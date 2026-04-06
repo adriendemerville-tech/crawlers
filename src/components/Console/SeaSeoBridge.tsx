@@ -556,7 +556,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
               </Button>
             </Link>
             <p className="text-[11px] text-muted-foreground/50">
-              {t3(language, 'Accès en lecture seule uniquement.', 'Read-only access only.', 'Acceso de solo lectura.')}{' '}
+              {t3(language, 'Seules des opérations de consultation sont effectuées.', 'Only read operations are performed.', 'Solo se realizan operaciones de consulta.')}{' '}
               <Link to="/api-integrations#google-ads" className="underline hover:text-muted-foreground">
                 {t3(language, 'Politique de confidentialité', 'Privacy policy', 'Política de privacidad')}
               </Link>

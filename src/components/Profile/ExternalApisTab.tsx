@@ -1219,28 +1219,28 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              {language === 'fr' ? 'Connexion Google Ads — Accès en lecture seule' :
-               language === 'es' ? 'Conexión Google Ads — Acceso de solo lectura' :
-               'Google Ads Connection — Read-Only Access'}
+              {language === 'fr' ? 'Connexion Google Ads — Accès sécurisé' :
+               language === 'es' ? 'Conexión Google Ads — Acceso seguro' :
+               'Google Ads Connection — Secure Access'}
             </DialogTitle>
             <DialogDescription className="text-left space-y-3 pt-2">
               <p>
                 {language === 'fr'
-                  ? "Google affichera un avertissement de sécurité car le scope technique requis (adwords) est global. C'est normal et attendu."
+                  ? "Crawlers se connecte à votre compte Google Ads via le scope standard (adwords). Ce scope est le seul proposé par Google — il n'existe pas d'alternative en lecture seule. Toutefois, notre application n'utilise que des opérations de consultation (reports, métriques, mots-clés)."
                   : language === 'es'
-                  ? "Google mostrará una advertencia de seguridad porque el scope técnico requerido (adwords) es global. Es normal y esperado."
-                  : "Google will show a security warning because the required technical scope (adwords) is global. This is normal and expected."}
+                  ? "Crawlers se conecta a su cuenta de Google Ads mediante el scope estándar (adwords). Es el único scope que ofrece Google — no existe alternativa de solo lectura. Sin embargo, nuestra aplicación solo utiliza operaciones de consulta (informes, métricas, palabras clave)."
+                  : "Crawlers connects to your Google Ads account via the standard scope (adwords). This is the only scope Google offers — there is no read-only alternative. However, our application only uses read operations (reports, metrics, keywords)."}
               </p>
               <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 text-sm">
                 <p className="font-medium text-foreground">
-                  {language === 'fr' ? '🔒 Ce que nous faisons réellement :' :
-                   language === 'es' ? '🔒 Lo que realmente hacemos:' :
-                   '🔒 What we actually do:'}
+                  {language === 'fr' ? '🔒 Ce que nous faisons concrètement :' :
+                   language === 'es' ? '🔒 Lo que hacemos concretamente:' :
+                   '🔒 What we concretely do:'}
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>{language === 'fr' ? 'Lecture des mots-clés et volumes de recherche' : language === 'es' ? 'Lectura de palabras clave y volúmenes de búsqueda' : 'Read keywords and search volumes'}</li>
-                  <li>{language === 'fr' ? 'Lecture des CPC et dépenses par campagne' : language === 'es' ? 'Lectura de CPC y gastos por campaña' : 'Read CPC and campaign spend'}</li>
-                  <li>{language === 'fr' ? 'Lecture des impressions, clics et conversions' : language === 'es' ? 'Lectura de impresiones, clics y conversiones' : 'Read impressions, clicks and conversions'}</li>
+                  <li>{language === 'fr' ? 'Consultation des mots-clés et volumes de recherche' : language === 'es' ? 'Consulta de palabras clave y volúmenes de búsqueda' : 'Query keywords and search volumes'}</li>
+                  <li>{language === 'fr' ? 'Consultation des CPC et dépenses par campagne' : language === 'es' ? 'Consulta de CPC y gastos por campaña' : 'Query CPC and campaign spend'}</li>
+                  <li>{language === 'fr' ? 'Consultation des impressions, clics et conversions' : language === 'es' ? 'Consulta de impresiones, clics y conversiones' : 'Query impressions, clicks and conversions'}</li>
                 </ul>
                 <p className="font-medium text-foreground pt-1">
                   {language === 'fr' ? '🚫 Ce que nous ne faisons JAMAIS :' :
