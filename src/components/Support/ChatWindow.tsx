@@ -976,6 +976,117 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                   </div>
                 ))}
 
+                {/* Architect action confirmation buttons */}
+                {pendingArchitectAction && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2 max-w-[85%]">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <CrawlersLogo size={12} />
+                        <span className="text-[11px] font-medium text-muted-foreground">Action suggérée</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {(pendingArchitectAction.target === 'content' || pendingArchitectAction.target === 'both') && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                // Insert diagnostic into architect_workbench
+                                const diag = pendingArchitectAction.diagnostic;
+                                if (user) {
+                                  const domain = diag.url ? new URL(diag.url).hostname : '';
+                                  await supabase.from('architect_workbench').insert({
+                                    domain,
+                                    user_id: user.id,
+                                    source_type: 'felix' as any,
+                                    source_function: 'sav-agent',
+                                    finding_category: diag.finding_category || 'content_upgrade',
+                                    severity: 'medium',
+                                    title: diag.title || 'Correctif Félix',
+                                    description: diag.description || '',
+                                    target_url: diag.url || '',
+                                    action_type: 'content' as any,
+                                    target_operation: 'replace',
+                                    payload: { source_context: diag.source_context, from_felix: true },
+                                  });
+                                }
+                                const confirmMsg: ChatMessage = {
+                                  role: 'assistant',
+                                  content: '✅ Content Architect ouvert avec le diagnostic pré-chargé.',
+                                  timestamp: new Date().toISOString(),
+                                };
+                                setMessages(prev => [...prev, confirmMsg]);
+                                setPendingArchitectAction(null);
+                                navigate('/audit-expert?tab=content-architect');
+                                onClose();
+                              } catch (e) {
+                                console.error('Architect workbench insert error:', e);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-500 transition-colors"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            Content Architect
+                          </button>
+                        )}
+                        {(pendingArchitectAction.target === 'code' || pendingArchitectAction.target === 'both') && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const diag = pendingArchitectAction.diagnostic;
+                                if (user) {
+                                  const domain = diag.url ? new URL(diag.url).hostname : '';
+                                  await supabase.from('architect_workbench').insert({
+                                    domain,
+                                    user_id: user.id,
+                                    source_type: 'felix' as any,
+                                    source_function: 'sav-agent',
+                                    finding_category: diag.finding_category || 'technical_fix',
+                                    severity: 'medium',
+                                    title: diag.title || 'Correctif Félix',
+                                    description: diag.description || '',
+                                    target_url: diag.url || '',
+                                    action_type: 'code' as any,
+                                    target_operation: 'replace',
+                                    payload: { source_context: diag.source_context, from_felix: true },
+                                  });
+                                }
+                                const confirmMsg: ChatMessage = {
+                                  role: 'assistant',
+                                  content: '✅ Code Architect ouvert avec le diagnostic pré-chargé.',
+                                  timestamp: new Date().toISOString(),
+                                };
+                                setMessages(prev => [...prev, confirmMsg]);
+                                setPendingArchitectAction(null);
+                                navigate('/audit-expert?tab=code-architect');
+                                onClose();
+                              } catch (e) {
+                                console.error('Architect workbench insert error:', e);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-500 transition-colors"
+                          >
+                            <Code className="w-3.5 h-3.5" />
+                            Code Architect
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            setPendingArchitectAction(null);
+                            const msg: ChatMessage = {
+                              role: 'user',
+                              content: 'Non merci, pas maintenant.',
+                              timestamp: new Date().toISOString(),
+                            };
+                            setMessages(prev => [...prev, msg]);
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 rounded-lg border border-muted-foreground/20 text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors"
+                        >
+                          Non merci
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {quizSuggestionPending && (
                   <div className="flex justify-start">
                     <div className="flex gap-2 ml-1">
