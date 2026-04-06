@@ -240,6 +240,21 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     }
   }, [autoEnterpriseContact]);
 
+  // Initial greeting from "Nous écrire" button
+  const greetingTriggered = useRef(false);
+  useEffect(() => {
+    if (initialGreeting && !greetingTriggered.current && messages.length === 0) {
+      greetingTriggered.current = true;
+      const greetingMsg: ChatMessage = {
+        id: 'greeting-' + Date.now(),
+        role: 'assistant',
+        content: initialGreeting,
+        created_at: new Date().toISOString(),
+      };
+      setMessages([greetingMsg]);
+    }
+  }, [initialGreeting]);
+
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
   useEffect(() => {
