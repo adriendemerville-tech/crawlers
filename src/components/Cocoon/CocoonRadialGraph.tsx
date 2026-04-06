@@ -450,11 +450,12 @@ export function CocoonRadialGraph({
     particlesRef.current = particles;
   }, [tree, nodes]);
 
-  // Filter edges by visibleJuiceTypes
-  const shouldShowEdge = useCallback((edgeType?: string) => {
-    if (!visibleJuiceTypes || visibleJuiceTypes.size === 0) return true;
-    return visibleJuiceTypes.has(edgeType || 'semantic');
-  }, [visibleJuiceTypes]);
+  // Filter edges by visibleJuiceTypes and visibleLinkDirections
+  const shouldShowEdge = useCallback((edgeType?: string, direction?: string) => {
+    if (visibleJuiceTypes && visibleJuiceTypes.size > 0 && !visibleJuiceTypes.has(edgeType || 'semantic')) return false;
+    if (visibleLinkDirections && visibleLinkDirections.size < 3 && direction && !visibleLinkDirections.has(direction)) return false;
+    return true;
+  }, [visibleJuiceTypes, visibleLinkDirections]);
 
   // Resize observer
   useEffect(() => {
