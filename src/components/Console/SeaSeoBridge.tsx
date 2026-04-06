@@ -54,6 +54,7 @@ const typeConfig: Record<string, { label: string; color: string; icon: typeof Tr
 };
 
 export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
+  const { language } = useLanguage();
   const { isDemoMode } = useDemoMode();
   const [loading, setLoading] = useState(false);
   const [injecting, setInjecting] = useState(false);
