@@ -1504,7 +1504,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--ARCHITECT_ACTI
     }
     } // end if (!isGuest)
 
-    return jsonOk({ reply, conversation_id });
+    return jsonOk({ reply, conversation_id, ...(architectAction ? { architect_action: architectAction } : {}) });
   } catch (e) {
     console.error("sav-agent error:", e);
     return jsonError(e instanceof Error ? e.message : "Erreur interne", 500);
