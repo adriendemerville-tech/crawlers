@@ -970,7 +970,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       error: error instanceof Error ? error.message : 'Worker error',
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-});
+}));
 
 /**
  * Finalize a completed job: compute scores, detect duplicates (title+meta+content hash), AI summary
