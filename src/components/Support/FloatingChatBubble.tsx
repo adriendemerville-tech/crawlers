@@ -252,11 +252,12 @@ export function FloatingChatBubble() {
           </div>
         }>
           <ChatWindow
-            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); }}
+            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); setFelixGreeting(null); }}
             triggerOnboarding={triggerOnboarding}
             onOnboardingConsumed={() => setTriggerOnboarding(false)}
             autoStartCrawlersQuiz={autoStartCrawlersQuiz}
             autoEnterpriseContact={autoEnterpriseContact}
+            initialGreeting={felixGreeting}
           />
         </Suspense>
       )}
