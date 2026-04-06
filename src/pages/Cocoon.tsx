@@ -981,72 +981,24 @@ function CocoonContent() {
 
           </div>
 
-          {/* Legend — dynamic, below preview */}
-          {nodes.length > 0 && (() => {
-              const pageLabels: Record<string, Record<string, string>> = {
-                homepage: { fr: 'Accueil', en: 'Home', es: 'Inicio' },
-                blog: { fr: 'Blog', en: 'Blog', es: 'Blog' },
-                produit: { fr: 'Produit', en: 'Product', es: 'Producto' },
-                'catégorie': { fr: 'Catégorie', en: 'Category', es: 'Categoría' },
-                faq: { fr: 'FAQ', en: 'FAQ', es: 'FAQ' },
-                guide: { fr: 'Guide', en: 'Guide', es: 'Guía' },
-                contact: { fr: 'Contact', en: 'Contact', es: 'Contacto' },
-                tarifs: { fr: 'Tarifs', en: 'Pricing', es: 'Precios' },
-                'légal': { fr: 'Légal', en: 'Legal', es: 'Legal' },
-                'à propos': { fr: 'À propos', en: 'About', es: 'Acerca de' },
-                page: { fr: 'Page', en: 'Page', es: 'Página' },
-                unknown: { fr: 'Autre', en: 'Other', es: 'Otro' },
-              };
-              const presentTypes = new Set(nodes.map((n: any) => n.page_type || 'unknown'));
-              const legendItems = Object.entries(pageLabels).filter(([type]) => presentTypes.has(type));
-
-              return (
-                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 opacity-0 animate-fade-in"
-                  style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
-                >
-                  {/* Pages legend */}
-                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Pages:' : 'Pages :'}</span>
-                    {legendItems.map(([type, labels]) => {
-                      const color = cocoonTheme.nodeColors[type] || cocoonTheme.nodeColors.unknown || '#7a7a9e';
-                      const label = labels[language] || labels.fr;
-                      return (
-                        <div key={type} className="flex items-center gap-1 sm:gap-1.5">
-                          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}80` }} />
-                          <span className="text-[10px] sm:text-xs text-white/50">{label}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Particles legend */}
-                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Particles:' : 'Particules :'}</span>
-                    {Object.entries(cocoonTheme.particleColors).map(([key, color]) => (
-                      <div key={key} className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full opacity-70" style={{ backgroundColor: color }} />
-                        <span className="text-[10px] sm:text-xs text-white/50 capitalize">{
-                          { authority: language === 'en' ? 'Authority' : language === 'es' ? 'Autoridad' : 'Autorité', semantic: language === 'en' ? 'Semantic' : language === 'es' ? 'Semántica' : 'Sémantique', traffic: language === 'en' ? 'Traffic' : language === 'es' ? 'Tráfico' : 'Trafic', hierarchy: language === 'en' ? 'Hierarchy' : language === 'es' ? 'Jerarquía' : 'Hiérarchie' }[key] || key
-                        }</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Links legend */}
-                  <div className="hidden sm:flex items-center gap-2 sm:gap-3">
-                    <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Links:' : 'Liens :'}</span>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
-                      <span className="text-[10px] text-white/40">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
-                      <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
-                    </div>
-                  </div>
+          {/* Links legend — centered below preview */}
+          {nodes.length > 0 && (
+            <div className="shrink-0 flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 opacity-0 animate-fade-in"
+              style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
+            >
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Links:' : 'Liens :'}</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
+                  <span className="text-[10px] text-white/40">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
                 </div>
-              );
-            })()}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
+                  <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
