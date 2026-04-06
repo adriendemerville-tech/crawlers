@@ -419,11 +419,21 @@ Réponds UNIQUEMENT en JSON :
       "reason": "Pourquoi cette modification améliore le SEO"
     }
   ],
+  "new_pages": [
+    {
+      "type": "landing|article",
+      "title": "Titre de la nouvelle page",
+      "keyword": "mot-clé cible principal",
+      "directive": "instruction admin à l'origine (si applicable)"
+    }
+  ],
   "estimated_score_improvement": 5-15,
   "confidence_score": 0-100,
   "priority_fixes": ["Liste des 3 corrections les plus impactantes"],
   "summary": "Résumé en 2-3 phrases"
-}`;
+}
+
+Note : "new_pages" est OPTIONNEL. N'inclus ce champ QUE si une directive admin le demande explicitement (ex: "crée un article sur...", "ajoute une landing page pour...") ou si un content gap majeur est identifié.`;
 
   const userPrompt = `PAGE : ${target.type === 'blog' ? 'Article de blog' : 'Landing page'} — ${target.slug}
 URL : ${target.url}
