@@ -975,7 +975,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 /**
  * Finalize a completed job: compute scores, detect duplicates (title+meta+content hash), AI summary
  */
-async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
+async function finalizeJob(supabase: any, job: any, _firecrawlKey: string, failedUrls: Array<{ url: string; reason: string }> = []) {
   console.log(`[Worker] Finalizing job ${job.id}...`);
 
   await supabase.from('crawl_jobs').update({ status: 'analyzing' }).eq('id', job.id);
