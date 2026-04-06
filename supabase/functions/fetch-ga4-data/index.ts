@@ -368,7 +368,7 @@ async function persistGA4Revenue(
       user_id: userId,
       source: 'ga4',
       amount: d.revenue,
-      currency: 'USD', // GA4 returns in property currency
+      currency: 'USD',
       transaction_date: `${d.date.slice(0, 4)}-${d.date.slice(4, 6)}-${d.date.slice(6, 8)}`,
       order_external_id: `ga4-daily-${d.date}`,
       raw_payload: { date: d.date, revenue: d.revenue },
@@ -379,5 +379,62 @@ async function persistGA4Revenue(
       .from('revenue_events')
       .upsert(revenueRows, { onConflict: 'tracked_site_id,source,order_external_id' })
     if (error) console.error('[GA4] Revenue persist error:', error.message)
+  }
+}
+
+/**
+ * Persist GA4 daily metrics (sessions, users, pageviews, revenue) into ga4_daily_metrics.
+ */
+async function persistGA4DailyMetrics(
+  supabase: any,
+  userId: string,
+  trackedSiteId: string,
+  dailySeries: any[],
+) {
+  const rows = dailySeries.map((d: any) => ({
+    tracked_site_id: trackedSiteId,
+    user_id: userId,
+    metric_date: `${d.date.slice(0, 4)}-${d.date.slice(4, 6)}-${d.date.slice(6, 8)}`,
+    sessions: d.sessions || 0,
+    total_users: d.users || 0,
+    pageviews: d.pageviews || 0,
+    revenue: d.revenue || 0,
+  }))
+
+  if (rows.length > 0) {
+    const { error } = await supabase
+      .from('ga4_daily_metrics')
+      .upsert(rows, { onConflict: 'tracked_site_id,metric_date' })
+    if (error) console.error('[GA4] Daily metrics persist error:', error.message)
+  }
+}
+
+/**
+ * Persist GA4 top pages with engagement data into ga4_top_pages.
+ */
+async function persistGA4TopPages(
+  supabase: any,
+  userId: string,
+  trackedSiteId: string,
+  startDate: string,
+  endDate: string,
+  topPages: any[],
+) {
+  const rows = topPages.map((p: any) => ({
+    tracked_site_id: trackedSiteId,
+    user_id: userId,
+    period_start: startDate,
+    period_end: endDate,
+    page_path: p.path,
+    pageviews: p.pageviews || 0,
+    avg_duration: p.avg_duration || 0,
+    bounce_rate: p.bounce_rate || 0,
+  }))
+
+  if (rows.length > 0) {
+    const { error } = await supabase
+      .from('ga4_top_pages')
+      .upsert(rows, { onConflict: 'tracked_site_id,period_start,period_end,page_path' })
+    if (error) console.error('[GA4] Top pages persist error:', error.message)
   }
 }
