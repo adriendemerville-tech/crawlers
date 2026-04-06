@@ -1177,7 +1177,7 @@ Donne 5-8 recommandations max, classées par impact.`;
           temperature: 0.3,
         }),
         signal: aiController.signal,
-      }));
+      });
       clearTimeout(aiTimeout);
 
       const aiData = await aiRes.json();
