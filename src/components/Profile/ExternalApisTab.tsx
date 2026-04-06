@@ -708,7 +708,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                 ) : isActive ? (
                   <>
                     <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                    {isGbpActive ? (language === 'fr' ? 'Reconnecter' : language === 'es' ? 'Reconectar' : 'Reconnect') : t.configure}
+                    {t.connected}
                   </>
                 ) : (
                   <>
