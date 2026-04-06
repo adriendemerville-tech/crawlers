@@ -245,7 +245,7 @@ function CocoonContent() {
   // Reset filters when site changes
   useEffect(() => {
     setFiltersInitialized(false);
-    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), showAllClusters: true, showParticles: true });
+    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
   }, [selectedSiteId]);
 
   // Initialize filters when nodes change — always re-init on new node set
