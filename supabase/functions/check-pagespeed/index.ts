@@ -96,7 +96,21 @@ async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey:
 } | null> {
   const googleApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`;
 
-  const response = await fetch(googleApiUrl);
+  // Timeout 120s pour laisser Google analyser les sites lents
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120_000);
+  let response: Response;
+  try {
+    response = await fetch(googleApiUrl, { signal: controller.signal });
+  } catch (err: any) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      console.error(`[PSI:${strategy}] ⏱️ Timeout 120s dépassé pour ${normalizedUrl}`);
+      throw new Error('timeout');
+    }
+    throw err;
+  }
+  clearTimeout(timeout);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
