@@ -39,7 +39,7 @@ export function SeoPageDrafts() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'draft' | 'approved' | 'all'>('draft');
+  const [filter, setFilter] = useState<'draft' | 'approved' | 'published' | 'all'>('draft');
 
   const fetchDrafts = useCallback(async () => {
     setLoading(true);
