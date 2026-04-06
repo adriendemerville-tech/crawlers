@@ -218,13 +218,18 @@ Deno.serve(handleRequest(async (req) => {
         fetchForStrategy(normalizedUrl, 'desktop', apiKey),
       ]);
 
-      // Check for quota errors
+      // Check for quota/timeout errors
       for (const r of [mobileResult, desktopResult]) {
-        if (r.status === 'rejected' && r.reason?.message === 'quota_exceeded') {
-          return new Response(
-            JSON.stringify({ success: false, error: 'quota_exceeded', message: 'PageSpeed API daily quota exceeded.' }),
-            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+        if (r.status === 'rejected') {
+          if (r.reason?.message === 'quota_exceeded') {
+            return new Response(
+              JSON.stringify({ success: false, error: 'quota_exceeded', message: 'PageSpeed API daily quota exceeded.' }),
+              { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          if (r.reason?.message === 'timeout') {
+            console.warn(`[PSI:dual] ⏱️ Timeout sur une stratégie pour ${normalizedUrl}`);
+          }
         }
       }
 
