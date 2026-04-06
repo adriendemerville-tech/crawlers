@@ -951,7 +951,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       }
 
       if (alreadyProcessed >= job.total_count) {
-        await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey);
+        await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey, failedUrlsByJob.get(job.id) || []);
       }
     }
 
