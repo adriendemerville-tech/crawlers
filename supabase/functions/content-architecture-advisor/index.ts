@@ -161,7 +161,7 @@ Deno.serve(handleRequest(async (req) => {
     if (!isServiceRole) {
       const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
       if (!fairUse.allowed) {
-        return jsonError('Rate limit exceeded', details: fairUse, 429)
+        return jsonError('Rate limit exceeded', 429)
       }
     }
 
@@ -214,15 +214,11 @@ Deno.serve(handleRequest(async (req) => {
 
       if (!monthlyFairUse.allowed) {
         if (isActiveSubscriber) {
-          return jsonError('Monthly content creation limit reached',
-            details: monthlyFairUse, 429)
+          return jsonError('Monthly content creation limit reached', 429)
         }
         const result = await deductCredits()
         if (!result.success) {
-          return jsonError('Crédits insuffisants',
-            credits_required: CONTENT_CREDIT_COST,
-            credits_balance: userProfile?.credits_balance ?? 0,
-            details: monthlyFairUse, 402)
+          return jsonError('Crédits insuffisants', 402)
         }
         creditsDeducted = true
         console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
