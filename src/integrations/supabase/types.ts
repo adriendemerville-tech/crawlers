@@ -3060,6 +3060,7 @@ export type Database = {
           schema_org_types: Json | null
           seo_score: number | null
           title: string | null
+          tone_analysis: Json | null
           url: string
           word_count: number | null
         }
@@ -3102,6 +3103,7 @@ export type Database = {
           schema_org_types?: Json | null
           seo_score?: number | null
           title?: string | null
+          tone_analysis?: Json | null
           url: string
           word_count?: number | null
         }
@@ -3144,6 +3146,7 @@ export type Database = {
           schema_org_types?: Json | null
           seo_score?: number | null
           title?: string | null
+          tone_analysis?: Json | null
           url?: string
           word_count?: number | null
         }
@@ -7988,6 +7991,7 @@ export type Database = {
           id: string
           max_depth: number | null
           status: string
+          tone_consistency_score: number | null
           total_pages: number
           url: string
           url_filter: string | null
@@ -8006,6 +8010,7 @@ export type Database = {
           id?: string
           max_depth?: number | null
           status?: string
+          tone_consistency_score?: number | null
           total_pages?: number
           url: string
           url_filter?: string | null
@@ -8024,6 +8029,7 @@ export type Database = {
           id?: string
           max_depth?: number | null
           status?: string
+          tone_consistency_score?: number | null
           total_pages?: number
           url?: string
           url_filter?: string | null
@@ -8927,6 +8933,7 @@ export type Database = {
           social_profiles: Json | null
           target_audience: string | null
           user_id: string
+          voice_dna: Json | null
         }
         Insert: {
           address?: string | null
@@ -8975,6 +8982,7 @@ export type Database = {
           social_profiles?: Json | null
           target_audience?: string | null
           user_id: string
+          voice_dna?: Json | null
         }
         Update: {
           address?: string | null
@@ -9023,6 +9031,7 @@ export type Database = {
           social_profiles?: Json | null
           target_audience?: string | null
           user_id?: string
+          voice_dna?: Json | null
         }
         Relationships: [
           {
