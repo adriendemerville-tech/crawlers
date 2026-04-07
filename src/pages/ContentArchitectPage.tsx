@@ -898,6 +898,15 @@ const ContentArchitectPage = memo(() => {
         </section>
       </div>
       <Footer />
+      {showTopUpModal && user && (
+        <Suspense fallback={null}>
+          <CreditTopUpModal
+            open={showTopUpModal}
+            onOpenChange={setShowTopUpModal}
+            currentBalance={balance}
+          />
+        </Suspense>
+      )}
     </>
   );
 });
