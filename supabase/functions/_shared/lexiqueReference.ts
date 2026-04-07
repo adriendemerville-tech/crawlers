@@ -70,5 +70,5 @@ Quand l'utilisateur mentionne un terme technique, utilise ces définitions. Tu p
 - **PageSpeed Insights API** : API Google pour Core Web Vitals et Lighthouse.
 - **Crédits Crawlers** : Unité de consommation pour fonctionnalités avancées.
 - **Pro Agency** : Abonnement premium 29€/mois (Cocon, Crawl, GMB, 1 collab).
-- **Pro Agency+** : Abonnement premium étendu 99€/mois (2 collabs, limites étendues).
+- **Pro Agency+** : Abonnement premium étendu 79€/mois (2 collabs, limites étendues).
 `;
