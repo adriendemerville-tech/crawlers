@@ -26,6 +26,7 @@ import { KeywordCloud } from '@/components/Profile/KeywordCloud';
 import { TopKeywordsList } from '@/components/Profile/TopKeywordsList';
 import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
+import { SmartRecommendationsPanel } from '@/components/Profile/SmartRecommendationsPanel';
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
