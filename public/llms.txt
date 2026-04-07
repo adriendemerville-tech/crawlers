@@ -237,7 +237,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - Console multi-sites (jusqu'à 30 sites)
 - 5 000 pages de crawl/mois
 - 3 comptes (owner + 2 invités)
-- Cocoon 3D, IAS, GMB, Content Architect (100/mois)
+- Cocoon 3D, IAS, GMB, Content Architect (80/mois)
 - Autopilote Parménion
 - Connexion CMS directe + GSC/GA4
 - Architecte Génératif Multi-Pages

@@ -125,9 +125,9 @@ const t = {
         price: '29€',
         priceUnit: '',
         period: '/mois',
-        pages: '100 pages/mois',
+        pages: '80 pages/mois',
         features: [
-          '100 pages créées par mois',
+          '80 pages créées par mois',
           'Images IA illimitées (2/page)',
           'Brief éditorial automatique',
           'Brouillons sauvegardés par URL',

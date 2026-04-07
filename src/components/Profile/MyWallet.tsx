@@ -645,7 +645,7 @@ export function MyWallet() {
             <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
               <PenTool className="h-3.5 w-3.5 text-violet-500 shrink-0" />
               <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? '100 créations de page inclus' : language === 'es' ? '100 creaciones de página' : '100 page creations included'}
+                {language === 'fr' ? '80 créations de page inclus' : language === 'es' ? '80 creaciones de página' : '80 page creations included'}
               </span>
             </div>
           </div>
