@@ -58,7 +58,7 @@ export function VoiceDNAEditor({ trackedSiteId, domain }: VoiceDNAEditorProps) {
         .eq('id', trackedSiteId)
         .single();
       
-      const dna = data?.voice_dna as VoiceDNA | null;
+      const dna = data?.voice_dna as unknown as VoiceDNA | null;
       setVoiceDna(dna);
       setForbiddenWords((dna?.forbidden_words || []).join(', '));
       setMandatoryWords((dna?.mandatory_words || []).join(', '));
