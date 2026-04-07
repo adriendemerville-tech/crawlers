@@ -5,7 +5,7 @@ const PAGES = [
   { route: "/", title: "Accueil", desc: "Page d'accueil avec audit SEO & GEO instantané, Score GEO, visibilité LLM et PageSpeed." },
   { route: "/audit-expert", title: "Audit Expert", desc: "Audit technique complet sur 168 critères SEO et GEO. Rapport détaillé avec plan d'action priorisé et code correctif." },
   { route: "/faq", title: "FAQ", desc: "Questions fréquentes sur l'audit SEO, le GEO Score, les crédits, le plan Pro Agency et l'intégration technique." },
-  { route: "/tarifs", title: "Tarifs", desc: "Plans et tarifs : gratuit, crédits à l'unité (0.90€), Pro Agency (59€/mois), Pro Agency+ (149€/mois)." },
+  { route: "/tarifs", title: "Tarifs", desc: "Plans et tarifs : gratuit, crédits à l'unité (0.90€), Pro Agency (29€/mois), Pro Agency+ (99€/mois)." },
   { route: "/pro-agency", title: "Pro Agency", desc: "Plan premium : audit illimité, Cocoon 3D, Content Architect, CMS Direct, Autopilote Parménion, GSC/GA4." },
   { route: "/blog", title: "Blog", desc: "Articles, guides et actualités SEO, GEO, visibilité IA, optimisation moteurs génératifs." },
   { route: "/lexique", title: "Lexique SEO & GEO", desc: "Glossaire complet de 150+ termes SEO et GEO avec définitions, exemples et conseils." },
@@ -90,8 +90,8 @@ Crawlers.fr est la première plateforme française combinant :
 |------|------|--------|
 | Gratuit | 0€ | Bots IA, Score GEO, Visibilité LLM, PageSpeed, Audit Expert (inscription), Matrice |
 | Crédits | 0.90€/crédit | Crawl, Audit Comparé, Marina, fonctions premium |
-| Pro Agency | 59€/mois | Tout illimité + Cocoon 3D + Content Architect + CMS Direct + GSC/GA4 + GMB |
-| Pro Agency+ | 149€/mois | Pro Agency + 100K pages crawl + API Marina illimitée + support prioritaire |
+| Pro Agency | 29€/mois | Tout illimité + Cocoon 3D + Content Architect + CMS Direct + GSC/GA4 + GMB |
+| Pro Agency+ | 99€/mois | Pro Agency + 50K pages crawl + API Marina illimitée + support prioritaire |
 
 ## PAGES DU SITE
 

@@ -282,7 +282,7 @@ Accessible via Code Architect > onglet "Contenu" OU depuis la Console. Le Conten
 ## Crédits & Abonnement
 - 25 crédits offerts à l'inscription.
 - Freemium : bots IA, GEO Score, LLM, PageSpeed gratuits. Audit SEO 1/jour.
-- Pro Agency : 59€/mois garanti à vie pour les 100 premiers. 5 000 pages de crawl/mois, 10 pages/scan. Détails sur [la page tarifs](https://crawlers.fr/tarifs).
+- Pro Agency : 29€/mois garanti à vie pour les 100 premiers. 5 000 pages de crawl/mois, 10 pages/scan. Détails sur [la page tarifs](https://crawlers.fr/tarifs).
 - Pro Agency + : 99€/mois. 50 000 pages de crawl/mois, 50 pages/scan. Pour les agences et structures avec 10+ clients. Analyse des logs serveur. Détails sur [la page Pro Agency](https://crawlers.fr/pro-agency).
 
 ## Analyse des Logs (Pro Agency+)
@@ -315,10 +315,10 @@ Accessible via [Console](https://crawlers.fr/console) > Mes sites > API (section
 - [Rank Math](https://crawlers.fr/console) : connexion via onglet API dans la Console.
 
 # OBJECTIONS TARIFAIRES
-"C'est trop cher" → Pro Agency 59€ remplace Semrush (120€) + Screaming Frog (200€/an) + outils GEO (95-295€). Garanti à vie pour les 100 premiers. Pro Agency+ à 99€ pour les agences avec gros volumes de crawl (50 000 pages/mois).
+"C'est trop cher" → Pro Agency 29€ remplace Semrush (120€) + Screaming Frog (200€/an) + outils GEO (95-295€). Garanti à vie pour les 100 premiers. Pro Agency+ à 99€ pour les agences avec gros volumes de crawl (50 000 pages/mois).
 "Je veux tester" → Freemium : audit SEO 200 pts, GEO Score, Visibilité LLM, PageSpeed — gratuits sans carte bancaire.
 "Pourquoi pas Semrush ?" → Semrush = SEO classique. Crawlers.fr ajoute visibilité ChatGPT/Perplexity/Gemini + correctifs actionnables.
-"Pro Agency ou Pro Agency+ ?" → Pro Agency (59€) = indépendants et petites agences (1-5 clients). Pro Agency+ (99€) = agences avec 10+ clients, gros volumes de crawl (50k pages/mois vs 5k), analyse des logs serveur, API Marina marque blanche complète.
+"Pro Agency ou Pro Agency+ ?" → Pro Agency (29€) = indépendants et petites agences (1-5 clients). Pro Agency+ (99€) = agences avec 10+ clients, gros volumes de crawl (50k pages/mois vs 5k), analyse des logs serveur, API Marina marque blanche complète.
 
 # ESCALADE
 Si demande de remboursement, bug bloquant > 10min, facturation, suppression compte, ou hors périmètre :
