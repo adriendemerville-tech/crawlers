@@ -836,12 +836,19 @@ const ContentArchitectPage = memo(() => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/tarifs">
-                  <Button variant="outline" size="lg" className="w-full font-semibold">
+                {user ? (
+                  <Button variant="outline" size="lg" className="w-full font-semibold" onClick={() => setShowTopUpModal(true)}>
                     <Coins className="h-5 w-5 mr-2" />
                     {language === 'en' ? 'Buy credits' : language === 'es' ? 'Comprar créditos' : 'Acheter des crédits'}
                   </Button>
-                </Link>
+                ) : (
+                  <Link to="/auth" className="w-full">
+                    <Button variant="outline" size="lg" className="w-full font-semibold">
+                      <Coins className="h-5 w-5 mr-2" />
+                      {language === 'en' ? 'Sign up to buy credits' : language === 'es' ? 'Regístrese para comprar' : 'S\'inscrire pour acheter'}
+                    </Button>
+                  </Link>
+                )}
               </div>
               {/* 3 subscription cards — from PricingPlansSection inline */}
               <div className="md:col-span-3">
