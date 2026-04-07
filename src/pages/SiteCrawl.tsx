@@ -1704,6 +1704,19 @@ export default function SiteCrawl() {
                     </CardContent>
                   </Card>
                 )}
+                {/* Tone Consistency KPI */}
+                {crawlResult.tone_consistency_score != null && (
+                  <Card className={`border ${crawlResult.tone_consistency_score >= 75 ? 'border-emerald-500/30 bg-emerald-500/5' : crawlResult.tone_consistency_score >= 50 ? 'border-amber-500/30 bg-amber-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
+                    <CardContent className="p-2.5 text-center">
+                      <div className={`text-lg font-bold ${crawlResult.tone_consistency_score >= 75 ? 'text-emerald-500' : crawlResult.tone_consistency_score >= 50 ? 'text-amber-500' : 'text-destructive'}`}>
+                        {crawlResult.tone_consistency_score}/100
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {language === 'fr' ? 'Cohérence tonale' : language === 'es' ? 'Coherencia tonal' : 'Tone Consistency'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Near-duplicate & Schema.org alerts */}
