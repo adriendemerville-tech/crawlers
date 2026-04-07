@@ -25,6 +25,7 @@ import { AccountManager } from '@/components/Profile/AccountManager';
 import { TeamSharingSettings } from '@/components/Profile/TeamSharingSettings';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
+import { CrawlQuotaCard } from '@/components/Profile/CrawlQuotaCard';
 
 const translations = {
   fr: {
@@ -294,6 +295,7 @@ export function MyWallet() {
                   { value: 'branding', icon: Palette, label: 'Branding' },
                   { value: 'cocoon', icon: Network, label: 'Cocoon' },
                   { value: 'clients', icon: Activity, label: 'Clients' },
+                  { value: 'counters', icon: Monitor, label: language === 'fr' ? 'Compteurs' : language === 'es' ? 'Contadores' : 'Counters' },
                   { value: 'invoices', icon: Receipt, label: language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices' },
                   { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
                   { value: 'profile', icon: User, label: language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts' },
@@ -335,6 +337,11 @@ export function MyWallet() {
 
               <TabsContent value="clients" className="mt-0">
                 <ClientsTab />
+              </TabsContent>
+
+              {/* Counters Tab */}
+              <TabsContent value="counters" className="mt-0">
+                <CrawlQuotaCard />
               </TabsContent>
 
               {/* Invoices Tab */}

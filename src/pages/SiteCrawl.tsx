@@ -1297,6 +1297,35 @@ export default function SiteCrawl() {
             <p className="text-muted-foreground max-w-2xl mx-auto">{t.subtitle}</p>
           </div>
 
+          {/* Crawl Quota Counter */}
+          {isUnlimited && (
+            <div className="mb-6 flex justify-center">
+              <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/60 border border-violet-500/20">
+                <Bug className="w-4 h-4 text-violet-400 shrink-0" />
+                <div className="flex items-baseline gap-1.5 text-sm">
+                  <span className="font-bold tabular-nums text-foreground">{crawlPagesThisMonth.toLocaleString('fr-FR')}</span>
+                  <span className="text-muted-foreground">/</span>
+                  <span className="font-semibold tabular-nums text-foreground">{FAIR_USE_LIMIT.toLocaleString('fr-FR')}</span>
+                </div>
+                <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      crawlPagesThisMonth / FAIR_USE_LIMIT > 0.9 ? 'bg-red-500' :
+                      crawlPagesThisMonth / FAIR_USE_LIMIT > 0.7 ? 'bg-amber-500' : 'bg-violet-500'
+                    }`}
+                    style={{ width: `${Math.min(100, (crawlPagesThisMonth / FAIR_USE_LIMIT) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {Math.max(0, FAIR_USE_LIMIT - crawlPagesThisMonth).toLocaleString('fr-FR')} {language === 'fr' ? 'pages restantes ce mois-ci' : language === 'es' ? 'páginas restantes este mes' : 'pages remaining this month'}
+                </span>
+                <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-500">
+                  {isAgencyPlus ? 'Pro Agency+' : 'Pro Agency'}
+                </Badge>
+              </div>
+            </div>
+          )}
+
           {/* SEO content moved to bottom */}
 
           {/* Formulaire */}
