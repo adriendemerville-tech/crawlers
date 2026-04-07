@@ -101,7 +101,7 @@ export function PayingUsersTab() {
   };
 
   const getMarginColor = (user: PayingUser) => {
-    const price = user.plan_type === 'agency_premium' ? 99 : 29;
+    const price = user.plan_type === 'agency_premium' ? 79 : 29;
     const margin = price - user.estimatedCost;
     const pct = (margin / price) * 100;
     if (pct < 10) return 'text-red-500';
@@ -110,7 +110,7 @@ export function PayingUsersTab() {
   };
 
   const getMarginPct = (user: PayingUser) => {
-    const price = user.plan_type === 'agency_premium' ? 99 : 29;
+    const price = user.plan_type === 'agency_premium' ? 79 : 29;
     const margin = price - user.estimatedCost;
     return Math.round((margin / price) * 100);
   };
@@ -179,7 +179,7 @@ export function PayingUsersTab() {
             <TableBody>
               {users.map((user) => {
                 const plan = getPlanLabel(user.plan_type);
-                const price = user.plan_type === 'agency_premium' ? 99 : 29;
+                const price = user.plan_type === 'agency_premium' ? 79 : 29;
                 const marginPct = getMarginPct(user);
                 const marginColor = getMarginColor(user);
                 
