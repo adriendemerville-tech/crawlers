@@ -293,7 +293,7 @@ export function FinancesDashboard() {
       const payingCount = payingProfiles?.length || 0;
       const creditsPurchased = (purchaseRes.data || []).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
       const bundleMrr = (bundleRes.data || []).reduce((sum: number, s: any) => sum + ((s.monthly_price_cents || 0) / 100), 0);
-      const mrr = payingCount * 59 + bundleMrr;
+      const mrr = payingCount * 29 + bundleMrr;
       setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr, bundleMrr });
 
       // ACPU per subscriber
@@ -501,7 +501,7 @@ export function FinancesDashboard() {
           <CardContent className="p-3 pt-0">
             <div className="text-lg font-bold">{businessMetrics.mrr.toLocaleString('fr-FR')} €</div>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {businessMetrics.payingSubscribers} × 59€{businessMetrics.bundleMrr > 0 ? ` + ${businessMetrics.bundleMrr.toLocaleString('fr-FR')}€ bundle` : ''}
+              {businessMetrics.payingSubscribers} × 29€{businessMetrics.bundleMrr > 0 ? ` + ${businessMetrics.bundleMrr.toLocaleString('fr-FR')}€ bundle` : ''}
             </p>
           </CardContent>
         </Card>
