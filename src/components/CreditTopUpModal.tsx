@@ -248,10 +248,6 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
           transition={{ delay: 0.3 }}
           className="relative rounded-xl border-2 border-violet-500/40 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent p-5 overflow-hidden"
         >
-          <Badge className="absolute top-3 right-3 bg-violet-600 text-white gap-1 text-xs">
-            <Infinity className="h-3 w-3" />
-            {language === 'fr' ? 'Illimité' : language === 'es' ? 'Ilimitado' : 'Unlimited'}
-          </Badge>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-1 space-y-2">
               <h3 className="font-bold text-base flex items-center gap-2">
