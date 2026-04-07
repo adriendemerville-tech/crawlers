@@ -1,6 +1,6 @@
-import { PenLine, Layers, ImageIcon, Settings, Braces, FileEdit, BookOpen, ClipboardList } from 'lucide-react';
+import { PenLine, Layers, ImageIcon, Settings, Braces, FileEdit, BookOpen, ClipboardList, Mic } from 'lucide-react';
 
-export type PanelId = 'prompt' | 'structure' | 'images' | 'structured-data' | 'draft' | 'library' | 'tasks' | 'options';
+export type PanelId = 'prompt' | 'structure' | 'images' | 'structured-data' | 'draft' | 'library' | 'tasks' | 'options' | 'voice';
 
 interface ToolbarItem {
   id: PanelId;
@@ -16,6 +16,7 @@ const TOOLBAR_ITEMS: ToolbarItem[] = [
   { id: 'draft', icon: FileEdit, label: 'Brouillon' },
   { id: 'library', icon: BookOpen, label: 'Biblio.' },
   { id: 'tasks', icon: ClipboardList, label: 'Tâches' },
+  { id: 'voice', icon: Mic, label: 'Voice' },
   { id: 'options', icon: Settings, label: 'Options' },
 ];
 
