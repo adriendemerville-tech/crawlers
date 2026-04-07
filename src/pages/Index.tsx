@@ -84,7 +84,7 @@ const Index = () => {
   const [showTutorial, setShowTutorial] = useState(false);
   const [firstAnalysisDone, setFirstAnalysisDone] = useState(false);
   const { toast } = useToast();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   // SEO metadata constants (used in Helmet below)
   const seoTitle = language === 'es'
