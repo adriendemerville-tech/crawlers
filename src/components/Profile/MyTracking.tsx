@@ -26,6 +26,7 @@ import { KeywordCloud } from '@/components/Profile/KeywordCloud';
 import { TopKeywordsList } from '@/components/Profile/TopKeywordsList';
 import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
+import { SmartRecommendationsPanel } from '@/components/Profile/SmartRecommendationsPanel';
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
@@ -843,6 +844,24 @@ export function MyTracking() {
                         )}
                       </CardContent>
                     </Card>
+
+                    {/* Smart Recommendations */}
+                    <SmartRecommendationsPanel
+                      trackedSiteId={h.currentSite.id}
+                      userId={h.user?.id || ''}
+                      language={h.language}
+                      onAction={(rec) => {
+                        if (rec.recommendation_key === 'connect_gsc') {
+                          toast.info('Ouvrez l\'onglet Connecteurs pour lier GSC.');
+                        } else if (rec.recommendation_key === 'identity_card') {
+                          h.setShowIdentityModal(true);
+                        } else if (rec.recommendation_key === 'autopilot') {
+                          h.setShowAutopilotModal(true);
+                        } else {
+                          toast.info(rec.title);
+                        }
+                      }}
+                    />
 
                     {/* SERP Ranking Banner */}
                     <SerpKpiBanner
