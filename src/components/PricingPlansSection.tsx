@@ -65,7 +65,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     }
     setLoadingPlus(true);
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription_plus' } });
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription_premium' } });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank', 'noopener');
     } catch (err: any) {
