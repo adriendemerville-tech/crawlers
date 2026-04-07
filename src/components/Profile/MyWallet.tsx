@@ -26,6 +26,7 @@ import { TeamSharingSettings } from '@/components/Profile/TeamSharingSettings';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 import { CrawlQuotaCard } from '@/components/Profile/CrawlQuotaCard';
+import { ContentQuotaCard } from '@/components/Profile/ContentQuotaCard';
 
 const translations = {
   fr: {
