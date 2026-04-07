@@ -845,6 +845,28 @@ export function MyTracking() {
                       </CardContent>
                     </Card>
 
+                    {/* Smart Recommendations */}
+                    <SmartRecommendationsPanel
+                      trackedSiteId={h.currentSite.id}
+                      userId={h.user?.id || ''}
+                      language={h.language}
+                      onAction={(rec) => {
+                        // Route actions based on recommendation key
+                        if (rec.recommendation_key === 'connect_gsc') {
+                          // Open external APIs tab
+                          toast.info('Ouvrez l\'onglet Connecteurs pour lier GSC.');
+                        } else if (rec.recommendation_key === 'identity_card') {
+                          h.setIdentityModalSiteId(h.currentSite!.id);
+                        } else if (rec.recommendation_key === 'first_crawl' || rec.recommendation_key === 'site_architecture_review') {
+                          h.setShowCrawlModal(true);
+                        } else if (rec.recommendation_key === 'deploy_corrective') {
+                          h.setActiveSiteForConfigurator(h.currentSite!);
+                        } else if (rec.recommendation_key === 'autopilot') {
+                          h.setAutopilotSite(h.currentSite!);
+                        }
+                      }}
+                    />
+
                     {/* SERP Ranking Banner */}
                     <SerpKpiBanner
                       data={h.latestSerpData}
