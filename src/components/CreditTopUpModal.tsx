@@ -335,7 +335,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
-              <p className="text-2xl font-bold text-foreground">99€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'mo'}</span></p>
+              <p className="text-2xl font-bold text-foreground">79€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'mo'}</span></p>
               <p className="text-[10px] font-medium text-amber-400">{language === 'fr' ? 'Sans engagement' : language === 'es' ? 'Sin compromiso' : 'No commitment'}</p>
               <Button
                 onClick={async () => {

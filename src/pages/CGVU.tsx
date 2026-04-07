@@ -122,7 +122,7 @@ const CGVU = () => {
                 <li><strong>Pack Premium</strong> (45 €) : 150 crédits d'analyse ;</li>
                 
                 <li><strong>Abonnement Pro Agency</strong> (29 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses, 80 créations de pages/mois (Content Architect), 2 comptes inclus (1 collaborateur) ;</li>
-                <li><strong>Abonnement Pro Agency +</strong> (99 €/mois) : tout Pro Agency inclus + 50 000 pages de crawl/mois, Benchmark LLM & Profondeur LLM illimités (cache serveur de 2 heures), 150 créations de pages/mois (Content Architect), Google Business (GBP/GMB), 3 comptes inclus (2 collaborateurs).</li>
+                <li><strong>Abonnement Pro Agency +</strong> (79 €/mois) : tout Pro Agency inclus + 50 000 pages de crawl/mois, Benchmark LLM & Profondeur LLM illimités (cache serveur de 2 heures), 150 créations de pages/mois (Content Architect), Google Business (GBP/GMB), 3 comptes inclus (2 collaborateurs).</li>
               </ul>
             </section>
 
@@ -281,7 +281,7 @@ const CGVU = () => {
               </p>
               <ul>
                 <li><strong>Pro Agency</strong> : 29 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
-                <li><strong>Pro Agency +</strong> : 99 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
+                <li><strong>Pro Agency +</strong> : 79 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
               </ul>
               <p className="mt-2">
                 Le paiement est prélevé automatiquement chaque mois via Stripe. L'utilisateur peut résilier à tout moment sans frais ni pénalités.
@@ -303,7 +303,7 @@ const CGVU = () => {
                 <li>Fonctionnalité Marque Blanche (White Label) — voir Article 8 ;</li>
                 <li>Support prioritaire.</li>
               </ul>
-              <p className="font-semibold mt-4">Pro Agency + (99€/mois) :</p>
+              <p className="font-semibold mt-4">Pro Agency + (79€/mois) :</p>
               <ul>
                 <li>Tout Pro Agency inclus ;</li>
                 <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 50 000 pages/mois ;</li>

@@ -201,9 +201,9 @@ export default function GoogleBusinessPage() {
     {
       q: t3(language, 'Le module Google Business est-il inclus dans l\'abonnement Pro Agency ?', 'Is the Google Business module included in the Pro Agency subscription?', '¿El módulo Google Business está incluido en la suscripción Pro Agency?'),
       a: t3(language,
-        'Le module Google Business est inclus dans l\'abonnement Pro Agency+ à 99 €/mois. L\'abonnement Pro Agency à 29 €/mois inclut tous les autres outils (audits illimités, crawl, Cocoon, Content Architect, Autopilote). Si vous êtes indépendant ou petite entreprise, vous pouvez également utiliser le module à l\'unité via des crédits.',
-        'The Google Business module is included in the Pro Agency+ subscription at €99/month. The Pro Agency subscription at €29/month includes all other tools (unlimited audits, crawl, Cocoon, Content Architect, Autopilot). Independent professionals can also use the module per-use via credits.',
-        'El módulo Google Business está incluido en la suscripción Pro Agency+ a 99 €/mes. La suscripción Pro Agency a 29 €/mes incluye todas las demás herramientas.'
+        'Le module Google Business est inclus dans l\'abonnement Pro Agency+ à 79 €/mois. L\'abonnement Pro Agency à 29 €/mois inclut tous les autres outils (audits illimités, crawl, Cocoon, Content Architect, Autopilote). Si vous êtes indépendant ou petite entreprise, vous pouvez également utiliser le module à l\'unité via des crédits.',
+        'The Google Business module is included in the Pro Agency+ subscription at €79/month. The Pro Agency subscription at €29/month includes all other tools (unlimited audits, crawl, Cocoon, Content Architect, Autopilot). Independent professionals can also use the module per-use via credits.',
+        'El módulo Google Business está incluido en la suscripción Pro Agency+ a 79 €/mes. La suscripción Pro Agency a 29 €/mes incluye todas las demás herramientas.'
       ),
     },
     {
@@ -429,7 +429,7 @@ export default function GoogleBusinessPage() {
                   <tr className="bg-primary/5">
                     <td className="py-3 px-4 font-bold text-primary">Crawlers.fr</td>
                     <td className="py-3 px-4 text-foreground font-medium">
-                      {t3(language, 'Inclus dans Pro Agency+ (99 €/mois)', 'Included in Pro Agency+ (€99/month)', 'Incluido en Pro Agency+ (99 €/mes)')}
+                      {t3(language, 'Inclus dans Pro Agency+ (79 €/mois)', 'Included in Pro Agency+ (€79/month)', 'Incluido en Pro Agency+ (79 €/mes)')}
                     </td>
                     <td className="py-3 px-4 text-foreground">
                       {t3(language,
@@ -520,9 +520,9 @@ export default function GoogleBusinessPage() {
         "description": "Optimisez votre fiche Google Business Profile pour le SEO local et la visibilité dans les moteurs IA (GEO). Score de complétude sur 42 critères, benchmark concurrentiel, recommandations IA.",
         "offers": {
           "@type": "Offer",
-          "price": "99",
+          "price": "79",
           "priceCurrency": "EUR",
-          "description": "Inclus dans l'abonnement Pro Agency+ à 99 €/mois"
+          "description": "Inclus dans l'abonnement Pro Agency+ à 79 €/mois"
         }
       })}} />
     </>
