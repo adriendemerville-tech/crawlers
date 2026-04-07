@@ -56,7 +56,7 @@ Deno.serve(handleRequest(async (req) => {
     const { data: job } = await sb.from('async_jobs').select('status, result_data, error_message, progress').eq('id', pollJobId).single()
     if (!job) return jsonError('Job not found', 404)
     if (job.status === 'completed') return jsonOk({ success: true, data: job.result_data, status: 'completed' })
-    if (job.status === 'failed') return jsonError(job.error_message || 'Job failed', status: 'failed', 500)
+    if (job.status === 'failed') return jsonError(job.error_message || 'Job failed', 500)
     return jsonOk({ status: job.status, progress: job.progress || 0 })
   }
 
@@ -161,7 +161,7 @@ Deno.serve(handleRequest(async (req) => {
     if (!isServiceRole) {
       const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
       if (!fairUse.allowed) {
-        return jsonError('Rate limit exceeded', details: fairUse, 429)
+        return jsonError('Rate limit exceeded', 429)
       }
     }
 
@@ -214,24 +214,18 @@ Deno.serve(handleRequest(async (req) => {
 
       if (!monthlyFairUse.allowed) {
         if (isActiveSubscriber) {
-          return jsonError('Monthly content creation limit reached',
-            details: monthlyFairUse, 429)
+          return jsonError('Monthly content creation limit reached', 429)
         }
         const result = await deductCredits()
         if (!result.success) {
-          return jsonError('Crédits insuffisants',
-            credits_required: CONTENT_CREDIT_COST,
-            credits_balance: userProfile?.credits_balance ?? 0,
-            details: monthlyFairUse, 402)
+          return jsonError('Crédits insuffisants', 402)
         }
         creditsDeducted = true
         console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
       } else if (!isActiveSubscriber) {
         const result = await deductCredits()
         if (!result.success) {
-          return jsonError('Crédits insuffisants',
-            credits_required: CONTENT_CREDIT_COST,
-            credits_balance: userProfile?.credits_balance ?? 0, 402)
+          return jsonError('Crédits insuffisants', 402)
         }
         creditsDeducted = true
         console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
@@ -721,6 +715,15 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     const jargonDist = typeof siteIdentity?.jargon_distance === 'number' ? siteIdentity.jargon_distance : null
 
     // ── BUILD CONTENT BRIEF (deterministic, pre-LLM) ──
+    // Load Voice DNA if available
+    let voiceDna: any = null;
+    if (resolvedSiteId) {
+      try {
+        const { data: siteData } = await serviceClient.from('tracked_sites').select('voice_dna').eq('id', resolvedSiteId).single();
+        voiceDna = siteData?.voice_dna || null;
+      } catch {}
+    }
+
     const contentBrief = await buildContentBrief({
       page_type: page_type as BriefPageType,
       keyword,
@@ -733,11 +736,12 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
       jargon_distance: jargonDist,
       language: language_code,
       secondary_keywords: workbenchKeywords.map((k: any) => k.payload?.keyword || k.title).filter(Boolean).slice(0, 10),
+      voice_dna: voiceDna,
       supabase: serviceClient,
     })
     const briefBlock = briefToPromptBlock(contentBrief)
     const brief = contentBrief // alias used downstream
-    console.log(`[content-advisor] ContentBrief built: ${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}, links=${contentBrief.internal_links.length}`)
+    console.log(`[content-advisor] ContentBrief built: ${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}, links=${contentBrief.internal_links.length}, voice_dna=${!!voiceDna}`)
 
     // ── Parse client_targets for audience context ──
     let audienceBlock = ''

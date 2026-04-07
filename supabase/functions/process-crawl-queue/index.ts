@@ -1234,4 +1234,23 @@ Donne 5-8 recommandations max, classées par impact.`;
   }).eq('id', job.id);
 
   console.log(`[Worker] ✅ Job ${job.id} finalized: ${pages.length} pages, avg score ${avgScore}/200`);
+
+  // ── Trigger Voice Tone Analysis (fire-and-forget) ──
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    fetch(`${supabaseUrl}/functions/v1/analyze-voice-tone`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mode: 'analyze_pages', crawl_id: job.crawl_id }),
+    }).then(() => {
+      console.log(`[Worker] 🎤 Voice tone analysis triggered for crawl ${job.crawl_id}`);
+    }).catch((e: any) => {
+      console.warn(`[Worker] Voice tone trigger failed (non-blocking):`, e);
+    });
+  } catch (e) {
+    console.warn(`[Worker] Voice tone trigger setup failed:`, e);
+  }
 }

@@ -87,6 +87,20 @@ export interface ContentBrief {
   language: string;
   target_url: string;
   domain: string;
+
+  // ── Voice DNA (editorial identity) ──
+  voice_dna?: {
+    dominant_register?: string;
+    dominant_posture?: string;
+    dominant_addressing?: string;
+    sentence_style?: string;
+    lexical_density?: string;
+    emotional_tone?: string;
+    sample_excerpts?: string[];
+    tone_override?: Record<string, any>;
+    forbidden_words?: string[];
+    mandatory_words?: string[];
+  };
 }
 
 // ═══ CONFIGURATION PAR TYPE DE PAGE ═══
@@ -379,6 +393,8 @@ export interface BuildContentBriefInput {
   jargon_distance?: number | null;
   language?: string;
   secondary_keywords?: string[];
+  // Voice DNA from tracked_sites
+  voice_dna?: any;
   // Supabase client for internal links resolution
   supabase?: any;
 }
@@ -453,6 +469,20 @@ export async function buildContentBrief(input: BuildContentBriefInput): Promise<
     language,
     target_url,
     domain,
+
+    // Voice DNA injection
+    voice_dna: input.voice_dna ? {
+      dominant_register: input.voice_dna.dominant_register,
+      dominant_posture: input.voice_dna.dominant_posture,
+      dominant_addressing: input.voice_dna.dominant_addressing,
+      sentence_style: input.voice_dna.sentence_style,
+      lexical_density: input.voice_dna.lexical_density,
+      emotional_tone: input.voice_dna.emotional_tone,
+      sample_excerpts: (input.voice_dna.sample_excerpts || []).slice(0, 2),
+      tone_override: input.voice_dna.tone_overrides?.[page_type] || undefined,
+      forbidden_words: input.voice_dna.forbidden_words,
+      mandatory_words: input.voice_dna.mandatory_words,
+    } : undefined,
   };
 }
 
@@ -519,6 +549,35 @@ export function briefToPromptBlock(brief: ContentBrief): string {
   lines.push(`Signaux E-E-A-T obligatoires: ${brief.eeat_signals.join(', ')}`);
   if (brief.freshness_markers) lines.push(`Fraîcheur: mentionner l'année en cours, dater les informations`);
   lines.push('');
+
+  // Voice DNA
+  if (brief.voice_dna) {
+    const v = brief.voice_dna;
+    lines.push(`── VOICE DNA (IDENTITÉ ÉDITORIALE — OBLIGATOIRE) ──`);
+    if (v.dominant_register) lines.push(`Registre: ${v.dominant_register}`);
+    if (v.dominant_posture) lines.push(`Posture: ${v.dominant_posture}`);
+    if (v.dominant_addressing) lines.push(`Adresse: ${v.dominant_addressing}`);
+    if (v.sentence_style) lines.push(`Style de phrases: ${v.sentence_style}`);
+    if (v.lexical_density) lines.push(`Densité lexicale: ${v.lexical_density}`);
+    if (v.emotional_tone) lines.push(`Tonalité émotionnelle: ${v.emotional_tone}`);
+    if (v.tone_override) {
+      lines.push(`⚠️ OVERRIDE pour ce type de page: ${JSON.stringify(v.tone_override)}`);
+    }
+    if (v.forbidden_words?.length) {
+      lines.push(`MOTS INTERDITS (ne jamais utiliser): ${v.forbidden_words.join(', ')}`);
+    }
+    if (v.mandatory_words?.length) {
+      lines.push(`MOTS OBLIGATOIRES (à placer naturellement): ${v.mandatory_words.join(', ')}`);
+    }
+    if (v.sample_excerpts?.length) {
+      lines.push(`Exemples de référence du ton attendu:`);
+      for (const ex of v.sample_excerpts) {
+        lines.push(`  « ${ex.slice(0, 200)}… »`);
+      }
+    }
+    lines.push(`Tu DOIS respecter cette identité éditoriale. Le contenu doit sonner comme s'il venait du même auteur.`);
+    lines.push('');
+  }
 
   lines.push(`═══ FIN CONTENT BRIEF ═══`);
 

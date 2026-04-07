@@ -865,6 +865,14 @@ RÈGLES:
     const topContentItem = contentItems[0];
     const briefPageType = topContentItem?._detected_page_type || 'article';
     const primaryKw = topContentItem?.payload?.keyword || topContentItem?.payload?.target_keyword || topContentItem?.title || '';
+    
+    // Load Voice DNA
+    let voiceDna: any = null;
+    try {
+      const { data: siteVoice } = await supabase.from('tracked_sites').select('voice_dna').eq('id', context.tracked_site_id).single();
+      voiceDna = siteVoice?.voice_dna || null;
+    } catch {}
+
     const contentBrief = await buildContentBrief({
       page_type: briefPageType,
       keyword: primaryKw,
@@ -877,8 +885,9 @@ RÈGLES:
       jargon_distance: context.siteInfo?.jargon_distance ?? null,
       language: 'fr',
       secondary_keywords: keywordEnrichment.totalKeywords > 0
-        ? Array.from({ length: Math.min(10, keywordEnrichment.totalKeywords) }).map((_, i) => '') // filled from kwEnrichment
+        ? Array.from({ length: Math.min(10, keywordEnrichment.totalKeywords) }).map((_, i) => '')
         : [],
+      voice_dna: voiceDna,
       supabase,
     });
     const briefBlock = briefToPromptBlock(contentBrief);
