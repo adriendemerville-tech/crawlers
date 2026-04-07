@@ -280,7 +280,7 @@ const CGVU = () => {
                 Les abonnements Crawlers sont proposés <strong>sans engagement</strong> :
               </p>
               <ul>
-                <li><strong>Pro Agency</strong> : 59 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
+                <li><strong>Pro Agency</strong> : 29 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
                 <li><strong>Pro Agency +</strong> : 99 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
               </ul>
               <p className="mt-2">

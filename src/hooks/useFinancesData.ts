@@ -266,7 +266,7 @@ export function useFinancesData() {
       const payingCount = payingProfiles?.length || 0;
       const creditsPurchased = (purchaseRes.data || []).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
       const bundleMrr = (bundleRes.data || []).reduce((sum: number, s: { monthly_price_cents: number }) => sum + ((s.monthly_price_cents || 0) / 100), 0);
-      setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr: payingCount * 59 + bundleMrr, bundleMrr });
+      setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr: payingCount * 29 + bundleMrr, bundleMrr });
 
       if (payingProfiles && payingProfiles.length > 0) {
         const payingUserIds = new Set(payingProfiles.map(p => p.user_id));
