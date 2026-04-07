@@ -168,7 +168,7 @@ export async function checkFairUse(
 
 const MONTHLY_LIMITS: Record<string, Record<string, number>> = {
   free:            { content_creation: 5 },
-  agency_pro:      { content_creation: 100 },
+  agency_pro:      { content_creation: 80 },
   agency_premium:  { content_creation: 150 },
 };
 
