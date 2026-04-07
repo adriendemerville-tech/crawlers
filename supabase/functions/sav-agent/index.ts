@@ -1016,8 +1016,77 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           console.error("Supervisor directive error:", e);
         }
       }
+
+      // ── UX Agent directive detection (admin creator only) ──
+      const uxDirectiveMatch = lastUserMsg.match(/^\/ux\s+(.+)/is);
+      const uxNaturalKeywords = [
+        "agent ux", "dis à l'agent ux", "dis a l'agent ux",
+        "demande à l'agent ux", "demande a l'agent ux",
+        "instruction ux", "directive ux", "directive design",
+        "l'agent ux doit", "agent ux doit",
+        "refonte", "redesign", "nouveau composant",
+        "améliore le design", "améliore l'ux", "optimise la conversion",
+      ];
+      const isUxDirective = uxDirectiveMatch || uxNaturalKeywords.some(kw => lowerMsgCheck.includes(kw));
+
+      if (isUxDirective && !isCreator) {
+        return jsonOk({ reply: "⚠️ Seul l'administrateur créateur peut transmettre des directives à l'Agent UX.", conversation_id });
+      }
+
+      if (isUxDirective && isCreator) {
+        const { data: bridgeConf4 } = await sb.from("admin_dashboard_config").select("card_order").eq("user_id", user_id).maybeSingle();
+        const bridgeConfig4 = (bridgeConf4?.card_order as any) || {};
+        if (bridgeConfig4.felix_ux_bridge === false) {
+          return jsonOk({ reply: "⚠️ Le pont Félix → Agent UX est actuellement **désactivé**. Vous pouvez le réactiver depuis le Hub Intelligence (admin).", conversation_id });
+        }
+        try {
+          const directiveText = uxDirectiveMatch
+            ? uxDirectiveMatch[1].trim()
+            : lastUserMsg;
+
+          const compMatch = directiveText.match(/(?:composant|component|section|page)\s+([A-Za-z0-9_-]+)/i);
+          const targetComponent = compMatch ? compMatch[1] : null;
+          const urlMatch = directiveText.match(/(?:sur|pour|page|url)\s+(\/[^\s,]+|https?:\/\/[^\s,]+)/i);
+          const targetUrl = urlMatch ? urlMatch[1] : null;
+
+          await sb.from("agent_ux_directives").insert({
+            user_id,
+            directive_text: directiveText,
+            target_component: targetComponent,
+            target_url: targetUrl,
+            status: 'pending',
+          });
+
+          const confirmReply = `✅ Directive transmise à l'Agent UX :\n\n> ${directiveText}\n\n${targetComponent ? `Composant cible : \`${targetComponent}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent UX intégrera cette instruction lors de sa prochaine analyse.`;
+
+          let savedConvId = conversation_id;
+          try {
+            const allMessages = [...messages, { role: "assistant", content: confirmReply }];
+            if (conversation_id) {
+              await sb.from("sav_conversations").update({
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).eq("id", conversation_id);
+            } else {
+              const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+              const { data: newConv } = await sb.from("sav_conversations").insert({
+                user_id,
+                user_email: prof?.email || null,
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).select("id").single();
+              savedConvId = newConv?.id;
+            }
+          } catch (e) {
+            console.error("Save UX directive conv error:", e);
+          }
+
+          return jsonOk({ reply: confirmReply, conversation_id: savedConvId || conversation_id });
+        } catch (e) {
+          console.error("UX directive error:", e);
+        }
+      }
       
-      const backendKeywords = [
         "combien", "table", "base de données", "database", "requête", "query",
         "utilisateurs", "users", "profils", "profiles", "edge function",
         "erreurs", "errors", "logs", "statistiques", "stats", "métriques",
