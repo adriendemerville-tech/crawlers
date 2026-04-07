@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';
@@ -18,7 +18,11 @@ import {
 import { motion } from 'framer-motion';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
 import { CreditCoin } from '@/components/ui/CreditCoin';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
+
+const CreditTopUpModal = lazy(() => import('@/components/CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
 
 /* ─── Translations ─── */
 const t = {
@@ -486,6 +490,9 @@ const fadeUp = {
 /* ─── Component ─── */
 const ContentArchitectPage = memo(() => {
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const { balance } = useCredits();
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
   const tr = t[language];
 
   return (
@@ -829,12 +836,19 @@ const ContentArchitectPage = memo(() => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/tarifs">
-                  <Button variant="outline" size="lg" className="w-full font-semibold">
+                {user ? (
+                  <Button variant="outline" size="lg" className="w-full font-semibold" onClick={() => setShowTopUpModal(true)}>
                     <Coins className="h-5 w-5 mr-2" />
                     {language === 'en' ? 'Buy credits' : language === 'es' ? 'Comprar créditos' : 'Acheter des crédits'}
                   </Button>
-                </Link>
+                ) : (
+                  <Link to="/auth" className="w-full">
+                    <Button variant="outline" size="lg" className="w-full font-semibold">
+                      <Coins className="h-5 w-5 mr-2" />
+                      {language === 'en' ? 'Sign up to buy credits' : language === 'es' ? 'Regístrese para comprar' : 'S\'inscrire pour acheter'}
+                    </Button>
+                  </Link>
+                )}
               </div>
               {/* 3 subscription cards — from PricingPlansSection inline */}
               <div className="md:col-span-3">
@@ -884,6 +898,15 @@ const ContentArchitectPage = memo(() => {
         </section>
       </div>
       <Footer />
+      {showTopUpModal && user && (
+        <Suspense fallback={null}>
+          <CreditTopUpModal
+            open={showTopUpModal}
+            onOpenChange={setShowTopUpModal}
+            currentBalance={balance}
+          />
+        </Suspense>
+      )}
     </>
   );
 });
