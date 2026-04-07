@@ -307,6 +307,7 @@ interface CrawlResult {
   ai_recommendations: any[];
   created_at: string;
   completed_at: string | null;
+  tone_consistency_score: number | null;
 }
 
 interface CustomSelector {
