@@ -381,7 +381,6 @@ async function resolveInternalLinks(
 // ═══ MAIN BUILDER ═══
 
 export interface BuildContentBriefInput {
-export interface BuildContentBriefInput {
   page_type: PageType;
   keyword: string;
   target_url: string;
