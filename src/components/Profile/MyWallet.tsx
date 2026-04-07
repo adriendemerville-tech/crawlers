@@ -341,8 +341,9 @@ export function MyWallet() {
               </TabsContent>
 
               {/* Counters Tab */}
-              <TabsContent value="counters" className="mt-0">
+              <TabsContent value="counters" className="mt-0 space-y-4">
                 <CrawlQuotaCard />
+                <ContentQuotaCard />
               </TabsContent>
 
               {/* Invoices Tab */}
