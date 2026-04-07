@@ -137,12 +137,8 @@ function HeroSectionComponent() {
 
         {/* Secondary CTAs */}
         <div className="mt-6 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-          <Link to="/tarifs" className="text-sm font-medium text-primary hover:text-primary/80 underline underline-offset-4 transition-colors">
+          <Link to="/auth" className="text-sm font-medium text-primary hover:text-primary/80 underline underline-offset-4 transition-colors">
             {language === 'fr' ? '25 crédits offerts à l\'inscription →' : language === 'es' ? '25 créditos gratis al registrarse →' : '25 free credits on signup →'}
-          </Link>
-          <span className="hidden sm:inline text-muted-foreground/30">|</span>
-          <Link to="/pro-agency" className="text-sm font-medium text-violet-400 hover:text-violet-300 underline underline-offset-4 transition-colors">
-            {language === 'fr' ? 'Pro Agency dès 29€/mois →' : language === 'es' ? 'Pro Agency desde 29€/mes →' : 'Pro Agency from €29/month →'}
           </Link>
         </div>
       </div>

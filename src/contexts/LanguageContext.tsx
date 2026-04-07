@@ -330,6 +330,10 @@ const translations: Record<Language, Translations> = {
         {
           question: "Pourquoi mon score PageSpeed affecte-t-il ma visibilité IA ?",
           answer: "Un site lent peut empêcher les crawlers IA de charger correctement votre contenu. Les Core Web Vitals (LCP, FID, CLS) influencent non seulement le SEO classique mais aussi la capacité des IA à analyser votre site. Un bon score PageSpeed garantit une meilleure indexation."
+        },
+        {
+          question: "Pourquoi Crawlers.fr n'est-il pas plus cher ?",
+          answer: "Nous appliquons le principe du « dividende de l'IA » : les coûts d'infrastructure et de calcul baissent structurellement grâce aux progrès des modèles (caching agressif, modèles légers pour les tâches courantes, architecture serverless). Plutôt que de maximiser nos marges, nous répercutons ces gains sur nos prix pour rendre l'audit SEO/GEO professionnel accessible à tous — freelances, PME et agences. C'est notre avantage compétitif durable."
         }
       ],
     },
@@ -520,6 +524,10 @@ const translations: Record<Language, Translations> = {
         {
           question: 'Why does my PageSpeed score affect AI visibility?',
           answer: 'A slow site can prevent AI crawlers from properly loading your content. Core Web Vitals (LCP, FID, CLS) affect not only classic SEO but also the ability of AI to analyze your site. A good PageSpeed score ensures better indexation.'
+        },
+        {
+          question: "Why isn't Crawlers.fr more expensive?",
+          answer: "We apply the 'AI dividend' principle: infrastructure and compute costs are structurally declining thanks to model improvements (aggressive caching, lightweight models for routine tasks, serverless architecture). Rather than maximizing margins, we pass these savings on to our pricing to make professional SEO/GEO auditing accessible to everyone — freelancers, SMBs and agencies. That's our sustainable competitive edge."
         }
       ],
     },
@@ -710,6 +718,10 @@ const translations: Record<Language, Translations> = {
         {
           question: '¿Por qué mi puntuación PageSpeed afecta mi visibilidad IA?',
           answer: 'Un sitio lento puede impedir que los crawlers de IA carguen correctamente tu contenido. Los Core Web Vitals (LCP, FID, CLS) afectan no solo el SEO clásico sino también la capacidad de la IA para analizar tu sitio. Una buena puntuación PageSpeed garantiza una mejor indexación.'
+        },
+        {
+          question: "¿Por qué Crawlers.fr no es más caro?",
+          answer: "Aplicamos el principio del 'dividendo de la IA': los costos de infraestructura y cómputo bajan estructuralmente gracias a los avances de los modelos (caché agresivo, modelos ligeros para tareas rutinarias, arquitectura serverless). En lugar de maximizar márgenes, trasladamos estos ahorros a nuestros precios para hacer la auditoría SEO/GEO profesional accesible a todos — freelancers, pymes y agencias. Es nuestra ventaja competitiva sostenible."
         }
       ],
     },

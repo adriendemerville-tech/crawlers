@@ -75,6 +75,14 @@ export default function Faq() {
                 "@type": "Answer",
                 "text": "Crawlers.fr interroge simultanément ChatGPT, Gemini, Perplexity et Claude pour calculer votre score de visibilité LLM et votre Part de Voix dans les moteurs de réponse IA."
               }
+            },
+            {
+              "@type": "Question",
+              "name": "Pourquoi Crawlers.fr n'est-il pas plus cher ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Nous appliquons le principe du « dividende de l'IA » : les coûts d'infrastructure baissent structurellement grâce aux progrès des modèles. Plutôt que de maximiser nos marges, nous répercutons ces gains sur nos prix pour rendre l'audit SEO/GEO professionnel accessible à tous."
+              }
             }
           ]
         })}</script>
