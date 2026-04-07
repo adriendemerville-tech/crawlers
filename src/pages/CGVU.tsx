@@ -293,7 +293,7 @@ const CGVU = () => {
                 <li>Accès illimité à l'ensemble des outils d'analyse et d'audit ;</li>
                 <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 5 000 pages/mois ;</li>
                 <li><strong>Module Cocoon</strong> : graphe sémantique illimité ;</li>
-                <li><strong>Content Architect</strong> : 100 contenus/mois (Fair Use) ;</li>
+                <li><strong>Content Architect</strong> : 80 contenus/mois (Fair Use) ;</li>
                 <li><strong>Autopilote Parménion</strong> : maintenance prédictive IA (2-10 actions/cycle) ;</li>
                 <li><strong>Connexion CMS directe</strong> : WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo ;</li>
                 <li><strong>Google Search Console & GA4</strong> : intégration OAuth ;</li>

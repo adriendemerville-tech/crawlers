@@ -301,7 +301,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li>• <strong className="text-foreground">Audits gratuits</strong> : Crawlers IA, PageSpeed, Score GEO — sans inscription</li>
                     <li>• <strong className="text-foreground">Audit Expert</strong> : Gratuit avec inscription (168 critères)</li>
                     <li>• <strong className="text-foreground">Crédits</strong> : Pack Essentiel 10 crédits (5€), Lite 50 crédits (19€), Premium 150 crédits (45€), Ultime 500 crédits (99€)</li>
-                    <li>• <strong className="text-foreground">Pro Agency</strong> : 29€/mois — 5 000 pages crawlées, 100 pages Content Architect, marque blanche + 2 comptes</li>
+                    <li>• <strong className="text-foreground">Pro Agency</strong> : 29€/mois — 5 000 pages crawlées, 80 pages Content Architect, marque blanche + 2 comptes</li>
                     <li>• <strong className="text-foreground">Pro Agency+</strong> : 99€/mois — 50 000 pages crawlées, 150 pages Content Architect, API Marina, logs serveur, SEA→SEO Bridge, 3 comptes</li>
                     <li>• <strong className="text-foreground">Enterprise</strong> : Sur demande — serveur dédié, utilisateurs illimités, SLA garanti</li>
                   </ul>
@@ -356,7 +356,7 @@ const ComparatifCrawlersSemrush = () => {
                   <FileText className="h-4 w-4" /> Content Architect : génération de contenu IA
                 </h3>
                 <p>
-                  <Link to="/content-architect" className="text-primary hover:underline font-medium">Content Architect</Link> génère des pages complètes, optimisées simultanément pour le SEO et le GEO : hiérarchie sémantique, données structurées, maillage interne, signaux E-E-A-T. Jusqu'à 100 pages/mois (Pro) ou 150 pages/mois (Pro+).
+                  <Link to="/content-architect" className="text-primary hover:underline font-medium">Content Architect</Link> génère des pages complètes, optimisées simultanément pour le SEO et le GEO : hiérarchie sémantique, données structurées, maillage interne, signaux E-E-A-T. Jusqu'à 80 pages/mois (Pro) ou 150 pages/mois (Pro+).
                 </p>
 
                 <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
