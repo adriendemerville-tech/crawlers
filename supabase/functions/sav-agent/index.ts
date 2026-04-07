@@ -1087,6 +1087,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         }
       }
       
+      const backendKeywords = [
         "combien", "table", "base de données", "database", "requête", "query",
         "utilisateurs", "users", "profils", "profiles", "edge function",
         "erreurs", "errors", "logs", "statistiques", "stats", "métriques",
