@@ -260,10 +260,10 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               </h3>
               <p className="text-sm text-muted-foreground">
                 {language === 'fr'
-                  ? 'Rapports et correctifs illimités, 5 000 pages de crawl/mois incluses, marque blanche avec votre logo, et support prioritaire — 29€/mois sans engagement.'
+                  ? 'Rapports et correctifs illimités, 5 000 pages de crawl/mois, marque blanche et support prioritaire.'
                   : language === 'es'
-                    ? 'Informes y correctivos ilimitados, 5 000 páginas de crawl/mes incluidas, marca blanca con su logo, y soporte prioritario — 29€/mes sin compromiso.'
-                    : 'Unlimited reports & fixes, 5,000 crawl pages/month included, white-label reports with your logo, and priority support — €29/month, no commitment.'}
+                    ? 'Informes y correctivos ilimitados, 5 000 páginas de crawl/mes, marca blanca y soporte prioritario.'
+                    : 'Unlimited reports & fixes, 5,000 crawl pages/month, white-label reports and priority support.'}
               </p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-1">
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Audits ∞' : language === 'es' ? 'Auditorías ∞' : 'Audits ∞'}</span>
@@ -323,10 +323,10 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               </h3>
               <p className="text-sm text-muted-foreground">
                 {language === 'fr'
-                  ? 'Tout Pro Agency + 50 000 pages de crawl/mois, slider étendu à 50 pages par analyse. Conçu pour les grands sites et portefeuilles clients étendus.'
+                  ? 'Tout Pro Agency + 50 000 pages crawl/mois, slider 50 pages/analyse. Pour les grands sites et portefeuilles clients étendus.'
                   : language === 'es'
-                    ? 'Todo Pro Agency + 50 000 páginas de crawl/mes, slider extendido a 50 páginas por análisis. Diseñado para grandes sitios y carteras de clientes amplias.'
-                    : 'Everything in Pro Agency + 50,000 crawl pages/month, extended slider up to 50 pages per analysis. Built for large sites and extended client portfolios.'}
+                    ? 'Todo Pro Agency + 50 000 páginas crawl/mes, slider 50 páginas/análisis. Para grandes sitios y carteras de clientes amplias.'
+                    : 'Everything in Pro Agency + 50,000 crawl pages/month, 50 pages/scan. For large sites and extended client portfolios.'}
               </p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-1">
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Globe className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? '50 000 pages crawl/mois' : language === 'es' ? '50 000 páginas crawl/mes' : '50,000 crawl pages/mo'}</span>
