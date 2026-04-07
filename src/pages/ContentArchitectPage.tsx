@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';
@@ -18,7 +18,11 @@ import {
 import { motion } from 'framer-motion';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
 import { CreditCoin } from '@/components/ui/CreditCoin';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
+
+const CreditTopUpModal = lazy(() => import('@/components/CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
 
 /* ─── Translations ─── */
 const t = {
