@@ -740,6 +740,47 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             agentReport += "\n";
           }
 
+          // Query UX directives
+          if (aboutUx || aboutAll) {
+            const { data: uxDirectives } = await sb.from("agent_ux_directives")
+              .select("id, directive_text, status, created_at, consumed_at, target_component, target_url")
+              .eq("user_id", user_id)
+              .order("created_at", { ascending: false })
+              .limit(10);
+
+            agentReport += "### 🎨 Agent UX\n";
+            if (uxDirectives && uxDirectives.length > 0) {
+              const pending = uxDirectives.filter(d => d.status === 'pending');
+              const consumed = uxDirectives.filter(d => d.status === 'consumed' || d.consumed_at);
+              agentReport += `- **${pending.length}** directive(s) en attente\n`;
+              agentReport += `- **${consumed.length}** directive(s) consommée(s)\n`;
+              agentReport += `- Dernière directive : ${new Date(uxDirectives[0].created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}\n`;
+              agentReport += "\n**Dernières directives :**\n";
+              for (const d of uxDirectives.slice(0, 5)) {
+                const statusIcon = d.consumed_at ? "✅" : "⏳";
+                agentReport += `${statusIcon} _${new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}_ — ${d.directive_text.slice(0, 80)}${d.directive_text.length > 80 ? '...' : ''}\n`;
+              }
+
+              // UX proposals
+              const { data: uxProposals, count: uxProposalCount } = await sb.from("cto_code_proposals")
+                .select("id, title, status, created_at, agent_source", { count: "exact" })
+                .eq("agent_source", "ux")
+                .order("created_at", { ascending: false })
+                .limit(5);
+              if (uxProposals && uxProposals.length > 0) {
+                const pendingP = uxProposals.filter(p => p.status === 'pending');
+                agentReport += `\n**Propositions UX :** ${uxProposalCount} total, ${pendingP.length} en attente\n`;
+                for (const p of uxProposals.slice(0, 3)) {
+                  const icon = p.status === 'approved' ? '✅' : p.status === 'rejected' ? '❌' : '⏳';
+                  agentReport += `${icon} ${p.title?.slice(0, 60) || 'Sans titre'} (${p.status})\n`;
+                }
+              }
+            } else {
+              agentReport += "Aucune directive transmise.\n";
+            }
+            agentReport += "\n";
+          }
+
           if (agentReport.length > 3000) agentReport = agentReport.substring(0, 2997) + "...";
 
           // Save conversation
