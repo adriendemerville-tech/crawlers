@@ -589,6 +589,18 @@ const Index = () => {
         <meta name="twitter:title" content={seoTitle} />
         <meta name="twitter:description" content={seoDescription} />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": t.faq.items.map(item => ({
+            "@type": "Question",
+            "name": item.question,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": item.answer
+            }
+          }))
+        })}</script>
       </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
