@@ -599,18 +599,33 @@ const Index = () => {
         {/* Pro Agency hero */}
         <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-14 sm:py-20">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
-            <div className="relative mx-auto max-w-3xl px-4 text-center">
+            <div className="relative mx-auto max-w-4xl px-4 text-center">
               <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                {language === 'fr' ? 'Passez au niveau supérieur avec ' : language === 'es' ? 'Sube de nivel con ' : 'Level up with '}
-                <span className="bg-gradient-to-r from-violet-500 to-amber-400 bg-clip-text text-transparent">Pro Agency</span>
+                {language === 'fr' ? 'Gérez 30 clients. Audits illimités. ' : language === 'es' ? 'Gestiona 30 clientes. Auditorías ilimitadas. ' : 'Manage 30 clients. Unlimited audits. '}
+                <span className="bg-gradient-to-r from-violet-500 to-amber-400 bg-clip-text text-transparent">
+                  {language === 'fr' ? 'Zéro limite.' : language === 'es' ? 'Sin límites.' : 'Zero limits.'}
+                </span>
               </h2>
               <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
                 {language === 'fr'
-                  ? 'Suivi de 30 sites, Code Architect multi-pages, crawl 5 000 pages/mois, rapports illimités et correctifs automatiques.'
+                  ? 'Rapports marque blanche, correctifs auto-déployés, crawl 5 000 pages/mois et agents IA — tout inclus.'
                   : language === 'es'
-                  ? 'Seguimiento de 30 sitios, Code Architect multi-páginas, crawl de 5 000 páginas/mes, informes ilimitados y correcciones automáticas.'
-                  : '30-site tracking, multi-page Code Architect, 5,000 pages/month crawl, unlimited reports & automatic fixes.'}
+                  ? 'Informes marca blanca, correcciones auto-desplegadas, crawl 5 000 páginas/mes y agentes IA — todo incluido.'
+                  : 'White-label reports, auto-deployed fixes, 5,000 pages/month crawl & AI agents — all included.'}
               </p>
+              {/* Mini stats */}
+              <div className="mx-auto mb-6 grid max-w-md grid-cols-3 gap-3">
+                {[
+                  { v: '∞', l: language === 'fr' ? 'Audits' : 'Audits' },
+                  { v: '30', l: language === 'fr' ? 'Sites' : 'Sites' },
+                  { v: '5K', l: language === 'fr' ? 'Pages/mois' : 'Pages/mo' },
+                ].map((s, i) => (
+                  <div key={i} className="rounded-lg border border-border/50 bg-card/30 px-3 py-2 text-center">
+                    <div className="text-xl font-extrabold text-foreground">{s.v}</div>
+                    <div className="text-[10px] text-muted-foreground">{s.l}</div>
+                  </div>
+                ))}
+              </div>
               <div className="flex flex-col items-center gap-4 mb-6">
                 <div className="flex items-baseline gap-1">
                   <span className="text-sm text-muted-foreground mr-1">{language === 'fr' ? 'à partir de' : language === 'es' ? 'desde' : 'from'}</span>

@@ -135,10 +135,16 @@ function HeroSectionComponent() {
           </Link>
         </div>
 
-        {/* Audit Expert info */}
-        <p className="mt-6 sm:mt-10 text-sm sm:text-lg font-medium text-muted-foreground text-center sm:text-right w-full" style={{ maxWidth: 'min(90%, 44rem)', marginLeft: 'auto', marginRight: 'auto' }}>
-          {language === 'es' ? '168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? '168 SEO/GEO criteria verified, cross-referenced and contextualized.' : '168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
-        </p>
+        {/* Secondary CTAs */}
+        <div className="mt-6 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+          <Link to="/tarifs" className="text-sm font-medium text-primary hover:text-primary/80 underline underline-offset-4 transition-colors">
+            {language === 'fr' ? '25 crédits offerts à l\'inscription →' : language === 'es' ? '25 créditos gratis al registrarse →' : '25 free credits on signup →'}
+          </Link>
+          <span className="hidden sm:inline text-muted-foreground/30">|</span>
+          <Link to="/pro-agency" className="text-sm font-medium text-violet-400 hover:text-violet-300 underline underline-offset-4 transition-colors">
+            {language === 'fr' ? 'Pro Agency dès 29€/mois →' : language === 'es' ? 'Pro Agency desde 29€/mes →' : 'Pro Agency from €29/month →'}
+          </Link>
+        </div>
       </div>
     </section>
   );

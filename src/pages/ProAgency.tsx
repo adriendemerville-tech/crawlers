@@ -25,13 +25,19 @@ const translations = {
   fr: {
     pageTitle: 'Pro Agency - Abonnement SEO & GEO illimité | Crawlers.fr',
     metaDescription: 'Découvrez l\'offre Pro Agency de Crawlers.fr : rapports SEO/GEO illimités, codes correctifs illimités, marque blanche et multi-comptes pour agences et freelances SEO. 29€/mois.',
-    heroTitle: 'Passez au niveau supérieur',
-    heroTitleAccent: 'avec Pro Agency',
-    heroSubtitle: 'L\'abonnement tout-en-un pour les professionnels du SEO et du GEO qui veulent scaler leur activité sans limites.',
+    heroTitle: 'Gérez 30 clients. Audits illimités.',
+    heroTitleAccent: 'Zéro limite.',
+    heroSubtitle: 'Rapports marque blanche, correctifs auto-déployés, crawl 5 000 pages/mois, agents IA et cocon sémantique 3D — tout inclus à partir de 29€/mois.',
+    heroStats: [
+      { value: '∞', label: 'Audits SEO & GEO' },
+      { value: '30', label: 'Sites suivis' },
+      { value: '5 000', label: 'Pages crawlées/mois' },
+      { value: '< 5 min', label: 'Par audit complet' },
+    ],
     price: '29€',
     period: '/mois',
-    badgeText: 'Tout illimité',
-    ctaSubscribe: 'S\'abonner maintenant',
+    badgeText: '100 premiers inscrits — tarif garanti à vie',
+    ctaSubscribe: 'S\'abonner — 29€/mois',
     ctaLoading: 'Redirection vers le paiement...',
     ctaLoginRequired: 'Connectez-vous pour vous abonner',
     ctaLogin: 'Créer un compte gratuit',
@@ -172,13 +178,19 @@ const translations = {
   en: {
     pageTitle: 'Pro Agency - Unlimited SEO & GEO Subscription | Crawlers.fr',
     metaDescription: 'Discover Crawlers.fr Pro Agency: unlimited SEO/GEO reports, unlimited corrective code, white label and multi-accounts for agencies and freelancers. €29/month.',
-    heroTitle: 'Take your business to the next level',
-    heroTitleAccent: 'with Pro Agency',
-    heroSubtitle: 'The all-in-one subscription for SEO and GEO professionals who want to scale without limits.',
+    heroTitle: 'Manage 30 clients. Unlimited audits.',
+    heroTitleAccent: 'Zero limits.',
+    heroSubtitle: 'White-label reports, auto-deployed fixes, 5,000 pages/month crawl, AI agents & 3D semantic cocoon — all included from €29/month.',
+    heroStats: [
+      { value: '∞', label: 'SEO & GEO Audits' },
+      { value: '30', label: 'Tracked sites' },
+      { value: '5,000', label: 'Crawled pages/mo' },
+      { value: '< 5 min', label: 'Per full audit' },
+    ],
     price: '€29',
     period: '/month',
-    badgeText: 'All unlimited',
-    ctaSubscribe: 'Subscribe now',
+    badgeText: 'First 100 subscribers — price locked for life',
+    ctaSubscribe: 'Subscribe — €29/month',
     ctaLoading: 'Redirecting to payment...',
     ctaLoginRequired: 'Log in to subscribe',
     ctaLogin: 'Create a free account',
@@ -254,13 +266,19 @@ const translations = {
   es: {
     pageTitle: 'Pro Agency - Suscripción SEO y GEO ilimitada | Crawlers.fr',
     metaDescription: 'Descubre la oferta Pro Agency de Crawlers.fr: informes SEO/GEO ilimitados, código correctivo ilimitado, marca blanca y multi-cuentas para agencias. 29€/mes.',
-    heroTitle: 'Lleva tu negocio al siguiente nivel',
-    heroTitleAccent: 'con Pro Agency',
-    heroSubtitle: 'La suscripción todo-en-uno para profesionales del SEO y GEO que quieren escalar sin límites.',
+    heroTitle: 'Gestiona 30 clientes. Auditorías ilimitadas.',
+    heroTitleAccent: 'Sin límites.',
+    heroSubtitle: 'Informes marca blanca, correcciones auto-desplegadas, crawl 5 000 páginas/mes, agentes IA y cocoon semántico 3D — todo incluido desde 29€/mes.',
+    heroStats: [
+      { value: '∞', label: 'Auditorías SEO & GEO' },
+      { value: '30', label: 'Sitios seguidos' },
+      { value: '5 000', label: 'Páginas crawleadas/mes' },
+      { value: '< 5 min', label: 'Por auditoría completa' },
+    ],
     price: '29€',
     period: '/mes',
-    badgeText: 'Todo ilimitado',
-    ctaSubscribe: 'Suscribirse ahora',
+    badgeText: 'Primeros 100 suscriptores — precio garantizado de por vida',
+    ctaSubscribe: 'Suscribirse — 29€/mes',
     ctaLoading: 'Redirigiendo al pago...',
     ctaLoginRequired: 'Inicia sesión para suscribirte',
     ctaLogin: 'Crear una cuenta gratis',
@@ -474,6 +492,18 @@ export default function ProAgency() {
               <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
                 {t.heroSubtitle}
               </p>
+
+              {/* Stats bar */}
+              {'heroStats' in t && (
+                <div className="mx-auto mb-10 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+                  {(t as any).heroStats.map((stat: { value: string; label: string }, i: number) => (
+                    <div key={i} className="rounded-xl border border-border/50 bg-card/30 backdrop-blur-sm px-4 py-3 text-center">
+                      <div className="text-2xl font-extrabold text-foreground sm:text-3xl">{stat.value}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Price */}
               <div className="mb-8 flex items-baseline justify-center gap-2">
