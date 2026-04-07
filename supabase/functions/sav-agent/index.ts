@@ -593,7 +593,8 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         "état des agents", "statut des agents", "status des agents",
         "qu'ont fait les agents", "qu'ont fait agent",
         "actions des agents", "derniers résultats agent",
-        "bilan agent", "bilan des agents", "bilan cto", "bilan seo",
+        "bilan agent", "bilan des agents", "bilan cto", "bilan seo", "bilan ux",
+        "agent ux a-t-il", "agent ux a t il", "activité ux", "actions agent ux",
       ];
       const isAgentQuery = isCreator && agentQueryKeywords.some(kw => lowerMsgCheck.includes(kw));
 
@@ -602,8 +603,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           // Determine which agent(s) the question is about
           const aboutCto = lowerMsgCheck.includes("cto");
           const aboutSeo = lowerMsgCheck.includes("seo");
+          const aboutUx = lowerMsgCheck.includes("ux") || lowerMsgCheck.includes("design");
           const aboutSupervisor = lowerMsgCheck.includes("supervisor");
-          const aboutAll = (!aboutCto && !aboutSeo && !aboutSupervisor) || lowerMsgCheck.includes("tous les agents") || lowerMsgCheck.includes("all agents");
+          const aboutAll = (!aboutCto && !aboutSeo && !aboutSupervisor && !aboutUx) || lowerMsgCheck.includes("tous les agents") || lowerMsgCheck.includes("all agents");
 
           let agentReport = "📋 **Rapport d'état des agents**\n\n";
 
