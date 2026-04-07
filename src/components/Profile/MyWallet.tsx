@@ -294,6 +294,7 @@ export function MyWallet() {
                   { value: 'branding', icon: Palette, label: 'Branding' },
                   { value: 'cocoon', icon: Network, label: 'Cocoon' },
                   { value: 'clients', icon: Activity, label: 'Clients' },
+                  { value: 'counters', icon: Monitor, label: language === 'fr' ? 'Compteurs' : language === 'es' ? 'Contadores' : 'Counters' },
                   { value: 'invoices', icon: Receipt, label: language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices' },
                   { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
                   { value: 'profile', icon: User, label: language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts' },
