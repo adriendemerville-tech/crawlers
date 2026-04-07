@@ -24,11 +24,11 @@ import {
 const translations = {
   fr: {
     pageTitle: 'Pro Agency - Abonnement SEO & GEO illimité | Crawlers.fr',
-    metaDescription: 'Découvrez l\'offre Pro Agency de Crawlers.fr : rapports SEO/GEO illimités, codes correctifs illimités, marque blanche et multi-comptes pour agences et freelances SEO. 59€/mois.',
+    metaDescription: 'Découvrez l\'offre Pro Agency de Crawlers.fr : rapports SEO/GEO illimités, codes correctifs illimités, marque blanche et multi-comptes pour agences et freelances SEO. 29€/mois.',
     heroTitle: 'Passez au niveau supérieur',
     heroTitleAccent: 'avec Pro Agency',
     heroSubtitle: 'L\'abonnement tout-en-un pour les professionnels du SEO et du GEO qui veulent scaler leur activité sans limites.',
-    price: '59€',
+    price: '29€',
     period: '/mois',
     badgeText: 'Tout illimité',
     ctaSubscribe: 'S\'abonner maintenant',
@@ -171,11 +171,11 @@ const translations = {
   },
   en: {
     pageTitle: 'Pro Agency - Unlimited SEO & GEO Subscription | Crawlers.fr',
-    metaDescription: 'Discover Crawlers.fr Pro Agency: unlimited SEO/GEO reports, unlimited corrective code, white label and multi-accounts for agencies and freelancers. €59/month.',
+    metaDescription: 'Discover Crawlers.fr Pro Agency: unlimited SEO/GEO reports, unlimited corrective code, white label and multi-accounts for agencies and freelancers. €29/month.',
     heroTitle: 'Take your business to the next level',
     heroTitleAccent: 'with Pro Agency',
     heroSubtitle: 'The all-in-one subscription for SEO and GEO professionals who want to scale without limits.',
-    price: '€59',
+    price: '€29',
     period: '/month',
     badgeText: 'All unlimited',
     ctaSubscribe: 'Subscribe now',
@@ -253,11 +253,11 @@ const translations = {
   },
   es: {
     pageTitle: 'Pro Agency - Suscripción SEO y GEO ilimitada | Crawlers.fr',
-    metaDescription: 'Descubre la oferta Pro Agency de Crawlers.fr: informes SEO/GEO ilimitados, código correctivo ilimitado, marca blanca y multi-cuentas para agencias. 59€/mes.',
+    metaDescription: 'Descubre la oferta Pro Agency de Crawlers.fr: informes SEO/GEO ilimitados, código correctivo ilimitado, marca blanca y multi-cuentas para agencias. 29€/mes.',
     heroTitle: 'Lleva tu negocio al siguiente nivel',
     heroTitleAccent: 'con Pro Agency',
     heroSubtitle: 'La suscripción todo-en-uno para profesionales del SEO y GEO que quieren escalar sin límites.',
-    price: '59€',
+    price: '29€',
     period: '/mes',
     badgeText: 'Todo ilimitado',
     ctaSubscribe: 'Suscribirse ahora',
@@ -412,7 +412,7 @@ export default function ProAgency() {
       {
         "@type": "Offer",
         "name": "Pro Agency — Sans engagement",
-        "price": "59.00",
+        "price": "29.00",
         "priceCurrency": "EUR",
         "availability": "https://schema.org/InStock",
         "priceValidUntil": "2026-12-31",
@@ -433,21 +433,21 @@ export default function ProAgency() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>Pro Agency — 59€/mois garanti à vie | Crawlers.fr</title>
-        <meta name="description" content="Plan Pro Agency Crawlers.fr — 59€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
+        <title>Pro Agency — 29€/mois garanti à vie | Crawlers.fr</title>
+        <meta name="description" content="Plan Pro Agency Crawlers.fr — 29€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <link rel="canonical" href="https://crawlers.fr/pro-agency" />
         <meta property="og:type" content="product" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/pro-agency" />
-        <meta property="og:title" content="Pro Agency — 59€/mois garanti à vie | Crawlers.fr" />
-        <meta property="og:description" content="Plan Pro Agency Crawlers.fr — 59€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
+        <meta property="og:title" content="Pro Agency — 29€/mois garanti à vie | Crawlers.fr" />
+        <meta property="og:description" content="Plan Pro Agency Crawlers.fr — 29€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
         <meta property="og:image" content="https://crawlers.fr/og-image.png" />
         <meta property="og:locale" content="fr_FR" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Pro Agency — 59€/mois garanti à vie | Crawlers.fr" />
-        <meta name="twitter:description" content="Plan Pro Agency Crawlers.fr — 59€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
+        <meta name="twitter:title" content="Pro Agency — 29€/mois garanti à vie | Crawlers.fr" />
+        <meta name="twitter:description" content="Plan Pro Agency Crawlers.fr — 29€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
         <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>

@@ -2651,7 +2651,7 @@ Allow: /`}</pre>
         <h3>Comment activer la mesure de notoriété sur votre site ?</h3>
 
         <p>
-          L'activation de l'IAS se fait en <strong>3 étapes</strong> : lancer un audit expert sur votre URL, souscrire à l'offre Pro Agency (59€/mois), puis connecter votre Google Search Console. L'IAS calcule votre premier score sous <strong>48 heures</strong> et se met à jour automatiquement chaque semaine.
+          L'activation de l'IAS se fait en <strong>3 étapes</strong> : lancer un audit expert sur votre URL, souscrire à l'offre Pro Agency (29€/mois), puis connecter votre Google Search Console. L'IAS calcule votre premier score sous <strong>48 heures</strong> et se met à jour automatiquement chaque semaine.
         </p>
 
         <h3>En quoi l'IAS diffère-t-il d'un simple rapport GSC ?</h3>
@@ -2798,7 +2798,7 @@ Allow: /`}</pre>
         <h3>How to Activate Awareness Measurement on Your Site</h3>
 
         <p>
-          Activating the SAI takes <strong>3 steps</strong>: run an expert audit on your URL, subscribe to Pro Agency (€59/month), then connect your Google Search Console. The SAI calculates your first score within <strong>48 hours</strong> and updates automatically every week.
+          Activating the SAI takes <strong>3 steps</strong>: run an expert audit on your URL, subscribe to Pro Agency (€29/month), then connect your Google Search Console. The SAI calculates your first score within <strong>48 hours</strong> and updates automatically every week.
         </p>
 
         <h3>How Does the SAI Differ from a Simple GSC Report?</h3>
@@ -2918,7 +2918,7 @@ Allow: /`}</pre>
         <h3>¿Cómo activar la medición de notoriedad en su sitio?</h3>
 
         <p>
-          La activación del IAS se hace en <strong>3 pasos</strong>: ejecutar una auditoría experta, suscribirse a Pro Agency (59€/mes) y conectar su Google Search Console. El IAS calcula su primer score en <strong>48 horas</strong>.
+          La activación del IAS se hace en <strong>3 pasos</strong>: ejecutar una auditoría experta, suscribirse a Pro Agency (29€/mes) y conectar su Google Search Console. El IAS calcula su primer score en <strong>48 horas</strong>.
         </p>
 
         <h3>¿Puedo medir la notoriedad de mis competidores?</h3>

@@ -30,7 +30,7 @@ const i18n = {
     engineTitle1: "Un moteur d'analyse ",
     engineHighlight: "complet",
     ctaTitle: "Prêt à révéler la structure cachée de votre site ?",
-    ctaDesc: "Inclus dans l'abonnement Pro Agency à 59€/mois. Accès illimité à l'Architecte de Cocon, aux analyses GEO et à toutes les fonctionnalités premium.",
+    ctaDesc: "Inclus dans l'abonnement Pro Agency à 29€/mois. Accès illimité à l'Architecte de Cocon, aux analyses GEO et à toutes les fonctionnalités premium.",
     ctaButton: "Lancer mon Cocoon",
     features: [
       { title: "Architecture Sémantique Vivante", description: "Visualisez le maillage de votre site comme un organisme biologique. Chaque page est un nœud, chaque lien une connexion neuronale." },
@@ -63,7 +63,7 @@ const i18n = {
     engineTitle1: "A ",
     engineHighlight: "complete",
     ctaTitle: "Ready to reveal your site's hidden structure?",
-    ctaDesc: "Included in the Pro Agency subscription at €59/month. Unlimited access to the Cocoon Architect, GEO analysis and all premium features.",
+    ctaDesc: "Included in the Pro Agency subscription at €29/month. Unlimited access to the Cocoon Architect, GEO analysis and all premium features.",
     ctaButton: "Launch my Cocoon",
     features: [
       { title: "Living Semantic Architecture", description: "Visualize your site's linking as a biological organism. Each page is a node, each link a neural connection." },
@@ -96,7 +96,7 @@ const i18n = {
     engineTitle1: "Un motor de análisis ",
     engineHighlight: "completo",
     ctaTitle: "¿Listo para revelar la estructura oculta de su sitio?",
-    ctaDesc: "Incluido en la suscripción Pro Agency a 59€/mes. Acceso ilimitado al Arquitecto de Cocoon, análisis GEO y todas las funcionalidades premium.",
+    ctaDesc: "Incluido en la suscripción Pro Agency a 29€/mes. Acceso ilimitado al Arquitecto de Cocoon, análisis GEO y todas las funcionalidades premium.",
     ctaButton: "Lanzar mi Cocoon",
     features: [
       { title: "Arquitectura Semántica Viva", description: "Visualice el enlazado de su sitio como un organismo biológico. Cada página es un nodo, cada enlace una conexión neuronal." },

@@ -45,7 +45,7 @@ export default function IndiceAlignementStrategique() {
       {
         "@type": "Question",
         "name": t3(language, "L'IAS est-il inclus dans Pro Agency ?", "Is the SAI included in Pro Agency?", "¿Está el IAS incluido en Pro Agency?"),
-        "acceptedAnswer": { "@type": "Answer", "text": t3(language, "Oui, l'IAS est accessible à tous les abonnés Pro Agency (59€/mois) sans surcoût. Il nécessite d'avoir connecté votre Google Search Console.", "Yes, the SAI is available to all Pro Agency subscribers (€59/month) at no extra cost. It requires connecting your Google Search Console.", "Sí, el IAS está disponible para todos los suscriptores Pro Agency (59€/mes) sin coste adicional.") }
+        "acceptedAnswer": { "@type": "Answer", "text": t3(language, "Oui, l'IAS est accessible à tous les abonnés Pro Agency (29€/mois) sans surcoût. Il nécessite d'avoir connecté votre Google Search Console.", "Yes, the SAI is available to all Pro Agency subscribers (€29/month) at no extra cost. It requires connecting your Google Search Console.", "Sí, el IAS está disponible para todos los suscriptores Pro Agency (29€/mes) sin coste adicional.") }
       },
     ]
   };
@@ -316,9 +316,9 @@ export default function IndiceAlignementStrategique() {
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               {t3(language,
-                'L\'IAS fait partie de la suite d\'outils premium accessible avec l\'abonnement Pro Agency (59€/mois, sans engagement). Les utilisateurs gratuits peuvent visualiser la carte IAS en aperçu flouté pour en comprendre la valeur.',
-                'The SAI is part of the premium tool suite accessible with the Pro Agency subscription (€59/month, no commitment). Free users can view a blurred preview of the SAI card to understand its value.',
-                'El IAS forma parte de la suite de herramientas premium accesible con la suscripción Pro Agency (59€/mes, sin compromiso). Los usuarios gratuitos pueden ver una vista previa borrosa de la tarjeta IAS.'
+                'L\'IAS fait partie de la suite d\'outils premium accessible avec l\'abonnement Pro Agency (29€/mois, sans engagement). Les utilisateurs gratuits peuvent visualiser la carte IAS en aperçu flouté pour en comprendre la valeur.',
+                'The SAI is part of the premium tool suite accessible with the Pro Agency subscription (€29/month, no commitment). Free users can view a blurred preview of the SAI card to understand its value.',
+                'El IAS forma parte de la suite de herramientas premium accesible con la suscripción Pro Agency (29€/mes, sin compromiso). Los usuarios gratuitos pueden ver una vista previa borrosa de la tarjeta IAS.'
               )}
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -332,7 +332,7 @@ export default function IndiceAlignementStrategique() {
               <Button size="lg" asChild className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold">
                 <Link to="/pro-agency">
                   <Crown className="h-5 w-5 mr-2 text-amber-300" />
-                  {t3(language, 'S\'abonner à Pro Agency — 59€/mois', 'Subscribe to Pro Agency — €59/month', 'Suscribirse a Pro Agency — 59€/mes')}
+                  {t3(language, 'S\'abonner à Pro Agency — 29€/mois', 'Subscribe to Pro Agency — €29/month', 'Suscribirse a Pro Agency — 29€/mes')}
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
@@ -371,7 +371,7 @@ export default function IndiceAlignementStrategique() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { to: '/audit-expert', label: t3(language, 'Audit Expert SEO/GEO', 'Expert SEO/GEO Audit', 'Auditoría Experta SEO/GEO') },
-                { to: '/pro-agency', label: 'Pro Agency — 59€/mois' },
+                { to: '/pro-agency', label: 'Pro Agency — 29€/mois' },
                 { to: '/methodologie', label: t3(language, 'Notre méthodologie', 'Our methodology', 'Nuestra metodología') },
                 { to: '/blog', label: t3(language, 'Articles & Guides', 'Articles & Guides', 'Artículos y Guías') },
                 { to: '/tarifs', label: t3(language, 'Tarifs', 'Pricing', 'Precios') },

@@ -116,7 +116,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <h3 className="text-2xl font-bold text-foreground">Pro Agency</h3>
         </div>
         <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-4xl font-extrabold text-foreground">59€</span>
+          <span className="text-4xl font-extrabold text-foreground">29€</span>
           <span className="text-lg text-muted-foreground">/mois</span>
         </div>
         <p className="text-xs font-medium text-violet-500 mb-4">

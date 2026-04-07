@@ -122,7 +122,7 @@ const t = {
       },
       {
         name: 'Pro Agency',
-        price: '59€',
+        price: '29€',
         priceUnit: '',
         period: '/mois',
         pages: '100 pages/mois',
@@ -285,7 +285,7 @@ const t = {
       },
       {
         name: 'Pro Agency',
-        price: '€59',
+        price: '€29',
         priceUnit: '',
         period: '/month',
         pages: '100 pages/month',
@@ -427,7 +427,7 @@ const t = {
       },
       {
         name: 'Pro Agency',
-        price: '59€',
+        price: '29€',
         priceUnit: '',
         period: '/mes',
         pages: '100 páginas/mes',

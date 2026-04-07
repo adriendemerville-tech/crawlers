@@ -288,7 +288,7 @@ const CGVU = () => {
               </p>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
-              <p className="font-semibold mt-2">Pro Agency (59€/mois) :</p>
+              <p className="font-semibold mt-2">Pro Agency (29€/mois) :</p>
               <ul>
                 <li>Accès illimité à l'ensemble des outils d'analyse et d'audit ;</li>
                 <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 5 000 pages/mois ;</li>

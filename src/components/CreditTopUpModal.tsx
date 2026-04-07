@@ -260,10 +260,10 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               </h3>
               <p className="text-sm text-muted-foreground">
                 {language === 'fr'
-                  ? 'Rapports et correctifs illimités, 5 000 pages de crawl/mois incluses, marque blanche avec votre logo, et support prioritaire — 59€/mois sans engagement.'
+                  ? 'Rapports et correctifs illimités, 5 000 pages de crawl/mois incluses, marque blanche avec votre logo, et support prioritaire — 29€/mois sans engagement.'
                   : language === 'es'
-                    ? 'Informes y correctivos ilimitados, 5 000 páginas de crawl/mes incluidas, marca blanca con su logo, y soporte prioritario — 59€/mes sin compromiso.'
-                    : 'Unlimited reports & fixes, 5,000 crawl pages/month included, white-label reports with your logo, and priority support — €59/month, no commitment.'}
+                    ? 'Informes y correctivos ilimitados, 5 000 páginas de crawl/mes incluidas, marca blanca con su logo, y soporte prioritario — 29€/mes sin compromiso.'
+                    : 'Unlimited reports & fixes, 5,000 crawl pages/month included, white-label reports with your logo, and priority support — €29/month, no commitment.'}
               </p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-1">
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Audits ∞' : language === 'es' ? 'Auditorías ∞' : 'Audits ∞'}</span>
@@ -277,7 +277,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
-              <p className="text-2xl font-bold text-foreground">59€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'mo'}</span></p>
+              <p className="text-2xl font-bold text-foreground">29€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'mo'}</span></p>
               <p className="text-[10px] font-medium text-violet-400">{language === 'fr' ? 'Sans engagement' : language === 'es' ? 'Sin compromiso' : 'No commitment'}</p>
               <Button
                 onClick={async () => {
