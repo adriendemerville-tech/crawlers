@@ -551,6 +551,35 @@ export function briefToPromptBlock(brief: ContentBrief): string {
   if (brief.freshness_markers) lines.push(`Fraîcheur: mentionner l'année en cours, dater les informations`);
   lines.push('');
 
+  // Voice DNA
+  if (brief.voice_dna) {
+    const v = brief.voice_dna;
+    lines.push(`── VOICE DNA (IDENTITÉ ÉDITORIALE — OBLIGATOIRE) ──`);
+    if (v.dominant_register) lines.push(`Registre: ${v.dominant_register}`);
+    if (v.dominant_posture) lines.push(`Posture: ${v.dominant_posture}`);
+    if (v.dominant_addressing) lines.push(`Adresse: ${v.dominant_addressing}`);
+    if (v.sentence_style) lines.push(`Style de phrases: ${v.sentence_style}`);
+    if (v.lexical_density) lines.push(`Densité lexicale: ${v.lexical_density}`);
+    if (v.emotional_tone) lines.push(`Tonalité émotionnelle: ${v.emotional_tone}`);
+    if (v.tone_override) {
+      lines.push(`⚠️ OVERRIDE pour ce type de page: ${JSON.stringify(v.tone_override)}`);
+    }
+    if (v.forbidden_words?.length) {
+      lines.push(`MOTS INTERDITS (ne jamais utiliser): ${v.forbidden_words.join(', ')}`);
+    }
+    if (v.mandatory_words?.length) {
+      lines.push(`MOTS OBLIGATOIRES (à placer naturellement): ${v.mandatory_words.join(', ')}`);
+    }
+    if (v.sample_excerpts?.length) {
+      lines.push(`Exemples de référence du ton attendu:`);
+      for (const ex of v.sample_excerpts) {
+        lines.push(`  « ${ex.slice(0, 200)}… »`);
+      }
+    }
+    lines.push(`Tu DOIS respecter cette identité éditoriale. Le contenu doit sonner comme s'il venait du même auteur.`);
+    lines.push('');
+  }
+
   lines.push(`═══ FIN CONTENT BRIEF ═══`);
 
   return lines.join('\n');
