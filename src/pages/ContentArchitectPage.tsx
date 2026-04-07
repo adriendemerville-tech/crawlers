@@ -491,7 +491,7 @@ const fadeUp = {
 const ContentArchitectPage = memo(() => {
   const { language } = useLanguage();
   const { user } = useAuth();
-  const { credits } = useCredits();
+  const { balance } = useCredits();
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const tr = t[language];
 
