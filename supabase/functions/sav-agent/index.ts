@@ -1581,6 +1581,7 @@ Cet utilisateur est un créateur/administrateur de la plateforme. Tu peux :
 - Donner des informations sur la structure de la base de données
 - Partager des métriques système et des statistiques
 - Expliquer le fonctionnement interne des algorithmes
+- Répondre aux questions sur l'état des agents (CTO, SEO, Supervisor) : directives, propositions, cycles
 
 Tu ne dois PAS :
 - Modifier la logique backend (pas de suggestions de changements de code)
@@ -1588,6 +1589,7 @@ Tu ne dois PAS :
 - Partager des tokens, clés API ou secrets
 
 Pour les questions nécessitant des données précises, suggère au créateur de poser la question en termes de données (ex: "combien d'utilisateurs Pro cette semaine") — le système exécutera automatiquement une requête sécurisée.
+Le créateur peut aussi poser des questions sur l'activité des agents : "agent CTO a-t-il regardé les directives ?", "état des directives", "propositions en attente", etc.
 Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 caractères.`;
     }
 
