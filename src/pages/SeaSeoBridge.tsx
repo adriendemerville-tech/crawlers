@@ -40,7 +40,7 @@ const SeaSeoBridgePage = memo(() => {
     description: 'Module d\'analyse croisée SEA/SEO propulsé par l\'IA. Identifiez les mots-clés payants convertibles en trafic organique et optimisez votre budget publicitaire grâce à l\'intelligence artificielle.',
     offers: {
       '@type': 'Offer',
-      price: '59',
+      price: '29',
       priceCurrency: 'EUR',
       description: 'Inclus dans l\'abonnement Pro Agency (sans engagement)',
       availability: 'https://schema.org/InStock',
@@ -88,7 +88,7 @@ const SeaSeoBridgePage = memo(() => {
       {
         '@type': 'Question',
         name: 'Le module est-il inclus dans l\'abonnement Pro Agency ?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Oui, le SEA → SEO Bridge est inclus sans surcoût dans les abonnements Pro Agency (59€/mois) et Pro Agency+ (99€/mois), sans engagement. Il est accessible depuis l\'onglet "SEA→SEO" de la Console.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'Oui, le SEA → SEO Bridge est inclus sans surcoût dans les abonnements Pro Agency (29€/mois) et Pro Agency+ (99€/mois), sans engagement. Il est accessible depuis l\'onglet "SEA→SEO" de la Console.' },
       },
     ],
   };
@@ -441,7 +441,7 @@ const SeaSeoBridgePage = memo(() => {
                   Arrêtez de payer pour du trafic que le SEO peut capturer
                 </h2>
                 <p className="mb-8 text-lg text-muted-foreground">
-                  Le SEA → SEO Bridge est inclus dans les abonnements Pro Agency (59€/mois) et Pro Agency+ (99€/mois), sans engagement.
+                  Le SEA → SEO Bridge est inclus dans les abonnements Pro Agency (29€/mois) et Pro Agency+ (99€/mois), sans engagement.
                 </p>
               </motion.div>
               <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-4">

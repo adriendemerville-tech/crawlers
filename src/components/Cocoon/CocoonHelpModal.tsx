@@ -30,7 +30,7 @@ const faqItems = {
     },
     {
       q: "Le module Cocoon est-il inclus dans mon abonnement ?",
-      a: "Le module Cocoon est réservé aux abonnés Pro Agency (59€/mois). Il inclut l'audit expert illimité, le code correctif illimité et la marque blanche."
+      a: "Le module Cocoon est réservé aux abonnés Pro Agency (29€/mois). Il inclut l'audit expert illimité, le code correctif illimité et la marque blanche."
     }
   ],
   en: [
@@ -52,7 +52,7 @@ const faqItems = {
     },
     {
       q: "Is the Cocoon module included in my plan?",
-      a: "The Cocoon module is exclusive to Pro Agency subscribers (59€/month). It includes unlimited expert audits, corrective code, and white-label features."
+      a: "The Cocoon module is exclusive to Pro Agency subscribers (29€/month). It includes unlimited expert audits, corrective code, and white-label features."
     }
   ],
   es: [
@@ -74,7 +74,7 @@ const faqItems = {
     },
     {
       q: "¿El módulo Cocoon está incluido en mi plan?",
-      a: "El módulo Cocoon es exclusivo para suscriptores Pro Agency (59€/mes)."
+      a: "El módulo Cocoon es exclusivo para suscriptores Pro Agency (29€/mes)."
     }
   ]
 };

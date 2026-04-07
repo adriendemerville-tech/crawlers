@@ -1244,7 +1244,7 @@ export default function SiteCrawl() {
                 </ul>
                 <div className="flex items-baseline gap-1 justify-center">
                   <span className="text-3xl font-extrabold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
-                    {language === 'fr' ? '59€' : '€59'}
+                    {language === 'fr' ? '29€' : '€29'}
                   </span>
                   <span className="text-sm text-muted-foreground">/ {language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
                 </div>

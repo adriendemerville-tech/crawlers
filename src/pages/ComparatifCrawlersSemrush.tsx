@@ -53,7 +53,7 @@ const faqItems = [
   },
   {
     q: "Combien coûte Crawlers.fr par rapport à Semrush ?",
-    a: "Semrush Pro démarre à 139,95$/mois (~130€). Crawlers.fr propose des audits gratuits, des crédits à partir de 5€, et des abonnements Pro Agency à 59€/mois ou Pro Agency+ à 99€/mois avec tout illimité. Soit 2 à 20 fois moins cher selon l'usage.",
+    a: "Semrush Pro démarre à 139,95$/mois (~130€). Crawlers.fr propose des audits gratuits, des crédits à partir de 5€, et des abonnements Pro Agency à 29€/mois ou Pro Agency+ à 99€/mois avec tout illimité. Soit 2 à 20 fois moins cher selon l'usage.",
   },
   {
     q: "Crawlers.fr remplace-t-il Semrush ?",
@@ -61,7 +61,7 @@ const faqItems = [
   },
   {
     q: "Puis-je utiliser Crawlers.fr en marque blanche pour mes clients ?",
-    a: "Oui. Le plan Pro Agency (59€/mois) inclut la marque blanche avec logo, couleurs et rapports personnalisés + 2 comptes collaborateurs. Le plan Pro Agency+ (99€/mois) ajoute l'API Marina en marque blanche complète + 3 comptes.",
+    a: "Oui. Le plan Pro Agency (29€/mois) inclut la marque blanche avec logo, couleurs et rapports personnalisés + 2 comptes collaborateurs. Le plan Pro Agency+ (99€/mois) ajoute l'API Marina en marque blanche complète + 3 comptes.",
   },
   {
     q: "Crawlers.fr peut-il déployer les corrections directement sur mon site ?",
@@ -101,7 +101,7 @@ type Row = {
 const comparisonData: Row[] = [
   // Tarifs & Accès
   { cat: "Tarifs", criteria: "Prix d'entrée", crawlers: "Gratuit (audits de base)", semrush: "139,95 $/mois (~130€)", cWin: true, sWin: false },
-  { cat: "Tarifs", criteria: "Abonnement agence", crawlers: "59€/mois (Pro Agency) ou 99€/mois (Pro Agency+)", semrush: "~230€/mois (Guru) + add-ons", cWin: true, sWin: false },
+  { cat: "Tarifs", criteria: "Abonnement agence", crawlers: "29€/mois (Pro Agency) ou 99€/mois (Pro Agency+)", semrush: "~230€/mois (Guru) + add-ons", cWin: true, sWin: false },
   { cat: "Tarifs", criteria: "Inscription obligatoire", crawlers: "Non (audits immédiats)", semrush: "Oui + CB souvent requise", cWin: true, sWin: false },
   // SEO Technique
   { cat: "SEO Technique", criteria: "Audit technique (PageSpeed, CWV)", crawlers: "Oui (CrUX + Lighthouse, 4 catégories)", semrush: "Oui (Site Audit)", cWin: null, sWin: null },
@@ -126,7 +126,7 @@ const comparisonData: Row[] = [
   { cat: "Tracking", criteria: "Suivi GSC/GA4 intégré", crawlers: "Oui (connexion directe, observatoire)", semrush: "Oui", cWin: null, sWin: null },
   // Agence
   { cat: "Agence", criteria: "Marque blanche (White Label)", crawlers: "Oui (logo, couleurs, rapports, API)", semrush: "Non (branding Semrush imposé)", cWin: true, sWin: false },
-  { cat: "Agence", criteria: "Dashboard multi-clients", crawlers: "Oui (inclus dès 59€/mois)", semrush: "Oui (add-on payant)", cWin: true, sWin: false },
+  { cat: "Agence", criteria: "Dashboard multi-clients", crawlers: "Oui (inclus dès 29€/mois)", semrush: "Oui (add-on payant)", cWin: true, sWin: false },
   { cat: "Agence", criteria: "Plans d'action pilotables", crawlers: "Oui (tâches, suivi, export)", semrush: "Non", cWin: true, sWin: false },
   { cat: "Agence", criteria: "Autopilote SEO (Parménion)", crawlers: "Oui (maintenance prédictive automatisée)", semrush: "Non", cWin: true, sWin: false },
   // Divers
@@ -221,7 +221,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Content Architect : génération de pages complètes SEO+GEO</li>
                     <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Code Architect : code correctif injectable + déploiement CMS</li>
                     <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Cocoon 3D, marque blanche, Autopilote Parménion</li>
-                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> À partir de 0€ — Pro Agency dès 59€/mois</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> À partir de 0€ — Pro Agency dès 29€/mois</li>
                   </ul>
                 </div>
               </div>
@@ -301,7 +301,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li>• <strong className="text-foreground">Audits gratuits</strong> : Crawlers IA, PageSpeed, Score GEO — sans inscription</li>
                     <li>• <strong className="text-foreground">Audit Expert</strong> : Gratuit avec inscription (168 critères)</li>
                     <li>• <strong className="text-foreground">Crédits</strong> : Pack Essentiel 10 crédits (5€), Lite 50 crédits (19€), Premium 150 crédits (45€), Ultime 500 crédits (99€)</li>
-                    <li>• <strong className="text-foreground">Pro Agency</strong> : 59€/mois — 5 000 pages crawlées, 100 pages Content Architect, marque blanche + 2 comptes</li>
+                    <li>• <strong className="text-foreground">Pro Agency</strong> : 29€/mois — 5 000 pages crawlées, 100 pages Content Architect, marque blanche + 2 comptes</li>
                     <li>• <strong className="text-foreground">Pro Agency+</strong> : 99€/mois — 50 000 pages crawlées, 150 pages Content Architect, API Marina, logs serveur, SEA→SEO Bridge, 3 comptes</li>
                     <li>• <strong className="text-foreground">Enterprise</strong> : Sur demande — serveur dédié, utilisateurs illimités, SLA garanti</li>
                   </ul>
@@ -404,7 +404,7 @@ const ComparatifCrawlersSemrush = () => {
                   { name: "Marie, consultante en communication", desc: "Budget limité. Veut être citée quand ses prospects interrogent ChatGPT.", tool: "Crawlers.fr", reason: "Audit gratuit + Content Architect", primary: true },
                   { name: "Alexandre, responsable SEO en agence", desc: "Gère 15 clients, besoin de suivi de positions et backlinks.", tool: "Semrush", reason: "Rank tracking + analyse concurrentielle", primary: false },
                   { name: "Sophie, artisan boulanger", desc: "Veut apparaître quand on demande « meilleure boulangerie Lyon » à Perplexity.", tool: "Crawlers.fr", reason: "Audit gratuit + GEO local", primary: true },
-                  { name: "Thomas, freelance SEO/GEO", desc: "Gère 5 clients, a besoin de rapports marque blanche et de contenu IA.", tool: "Crawlers.fr Pro Agency", reason: "59€/mois tout inclus vs 230€+ chez Semrush", primary: true },
+                  { name: "Thomas, freelance SEO/GEO", desc: "Gère 5 clients, a besoin de rapports marque blanche et de contenu IA.", tool: "Crawlers.fr Pro Agency", reason: "29€/mois tout inclus vs 230€+ chez Semrush", primary: true },
                 ].map((c, i) => (
                   <div key={i} className={`bg-muted/30 rounded-lg p-5 border-l-4 ${c.primary ? 'border-primary' : 'border-muted-foreground'}`}>
                     <p className="font-semibold text-foreground text-sm">{c.name}</p>
@@ -536,7 +536,7 @@ const ComparatifCrawlersSemrush = () => {
                   { to: "/guide-audit-seo", label: "Guide Audit SEO 2026", desc: "Guide complet pour auditer votre site" },
                   { to: "/content-architect", label: "Content Architect", desc: "Créez du contenu IA optimisé" },
                   { to: "/features/cocoon", label: "Cocoon 3D", desc: "Cocon sémantique interactif" },
-                  { to: "/pro-agency", label: "Plans Pro Agency", desc: "Offres agences dès 59€/mois" },
+                  { to: "/pro-agency", label: "Plans Pro Agency", desc: "Offres agences dès 29€/mois" },
                   { to: "/sea-seo-bridge", label: "SEA → SEO Bridge", desc: "Économies Google Ads calculées" },
                   { to: "/tarifs", label: "Tous les tarifs", desc: "Crédits, packs et abonnements" },
                   { to: "/analyse-site-web-gratuit", label: "Analyse de site gratuite", desc: "Lancez un audit en 30 secondes" },

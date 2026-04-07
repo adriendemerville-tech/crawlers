@@ -24,7 +24,7 @@ export function useStructuredData() {
           ],
           "offers": {
             "@type": "Offer",
-            "price": "59",
+            "price": "29",
             "priceCurrency": "EUR",
             "description": "Pro Agency — offre de lancement garantie à vie pour les 100 premiers abonnés. Prochain palier : 99€/mois.",
             "availability": "https://schema.org/LimitedAvailability"

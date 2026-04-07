@@ -426,7 +426,7 @@ export function MyWallet() {
                         </div>
                         <div>
                           <p className="text-sm font-medium">
-                            Pro Agency — 59€<span className="text-xs font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+                            Pro Agency — 29€<span className="text-xs font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {language === 'fr' ? 'Gérer, modifier ou résilier votre abonnement' : language === 'es' ? 'Gestionar, modificar o cancelar su suscripción' : 'Manage, update or cancel your subscription'}
@@ -644,7 +644,7 @@ export function MyWallet() {
           </div>
           <div className="flex items-center justify-between pt-1">
             <p className="text-2xl font-bold text-foreground">
-              59€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+              29€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
             </p>
             <Button
               onClick={async () => {

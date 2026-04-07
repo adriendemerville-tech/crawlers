@@ -442,9 +442,9 @@ export default function ArchitecteGeneratif() {
                   {
                     q: t3(language, 'Le correctif multi-pages est-il inclus dans Pro Agency ?', 'Is multi-page corrective included in Pro Agency?', '¿El correctivo multi-páginas está incluido en Pro Agency?'),
                     a: t3(language,
-                      'Oui, la fonctionnalité complète est incluse dans l\'abonnement Pro Agency à 59€/mois, sans surcoût.',
-                      'Yes, the full feature is included in the Pro Agency subscription at €59/month, at no extra cost.',
-                      'Sí, la funcionalidad completa está incluida en la suscripción Pro Agency a 59€/mes, sin coste adicional.'
+                      'Oui, la fonctionnalité complète est incluse dans l\'abonnement Pro Agency à 29€/mois, sans surcoût.',
+                      'Yes, the full feature is included in the Pro Agency subscription at €29/month, at no extra cost.',
+                      'Sí, la funcionalidad completa está incluida en la suscripción Pro Agency a 29€/mes, sin coste adicional.'
                     )
                   },
                   {

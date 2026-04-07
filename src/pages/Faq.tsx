@@ -57,7 +57,7 @@ export default function Faq() {
               "name": "Crawlers.fr est-il gratuit ?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Oui, partiellement. Les outils Bots IA, Score GEO, Visibilité LLM et PageSpeed sont gratuits sans inscription. L'audit technique SEO 200 points est gratuit avec inscription. Le plan Pro Agency est à 59€/mois, garanti à vie pour les 100 premiers abonnés."
+                "text": "Oui, partiellement. Les outils Bots IA, Score GEO, Visibilité LLM et PageSpeed sont gratuits sans inscription. L'audit technique SEO 200 points est gratuit avec inscription. Le plan Pro Agency est à 29€/mois, garanti à vie pour les 100 premiers abonnés."
               }
             },
             {

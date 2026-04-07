@@ -745,7 +745,7 @@ export default function Marina() {
           "url": "https://crawlers.fr/marina",
           "offers": [
             { "@type": "Offer", "name": "Per report", "price": "2.50", "priceCurrency": "EUR", "description": "5 credits per report" },
-            { "@type": "Offer", "name": "Pro Agency", "price": "59", "priceCurrency": "EUR", "description": "Marina included" },
+            { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR", "description": "Marina included" },
           ],
           "featureList": [
             "200-point technical SEO audit",
