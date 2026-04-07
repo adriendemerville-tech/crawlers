@@ -305,35 +305,27 @@ const translations: Record<Language, Translations> = {
     },
     faq: {
       badge: 'Questions Fréquentes',
-      title: 'Questions fréquentes sur l\'audit SEO, le GEO et la visibilité IA',
+      title: 'Tout ce qu\'il faut savoir avant de lancer votre audit',
       items: [
         {
-          question: "Crawlers.AI est-il gratuit ou payant ?",
-          answer: "Crawlers.AI propose les deux ! Les outils d'analyse (Bots IA, Score GEO, Visibilité LLM, PageSpeed) sont 100% gratuits et accessibles sans inscription sur la page d'accueil. L'audit technique SEO complet est également gratuit mais nécessite une inscription pour sauvegarder vos rapports. Les fonctionnalités premium (audit stratégique IA et codes correctifs) sont payantes via un système de crédits, avec les 2 premiers audits stratégiques offerts."
+          question: "Que contient l'audit SEO 200 points de Crawlers.fr ?",
+          answer: "L'audit analyse 200 critères techniques répartis en 12 catégories : balises meta, vitesse, données structurées, maillage interne, accessibilité mobile, sécurité HTTPS, Core Web Vitals, sitemap, robots.txt, E-E-A-T, indexation et compatibilité LLM. Vous recevez un score global, des recommandations priorisées et du code correctif prêt à déployer."
         },
         {
-          question: "Qu'est-ce qu'un crawler IA et pourquoi est-ce important ?",
-          answer: "Un crawler IA est un robot qui parcourt le web pour collecter des données destinées à entraîner des modèles de langage (LLM) comme ChatGPT, Claude ou Gemini. Si votre site est accessible à ces crawlers, votre contenu peut être cité et référencé dans les réponses des assistants IA, générant du trafic qualifié."
+          question: "Comment être cité par ChatGPT, Perplexity et Gemini ?",
+          answer: "Il faut optimiser votre GEO (Generative Engine Optimization) : données structurées JSON-LD riches, contenu E-E-A-T vérifié, autorisation des crawlers IA dans votre robots.txt, et phrases « citables » dans votre contenu. Crawlers.fr mesure votre score GEO et votre Part de Voix LLM sur 4 modèles simultanément."
         },
         {
-          question: "Qu'est-ce que le score GEO et comment l'améliorer ?",
-          answer: "Le score GEO (Generative Engine Optimization) mesure l'optimisation de votre site pour les moteurs de recherche génératifs. Pour l'améliorer : ajoutez des données structurées JSON-LD, optimisez vos balises meta, utilisez une hiérarchie H1/H2 claire, et assurez-vous que votre sitemap est accessible."
+          question: "Combien de temps prend un audit complet ?",
+          answer: "Moins de 5 minutes. Entrez votre URL, Crawlers.fr lance 7 algorithmes en parallèle : crawl technique, analyse PageSpeed, score GEO, visibilité LLM, données structurées, sécurité et E-E-A-T. Le rapport complet avec correctifs est disponible immédiatement."
         },
         {
-          question: 'Comment bloquer ou autoriser les bots IA sur mon site ?',
-          answer: "Modifiez votre fichier robots.txt à la racine de votre site. Pour bloquer GPTBot : ajoutez 'User-agent: GPTBot' suivi de 'Disallow: /'. Pour l'autoriser : utilisez 'Allow: /' à la place. Répétez pour chaque bot (ClaudeBot, Google-Extended, etc.)."
+          question: "Quelle est la différence entre SEO classique et GEO ?",
+          answer: "Le SEO classique optimise votre positionnement sur Google. Le GEO optimise votre citabilité dans les réponses des IA génératives (ChatGPT, Perplexity, Gemini, Claude). En 2026, 40% des recherches passent par un moteur IA. Crawlers.fr est le premier outil francophone à couvrir les deux simultanément."
         },
         {
-          question: 'Quels sont les principaux crawlers IA à surveiller ?',
-          answer: "Les principaux crawlers IA sont : GPTBot et ChatGPT-User (OpenAI), ClaudeBot (Anthropic), Google-Extended (Google AI), PerplexityBot (Perplexity), CCBot (Common Crawl) et Applebot-Extended (Apple Intelligence). Chacun a ses propres règles de respect du robots.txt."
-        },
-        {
-          question: "Pourquoi mon score PageSpeed affecte-t-il ma visibilité IA ?",
-          answer: "Un site lent peut empêcher les crawlers IA de charger correctement votre contenu. Les Core Web Vitals (LCP, FID, CLS) influencent non seulement le SEO classique mais aussi la capacité des IA à analyser votre site. Un bon score PageSpeed garantit une meilleure indexation."
-        },
-        {
-          question: "Pourquoi Crawlers.fr n'est-il pas plus cher ?",
-          answer: "Nous appliquons le principe du « dividende de l'IA » : les coûts d'infrastructure et de calcul baissent structurellement grâce aux progrès des modèles (caching agressif, modèles légers pour les tâches courantes, architecture serverless). Plutôt que de maximiser nos marges, nous répercutons ces gains sur nos prix pour rendre l'audit SEO/GEO professionnel accessible à tous — freelances, PME et agences. C'est notre avantage compétitif durable."
+          question: "Pourquoi Crawlers.fr à 29€/mois au lieu de 200€+ ?",
+          answer: "Nous appliquons le « dividende de l'IA » : les coûts d'infrastructure baissent structurellement grâce aux progrès des modèles. Plutôt que de maximiser nos marges, nous répercutons ces gains sur nos prix. Résultat : un audit qui coûtait 2 000€ en agence est aujourd'hui accessible à 29€/mois, audits illimités inclus."
         }
       ],
     },
@@ -499,35 +491,27 @@ const translations: Record<Language, Translations> = {
     },
     faq: {
       badge: 'Frequently Asked Questions',
-      title: 'Frequently asked questions about SEO audit, GEO and AI visibility',
+      title: 'Everything you need to know before running your audit',
       items: [
         {
-          question: 'Is Crawlers.AI free or paid?',
-          answer: 'Crawlers.AI offers both! The analysis tools (AI Bots, GEO Score, LLM Visibility, PageSpeed) are 100% free and accessible without registration on the homepage. The complete technical SEO audit is also free but requires registration to save your reports. Premium features (AI strategic audit and corrective codes) are paid via a credit system, with the first 2 strategic audits free.'
+          question: "What does the Crawlers.fr 200-point SEO audit include?",
+          answer: "The audit analyzes 200 technical criteria across 12 categories: meta tags, speed, structured data, internal linking, mobile accessibility, HTTPS security, Core Web Vitals, sitemap, robots.txt, E-E-A-T, indexation and LLM compatibility. You get an overall score, prioritized recommendations and deploy-ready corrective code."
         },
         {
-          question: 'What is an AI crawler and why does it matter?',
-          answer: 'An AI crawler is a bot that crawls the web to collect data for training language models (LLMs) like ChatGPT, Claude, or Gemini. If your site is accessible to these crawlers, your content can be cited and referenced in AI assistant responses, driving qualified traffic.'
+          question: "How to get cited by ChatGPT, Perplexity and Gemini?",
+          answer: "You need to optimize your GEO (Generative Engine Optimization): rich JSON-LD structured data, verified E-E-A-T content, AI crawler authorization in your robots.txt, and 'citable' phrases in your content. Crawlers.fr measures your GEO score and LLM Share of Voice across 4 models simultaneously."
         },
         {
-          question: 'What is the GEO score and how can I improve it?',
-          answer: 'The GEO score (Generative Engine Optimization) measures how well your site is optimized for generative search engines. To improve it: add JSON-LD structured data, optimize your meta tags, use a clear H1/H2 hierarchy, and ensure your sitemap is accessible.'
+          question: "How long does a full audit take?",
+          answer: "Under 5 minutes. Enter your URL, Crawlers.fr runs 7 algorithms in parallel: technical crawl, PageSpeed analysis, GEO score, LLM visibility, structured data, security and E-E-A-T. The full report with fixes is available immediately."
         },
         {
-          question: 'How do I block or allow AI bots on my site?',
-          answer: "Edit your robots.txt file at your site root. To block GPTBot: add 'User-agent: GPTBot' followed by 'Disallow: /'. To allow it: use 'Allow: /' instead. Repeat for each bot (ClaudeBot, Google-Extended, etc.)."
+          question: "What's the difference between traditional SEO and GEO?",
+          answer: "Traditional SEO optimizes your ranking on Google. GEO optimizes your citability in generative AI responses (ChatGPT, Perplexity, Gemini, Claude). In 2026, 40% of searches go through an AI engine. Crawlers.fr is the first French-language tool covering both simultaneously."
         },
         {
-          question: 'What are the main AI crawlers to monitor?',
-          answer: 'The main AI crawlers are: GPTBot and ChatGPT-User (OpenAI), ClaudeBot (Anthropic), Google-Extended (Google AI), PerplexityBot (Perplexity), CCBot (Common Crawl), and Applebot-Extended (Apple Intelligence). Each has its own robots.txt compliance rules.'
-        },
-        {
-          question: 'Why does my PageSpeed score affect AI visibility?',
-          answer: 'A slow site can prevent AI crawlers from properly loading your content. Core Web Vitals (LCP, FID, CLS) affect not only classic SEO but also the ability of AI to analyze your site. A good PageSpeed score ensures better indexation.'
-        },
-        {
-          question: "Why isn't Crawlers.fr more expensive?",
-          answer: "We apply the 'AI dividend' principle: infrastructure and compute costs are structurally declining thanks to model improvements (aggressive caching, lightweight models for routine tasks, serverless architecture). Rather than maximizing margins, we pass these savings on to our pricing to make professional SEO/GEO auditing accessible to everyone — freelancers, SMBs and agencies. That's our sustainable competitive edge."
+          question: "Why is Crawlers.fr €29/month instead of €200+?",
+          answer: "We apply the 'AI dividend': infrastructure costs are structurally declining thanks to model improvements. Rather than maximizing margins, we pass these savings on to pricing. Result: an audit that cost €2,000 at an agency is now accessible at €29/month, unlimited audits included."
         }
       ],
     },
@@ -693,35 +677,27 @@ const translations: Record<Language, Translations> = {
     },
     faq: {
       badge: 'Preguntas Frecuentes',
-      title: 'Preguntas frecuentes sobre auditoría SEO, GEO y visibilidad IA',
+      title: 'Todo lo que necesitas saber antes de lanzar tu auditoría',
       items: [
         {
-          question: '¿Crawlers.AI es gratis o de pago?',
-          answer: '¡Crawlers.AI ofrece ambos! Las herramientas de análisis (Bots IA, Puntuación GEO, Visibilidad LLM, PageSpeed) son 100% gratuitas y accesibles sin registro en la página de inicio. La auditoría técnica SEO completa también es gratuita pero requiere registro para guardar tus informes. Las funcionalidades premium (auditoría estratégica IA y códigos correctivos) son de pago mediante un sistema de créditos, con las 2 primeras auditorías estratégicas gratis.'
+          question: "¿Qué incluye la auditoría SEO de 200 puntos de Crawlers.fr?",
+          answer: "La auditoría analiza 200 criterios técnicos en 12 categorías: meta tags, velocidad, datos estructurados, enlazado interno, accesibilidad móvil, seguridad HTTPS, Core Web Vitals, sitemap, robots.txt, E-E-A-T, indexación y compatibilidad LLM. Recibes una puntuación global, recomendaciones priorizadas y código correctivo listo para implementar."
         },
         {
-          question: '¿Qué es un crawler de IA y por qué es importante?',
-          answer: 'Un crawler de IA es un bot que recorre la web para recopilar datos destinados a entrenar modelos de lenguaje (LLM) como ChatGPT, Claude o Gemini. Si tu sitio es accesible para estos crawlers, tu contenido puede ser citado y referenciado en las respuestas de los asistentes de IA, generando tráfico cualificado.'
+          question: "¿Cómo ser citado por ChatGPT, Perplexity y Gemini?",
+          answer: "Necesitas optimizar tu GEO (Generative Engine Optimization): datos estructurados JSON-LD ricos, contenido E-E-A-T verificado, autorización de crawlers IA en tu robots.txt, y frases 'citables' en tu contenido. Crawlers.fr mide tu puntuación GEO y tu Cuota de Voz LLM en 4 modelos simultáneamente."
         },
         {
-          question: '¿Qué es la puntuación GEO y cómo puedo mejorarla?',
-          answer: 'La puntuación GEO (Generative Engine Optimization) mide qué tan optimizado está tu sitio para los motores de búsqueda generativos. Para mejorarla: añade datos estructurados JSON-LD, optimiza tus meta tags, usa una jerarquía H1/H2 clara, y asegúrate de que tu sitemap sea accesible.'
+          question: "¿Cuánto tiempo toma una auditoría completa?",
+          answer: "Menos de 5 minutos. Ingresa tu URL, Crawlers.fr ejecuta 7 algoritmos en paralelo: crawl técnico, análisis PageSpeed, puntuación GEO, visibilidad LLM, datos estructurados, seguridad y E-E-A-T. El informe completo con correcciones está disponible de inmediato."
         },
         {
-          question: '¿Cómo bloqueo o permito bots de IA en mi sitio?',
-          answer: "Edita tu archivo robots.txt en la raíz de tu sitio. Para bloquear GPTBot: añade 'User-agent: GPTBot' seguido de 'Disallow: /'. Para permitirlo: usa 'Allow: /' en su lugar. Repite para cada bot (ClaudeBot, Google-Extended, etc.)."
+          question: "¿Cuál es la diferencia entre SEO clásico y GEO?",
+          answer: "El SEO clásico optimiza tu posicionamiento en Google. El GEO optimiza tu citabilidad en las respuestas de IA generativa (ChatGPT, Perplexity, Gemini, Claude). En 2026, el 40% de las búsquedas pasan por un motor IA. Crawlers.fr es la primera herramienta francófona que cubre ambos simultáneamente."
         },
         {
-          question: '¿Cuáles son los principales crawlers de IA a monitorear?',
-          answer: 'Los principales crawlers de IA son: GPTBot y ChatGPT-User (OpenAI), ClaudeBot (Anthropic), Google-Extended (Google AI), PerplexityBot (Perplexity), CCBot (Common Crawl) y Applebot-Extended (Apple Intelligence). Cada uno tiene sus propias reglas de cumplimiento del robots.txt.'
-        },
-        {
-          question: '¿Por qué mi puntuación PageSpeed afecta mi visibilidad IA?',
-          answer: 'Un sitio lento puede impedir que los crawlers de IA carguen correctamente tu contenido. Los Core Web Vitals (LCP, FID, CLS) afectan no solo el SEO clásico sino también la capacidad de la IA para analizar tu sitio. Una buena puntuación PageSpeed garantiza una mejor indexación.'
-        },
-        {
-          question: "¿Por qué Crawlers.fr no es más caro?",
-          answer: "Aplicamos el principio del 'dividendo de la IA': los costos de infraestructura y cómputo bajan estructuralmente gracias a los avances de los modelos (caché agresivo, modelos ligeros para tareas rutinarias, arquitectura serverless). En lugar de maximizar márgenes, trasladamos estos ahorros a nuestros precios para hacer la auditoría SEO/GEO profesional accesible a todos — freelancers, pymes y agencias. Es nuestra ventaja competitiva sostenible."
+          question: "¿Por qué Crawlers.fr cuesta 29€/mes en vez de 200€+?",
+          answer: "Aplicamos el 'dividendo de la IA': los costos de infraestructura bajan estructuralmente gracias a los avances de los modelos. En lugar de maximizar márgenes, trasladamos estos ahorros a nuestros precios. Resultado: una auditoría que costaba 2.000€ en agencia ahora es accesible a 29€/mes, auditorías ilimitadas incluidas."
         }
       ],
     },
