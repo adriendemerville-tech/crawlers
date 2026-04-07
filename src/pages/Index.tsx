@@ -601,10 +601,7 @@ const Index = () => {
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
             <div className="relative mx-auto max-w-4xl px-4 text-center">
               <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                {language === 'fr' ? 'Gérez 30 clients. Audits illimités. ' : language === 'es' ? 'Gestiona 30 clientes. Auditorías ilimitadas. ' : 'Manage 30 clients. Unlimited audits. '}
-                <span className="bg-gradient-to-r from-violet-500 to-amber-400 bg-clip-text text-transparent">
-                  {language === 'fr' ? 'Zéro limite.' : language === 'es' ? 'Sin límites.' : 'Zero limits.'}
-                </span>
+                {language === 'fr' ? 'Gérez 30 clients. Audits illimités.' : language === 'es' ? 'Gestiona 30 clientes. Auditorías ilimitadas.' : 'Manage 30 clients. Unlimited audits.'}
               </h2>
               <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
                 {language === 'fr'
