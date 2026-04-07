@@ -200,7 +200,7 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     // Crédits & abonnements
     { term: "Crédits Crawlers", definition: "Unité de consommation pour les fonctionnalités avancées (audits stratégiques, génération de code, Content Architect). 25 crédits offerts aux 1000 premiers inscrits.", category: "technical" },
     { term: "Pro Agency", definition: "Abonnement premium Crawlers.fr (29€/mois) débloquant le Cocon Sémantique 3D, le Crawl Multi-Pages, le tracking SERP, la connexion GMB et 1 collaborateur.", category: "technical" },
-    { term: "Pro Agency+", definition: "Abonnement premium étendu (99€/mois) avec 2 collaborateurs, limites de crawl à 50 pages et accès prioritaire aux nouvelles fonctionnalités.", category: "technical" },
+    { term: "Pro Agency+", definition: "Abonnement premium étendu (79€/mois) avec 2 collaborateurs, limites de crawl à 50 pages et accès prioritaire aux nouvelles fonctionnalités.", category: "technical" },
 
     // Fichiers techniques
     { term: "llms.txt", definition: "Fichier texte à la racine d'un site listant les pages clés avec descriptions pour les LLMs. Complément du robots.txt pour la visibilité dans les moteurs IA.", category: "geo" },

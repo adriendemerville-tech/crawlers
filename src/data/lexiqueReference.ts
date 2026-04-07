@@ -118,7 +118,7 @@ export const LEXIQUE_REFERENCE: LexiqueEntry[] = [
   { term: 'Données Structurées', def: "Balisage JSON-LD/Schema.org pour machines et IA." },
   { term: 'Crédits Crawlers', def: "Unité de consommation pour fonctionnalités avancées." },
   { term: 'Pro Agency', def: "Abonnement premium 29€/mois (Cocon, Crawl, GMB, 1 collab)." },
-  { term: 'Pro Agency+', def: "Abonnement premium étendu 99€/mois (2 collabs, limites étendues)." },
+  { term: 'Pro Agency+', def: "Abonnement premium étendu 79€/mois (2 collabs, limites étendues)." },
 ];
 
 /**
