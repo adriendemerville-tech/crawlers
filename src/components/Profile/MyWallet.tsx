@@ -338,6 +338,11 @@ export function MyWallet() {
                 <ClientsTab />
               </TabsContent>
 
+              {/* Counters Tab */}
+              <TabsContent value="counters" className="mt-0">
+                <CrawlQuotaCard />
+              </TabsContent>
+
               {/* Invoices Tab */}
               <TabsContent value="invoices" className="mt-0">
                 <Card>
