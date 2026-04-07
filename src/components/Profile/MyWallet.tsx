@@ -26,6 +26,7 @@ import { TeamSharingSettings } from '@/components/Profile/TeamSharingSettings';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 import { CrawlQuotaCard } from '@/components/Profile/CrawlQuotaCard';
+import { ContentQuotaCard } from '@/components/Profile/ContentQuotaCard';
 
 const translations = {
   fr: {
@@ -340,8 +341,9 @@ export function MyWallet() {
               </TabsContent>
 
               {/* Counters Tab */}
-              <TabsContent value="counters" className="mt-0">
+              <TabsContent value="counters" className="mt-0 space-y-4">
                 <CrawlQuotaCard />
+                <ContentQuotaCard />
               </TabsContent>
 
               {/* Invoices Tab */}
