@@ -721,6 +721,15 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
     const jargonDist = typeof siteIdentity?.jargon_distance === 'number' ? siteIdentity.jargon_distance : null
 
     // ── BUILD CONTENT BRIEF (deterministic, pre-LLM) ──
+    // Load Voice DNA if available
+    let voiceDna: any = null;
+    if (resolvedSiteId) {
+      try {
+        const { data: siteData } = await serviceClient.from('tracked_sites').select('voice_dna').eq('id', resolvedSiteId).single();
+        voiceDna = siteData?.voice_dna || null;
+      } catch {}
+    }
+
     const contentBrief = await buildContentBrief({
       page_type: page_type as BriefPageType,
       keyword,
@@ -733,11 +742,12 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
       jargon_distance: jargonDist,
       language: language_code,
       secondary_keywords: workbenchKeywords.map((k: any) => k.payload?.keyword || k.title).filter(Boolean).slice(0, 10),
+      voice_dna: voiceDna,
       supabase: serviceClient,
     })
     const briefBlock = briefToPromptBlock(contentBrief)
     const brief = contentBrief // alias used downstream
-    console.log(`[content-advisor] ContentBrief built: ${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}, links=${contentBrief.internal_links.length}`)
+    console.log(`[content-advisor] ContentBrief built: ${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}, links=${contentBrief.internal_links.length}, voice_dna=${!!voiceDna}`)
 
     // ── Parse client_targets for audience context ──
     let audienceBlock = ''
