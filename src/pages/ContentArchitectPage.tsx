@@ -490,6 +490,9 @@ const fadeUp = {
 /* ─── Component ─── */
 const ContentArchitectPage = memo(() => {
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const { credits } = useCredits();
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
   const tr = t[language];
 
   return (
