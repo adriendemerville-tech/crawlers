@@ -25,6 +25,7 @@ import { ContentArchitectLibraryPanel } from './ContentArchitectLibraryPanel';
 import { ContentArchitectTasksPanel } from './ContentArchitectTasksPanel';
 import { ContentArchitectPreview } from './ContentArchitectPreview';
 import { ContentArchitectProvider } from '@/contexts/ContentArchitectContext';
+import { VoiceDNAEditor } from './VoiceDNAEditor';
 
 interface CocoonContentArchitectModalProps {
   isOpen: boolean;
