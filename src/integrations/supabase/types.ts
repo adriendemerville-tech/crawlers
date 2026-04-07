@@ -394,6 +394,75 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_ux_directives: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          directive_text: string
+          id: string
+          status: string
+          target_component: string | null
+          target_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          directive_text: string
+          id?: string
+          status?: string
+          target_component?: string | null
+          target_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          directive_text?: string
+          id?: string
+          status?: string
+          target_component?: string | null
+          target_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_ux_logs: {
+        Row: {
+          analysis_type: string
+          confidence_score: number | null
+          created_at: string
+          findings: Json | null
+          id: string
+          model_used: string | null
+          page_analyzed: string
+          proposals_generated: number | null
+        }
+        Insert: {
+          analysis_type?: string
+          confidence_score?: number | null
+          created_at?: string
+          findings?: Json | null
+          id?: string
+          model_used?: string | null
+          page_analyzed: string
+          proposals_generated?: number | null
+        }
+        Update: {
+          analysis_type?: string
+          confidence_score?: number | null
+          created_at?: string
+          findings?: Json | null
+          id?: string
+          model_used?: string | null
+          page_analyzed?: string
+          proposals_generated?: number | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string

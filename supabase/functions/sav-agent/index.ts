@@ -593,7 +593,8 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         "état des agents", "statut des agents", "status des agents",
         "qu'ont fait les agents", "qu'ont fait agent",
         "actions des agents", "derniers résultats agent",
-        "bilan agent", "bilan des agents", "bilan cto", "bilan seo",
+        "bilan agent", "bilan des agents", "bilan cto", "bilan seo", "bilan ux",
+        "agent ux a-t-il", "agent ux a t il", "activité ux", "actions agent ux",
       ];
       const isAgentQuery = isCreator && agentQueryKeywords.some(kw => lowerMsgCheck.includes(kw));
 
@@ -602,8 +603,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           // Determine which agent(s) the question is about
           const aboutCto = lowerMsgCheck.includes("cto");
           const aboutSeo = lowerMsgCheck.includes("seo");
+          const aboutUx = lowerMsgCheck.includes("ux") || lowerMsgCheck.includes("design");
           const aboutSupervisor = lowerMsgCheck.includes("supervisor");
-          const aboutAll = (!aboutCto && !aboutSeo && !aboutSupervisor) || lowerMsgCheck.includes("tous les agents") || lowerMsgCheck.includes("all agents");
+          const aboutAll = (!aboutCto && !aboutSeo && !aboutSupervisor && !aboutUx) || lowerMsgCheck.includes("tous les agents") || lowerMsgCheck.includes("all agents");
 
           let agentReport = "📋 **Rapport d'état des agents**\n\n";
 
@@ -730,6 +732,47 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
                   const statusIcon = c.status === 'completed' ? '✅' : c.status === 'failed' ? '❌' : '🔄';
                   const date = new Date(c.started_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
                   agentReport += `${statusIcon} ${date} — ${c.functions_audited || 0} fonctions, ${c.correction_count || 0} corrections, ${c.error_count || 0} erreurs\n`;
+                }
+              }
+            } else {
+              agentReport += "Aucune directive transmise.\n";
+            }
+            agentReport += "\n";
+          }
+
+          // Query UX directives
+          if (aboutUx || aboutAll) {
+            const { data: uxDirectives } = await sb.from("agent_ux_directives")
+              .select("id, directive_text, status, created_at, consumed_at, target_component, target_url")
+              .eq("user_id", user_id)
+              .order("created_at", { ascending: false })
+              .limit(10);
+
+            agentReport += "### 🎨 Agent UX\n";
+            if (uxDirectives && uxDirectives.length > 0) {
+              const pending = uxDirectives.filter(d => d.status === 'pending');
+              const consumed = uxDirectives.filter(d => d.status === 'consumed' || d.consumed_at);
+              agentReport += `- **${pending.length}** directive(s) en attente\n`;
+              agentReport += `- **${consumed.length}** directive(s) consommée(s)\n`;
+              agentReport += `- Dernière directive : ${new Date(uxDirectives[0].created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}\n`;
+              agentReport += "\n**Dernières directives :**\n";
+              for (const d of uxDirectives.slice(0, 5)) {
+                const statusIcon = d.consumed_at ? "✅" : "⏳";
+                agentReport += `${statusIcon} _${new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}_ — ${d.directive_text.slice(0, 80)}${d.directive_text.length > 80 ? '...' : ''}\n`;
+              }
+
+              // UX proposals
+              const { data: uxProposals, count: uxProposalCount } = await sb.from("cto_code_proposals")
+                .select("id, title, status, created_at, agent_source", { count: "exact" })
+                .eq("agent_source", "ux")
+                .order("created_at", { ascending: false })
+                .limit(5);
+              if (uxProposals && uxProposals.length > 0) {
+                const pendingP = uxProposals.filter(p => p.status === 'pending');
+                agentReport += `\n**Propositions UX :** ${uxProposalCount} total, ${pendingP.length} en attente\n`;
+                for (const p of uxProposals.slice(0, 3)) {
+                  const icon = p.status === 'approved' ? '✅' : p.status === 'rejected' ? '❌' : '⏳';
+                  agentReport += `${icon} ${p.title?.slice(0, 60) || 'Sans titre'} (${p.status})\n`;
                 }
               }
             } else {
@@ -971,6 +1014,76 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           return jsonOk({ reply: confirmReply, conversation_id: savedConvId || conversation_id });
         } catch (e) {
           console.error("Supervisor directive error:", e);
+        }
+      }
+
+      // ── UX Agent directive detection (admin creator only) ──
+      const uxDirectiveMatch = lastUserMsg.match(/^\/ux\s+(.+)/is);
+      const uxNaturalKeywords = [
+        "agent ux", "dis à l'agent ux", "dis a l'agent ux",
+        "demande à l'agent ux", "demande a l'agent ux",
+        "instruction ux", "directive ux", "directive design",
+        "l'agent ux doit", "agent ux doit",
+        "refonte", "redesign", "nouveau composant",
+        "améliore le design", "améliore l'ux", "optimise la conversion",
+      ];
+      const isUxDirective = uxDirectiveMatch || uxNaturalKeywords.some(kw => lowerMsgCheck.includes(kw));
+
+      if (isUxDirective && !isCreator) {
+        return jsonOk({ reply: "⚠️ Seul l'administrateur créateur peut transmettre des directives à l'Agent UX.", conversation_id });
+      }
+
+      if (isUxDirective && isCreator) {
+        const { data: bridgeConf4 } = await sb.from("admin_dashboard_config").select("card_order").eq("user_id", user_id).maybeSingle();
+        const bridgeConfig4 = (bridgeConf4?.card_order as any) || {};
+        if (bridgeConfig4.felix_ux_bridge === false) {
+          return jsonOk({ reply: "⚠️ Le pont Félix → Agent UX est actuellement **désactivé**. Vous pouvez le réactiver depuis le Hub Intelligence (admin).", conversation_id });
+        }
+        try {
+          const directiveText = uxDirectiveMatch
+            ? uxDirectiveMatch[1].trim()
+            : lastUserMsg;
+
+          const compMatch = directiveText.match(/(?:composant|component|section|page)\s+([A-Za-z0-9_-]+)/i);
+          const targetComponent = compMatch ? compMatch[1] : null;
+          const urlMatch = directiveText.match(/(?:sur|pour|page|url)\s+(\/[^\s,]+|https?:\/\/[^\s,]+)/i);
+          const targetUrl = urlMatch ? urlMatch[1] : null;
+
+          await sb.from("agent_ux_directives").insert({
+            user_id,
+            directive_text: directiveText,
+            target_component: targetComponent,
+            target_url: targetUrl,
+            status: 'pending',
+          });
+
+          const confirmReply = `✅ Directive transmise à l'Agent UX :\n\n> ${directiveText}\n\n${targetComponent ? `Composant cible : \`${targetComponent}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent UX intégrera cette instruction lors de sa prochaine analyse.`;
+
+          let savedConvId = conversation_id;
+          try {
+            const allMessages = [...messages, { role: "assistant", content: confirmReply }];
+            if (conversation_id) {
+              await sb.from("sav_conversations").update({
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).eq("id", conversation_id);
+            } else {
+              const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+              const { data: newConv } = await sb.from("sav_conversations").insert({
+                user_id,
+                user_email: prof?.email || null,
+                messages: allMessages,
+                message_count: allMessages.length,
+              }).select("id").single();
+              savedConvId = newConv?.id;
+            }
+          } catch (e) {
+            console.error("Save UX directive conv error:", e);
+          }
+
+          return jsonOk({ reply: confirmReply, conversation_id: savedConvId || conversation_id });
+        } catch (e) {
+          console.error("UX directive error:", e);
         }
       }
       

@@ -1,7 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bot, Search, Brain, Shield, Bug, Award } from 'lucide-react';
+import { Bot, Search, Brain, Shield, Bug, Award, Palette } from 'lucide-react';
 import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { SeoAgentDashboard } from './SeoAgentDashboard';
+import { UxAgentDashboard } from './UxAgentDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
 import { CtoSupervisor } from './CtoSupervisor';
 import { SupervisorErrorsRegistry } from './SupervisorErrorsRegistry';
@@ -22,6 +23,10 @@ export function IntelligenceHub() {
           <TabsTrigger value="agent-cto" className="flex-1 gap-2">
             <Bot className="h-4 w-4" />
             <span className="hidden sm:inline">Agent CTO</span>
+          </TabsTrigger>
+          <TabsTrigger value="agent-ux" className="flex-1 gap-2">
+            <Palette className="h-4 w-4" />
+            <span className="hidden sm:inline">Agent UX</span>
           </TabsTrigger>
           <TabsTrigger value="recettage" className="flex-1 gap-2">
             <Bug className="h-4 w-4" />
@@ -47,6 +52,10 @@ export function IntelligenceHub() {
 
         <TabsContent value="agent-cto" forceMount className="data-[state=inactive]:hidden">
           <CtoAgentDashboard />
+        </TabsContent>
+
+        <TabsContent value="agent-ux" forceMount className="data-[state=inactive]:hidden">
+          <UxAgentDashboard />
         </TabsContent>
 
         <TabsContent value="recettage" forceMount className="data-[state=inactive]:hidden">
