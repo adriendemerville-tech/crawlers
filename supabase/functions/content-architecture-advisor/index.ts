@@ -56,7 +56,7 @@ Deno.serve(handleRequest(async (req) => {
     const { data: job } = await sb.from('async_jobs').select('status, result_data, error_message, progress').eq('id', pollJobId).single()
     if (!job) return jsonError('Job not found', 404)
     if (job.status === 'completed') return jsonOk({ success: true, data: job.result_data, status: 'completed' })
-    if (job.status === 'failed') return jsonError(job.error_message || 'Job failed', status: 'failed', 500)
+    if (job.status === 'failed') return jsonError(job.error_message || 'Job failed', 500)
     return jsonOk({ status: job.status, progress: job.progress || 0 })
   }
 
