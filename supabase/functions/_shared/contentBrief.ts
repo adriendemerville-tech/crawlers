@@ -470,6 +470,20 @@ export async function buildContentBrief(input: BuildContentBriefInput): Promise<
     language,
     target_url,
     domain,
+
+    // Voice DNA injection
+    voice_dna: input.voice_dna ? {
+      dominant_register: input.voice_dna.dominant_register,
+      dominant_posture: input.voice_dna.dominant_posture,
+      dominant_addressing: input.voice_dna.dominant_addressing,
+      sentence_style: input.voice_dna.sentence_style,
+      lexical_density: input.voice_dna.lexical_density,
+      emotional_tone: input.voice_dna.emotional_tone,
+      sample_excerpts: (input.voice_dna.sample_excerpts || []).slice(0, 2),
+      tone_override: input.voice_dna.tone_overrides?.[page_type] || undefined,
+      forbidden_words: input.voice_dna.forbidden_words,
+      mandatory_words: input.voice_dna.mandatory_words,
+    } : undefined,
   };
 }
 
