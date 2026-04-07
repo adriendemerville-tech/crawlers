@@ -332,15 +332,15 @@ Coût des actions principales :
 | Content Architect + Calendrier éditorial | ❌ | ✅ | ✅ |
 | Sites simultanés | 1 | 30 | 30 |
 | Quiz IA intégrés | ✅ (Crawlers) | ✅ (tous) | ✅ (tous) |
-| Prix | Gratuit | à partir de 59€/mois* | 89€/mois |
+| Prix | Gratuit | à partir de 29€/mois* | 99€/mois |
 
 *Offre de lancement garantie à vie pour les 100 premiers abonnés. Prochain palier : 99€/mois.
 
 ### Qu'est-ce que le plan Pro Agency + ?
-Le plan Pro Agency + (89€/mois) est le plan premium de Crawlers.fr. Il inclut toutes les fonctionnalités de Pro Agency avec un quota de crawl étendu à 50 000 pages par mois (au lieu de 5 000), et un slider de crawl étendu jusqu'à 50 pages par analyse (au lieu de 20). Ce plan est conçu pour les agences gérant de grands sites ou un portefeuille étendu de clients.
+Le plan Pro Agency + (99€/mois) est le plan premium de Crawlers.fr. Il inclut toutes les fonctionnalités de Pro Agency avec un quota de crawl étendu à 50 000 pages par mois (au lieu de 5 000), et un slider de crawl étendu jusqu'à 50 pages par analyse (au lieu de 20). Ce plan est conçu pour les agences gérant de grands sites ou un portefeuille étendu de clients.
 
 ### Comment fonctionne l'offre early adopter ?
-Les 100 premiers abonnés Pro Agency bénéficient du tarif 59€/mois garanti à vie — même quand le prix public passera à 99€/mois.
+Les 100 premiers abonnés Pro Agency bénéficient du tarif 29€/mois garanti à vie — même quand le prix public passera à 99€/mois.
 
 Ce tarif est nominatif, lié à votre compte, et non transférable.
 

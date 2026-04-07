@@ -56,7 +56,7 @@ Les 4 outils d'analyse suivants sont entièrement gratuits et accessibles sans i
 - Premium : 150 crédits = 45€ (0,30€/crédit)
 - Pack Ultime : 500 crédits = 99€ (0,20€/crédit)
 
-# ABONNEMENT PRO AGENCY : 59€/mois
+# ABONNEMENT PRO AGENCY : 29€/mois
 - Audits techniques et stratégiques illimités
 - Codes correctifs illimités
 - Architecte Génératif (correctif multi-pages)
@@ -106,7 +106,7 @@ Système de routage intelligent pour appliquer des correctifs différents selon 
 - Modules configurables : JSON-LD, Open Graph, Meta, Hreflang, FAQ, HowTo par règle
 - Garde-fous : validation JSON-LD, sandboxing sémantique, watchdog CRON, kill switches
 - Historique des versions : archivage automatique, restauration en un clic
-- Réservé aux abonnés Pro Agency (59€/mois)
+- Réservé aux abonnés Pro Agency (29€/mois)
 
 ## 6. INTÉGRATION GTM / WIDGET (GRATUIT)
 Connexion simplifiée entre Crawlers.fr et n'importe quel site :
@@ -136,7 +136,7 @@ Diagnostic automatisé de l'équilibre Brand / Non-Brand :
 - Classification IA automatique du modèle économique (e-commerce, média, SaaS, etc.)
 - Taux de pénétration de marque (clics GSC vs volumes de recherche réels)
 - Historisation hebdomadaire pour détecter les dérives
-- Réservé aux abonnés Pro Agency (59€/mois)
+- Réservé aux abonnés Pro Agency (29€/mois)
 
 ## 10. COCOON — ARCHITECTURE SÉMANTIQUE VIVANTE 3D (Pro Agency)
 Moteur Three.js temps réel pour visualiser le maillage sémantique :
@@ -151,7 +151,7 @@ Moteur Three.js temps réel pour visualiser le maillage sémantique :
 - Assistant IA conversationnel intégré (Gemini) avec sélection multi-nœuds
 - Thème personnalisable (couleurs nœuds, particules, halos)
 - Auto-refresh à la détection de nouveaux audits/crawls
-- Réservé aux abonnés Pro Agency (59€/mois)
+- Réservé aux abonnés Pro Agency (29€/mois)
 
 ## 11. SERVEUR MCP — MODEL CONTEXT PROTOCOL (Pro Agency + Gratuit)
 Serveur MCP natif exposant 12 outils d'audit SEO/GEO :
