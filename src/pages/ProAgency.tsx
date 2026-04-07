@@ -493,6 +493,18 @@ export default function ProAgency() {
                 {t.heroSubtitle}
               </p>
 
+              {/* Stats bar */}
+              {'heroStats' in t && (
+                <div className="mx-auto mb-10 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+                  {(t as any).heroStats.map((stat: { value: string; label: string }, i: number) => (
+                    <div key={i} className="rounded-xl border border-border/50 bg-card/30 backdrop-blur-sm px-4 py-3 text-center">
+                      <div className="text-2xl font-extrabold text-foreground sm:text-3xl">{stat.value}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Price */}
               <div className="mb-8 flex items-baseline justify-center gap-2">
                 <span className="text-lg text-muted-foreground">{t.fromLabel}</span>
