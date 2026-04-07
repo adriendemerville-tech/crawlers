@@ -421,7 +421,7 @@ export default function ProAgency() {
       {
         "@type": "Offer",
         "name": "Pro Agency + — Sans engagement",
-        "price": "99.00",
+        "price": "79.00",
         "priceCurrency": "EUR",
         "availability": "https://schema.org/InStock",
         "priceValidUntil": "2026-12-31",

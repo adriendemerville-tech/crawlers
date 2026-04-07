@@ -308,16 +308,16 @@ const DOC_SECTIONS: DocSection[] = [
 <tr class="border-t border-border"><td class="p-2">Tracking SERP/GSC/GA4</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Quiz IA intégrés</td><td class="p-2 text-center">Crawlers</td><td class="p-2 text-center">Tous</td><td class="p-2 text-center">Tous</td></tr>
 <tr class="border-t border-border"><td class="p-2">Sites simultanés</td><td class="p-2 text-center">1</td><td class="p-2 text-center">30</td><td class="p-2 text-center">30</td></tr>
-<tr class="border-t border-border"><td class="p-2">Prix</td><td class="p-2 text-center">Gratuit</td><td class="p-2 text-center font-semibold">à partir de 29€/mois*</td><td class="p-2 text-center font-semibold">99€/mois</td></tr>
+<tr class="border-t border-border"><td class="p-2">Prix</td><td class="p-2 text-center">Gratuit</td><td class="p-2 text-center font-semibold">à partir de 29€/mois*</td><td class="p-2 text-center font-semibold">79€/mois</td></tr>
 </tbody>
 </table>
 </div>
-<p class="mt-2 text-xs text-muted-foreground">*Offre de lancement garantie à vie pour les 100 premiers abonnés. Prochain palier : 99€/mois.</p>`,
+<p class="mt-2 text-xs text-muted-foreground">*Offre de lancement garantie à vie pour les 100 premiers abonnés. Prochain palier : 79€/mois.</p>`,
       },
       {
         id: 'early-adopter',
         title: "Comment fonctionne l'offre early adopter ?",
-        content: `Les 100 premiers abonnés Pro Agency bénéficient du tarif <strong>29€/mois garanti à vie</strong> — même quand le prix public passera à 99€/mois.
+        content: `Les 100 premiers abonnés Pro Agency bénéficient du tarif <strong>29€/mois garanti à vie</strong> — même quand le prix public passera à 79€/mois.
 <p class="mt-2">Ce tarif est nominatif, lié à votre compte, et non transférable.</p>`,
       },
       {

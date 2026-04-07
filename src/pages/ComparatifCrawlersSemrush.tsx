@@ -53,7 +53,7 @@ const faqItems = [
   },
   {
     q: "Combien coûte Crawlers.fr par rapport à Semrush ?",
-    a: "Semrush Pro démarre à 139,95$/mois (~130€). Crawlers.fr propose des audits gratuits, des crédits à partir de 5€, et des abonnements Pro Agency à 29€/mois ou Pro Agency+ à 99€/mois avec tout illimité. Soit 2 à 20 fois moins cher selon l'usage.",
+    a: "Semrush Pro démarre à 139,95$/mois (~130€). Crawlers.fr propose des audits gratuits, des crédits à partir de 5€, et des abonnements Pro Agency à 29€/mois ou Pro Agency+ à 79€/mois avec tout illimité. Soit 2 à 20 fois moins cher selon l'usage.",
   },
   {
     q: "Crawlers.fr remplace-t-il Semrush ?",
@@ -61,7 +61,7 @@ const faqItems = [
   },
   {
     q: "Puis-je utiliser Crawlers.fr en marque blanche pour mes clients ?",
-    a: "Oui. Le plan Pro Agency (29€/mois) inclut la marque blanche avec logo, couleurs et rapports personnalisés + 2 comptes collaborateurs. Le plan Pro Agency+ (99€/mois) ajoute l'API Marina en marque blanche complète + 3 comptes.",
+    a: "Oui. Le plan Pro Agency (29€/mois) inclut la marque blanche avec logo, couleurs et rapports personnalisés + 2 comptes collaborateurs. Le plan Pro Agency+ (79€/mois) ajoute l'API Marina en marque blanche complète + 3 comptes.",
   },
   {
     q: "Crawlers.fr peut-il déployer les corrections directement sur mon site ?",
@@ -101,7 +101,7 @@ type Row = {
 const comparisonData: Row[] = [
   // Tarifs & Accès
   { cat: "Tarifs", criteria: "Prix d'entrée", crawlers: "Gratuit (audits de base)", semrush: "139,95 $/mois (~130€)", cWin: true, sWin: false },
-  { cat: "Tarifs", criteria: "Abonnement agence", crawlers: "29€/mois (Pro Agency) ou 99€/mois (Pro Agency+)", semrush: "~230€/mois (Guru) + add-ons", cWin: true, sWin: false },
+  { cat: "Tarifs", criteria: "Abonnement agence", crawlers: "29€/mois (Pro Agency) ou 79€/mois (Pro Agency+)", semrush: "~230€/mois (Guru) + add-ons", cWin: true, sWin: false },
   { cat: "Tarifs", criteria: "Inscription obligatoire", crawlers: "Non (audits immédiats)", semrush: "Oui + CB souvent requise", cWin: true, sWin: false },
   // SEO Technique
   { cat: "SEO Technique", criteria: "Audit technique (PageSpeed, CWV)", crawlers: "Oui (CrUX + Lighthouse, 4 catégories)", semrush: "Oui (Site Audit)", cWin: null, sWin: null },
@@ -302,7 +302,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li>• <strong className="text-foreground">Audit Expert</strong> : Gratuit avec inscription (168 critères)</li>
                     <li>• <strong className="text-foreground">Crédits</strong> : Pack Essentiel 10 crédits (5€), Lite 50 crédits (19€), Premium 150 crédits (45€), Ultime 500 crédits (99€)</li>
                     <li>• <strong className="text-foreground">Pro Agency</strong> : 29€/mois — 5 000 pages crawlées, 80 pages Content Architect, marque blanche + 2 comptes</li>
-                    <li>• <strong className="text-foreground">Pro Agency+</strong> : 99€/mois — 50 000 pages crawlées, 150 pages Content Architect, API Marina, logs serveur, SEA→SEO Bridge, 3 comptes</li>
+                    <li>• <strong className="text-foreground">Pro Agency+</strong> : 79€/mois — 50 000 pages crawlées, 150 pages Content Architect, API Marina, logs serveur, SEA→SEO Bridge, 3 comptes</li>
                     <li>• <strong className="text-foreground">Enterprise</strong> : Sur demande — serveur dédié, utilisateurs illimités, SLA garanti</li>
                   </ul>
                   <p className="text-xs text-muted-foreground mt-3">* Sans engagement, résiliable à tout moment. 25 crédits offerts à l'inscription.</p>

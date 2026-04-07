@@ -140,7 +140,7 @@ const t = {
       },
       {
         name: 'Pro Agency +',
-        price: '99€',
+        price: '79€',
         priceUnit: '',
         period: '/mois',
         pages: '150 pages/mois',
@@ -296,7 +296,7 @@ const t = {
       },
       {
         name: 'Pro Agency +',
-        price: '€99',
+        price: '€79',
         priceUnit: '',
         period: '/month',
         pages: '150 pages/month',
@@ -438,7 +438,7 @@ const t = {
       },
       {
         name: 'Pro Agency +',
-        price: '99€',
+        price: '79€',
         priceUnit: '',
         period: '/mes',
         pages: '150 páginas/mes',
@@ -511,7 +511,7 @@ const ContentArchitectPage = memo(() => {
           "offers": [
             { "@type": "Offer", "name": "Pay-as-you-go", "price": "2.50", "priceCurrency": "EUR", "description": "5 credits per page" },
             { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "29", "priceCurrency": "EUR" },
-            { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "99", "priceCurrency": "EUR" },
+            { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "79", "priceCurrency": "EUR" },
           ],
           "featureList": ["Automated SEO content generation", "Multi-engine AI image generation", "Multi-CMS publishing", "Schema.org structured data", "GEO optimization", "Canva-like editor"],
         })}</script>
