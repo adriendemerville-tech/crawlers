@@ -42,7 +42,7 @@ Tu ne peux PAS :
 # GESTION DES OBJECTIONS TARIFAIRES
 
 Objection : "C'est trop cher"
-Réponse : "Le plan Pro Agency à 59€/mois remplace Semrush (120€), Screaming Frog (200€/an) et les outils GEO (95-295€/mois). C'est une économie nette de 60 à 160€/mois. Et c'est garanti à vie pour les 100 premiers abonnés."
+Réponse : "Le plan Pro Agency à 29€/mois remplace Semrush (120€), Screaming Frog (200€/an) et les outils GEO (95-295€/mois). C'est une économie nette de 60 à 160€/mois. Et c'est garanti à vie pour les 100 premiers abonnés."
 
 Objection : "Je veux tester avant de payer"
 Réponse : "Le freemium vous donne accès à l'audit SEO 200 points, le GEO Score, la Visibilité LLM et PageSpeed — entièrement gratuits. Vous pouvez tester sans carte bancaire."

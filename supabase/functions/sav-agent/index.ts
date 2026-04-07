@@ -943,14 +943,14 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         if (userCredits <= 0) {
           alertBlock += `\n⚠️ ALERTE CRÉDITS ÉPUISÉS : L'utilisateur n'a plus de crédits (solde: ${userCredits}). `;
           if (userPlan === 'free') {
-            alertBlock += `Suggère de passer au plan Pro Agency (59€/mois) pour bénéficier de l'Audit Expert et du Code Correctif illimités + 5000 pages de crawl. Lien : [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
+            alertBlock += `Suggère de passer au plan Pro Agency (29€/mois) pour bénéficier de l'Audit Expert et du Code Correctif illimités + 5000 pages de crawl. Lien : [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
           } else {
             alertBlock += `Suggère de recharger avec un pack de crédits (Premium : 150 crédits à 45€) depuis [Mon Portefeuille](https://crawlers.fr/console) > onglet Pro Agency.`;
           }
         } else if (userCredits <= 3) {
           alertBlock += `\n⚠️ ALERTE CRÉDITS BAS : Il ne reste que ${userCredits} crédit(s). `;
           if (userPlan === 'free') {
-            alertBlock += `Mentionne que le plan Pro Agency (59€/mois) offre l'Audit Expert et le Code Correctif illimités. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
+            alertBlock += `Mentionne que le plan Pro Agency (29€/mois) offre l'Audit Expert et le Code Correctif illimités. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
           } else {
             alertBlock += `Propose de recharger avec le Pack Premium (150 crédits à 45€) depuis l'onglet Pro Agency dans la Console.`;
           }
@@ -962,14 +962,14 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           if (userPlan === 'agency_pro') {
             alertBlock += `Suggère de passer à Pro Agency + (99€/mois) pour 50 000 pages/mois et 50 pages/scan. [Voir Pro Agency +](https://crawlers.fr/pro-agency)`;
           } else if (userPlan === 'free') {
-            alertBlock += `Suggère Pro Agency (59€/mois) pour 5 000 pages/mois. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
+            alertBlock += `Suggère Pro Agency (29€/mois) pour 5 000 pages/mois. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
           }
         } else if (crawlUsagePercent >= 80) {
           alertBlock += `\n⚠️ ALERTE CRAWL PROCHE DU PLAFOND : ${totalCrawledPages}/${maxCrawlPages} pages crawlées ce mois (${crawlUsagePercent}%). `;
           if (userPlan === 'agency_pro') {
             alertBlock += `Informe que Pro Agency + (99€/mois) offre 50 000 pages/mois si besoin. [Voir Pro Agency +](https://crawlers.fr/pro-agency)`;
           } else if (userPlan === 'free') {
-            alertBlock += `Suggère Pro Agency (59€/mois) pour 5 000 pages/mois. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
+            alertBlock += `Suggère Pro Agency (29€/mois) pour 5 000 pages/mois. [Voir Pro Agency](https://crawlers.fr/pro-agency)`;
           }
         }
 
@@ -1362,7 +1362,7 @@ Résultats obtenus en temps réel :\n`;
 Cet utilisateur n'est PAS connecté. Tu es en mode commercial / vente.
 - Réponds à ses questions sur Crawlers.fr avec enthousiasme mais sans survente
 - Mets en avant les fonctionnalités gratuites : [Audit SEO gratuit](https://crawlers.fr/audit-expert), [Score GEO](https://crawlers.fr), [Vérification bots IA](https://crawlers.fr), [PageSpeed](https://crawlers.fr)
-- Si pertinent, mentionne l'offre Pro Agency à 59€/mois qui remplace Semrush (120€), Screaming Frog (200€/an) et les outils GEO (95-295€/mois)
+- Si pertinent, mentionne l'offre Pro Agency à 29€/mois qui remplace Semrush (120€), Screaming Frog (200€/an) et les outils GEO (95-295€/mois)
 - Propose-lui de s'inscrire gratuitement pour accéder à toutes les fonctionnalités de base : [S'inscrire](https://crawlers.fr/auth)
 - Tutoie le visiteur, sois chaleureux et accessible
 - Ne propose JAMAIS d'être rappelé par téléphone en mode visiteur
