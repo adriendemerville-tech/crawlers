@@ -225,9 +225,7 @@ Deno.serve(handleRequest(async (req) => {
       } else if (!isActiveSubscriber) {
         const result = await deductCredits()
         if (!result.success) {
-          return jsonError('Crédits insuffisants',
-            credits_required: CONTENT_CREDIT_COST,
-            credits_balance: userProfile?.credits_balance ?? 0, 402)
+          return jsonError('Crédits insuffisants', 402)
         }
         creditsDeducted = true
         console.log(`[content-advisor] Deducted ${CONTENT_CREDIT_COST} credits from ${user.id} (balance: ${result.new_balance})`)
