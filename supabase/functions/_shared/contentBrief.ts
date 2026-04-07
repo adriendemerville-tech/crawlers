@@ -87,6 +87,20 @@ export interface ContentBrief {
   language: string;
   target_url: string;
   domain: string;
+
+  // ── Voice DNA (editorial identity) ──
+  voice_dna?: {
+    dominant_register?: string;
+    dominant_posture?: string;
+    dominant_addressing?: string;
+    sentence_style?: string;
+    lexical_density?: string;
+    emotional_tone?: string;
+    sample_excerpts?: string[];
+    tone_override?: Record<string, any>;
+    forbidden_words?: string[];
+    mandatory_words?: string[];
+  };
 }
 
 // ═══ CONFIGURATION PAR TYPE DE PAGE ═══
@@ -367,6 +381,7 @@ async function resolveInternalLinks(
 // ═══ MAIN BUILDER ═══
 
 export interface BuildContentBriefInput {
+export interface BuildContentBriefInput {
   page_type: PageType;
   keyword: string;
   target_url: string;
@@ -379,6 +394,8 @@ export interface BuildContentBriefInput {
   jargon_distance?: number | null;
   language?: string;
   secondary_keywords?: string[];
+  // Voice DNA from tracked_sites
+  voice_dna?: any;
   // Supabase client for internal links resolution
   supabase?: any;
 }
