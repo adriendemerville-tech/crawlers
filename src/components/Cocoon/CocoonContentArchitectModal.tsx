@@ -649,6 +649,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                 )}
                 {activePanel === 'voice' && trackedSiteId && domain && (
                   <VoiceDNAEditor trackedSiteId={trackedSiteId} domain={domain} />
+                )}
                 {activePanel === 'tasks' && (
                   <ContentArchitectTasksPanel
                     domain={domain} trackedSiteId={trackedSiteId}
