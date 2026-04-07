@@ -31,7 +31,7 @@ const TOOLS = [
   { name: "Visibilité LLM", access: "Gratuit", desc: "Présence de la marque dans ChatGPT, Gemini, Perplexity, Claude, Grok." },
   { name: "PageSpeed", access: "Gratuit", desc: "Core Web Vitals (LCP, FID, CLS, TTFB) via Google PageSpeed Insights." },
   { name: "Audit Expert", access: "Gratuit (inscription)", desc: "168 critères techniques et sémantiques avec code correctif." },
-  { name: "Crawl Multi-Pages", access: "Premium", desc: "Analyse récursive jusqu'à 100 000 pages avec synthèse IA." },
+  { name: "Crawl Multi-Pages", access: "Premium", desc: "Analyse récursive jusqu'à 50 000 pages avec synthèse IA." },
   { name: "Audit Comparé", access: "Premium", desc: "Analyse face-à-face de deux URLs concurrentes." },
   { name: "Cocoon 3D", access: "Pro Agency", desc: "Cocon sémantique 3D avec stratège IA conversationnel." },
   { name: "Content Architect", access: "Pro Agency", desc: "Création de contenu IA avec données structurées et maillage." },
