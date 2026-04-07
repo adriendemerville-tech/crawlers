@@ -583,6 +583,17 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         "a-t-il consommé", "a t il consommé",
         "combien de directives", "combien de proposals",
         "historique agent", "historique directives",
+        // Query-intent phrases (list, show, give me, status...)
+        "liste des dernières actions", "dernières actions de",
+        "dernières actions agent", "liste des actions",
+        "actions de l'agent", "actions agent cto", "actions agent seo",
+        "montre les actions", "montre-moi les actions",
+        "donne moi la liste", "donne-moi la liste",
+        "résumé des agents", "résumé agent", "summary agent",
+        "état des agents", "statut des agents", "status des agents",
+        "qu'ont fait les agents", "qu'ont fait agent",
+        "actions des agents", "derniers résultats agent",
+        "bilan agent", "bilan des agents", "bilan cto", "bilan seo",
       ];
       const isAgentQuery = isCreator && agentQueryKeywords.some(kw => lowerMsgCheck.includes(kw));
 
