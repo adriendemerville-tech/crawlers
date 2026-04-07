@@ -8195,6 +8195,74 @@ export type Database = {
           },
         ]
       }
+      smart_recommendations: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_unlocked: boolean
+          last_evaluated_at: string | null
+          maturity_level: string
+          priority: number
+          recommendation_data: Json | null
+          recommendation_key: string
+          status: string
+          title: string
+          tracked_site_id: string
+          unlock_criteria_met: Json | null
+          unlock_criteria_required: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_unlocked?: boolean
+          last_evaluated_at?: string | null
+          maturity_level?: string
+          priority?: number
+          recommendation_data?: Json | null
+          recommendation_key: string
+          status?: string
+          title?: string
+          tracked_site_id: string
+          unlock_criteria_met?: Json | null
+          unlock_criteria_required?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_unlocked?: boolean
+          last_evaluated_at?: string | null
+          maturity_level?: string
+          priority?: number
+          recommendation_data?: Json | null
+          recommendation_key?: string
+          status?: string
+          title?: string
+          tracked_site_id?: string
+          unlock_criteria_met?: Json | null
+          unlock_criteria_required?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "smart_recommendations_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solution_library: {
         Row: {
           category: string | null
