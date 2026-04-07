@@ -564,6 +564,195 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
         }
       }
 
+      // ── Agent status QUERY detection (admin creator only) ──
+      // Detects questions ABOUT agents (status, consumed directives, proposals, last run...)
+      const agentQueryKeywords = [
+        "agent cto a-t-il", "agent cto a t il", "agent cto a-t'il",
+        "agent seo a-t-il", "agent seo a t il", "agent seo a-t'il",
+        "supervisor a-t-il", "supervisor a t il", "supervisor a-t'il",
+        "directives transmises", "directives envoyées", "directives pending",
+        "directives en attente", "directives consommées",
+        "état des directives", "statut des directives", "status directives",
+        "état de l'agent", "statut de l'agent", "status agent",
+        "dernier cycle", "dernière exécution", "last run",
+        "propositions de code", "code proposals", "proposals en attente",
+        "qu'a fait l'agent", "qu'a fait agent", "que fait l'agent",
+        "rapport agent", "rapport du supervisor", "rapport supervisor",
+        "activité agent", "activité des agents", "activité cto", "activité seo",
+        "a-t-il regardé", "a t il regardé", "a-t-il traité", "a t il traité",
+        "a-t-il consommé", "a t il consommé",
+        "combien de directives", "combien de proposals",
+        "historique agent", "historique directives",
+      ];
+      const isAgentQuery = isCreator && agentQueryKeywords.some(kw => lowerMsgCheck.includes(kw));
+
+      if (isAgentQuery) {
+        try {
+          // Determine which agent(s) the question is about
+          const aboutCto = lowerMsgCheck.includes("cto");
+          const aboutSeo = lowerMsgCheck.includes("seo");
+          const aboutSupervisor = lowerMsgCheck.includes("supervisor");
+          const aboutAll = (!aboutCto && !aboutSeo && !aboutSupervisor) || lowerMsgCheck.includes("tous les agents") || lowerMsgCheck.includes("all agents");
+
+          let agentReport = "📋 **Rapport d'état des agents**\n\n";
+
+          // Query CTO directives
+          if (aboutCto || aboutAll) {
+            const { data: ctoDirectives } = await sb.from("agent_cto_directives")
+              .select("id, directive_text, status, created_at, consumed_at, target_function, target_url")
+              .eq("user_id", user_id)
+              .order("created_at", { ascending: false })
+              .limit(10);
+
+            agentReport += "### 🔧 Agent CTO\n";
+            if (ctoDirectives && ctoDirectives.length > 0) {
+              const pending = ctoDirectives.filter(d => d.status === 'pending');
+              const consumed = ctoDirectives.filter(d => d.status === 'consumed' || d.consumed_at);
+              agentReport += `- **${pending.length}** directive(s) en attente\n`;
+              agentReport += `- **${consumed.length}** directive(s) consommée(s)\n`;
+              agentReport += `- Dernière directive : ${new Date(ctoDirectives[0].created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}\n`;
+              if (ctoDirectives[0].consumed_at) {
+                agentReport += `- Dernière consommation : ${new Date(ctoDirectives[0].consumed_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}\n`;
+              }
+              agentReport += "\n**Dernières directives :**\n";
+              for (const d of ctoDirectives.slice(0, 5)) {
+                const statusIcon = d.consumed_at ? "✅" : "⏳";
+                agentReport += `${statusIcon} _${new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}_ — ${d.directive_text.slice(0, 80)}${d.directive_text.length > 80 ? '...' : ''}\n`;
+              }
+            } else {
+              agentReport += "Aucune directive transmise.\n";
+            }
+
+            // CTO proposals
+            const { data: ctoProposals, count: proposalCount } = await sb.from("cto_code_proposals")
+              .select("id, title, status, created_at, agent_source", { count: "exact" })
+              .eq("agent_source", "cto")
+              .order("created_at", { ascending: false })
+              .limit(5);
+            if (ctoProposals && ctoProposals.length > 0) {
+              const pendingP = ctoProposals.filter(p => p.status === 'pending');
+              agentReport += `\n**Propositions de code :** ${proposalCount} total, ${pendingP.length} en attente\n`;
+              for (const p of ctoProposals.slice(0, 3)) {
+                const icon = p.status === 'approved' ? '✅' : p.status === 'rejected' ? '❌' : '⏳';
+                agentReport += `${icon} ${p.title?.slice(0, 60) || 'Sans titre'} (${p.status})\n`;
+              }
+            }
+            agentReport += "\n";
+          }
+
+          // Query SEO directives
+          if (aboutSeo || aboutAll) {
+            const { data: seoDirectives } = await sb.from("agent_seo_directives")
+              .select("id, directive_text, status, created_at, consumed_at, target_url, target_slug")
+              .eq("user_id", user_id)
+              .order("created_at", { ascending: false })
+              .limit(10);
+
+            agentReport += "### 🔍 Agent SEO\n";
+            if (seoDirectives && seoDirectives.length > 0) {
+              const pending = seoDirectives.filter(d => d.status === 'pending');
+              const consumed = seoDirectives.filter(d => d.status === 'consumed' || d.consumed_at);
+              agentReport += `- **${pending.length}** directive(s) en attente\n`;
+              agentReport += `- **${consumed.length}** directive(s) consommée(s)\n`;
+              agentReport += `- Dernière directive : ${new Date(seoDirectives[0].created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}\n`;
+              if (seoDirectives[0].consumed_at) {
+                agentReport += `- Dernière consommation : ${new Date(seoDirectives[0].consumed_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}\n`;
+              }
+              agentReport += "\n**Dernières directives :**\n";
+              for (const d of seoDirectives.slice(0, 5)) {
+                const statusIcon = d.consumed_at ? "✅" : "⏳";
+                agentReport += `${statusIcon} _${new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}_ — ${d.directive_text.slice(0, 80)}${d.directive_text.length > 80 ? '...' : ''}\n`;
+              }
+
+              // SEO proposals
+              const { data: seoProposals, count: seoProposalCount } = await sb.from("cto_code_proposals")
+                .select("id, title, status, created_at, agent_source", { count: "exact" })
+                .eq("agent_source", "seo")
+                .order("created_at", { ascending: false })
+                .limit(5);
+              if (seoProposals && seoProposals.length > 0) {
+                const pendingP = seoProposals.filter(p => p.status === 'pending');
+                agentReport += `\n**Propositions SEO :** ${seoProposalCount} total, ${pendingP.length} en attente\n`;
+                for (const p of seoProposals.slice(0, 3)) {
+                  const icon = p.status === 'approved' ? '✅' : p.status === 'rejected' ? '❌' : '⏳';
+                  agentReport += `${icon} ${p.title?.slice(0, 60) || 'Sans titre'} (${p.status})\n`;
+                }
+              }
+            } else {
+              agentReport += "Aucune directive transmise.\n";
+            }
+            agentReport += "\n";
+          }
+
+          // Query Supervisor directives
+          if (aboutSupervisor || aboutAll) {
+            const { data: supDirectives } = await sb.from("agent_supervisor_directives")
+              .select("id, directive_text, status, created_at, consumed_at, target_function, target_url")
+              .eq("user_id", user_id)
+              .order("created_at", { ascending: false })
+              .limit(10);
+
+            agentReport += "### 🛡️ Supervisor\n";
+            if (supDirectives && supDirectives.length > 0) {
+              const pending = supDirectives.filter(d => d.status === 'pending');
+              const consumed = supDirectives.filter(d => d.status === 'consumed' || d.consumed_at);
+              agentReport += `- **${pending.length}** directive(s) en attente\n`;
+              agentReport += `- **${consumed.length}** directive(s) consommée(s)\n`;
+              agentReport += `- Dernière directive : ${new Date(supDirectives[0].created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}\n`;
+              if (supDirectives[0].consumed_at) {
+                agentReport += `- Dernière consommation : ${new Date(supDirectives[0].consumed_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}\n`;
+              }
+              agentReport += "\n**Dernières directives :**\n";
+              for (const d of supDirectives.slice(0, 5)) {
+                const statusIcon = d.consumed_at ? "✅" : "⏳";
+                agentReport += `${statusIcon} _${new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}_ — ${d.directive_text.slice(0, 80)}${d.directive_text.length > 80 ? '...' : ''}\n`;
+              }
+
+              // Supervisor cycles
+              const { data: supCycles } = await sb.from("supervisor_cycles")
+                .select("id, status, started_at, completed_at, functions_audited, error_count, correction_count")
+                .order("started_at", { ascending: false })
+                .limit(3);
+              if (supCycles && supCycles.length > 0) {
+                agentReport += `\n**Derniers cycles Supervisor :**\n`;
+                for (const c of supCycles) {
+                  const statusIcon = c.status === 'completed' ? '✅' : c.status === 'failed' ? '❌' : '🔄';
+                  const date = new Date(c.started_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                  agentReport += `${statusIcon} ${date} — ${c.functions_audited || 0} fonctions, ${c.correction_count || 0} corrections, ${c.error_count || 0} erreurs\n`;
+                }
+              }
+            } else {
+              agentReport += "Aucune directive transmise.\n";
+            }
+            agentReport += "\n";
+          }
+
+          if (agentReport.length > 3000) agentReport = agentReport.substring(0, 2997) + "...";
+
+          // Save conversation
+          let savedConvId = conversation_id;
+          try {
+            const allMessages = [...messages, { role: "assistant", content: agentReport }];
+            if (conversation_id) {
+              await sb.from("sav_conversations").update({ messages: allMessages, message_count: allMessages.length }).eq("id", conversation_id);
+            } else {
+              const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+              const { data: newConv } = await sb.from("sav_conversations").insert({
+                user_id, user_email: prof?.email || null, messages: allMessages, message_count: allMessages.length,
+              }).select("id").single();
+              savedConvId = newConv?.id;
+            }
+          } catch (e) {
+            console.error("Save agent query conv error:", e);
+          }
+
+          return jsonOk({ reply: agentReport, conversation_id: savedConvId || conversation_id });
+        } catch (e) {
+          console.error("Agent status query error:", e);
+          // Fall through to normal flow
+        }
+      }
+
       // ── SEO Agent directive detection (admin creator only) ──
       const seoDirectiveMatch = lastUserMsg.match(/^\/seo\s+(.+)/is);
       const seoNaturalKeywords = [
@@ -1392,6 +1581,7 @@ Cet utilisateur est un créateur/administrateur de la plateforme. Tu peux :
 - Donner des informations sur la structure de la base de données
 - Partager des métriques système et des statistiques
 - Expliquer le fonctionnement interne des algorithmes
+- Répondre aux questions sur l'état des agents (CTO, SEO, Supervisor) : directives, propositions, cycles
 
 Tu ne dois PAS :
 - Modifier la logique backend (pas de suggestions de changements de code)
@@ -1399,6 +1589,7 @@ Tu ne dois PAS :
 - Partager des tokens, clés API ou secrets
 
 Pour les questions nécessitant des données précises, suggère au créateur de poser la question en termes de données (ex: "combien d'utilisateurs Pro cette semaine") — le système exécutera automatiquement une requête sécurisée.
+Le créateur peut aussi poser des questions sur l'activité des agents : "agent CTO a-t-il regardé les directives ?", "état des directives", "propositions en attente", etc.
 Tu n'as plus de limite de 1000 caractères en mode créateur. Limite: 3000 caractères.`;
     }
 
