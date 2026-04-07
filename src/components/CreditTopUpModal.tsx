@@ -273,7 +273,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Users className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '2 comptes inclus' : language === 'es' ? '2 cuentas' : '2 accounts'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><Zap className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Indice IAS' : language === 'es' ? 'Índice IAS' : 'SAI Index'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><Network className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Architecte de Cocon & GEO' : language === 'es' ? 'Arquitecto Cocon & GEO' : 'Cocoon Architect & GEO'}</span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><FileText className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Content Architect : 100 pages créés inclus' : language === 'es' ? 'Content Architect: 100 páginas creadas incluidas' : 'Content Architect: 100 pages created included'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><FileText className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Content Architect : 80 pages créés inclus' : language === 'es' ? 'Content Architect: 80 páginas creadas incluidas' : 'Content Architect: 80 pages created included'}</span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
