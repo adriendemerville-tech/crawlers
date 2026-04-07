@@ -201,9 +201,9 @@ export default function GoogleBusinessPage() {
     {
       q: t3(language, 'Le module Google Business est-il inclus dans l\'abonnement Pro Agency ?', 'Is the Google Business module included in the Pro Agency subscription?', '¿El módulo Google Business está incluido en la suscripción Pro Agency?'),
       a: t3(language,
-        'Le module Google Business est inclus dans l\'abonnement Pro Agency+ à 99 €/mois. L\'abonnement Pro Agency à 59 €/mois inclut tous les autres outils (audits illimités, crawl, Cocoon, Content Architect, Autopilote). Si vous êtes indépendant ou petite entreprise, vous pouvez également utiliser le module à l\'unité via des crédits.',
+        'Le module Google Business est inclus dans l\'abonnement Pro Agency+ à 99 €/mois. L\'abonnement Pro Agency à 29 €/mois inclut tous les autres outils (audits illimités, crawl, Cocoon, Content Architect, Autopilote). Si vous êtes indépendant ou petite entreprise, vous pouvez également utiliser le module à l\'unité via des crédits.',
         'The Google Business module is included in the Pro Agency+ subscription at €99/month. The Pro Agency subscription at €29/month includes all other tools (unlimited audits, crawl, Cocoon, Content Architect, Autopilot). Independent professionals can also use the module per-use via credits.',
-        'El módulo Google Business está incluido en la suscripción Pro Agency+ a 99 €/mes. La suscripción Pro Agency a 59 €/mes incluye todas las demás herramientas.'
+        'El módulo Google Business está incluido en la suscripción Pro Agency+ a 99 €/mes. La suscripción Pro Agency a 29 €/mes incluye todas las demás herramientas.'
       ),
     },
     {

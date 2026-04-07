@@ -510,7 +510,7 @@ const ContentArchitectPage = memo(() => {
           "description": tr.meta.description,
           "offers": [
             { "@type": "Offer", "name": "Pay-as-you-go", "price": "2.50", "priceCurrency": "EUR", "description": "5 credits per page" },
-            { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "59", "priceCurrency": "EUR" },
+            { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "29", "priceCurrency": "EUR" },
             { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "99", "priceCurrency": "EUR" },
           ],
           "featureList": ["Automated SEO content generation", "Multi-engine AI image generation", "Multi-CMS publishing", "Schema.org structured data", "GEO optimization", "Canva-like editor"],
