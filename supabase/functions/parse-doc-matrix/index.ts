@@ -2,7 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { read, utils } from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
+import { read, utils } from 'npm:xlsx@0.18.5';
 
 /* ================================================================== */
 /*  parse-doc-matrix — Native XLSX/CSV parser with variable detection  */
