@@ -1822,7 +1822,28 @@ export default function SiteCrawl() {
                 </Card>
               )}
 
-              {/* Top erreurs */}
+              {/* Maillage Interne (IPR) */}
+              {pages.length >= 3 && (() => {
+                const maillageData = computeMaillageFromCrawlPages(pages.map(p => ({
+                  internal_links: (p as any).internal_links ?? undefined,
+                  external_links: (p as any).external_links ?? undefined,
+                  crawl_depth: p.crawl_depth ?? undefined,
+                  seo_score: p.seo_score ?? undefined,
+                  http_status: p.http_status ?? undefined,
+                })));
+                if (!maillageData) return null;
+                return (
+                  <MaillageIPRCard
+                    data={maillageData}
+                    onExploreCocoon={() => {
+                      const domain = crawlResult?.domain || '';
+                      navigate(`/app/cocoon?domain=${encodeURIComponent(domain)}`);
+                    }}
+                  />
+                );
+              })()}
+
+
               {Object.keys(issueStats).length > 0 && (
                 <Card>
                   <CardHeader className="pb-2">
