@@ -56,6 +56,8 @@ export const reportTranslations = {
     tbtDesc: 'Temps de blocage du fil principal',
     speedIndexDesc: 'Vitesse d\'affichage du contenu visible',
     ttiDesc: 'Temps jusqu\'à l\'interactivité complète',
+    priority: 'Prioritaire',
+    recommended: 'Recommandé',
   },
   en: {
     title: 'Analysis Report',
@@ -114,6 +116,8 @@ export const reportTranslations = {
     tbtDesc: 'Main thread blocking time',
     speedIndexDesc: 'Speed of visible content display',
     ttiDesc: 'Time to full interactivity',
+    priority: 'Priority',
+    recommended: 'Recommended',
   },
   es: {
     title: 'Informe de Análisis',
@@ -172,6 +176,8 @@ export const reportTranslations = {
     tbtDesc: 'Tiempo de bloqueo del hilo principal',
     speedIndexDesc: 'Velocidad de visualización del contenido visible',
     ttiDesc: 'Tiempo hasta la interactividad completa',
+    priority: 'Prioritario',
+    recommended: 'Recomendado',
   },
 };
 
