@@ -124,9 +124,10 @@ interface CocoonBulkAutoLinkingProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   trackedSiteId: string;
+  hasCmsConnection?: boolean;
 }
 
-export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: CocoonBulkAutoLinkingProps) {
+export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId, hasCmsConnection = false }: CocoonBulkAutoLinkingProps) {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
 
