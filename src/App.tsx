@@ -114,6 +114,7 @@ const App = () => (
                 <DemoModeProvider>
                 <FreemiumProvider>
                 <CreditsProvider>
+                <AISidebarProvider>
                   <TooltipProvider>
                     <Suspense fallback={null}>
                       <Toaster />
