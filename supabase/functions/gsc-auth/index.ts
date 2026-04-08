@@ -180,6 +180,44 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         }
       }
 
+      // ═══ First GA4 pull — triggered immediately after OAuth ═══
+      if (ga4PropertyId) {
+        try {
+          const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+          const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+          // Find all tracked sites for this user to pull GA4 data for each domain
+          const { data: userSites } = await supabase
+            .from('tracked_sites')
+            .select('id, domain')
+            .eq('user_id', userId);
+
+          for (const site of (userSites || [])) {
+            const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            const endDate = new Date().toISOString().split('T')[0];
+            // Fire-and-forget: don't block the redirect
+            fetch(`${supabaseUrl}/functions/v1/fetch-ga4-data`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${serviceKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'fetch_metrics',
+                user_id: userId,
+                property_id: ga4PropertyId,
+                domain: site.domain,
+                start_date: startDate,
+                end_date: endDate,
+              }),
+            }).then(r => console.log(`[gsc-auth] GA4 first pull for ${site.domain}: ${r.status}`))
+              .catch(e => console.error(`[gsc-auth] GA4 first pull failed for ${site.domain}:`, e));
+          }
+          console.log(`[gsc-auth] 🚀 GA4 first pull triggered for ${(userSites || []).length} site(s)`);
+        } catch (e) {
+          console.error('[gsc-auth] GA4 first pull error (non-blocking):', e);
+        }
+      }
+
       // Redirect back to frontend with success
       return new Response(null, {
         status: 302,
