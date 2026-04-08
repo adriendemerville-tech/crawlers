@@ -41,9 +41,9 @@ function ArticleLayoutComponent({
     { year: 'numeric', month: 'long', day: 'numeric' }
   );
 
-  // Canonical URL
+  // Canonical URL — ALWAYS point to the clean URL without ?lang= to avoid duplicate content
   const canonicalUrl = slug 
-    ? `${SITE_URL}/blog/${slug}${language !== 'fr' ? `?lang=${language}` : ''}`
+    ? `${SITE_URL}/blog/${slug}`
     : `${SITE_URL}/blog`;
 
   // Hreflang alternates
