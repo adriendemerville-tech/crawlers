@@ -222,4 +222,4 @@ try {
     console.error('[content-pruning] error:', msg)
     return json({ error: msg }, 500)
   }
-})
+}));
