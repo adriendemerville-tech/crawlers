@@ -401,7 +401,21 @@ serve(async (req) => {
 
     const category = CATEGORIES[categoryId];
     const baseTargetRatio = category.targetRatio;
-    const ageYears = getAgeYears(site.founding_year);
+
+    // Auto-detect founding year via Wayback Machine if missing
+    let foundingYear = site.founding_year as number | null;
+    if (!foundingYear) {
+      console.log(`founding_year missing for ${site.domain}, querying Wayback Machine...`);
+      foundingYear = await fetchWaybackAge(site.domain);
+      if (foundingYear) {
+        console.log(`Wayback Machine: ${site.domain} first seen in ${foundingYear}`);
+        await supabase.from("tracked_sites").update({ founding_year: foundingYear }).eq("id", tracked_site_id);
+      } else {
+        console.log(`Wayback Machine: no data for ${site.domain}`);
+      }
+    }
+
+    const ageYears = getAgeYears(foundingYear);
     const ageLabel = getAgeLabel(ageYears);
 
     const seasonalityResult = calculateSeasonalityFactor(
