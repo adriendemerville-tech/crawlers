@@ -6285,6 +6285,56 @@ export type Database = {
         }
         Relationships: []
       }
+      page_priority_scores: {
+        Row: {
+          breakdown: Json
+          created_at: string
+          domain: string
+          id: string
+          page_url: string
+          priority_score: number
+          signals: Json
+          top_opportunities: Json
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          breakdown?: Json
+          created_at?: string
+          domain: string
+          id?: string
+          page_url: string
+          priority_score?: number
+          signals?: Json
+          top_opportunities?: Json
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          breakdown?: Json
+          created_at?: string
+          domain?: string
+          id?: string
+          page_url?: string
+          priority_score?: number
+          signals?: Json
+          top_opportunities?: Json
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_priority_scores_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parmenion_decision_log: {
         Row: {
           action_payload: Json
