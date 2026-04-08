@@ -408,10 +408,15 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
             </TabsTrigger>
             <TabsTrigger value="urls" className="gap-1.5 flex-1">
               <Search className="h-3.5 w-3.5" />
-              URLs scannées
+              URLs
               {scannedUrls.length > 0 && (
                 <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{scannedUrls.length}</Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="gap-1.5 flex-1">
+              <Radio className="h-3.5 w-3.5" />
+              Logs
+              {livePolling && <span className="ml-1 h-2 w-2 rounded-full bg-green-500 animate-pulse" />}
             </TabsTrigger>
           </TabsList>
 
