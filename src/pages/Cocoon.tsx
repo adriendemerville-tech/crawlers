@@ -930,6 +930,7 @@ function CocoonContent() {
                 colorIntensity={colorIntensity}
                 nodeColors={cocoonTheme.nodeColors}
                 bgColorSlider={bgColor}
+                particlesEnabled={particlesEnabled && cocoonFilters.showParticles}
               />
             ) : (
               <CocoonForceGraph
