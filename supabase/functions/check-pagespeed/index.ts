@@ -281,6 +281,7 @@ async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey:
   scores: PageSpeedResult;
   dataSource: 'field' | 'lab';
   partial: boolean;
+  recommendations: LighthouseRecommendation[];
 } | null> {
   const categories = ['PERFORMANCE', 'ACCESSIBILITY', 'BEST_PRACTICES', 'SEO'] as const;
 
@@ -340,6 +341,10 @@ async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey:
     tti: formatTime(perfAudits['interactive']?.numericValue || 0),
   };
 
+  // Extract Lighthouse recommendations for Code Architect
+  const recommendations = extractRecommendations(categoryData);
+  console.log(`[PSI:${strategy}] 📋 ${recommendations.length} recommandations Lighthouse extraites`);
+
   // CrUX field data (disponible dans n'importe quelle réponse de catégorie)
   const anyData = perfData || a11yData || bpData || seoData;
   const crux = extractCruxData(anyData?.loadingExperience);
@@ -368,7 +373,7 @@ async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey:
     finalResult = lighthouseResult;
   }
 
-  return { scores: finalResult, dataSource, partial };
+  return { scores: finalResult, dataSource, partial, recommendations };
 }
 
 Deno.serve(handleRequest(async (req) => {
