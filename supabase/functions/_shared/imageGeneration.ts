@@ -114,6 +114,12 @@ export function getStyleConfig(styleKey: ImageStyle): ImageStyleConfig {
   return IMAGE_STYLES.find(s => s.key === styleKey) || IMAGE_STYLES[0];
 }
 
+/**
+ * Anti-text guard: appended to all prompts unless allowText is true.
+ * Prevents models from rendering titles, labels or watermarks on images.
+ */
+const NO_TEXT_GUARD = ' Do NOT include any text, title, label, watermark, caption, heading or lettering in the image. The image must be purely visual with zero written words.';
+
 export interface ImageGenerationRequest {
   prompt: string;
   style: ImageStyle;
@@ -130,6 +136,14 @@ export interface ImageGenerationRequest {
   referenceImageUrl?: string;
   /** 'inspiration' = use as visual context, 'edit' = transform the reference */
   referenceMode?: 'inspiration' | 'edit';
+  /** Allow text in the generated image (default false). Set true only when user explicitly requests text. */
+  allowText?: boolean;
+}
+
+/** Build the final prompt with optional no-text guard */
+function buildSafePrompt(prefix: string, userPrompt: string, allowText?: boolean): string {
+  const base = `${prefix} ${userPrompt}`;
+  return allowText ? base : base + NO_TEXT_GUARD;
 }
 
 export interface ImageGenerationResult {
@@ -171,7 +185,7 @@ async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenera
       { type: 'image_url', image_url: { url: req.referenceImageUrl } },
     ];
   } else {
-    content = `${styleConfig.promptPrefix} ${req.prompt}`;
+    content = buildSafePrompt(styleConfig.promptPrefix, req.prompt, req.allowText);
   }
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -227,7 +241,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      prompt: `${styleConfig.promptPrefix} ${req.prompt}`,
+      prompt: buildSafePrompt(styleConfig.promptPrefix, req.prompt, req.allowText),
       width: req.width || 1024,
       height: req.height || 1024,
       ...(req.negativePrompt ? { negative_prompt: req.negativePrompt } : {}),
@@ -295,7 +309,7 @@ async function generateIdeogram(req: ImageGenerationRequest): Promise<ImageGener
     },
     body: JSON.stringify({
       image_request: {
-        prompt: `${styleConfig.promptPrefix} ${req.prompt}`,
+        prompt: buildSafePrompt(styleConfig.promptPrefix, req.prompt, req.allowText),
         model: 'V_2',
         aspect_ratio: req.aspectRatio || 'ASPECT_1_1',
         magic_prompt_option: 'AUTO',

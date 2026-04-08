@@ -755,7 +755,7 @@ try {
                       try {
                         const articleTitle = cmsAction.body.title || '';
                         const articleExcerpt = cmsAction.body.excerpt || cmsAction.body.meta_description || '';
-                        const imagePrompt = `Blog article header image for: ${articleTitle}. Context: ${articleExcerpt}`.slice(0, 500);
+                        const imagePrompt = `Evocative visual illustration for a blog article about: ${articleTitle}. Context: ${articleExcerpt}. Do NOT include any text, title or lettering.`.slice(0, 500);
                         
                         console.log(`[AutopilotEngine] Generating image for IKtracker article: "${articleTitle}"`);
                         
