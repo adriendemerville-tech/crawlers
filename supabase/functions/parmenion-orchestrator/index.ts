@@ -286,6 +286,15 @@ try {
         force_content: forceContent,
         force_iktracker_article: force_iktracker_article === true,
       });
+      if (!decision) {
+        return jsonOk({
+          cycle: cycle_number,
+          phase: currentPhase,
+          status: 'skipped',
+          reason: 'No workbench items available for prescribe phase',
+          domain,
+        });
+      }
     } else {
       // Non-prescribe phases or empty workbench without forced content: single LLM call
       // For execute phase, scan CMS to provide inventory of existing content (avoid duplicates)
@@ -1008,6 +1017,10 @@ ${templateBlock}`;
   console.log(`[Parménion] ✅ Prescribe V2: ${techResults.length} tech + ${contentResults.length} content = ${allToolCalls.length} tool calls total`);
 
   // ── BUILD DECISION FROM TOOL CALLS ──
+  if (items.length === 0) {
+    console.warn('[Parménion] Prescribe V2: no workbench items — skipping decision build');
+    return null;
+  }
   const topItem = items[0];
   const cmsActions: any[] = [];
   const fixes: any[] = [];
