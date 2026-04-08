@@ -38,7 +38,7 @@ interface HistoryRow {
   brand_penetration_score?: number;
   momentum_score?: number;
   diagnostic_text?: string;
-  sub_scores_detail?: Record<string, { score: number; label: string }>;
+  sub_scores_detail?: any;
 }
 
 interface IASCardProps {
