@@ -3229,6 +3229,56 @@ export type Database = {
         }
         Relationships: []
       }
+      cross_agent_insights: {
+        Row: {
+          created_at: string
+          id: string
+          insight_data: Json
+          insight_type: string
+          is_resolved: boolean
+          resolved_at: string | null
+          source_agent: string
+          target_agent: string
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insight_data?: Json
+          insight_type?: string
+          is_resolved?: boolean
+          resolved_at?: string | null
+          source_agent?: string
+          target_agent?: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insight_data?: Json
+          insight_type?: string
+          is_resolved?: boolean
+          resolved_at?: string | null
+          source_agent?: string
+          target_agent?: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cross_agent_insights_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cto_agent_logs: {
         Row: {
           analysis_summary: string
