@@ -435,6 +435,21 @@ IMPORTANT: Si des entités Schema.org sont marquées ✓, elles EXISTENT — val
 ${backlinkSection}
 ${gbpSection}
 
+${identityCard ? `
+═══ CARTE D'IDENTITÉ DU SITE ═══
+- Secteur: ${identityCard.market_sector || 'Non renseigné'}
+- Type d'entité: ${identityCard.entity_type || 'Non renseigné'}
+- Type de business: ${identityCard.business_type || 'Non renseigné'}
+- Audience cible: ${identityCard.target_audience || 'Non renseigné'}
+- Produits/Services: ${identityCard.products_services || 'Non renseigné'}
+- Marque: ${identityCard.brand_name || 'Non renseigné'}
+- Zone commerciale: ${identityCard.commercial_area || 'Non renseigné'}
+- Taille d'entreprise: ${identityCard.company_size || 'Non renseigné'}
+- Structure juridique: ${identityCard.legal_structure || 'Non renseigné'}
+- Segment cible: ${identityCard.target_segment || 'Non renseigné'}
+- Modèle commercial: ${identityCard.commercial_model || 'Non renseigné'}
+IMPORTANT: Utilise ces données business pour contextualiser ton analyse E-E-A-T. Un site médical, financier ou juridique (YMYL) exige des standards plus élevés.` : ''}
+
 ${pagesContext}
 
 ═══ INSTRUCTIONS ═══
