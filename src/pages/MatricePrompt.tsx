@@ -436,7 +436,46 @@ export default function MatricePrompt() {
     if (!url.trim()) { toast.error('Entrez une URL'); return; }
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
     setAnalyzing(true);
+    setBenchmarkData(null);
     try {
+      // ── BENCHMARK MODE ──────────────────────────────────────────────
+      if (activeMatriceType === 'benchmark') {
+        const benchmarkItems = selectedRows.map(row => ({
+          id: row.id,
+          prompt: row.prompt,
+          theme: (row as any).theme || row.axe || 'Général',
+          engine: (row as any).engine || 'ChatGPT',
+          poids: row.poids,
+          axe: row.axe,
+          seuil_bon: row.seuil_bon,
+          seuil_moyen: row.seuil_moyen,
+          seuil_mauvais: row.seuil_mauvais,
+          llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
+        }));
+
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('parse-matrix-geo', {
+          body: { url: url.trim(), benchmark_items: benchmarkItems, mode: 'benchmark' },
+        });
+
+        if (fnError || !fnData?.success) {
+          throw new Error(fnData?.error || fnError?.message || 'Benchmark failed');
+        }
+
+        setBenchmarkData({
+          results: fnData.results,
+          themes: fnData.themes,
+          engines: fnData.engines,
+          heatmap: fnData.heatmap,
+          globalScore: fnData.global_score,
+          citationRate: fnData.citation_rate,
+        });
+
+        toast.success(`Benchmark terminé — Score: ${fnData.global_score}/100, Citations: ${fnData.citation_rate}%`);
+        setAnalyzing(false);
+        return;
+      }
+
+      // ── STANDARD MODE ───────────────────────────────────────────────
       // Build items payload for the edge function
       const items = selectedRows.map(row => ({
         id: row.id,
