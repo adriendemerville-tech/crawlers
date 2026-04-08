@@ -86,7 +86,49 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
     setLoading(true);
     fetchKpis(user.user_id);
     fetchScannedUrls(user.user_id);
+    fetchLogs(user.user_id, true);
   }, [open, user]);
+
+  // Cleanup polling on unmount or close
+  useEffect(() => {
+    if (!open) {
+      setLivePolling(false);
+      if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+    }
+    return () => { if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; } };
+  }, [open]);
+
+  // Live polling effect
+  useEffect(() => {
+    if (livePolling && user) {
+      pollingRef.current = setInterval(() => fetchLogs(user.user_id, false), 5000);
+      return () => { if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; } };
+    }
+  }, [livePolling, user]);
+
+  const fetchLogs = useCallback(async (userId: string, initial: boolean) => {
+    if (initial) setLogsLoading(true);
+    try {
+      const query = supabase
+        .from('analytics_events')
+        .select('id, event_type, event_data, target_url, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      const { data } = await query;
+      if (data) {
+        setLogs(data as LogEntry[]);
+        if (data.length > 0 && data[0].id !== lastLogIdRef.current) {
+          lastLogIdRef.current = data[0].id;
+          // Auto-scroll on new entries
+          setTimeout(() => logsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        }
+      }
+    } catch { /* silent */ } finally {
+      if (initial) setLogsLoading(false);
+    }
+  }, []);
 
   const fetchKpis = async (userId: string) => {
     try {
