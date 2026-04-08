@@ -7,19 +7,18 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  * Edge Function: cocoon-bulk-auto-linking
  * 
  * Auto-Maillage Rétroactif en Masse
- * Scans ALL crawled pages of a site and finds internal linking opportunities
- * using pre-scan (title matching) + AI (semantic anchor selection).
- * 
- * Processes pages in batches, prioritized by PageRank (high authority pages first).
- * Results stored in cocoon_auto_links for review/deployment.
+ * Uses background processing (EdgeRuntime.waitUntil) to avoid timeout.
+ * Returns a job_id immediately, client polls async_jobs for status.
  */
 
 interface BulkAutoLinkRequest {
   tracked_site_id: string;
-  max_pages?: number;       // Max source pages to process (default: 50)
-  max_links_per_page?: number; // Max links per source page (default: 3)
-  min_confidence?: number;  // Min confidence threshold (default: 0.6)
+  max_pages?: number;
+  max_links_per_page?: number;
+  min_confidence?: number;
   dry_run?: boolean;
+  // Poll mode: check job status
+  job_id?: string;
 }
 
 interface LinkSuggestion {
@@ -33,7 +32,7 @@ interface LinkSuggestion {
 }
 
 Deno.serve(handleRequest(async (req) => {
-try {
+  try {
     const authHeader = req.headers.get('Authorization') || '';
     const userClient = getUserClient(authHeader);
     const { data: { user }, error: authErr } = await userClient.auth.getUser();
@@ -42,6 +41,28 @@ try {
     }
 
     const body: BulkAutoLinkRequest = await req.json();
+
+    // ─── Poll mode: check job status ───
+    if (body.job_id) {
+      const supabase = getServiceClient();
+      const { data: job } = await supabase
+        .from('async_jobs')
+        .select('status, progress, result_data, error_message')
+        .eq('id', body.job_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!job) return jsonError('Job non trouvé', 404);
+
+      return new Response(JSON.stringify({
+        status: job.status,
+        progress: job.progress,
+        result: job.result_data,
+        error: job.error_message,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // ─── Launch mode ───
     const {
       tracked_site_id,
       max_pages = 50,
@@ -66,7 +87,7 @@ try {
       return jsonError('Accès réservé Pro Agency', 403);
     }
 
-    // ─── Get site & verify ownership ───
+    // ─── Verify site ownership ───
     const { data: site } = await supabase
       .from('tracked_sites')
       .select('id, domain, user_id')
@@ -77,7 +98,7 @@ try {
       return jsonError('Site non trouvé', 404);
     }
 
-    // ─── Get latest completed crawl ───
+    // ─── Check crawl exists ───
     const { data: crawls } = await supabase
       .from('site_crawls')
       .select('id')
@@ -91,6 +112,63 @@ try {
       return jsonError('Aucun crawl disponible. Lancez un crawl d\'abord.', 400);
     }
 
+    // ─── Create async job ───
+    const { data: job, error: jobErr } = await supabase
+      .from('async_jobs')
+      .insert({
+        user_id: user.id,
+        function_name: 'cocoon-bulk-auto-linking',
+        input_payload: { tracked_site_id, max_pages, max_links_per_page, min_confidence, dry_run, crawl_id: crawlId },
+        status: 'pending',
+        progress: 0,
+      })
+      .select('id')
+      .single();
+
+    if (jobErr || !job) {
+      console.error('[bulk-auto-linking] Job creation error:', jobErr);
+      return jsonError('Erreur création du job', 500);
+    }
+
+    // ─── Background processing ───
+    const jobId = job.id;
+    const userId = user.id;
+
+    // @ts-ignore – EdgeRuntime.waitUntil is available in Supabase Edge Functions
+    EdgeRuntime.waitUntil(
+      processAutoLinking(supabase, jobId, userId, tracked_site_id, crawlId, max_pages, max_links_per_page, min_confidence, dry_run)
+    );
+
+    // ─── Return immediately ───
+    return new Response(JSON.stringify({
+      job_id: jobId,
+      status: 'processing',
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 202,
+    });
+
+  } catch (error) {
+    console.error('[cocoon-bulk-auto-linking] Error:', error);
+    return jsonError(error.message || 'Erreur serveur', 500);
+  }
+}));
+
+
+async function processAutoLinking(
+  supabase: any,
+  jobId: string,
+  userId: string,
+  tracked_site_id: string,
+  crawlId: string,
+  max_pages: number,
+  max_links_per_page: number,
+  min_confidence: number,
+  dry_run: boolean,
+) {
+  try {
+    await supabase.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString() }).eq('id', jobId);
+
     // ─── Get all indexable pages with content ───
     const { data: allPages } = await supabase
       .from('crawl_pages')
@@ -101,7 +179,12 @@ try {
       .limit(200);
 
     if (!allPages || allPages.length < 3) {
-      return jsonError('Pas assez de pages crawlées (minimum 3).', 400);
+      await supabase.from('async_jobs').update({
+        status: 'failed',
+        error_message: 'Pas assez de pages crawlées (minimum 3).',
+        completed_at: new Date().toISOString(),
+      }).eq('id', jobId);
+      return;
     }
 
     // ─── Get existing auto-links to avoid duplicates ───
@@ -111,7 +194,7 @@ try {
       .eq('tracked_site_id', tracked_site_id);
 
     const existingSet = new Set(
-      (existingLinks || []).map(l => `${l.source_url}→${l.target_url}`)
+      (existingLinks || []).map((l: any) => `${l.source_url}→${l.target_url}`)
     );
 
     // ─── Get exclusions ───
@@ -139,42 +222,41 @@ try {
       existingInternalLinks.set(page.url, targets);
     }
 
-    // ─── Select source pages (those with fewest outgoing links, high SEO score) ───
+    // ─── Select source pages ───
     const sourcePages = allPages
-      .filter(p => !excludedSources.has(p.url) && p.body_text_truncated)
-      .sort((a, b) => {
+      .filter((p: any) => !excludedSources.has(p.url) && p.body_text_truncated)
+      .sort((a: any, b: any) => {
         const aOut = existingInternalLinks.get(a.url)?.size || 0;
         const bOut = existingInternalLinks.get(b.url)?.size || 0;
-        // Prioritize pages with few outgoing links but high SEO score
         return (aOut - bOut) || ((b.seo_score || 0) - (a.seo_score || 0));
       })
       .slice(0, max_pages);
 
-    // ─── Target pages: all indexable, sorted by SEO score ───
     const targetPages = allPages
-      .filter(p => !excludedTargets.has(p.url))
-      .map(p => ({ url: p.url, title: p.title || p.h1 || '', meta_description: p.meta_description || '' }));
+      .filter((p: any) => !excludedTargets.has(p.url))
+      .map((p: any) => ({ url: p.url, title: p.title || p.h1 || '', meta_description: p.meta_description || '' }));
 
     const allSuggestions: LinkSuggestion[] = [];
     let totalPreScan = 0;
     let totalAI = 0;
     let pagesProcessed = 0;
-
     const hasAI = isLovableAIConfigured();
 
     // ─── Process each source page ───
     for (const source of sourcePages) {
-      const sourceText = (source.body_text_truncated || '').toLowerCase();
-      const sourceExisting = existingInternalLinks.get(source.url) || new Set();
+      const sourceText = ((source as any).body_text_truncated || '').toLowerCase();
+      const sourceExisting = existingInternalLinks.get((source as any).url) || new Set();
 
-      // Filter targets: exclude self, already linked, already suggested
-      const candidates = targetPages.filter(t =>
-        t.url !== source.url &&
+      const candidates = targetPages.filter((t: any) =>
+        t.url !== (source as any).url &&
         !sourceExisting.has(t.url) &&
-        !existingSet.has(`${source.url}→${t.url}`)
+        !existingSet.has(`${(source as any).url}→${t.url}`)
       );
 
-      if (candidates.length === 0) continue;
+      if (candidates.length === 0) {
+        pagesProcessed++;
+        continue;
+      }
 
       // Pre-scan: title matching
       const preScanMatches: LinkSuggestion[] = [];
@@ -184,7 +266,7 @@ try {
         const titleLower = target.title.toLowerCase().trim();
         if (titleLower && titleLower.length > 3 && sourceText.includes(titleLower)) {
           preScanMatches.push({
-            source_url: source.url,
+            source_url: (source as any).url,
             target_url: target.url,
             target_title: target.title,
             anchor_text: titleLower,
@@ -197,18 +279,17 @@ try {
         }
       }
 
-      // Take pre-scan matches up to limit
       const pageSuggestions = preScanMatches.slice(0, max_links_per_page);
       totalPreScan += pageSuggestions.length;
 
       // AI for remaining slots
       const remainingSlots = max_links_per_page - pageSuggestions.length;
       if (remainingSlots > 0 && needsAI.length > 0 && hasAI) {
-        const targetList = needsAI.slice(0, 8).map(t =>
+        const targetList = needsAI.slice(0, 8).map((t: any) =>
           `- URL: ${t.url} | Titre: ${t.title} | Desc: ${t.meta_description?.slice(0, 80) || 'N/A'}`
         ).join('\n');
 
-        const truncatedContent = source.body_text_truncated!.slice(0, 2500);
+        const truncatedContent = (source as any).body_text_truncated!.slice(0, 2500);
 
         try {
           const aiResp = await callLovableAI({
@@ -216,7 +297,7 @@ try {
             system: 'Tu es un expert SEO en maillage interne. Réponds uniquement via l\'outil fourni.',
             user: `Analyse ce contenu et identifie les meilleurs emplacements pour des liens internes.
 
-PAGE SOURCE: ${source.title || source.h1}
+PAGE SOURCE: ${(source as any).title || (source as any).h1}
 CONTENU (extrait): ${truncatedContent}
 
 PAGES CIBLES:
@@ -265,9 +346,9 @@ RÈGLES:
             for (const link of (parsed.links || []).slice(0, remainingSlots)) {
               if ((link.confidence || 0) >= min_confidence) {
                 pageSuggestions.push({
-                  source_url: source.url,
+                  source_url: (source as any).url,
                   target_url: link.target_url,
-                  target_title: needsAI.find(t => t.url === link.target_url)?.title || link.target_url,
+                  target_title: needsAI.find((t: any) => t.url === link.target_url)?.title || link.target_url,
                   anchor_text: link.anchor_text,
                   context_sentence: link.context_sentence,
                   confidence: Math.min(1, Math.max(0, link.confidence)),
@@ -278,17 +359,20 @@ RÈGLES:
             }
           }
         } catch (aiErr) {
-          console.error(`[bulk-auto-linking] AI error for ${source.url}:`, aiErr);
+          console.error(`[bulk-auto-linking] AI error for ${(source as any).url}:`, aiErr);
         }
       }
 
       allSuggestions.push(...pageSuggestions);
       pagesProcessed++;
 
-      // Mark as existing to avoid dups within this batch
       for (const s of pageSuggestions) {
         existingSet.add(`${s.source_url}→${s.target_url}`);
       }
+
+      // Update progress
+      const progress = Math.round((pagesProcessed / sourcePages.length) * 100);
+      await supabase.from('async_jobs').update({ progress }).eq('id', jobId);
     }
 
     // ─── Persist if not dry_run ───
@@ -297,7 +381,7 @@ RÈGLES:
         const batch = allSuggestions.slice(i, i + 20);
         const rows = batch.map(s => ({
           tracked_site_id,
-          user_id: user.id,
+          user_id: userId,
           source_url: s.source_url,
           target_url: s.target_url,
           anchor_text: s.anchor_text,
@@ -325,25 +409,34 @@ RÈGLES:
       suggestions: links,
     }));
 
-    return new Response(JSON.stringify({
-      success: true,
-      stats: {
-        pages_analyzed: pagesProcessed,
-        total_pages_available: sourcePages.length,
-        total_suggestions: allSuggestions.length,
-        pre_scan_matches: totalPreScan,
-        ai_generated: totalAI,
-        avg_confidence: allSuggestions.length > 0
-          ? Math.round(allSuggestions.reduce((a, s) => a + s.confidence, 0) / allSuggestions.length * 100) / 100
-          : 0,
+    // ─── Mark job complete ───
+    await supabase.from('async_jobs').update({
+      status: 'completed',
+      progress: 100,
+      completed_at: new Date().toISOString(),
+      result_data: {
+        stats: {
+          pages_analyzed: pagesProcessed,
+          total_pages_available: sourcePages.length,
+          total_suggestions: allSuggestions.length,
+          pre_scan_matches: totalPreScan,
+          ai_generated: totalAI,
+          avg_confidence: allSuggestions.length > 0
+            ? Math.round(allSuggestions.reduce((a: number, s: LinkSuggestion) => a + s.confidence, 0) / allSuggestions.length * 100) / 100
+            : 0,
+        },
+        results: groupedResults,
       },
-      results: groupedResults,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    }).eq('id', jobId);
+
+    console.log(`[bulk-auto-linking] ✅ Job ${jobId} completed: ${allSuggestions.length} suggestions from ${pagesProcessed} pages`);
 
   } catch (error) {
-    console.error('[cocoon-bulk-auto-linking] Error:', error);
-    return jsonError(error.message || 'Erreur serveur', 500);
+    console.error(`[bulk-auto-linking] ❌ Job ${jobId} failed:`, error);
+    await supabase.from('async_jobs').update({
+      status: 'failed',
+      error_message: error.message || 'Erreur interne',
+      completed_at: new Date().toISOString(),
+    }).eq('id', jobId);
   }
-}));
+}
