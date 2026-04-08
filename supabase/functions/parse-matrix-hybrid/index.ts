@@ -308,4 +308,4 @@ const clientIp = getClientIp(req)
   } finally {
     releaseConcurrency('parse-matrix-hybrid')
   }
-})
+}))
