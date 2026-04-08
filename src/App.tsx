@@ -52,6 +52,10 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 
 const EEATPage = lazy(() => import("./pages/EEATPage"));
 const AppEeat = lazy(() => import("./pages/AppEeat"));
+const AnalyseBotsIA = lazy(() => import("./pages/AnalyseBotsIA"));
+const ScoreGEO = lazy(() => import("./pages/ScoreGEO"));
+const VisibiliteLLM = lazy(() => import("./pages/VisibiliteLLM"));
+const PageSpeedLanding = lazy(() => import("./pages/PageSpeedLanding"));
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
