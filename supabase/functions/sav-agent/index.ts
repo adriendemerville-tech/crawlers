@@ -1364,7 +1364,7 @@ ${alertBlock}\n`;
           }
         }
 
-        // Read persistent memory for each site
+        // Read persistent memory + cocoon diagnostics for each site
         for (const s of sites.slice(0, 3)) {
           try {
             const { promptSnippet: memSnippet } = await readSiteMemory(s.id);
@@ -1378,6 +1378,27 @@ ${alertBlock}\n`;
               for (const p of pending.slice(0, 3)) {
                 contextSnippet += `  - ${p.field_name}: "${p.current_value}" → "${p.suggested_value}" (${p.reason})\n`;
               }
+            }
+
+            // ── CROSS-AGENT: Inject Cocoon diagnostics into Félix context ──
+            try {
+              const { snippet: cocoonSnippet } = await getCocoonDiagnosticsForFelix(s.id);
+              if (cocoonSnippet) {
+                contextSnippet += cocoonSnippet;
+              }
+            } catch (e) {
+              console.error(`[sav-agent] Cocoon diagnostics error for ${s.domain}:`, e);
+            }
+
+            // ── CROSS-AGENT: Detect feedback loop (user returns with same problem) ──
+            try {
+              const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+              const feedbackHint = await detectFeedbackLoop(user_id, s.id, s.domain, lastUserMsg);
+              if (feedbackHint) {
+                contextSnippet += feedbackHint;
+              }
+            } catch (e) {
+              console.error(`[sav-agent] Feedback loop detection error:`, e);
             }
           } catch (e) {
             console.error(`[sav-agent] Memory read error for ${s.domain}:`, e);
