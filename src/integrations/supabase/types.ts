@@ -9683,6 +9683,7 @@ export type Database = {
               id: string
               lane: string
               payload: Json
+              priority_tag: string
               severity: string
               severity_bonus: number
               source_type: string

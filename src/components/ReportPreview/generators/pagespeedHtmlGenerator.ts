@@ -13,6 +13,16 @@ function getScoreBg(score: number): string {
   return 'hsla(0, 84%, 60%, 0.1)';
 }
 
+function generatePriorityBadge(score: number, label: string, t: TranslationKeys): string {
+  if (score < 50) {
+    return `<span class="priority-badge priority-badge-critical">🔴 ${t.priority || 'Prioritaire'}</span>`;
+  }
+  if (score < 80) {
+    return `<span class="priority-badge priority-badge-warning">🟡 ${t.recommended || 'Recommandé'}</span>`;
+  }
+  return '';
+}
+
 export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys): string {
   const { scores } = data;
 
@@ -22,7 +32,8 @@ export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys)
     { label: t.bestPractices, value: scores.bestPractices },
     { label: t.seo, value: scores.seo },
   ].map(item => `
-    <div class="card pagespeed-score-card" style="background: ${getScoreBg(item.value)};">
+    <div class="card pagespeed-score-card" style="background: ${getScoreBg(item.value)}; position: relative;">
+      ${generatePriorityBadge(item.value, item.label, t)}
       <div class="pagespeed-score-value" style="color: ${getScoreColor(item.value)};">${item.value}</div>
       <div class="pagespeed-score-label">${item.label}</div>
     </div>
