@@ -133,21 +133,23 @@ async function handleCodeItem(item: WorkbenchItem, userId: string, trackedSiteId
     // Determine target file from the fix category
     const targetFile = resolveTargetFile(item);
 
-    const { error: insertErr } = await supabase
+    const { data: insertedProposal, error: insertErr } = await supabase
       .from('cto_code_proposals' as any)
       .insert({
         domain: DOMAIN,
-        user_id: userId,
         title: `[Self-Optimize] ${item.title}`,
         description: item.description || `Auto-fix: ${item.finding_category}`,
         proposed_code: proposedCode,
         target_function: targetFile,
+        target_url: item.target_url || BASE_URL,
         proposal_type: 'fix',
         agent_source: 'self-optimize',
         confidence_score: 70,
-        status: 'approved', // Auto-approved for self-optimization (no admin gate)
-        source_workbench_id: item.id,
-      } as any);
+        status: 'approved', // Auto-approved (no admin gate)
+        source_diagnostic_id: item.id,
+      } as any)
+      .select('id')
+      .single();
 
     if (insertErr) {
       result.status = 'error';
@@ -155,17 +157,7 @@ async function handleCodeItem(item: WorkbenchItem, userId: string, trackedSiteId
       return result;
     }
 
-    // Step 3: Trigger deploy-code-proposal
-    // Get the latest approved proposal we just inserted
-    const { data: proposal } = await supabase
-      .from('cto_code_proposals' as any)
-      .select('id')
-      .eq('domain', DOMAIN)
-      .eq('source_workbench_id', item.id)
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const proposal = insertedProposal;
 
     if (proposal) {
       const deployResult = await callFunction('deploy-code-proposal', {
