@@ -92,6 +92,7 @@ Deno.serve(handleRequest(async (req) => {
         // ── Write E-E-A-T score back to tracked_sites (identity card) ──
         await writeEeatToIdentityCard(supabase, tracked_site_id, result, domain, workerUserId);
 
+        await supabase.from('async_jobs').update({
           status: 'completed',
           progress: 100,
           result_data: result,
