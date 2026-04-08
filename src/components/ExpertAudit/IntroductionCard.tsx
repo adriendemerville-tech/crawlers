@@ -26,6 +26,9 @@ const translations = {
     improvement: 'Axe d\'amélioration prioritaire',
     competitors: 'Concurrents identifiés',
     correctInfo: 'Corriger les informations',
+    scopeNotice: (url: string, domain: string) =>
+      `Cet audit concerne l'URL ${url}, non l'ensemble du nom de domaine ${domain}.`,
+    mobileFirstNotice: '📱 Depuis 2021, Google indexe et classe les sites principalement sur la base de leur version mobile (Mobile-First Indexing). Les performances mobiles influencent directement votre positionnement dans les résultats de recherche. C\'est pourquoi cet audit analyse en priorité les performances mobiles de votre site.',
   },
   en: {
     technicalTitle: 'Technical SEO Analysis',
@@ -35,6 +38,9 @@ const translations = {
     improvement: 'Priority Improvement Area',
     competitors: 'Identified Competitors',
     correctInfo: 'Correct information',
+    scopeNotice: (url: string, domain: string) =>
+      `This audit covers the URL ${url}, not the entire domain ${domain}.`,
+    mobileFirstNotice: '📱 Since 2021, Google indexes and ranks websites primarily based on their mobile version (Mobile-First Indexing). Mobile performance directly impacts your search rankings. This is why this audit prioritizes the analysis of your site\'s mobile performance.',
   },
   es: {
     technicalTitle: 'Análisis Técnico SEO',
@@ -44,6 +50,9 @@ const translations = {
     improvement: 'Área de mejora prioritaria',
     competitors: 'Competidores identificados',
     correctInfo: 'Corregir información',
+    scopeNotice: (url: string, domain: string) =>
+      `Esta auditoría cubre la URL ${url}, no el dominio completo ${domain}.`,
+    mobileFirstNotice: '📱 Desde 2021, Google indexa y clasifica los sitios web principalmente en base a su versión móvil (Mobile-First Indexing). El rendimiento móvil impacta directamente en su posicionamiento en los resultados de búsqueda. Por eso esta auditoría prioriza el análisis del rendimiento móvil de su sitio.',
   },
 };
 
