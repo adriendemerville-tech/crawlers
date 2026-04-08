@@ -546,18 +546,18 @@ const ContentArchitectPage = memo(() => {
                 <PenTool className="h-3 w-3" />
                 {tr.hero.badge}
               </Badge>
-            </motion.div>
+            </div>
 
             <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1} className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight">
               {tr.hero.title}{' '}
               <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
                 {tr.hero.titleAccent}
               </span>
-            </motion.h1>
+            </h1>
 
             <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2} className="mx-auto mt-6 max-w-3xl text-lg text-muted-foreground">
               {tr.hero.subtitle}
-            </motion.p>
+            </p>
 
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3} className="mt-8 flex flex-wrap justify-center gap-4">
               <Link to="/auth">
@@ -570,7 +570,7 @@ const ContentArchitectPage = memo(() => {
                   {tr.hero.ctaSecondary}
                 </Button>
               </a>
-            </motion.div>
+            </div>
 
             {/* Screenshot */}
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4} className="mt-12 mx-auto max-w-5xl">
@@ -582,7 +582,7 @@ const ContentArchitectPage = memo(() => {
                   loading="eager"
                 />
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -594,7 +594,7 @@ const ContentArchitectPage = memo(() => {
                 <p className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{s.value}</p>
                 <p className="text-sm font-medium text-foreground mt-1">{s.label}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{s.detail}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </section>
@@ -605,7 +605,7 @@ const ContentArchitectPage = memo(() => {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.workflowTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.workflowSubtitle}</p>
-            </motion.div>
+            </div>
 
             <div className="space-y-8">
               {tr.workflow.map((step, i) => (
@@ -638,7 +638,7 @@ const ContentArchitectPage = memo(() => {
                       <ArrowDown className="h-5 w-5 text-emerald-400/40" />
                     </div>
                   )}
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -650,7 +650,7 @@ const ContentArchitectPage = memo(() => {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.layoutTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.layoutSubtitle}</p>
-            </motion.div>
+            </div>
 
             {/* Visual mockup */}
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="mb-14">
@@ -713,7 +713,7 @@ const ContentArchitectPage = memo(() => {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
 
             {/* Feature grid */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -730,7 +730,7 @@ const ContentArchitectPage = memo(() => {
                         <p className="text-xs text-muted-foreground leading-relaxed">{feat.desc}</p>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -743,7 +743,7 @@ const ContentArchitectPage = memo(() => {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.toolsTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.toolsSubtitle}</p>
-            </motion.div>
+            </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {tr.tools.map((tool, i) => {
@@ -759,7 +759,7 @@ const ContentArchitectPage = memo(() => {
                         <p className="text-xs text-muted-foreground leading-relaxed">{tool.desc}</p>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -772,7 +772,7 @@ const ContentArchitectPage = memo(() => {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.apisTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.apisSubtitle}</p>
-            </motion.div>
+            </div>
 
             <div className="overflow-hidden rounded-xl border border-border">
               <div className="overflow-x-auto">
@@ -792,7 +792,7 @@ const ContentArchitectPage = memo(() => {
                           <Badge variant="secondary" className="text-xs">{api.category}</Badge>
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">{api.usage}</td>
-                      </motion.tr>
+                      </tr>
                     ))}
                   </tbody>
                 </table>
@@ -863,7 +863,7 @@ const ContentArchitectPage = memo(() => {
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.faqTitle}</h2>
-            </motion.div>
+            </div>
 
             <div className="space-y-4">
               {tr.faq.map((item, i) => (
@@ -874,7 +874,7 @@ const ContentArchitectPage = memo(() => {
                       <p className="text-xs text-muted-foreground leading-relaxed">{item.a}</p>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -893,7 +893,7 @@ const ContentArchitectPage = memo(() => {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
-            </motion.div>
+            </div>
           </div>
         </section>
       </div>

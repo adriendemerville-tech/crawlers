@@ -902,7 +902,7 @@ export default function Tarifs() {
                 </Button>
               </Link>
             </div>
-          </motion.div>
+          </div>
         </main>
         <Suspense fallback={null}><Footer /></Suspense>
       </div>

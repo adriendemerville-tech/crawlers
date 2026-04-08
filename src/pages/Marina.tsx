@@ -846,7 +846,7 @@ export default function Marina() {
                     />
                   </div>
                   <p className="text-sm text-muted-foreground mt-2">{PHASE_LABELS[phase] || phase}</p>
-                </motion.div>
+                </div>
               )}
 
               {/* Error */}
@@ -889,9 +889,9 @@ export default function Marina() {
                       </Button>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -938,7 +938,7 @@ export default function Marina() {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>

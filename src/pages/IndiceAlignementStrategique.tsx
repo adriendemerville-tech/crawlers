@@ -127,7 +127,7 @@ export default function IndiceAlignementStrategique() {
                   </Link>
                 </Button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 

@@ -227,7 +227,7 @@ export default function ApiIntegrations() {
                 Toutes les données sont <strong className="text-foreground">anonymisées</strong>. 
                 Chaque intégration est <strong className="text-foreground">déconnectable en 1 clic</strong>.
               </p>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -249,7 +249,7 @@ export default function ApiIntegrations() {
                   </div>
                   <h3 className="font-semibold text-sm">{sp.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{sp.desc}</p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -263,7 +263,7 @@ export default function ApiIntegrations() {
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 Chaque API enrichit vos audits et recommandations. Plus de données connectées = plus de précision.
               </p>
-            </motion.div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {apis.map((api, i) => (
@@ -329,7 +329,7 @@ export default function ApiIntegrations() {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -393,7 +393,7 @@ export default function ApiIntegrations() {
                   </Link>
                 </Button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -417,7 +417,7 @@ export default function ApiIntegrations() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
       </main>

@@ -281,7 +281,7 @@ export default function GoogleBusinessPage() {
                     </Link>
                   </Button>
                 </div>
-              </motion.div>
+              </div>
 
               <motion.div
                 variants={fadeUp}
@@ -290,7 +290,7 @@ export default function GoogleBusinessPage() {
                 transition={{ delay: 0.2 }}
               >
                 <GmbConsolePreview />
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
@@ -330,7 +330,7 @@ export default function GoogleBusinessPage() {
                       <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

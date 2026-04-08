@@ -562,7 +562,7 @@ export default function ProAgency() {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -591,7 +591,7 @@ export default function ProAgency() {
                       <p className="text-sm text-muted-foreground leading-relaxed">{feat.description}</p>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -661,7 +661,7 @@ export default function ProAgency() {
                       <p className="text-sm text-muted-foreground">{uc.description}</p>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
