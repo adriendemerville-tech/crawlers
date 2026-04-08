@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
-import matriceScreenshot from '@/assets/screenshots/crawlers.fr_matrice-audit-seo-grille-personnalisee.png';
+import matriceScreenshot from '@/assets/screenshots/crawlers.fr_matrice-audit-seo-grille-personnalisee.webp';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -858,7 +858,7 @@ const Index = () => {
               </div>
               <div className="flex-shrink-0 w-full md:w-[420px] space-y-6">
                 <div className="rounded-2xl overflow-hidden border border-violet-500/20 shadow-2xl shadow-violet-500/10">
-                  <img src={matriceScreenshot} alt="Crawlers.fr matrice audit SEO grille personnalisée" className="w-full h-auto" loading="lazy" />
+                  <img src={matriceScreenshot} alt="Crawlers.fr matrice audit SEO grille personnalisée" width={420} height={263} className="w-full h-auto" loading="lazy" decoding="async" />
                 </div>
                 <div className="text-center">
                   <Link to="/matrice">

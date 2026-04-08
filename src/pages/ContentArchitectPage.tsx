@@ -20,7 +20,7 @@ import { PricingPlansSection } from '@/components/PricingPlansSection';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
-import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
+import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.webp';
 
 const CreditTopUpModal = lazy(() => import('@/components/CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
 
