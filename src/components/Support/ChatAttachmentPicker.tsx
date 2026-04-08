@@ -88,20 +88,25 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
     fetchItems();
   }, [open, tab, userId]);
 
+  // File input always mounted so ref works from both closed and open states
+  const fileInput = (
+    <input
+      ref={imageInputRef}
+      type="file"
+      accept="image/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file && onImageAttach) onImageAttach(file.name, file);
+        e.target.value = '';
+      }}
+    />
+  );
+
   if (!open) {
     return (
       <>
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file && onImageAttach) onImageAttach(file.name, file);
-            e.target.value = '';
-          }}
-        />
+        {fileInput}
         <button
           className="h-7 w-7 shrink-0 self-center flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
           onClick={() => {
