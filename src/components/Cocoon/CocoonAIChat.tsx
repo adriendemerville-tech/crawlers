@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap } from 'lucide-react';
+import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap, Maximize2, Minimize2 } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -378,6 +378,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [sessionResumed, setSessionResumed] = useState(false);
   const resumeAttemptedRef = useRef<string | null>(null);
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
+  const [isExpanded, setIsExpanded] = useState(false);
   const [resolvedBugCount, setResolvedBugCount] = useState(0);
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -1577,8 +1578,12 @@ Termina con un resumen ejecutivo y próximos pasos.`,
     <div className="relative">
       {/* Floating chat window — opens upward */}
       {isOpen && (
-        <div className="absolute bottom-full mb-2 left-0 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
-          style={{ maxHeight: 'min(600px, 72vh)' }}
+        <div className={
+          isExpanded
+            ? "fixed top-0 left-0 h-full w-[28rem] max-w-[90vw] border-r border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
+            : "absolute bottom-full mb-2 left-0 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
+        }
+          style={isExpanded ? undefined : { maxHeight: 'min(600px, 72vh)' }}
         >
           {/* Header — compact */}
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
@@ -1610,7 +1615,16 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                   <Trash2 className="w-3 h-3 text-white/30 hover:text-white/60" />
                 </button>
               )}
-              <button onClick={() => setIsOpen(false)} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
+              <button
+                onClick={() => setIsExpanded(prev => !prev)}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                title={isExpanded ? 'Réduire' : 'Agrandir'}
+              >
+                {isExpanded
+                  ? <Minimize2 className="w-3 h-3 text-white/30 hover:text-white/60" />
+                  : <Maximize2 className="w-3 h-3 text-white/30 hover:text-white/60" />}
+              </button>
+              <button onClick={() => { setIsOpen(false); setIsExpanded(false); }} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
                 <X className="w-3.5 h-3.5 text-white/50 hover:text-white/80" />
               </button>
             </div>
