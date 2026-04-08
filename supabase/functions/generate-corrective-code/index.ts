@@ -1724,8 +1724,91 @@ function generateFixCode(
       console.error('[Crawlers.fr] Erreur Suite PageSpeed:', e);
     }
   }`,
-        call: 'applyPageSpeedSuite();'
+      call: 'applyPageSpeedSuite();'
       };
+
+    case 'fix_image_format': {
+      // Super-capacité: Conversion d'images vers WebP/AVIF via <picture> + wsrv.nl
+      const proxyBase = fix.data?.proxyBase || '';
+      const targetFormat = fix.data?.format || 'webp';
+      const targetQuality = fix.data?.quality || 80;
+      const maxWidth = fix.data?.maxWidth || 1200;
+      return {
+        fn: `  // 🖼️ SUPER-CAPACITÉ: Conversion Images → ${targetFormat.toUpperCase()} (via wsrv.nl / proxy Crawlers)
+  function convertImagesToModernFormat() {
+    try {
+      var converted = 0;
+      var totalSaved = 0;
+      var format = '${targetFormat}';
+      var quality = ${targetQuality};
+      var maxW = ${maxWidth};
+      var proxyBase = '${proxyBase}';
+      
+      var images = document.querySelectorAll('img[src]');
+      
+      images.forEach(function(img) {
+        var src = img.getAttribute('src') || '';
+        // Skip already-optimized, data URIs, SVGs, and tiny images
+        if (!src || src.startsWith('data:') || src.endsWith('.svg') || src.endsWith('.webp') || src.endsWith('.avif')) return;
+        if (img.naturalWidth && img.naturalWidth < 10) return;
+        
+        // Skip images already inside a <picture> element
+        if (img.parentElement && img.parentElement.tagName === 'PICTURE') return;
+        
+        // Resolve absolute URL
+        var absoluteSrc = src;
+        if (src.startsWith('/') && !src.startsWith('//')) {
+          absoluteSrc = window.location.origin + src;
+        } else if (src.startsWith('//')) {
+          absoluteSrc = window.location.protocol + src;
+        }
+        
+        // Build optimized URL via wsrv.nl CDN
+        var wsrvParams = 'url=' + encodeURIComponent(absoluteSrc) + '&output=' + format + '&q=' + quality + '&il';
+        if (maxW > 0 && img.naturalWidth && img.naturalWidth > maxW) {
+          wsrvParams += '&w=' + maxW;
+        }
+        var optimizedUrl = proxyBase ? (proxyBase + '?url=' + encodeURIComponent(absoluteSrc) + '&format=' + format + '&q=' + quality + '&proxy=1') : ('https://wsrv.nl/?' + wsrvParams);
+        
+        // Wrap in <picture> element for progressive enhancement
+        var picture = document.createElement('picture');
+        
+        // WebP source
+        var sourceWebP = document.createElement('source');
+        sourceWebP.type = 'image/' + format;
+        sourceWebP.srcset = optimizedUrl;
+        if (img.sizes) sourceWebP.sizes = img.sizes;
+        picture.appendChild(sourceWebP);
+        
+        // If targeting WebP, also add AVIF as higher priority
+        if (format === 'webp') {
+          var avifParams = wsrvParams.replace('output=webp', 'output=avif');
+          var avifUrl = proxyBase ? optimizedUrl.replace('format=webp', 'format=avif') : ('https://wsrv.nl/?' + avifParams);
+          var sourceAvif = document.createElement('source');
+          sourceAvif.type = 'image/avif';
+          sourceAvif.srcset = avifUrl;
+          if (img.sizes) sourceAvif.sizes = img.sizes;
+          picture.insertBefore(sourceAvif, sourceWebP);
+        }
+        
+        // Move original img inside picture as fallback
+        img.parentElement.insertBefore(picture, img);
+        picture.appendChild(img);
+        
+        converted++;
+      });
+      
+      console.log('[Crawlers.fr] 🖼️ Conversion images: ' + converted + ' images converties en ' + format.toUpperCase() + ' (via <picture> + wsrv.nl)');
+      if (converted > 0) {
+        console.log('[Crawlers.fr] 💡 Économie estimée: ~' + Math.round(converted * 30) + '% de bande passante en moins');
+      }
+    } catch(e) {
+      console.error('[Crawlers.fr] Erreur conversion images:', e);
+    }
+  }`,
+        call: 'convertImagesToModernFormat();'
+      };
+    }
 
     case 'fix_hreflang':
       const hreflangLangs = fix.data?.languages || [
@@ -2684,6 +2767,7 @@ const IMPACT_ESTIMATES: Record<string, { seoPoints: [number, number]; category: 
   fix_semantic_injection:{ seoPoints: [4, 10], category: 'GEO',         description: 'Info Box sémantique renforce l\'autorité thématique' },
   fix_robot_context:    { seoPoints: [6, 15],  category: 'GEO/AEO',     description: 'Calque anti-hallucination clarifie l\'entité pour les LLMs' },
   fix_pagespeed_suite:  { seoPoints: [5, 12],  category: 'Performance', description: 'Suite CLS+LCP+Fonts améliore les Core Web Vitals' },
+  fix_image_format:     { seoPoints: [4, 10],  category: 'Performance', description: 'Conversion WebP/AVIF via <picture> réduit le poids images de 30-70%' },
   fix_hreflang:         { seoPoints: [2, 5],   category: 'SEO Int.',    description: 'Hreflang améliore le SEO international' },
   fix_open_graph:       { seoPoints: [2, 5],   category: 'SEO Social',  description: 'Open Graph optimise les previews sur les réseaux sociaux' },
   fix_twitter_cards:    { seoPoints: [1, 4],   category: 'SEO Social',  description: 'Twitter Cards améliorent la visibilité sur X/Twitter' },
@@ -2695,7 +2779,7 @@ const TEMPLATE_FIX_IDS = new Set([
   'fix_https_redirect', 'fix_contrast', 'fix_alt_images', 'fix_gtm', 'fix_ga4',
   'fix_hallucination', 'inject_faq', 'inject_blog_section', 'enhance_semantic_meta',
   'inject_breadcrumbs', 'inject_local_business', 'fix_missing_blog',
-  'fix_semantic_injection', 'fix_robot_context', 'fix_pagespeed_suite',
+  'fix_semantic_injection', 'fix_robot_context', 'fix_pagespeed_suite', 'fix_image_format',
   'fix_hreflang', 'fix_open_graph', 'fix_twitter_cards'
 ]);
 
