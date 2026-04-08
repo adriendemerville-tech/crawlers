@@ -15,9 +15,9 @@ import llmChatgpt from '@/assets/llm-chatgpt.webp';
 import llmChatgptWhite from '@/assets/llm-chatgpt-white.webp';
 import llmGemini from '@/assets/llm-gemini.webp';
 import llmPerplexity from '@/assets/llm-perplexity.webp';
-import llmClaude from '@/assets/llm-claude.png';
+import llmClaude from '@/assets/llm-claude.webp';
 import llmGrok from '@/assets/llm-grok.webp';
-import llmMistral from '@/assets/mistral-logo-2025.png';
+import llmMistral from '@/assets/mistral-logo-2025.webp';
 
 /* ─── Animated Counter ─── */
 function AnimatedCounter({ end, suffix = '', prefix = '' }: { end: number; suffix?: string; prefix?: string }) {
