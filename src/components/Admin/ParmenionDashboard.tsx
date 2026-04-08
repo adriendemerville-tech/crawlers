@@ -79,7 +79,7 @@ export function ParmenionDashboard() {
       .from('parmenion_decision_log')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(200);
     if (!error && data) setLogs(data as unknown as DecisionLog[]);
     setLoading(false);
   }, []);
