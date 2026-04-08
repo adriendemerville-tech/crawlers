@@ -1030,67 +1030,6 @@ const Index = () => {
             </div>
           </div>
         </section>
-
-        {/* E-E-A-T Section */}
-        <section className="py-20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-emerald-500/5" />
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
-              {/* Left — text */}
-              <div className="flex-1 space-y-5">
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  {language === 'fr' ? 'E-E-A-T · Confiance Google' : language === 'es' ? 'E-E-A-T · Confianza Google' : 'E-E-A-T · Google Trust'}
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                  {language === 'fr'
-                    ? 'Mesurez votre score E-E-A-T et renforcez votre crédibilité'
-                    : language === 'es'
-                    ? 'Mida su puntuación E-E-A-T y refuerce su credibilidad'
-                    : 'Measure your E-E-A-T score and boost your credibility'}
-                </h2>
-                <p className="text-muted-foreground leading-relaxed max-w-xl">
-                  {language === 'fr'
-                    ? 'Expérience, Expertise, Autorité, Fiabilité — les 4 piliers que Google utilise pour évaluer la qualité de votre contenu. Notre outil analyse automatiquement vos pages et génère des recommandations actionnables.'
-                    : language === 'es'
-                    ? 'Experiencia, Pericia, Autoridad, Fiabilidad — los 4 pilares que Google usa para evaluar la calidad de su contenido. Nuestra herramienta analiza automáticamente sus páginas y genera recomendaciones accionables.'
-                    : 'Experience, Expertise, Authoritativeness, Trustworthiness — the 4 pillars Google uses to evaluate your content quality. Our tool automatically analyzes your pages and generates actionable recommendations.'}
-                </p>
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <Link to="/app/eeat">
-                    <Button size="lg" className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 shadow-lg">
-                      <Search className="h-4 w-4" />
-                      {language === 'fr' ? 'Lancer un audit E-E-A-T gratuit' : language === 'es' ? 'Iniciar una auditoría E-E-A-T gratis' : 'Run a free E-E-A-T audit'}
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link to="/eeat">
-                    <Button variant="outline" size="lg" className="gap-2">
-                      {language === 'fr' ? 'En savoir plus' : language === 'es' ? 'Saber más' : 'Learn more'}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Right — 4 pillar cards */}
-              <div className="grid grid-cols-2 gap-4 w-full lg:w-[420px] shrink-0">
-                {[
-                  { letter: 'E', label: language === 'fr' ? 'Expérience' : 'Experience', color: 'from-blue-500 to-blue-600', icon: '🧑‍💻' },
-                  { letter: 'E', label: language === 'fr' ? 'Expertise' : 'Expertise', color: 'from-emerald-500 to-emerald-600', icon: '🎓' },
-                  { letter: 'A', label: language === 'fr' ? 'Autorité' : 'Authority', color: 'from-violet-500 to-violet-600', icon: '🏛️' },
-                  { letter: 'T', label: language === 'fr' ? 'Fiabilité' : 'Trust', color: 'from-amber-500 to-amber-600', icon: '🛡️' },
-                ].map((p) => (
-                  <div key={p.label} className="rounded-xl border border-border/60 bg-card/80 backdrop-blur p-5 text-center space-y-2 hover:shadow-lg transition-shadow">
-                    <span className="text-3xl">{p.icon}</span>
-                    <p className={`text-2xl font-black bg-gradient-to-r ${p.color} bg-clip-text text-transparent`}>{p.letter}</p>
-                    <p className="text-sm font-medium text-foreground">{p.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         <Suspense fallback={<SectionSkeleton />}>
           <TestimonialsCarousel />
         </Suspense>
