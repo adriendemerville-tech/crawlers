@@ -1,5 +1,5 @@
 # Memory: tech/admin/admin-features-fr
-Updated: 2026-03-29
+Updated: 2026-04-08
 
 ## Dashboard Admin — Fonctionnalités
 
@@ -113,6 +113,26 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `check-eeat` : Signaux E-E-A-T ciblés (Gemini Flash Lite ~$0.003)
 - `check-llm` modifié : ajout `customPrompt` (prompt exact user) + `targetProvider` (ciblage 1 LLM)
 
+### Score de Priorité d'Optimisation — SPO (`page_priority_scores`)
+- Edge Function : `calculate-page-priority`
+- Score composite 0-100 par page, pondéré sur 8 signaux :
+  - CTR Gap (20%), Conversion Value (18%), Quick-win Position (15%), Maillage Centrality (12%), Indexation (10%), Content Decay (10%), Backlinks (8%), Cannibalization (7%)
+- Sources : `crawl_pages`, `gsc_keyword_rankings`, `ga4_top_pages`, `semantic_nodes`, `indexation_checks`, `crawl_page_backlinks`, `revenue_events`
+- Top 200 pages stockées par site, consommé par Cocoon, Félix, Autopilote, Marina
+- Cocoon commence toujours par les 5 pages prioritaires ; Félix les affiche en contexte d'audit
+
+### Vérification d'Indexation GSC (`check-indexation`)
+- Edge Function : `check-indexation`
+- Vérifie le statut d'indexation Google via l'API GSC (URL Inspection)
+- Table : `indexation_checks` (page_url, verdict, coverage_state, last_crawl_time, tracked_site_id)
+- Résultats injectés dans : `detect-anomalies`, `marina` (rapport), `calculate-page-priority` (signal indexation)
+- Actions : `check` (vérifier des URLs), `list` (lister les résultats)
+
+### Bandeau d'alertes Console
+- Bandeau défilant GA4/GSC dans /console (anomaly_alerts)
+- Option profil utilisateur : masquer par défaut (`ProfileSettings` → toggle Bandeau d'alertes)
+- Trilingue FR/EN/ES
+
 ### Edge Functions associées
 - `content-architecture-advisor` : Analyse et recommandations de structure de contenu
 - `generate-infotainment` : Génération de cartes news/tips SEO/GEO
@@ -128,6 +148,8 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - `felix-seo-quiz` : Quiz adaptatif SEO/GEO/LLM + Quiz Crawlers + Quiz Stratège Cocoon. Mélange aléatoire de la position des bonnes réponses (`shuffleOptions`) à chaque requête. Actions : `get_questions`, `get_crawlers_quiz`, `get_stratege_cocoon_quiz`, `get_last_score`.
 - `sync-quiz-crawlers` : Cron mensuel (1er du mois, 3h) — régénère 10 questions Crawlers via LLM + doc SAV, sauvées `is_active=false` en attente de validation admin dans Félix
 - `felix-weekly-quiz-notif` : Cron hebdomadaire (lundi 10h) — insère `felix:quiz_invite` dans `analytics_events` pour les users actifs n'ayant pas fait de quiz depuis 7 jours. Félix détecte et affiche la notification d'invitation.
+- `calculate-page-priority` : Score de Priorité d'Optimisation (SPO) — scoring 8 signaux par page
+- `check-indexation` : Vérification statut d'indexation Google via API GSC
 - **Quiz visiteurs non connectés** : Sur la home, 5s après la 1ère visite, Félix propose le quiz Crawlers via tooltip avec boutons "D'accord !" / "Plus tard." (sessionStorage `felix_guest_quiz_suggested`). Le quiz se lance directement dans le chat via `autoStartCrawlersQuiz` prop.
 
 ### Fallback LLM (Gemini Pro → Flash)
