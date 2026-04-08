@@ -9675,6 +9675,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_short_link_clicks: {
+        Args: { link_code: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
