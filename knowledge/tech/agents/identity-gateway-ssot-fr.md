@@ -12,6 +12,7 @@ L'architecture de la 'Carte d'identité' (`identity_card`) est centralisée via 
 - `cocoon-strategist` → `target_audience` (déduit des diagnostics sémantiques)
 - `seasonality-detector` → `is_seasonal`, `seasonality_profile`
 - `audit-strategique-ia` → `client_targets`, `jargon_distance`
+- `parse-matrix-hybrid` → `cms_platform`, `entity_type`, `site_name` (détection HTML post-audit)
 - **Différé** : `agent-seo` (limité au suivi interne 'crawlers.fr')
 
 ## Fonctions qui LISENT la carte (via getSiteContext)
@@ -33,4 +34,4 @@ L'architecture de la 'Carte d'identité' (`identity_card`) est centralisée via 
 - `backlink-scanner` — Log le secteur et les concurrents pour traçabilité stratégique
 
 ### Sources identifiées
-`llm_auto`, `llm_verified`, `user_manual`, `user_voice`, `felix`, `stratege`, `seasonality`, `expert_audit`, `agent_seo`, `marina`, `system`
+`llm_auto`, `llm_verified`, `user_manual`, `user_voice`, `felix`, `stratege`, `seasonality`, `expert_audit`, `agent_seo`, `marina`, `matrix`, `system`

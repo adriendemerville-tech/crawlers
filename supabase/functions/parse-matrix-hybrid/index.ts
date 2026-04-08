@@ -5,8 +5,10 @@ import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { detectItemType, type ItemType } from '../_shared/matriceTypeDetector.ts'
 import { analyzeHtmlFull } from '../_shared/matriceHtmlAnalysis.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
+import { writeIdentity } from '../_shared/identityGateway.ts'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 import {
-import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
   type RobotsData, type SitemapData, type PsiData,
   checkRobots, checkSitemap, checkLlmsTxt, fetchPsi,
   computeBaliseScore, computeStructuredDataScore, computePerformanceScore,
@@ -150,6 +152,31 @@ const clientIp = getClientIp(req)
 
     console.log(`[parse-matrix-hybrid] Starting for ${normalizedUrl} with ${items.length} items`)
 
+    // ── Optional: read identity card if site is tracked ──────────────
+    let domain = ''
+    try { domain = new URL(normalizedUrl).hostname.replace(/^www\./, '') } catch { domain = normalizedUrl }
+
+    const sb = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+
+    let trackedSite: Record<string, any> | null = null
+    try {
+      const { data } = await sb
+        .from('tracked_sites')
+        .select('id, user_id, domain, site_name, market_sector, entity_type, commercial_model, target_audience, products_services, commercial_area, cms_platform, competitors')
+        .eq('domain', domain)
+        .limit(1)
+        .maybeSingle()
+      if (data) {
+        trackedSite = data
+        console.log(`[parse-matrix-hybrid] 📇 Identity card loaded for ${domain} (sector: ${data.market_sector || 'unknown'})`)
+      }
+    } catch (e) {
+      console.warn(`[parse-matrix-hybrid] Could not load identity card:`, e)
+    }
+
     // Fetch HTML + external data
     const [htmlResult, robotsData, sitemapData, psiData] = await Promise.all([
       fetchAndRenderPage(normalizedUrl, { timeout: 15000 }).catch(() => null),
@@ -216,6 +243,57 @@ const clientIp = getClientIp(req)
 
     console.log(`[parse-matrix-hybrid] Complete. SEO: ${globalScore}/100, GEO: ${globalGeoScore}/100`)
 
+    // ── Mandatory: write to identity card if site is tracked ─────────
+    if (trackedSite) {
+      try {
+        const identityFields: Record<string, unknown> = {}
+
+        // Detect CMS from HTML signals
+        if (htmlData && !trackedSite.cms_platform) {
+          const cmsSignals = html.toLowerCase()
+          if (cmsSignals.includes('wp-content') || cmsSignals.includes('wordpress')) identityFields.cms_platform = 'wordpress'
+          else if (cmsSignals.includes('shopify')) identityFields.cms_platform = 'shopify'
+          else if (cmsSignals.includes('wix.com')) identityFields.cms_platform = 'wix'
+          else if (cmsSignals.includes('squarespace')) identityFields.cms_platform = 'squarespace'
+          else if (cmsSignals.includes('prestashop')) identityFields.cms_platform = 'prestashop'
+          else if (cmsSignals.includes('drupal')) identityFields.cms_platform = 'drupal'
+          else if (cmsSignals.includes('joomla')) identityFields.cms_platform = 'joomla'
+          else if (cmsSignals.includes('webflow')) identityFields.cms_platform = 'webflow'
+        }
+
+        // Extract entity_type from structured data if missing
+        if (htmlData && !trackedSite.entity_type) {
+          const jsonLdMatch = html.match(/"@type"\s*:\s*"([^"]+)"/i)
+          if (jsonLdMatch) {
+            const schemaType = jsonLdMatch[1].toLowerCase()
+            if (schemaType.includes('localbusiness') || schemaType.includes('store')) identityFields.entity_type = 'local_business'
+            else if (schemaType.includes('organization')) identityFields.entity_type = 'business'
+            else if (schemaType.includes('person')) identityFields.entity_type = 'freelance'
+          }
+        }
+
+        // Extract site_name from OG/title if missing
+        if (htmlData && !trackedSite.site_name) {
+          const ogSiteName = html.match(/<meta[^>]*property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i)
+          if (ogSiteName?.[1]) identityFields.site_name = ogSiteName[1].trim()
+        }
+
+        if (Object.keys(identityFields).length > 0) {
+          const writeResult = await writeIdentity({
+            siteId: trackedSite.id,
+            fields: identityFields,
+            source: 'matrix',
+            userId: trackedSite.user_id,
+          })
+          console.log(`[parse-matrix-hybrid] 📇→ Identity card updated: ${writeResult.applied.join(', ') || 'none'} | pending: ${writeResult.pendingReview.join(', ') || 'none'}`)
+        } else {
+          console.log(`[parse-matrix-hybrid] 📇 No new identity fields to write for ${domain}`)
+        }
+      } catch (e) {
+        console.warn(`[parse-matrix-hybrid] Identity card write failed (non-blocking):`, e)
+      }
+    }
+
     return jsonOk({
       success: true, url: normalizedUrl,
       global_score: globalScore, global_geo_score: globalGeoScore,
@@ -230,4 +308,4 @@ const clientIp = getClientIp(req)
   } finally {
     releaseConcurrency('parse-matrix-hybrid')
   }
-})
+}))

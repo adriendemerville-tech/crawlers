@@ -10,7 +10,7 @@
  * - Change logging for audit trail
  * 
  * Callers: enrichSiteContext, siteMemory, voice-identity-enrichment,
- *          cocoon-strategist, seasonality-detector, expert-audit, agent-seo, marina
+ *          cocoon-strategist, seasonality-detector, expert-audit, agent-seo, marina, parse-matrix-hybrid
  */
 
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2'
@@ -51,6 +51,7 @@ export type IdentitySource =
   | 'expert_audit'   // Technical audit
   | 'agent_seo'      // SEO agent
   | 'marina'         // Marina pipeline
+  | 'matrix'         // Matrice d'audit
   | 'system'         // System/migration
 
 export interface IdentityWriteRequest {
