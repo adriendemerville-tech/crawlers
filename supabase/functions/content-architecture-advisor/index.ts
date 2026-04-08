@@ -6,6 +6,7 @@ import { checkFairUse, checkMonthlyFairUse } from '../_shared/fairUse.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { buildContentBrief, briefToPromptBlock, type PageType as BriefPageType } from '../_shared/contentBrief.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts';
 
 /**
  * content-architecture-advisor
@@ -271,6 +272,27 @@ Deno.serve(handleRequest(async (req) => {
         }
         console.log(`[content-advisor] CMS detected: ${conn.platform} (write: ${cmsConnection.hasWriteAccess})`)
       }
+    }
+
+    // ── Step 1b: Scan target page HTML (existing content analysis) ──
+    let existingPageHtml: HtmlData | null = null
+    let existingPageHtmlRaw = ''
+    try {
+      console.log(`[content-advisor] Step 1b: Fetching target page HTML for ${url}`)
+      const htmlResp = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Crawlers-ContentArchitect/1.0)' },
+        signal: AbortSignal.timeout(12000),
+        redirect: 'follow',
+      })
+      if (htmlResp.ok) {
+        existingPageHtmlRaw = await htmlResp.text()
+        existingPageHtml = analyzeHtmlFull(existingPageHtmlRaw, url)
+        console.log(`[content-advisor] ✅ HTML scan: title="${existingPageHtml.titleContent}" h1=${existingPageHtml.h1Count} h2=${existingPageHtml.h2Count} words=${existingPageHtml.wordCount} schema=${existingPageHtml.schemaTypes.join(',')} images=${existingPageHtml.imagesTotal}`)
+      } else {
+        console.log(`[content-advisor] ⚠️ HTML fetch failed: HTTP ${htmlResp.status} — page may not exist yet`)
+      }
+    } catch (e) {
+      console.log(`[content-advisor] ⚠️ HTML scan skipped: ${e instanceof Error ? e.message : String(e)}`)
     }
 
     // ── Load SEO/GEO prompt template for this page type ──
@@ -916,6 +938,43 @@ ${llmVisibilityData ? JSON.stringify(llmVisibilityData, null, 2) : 'Non mesurée
 **Backlinks & Autorité:**
 ${backlinkData ? `Referring domains: ${backlinkData.referring_domains || 0}, Total backlinks: ${backlinkData.backlinks_total || 0}, Domain rank: ${backlinkData.domain_rank || 'N/A'}` : 'Non mesuré'}
 
+${existingPageHtml ? `
+── SCAN HTML DE LA PAGE CIBLE (état actuel) ──
+⚠️ CRITIQUE : La page cible EXISTE DÉJÀ. Le contenu recommandé doit ENRICHIR/AMÉLIORER l'existant, pas le remplacer aveuglément.
+
+**Structure actuelle:**
+- Title: "${existingPageHtml.titleContent}" (${existingPageHtml.titleLength} chars)
+- Meta description: "${existingPageHtml.metaDescContent}" (${existingPageHtml.metaDescLength} chars)
+- H1: ${existingPageHtml.h1Count > 0 ? existingPageHtml.h1Contents.map(h => `"${h}"`).join(', ') : 'ABSENT ⚠️'}
+- H2: ${existingPageHtml.h2Count} | H3: ${existingPageHtml.h3Count}
+- Nombre de mots: ${existingPageHtml.wordCount}
+
+**Médias & Liens:**
+- Images: ${existingPageHtml.imagesTotal} (${existingPageHtml.imagesMissingAlt} sans alt ⚠️)
+- Liens internes: ${existingPageHtml.internalLinksCount} | Liens externes: ${existingPageHtml.externalLinksCount}
+
+**Schema.org existant:** ${existingPageHtml.hasSchemaOrg ? existingPageHtml.schemaTypes.join(', ') : 'AUCUN ⚠️'}
+**Canonical:** ${existingPageHtml.hasCanonical ? existingPageHtml.canonicalUrl : 'ABSENT ⚠️'}
+**Open Graph:** ${existingPageHtml.hasOg ? existingPageHtml.ogTags.join(', ') : 'ABSENT'}
+**FAQ existante:** ${existingPageHtml.hasFAQSection ? (existingPageHtml.hasFAQWithSchema ? 'Oui avec schema FAQPage ✅' : 'Oui SANS schema ⚠️') : 'Non'}
+**TL;DR/Résumé existant:** ${existingPageHtml.hasTLDR ? 'Oui' : 'Non'}
+**Auteur bio:** ${existingPageHtml.hasAuthorBio ? 'Oui' : 'Non ⚠️'}
+**Données chiffrées:** ${existingPageHtml.statisticCount} statistiques, ${existingPageHtml.percentageCount} pourcentages (densité: ${existingPageHtml.dataDensityScore}/100)
+**Fraîcheur:** ${existingPageHtml.contentAgeDays !== null ? `${existingPageHtml.contentAgeDays} jours (${existingPageHtml.mostRecentDate})` : 'Inconnue'}
+**Liens sociaux:** ${existingPageHtml.hasSocialLinks ? 'Oui' : 'Non'} | LinkedIn: ${existingPageHtml.hasLinkedInLinks ? 'Oui' : 'Non'}
+
+RÈGLES BASÉES SUR LE SCAN :
+1. Si un H1 existe, le recommended_h1 doit l'AMÉLIORER (pas le changer radicalement sauf si objectivement mauvais)
+2. Si la meta description existe, propose une amélioration, pas un remplacement total
+3. Si des Schema.org existent, les compléter, pas les remplacer
+4. Si la FAQ existe sans schema, AJOUTER le schema FAQPage
+5. Les sections recommandées doivent combler les LACUNES identifiées, pas dupliquer l'existant
+6. Si le word_count est déjà suffisant, concentre-toi sur la qualité et la structure
+` : `
+── SCAN HTML DE LA PAGE CIBLE ──
+La page n'existe pas encore ou n'est pas accessible. Les recommandations partent de zéro.
+`}
+
 **GMB associée:** ${hasGMB ? `Oui (${siteIdentity?.gmb_city || 'ville inconnue'})` : 'Non'}
 **Position SERP actuelle:** ${isInSERP ? `Position ${serpPosition + 1}` : 'Hors top 10 ou inconnu'}
 
@@ -1337,7 +1396,7 @@ FRAÎCHEUR & DÉNOMINATION:
         brief_eeat_signals: contentBrief.eeat_signals,
         brief_geo_passages: contentBrief.geo_citable_passages,
         source: 'content_architect',
-      }));
+      });
       console.log(`[content-advisor] Generation logged for correlation training`);
     } catch (e) {
       console.warn('[content-advisor] Failed to log generation:', e);
@@ -1363,6 +1422,27 @@ FRAÎCHEUR & DÉNOMINATION:
       console.log(`[content-advisor] Async job ${jobId} completed`)
     }
 
+    // Enrich result with page scan metadata
+    if (existingPageHtml) {
+      result.existing_page_scan = {
+        has_existing_content: true,
+        title: existingPageHtml.titleContent,
+        h1: existingPageHtml.h1Contents,
+        h2_count: existingPageHtml.h2Count,
+        word_count: existingPageHtml.wordCount,
+        has_schema: existingPageHtml.hasSchemaOrg,
+        schema_types: existingPageHtml.schemaTypes,
+        has_faq: existingPageHtml.hasFAQSection,
+        has_faq_schema: existingPageHtml.hasFAQWithSchema,
+        images_total: existingPageHtml.imagesTotal,
+        images_missing_alt: existingPageHtml.imagesMissingAlt,
+        internal_links: existingPageHtml.internalLinksCount,
+        content_age_days: existingPageHtml.contentAgeDays,
+      }
+    } else {
+      result.existing_page_scan = { has_existing_content: false }
+    }
+
     return jsonOk({ data: result })
 
   } catch (error) {
@@ -1382,4 +1462,4 @@ FRAÎCHEUR & DÉNOMINATION:
 
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-})
+}));
