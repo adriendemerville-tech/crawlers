@@ -196,6 +196,7 @@ const App = () => (
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
+                      </AISidebarPageWrapper>
                       <Suspense fallback={null}>
                         <FloatingChatBubble />
                       </Suspense>
