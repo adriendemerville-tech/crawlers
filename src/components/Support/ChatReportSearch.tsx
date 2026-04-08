@@ -297,7 +297,8 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
             Tapez un mot-clé ou un domaine
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
