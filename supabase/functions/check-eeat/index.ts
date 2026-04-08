@@ -589,6 +589,76 @@ Réponds UNIQUEMENT en JSON valide :
 }
 
 // ══════════════════════════════════════════════════════
+// Fetch domain age from site identity card or Wayback Machine
+// ══════════════════════════════════════════════════════
+async function fetchDomainAge(supabase: any, domain: string, trackedSiteId: string | null): Promise<{ available: boolean; foundingYear: number | null; ageYears: number | null }> {
+  try {
+    // 1. Try to get founding_year from tracked_sites
+    let foundingYear: number | null = null;
+
+    if (trackedSiteId) {
+      const { data } = await supabase
+        .from('tracked_sites')
+        .select('founding_year')
+        .eq('id', trackedSiteId)
+        .maybeSingle();
+      foundingYear = data?.founding_year || null;
+    }
+
+    if (!foundingYear) {
+      const { data } = await supabase
+        .from('tracked_sites')
+        .select('id, founding_year')
+        .ilike('domain', `%${domain}%`)
+        .limit(1)
+        .maybeSingle();
+      foundingYear = data?.founding_year || null;
+
+      // 2. If still missing, query Wayback Machine
+      if (!foundingYear) {
+        console.log(`[check-eeat] 📅 founding_year missing, querying Wayback Machine for ${domain}...`);
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 8000);
+          const wbResp = await fetch(
+            `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(domain)}&output=json&limit=1&fl=timestamp&sort=timestamp:asc`,
+            { signal: controller.signal }
+          );
+          clearTimeout(timeout);
+          if (wbResp.ok) {
+            const wbData = await wbResp.json();
+            if (Array.isArray(wbData) && wbData.length > 1 && wbData[1]?.[0]) {
+              const year = parseInt(String(wbData[1][0]).substring(0, 4), 10);
+              if (year >= 1990) {
+                foundingYear = year;
+                console.log(`[check-eeat] 📅 Wayback Machine: ${domain} first seen in ${year}`);
+                // Persist for future use
+                if (data?.id) {
+                  await supabase.from('tracked_sites').update({ founding_year: year }).eq('id', data.id);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`[check-eeat] ⚠️ Wayback Machine query failed:`, e);
+        }
+      }
+    }
+
+    if (foundingYear) {
+      const ageYears = new Date().getFullYear() - foundingYear;
+      console.log(`[check-eeat] 📅 Domain age: ${ageYears} years (founded ${foundingYear})`);
+      return { available: true, foundingYear, ageYears };
+    }
+
+    return { available: false, foundingYear: null, ageYears: null };
+  } catch (e) {
+    console.warn(`[check-eeat] ⚠️ Domain age fetch failed:`, e);
+    return { available: false, foundingYear: null, ageYears: null };
+  }
+}
+
+// ══════════════════════════════════════════════════════
 // Fetch real backlink data from DataForSEO
 // ══════════════════════════════════════════════════════
 async function fetchBacklinkData(domain: string): Promise<any> {
