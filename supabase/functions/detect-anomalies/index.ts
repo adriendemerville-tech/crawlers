@@ -96,7 +96,7 @@ try {
     console.error('[detect-anomalies] Error:', error);
     return jsonError('Internal error', 500);
   }
-});
+}));
 
 async function detectForSite(supabase: any, trackedSiteId: string, domain: string, userId: string): Promise<number> {
   // Fetch site identity card for seasonality awareness
