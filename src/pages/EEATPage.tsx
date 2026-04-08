@@ -455,9 +455,9 @@ export default function EEATPage() {
               avec un plan d'action personnalisé.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/audit-expert">
+              <Link to="/app/eeat">
                 <Button size="lg" className="gap-2 w-full sm:w-auto">
-                  Lancer un Audit Expert
+                  Lancer l'audit E-E-A-T gratuit
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
