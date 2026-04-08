@@ -137,3 +137,17 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
 - 2 prompts LLM max par micro-cycle (technique + contenu)
 - 8 items max scorés par cycle (répartis entre les 2 lanes)
 - Polling async : 90s max, intervalle 5s
+
+### Anti-doublon renforcé (FIX v2.3, 2026-04-08)
+
+**Problème racine** : Parménion créait des articles en doublon sur le même thème (ex: 5 articles "frais réels") à cause de :
+1. Seuil Jaccard trop strict (0.65) — des titres reformulés passaient sous le radar
+2. Items workbench jamais marqués `consumed_by_content = true` après création → re-présentés au LLM
+
+**Corrections appliquées** :
+1. `iktracker-actions` : dédup multi-couche (3 layers) :
+   - **Layer A** : Jaccard classique abaissé de 0.65 → **0.45**
+   - **Layer B** : Core Topic Overlap (mots-clés centraux, sans stop words) ≥ **0.80** → même sujet
+   - **Layer C** : Slug Similarity ≥ **0.70** → même intention d'URL
+2. `autopilot-engine` : POST-EXECUTE marque les items content (`missing_page`, `content_gap`, `content_upgrade`, `missing_terms`) avec `consumed_by_content = true` après succès
+3. Les stop words français (le, la, des, guide, complet, etc.) sont exclus du calcul core topic pour se concentrer sur les mots-clés réellement discriminants

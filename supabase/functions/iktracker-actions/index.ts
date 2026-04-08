@@ -156,6 +156,22 @@ function normalizeForComparison(text: string): string {
     .trim()
 }
 
+/** French stop words to ignore when extracting core keywords */
+const STOP_WORDS = new Set([
+  'le', 'la', 'les', 'de', 'des', 'du', 'un', 'une', 'et', 'en', 'pour', 'par',
+  'sur', 'avec', 'dans', 'que', 'qui', 'est', 'au', 'aux', 'son', 'ses', 'ce',
+  'cette', 'ces', 'ou', 'ne', 'pas', 'plus', 'tout', 'tous', 'votre', 'vos',
+  'notre', 'nos', 'comment', 'pourquoi', 'quand', 'guide', 'complet', 'complete',
+  'article', 'tout', 'savoir', 'connaitre', 'comprendre', 'the', 'and', 'for',
+])
+
+/** Extract core keywords from a title (words that carry real topic meaning) */
+function extractCoreKeywords(text: string): Set<string> {
+  const normalized = normalizeForComparison(text)
+  const words = normalized.split(' ').filter(w => w.length > 2 && !STOP_WORDS.has(w))
+  return new Set(words)
+}
+
 /** Compute word-overlap similarity (Jaccard) between two strings, returns 0-1 */
 function titleSimilarity(a: string, b: string): number {
   const wordsA = new Set(normalizeForComparison(a).split(' ').filter(w => w.length > 2))
@@ -164,6 +180,30 @@ function titleSimilarity(a: string, b: string): number {
   let intersection = 0
   for (const w of wordsA) { if (wordsB.has(w)) intersection++ }
   return intersection / Math.max(wordsA.size, wordsB.size)
+}
+
+/** Check if two titles share the same core topic (e.g. "frais reels") */
+function coreTopicOverlap(a: string, b: string): number {
+  const coreA = extractCoreKeywords(a)
+  const coreB = extractCoreKeywords(b)
+  if (coreA.size === 0 || coreB.size === 0) return 0
+  let intersection = 0
+  for (const w of coreA) { if (coreB.has(w)) intersection++ }
+  // Use the smaller set as denominator — if all core words of one title
+  // appear in the other, they cover the same topic
+  return intersection / Math.min(coreA.size, coreB.size)
+}
+
+/** Slug similarity: normalize slugs and compare */
+function slugSimilarity(a: string, b: string): number {
+  if (!a || !b) return 0
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim()
+  const wordsA = new Set(normalize(a).split(' ').filter(w => w.length > 2))
+  const wordsB = new Set(normalize(b).split(' ').filter(w => w.length > 2))
+  if (wordsA.size === 0 || wordsB.size === 0) return 0
+  let intersection = 0
+  for (const w of wordsA) { if (wordsB.has(w)) intersection++ }
+  return intersection / Math.min(wordsA.size, wordsB.size)
 }
 
 async function createPost(apiKey: string, body: Record<string, unknown>) {
@@ -184,20 +224,43 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
     }
   }
 
-  // 2) Semantic dedup: check if a very similar article already exists by title
-  if (title) {
+  // 2) Multi-layer semantic dedup
+  if (title || slug) {
     try {
       const posts = await listPostsForDedup(apiKey)
       
       for (const post of posts) {
         if (!post.title) continue
+
+        // Layer A: Classic Jaccard on full title (lowered from 0.65 to 0.45)
         const sim = titleSimilarity(title, post.title)
-        if (sim >= 0.65) {
+        if (sim >= 0.45) {
           const existingSlug = post.slug || ''
-          console.log(`[iktracker-actions] Semantic duplicate detected (similarity=${sim.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
+          console.log(`[iktracker-actions] Title duplicate detected (jaccard=${sim.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
             const updateResult = await callIktracker('PUT', `/posts/${existingSlug}`, apiKey, body)
-            return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: sim }
+            return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: sim, _dedup_layer: 'jaccard' }
+          }
+        }
+
+        // Layer B: Core topic overlap — if ≥80% of core keywords match, same topic
+        const coreOverlap = coreTopicOverlap(title, post.title)
+        if (coreOverlap >= 0.80) {
+          const existingSlug = post.slug || ''
+          console.log(`[iktracker-actions] Core topic duplicate detected (overlap=${coreOverlap.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
+          if (existingSlug) {
+            const updateResult = await callIktracker('PUT', `/posts/${existingSlug}`, apiKey, body)
+            return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: coreOverlap, _dedup_layer: 'core_topic' }
+          }
+        }
+
+        // Layer C: Slug similarity (catches reformulations with same URL intent)
+        if (slug && post.slug) {
+          const slugSim = slugSimilarity(slug, post.slug)
+          if (slugSim >= 0.70) {
+            console.log(`[iktracker-actions] Slug duplicate detected (slugSim=${slugSim.toFixed(2)}): "${slug}" ≈ "${post.slug}" → updating`)
+            const updateResult = await callIktracker('PUT', `/posts/${post.slug}`, apiKey, body)
+            return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: post.slug, _similarity: slugSim, _dedup_layer: 'slug' }
           }
         }
       }
