@@ -578,23 +578,23 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={`w-[98vw] max-w-[1600px] h-[92vh] border border-white/10 rounded-2xl flex flex-col overflow-hidden shadow-2xl ${colorTheme === 'green' ? 'bg-[#0b1a14]' : 'bg-[#0f0a1e]'}`}>
+      <div className={`w-[98vw] max-w-[1600px] h-[92vh] border border-slate-700/60 rounded-2xl flex flex-col overflow-hidden shadow-2xl bg-[#0f172a]`}>
         {/* Header — compact, no publish here */}
-        <div className={`flex items-center justify-between px-4 py-2 border-b border-white/10 ${colorTheme === 'green' ? 'bg-gradient-to-r from-[#0d2218] to-[#0b1a14]' : 'bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]'}`}>
+        <div className="flex items-center justify-between px-4 py-2 border-b border-slate-700/60 bg-gradient-to-r from-[#1e293b] to-[#0f172a]">
           <div className="flex items-center gap-3">
-            <FileText className={`w-4 h-4 stroke-[1.5] ${colorTheme === 'green' ? 'text-emerald-400' : 'text-[#fbbf24]'}`} />
+            <FileText className="w-4 h-4 stroke-[1.5] text-teal-400" />
             <span className="text-sm font-semibold text-white">Content Architect</span>
             {result && (
               <div className="flex items-center gap-2 ml-3">
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Type className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />H1: {counters.h1}</Badge>
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60">H2: {counters.h2}</Badge>
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Hash className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.chars.toLocaleString()} car.</Badge>
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Image className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.medias}</Badge>
-                <Badge variant="outline" className="text-[10px] border-white/20 text-white/60"><Link2 className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.links}</Badge>
+                 <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400"><Type className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />H1: {counters.h1}</Badge>
+                 <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400">H2: {counters.h2}</Badge>
+                 <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400"><Hash className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.chars.toLocaleString()} car.</Badge>
+                 <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400"><Image className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.medias}</Badge>
+                 <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400"><Link2 className="w-2.5 h-2.5 mr-1 stroke-[1.5]" />{counters.links}</Badge>
               </div>
             )}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"><X className="w-4 h-4 text-white/50" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"><X className="w-4 h-4 text-slate-400" /></button>
         </div>
 
         {/* Body: Toolbar + Panel + Resizable Preview */}
@@ -603,7 +603,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
           {/* Expandable panel + shared instructions */}
           {activePanel && (
-            <div className={`w-[320px] shrink-0 border-r border-white/10 flex flex-col animate-in slide-in-from-left-2 duration-200 ${colorTheme === 'green' ? 'bg-[#081610]' : 'bg-[#0d0819]'}`}>
+            <div className="w-[320px] shrink-0 border-r border-slate-700/60 flex flex-col animate-in slide-in-from-left-2 duration-200 bg-[#1e293b]">
               {/* Panel content area */}
               <div className="flex-1 overflow-y-auto min-h-0">
                 {activePanel === 'prompt' && (
@@ -678,25 +678,25 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               </div>
 
               {/* Shared "Instructions spécifiques" — always visible, resizable height */}
-              <div className="border-t border-white/10 flex flex-col" style={{ minHeight: '120px' }}>
+              <div className="border-t border-slate-700/60 flex flex-col" style={{ minHeight: '120px' }}>
                 <div className="px-3 pt-2 pb-1">
-                  <label className="text-[10px] text-white/40 uppercase tracking-wider">Instructions spécifiques</label>
+                  <label className="text-[10px] text-slate-500 uppercase tracking-wider">Instructions spécifiques</label>
                 </div>
                 <div className="flex-1 px-3 pb-1">
                   <Textarea
                     value={prompt}
                     onChange={e => setPrompt(e.target.value)}
                     placeholder="Ex: Inclure un tableau comparatif, citer des sources…"
-                    className="w-full bg-white/5 border-white/10 text-white text-xs resize-y min-h-[60px] max-h-[300px]"
+                    className="w-full bg-slate-700/50 border-slate-600 text-white text-xs resize-y min-h-[60px] max-h-[300px]"
                     style={{ height: '80px' }}
                   />
                 </div>
-                <div className={`px-3 pb-2 pt-1 sticky bottom-0 ${colorTheme === 'green' ? 'bg-[#081610]' : 'bg-[#0d0819]'}`}>
+                <div className="px-3 pb-2 pt-1 sticky bottom-0 bg-[#1e293b]">
                   <Button
                     size="sm"
                     onClick={handleGenerate}
                     disabled={loading || !keyword}
-                    className={`w-full text-xs gap-1.5 ${colorTheme === 'green' ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30' : 'bg-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/30 border border-[#fbbf24]/30'}`}
+                    className="w-full text-xs gap-1.5 bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border border-teal-500/30"
                   >
                     <Syringe className="w-3 h-3 stroke-[1.5]" />
                     Injecter
@@ -709,7 +709,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           {/* Draggable resize handle for preview width */}
           {activePanel && (
             <div
-              className={`w-1 cursor-col-resize transition-colors shrink-0 ${colorTheme === 'green' ? 'hover:bg-emerald-500/30 active:bg-emerald-500/50' : 'hover:bg-[#fbbf24]/30 active:bg-[#fbbf24]/50'}`}
+              className="w-1 cursor-col-resize transition-colors shrink-0 hover:bg-teal-500/30 active:bg-teal-500/50"
               onMouseDown={(e) => {
                 e.preventDefault();
                 const startX = e.clientX;
