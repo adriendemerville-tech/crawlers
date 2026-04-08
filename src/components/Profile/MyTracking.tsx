@@ -682,7 +682,7 @@ export function MyTracking() {
                         )}
 
                         {/* Quick Wins */}
-                        <QuickWinsCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} keywords={h.latestSerpData?.sample_keywords || []} userId={h.user?.id || ''} />
+                        <QuickWinsCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} />
                       </TabsContent>
                       <TabsContent value="evolution" className="space-y-4">
                         {h.chartData.length > 0 ? (

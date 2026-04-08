@@ -5343,6 +5343,80 @@ export type Database = {
           },
         ]
       }
+      keyword_universe: {
+        Row: {
+          best_position: number | null
+          current_position: number | null
+          difficulty: number | null
+          domain: string
+          first_seen_at: string
+          id: string
+          intent: string | null
+          is_quick_win: boolean | null
+          keyword: string
+          opportunity_score: number | null
+          quick_win_action: string | null
+          quick_win_type: string | null
+          search_volume: number | null
+          source_details: Json | null
+          sources: string[]
+          target_url: string | null
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_position?: number | null
+          current_position?: number | null
+          difficulty?: number | null
+          domain: string
+          first_seen_at?: string
+          id?: string
+          intent?: string | null
+          is_quick_win?: boolean | null
+          keyword: string
+          opportunity_score?: number | null
+          quick_win_action?: string | null
+          quick_win_type?: string | null
+          search_volume?: number | null
+          source_details?: Json | null
+          sources?: string[]
+          target_url?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_position?: number | null
+          current_position?: number | null
+          difficulty?: number | null
+          domain?: string
+          first_seen_at?: string
+          id?: string
+          intent?: string | null
+          is_quick_win?: boolean | null
+          keyword?: string
+          opportunity_score?: number | null
+          quick_win_action?: string | null
+          quick_win_type?: string | null
+          search_volume?: number | null
+          source_details?: Json | null
+          sources?: string[]
+          target_url?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "keyword_universe_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       llm_depth_conversations: {
         Row: {
           created_at: string
@@ -9981,6 +10055,16 @@ export type Database = {
       upsert_analyzed_url: {
         Args: { p_domain: string; p_url: string }
         Returns: undefined
+      }
+      upsert_keyword_universe: {
+        Args: {
+          p_domain: string
+          p_keywords: Json
+          p_source: string
+          p_tracked_site_id?: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       upsert_user_activity: {
         Args: {

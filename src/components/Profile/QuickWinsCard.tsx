@@ -1,92 +1,30 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Check, Sparkles, Plus } from 'lucide-react';
+import { Zap, Sparkles, Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface KeywordItem {
-  keyword: string;
-  position: number;
-  search_volume: number;
-  url?: string;
-}
+import { useQuery } from '@tanstack/react-query';
 
 interface QuickWinsCardProps {
-  keywords: KeywordItem[];
   domain: string;
   trackedSiteId: string;
   userId: string;
 }
 
-interface QuickWin {
+interface QuickWinRow {
   id: string;
-  title: string;
-  description: string;
   keyword: string;
-  position: number;
-  type: 'title_optimization' | 'meta_description' | 'content_gap' | 'internal_link' | 'heading_structure';
-}
-
-function generateQuickWins(keywords: KeywordItem[]): QuickWin[] {
-  if (!keywords?.length) return [];
-
-  // Keywords close to page 1 (positions 11-20) = biggest quick wins
-  const nearPage1 = keywords.filter(k => k.position >= 8 && k.position <= 25).sort((a, b) => a.position - b.position);
-  // Already ranking but could be improved (4-10)
-  const improvable = keywords.filter(k => k.position >= 4 && k.position <= 10).sort((a, b) => b.search_volume - a.search_volume);
-
-  const wins: QuickWin[] = [];
-  const types: Array<{ type: QuickWin['type']; titleFn: (kw: string) => string; descFn: (kw: string, pos: number) => string }> = [
-    {
-      type: 'title_optimization',
-      titleFn: (kw) => `Optimiser le title pour "${kw}"`,
-      descFn: (kw, pos) => `Position actuelle #${pos}. Intégrez "${kw}" plus tôt dans la balise <title> pour gagner en pertinence.`,
-    },
-    {
-      type: 'meta_description',
-      titleFn: (kw) => `Enrichir la meta description avec "${kw}"`,
-      descFn: (kw, pos) => `Améliorez le CTR sur "${kw}" (position #${pos}) en réécrivant la meta description avec un appel à l'action.`,
-    },
-    {
-      type: 'content_gap',
-      titleFn: (kw) => `Renforcer le contenu autour de "${kw}"`,
-      descFn: (kw, pos) => `Ajoutez 200-300 mots de contenu pertinent autour de "${kw}" pour consolider votre position #${pos}.`,
-    },
-    {
-      type: 'internal_link',
-      titleFn: (kw) => `Ajouter des liens internes vers "${kw}"`,
-      descFn: (kw, pos) => `Créez 2-3 liens internes avec l'ancre "${kw}" depuis vos pages les plus fortes pour booster la position #${pos}.`,
-    },
-    {
-      type: 'heading_structure',
-      titleFn: (kw) => `Restructurer les H2/H3 avec "${kw}"`,
-      descFn: (kw, pos) => `Intégrez "${kw}" dans un H2 ou H3 pour renforcer la pertinence sémantique (actuellement #${pos}).`,
-    },
-  ];
-
-  // Generate wins from near-page-1 keywords first
-  [...nearPage1, ...improvable].forEach((kw, i) => {
-    if (wins.length >= 10) return;
-    const typeIdx = i % types.length;
-    const t = types[typeIdx];
-    wins.push({
-      id: `qw-${kw.keyword}-${t.type}`,
-      title: t.titleFn(kw.keyword),
-      description: t.descFn(kw.keyword, kw.position),
-      keyword: kw.keyword,
-      position: kw.position,
-      type: t.type,
-    });
-  });
-
-  return wins;
+  search_volume: number;
+  current_position: number | null;
+  opportunity_score: number;
+  quick_win_type: string | null;
+  quick_win_action: string | null;
+  target_url: string | null;
 }
 
 function SparkleExplosion({ onDone }: { onDone: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const timer = setTimeout(onDone, 800);
     return () => clearTimeout(timer);
@@ -102,16 +40,14 @@ function SparkleExplosion({ onDone }: { onDone: () => void }) {
   });
 
   return (
-    <div ref={ref} className="absolute inset-0 pointer-events-none overflow-visible z-10">
+    <div className="absolute inset-0 pointer-events-none overflow-visible z-10">
       {particles.map((p, i) => (
         <span
           key={i}
           className={`absolute rounded-full ${p.color} animate-ping`}
           style={{
-            left: '50%',
-            top: '50%',
-            width: p.size,
-            height: p.size,
+            left: '50%', top: '50%',
+            width: p.size, height: p.size,
             transform: `translate(${p.x}px, ${p.y}px)`,
             animationDuration: '0.6s',
             animationDelay: `${p.delay}ms`,
@@ -124,19 +60,49 @@ function SparkleExplosion({ onDone }: { onDone: () => void }) {
   );
 }
 
-export function QuickWinsCard({ keywords, domain, trackedSiteId, userId }: QuickWinsCardProps) {
-  const allWins = useState(() => generateQuickWins(keywords))[0];
+function getQuickWinTitle(kw: QuickWinRow): string {
+  const typeLabels: Record<string, (k: string) => string> = {
+    title_optimization: (k) => `Optimiser le title pour "${k}"`,
+    meta_description: (k) => `Enrichir la meta description avec "${k}"`,
+    content_gap: (k) => `Renforcer le contenu autour de "${k}"`,
+    internal_link: (k) => `Ajouter des liens internes vers "${k}"`,
+    heading_structure: (k) => `Restructurer les H2/H3 avec "${k}"`,
+  };
+  const fn = typeLabels[kw.quick_win_type || ''];
+  return fn ? fn(kw.keyword) : `Optimiser "${kw.keyword}"`;
+}
+
+function getQuickWinDescription(kw: QuickWinRow): string {
+  if (kw.quick_win_action) return kw.quick_win_action;
+  const pos = kw.current_position ? `position #${kw.current_position}` : 'non positionné';
+  return `Volume: ${(kw.search_volume || 0).toLocaleString()}/mois — ${pos}. Score opportunité: ${kw.opportunity_score}/100.`;
+}
+
+export function QuickWinsCard({ domain, trackedSiteId, userId }: QuickWinsCardProps) {
+  const { data: quickWins = [], isLoading } = useQuery({
+    queryKey: ['keyword-universe-quick-wins', domain, userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('keyword_universe')
+        .select('id, keyword, search_volume, current_position, opportunity_score, quick_win_type, quick_win_action, target_url')
+        .eq('domain', domain)
+        .eq('user_id', userId)
+        .eq('is_quick_win', true)
+        .order('opportunity_score', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as QuickWinRow[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [sparklingId, setSparklingId] = useState<string | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const visibleWins = allWins.filter(w => !completedIds.has(w.id));
-  const currentWin = visibleWins[0];
+  const visibleWins = quickWins.filter(w => !completedIds.has(w.id));
 
-  const handleComplete = useCallback(async (win: QuickWin) => {
+  const handleComplete = useCallback(async (win: QuickWinRow) => {
     setSparklingId(win.id);
-
-    // Add to action plan in background
     try {
       const { data: existing } = await supabase
         .from('action_plans')
@@ -147,29 +113,22 @@ export function QuickWinsCard({ keywords, domain, trackedSiteId, userId }: Quick
         .limit(1)
         .maybeSingle();
 
+      const newTask = {
+        id: crypto.randomUUID(),
+        title: getQuickWinTitle(win),
+        description: getQuickWinDescription(win),
+        priority: (win.current_position ?? 100) <= 15 ? 'important' : 'optional',
+        category: win.quick_win_type === 'content_gap' ? 'contenu' : 'technique',
+        completed: false,
+      };
+
       if (existing) {
         const tasks = Array.isArray(existing.tasks) ? existing.tasks : [];
-        const newTask = {
-          id: crypto.randomUUID(),
-          title: win.title,
-          description: win.description,
-          priority: win.position <= 15 ? 'important' : 'optional',
-          category: win.type === 'content_gap' ? 'contenu' : 'technique',
-          completed: false,
-        };
         await supabase
           .from('action_plans')
           .update({ tasks: [...tasks, newTask], updated_at: new Date().toISOString() })
           .eq('id', existing.id);
       } else {
-        const newTask = {
-          id: crypto.randomUUID(),
-          title: win.title,
-          description: win.description,
-          priority: win.position <= 15 ? 'important' : 'optional',
-          category: win.type === 'content_gap' ? 'contenu' : 'technique',
-          completed: false,
-        };
         await supabase.from('action_plans').insert({
           url: `https://${domain}`,
           user_id: userId,
@@ -191,7 +150,17 @@ export function QuickWinsCard({ keywords, domain, trackedSiteId, userId }: Quick
     }
   }, [sparklingId]);
 
-  if (!allWins.length) return null;
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!quickWins.length) return null;
 
   return (
     <Card>
@@ -200,7 +169,7 @@ export function QuickWinsCard({ keywords, domain, trackedSiteId, userId }: Quick
           <Zap className="h-4 w-4 text-amber-500" />
           Quick Wins
           <Badge variant="secondary" className="text-[10px] font-normal ml-auto">
-            {completedIds.size}/{allWins.length} ajoutés
+            {completedIds.size}/{quickWins.length} ajoutés
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -215,8 +184,8 @@ export function QuickWinsCard({ keywords, domain, trackedSiteId, userId }: Quick
           >
             {sparklingId === win.id && <SparkleExplosion onDone={handleSparkleDone} />}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium leading-tight">{win.title}</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{win.description}</p>
+              <p className="text-sm font-medium leading-tight">{getQuickWinTitle(win)}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{getQuickWinDescription(win)}</p>
             </div>
             <button
               onClick={() => handleComplete(win)}
