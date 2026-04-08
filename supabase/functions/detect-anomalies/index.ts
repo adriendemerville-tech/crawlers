@@ -112,7 +112,7 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
   } catch (_) { /* non-blocking */ }
 
   // Fetch all historical data in parallel (8 weeks + current)
-  const [gscRes, ga4Res, gmbRes, adsRes, serpRes] = await Promise.all([
+  const [gscRes, ga4Res, gmbRes, adsRes, serpRes, idxRes] = await Promise.all([
     supabase
       .from('gsc_history_log')
       .select('clicks, impressions, ctr, avg_position, week_start_date')
@@ -144,6 +144,11 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
       .eq('data_type', 'serp_kpis')
       .order('created_at', { ascending: false })
       .limit(9),
+    // Indexation checks — compute current ratio
+    supabase
+      .from('indexation_checks')
+      .select('verdict')
+      .eq('tracked_site_id', trackedSiteId),
   ]);
 
   const series: MetricSeries[] = [];
