@@ -157,8 +157,12 @@ function BlogIndexComponent() {
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30">
                     <div className="aspect-video overflow-hidden">
                       <img
-                        src={article.heroImage}
+                        src={article.heroImage.includes('unsplash.com') 
+                          ? `${article.heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${article.heroImage.includes('?') ? '&' : '?'}w=640&q=75&auto=format`
+                          : article.heroImage}
                         alt={article.heroAlt[language] || article.heroAlt.fr}
+                        width={640}
+                        height={360}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
                       />
