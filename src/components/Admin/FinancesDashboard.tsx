@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { AIGatewayUsageCard } from './AIGatewayUsageCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -469,6 +470,9 @@ export function FinancesDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Gateway Usage */}
+      <AIGatewayUsageCard />
 
       {/* Business Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
