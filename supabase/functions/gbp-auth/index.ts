@@ -310,10 +310,55 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
         }
       }
 
+      // If gmb_account_id is null, retry discovery now that we have a valid token
+      let accountId = gbpConn.gmb_account_id
+      let locationId = gbpConn.gmb_location_id
+
+      if (!accountId && accessToken) {
+        console.log('[gbp-auth/status] 🔄 gmb_account_id is null — retrying discovery...')
+        try {
+          const acctResp = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          })
+          console.log(`[gbp-auth/status] Accounts API: ${acctResp.status}`)
+          if (acctResp.ok) {
+            const { accounts = [] } = await acctResp.json()
+            console.log(`[gbp-auth/status] Found ${accounts.length} account(s)`)
+            if (accounts.length > 0) {
+              accountId = accounts[0].name?.replace('accounts/', '') || null
+              console.log(`[gbp-auth/status] Using account: ${accountId}`)
+              if (accountId) {
+                const locResp = await fetch(
+                  `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${accountId}/locations?readMask=name,title,storefrontAddress`,
+                  { headers: { Authorization: `Bearer ${accessToken}` } }
+                )
+                if (locResp.ok) {
+                  const { locations: locs = [] } = await locResp.json()
+                  if (locs.length > 0) {
+                    locationId = locs[0].name?.split('/').pop() || null
+                    console.log(`[gbp-auth/status] ✅ Discovered location: ${locationId}`)
+                  }
+                }
+                // Persist discovered IDs
+                await supabase.from('google_connections').update({
+                  gmb_account_id: accountId,
+                  gmb_location_id: locationId,
+                  updated_at: new Date().toISOString(),
+                }).eq('id', gbpConn.id)
+                console.log('[gbp-auth/status] ✅ Persisted account/location IDs')
+              }
+            }
+          } else {
+            console.warn('[gbp-auth/status] Accounts API failed:', await acctResp.text())
+          }
+        } catch (e) {
+          console.warn('[gbp-auth/status] Discovery retry failed:', e)
+        }
+      }
+
       // Fetch real locations from GBP API
       const locations: Array<{id: string; location_name: string; address: string; phone: string; website: string; category: string}> = []
       try {
-        const accountId = gbpConn.gmb_account_id
         if (accountId && accessToken) {
           const locResp = await fetch(
             `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${accountId}/locations?readMask=name,title,storefrontAddress,phoneNumbers,websiteUri,categories`,
