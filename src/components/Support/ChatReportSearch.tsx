@@ -206,7 +206,10 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(true);
+        }}
         className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50 transition-colors"
         title="Chercher un rapport"
       >
@@ -216,8 +219,18 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
   }
 
   return (
-    <div ref={panelRef} className="absolute bottom-full left-0 right-0 mb-1 z-20">
-      <div className="mx-2 rounded-xl border border-border/50 bg-background/98 shadow-lg backdrop-blur-md overflow-hidden">
+    <>
+      {/* Invisible trigger button to keep layout slot */}
+      <button
+        onClick={() => { setIsOpen(false); setQuery(''); setResults([]); }}
+        className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full text-primary bg-primary/10 transition-colors"
+        title="Fermer la recherche"
+      >
+        <FolderSearch className="h-3.5 w-3.5" />
+      </button>
+      {/* Panel positioned relative to the parent border-t container */}
+      <div ref={panelRef} className="absolute bottom-full left-0 right-0 mb-1 z-30">
+        <div className="mx-2 rounded-xl border border-border/50 bg-background/98 shadow-lg backdrop-blur-md overflow-hidden">
         {/* Search input */}
         <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30">
           <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
@@ -284,7 +297,8 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
             Tapez un mot-clé ou un domaine
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
