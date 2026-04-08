@@ -41,6 +41,7 @@ import { AEOScoreCard } from './AEOScoreCard';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 import { TechnicalResultsSection } from './TechnicalResultsSection';
 import { StrategicResultsSection } from './StrategicResultsSection';
+import { NextStepFloatingButton } from './NextStepFloatingButton';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1526,35 +1527,45 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {auditMode === 'technical' && (
             <StrategicErrorBoundary onReset={handleNewAudit}>
               <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
+              <NextStepFloatingButton
+                nextStepLabel={language === 'en' ? 'Next: AI Visibility Audit' : language === 'es' ? 'Siguiente: Auditoría GEO' : 'Étape suivante : Audit GEO'}
+                onNextStep={() => handleStrategicAudit()}
+              />
             </StrategicErrorBoundary>
           )}
 
           {/* === STEP 2: STRATEGIC AUDIT SECTION === */}
           {auditMode === 'strategic' && (
-            <StrategicResultsSection
-              result={result}
-              url={url}
-              t={t}
-              isLoggedIn={isLoggedIn}
-              isStrategicLoading={isStrategicLoading}
-              hallucinationDiagnosis={hallucinationDiagnosis}
-              storedCorrections={storedCorrections}
-              strategicProgressiveReveal={strategicProgressiveReveal}
-              strategicCacheInfo={strategicCacheInfo}
-              onReportClick={handleReportButtonClick}
-              onHallucinationCorrectionComplete={handleHallucinationCorrectionComplete}
-              onCompetitorCorrectionComplete={handleCompetitorCorrectionComplete}
-              onNewAudit={handleNewAudit}
-              onStrategicAudit={handleStrategicAudit}
-              onForceRefresh={() => {
-                setForceStrategicRefresh(true);
-                const d = result.domain || (() => { try { return new URL(url).hostname; } catch { return ''; } })();
-                if (d) clearStrategicCache(d);
-                setStrategicCacheInfo(null);
-                const normalizedUrl = normalizeUrl(url);
-                setTimeout(() => runStrategicAudit(normalizedUrl), 100);
-              }}
-            />
+            <>
+              <StrategicResultsSection
+                result={result}
+                url={url}
+                t={t}
+                isLoggedIn={isLoggedIn}
+                isStrategicLoading={isStrategicLoading}
+                hallucinationDiagnosis={hallucinationDiagnosis}
+                storedCorrections={storedCorrections}
+                strategicProgressiveReveal={strategicProgressiveReveal}
+                strategicCacheInfo={strategicCacheInfo}
+                onReportClick={handleReportButtonClick}
+                onHallucinationCorrectionComplete={handleHallucinationCorrectionComplete}
+                onCompetitorCorrectionComplete={handleCompetitorCorrectionComplete}
+                onNewAudit={handleNewAudit}
+                onStrategicAudit={handleStrategicAudit}
+                onForceRefresh={() => {
+                  setForceStrategicRefresh(true);
+                  const d = result.domain || (() => { try { return new URL(url).hostname; } catch { return ''; } })();
+                  if (d) clearStrategicCache(d);
+                  setStrategicCacheInfo(null);
+                  const normalizedUrl = normalizeUrl(url);
+                  setTimeout(() => runStrategicAudit(normalizedUrl), 100);
+                }}
+              />
+              <NextStepFloatingButton
+                nextStepLabel={language === 'en' ? 'Next: Corrective Code' : language === 'es' ? 'Siguiente: Código Correctivo' : 'Étape suivante : Code Correctif'}
+                onNextStep={() => setIsCodeEditorOpen(true)}
+              />
+            </>
           )}
 
           {/* Timestamp + Premium Report Button */}
