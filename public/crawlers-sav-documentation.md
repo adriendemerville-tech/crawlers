@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "3.5"
-date: "2026-03-30"
+version: "4.0"
+date: "2026-04-08"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -371,6 +371,17 @@ Félix est l'assistant IA intégré, disponible sur toutes les pages via la bull
 - Guide interactif : demande à l'utilisateur de scroller pour analyser davantage
 - Détection des questions récurrentes et suggestion de quiz
 - Signalement de bugs via bouton dédié
+- Upload d'images/documents via le bouton photo (ouvre le sélecteur de fichiers natif du système)
+
+**Workflow post-audit :**
+Après un audit (Expert ou Matrice), si Félix est en mode fenêtre toute hauteur, il propose automatiquement :
+1. « Veux-tu que je te résume les résultats de cet audit ? » → résumé général bref
+2. Classement des problèmes par priorité (haute, moyenne, basse)
+3. « Par quoi veux-tu qu'on commence ? » avec 3 boutons de priorité
+4. Au clic : lecture du Workbench et présentation des solutions proposées
+5. Proposition d'action : « Veux-tu que j'ouvre Content Architect / Code Architect ? » (Oui / Non)
+6. Si non : « Veux-tu que je mette à jour le plan d'action ? » → mise à jour dans /console
+7. Si non : « Tu peux revenir plus tard via l'historique (picto horloge) »
 
 **Quiz intégrés :** Félix propose trois types de quiz :
 - **Quiz SEO/GEO** (20 questions) : testez vos connaissances en référencement naturel et optimisation IA
