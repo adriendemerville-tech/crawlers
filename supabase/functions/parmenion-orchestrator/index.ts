@@ -286,6 +286,15 @@ try {
         force_content: forceContent,
         force_iktracker_article: force_iktracker_article === true,
       });
+      if (!decision) {
+        return jsonOk({
+          cycle: cycle_number,
+          phase: currentPhase,
+          status: 'skipped',
+          reason: 'No workbench items available for prescribe phase',
+          domain,
+        });
+      }
     } else {
       // Non-prescribe phases or empty workbench without forced content: single LLM call
       // For execute phase, scan CMS to provide inventory of existing content (avoid duplicates)
