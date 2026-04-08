@@ -2250,7 +2250,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
     }
     } // end if (!isGuest)
 
-    return jsonOk({ reply, conversation_id, ...(architectAction ? { architect_action: architectAction } : {}), ...(navigationAction ? { navigation_action: navigationAction } : {}) });
+    return jsonOk({ reply, conversation_id, ...(architectAction ? { architect_action: architectAction } : {}), ...(navigationAction ? { navigation_action: navigationAction } : {}), ...(handoffAction ? { handoff_action: handoffAction } : {}) });
   } catch (e) {
     console.error("sav-agent error:", e);
     return jsonError(e instanceof Error ? e.message : "Erreur interne", 500);
