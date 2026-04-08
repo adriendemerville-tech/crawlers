@@ -747,7 +747,7 @@ function detectDefaultLanguage(): Language {
   const browserLang = (navigator.language || '').toLowerCase();
   if (browserLang.startsWith('fr')) return 'fr';
   if (browserLang.startsWith('es')) return 'es';
-  return 'en';
+  return 'fr';
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
