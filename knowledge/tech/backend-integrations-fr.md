@@ -1,5 +1,5 @@
 # Memory: tech/backend-integrations-fr
-Updated: 2026-04-07
+Updated: 2026-04-08
 
 ## Intégrations API tierces préparées (backend ready, pas encore connectées)
 
@@ -76,3 +76,9 @@ Updated: 2026-04-07
 
 ## Gouvernance des Agents IA
 - **Budget tokens** : Les agents Supervisor et CTO sont limités à 1€/jour maximum en tokens Anthropic. Le contrôle est appliqué dans les edge functions respectives via un compteur quotidien.
+
+## Logging tokens LLM (`ai_gateway_usage`)
+- Toutes les edge functions utilisant des LLM loguent leur consommation dans `ai_gateway_usage`
+- Champs : `model`, `prompt_tokens`, `completion_tokens`, `total_tokens`, `estimated_cost_usd`, `gateway`, `edge_function`, `is_fallback`
+- Edge functions trackées : `sav-agent`, `cocoon-chat`, `strategic-synthesis`, `audit-strategique-ia`, `content-architecture-advisor`, `generate-corrective-code`, `autopilot-engine`, etc.
+- Dashboard Finances (admin) : agrège les coûts par edge function et par modèle

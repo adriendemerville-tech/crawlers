@@ -6,7 +6,7 @@ Updated: 2026-04-08
 ### Onglets principaux
 - **Utilisateurs** : KPIs par utilisateur, archivage, rôles (`user_roles` avec enum `app_role`)
 - **SAV IA** : Historique conversations agent Crawler, indicateurs satisfaction, escalade téléphonique
-- **Finances** : Suivi coûts API (Spider, Firecrawl, DataForSEO, SerpAPI), revenus Stripe
+- **Finances** : Suivi coûts API (Spider, Firecrawl, DataForSEO, SerpAPI), revenus Stripe. Tokens comptabilisés depuis `sav-agent` et `cocoon-chat` via `ai_gateway_usage`.
 - **Algo Training** : Entraînement et monitoring des modèles de scoring (GEO, SEO, prédictions)
 - **Bundle Option** : Catalogue APIs tierces (`bundle_api_catalog`), abonnements bundle
 - **Intelligence Hub** : Supervisor (agents + assistant SAV), Agent CTO + Recettage, Error Registry
@@ -62,6 +62,7 @@ Updated: 2026-04-08
   - URLs concurrentes à analyser (1-3)
 - **Multi** : Router multi-pages pour génération de scripts sur plusieurs URLs
 - Les onglets Contenu, Scribe et Multi sont **cachés en mode démo** (`openMode`)
+- **Contrainte images** : Parménion et Content Architect ne génèrent pas d'images avec du texte incrusté sauf demande explicite de l'utilisateur ou de l'admin. Le titre de l'article ne doit pas apparaître dans les photos générées.
 
 ### Garde-fous Content Architecture Advisor
 - Pénalités de confiance pour innovation disruptive en secteurs conservateurs
@@ -164,6 +165,27 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - **Tracking** : Résilience token tracker, headers CORS
 
 
+## Audit Expert (/audit-expert)
+
+### Bouton flottant "Étape suivante"
+- Composant `NextStepFloatingButton` — bouton fixé en bas à gauche de l'écran
+- Apparaît après 30% de scroll dans les résultats d'audit
+- Style : conteneur `rounded-xl`, `border-border/60`, `bg-card/80`, `backdrop-blur-md`, texte `text-foreground` (blanc en dark, noir en light), chevron discret
+- **Audit SEO** → label "Étape suivante : Audit GEO" → scroll top + lance l'audit stratégique après 1s
+- **Audit GEO** → label "Étape suivante : Code Correctif" → scroll top + ouvre l'éditeur correctif après 1s
+- Trilingue FR/EN/ES
+- Disparaît après le clic (state `triggered`)
+
+### Animation de chargement
+- Texte de chargement : "Analyse de l'url {url}" (au lieu de "Analyse de {url}")
+
+### Maillage Interne (IPR)
+- **Déplacé** de l'audit stratégique GEO vers le crawl multi-pages (/crawl)
+- La carte `MaillageIPRCard` s'affiche après la synthèse IA dans les résultats de crawl
+- Données calculées à partir de `crawl_pages` (internal_links, crawl_depth, seo_score) via `computeMaillageFromCrawlPages()`
+- Minimum 3 pages avec HTTP 200 pour afficher la carte
+
+
 ## Homepage — Améliorations SEO/GEO (v5.1 — 2026-03-29)
 
 ### Section "Comment ça marche" (`HowItWorksSection`)
@@ -205,6 +227,7 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - Crawls précédents : rapport se déroule inline sans rechargement de page
 - En bas du rapport déroulé : boutons "Rapport" et "Cocoon" pour navigation directe
 - Le bouton Cocoon transmet l'identifiant du crawl pour pré-charger le bon site dans le sélecteur /cocoon
+- **Carte Maillage Interne (IPR)** : affichée après la synthèse IA, calculée depuis les `crawl_pages` (densité, profondeur max, pages orphelines, distribution PageRank)
 
 ### Cocoon (/cocoon) — Sélecteur de sites
 - Affiche les 5 crawls les plus audités dans Cocoon en priorité

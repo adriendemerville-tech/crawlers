@@ -20,6 +20,7 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - **Mode Créateur** (admin + is_creator) : accès lecture complète backend (tables, functions, logs), interrogation croisée multi-tables, consultation code source edge functions. Modification logique interdite.
 - **Notification résolution** : badge sur bouton assistant quand un `user_bug_reports` passe à `resolved`
 - **Validation Quiz Crawlers** : notification inline pour admin créateur quand des questions auto-générées sont en attente (`is_active=false, auto_generated=true`). Boutons Valider/Rejeter par question.
+- **Logging tokens** : Chaque appel LLM est comptabilisé dans `ai_gateway_usage` (modèle, tokens prompt/completion, coût estimé, edge_function: 'sav-agent')
 
 ## Agent Félix (Onboarding & Support)
 - **Pages prioritaires SPO** : quand l'utilisateur interroge Félix sur un audit ou une optimisation (depuis /console ou à l'écran), Félix commence par lister les 5 pages prioritaires à optimiser (depuis `page_priority_scores`), sans explication méthodologique sauf demande explicite.
@@ -45,6 +46,17 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
   - `sync-quiz-crawlers` (cron mensuel, génération IA de questions Crawlers)
   - `felix-weekly-quiz-notif` (cron hebdomadaire, notification quiz pour users actifs)
 - **Fenêtre chat** : position persistée dans localStorage (`felix_sidebar_expanded`). Si l'utilisateur ouvre Félix en colonne toute hauteur, la prochaine ouverture reprend cette disposition. Boutons : "−" (réduire), icône nouvel onglet (ouvre en pleine page).
+- **Bouton flottant Félix** : masqué automatiquement quand la sidebar est en mode étendu (toute hauteur), pour ne pas masquer la fenêtre de chat.
+- **Logo Crawlers header** : un petit logo Crawlers rond s'affiche à gauche de "Félix" dans le header quand la sidebar est étendue.
+- **Historique des conversations** :
+  - Archivage automatique de la conversation en cours lors du clic sur "Nouveau"
+  - Conversations archivées consultables via un bouton historique (icône horloge) dans le footer, visible uniquement en mode étendu
+  - Panneau overlay avec liste des archives (date, aperçu du dernier message)
+  - Restauration d'une archive : archive la conversation active, charge l'ancienne
+  - Suppression individuelle d'archives
+  - Persistance via `localStorage` (`felix_conversations_archive`, `felix_current_conversation`)
+  - La conversation la plus récente est préchargée à la prochaine session
+- **Logging tokens** : Chaque appel LLM est comptabilisé dans `ai_gateway_usage` (edge_function: 'cocoon-chat' pour le Stratège, 'sav-agent' pour Crawler)
 
 ## Scoring de précision (`sav_quality_scores`)
 - precision_score (0-100), route_match, repeated_intent_count, escalated_to_phone
@@ -63,6 +75,7 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - **Changement auto** : historique et conversation changent quand l'utilisateur sélectionne un autre site/URL
 - **Boutons d'action** : taille maximale réduite pour éviter la superposition avec le bouton "+" en bas à droite
 - **Fenêtre chat** : position persistée. Boutons : "−" (réduire), icône nouvel onglet (ouvre en pleine page).
+- **Logging tokens** : Chaque appel LLM est comptabilisé dans `ai_gateway_usage` (edge_function: 'cocoon-chat')
 
 ## Circuit de Signalement (Recettage)
 - Table : `user_bug_reports` (raw_message, translated_message, route, context_data, category, status, cto_response, notified_user)
