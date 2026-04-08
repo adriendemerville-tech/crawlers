@@ -19,7 +19,11 @@ const GENERATIVE_ICONS: Record<string, React.ReactNode> = {
 };
 
 export function GenerativeTab({ fixes, onToggle, disabled }: GenerativeTabProps) {
-  const generativeFixes = fixes.filter(f => f.category === 'generative');
+  const generativeFixes = fixes.filter(f => f.category === 'generative')
+    .sort((a, b) => {
+      const order = { critical: 0, important: 1, optional: 2, installed: 3 };
+      return (order[a.priority as keyof typeof order] ?? 2) - (order[b.priority as keyof typeof order] ?? 2);
+    });
 
   if (generativeFixes.length === 0) {
     return (

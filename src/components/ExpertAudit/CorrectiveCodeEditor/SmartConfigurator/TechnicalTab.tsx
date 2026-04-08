@@ -44,24 +44,28 @@ const categoryLabels: Record<string, string> = {
 
 const priorityConfig = {
   critical: { 
-    label: 'Critique', 
+    label: 'Prioritaire', 
     color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30',
-    icon: AlertCircle 
+    icon: AlertCircle,
+    sortOrder: 0,
   },
   important: { 
-    label: 'Important', 
+    label: 'Vigilance', 
     color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
-    icon: AlertTriangle 
+    icon: AlertTriangle,
+    sortOrder: 1,
   },
   optional: { 
     label: 'Optionnel', 
     color: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30',
-    icon: Info 
+    icon: Info,
+    sortOrder: 2,
   },
   installed: {
     label: 'Déjà installé',
     color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
-    icon: Info
+    icon: Info,
+    sortOrder: 3,
   },
 };
 
@@ -81,12 +85,21 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth, disabled }: Techn
       .map(f => f.id)
   );
   
-  // Group by category
+  // Group by category, then sort each group by priority
   const groupedFixes = technicalFixes.reduce((acc, fix) => {
     if (!acc[fix.category]) acc[fix.category] = [];
     acc[fix.category].push(fix);
     return acc;
   }, {} as Record<string, FixConfig[]>);
+
+  // Sort within each category: critical → important → optional → installed
+  Object.values(groupedFixes).forEach(group => {
+    group.sort((a, b) => {
+      const aOrder = (priorityConfig[a.priority as keyof typeof priorityConfig] || priorityConfig.optional).sortOrder;
+      const bOrder = (priorityConfig[b.priority as keyof typeof priorityConfig] || priorityConfig.optional).sortOrder;
+      return aOrder - bOrder;
+    });
+  });
 
   return (
     <div className="space-y-3">
@@ -145,6 +158,14 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth, disabled }: Techn
                               >
                                 {pConfig.label}
                               </Badge>
+                            ) : (fix.priority === 'critical' || fix.priority === 'important') ? (
+                               <Badge 
+                                 variant="outline" 
+                                 className={`text-[9px] px-1.5 py-0 h-4 ${pConfig.color} font-semibold`}
+                               >
+                                 <PriorityIcon className="w-2.5 h-2.5 mr-0.5" />
+                                 {pConfig.label}
+                               </Badge>
                             ) : fix.isRecommended ? (
                                <Badge 
                                  variant="outline" 
@@ -157,7 +178,6 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth, disabled }: Techn
                                  variant="outline" 
                                  className={`text-[9px] px-1 py-0 h-4 ${pConfig.color}`}
                                >
-                                 <PriorityIcon className="w-2 h-2 mr-0.5" />
                                  {pConfig.label}
                                </Badge>
                              )}
