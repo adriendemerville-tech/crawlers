@@ -7,8 +7,8 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { t3 } from '@/utils/i18n';
-import heroImage from '@/assets/landing/ias-dashboard-scores.webp';
-import beforeAfterImage from '@/assets/landing/ias-before-after.webp';
+import heroImage from '@/assets/landing/ias-dashboard-scores-mobile.webp';
+import beforeAfterImage from '@/assets/landing/ias-before-after-mobile.webp';
 import {
   Crown, Target, TrendingUp, Shield, BarChart3, ArrowRight, Zap,
   CheckCircle2, AlertTriangle, Gauge, Sprout, Search, Activity,
@@ -140,9 +140,10 @@ export default function IndiceAlignementStrategique() {
             src={heroImage}
             alt={t3(language, 'Dashboard IAS avec les quatre sous-scores : traction organique, maturité de marque, pénétration et tendance', 'IAS dashboard with four sub-scores: organic traction, brand maturity, penetration, and momentum', 'Dashboard IAS con los cuatro sub-scores')}
             className="w-full rounded-xl shadow-2xl border border-border"
-            width={1200}
-            height={630}
+            width={800}
+            height={400}
             fetchPriority="high"
+            decoding="async"
           />
         </section>
 
@@ -263,9 +264,10 @@ export default function IndiceAlignementStrategique() {
               src={beforeAfterImage}
               alt={t3(language, 'Avant l\'IAS : données brutes confuses. Après l\'IAS : diagnostic stratégique clair avec score et indicateurs colorés', 'Before SAI: confusing raw data. After SAI: clear strategic diagnostic with score and colored indicators', 'Antes del IAS: datos brutos confusos. Después del IAS: diagnóstico estratégico claro')}
               className="w-full rounded-xl shadow-lg border border-border"
-              width={1200}
-              height={600}
+              width={700}
+              height={700}
               loading="lazy"
+              decoding="async"
             />
             <p className="text-center text-sm text-muted-foreground">
               {t3(language,
