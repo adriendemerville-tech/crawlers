@@ -110,6 +110,30 @@ serve(async (req) => {
       }
     }
 
+    // ── Fetch Top 5 Priority Pages ──
+    let priorityPagesBlock = '';
+    if (trackedSiteId) {
+      try {
+        const { data: priorityPages } = await supabase
+          .from('page_priority_scores')
+          .select('page_url, priority_score, top_opportunities')
+          .eq('tracked_site_id', trackedSiteId)
+          .order('priority_score', { ascending: false })
+          .limit(5);
+
+        if (priorityPages?.length) {
+          priorityPagesBlock = `\n\n🎯 TOP 5 PAGES PRIORITAIRES À OPTIMISER :\n`;
+          for (let i = 0; i < priorityPages.length; i++) {
+            const p = priorityPages[i];
+            const opps = (p.top_opportunities as string[]) || [];
+            priorityPagesBlock += `${i + 1}. **${p.page_url}** (score ${p.priority_score}/100)${opps[0] ? ` → ${opps[0]}` : ''}\n`;
+          }
+        }
+      } catch (e) {
+        console.warn('[cocoon-chat] Could not fetch priority pages:', e);
+      }
+    }
+
     // ══════════════════════════════════════════════════════
     // ★ STRATEGIST MODE: Fetch strategy data if requested
     // ══════════════════════════════════════════════════════
