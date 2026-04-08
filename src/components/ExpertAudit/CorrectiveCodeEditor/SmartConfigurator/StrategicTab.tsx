@@ -27,7 +27,11 @@ export function StrategicTab({ fixes, onToggle, onUpdateData, disabled }: Strate
   const [openCards, setOpenCards] = useState<string[]>([]);
 
   // Filter only strategic fixes
-  const strategicFixes = fixes.filter(f => f.category === 'strategic');
+  const strategicFixes = fixes.filter(f => f.category === 'strategic')
+    .sort((a, b) => {
+      const order = { critical: 0, important: 1, optional: 2, installed: 3 };
+      return (order[a.priority as keyof typeof order] ?? 2) - (order[b.priority as keyof typeof order] ?? 2);
+    });
 
   const toggleCard = (fixId: string) => {
     setOpenCards(prev => 
