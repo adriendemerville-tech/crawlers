@@ -1399,6 +1399,36 @@ ${alertBlock}\n`;
               console.error(`[sav-agent] Cocoon diagnostics error for ${s.domain}:`, e);
             }
 
+            // ── CROSS-AGENT: Inject Workbench findings into Félix context ──
+            try {
+              const { data: wbItems } = await sb
+                .from('architect_workbench')
+                .select('title, finding_category, severity, source_function, target_url, created_at, status')
+                .eq('domain', s.domain)
+                .eq('user_id', s.user_id || user_id)
+                .in('status', ['pending', 'assigned', 'in_progress'])
+                .order('severity', { ascending: true })
+                .limit(10);
+
+              if (wbItems?.length) {
+                const sourceLabel: Record<string, string> = {
+                  'parse-matrix-hybrid': 'Matrice',
+                  'cocoon-strategist': 'Stratège Cocoon',
+                  'audit-strategique-ia': 'Audit Stratégique',
+                  'audit_recommendations_registry': 'Audit Technique',
+                  'sav-agent': 'Félix',
+                };
+                contextSnippet += `\n### 🏗️ Workbench ${s.display_name || s.domain} (${wbItems.length} findings actifs)\n`;
+                for (const wb of wbItems) {
+                  const src = sourceLabel[wb.source_function || ''] || wb.source_function || '?';
+                  const sev = wb.severity === 'critical' ? '🔴' : wb.severity === 'high' ? '🟠' : '🟡';
+                  contextSnippet += `  ${sev} [${src}] ${wb.title} (${wb.finding_category}, ${wb.status})\n`;
+                }
+              }
+            } catch (e) {
+              console.error(`[sav-agent] Workbench read error for ${s.domain}:`, e);
+            }
+
             // ── CROSS-AGENT: Detect feedback loop (user returns with same problem) ──
             try {
               const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
