@@ -16,7 +16,7 @@ interface AttachmentItem {
 interface ChatAttachmentPickerProps {
   userId?: string;
   onAttach: (item: AttachmentItem) => void;
-  onImageAttach?: (fileName: string) => void;
+  onImageAttach?: (fileName: string, file?: File) => void;
 }
 
 export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAttachmentPickerProps) {
@@ -94,11 +94,11 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
         <input
           ref={imageInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file && onImageAttach) onImageAttach(file.name);
+            if (file && onImageAttach) onImageAttach(file.name, file);
             e.target.value = '';
           }}
         />
