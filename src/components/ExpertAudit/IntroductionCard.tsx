@@ -29,7 +29,7 @@ const translations = {
     correctInfo: 'Corriger les informations',
     scopeNotice: (url: string, domain: string) =>
       `Cet audit concerne l'URL ${url}, non l'ensemble du nom de domaine ${domain}.`,
-    mobileFirstNotice: '📱 Depuis 2021, Google indexe et classe les sites principalement sur la base de leur version mobile (Mobile-First Indexing). Les performances mobiles influencent directement votre positionnement dans les résultats de recherche. C\'est pourquoi cet audit analyse en priorité les performances mobiles de votre site.',
+    mobileFirstNotice: '📱 Depuis 2021, Google indexe et classe les sites principalement sur la base de leur version et performance sur support mobile (Mobile-First Indexing). Les performances mobiles influencent directement votre positionnement dans les résultats de recherche. C\'est pourquoi cet audit analyse en priorité les performances mobiles de votre site.',
   },
   en: {
     technicalTitle: 'Technical SEO Analysis',
