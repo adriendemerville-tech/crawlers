@@ -147,6 +147,7 @@ const App = () => (
                           <Route path="/temporarylink/:shareId" element={<SharedReportRedirect />} />
                           <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
                           <Route path="/r/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
+                          <Route path="/s/:code" element={<ShortLinkRedirect />} />
                           <Route path="/blog" element={<Blog />} />
                           <Route path="/blog/:slug" element={<ArticlePage />} />
                           <Route path="/landing/:slug" element={<LandingPage />} />
