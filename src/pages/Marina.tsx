@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense} from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -771,7 +770,7 @@ export default function Marina() {
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
           <div className="relative mx-auto max-w-5xl px-4 py-20 text-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div>
               <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
                 <Anchor className="w-3 h-3 mr-1" /> {t.hero.badge}
               </Badge>
@@ -837,12 +836,10 @@ export default function Marina() {
 
               {/* Progress */}
               {loading && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md mx-auto">
+                <div className="mt-8 max-w-md mx-auto">
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <motion.div
+                    <div
                       className="h-full bg-primary rounded-full"
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.5 }}
                     />
                   </div>
                   <p className="text-sm text-muted-foreground mt-2">{PHASE_LABELS[phase] || phase}</p>
@@ -858,7 +855,7 @@ export default function Marina() {
 
               {/* Result */}
               {reportUrl && (
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mt-8">
+                <div className="mt-8">
                   <Card className="max-w-md mx-auto border-primary/20 bg-primary/5">
                     <CardContent className="p-6 text-center">
                       <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
@@ -926,7 +923,7 @@ export default function Marina() {
               {t.features.map((f, i) => {
                 const Icon = featureIcons[i];
                 return (
-                  <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
+                  <div key={i}>
                     <Card className="border-border/50 bg-card/50 hover:border-primary/20 transition-colors">
                       <CardContent className="p-5 flex items-start gap-4">
                         <div className="p-2.5 rounded-lg bg-primary/10">

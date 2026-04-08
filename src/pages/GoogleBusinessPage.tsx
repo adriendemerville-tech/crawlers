@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +17,6 @@ import { PricingPlansSection } from '@/components/PricingPlansSection';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
-const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
 /* ── Fake GMB Console Preview ── */
 function GmbConsolePreview() {
@@ -246,7 +244,7 @@ export default function GoogleBusinessPage() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
           <div className="mx-auto max-w-6xl px-4 py-16 md:py-24 relative">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-6">
+              <div className="space-y-6">
                 <Badge variant="outline" className="text-xs">
                   <MapPin className="h-3 w-3 mr-1" /> SEO Local + GEO
                 </Badge>
@@ -283,11 +281,7 @@ export default function GoogleBusinessPage() {
                 </div>
               </div>
 
-              <motion.div
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: 0.2 }}
+              <div
               >
                 <GmbConsolePreview />
               </div>
@@ -313,13 +307,8 @@ export default function GoogleBusinessPage() {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((f, i) => (
-                <motion.div
+                <div
                   key={f.title}
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.08 }}
                 >
                   <Card className="h-full hover:shadow-md transition-shadow">
                     <CardContent className="p-6 space-y-3">

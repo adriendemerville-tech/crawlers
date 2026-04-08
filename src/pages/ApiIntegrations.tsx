@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +15,6 @@ const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.
   Zap, Eye, Database, CheckCircle2, XCircle, RefreshCw
 } from 'lucide-react';
 
-const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
 interface ApiCard {
   id: string;
@@ -212,7 +210,7 @@ export default function ApiIntegrations() {
         <section className="relative py-20 md:py-28 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
           <div className="container mx-auto px-4 relative z-10 max-w-4xl text-center">
-            <motion.div initial="hidden" animate="visible" variants={fadeUp}>
+            <div>
               <Badge variant="outline" className="mb-6 px-4 py-1.5 text-sm border-primary/30 bg-primary/5">
                 <Database className="w-3.5 h-3.5 mr-1.5" />
                 {apis.length} intégrations disponibles
@@ -236,12 +234,8 @@ export default function ApiIntegrations() {
           <div className="container mx-auto px-4 max-w-5xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {securityPoints.map((sp, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={{ ...fadeUp, visible: { ...fadeUp.visible, transition: { delay: i * 0.1, duration: 0.4 } } }}
                   className="flex flex-col items-center text-center gap-3 p-4"
                 >
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
@@ -258,7 +252,7 @@ export default function ApiIntegrations() {
         {/* API Cards */}
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4 max-w-6xl">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-12">
+            <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-3">Toutes les intégrations</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 Chaque API enrichit vos audits et recommandations. Plus de données connectées = plus de précision.
@@ -267,13 +261,9 @@ export default function ApiIntegrations() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {apis.map((api, i) => (
-                <motion.div
+                <div
                   key={api.id}
                   id={api.id}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: '-50px' }}
-                  variants={{ ...fadeUp, visible: { ...fadeUp.visible, transition: { delay: i * 0.05, duration: 0.4 } } }}
                 >
                   <Card className="h-full border-border/60 hover:border-primary/30 transition-colors">
                     <CardContent className="p-6 space-y-4">
@@ -338,7 +328,7 @@ export default function ApiIntegrations() {
         {/* Data flow summary */}
         <section className="py-16 bg-muted/30 border-t border-border/50">
           <div className="container mx-auto px-4 max-w-4xl text-center">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+            <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-4">Comment vos données sont utilisées</h2>
               <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Le cycle est simple : vous connectez → nous anonymisons → l'IA analyse → vous obtenez des recommandations précises.
@@ -400,7 +390,7 @@ export default function ApiIntegrations() {
         {/* What we DON'T do */}
         <section className="py-16">
           <div className="container mx-auto px-4 max-w-3xl">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+            <div>
               <h2 className="text-2xl font-bold mb-6 text-center">Ce que nous ne faisons <span className="text-destructive">jamais</span></h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[

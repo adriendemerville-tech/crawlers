@@ -15,7 +15,6 @@ import {
   Coins, Palette, Save, Building2, MessageCircle,
   PanelLeft, Eye, Syringe, ImagePlus, Server
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { useAuth } from '@/contexts/AuthContext';
@@ -482,10 +481,6 @@ const t = {
 };
 
 /* ─── Anim variants ─── */
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5 } }),
-};
 
 /* ─── Component ─── */
 const ContentArchitectPage = memo(() => {
@@ -541,25 +536,25 @@ const ContentArchitectPage = memo(() => {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(160_60%_40%/0.08),transparent_60%)]" />
 
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
+            <div>
               <Badge variant="outline" className="mb-6 border-emerald-500/30 bg-emerald-500/10 text-emerald-400 gap-1.5">
                 <PenTool className="h-3 w-3" />
                 {tr.hero.badge}
               </Badge>
             </div>
 
-            <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1} className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight">
               {tr.hero.title}{' '}
               <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
                 {tr.hero.titleAccent}
               </span>
             </h1>
 
-            <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2} className="mx-auto mt-6 max-w-3xl text-lg text-muted-foreground">
+            <p className="mx-auto mt-6 max-w-3xl text-lg text-muted-foreground">
               {tr.hero.subtitle}
             </p>
 
-            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3} className="mt-8 flex flex-wrap justify-center gap-4">
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link to="/auth">
                 <Button size="lg" className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0 shadow-lg shadow-emerald-500/20">
                   <Rocket className="h-4 w-4" /> {tr.hero.cta} <ArrowRight className="h-4 w-4" />
@@ -573,7 +568,7 @@ const ContentArchitectPage = memo(() => {
             </div>
 
             {/* Screenshot */}
-            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4} className="mt-12 mx-auto max-w-5xl">
+            <div className="mt-12 mx-auto max-w-5xl">
               <div className="rounded-xl border border-border shadow-2xl shadow-emerald-500/10 overflow-hidden">
                 <img
                   src={contentArchitectPreview}
@@ -590,7 +585,7 @@ const ContentArchitectPage = memo(() => {
         <section className="border-b border-border py-12 bg-muted/30">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
             {tr.stats.map((s, i) => (
-              <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i} className="text-center">
+              <div key={i} className="text-center">
                 <p className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{s.value}</p>
                 <p className="text-sm font-medium text-foreground mt-1">{s.label}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{s.detail}</p>
@@ -602,14 +597,14 @@ const ContentArchitectPage = memo(() => {
         {/* ═══ WORKFLOW ═══ */}
         <section className="py-20 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-16">
+            <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.workflowTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.workflowSubtitle}</p>
             </div>
 
             <div className="space-y-8">
               {tr.workflow.map((step, i) => (
-                <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
+                <div key={i}>
                   <Card className="overflow-hidden border-border/50 hover:border-emerald-500/20 transition-colors">
                     <CardContent className="p-6 sm:p-8">
                       <div className="flex flex-col sm:flex-row gap-6">
@@ -647,13 +642,13 @@ const ContentArchitectPage = memo(() => {
         {/* ═══ LAYOUT / INTERFACE ═══ */}
         <section className="py-20 sm:py-28 border-t border-border bg-muted/10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
+            <div className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.layoutTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.layoutSubtitle}</p>
             </div>
 
             {/* Visual mockup */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="mb-14">
+            <div className="mb-14">
               <Card className="border-emerald-500/20 overflow-hidden">
                 <CardContent className="p-0">
                   <div className="flex h-72 sm:h-80">
@@ -720,7 +715,7 @@ const ContentArchitectPage = memo(() => {
               {tr.layoutFeatures.map((feat, i) => {
                 const Icon = feat.icon;
                 return (
-                  <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
+                  <div key={i}>
                     <Card className="h-full border-border/50 hover:border-emerald-500/20 transition-colors">
                       <CardContent className="p-5">
                         <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-3">
@@ -740,7 +735,7 @@ const ContentArchitectPage = memo(() => {
         {/* ═══ TOOLS ═══ */}
         <section className="py-20 sm:py-28 border-t border-border bg-muted/20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
+            <div className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.toolsTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.toolsSubtitle}</p>
             </div>
@@ -749,7 +744,7 @@ const ContentArchitectPage = memo(() => {
               {tr.tools.map((tool, i) => {
                 const Icon = tool.icon;
                 return (
-                  <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
+                  <div key={i}>
                     <Card className="h-full border-border/50 hover:border-emerald-500/20 transition-colors group">
                       <CardContent className="p-5">
                         <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-3 group-hover:bg-emerald-500/15 transition-colors">
@@ -769,7 +764,7 @@ const ContentArchitectPage = memo(() => {
         {/* ═══ APIS ═══ */}
         <section className="py-20 sm:py-28 border-t border-border">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
+            <div className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.apisTitle}</h2>
               <p className="mt-3 text-muted-foreground">{tr.apisSubtitle}</p>
             </div>
@@ -786,7 +781,7 @@ const ContentArchitectPage = memo(() => {
                   </thead>
                   <tbody>
                     {tr.apis.map((api, i) => (
-                      <motion.tr key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i * 0.5} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
+                      <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="py-3 px-4 font-medium text-foreground">{api.name}</td>
                         <td className="py-3 px-4">
                           <Badge variant="secondary" className="text-xs">{api.category}</Badge>
@@ -861,13 +856,13 @@ const ContentArchitectPage = memo(() => {
         {/* ═══ FAQ ═══ */}
         <section className="py-20 sm:py-28 border-t border-border">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
+            <div className="text-center mb-14">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground">{tr.faqTitle}</h2>
             </div>
 
             <div className="space-y-4">
               {tr.faq.map((item, i) => (
-                <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i * 0.5}>
+                <div key={i}>
                   <Card className="border-border/50">
                     <CardContent className="p-5">
                       <h3 className="font-semibold text-sm text-foreground mb-2">{item.q}</h3>
@@ -883,7 +878,7 @@ const ContentArchitectPage = memo(() => {
         {/* ═══ CTA FINAL ═══ */}
         <section className="border-t border-border py-20 bg-gradient-to-b from-muted/30 to-background">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
+            <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">{tr.ctaFinal.title}</h2>
               <p className="text-muted-foreground mb-8">{tr.ctaFinal.subtitle}</p>
               <Link to="/auth">
