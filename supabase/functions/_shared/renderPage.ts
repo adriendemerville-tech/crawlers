@@ -198,6 +198,49 @@ async function renderWithFlyPlaywright(url: string): Promise<string | null> {
 }
 
 /**
+ * Self-render fallback for crawlers.fr (our own SPA).
+ * Uses fetch-external-site edge function which has Spider/Browserless/Fly cascade.
+ */
+async function renderSelfFallback(url: string): Promise<string | null> {
+  // Only activate for crawlers.fr / crawlers.lovable.app
+  const hostname = (() => { try { return new URL(url).hostname; } catch { return ''; } })();
+  const isSelf = hostname === 'crawlers.fr' || hostname === 'www.crawlers.fr' || hostname.endsWith('.lovable.app');
+  if (!isSelf) return null;
+
+  console.log(`[renderPage] 🔄 Self-render fallback for ${url}`);
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey) return null;
+
+  try {
+    const resp = await fetch(`${supabaseUrl}/functions/v1/fetch-external-site`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, render_js: true }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      const html = data.html || data.content || null;
+      if (html && html.length > 500) {
+        console.log(`[renderPage] ✅ Self-render fallback success (${html.length} chars)`);
+        return html;
+      }
+    }
+    console.log(`[renderPage] ⚠️ Self-render fallback: no usable HTML`);
+    return null;
+  } catch (err) {
+    console.log(`[renderPage] ⚠️ Self-render fallback failed:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/**
  * Fetches a page with automatic SPA/CSR detection and JS rendering fallback.
  * 
  * @param url - The URL to fetch
@@ -285,25 +328,34 @@ export async function fetchAndRenderPage(
   if (shouldRender) {
     console.log(`[renderPage] SPA/CSR detected (${visibleText.length} chars text, ${html.length} chars HTML, framework: ${spaInfo.framework || 'unknown'}). Trying JS rendering...`);
 
+    let rendered: string | null = null;
     const renderingKey = Deno.env.get('RENDERING_API_KEY');
-    if (renderingKey) {
-      const rendered = await renderWithBrowserless(url, renderingKey);
-      if (rendered) {
-        const renderedText = extractVisibleText(rendered);
-        const renderedWords = renderedText.split(/\s+/).filter(w => w.length > 2).length;
-        const staticWords = visibleText.split(/\s+/).filter(w => w.length > 2).length;
-        const seoUpgraded = hasMeaningfulSeoUpgrade(html, rendered);
 
-        if (renderedWords > staticWords || rendered.length > html.length || seoUpgraded) {
-          console.log(`[renderPage] ✅ JS rendering success (${renderedWords} words vs ${staticWords} static, SEO upgrade: ${seoUpgraded ? 'yes' : 'no'})`);
-          html = rendered;
-          usedRendering = true;
-        } else {
-          console.log(`[renderPage] ⚠️ Rendered HTML not materially better (${renderedWords} words vs ${staticWords} static). Keeping original.`);
-        }
-      }
+    // Tier 1: Browserless (includes Fly.io fallback internally)
+    if (renderingKey) {
+      rendered = await renderWithBrowserless(url, renderingKey);
     } else {
       console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured');
+    }
+
+    // Tier 2: Self-render fallback for crawlers.fr if Browserless/Fly failed
+    if (!rendered) {
+      rendered = await renderSelfFallback(url);
+    }
+
+    if (rendered) {
+      const renderedText = extractVisibleText(rendered);
+      const renderedWords = renderedText.split(/\s+/).filter(w => w.length > 2).length;
+      const staticWords = visibleText.split(/\s+/).filter(w => w.length > 2).length;
+      const seoUpgraded = hasMeaningfulSeoUpgrade(html, rendered);
+
+      if (renderedWords > staticWords || rendered.length > html.length || seoUpgraded) {
+        console.log(`[renderPage] ✅ JS rendering success (${renderedWords} words vs ${staticWords} static, SEO upgrade: ${seoUpgraded ? 'yes' : 'no'})`);
+        html = rendered;
+        usedRendering = true;
+      } else {
+        console.log(`[renderPage] ⚠️ Rendered HTML not materially better (${renderedWords} words vs ${staticWords} static). Keeping original.`);
+      }
     }
   }
 
