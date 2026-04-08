@@ -58,6 +58,7 @@ export const reportTranslations = {
     ttiDesc: 'Temps jusqu\'à l\'interactivité complète',
     priority: 'Prioritaire',
     recommended: 'Recommandé',
+    vigilance: 'Vigilance',
   },
   en: {
     title: 'Analysis Report',
@@ -118,6 +119,7 @@ export const reportTranslations = {
     ttiDesc: 'Time to full interactivity',
     priority: 'Priority',
     recommended: 'Recommended',
+    vigilance: 'Vigilance',
   },
   es: {
     title: 'Informe de Análisis',
@@ -178,6 +180,7 @@ export const reportTranslations = {
     ttiDesc: 'Tiempo hasta la interactividad completa',
     priority: 'Prioritario',
     recommended: 'Recomendado',
+    vigilance: 'Vigilancia',
   },
 };
 
