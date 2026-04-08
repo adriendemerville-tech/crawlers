@@ -9997,61 +9997,37 @@ export type Database = {
         }[]
       }
       recalculate_reliability: { Args: never; Returns: undefined }
-      score_workbench_priority:
-        | {
-            Args: { p_domain: string; p_limit?: number; p_user_id: string }
-            Returns: {
-              action_type: string
-              aging_bonus: number
-              base_score: number
-              created_at: string
-              description: string
-              finding_category: string
-              gate_malus: number
-              id: string
-              payload: Json
-              severity: string
-              severity_bonus: number
-              source_type: string
-              target_operation: string
-              target_selector: string
-              target_url: string
-              tier: number
-              title: string
-              total_score: number
-            }[]
-          }
-        | {
-            Args: {
-              p_domain: string
-              p_force_content?: boolean
-              p_lane?: string
-              p_limit?: number
-              p_user_id: string
-            }
-            Returns: {
-              action_type: string
-              aging_bonus: number
-              base_score: number
-              created_at: string
-              description: string
-              finding_category: string
-              gate_malus: number
-              id: string
-              lane: string
-              payload: Json
-              priority_tag: string
-              severity: string
-              severity_bonus: number
-              source_type: string
-              target_operation: string
-              target_selector: string
-              target_url: string
-              tier: number
-              title: string
-              total_score: number
-            }[]
-          }
+      score_workbench_priority: {
+        Args: {
+          p_domain: string
+          p_force_content?: boolean
+          p_lane?: string
+          p_limit?: number
+          p_user_id: string
+        }
+        Returns: {
+          action_type: string
+          aging_bonus: number
+          base_score: number
+          created_at: string
+          description: string
+          finding_category: string
+          gate_malus: number
+          id: string
+          lane: string
+          payload: Json
+          priority_tag: string
+          severity: string
+          severity_bonus: number
+          source_type: string
+          target_operation: string
+          target_selector: string
+          target_url: string
+          tier: number
+          title: string
+          total_score: number
+        }[]
+      }
       upsert_analyzed_url: {
         Args: { p_domain: string; p_url: string }
         Returns: undefined
@@ -10075,16 +10051,10 @@ export type Database = {
         }
         Returns: undefined
       }
-      use_credit:
-        | { Args: { p_description?: string; p_user_id: string }; Returns: Json }
-        | {
-            Args: {
-              p_amount?: number
-              p_description?: string
-              p_user_id: string
-            }
-            Returns: Json
-          }
+      use_credit: {
+        Args: { p_amount?: number; p_description?: string; p_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role:
