@@ -243,10 +243,16 @@ function CocoonContent() {
     }
   }, [nodes]);
 
-  // Reset filters when site changes
+  // Reset filters & check CMS when site changes
   useEffect(() => {
     setFiltersInitialized(false);
     setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
+    setHasCmsConnection(false);
+    if (selectedSiteId) {
+      supabase.from('cms_connections').select('id').eq('tracked_site_id', selectedSiteId).eq('status', 'active').limit(1).then(({ data }) => {
+        setHasCmsConnection(!!(data && data.length > 0));
+      });
+    }
   }, [selectedSiteId]);
 
   // Initialize filters when nodes change — always re-init on new node set
