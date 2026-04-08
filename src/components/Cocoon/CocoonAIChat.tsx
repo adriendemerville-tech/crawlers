@@ -384,6 +384,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
 
   useEffect(() => {
     setCocoonExpanded(isExpanded && isOpen);
+    localStorage.setItem('cocoon_sidebar_expanded', isExpanded ? '1' : '0');
     return () => setCocoonExpanded(false);
   }, [isExpanded, isOpen, setCocoonExpanded]);
   const [resolvedBugCount, setResolvedBugCount] = useState(0);
