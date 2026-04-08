@@ -50,6 +50,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 
+const EEATPage = lazy(() => import("./pages/EEATPage"));
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
@@ -164,6 +165,7 @@ const App = () => (
                           <Route path="/audit-seo-gratuit" element={<AuditSeoGratuit />} />
                           <Route path="/analyse-site-web-gratuit" element={<AnalyseSiteWebGratuit />} />
                           <Route path="/generative-engine-optimization" element={<GenerativeEngineOptimization />} />
+                          <Route path="/eeat" element={<EEATPage />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
                           <Route path="/app/site-crawl" element={<SiteCrawl />} />
                           <Route path="/app/audit-compare" element={<AuditCompare />} />
