@@ -11,12 +11,12 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import llmChatgpt from '@/assets/llm-chatgpt.png';
-import llmChatgptWhite from '@/assets/llm-chatgpt-white.png';
-import llmGemini from '@/assets/llm-gemini.png';
-import llmPerplexity from '@/assets/llm-perplexity.png';
+import llmChatgpt from '@/assets/llm-chatgpt.webp';
+import llmChatgptWhite from '@/assets/llm-chatgpt-white.webp';
+import llmGemini from '@/assets/llm-gemini.webp';
+import llmPerplexity from '@/assets/llm-perplexity.webp';
 import llmClaude from '@/assets/llm-claude.png';
-import llmGrok from '@/assets/llm-grok.png';
+import llmGrok from '@/assets/llm-grok.webp';
 import llmMistral from '@/assets/mistral-logo-2025.png';
 
 /* ─── Animated Counter ─── */
