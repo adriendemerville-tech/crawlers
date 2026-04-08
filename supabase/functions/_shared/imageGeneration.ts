@@ -355,6 +355,11 @@ const PROVIDER_MAP: Record<ImageProvider, (req: ImageGenerationRequest) => Promi
 };
 
 export async function generateImage(req: ImageGenerationRequest): Promise<ImageGenerationResult> {
+  // Typography and infographic styles intentionally include text — auto-allow
+  if (!req.allowText && (req.style === 'typography' || req.style === 'infographic')) {
+    req = { ...req, allowText: true };
+  }
+
   let provider = resolveProvider(req.style, req.provider);
 
   // If reference image is provided, force Imagen3 (Gemini) since it supports multimodal
