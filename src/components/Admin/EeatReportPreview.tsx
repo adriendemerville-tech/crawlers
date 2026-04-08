@@ -13,6 +13,12 @@ interface EeatScanResult {
   expertise: number;
   authoritativeness: number;
   trustworthiness: number;
+  scoring?: {
+    weights: { experience: number; expertise: number; authoritativeness: number; trustworthiness: number };
+    trustPenalties: string[];
+    domainAge: { years: number | null; foundingYear: number | null } | null;
+    method: string;
+  };
   signals: {
     authorIdentified: boolean;
     sourcesCited: boolean;
@@ -61,10 +67,10 @@ interface EeatScanResult {
 }
 
 const CATEGORY_META = [
-  { key: 'experience', label: 'Experience', icon: Eye, color: 'text-blue-500', weight: 2.0, desc: 'Preuves de vécu terrain, cas concrets, témoignages' },
-  { key: 'expertise', label: 'Expertise', icon: Brain, color: 'text-purple-500', weight: 3.0, desc: 'Compétence technique, profondeur du contenu' },
+  { key: 'experience', label: 'Experience', icon: Eye, color: 'text-blue-500', weight: 1.5, desc: 'Preuves de vécu terrain, cas concrets, témoignages' },
+  { key: 'expertise', label: 'Expertise', icon: Brain, color: 'text-purple-500', weight: 2.5, desc: 'Compétence technique, profondeur du contenu' },
   { key: 'authoritativeness', label: 'Authoritativeness', icon: Award, color: 'text-amber-500', weight: 2.5, desc: 'Reconnaissance externe, citations, backlinks' },
-  { key: 'trustworthiness', label: 'Trustworthiness', icon: Shield, color: 'text-green-500', weight: 2.5, desc: 'Signaux de confiance : HTTPS, légal, contact' },
+  { key: 'trustworthiness', label: 'Trustworthiness', icon: Shield, color: 'text-green-500', weight: 4.0, desc: 'Signaux de confiance : HTTPS, légal, contact, citations (×4 — pilier dominant)' },
 ] as const;
 
 const SIGNAL_WEIGHTS: Record<string, { weight: number; category: string }> = {
@@ -400,9 +406,26 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
               {result.score}<span className="text-lg text-muted-foreground">/100</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">Score global E-E-A-T</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {result.scoring?.method === 'weighted_algorithmic_v2' 
+                ? 'Calcul pondéré : E×1.5 · Ex×2.5 · A×2.5 · T×4' 
+                : 'Score LLM'}
+            </p>
             <p className={`text-xs mt-2 px-4 py-1.5 inline-block rounded-full ${getScoreBadgeClasses(result.score)}`}>
               {getScoreLabel(result.score)}
             </p>
+            {result.scoring?.trustPenalties && result.scoring.trustPenalties.length > 0 && (
+              <div className="mt-2 space-y-0.5">
+                {result.scoring.trustPenalties.map((p, i) => (
+                  <p key={i} className="text-[10px] text-destructive">⚠️ {p}</p>
+                ))}
+              </div>
+            )}
+            {result.scoring?.domainAge && (
+              <p className="text-[10px] text-muted-foreground mt-1">
+                📅 Domaine créé en {result.scoring.domainAge.foundingYear} ({result.scoring.domainAge.years} ans)
+              </p>
+            )}
             {result.crawlInfo && (
               <p className="text-xs text-muted-foreground mt-2">
                 📄 {result.crawlInfo.pagesAnalyzed} pages analysées ({result.crawlInfo.source === 'cache' ? 'crawl récent en cache' : 'crawl intermédiaire'})
@@ -452,7 +475,7 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
                 );
               })}
               <p className="text-[10px] text-muted-foreground text-center mt-1">
-                Poids : Expertise ×3.0 · Authoritativeness ×2.5 · Trustworthiness ×2.5 · Experience ×2.0
+                Poids : Trustworthiness ×4.0 · Expertise ×2.5 · Authoritativeness ×2.5 · Experience ×1.5
               </p>
             </div>
           </div>

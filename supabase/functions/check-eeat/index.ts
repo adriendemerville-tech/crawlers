@@ -318,6 +318,10 @@ async function runEeatPipeline(
   const gbpData = await fetchGbpData(supabase, domain, trackedSiteId);
   if (jobId) await supabase.from('async_jobs').update({ progress: 50 }).eq('id', jobId);
 
+  // ── Phase 2.7: Fetch domain age from site identity card ──
+  console.log(`[check-eeat] 📅 Phase 2.7: Fetching domain age...`);
+  const domainAgeInfo = await fetchDomainAge(supabase, effectiveDomain, trackedSiteId);
+
   // ── Phase 3: LLM analysis with enriched context ──
   console.log(`[check-eeat] 🤖 Phase 3: LLM analysis...`);
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -473,13 +477,62 @@ Réponds UNIQUEMENT en JSON valide :
 
   if (jobId) await supabase.from('async_jobs').update({ progress: 95 }).eq('id', jobId);
 
+  // ── Weighted score calculation with Trustworthiness penalties ──
+  let rawTrust = analysis.trustworthiness ?? 40;
+  const trustPenalties: string[] = [];
+
+  // Penalty: no external citations / no outgoing links
+  if (!analysis.sources_cited && aggregated.avgExternalLinks < 1) {
+    rawTrust = Math.max(0, rawTrust - 15);
+    trustPenalties.push('Aucune citation externe ni lien sortant détecté (-15)');
+  }
+
+  // Penalty: domain age < 2 years
+  if (domainAgeInfo.available && domainAgeInfo.ageYears !== null && domainAgeInfo.ageYears < 2) {
+    rawTrust = Math.max(0, rawTrust - 10);
+    trustPenalties.push(`Domaine jeune (${domainAgeInfo.ageYears < 1 ? '< 1 an' : '~' + Math.floor(domainAgeInfo.ageYears) + ' an(s)'}) (-10)`);
+  }
+
+  // Penalty: no HTTPS
+  if (!aggregated.isHttps) {
+    rawTrust = Math.max(0, rawTrust - 20);
+    trustPenalties.push('Pas de HTTPS détecté (-20)');
+  }
+
+  const pillars = {
+    experience: analysis.experience ?? 40,
+    expertise: analysis.expertise ?? 40,
+    authoritativeness: analysis.authoritativeness ?? 40,
+    trustworthiness: rawTrust,
+  };
+
+  // Weighted overall: E×1.5 + Ex×2.5 + A×2.5 + T×4 = /10.5
+  const WEIGHTS = { experience: 1.5, expertise: 2.5, authoritativeness: 2.5, trustworthiness: 4 };
+  const weightedSum = pillars.experience * WEIGHTS.experience
+    + pillars.expertise * WEIGHTS.expertise
+    + pillars.authoritativeness * WEIGHTS.authoritativeness
+    + pillars.trustworthiness * WEIGHTS.trustworthiness;
+  const totalWeight = WEIGHTS.experience + WEIGHTS.expertise + WEIGHTS.authoritativeness + WEIGHTS.trustworthiness;
+  const calculatedOverall = Math.round(weightedSum / totalWeight);
+
+  console.log(`[check-eeat] 📊 Weighted score: E=${pillars.experience}×1.5 Ex=${pillars.expertise}×2.5 A=${pillars.authoritativeness}×2.5 T=${pillars.trustworthiness}×4 → ${calculatedOverall}`);
+  if (trustPenalties.length > 0) {
+    console.log(`[check-eeat] ⚠️ Trust penalties applied: ${trustPenalties.join(', ')}`);
+  }
+
   return {
     success: true,
-    score: analysis.overall ?? 40,
-    experience: analysis.experience,
-    expertise: analysis.expertise,
-    authoritativeness: analysis.authoritativeness,
-    trustworthiness: analysis.trustworthiness,
+    score: calculatedOverall,
+    experience: pillars.experience,
+    expertise: pillars.expertise,
+    authoritativeness: pillars.authoritativeness,
+    trustworthiness: pillars.trustworthiness,
+    scoring: {
+      weights: WEIGHTS,
+      trustPenalties,
+      domainAge: domainAgeInfo.available ? { years: domainAgeInfo.ageYears, foundingYear: domainAgeInfo.foundingYear } : null,
+      method: 'weighted_algorithmic_v2',
+    },
     signals: {
       authorIdentified: analysis.author_identified ?? aggregated.pagesWithAuthor > 0,
       sourcesCited: analysis.sources_cited ?? false,
@@ -494,10 +547,9 @@ Réponds UNIQUEMENT en JSON valide :
     },
     trustSignals: analysis.trust_signals || [],
     missingSignals: analysis.missing_signals || [],
-    issues: analysis.issues || [],
+    issues: [...(analysis.issues || []), ...trustPenalties.map(p => `[Trustworthiness] ${p}`)],
     strengths: analysis.strengths || [],
     recommendations: analysis.recommendations || [],
-    // Backlink data enrichment
     backlinkData: backlinkData.available ? {
       referringDomains: backlinkData.referringDomains,
       backlinksTotal: backlinkData.backlinksTotal,
@@ -507,13 +559,11 @@ Réponds UNIQUEMENT en JSON valide :
       anchorDistribution: backlinkData.anchorDistribution,
       referringPages: backlinkData.referringPages,
     } : null,
-    // GA4 referral data enrichment
     ga4Referrals: ga4Referrals.available ? {
       referrals: ga4Referrals.referrals,
       totalReferralSessions: ga4Referrals.totalReferralSessions,
     } : null,
     ga4Connected: ga4Referrals.available,
-    // GBP data enrichment
     gbpData: gbpData.available ? {
       avgRating: gbpData.avgRating,
       totalReviews: gbpData.totalReviews,
@@ -533,8 +583,79 @@ Réponds UNIQUEMENT en JSON valide :
       ...(backlinkData.available ? ['dataforseo_backlinks'] : []),
       ...(ga4Referrals.available ? ['ga4_referrals'] : []),
       ...(gbpData.available ? ['google_business_profile'] : []),
+      ...(domainAgeInfo.available ? ['wayback_domain_age'] : []),
     ],
   };
+}
+
+// ══════════════════════════════════════════════════════
+// Fetch domain age from site identity card or Wayback Machine
+// ══════════════════════════════════════════════════════
+async function fetchDomainAge(supabase: any, domain: string, trackedSiteId: string | null): Promise<{ available: boolean; foundingYear: number | null; ageYears: number | null }> {
+  try {
+    // 1. Try to get founding_year from tracked_sites
+    let foundingYear: number | null = null;
+
+    if (trackedSiteId) {
+      const { data } = await supabase
+        .from('tracked_sites')
+        .select('founding_year')
+        .eq('id', trackedSiteId)
+        .maybeSingle();
+      foundingYear = data?.founding_year || null;
+    }
+
+    if (!foundingYear) {
+      const { data } = await supabase
+        .from('tracked_sites')
+        .select('id, founding_year')
+        .ilike('domain', `%${domain}%`)
+        .limit(1)
+        .maybeSingle();
+      foundingYear = data?.founding_year || null;
+
+      // 2. If still missing, query Wayback Machine
+      if (!foundingYear) {
+        console.log(`[check-eeat] 📅 founding_year missing, querying Wayback Machine for ${domain}...`);
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 8000);
+          const wbResp = await fetch(
+            `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(domain)}&output=json&limit=1&fl=timestamp&sort=timestamp:asc`,
+            { signal: controller.signal }
+          );
+          clearTimeout(timeout);
+          if (wbResp.ok) {
+            const wbData = await wbResp.json();
+            if (Array.isArray(wbData) && wbData.length > 1 && wbData[1]?.[0]) {
+              const year = parseInt(String(wbData[1][0]).substring(0, 4), 10);
+              if (year >= 1990) {
+                foundingYear = year;
+                console.log(`[check-eeat] 📅 Wayback Machine: ${domain} first seen in ${year}`);
+                // Persist for future use
+                if (data?.id) {
+                  await supabase.from('tracked_sites').update({ founding_year: year }).eq('id', data.id);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`[check-eeat] ⚠️ Wayback Machine query failed:`, e);
+        }
+      }
+    }
+
+    if (foundingYear) {
+      const ageYears = new Date().getFullYear() - foundingYear;
+      console.log(`[check-eeat] 📅 Domain age: ${ageYears} years (founded ${foundingYear})`);
+      return { available: true, foundingYear, ageYears };
+    }
+
+    return { available: false, foundingYear: null, ageYears: null };
+  } catch (e) {
+    console.warn(`[check-eeat] ⚠️ Domain age fetch failed:`, e);
+    return { available: false, foundingYear: null, ageYears: null };
+  }
 }
 
 // ══════════════════════════════════════════════════════
