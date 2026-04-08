@@ -163,3 +163,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.strategic-orchestrator]
     verify_jwt = false
+  [functions.self-optimize]
+    verify_jwt = false
