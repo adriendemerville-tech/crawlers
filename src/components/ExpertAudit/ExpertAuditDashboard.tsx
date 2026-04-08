@@ -1536,34 +1536,36 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
 
           {/* === STEP 2: STRATEGIC AUDIT SECTION === */}
           {auditMode === 'strategic' && (
-            <StrategicResultsSection
-              result={result}
-              url={url}
-              t={t}
-              isLoggedIn={isLoggedIn}
-              isStrategicLoading={isStrategicLoading}
-              hallucinationDiagnosis={hallucinationDiagnosis}
-              storedCorrections={storedCorrections}
-              strategicProgressiveReveal={strategicProgressiveReveal}
-              strategicCacheInfo={strategicCacheInfo}
-              onReportClick={handleReportButtonClick}
-              onHallucinationCorrectionComplete={handleHallucinationCorrectionComplete}
-              onCompetitorCorrectionComplete={handleCompetitorCorrectionComplete}
-              onNewAudit={handleNewAudit}
-              onStrategicAudit={handleStrategicAudit}
-              onForceRefresh={() => {
-                setForceStrategicRefresh(true);
-                const d = result.domain || (() => { try { return new URL(url).hostname; } catch { return ''; } })();
-                if (d) clearStrategicCache(d);
-                setStrategicCacheInfo(null);
-                const normalizedUrl = normalizeUrl(url);
-                setTimeout(() => runStrategicAudit(normalizedUrl), 100);
-              }}
+            <>
+              <StrategicResultsSection
+                result={result}
+                url={url}
+                t={t}
+                isLoggedIn={isLoggedIn}
+                isStrategicLoading={isStrategicLoading}
+                hallucinationDiagnosis={hallucinationDiagnosis}
+                storedCorrections={storedCorrections}
+                strategicProgressiveReveal={strategicProgressiveReveal}
+                strategicCacheInfo={strategicCacheInfo}
+                onReportClick={handleReportButtonClick}
+                onHallucinationCorrectionComplete={handleHallucinationCorrectionComplete}
+                onCompetitorCorrectionComplete={handleCompetitorCorrectionComplete}
+                onNewAudit={handleNewAudit}
+                onStrategicAudit={handleStrategicAudit}
+                onForceRefresh={() => {
+                  setForceStrategicRefresh(true);
+                  const d = result.domain || (() => { try { return new URL(url).hostname; } catch { return ''; } })();
+                  if (d) clearStrategicCache(d);
+                  setStrategicCacheInfo(null);
+                  const normalizedUrl = normalizeUrl(url);
+                  setTimeout(() => runStrategicAudit(normalizedUrl), 100);
+                }}
+              />
               <NextStepFloatingButton
                 nextStepLabel={language === 'en' ? 'Next: Corrective Code' : language === 'es' ? 'Siguiente: Código Correctivo' : 'Étape suivante : Code Correctif'}
                 onNextStep={() => setIsCodeEditorOpen(true)}
               />
-            />
+            </>
           )}
 
           {/* Timestamp + Premium Report Button */}
