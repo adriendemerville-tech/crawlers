@@ -1,5 +1,5 @@
 # Memory: features/support/help-center-ai-fr
-Updated: now
+Updated: 2026-04-08
 
 ## Agent SAV "Félix"
 - Modèle : Gemini Flash via Lovable AI Gateway (`LOVABLE_API_KEY`)
@@ -13,6 +13,18 @@ Updated: now
 - Utilise le prénom si disponible dans `profiles`
 - Peut envoyer des liens internes (ex: `/cocoon`, `/matrice`, `/console`)
 - Logo robot Crawlers dans la conversation (remplace emoji et "Crawler" texte)
+
+## Interface chat Félix
+- **Bouton flottant** : masqué automatiquement quand la sidebar est en mode étendu (toute hauteur), pour ne pas masquer la fenêtre
+- **Logo Crawlers** : petit logo rond affiché à gauche de "Félix" dans le header, visible uniquement en mode étendu
+- **Historique des conversations** :
+  - Clic "Nouveau" → archive automatiquement la conversation en cours, lance une nouvelle session
+  - Bouton historique (icône horloge) dans le footer, visible uniquement en mode étendu (toute hauteur)
+  - Panneau overlay avec liste des conversations archivées (date, aperçu)
+  - Restauration : archive la conversation active avant de charger l'ancienne
+  - Suppression individuelle possible
+  - Persistance `localStorage` (`felix_conversations_archive`, `felix_current_conversation`)
+  - La conversation la plus récente se précharge automatiquement à la session suivante
 
 ## Compréhension d'audit en temps réel (Screen Context)
 - Le frontend capture le contenu visible à l'écran de l'utilisateur (`captureScreenContext`)
