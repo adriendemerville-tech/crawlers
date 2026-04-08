@@ -1054,7 +1054,7 @@ async function checkSpecializedSitemaps(url: string): Promise<SpecializedSitemap
   // Also check main sitemap for image/video namespace
   try {
     const controller = new AbortController();
-    setTimeout(() => controller.abort(), 5000);
+    setTimeout(() => controller.abort(), 15000);
     const mainResp = await fetch(`${origin}/sitemap.xml`, {
       signal: controller.signal,
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
@@ -1101,7 +1101,7 @@ async function checkSitemap(url: string): Promise<SitemapAnalysis> {
     const sitemapUrl = `${origin}/sitemap.xml`;
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     
     const response = await fetch(sitemapUrl, {
       signal: controller.signal,
