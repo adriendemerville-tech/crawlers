@@ -121,9 +121,9 @@ async function runViaBrowserless(
     waitForTimeout: 3000,
   };
 
-  // Use Browserless /function endpoint to run custom code
+  // Use Browserless v2 /function endpoint with export default syntax
   const testScript = `
-    module.exports = async ({ page }) => {
+    export default async ({ page }) => {
       const jsErrors = [];
       page.on('pageerror', (err) => jsErrors.push(err.message));
       page.on('error', (err) => jsErrors.push(err.message));
@@ -168,17 +168,20 @@ async function runViaBrowserless(
       });
 
       return {
-        jsErrors,
-        clsScore: cls,
-        jsonLdValid: jsonLdData.every(j => j.valid),
-        jsonLdCount: jsonLdData.length,
-        pageLoadedOk: true,
+        data: {
+          jsErrors,
+          clsScore: cls,
+          jsonLdValid: jsonLdData.every(j => j.valid),
+          jsonLdCount: jsonLdData.length,
+          pageLoadedOk: true,
+        },
+        type: 'application/json',
       };
     };
   `;
 
   try {
-    const response = await fetch(`https://production-sfo.browserless.io/function?token=${apiKey}`, {
+    const response = await fetch(getBrowserlessFunctionUrl(apiKey), {
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: testScript,
