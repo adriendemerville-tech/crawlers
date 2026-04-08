@@ -7,6 +7,7 @@ import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLi
 import { getDomainContext } from '../_shared/getDomainContext.ts';
 import { STRATEGIST_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from '../_shared/agentPersonas.ts';
 import { LEXIQUE_PROMPT_BLOCK } from '../_shared/lexiqueReference.ts';
+import { logAIUsageEstimated } from '../_shared/logAIUsage.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -579,6 +580,11 @@ LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).`
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Log estimated usage (streaming = no usage object)
+    const totalPromptChars = systemPrompt.length + messages.reduce((s: number, m: any) => s + (m.content?.length || 0), 0);
+    const supabaseLog = getServiceClient();
+    logAIUsageEstimated(supabaseLog, "google/gemini-3-flash-preview", "cocoon-chat", totalPromptChars, 600);
 
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },

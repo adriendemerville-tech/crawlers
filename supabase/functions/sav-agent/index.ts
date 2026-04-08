@@ -4,6 +4,7 @@ import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtract
 import { FELIX_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from "../_shared/agentPersonas.ts";
 import { LEXIQUE_PROMPT_BLOCK } from "../_shared/lexiqueReference.ts";
 import { getCocoonDiagnosticsForFelix, detectFeedbackLoop, createHandoffContext } from "../_shared/crossAgentContext.ts";
+import { logAIUsageFromResponse } from "../_shared/logAIUsage.ts";
 
 // Fire-and-forget: trigger dispatch-agent-directives immediately after a new directive
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -557,6 +558,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
 
           if (aiResp.ok) {
             const aiData = await aiResp.json();
+            logAIUsageFromResponse(sb, "google/gemini-2.5-flash", "sav-agent", aiData.usage);
             let reply = aiData.choices?.[0]?.message?.content || "Je n'ai pas pu récupérer l'état de Parménion.";
             if (reply.length > 3000) reply = reply.substring(0, 2997) + "...";
 
@@ -2111,6 +2113,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
     }
 
     const data = await response.json();
+    logAIUsageFromResponse(sb, "google/gemini-2.5-flash", "sav-agent", data.usage);
     let rawReply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
 
     // Extract and persist memory from LLM response
