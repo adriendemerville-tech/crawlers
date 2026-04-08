@@ -12,6 +12,7 @@ const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ de
 const CreditsProvider = lazy(() => import("@/contexts/CreditsContext").then(m => ({ default: m.CreditsProvider })));
 const DemoModeProvider = lazy(() => import("@/contexts/DemoModeContext").then(m => ({ default: m.DemoModeProvider })));
 const FreemiumProvider = lazy(() => import("@/contexts/FreemiumContext").then(m => ({ default: m.FreemiumProvider })));
+const AISidebarProvider = lazy(() => import("@/contexts/AISidebarContext").then(m => ({ default: m.AISidebarProvider })));
 const TooltipProvider = lazy(() => import("@/components/ui/tooltip").then(m => ({ default: m.TooltipProvider })));
 const HelmetProvider = lazy(() => import("react-helmet-async").then(m => ({ default: m.HelmetProvider })));
 
