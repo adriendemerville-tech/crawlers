@@ -19,8 +19,7 @@ const asyncCssPlugin = (): Plugin => ({
 });
 
 // Plugin to inject modulepreload hints for critical vendor chunks
-// This parallelizes the loading of vendor-react and vendor-router with the entry JS,
-// reducing the critical request chain depth from 3 to 2.
+// and preload the critical font to break the CSS→font chain
 const modulePreloadPlugin = (): Plugin => ({
   name: 'critical-modulepreload',
   enforce: 'post',
@@ -33,6 +32,10 @@ const modulePreloadPlugin = (): Plugin => ({
     for (const [fileName] of Object.entries(ctx.bundle)) {
       if (criticalChunks.some(name => fileName.includes(name))) {
         preloadTags.push(`<link rel="modulepreload" href="/${fileName}">`);
+      }
+      // Preload Space Grotesk font (critical for LCP — breaks CSS→font chain)
+      if (fileName.includes('space-gro') && fileName.endsWith('.woff2')) {
+        preloadTags.push(`<link rel="preload" as="font" type="font/woff2" href="/${fileName}" crossorigin>`);
       }
     }
     
