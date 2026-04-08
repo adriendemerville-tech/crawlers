@@ -198,6 +198,49 @@ async function renderWithFlyPlaywright(url: string): Promise<string | null> {
 }
 
 /**
+ * Self-render fallback for crawlers.fr (our own SPA).
+ * Uses fetch-external-site edge function which has Spider/Browserless/Fly cascade.
+ */
+async function renderSelfFallback(url: string): Promise<string | null> {
+  // Only activate for crawlers.fr / crawlers.lovable.app
+  const hostname = (() => { try { return new URL(url).hostname; } catch { return ''; } })();
+  const isSelf = hostname === 'crawlers.fr' || hostname === 'www.crawlers.fr' || hostname.endsWith('.lovable.app');
+  if (!isSelf) return null;
+
+  console.log(`[renderPage] 🔄 Self-render fallback for ${url}`);
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey) return null;
+
+  try {
+    const resp = await fetch(`${supabaseUrl}/functions/v1/fetch-external-site`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, render_js: true }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      const html = data.html || data.content || null;
+      if (html && html.length > 500) {
+        console.log(`[renderPage] ✅ Self-render fallback success (${html.length} chars)`);
+        return html;
+      }
+    }
+    console.log(`[renderPage] ⚠️ Self-render fallback: no usable HTML`);
+    return null;
+  } catch (err) {
+    console.log(`[renderPage] ⚠️ Self-render fallback failed:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/**
  * Fetches a page with automatic SPA/CSR detection and JS rendering fallback.
  * 
  * @param url - The URL to fetch
