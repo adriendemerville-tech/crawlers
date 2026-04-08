@@ -41,6 +41,7 @@ import { AEOScoreCard } from './AEOScoreCard';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 import { TechnicalResultsSection } from './TechnicalResultsSection';
 import { StrategicResultsSection } from './StrategicResultsSection';
+import { NextStepFloatingButton } from './NextStepFloatingButton';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
