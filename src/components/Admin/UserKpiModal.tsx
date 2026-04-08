@@ -61,11 +61,25 @@ interface UserKpiModalProps {
   auditorUserIds?: Set<string>;
 }
 
+interface LogEntry {
+  id: string;
+  event_type: string;
+  event_data: any;
+  target_url: string | null;
+  created_at: string;
+}
+
 export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleRole, onManageCredits, onStripPro, onEditProfile, adminUserIds, viewerUserIds, viewer2UserIds, auditorUserIds }: UserKpiModalProps) {
   const [kpis, setKpis] = useState<UserKpis | null>(null);
   const [scannedUrls, setScannedUrls] = useState<ScannedUrl[]>([]);
   const [loading, setLoading] = useState(false);
   const [urlsLoading, setUrlsLoading] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [livePolling, setLivePolling] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+  const lastLogIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!open || !user) return;
