@@ -13,7 +13,10 @@ import { playNotificationSound } from '@/utils/notificationSound';
 const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
 
 export function FloatingChatBubble() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('felix') === 'fullpage';
+  });
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);

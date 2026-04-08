@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink } from 'lucide-react';
+import { useAISidebar } from '@/contexts/AISidebarContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -153,7 +154,15 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const messagesViewportRef = useRef<HTMLDivElement>(null);
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => localStorage.getItem('felix_sidebar_expanded') === '1');
+  const { setFelixExpanded } = useAISidebar();
+
+  // Sync sidebar context when expanded state changes
+  useEffect(() => {
+    setFelixExpanded(isExpanded);
+    localStorage.setItem('felix_sidebar_expanded', isExpanded ? '1' : '0');
+    return () => setFelixExpanded(false);
+  }, [isExpanded, setFelixExpanded]);
 
   // Quiz state
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any>; title?: string; isCrawlersQuiz?: boolean } | null>(null);
@@ -936,7 +945,21 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
           >
             {isExpanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
           </button>
-          <button onClick={handleClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('felix', 'fullpage');
+              window.open(url.toString(), '_blank');
+            }}
+            className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+            title="Ouvrir dans un nouvel onglet"
+          >
+            <ExternalLink className="h-3 w-3" />
+          </button>
+          <button onClick={handleClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground transition-colors" title="Réduire">
+            <Minus className="h-3 w-3" />
+          </button>
+          <button onClick={() => { setIsExpanded(false); handleClose(); }} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors" title="Fermer">
             <X className="h-3 w-3" />
           </button>
         </div>

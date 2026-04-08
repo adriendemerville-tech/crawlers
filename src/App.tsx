@@ -12,6 +12,7 @@ const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ de
 const CreditsProvider = lazy(() => import("@/contexts/CreditsContext").then(m => ({ default: m.CreditsProvider })));
 const DemoModeProvider = lazy(() => import("@/contexts/DemoModeContext").then(m => ({ default: m.DemoModeProvider })));
 const FreemiumProvider = lazy(() => import("@/contexts/FreemiumContext").then(m => ({ default: m.FreemiumProvider })));
+const AISidebarProvider = lazy(() => import("@/contexts/AISidebarContext").then(m => ({ default: m.AISidebarProvider })));
 const TooltipProvider = lazy(() => import("@/components/ui/tooltip").then(m => ({ default: m.TooltipProvider })));
 const HelmetProvider = lazy(() => import("react-helmet-async").then(m => ({ default: m.HelmetProvider })));
 
@@ -26,7 +27,7 @@ const Sonner = lazy(() => import("@/components/ui/sonner").then(m => ({ default:
 // Lazy load the chat bubble (not needed for initial render)
 const FloatingChatBubble = lazy(() => import("@/components/Support/FloatingChatBubble").then(m => ({ default: m.FloatingChatBubble })));
 const SurveyModal = lazy(() => import("@/components/Survey/SurveyModal").then(m => ({ default: m.SurveyModal })));
-
+const AISidebarPageWrapper = lazy(() => import("@/components/AISidebarPageWrapper").then(m => ({ default: m.AISidebarPageWrapper })));
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -113,6 +114,7 @@ const App = () => (
                 <DemoModeProvider>
                 <FreemiumProvider>
                 <CreditsProvider>
+                <AISidebarProvider>
                   <TooltipProvider>
                     <Suspense fallback={null}>
                       <Toaster />
@@ -123,6 +125,7 @@ const App = () => (
                       <Suspense fallback={null}>
                         <PageViewTracker />
                       </Suspense>
+                      <AISidebarPageWrapper>
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
                           <Route path="/" element={<Index />} />
@@ -193,6 +196,7 @@ const App = () => (
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
+                      </AISidebarPageWrapper>
                       <Suspense fallback={null}>
                         <FloatingChatBubble />
                       </Suspense>
@@ -201,6 +205,7 @@ const App = () => (
                       </Suspense>
                     </BrowserRouter>
                   </TooltipProvider>
+                </AISidebarProvider>
                 </CreditsProvider>
                 </FreemiumProvider>
                 </DemoModeProvider>

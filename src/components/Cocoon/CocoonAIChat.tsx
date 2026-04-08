@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap, Maximize2, Minimize2 } from 'lucide-react';
+import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap, Maximize2, Minimize2, Minus, ExternalLink } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw } from 'lucide-react';
+import { useAISidebar } from '@/contexts/AISidebarContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -379,6 +380,12 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const resumeAttemptedRef = useRef<string | null>(null);
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
   const [isExpanded, setIsExpanded] = useState(false);
+  const { setCocoonExpanded } = useAISidebar();
+
+  useEffect(() => {
+    setCocoonExpanded(isExpanded && isOpen);
+    return () => setCocoonExpanded(false);
+  }, [isExpanded, isOpen, setCocoonExpanded]);
   const [resolvedBugCount, setResolvedBugCount] = useState(0);
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -1624,7 +1631,19 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                   ? <Minimize2 className="w-3 h-3 text-white/30 hover:text-white/60" />
                   : <Maximize2 className="w-3 h-3 text-white/30 hover:text-white/60" />}
               </button>
-              <button onClick={() => { setIsOpen(false); setIsExpanded(false); }} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
+              <button
+                onClick={() => {
+                  window.open('/stratege-cocoon', '_blank');
+                }}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                title="Ouvrir dans un nouvel onglet"
+              >
+                <ExternalLink className="w-3 h-3 text-white/30 hover:text-white/60" />
+              </button>
+              <button onClick={() => { setIsOpen(false); }} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title="Réduire">
+                <Minus className="w-3.5 h-3.5 text-white/50 hover:text-white/80" />
+              </button>
+              <button onClick={() => { setIsOpen(false); setIsExpanded(false); }} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title="Fermer">
                 <X className="w-3.5 h-3.5 text-white/50 hover:text-white/80" />
               </button>
             </div>
