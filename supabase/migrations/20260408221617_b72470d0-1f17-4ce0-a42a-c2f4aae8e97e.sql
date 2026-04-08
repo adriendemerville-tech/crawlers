@@ -1,0 +1,2 @@
+ALTER TABLE public.cto_code_proposals DROP CONSTRAINT cto_code_proposals_agent_source_check;
+ALTER TABLE public.cto_code_proposals ADD CONSTRAINT cto_code_proposals_agent_source_check CHECK (agent_source = ANY (ARRAY['cto'::text, 'seo'::text, 'ux'::text, 'supervisor'::text, 'self-optimize'::text]));

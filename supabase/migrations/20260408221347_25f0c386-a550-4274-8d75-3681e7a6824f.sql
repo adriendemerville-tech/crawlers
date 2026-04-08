@@ -1,0 +1,1 @@
+ALTER TABLE public.architect_workbench ADD COLUMN IF NOT EXISTS priority_tag text DEFAULT NULL;

@@ -651,6 +651,7 @@ export type Database = {
           finding_category: string
           id: string
           payload: Json | null
+          priority_tag: string | null
           severity: string
           source_function: string | null
           source_record_id: string | null
@@ -678,6 +679,7 @@ export type Database = {
           finding_category: string
           id?: string
           payload?: Json | null
+          priority_tag?: string | null
           severity?: string
           source_function?: string | null
           source_record_id?: string | null
@@ -705,6 +707,7 @@ export type Database = {
           finding_category?: string
           id?: string
           payload?: Json | null
+          priority_tag?: string | null
           severity?: string
           source_function?: string | null
           source_record_id?: string | null
