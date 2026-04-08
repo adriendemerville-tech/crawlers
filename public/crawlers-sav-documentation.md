@@ -14,7 +14,7 @@ confidentialite: "Public"
 Rendez-vous sur https://crawlers.fr/signup.
 L'inscription est gratuite et débloque :
 - L'audit technique SEO 200 points (1 par jour)
-- 25 crédits offerts dès l'inscription
+- 20 crédits offerts dès l'inscription
 - L'accès au tableau de bord personnel
 
 Pour activer les fonctionnalités avancées (tracking GSC, GA4, historique SERP), connectez vos comptes Google via OAuth depuis votre tableau de bord.

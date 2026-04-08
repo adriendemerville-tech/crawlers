@@ -284,7 +284,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`get_site_revenue(p_site_id, p_start, p_end)\` | RPC | Calcul du CA e-commerce |
 | \`get_database_size()\` | RPC | Taille de la base de données |
 | \`upsert_user_activity(p_user_id, p_field, p_timestamp)\` | RPC | MAJ journal d'activité |
-| \`grant_welcome_credits()\` | Trigger | 25 crédits offerts aux 1000 premiers inscrits |
+| \`grant_welcome_credits()\` | Trigger | | \`grant_welcome_credits()\` | Trigger | 20 crédits offerts aux 1000 premiers inscrits | |
 | \`protect_profile_fields()\` | Trigger | Empêche la modification client de \`credits_balance\`, \`plan_type\`, etc. |
 | \`generate_referral_code()\` | Trigger | Génère un code de parrainage unique |
 

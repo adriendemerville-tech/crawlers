@@ -30,7 +30,7 @@ const DOC_SECTIONS: DocSection[] = [
         content: `Rendez-vous sur <a href="https://crawlers.fr/signup" class="text-primary underline">crawlers.fr/signup</a>. L'inscription est gratuite et débloque :
 <ul class="list-disc pl-6 mt-2 space-y-1">
 <li>L'audit technique SEO 200 points (1 par jour)</li>
-<li>25 crédits offerts dès l'inscription</li>
+<li>20 crédits offerts dès l'inscription</li>
 <li>L'accès au tableau de bord personnel</li>
 </ul>
 <p class="mt-2">Pour activer les fonctionnalités avancées (tracking GSC, GA4, historique SERP), connectez vos comptes Google via OAuth depuis votre tableau de bord.</p>`,
@@ -288,7 +288,7 @@ const DOC_SECTIONS: DocSection[] = [
         id: 'fonctionnement-credits',
         title: 'Comment fonctionnent les crédits ?',
         content: `Les crédits (CreditCoin) sont la monnaie interne de Crawlers.fr pour les fonctionnalités premium ponctuelles.
-<p class="mt-2">À l'inscription : <strong>25 crédits offerts</strong>.</p>
+<p class="mt-2">À l'inscription : <strong>20 crédits offerts</strong>.</p>
 <p class="mt-1">Coût des actions principales :</p>
 <ul class="list-disc pl-6 mt-1 space-y-1">
 <li>Audit Stratégique IA : 1 crédit</li>

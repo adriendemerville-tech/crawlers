@@ -321,6 +321,11 @@ export default function Auth() {
             <CardDescription>
               {isLogin ? t.loginDesc : t.signupDesc}
             </CardDescription>
+            {!isLogin && (
+              <p className="text-xs text-primary font-medium mt-1">
+                {language === 'fr' ? '🎁 20 crédits offerts à l\'inscription' : language === 'es' ? '🎁 20 créditos gratis al registrarse' : '🎁 20 free credits on signup'}
+              </p>
+            )}
           </CardHeader>
           <CardContent className="space-y-5 pb-4">
             {/* Google OAuth Button */}
