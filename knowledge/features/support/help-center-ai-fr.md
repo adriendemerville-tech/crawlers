@@ -25,6 +25,13 @@ Updated: 2026-04-08
   - Suppression individuelle possible
   - Persistance `localStorage` (`felix_conversations_archive`, `felix_current_conversation`)
   - La conversation la plus récente se précharge automatiquement à la session suivante
+- **Workflow post-audit guidé** :
+  - Se déclenche automatiquement après un Audit Expert ou Matrice quand Félix est en mode étendu
+  - Propose un résumé des résultats (sentiment + problèmes classés par sévérité)
+  - Boutons de priorité (🔴 Critique, 🟠 Important, 🟡 Recommandé) liés au workbench
+  - Affiche les solutions avec source et catégorie, regroupées par type (code/contenu)
+  - Propose l'implémentation directe via Code ou Content Architect
+  - Alternative : mise à jour du plan d'action dans la Console
 
 ## Compréhension d'audit en temps réel (Screen Context)
 - Le frontend capture le contenu visible à l'écran de l'utilisateur (`captureScreenContext`)
