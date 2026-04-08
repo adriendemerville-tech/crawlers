@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
 
 /**
  * Edge Function: dry-run-script
