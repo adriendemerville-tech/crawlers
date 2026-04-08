@@ -355,7 +355,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1' || localStorage.getItem('cocoon_chat_open') === '1');
   const [selectedSlots, setSelectedSlots] = useState<SelectedNodeSlot[]>([]);
   const [pickingIndex, setPickingIndex] = useState<number | null>(null);
   const pickingIndexRef = useRef<number | null>(null);
@@ -385,6 +385,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   useEffect(() => {
     setCocoonExpanded(isExpanded && isOpen);
     localStorage.setItem('cocoon_sidebar_expanded', isExpanded ? '1' : '0');
+    localStorage.setItem('cocoon_chat_open', isOpen ? '1' : '0');
     return () => setCocoonExpanded(false);
   }, [isExpanded, isOpen, setCocoonExpanded]);
   const [resolvedBugCount, setResolvedBugCount] = useState(0);
