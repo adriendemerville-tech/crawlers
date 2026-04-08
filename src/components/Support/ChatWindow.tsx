@@ -1510,7 +1510,161 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                   </div>
                 )}
 
-                {bugReportMode === 'prompt' && (
+                {/* ═══ Post-audit guided workflow buttons ═══ */}
+                {auditGuideStep === 'ask_summary' && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 ml-1">
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Oui, résume-moi les résultats.', timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg]);
+                          setNewMessage('Oui');
+                          setTimeout(() => { setNewMessage(''); handleSend(); }, 50);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Oui, résume !
+                      </button>
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Non merci.', timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, { role: 'assistant', content: "Pas de problème ! N'hésite pas si tu changes d'avis. 👍", timestamp: new Date().toISOString() }]);
+                          setAuditGuideStep('idle');
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-muted-foreground/20 text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors"
+                      >
+                        Non merci
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {auditGuideStep === 'show_priorities' && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2 max-w-[85%]">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <CrawlersLogo size={12} />
+                        <span className="text-[11px] font-medium text-muted-foreground">Priorité</span>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        {[
+                          { label: '🔴 Critique', severity: 'critical' },
+                          { label: '🟠 Important', severity: 'high' },
+                          { label: '🟡 Recommandé', severity: 'medium' },
+                        ].map(({ label, severity }) => {
+                          const count = auditGuideFindings.filter(f => f.severity === severity).length;
+                          if (count === 0) return null;
+                          return (
+                            <button
+                              key={severity}
+                              onClick={async () => {
+                                const userMsg: ChatMessage = { role: 'user', content: label, timestamp: new Date().toISOString() };
+                                setMessages(prev => [...prev, userMsg]);
+                                setSending(true);
+
+                                const filtered = auditGuideFindings.filter(f => f.severity === severity);
+                                const sourceMap: Record<string, string> = {
+                                  'audit_tech': 'Audit technique', 'audit_strategic': 'Audit stratégique',
+                                  'cocoon': 'Stratège Cocoon', 'felix': 'Félix', 'parse-matrix-hybrid': 'Matrice',
+                                };
+
+                                let solutionMsg = `**Problèmes ${label} (${filtered.length}) :**\n\n`;
+                                filtered.forEach((f, i) => {
+                                  const src = sourceMap[f.source_type] || f.source_type;
+                                  solutionMsg += `${i + 1}. **${f.title}**\n   📂 ${f.finding_category} · Source: ${src}\n   💡 ${f.description || 'Correction recommandée'}\n\n`;
+                                });
+
+                                // Determine dominant action type
+                                const codeItems = filtered.filter(f => f.action_type === 'code' || f.action_type === 'both').length;
+                                const contentItems = filtered.filter(f => f.action_type === 'content' || f.action_type === 'both').length;
+                                const dominantLane = codeItems >= contentItems ? 'code' : 'content';
+                                setAuditGuidePriorityLane(dominantLane);
+
+                                solutionMsg += `---\n\n💡 Ces modifications peuvent être regroupées par type :\n- **Code** (balises, Schema.org, performance) : ${codeItems} correctif${codeItems > 1 ? 's' : ''}\n- **Contenu** (textes, H1, meta, FAQ) : ${contentItems} amélioration${contentItems > 1 ? 's' : ''}\n\n`;
+                                const dominantLabel = dominantLane === 'code' ? 'les correctifs techniques' : 'les améliorations de contenu';
+                                solutionMsg += `**Veux-tu implémenter tout de suite ${dominantLabel} ?**`;
+
+                                const msg: ChatMessage = { role: 'assistant', content: solutionMsg, timestamp: new Date().toISOString() };
+                                setMessages(prev => [...prev, msg]);
+                                setSending(false);
+                                setAuditGuideStep('confirm_implement');
+                              }}
+                              className="inline-flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-muted-foreground/15 bg-background text-foreground text-xs font-medium hover:bg-muted/50 transition-colors w-full"
+                            >
+                              <span>{label}</span>
+                              <span className="text-muted-foreground text-[10px]">{count} problème{count > 1 ? 's' : ''}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {auditGuideStep === 'confirm_implement' && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 ml-1">
+                      <button
+                        onClick={() => {
+                          const lane = auditGuidePriorityLane;
+                          const targetLabel = lane === 'code' ? 'Code Architect' : 'Content Architect';
+                          const userMsg: ChatMessage = { role: 'user', content: 'Oui, allons-y !', timestamp: new Date().toISOString() };
+                          const msg: ChatMessage = { role: 'assistant', content: `🚀 **D'accord !** J'ouvre **${targetLabel}** pour toi.`, timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, msg]);
+                          setAuditGuideStep('idle');
+                          setTimeout(() => {
+                            if (lane === 'code') { navigate('/architecte-generatif'); onClose(); }
+                            else { setContentArchitectDiag({ url: auditGuideUrl }); setShowContentArchitectModal(true); }
+                          }, 800);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Oui, allons-y !
+                      </button>
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Non, pas maintenant.', timestamp: new Date().toISOString() };
+                          const msg: ChatMessage = { role: 'assistant', content: "Entendu ! Veux-tu que je mette à jour le **plan d'action** pour ce site dans la Console ?", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, msg]);
+                          setAuditGuideStep('confirm_action_plan');
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-muted-foreground/20 text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors"
+                      >
+                        Non, pas maintenant
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {auditGuideStep === 'confirm_action_plan' && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 ml-1">
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Oui, mets à jour le plan.', timestamp: new Date().toISOString() };
+                          const msg: ChatMessage = { role: 'assistant', content: "✅ **Plan d'action mis à jour !** Tu peux le consulter dans [Console → Plans d'action](https://crawlers.fr/app/console).", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, msg]);
+                          setAuditGuideStep('idle');
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Oui, mets à jour
+                      </button>
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Non merci.', timestamp: new Date().toISOString() };
+                          const msg: ChatMessage = { role: 'assistant', content: "Pas de problème ! Tu peux revenir plus tard dans cette conversation via l'historique 🕐", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, msg]);
+                          setAuditGuideStep('idle');
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-muted-foreground/20 text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors"
+                      >
+                        Non merci
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                   <div className="flex justify-start">
                     <button
                       onClick={activateBugReportMode}
