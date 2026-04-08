@@ -413,6 +413,18 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId, hasCm
             {t.noResults}
           </div>
         )}
+
+        {/* CMS connection status */}
+        {stats && stats.total_suggestions > 0 && (
+          <div className={`flex items-start gap-2 rounded-lg p-3 text-xs ${hasCmsConnection ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+            {hasCmsConnection ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            ) : (
+              <Link2 className="w-4 h-4 shrink-0 mt-0.5" />
+            )}
+            <span>{hasCmsConnection ? t.cmsReady : t.noCms}</span>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
