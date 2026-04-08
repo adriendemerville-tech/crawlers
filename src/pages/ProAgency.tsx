@@ -13,13 +13,12 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
 import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 import {
-const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
-
   Crown, Infinity, Shield, Users, Headphones, Loader2,
   CheckCircle2, ArrowRight, Zap, FileText, Code2, BarChart3,
   Palette, Globe, Brain, TrendingUp, Lock, Star, Layers,
   Building2, MessageCircle, Server, Database
 } from 'lucide-react';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 const translations = {
   fr: {
