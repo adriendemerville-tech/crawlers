@@ -6,7 +6,7 @@
     Crawlers.fr - Sitemap XML Optimisé SEO & GEO
     Plateforme d'Audit Technique, Stratégique & Marketing
     Générateur de Code Correctif | IAS | Cocoon 3D | GMB | Matrice | Surveys | 2026
-    Dernière mise à jour : 2026-03-29
+    Dernière mise à jour : 2026-04-08
     
     ⚠️ CLARIFICATION : Crawlers.fr est une PLATEFORME D'AUDIT pour webmasters,
     PAS un scraper ni un outil d'extraction de données.
@@ -96,6 +96,30 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/integration-gtm?lang=en"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/integration-gtm?lang=es"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/integration-gtm"/>
+  </url>
+
+  <!-- E-E-A-T Landing Page -->
+  <url>
+    <loc>https://crawlers.fr/eeat</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/eeat"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/eeat?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/eeat?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/eeat"/>
+  </url>
+
+  <!-- Audit E-E-A-T — Outil interactif gratuit -->
+  <url>
+    <loc>https://crawlers.fr/app/eeat</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/app/eeat"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/app/eeat?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/app/eeat?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/app/eeat"/>
   </url>
 
   <!-- ==================== LANDING PAGES SEO ==================== -->
