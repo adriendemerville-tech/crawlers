@@ -116,7 +116,7 @@ Deno.serve(handleRequest(async (req) => {
       // Get user from auth header
       const authHeader = req.headers.get('authorization') || '';
       const token = authHeader.replace('Bearer ', '');
-      let userId = 'anonymous';
+      let userId: string | null = null;
       if (token) {
         const { data: { user } } = await supabase.auth.getUser(token);
         if (user) userId = user.id;
