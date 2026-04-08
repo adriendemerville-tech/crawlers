@@ -1498,9 +1498,63 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         </div>
       )}
 
+      {/* History Panel Overlay (expanded mode only) */}
+      {showHistory && isExpanded && (
+        <div className="absolute inset-0 z-20 bg-background/98 backdrop-blur-sm flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 shrink-0">
+            <button onClick={() => setShowHistory(false)} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-xs font-medium text-foreground/80">Historique des conversations</span>
+          </div>
+          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
+            {getArchivedConversations().length === 0 ? (
+              <p className="text-[11px] text-muted-foreground/60 text-center py-8">Aucune conversation archivée</p>
+            ) : (
+              getArchivedConversations().map((archive) => {
+                const date = new Date(archive.archivedAt);
+                const dateStr = `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                return (
+                  <div
+                    key={archive.id}
+                    className="group flex items-start gap-2 rounded-lg px-2.5 py-2 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => handleRestoreConversation(archive)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-foreground/80 truncate">{archive.preview}</p>
+                      <p className="text-[10px] text-muted-foreground/50 mt-0.5">{dateStr} · {archive.messages.length} msg</p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteArchive(archive.id); }}
+                      className="h-5 w-5 shrink-0 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive transition-all"
+                      title="Supprimer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-border/30 px-2 py-1 shrink-0 relative">
         <div className="flex items-center gap-1">
+          {/* History button — expanded mode only */}
+          {isExpanded && (
+            <button
+              onClick={() => setShowHistory(prev => !prev)}
+              className={cn(
+                "h-7 w-7 shrink-0 flex items-center justify-center rounded-full transition-colors",
+                showHistory ? "bg-muted text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50"
+              )}
+              title="Historique"
+            >
+              <History className="h-3.5 w-3.5" />
+            </button>
+          )}
           {user && (
             <ChatAttachmentPicker
               userId={user.id}
