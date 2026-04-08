@@ -378,6 +378,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [sessionResumed, setSessionResumed] = useState(false);
   const resumeAttemptedRef = useRef<string | null>(null);
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
+  const [isExpanded, setIsExpanded] = useState(false);
   const [resolvedBugCount, setResolvedBugCount] = useState(0);
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -1577,8 +1578,12 @@ Termina con un resumen ejecutivo y próximos pasos.`,
     <div className="relative">
       {/* Floating chat window — opens upward */}
       {isOpen && (
-        <div className="absolute bottom-full mb-2 left-0 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
-          style={{ maxHeight: 'min(600px, 72vh)' }}
+        <div className={
+          isExpanded
+            ? "fixed top-0 left-0 h-full w-[28rem] max-w-[90vw] border-r border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
+            : "absolute bottom-full mb-2 left-0 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
+        }
+          style={isExpanded ? undefined : { maxHeight: 'min(600px, 72vh)' }}
         >
           {/* Header — compact */}
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
