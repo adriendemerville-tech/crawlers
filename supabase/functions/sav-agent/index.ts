@@ -1866,6 +1866,58 @@ ${screen_context}
       }
     }
 
+    // ── CROSS-AGENT: Handoff to Stratège detection ──
+    let handoffAction: any = null;
+    if (!isGuest && user_id) {
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const lowerHandoff = lastUserMsg.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      
+      const cocoonHandoffPatterns = [
+        /(?:cocon|cocoon|maillage|architecture|cluster|silo|arborescence|structure de lien)/,
+        /(?:strateg(?:ie|ique)|diagnostic|plan strategique|plan d'action cocoon)/,
+        /(?:transfere|passe|envoie|redirige|transfère).+(?:strateg|cocoon|consultant)/,
+        /(?:analyse.+(?:profonde|avancee|complete|detaillee).+(?:site|contenu|semantique|maillage))/,
+      ];
+      
+      const hasCocoonIntent = cocoonHandoffPatterns.some(p => p.test(lowerHandoff));
+      
+      if (hasCocoonIntent) {
+        // Check if user has a tracked site for handoff
+        try {
+          const { data: firstSite } = await sb
+            .from("tracked_sites")
+            .select("id, domain")
+            .eq("user_id", user_id)
+            .limit(1)
+            .single();
+          
+          if (firstSite) {
+            // Build conversation summary for handoff
+            const userMsgs = messages.filter((m: any) => m.role === "user").map((m: any) => m.content).slice(-3);
+            const summary = userMsgs.join(' | ').slice(0, 300);
+            const topics = [];
+            if (lowerHandoff.includes('maillage') || lowerHandoff.includes('linking')) topics.push('maillage');
+            if (lowerHandoff.includes('contenu') || lowerHandoff.includes('content')) topics.push('contenu');
+            if (lowerHandoff.includes('semantique') || lowerHandoff.includes('semantic')) topics.push('sémantique');
+            if (lowerHandoff.includes('structure') || lowerHandoff.includes('arborescence')) topics.push('structure');
+            if (lowerHandoff.includes('cannibalisation') || lowerHandoff.includes('cannibalization')) topics.push('cannibalisation');
+            
+            handoffAction = {
+              action: 'handoff_to_strategist',
+              tracked_site_id: firstSite.id,
+              domain: firstSite.domain,
+              summary,
+              topics,
+            };
+
+            // Fire-and-forget: create handoff context
+            createHandoffContext(user_id, firstSite.id, firstSite.domain, summary, topics)
+              .catch(e => console.error('[sav-agent] Handoff context error:', e));
+          }
+        } catch {}
+      }
+    }
+
     // ── Architect routing: detect fix/solve intent ──
     let architectAction: any = null;
     if (!isGuest && user_id && screen_context) {
