@@ -1396,7 +1396,7 @@ FRAÎCHEUR & DÉNOMINATION:
         brief_eeat_signals: contentBrief.eeat_signals,
         brief_geo_passages: contentBrief.geo_citable_passages,
         source: 'content_architect',
-      }));
+      });
       console.log(`[content-advisor] Generation logged for correlation training`);
     } catch (e) {
       console.warn('[content-advisor] Failed to log generation:', e);
