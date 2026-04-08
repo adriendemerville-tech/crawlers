@@ -9844,6 +9844,37 @@ export type Database = {
       recalculate_reliability: { Args: never; Returns: undefined }
       score_workbench_priority:
         | {
+            Args: {
+              p_domain: string
+              p_force_content?: boolean
+              p_lane?: string
+              p_limit?: number
+              p_user_id: string
+            }
+            Returns: {
+              action_type: string
+              computed_aging_bonus: number
+              computed_base_score: number
+              computed_gate_malus: number
+              computed_lane: string
+              computed_severity_bonus: number
+              computed_tier: number
+              computed_total_score: number
+              created_at: string
+              description: string
+              finding_category: string
+              id: string
+              p_tag: string
+              payload: Json
+              severity: string
+              source_type: string
+              target_operation: string
+              target_selector: string
+              target_url: string
+              title: string
+            }[]
+          }
+        | {
             Args: { p_domain: string; p_limit?: number; p_user_id: string }
             Returns: {
               action_type: string
