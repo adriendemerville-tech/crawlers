@@ -9199,6 +9199,9 @@ export type Database = {
           created_at: string
           current_config: Json
           domain: string
+          eeat_details: Json | null
+          eeat_last_audit_at: string | null
+          eeat_score: number | null
           entity_type: string | null
           founding_year: number | null
           gmb_city: string | null
@@ -9252,6 +9255,9 @@ export type Database = {
           created_at?: string
           current_config?: Json
           domain: string
+          eeat_details?: Json | null
+          eeat_last_audit_at?: string | null
+          eeat_score?: number | null
           entity_type?: string | null
           founding_year?: number | null
           gmb_city?: string | null
@@ -9305,6 +9311,9 @@ export type Database = {
           created_at?: string
           current_config?: Json
           domain?: string
+          eeat_details?: Json | null
+          eeat_last_audit_at?: string | null
+          eeat_score?: number | null
           entity_type?: string | null
           founding_year?: number | null
           gmb_city?: string | null

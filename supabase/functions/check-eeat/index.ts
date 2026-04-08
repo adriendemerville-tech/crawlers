@@ -89,6 +89,9 @@ Deno.serve(handleRequest(async (req) => {
           console.warn(`[check-eeat] ⚠️ Failed to persist EEAT in audit_raw_data:`, persistErr);
         }
 
+        // ── Write E-E-A-T score back to tracked_sites (identity card) ──
+        await writeEeatToIdentityCard(supabase, tracked_site_id, result, domain, workerUserId);
+
         await supabase.from('async_jobs').update({
           status: 'completed',
           progress: 100,
@@ -199,6 +202,18 @@ Deno.serve(handleRequest(async (req) => {
       });
     } catch (_) { /* best effort */ }
 
+    // Write back to identity card (sync mode)
+    try {
+      const authHeader = req.headers.get('authorization') || '';
+      const token = authHeader.replace('Bearer ', '');
+      let syncUid: string | null = null;
+      if (token) {
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) syncUid = user.id;
+      }
+      await writeEeatToIdentityCard(supabase, tracked_site_id, result, domain, syncUid);
+    } catch (_) { /* best effort */ }
+
     return new Response(JSON.stringify(result), { headers: HEADERS });
 
   } catch (e) {
@@ -206,6 +221,123 @@ Deno.serve(handleRequest(async (req) => {
     return new Response(JSON.stringify({ success: false, error: e instanceof Error ? e.message : String(e), score: 0 }), { status: 500, headers: HEADERS });
   }
 }));
+
+// ══════════════════════════════════════════════════════
+// Write E-E-A-T score to identity card + push findings to workbench
+// ══════════════════════════════════════════════════════
+async function writeEeatToIdentityCard(supabase: any, trackedSiteId: string | null, result: any, domain: string, userId: string | null) {
+  if (!result.success || !result.score) return;
+
+  // 1. Update tracked_sites with E-E-A-T score
+  if (trackedSiteId) {
+    try {
+      const eeatDetails = {
+        experience: result.experience,
+        expertise: result.expertise,
+        authoritativeness: result.authoritativeness,
+        trustworthiness: result.trustworthiness,
+        scoring: result.scoring,
+        signals: result.signals,
+        issues: result.issues,
+        strengths: result.strengths,
+        recommendations: result.recommendations,
+        dataSources: result.dataSources,
+      };
+      await supabase.from('tracked_sites').update({
+        eeat_score: result.score,
+        eeat_details: eeatDetails,
+        eeat_last_audit_at: new Date().toISOString(),
+      }).eq('id', trackedSiteId);
+      console.log(`[check-eeat] 🪪 E-E-A-T score (${result.score}) written to identity card for ${domain}`);
+
+      // 1b. Propose identity card enrichments from signals
+      const enrichments: Record<string, any> = {};
+      if (!result.signals) { /* skip */ }
+      else {
+        // If we detected a blog section but entity_type is not set, suggest 'media'
+        if (result.signals.blogSection && !result.signals.aboutPage) {
+          enrichments.entity_type = 'media';
+        }
+      }
+      if (Object.keys(enrichments).length > 0) {
+        await supabase.from('tracked_sites').update(enrichments).eq('id', trackedSiteId);
+        console.log(`[check-eeat] 🪪 Identity card enriched with: ${Object.keys(enrichments).join(', ')}`);
+      }
+    } catch (e) {
+      console.warn(`[check-eeat] ⚠️ Failed to write E-E-A-T to identity card:`, e);
+    }
+  }
+
+  // 2. Push E-E-A-T findings to architect_workbench
+  if (userId && result.issues?.length > 0) {
+    try {
+      const findings = result.issues.slice(0, 10).map((issue: string, i: number) => ({
+        domain,
+        tracked_site_id: trackedSiteId,
+        user_id: userId,
+        source_type: 'audit_tech',
+        source_function: 'check-eeat',
+        source_record_id: `eeat_${domain}_${i}_${Date.now()}`,
+        finding_category: 'eeat',
+        severity: i < 3 ? 'high' : 'medium',
+        title: issue.length > 120 ? issue.substring(0, 117) + '...' : issue,
+        description: issue,
+        target_url: `https://${domain}`,
+        action_type: 'content',
+        target_operation: 'replace',
+        payload: {
+          eeat_score: result.score,
+          pillar_scores: {
+            experience: result.experience,
+            expertise: result.expertise,
+            authoritativeness: result.authoritativeness,
+            trustworthiness: result.trustworthiness,
+          },
+          source: 'check-eeat',
+        },
+      }));
+
+      const { error } = await supabase.from('architect_workbench').upsert(findings, {
+        onConflict: 'source_type,source_record_id',
+        ignoreDuplicates: true,
+      });
+      if (error) throw error;
+      console.log(`[check-eeat] 🏗️ ${findings.length} E-E-A-T findings pushed to workbench for ${domain}`);
+    } catch (e) {
+      console.warn(`[check-eeat] ⚠️ Failed to push E-E-A-T findings to workbench:`, e);
+    }
+  }
+
+  // 3. Push E-E-A-T recommendations as workbench items
+  if (userId && result.recommendations?.length > 0) {
+    try {
+      const recos = result.recommendations.slice(0, 5).map((reco: string, i: number) => ({
+        domain,
+        tracked_site_id: trackedSiteId,
+        user_id: userId,
+        source_type: 'audit_tech',
+        source_function: 'check-eeat',
+        source_record_id: `eeat_reco_${domain}_${i}_${Date.now()}`,
+        finding_category: 'eeat',
+        severity: 'medium',
+        title: `[E-E-A-T] ${reco.length > 100 ? reco.substring(0, 97) + '...' : reco}`,
+        description: reco,
+        target_url: `https://${domain}`,
+        action_type: 'content',
+        target_operation: 'append',
+        payload: { eeat_score: result.score, type: 'recommendation', source: 'check-eeat' },
+      }));
+
+      await supabase.from('architect_workbench').upsert(recos, {
+        onConflict: 'source_type,source_record_id',
+        ignoreDuplicates: true,
+      });
+      console.log(`[check-eeat] 🏗️ ${recos.length} E-E-A-T recommendations pushed to workbench for ${domain}`);
+    } catch (e) {
+      console.warn(`[check-eeat] ⚠️ Failed to push E-E-A-T recommendations to workbench:`, e);
+    }
+  }
+}
 
 // ══════════════════════════════════════════════════════
 // Fair use check for E-E-A-T audits
@@ -322,6 +454,22 @@ async function runEeatPipeline(
   console.log(`[check-eeat] 📅 Phase 2.7: Fetching domain age...`);
   const domainAgeInfo = await fetchDomainAge(supabase, effectiveDomain, trackedSiteId);
 
+  // ── Phase 2.8: Read full identity card for context enrichment ──
+  console.log(`[check-eeat] 🪪 Phase 2.8: Reading identity card...`);
+  let identityCard: Record<string, any> | null = null;
+  if (trackedSiteId) {
+    const { data: idCard } = await supabase
+      .from('tracked_sites')
+      .select('market_sector, entity_type, business_type, target_audience, products_services, brand_name, commercial_area, company_size, founding_year, legal_structure, social_profiles, competitors, commercial_model, primary_language, target_segment, primary_use_case, location_detail, brand_site_url')
+      .eq('id', trackedSiteId)
+      .maybeSingle();
+    if (idCard) {
+      identityCard = idCard;
+      console.log(`[check-eeat] 🪪 Identity card loaded: sector=${idCard.market_sector}, entity=${idCard.entity_type}`);
+    }
+  }
+  if (jobId) await supabase.from('async_jobs').update({ progress: 55 }).eq('id', jobId);
+
   // ── Phase 3: LLM analysis with enriched context ──
   console.log(`[check-eeat] 🤖 Phase 3: LLM analysis...`);
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -418,6 +566,21 @@ IMPORTANT: Les détections de pages (À propos, Contact, Mentions légales, CGV/
 IMPORTANT: Si des entités Schema.org sont marquées ✓, elles EXISTENT — valorise-les dans le score. Si sameAs ou auteur JSON-LD sont présents, c'est un signal E-E-A-T fort.
 ${backlinkSection}
 ${gbpSection}
+
+${identityCard ? `
+═══ CARTE D'IDENTITÉ DU SITE ═══
+- Secteur: ${identityCard.market_sector || 'Non renseigné'}
+- Type d'entité: ${identityCard.entity_type || 'Non renseigné'}
+- Type de business: ${identityCard.business_type || 'Non renseigné'}
+- Audience cible: ${identityCard.target_audience || 'Non renseigné'}
+- Produits/Services: ${identityCard.products_services || 'Non renseigné'}
+- Marque: ${identityCard.brand_name || 'Non renseigné'}
+- Zone commerciale: ${identityCard.commercial_area || 'Non renseigné'}
+- Taille d'entreprise: ${identityCard.company_size || 'Non renseigné'}
+- Structure juridique: ${identityCard.legal_structure || 'Non renseigné'}
+- Segment cible: ${identityCard.target_segment || 'Non renseigné'}
+- Modèle commercial: ${identityCard.commercial_model || 'Non renseigné'}
+IMPORTANT: Utilise ces données business pour contextualiser ton analyse E-E-A-T. Un site médical, financier ou juridique (YMYL) exige des standards plus élevés.` : ''}
 
 ${pagesContext}
 
