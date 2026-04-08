@@ -63,6 +63,7 @@ interface CocoonRadialGraphProps {
   colorIntensity?: number;
   nodeColors?: Record<string, string>;
   bgColorSlider?: number;
+  particlesEnabled?: boolean;
 }
 
 // ─── Page-type colors (SAME as Force & 3D views) ───
@@ -340,6 +341,7 @@ export function CocoonRadialGraph({
   colorIntensity = 5,
   nodeColors,
   bgColorSlider = 0,
+  particlesEnabled = true,
 }: CocoonRadialGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
