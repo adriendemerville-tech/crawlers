@@ -52,8 +52,15 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: s
     return 'progress-error';
   };
 
+  const getPriorityBadge = (status: string) => {
+    if (status === 'error') return `<span class="priority-badge priority-badge-critical">🔴 ${t.priority || 'Prioritaire'}</span>`;
+    if (status === 'warning') return `<span class="priority-badge priority-badge-warning">🟡 ${t.recommended || 'Recommandé'}</span>`;
+    return '';
+  };
+
   const factorCards = data.factors.map((factor) => `
-    <div class="card factor-card">
+    <div class="card factor-card" style="position: relative;">
+      ${getPriorityBadge(factor.status)}
       <div class="factor-header">
         <div style="flex: 1;">
           <div class="factor-title-row">
