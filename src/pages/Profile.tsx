@@ -216,9 +216,6 @@ function ProfileContent() {
             transition={{ duration: 0.5 }}
           >
 
-                <TabsContent value="indexation">
-                  <IndexationMonitor />
-                </TabsContent>
 
             <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-2">
