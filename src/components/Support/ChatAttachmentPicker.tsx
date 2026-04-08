@@ -125,6 +125,8 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
   }
 
   return (
+    <>
+    {fileInput}
     <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border bg-background shadow-xl z-10">
       <div className="flex items-center justify-between border-b px-3 py-1.5">
         <div className="flex gap-1">
