@@ -1,8 +1,8 @@
 # Crawlers.fr — Documentation Technique
 
-> **Dernière mise à jour** : 28 mars 2026  
-> **Version** : 2.13.0  
-> **Lignes de code** : ~223 000 (Backend: 77 951 · Frontend: 136 612 · SQL: 8 592)
+> **Dernière mise à jour** : 8 avril 2026  
+> **Version** : 2.15.0  
+> **Lignes de code** : ~260 000 (Backend: 96 177 · Frontend: 153 145 · SQL: 10 828)
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 2. Architecture Backend
 
-### 2.1 Edge Functions (176 fonctions + 41 modules partagés)
+### 2.1 Edge Functions (216 fonctions + 58 modules partagés)
 
 Organisées en **13 domaines fonctionnels** :
 
@@ -51,14 +51,14 @@ Organisées en **13 domaines fonctionnels** :
 
 ### 2.2 Modules partagés (`_shared/`)
 
-41 modules réutilisables : `supabaseClient.ts`, `getSiteContext.ts`, `enrichSiteContext.ts`, `identityGateway.ts`, `getDomainContext.ts`, `siteMemory.ts`, `lovableAI.ts`, `fairUse.ts`, `auditCache.ts`, `silentErrorLogger.ts`, `corsHeaders.ts`, `stealthFetch.ts`, `strategicPrompts.ts`, `contentBrief.ts`, `tokenTracker.ts`, `circuitBreaker.ts`, etc.
+58 modules réutilisables : `supabaseClient.ts`, `getSiteContext.ts`, `enrichSiteContext.ts`, `identityGateway.ts`, `getDomainContext.ts`, `siteMemory.ts`, `lovableAI.ts`, `fairUse.ts`, `auditCache.ts`, `silentErrorLogger.ts`, `corsHeaders.ts`, `stealthFetch.ts`, `strategicPrompts.ts`, `contentBrief.ts`, `tokenTracker.ts`, `circuitBreaker.ts`, `preCrawlForAudit.ts`, `serveHandler.ts`, `naturalPrompts.ts`, `resolveGoogleToken.ts`, etc.
 
 ### 2.3 Base de données
 
-- **~144 tables** PostgreSQL avec RLS
-- **255 migrations** versionnées
-- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_logs`, `marina_training_data`, `architect_workbench`, `parmenion_decision_log`, `identity_card_suggestions`, `autopilot_configs`
-- Fonctions DB : `check_fair_use_v2`, `check_monthly_fair_use`, `use_credit`, `has_role`, `upsert_analyzed_url`, `score_workbench_priority`, `populate_architect_workbench`, `parmenion_error_rate`, `atomic_credit_update`, etc.
+- **~181 tables** PostgreSQL avec RLS
+- **311 migrations** versionnées
+- Tables clés : `tracked_sites`, `profiles`, `site_crawls`, `crawl_pages`, `cocoon_sessions`, `analytics_events`, `audit_raw_data`, `domain_data_cache`, `site_script_rules`, `archived_users`, `supervisor_logs`, `marina_training_data`, `architect_workbench`, `parmenion_decision_log`, `identity_card_suggestions`, `autopilot_configs`, `autopilot_modification_log`
+- Fonctions DB : `check_fair_use_v2`, `check_monthly_fair_use`, `use_credit`, `has_role`, `upsert_analyzed_url`, `score_workbench_priority`, `populate_architect_workbench`, `parmenion_error_rate`, `parmenion_recent_errors`, `atomic_credit_update`, `get_team_accessible_sites`, etc.
 - File d'attente email : PGMQ (`enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`)
 
 ### 2.4 Agents IA — Architecture CTO / Supervisor
@@ -67,7 +67,7 @@ Organisées en **13 domaines fonctionnels** :
 |-------|------|-----------|
 | **CTO** | Analyse les erreurs des Edge Functions, propose et déploie des correctifs automatiques | Toutes les fonctions sauf `supervisor-actions` |
 | **Supervisor** | Contrôle les actions correctives de CTO : analyse la solution déployée, sa logique, son impact | Revue post-déploiement des correctifs CTO |
-| **Félix (SAV)** | Agent conversationnel SEO, quiz hebdomadaire, mémoire contextuelle par site | Interactions utilisateurs, support SEO |
+| **Félix (SAV)** | Agent conversationnel SEO, quiz hebdomadaire, mémoire contextuelle par site, workflow post-audit guidé (résumé → priorités → actions) | Interactions utilisateurs, support SEO |
 | **Agent SEO** | Agent autonome d'optimisation SEO continue | Suivi interne (crawlers.fr), différé pour les sites clients |
 | **Parménion** | Orchestrateur autopilote en 5 phases : diagnostic → prescription → implémentation → mesure → calibration | Déploiement CMS universel via 4 canaux (code, data, content, editorial) |
 
@@ -75,6 +75,7 @@ Organisées en **13 domaines fonctionnels** :
 - Le Supervisor dispose de son propre **registre d'erreurs** (`supervisor_logs`) visible en admin
 - Le Supervisor valide/invalide les correctifs CTO avec un score de confiance et un verdict
 - Parménion utilise le **Workbench** (`architect_workbench`) comme source de tâches priorisées
+- **Cooldown Parménion** : appliqué uniquement entre macro-cycles réussis (2h par défaut). Pas de cooldown après un cycle échoué — retry immédiat au prochain cron (10 min)
 
 ### 2.5 Carte d'Identité (Identity Gateway)
 
@@ -89,13 +90,33 @@ Architecture centralisée via `_shared/identityGateway.ts`, unique point d'écri
 
 **Sources d'écriture** : `enrichSiteContext`, `voice-identity-enrichment`, `siteMemory`, `expert-audit` (CMS), `marina`, `cocoon-strategist`, `seasonality-detector`, `audit-strategique-ia`
 
-**Lecteurs** (via `getSiteContext`) : `audit-strategique-ia`, `content-architecture-advisor`, `generate-prediction`, `detect-anomalies`, `cocoon-strategist`, `content-freshness`, `content-pruning`, `drop-detector`, `backlink-scanner`, `parmenion-orchestrator`, `check-llm`, `calculate-sov`, `sav-agent`
+**Lecteurs** (via `getSiteContext`) : `audit-strategique-ia`, `content-architecture-advisor`, `generate-prediction`, `detect-anomalies`, `cocoon-strategist`, `content-freshness`, `content-pruning`, `drop-detector`, `backlink-scanner`, `parmenion-orchestrator`, `check-llm`, `calculate-sov`, `sav-agent`, `check-eeat`
+
+### 2.6 Scoring E-E-A-T (v2 — weighted_algorithmic)
+
+Le score E-E-A-T utilise un calcul pondéré algorithmique (le LLM évalue les 4 piliers individuellement, le score global est calculé mathématiquement) :
+
+| Pilier | Poids | Description |
+|--------|-------|-------------|
+| **Trustworthiness** | ×4.0 | Pilier dominant — HTTPS, mentions légales, citations, âge du domaine |
+| **Expertise** | ×2.5 | Compétence technique, profondeur du contenu |
+| **Authoritativeness** | ×2.5 | Reconnaissance externe, backlinks (DataForSEO + GA4 referrals) |
+| **Experience** | ×1.5 | Preuves de vécu terrain, témoignages, cas concrets |
+
+**Formule** : `overall = (E×1.5 + Ex×2.5 + A×2.5 + T×4) / 10.5`
+
+**Pénalités Trustworthiness** (appliquées avant le calcul) :
+- Aucune citation externe / aucun lien sortant : **-15 pts**
+- Domaine < 2 ans (via `founding_year` de la carte d'identité, fallback Wayback Machine) : **-10 pts**
+- Pas de HTTPS : **-20 pts**
+
+**Sources de données** : crawl HTML multi-pages, LLM sémantique, DataForSEO backlinks, GA4 referrals, Google Business Profile, Wayback Machine (âge domaine).
 
 ---
 
 ## 3. Architecture Frontend
 
-### 3.1 Pages (40 pages)
+### 3.1 Pages (51 pages)
 
 | Catégorie | Pages |
 |-----------|-------|
@@ -108,18 +129,18 @@ Architecture centralisée via `_shared/identityGateway.ts`, unique point d'écri
 | **Rapports** | `ReportViewer`, `RapportViewer`, `SharedReportRedirect` |
 | **Légal** | `CGVU`, `RGPD`, `MentionsLegales`, `PolitiqueConfidentialite`, `ConditionsUtilisation` |
 
-### 3.2 Composants (312+ fichiers, 13 modules)
+### 3.2 Composants (369+ fichiers, 13 modules)
 
 | Module | Rôle |
 |--------|------|
-| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions, registre erreurs Supervisor, Marina (pipeline prospection) |
+| **Admin/** | Dashboard admin, gestion crawls, registre URLs, analytics, prédictions, registre erreurs Supervisor, Marina (pipeline prospection), E-E-A-T scoring admin |
 | **Cocoon/** | Graphe 3D (Three.js), assistant IA, rapport, recommandations, tâches |
 | **ExpertAudit/** | Dashboard audit, catégories, code correctif, Architecte Génératif, lecteur Spotify (prev/next) |
 | **Profile/** | Mes sites, crawls, rapports, wallet, scripts, intégrations, GMB |
 | **Blog/** | Articles, carrousel actualités |
 | **Lexique/** | Glossaire SEO interactif |
 | **Analytics/** | Tracking événements |
-| **Support/** | FAQ, chat support |
+| **Support/** | FAQ, chat support, Félix (assistant IA avec workflow post-audit) |
 | **ui/** | Composants shadcn/ui personnalisés |
 
 ### 3.3 Contextes React
@@ -150,19 +171,37 @@ Architecture centralisée via `_shared/identityGateway.ts`, unique point d'écri
 - Architecte Génératif : injection de scripts via widget JS
 - Lecteur Spotify intégré avec contrôles prev/play/next
 
-### 4.3 Suivi & Monitoring
+### 4.3 Audit E-E-A-T (v2)
+- Scoring pondéré algorithmique : Trustworthiness ×4, Expertise ×2.5, Authoritativeness ×2.5, Experience ×1.5
+- Pénalités automatiques sur Trustworthiness : absence citations (-15), domaine jeune (-10), pas HTTPS (-20)
+- Enrichissement multi-sources : crawl HTML, DataForSEO backlinks, GA4 referrals, Google Business Profile
+- Détection automatique de l'âge du domaine via carte d'identité + fallback Wayback Machine
+- Rapport avec décomposition visuelle des contributions par pilier
+
+### 4.4 Suivi & Monitoring
 - Tracking hebdomadaire automatique (SEO score, GEO score, visibilité LLM, autorité sémantique)
 - Intégrations : Google Search Console, Google Analytics 4, Google My Business
 - Historique backlinks (DataForSEO)
 - Graphiques d'évolution multi-métriques
 
-### 4.4 Système de crédits
+### 4.5 Parménion (Autopilote)
+- Orchestrateur en 5 phases : diagnostic → prescription → implémentation → mesure → calibration
+- **Cooldown macro-cycle** : 2h entre deux macro-cycles réussis. Pas de cooldown après un cycle échoué — retry immédiat au prochain intervalle cron (10 min)
+- Workbench comme source de tâches priorisées avec scoring multi-critères (`score_workbench_priority`)
+- Déploiement CMS universel via 4 canaux (code, data, content, editorial)
+
+### 4.6 Félix — Workflow post-audit
+- Après un audit (Expert ou Matrice), Félix propose un résumé des résultats en mode fenêtre toute hauteur
+- Flux guidé : résumé → classement par priorité → choix de priorité via boutons → solutions du workbench → proposition d'action (Content/Code Architect) → mise à jour du plan d'action
+- Lecture du `architect_workbench` avec traçabilité des sources (`source_type`, `source_function`)
+
+### 4.7 Système de crédits
 - Crédits welcome (25 pour les 1000 premiers inscrits)
 - Pro Agency gratuit 6 mois pour les 100 premiers
 - Système d'affiliation et parrainage
 - Paiement Stripe (abonnements + crédits à la carte)
 
-### 4.5 Onboarding & Inscription
+### 4.8 Onboarding & Inscription
 - Segmentation PersonaGate (type d'utilisateur) à l'inscription
 - Double champ mot de passe avec indicateur de force (jaune minimum)
 - Pré-vérification email : détection des comptes existants avec bannière violette de connexion
@@ -170,7 +209,7 @@ Architecture centralisée via `_shared/identityGateway.ts`, unique point d'écri
 - Confirmation par lien email avec redirection intelligente (attend l'onglet actif)
 - Modal d'inscription contextuelle en mode ouvert (après 60s sur une feature) avec tracking admin (affichages, fermetures, signups abandonnés, emails envoyés)
 
-### 4.6 Gestion utilisateurs (Admin)
+### 4.9 Gestion utilisateurs (Admin)
 - **Suppression dédiée** : Edge Function `delete-account` en 4 étapes :
   1. Archivage complet dans `archived_users` (profil, crédits, plan, branding, snapshot)
   2. Nettoyage exhaustif de **60+ tables** dans l'ordre des dépendances FK (leaves → parents)
@@ -187,7 +226,7 @@ Architecture centralisée via `_shared/identityGateway.ts`, unique point d'écri
 
 - **RLS** sur toutes les tables sensibles
 - **Rôles** : table `user_roles` avec enum (`admin`, `moderator`, `user`)
-- **Fair-use** : `check_fair_use_v2` (limites horaires + journalières)
+- **Fair-use** : `check_fair_use_v2` (limites horaires + journalières) + `check_monthly_fair_use`
 - **Rate limiting** : `check_rate_limit` par action
 - **Protection profils** : triggers `protect_profile_fields` et `protect_billing_fields`
 - **Tokens OAuth** : stockage chiffré (Google, CMS)
