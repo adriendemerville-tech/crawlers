@@ -153,6 +153,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const messagesViewportRef = useRef<HTMLDivElement>(null);
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Quiz state
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any>; title?: string; isCrawlersQuiz?: boolean } | null>(null);
