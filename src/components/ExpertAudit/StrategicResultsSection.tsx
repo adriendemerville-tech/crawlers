@@ -1,4 +1,3 @@
-import { useState, useEffect, useMemo } from 'react';
 import { AuditRadialChart } from './AuditRadialChart';
 import { usePreviousAuditData } from './hooks/usePreviousAuditData';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,10 +12,8 @@ import { StrategicInsights } from './StrategicInsights';
 import { ActionPlan } from './ActionPlan';
 
 import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
-import { normalizeUrl } from '@/hooks/useUrlValidation';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+
 
 interface Props {
   result: ExpertAuditResult;
@@ -45,11 +42,8 @@ export function StrategicResultsSection({
   onReportClick, onHallucinationCorrectionComplete, onCompetitorCorrectionComplete,
   onNewAudit, onStrategicAudit, onForceRefresh,
 }: Props) {
-  const { user } = useAuth();
   const { language } = useLanguage();
   const previousData = usePreviousAuditData(result, 'strategic', language);
-
-
 
   return (
     <StrategicErrorBoundary onReset={onNewAudit}>
