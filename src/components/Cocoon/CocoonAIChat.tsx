@@ -1615,7 +1615,16 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                   <Trash2 className="w-3 h-3 text-white/30 hover:text-white/60" />
                 </button>
               )}
-              <button onClick={() => setIsOpen(false)} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
+              <button
+                onClick={() => setIsExpanded(prev => !prev)}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                title={isExpanded ? 'Réduire' : 'Agrandir'}
+              >
+                {isExpanded
+                  ? <Minimize2 className="w-3 h-3 text-white/30 hover:text-white/60" />
+                  : <Maximize2 className="w-3 h-3 text-white/30 hover:text-white/60" />}
+              </button>
+              <button onClick={() => { setIsOpen(false); setIsExpanded(false); }} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
                 <X className="w-3.5 h-3.5 text-white/50 hover:text-white/80" />
               </button>
             </div>
