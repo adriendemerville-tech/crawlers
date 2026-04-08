@@ -1417,7 +1417,8 @@ try {
           .update({
             status: finalCycleStatus === 'failed' ? 'error' : 'idle',
             total_cycles_run: cycleNumber,
-            last_cycle_at: new Date().toISOString(),
+            // Only update last_cycle_at on success — failed cycles skip cooldown on retry
+            ...(finalCycleStatus !== 'failed' ? { last_cycle_at: new Date().toISOString() } : {}),
             updated_at: new Date().toISOString(),
             // force_content_cycle stays true by default (proactive mode)
             // Only reset force_iktracker_article which is a one-shot toggle
