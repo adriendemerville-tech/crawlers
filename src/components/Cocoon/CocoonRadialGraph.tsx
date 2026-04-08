@@ -555,36 +555,40 @@ export function CocoonRadialGraph({
     }
     drawLinks(tree);
 
-    // Draw & advance particles — color by direction
-    const nodeById = new Map(allRadialNodes.map(n => [n.id, n]));
-    for (const p of particlesRef.current) {
-      p.t += p.speed;
-      if (p.t > 1) p.t -= 1;
+    // Draw & advance particles — color by direction (respects particlesEnabled + direction filters)
+    if (particlesEnabled) {
+      const nodeById = new Map(allRadialNodes.map(n => [n.id, n]));
+      for (const p of particlesRef.current) {
+        p.t += p.speed;
+        if (p.t > 1) p.t -= 1;
 
-      const from = nodeById.get(p.fromId);
-      const to = nodeById.get(p.toId);
-      if (!from || !to) continue;
+        const from = nodeById.get(p.fromId);
+        const to = nodeById.get(p.toId);
+        if (!from || !to) continue;
 
-      const px = from.x + (to.x - from.x) * p.t;
-      const py = from.y + (to.y - from.y) * p.t;
+        // Determine direction for filtering
+        const dir = from.depth < to.depth ? 'descending' : from.depth > to.depth ? 'ascending' : 'lateral';
+        if (visibleLinkDirections && visibleLinkDirections.size < 3 && !visibleLinkDirections.has(dir)) continue;
 
-      // Direction-based coloring: descending (outward) = gold, ascending (inward) = blue
-      let cr: number, cg: number, cb: number;
-      if (from.depth < to.depth) {
-        // Descending: golden
-        cr = 251; cg = 191; cb = 36;
-      } else if (from.depth > to.depth) {
-        // Ascending: blue
-        cr = 96; cg = 165; cb = 250;
-      } else {
-        // Lateral: use node color
-        [cr, cg, cb] = getNodeColorRgb(to.pageType, nodeColors);
+        const px = from.x + (to.x - from.x) * p.t;
+        const py = from.y + (to.y - from.y) * p.t;
+
+        // Direction-based coloring: descending (outward) = gold, ascending (inward) = blue
+        let cr: number, cg: number, cb: number;
+        if (dir === 'descending') {
+          cr = 251; cg = 191; cb = 36;
+        } else if (dir === 'ascending') {
+          cr = 96; cg = 165; cb = 250;
+        } else {
+          [cr, cg, cb] = getNodeColorRgb(to.pageType, nodeColors);
+        }
+
+        ctx.beginPath();
+        ctx.arc(px, py, 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},0.7)`;
+        ctx.fill();
       }
-
-      ctx.beginPath();
-      ctx.arc(px, py, 1.8, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${cr},${cg},${cb},0.7)`;
-      ctx.fill();
+    }
     }
     // Draw silo fan arcs at level 1 (only if showClusters)
     if (showClusters) {
