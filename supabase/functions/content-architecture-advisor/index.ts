@@ -6,6 +6,7 @@ import { checkFairUse, checkMonthlyFairUse } from '../_shared/fairUse.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { buildContentBrief, briefToPromptBlock, type PageType as BriefPageType } from '../_shared/contentBrief.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts';
 
 /**
  * content-architecture-advisor
