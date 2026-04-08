@@ -1,4 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
+import { extractInjectionPoints, type InjectionPoints } from '../_shared/injectionPoints.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
@@ -1128,8 +1129,27 @@ try {
       return new Response(JSON.stringify(brief), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    console.log(`[cms-patch-content] Patching ${target_url} on ${conn.platform} with ${patches.length} patches`);
-    const result = await patchContent(conn as CmsConnection, body);
+    // ── Auto-enrich patches with injection points from live HTML scan ──
+    let enrichedPatches = patches;
+    try {
+      console.log(`[cms-patch-content] Fetching target HTML for injection points...`);
+      const htmlResp = await fetch(target_url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Crawlers-CMSPatch/1.0)' },
+        signal: AbortSignal.timeout(10000),
+        redirect: 'follow',
+      });
+      if (htmlResp.ok) {
+        const rawHtml = await htmlResp.text();
+        const ip = extractInjectionPoints(rawHtml, target_url);
+        enrichedPatches = enrichPatchesWithInjectionPoints(patches, ip);
+        console.log(`[cms-patch-content] ✅ Injection points extracted: h1=${ip.h1_selector}, main=${ip.main_content_selector}, faq=${ip.faq_existing_selector || ip.faq_insert_before}`);
+      }
+    } catch (e) {
+      console.warn(`[cms-patch-content] ⚠️ HTML fetch for injection points failed:`, e);
+    }
+
+    console.log(`[cms-patch-content] Patching ${target_url} on ${conn.platform} with ${enrichedPatches.length} patches`);
+    const result = await patchContent(conn as CmsConnection, { ...body, patches: enrichedPatches });
 
     // Log
     try {
