@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { SEOHead } from '@/components/SEOHead';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -189,11 +189,13 @@ export default function AppEeat() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{t.title}</title>
-        <meta name="description" content={t.meta} />
-        <link rel="canonical" href={`https://crawlers.fr/app/eeat`} />
-      </Helmet>
+      <SEOHead
+        title={t.title}
+        description={t.meta}
+        path="/app/eeat"
+      >
+        <link rel="canonical" href="https://crawlers.fr/app/eeat" />
+      </SEOHead>
 
       <Header />
 
