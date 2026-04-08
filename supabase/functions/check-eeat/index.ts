@@ -318,6 +318,10 @@ async function runEeatPipeline(
   const gbpData = await fetchGbpData(supabase, domain, trackedSiteId);
   if (jobId) await supabase.from('async_jobs').update({ progress: 50 }).eq('id', jobId);
 
+  // ── Phase 2.7: Fetch domain age from site identity card ──
+  console.log(`[check-eeat] 📅 Phase 2.7: Fetching domain age...`);
+  const domainAgeInfo = await fetchDomainAge(supabase, effectiveDomain, trackedSiteId);
+
   // ── Phase 3: LLM analysis with enriched context ──
   console.log(`[check-eeat] 🤖 Phase 3: LLM analysis...`);
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
