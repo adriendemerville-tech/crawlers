@@ -13,6 +13,12 @@ interface EeatScanResult {
   expertise: number;
   authoritativeness: number;
   trustworthiness: number;
+  scoring?: {
+    weights: { experience: number; expertise: number; authoritativeness: number; trustworthiness: number };
+    trustPenalties: string[];
+    domainAge: { years: number | null; foundingYear: number | null } | null;
+    method: string;
+  };
   signals: {
     authorIdentified: boolean;
     sourcesCited: boolean;
@@ -61,10 +67,10 @@ interface EeatScanResult {
 }
 
 const CATEGORY_META = [
-  { key: 'experience', label: 'Experience', icon: Eye, color: 'text-blue-500', weight: 2.0, desc: 'Preuves de vécu terrain, cas concrets, témoignages' },
-  { key: 'expertise', label: 'Expertise', icon: Brain, color: 'text-purple-500', weight: 3.0, desc: 'Compétence technique, profondeur du contenu' },
+  { key: 'experience', label: 'Experience', icon: Eye, color: 'text-blue-500', weight: 1.5, desc: 'Preuves de vécu terrain, cas concrets, témoignages' },
+  { key: 'expertise', label: 'Expertise', icon: Brain, color: 'text-purple-500', weight: 2.5, desc: 'Compétence technique, profondeur du contenu' },
   { key: 'authoritativeness', label: 'Authoritativeness', icon: Award, color: 'text-amber-500', weight: 2.5, desc: 'Reconnaissance externe, citations, backlinks' },
-  { key: 'trustworthiness', label: 'Trustworthiness', icon: Shield, color: 'text-green-500', weight: 2.5, desc: 'Signaux de confiance : HTTPS, légal, contact' },
+  { key: 'trustworthiness', label: 'Trustworthiness', icon: Shield, color: 'text-green-500', weight: 4.0, desc: 'Signaux de confiance : HTTPS, légal, contact, citations (×4 — pilier dominant)' },
 ] as const;
 
 const SIGNAL_WEIGHTS: Record<string, { weight: number; category: string }> = {
