@@ -256,7 +256,7 @@ function ProfileContent() {
                 {!isMobile && (
                   <TabsTrigger value="drafts" className="flex-1 gap-2">
                     <FileEdit className="h-4 w-4" />
-                    <span className="hidden sm:inline">Content</span>
+                    <span className="hidden sm:inline"><span className="text-muted-foreground text-[10px] font-normal mr-1">beta</span>Content</span>
                   </TabsTrigger>
                 )}
                 {isProUser && !isMobile && (

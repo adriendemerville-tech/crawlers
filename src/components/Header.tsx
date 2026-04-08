@@ -335,6 +335,7 @@ export function Header() {
             className="gap-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
           >
             <PenLine className="h-3.5 w-3.5" />
+            <span className="text-muted-foreground text-[10px] font-normal mr-1">beta</span>
             <span className="text-sm font-semibold">Content</span>
           </Button>
 
