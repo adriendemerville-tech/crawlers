@@ -123,7 +123,7 @@ Deno.serve(handleRequest(async (req) => {
       }
 
       // ── Fair use check ──
-      if (userId !== 'anonymous') {
+      if (userId) {
         const fairUseResult = await checkEeatFairUse(supabase, userId);
         if (!fairUseResult.allowed) {
           return new Response(JSON.stringify({
@@ -136,9 +136,12 @@ Deno.serve(handleRequest(async (req) => {
         }
       }
 
+      // Use a deterministic anonymous UUID for unauthenticated users
+      const jobUserId = userId || '00000000-0000-0000-0000-000000000000';
+
       const { data: job, error: jobErr } = await supabase.from('async_jobs').insert({
         function_name: 'check-eeat',
-        user_id: userId,
+        user_id: jobUserId,
         input_payload: { url, tracked_site_id, forceCrawl },
         status: 'pending',
         progress: 0,
