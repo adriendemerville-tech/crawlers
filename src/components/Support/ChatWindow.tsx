@@ -1665,6 +1665,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                   </div>
                 )}
 
+                {bugReportMode === 'prompt' && (
                   <div className="flex justify-start">
                     <button
                       onClick={activateBugReportMode}
