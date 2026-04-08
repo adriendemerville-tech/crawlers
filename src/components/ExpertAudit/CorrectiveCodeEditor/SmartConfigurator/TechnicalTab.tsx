@@ -158,6 +158,14 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth, disabled }: Techn
                               >
                                 {pConfig.label}
                               </Badge>
+                            ) : (fix.priority === 'critical' || fix.priority === 'important') ? (
+                               <Badge 
+                                 variant="outline" 
+                                 className={`text-[9px] px-1.5 py-0 h-4 ${pConfig.color} font-semibold`}
+                               >
+                                 <PriorityIcon className="w-2.5 h-2.5 mr-0.5" />
+                                 {pConfig.label}
+                               </Badge>
                             ) : fix.isRecommended ? (
                                <Badge 
                                  variant="outline" 
@@ -170,7 +178,6 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth, disabled }: Techn
                                  variant="outline" 
                                  className={`text-[9px] px-1 py-0 h-4 ${pConfig.color}`}
                                >
-                                 <PriorityIcon className="w-2 h-2 mr-0.5" />
                                  {pConfig.label}
                                </Badge>
                              )}
