@@ -1422,6 +1422,27 @@ FRAÎCHEUR & DÉNOMINATION:
       console.log(`[content-advisor] Async job ${jobId} completed`)
     }
 
+    // Enrich result with page scan metadata
+    if (existingPageHtml) {
+      result.existing_page_scan = {
+        has_existing_content: true,
+        title: existingPageHtml.titleContent,
+        h1: existingPageHtml.h1Contents,
+        h2_count: existingPageHtml.h2Count,
+        word_count: existingPageHtml.wordCount,
+        has_schema: existingPageHtml.hasSchemaOrg,
+        schema_types: existingPageHtml.schemaTypes,
+        has_faq: existingPageHtml.hasFAQSection,
+        has_faq_schema: existingPageHtml.hasFAQWithSchema,
+        images_total: existingPageHtml.imagesTotal,
+        images_missing_alt: existingPageHtml.imagesMissingAlt,
+        internal_links: existingPageHtml.internalLinksCount,
+        content_age_days: existingPageHtml.contentAgeDays,
+      }
+    } else {
+      result.existing_page_scan = { has_existing_content: false }
+    }
+
     return jsonOk({ data: result })
 
   } catch (error) {
