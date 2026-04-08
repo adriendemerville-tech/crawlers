@@ -230,8 +230,10 @@ async function autoDetectProperty(accessToken: string, domain: string): Promise<
 }
 
 async function fetchGA4Metrics(accessToken: string, propertyId: string, startDate: string, endDate: string) {
+  // Normalize: strip "properties/" prefix if already present to avoid double prefix
+  const numericId = propertyId.replace(/^properties\//, '');
   // ─── Report 1: Core engagement metrics ─────────────────────────
-  const coreResp = await fetch(`${GA4_API}/properties/${propertyId}:runReport`, {
+  const coreResp = await fetch(`${GA4_API}/properties/${numericId}:runReport`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
