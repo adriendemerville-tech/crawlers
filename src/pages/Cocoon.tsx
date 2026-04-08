@@ -969,6 +969,7 @@ function CocoonContent() {
             open={showBulkAutoLink}
             onOpenChange={setShowBulkAutoLink}
             trackedSiteId={selectedSiteId}
+            hasCmsConnection={hasCmsConnection}
           />
         )}
 
