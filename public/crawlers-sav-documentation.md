@@ -125,7 +125,22 @@ Les résultats incluent un **graphique radar adaptatif** avec des axes dynamique
 
 Coût : 1 crédit.
 
-### Audit Comparé
+### Audit E-E-A-T
+Évaluation complète des signaux E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) de votre site :
+- **Score pondéré algorithmique** : chaque pilier a un poids différent dans le score final
+  - Trustworthiness ×4.0 (pilier dominant)
+  - Expertise ×2.5
+  - Authoritativeness ×2.5
+  - Experience ×1.5
+- **Pénalités automatiques** sur le pilier Trustworthiness :
+  - Absence de citations externes / liens sortants : -15 points
+  - Domaine de moins de 2 ans : -10 points
+  - Pas de HTTPS : -20 points
+- **Sources de données** : crawl HTML multi-pages, backlinks DataForSEO, referrals GA4, données Google Business Profile, âge du domaine (carte d'identité + Wayback Machine)
+- Rapport avec décomposition visuelle des contributions par pilier et affichage des pénalités appliquées
+
+Coût : utilise le fair use mensuel (3/mois freemium, 15/mois Pro, 20/mois Pro+).
+
 Benchmark de votre site vs jusqu'à 3 concurrents :
 - Radar Chart comparatif
 - Analyse différentielle feature par feature
