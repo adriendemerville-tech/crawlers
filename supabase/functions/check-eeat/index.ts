@@ -222,6 +222,123 @@ Deno.serve(handleRequest(async (req) => {
 }));
 
 // ══════════════════════════════════════════════════════
+// Write E-E-A-T score to identity card + push findings to workbench
+// ══════════════════════════════════════════════════════
+async function writeEeatToIdentityCard(supabase: any, trackedSiteId: string | null, result: any, domain: string, userId: string | null) {
+  if (!result.success || !result.score) return;
+
+  // 1. Update tracked_sites with E-E-A-T score
+  if (trackedSiteId) {
+    try {
+      const eeatDetails = {
+        experience: result.experience,
+        expertise: result.expertise,
+        authoritativeness: result.authoritativeness,
+        trustworthiness: result.trustworthiness,
+        scoring: result.scoring,
+        signals: result.signals,
+        issues: result.issues,
+        strengths: result.strengths,
+        recommendations: result.recommendations,
+        dataSources: result.dataSources,
+      };
+      await supabase.from('tracked_sites').update({
+        eeat_score: result.score,
+        eeat_details: eeatDetails,
+        eeat_last_audit_at: new Date().toISOString(),
+      }).eq('id', trackedSiteId);
+      console.log(`[check-eeat] 🪪 E-E-A-T score (${result.score}) written to identity card for ${domain}`);
+
+      // 1b. Propose identity card enrichments from signals
+      const enrichments: Record<string, any> = {};
+      if (!result.signals) { /* skip */ }
+      else {
+        // If we detected a blog section but entity_type is not set, suggest 'media'
+        if (result.signals.blogSection && !result.signals.aboutPage) {
+          enrichments.entity_type = 'media';
+        }
+      }
+      if (Object.keys(enrichments).length > 0) {
+        await supabase.from('tracked_sites').update(enrichments).eq('id', trackedSiteId);
+        console.log(`[check-eeat] 🪪 Identity card enriched with: ${Object.keys(enrichments).join(', ')}`);
+      }
+    } catch (e) {
+      console.warn(`[check-eeat] ⚠️ Failed to write E-E-A-T to identity card:`, e);
+    }
+  }
+
+  // 2. Push E-E-A-T findings to architect_workbench
+  if (userId && result.issues?.length > 0) {
+    try {
+      const findings = result.issues.slice(0, 10).map((issue: string, i: number) => ({
+        domain,
+        tracked_site_id: trackedSiteId,
+        user_id: userId,
+        source_type: 'audit_tech',
+        source_function: 'check-eeat',
+        source_record_id: `eeat_${domain}_${i}_${Date.now()}`,
+        finding_category: 'eeat',
+        severity: i < 3 ? 'high' : 'medium',
+        title: issue.length > 120 ? issue.substring(0, 117) + '...' : issue,
+        description: issue,
+        target_url: `https://${domain}`,
+        action_type: 'content',
+        target_operation: 'replace',
+        payload: {
+          eeat_score: result.score,
+          pillar_scores: {
+            experience: result.experience,
+            expertise: result.expertise,
+            authoritativeness: result.authoritativeness,
+            trustworthiness: result.trustworthiness,
+          },
+          source: 'check-eeat',
+        },
+      }));
+
+      const { error } = await supabase.from('architect_workbench').upsert(findings, {
+        onConflict: 'source_type,source_record_id',
+        ignoreDuplicates: true,
+      });
+      if (error) throw error;
+      console.log(`[check-eeat] 🏗️ ${findings.length} E-E-A-T findings pushed to workbench for ${domain}`);
+    } catch (e) {
+      console.warn(`[check-eeat] ⚠️ Failed to push E-E-A-T findings to workbench:`, e);
+    }
+  }
+
+  // 3. Push E-E-A-T recommendations as workbench items
+  if (userId && result.recommendations?.length > 0) {
+    try {
+      const recos = result.recommendations.slice(0, 5).map((reco: string, i: number) => ({
+        domain,
+        tracked_site_id: trackedSiteId,
+        user_id: userId,
+        source_type: 'audit_tech',
+        source_function: 'check-eeat',
+        source_record_id: `eeat_reco_${domain}_${i}_${Date.now()}`,
+        finding_category: 'eeat',
+        severity: 'medium',
+        title: `[E-E-A-T] ${reco.length > 100 ? reco.substring(0, 97) + '...' : reco}`,
+        description: reco,
+        target_url: `https://${domain}`,
+        action_type: 'content',
+        target_operation: 'append',
+        payload: { eeat_score: result.score, type: 'recommendation', source: 'check-eeat' },
+      }));
+
+      await supabase.from('architect_workbench').upsert(recos, {
+        onConflict: 'source_type,source_record_id',
+        ignoreDuplicates: true,
+      });
+      console.log(`[check-eeat] 🏗️ ${recos.length} E-E-A-T recommendations pushed to workbench for ${domain}`);
+    } catch (e) {
+      console.warn(`[check-eeat] ⚠️ Failed to push E-E-A-T recommendations to workbench:`, e);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════
 // Fair use check for E-E-A-T audits
 // ══════════════════════════════════════════════════════
 async function checkEeatFairUse(supabase: any, userId: string) {
