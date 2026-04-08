@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink, History, ArrowLeft } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink, History, ArrowLeft, ClipboardList } from 'lucide-react';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
