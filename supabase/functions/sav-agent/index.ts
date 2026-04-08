@@ -3,6 +3,17 @@ import { getServiceClient } from "../_shared/supabaseClient.ts";
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtractionPrompt, parseMemoryExtraction, getPendingSuggestions } from "../_shared/siteMemory.ts";
 import { FELIX_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from "../_shared/agentPersonas.ts";
 import { LEXIQUE_PROMPT_BLOCK } from "../_shared/lexiqueReference.ts";
+
+// Fire-and-forget: trigger dispatch-agent-directives immediately after a new directive
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SERVICE_KEY_DISPATCH = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+function fireDispatchAgentDirectives() {
+  fetch(`${SUPABASE_URL}/functions/v1/dispatch-agent-directives`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${SERVICE_KEY_DISPATCH}`, 'Content-Type': 'application/json' },
+    body: '{}',
+  }).catch(() => {/* fire-and-forget */});
+}
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const FRONTEND_TAXONOMY = `
