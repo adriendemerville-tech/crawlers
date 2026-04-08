@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CrawlersLogo } from './CrawlersLogo';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
+import { ChatReportSearch } from './ChatReportSearch';
 import { ChatMicButton } from './ChatMicButton';
 import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
 import { captureScreenContext } from '@/utils/screenContext';
@@ -1434,6 +1435,36 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
               }}
               onImageAttach={(fileName) => {
                 setNewMessage(prev => prev ? `${prev}\n[📷 Image: ${fileName}]` : `[📷 Image: ${fileName}]`);
+              }}
+            />
+          )}
+          {user && (
+            <ChatReportSearch
+              userId={user.id}
+              onSelect={(report) => {
+                const typeLabels: Record<string, string> = {
+                  seo: 'audit SEO', geo: 'audit GEO', strategic: 'audit stratégique',
+                  crawl: 'crawl', cocoon: 'analyse Cocoon', marina: 'rapport Marina',
+                  eeat: 'audit E-E-A-T', technical: 'audit technique',
+                };
+                const typeLabel = typeLabels[report.type] || 'rapport';
+                const attachText = `[📊 ${typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)}: ${report.domain} — ${report.id}]\nEn quoi puis-je t'aider avec ce ${typeLabel} pour ${report.domain} ?`;
+                setNewMessage(attachText);
+                // Auto-send as user message to trigger Félix context
+                setTimeout(() => {
+                  const userMsg: ChatMessage = {
+                    role: 'user',
+                    content: `[📊 Rapport sélectionné: ${typeLabel} — ${report.domain} — ID: ${report.id}]`,
+                    timestamp: new Date().toISOString(),
+                  };
+                  const assistantMsg: ChatMessage = {
+                    role: 'assistant',
+                    content: `En quoi puis-je t'aider avec ce ${typeLabel} pour **${report.domain}** ?`,
+                    timestamp: new Date().toISOString(),
+                  };
+                  setMessages(prev => [...prev, userMsg, assistantMsg]);
+                  setNewMessage('');
+                }, 50);
               }}
             />
           )}
