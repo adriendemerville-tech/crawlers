@@ -159,7 +159,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
   const activeSite = sites.find(s => s.id === activeSiteId);
 
   return (
-    <div className="w-full shrink-0 flex flex-col h-full bg-[#0d0819]">
+    <div className="w-full shrink-0 flex flex-col h-full bg-[#1e293b]">
       {/* Sites list */}
       <div className="border-b border-white/10">
         <p className="text-[10px] text-white/30 uppercase tracking-wider px-3 pt-2 pb-1">Mes sites</p>

@@ -29,16 +29,16 @@ interface ContentArchitectToolbarProps {
 
 const themes = {
   cocoon: {
-    bg: 'bg-[#0a0616]',
-    active: 'bg-[#fbbf24]/15 text-[#fbbf24] shadow-[0_0_12px_rgba(251,191,36,0.1)]',
-    inactive: 'text-white/30 hover:bg-white/5 hover:text-white/60',
-    border: 'border-white/10',
+    bg: 'bg-[#0f172a]',
+    active: 'bg-teal-500/15 text-teal-400 shadow-[0_0_12px_rgba(20,184,166,0.12)]',
+    inactive: 'text-slate-400 hover:bg-slate-700/40 hover:text-slate-300',
+    border: 'border-slate-700/60',
   },
   green: {
-    bg: 'bg-[#0b1a14]',
-    active: 'bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]',
-    inactive: 'text-white/30 hover:bg-white/5 hover:text-white/60',
-    border: 'border-white/10',
+    bg: 'bg-[#0f172a]',
+    active: 'bg-teal-500/15 text-teal-400 shadow-[0_0_12px_rgba(20,184,166,0.12)]',
+    inactive: 'text-slate-400 hover:bg-slate-700/40 hover:text-slate-300',
+    border: 'border-slate-700/60',
   },
 };
 
