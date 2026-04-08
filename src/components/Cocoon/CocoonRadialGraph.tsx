@@ -589,7 +589,6 @@ export function CocoonRadialGraph({
         ctx.fill();
       }
     }
-    }
     // Draw silo fan arcs at level 1 (only if showClusters)
     if (showClusters) {
       for (const level1 of tree.children) {
