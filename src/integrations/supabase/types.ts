@@ -4892,18 +4892,24 @@ export type Database = {
           actual_ratio: number
           age_factor: number | null
           brand_clicks: number
+          brand_maturity_score: number | null
           brand_penetration_rate: number | null
+          brand_penetration_score: number | null
           business_type: string
           composite_ias_score: number | null
           created_at: string
+          diagnostic_text: string | null
           domain: string
           founding_year: number | null
           generic_clicks: number
           ias_score: number | null
           id: string
           is_seasonal: boolean | null
+          momentum_score: number | null
+          organic_traction_score: number | null
           risk_score: number
           seasonality_factor: number | null
+          sub_scores_detail: Json | null
           target_ratio: number
           total_clicks: number
           tracked_site_id: string
@@ -4914,18 +4920,24 @@ export type Database = {
           actual_ratio: number
           age_factor?: number | null
           brand_clicks?: number
+          brand_maturity_score?: number | null
           brand_penetration_rate?: number | null
+          brand_penetration_score?: number | null
           business_type: string
           composite_ias_score?: number | null
           created_at?: string
+          diagnostic_text?: string | null
           domain: string
           founding_year?: number | null
           generic_clicks?: number
           ias_score?: number | null
           id?: string
           is_seasonal?: boolean | null
+          momentum_score?: number | null
+          organic_traction_score?: number | null
           risk_score: number
           seasonality_factor?: number | null
+          sub_scores_detail?: Json | null
           target_ratio: number
           total_clicks?: number
           tracked_site_id: string
@@ -4936,18 +4948,24 @@ export type Database = {
           actual_ratio?: number
           age_factor?: number | null
           brand_clicks?: number
+          brand_maturity_score?: number | null
           brand_penetration_rate?: number | null
+          brand_penetration_score?: number | null
           business_type?: string
           composite_ias_score?: number | null
           created_at?: string
+          diagnostic_text?: string | null
           domain?: string
           founding_year?: number | null
           generic_clicks?: number
           ias_score?: number | null
           id?: string
           is_seasonal?: boolean | null
+          momentum_score?: number | null
+          organic_traction_score?: number | null
           risk_score?: number
           seasonality_factor?: number | null
+          sub_scores_detail?: Json | null
           target_ratio?: number
           total_clicks?: number
           tracked_site_id?: string
