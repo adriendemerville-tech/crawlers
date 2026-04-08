@@ -16,7 +16,7 @@ interface AttachmentItem {
 interface ChatAttachmentPickerProps {
   userId?: string;
   onAttach: (item: AttachmentItem) => void;
-  onImageAttach?: (fileName: string) => void;
+  onImageAttach?: (fileName: string, file?: File) => void;
 }
 
 export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAttachmentPickerProps) {
@@ -88,20 +88,25 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
     fetchItems();
   }, [open, tab, userId]);
 
+  // File input always mounted so ref works from both closed and open states
+  const fileInput = (
+    <input
+      ref={imageInputRef}
+      type="file"
+      accept="image/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file && onImageAttach) onImageAttach(file.name, file);
+        e.target.value = '';
+      }}
+    />
+  );
+
   if (!open) {
     return (
       <>
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file && onImageAttach) onImageAttach(file.name);
-            e.target.value = '';
-          }}
-        />
+        {fileInput}
         <button
           className="h-7 w-7 shrink-0 self-center flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
           onClick={() => {
@@ -120,6 +125,8 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
   }
 
   return (
+    <>
+    {fileInput}
     <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border bg-background shadow-xl z-10">
       <div className="flex items-center justify-between border-b px-3 py-1.5">
         <div className="flex gap-1">
@@ -198,5 +205,6 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
         )}
       </ScrollArea>
     </div>
+    </>
   );
 }

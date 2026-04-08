@@ -1937,8 +1937,19 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                 const attachText = `[${prefix}: ${item.title}${item.domain ? ` (${item.domain})` : ''}]\nExplique-moi ce ${item.type === 'report' ? 'rapport' : 'script'}.`;
                 setNewMessage(attachText);
               }}
-              onImageAttach={(fileName) => {
-                setNewMessage(prev => prev ? `${prev}\n[📷 Image: ${fileName}]` : `[📷 Image: ${fileName}]`);
+              onImageAttach={async (fileName, file) => {
+                if (file) {
+                  const isImage = file.type.startsWith('image/');
+                  const icon = isImage ? '📷' : '📎';
+                  const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+                  if (file.size > 10 * 1024 * 1024) {
+                    setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ Le fichier est trop volumineux (${sizeMb} Mo). La limite est de 10 Mo.`, timestamp: new Date().toISOString() }]);
+                    return;
+                  }
+                  setNewMessage(prev => prev ? `${prev}\n[${icon} ${fileName} (${sizeMb} Mo)]` : `[${icon} ${fileName} (${sizeMb} Mo)]`);
+                } else {
+                  setNewMessage(prev => prev ? `${prev}\n[📷 Image: ${fileName}]` : `[📷 Image: ${fileName}]`);
+                }
               }}
             />
           )}
