@@ -463,6 +463,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_gateway_usage: {
+        Row: {
+          completion_tokens: number | null
+          created_at: string
+          edge_function: string | null
+          estimated_cost_usd: number | null
+          gateway: string
+          id: string
+          is_fallback: boolean | null
+          model: string
+          prompt_tokens: number | null
+          total_tokens: number | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          created_at?: string
+          edge_function?: string | null
+          estimated_cost_usd?: number | null
+          gateway?: string
+          id?: string
+          is_fallback?: boolean | null
+          model: string
+          prompt_tokens?: number | null
+          total_tokens?: number | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          created_at?: string
+          edge_function?: string | null
+          estimated_cost_usd?: number | null
+          gateway?: string
+          id?: string
+          is_fallback?: boolean | null
+          model?: string
+          prompt_tokens?: number | null
+          total_tokens?: number | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string

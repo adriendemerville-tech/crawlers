@@ -2,6 +2,7 @@
  * Centralized Lovable AI Gateway wrapper with automatic OpenRouter fallback.
  * When Lovable AI returns 402 (credits exhausted) or 429 (rate limit),
  * requests are automatically retried via OpenRouter if OPENROUTER_API_KEY is set.
+ * All calls are logged to ai_gateway_usage for cost tracking.
  * 
  * Usage:
  *   import { callLovableAI, callLovableAIJson } from '../_shared/lovableAI.ts';
@@ -27,6 +28,25 @@ const MODEL_FALLBACK_MAP: Record<string, string> = {
   'openai/gpt-5-nano': 'openai/gpt-4o-mini',
 };
 
+/** Estimated cost per 1M tokens (USD) */
+const MODEL_COST: Record<string, { input: number; output: number }> = {
+  'google/gemini-2.5-flash': { input: 0.15, output: 0.60 },
+  'google/gemini-2.5-flash-lite': { input: 0.075, output: 0.30 },
+  'google/gemini-2.5-pro': { input: 1.25, output: 5.00 },
+  'google/gemini-3-flash-preview': { input: 0.15, output: 0.60 },
+  'google/gemini-3.1-pro-preview': { input: 1.25, output: 5.00 },
+  'openai/gpt-5': { input: 5.00, output: 15.00 },
+  'openai/gpt-5-mini': { input: 0.40, output: 1.60 },
+  'openai/gpt-5-nano': { input: 0.10, output: 0.40 },
+  'openai/gpt-4o': { input: 2.50, output: 10.00 },
+  'openai/gpt-4o-mini': { input: 0.15, output: 0.60 },
+};
+
+function estimateCostUsd(model: string, promptTokens: number, completionTokens: number): number {
+  const p = MODEL_COST[model] || { input: 0.50, output: 2.00 };
+  return (promptTokens * p.input + completionTokens * p.output) / 1_000_000;
+}
+
 export interface LovableAIOptions {
   /** System prompt */
   system?: string;
@@ -50,6 +70,8 @@ export interface LovableAIOptions {
   toolChoice?: unknown;
   /** Disable OpenRouter fallback for this call */
   noFallback?: boolean;
+  /** Name of the calling edge function (for usage tracking) */
+  callerFunction?: string;
 }
 
 export interface LovableAIResponse {
@@ -86,6 +108,34 @@ function mapModelToOpenRouter(model: string): string {
   return MODEL_FALLBACK_MAP[model] || 'google/gemini-2.5-flash';
 }
 
+/** Log usage to ai_gateway_usage (fire-and-forget) */
+async function logUsage(
+  gateway: 'lovable' | 'openrouter',
+  model: string,
+  usage: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | undefined,
+  isFallback: boolean,
+  callerFunction?: string,
+) {
+  try {
+    const { getServiceClient } = await import('../_shared/supabaseClient.ts');
+    const supabase = getServiceClient();
+    const pt = usage?.prompt_tokens || 0;
+    const ct = usage?.completion_tokens || 0;
+    await supabase.from('ai_gateway_usage').insert({
+      gateway,
+      model,
+      edge_function: callerFunction || null,
+      prompt_tokens: pt,
+      completion_tokens: ct,
+      total_tokens: usage?.total_tokens || (pt + ct),
+      estimated_cost_usd: estimateCostUsd(model, pt, ct),
+      is_fallback: isFallback,
+    });
+  } catch {
+    // silent — logging should never break the main flow
+  }
+}
+
 /** Log fallback event to analytics_events (fire-and-forget) */
 async function logFallbackEvent(model: string, primaryGateway: string, fallbackGateway: string, statusCode: number) {
   try {
@@ -93,16 +143,9 @@ async function logFallbackEvent(model: string, primaryGateway: string, fallbackG
     const supabase = getServiceClient();
     await supabase.from('analytics_events').insert({
       event_type: 'api_gateway_fallback',
-      event_data: {
-        model,
-        primary_gateway: primaryGateway,
-        fallback_gateway: fallbackGateway,
-        status_code: statusCode,
-      },
+      event_data: { model, primary_gateway: primaryGateway, fallback_gateway: fallbackGateway, status_code: statusCode },
     });
-  } catch {
-    // silent — logging should never break the main flow
-  }
+  } catch { /* silent */ }
 }
 
 /**
@@ -144,7 +187,7 @@ async function callGateway(
 }
 
 /**
- * Call Lovable AI Gateway with automatic OpenRouter fallback.
+ * Call Lovable AI Gateway with automatic OpenRouter fallback and usage tracking.
  */
 export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIResponse> {
   const apiKey = getApiKey();
@@ -156,6 +199,8 @@ export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIRe
   if (response.ok) {
     const data = await response.json();
     const choice = data.choices?.[0];
+    // Fire-and-forget usage logging
+    logUsage('lovable', model, data.usage, false, opts.callerFunction);
     return {
       content: choice?.message?.content || '',
       usage: data.usage,
@@ -180,15 +225,10 @@ export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIRe
   // --- Secondary: OpenRouter ---
   const fallbackModel = mapModelToOpenRouter(model);
   console.warn(`[lovableAI] ⚡ Fallback ${response.status}: ${model} → OpenRouter/${fallbackModel}`);
-
-  // Fire-and-forget analytics
   logFallbackEvent(model, 'lovable', 'openrouter', response.status);
 
   const fallbackResp = await callGateway(
-    OPENROUTER_URL,
-    openRouterKey,
-    fallbackModel,
-    opts,
+    OPENROUTER_URL, openRouterKey, fallbackModel, opts,
     { 'HTTP-Referer': 'https://crawlers.lovable.app', 'X-Title': 'Crawlers.fr' },
   );
 
@@ -200,6 +240,7 @@ export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIRe
 
   const data = await fallbackResp.json();
   const choice = data.choices?.[0];
+  logUsage('openrouter', fallbackModel, data.usage, true, opts.callerFunction);
   return {
     content: choice?.message?.content || '',
     usage: data.usage,
