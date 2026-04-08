@@ -57,7 +57,7 @@ try {
     if (!mapResponse.ok) {
       const err = await mapResponse.text();
       console.error('[cocoon-diag-subdomains] Firecrawl map failed:', err);
-      return jsonError('Map failed', details: err, 502);
+      return jsonError('Map failed', err, 502);
     }
 
     const mapData = await mapResponse.json();
