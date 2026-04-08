@@ -281,7 +281,7 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
   }
 
   // ─── Report 2: Daily time series ───────────────────────────────
-  const dailyResp = await fetch(`${GA4_API}/properties/${propertyId}:runReport`, {
+  const dailyResp = await fetch(`${GA4_API}/properties/${numericId}:runReport`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -314,7 +314,7 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
   }
 
   // ─── Report 3: Top pages ───────────────────────────────────────
-  const pagesResp = await fetch(`${GA4_API}/properties/${propertyId}:runReport`, {
+  const pagesResp = await fetch(`${GA4_API}/properties/${numericId}:runReport`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
