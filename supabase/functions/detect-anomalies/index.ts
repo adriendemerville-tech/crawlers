@@ -216,6 +216,33 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
     }
   }
 
+  // --- Indexation ratio ---
+  const idxChecks = idxRes.data || [];
+  if (idxChecks.length >= 3) {
+    const totalChecked = idxChecks.length;
+    const indexedCount = idxChecks.filter((r: any) => r.verdict === 'PASS').length;
+    const indexedRatio = Math.round((indexedCount / totalChecked) * 100);
+    // Use a simple threshold-based alert (no historical series needed)
+    if (indexedRatio < 50 && totalChecked >= 5) {
+      newAlerts.push({
+        tracked_site_id: trackedSiteId,
+        user_id: userId,
+        domain,
+        metric_name: 'Taux d\'indexation',
+        metric_source: 'gsc_inspection',
+        severity: indexedRatio < 30 ? 'danger' : 'warning',
+        direction: 'down',
+        z_score: -2,
+        current_value: indexedRatio,
+        baseline_mean: 80,
+        baseline_stddev: 10,
+        change_pct: indexedRatio - 80,
+        affected_pages: totalChecked - indexedCount,
+        description: `⚠️ Seulement ${indexedRatio}% des pages vérifiées sont indexées (${indexedCount}/${totalChecked})`,
+      });
+    }
+  }
+
   // Run Z-score detection on all series
   const newAlerts: any[] = [];
 
