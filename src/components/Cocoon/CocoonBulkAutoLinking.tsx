@@ -249,7 +249,7 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-xs text-white/50 mb-1 block">{t.maxPages}</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Slider
                   value={[maxPages]}
                   onValueChange={([v]) => setMaxPages(v)}
@@ -262,7 +262,7 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
             </div>
             <div>
               <label className="text-xs text-white/50 mb-1 block">{t.maxLinksPerPage}</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Slider
                   value={[maxLinksPerPage]}
                   onValueChange={([v]) => setMaxLinksPerPage(v)}
@@ -275,7 +275,7 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
             </div>
             <div>
               <label className="text-xs text-white/50 mb-1 block">{t.minConfidence}</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Slider
                   value={[minConfidence * 100]}
                   onValueChange={([v]) => setMinConfidence(v / 100)}
@@ -291,7 +291,7 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
           <Button
             onClick={handleLaunch}
             disabled={isRunning}
-            className="w-full gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white"
+            className="w-1/2 mx-auto gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white"
           >
             {isRunning ? (
               <>
