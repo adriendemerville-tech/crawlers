@@ -201,6 +201,18 @@ Deno.serve(handleRequest(async (req) => {
       });
     } catch (_) { /* best effort */ }
 
+    // Write back to identity card (sync mode)
+    try {
+      const authHeader = req.headers.get('authorization') || '';
+      const token = authHeader.replace('Bearer ', '');
+      let syncUid: string | null = null;
+      if (token) {
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) syncUid = user.id;
+      }
+      await writeEeatToIdentityCard(supabase, tracked_site_id, result, domain, syncUid);
+    } catch (_) { /* best effort */ }
+
     return new Response(JSON.stringify(result), { headers: HEADERS });
 
   } catch (e) {
