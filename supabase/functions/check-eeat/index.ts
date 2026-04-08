@@ -322,6 +322,22 @@ async function runEeatPipeline(
   console.log(`[check-eeat] 📅 Phase 2.7: Fetching domain age...`);
   const domainAgeInfo = await fetchDomainAge(supabase, effectiveDomain, trackedSiteId);
 
+  // ── Phase 2.8: Read full identity card for context enrichment ──
+  console.log(`[check-eeat] 🪪 Phase 2.8: Reading identity card...`);
+  let identityCard: Record<string, any> | null = null;
+  if (trackedSiteId) {
+    const { data: idCard } = await supabase
+      .from('tracked_sites')
+      .select('market_sector, entity_type, business_type, target_audience, products_services, brand_name, commercial_area, company_size, founding_year, legal_structure, social_profiles, competitors, commercial_model, primary_language, target_segment, primary_use_case, location_detail, brand_site_url')
+      .eq('id', trackedSiteId)
+      .maybeSingle();
+    if (idCard) {
+      identityCard = idCard;
+      console.log(`[check-eeat] 🪪 Identity card loaded: sector=${idCard.market_sector}, entity=${idCard.entity_type}`);
+    }
+  }
+  if (jobId) await supabase.from('async_jobs').update({ progress: 55 }).eq('id', jobId);
+
   // ── Phase 3: LLM analysis with enriched context ──
   console.log(`[check-eeat] 🤖 Phase 3: LLM analysis...`);
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
