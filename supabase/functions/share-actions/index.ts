@@ -323,9 +323,10 @@ Deno.serve(async (req) => {
     const action = body.action as string;
 
     switch (action) {
-      case 'create':      return await handleCreate(body);
-      case 'resolve':     return await handleResolve(body);
-      case 'track-click': return await handleTrackClick(req, body);
+      case 'create':        return await handleCreate(body);
+      case 'resolve':       return await handleResolve(body);
+      case 'resolve-short': return await handleResolveShort(body);
+      case 'track-click':   return await handleTrackClick(req, body);
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }
