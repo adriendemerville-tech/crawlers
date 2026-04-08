@@ -228,17 +228,11 @@ async function handleResolve(body: any) {
     return json({ success: false, error: 'Invalid share ID' }, 400);
   }
 
-  const supabase = getServiceClient();
-  const fileName = `reports/${shareId}.html`;
-  const { data: urlData, error } = await supabase.storage
-    .from('shared-reports')
-    .createSignedUrl(fileName, 60 * 60 * 24 * 7);
+  // Build a URL to the view-report edge function which serves HTML with correct Content-Type
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const viewReportUrl = `${supabaseUrl}/functions/v1/view-report?id=${shareId}`;
 
-  if (error || !urlData?.signedUrl) {
-    return json({ success: false, error: 'Report not found or expired' }, 404);
-  }
-
-  return json({ success: true, signedUrl: urlData.signedUrl });
+  return json({ success: true, signedUrl: viewReportUrl });
 }
 
 // ─── Action: track-click (track-share-click) ───
