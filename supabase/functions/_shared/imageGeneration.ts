@@ -177,9 +177,10 @@ async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenera
   // Build message content — multimodal if reference image provided
   let content: any;
   if (req.referenceImageUrl) {
+    const noTextSuffix = req.allowText ? '' : NO_TEXT_GUARD;
     const textInstruction = req.referenceMode === 'edit'
-      ? `Transform this image with the following style and instructions. Style: ${styleConfig.promptPrefix} Instructions: ${req.prompt}`
-      : `Use this image as visual inspiration (style, composition, mood) to create a NEW original image. Style: ${styleConfig.promptPrefix} Instructions: ${req.prompt}`;
+      ? `Transform this image with the following style and instructions. Style: ${styleConfig.promptPrefix} Instructions: ${req.prompt}${noTextSuffix}`
+      : `Use this image as visual inspiration (style, composition, mood) to create a NEW original image. Style: ${styleConfig.promptPrefix} Instructions: ${req.prompt}${noTextSuffix}`;
     content = [
       { type: 'text', text: textInstruction },
       { type: 'image_url', image_url: { url: req.referenceImageUrl } },
