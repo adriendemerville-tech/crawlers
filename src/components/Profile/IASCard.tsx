@@ -152,7 +152,7 @@ export function IASCard({ trackedSiteId, userId, domain, isPremium, onUpgrade }:
         .order('week_start_date', { ascending: true });
 
       if (error) throw error;
-      setHistory((data as HistoryRow[]) || []);
+      setHistory((data as unknown as HistoryRow[]) || []);
       if (data && data.length > 0 && !selectedCategoryId) {
         const cat = CATEGORIES.find(c => c.label.toLowerCase().includes((data[0] as any).business_type));
         if (cat) setSelectedCategoryId(cat.id);
