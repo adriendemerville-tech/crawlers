@@ -745,6 +745,8 @@ const Index = () => {
           </div>
         </section>
 
+        <Suspense fallback={<SectionSkeleton />}>
+          <HybridSection />
         </Suspense>
 
         {/* Identity First */}
