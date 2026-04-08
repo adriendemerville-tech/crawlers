@@ -201,7 +201,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     return () => setFelixExpanded(false);
   }, [isExpanded, setFelixExpanded]);
 
-  // Quiz state
+  // Persist current conversation to localStorage on change
+  useEffect(() => {
+    saveCurrentConversation(messages);
+  }, [messages]);
+
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any>; title?: string; isCrawlersQuiz?: boolean } | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
   const [howToCount, setHowToCount] = useState(0);
