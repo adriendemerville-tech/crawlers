@@ -189,4 +189,4 @@ try {
     console.error('[content-freshness] error:', msg)
     return json({ error: msg }, 500)
   }
-})
+}));
