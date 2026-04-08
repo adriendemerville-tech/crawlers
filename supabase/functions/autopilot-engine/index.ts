@@ -381,6 +381,25 @@ try {
 
           const orchestratorResult = await orchestratorResponse.json();
 
+          // ═══ Handle "skipped" prescribe gracefully ═══
+          // When the workbench is empty for prescribe, the orchestrator returns status: 'skipped'
+          // with no decision_id. This is NOT an error — just skip to execute/validate.
+          if (orchestratorResponse.ok && orchestratorResult.status === 'skipped') {
+            console.log(`[AutopilotEngine] Phase ${phase} skipped for ${site.domain}: ${orchestratorResult.reason || 'no items'}`);
+            await supabase.from('autopilot_modification_log').insert({
+              tracked_site_id: config.tracked_site_id,
+              config_id: config.id,
+              user_id: config.user_id,
+              phase,
+              action_type: 'skip',
+              cycle_number: cycleNumber,
+              description: `Phase ${phase} skipped: ${orchestratorResult.reason || 'nothing to do'}`,
+              status: 'skipped',
+            });
+            allPhaseResults.push({ phase, decision_id: 'skipped', status: 'skipped', executionResults: [] });
+            continue; // Move to next phase instead of breaking the pipeline
+          }
+
           if (!orchestratorResponse.ok || !orchestratorResult.decision_id) {
             console.error(`[AutopilotEngine] Orchestrator failed at phase ${phase}:`, orchestratorResult.error);
             

@@ -151,3 +151,16 @@ L'Autopilote suit un double cycle avec **deux pipelines parallèles** (tech + co
    - **Layer C** : Slug Similarity ≥ **0.70** → même intention d'URL
 2. `autopilot-engine` : POST-EXECUTE marque les items content (`missing_page`, `content_gap`, `content_upgrade`, `missing_terms`) avec `consumed_by_content = true` après succès
 3. Les stop words français (le, la, des, guide, complet, etc.) sont exclus du calcul core topic pour se concentrer sur les mots-clés réellement discriminants
+
+### FIX Pipeline bloqué en boucle audit-diagnose (v2.4, 2026-04-08)
+
+**Problème racine** : Parménion restait bloqué en boucle audit→diagnose→prescribe(fail)→audit sans jamais atteindre execute/validate. 3 causes :
+
+1. **Ambiguïté de surcharge RPC** : `score_workbench_priority` avait 2 overloads compatibles (paramètre `p_user_id` en `uuid` ET en `text`). PostgREST ne pouvait pas choisir → scoring échouait silencieusement → workbench toujours vide pour le LLM
+2. **`force_content_cycle = false`** dans la DB malgré le défaut v3 à `true` → pas d'item synthétique de secours quand le scoring échoue
+3. **Le engine traitait un prescribe "skipped" comme une erreur fatale** (`break`) au lieu de continuer vers execute/validate
+
+**Corrections appliquées** :
+1. `DROP FUNCTION score_workbench_priority(text, text, int, text, bool)` — suppression de l'overload `text` qui causait l'ambiguïté
+2. `UPDATE autopilot_configs SET force_content_cycle = true` pour tous les configs actifs
+3. `autopilot-engine` : un prescribe retournant `status: 'skipped'` est désormais logué puis `continue` au lieu de `break` — le pipeline peut continuer vers execute/validate
