@@ -2227,6 +2227,23 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         console.warn('[Marina] Branding fetch failed (non-fatal):', brandErr);
       }
 
+      // ─── Fetch indexation data ───
+      let indexationData: any[] = [];
+      if (trackedSiteId) {
+        try {
+          const { data: idxRows } = await sb
+            .from('indexation_checks')
+            .select('page_url, verdict, coverage_state, last_crawl_time')
+            .eq('tracked_site_id', trackedSiteId)
+            .order('checked_at', { ascending: false })
+            .limit(100);
+          indexationData = idxRows || [];
+          console.log(`[Marina] Indexation data: ${indexationData.length} checks found`);
+        } catch (idxErr) {
+          console.warn('[Marina] Indexation fetch failed (non-fatal):', idxErr);
+        }
+      }
+
       // ─── Step 4: Generate HTML reports ───
       let html: string;
       
@@ -2237,6 +2254,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
         const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain, llmVisibilityData);
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain);
+        const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
 
         const tempPrefix = `marina/tmp/${jobId}`;
         const storageUploads = [
