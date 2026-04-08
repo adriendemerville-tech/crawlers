@@ -328,25 +328,34 @@ export async function fetchAndRenderPage(
   if (shouldRender) {
     console.log(`[renderPage] SPA/CSR detected (${visibleText.length} chars text, ${html.length} chars HTML, framework: ${spaInfo.framework || 'unknown'}). Trying JS rendering...`);
 
+    let rendered: string | null = null;
     const renderingKey = Deno.env.get('RENDERING_API_KEY');
-    if (renderingKey) {
-      const rendered = await renderWithBrowserless(url, renderingKey);
-      if (rendered) {
-        const renderedText = extractVisibleText(rendered);
-        const renderedWords = renderedText.split(/\s+/).filter(w => w.length > 2).length;
-        const staticWords = visibleText.split(/\s+/).filter(w => w.length > 2).length;
-        const seoUpgraded = hasMeaningfulSeoUpgrade(html, rendered);
 
-        if (renderedWords > staticWords || rendered.length > html.length || seoUpgraded) {
-          console.log(`[renderPage] ✅ JS rendering success (${renderedWords} words vs ${staticWords} static, SEO upgrade: ${seoUpgraded ? 'yes' : 'no'})`);
-          html = rendered;
-          usedRendering = true;
-        } else {
-          console.log(`[renderPage] ⚠️ Rendered HTML not materially better (${renderedWords} words vs ${staticWords} static). Keeping original.`);
-        }
-      }
+    // Tier 1: Browserless (includes Fly.io fallback internally)
+    if (renderingKey) {
+      rendered = await renderWithBrowserless(url, renderingKey);
     } else {
       console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured');
+    }
+
+    // Tier 2: Self-render fallback for crawlers.fr if Browserless/Fly failed
+    if (!rendered) {
+      rendered = await renderSelfFallback(url);
+    }
+
+    if (rendered) {
+      const renderedText = extractVisibleText(rendered);
+      const renderedWords = renderedText.split(/\s+/).filter(w => w.length > 2).length;
+      const staticWords = visibleText.split(/\s+/).filter(w => w.length > 2).length;
+      const seoUpgraded = hasMeaningfulSeoUpgrade(html, rendered);
+
+      if (renderedWords > staticWords || rendered.length > html.length || seoUpgraded) {
+        console.log(`[renderPage] ✅ JS rendering success (${renderedWords} words vs ${staticWords} static, SEO upgrade: ${seoUpgraded ? 'yes' : 'no'})`);
+        html = rendered;
+        usedRendering = true;
+      } else {
+        console.log(`[renderPage] ⚠️ Rendered HTML not materially better (${renderedWords} words vs ${staticWords} static). Keeping original.`);
+      }
     }
   }
 
