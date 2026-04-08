@@ -1090,6 +1090,59 @@ async function patchContent(conn: CmsConnection, input: PatchInput): Promise<Pat
   }
 }
 
+// ── Auto-enrich patches with injection point selectors ──
+
+function enrichPatchesWithInjectionPoints(patches: PatchOperation[], ip: InjectionPoints): PatchOperation[] {
+  return patches.map(patch => {
+    // If patch already has a selector or old_value, don't override
+    if (patch.selector || patch.old_value) return patch
+
+    const enriched = { ...patch }
+
+    switch (patch.zone) {
+      case 'h1':
+        if (ip.h1_content) enriched.old_value = ip.h1_content
+        if (ip.h1_selector) enriched.selector = ip.h1_selector
+        break
+      case 'h2':
+      case 'h3':
+        // Try to match by index from injection points
+        if (ip.h2_selectors.length > 0 && patch.action === 'replace') {
+          // Use first available H2 selector as hint
+          enriched.selector = ip.h2_selectors[0]
+          if (ip.h2_contents.length > 0) enriched.old_value = ip.h2_contents[0]
+        }
+        break
+      case 'faq':
+        if (ip.faq_existing_selector) {
+          enriched.selector = ip.faq_existing_selector
+        } else if (ip.faq_insert_before) {
+          enriched.selector = ip.faq_insert_before
+          if (patch.action === 'replace') enriched.action = 'prepend' // no existing FAQ, prepend before footer
+        }
+        break
+      case 'schema_org':
+        enriched.selector = ip.schema_target // 'head'
+        break
+      case 'body_section':
+        if (patch.action === 'append' && ip.main_content_selector) {
+          enriched.selector = ip.main_content_end_selector || ip.main_content_selector
+        } else if (patch.action === 'prepend' && ip.main_content_selector) {
+          enriched.selector = ip.main_content_selector
+        }
+        break
+      case 'alt_text':
+        // Provide first missing-alt image src as old_value
+        if (ip.images_missing_alt_srcs.length > 0) {
+          enriched.old_value = ip.images_missing_alt_srcs[0]
+        }
+        break
+    }
+
+    return enriched
+  })
+}
+
 // ── Main Handler ──
 
 Deno.serve(handleRequest(async (req) => {
