@@ -1867,6 +1867,34 @@ async function generateAllFixesWithAI(
 - Liens cassés: ${h.brokenLinks?.length ?? '?'}`);
   }
 
+  // ── SCAN HTML LIVE de la page cible (structure réelle pour injection ciblée) ──
+  if (pageHtmlData) {
+    contextParts.push(`SCAN HTML LIVE DE LA PAGE CIBLE:
+⚠️ CRITIQUE : Utilise cette structure réelle pour cibler tes injections au bon endroit.
+
+STRUCTURE DOM EXISTANTE:
+- Title: "${pageHtmlData.titleContent}" (${pageHtmlData.titleLength} chars)
+- Meta description: "${pageHtmlData.metaDescContent}" (${pageHtmlData.metaDescLength} chars)
+- H1: ${pageHtmlData.h1Count > 0 ? pageHtmlData.h1Contents.map(h => `"${h}"`).join(', ') : 'ABSENT'}
+- H2: ${pageHtmlData.h2Count} | H3: ${pageHtmlData.h3Count}
+- Mots: ${pageHtmlData.wordCount}
+- Images: ${pageHtmlData.imagesTotal} (${pageHtmlData.imagesMissingAlt} sans alt)
+- Liens internes: ${pageHtmlData.internalLinksCount} | externes: ${pageHtmlData.externalLinksCount}
+- Schema.org existant: ${pageHtmlData.hasSchemaOrg ? pageHtmlData.schemaTypes.join(', ') : 'AUCUN'}
+- FAQ existante: ${pageHtmlData.hasFAQSection ? (pageHtmlData.hasFAQWithSchema ? 'Oui + schema FAQPage' : 'Oui SANS schema') : 'Non'}
+- Canonical: ${pageHtmlData.hasCanonical ? pageHtmlData.canonicalUrl : 'ABSENT'}
+- Open Graph: ${pageHtmlData.hasOg ? pageHtmlData.ogTags.join(', ') : 'ABSENT'}
+- Viewport: ${pageHtmlData.hasViewport ? 'OK' : 'ABSENT'}
+- HTTPS: ${pageHtmlData.isHttps ? 'OK' : 'NON'}
+
+RÈGLES D'INJECTION BASÉES SUR LE SCAN:
+1. Schema.org → injecter dans <head> via injectJsonLd(), NE PAS dupliquer les types déjà présents (${pageHtmlData.schemaTypes.join(', ') || 'aucun'})
+2. Meta tags → utiliser document.querySelector('meta[name="description"]') si existe, sinon créer
+3. H1 → cibler le H1 existant "${pageHtmlData.h1Contents[0] || ''}" pour le modifier, pas en créer un second
+4. FAQ → ${pageHtmlData.hasFAQSection ? 'enrichir/structurer la FAQ existante' : 'injecter avant </main> ou avant le footer'}
+5. Contenu visible → utiliser injectWithSkeleton() avec un sélecteur précis basé sur la structure détectée`);
+  }
+
   if (auditContext.technicalScores) {
     const s = auditContext.technicalScores;
     contextParts.push(`SCORES TECHNIQUES:
