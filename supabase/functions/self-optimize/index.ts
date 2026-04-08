@@ -66,6 +66,19 @@ interface WorkbenchItem {
   source_function: string | null;
 }
 
+function mapToFixCategory(findingCategory: string): string {
+  const map: Record<string, string> = {
+    speed: 'performance', core_web_vitals: 'performance', 
+    meta_tags: 'seo', canonical: 'seo', robots: 'seo', sitemap: 'seo',
+    structured_data: 'seo', broken_links: 'seo', duplicate_content: 'seo',
+    accessibility: 'accessibility', security: 'seo',
+    content_upgrade: 'strategic', content_gap: 'strategic', missing_page: 'strategic',
+    quick_win: 'strategic', keyword_data: 'strategic', missing_terms: 'strategic',
+    linking: 'seo', silo_structure: 'seo', anchor_optimization: 'seo',
+  };
+  return map[findingCategory] || 'seo';
+}
+
 interface ActionResult {
   item_id: string;
   title: string;
