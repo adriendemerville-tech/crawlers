@@ -89,7 +89,9 @@ Deno.serve(handleRequest(async (req) => {
           console.warn(`[check-eeat] ⚠️ Failed to persist EEAT in audit_raw_data:`, persistErr);
         }
 
-        await supabase.from('async_jobs').update({
+        // ── Write E-E-A-T score back to tracked_sites (identity card) ──
+        await writeEeatToIdentityCard(supabase, tracked_site_id, result, domain, workerUserId);
+
           status: 'completed',
           progress: 100,
           result_data: result,
