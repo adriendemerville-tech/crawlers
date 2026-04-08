@@ -851,8 +851,23 @@ export default function MatricePrompt() {
             </div>
           </div>
 
+          {/* Benchmark Heatmap (shown when benchmark mode has results) */}
+          {benchmarkData && (
+            <div className="mb-6 border rounded-lg p-4 bg-card">
+              <h2 className="text-sm font-semibold mb-3 text-foreground">Benchmark Citabilité — Heatmap Thème × Engine</h2>
+              <BenchmarkHeatmap
+                results={benchmarkData.results}
+                themes={benchmarkData.themes}
+                engines={benchmarkData.engines}
+                heatmap={benchmarkData.heatmap}
+                globalScore={benchmarkData.globalScore}
+                citationRate={benchmarkData.citationRate}
+              />
+            </div>
+          )}
+
           {/* Matrix table */}
-          {rows.length > 0 && (
+          {rows.length > 0 && !benchmarkData && (
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
