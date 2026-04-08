@@ -179,6 +179,20 @@ export function IntroductionCard({
               </ul>
             </div>
           )}
+
+          {/* Scope notice — audit concerne l'URL, pas le domaine entier */}
+          {displayUrl && displayDomain && displayUrl !== displayDomain && (
+            <p className="text-xs text-muted-foreground/70 italic border-t border-border/30 pt-3 mt-2">
+              {t.scopeNotice(displayUrl, displayDomain)}
+            </p>
+          )}
+
+          {/* Mobile-First notice — uniquement pour l'audit technique */}
+          {variant === 'technical' && (
+            <div className="p-3 rounded-md bg-primary/5 border border-primary/10 text-xs text-muted-foreground leading-relaxed mt-2">
+              {t.mobileFirstNotice}
+            </div>
+          )}
         </CardContent>
       </Card>
 
