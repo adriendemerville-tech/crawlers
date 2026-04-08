@@ -11,6 +11,7 @@ interface IntroductionCardProps {
   introduction: StrategicIntroduction;
   variant: 'technical' | 'strategic';
   domain?: string;
+  url?: string;
   siteName?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onHallucinationData?: (data: any) => void;
