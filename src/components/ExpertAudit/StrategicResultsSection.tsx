@@ -13,7 +13,6 @@ import { StrategicInsights } from './StrategicInsights';
 import { ActionPlan } from './ActionPlan';
 
 import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
-import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
 import { normalizeUrl } from '@/hooks/useUrlValidation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
