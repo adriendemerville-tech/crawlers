@@ -161,7 +161,18 @@ function generateReportHTML(type: string, data: any, url: string, language: stri
 
 // ─── Action: create (share-report) ───
 
-async function handleCreate(body: any) {
+function generateShortCode(): string {
+  const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
+  let result = '';
+  const randomValues = new Uint8Array(6);
+  crypto.getRandomValues(randomValues);
+  for (let i = 0; i < 6; i++) {
+    result += chars[randomValues[i] % chars.length];
+  }
+  return result;
+}
+
+async function handleCreate(body: any, req: Request) {
   const { type, url, data, language, preRenderedHtml } = body;
   const supabase = getServiceClient();
   const html = preRenderedHtml || generateReportHTML(type, data, url, language);
@@ -175,7 +186,38 @@ async function handleCreate(body: any) {
 
   if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
-  return json({ success: true, shareId: shortId, expiresIn: '7 days' });
+  // Create short link
+  const shortCode = generateShortCode();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  let userId: string | null = null;
+  try {
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub;
+    }
+  } catch {}
+
+  if (userId) {
+    await supabase.from('short_links').insert({
+      code: shortCode,
+      target_url: `/temporarylink/${shortId}`,
+      created_by: userId,
+      expires_at: expiresAt,
+    });
+  }
+
+  const shareUrl = `https://crawlers.lovable.app/s/${shortCode}`;
+
+  return json({
+    success: true,
+    shareId: shortId,
+    shortCode,
+    shareUrl,
+    expiresIn: '7 days',
+  });
 }
 
 // ─── Action: resolve (resolve-share) ───
@@ -270,6 +312,36 @@ async function handleTrackClick(req: Request, body: any) {
   return json({ success: true, credits_awarded: rewardAmount });
 }
 
+// ─── Action: resolve-short ───
+
+async function handleResolveShort(body: any) {
+  const { code } = body;
+  if (!code || typeof code !== 'string' || code.length !== 6) {
+    return json({ success: false, error: 'Invalid short code' }, 400);
+  }
+
+  const supabase = getServiceClient();
+
+  const { data: link, error } = await supabase
+    .from('short_links')
+    .select('target_url, expires_at')
+    .eq('code', code)
+    .single();
+
+  if (error || !link) {
+    return json({ success: false, error: 'Short link not found' }, 404);
+  }
+
+  if (link.expires_at && new Date(link.expires_at) < new Date()) {
+    return json({ success: false, error: 'Link expired' }, 410);
+  }
+
+  // Increment click count
+  await supabase.rpc('increment_short_link_clicks', { link_code: code }).catch(() => {});
+
+  return json({ success: true, targetUrl: link.target_url });
+}
+
 // ─── Router ───
 
 Deno.serve(async (req) => {
@@ -280,9 +352,10 @@ Deno.serve(async (req) => {
     const action = body.action as string;
 
     switch (action) {
-      case 'create':      return await handleCreate(body);
-      case 'resolve':     return await handleResolve(body);
-      case 'track-click': return await handleTrackClick(req, body);
+      case 'create':        return await handleCreate(body, req);
+      case 'resolve':       return await handleResolve(body);
+      case 'resolve-short': return await handleResolveShort(body);
+      case 'track-click':   return await handleTrackClick(req, body);
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }

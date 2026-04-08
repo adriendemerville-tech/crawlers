@@ -8066,6 +8066,36 @@ export type Database = {
         }
         Relationships: []
       }
+      short_links: {
+        Row: {
+          click_count: number
+          code: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          target_url: string
+        }
+        Insert: {
+          click_count?: number
+          code: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          target_url: string
+        }
+        Update: {
+          click_count?: number
+          code?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          target_url?: string
+        }
+        Relationships: []
+      }
       site_crawls: {
         Row: {
           ai_recommendations: Json | null
@@ -9644,6 +9674,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_short_link_clicks: {
+        Args: { link_code: string }
+        Returns: undefined
       }
       move_to_dlq: {
         Args: {

@@ -45,6 +45,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const ReportViewer = lazy(() => import("./pages/ReportViewer"));
 const RapportViewer = lazy(() => import("./pages/RapportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
+const ShortLinkRedirect = lazy(() => import("./pages/ShortLinkRedirect"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -147,6 +148,7 @@ const App = () => (
                           <Route path="/temporarylink/:shareId" element={<SharedReportRedirect />} />
                           <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
                           <Route path="/r/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
+                          <Route path="/s/:code" element={<ShortLinkRedirect />} />
                           <Route path="/blog" element={<Blog />} />
                           <Route path="/blog/:slug" element={<ArticlePage />} />
                           <Route path="/landing/:slug" element={<LandingPage />} />
