@@ -223,6 +223,55 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const [hallucinationDiagFlow, setHallucinationDiagFlow] = useState<'idle' | 'asked_details' | 'asked_fix' | 'show_fix_buttons'>('idle');
   const hallucinationDiagTriggered = useRef(false);
 
+  // ═══ Post-audit guided workflow ═══
+  // Flow: audit_detected → ask_summary → show_priorities → show_solutions → propose_group → confirm_implement → done
+  type AuditGuideStep = 'idle' | 'ask_summary' | 'show_priorities' | 'show_solutions' | 'propose_group' | 'confirm_implement' | 'confirm_action_plan';
+  const [auditGuideStep, setAuditGuideStep] = useState<AuditGuideStep>('idle');
+  const [auditGuideUrl, setAuditGuideUrl] = useState('');
+  const [auditGuideDomain, setAuditGuideDomain] = useState('');
+  const [auditGuideSource, setAuditGuideSource] = useState<'audit-expert' | 'matrice'>('audit-expert');
+  const [auditGuideFindings, setAuditGuideFindings] = useState<any[]>([]);
+  const [auditGuidePriorityLane, setAuditGuidePriorityLane] = useState<'code' | 'content'>('code');
+  const auditGuideTriggered = useRef<string | null>(null);
+
+  // Listen for audit completion events
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const source = detail.source || 'audit-expert';
+      const auditUrl = detail.url || '';
+
+      // Only trigger when Felix is expanded & not already in a guide flow
+      if (!isExpanded) return;
+      // Deduplicate: don't trigger twice for same audit URL
+      const key = `${source}_${auditUrl}`;
+      if (auditGuideTriggered.current === key) return;
+      auditGuideTriggered.current = key;
+
+      const sourceLabel = source === 'matrice' ? 'Matrice' : 'Audit Expert';
+      let domain = '';
+      try { domain = new URL(auditUrl).hostname; } catch { domain = auditUrl; }
+
+      setAuditGuideUrl(auditUrl);
+      setAuditGuideDomain(domain);
+      setAuditGuideSource(source);
+
+      // Inject proactive message after a short delay
+      setTimeout(() => {
+        const msg: ChatMessage = {
+          role: 'assistant',
+          content: `📊 **${sourceLabel} terminé !**\n\nVeux-tu que je te résume les résultats de cet audit ?`,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, msg]);
+        setAuditGuideStep('ask_summary');
+      }, 2000);
+    };
+
+    window.addEventListener('expert-audit-complete', handler);
+    return () => window.removeEventListener('expert-audit-complete', handler);
+  }, [isExpanded]);
+
   // Listen for hallucination diagnosis trigger from FloatingChatBubble
   useEffect(() => {
     const handler = () => {
