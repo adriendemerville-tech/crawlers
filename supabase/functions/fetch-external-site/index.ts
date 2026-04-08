@@ -153,6 +153,36 @@ Deno.serve(async (req) => {
         }
       }
 
+      // ── Étape 3 : Fly.io (headless Chrome auto-hébergé) ──
+      const flyRendererUrl = Deno.env.get('FLY_RENDERER_URL');
+      const flyRendererSecret = Deno.env.get('FLY_RENDERER_SECRET');
+      if (!rendered && flyRendererUrl && flyRendererSecret) {
+        try {
+          console.log(`[fetch-external-site] 🚀 Trying Fly.io renderer...`);
+          const flyResp = await fetch(`${flyRendererUrl}/content`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Renderer-Secret': flyRendererSecret,
+            },
+            body: JSON.stringify({ url: finalUrl }),
+            signal: AbortSignal.timeout(60000),
+          });
+          if (flyResp.ok) {
+            const flyHtml = await flyResp.text();
+            if (flyHtml.length > html.length) {
+              console.log(`[fetch-external-site] ✅ Fly.io success (${flyHtml.length} chars vs ${html.length} static)`);
+              html = flyHtml;
+              rendered = true;
+            }
+          } else {
+            console.log(`[fetch-external-site] ⚠️ Fly.io error: ${flyResp.status}`);
+          }
+        } catch (flyErr: any) {
+          console.log(`[fetch-external-site] ⚠️ Fly.io failed: ${flyErr.message}`);
+        }
+      }
+
       if (!rendered) {
         console.log('[fetch-external-site] ⚠️ No rendering service succeeded for SPA');
       }
