@@ -374,6 +374,10 @@ function ProfileContent() {
                   </TabsContent>
                 )}
 
+                <TabsContent value="indexation">
+                  <IndexationMonitor />
+                </TabsContent>
+
                 <TabsContent value="gmb">
                   <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />
                 </TabsContent>
