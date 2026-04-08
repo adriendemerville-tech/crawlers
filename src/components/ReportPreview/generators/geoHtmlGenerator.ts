@@ -53,8 +53,8 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: s
   };
 
   const getPriorityBadge = (status: string) => {
-    if (status === 'error') return `<span class="priority-badge priority-badge-critical">🔴 ${t.priority || 'Prioritaire'}</span>`;
-    if (status === 'warning') return `<span class="priority-badge priority-badge-warning">🟡 ${t.recommended || 'Recommandé'}</span>`;
+    if (status === 'error') return `<span class="priority-badge priority-badge-critical">${t.priority}</span>`;
+    if (status === 'warning') return `<span class="priority-badge priority-badge-warning">${t.vigilance}</span>`;
     return '';
   };
 

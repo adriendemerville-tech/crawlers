@@ -15,10 +15,10 @@ function getScoreBg(score: number): string {
 
 function generatePriorityBadge(score: number, label: string, t: TranslationKeys): string {
   if (score < 50) {
-    return `<span class="priority-badge priority-badge-critical">🔴 ${t.priority || 'Prioritaire'}</span>`;
+    return `<span class="priority-badge priority-badge-critical">${t.priority}</span>`;
   }
   if (score < 80) {
-    return `<span class="priority-badge priority-badge-warning">🟡 ${t.recommended || 'Recommandé'}</span>`;
+    return `<span class="priority-badge priority-badge-warning">${t.vigilance}</span>`;
   }
   return '';
 }
