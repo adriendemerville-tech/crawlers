@@ -946,17 +946,6 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
           >
             {isExpanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
           </button>
-          <button
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('felix', 'fullpage');
-              window.open(url.toString(), '_blank');
-            }}
-            className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-            title="Ouvrir dans un nouvel onglet"
-          >
-            <ExternalLink className="h-3 w-3" />
-          </button>
           <button onClick={handleClose} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground transition-colors" title="Réduire">
             <Minus className="h-3 w-3" />
           </button>
