@@ -172,7 +172,7 @@ function generateShortCode(): string {
   return result;
 }
 
-async function handleCreate(body: any) {
+async function handleCreate(body: any, req: Request) {
   const { type, url, data, language, preRenderedHtml } = body;
   const supabase = getServiceClient();
   const html = preRenderedHtml || generateReportHTML(type, data, url, language);
@@ -190,10 +190,9 @@ async function handleCreate(body: any) {
   const shortCode = generateShortCode();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Extract user_id from JWT if available
   let userId: string | null = null;
   try {
-    const authHeader = body._authHeader;
+    const authHeader = req.headers.get('Authorization');
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -353,7 +352,7 @@ Deno.serve(async (req) => {
     const action = body.action as string;
 
     switch (action) {
-      case 'create':        return await handleCreate(body);
+      case 'create':        return await handleCreate(body, req);
       case 'resolve':       return await handleResolve(body);
       case 'resolve-short': return await handleResolveShort(body);
       case 'track-click':   return await handleTrackClick(req, body);
