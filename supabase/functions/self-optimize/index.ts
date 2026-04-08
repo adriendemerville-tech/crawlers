@@ -79,22 +79,26 @@ async function handleCodeItem(item: WorkbenchItem, userId: string, trackedSiteId
 
   try {
     // Step 1: Generate corrective code via code architect
+    // Map workbench item to FixConfig format expected by generate-corrective-code
+    const fixCategory = mapToFixCategory(item.finding_category);
+    const fixId = `self_opt_${item.finding_category}_${item.id.slice(0, 8)}`;
+
     const genResult = await callFunction('generate-corrective-code', {
-      url: item.target_url || BASE_URL,
-      domain: DOMAIN,
-      // Pass workbench prescriptions as audit recommendations
-      recommendations: [{
-        id: item.id,
-        title: item.title,
-        description: item.description || '',
-        category: item.finding_category,
-        priority: item.severity,
-        fix_type: item.payload?.fix_type || 'code',
-        fix_data: item.payload?.fix_data || {},
-        prompt_summary: item.payload?.prompt_summary || item.title,
+      fixes: [{
+        id: fixId,
+        category: fixCategory,
+        label: item.title,
+        description: item.description || item.title,
+        enabled: true,
+        priority: item.severity === 'critical' ? 'critical' : item.severity === 'high' ? 'important' : 'optional',
+        data: item.payload || {},
       }],
-      source: 'self-optimize',
-      tracked_site_id: trackedSiteId,
+      siteName: 'Crawlers.fr',
+      siteUrl: BASE_URL,
+      language: 'fr',
+      useAI: true,
+      includeRegistryContext: true,
+      technologyContext: 'React 18, Vite 5, Tailwind CSS, TypeScript, SPA',
     });
 
     if (genResult.error) {
