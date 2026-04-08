@@ -61,6 +61,7 @@ export function IntroductionCard({
   introduction, 
   variant,
   domain = '',
+  url: auditUrl = '',
   siteName = '',
   onHallucinationData,
   typewriter = false
@@ -74,6 +75,10 @@ export function IntroductionCard({
   const gradientClass = variant === 'technical' 
     ? 'border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent'
     : 'border border-muted-foreground/20 bg-gradient-to-br from-muted/30 to-transparent';
+
+  // Compute scope notice
+  const displayUrl = auditUrl || domain;
+  const displayDomain = domain || (auditUrl ? (() => { try { return new URL(auditUrl.startsWith('http') ? auditUrl : `https://${auditUrl}`).hostname; } catch { return auditUrl; } })() : '');
 
   // Build introduction text for hallucination modal
   const getIntroductionText = (): string => {
