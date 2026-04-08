@@ -96,7 +96,7 @@ const VisibiliteLLM = () => {
             <Badge variant="outline" className="mb-4 text-primary border-primary/30">
               <Brain className="h-3 w-3 mr-1" /> Citabilité IA
             </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-6 lg:text-5xl">
               Les IA parlent-elles de <span className="text-primary">votre marque</span> ?
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
