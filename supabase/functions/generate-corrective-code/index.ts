@@ -2996,6 +2996,7 @@ const clientIp = getClientIp(req);
     // ══════════════════════════════════════════════════════════════
     let aiGeneratedFixes: Map<string, { fn: string; call: string }> | null = null;
     let cmsSettings: SiteSettings = { hasApiConnection: false, cmsType: null };
+    let pageHtmlData: HtmlData | null = null;
 
     if (useAI && auditContext) {
       // Récupérer les paramètres CMS pour le prompting dynamique
@@ -3003,8 +3004,28 @@ const clientIp = getClientIp(req);
       if (cmsSettings.hasApiConnection) {
         console.log(`🔌 Connexion CMS détectée: ${cmsSettings.cmsType} (API lecture/écriture)`);
       }
+
+      // ── Scan HTML live de la page cible pour injection ciblée ──
+      try {
+        console.log(`🔍 Scan HTML live de la page cible: ${siteUrl}`);
+        const htmlResp = await fetch(siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Crawlers-CodeArchitect/1.0)' },
+          signal: AbortSignal.timeout(12000),
+          redirect: 'follow',
+        });
+        if (htmlResp.ok) {
+          const rawHtml = await htmlResp.text();
+          pageHtmlData = analyzeHtmlFull(rawHtml, siteUrl);
+          console.log(`✅ HTML scan: title="${pageHtmlData.titleContent}" h1=${pageHtmlData.h1Count} h2=${pageHtmlData.h2Count} schema=${pageHtmlData.schemaTypes.join(',') || 'none'} words=${pageHtmlData.wordCount}`);
+        } else {
+          console.log(`⚠️ HTML fetch failed: HTTP ${htmlResp.status}`);
+        }
+      } catch (e) {
+        console.log(`⚠️ HTML scan skipped: ${e instanceof Error ? e.message : String(e)}`);
+      }
+
       console.log('🤖 Génération IA personnalisée de TOUS les correctifs...');
-      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext, cmsSettings);
+      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext, cmsSettings, pageHtmlData);
     }
 
     // Générer le script avec contexte et contenu IA
