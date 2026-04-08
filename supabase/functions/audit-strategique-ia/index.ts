@@ -3313,6 +3313,101 @@ Réponds en JSON STRICT:
       } catch {}
     }
 
+    // ═══ FEED keyword_universe SSOT ═══
+    if (authHeader && parsedAnalysis?.keyword_positioning) {
+      try {
+        const svcKw = getServiceClient();
+        const sbKw = getUserClient(authHeader);
+        const { data: { user: kwUser } } = await sbKw.auth.getUser();
+        if (kwUser) {
+          const kp = parsedAnalysis.keyword_positioning;
+          const kwPayload: any[] = [];
+
+          // Main keywords
+          if (Array.isArray(kp.main_keywords)) {
+            for (const mk of kp.main_keywords) {
+              if (!mk?.keyword) continue;
+              kwPayload.push({
+                keyword: mk.keyword,
+                search_volume: mk.volume || 0,
+                difficulty: mk.difficulty || null,
+                position: mk.current_rank ? parseInt(String(mk.current_rank), 10) || null : null,
+                intent: mk.strategic_analysis?.intent || 'default',
+                target_url: mk.target_url || mk.page_url || null,
+                is_quick_win: false,
+              });
+            }
+          }
+
+          // Quick wins
+          if (Array.isArray(kp.quick_wins)) {
+            for (const qw of kp.quick_wins) {
+              kwPayload.push({
+                keyword: qw.keyword || qw.title || 'unknown',
+                search_volume: qw.volume || qw.search_volume || 0,
+                position: qw.position || qw.current_rank ? parseInt(String(qw.position || qw.current_rank), 10) : null,
+                intent: qw.intent || 'default',
+                target_url: qw.url || qw.page_url || qw.target_url || null,
+                is_quick_win: true,
+                quick_win_type: qw.type || qw.quick_win_type || 'general',
+                quick_win_action: qw.action || qw.recommended_action || '',
+              });
+            }
+          }
+
+          // Content gaps as keywords
+          if (Array.isArray(kp.content_gaps)) {
+            for (const cg of kp.content_gaps) {
+              if (!cg?.keyword && !cg?.title) continue;
+              kwPayload.push({
+                keyword: cg.keyword || cg.title,
+                search_volume: cg.volume || 0,
+                intent: 'informational',
+                target_url: cg.url || cg.suggested_url || null,
+                is_quick_win: false,
+              });
+            }
+          }
+
+          // Missing terms
+          if (Array.isArray(kp.missing_terms)) {
+            for (const mt of kp.missing_terms) {
+              if (!mt?.term) continue;
+              kwPayload.push({
+                keyword: mt.term,
+                search_volume: 0,
+                intent: 'default',
+                target_url: mt.url || mt.page_url || null,
+                is_quick_win: false,
+              });
+            }
+          }
+
+          if (kwPayload.length > 0) {
+            // Look up tracked_site_id
+            const { data: tsData } = await svcKw
+              .from('tracked_sites')
+              .select('id')
+              .eq('user_id', kwUser.id)
+              .ilike('domain', `%${domain}%`)
+              .limit(1)
+              .maybeSingle();
+
+            await svcKw.rpc('upsert_keyword_universe', {
+              p_domain: domain,
+              p_user_id: kwUser.id,
+              p_keywords: kwPayload,
+              p_source: 'audit_strategic',
+              p_tracked_site_id: tsData?.id || null,
+            });
+            console.log(`[audit-strategique-ia] keyword_universe: ${kwPayload.length} keywords upserted`);
+          }
+        }
+      } catch (kwErr) {
+        console.warn('[audit-strategique-ia] keyword_universe upsert failed:', kwErr);
+      }
+    }
+
     // ═══ NORMALIZE + PERSIST CLIENT TARGETS + JARGON DISTANCE TO IDENTITY CARD ═══
     if (domain && (parsedAnalysis?.client_targets || jargonDistance)) {
       try {
