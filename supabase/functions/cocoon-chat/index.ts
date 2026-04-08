@@ -7,6 +7,7 @@ import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLi
 import { getDomainContext } from '../_shared/getDomainContext.ts';
 import { STRATEGIST_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from '../_shared/agentPersonas.ts';
 import { LEXIQUE_PROMPT_BLOCK } from '../_shared/lexiqueReference.ts';
+import { logAIUsageEstimated } from '../_shared/logAIUsage.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

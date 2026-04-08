@@ -4,6 +4,7 @@ import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtract
 import { FELIX_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from "../_shared/agentPersonas.ts";
 import { LEXIQUE_PROMPT_BLOCK } from "../_shared/lexiqueReference.ts";
 import { getCocoonDiagnosticsForFelix, detectFeedbackLoop, createHandoffContext } from "../_shared/crossAgentContext.ts";
+import { logAIUsageFromResponse } from "../_shared/logAIUsage.ts";
 
 // Fire-and-forget: trigger dispatch-agent-directives immediately after a new directive
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
