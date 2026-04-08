@@ -214,6 +214,7 @@ function CocoonContent() {
   const [showTaskPlan, setShowTaskPlan] = useState(false);
   const [showArchitect, setShowArchitect] = useState(false);
   const [showBulkAutoLink, setShowBulkAutoLink] = useState(false);
+  const [hasCmsConnection, setHasCmsConnection] = useState(false);
   const [architectRecoText, setArchitectRecoText] = useState<string | undefined>();
   const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
   const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
