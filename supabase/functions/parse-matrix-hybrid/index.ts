@@ -5,8 +5,10 @@ import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { detectItemType, type ItemType } from '../_shared/matriceTypeDetector.ts'
 import { analyzeHtmlFull } from '../_shared/matriceHtmlAnalysis.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
+import { writeIdentity } from '../_shared/identityGateway.ts'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 import {
-import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
   type RobotsData, type SitemapData, type PsiData,
   checkRobots, checkSitemap, checkLlmsTxt, fetchPsi,
   computeBaliseScore, computeStructuredDataScore, computePerformanceScore,
