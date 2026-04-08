@@ -8,12 +8,11 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import {
-const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
-
   Shield, Lock, Unplug, ArrowRight, BarChart3, Globe, Terminal,
   Search, TrendingUp, Brain, Network, ShoppingCart, FileText,
   Zap, Eye, Database, CheckCircle2, XCircle, RefreshCw
 } from 'lucide-react';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
 interface ApiCard {

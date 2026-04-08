@@ -9,10 +9,9 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { t3 } from '@/utils/i18n';
 import heroImage from '@/assets/landing/indice-alignement-strategique-hero.webp';
 import {
-const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
-
   Crown, Target, TrendingUp, Shield, BarChart3, ArrowRight, Zap, CheckCircle2, AlertTriangle, Gauge
 } from 'lucide-react';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 export default function IndiceAlignementStrategique() {
   const { language } = useLanguage();

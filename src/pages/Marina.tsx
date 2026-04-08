@@ -14,12 +14,11 @@ import { Link } from 'react-router-dom';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
-const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
-
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
   Zap, Globe, Brain, Code2, Shield, ArrowRight, Terminal, Key,
   BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer, Palette
 } from 'lucide-react';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 const CREDIT_COST = 5;
 
