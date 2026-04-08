@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     console.log(`🧪 Dry Run: testing script on ${siteUrl}`);
 
-    const BROWSERLESS_API_KEY = Deno.env.get('BROWSERLESS_API_KEY');
+    const BROWSERLESS_API_KEY = getBrowserlessKey();
     const FLY_RENDERER_URL = Deno.env.get('FLY_RENDERER_URL');
     const FLY_RENDERER_SECRET = Deno.env.get('FLY_RENDERER_SECRET');
 
