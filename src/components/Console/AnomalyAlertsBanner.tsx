@@ -77,7 +77,7 @@ type TickerItem = { id: string; icon: any; bg: string; border: string; textColor
 export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnabled }: AnomalyAlertsBannerProps) {
   const [alerts, setAlerts] = useState<AnomalyAlert[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(() => localStorage.getItem('ticker_hidden_default') === '1');
   const [paused, setPaused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number | null>(null);
