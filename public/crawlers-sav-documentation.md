@@ -310,7 +310,7 @@ Marina est un pipeline d'audit automatisé disponible via API publique et dashbo
 ### Comment fonctionnent les crédits ?
 Les crédits (CreditCoin) sont la monnaie interne de Crawlers.fr pour les fonctionnalités premium ponctuelles.
 
-À l'inscription : 25 crédits offerts.
+À l'inscription : 20 crédits offerts.
 
 Coût des actions principales :
 - Audit Stratégique IA : 1 crédit
