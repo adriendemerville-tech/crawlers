@@ -1085,6 +1085,42 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   return wrapStandaloneHTML(content, `${tr.strategicAudit} - ${domain}`, lang);
 }
 
+// ─── Section 5: Indexation Health (standalone HTML) ───
+function generateIndexationSectionHTML(indexationData: any[], lang: string, domain: string): string {
+  const title = lang === 'fr' ? 'Santé d\'indexation Google' : lang === 'es' ? 'Salud de indexación Google' : 'Google Indexation Health';
+  const total = indexationData.length;
+  const indexed = indexationData.filter(r => r.verdict === 'PASS').length;
+  const notIndexed = total - indexed;
+  const ratio = total > 0 ? Math.round((indexed / total) * 100) : 0;
+  const ratioColor = ratio >= 80 ? '#22c55e' : ratio >= 50 ? '#f59e0b' : '#ef4444';
+
+  const issueRows = indexationData
+    .filter(r => r.verdict !== 'PASS')
+    .slice(0, 20)
+    .map(r => `<tr>
+      <td style="padding:6px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;word-break:break-all;">${r.page_url}</td>
+      <td style="padding:6px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;color:#ef4444;">${r.coverage_state || r.verdict}</td>
+      <td style="padding:6px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;">${r.last_crawl_time ? new Date(r.last_crawl_time).toLocaleDateString() : '—'}</td>
+    </tr>`)
+    .join('');
+
+  return `<div class="section"><h2><span class="section-number">5</span> 📊 ${title}</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+      <div class="stat-card"><div class="value" style="color:${ratioColor}">${ratio}%</div><div class="label">${lang === 'fr' ? 'Taux d\'indexation' : 'Indexation rate'}</div></div>
+      <div class="stat-card"><div class="value" style="color:#22c55e">${indexed}</div><div class="label">${lang === 'fr' ? 'Pages indexées' : 'Indexed pages'}</div></div>
+      <div class="stat-card"><div class="value" style="color:#ef4444">${notIndexed}</div><div class="label">${lang === 'fr' ? 'Non indexées' : 'Not indexed'}</div></div>
+    </div>
+    ${notIndexed > 0 ? `<table style="width:100%;border-collapse:collapse;margin-top:12px;">
+      <thead><tr style="background:#f8fafc;">
+        <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#64748b;">URL</th>
+        <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#64748b;">${lang === 'fr' ? 'Raison' : 'Reason'}</th>
+        <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#64748b;">${lang === 'fr' ? 'Dernier crawl' : 'Last crawl'}</th>
+      </tr></thead>
+      <tbody>${issueRows}</tbody>
+    </table>` : `<p style="color:#22c55e;font-weight:600;">✅ ${lang === 'fr' ? 'Toutes les pages vérifiées sont correctement indexées.' : 'All checked pages are properly indexed.'}</p>`}
+  </div>`;
+}
+
 // ─── Section 4: Cocoon Analysis (standalone HTML) ───
 function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string): string {
   const tr = getTranslations(lang);
