@@ -325,7 +325,7 @@ const translations: Record<Language, Translations> = {
         },
         {
           question: "Pourquoi Crawlers.fr à 29€/mois au lieu de 200€+ ?",
-          answer: "Nous appliquons le « dividende de l'IA » : les coûts d'infrastructure baissent structurellement grâce aux progrès des modèles. Plutôt que de maximiser nos marges, nous répercutons ces gains sur nos prix. Résultat : un audit qui coûtait 2 000€ en agence est aujourd'hui accessible à 29€/mois, audits illimités inclus."
+          answer: "Nous appliquons le « dividende de l'IA » : les coûts d'infrastructure baissent structurellement grâce aux progrès des modèles. Plutôt que de maximiser nos marges, nous répercutons ces gains sur nos prix. Résultat : là où les outils traditionnels coûtaient plus d'une centaine d'euros en 2022, Crawlers rend un service équivalent pour 29 € par mois."
         }
       ],
     },
