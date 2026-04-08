@@ -8,9 +8,6 @@ import { corsHeaders } from '../_shared/cors.ts';
  * so they render properly in browsers and iframes.
  * 
  * Usage: GET /view-marina-report?id=<job_id>
- * 
- * This solves the Supabase Storage issue where .html files are served
- * with Content-Disposition: attachment, preventing browser rendering.
  */
 
 Deno.serve(async (req) => {
@@ -39,26 +36,26 @@ Deno.serve(async (req) => {
     const sb = getServiceClient();
     const fileName = `marina/${jobId}.html`;
 
-    // Create a signed URL that serves HTML with proper Content-Type
-    // (Supabase gateway overrides Content-Type on edge functions, so we redirect to storage)
-    const { data: signedData, error: signedError } = await sb.storage
+    // Download the file and serve with correct Content-Type
+    const { data, error } = await sb.storage
       .from('shared-reports')
-      .createSignedUrl(fileName, 3600); // 1 hour validity
+      .download(fileName);
 
-    if (signedError || !signedData?.signedUrl) {
-      console.error(`[view-marina-report] Signed URL error for ${fileName}:`, signedError);
-      return new Response(JSON.stringify({ error: 'Report not found or expired' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (error || !data) {
+      console.error(`[view-marina-report] Download error for ${fileName}:`, error);
+      return new Response(
+        `<html><body style="font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;background:#0d0f17;color:#e2e8f0"><div style="text-align:center"><h1>Rapport introuvable</h1><p style="color:#94a3b8">Ce rapport a expiré ou n'existe pas.</p></div></body></html>`,
+        { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+      );
     }
 
-    // Redirect to the signed storage URL which serves HTML correctly
-    return new Response(null, {
-      status: 302,
+    const htmlContent = await data.text();
+
+    return new Response(htmlContent, {
+      status: 200,
       headers: {
-        'Location': signedData.signedUrl,
-        'Cache-Control': 'no-cache',
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
         'Access-Control-Allow-Origin': '*',
       },
     });
