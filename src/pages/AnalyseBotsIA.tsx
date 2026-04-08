@@ -6,6 +6,7 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { LeadMagnetAudit } from '@/components/LeadMagnetAudit';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight, Bot, Shield, CheckCircle2, Search, AlertTriangle,
@@ -111,16 +112,11 @@ const AnalyseBotsIA = () => {
               En 2026, <strong>40% du trafic web</strong> passe par les moteurs génératifs. Si votre <code>robots.txt</code> bloque GPTBot ou ClaudeBot, 
               vous êtes <strong>invisible</strong> pour ChatGPT, Claude et Perplexity. Vérifiez maintenant.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-base px-8">
-                <Link to="/audit-expert">
-                  Analyser mon site <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-base px-8">
-                <a href="#bots">Découvrir les bots IA</a>
-              </Button>
-            </div>
+            <LeadMagnetAudit
+              type="robots"
+              placeholder="https://votre-site.com"
+              ctaLabel="Analyser l'accès bots IA"
+            />
           </div>
         </section>
 
