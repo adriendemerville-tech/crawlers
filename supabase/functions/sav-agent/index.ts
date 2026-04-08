@@ -405,8 +405,23 @@ try {
       isCreator = isAdmin === true;
     }
 
+    // ── /createur : prefix gate — admin commands require explicit prefix ──
+    const lastUserMsgRaw = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+    const createurPrefixMatch = lastUserMsgRaw.match(/^\/createur\s*:\s*/i);
+    const isCreatorMode = isCreator && !!createurPrefixMatch;
+
+    // Strip the /createur : prefix from the message for downstream processing
+    if (isCreatorMode && createurPrefixMatch) {
+      const strippedMsg = lastUserMsgRaw.slice(createurPrefixMatch[0].length).trim();
+      // Update the last user message in the messages array
+      const lastUserMsgIndex = messages.map((m: any) => m.role).lastIndexOf("user");
+      if (lastUserMsgIndex >= 0) {
+        messages[lastUserMsgIndex] = { ...messages[lastUserMsgIndex], content: strippedMsg };
+      }
+    }
+
     // ── Detect backend query intent from creator ──
-    if (isCreator) {
+    if (isCreatorMode) {
       const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
       
       // ── Parménion intent detection ──
@@ -1695,9 +1710,9 @@ Cet utilisateur n'est PAS connecté. Tu es en mode commercial / vente.
       greetingHint = `\n\nNote: Le prénom de l'utilisateur est "${userFirstName}". Utilise-le naturellement dans ta première réponse.`;
     }
 
-    // Creator admin hint
+    // Creator admin hint — only injected when /createur : prefix is used
     let creatorHint = "";
-    if (isCreator) {
+    if (isCreatorMode) {
       creatorHint = `\n\n# MODE CRÉATEUR (ADMIN)
 Cet utilisateur est un créateur/administrateur de la plateforme. Tu peux :
 - Discuter ouvertement du backend, des tables, des edge functions, de l'architecture

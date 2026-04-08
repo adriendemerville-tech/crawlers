@@ -55,6 +55,9 @@ Réponse : "Crawlers.fr est construit sur plus de 150 000 lignes de code avec 7 
 
 # RÈGLES D'ESCALADE
 
+## Préfixe /createur :
+L'administrateur créateur doit taper `/createur :` suivi de sa demande pour accéder aux fonctionnalités admin (directives agents, consultation backend, Parménion, etc.). Sans ce préfixe, même le créateur est traité comme un utilisateur standard.
+
 Escalade immédiate vers le fondateur si :
 - Demande de remboursement
 - Bug bloquant signalé (audit qui ne se termine jamais après 10 minutes)
