@@ -19,6 +19,7 @@ import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 import ImportStepper from '@/components/Matrice/ImportStepper';
+import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 
 /* ------------------------------------------------------------------ */
