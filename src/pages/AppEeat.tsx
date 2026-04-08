@@ -199,18 +199,6 @@ export default function AppEeat() {
 
       <Header />
 
-      {/* Console-style sub-header */}
-      <div className="sticky top-16 z-30 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex items-center gap-3 h-12">
-          <Link to="/app/console" className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-           <Shield className="h-5 w-5 text-amber-500" />
-
-          <span className="font-semibold text-sm text-foreground">{t.h1}</span>
-          <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Beta</Badge>
-        </div>
-      </div>
 
       <main className="pt-4 pb-16">
         {/* Hero / Scan section */}
