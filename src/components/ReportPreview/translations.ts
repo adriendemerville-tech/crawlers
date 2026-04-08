@@ -59,6 +59,7 @@ export const reportTranslations = {
     priority: 'Prioritaire',
     recommended: 'Recommandé',
     vigilance: 'Vigilance',
+    mobileFirstNotice: 'Depuis 2021, Google indexe et classe les sites principalement sur la base de leur version mobile. Les performances mobiles influencent directement votre positionnement dans les résultats de recherche.',
   },
   en: {
     title: 'Analysis Report',
@@ -120,6 +121,7 @@ export const reportTranslations = {
     priority: 'Priority',
     recommended: 'Recommended',
     vigilance: 'Vigilance',
+    mobileFirstNotice: 'Since 2021, Google indexes and ranks websites primarily based on their mobile version. Mobile performance directly impacts your search rankings.',
   },
   es: {
     title: 'Informe de Análisis',
@@ -181,6 +183,7 @@ export const reportTranslations = {
     priority: 'Prioritario',
     recommended: 'Recomendado',
     vigilance: 'Vigilancia',
+    mobileFirstNotice: 'Desde 2021, Google indexa y clasifica los sitios web principalmente en función de su versión móvil. El rendimiento móvil influye directamente en su posicionamiento en los resultados de búsqueda.',
   },
 };
 
