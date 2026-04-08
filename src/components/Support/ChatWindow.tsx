@@ -177,7 +177,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadCurrentConversation());
+  const [showHistory, setShowHistory] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
