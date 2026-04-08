@@ -33,11 +33,12 @@ function formatMs(ms: number): string {
 
 interface Props {
   result: ExpertAuditResult;
+  url?: string;
   t: Record<string, string>;
   onReportClick: () => void;
 }
 
-export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
+export function TechnicalResultsSection({ result, url, t, onReportClick }: Props) {
   const { language } = useLanguage();
   const previousData = usePreviousAuditData(result, 'technical', language);
   // Defensive: guard against missing scores sub-objects
@@ -55,7 +56,7 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
     <>
       {/* Introduction */}
       {result.introduction && (
-        <IntroductionCard introduction={result.introduction} variant="technical" />
+        <IntroductionCard introduction={result.introduction} variant="technical" domain={result.domain} url={url || result.url} />
       )}
 
       {/* SPA Detection Alert */}

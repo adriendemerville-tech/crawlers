@@ -1525,7 +1525,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {/* === STEP 1: TECHNICAL AUDIT SECTION === */}
           {auditMode === 'technical' && (
             <StrategicErrorBoundary onReset={handleNewAudit}>
-              <TechnicalResultsSection result={result} t={t} onReportClick={handleReportButtonClick} />
+              <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
             </StrategicErrorBoundary>
           )}
 

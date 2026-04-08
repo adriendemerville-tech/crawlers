@@ -131,6 +131,7 @@ export function StrategicResultsSection({
               introduction={result.strategicAnalysis.introduction}
               variant="strategic"
               domain={result.domain || url}
+              url={url || result.url}
               siteName={result.domain || url}
               onHallucinationData={onHallucinationCorrectionComplete}
               typewriter={strategicProgressiveReveal}
