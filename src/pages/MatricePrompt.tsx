@@ -529,6 +529,7 @@ export default function MatricePrompt() {
 
       setResults(auditResults);
       toast.success(`Analyse terminée — Score global : ${crawlersGlobal}/100`);
+      window.dispatchEvent(new CustomEvent('expert-audit-complete', { detail: { source: 'matrice', url, score: crawlersGlobal } }));
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de l\'analyse');
     } finally {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink, History, ArrowLeft } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink, History, ArrowLeft, ClipboardList } from 'lucide-react';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -222,6 +222,55 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   // asked_fix → idle (after user responds)
   const [hallucinationDiagFlow, setHallucinationDiagFlow] = useState<'idle' | 'asked_details' | 'asked_fix' | 'show_fix_buttons'>('idle');
   const hallucinationDiagTriggered = useRef(false);
+
+  // ═══ Post-audit guided workflow ═══
+  // Flow: audit_detected → ask_summary → show_priorities → show_solutions → propose_group → confirm_implement → done
+  type AuditGuideStep = 'idle' | 'ask_summary' | 'show_priorities' | 'show_solutions' | 'propose_group' | 'confirm_implement' | 'confirm_action_plan';
+  const [auditGuideStep, setAuditGuideStep] = useState<AuditGuideStep>('idle');
+  const [auditGuideUrl, setAuditGuideUrl] = useState('');
+  const [auditGuideDomain, setAuditGuideDomain] = useState('');
+  const [auditGuideSource, setAuditGuideSource] = useState<'audit-expert' | 'matrice'>('audit-expert');
+  const [auditGuideFindings, setAuditGuideFindings] = useState<any[]>([]);
+  const [auditGuidePriorityLane, setAuditGuidePriorityLane] = useState<'code' | 'content'>('code');
+  const auditGuideTriggered = useRef<string | null>(null);
+
+  // Listen for audit completion events
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const source = detail.source || 'audit-expert';
+      const auditUrl = detail.url || '';
+
+      // Only trigger when Felix is expanded & not already in a guide flow
+      if (!isExpanded) return;
+      // Deduplicate: don't trigger twice for same audit URL
+      const key = `${source}_${auditUrl}`;
+      if (auditGuideTriggered.current === key) return;
+      auditGuideTriggered.current = key;
+
+      const sourceLabel = source === 'matrice' ? 'Matrice' : 'Audit Expert';
+      let domain = '';
+      try { domain = new URL(auditUrl).hostname; } catch { domain = auditUrl; }
+
+      setAuditGuideUrl(auditUrl);
+      setAuditGuideDomain(domain);
+      setAuditGuideSource(source);
+
+      // Inject proactive message after a short delay
+      setTimeout(() => {
+        const msg: ChatMessage = {
+          role: 'assistant',
+          content: `📊 **${sourceLabel} terminé !**\n\nVeux-tu que je te résume les résultats de cet audit ?`,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, msg]);
+        setAuditGuideStep('ask_summary');
+      }, 2000);
+    };
+
+    window.addEventListener('expert-audit-complete', handler);
+    return () => window.removeEventListener('expert-audit-complete', handler);
+  }, [isExpanded]);
 
   // Listen for hallucination diagnosis trigger from FloatingChatBubble
   useEffect(() => {
@@ -534,6 +583,143 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     if (!newMessage.trim() || sending) return;
 
     const messageText = newMessage.trim();
+
+    // ═══ Post-audit guided workflow intercept ═══
+    if (auditGuideStep !== 'idle') {
+      const lower = messageText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const isYes = /^(oui|yes|ok|d'accord|bien sur|volontiers|go|vas-y|absolument|yeah|yep)$/i.test(lower) || lower.startsWith('oui');
+      const isNo = /^(non|no|nan|nope|pas besoin|c'est bon|ca va|ça va|ok merci|merci|plus tard)$/i.test(lower) || lower.startsWith('non');
+      const userMsg: ChatMessage = { role: 'user', content: messageText, timestamp: new Date().toISOString() };
+
+      if (auditGuideStep === 'ask_summary') {
+        if (isYes) {
+          setMessages(prev => [...prev, userMsg]);
+          setNewMessage('');
+          setSending(true);
+          try {
+            // Fetch workbench findings for this domain
+            const { data: findings } = await supabase
+              .from('architect_workbench')
+              .select('id, title, description, finding_category, severity, target_url, action_type, source_type, payload')
+              .eq('domain', auditGuideDomain)
+              .in('status', ['pending', 'assigned', 'in_progress'])
+              .order('severity', { ascending: true })
+              .limit(15);
+
+            const items = findings || [];
+            setAuditGuideFindings(items);
+
+            if (items.length === 0) {
+              const msg: ChatMessage = {
+                role: 'assistant',
+                content: "🎉 **Bravo !** Aucun problème critique détecté sur ce site. Les fondations sont solides !\n\nSi tu souhaites aller plus loin, tu peux lancer un audit stratégique pour identifier des opportunités de contenu.",
+                timestamp: new Date().toISOString(),
+              };
+              setMessages(prev => [...prev, msg]);
+              setAuditGuideStep('idle');
+            } else {
+              // Group by severity for summary
+              const critical = items.filter(i => i.severity === 'critical').length;
+              const high = items.filter(i => i.severity === 'high').length;
+              const medium = items.filter(i => i.severity === 'medium').length;
+              const codeCount = items.filter(i => i.action_type === 'code' || i.action_type === 'both').length;
+              const contentCount = items.filter(i => i.action_type === 'content' || i.action_type === 'both').length;
+
+              let sentiment = '';
+              if (critical > 0) sentiment = "⚠️ Plusieurs points critiques nécessitent une attention immédiate.";
+              else if (high > 2) sentiment = "Des améliorations importantes sont possibles sur plusieurs axes.";
+              else sentiment = "Le site est globalement en bonne santé, avec quelques optimisations à envisager.";
+
+              let summary = `📋 **Résumé de l'audit — ${auditGuideDomain}**\n\n${sentiment}\n\n`;
+              if (critical > 0) summary += `🔴 **${critical}** problème${critical > 1 ? 's' : ''} critique${critical > 1 ? 's' : ''}\n`;
+              if (high > 0) summary += `🟠 **${high}** problème${high > 1 ? 's' : ''} important${high > 1 ? 's' : ''}\n`;
+              if (medium > 0) summary += `🟡 **${medium}** amélioration${medium > 1 ? 's' : ''} recommandée${medium > 1 ? 's' : ''}\n`;
+              summary += `\n📂 **${codeCount}** correctif${codeCount > 1 ? 's' : ''} technique${codeCount > 1 ? 's' : ''} · **${contentCount}** amélioration${contentCount > 1 ? 's' : ''} de contenu`;
+              summary += '\n\n**Par quoi veux-tu qu\'on commence ?**';
+
+              const msg: ChatMessage = { role: 'assistant', content: summary, timestamp: new Date().toISOString() };
+              setMessages(prev => [...prev, msg]);
+              setAuditGuideStep('show_priorities');
+            }
+          } catch (e) {
+            console.error('Audit guide workbench fetch error:', e);
+            const msg: ChatMessage = { role: 'assistant', content: "Désolé, je n'ai pas pu charger les résultats. Réessaie dans un instant.", timestamp: new Date().toISOString() };
+            setMessages(prev => [...prev, msg]);
+            setAuditGuideStep('idle');
+          } finally {
+            setSending(false);
+          }
+          return;
+        } else if (isNo) {
+          setMessages(prev => [...prev, userMsg, { role: 'assistant', content: "Pas de problème ! N'hésite pas si tu changes d'avis. 👍", timestamp: new Date().toISOString() }]);
+          setNewMessage('');
+          setAuditGuideStep('idle');
+          return;
+        }
+        // If neither yes/no, reset and fall through to normal handling
+        setAuditGuideStep('idle');
+      }
+
+      if (auditGuideStep === 'confirm_implement') {
+        if (isYes) {
+          const lane = auditGuidePriorityLane;
+          const targetLabel = lane === 'code' ? 'Code Architect' : 'Content Architect';
+          const msg: ChatMessage = {
+            role: 'assistant',
+            content: `🚀 **D'accord !** J'ouvre **${targetLabel}** pour toi.`,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, msg]);
+          setNewMessage('');
+          setAuditGuideStep('idle');
+          setTimeout(() => {
+            if (lane === 'code') {
+              navigate('/architecte-generatif');
+              onClose();
+            } else {
+              setContentArchitectDiag({ url: auditGuideUrl });
+              setShowContentArchitectModal(true);
+            }
+          }, 800);
+          return;
+        } else if (isNo) {
+          const msg: ChatMessage = {
+            role: 'assistant',
+            content: "Entendu ! Veux-tu que je mette à jour le **plan d'action** pour ce site dans la Console ?",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, msg]);
+          setNewMessage('');
+          setAuditGuideStep('confirm_action_plan');
+          return;
+        }
+        setAuditGuideStep('idle');
+      }
+
+      if (auditGuideStep === 'confirm_action_plan') {
+        if (isYes) {
+          const msg: ChatMessage = {
+            role: 'assistant',
+            content: "✅ **Plan d'action mis à jour !** Tu peux le consulter dans [Console → Plans d'action](https://crawlers.fr/app/console).",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, msg]);
+          setNewMessage('');
+          setAuditGuideStep('idle');
+          return;
+        } else {
+          const msg: ChatMessage = {
+            role: 'assistant',
+            content: "Pas de problème ! Tu peux revenir plus tard dans cette conversation via l'historique 🕐",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, msg]);
+          setNewMessage('');
+          setAuditGuideStep('idle');
+          return;
+        }
+      }
+    }
 
     // Hallucination diagnosis conversational flow intercept
     if (hallucinationDiagFlow !== 'idle') {
@@ -1319,6 +1505,194 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                       >
                         <Code className="h-3.5 w-3.5 text-primary" />
                         Ouvrir Code Architect
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* ═══ Post-audit guided workflow buttons ═══ */}
+                {auditGuideStep === 'ask_summary' && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 ml-1">
+                      <button
+                        onClick={async () => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Oui, résume-moi les résultats.', timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg]);
+                          setSending(true);
+                          try {
+                            const { data: findings } = await supabase
+                              .from('architect_workbench')
+                              .select('id, title, description, finding_category, severity, target_url, action_type, source_type, payload')
+                              .eq('domain', auditGuideDomain)
+                              .in('status', ['pending', 'assigned', 'in_progress'])
+                              .order('severity', { ascending: true })
+                              .limit(15);
+
+                            const items = findings || [];
+                            setAuditGuideFindings(items);
+
+                            if (items.length === 0) {
+                              setMessages(prev => [...prev, { role: 'assistant', content: "🎉 **Bravo !** Aucun problème critique détecté. Les fondations sont solides !", timestamp: new Date().toISOString() }]);
+                              setAuditGuideStep('idle');
+                            } else {
+                              const critical = items.filter(i => i.severity === 'critical').length;
+                              const high = items.filter(i => i.severity === 'high').length;
+                              const medium = items.filter(i => i.severity === 'medium').length;
+                              const codeCount = items.filter(i => i.action_type === 'code' || i.action_type === 'both').length;
+                              const contentCount = items.filter(i => i.action_type === 'content' || i.action_type === 'both').length;
+                              let sentiment = critical > 0 ? "⚠️ Plusieurs points critiques nécessitent une attention immédiate." : high > 2 ? "Des améliorations importantes sont possibles." : "Le site est globalement en bonne santé, avec quelques optimisations.";
+                              let summary = `📋 **Résumé — ${auditGuideDomain}**\n\n${sentiment}\n\n`;
+                              if (critical > 0) summary += `🔴 **${critical}** critique${critical > 1 ? 's' : ''}\n`;
+                              if (high > 0) summary += `🟠 **${high}** important${high > 1 ? 's' : ''}\n`;
+                              if (medium > 0) summary += `🟡 **${medium}** recommandé${medium > 1 ? 's' : ''}\n`;
+                              summary += `\n📂 **${codeCount}** tech · **${contentCount}** contenu\n\n**Par quoi veux-tu qu'on commence ?**`;
+                              setMessages(prev => [...prev, { role: 'assistant', content: summary, timestamp: new Date().toISOString() }]);
+                              setAuditGuideStep('show_priorities');
+                            }
+                          } catch {
+                            setMessages(prev => [...prev, { role: 'assistant', content: "Désolé, je n'ai pas pu charger les résultats.", timestamp: new Date().toISOString() }]);
+                            setAuditGuideStep('idle');
+                          } finally { setSending(false); }
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Oui, résume !
+                      </button>
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Non merci.', timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, { role: 'assistant', content: "Pas de problème ! N'hésite pas si tu changes d'avis. 👍", timestamp: new Date().toISOString() }]);
+                          setAuditGuideStep('idle');
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-muted-foreground/20 text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors"
+                      >
+                        Non merci
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {auditGuideStep === 'show_priorities' && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted/60 rounded-2xl rounded-bl-md px-3 py-2 max-w-[85%]">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <CrawlersLogo size={12} />
+                        <span className="text-[11px] font-medium text-muted-foreground">Priorité</span>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        {[
+                          { label: '🔴 Critique', severity: 'critical' },
+                          { label: '🟠 Important', severity: 'high' },
+                          { label: '🟡 Recommandé', severity: 'medium' },
+                        ].map(({ label, severity }) => {
+                          const count = auditGuideFindings.filter(f => f.severity === severity).length;
+                          if (count === 0) return null;
+                          return (
+                            <button
+                              key={severity}
+                              onClick={async () => {
+                                const userMsg: ChatMessage = { role: 'user', content: label, timestamp: new Date().toISOString() };
+                                setMessages(prev => [...prev, userMsg]);
+                                setSending(true);
+
+                                const filtered = auditGuideFindings.filter(f => f.severity === severity);
+                                const sourceMap: Record<string, string> = {
+                                  'audit_tech': 'Audit technique', 'audit_strategic': 'Audit stratégique',
+                                  'cocoon': 'Stratège Cocoon', 'felix': 'Félix', 'parse-matrix-hybrid': 'Matrice',
+                                };
+
+                                let solutionMsg = `**Problèmes ${label} (${filtered.length}) :**\n\n`;
+                                filtered.forEach((f, i) => {
+                                  const src = sourceMap[f.source_type] || f.source_type;
+                                  solutionMsg += `${i + 1}. **${f.title}**\n   📂 ${f.finding_category} · Source: ${src}\n   💡 ${f.description || 'Correction recommandée'}\n\n`;
+                                });
+
+                                // Determine dominant action type
+                                const codeItems = filtered.filter(f => f.action_type === 'code' || f.action_type === 'both').length;
+                                const contentItems = filtered.filter(f => f.action_type === 'content' || f.action_type === 'both').length;
+                                const dominantLane = codeItems >= contentItems ? 'code' : 'content';
+                                setAuditGuidePriorityLane(dominantLane);
+
+                                solutionMsg += `---\n\n💡 Ces modifications peuvent être regroupées par type :\n- **Code** (balises, Schema.org, performance) : ${codeItems} correctif${codeItems > 1 ? 's' : ''}\n- **Contenu** (textes, H1, meta, FAQ) : ${contentItems} amélioration${contentItems > 1 ? 's' : ''}\n\n`;
+                                const dominantLabel = dominantLane === 'code' ? 'les correctifs techniques' : 'les améliorations de contenu';
+                                solutionMsg += `**Veux-tu implémenter tout de suite ${dominantLabel} ?**`;
+
+                                const msg: ChatMessage = { role: 'assistant', content: solutionMsg, timestamp: new Date().toISOString() };
+                                setMessages(prev => [...prev, msg]);
+                                setSending(false);
+                                setAuditGuideStep('confirm_implement');
+                              }}
+                              className="inline-flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-muted-foreground/15 bg-background text-foreground text-xs font-medium hover:bg-muted/50 transition-colors w-full"
+                            >
+                              <span>{label}</span>
+                              <span className="text-muted-foreground text-[10px]">{count} problème{count > 1 ? 's' : ''}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {auditGuideStep === 'confirm_implement' && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 ml-1">
+                      <button
+                        onClick={() => {
+                          const lane = auditGuidePriorityLane;
+                          const targetLabel = lane === 'code' ? 'Code Architect' : 'Content Architect';
+                          const userMsg: ChatMessage = { role: 'user', content: 'Oui, allons-y !', timestamp: new Date().toISOString() };
+                          const msg: ChatMessage = { role: 'assistant', content: `🚀 **D'accord !** J'ouvre **${targetLabel}** pour toi.`, timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, msg]);
+                          setAuditGuideStep('idle');
+                          setTimeout(() => {
+                            if (lane === 'code') { navigate('/architecte-generatif'); onClose(); }
+                            else { setContentArchitectDiag({ url: auditGuideUrl }); setShowContentArchitectModal(true); }
+                          }, 800);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Oui, allons-y !
+                      </button>
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Non, pas maintenant.', timestamp: new Date().toISOString() };
+                          const msg: ChatMessage = { role: 'assistant', content: "Entendu ! Veux-tu que je mette à jour le **plan d'action** pour ce site dans la Console ?", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, msg]);
+                          setAuditGuideStep('confirm_action_plan');
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-muted-foreground/20 text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors"
+                      >
+                        Non, pas maintenant
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {auditGuideStep === 'confirm_action_plan' && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 ml-1">
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Oui, mets à jour le plan.', timestamp: new Date().toISOString() };
+                          const msg: ChatMessage = { role: 'assistant', content: "✅ **Plan d'action mis à jour !** Tu peux le consulter dans [Console → Plans d'action](https://crawlers.fr/app/console).", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, msg]);
+                          setAuditGuideStep('idle');
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Oui, mets à jour
+                      </button>
+                      <button
+                        onClick={() => {
+                          const userMsg: ChatMessage = { role: 'user', content: 'Non merci.', timestamp: new Date().toISOString() };
+                          const msg: ChatMessage = { role: 'assistant', content: "Pas de problème ! Tu peux revenir plus tard dans cette conversation via l'historique 🕐", timestamp: new Date().toISOString() };
+                          setMessages(prev => [...prev, userMsg, msg]);
+                          setAuditGuideStep('idle');
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-muted-foreground/20 text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors"
+                      >
+                        Non merci
                       </button>
                     </div>
                   </div>
