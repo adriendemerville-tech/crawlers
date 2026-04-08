@@ -23,6 +23,31 @@ function getAgeYears(foundingYear: number | null): number | null {
   return new Date().getFullYear() - foundingYear;
 }
 
+/**
+ * Fetch the earliest snapshot year from the Wayback Machine CDX API.
+ * Returns the founding year or null if unavailable.
+ */
+async function fetchWaybackAge(domain: string): Promise<number | null> {
+  try {
+    const url = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(domain)}&output=json&limit=1&fl=timestamp&sort=timestamp:asc`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    // CDX returns [[header], [first_row]] — first row timestamp is YYYYMMDDHHmmss
+    if (!Array.isArray(data) || data.length < 2) return null;
+    const timestamp = String(data[1][0]);
+    const year = parseInt(timestamp.substring(0, 4), 10);
+    if (isNaN(year) || year < 1990) return null;
+    return year;
+  } catch (e) {
+    console.warn('Wayback Machine lookup failed:', e);
+    return null;
+  }
+}
+
 function getAgeLabel(ageYears: number | null): string {
   if (ageYears == null) return 'Inconnu';
   if (ageYears <= 1) return 'Startup (<1 an)';
