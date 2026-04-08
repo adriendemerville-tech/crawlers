@@ -6,6 +6,7 @@ import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts';
+import { extractInjectionPoints, injectionPointsToPrompt } from '../_shared/injectionPoints.ts';
 
 // ══════════════════════════════════════════════════════════════
 // INTERFACES - CODE ARCHITECT v4.0 — CLS-ZERO Protocol
@@ -1868,7 +1869,27 @@ async function generateAllFixesWithAI(
   }
 
   // ── SCAN HTML LIVE de la page cible (structure réelle pour injection ciblée) ──
+  // Includes precise injection points (CSS selectors) for surgical DOM targeting
+  let injectionPointsBlock = ''
   if (pageHtmlData) {
+    // Extract injection points from raw HTML if available
+    try {
+      const rawHtml = await (async () => {
+        try {
+          const resp = await fetch(siteUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Crawlers-CodeArchitect/1.0)' },
+            signal: AbortSignal.timeout(8000),
+            redirect: 'follow',
+          })
+          return resp.ok ? await resp.text() : ''
+        } catch { return '' }
+      })()
+      if (rawHtml) {
+        const ip = extractInjectionPoints(rawHtml, siteUrl)
+        injectionPointsBlock = '\n\n' + injectionPointsToPrompt(ip)
+      }
+    } catch { /* skip injection points if fetch fails */ }
+
     contextParts.push(`SCAN HTML LIVE DE LA PAGE CIBLE:
 ⚠️ CRITIQUE : Utilise cette structure réelle pour cibler tes injections au bon endroit.
 
@@ -1886,13 +1907,7 @@ STRUCTURE DOM EXISTANTE:
 - Open Graph: ${pageHtmlData.hasOg ? pageHtmlData.ogTags.join(', ') : 'ABSENT'}
 - Viewport: ${pageHtmlData.hasViewport ? 'OK' : 'ABSENT'}
 - HTTPS: ${pageHtmlData.isHttps ? 'OK' : 'NON'}
-
-RÈGLES D'INJECTION BASÉES SUR LE SCAN:
-1. Schema.org → injecter dans <head> via injectJsonLd(), NE PAS dupliquer les types déjà présents (${pageHtmlData.schemaTypes.join(', ') || 'aucun'})
-2. Meta tags → utiliser document.querySelector('meta[name="description"]') si existe, sinon créer
-3. H1 → cibler le H1 existant "${pageHtmlData.h1Contents[0] || ''}" pour le modifier, pas en créer un second
-4. FAQ → ${pageHtmlData.hasFAQSection ? 'enrichir/structurer la FAQ existante' : 'injecter avant </main> ou avant le footer'}
-5. Contenu visible → utiliser injectWithSkeleton() avec un sélecteur précis basé sur la structure détectée`);
+${injectionPointsBlock}`);
   }
 
   if (auditContext.technicalScores) {
