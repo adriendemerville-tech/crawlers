@@ -4,6 +4,7 @@ import { readSiteMemory, writeSiteMemory, applyIdentityUpdates } from '../_share
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, findMatchingContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
+import { getSavPatternsForStrategist } from '../_shared/crossAgentContext.ts';
 
 /**
  * cocoon-strategist: Orchestrateur Stratège 360°
@@ -379,6 +380,20 @@ try {
       }
     } catch (e) {
       console.error('[strategist] Memory read error:', e);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 0b: Read SAV conversation patterns (cross-agent)
+    // ═══════════════════════════════════════════════════════════
+    let savPatternsContext = '';
+    try {
+      const { snippet: savSnippet, patterns } = await getSavPatternsForStrategist(auth.userId, domain);
+      if (savSnippet) {
+        savPatternsContext = savSnippet;
+        console.log(`[strategist] Loaded ${patterns.length} SAV patterns for ${domain}`);
+      }
+    } catch (e) {
+      console.error('[strategist] SAV patterns read error:', e);
     }
 
     // ═══════════════════════════════════════════════════════════
