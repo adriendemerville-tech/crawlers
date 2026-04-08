@@ -477,13 +477,62 @@ Réponds UNIQUEMENT en JSON valide :
 
   if (jobId) await supabase.from('async_jobs').update({ progress: 95 }).eq('id', jobId);
 
+  // ── Weighted score calculation with Trustworthiness penalties ──
+  let rawTrust = analysis.trustworthiness ?? 40;
+  const trustPenalties: string[] = [];
+
+  // Penalty: no external citations / no outgoing links
+  if (!analysis.sources_cited && aggregated.avgExternalLinks < 1) {
+    rawTrust = Math.max(0, rawTrust - 15);
+    trustPenalties.push('Aucune citation externe ni lien sortant détecté (-15)');
+  }
+
+  // Penalty: domain age < 2 years
+  if (domainAgeInfo.available && domainAgeInfo.ageYears !== null && domainAgeInfo.ageYears < 2) {
+    rawTrust = Math.max(0, rawTrust - 10);
+    trustPenalties.push(`Domaine jeune (${domainAgeInfo.ageYears < 1 ? '< 1 an' : '~' + Math.floor(domainAgeInfo.ageYears) + ' an(s)'}) (-10)`);
+  }
+
+  // Penalty: no HTTPS
+  if (!aggregated.isHttps) {
+    rawTrust = Math.max(0, rawTrust - 20);
+    trustPenalties.push('Pas de HTTPS détecté (-20)');
+  }
+
+  const pillars = {
+    experience: analysis.experience ?? 40,
+    expertise: analysis.expertise ?? 40,
+    authoritativeness: analysis.authoritativeness ?? 40,
+    trustworthiness: rawTrust,
+  };
+
+  // Weighted overall: E×1.5 + Ex×2.5 + A×2.5 + T×4 = /10.5
+  const WEIGHTS = { experience: 1.5, expertise: 2.5, authoritativeness: 2.5, trustworthiness: 4 };
+  const weightedSum = pillars.experience * WEIGHTS.experience
+    + pillars.expertise * WEIGHTS.expertise
+    + pillars.authoritativeness * WEIGHTS.authoritativeness
+    + pillars.trustworthiness * WEIGHTS.trustworthiness;
+  const totalWeight = WEIGHTS.experience + WEIGHTS.expertise + WEIGHTS.authoritativeness + WEIGHTS.trustworthiness;
+  const calculatedOverall = Math.round(weightedSum / totalWeight);
+
+  console.log(`[check-eeat] 📊 Weighted score: E=${pillars.experience}×1.5 Ex=${pillars.expertise}×2.5 A=${pillars.authoritativeness}×2.5 T=${pillars.trustworthiness}×4 → ${calculatedOverall}`);
+  if (trustPenalties.length > 0) {
+    console.log(`[check-eeat] ⚠️ Trust penalties applied: ${trustPenalties.join(', ')}`);
+  }
+
   return {
     success: true,
-    score: analysis.overall ?? 40,
-    experience: analysis.experience,
-    expertise: analysis.expertise,
-    authoritativeness: analysis.authoritativeness,
-    trustworthiness: analysis.trustworthiness,
+    score: calculatedOverall,
+    experience: pillars.experience,
+    expertise: pillars.expertise,
+    authoritativeness: pillars.authoritativeness,
+    trustworthiness: pillars.trustworthiness,
+    scoring: {
+      weights: WEIGHTS,
+      trustPenalties,
+      domainAge: domainAgeInfo.available ? { years: domainAgeInfo.ageYears, foundingYear: domainAgeInfo.foundingYear } : null,
+      method: 'weighted_algorithmic_v2',
+    },
     signals: {
       authorIdentified: analysis.author_identified ?? aggregated.pagesWithAuthor > 0,
       sourcesCited: analysis.sources_cited ?? false,
@@ -498,10 +547,9 @@ Réponds UNIQUEMENT en JSON valide :
     },
     trustSignals: analysis.trust_signals || [],
     missingSignals: analysis.missing_signals || [],
-    issues: analysis.issues || [],
+    issues: [...(analysis.issues || []), ...trustPenalties.map(p => `[Trustworthiness] ${p}`)],
     strengths: analysis.strengths || [],
     recommendations: analysis.recommendations || [],
-    // Backlink data enrichment
     backlinkData: backlinkData.available ? {
       referringDomains: backlinkData.referringDomains,
       backlinksTotal: backlinkData.backlinksTotal,
@@ -511,13 +559,11 @@ Réponds UNIQUEMENT en JSON valide :
       anchorDistribution: backlinkData.anchorDistribution,
       referringPages: backlinkData.referringPages,
     } : null,
-    // GA4 referral data enrichment
     ga4Referrals: ga4Referrals.available ? {
       referrals: ga4Referrals.referrals,
       totalReferralSessions: ga4Referrals.totalReferralSessions,
     } : null,
     ga4Connected: ga4Referrals.available,
-    // GBP data enrichment
     gbpData: gbpData.available ? {
       avgRating: gbpData.avgRating,
       totalReviews: gbpData.totalReviews,
@@ -537,6 +583,7 @@ Réponds UNIQUEMENT en JSON valide :
       ...(backlinkData.available ? ['dataforseo_backlinks'] : []),
       ...(ga4Referrals.available ? ['ga4_referrals'] : []),
       ...(gbpData.available ? ['google_business_profile'] : []),
+      ...(domainAgeInfo.available ? ['wayback_domain_age'] : []),
     ],
   };
 }
