@@ -203,6 +203,7 @@ const App = () => (
                       </Suspense>
                     </BrowserRouter>
                   </TooltipProvider>
+                </AISidebarProvider>
                 </CreditsProvider>
                 </FreemiumProvider>
                 </DemoModeProvider>
