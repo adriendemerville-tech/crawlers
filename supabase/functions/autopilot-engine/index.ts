@@ -324,9 +324,9 @@ try {
           continue;
         }
 
-        // ═══ Check cooldown ═══
+        // ═══ Check cooldown (only after successful macro-cycles) ═══
         const cooldownMs = (config.cooldown_hours || COOLDOWN_HOURS) * 3600 * 1000;
-        if (config.last_cycle_at) {
+        if (config.last_cycle_at && config.status !== 'error') {
           const elapsed = Date.now() - new Date(config.last_cycle_at).getTime();
           if (elapsed < cooldownMs) {
             const hoursLeft = Math.round((cooldownMs - elapsed) / 3600000);
@@ -334,6 +334,7 @@ try {
             continue;
           }
         }
+        // If last cycle failed (status === 'error'), skip cooldown and retry immediately
 
         // ═══ Update status to 'running' ═══
         await supabase
