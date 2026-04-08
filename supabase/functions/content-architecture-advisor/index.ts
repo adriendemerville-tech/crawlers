@@ -938,6 +938,43 @@ ${llmVisibilityData ? JSON.stringify(llmVisibilityData, null, 2) : 'Non mesurée
 **Backlinks & Autorité:**
 ${backlinkData ? `Referring domains: ${backlinkData.referring_domains || 0}, Total backlinks: ${backlinkData.backlinks_total || 0}, Domain rank: ${backlinkData.domain_rank || 'N/A'}` : 'Non mesuré'}
 
+${existingPageHtml ? `
+── SCAN HTML DE LA PAGE CIBLE (état actuel) ──
+⚠️ CRITIQUE : La page cible EXISTE DÉJÀ. Le contenu recommandé doit ENRICHIR/AMÉLIORER l'existant, pas le remplacer aveuglément.
+
+**Structure actuelle:**
+- Title: "${existingPageHtml.titleContent}" (${existingPageHtml.titleLength} chars)
+- Meta description: "${existingPageHtml.metaDescContent}" (${existingPageHtml.metaDescLength} chars)
+- H1: ${existingPageHtml.h1Count > 0 ? existingPageHtml.h1Contents.map(h => `"${h}"`).join(', ') : 'ABSENT ⚠️'}
+- H2: ${existingPageHtml.h2Count} | H3: ${existingPageHtml.h3Count}
+- Nombre de mots: ${existingPageHtml.wordCount}
+
+**Médias & Liens:**
+- Images: ${existingPageHtml.imagesTotal} (${existingPageHtml.imagesMissingAlt} sans alt ⚠️)
+- Liens internes: ${existingPageHtml.internalLinksCount} | Liens externes: ${existingPageHtml.externalLinksCount}
+
+**Schema.org existant:** ${existingPageHtml.hasSchemaOrg ? existingPageHtml.schemaTypes.join(', ') : 'AUCUN ⚠️'}
+**Canonical:** ${existingPageHtml.hasCanonical ? existingPageHtml.canonicalUrl : 'ABSENT ⚠️'}
+**Open Graph:** ${existingPageHtml.hasOg ? existingPageHtml.ogTags.join(', ') : 'ABSENT'}
+**FAQ existante:** ${existingPageHtml.hasFAQSection ? (existingPageHtml.hasFAQWithSchema ? 'Oui avec schema FAQPage ✅' : 'Oui SANS schema ⚠️') : 'Non'}
+**TL;DR/Résumé existant:** ${existingPageHtml.hasTLDR ? 'Oui' : 'Non'}
+**Auteur bio:** ${existingPageHtml.hasAuthorBio ? 'Oui' : 'Non ⚠️'}
+**Données chiffrées:** ${existingPageHtml.statisticCount} statistiques, ${existingPageHtml.percentageCount} pourcentages (densité: ${existingPageHtml.dataDensityScore}/100)
+**Fraîcheur:** ${existingPageHtml.contentAgeDays !== null ? `${existingPageHtml.contentAgeDays} jours (${existingPageHtml.mostRecentDate})` : 'Inconnue'}
+**Liens sociaux:** ${existingPageHtml.hasSocialLinks ? 'Oui' : 'Non'} | LinkedIn: ${existingPageHtml.hasLinkedInLinks ? 'Oui' : 'Non'}
+
+RÈGLES BASÉES SUR LE SCAN :
+1. Si un H1 existe, le recommended_h1 doit l'AMÉLIORER (pas le changer radicalement sauf si objectivement mauvais)
+2. Si la meta description existe, propose une amélioration, pas un remplacement total
+3. Si des Schema.org existent, les compléter, pas les remplacer
+4. Si la FAQ existe sans schema, AJOUTER le schema FAQPage
+5. Les sections recommandées doivent combler les LACUNES identifiées, pas dupliquer l'existant
+6. Si le word_count est déjà suffisant, concentre-toi sur la qualité et la structure
+` : `
+── SCAN HTML DE LA PAGE CIBLE ──
+La page n'existe pas encore ou n'est pas accessible. Les recommandations partent de zéro.
+`}
+
 **GMB associée:** ${hasGMB ? `Oui (${siteIdentity?.gmb_city || 'ville inconnue'})` : 'Non'}
 **Position SERP actuelle:** ${isInSERP ? `Position ${serpPosition + 1}` : 'Hors top 10 ou inconnu'}
 
