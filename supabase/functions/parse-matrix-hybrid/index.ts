@@ -294,6 +294,78 @@ const clientIp = getClientIp(req)
       }
     }
 
+    // ── Mandatory: write findings to architect_workbench if site is tracked ──
+    if (trackedSite) {
+      try {
+        const findings = orderedResults.filter(r => r.crawlers_score < r.seuil_moyen)
+        if (findings.length > 0) {
+          const rows = findings.map(f => {
+            // Map axe to workbench finding_category
+            const categoryMap: Record<string, string> = {
+              'balises': 'meta_tags',
+              'structure': 'structured_data',
+              'performance': 'speed',
+              'securite': 'security',
+              'sécurité': 'security',
+              'contenu': 'thin_content',
+              'content': 'thin_content',
+              'accessibilite': 'accessibility',
+              'accessibilité': 'accessibility',
+              'mobile': 'mobile',
+              'linking': 'linking',
+              'maillage': 'linking',
+              'geo': 'geo_visibility',
+              'eeat': 'eeat',
+              'seo': 'meta_tags',
+            }
+            const category = categoryMap[f.axe?.toLowerCase()] || 'technical_fix'
+            const severity = f.crawlers_score <= f.seuil_mauvais ? 'critical'
+              : f.crawlers_score < f.seuil_moyen ? 'high' : 'medium'
+
+            return {
+              domain,
+              tracked_site_id: trackedSite.id,
+              user_id: trackedSite.user_id,
+              source_type: 'audit_tech',
+              source_function: 'parse-matrix-hybrid',
+              source_record_id: `matrix_${domain}_${f.id}`,
+              finding_category: category,
+              severity,
+              title: `Matrice: ${f.prompt.substring(0, 80)}`,
+              description: f.parsed_raw?.justification || `Score ${f.crawlers_score}/100 (seuil: ${f.seuil_moyen})`,
+              target_url: normalizedUrl,
+              target_operation: 'replace',
+              payload: {
+                crawlers_score: f.crawlers_score,
+                geo_score: f.geo_score,
+                parsed_score: f.parsed_score,
+                axe: f.axe,
+                poids: f.poids,
+                seuil_bon: f.seuil_bon,
+                seuil_moyen: f.seuil_moyen,
+                seuil_mauvais: f.seuil_mauvais,
+                raw_data: f.raw_data,
+                parsed_raw: f.parsed_raw,
+              },
+            }
+          })
+
+          // Upsert: use source_record_id to avoid duplicates on re-audit
+          for (const row of rows) {
+            await sb
+              .from('architect_workbench')
+              .upsert(row, { onConflict: 'source_type,source_record_id' })
+          }
+
+          console.log(`[parse-matrix-hybrid] 🏗️ Workbench: ${rows.length} findings written (${findings.filter(f => f.crawlers_score <= f.seuil_mauvais).length} critical)`)
+        } else {
+          console.log(`[parse-matrix-hybrid] 🏗️ Workbench: all items above threshold, no findings to write`)
+        }
+      } catch (e) {
+        console.warn(`[parse-matrix-hybrid] Workbench write failed (non-blocking):`, e)
+      }
+    }
+
     return jsonOk({
       success: true, url: normalizedUrl,
       global_score: globalScore, global_geo_score: globalGeoScore,
