@@ -82,7 +82,8 @@ const CGVU = () => {
                 <li>L'analyse de l'accessibilité du site aux robots IA (crawlability) ;</li>
                 <li>Le calcul d'un score GEO (optimisation pour les moteurs génératifs) ;</li>
                 <li>L'analyse de la visibilité auprès des LLM (ChatGPT, Perplexity, Claude, etc.) ;</li>
-                <li>L'audit de performance technique (Core Web Vitals, PageSpeed) sur mobile et desktop ;</li>
+                <li>L'audit de performance technique (Core Web Vitals, PageSpeed) sur mobile et desktop, avec analyse des formats d'images (détection PNG/JPEG/BMP, recommandation de conversion WebP/AVIF) et estimation des gains de performance ;</li>
+                <li>La <strong>conversion automatique d'images</strong> via Code Architect : réécriture JavaScript des balises <code>&lt;img&gt;</code> en <code>&lt;picture&gt;</code> avec sources WebP/AVIF, sans modification des fichiers originaux du site client (approche non-destructive et réversible) ;</li>
                 <li>L'audit stratégique approfondi (EEAT, positionnement concurrentiel, analyse sémantique) ;</li>
                 <li>L'analyse de mots-clés, requêtes cibles et contenu prioritaire ;</li>
                 <li>Le <strong>crawl multi-pages</strong> : analyse récursive de l'ensemble des pages d'un site (jusqu'à 500 pages, structure, SEO par page, score global, synthèse IA) ;</li>

@@ -164,10 +164,12 @@ const DOC_SECTIONS: DocSection[] = [
 <ul class="list-disc pl-6 mt-1 space-y-1">
 <li><strong>Technique</strong> : indexation, robots.txt, sitemap, redirections, erreurs HTTP</li>
 <li><strong>Sémantique</strong> : balises title, meta, H1-H6, densité de mots-clés</li>
-<li><strong>Performance</strong> : Core Web Vitals, PageSpeed, temps de chargement</li>
+<li><strong>Performance</strong> : Core Web Vitals, PageSpeed, temps de chargement, analyse des formats d'images</li>
+<li><strong>Images</strong> : détection des formats non optimisés (PNG, JPEG, BMP), taille réelle des fichiers, estimation des gains de conversion WebP/AVIF, dimensions surdimensionnées</li>
 <li><strong>Sécurité</strong> : HTTPS, mixed content, vulnérabilités</li>
 </ul>
-<p class="mt-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-sm">📱 <strong>Mobile-First</strong> — Depuis 2021, Google indexe et classe les sites principalement sur la base de leur version mobile. C'est pourquoi nos audits analysent en priorité les performances mobiles de votre site.</p>
+<p class="mt-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-sm">📱 <strong>Mobile-First</strong> — Depuis 2021, Google indexe et classe les sites principalement sur la base de leur version mobile. Les performances mobiles influencent directement votre positionnement dans les résultats de recherche. C'est pourquoi nos audits analysent en priorité les performances mobiles de votre site.</p>
+<p class="mt-2 p-3 rounded-md bg-amber-500/10 border border-amber-500/20 text-sm">🖼️ <strong>Formats d'images</strong> — Les images PNG et JPEG non optimisées sont la première cause de lenteur des pages. Notre audit détecte ces formats et Code Architect peut les convertir automatiquement en WebP/AVIF via la balise <code>&lt;picture&gt;</code>, sans modifier vos fichiers originaux.</p>
 <p class="mt-2 text-sm text-muted-foreground">Disponible : 1 fois par jour en freemium inscrit. Illimité en Pro Agency.</p>`,
       },
       {
