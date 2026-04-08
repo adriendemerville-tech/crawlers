@@ -285,7 +285,7 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
       change_pct: Math.round(changePct * 100) / 100,
       affected_pages: s.affected_pages || 0,
       description,
-    }));
+    });
   }
 
   if (newAlerts.length > 0) {
