@@ -417,12 +417,12 @@ try {
       isCreator = isAdmin === true;
     }
 
-    // ── /createur : prefix gate — admin commands require explicit prefix ──
+    // ── /createur, /creator, /admin : prefix gate — admin commands require explicit prefix ──
     const lastUserMsgRaw = messages.filter((m: any) => m.role === "user").pop()?.content || "";
-    const createurPrefixMatch = lastUserMsgRaw.match(/^\/createur\s*:\s*/i);
+    const createurPrefixMatch = lastUserMsgRaw.match(/^\/(?:createur|creator|admin)\s*:\s*/i);
     const isCreatorMode = isCreator && !!createurPrefixMatch;
 
-    // Strip the /createur : prefix from the message for downstream processing
+    // Strip the prefix from the message for downstream processing
     if (isCreatorMode && createurPrefixMatch) {
       const strippedMsg = lastUserMsgRaw.slice(createurPrefixMatch[0].length).trim();
       // Update the last user message in the messages array
