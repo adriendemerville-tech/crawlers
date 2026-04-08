@@ -158,16 +158,24 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
       });
       if (error) throw error;
 
-      const shareId = responseData?.shareId || responseData?.shareUrl?.split('/').pop();
-      if (shareId) {
-        const crawlersUrl = `https://crawlers.fr/temporarylink/${shareId}`;
-        setShareUrl(crawlersUrl);
-        await navigator.clipboard.writeText(crawlersUrl);
+      // Use the short shareUrl returned by the edge function
+      const shortUrl = responseData?.shareUrl;
+      if (shortUrl) {
+        setShareUrl(shortUrl);
+        await navigator.clipboard.writeText(shortUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
         toast.success('Lien de partage copié !');
       } else {
-        throw new Error('No share ID returned');
+        // Fallback to legacy format
+        const shareId = responseData?.shareId;
+        if (!shareId) throw new Error('No share ID returned');
+        const fallbackUrl = `https://crawlers.lovable.app/temporarylink/${shareId}`;
+        setShareUrl(fallbackUrl);
+        await navigator.clipboard.writeText(fallbackUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        toast.success('Lien de partage copié !');
       }
     } catch (error) {
       console.error('Share error:', error);
