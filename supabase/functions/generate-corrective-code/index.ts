@@ -1846,7 +1846,8 @@ async function generateAllFixesWithAI(
   language: string,
   auditContext: AuditContext,
   roadmapContext: string = '',
-  cmsSettings?: SiteSettings
+  cmsSettings?: SiteSettings,
+  pageHtmlData?: HtmlData | null,
 ): Promise<Map<string, { fn: string; call: string }> | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return null;
