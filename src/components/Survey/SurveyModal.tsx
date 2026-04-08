@@ -8,7 +8,7 @@ import { X, Star, Camera, Send, MessageCircle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import html2canvas from 'html2canvas';
+
 
 interface ContentBlock {
   id: string;
