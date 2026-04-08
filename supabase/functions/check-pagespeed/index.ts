@@ -456,6 +456,8 @@ Deno.serve(handleRequest(async (req) => {
             desktop: desktop ? { ...desktop, strategy: 'desktop' } : null,
             // Backward compatible: main "scores" = mobile (or desktop fallback)
             scores: mobile?.scores || desktop?.scores || null,
+            // Lighthouse recommendations (mobile prioritized)
+            recommendations: mobile?.recommendations || desktop?.recommendations || [],
             strategy: 'dual',
             dataSource: mobile?.dataSource || desktop?.dataSource || 'lab',
             scannedAt: new Date().toISOString(),
@@ -487,6 +489,7 @@ Deno.serve(handleRequest(async (req) => {
             url: normalizedUrl,
             strategy,
             scores: result.scores,
+            recommendations: result.recommendations,
             dataSource: result.dataSource,
             scannedAt: new Date().toISOString(),
           }
