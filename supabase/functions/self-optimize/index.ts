@@ -26,6 +26,7 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DOMAIN = 'crawlers.fr';
 const BASE_URL = 'https://crawlers.fr';
 const MAX_ITEMS_PER_CYCLE = 5;
+const GITHUB_API = 'https://api.github.com';
 
 // ── Helpers ─────────────────────────────────────────────
 
