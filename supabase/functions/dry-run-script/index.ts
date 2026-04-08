@@ -198,6 +198,17 @@ async function runViaBrowserless(
     };
   } catch (error) {
     console.error('❌ Browserless dry run failed:', error);
+    // Cascade to Fly.io before falling back to syntax-only
+    const flyUrl = Deno.env.get('FLY_RENDERER_URL');
+    const flySecret = Deno.env.get('FLY_RENDERER_SECRET');
+    if (flyUrl && flySecret) {
+      console.log('🔄 Falling back to Fly.io renderer...');
+      try {
+        return await runViaFly(siteUrl, code, flyUrl, flySecret);
+      } catch (flyErr) {
+        console.error('❌ Fly.io fallback also failed:', flyErr);
+      }
+    }
     return syntaxOnlyCheck(code, startTime);
   }
 }
