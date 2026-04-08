@@ -1,4 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
+import { extractInjectionPoints, type InjectionPoints } from '../_shared/injectionPoints.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
@@ -1089,6 +1090,59 @@ async function patchContent(conn: CmsConnection, input: PatchInput): Promise<Pat
   }
 }
 
+// ── Auto-enrich patches with injection point selectors ──
+
+function enrichPatchesWithInjectionPoints(patches: PatchOperation[], ip: InjectionPoints): PatchOperation[] {
+  return patches.map(patch => {
+    // If patch already has a selector or old_value, don't override
+    if (patch.selector || patch.old_value) return patch
+
+    const enriched = { ...patch }
+
+    switch (patch.zone) {
+      case 'h1':
+        if (ip.h1_content) enriched.old_value = ip.h1_content
+        if (ip.h1_selector) enriched.selector = ip.h1_selector
+        break
+      case 'h2':
+      case 'h3':
+        // Try to match by index from injection points
+        if (ip.h2_selectors.length > 0 && patch.action === 'replace') {
+          // Use first available H2 selector as hint
+          enriched.selector = ip.h2_selectors[0]
+          if (ip.h2_contents.length > 0) enriched.old_value = ip.h2_contents[0]
+        }
+        break
+      case 'faq':
+        if (ip.faq_existing_selector) {
+          enriched.selector = ip.faq_existing_selector
+        } else if (ip.faq_insert_before) {
+          enriched.selector = ip.faq_insert_before
+          if (patch.action === 'replace') enriched.action = 'prepend' // no existing FAQ, prepend before footer
+        }
+        break
+      case 'schema_org':
+        enriched.selector = ip.schema_target // 'head'
+        break
+      case 'body_section':
+        if (patch.action === 'append' && ip.main_content_selector) {
+          enriched.selector = ip.main_content_end_selector || ip.main_content_selector
+        } else if (patch.action === 'prepend' && ip.main_content_selector) {
+          enriched.selector = ip.main_content_selector
+        }
+        break
+      case 'alt_text':
+        // Provide first missing-alt image src as old_value
+        if (ip.images_missing_alt_srcs.length > 0) {
+          enriched.old_value = ip.images_missing_alt_srcs[0]
+        }
+        break
+    }
+
+    return enriched
+  })
+}
+
 // ── Main Handler ──
 
 Deno.serve(handleRequest(async (req) => {
@@ -1128,8 +1182,27 @@ try {
       return new Response(JSON.stringify(brief), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    console.log(`[cms-patch-content] Patching ${target_url} on ${conn.platform} with ${patches.length} patches`);
-    const result = await patchContent(conn as CmsConnection, body);
+    // ── Auto-enrich patches with injection points from live HTML scan ──
+    let enrichedPatches = patches;
+    try {
+      console.log(`[cms-patch-content] Fetching target HTML for injection points...`);
+      const htmlResp = await fetch(target_url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Crawlers-CMSPatch/1.0)' },
+        signal: AbortSignal.timeout(10000),
+        redirect: 'follow',
+      });
+      if (htmlResp.ok) {
+        const rawHtml = await htmlResp.text();
+        const ip = extractInjectionPoints(rawHtml, target_url);
+        enrichedPatches = enrichPatchesWithInjectionPoints(patches, ip);
+        console.log(`[cms-patch-content] ✅ Injection points extracted: h1=${ip.h1_selector}, main=${ip.main_content_selector}, faq=${ip.faq_existing_selector || ip.faq_insert_before}`);
+      }
+    } catch (e) {
+      console.warn(`[cms-patch-content] ⚠️ HTML fetch for injection points failed:`, e);
+    }
+
+    console.log(`[cms-patch-content] Patching ${target_url} on ${conn.platform} with ${enrichedPatches.length} patches`);
+    const result = await patchContent(conn as CmsConnection, { ...body, patches: enrichedPatches });
 
     // Log
     try {

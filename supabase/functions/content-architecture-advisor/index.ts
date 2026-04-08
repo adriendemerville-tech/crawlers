@@ -7,6 +7,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { buildContentBrief, briefToPromptBlock, type PageType as BriefPageType } from '../_shared/contentBrief.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts';
+import { extractInjectionPoints, injectionPointsToPrompt, type InjectionPoints } from '../_shared/injectionPoints.ts';
 
 /**
  * content-architecture-advisor
@@ -1424,6 +1425,7 @@ FRAÎCHEUR & DÉNOMINATION:
 
     // Enrich result with page scan metadata
     if (existingPageHtml) {
+      const injectionPts = existingPageHtmlRaw ? extractInjectionPoints(existingPageHtmlRaw, url) : null
       result.existing_page_scan = {
         has_existing_content: true,
         title: existingPageHtml.titleContent,
@@ -1438,9 +1440,10 @@ FRAÎCHEUR & DÉNOMINATION:
         images_missing_alt: existingPageHtml.imagesMissingAlt,
         internal_links: existingPageHtml.internalLinksCount,
         content_age_days: existingPageHtml.contentAgeDays,
+        injection_points: injectionPts,
       }
     } else {
-      result.existing_page_scan = { has_existing_content: false }
+      result.existing_page_scan = { has_existing_content: false, injection_points: null }
     }
 
     return jsonOk({ data: result })
