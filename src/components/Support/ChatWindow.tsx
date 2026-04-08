@@ -918,11 +918,53 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   };
 
   const handleNewConversation = async () => {
+    // Archive current conversation if it has user messages
+    if (messages.length > 0) {
+      const firstUserMsg = messages.find(m => m.role === 'user');
+      const preview = firstUserMsg?.content?.slice(0, 80) || messages[0]?.content?.slice(0, 80) || 'Conversation';
+      const archive: ArchivedConversation = {
+        id: Date.now().toString(),
+        messages: [...messages],
+        archivedAt: new Date().toISOString(),
+        preview,
+      };
+      const existing = getArchivedConversations();
+      saveArchivedConversations([archive, ...existing]);
+    }
     setMessages([]);
     setConversationId(null);
     setShowPhonePrompt(false);
     setPhoneSent(false);
     setBugReportMode('idle');
+    saveCurrentConversation([]);
+  };
+
+  const handleRestoreConversation = (archive: ArchivedConversation) => {
+    // Archive current if non-empty before restoring
+    if (messages.length > 0) {
+      const firstUserMsg = messages.find(m => m.role === 'user');
+      const preview = firstUserMsg?.content?.slice(0, 80) || messages[0]?.content?.slice(0, 80) || 'Conversation';
+      const current: ArchivedConversation = {
+        id: Date.now().toString(),
+        messages: [...messages],
+        archivedAt: new Date().toISOString(),
+        preview,
+      };
+      const existing = getArchivedConversations();
+      saveArchivedConversations([current, ...existing.filter(a => a.id !== archive.id)]);
+    } else {
+      // Just remove the restored one from archives
+      const existing = getArchivedConversations();
+      saveArchivedConversations(existing.filter(a => a.id !== archive.id));
+    }
+    setMessages(archive.messages);
+    setConversationId(null);
+    setShowHistory(false);
+  };
+
+  const handleDeleteArchive = (archiveId: string) => {
+    const existing = getArchivedConversations();
+    saveArchivedConversations(existing.filter(a => a.id !== archiveId));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
