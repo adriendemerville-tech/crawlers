@@ -475,7 +475,8 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
                 );
               })}
               <p className="text-[10px] text-muted-foreground text-center mt-1">
-                Poids : Expertise ×3.0 · Authoritativeness ×2.5 · Trustworthiness ×2.5 · Experience ×2.0
+                Poids : Trustworthiness ×4.0 · Expertise ×2.5 · Authoritativeness ×2.5 · Experience ×1.5
+              </p>
               </p>
             </div>
           </div>
