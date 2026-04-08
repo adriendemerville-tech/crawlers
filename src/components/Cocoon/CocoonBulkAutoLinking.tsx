@@ -59,6 +59,8 @@ const i18n = {
     saved: 'Suggestions sauvegardées dans Cocoon pour validation.',
     error: 'Erreur lors de l\'analyse',
     progressLabel: 'Progression',
+    noCms: 'Connectez votre CMS dans les paramètres du site pour déployer automatiquement ces liens.',
+    cmsReady: 'Votre CMS est connecté — vous pourrez déployer ces liens en un clic.',
   },
   en: {
     title: 'Retroactive Auto-Linking',
@@ -85,6 +87,8 @@ const i18n = {
     saved: 'Suggestions saved in Cocoon for review.',
     error: 'Error during analysis',
     progressLabel: 'Progress',
+    noCms: 'Connect your CMS in site settings to automatically deploy these links.',
+    cmsReady: 'Your CMS is connected — you can deploy these links in one click.',
   },
   es: {
     title: 'Auto-Enlace Retroactivo',
@@ -111,6 +115,8 @@ const i18n = {
     saved: 'Sugerencias guardadas en Cocoon para revisión.',
     error: 'Error durante el análisis',
     progressLabel: 'Progreso',
+    noCms: 'Conecte su CMS en la configuración del sitio para desplegar estos enlaces automáticamente.',
+    cmsReady: 'Su CMS está conectado — podrá desplegar estos enlaces con un clic.',
   },
 };
 
