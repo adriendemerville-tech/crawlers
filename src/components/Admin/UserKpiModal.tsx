@@ -486,6 +486,78 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
               </Table>
             )}
           </TabsContent>
+
+          <TabsContent value="logs" className="overflow-hidden flex flex-col flex-1">
+            <div className="flex items-center gap-2 py-2 border-b border-border">
+              <Button
+                variant={livePolling ? 'default' : 'outline'}
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setLivePolling(!livePolling)}
+              >
+                {livePolling ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                {livePolling ? 'Pause' : 'Live'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => user && fetchLogs(user.user_id, true)}
+              >
+                <RefreshCw className="h-3 w-3" />
+                Refresh
+              </Button>
+              <span className="text-xs text-muted-foreground ml-auto">{logs.length} événements</span>
+            </div>
+            <ScrollArea className="flex-1 max-h-[50vh]">
+              {logsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : logs.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Aucun log</p>
+              ) : (
+                <div className="space-y-1 py-2 font-mono text-[11px]">
+                  {logs.map((log) => {
+                    const isError = log.event_type.includes('error');
+                    const isFairUse = log.event_type.startsWith('fair_use:');
+                    const isAudit = log.event_type.includes('audit') || log.event_type.includes('strategic');
+                    const isCrawl = log.event_type.includes('crawl');
+                    const colorClass = isError
+                      ? 'text-red-500'
+                      : isFairUse
+                      ? 'text-amber-500'
+                      : isAudit
+                      ? 'text-purple-500'
+                      : isCrawl
+                      ? 'text-cyan-500'
+                      : 'text-muted-foreground';
+
+                    const time = new Date(log.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const date = new Date(log.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+
+                    // Extract useful info from event_data
+                    let detail = '';
+                    if (log.target_url) detail = log.target_url;
+                    else if (log.event_data) {
+                      const d = log.event_data as Record<string, any>;
+                      detail = d.action || d.function_name || d.error_message || d.url || d.domain || '';
+                      if (typeof detail !== 'string') detail = JSON.stringify(detail).slice(0, 120);
+                    }
+
+                    return (
+                      <div key={log.id} className={`flex items-start gap-2 px-2 py-0.5 hover:bg-muted/50 rounded ${isError ? 'bg-red-500/5' : ''}`}>
+                        <span className="text-muted-foreground/60 shrink-0 w-[70px]">{date} {time}</span>
+                        <span className={`shrink-0 w-[180px] truncate ${colorClass}`}>{log.event_type}</span>
+                        <span className="text-muted-foreground truncate">{detail}</span>
+                      </div>
+                    );
+                  })}
+                  <div ref={logsEndRef} />
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
