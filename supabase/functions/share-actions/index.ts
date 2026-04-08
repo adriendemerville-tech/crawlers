@@ -313,6 +313,36 @@ async function handleTrackClick(req: Request, body: any) {
   return json({ success: true, credits_awarded: rewardAmount });
 }
 
+// ─── Action: resolve-short ───
+
+async function handleResolveShort(body: any) {
+  const { code } = body;
+  if (!code || typeof code !== 'string' || code.length !== 6) {
+    return json({ success: false, error: 'Invalid short code' }, 400);
+  }
+
+  const supabase = getServiceClient();
+
+  const { data: link, error } = await supabase
+    .from('short_links')
+    .select('target_url, expires_at')
+    .eq('code', code)
+    .single();
+
+  if (error || !link) {
+    return json({ success: false, error: 'Short link not found' }, 404);
+  }
+
+  if (link.expires_at && new Date(link.expires_at) < new Date()) {
+    return json({ success: false, error: 'Link expired' }, 410);
+  }
+
+  // Increment click count
+  await supabase.rpc('increment_short_link_clicks', { link_code: code }).catch(() => {});
+
+  return json({ success: true, targetUrl: link.target_url });
+}
+
 // ─── Router ───
 
 Deno.serve(async (req) => {
