@@ -2277,7 +2277,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         await updateProgress(90, 'generating_report');
 
         html = compileMarinaReport(
-          { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML },
+          { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML, indexation: indexationHTML || undefined },
           detectedLang, domain, url, marinaBranding,
         );
 
