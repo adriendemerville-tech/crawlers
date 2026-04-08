@@ -477,7 +477,6 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
               <p className="text-[10px] text-muted-foreground text-center mt-1">
                 Poids : Trustworthiness ×4.0 · Expertise ×2.5 · Authoritativeness ×2.5 · Experience ×1.5
               </p>
-              </p>
             </div>
           </div>
 
