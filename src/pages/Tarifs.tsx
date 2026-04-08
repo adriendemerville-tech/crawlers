@@ -19,7 +19,7 @@ import {
   ScanSearch, GitCompareArrows, Layers, Building2, MessageCircle, Server, Database
 } from 'lucide-react';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
-import proAgencyPlusLogo from '@/assets/pro-agency-plus-logo.png';
+import proAgencyPlusLogo from '@/assets/pro-agency-plus-logo.webp';
 
 const translations = {
   fr: {
