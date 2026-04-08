@@ -4,11 +4,18 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /* ================================================================== */
-/*  GEO Matrice Audit — evaluates GEO/AI-Ready criteria               */
+/*  GEO Matrice Audit — standard mode + benchmark mode                 */
 /* ================================================================== */
 
 interface GeoItem {
   id: string; prompt: string; poids: number; axe: string
+  seuil_bon: number; seuil_moyen: number; seuil_mauvais: number
+  llm_name?: string
+}
+
+interface BenchmarkItem {
+  id: string; prompt: string; theme: string; engine: string
+  poids: number; axe: string
   seuil_bon: number; seuil_moyen: number; seuil_mauvais: number
   llm_name?: string
 }
@@ -23,7 +30,31 @@ interface GeoResult {
   seuil_bon: number; seuil_moyen: number; seuil_mauvais: number
 }
 
-/* ── LLM GEO evaluation ──────────────────────────────────────────── */
+interface BenchmarkResult extends GeoResult {
+  theme: string; engine: string
+  citation_found: boolean
+  citation_rank: number | null
+  citation_context: string
+}
+
+/* ── Engine-specific system prompts ──────────────────────────────── */
+
+const ENGINE_PROMPTS: Record<string, string> = {
+  chatgpt: `Tu simules ChatGPT. Réponds à la question de l'utilisateur comme le ferait ChatGPT. Sois factuel, cite des sources si pertinent.`,
+  gemini: `Tu simules Google Gemini. Réponds comme Gemini le ferait : synthétique, avec des données vérifiables.`,
+  perplexity: `Tu simules Perplexity AI. Réponds avec des citations de sources, des liens, une synthèse structurée.`,
+  copilot: `Tu simules Microsoft Copilot. Réponds de manière concise et pratique, avec des suggestions actionnables.`,
+};
+
+function getEngineSystemPrompt(engine: string): string {
+  const lower = engine.toLowerCase();
+  for (const [key, prompt] of Object.entries(ENGINE_PROMPTS)) {
+    if (lower.includes(key)) return prompt;
+  }
+  return `Tu es un moteur de recherche IA. Réponds de manière factuelle et structurée.`;
+}
+
+/* ── LLM GEO evaluation (standard mode) ─────────────────────────── */
 
 async function evaluateGeo(
   prompt: string, url: string, llmName: string, retryCount = 0
@@ -79,18 +110,7 @@ Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string c
     const content = data.choices?.[0]?.message?.content || ''
     trackTokenUsage('parse-matrix-geo', llmName || 'google/gemini-2.5-flash', data.usage, url)
 
-    let jsonContent = content
-    if (content.includes('```json')) jsonContent = content.split('```json')[1].split('```')[0].trim()
-    else if (content.includes('```')) jsonContent = content.split('```')[1].split('```')[0].trim()
-
-    try {
-      const parsed = JSON.parse(jsonContent)
-      return { score: Math.min(100, Math.max(0, Math.round(Number(parsed.score) || 50))), raw: parsed }
-    } catch {
-      const numMatch = content.match(/(\d{1,3})/)
-      if (numMatch) return { score: Math.min(100, parseInt(numMatch[1])), raw: { llm_raw: content.substring(0, 200) } }
-      return { score: 50, raw: { llm_raw: content.substring(0, 200), parse_error: true } }
-    }
+    return parseScoreResponse(content)
   } catch (e) {
     if (retryCount < MAX_RETRIES) {
       await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
@@ -100,29 +120,226 @@ Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string c
   }
 }
 
+/* ── Benchmark evaluation: send full prompt as-is to engine ──────── */
+
+async function evaluateBenchmark(
+  prompt: string, brandUrl: string, engine: string, llmName: string, retryCount = 0
+): Promise<{ score: number; raw: Record<string, any>; citation_found: boolean; citation_rank: number | null; citation_context: string }> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+  if (!LOVABLE_API_KEY) return { score: 0, raw: { error: 'No API key' }, citation_found: false, citation_rank: null, citation_context: '' }
+
+  const MAX_RETRIES = 2
+  const RETRY_DELAYS = [2000, 5000]
+
+  try {
+    // Step 1: Send the full prompt to the simulated engine
+    const enginePrompt = getEngineSystemPrompt(engine);
+    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: llmName || 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: enginePrompt },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.3,
+      }),
+      signal: AbortSignal.timeout(30000),
+    })
+
+    if (!resp.ok) {
+      const status = resp.status
+      await resp.text()
+      if ((status === 429 || status >= 500) && retryCount < MAX_RETRIES) {
+        await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
+        return evaluateBenchmark(prompt, brandUrl, engine, llmName, retryCount + 1)
+      }
+      return { score: 0, raw: { error: `API error ${status}` }, citation_found: false, citation_rank: null, citation_context: '' }
+    }
+
+    const data = await resp.json()
+    const engineResponse = data.choices?.[0]?.message?.content || ''
+    trackTokenUsage('parse-matrix-geo', llmName || 'google/gemini-2.5-flash', data.usage, brandUrl)
+
+    // Step 2: Score the response with a fast LLM
+    const scoringResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          { role: 'system', content: `Tu analyses la réponse d'un moteur IA pour vérifier si une marque/site est cité.
+Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context": "<phrase où la marque apparaît>", "score": <0-100>}
+- cited: true si la marque/URL est mentionnée
+- rank: position dans la liste de recommandations (1 = premier cité, null si absent)
+- context: la phrase exacte de citation (vide si non cité)
+- score: 0 si non cité, 100 si cité en premier, dégression selon le rang` },
+          { role: 'user', content: `URL/Marque à chercher: ${brandUrl}\n\nRéponse du moteur IA (${engine}):\n${engineResponse.substring(0, 3000)}` },
+        ],
+        temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(15000),
+    })
+
+    if (!scoringResp.ok) {
+      await scoringResp.text()
+      return {
+        score: 0,
+        raw: { engine_response: engineResponse.substring(0, 500), scoring_error: true },
+        citation_found: false,
+        citation_rank: null,
+        citation_context: '',
+      }
+    }
+
+    const scoringData = await scoringResp.json()
+    const scoringContent = scoringData.choices?.[0]?.message?.content || ''
+    trackTokenUsage('parse-matrix-geo', 'google/gemini-2.5-flash-lite', scoringData.usage, brandUrl)
+
+    const parsed = parseScoreResponse(scoringContent)
+    const scoringRaw = parsed.raw as any
+
+    return {
+      score: scoringRaw.score ?? parsed.score,
+      raw: {
+        engine_response_preview: engineResponse.substring(0, 300),
+        scoring: scoringRaw,
+        engine,
+      },
+      citation_found: scoringRaw.cited ?? false,
+      citation_rank: scoringRaw.rank ?? null,
+      citation_context: scoringRaw.context ?? '',
+    }
+  } catch (e) {
+    if (retryCount < MAX_RETRIES) {
+      await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
+      return evaluateBenchmark(prompt, brandUrl, engine, llmName, retryCount + 1)
+    }
+    return { score: 0, raw: { error: e instanceof Error ? e.message : 'Unknown' }, citation_found: false, citation_rank: null, citation_context: '' }
+  }
+}
+
+/* ── Parse score from LLM response ───────────────────────────────── */
+
+function parseScoreResponse(content: string): { score: number; raw: Record<string, any> } {
+  let jsonContent = content
+  if (content.includes('```json')) jsonContent = content.split('```json')[1].split('```')[0].trim()
+  else if (content.includes('```')) jsonContent = content.split('```')[1].split('```')[0].trim()
+
+  try {
+    const parsed = JSON.parse(jsonContent)
+    return { score: Math.min(100, Math.max(0, Math.round(Number(parsed.score) || 50))), raw: parsed }
+  } catch {
+    const numMatch = content.match(/(\d{1,3})/)
+    if (numMatch) return { score: Math.min(100, parseInt(numMatch[1])), raw: { llm_raw: content.substring(0, 200) } }
+    return { score: 50, raw: { llm_raw: content.substring(0, 200), parse_error: true } }
+  }
+}
+
 /* ── Main handler ─────────────────────────────────────────────────── */
 
 Deno.serve(handleRequest(async (req) => {
-const clientIp = getClientIp(req)
+  const clientIp = getClientIp(req)
   const ipCheck = checkIpRate(clientIp, 'parse-matrix-geo', 15, 60_000)
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs)
   if (!acquireConcurrency('parse-matrix-geo', 50)) return concurrencyResponse(corsHeaders)
 
   try {
-    const { url, items } = await req.json() as { url: string; items: GeoItem[] }
+    const body = await req.json()
+    const { url, items, benchmark_items, mode } = body as {
+      url: string;
+      items?: GeoItem[];
+      benchmark_items?: BenchmarkItem[];
+      mode?: 'standard' | 'benchmark';
+    }
 
-    if (!url || !items?.length) {
-      return new Response(JSON.stringify({ success: false, error: 'url and items[] required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (!url) {
+      return jsonError('url required', 400)
     }
 
     let normalizedUrl = url.trim()
     if (!normalizedUrl.startsWith('http')) normalizedUrl = `https://${normalizedUrl}`
 
+    // ── BENCHMARK MODE ──────────────────────────────────────────────
+    if (mode === 'benchmark' && benchmark_items?.length) {
+      console.log(`[parse-matrix-geo] BENCHMARK mode for ${normalizedUrl} with ${benchmark_items.length} items`)
+
+      const BATCH_SIZE = 2 // Lower batch size for benchmark (2 LLM calls per item)
+      const results: BenchmarkResult[] = []
+
+      for (let i = 0; i < benchmark_items.length; i += BATCH_SIZE) {
+        const batch = benchmark_items.slice(i, i + BATCH_SIZE)
+        console.log(`[parse-matrix-geo] Benchmark batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(benchmark_items.length / BATCH_SIZE)}`)
+
+        const batchResults = await Promise.all(
+          batch.map(async (item): Promise<BenchmarkResult> => {
+            const { score, raw, citation_found, citation_rank, citation_context } = await evaluateBenchmark(
+              item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-2.5-flash'
+            )
+            return {
+              id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
+              theme: item.theme, engine: item.engine,
+              detected_type: 'geo_benchmark',
+              crawlers_score: score, parsed_score: score,
+              raw_data: raw, parsed_raw: raw,
+              citation_found, citation_rank, citation_context,
+              seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
+            }
+          })
+        )
+        results.push(...batchResults)
+
+        if (i + BATCH_SIZE < benchmark_items.length) await new Promise(r => setTimeout(r, 1000))
+      }
+
+      // Build heatmap data: theme × engine
+      const themes = [...new Set(results.map(r => r.theme))]
+      const engines = [...new Set(results.map(r => r.engine))]
+      const heatmap: Record<string, Record<string, { score: number; cited: boolean; rank: number | null }>> = {}
+
+      for (const theme of themes) {
+        heatmap[theme] = {}
+        for (const engine of engines) {
+          const match = results.find(r => r.theme === theme && r.engine === engine)
+          heatmap[theme][engine] = match
+            ? { score: match.crawlers_score, cited: match.citation_found, rank: match.citation_rank }
+            : { score: -1, cited: false, rank: null }
+        }
+      }
+
+      const totalWeight = results.reduce((s, r) => s + r.poids, 0)
+      const globalScore = totalWeight > 0
+        ? Math.round(results.reduce((s, r) => s + r.crawlers_score * r.poids, 0) / totalWeight)
+        : 0
+
+      const citationRate = results.length > 0
+        ? Math.round(results.filter(r => r.citation_found).length / results.length * 100)
+        : 0
+
+      console.log(`[parse-matrix-geo] Benchmark complete. Global: ${globalScore}/100, Citation rate: ${citationRate}%`)
+
+      return jsonOk({
+        success: true, url: normalizedUrl, mode: 'benchmark',
+        global_score: globalScore, citation_rate: citationRate,
+        total_items: results.length, audit_type: 'geo_benchmark',
+        themes, engines, heatmap, results,
+      })
+    }
+
+    // ── STANDARD MODE ───────────────────────────────────────────────
+    if (!items?.length) {
+      return jsonError('items[] required for standard mode', 400)
+    }
+
     console.log(`[parse-matrix-geo] Starting GEO audit for ${normalizedUrl} with ${items.length} items`)
 
-    // Process in batches of 3 to avoid rate limiting and timeouts
     const BATCH_SIZE = 3
     const results: GeoResult[] = []
 
@@ -145,7 +362,6 @@ const clientIp = getClientIp(req)
       )
       results.push(...batchResults)
 
-      // Small delay between batches to avoid rate limiting
       if (i + BATCH_SIZE < items.length) await new Promise(r => setTimeout(r, 500))
     }
 
@@ -170,4 +386,4 @@ const clientIp = getClientIp(req)
   } finally {
     releaseConcurrency('parse-matrix-geo')
   }
-})
+}))

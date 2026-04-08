@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -19,6 +19,7 @@ import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 import ImportStepper from '@/components/Matrice/ImportStepper';
+import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 
 /* ------------------------------------------------------------------ */
@@ -62,6 +63,7 @@ export default function MatricePrompt() {
   const [url, setUrl] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<any[] | null>(null);
+  const [benchmarkData, setBenchmarkData] = useState<{ results: any[]; themes: string[]; engines: string[]; heatmap: any; globalScore: number; citationRate: number } | null>(null);
   // Dynamic column labels from fuzzy mapping (original header → mapped field)
   const [columnLabels, setColumnLabels] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -435,7 +437,46 @@ export default function MatricePrompt() {
     if (!url.trim()) { toast.error('Entrez une URL'); return; }
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
     setAnalyzing(true);
+    setBenchmarkData(null);
     try {
+      // ── BENCHMARK MODE ──────────────────────────────────────────────
+      if (activeMatriceType === 'benchmark') {
+        const benchmarkItems = selectedRows.map(row => ({
+          id: row.id,
+          prompt: row.prompt,
+          theme: (row as any).theme || row.axe || 'Général',
+          engine: (row as any).engine || 'ChatGPT',
+          poids: row.poids,
+          axe: row.axe,
+          seuil_bon: row.seuil_bon,
+          seuil_moyen: row.seuil_moyen,
+          seuil_mauvais: row.seuil_mauvais,
+          llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
+        }));
+
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('parse-matrix-geo', {
+          body: { url: url.trim(), benchmark_items: benchmarkItems, mode: 'benchmark' },
+        });
+
+        if (fnError || !fnData?.success) {
+          throw new Error(fnData?.error || fnError?.message || 'Benchmark failed');
+        }
+
+        setBenchmarkData({
+          results: fnData.results,
+          themes: fnData.themes,
+          engines: fnData.engines,
+          heatmap: fnData.heatmap,
+          globalScore: fnData.global_score,
+          citationRate: fnData.citation_rate,
+        });
+
+        toast.success(`Benchmark terminé — Score: ${fnData.global_score}/100, Citations: ${fnData.citation_rate}%`);
+        setAnalyzing(false);
+        return;
+      }
+
+      // ── STANDARD MODE ───────────────────────────────────────────────
       // Build items payload for the edge function
       const items = selectedRows.map(row => ({
         id: row.id,
@@ -810,8 +851,23 @@ export default function MatricePrompt() {
             </div>
           </div>
 
+          {/* Benchmark Heatmap (shown when benchmark mode has results) */}
+          {benchmarkData && (
+            <div className="mb-6 border rounded-lg p-4 bg-card">
+              <h2 className="text-sm font-semibold mb-3 text-foreground">Benchmark Citabilité — Heatmap Thème × Engine</h2>
+              <BenchmarkHeatmap
+                results={benchmarkData.results}
+                themes={benchmarkData.themes}
+                engines={benchmarkData.engines}
+                heatmap={benchmarkData.heatmap}
+                globalScore={benchmarkData.globalScore}
+                citationRate={benchmarkData.citationRate}
+              />
+            </div>
+          )}
+
           {/* Matrix table */}
-          {rows.length > 0 && (
+          {rows.length > 0 && !benchmarkData && (
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>

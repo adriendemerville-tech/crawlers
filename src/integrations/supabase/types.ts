@@ -6112,6 +6112,45 @@ export type Database = {
           },
         ]
       }
+      matrix_display_schemas: {
+        Row: {
+          columns_config: Json
+          created_at: string
+          id: string
+          schema_hash: string
+          schema_name: string
+          scoring_config: Json
+          source_file_signature: string | null
+          updated_at: string
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          columns_config?: Json
+          created_at?: string
+          id?: string
+          schema_hash: string
+          schema_name?: string
+          scoring_config?: Json
+          source_file_signature?: string | null
+          updated_at?: string
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          columns_config?: Json
+          created_at?: string
+          id?: string
+          schema_hash?: string
+          schema_name?: string
+          scoring_config?: Json
+          source_file_signature?: string | null
+          updated_at?: string
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       matrix_errors: {
         Row: {
           admin_notes: string | null
@@ -9148,6 +9187,7 @@ export type Database = {
           address: string | null
           api_key: string
           brand_name: string | null
+          brand_site_url: string | null
           business_type: string | null
           client_targets: Json | null
           cms_platform: string | null
@@ -9174,6 +9214,7 @@ export type Database = {
           last_sov_update: string | null
           last_widget_ping: string | null
           legal_structure: string | null
+          location_detail: string | null
           main_serp_competitor: string | null
           market_sector: string | null
           media_specialties: string[] | null
@@ -9181,6 +9222,7 @@ export type Database = {
           nonprofit_type: string | null
           previous_config: Json
           primary_language: string | null
+          primary_use_case: string | null
           products_services: string | null
           seasonality_detected_at: string | null
           seasonality_profile: Json | null
@@ -9190,6 +9232,7 @@ export type Database = {
           site_name: string
           social_profiles: Json | null
           target_audience: string | null
+          target_segment: string | null
           user_id: string
           voice_dna: Json | null
         }
@@ -9197,6 +9240,7 @@ export type Database = {
           address?: string | null
           api_key?: string
           brand_name?: string | null
+          brand_site_url?: string | null
           business_type?: string | null
           client_targets?: Json | null
           cms_platform?: string | null
@@ -9223,6 +9267,7 @@ export type Database = {
           last_sov_update?: string | null
           last_widget_ping?: string | null
           legal_structure?: string | null
+          location_detail?: string | null
           main_serp_competitor?: string | null
           market_sector?: string | null
           media_specialties?: string[] | null
@@ -9230,6 +9275,7 @@ export type Database = {
           nonprofit_type?: string | null
           previous_config?: Json
           primary_language?: string | null
+          primary_use_case?: string | null
           products_services?: string | null
           seasonality_detected_at?: string | null
           seasonality_profile?: Json | null
@@ -9239,6 +9285,7 @@ export type Database = {
           site_name?: string
           social_profiles?: Json | null
           target_audience?: string | null
+          target_segment?: string | null
           user_id: string
           voice_dna?: Json | null
         }
@@ -9246,6 +9293,7 @@ export type Database = {
           address?: string | null
           api_key?: string
           brand_name?: string | null
+          brand_site_url?: string | null
           business_type?: string | null
           client_targets?: Json | null
           cms_platform?: string | null
@@ -9272,6 +9320,7 @@ export type Database = {
           last_sov_update?: string | null
           last_widget_ping?: string | null
           legal_structure?: string | null
+          location_detail?: string | null
           main_serp_competitor?: string | null
           market_sector?: string | null
           media_specialties?: string[] | null
@@ -9279,6 +9328,7 @@ export type Database = {
           nonprofit_type?: string | null
           previous_config?: Json
           primary_language?: string | null
+          primary_use_case?: string | null
           products_services?: string | null
           seasonality_detected_at?: string | null
           seasonality_profile?: Json | null
@@ -9288,6 +9338,7 @@ export type Database = {
           site_name?: string
           social_profiles?: Json | null
           target_audience?: string | null
+          target_segment?: string | null
           user_id?: string
           voice_dna?: Json | null
         }

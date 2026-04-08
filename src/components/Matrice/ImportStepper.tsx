@@ -27,6 +27,7 @@ const TYPE_LABELS: Record<MatriceType, { label: string; desc: string; color: str
   seo: { label: 'SEO', desc: 'Audit technique, balises, performance, structured data', color: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
   geo: { label: 'GEO', desc: 'Citabilité IA, visibilité moteurs génératifs, scoring multi-LLM', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
   hybrid: { label: 'Hybride', desc: 'Critères SEO + GEO combinés', color: 'bg-amber-500/10 text-amber-400 border-amber-500/30' },
+  benchmark: { label: 'Benchmark LLM', desc: 'Test de citation par moteur IA — heatmap thème × engine', color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' },
 };
 
 const STEPS: { key: Step; label: string }[] = [
