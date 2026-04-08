@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { UxCodeProposals } from './UxCodeProposals';
+import { UxActionsRegistry } from './UxActionsRegistry';
 
 interface UxLog {
   id: string;
@@ -151,6 +152,9 @@ export function UxAgentDashboard() {
 
       {/* UX Code Proposals */}
       <UxCodeProposals />
+
+      {/* UX Actions History */}
+      <UxActionsRegistry />
 
       {/* Recent logs */}
       <Card>
