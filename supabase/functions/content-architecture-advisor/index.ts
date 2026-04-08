@@ -274,6 +274,27 @@ Deno.serve(handleRequest(async (req) => {
       }
     }
 
+    // ── Step 1b: Scan target page HTML (existing content analysis) ──
+    let existingPageHtml: HtmlData | null = null
+    let existingPageHtmlRaw = ''
+    try {
+      console.log(`[content-advisor] Step 1b: Fetching target page HTML for ${url}`)
+      const htmlResp = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Crawlers-ContentArchitect/1.0)' },
+        signal: AbortSignal.timeout(12000),
+        redirect: 'follow',
+      })
+      if (htmlResp.ok) {
+        existingPageHtmlRaw = await htmlResp.text()
+        existingPageHtml = analyzeHtmlFull(existingPageHtmlRaw, url)
+        console.log(`[content-advisor] ✅ HTML scan: title="${existingPageHtml.titleContent}" h1=${existingPageHtml.h1Count} h2=${existingPageHtml.h2Count} words=${existingPageHtml.wordCount} schema=${existingPageHtml.schemaTypes.join(',')} images=${existingPageHtml.imagesTotal}`)
+      } else {
+        console.log(`[content-advisor] ⚠️ HTML fetch failed: HTTP ${htmlResp.status} — page may not exist yet`)
+      }
+    } catch (e) {
+      console.log(`[content-advisor] ⚠️ HTML scan skipped: ${e instanceof Error ? e.message : String(e)}`)
+    }
+
     // ── Load SEO/GEO prompt template for this page type ──
     const templatePageType = page_type === 'homepage' || page_type === 'category' ? 'landing'
       : page_type === 'faq' ? 'article'
