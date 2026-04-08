@@ -275,6 +275,12 @@ function ProfileContent() {
                     <span className="hidden sm:inline">SEA→SEO</span>
                   </TabsTrigger>
                 )}
+                {!isMobile && (
+                  <TabsTrigger value="indexation" className="flex-1 gap-2">
+                    <Globe className="h-4 w-4" />
+                    <span className="hidden sm:inline">Indexation</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger
                   value="gmb"
                   className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
