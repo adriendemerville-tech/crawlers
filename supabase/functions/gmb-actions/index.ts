@@ -504,4 +504,4 @@ try {
     console.error('[gmb-actions] error:', msg)
     return jsonError(msg, 500)
   }
-})
+}))
