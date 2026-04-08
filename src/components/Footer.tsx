@@ -20,10 +20,10 @@ function FooterComponent() {
   const { t, language } = useLanguage();
 
   const toolsLinks = [
-    { icon: Bot, label: t3(language, 'Analyse Bots IA', 'AI Bots Analysis', 'Análisis Bots IA'), href: '/', description: t3(language, 'Vérifiez l\'accès des robots IA à votre site', 'Check AI bot access to your site', 'Verifique el acceso de los bots IA a su sitio'), isRoute: true },
-    { icon: Globe, label: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'), href: '/', description: t3(language, 'Optimisation pour moteurs génératifs', 'Generative engine optimization', 'Optimización para motores generativos'), isRoute: true },
-    { icon: Brain, label: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'), href: '/', description: t3(language, 'Analyse de citabilité par les IA', 'AI citation analysis', 'Análisis de citabilidad por IA'), isRoute: true },
-    { icon: Gauge, label: 'PageSpeed', href: '/', description: t3(language, 'Performance et Core Web Vitals', 'Performance & Core Web Vitals', 'Rendimiento y Core Web Vitals'), isRoute: true },
+    { icon: Bot, label: t3(language, 'Analyse Bots IA', 'AI Bots Analysis', 'Análisis Bots IA'), href: '/analyse-bots-ia', description: t3(language, 'Vérifiez l\'accès des robots IA à votre site', 'Check AI bot access to your site', 'Verifique el acceso de los bots IA a su sitio'), isRoute: true },
+    { icon: Globe, label: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'), href: '/score-geo', description: t3(language, 'Optimisation pour moteurs génératifs', 'Generative engine optimization', 'Optimización para motores generativos'), isRoute: true },
+    { icon: Brain, label: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'), href: '/visibilite-llm', description: t3(language, 'Analyse de citabilité par les IA', 'AI citation analysis', 'Análisis de citabilidad por IA'), isRoute: true },
+    { icon: Gauge, label: 'PageSpeed', href: '/pagespeed', description: t3(language, 'Performance et Core Web Vitals', 'Performance & Core Web Vitals', 'Rendimiento y Core Web Vitals'), isRoute: true },
     { icon: GitCompareArrows, label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'), href: '/app/audit-compare', description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'), isRoute: true },
     { icon: Radar, label: t3(language, '<code correctif>', '<corrective code>', '<código correctivo>'), href: '/audit-expert', description: t3(language, 'Code correctif SEO/GEO automatique', 'Automatic SEO/GEO corrective code', 'Código correctivo SEO/GEO automático'), isRoute: true },
     { icon: Radar, label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'), href: '/audit-expert', description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'), isRoute: true },
