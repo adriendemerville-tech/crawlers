@@ -28,7 +28,7 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
 
       // Render HTML in a hidden iframe
       const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;border:none;';
+      iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:auto;border:none;';
       document.body.appendChild(iframe);
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       if (!iframeDoc) throw new Error('Cannot access iframe');
@@ -37,82 +37,62 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
       iframeDoc.close();
 
       // Wait for content + images to render
-      await new Promise((r) => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 2000));
 
-      // Section-based capture (same approach as Expert audit reports)
-      const container = iframeDoc.querySelector('.container') || iframeDoc.body;
-      const sections = Array.from(container.children) as HTMLElement[];
+      // Let the iframe auto-size to its content
+      const body = iframeDoc.body;
+      const scrollHeight = body.scrollHeight;
+      iframe.style.height = `${scrollHeight}px`;
+      await new Promise((r) => setTimeout(r, 500));
+
+      // Full-body capture
+      const canvas = await html2canvas(body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        width: 794,
+        height: scrollHeight,
+        windowWidth: 794,
+        windowHeight: scrollHeight,
+        logging: false,
+        backgroundColor: '#f8fafc',
+      });
 
       const pdfWidthMm = 210;
       const pdfHeightMm = 297;
-      const marginTopMm = 15;
-      const marginBottomMm = 15;
+      const marginTopMm = 10;
+      const marginBottomMm = 10;
       const marginSideMm = 10;
-      const usableHeightMm = pdfHeightMm - marginTopMm - marginBottomMm;
       const usableWidthMm = pdfWidthMm - marginSideMm * 2;
-      const scale = 2;
+      const usableHeightMm = pdfHeightMm - marginTopMm - marginBottomMm;
 
       const doc = new jsPDF('p', 'mm', 'a4');
-      let cursorYMm = marginTopMm;
+      const imgWidthMm = usableWidthMm;
+      const totalImgHeightMm = (canvas.height * imgWidthMm) / canvas.width;
+
+      // Slice into pages
+      const pixelsPerMm = canvas.height / totalImgHeightMm;
+      let srcYPx = 0;
+      let remaining = totalImgHeightMm;
       let isFirstPage = true;
 
-      for (const section of sections) {
-        const canvas = await html2canvas(section, {
-          scale,
-          useCORS: true,
-          allowTaint: true,
-          width: 794 - 32,
-          windowWidth: 794,
-          logging: false,
-          backgroundColor: '#f8fafc',
-        });
+      while (remaining > 0) {
+        if (!isFirstPage) doc.addPage();
+        const sliceHeightMm = Math.min(remaining, usableHeightMm);
+        const sliceHeightPx = Math.round(sliceHeightMm * pixelsPerMm);
 
-        const imgData = canvas.toDataURL('image/png');
-        const sectionWidthMm = usableWidthMm;
-        const sectionHeightMm = (canvas.height * sectionWidthMm) / canvas.width;
-
-        if (cursorYMm + sectionHeightMm <= pdfHeightMm - marginBottomMm) {
-          doc.addImage(imgData, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sectionHeightMm);
-          cursorYMm += sectionHeightMm + 2;
-        } else if (sectionHeightMm <= usableHeightMm) {
-          if (!isFirstPage || cursorYMm > marginTopMm + 5) {
-            doc.addPage();
-            cursorYMm = marginTopMm;
-          }
-          doc.addImage(imgData, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sectionHeightMm);
-          cursorYMm += sectionHeightMm + 2;
-        } else {
-          // Section taller than one page — slice across pages
-          const pixelsPerMm = canvas.height / sectionHeightMm;
-          let srcYPx = 0;
-          let remaining = sectionHeightMm;
-
-          while (remaining > 0) {
-            const spaceOnPage = (pdfHeightMm - marginBottomMm) - cursorYMm;
-            const sliceHeightMm = Math.min(remaining, spaceOnPage);
-            const sliceHeightPx = Math.round(sliceHeightMm * pixelsPerMm);
-
-            const sliceCanvas = document.createElement('canvas');
-            sliceCanvas.width = canvas.width;
-            sliceCanvas.height = sliceHeightPx;
-            const ctx = sliceCanvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
-              const sliceImg = sliceCanvas.toDataURL('image/png');
-              doc.addImage(sliceImg, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sliceHeightMm);
-            }
-
-            srcYPx += sliceHeightPx;
-            remaining -= sliceHeightMm;
-            cursorYMm += sliceHeightMm;
-
-            if (remaining > 0) {
-              doc.addPage();
-              cursorYMm = marginTopMm;
-            }
-          }
-          cursorYMm += 2;
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceHeightPx;
+        const ctx = sliceCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+          const sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
+          doc.addImage(sliceImg, 'JPEG', marginSideMm, marginTopMm, imgWidthMm, sliceHeightMm);
         }
+
+        srcYPx += sliceHeightPx;
+        remaining -= sliceHeightMm;
         isFirstPage = false;
       }
 
@@ -158,16 +138,24 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
       });
       if (error) throw error;
 
-      const shareId = responseData?.shareId || responseData?.shareUrl?.split('/').pop();
-      if (shareId) {
-        const crawlersUrl = `https://crawlers.fr/temporarylink/${shareId}`;
-        setShareUrl(crawlersUrl);
-        await navigator.clipboard.writeText(crawlersUrl);
+      // Use the short shareUrl returned by the edge function
+      const shortUrl = responseData?.shareUrl;
+      if (shortUrl) {
+        setShareUrl(shortUrl);
+        await navigator.clipboard.writeText(shortUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
         toast.success('Lien de partage copié !');
       } else {
-        throw new Error('No share ID returned');
+        // Fallback to legacy format
+        const shareId = responseData?.shareId;
+        if (!shareId) throw new Error('No share ID returned');
+        const fallbackUrl = `https://crawlers.lovable.app/temporarylink/${shareId}`;
+        setShareUrl(fallbackUrl);
+        await navigator.clipboard.writeText(fallbackUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        toast.success('Lien de partage copié !');
       }
     } catch (error) {
       console.error('Share error:', error);

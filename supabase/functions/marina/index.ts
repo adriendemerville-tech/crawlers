@@ -949,7 +949,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
         <div class="stat-grid-4">
           <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance /100</div></div>
           ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.lcp) > 60 ? (Number(crawlMeta.lcp) / 1000).toFixed(2) : Number(crawlMeta.lcp).toFixed(2)}s</div><div class="label">LCP</div></div>` : ''}
-          ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${crawlMeta.tbt}ms</div><div class="label">TBT</div></div>` : ''}
+          ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${Math.round(Number(crawlMeta.tbt))}ms</div><div class="label">TBT</div></div>` : ''}
           ${crawlMeta.cls !== null && crawlMeta.cls !== undefined ? `<div class="stat-card"><div class="value">${Number(crawlMeta.cls).toFixed(3)}</div><div class="label">CLS (score)</div></div>` : ''}
           ${crawlMeta.fcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.fcp) > 60 ? (Number(crawlMeta.fcp) / 1000).toFixed(2) : Number(crawlMeta.fcp).toFixed(2)}s</div><div class="label">FCP</div></div>` : ''}
         </div>
