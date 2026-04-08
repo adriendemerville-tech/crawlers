@@ -379,7 +379,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [sessionResumed, setSessionResumed] = useState(false);
   const resumeAttemptedRef = useRef<string | null>(null);
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1');
   const { setCocoonExpanded } = useAISidebar();
 
   useEffect(() => {
