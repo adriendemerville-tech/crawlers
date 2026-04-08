@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, RefreshCw, Shield, Brain, Eye, Award, Lock } from 'lucide-react';
+import { Search, RefreshCw, Shield, Brain, Eye, Award, Lock, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { EeatReportPreview } from '@/components/Admin/EeatReportPreview';
 import { InlineAuthForm } from '@/components/ExpertAudit/InlineAuthForm';
 
