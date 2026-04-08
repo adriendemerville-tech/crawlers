@@ -6,6 +6,7 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { LeadMagnetAudit } from '@/components/LeadMagnetAudit';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight, Gauge, Zap, Clock, Eye, Smartphone,
@@ -111,11 +112,11 @@ const PageSpeedLanding = () => {
               <strong>53% des visiteurs mobiles</strong> quittent un site qui met plus de 3 secondes à charger. 
               Testez vos <strong>Core Web Vitals</strong> et obtenez un plan d'action pour accélérer votre site.
             </p>
-            <Button asChild size="lg" className="text-base px-8">
-              <Link to="/audit-expert">
-                Tester la vitesse de mon site <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+            <LeadMagnetAudit
+              type="pagespeed"
+              placeholder="https://votre-site.com"
+              ctaLabel="Tester la vitesse"
+            />
           </div>
         </section>
 

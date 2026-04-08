@@ -6,6 +6,7 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { LeadMagnetAudit } from '@/components/LeadMagnetAudit';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight, Brain, MessageSquare, Search, Target, Zap,
@@ -102,13 +103,11 @@ const VisibiliteLLM = () => {
               Quand un utilisateur demande « quel est le meilleur outil pour [votre secteur] ? » à ChatGPT, 
               <strong> êtes-vous dans la réponse</strong> ? L'analyse de Visibilité LLM vous donne la réponse — et les clés pour y apparaître.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-base px-8">
-                <Link to="/audit-expert">
-                  Analyser ma visibilité LLM <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
+            <LeadMagnetAudit
+              type="llm"
+              placeholder="https://votre-site.com"
+              ctaLabel="Analyser ma visibilité LLM"
+            />
           </div>
         </section>
 
