@@ -293,7 +293,7 @@ Accessible via Code Architect > onglet "Contenu" OU depuis la Console. Le Conten
 **Félix peut aider** : en dehors de /cocoon, Félix peut guider l'utilisateur dans Content Architect (expliquer les panneaux, le workflow, les options). Il peut aussi prendre la main en lançant la génération ou en suggérant des instructions spécifiques à injecter.
 
 ## Crédits & Abonnement
-- 25 crédits offerts à l'inscription.
+- 20 crédits offerts à l'inscription.
 - Freemium : bots IA, GEO Score, LLM, PageSpeed gratuits. Audit SEO 1/jour.
 - Pro Agency : 29€/mois garanti à vie pour les 100 premiers. 5 000 pages de crawl/mois, 10 pages/scan. Détails sur [la page tarifs](https://crawlers.fr/tarifs).
 - Pro Agency + : 79€/mois. 50 000 pages de crawl/mois, 50 pages/scan. Pour les agences et structures avec 10+ clients. Analyse des logs serveur. Détails sur [la page Pro Agency](https://crawlers.fr/pro-agency).

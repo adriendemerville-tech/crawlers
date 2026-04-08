@@ -14,7 +14,7 @@ confidentialite: "Public"
 Rendez-vous sur https://crawlers.fr/signup.
 L'inscription est gratuite et débloque :
 - L'audit technique SEO 200 points (1 par jour)
-- 25 crédits offerts dès l'inscription
+- 20 crédits offerts dès l'inscription
 - L'accès au tableau de bord personnel
 
 Pour activer les fonctionnalités avancées (tracking GSC, GA4, historique SERP), connectez vos comptes Google via OAuth depuis votre tableau de bord.
@@ -310,7 +310,7 @@ Marina est un pipeline d'audit automatisé disponible via API publique et dashbo
 ### Comment fonctionnent les crédits ?
 Les crédits (CreditCoin) sont la monnaie interne de Crawlers.fr pour les fonctionnalités premium ponctuelles.
 
-À l'inscription : 25 crédits offerts.
+À l'inscription : 20 crédits offerts.
 
 Coût des actions principales :
 - Audit Stratégique IA : 1 crédit
