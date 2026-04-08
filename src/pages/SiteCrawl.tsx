@@ -473,8 +473,9 @@ export default function SiteCrawl() {
   const [isLoadingPastCrawl, setIsLoadingPastCrawl] = useState(false);
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-  const [crawlBacklinks, setCrawlBacklinks] = useState<any[]>([]);
-  const [isScanningBacklinks, setIsScanningBacklinks] = useState(false);
+   const [crawlBacklinks, setCrawlBacklinks] = useState<any[]>([]);
+   const [isScanningBacklinks, setIsScanningBacklinks] = useState(false);
+   const [indexationMap, setIndexationMap] = useState<Record<string, { verdict: string; coverage_state: string | null }>>({});
   const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
   const [sitemapPagesCount, setSitemapPagesCount] = useState<number | null>(null);
   const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
@@ -933,6 +934,22 @@ export default function SiteCrawl() {
           custom_extraction: (p.custom_extraction && typeof p.custom_extraction === 'object' && !Array.isArray(p.custom_extraction)) ? p.custom_extraction : {},
         }));
         setPages(sanitized as any);
+
+        // Load GSC indexation status for these pages
+        const pageUrls = sanitized.map((p: any) => p.url).filter(Boolean);
+        if (pageUrls.length > 0) {
+          const { data: idxData } = await supabase
+            .from('indexation_checks')
+            .select('page_url, verdict, coverage_state')
+            .in('page_url', pageUrls.slice(0, 500));
+          if (idxData?.length) {
+            const map: Record<string, { verdict: string; coverage_state: string | null }> = {};
+            for (const row of idxData) {
+              map[row.page_url] = { verdict: row.verdict, coverage_state: row.coverage_state };
+            }
+            setIndexationMap(map);
+          }
+        }
       }
       setCrawlBacklinks(blData || []);
     } catch {
@@ -1890,6 +1907,17 @@ export default function SiteCrawl() {
                             <div className="text-xs text-muted-foreground truncate">{page.title || t.noTitle}</div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
+                            {/* GSC Indexation badge */}
+                            {indexationMap[page.url] && (
+                              <Badge
+                                variant={indexationMap[page.url].verdict === 'PASS' ? 'secondary' : 'destructive'}
+                                className="text-[10px] gap-1"
+                                title={indexationMap[page.url].coverage_state || undefined}
+                              >
+                                <Globe className="w-3 h-3" />
+                                {indexationMap[page.url].verdict === 'PASS' ? 'Indexé' : 'Non indexé'}
+                              </Badge>
+                            )}
                             {page.crawl_depth !== undefined && page.crawl_depth > 0 && (
                               <Badge variant="outline" className="text-[10px] gap-1"><Layers className="w-3 h-3" />{page.crawl_depth}</Badge>
                             )}
