@@ -41,9 +41,9 @@ function ArticleLayoutComponent({
     { year: 'numeric', month: 'long', day: 'numeric' }
   );
 
-  // Canonical URL
+  // Canonical URL — ALWAYS point to the clean URL without ?lang= to avoid duplicate content
   const canonicalUrl = slug 
-    ? `${SITE_URL}/blog/${slug}${language !== 'fr' ? `?lang=${language}` : ''}`
+    ? `${SITE_URL}/blog/${slug}`
     : `${SITE_URL}/blog`;
 
   // Hreflang alternates
@@ -110,6 +110,16 @@ function ArticleLayoutComponent({
   return (
     <>
       <Helmet>
+        {/* Preload hero image for faster LCP */}
+        {heroImage && heroImage.includes('unsplash.com') && (
+          <link 
+            rel="preload" 
+            as="image" 
+            href={`${heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${heroImage.includes('?') ? '&' : '?'}w=828&q=75&auto=format`}
+            imageSrcSet={`${heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${heroImage.includes('?') ? '&' : '?'}w=640&q=75&auto=format 640w, ${heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${heroImage.includes('?') ? '&' : '?'}w=828&q=75&auto=format 828w, ${heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${heroImage.includes('?') ? '&' : '?'}w=1200&q=80&auto=format 1200w`}
+            imageSizes="100vw"
+          />
+        )}
         {/* Title & Description */}
         <title>{title} | Crawlers AI</title>
         <meta name="description" content={description} />

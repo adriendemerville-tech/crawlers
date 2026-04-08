@@ -64,6 +64,8 @@ function ResponsiveHeroImageComponent({
       srcSet={srcSet}
       sizes={srcSet ? sizes : undefined}
       alt={alt}
+      width={1200}
+      height={630}
       className={`w-full h-full object-cover ${className}`}
       loading="eager"
       fetchPriority="high"

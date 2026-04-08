@@ -162,6 +162,10 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('jspdf')) {
               return 'vendor-pdf';
             }
+            // html2canvas - only loaded on demand (large ~73KB)
+            if (id.includes('html2canvas')) {
+              return 'vendor-html2canvas';
+            }
             // Charts - isolate recharts dependencies (large ~100KB)
             if (id.includes('recharts')) {
               return 'vendor-recharts';
@@ -228,14 +232,14 @@ export default defineConfig(({ mode }) => ({
       'react',
       'react-dom',
       'react-router-dom',
-      'recharts',
-      'lodash',
     ],
     // Exclude heavy deps from pre-bundling to reduce initial load
     exclude: [
       'framer-motion',
       'jspdf',
       'jspdf-autotable',
+      'html2canvas',
+      'recharts',
     ],
   },
 }));

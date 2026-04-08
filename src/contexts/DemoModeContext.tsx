@@ -63,6 +63,13 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchDemoMode();
 
+    // Only subscribe to realtime on non-public pages (avoid WebSocket errors on blog/landing)
+    const isPublicPage = ['/blog', '/lexique', '/tarifs', '/guide-audit-seo', '/landing'].some(
+      p => window.location.pathname.startsWith(p)
+    ) || window.location.pathname === '/';
+    
+    if (isPublicPage) return;
+
     // Listen for realtime changes
     const channel = supabase
       .channel('demo-mode-watch')

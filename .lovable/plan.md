@@ -1,46 +1,66 @@
-## Diagnostic PageSpeed Mobile (score 64/100)
 
-**Métriques critiques :**
-- FCP : 3,8s (rouge) → cible < 1,8s
-- LCP : 6,3s (rouge) → cible < 2,5s  
-- Speed Index : 6,5s (rouge)
-- Délai d'affichage LCP : 2 880ms (le gros du problème)
+# Plan de performance mobile — Pages Blog
+
+## Phase 1 : Réduire le JavaScript critique (Impact LCP & FCP majeur)
+
+### Tâche 1.1 — Lazy-load des chunks lourds non-essentiels au blog
+- `vendor-pdf` (615 KiB) : import dynamique `React.lazy()`, ne charger que sur les pages qui l'utilisent (audit PDF)
+- `html2canvas` (73 KiB) : idem, n'est pas utilisé sur les articles
+- `vendor-recharts` (110 KiB) : idem, pas de graphiques sur les articles
+- **Gain estimé : ~337 KiB de JS en moins sur les pages blog**
+
+### Tâche 1.2 — Désactiver Supabase Realtime sur les pages blog publiques  
+- Le client Supabase tente d'ouvrir un WebSocket sur chaque page, même publique → erreurs console + JS inutile
+- Conditionner le channel Realtime uniquement aux pages authentifiées (dashboard)
+- **Gain : supprime les erreurs console + réduit vendor-supabase actif**
+
+### Tâche 1.3 — CSS critique inline + defer le reste
+- Extraire le CSS critique (above-the-fold) du blog et l'inliner dans le `<head>` via `render-page`
+- Charger `index.css` en `media="print" onload` pour débloquer le rendu
+- **Gain estimé : -940ms de blocage rendu**
+
+## Phase 2 : Optimiser le LCP (Image hero)
+
+### Tâche 2.1 — Convertir les images blog Unsplash en WebP/AVIF optimisé
+- Les images sont servies depuis Unsplash sans optimisation de taille
+- Ajouter un proxy d'image ou utiliser les paramètres Unsplash (`?w=800&q=75&fm=webp`)
+- Appliquer `fetchpriority="high"` et `<link rel="preload">` pour l'image hero
+- **Gain estimé : -8 KiB + LCP réduit de ~2s**
+
+### Tâche 2.2 — Preconnect correct pour Supabase
+- Le preconnect vers Supabase est marqué "inutilisé" (attribut `crossorigin` manquant)
+- Corriger ou supprimer le preconnect si non nécessaire sur les pages blog
+
+## Phase 3 : Cache & headers HTTP
+
+### Tâche 3.1 — Configurer les headers Cache-Control sur les assets statiques
+- Les assets Vite (`/assets/*`) doivent avoir `Cache-Control: public, max-age=31536000, immutable` (hash dans le nom)
+- Configurer via Cloudflare Page Rules ou le Worker
+
+## Phase 4 : SEO & accessibilité
+
+### Tâche 4.1 — Corriger le conflit canonical `?lang=en`
+- L'URL canonique doit pointer vers la version sans paramètre `?lang=`
+- Mettre à jour `render-page` pour générer un canonical propre
+
+### Tâche 4.2 — Corriger le contraste des boutons "Read article"
+- Augmenter le ratio de contraste des CTA dans les cartes d'articles
+
+### Tâche 4.3 — Corriger l'ordre séquentiel des headings  
+- Vérifier la hiérarchie H1 > H2 > H3 dans le composant ArticlePage
+
+## Phase 5 : Prévention future (articles à venir)
+
+### Tâche 5.1 — Optimisation automatique des images dans le composant ArticlePage
+- Transformer automatiquement les URLs Unsplash en variantes optimisées (WebP, taille responsive)
+- Ajouter `loading="lazy"` sur les images below-the-fold, `fetchpriority="high"` sur le hero
+- Ajouter des attributs `width`/`height` pour éviter le CLS
+
+### Tâche 5.2 — Audit de bundle automatisé  
+- Ajouter `rollup-plugin-visualizer` au build pour monitorer la taille des chunks
+- Configurer des seuils d'alerte si un chunk dépasse 100 KiB sur les routes blog
 
 ---
 
-### Tâche 1 — Optimiser les images (gain estimé ~491 KiB)
-- `llm-gemini.png` : 1174x1174 affiché 108x108 → redimensionner à 216x216 + convertir en WebP
-- `console-seo-monitoring-dashboard.png` : 1920x1200 affiché 452x283 → redimensionner + WebP
-- `llm-chatgpt-white.png`, `llm-claude.png`, `llm-grok.png`, `llm-perplexity.png`, `mistral.png` : toutes surdimensionnées → redimensionner à 216x216 + WebP
-- Ajouter `width`/`height` explicites sur toutes les `<img>`
-- Ajouter `loading="lazy"` sur les images below-the-fold
-
-### Tâche 2 — Lazy-load des JS lourds (gain estimé ~371 KiB)
-- `vendor-pdf` (140 KiB) : lazy import, non nécessaire sur la home
-- `html2canvas` (46 KiB) : lazy import
-- `vendor-motion` (57 KiB) : différer les animations non-critiques ou utiliser `LazyMotion` de framer-motion
-- `vendor-supabase` (44 KiB) : vérifier qu'il est déjà code-split
-
-### Tâche 3 — Optimiser le CSS critique (gain estimé ~30 KiB)
-- 30 KiB de CSS inutilisé dans `index.css`
-- Purger les classes Tailwind non utilisées (vérifier la config de purge)
-- Inliner le CSS critique above-the-fold
-
-### Tâche 4 — Corriger la chaîne de requêtes critiques (LCP)
-- Chaîne actuelle : HTML → CSS (1,6s) → font Space Grotesk (2,8s)
-- Preload la font : `<link rel="preload" href="..." as="font" crossorigin>`
-- Font-display: swap pour éviter le blocage
-- Corriger le preconnect Supabase (crossorigin manquant)
-
-### Tâche 5 — Réduire les tâches longues du thread principal
-- 4 tâches longues détectées
-- Ajustement forcé de la mise en page dans `vendor-recharts` et `vendor-ui` (99ms)
-- Différer le rendu des sections below-the-fold avec `IntersectionObserver` ou lazy components
-
-### Tâche 6 — Zones cibles tactiles (accessibilité mobile)
-- Augmenter la taille/espacement des boutons du carrousel (slides)
-- Vérifier les CTA mobiles (min 48x48px)
-
----
-
-**Impact estimé : Score 64 → 85-92** en appliquant les tâches 1 à 4 (les plus impactantes sur le LCP).
+**Objectif : Score PageSpeed mobile ≥ 90 sur toutes les pages blog**
+**Estimation : 6 tâches techniques principales**
