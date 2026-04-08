@@ -584,6 +584,143 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
     const messageText = newMessage.trim();
 
+    // ═══ Post-audit guided workflow intercept ═══
+    if (auditGuideStep !== 'idle') {
+      const lower = messageText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const isYes = /^(oui|yes|ok|d'accord|bien sur|volontiers|go|vas-y|absolument|yeah|yep)$/i.test(lower) || lower.startsWith('oui');
+      const isNo = /^(non|no|nan|nope|pas besoin|c'est bon|ca va|ça va|ok merci|merci|plus tard)$/i.test(lower) || lower.startsWith('non');
+      const userMsg: ChatMessage = { role: 'user', content: messageText, timestamp: new Date().toISOString() };
+
+      if (auditGuideStep === 'ask_summary') {
+        if (isYes) {
+          setMessages(prev => [...prev, userMsg]);
+          setNewMessage('');
+          setSending(true);
+          try {
+            // Fetch workbench findings for this domain
+            const { data: findings } = await supabase
+              .from('architect_workbench')
+              .select('id, title, description, finding_category, severity, target_url, action_type, source_type, payload')
+              .eq('domain', auditGuideDomain)
+              .in('status', ['pending', 'assigned', 'in_progress'])
+              .order('severity', { ascending: true })
+              .limit(15);
+
+            const items = findings || [];
+            setAuditGuideFindings(items);
+
+            if (items.length === 0) {
+              const msg: ChatMessage = {
+                role: 'assistant',
+                content: "🎉 **Bravo !** Aucun problème critique détecté sur ce site. Les fondations sont solides !\n\nSi tu souhaites aller plus loin, tu peux lancer un audit stratégique pour identifier des opportunités de contenu.",
+                timestamp: new Date().toISOString(),
+              };
+              setMessages(prev => [...prev, msg]);
+              setAuditGuideStep('idle');
+            } else {
+              // Group by severity for summary
+              const critical = items.filter(i => i.severity === 'critical').length;
+              const high = items.filter(i => i.severity === 'high').length;
+              const medium = items.filter(i => i.severity === 'medium').length;
+              const codeCount = items.filter(i => i.action_type === 'code' || i.action_type === 'both').length;
+              const contentCount = items.filter(i => i.action_type === 'content' || i.action_type === 'both').length;
+
+              let sentiment = '';
+              if (critical > 0) sentiment = "⚠️ Plusieurs points critiques nécessitent une attention immédiate.";
+              else if (high > 2) sentiment = "Des améliorations importantes sont possibles sur plusieurs axes.";
+              else sentiment = "Le site est globalement en bonne santé, avec quelques optimisations à envisager.";
+
+              let summary = `📋 **Résumé de l'audit — ${auditGuideDomain}**\n\n${sentiment}\n\n`;
+              if (critical > 0) summary += `🔴 **${critical}** problème${critical > 1 ? 's' : ''} critique${critical > 1 ? 's' : ''}\n`;
+              if (high > 0) summary += `🟠 **${high}** problème${high > 1 ? 's' : ''} important${high > 1 ? 's' : ''}\n`;
+              if (medium > 0) summary += `🟡 **${medium}** amélioration${medium > 1 ? 's' : ''} recommandée${medium > 1 ? 's' : ''}\n`;
+              summary += `\n📂 **${codeCount}** correctif${codeCount > 1 ? 's' : ''} technique${codeCount > 1 ? 's' : ''} · **${contentCount}** amélioration${contentCount > 1 ? 's' : ''} de contenu`;
+              summary += '\n\n**Par quoi veux-tu qu\'on commence ?**';
+
+              const msg: ChatMessage = { role: 'assistant', content: summary, timestamp: new Date().toISOString() };
+              setMessages(prev => [...prev, msg]);
+              setAuditGuideStep('show_priorities');
+            }
+          } catch (e) {
+            console.error('Audit guide workbench fetch error:', e);
+            const msg: ChatMessage = { role: 'assistant', content: "Désolé, je n'ai pas pu charger les résultats. Réessaie dans un instant.", timestamp: new Date().toISOString() };
+            setMessages(prev => [...prev, msg]);
+            setAuditGuideStep('idle');
+          } finally {
+            setSending(false);
+          }
+          return;
+        } else if (isNo) {
+          setMessages(prev => [...prev, userMsg, { role: 'assistant', content: "Pas de problème ! N'hésite pas si tu changes d'avis. 👍", timestamp: new Date().toISOString() }]);
+          setNewMessage('');
+          setAuditGuideStep('idle');
+          return;
+        }
+        // If neither yes/no, reset and fall through to normal handling
+        setAuditGuideStep('idle');
+      }
+
+      if (auditGuideStep === 'confirm_implement') {
+        if (isYes) {
+          const lane = auditGuidePriorityLane;
+          const targetLabel = lane === 'code' ? 'Code Architect' : 'Content Architect';
+          const msg: ChatMessage = {
+            role: 'assistant',
+            content: `🚀 **D'accord !** J'ouvre **${targetLabel}** pour toi.`,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, msg]);
+          setNewMessage('');
+          setAuditGuideStep('idle');
+          setTimeout(() => {
+            if (lane === 'code') {
+              navigate('/architecte-generatif');
+              onClose();
+            } else {
+              setContentArchitectDiag({ url: auditGuideUrl });
+              setShowContentArchitectModal(true);
+            }
+          }, 800);
+          return;
+        } else if (isNo) {
+          const msg: ChatMessage = {
+            role: 'assistant',
+            content: "Entendu ! Veux-tu que je mette à jour le **plan d'action** pour ce site dans la Console ?",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, msg]);
+          setNewMessage('');
+          setAuditGuideStep('confirm_action_plan');
+          return;
+        }
+        setAuditGuideStep('idle');
+      }
+
+      if (auditGuideStep === 'confirm_action_plan') {
+        if (isYes) {
+          const msg: ChatMessage = {
+            role: 'assistant',
+            content: "✅ **Plan d'action mis à jour !** Tu peux le consulter dans [Console → Plans d'action](https://crawlers.fr/app/console).",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, msg]);
+          setNewMessage('');
+          setAuditGuideStep('idle');
+          return;
+        } else {
+          const msg: ChatMessage = {
+            role: 'assistant',
+            content: "Pas de problème ! Tu peux revenir plus tard dans cette conversation via l'historique 🕐",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, userMsg, msg]);
+          setNewMessage('');
+          setAuditGuideStep('idle');
+          return;
+        }
+      }
+    }
+
     // Hallucination diagnosis conversational flow intercept
     if (hallucinationDiagFlow !== 'idle') {
       const lower = messageText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
