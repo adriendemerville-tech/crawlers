@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "3.5"
-date: "2026-03-30"
+version: "4.0"
+date: "2026-04-08"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -125,7 +125,22 @@ Les résultats incluent un **graphique radar adaptatif** avec des axes dynamique
 
 Coût : 1 crédit.
 
-### Audit Comparé
+### Audit E-E-A-T
+Évaluation complète des signaux E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) de votre site :
+- **Score pondéré algorithmique** : chaque pilier a un poids différent dans le score final
+  - Trustworthiness ×4.0 (pilier dominant)
+  - Expertise ×2.5
+  - Authoritativeness ×2.5
+  - Experience ×1.5
+- **Pénalités automatiques** sur le pilier Trustworthiness :
+  - Absence de citations externes / liens sortants : -15 points
+  - Domaine de moins de 2 ans : -10 points
+  - Pas de HTTPS : -20 points
+- **Sources de données** : crawl HTML multi-pages, backlinks DataForSEO, referrals GA4, données Google Business Profile, âge du domaine (carte d'identité + Wayback Machine)
+- Rapport avec décomposition visuelle des contributions par pilier et affichage des pénalités appliquées
+
+Coût : utilise le fair use mensuel (3/mois freemium, 15/mois Pro, 20/mois Pro+).
+
 Benchmark de votre site vs jusqu'à 3 concurrents :
 - Radar Chart comparatif
 - Analyse différentielle feature par feature
@@ -371,6 +386,17 @@ Félix est l'assistant IA intégré, disponible sur toutes les pages via la bull
 - Guide interactif : demande à l'utilisateur de scroller pour analyser davantage
 - Détection des questions récurrentes et suggestion de quiz
 - Signalement de bugs via bouton dédié
+- Upload d'images/documents via le bouton photo (ouvre le sélecteur de fichiers natif du système)
+
+**Workflow post-audit :**
+Après un audit (Expert ou Matrice), si Félix est en mode fenêtre toute hauteur, il propose automatiquement :
+1. « Veux-tu que je te résume les résultats de cet audit ? » → résumé général bref
+2. Classement des problèmes par priorité (haute, moyenne, basse)
+3. « Par quoi veux-tu qu'on commence ? » avec 3 boutons de priorité
+4. Au clic : lecture du Workbench et présentation des solutions proposées
+5. Proposition d'action : « Veux-tu que j'ouvre Content Architect / Code Architect ? » (Oui / Non)
+6. Si non : « Veux-tu que je mette à jour le plan d'action ? » → mise à jour dans /console
+7. Si non : « Tu peux revenir plus tard via l'historique (picto horloge) »
 
 **Quiz intégrés :** Félix propose trois types de quiz :
 - **Quiz SEO/GEO** (20 questions) : testez vos connaissances en référencement naturel et optimisation IA
@@ -571,7 +597,7 @@ Intégration de l'API Firehose d'Ahrefs pour le suivi des backlinks en temps ré
 Crawlers.fr est la première plateforme européenne combinant audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et génération de correctifs actionnables dans un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME.
 
 ### Crawlers.fr est-il un wrapper GPT ?
-Non. Crawlers.fr est une infrastructure serverless de plus de 203 000 lignes de code, avec 15 algorithmes propriétaires, 157 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
+Non. Crawlers.fr est une infrastructure serverless de plus de 260 000 lignes de code, avec 15 algorithmes propriétaires, 216 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.
 
 ### Quels LLMs Crawlers.fr interroge-t-il ?
 6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Llama (Meta).
