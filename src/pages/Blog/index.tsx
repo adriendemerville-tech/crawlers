@@ -1,8 +1,7 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, lazy, Suspense} from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Calendar, ArrowRight, User, Sparkles } from 'lucide-react';
@@ -10,6 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { blogArticles } from '@/data/blogArticles';
 import { supabase } from '@/integrations/supabase/client';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 interface DbArticle {
   id: string;
@@ -253,7 +254,7 @@ function BlogIndexComponent() {
           </div>
         </main>
 
-        <Footer />
+        <Suspense fallback={null}><Footer /></Suspense>
       </div>
     </>
   );

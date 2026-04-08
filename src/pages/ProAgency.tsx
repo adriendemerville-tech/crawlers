@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense} from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +13,8 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
 import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 import {
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
   Crown, Infinity, Shield, Users, Headphones, Loader2,
   CheckCircle2, ArrowRight, Zap, FileText, Code2, BarChart3,
   Palette, Globe, Brain, TrendingUp, Lock, Star, Layers,
@@ -503,7 +503,7 @@ export default function ProAgency() {
         <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-20 sm:py-28">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
           <div className="relative mx-auto max-w-4xl px-4 text-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <div>
               <Badge className="mb-6 bg-violet-600/20 text-violet-400 border-violet-500/30 text-sm px-4 py-1.5">
                 <Crown className="h-4 w-4 mr-1.5 text-yellow-500" />
                 {t.badgeText}
@@ -561,7 +561,7 @@ export default function ProAgency() {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -574,12 +574,8 @@ export default function ProAgency() {
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {t.features.map((feat, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.08 }}
                 >
                   <Card className="h-full border-border/50 bg-card/50 hover:border-violet-500/30 transition-colors">
                     <CardContent className="p-6">
@@ -590,7 +586,7 @@ export default function ProAgency() {
                       <p className="text-sm text-muted-foreground leading-relaxed">{feat.description}</p>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -644,12 +640,8 @@ export default function ProAgency() {
             <h2 className="text-center text-2xl font-bold text-foreground sm:text-3xl mb-10">{t.useCasesTitle}</h2>
             <div className="grid gap-6 sm:grid-cols-3">
               {t.useCases.map((uc, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
                 >
                   <Card className="h-full border-border/50 text-center">
                     <CardContent className="p-6">
@@ -660,7 +652,7 @@ export default function ProAgency() {
                       <p className="text-sm text-muted-foreground">{uc.description}</p>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -725,7 +717,7 @@ export default function ProAgency() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
 
       {/* Auth Gate Modal */}
       {showAuthModal && (

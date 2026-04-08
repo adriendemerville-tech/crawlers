@@ -1,7 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -10,6 +9,8 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { t3 } from '@/utils/i18n';
 import heroImage from '@/assets/landing/indice-alignement-strategique-hero.webp';
 import {
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
   Crown, Target, TrendingUp, Shield, BarChart3, ArrowRight, Zap, CheckCircle2, AlertTriangle, Gauge
 } from 'lucide-react';
 
@@ -92,7 +93,7 @@ export default function IndiceAlignementStrategique() {
         <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-amber-950/20 via-background to-background py-16 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
           <div className="relative mx-auto max-w-4xl px-4 text-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <div>
               <Badge className="mb-6 bg-amber-600/20 text-amber-400 border-amber-500/30 text-sm px-4 py-1.5">
                 <Zap className="h-4 w-4 mr-1.5" />
                 {t3(language, '🆕 Nouveau — Mars 2026', '🆕 New — March 2026', '🆕 Nuevo — Marzo 2026')}
@@ -125,7 +126,7 @@ export default function IndiceAlignementStrategique() {
                   </Link>
                 </Button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -387,7 +388,7 @@ export default function IndiceAlignementStrategique() {
         </section>
       </main>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </div>
   );
 }

@@ -1,10 +1,9 @@
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2, Link2, Star } from 'lucide-react';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, lazy, Suspense} from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
@@ -13,6 +12,8 @@ import autoTable from 'jspdf-autotable';
 import { toast } from 'sonner';
 import { ExpertTermsGrid } from '@/components/Lexique/ExpertTermsGrid';
 import { TrustBadge, SoftwareApplicationSchema } from '@/components/TrustBadge';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 // Local storage key for favorites
 const FAVORITES_KEY = 'lexique-favorites';
@@ -971,7 +972,7 @@ export default function Lexique() {
         {/* Trust Badge */}
         <TrustBadge className="border-t border-border" />
 
-        <Footer />
+        <Suspense fallback={null}><Footer /></Suspense>
       </div>
     </>
   );

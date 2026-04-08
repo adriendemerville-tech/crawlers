@@ -1,12 +1,13 @@
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Search, Layers, Brain, Target, CheckCircle2, FileText, BarChart3 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense} from 'react';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 export default function AuditSemantique() {
   const { language } = useLanguage();
@@ -250,7 +251,7 @@ export default function AuditSemantique() {
         </section>
       </main>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </div>
   );
 }

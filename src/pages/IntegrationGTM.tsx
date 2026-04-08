@@ -1,7 +1,7 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,8 @@ import {
   MonitorSmartphone, ToggleRight, Cable, Sparkles, Download, Link2, ArrowRight
 } from 'lucide-react';
 import { t3 } from '@/utils/i18n';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 const SITE_URL = 'https://crawlers.fr';
 
@@ -562,7 +564,7 @@ export default function IntegrationGTM() {
 
         </div>
       </main>
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </div>
   );
 }

@@ -1,6 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,8 @@ import {
   ArrowRight, HelpCircle, Cpu, Globe, FileText, Rocket,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 const SITE_URL = 'https://crawlers.fr';
 
@@ -581,7 +583,7 @@ const ComparatifCrawlersSemrush = () => {
           </section>
         </main>
 
-        <Footer />
+        <Suspense fallback={null}><Footer /></Suspense>
       </div>
     </>
   );
