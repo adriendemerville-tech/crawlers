@@ -1,62 +1,60 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { BROWSERLESS_BASE_URL, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
+import { getBrowserlessMetaUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
-Deno.serve(handleRequest(async (req) => {
+/**
+ * Browserless v2 Cloud: /metrics endpoint no longer exists.
+ * We use /meta (returns active sessions) + our own paid_api_calls table for usage tracking.
+ */
+
+Deno.serve(handleRequest(async (_req) => {
   const token = getBrowserlessKey();
   if (!token) {
     return jsonError('RENDERING_API_KEY not configured', 500);
   }
 
   try {
-    const metricsRes = await fetch(`${BROWSERLESS_BASE_URL}/metrics?token=${token}`, {
+    // 1. Get /meta info (active sessions, queued, etc.)
+    const metaRes = await fetch(getBrowserlessMetaUrl(token), {
       signal: AbortSignal.timeout(10000),
     });
 
-    if (!metricsRes.ok) {
-      return new Response(JSON.stringify({ error: `Browserless /metrics returned ${metricsRes.status}` }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    let metaData: Record<string, unknown> = {};
+    if (metaRes.ok) {
+      metaData = await metaRes.json();
+    } else {
+      console.warn(`[browserless-metrics] /meta returned ${metaRes.status}`);
     }
 
-    const metrics = await metricsRes.json();
+    // 2. Get our own usage stats from paid_api_calls table
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // metrics is an array of time-bucketed entries
-    // Aggregate totals from all entries
-    const totals = {
-      successful: 0,
-      error: 0,
-      timedout: 0,
-      queued: 0,
-      rejected: 0,
-      unauthorized: 0,
-      units: 0,
-      running: 0,
-      maxConcurrent: 0,
-    };
+    // Count Browserless calls this month
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    
+    const { count: monthlyCallCount } = await supabase
+      .from('paid_api_calls')
+      .select('*', { count: 'exact', head: true })
+      .eq('api_provider', 'browserless')
+      .gte('called_at', monthStart);
 
-    if (Array.isArray(metrics)) {
-      for (const m of metrics) {
-        totals.successful += m.successful || 0;
-        totals.error += m.error || 0;
-        totals.timedout += m.timedout || 0;
-        totals.queued += m.queued || 0;
-        totals.rejected += m.rejected || 0;
-        totals.unauthorized += m.unauthorized || 0;
-        totals.units += m.units || 0;
-        // running & maxConcurrent: take latest values
-        totals.running = m.running ?? totals.running;
-        totals.maxConcurrent = m.maxConcurrent ?? totals.maxConcurrent;
-      }
-    }
+    const usedUnits = monthlyCallCount ?? 0;
 
     return jsonOk({
-      ...totals,
+      // Meta info from Browserless
+      activeSessions: metaData.running ?? 0,
+      queued: metaData.queued ?? 0,
+      maxConcurrent: metaData.maxConcurrent ?? 10,
+      // Usage from our tracking
+      unitsUsedThisMonth: usedUnits,
       planUnitsPerMonth: 1000,
-      unitsRemaining: Math.max(0, 1000 - totals.units),
+      unitsRemaining: Math.max(0, 1000 - usedUnits),
       concurrencyLimit: 10,
-      entriesCount: Array.isArray(metrics) ? metrics.length : 0,
+      source: 'meta+paid_api_calls',
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
