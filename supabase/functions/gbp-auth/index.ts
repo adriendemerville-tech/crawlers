@@ -359,4 +359,4 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
     console.error('[gbp-auth] error:', msg)
     return jsonError(msg, 500)
   }
-})
+}))
