@@ -1515,11 +1515,44 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                   <div className="flex justify-start">
                     <div className="flex gap-2 ml-1">
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           const userMsg: ChatMessage = { role: 'user', content: 'Oui, résume-moi les résultats.', timestamp: new Date().toISOString() };
                           setMessages(prev => [...prev, userMsg]);
-                          setNewMessage('Oui');
-                          setTimeout(() => { setNewMessage(''); handleSend(); }, 50);
+                          setSending(true);
+                          try {
+                            const { data: findings } = await supabase
+                              .from('architect_workbench')
+                              .select('id, title, description, finding_category, severity, target_url, action_type, source_type, payload')
+                              .eq('domain', auditGuideDomain)
+                              .in('status', ['pending', 'assigned', 'in_progress'])
+                              .order('severity', { ascending: true })
+                              .limit(15);
+
+                            const items = findings || [];
+                            setAuditGuideFindings(items);
+
+                            if (items.length === 0) {
+                              setMessages(prev => [...prev, { role: 'assistant', content: "🎉 **Bravo !** Aucun problème critique détecté. Les fondations sont solides !", timestamp: new Date().toISOString() }]);
+                              setAuditGuideStep('idle');
+                            } else {
+                              const critical = items.filter(i => i.severity === 'critical').length;
+                              const high = items.filter(i => i.severity === 'high').length;
+                              const medium = items.filter(i => i.severity === 'medium').length;
+                              const codeCount = items.filter(i => i.action_type === 'code' || i.action_type === 'both').length;
+                              const contentCount = items.filter(i => i.action_type === 'content' || i.action_type === 'both').length;
+                              let sentiment = critical > 0 ? "⚠️ Plusieurs points critiques nécessitent une attention immédiate." : high > 2 ? "Des améliorations importantes sont possibles." : "Le site est globalement en bonne santé, avec quelques optimisations.";
+                              let summary = `📋 **Résumé — ${auditGuideDomain}**\n\n${sentiment}\n\n`;
+                              if (critical > 0) summary += `🔴 **${critical}** critique${critical > 1 ? 's' : ''}\n`;
+                              if (high > 0) summary += `🟠 **${high}** important${high > 1 ? 's' : ''}\n`;
+                              if (medium > 0) summary += `🟡 **${medium}** recommandé${medium > 1 ? 's' : ''}\n`;
+                              summary += `\n📂 **${codeCount}** tech · **${contentCount}** contenu\n\n**Par quoi veux-tu qu'on commence ?**`;
+                              setMessages(prev => [...prev, { role: 'assistant', content: summary, timestamp: new Date().toISOString() }]);
+                              setAuditGuideStep('show_priorities');
+                            }
+                          } catch {
+                            setMessages(prev => [...prev, { role: 'assistant', content: "Désolé, je n'ai pas pu charger les résultats.", timestamp: new Date().toISOString() }]);
+                            setAuditGuideStep('idle');
+                          } finally { setSending(false); }
                         }}
                         className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
                       >
