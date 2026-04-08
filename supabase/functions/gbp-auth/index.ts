@@ -90,31 +90,51 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
       let gmbAccountId: string | null = null
       let gmbLocationId: string | null = null
       try {
+        console.log('[gbp-auth] 🔍 Starting GBP account discovery...')
         const accountsResp = await fetch(
           'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
           { headers: { Authorization: `Bearer ${tokens.access_token}` } }
         )
+        console.log(`[gbp-auth] Accounts API status: ${accountsResp.status}`)
         if (accountsResp.ok) {
-          const { accounts = [] } = await accountsResp.json()
+          const accountsBody = await accountsResp.json()
+          const accounts = accountsBody.accounts || []
+          console.log(`[gbp-auth] Found ${accounts.length} account(s):`, JSON.stringify(accounts.map((a: any) => ({ name: a.name, type: a.type, role: a.role }))))
           if (accounts.length > 0) {
             gmbAccountId = accounts[0].name?.replace('accounts/', '') || null
+            console.log(`[gbp-auth] Using account: ${gmbAccountId}`)
             // Fetch first location
             if (gmbAccountId) {
-              const locResp = await fetch(
-                `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${gmbAccountId}/locations?readMask=name,title`,
-                { headers: { Authorization: `Bearer ${tokens.access_token}` } }
-              )
+              const locUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${gmbAccountId}/locations?readMask=name,title,storefrontAddress`
+              console.log(`[gbp-auth] Fetching locations from: ${locUrl}`)
+              const locResp = await fetch(locUrl, {
+                headers: { Authorization: `Bearer ${tokens.access_token}` },
+              })
+              console.log(`[gbp-auth] Locations API status: ${locResp.status}`)
               if (locResp.ok) {
-                const { locations = [] } = await locResp.json()
+                const locBody = await locResp.json()
+                const locations = locBody.locations || []
+                console.log(`[gbp-auth] Found ${locations.length} location(s):`, JSON.stringify(locations.map((l: any) => ({ name: l.name, title: l.title }))))
                 if (locations.length > 0) {
                   gmbLocationId = locations[0].name?.split('/').pop() || null
+                  console.log(`[gbp-auth] ✅ Selected location: ${gmbLocationId}`)
+                } else {
+                  console.warn('[gbp-auth] ⚠️ Account found but NO locations — user may need to create a GMB listing first')
                 }
+              } else {
+                const locErr = await locResp.text()
+                console.error(`[gbp-auth] ❌ Locations API error ${locResp.status}: ${locErr}`)
               }
             }
+          } else {
+            console.warn('[gbp-auth] ⚠️ No GMB accounts found for this Google account')
           }
+        } else {
+          const errBody = await accountsResp.text()
+          console.error(`[gbp-auth] ❌ Accounts API error ${accountsResp.status}: ${errBody}`)
         }
       } catch (e) {
-        console.warn('[gbp-auth] GBP discovery error:', e)
+        console.error('[gbp-auth] GBP discovery error:', e)
       }
 
       // Upsert into google_connections with gbp-specific flag
