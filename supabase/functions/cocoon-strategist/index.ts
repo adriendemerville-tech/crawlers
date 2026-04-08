@@ -46,7 +46,6 @@ type ActionType =
   | 'publish_draft'
   | 'add_internal_link'
   | 'remove_internal_link'
-  | 'add_backlink_target'
   | 'fix_redirect_chain'
   | 'restructure_tree'
   | 'enrich_metadata'
@@ -226,7 +225,7 @@ const LABELS: Record<string, Record<string, string>> = {
     eeat_weak: 'Renforcer les signaux E-E-A-T',
     restructure: 'Réorganiser l\'arborescence du site',
     create_pillar: 'Créer une page pilier pour ce cluster',
-    backlink_target: 'Cibler des backlinks vers cette page',
+    backlink_target: 'Améliorer le maillage interne vers cette page',
     optimize_kw_placement: 'Optimiser le placement du mot-clé dans le title',
   },
   en: {
@@ -249,7 +248,7 @@ const LABELS: Record<string, Record<string, string>> = {
     eeat_weak: 'Strengthen E-E-A-T signals',
     restructure: 'Restructure site architecture',
     create_pillar: 'Create a pillar page for this cluster',
-    backlink_target: 'Target backlinks to this page',
+    backlink_target: 'Improve internal linking to this page',
     optimize_kw_placement: 'Optimize keyword placement in title',
   },
   es: {
@@ -272,7 +271,7 @@ const LABELS: Record<string, Record<string, string>> = {
     eeat_weak: 'Reforzar las señales E-E-A-T',
     restructure: 'Reorganizar la arquitectura del sitio',
     create_pillar: 'Crear una página pilar para este cluster',
-    backlink_target: 'Apuntar backlinks a esta página',
+    backlink_target: 'Mejorar el enlazado interno a esta página',
     optimize_kw_placement: 'Optimizar la ubicación de la palabra clave en el título',
   },
 };
@@ -871,17 +870,7 @@ try {
           es: 'Reestructurar el enlazado interno, resolver canibalizaciones, integrar páginas huérfanas y crear páginas pilar.',
         },
       },
-      {
-        id: 'backlink_growth',
-        condition: () => allFindings.some(f => ['backlink_health', 'domain_authority', 'anchor_diversity'].includes(f.category)),
-        priority: allFindings.filter(f => f.category === 'domain_authority').length * 8,
-        label: { fr: 'Croissance off-site', en: 'Off-site Growth', es: 'Crecimiento Off-site' },
-        description: {
-          fr: 'Renforcer l\'autorité du domaine via des campagnes de backlinks ciblées, diversifier les ancres et surveiller les liens perdus.',
-          en: 'Strengthen domain authority via targeted backlink campaigns, diversify anchors and monitor lost links.',
-          es: 'Reforzar la autoridad del dominio con campañas de backlinks específicas, diversificar anclas y monitorear enlaces perdidos.',
-        },
-      },
+      // Note: backlink/off-site growth removed — the strategist cannot execute off-site actions
       {
         id: 'conversion_optimization',
         condition: () => feedbackAnalysis.successful.length > 0 || allFindings.some(f => f.category === 'keyword_mismatch'),
@@ -1345,11 +1334,12 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
 
     case 'backlink_health':
     case 'domain_authority':
+      // Off-site actions removed — redirect to internal linking improvement instead
       tasks.push({
         id: `${baseId}_auth`,
-        action_type: 'add_backlink_target',
+        action_type: 'add_internal_link',
         priority: 0,
-        title: label('low_authority', lang),
+        title: label('low_pagerank', lang),
         description: finding.description || '',
         affected_urls: urls.slice(0, 3),
         source_diagnostics: [sourceType],
