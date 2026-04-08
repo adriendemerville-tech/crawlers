@@ -149,6 +149,9 @@ Le rapport inclut : audit technique 200 points, score GEO, visibilité LLM (Chat
 Les agences peuvent embarquer Marina sur leur site via l'API (clé API dans Console > Marina). Chaque rapport via l'API consomme 5 crédits.
 Page publique : [Marina](https://crawlers.fr/marina) | Console : [Onglet Marina](https://crawlers.fr/app/console?tab=marina)
 
+## Préfixe /createur :
+L'administrateur créateur doit taper \`/createur :\` suivi de sa demande pour accéder aux fonctionnalités admin (directives agents, consultation backend, Parménion, etc.). Sans ce préfixe, le créateur est traité comme un utilisateur standard.
+
 ## Formulations INTERDITES
 ${SHARED_FORBIDDEN_PHRASES.map(p => `- "${p}"`).join('\n')}
 
