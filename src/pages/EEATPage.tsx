@@ -318,6 +318,33 @@ export default function EEATPage() {
           </div>
         </section>
 
+        {/* CTA — mid-page */}
+        <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-amber-500/5 to-background">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+              Mesurez votre E-E-A-T gratuitement
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              Lancez un Audit Expert sur votre URL et obtenez votre score E-E-A-T algorithmique 
+              avec un plan d'action personnalisé.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/app/eeat">
+               <Button size="lg" className="gap-2 w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 shadow-lg">
+                  Lancer l'audit E-E-A-T gratuit
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/generative-engine-optimization">
+                <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
+                  Découvrir le GEO
+                  <Globe className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Méthodologie Crawlers */}
         <section className="py-12 sm:py-16 px-4">
           <div className="mx-auto max-w-4xl space-y-8">
