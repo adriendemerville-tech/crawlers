@@ -139,7 +139,7 @@ export function VoiceDNAEditor({ trackedSiteId, domain }: VoiceDNAEditorProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Mic className="w-4 h-4 text-primary" />
-            Voice DNA — Identité Éditoriale
+            Voice DNA
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button
@@ -150,7 +150,7 @@ export function VoiceDNAEditor({ trackedSiteId, domain }: VoiceDNAEditorProps) {
               className="text-xs gap-1.5"
             >
               {analyzing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              {voiceDna ? 'Ré-analyser' : 'Analyser depuis les crawls'}
+              {voiceDna ? 'Ré-analyser' : 'Analyser'}
             </Button>
             {voiceDna && (
               <Button size="sm" onClick={handleSave} disabled={saving} className="text-xs gap-1.5">

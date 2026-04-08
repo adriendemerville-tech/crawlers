@@ -491,6 +491,21 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
     if (draft.h1_suggestion) setH1Field(draft.h1_suggestion);
     if (draft.secondary_keywords?.length) setKeywordTags(prev => Array.from(new Set([...prev, ...draft.secondary_keywords])));
     if (draft.priority_actions?.length && !draft.custom_prompt) { setPrompt(draft.priority_actions.join('\n')); setAutoFilled(prev => new Set(prev).add('prompt')); }
+    // Auto-derive slug from keyword or URL path when no directory/slug is set
+    if (draft.keyword && !draft.slug) {
+      const autoSlug = generateSlugFromKeyword(draft.keyword);
+      if (autoSlug) { setSlug(autoSlug); setAutoFilled(prev => new Set(prev).add('slug_auto')); }
+    }
+    if (draft.url && !directory) {
+      try {
+        const urlObj = new URL(draft.url);
+        const pathParts = urlObj.pathname.split('/').filter(Boolean);
+        if (pathParts.length > 0) {
+          const dir = '/' + pathParts.slice(0, -1).join('/') || '/';
+          setDirectory(dir === '/' ? '' : dir);
+        }
+      } catch {}
+    }
   };
 
   // ── Generate ──
