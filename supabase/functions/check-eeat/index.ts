@@ -148,7 +148,8 @@ Deno.serve(handleRequest(async (req) => {
       }).select('id').single();
 
       if (jobErr || !job) {
-        return new Response(JSON.stringify({ error: 'Failed to create job' }), { status: 500, headers: HEADERS });
+        console.error('[check-eeat] Failed to create job:', jobErr);
+        return new Response(JSON.stringify({ error: 'Failed to create job', details: jobErr?.message }), { status: 500, headers: HEADERS });
       }
 
       // Self-invoke (fire-and-forget)
