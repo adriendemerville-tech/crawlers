@@ -699,7 +699,7 @@ export function CocoonRadialGraph({
     ctx.restore();
 
     // Legend removed — only "Liens" shown below preview
-  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes, bgColor]);
+  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes, bgColor, particlesEnabled, visibleLinkDirections]);
 
   function drawLegend(ctx: CanvasRenderingContext2D, w: number, _h: number) {
     const x = w - 140;
