@@ -167,6 +167,7 @@ const DOC_SECTIONS: DocSection[] = [
 <li><strong>Performance</strong> : Core Web Vitals, PageSpeed, temps de chargement</li>
 <li><strong>Sécurité</strong> : HTTPS, mixed content, vulnérabilités</li>
 </ul>
+<p class="mt-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20 text-sm">📱 <strong>Mobile-First</strong> — Depuis 2021, Google indexe et classe les sites principalement sur la base de leur version mobile. C'est pourquoi nos audits analysent en priorité les performances mobiles de votre site.</p>
 <p class="mt-2 text-sm text-muted-foreground">Disponible : 1 fois par jour en freemium inscrit. Illimité en Pro Agency.</p>`,
       },
       {
