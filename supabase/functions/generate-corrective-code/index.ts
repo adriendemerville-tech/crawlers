@@ -5,6 +5,7 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts';
 
 // ══════════════════════════════════════════════════════════════
 // INTERFACES - CODE ARCHITECT v4.0 — CLS-ZERO Protocol
@@ -1845,7 +1846,8 @@ async function generateAllFixesWithAI(
   language: string,
   auditContext: AuditContext,
   roadmapContext: string = '',
-  cmsSettings?: SiteSettings
+  cmsSettings?: SiteSettings,
+  pageHtmlData?: HtmlData | null,
 ): Promise<Map<string, { fn: string; call: string }> | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return null;
@@ -1863,6 +1865,34 @@ async function generateAllFixesWithAI(
 - Nombre de H1: ${h.h1Count ?? '?'}
 - Images sans attribut alt: ${h.imagesMissingAlt ?? '?'}
 - Liens cassés: ${h.brokenLinks?.length ?? '?'}`);
+  }
+
+  // ── SCAN HTML LIVE de la page cible (structure réelle pour injection ciblée) ──
+  if (pageHtmlData) {
+    contextParts.push(`SCAN HTML LIVE DE LA PAGE CIBLE:
+⚠️ CRITIQUE : Utilise cette structure réelle pour cibler tes injections au bon endroit.
+
+STRUCTURE DOM EXISTANTE:
+- Title: "${pageHtmlData.titleContent}" (${pageHtmlData.titleLength} chars)
+- Meta description: "${pageHtmlData.metaDescContent}" (${pageHtmlData.metaDescLength} chars)
+- H1: ${pageHtmlData.h1Count > 0 ? pageHtmlData.h1Contents.map(h => `"${h}"`).join(', ') : 'ABSENT'}
+- H2: ${pageHtmlData.h2Count} | H3: ${pageHtmlData.h3Count}
+- Mots: ${pageHtmlData.wordCount}
+- Images: ${pageHtmlData.imagesTotal} (${pageHtmlData.imagesMissingAlt} sans alt)
+- Liens internes: ${pageHtmlData.internalLinksCount} | externes: ${pageHtmlData.externalLinksCount}
+- Schema.org existant: ${pageHtmlData.hasSchemaOrg ? pageHtmlData.schemaTypes.join(', ') : 'AUCUN'}
+- FAQ existante: ${pageHtmlData.hasFAQSection ? (pageHtmlData.hasFAQWithSchema ? 'Oui + schema FAQPage' : 'Oui SANS schema') : 'Non'}
+- Canonical: ${pageHtmlData.hasCanonical ? pageHtmlData.canonicalUrl : 'ABSENT'}
+- Open Graph: ${pageHtmlData.hasOg ? pageHtmlData.ogTags.join(', ') : 'ABSENT'}
+- Viewport: ${pageHtmlData.hasViewport ? 'OK' : 'ABSENT'}
+- HTTPS: ${pageHtmlData.isHttps ? 'OK' : 'NON'}
+
+RÈGLES D'INJECTION BASÉES SUR LE SCAN:
+1. Schema.org → injecter dans <head> via injectJsonLd(), NE PAS dupliquer les types déjà présents (${pageHtmlData.schemaTypes.join(', ') || 'aucun'})
+2. Meta tags → utiliser document.querySelector('meta[name="description"]') si existe, sinon créer
+3. H1 → cibler le H1 existant "${pageHtmlData.h1Contents[0] || ''}" pour le modifier, pas en créer un second
+4. FAQ → ${pageHtmlData.hasFAQSection ? 'enrichir/structurer la FAQ existante' : 'injecter avant </main> ou avant le footer'}
+5. Contenu visible → utiliser injectWithSkeleton() avec un sélecteur précis basé sur la structure détectée`);
   }
 
   if (auditContext.technicalScores) {
@@ -2966,6 +2996,7 @@ const clientIp = getClientIp(req);
     // ══════════════════════════════════════════════════════════════
     let aiGeneratedFixes: Map<string, { fn: string; call: string }> | null = null;
     let cmsSettings: SiteSettings = { hasApiConnection: false, cmsType: null };
+    let pageHtmlData: HtmlData | null = null;
 
     if (useAI && auditContext) {
       // Récupérer les paramètres CMS pour le prompting dynamique
@@ -2973,8 +3004,28 @@ const clientIp = getClientIp(req);
       if (cmsSettings.hasApiConnection) {
         console.log(`🔌 Connexion CMS détectée: ${cmsSettings.cmsType} (API lecture/écriture)`);
       }
+
+      // ── Scan HTML live de la page cible pour injection ciblée ──
+      try {
+        console.log(`🔍 Scan HTML live de la page cible: ${siteUrl}`);
+        const htmlResp = await fetch(siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Crawlers-CodeArchitect/1.0)' },
+          signal: AbortSignal.timeout(12000),
+          redirect: 'follow',
+        });
+        if (htmlResp.ok) {
+          const rawHtml = await htmlResp.text();
+          pageHtmlData = analyzeHtmlFull(rawHtml, siteUrl);
+          console.log(`✅ HTML scan: title="${pageHtmlData.titleContent}" h1=${pageHtmlData.h1Count} h2=${pageHtmlData.h2Count} schema=${pageHtmlData.schemaTypes.join(',') || 'none'} words=${pageHtmlData.wordCount}`);
+        } else {
+          console.log(`⚠️ HTML fetch failed: HTTP ${htmlResp.status}`);
+        }
+      } catch (e) {
+        console.log(`⚠️ HTML scan skipped: ${e instanceof Error ? e.message : String(e)}`);
+      }
+
       console.log('🤖 Génération IA personnalisée de TOUS les correctifs...');
-      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext, cmsSettings);
+      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext, cmsSettings, pageHtmlData);
     }
 
     // Générer le script avec contexte et contenu IA
