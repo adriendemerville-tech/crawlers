@@ -483,6 +483,136 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
       });
     }
 
+    // === FORCE_REFRESH: Admin tool to refresh token + re-detect GA4/GMB ===
+    if (action === 'force_refresh') {
+      if (!user_id || !connection_id) {
+        return jsonError('user_id and connection_id required', 400);
+      }
+
+      const { data: conn } = await supabase
+        .from('google_connections')
+        .select('*')
+        .eq('id', connection_id)
+        .eq('user_id', user_id)
+        .single();
+
+      if (!conn) return jsonError('Connection not found', 404);
+      if (!conn.refresh_token) return jsonError('No refresh token available', 400);
+
+      // Refresh the token
+      const refreshResp = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: conn.refresh_token,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      if (!refreshResp.ok) {
+        const errText = await refreshResp.text();
+        return jsonError(`Token refresh failed (${refreshResp.status}): ${errText.slice(0, 300)}`, 400);
+      }
+
+      const tokens = await refreshResp.json();
+      const newExpiry = new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString();
+      const freshToken = tokens.access_token;
+
+      // Get scopes from tokeninfo
+      let grantedScopes: string[] = [];
+      try {
+        const tiResp = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(freshToken)}`);
+        if (tiResp.ok) {
+          const ti = await tiResp.json();
+          if (ti.scope) grantedScopes = ti.scope.split(' ');
+        }
+      } catch (_) {}
+
+      // Detect GSC sites
+      let gscSiteUrls: string[] = [];
+      try {
+        const r = await fetch('https://www.googleapis.com/webmasters/v3/sites', {
+          headers: { Authorization: `Bearer ${freshToken}` },
+        });
+        if (r.ok) {
+          const d = await r.json();
+          gscSiteUrls = (d.siteEntry || []).map((s: any) => s.siteUrl);
+        } else {
+          console.log(`[force_refresh] GSC sites: ${r.status}`);
+        }
+      } catch (_) {}
+
+      // Detect GA4
+      let ga4PropertyId: string | null = null;
+      try {
+        const r = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', {
+          headers: { Authorization: `Bearer ${freshToken}` },
+        });
+        if (r.ok) {
+          const d = await r.json();
+          for (const acct of (d.accountSummaries || [])) {
+            const props = acct.propertySummaries || [];
+            if (props.length > 0) { ga4PropertyId = props[0].property; break; }
+          }
+        } else {
+          console.log(`[force_refresh] GA4: ${r.status} ${(await r.text()).slice(0, 200)}`);
+        }
+      } catch (_) {}
+
+      // Detect GMB
+      let gmbAccountId: string | null = null;
+      let gmbLocationId: string | null = null;
+      try {
+        const r = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+          headers: { Authorization: `Bearer ${freshToken}` },
+        });
+        if (r.ok) {
+          const d = await r.json();
+          if ((d.accounts || []).length > 0) {
+            gmbAccountId = d.accounts[0].name;
+            try {
+              const lr = await fetch(
+                `https://mybusinessbusinessinformation.googleapis.com/v1/${gmbAccountId}/locations?readMask=name,title,storefrontAddress`,
+                { headers: { Authorization: `Bearer ${freshToken}` } }
+              );
+              if (lr.ok) {
+                const ld = await lr.json();
+                if ((ld.locations || []).length > 0) gmbLocationId = ld.locations[0].name;
+              } else {
+                console.log(`[force_refresh] GMB locations: ${lr.status}`);
+              }
+            } catch (_) {}
+          }
+        } else {
+          console.log(`[force_refresh] GMB: ${r.status} ${(await r.text()).slice(0, 200)}`);
+        }
+      } catch (_) {}
+
+      // Update the connection
+      await supabase.from('google_connections').update({
+        access_token: freshToken,
+        token_expiry: newExpiry,
+        scopes: grantedScopes,
+        gsc_site_urls: gscSiteUrls.length > 0 ? gscSiteUrls : conn.gsc_site_urls,
+        ga4_property_id: ga4PropertyId || conn.ga4_property_id,
+        gmb_account_id: gmbAccountId || conn.gmb_account_id,
+        gmb_location_id: gmbLocationId || conn.gmb_location_id,
+        updated_at: new Date().toISOString(),
+      }).eq('id', connection_id);
+
+      return jsonOk({
+        success: true,
+        scopes: grantedScopes,
+        gsc_site_urls: gscSiteUrls,
+        ga4_property_id: ga4PropertyId,
+        gmb_account_id: gmbAccountId,
+        gmb_location_id: gmbLocationId,
+        token_expiry: newExpiry,
+      });
+    }
+
     // === FETCH: Get GSC data for last 30 days ===
     if (action === 'fetch') {
       if (!user_id) {
