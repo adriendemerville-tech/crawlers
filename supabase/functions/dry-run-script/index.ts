@@ -116,12 +116,6 @@ async function runViaBrowserless(
 ): Promise<DryRunResult> {
   const startTime = Date.now();
   
-  const browserlessPayload = {
-    url: siteUrl,
-    gotoOptions: { waitUntil: 'networkidle2', timeout: 45000 },
-    addScriptTag: [{ content: code }],
-    waitForTimeout: 3000,
-  };
 
   // Browserless v2 /function: export default, return { data, type }
   const escapedCode = JSON.stringify(code);
@@ -190,9 +184,16 @@ async function runViaBrowserless(
       throw new Error(`Browserless error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const rawData = await response.json();
+    // v2 /function wraps results in { data: ..., type: ... } — or returns data directly
+    const resultData = rawData?.data ?? rawData;
+    console.log('[dry-run] Browserless response keys:', Object.keys(resultData));
     return {
-      ...data,
+      jsErrors: resultData.jsErrors || [],
+      clsScore: resultData.clsScore ?? null,
+      jsonLdValid: resultData.jsonLdValid ?? true,
+      jsonLdCount: resultData.jsonLdCount ?? 0,
+      pageLoadedOk: resultData.pageLoadedOk ?? true,
       executionTimeMs: Date.now() - startTime,
     };
   } catch (error) {
