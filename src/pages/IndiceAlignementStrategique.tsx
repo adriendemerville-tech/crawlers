@@ -1,7 +1,7 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -10,6 +10,8 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { t3 } from '@/utils/i18n';
 import heroImage from '@/assets/landing/indice-alignement-strategique-hero.webp';
 import {
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
   Crown, Target, TrendingUp, Shield, BarChart3, ArrowRight, Zap, CheckCircle2, AlertTriangle, Gauge
 } from 'lucide-react';
 
@@ -387,7 +389,7 @@ export default function IndiceAlignementStrategique() {
         </section>
       </main>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </div>
   );
 }

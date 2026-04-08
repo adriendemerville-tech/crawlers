@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense} from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,8 @@ import {
 } from 'lucide-react';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
 import proAgencyPlusLogo from '@/assets/pro-agency-plus-logo.webp';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 const translations = {
   fr: {
@@ -903,7 +904,7 @@ export default function Tarifs() {
             </div>
           </motion.div>
         </main>
-        <Footer />
+        <Suspense fallback={null}><Footer /></Suspense>
       </div>
     </>
   );

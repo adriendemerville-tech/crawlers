@@ -1,9 +1,11 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 const sections = [
   { id: 'objet', title: '1. Objet du Service' },
@@ -480,7 +482,7 @@ const CGVU = () => {
           </article>
         </div>
       </main>
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </div>
   );
 };

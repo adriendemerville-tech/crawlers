@@ -1,13 +1,15 @@
+import { lazy, Suspense } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getExpertTermBySlug, expertCategories } from '@/data/expertTerms';
 import { ArrowLeft, Calendar, Code2, Lightbulb, BookOpen, MessageSquare, ChevronRight, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { TrustBadge, SoftwareApplicationSchema } from '@/components/TrustBadge';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 export default function ExpertTermPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -25,7 +27,7 @@ export default function ExpertTermPage() {
             Retour au lexique
           </Link>
         </main>
-        <Footer />
+        <Suspense fallback={null}><Footer /></Suspense>
       </div>
     );
   }
@@ -198,7 +200,7 @@ export default function ExpertTermPage() {
       {/* Trust Badge */}
       <TrustBadge className="border-t border-border" />
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </div>
   );
 }

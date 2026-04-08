@@ -1,7 +1,7 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,8 @@ import {
   Clock, Users, Search, Crown, Sparkles, Target, Award
 } from 'lucide-react';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
@@ -498,7 +500,7 @@ export default function GoogleBusinessPage() {
         </section>
       </main>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
 
       {/* JSON-LD: FAQPage + SoftwareApplication */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

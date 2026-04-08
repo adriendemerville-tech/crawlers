@@ -1,10 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { WordPressScanner } from '@/components/WordPressScanner';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import heroImage from '@/assets/blog/wordpress-plugin-hero.webp';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 const SITE_URL = 'https://crawlers.fr';
 const PLUGIN_URL = `https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/download-plugin`;
@@ -543,7 +545,7 @@ const ModifierCodeWordPress = () => {
         </section>
       </main>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </>
   );
 };

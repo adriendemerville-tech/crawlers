@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense} from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +14,8 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
 import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 import {
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
   Crown, Infinity, Shield, Users, Headphones, Loader2,
   CheckCircle2, ArrowRight, Zap, FileText, Code2, BarChart3,
   Palette, Globe, Brain, TrendingUp, Lock, Star, Layers,
@@ -725,7 +726,7 @@ export default function ProAgency() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
 
       {/* Auth Gate Modal */}
       {showAuthModal && (

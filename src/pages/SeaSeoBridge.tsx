@@ -13,6 +13,8 @@ import {
 import { motion } from 'framer-motion';
 
 const SeaBridgeScene = lazy(() => import('@/components/SeaBridge/SeaBridgeScene'));
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } };
 const stagger = { visible: { transition: { staggerChildren: 0.1 } } };

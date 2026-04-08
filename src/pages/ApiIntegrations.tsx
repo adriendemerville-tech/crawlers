@@ -1,7 +1,7 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import {
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
   Shield, Lock, Unplug, ArrowRight, BarChart3, Globe, Terminal,
   Search, TrendingUp, Brain, Network, ShoppingCart, FileText,
   Zap, Eye, Database, CheckCircle2, XCircle, RefreshCw
@@ -420,7 +422,7 @@ export default function ApiIntegrations() {
         </section>
       </main>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </div>
   );
 }

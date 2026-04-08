@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, lazy, Suspense} from 'react';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -7,7 +7,6 @@ import { Helmet } from 'react-helmet-async';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +34,8 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 // ==================== TYPES ====================
 
@@ -1650,7 +1651,7 @@ const AuditCompare = () => {
         </div>
       </section>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
       <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} currentBalance={balance} />
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent className="sm:max-w-md">

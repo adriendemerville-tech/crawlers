@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense} from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +15,8 @@ import { Link } from 'react-router-dom';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
   Zap, Globe, Brain, Code2, Shield, ArrowRight, Terminal, Key,
   BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer, Palette
@@ -1496,7 +1497,7 @@ async function generateReport(url) {
         )}
       </main>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
 
       {reportHtml && (
         <MarinaReportPreviewModal

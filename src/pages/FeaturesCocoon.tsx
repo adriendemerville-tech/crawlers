@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
@@ -5,7 +6,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Network, TrendingUp, Eye, Zap, Globe, Brain, ArrowRight, Shield, BarChart3, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+
 
 const i18n = {
   fr: {
@@ -253,7 +255,7 @@ export default function FeaturesCocoon() {
         </section>
       </main>
 
-      <Footer />
+      <Suspense fallback={null}><Footer /></Suspense>
     </>
   );
 }
