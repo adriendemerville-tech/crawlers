@@ -216,14 +216,16 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
     }
   }
 
-  // --- Indexation ratio ---
+  // Run Z-score detection on all series
+  const newAlerts: any[] = [];
+
+  // --- Indexation ratio (threshold-based, no Z-score needed) ---
   const idxChecks = idxRes.data || [];
-  if (idxChecks.length >= 3) {
+  if (idxChecks.length >= 5) {
     const totalChecked = idxChecks.length;
     const indexedCount = idxChecks.filter((r: any) => r.verdict === 'PASS').length;
     const indexedRatio = Math.round((indexedCount / totalChecked) * 100);
-    // Use a simple threshold-based alert (no historical series needed)
-    if (indexedRatio < 50 && totalChecked >= 5) {
+    if (indexedRatio < 50) {
       newAlerts.push({
         tracked_site_id: trackedSiteId,
         user_id: userId,
@@ -242,9 +244,6 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
       });
     }
   }
-
-  // Run Z-score detection on all series
-  const newAlerts: any[] = [];
 
   for (const s of series) {
     const { z, mean, stddev } = computeZScore(s.values, s.current);
