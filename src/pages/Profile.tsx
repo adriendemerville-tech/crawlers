@@ -4,7 +4,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks, FileEdit, Anchor, Target } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks, FileEdit, Anchor, Target, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,6 +24,7 @@ const BundleOptionTab = lazy(() => import('@/components/Profile/BundleOptionTab'
 const MyContent = lazy(() => import('@/components/Profile/MyContent').then(m => ({ default: m.MyContent })));
 const MarinaConsoleTab = lazy(() => import('@/components/Profile/MarinaConsoleTab').then(m => ({ default: m.MarinaConsoleTab })));
 const SeaSeoBridgeTab = lazy(() => import('@/components/Profile/SeaSeoBridgeTab').then(m => ({ default: m.SeaSeoBridgeTab })));
+const IndexationMonitor = lazy(() => import('@/components/Console/IndexationMonitor').then(m => ({ default: m.IndexationMonitor })));
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
 const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
 import { useAdmin } from '@/hooks/useAdmin';
@@ -215,7 +216,6 @@ function ProfileContent() {
             transition={{ duration: 0.5 }}
           >
 
-
             <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-2">
               <TabsList className="w-full flex my-0 py-0">
@@ -272,6 +272,12 @@ function ProfileContent() {
                   <TabsTrigger value="sea-seo" className="flex-1 gap-2">
                     <Target className="h-4 w-4" />
                     <span className="hidden sm:inline">SEA→SEO</span>
+                  </TabsTrigger>
+                )}
+                {!isMobile && (
+                  <TabsTrigger value="indexation" className="flex-1 gap-2">
+                    <Globe className="h-4 w-4" />
+                    <span className="hidden sm:inline">Indexation</span>
                   </TabsTrigger>
                 )}
                 <TabsTrigger
@@ -367,6 +373,10 @@ function ProfileContent() {
                     <SeaSeoBridgeTab />
                   </TabsContent>
                 )}
+
+                <TabsContent value="indexation">
+                  <IndexationMonitor />
+                </TabsContent>
 
                 <TabsContent value="gmb">
                   <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />

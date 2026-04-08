@@ -5102,6 +5102,74 @@ export type Database = {
           },
         ]
       }
+      indexation_checks: {
+        Row: {
+          checked_at: string
+          coverage_state: string | null
+          crawled_as: string | null
+          created_at: string
+          id: string
+          indexing_state: string | null
+          last_crawl_time: string | null
+          page_fetch_state: string | null
+          page_url: string
+          raw_response: Json | null
+          referring_urls: string[] | null
+          rich_results_errors: Json | null
+          robots_txt_state: string | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+          verdict: string
+        }
+        Insert: {
+          checked_at?: string
+          coverage_state?: string | null
+          crawled_as?: string | null
+          created_at?: string
+          id?: string
+          indexing_state?: string | null
+          last_crawl_time?: string | null
+          page_fetch_state?: string | null
+          page_url: string
+          raw_response?: Json | null
+          referring_urls?: string[] | null
+          rich_results_errors?: Json | null
+          robots_txt_state?: string | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+          verdict?: string
+        }
+        Update: {
+          checked_at?: string
+          coverage_state?: string | null
+          crawled_as?: string | null
+          created_at?: string
+          id?: string
+          indexing_state?: string | null
+          last_crawl_time?: string | null
+          page_fetch_state?: string | null
+          page_url?: string
+          raw_response?: Json | null
+          referring_urls?: string[] | null
+          rich_results_errors?: Json | null
+          robots_txt_state?: string | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indexation_checks_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       injection_abuse_logs: {
         Row: {
           abuse_type: string
