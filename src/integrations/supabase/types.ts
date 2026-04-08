@@ -1929,6 +1929,7 @@ export type Database = {
           id: string
           metadata: Json | null
           scores: Json
+          source_function: string
           tracked_site_id: string
           user_id: string
         }
@@ -1940,6 +1941,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           scores?: Json
+          source_function?: string
           tracked_site_id: string
           user_id: string
         }
@@ -1951,6 +1953,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           scores?: Json
+          source_function?: string
           tracked_site_id?: string
           user_id?: string
         }
