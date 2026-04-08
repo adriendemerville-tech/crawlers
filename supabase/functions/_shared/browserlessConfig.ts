@@ -4,6 +4,11 @@
  * 
  * Current plan: Cloud (1000 units/month, concurrency 10)
  * URL: production-sfo.browserless.io (v2 cloud)
+ * 
+ * API v2 changes:
+ * - /metrics is removed → use /meta for active sessions info
+ * - /function uses `export default async ({ page }) =>` syntax
+ * - /content still works as before
  */
 export const BROWSERLESS_BASE_URL = 'https://production-sfo.browserless.io';
 
@@ -13,6 +18,10 @@ export function getBrowserlessContentUrl(token: string): string {
 
 export function getBrowserlessFunctionUrl(token: string): string {
   return `${BROWSERLESS_BASE_URL}/function?token=${token}`;
+}
+
+export function getBrowserlessMetaUrl(token: string): string {
+  return `${BROWSERLESS_BASE_URL}/meta?token=${token}`;
 }
 
 export function getBrowserlessKey(): string | null {

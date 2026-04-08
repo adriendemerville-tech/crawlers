@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
 
 /**
  * Edge Function: dry-run-script
@@ -42,15 +43,17 @@ Deno.serve(async (req) => {
 
     console.log(`🧪 Dry Run: testing script on ${siteUrl}`);
 
-    const BROWSERLESS_API_KEY = Deno.env.get('BROWSERLESS_API_KEY');
+    const browserlessKey = getBrowserlessKey();
     const FLY_RENDERER_URL = Deno.env.get('FLY_RENDERER_URL');
     const FLY_RENDERER_SECRET = Deno.env.get('FLY_RENDERER_SECRET');
+
+    console.log(`[dry-run] Browserless key: ${browserlessKey ? 'SET' : 'NOT SET'}, Fly: ${FLY_RENDERER_URL ? 'SET' : 'NOT SET'}`);
 
     // Try Browserless first, fallback to Fly.io
     let result: DryRunResult;
 
-    if (BROWSERLESS_API_KEY) {
-      result = await runViaBrowserless(siteUrl, code, BROWSERLESS_API_KEY);
+    if (browserlessKey) {
+      result = await runViaBrowserless(siteUrl, code, browserlessKey);
     } else if (FLY_RENDERER_URL && FLY_RENDERER_SECRET) {
       result = await runViaFly(siteUrl, code, FLY_RENDERER_URL, FLY_RENDERER_SECRET);
     } else {
@@ -113,71 +116,61 @@ async function runViaBrowserless(
 ): Promise<DryRunResult> {
   const startTime = Date.now();
   
-  const browserlessPayload = {
-    url: siteUrl,
-    gotoOptions: { waitUntil: 'networkidle2', timeout: 45000 },
-    addScriptTag: [{ content: code }],
-    waitForTimeout: 3000,
-  };
 
-  // Use Browserless /function endpoint to run custom code
-  const testScript = `
-    module.exports = async ({ page }) => {
-      const jsErrors = [];
-      page.on('pageerror', (err) => jsErrors.push(err.message));
-      page.on('error', (err) => jsErrors.push(err.message));
+  // Browserless v2 /function: export default, return { data, type }
+  const escapedCode = JSON.stringify(code);
+  const testScript = `export default async ({ page }) => {
+  const jsErrors = [];
+  page.on('pageerror', (err) => jsErrors.push(err.message));
+  page.on('error', (err) => jsErrors.push(err.message));
 
-      await page.goto('${siteUrl}', { waitUntil: 'networkidle2', timeout: 45000 });
+  await page.goto(${JSON.stringify(siteUrl)}, { waitUntil: 'networkidle2', timeout: 45000 });
+  await page.addScriptTag({ content: ${escapedCode} });
+  await new Promise(r => setTimeout(r, 3000));
 
-      // Inject the corrective script
-      await page.addScriptTag({ content: ${JSON.stringify(code)} });
-
-      // Wait for script execution
-      await page.waitForTimeout(3000);
-
-      // Check CLS
-      const cls = await page.evaluate(() => {
-        return new Promise((resolve) => {
-          let clsValue = 0;
-          const observer = new PerformanceObserver((list) => {
-            for (const entry of list.getEntries()) {
-              if (!entry.hadRecentInput) clsValue += entry.value;
-            }
-          });
-          try {
-            observer.observe({ type: 'layout-shift', buffered: true });
-          } catch(e) {}
-          setTimeout(() => resolve(clsValue), 1000);
-        });
-      });
-
-      // Check JSON-LD validity
-      const jsonLdData = await page.evaluate(() => {
-        const scripts = document.querySelectorAll('script[type="application/ld+json"]');
-        const results = [];
-        scripts.forEach((s) => {
-          try {
-            const parsed = JSON.parse(s.textContent || '');
-            results.push({ valid: true, type: parsed['@type'] || 'unknown' });
-          } catch(e) {
-            results.push({ valid: false, error: e.message });
+  const cls = await page.evaluate(() => {
+    return new Promise((resolve) => {
+      let clsValue = 0;
+      try {
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (!entry.hadRecentInput) clsValue += entry.value;
           }
         });
-        return results;
-      });
+        observer.observe({ type: 'layout-shift', buffered: true });
+      } catch(e) {}
+      setTimeout(() => resolve(clsValue), 1000);
+    });
+  });
 
-      return {
-        jsErrors,
-        clsScore: cls,
-        jsonLdValid: jsonLdData.every(j => j.valid),
-        jsonLdCount: jsonLdData.length,
-        pageLoadedOk: true,
-      };
-    };
-  `;
+  const jsonLdData = await page.evaluate(() => {
+    const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+    const results = [];
+    scripts.forEach((s) => {
+      try {
+        const parsed = JSON.parse(s.textContent || '');
+        results.push({ valid: true, type: parsed['@type'] || 'unknown' });
+      } catch(e) {
+        results.push({ valid: false, error: e.message });
+      }
+    });
+    return results;
+  });
+
+  return {
+    data: {
+      jsErrors,
+      clsScore: cls,
+      jsonLdValid: jsonLdData.every(j => j.valid),
+      jsonLdCount: jsonLdData.length,
+      pageLoadedOk: true,
+    },
+    type: 'application/json',
+  };
+};`;
 
   try {
-    const response = await fetch(`https://production-sfo.browserless.io/function?token=${apiKey}`, {
+    const response = await fetch(getBrowserlessFunctionUrl(apiKey), {
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: testScript,
@@ -191,9 +184,16 @@ async function runViaBrowserless(
       throw new Error(`Browserless error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const rawData = await response.json();
+    // v2 /function wraps results in { data: ..., type: ... } — or returns data directly
+    const resultData = rawData?.data ?? rawData;
+    console.log('[dry-run] Browserless response keys:', Object.keys(resultData));
     return {
-      ...data,
+      jsErrors: resultData.jsErrors || [],
+      clsScore: resultData.clsScore ?? null,
+      jsonLdValid: resultData.jsonLdValid ?? true,
+      jsonLdCount: resultData.jsonLdCount ?? 0,
+      pageLoadedOk: resultData.pageLoadedOk ?? true,
       executionTimeMs: Date.now() - startTime,
     };
   } catch (error) {
