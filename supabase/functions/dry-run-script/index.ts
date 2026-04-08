@@ -43,15 +43,17 @@ Deno.serve(async (req) => {
 
     console.log(`🧪 Dry Run: testing script on ${siteUrl}`);
 
-    const BROWSERLESS_API_KEY = getBrowserlessKey();
+    const browserlessKey = getBrowserlessKey();
     const FLY_RENDERER_URL = Deno.env.get('FLY_RENDERER_URL');
     const FLY_RENDERER_SECRET = Deno.env.get('FLY_RENDERER_SECRET');
+
+    console.log(`[dry-run] Browserless key: ${browserlessKey ? 'SET' : 'NOT SET'}, Fly: ${FLY_RENDERER_URL ? 'SET' : 'NOT SET'}`);
 
     // Try Browserless first, fallback to Fly.io
     let result: DryRunResult;
 
-    if (BROWSERLESS_API_KEY) {
-      result = await runViaBrowserless(siteUrl, code, BROWSERLESS_API_KEY);
+    if (browserlessKey) {
+      result = await runViaBrowserless(siteUrl, code, browserlessKey);
     } else if (FLY_RENDERER_URL && FLY_RENDERER_SECRET) {
       result = await runViaFly(siteUrl, code, FLY_RENDERER_URL, FLY_RENDERER_SECRET);
     } else {
