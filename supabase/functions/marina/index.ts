@@ -1302,7 +1302,7 @@ interface MarinaBranding {
 
 // ─── Compile multiple section HTMLs into one final report ───
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string },
   lang: string,
   domain: string,
   url: string,
@@ -1379,6 +1379,7 @@ function compileMarinaReport(
       <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
+      ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
     </div>
 
     <!-- Section 1: Crawl -->
@@ -1398,6 +1399,12 @@ function compileMarinaReport(
 
     <!-- Section 4: Cocoon -->
     ${cocoonContent}
+
+    ${sectionHTMLs.indexation ? `
+    <div class="marina-separator"></div>
+    <!-- Section 5: Indexation Health -->
+    ${extractBodyContent(sectionHTMLs.indexation, { stripHeader: true, stripFooter: true })}
+    ` : ''}
 
     ${ctaHtml}
 
