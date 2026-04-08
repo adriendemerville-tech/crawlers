@@ -57,7 +57,7 @@ export function NextStepFloatingButton({ nextStepLabel, onNextStep, scrollThresh
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           onClick={handleClick}
-          className="fixed bottom-6 left-6 z-40 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border/60 bg-card/80 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-200 hover:border-foreground/30 group cursor-pointer"
+          className="fixed bottom-12 left-6 z-40 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/80 bg-card/95 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-200 hover:border-white group cursor-pointer"
         >
           <span className="text-sm font-medium text-foreground/90 group-hover:text-foreground transition-colors">
             {nextStepLabel || t.nextStep}
