@@ -205,5 +205,6 @@ export function ChatAttachmentPicker({ userId, onAttach, onImageAttach }: ChatAt
         )}
       </ScrollArea>
     </div>
+    </>
   );
 }
