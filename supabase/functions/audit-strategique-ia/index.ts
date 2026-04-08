@@ -6,6 +6,7 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
+import { writeIdentity } from '../_shared/identityGateway.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
 import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts'
