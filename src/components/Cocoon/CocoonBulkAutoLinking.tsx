@@ -59,6 +59,8 @@ const i18n = {
     saved: 'Suggestions sauvegardées dans Cocoon pour validation.',
     error: 'Erreur lors de l\'analyse',
     progressLabel: 'Progression',
+    noCms: 'Connectez votre CMS dans les paramètres du site pour déployer automatiquement ces liens.',
+    cmsReady: 'Votre CMS est connecté — vous pourrez déployer ces liens en un clic.',
   },
   en: {
     title: 'Retroactive Auto-Linking',
@@ -85,6 +87,8 @@ const i18n = {
     saved: 'Suggestions saved in Cocoon for review.',
     error: 'Error during analysis',
     progressLabel: 'Progress',
+    noCms: 'Connect your CMS in site settings to automatically deploy these links.',
+    cmsReady: 'Your CMS is connected — you can deploy these links in one click.',
   },
   es: {
     title: 'Auto-Enlace Retroactivo',
@@ -111,6 +115,8 @@ const i18n = {
     saved: 'Sugerencias guardadas en Cocoon para revisión.',
     error: 'Error durante el análisis',
     progressLabel: 'Progreso',
+    noCms: 'Conecte su CMS en la configuración del sitio para desplegar estos enlaces automáticamente.',
+    cmsReady: 'Su CMS está conectado — podrá desplegar estos enlaces con un clic.',
   },
 };
 
@@ -118,9 +124,10 @@ interface CocoonBulkAutoLinkingProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   trackedSiteId: string;
+  hasCmsConnection?: boolean;
 }
 
-export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: CocoonBulkAutoLinkingProps) {
+export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId, hasCmsConnection = false }: CocoonBulkAutoLinkingProps) {
   const { language } = useLanguage();
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
 
@@ -404,6 +411,18 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
           <div className="text-center py-8 text-white/40 text-sm">
             <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-400/50" />
             {t.noResults}
+          </div>
+        )}
+
+        {/* CMS connection status */}
+        {stats && stats.total_suggestions > 0 && (
+          <div className={`flex items-start gap-2 rounded-lg p-3 text-xs ${hasCmsConnection ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+            {hasCmsConnection ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            ) : (
+              <Link2 className="w-4 h-4 shrink-0 mt-0.5" />
+            )}
+            <span>{hasCmsConnection ? t.cmsReady : t.noCms}</span>
           </div>
         )}
       </DialogContent>
