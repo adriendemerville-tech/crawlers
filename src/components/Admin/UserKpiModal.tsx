@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug, ShieldCheck, Trash2, Crown, Eye, EyeOff, FileSearch, ChevronDown, Pencil } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug, ShieldCheck, Trash2, Crown, Eye, EyeOff, FileSearch, ChevronDown, Pencil, Radio, Pause, Play, RefreshCw } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -60,18 +61,74 @@ interface UserKpiModalProps {
   auditorUserIds?: Set<string>;
 }
 
+interface LogEntry {
+  id: string;
+  event_type: string;
+  event_data: any;
+  target_url: string | null;
+  created_at: string;
+}
+
 export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleRole, onManageCredits, onStripPro, onEditProfile, adminUserIds, viewerUserIds, viewer2UserIds, auditorUserIds }: UserKpiModalProps) {
   const [kpis, setKpis] = useState<UserKpis | null>(null);
   const [scannedUrls, setScannedUrls] = useState<ScannedUrl[]>([]);
   const [loading, setLoading] = useState(false);
   const [urlsLoading, setUrlsLoading] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [livePolling, setLivePolling] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+  const lastLogIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!open || !user) return;
     setLoading(true);
     fetchKpis(user.user_id);
     fetchScannedUrls(user.user_id);
+    fetchLogs(user.user_id, true);
   }, [open, user]);
+
+  // Cleanup polling on unmount or close
+  useEffect(() => {
+    if (!open) {
+      setLivePolling(false);
+      if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+    }
+    return () => { if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; } };
+  }, [open]);
+
+  // Live polling effect
+  useEffect(() => {
+    if (livePolling && user) {
+      pollingRef.current = setInterval(() => fetchLogs(user.user_id, false), 5000);
+      return () => { if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; } };
+    }
+  }, [livePolling, user]);
+
+  const fetchLogs = useCallback(async (userId: string, initial: boolean) => {
+    if (initial) setLogsLoading(true);
+    try {
+      const query = supabase
+        .from('analytics_events')
+        .select('id, event_type, event_data, target_url, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      const { data } = await query;
+      if (data) {
+        setLogs(data as LogEntry[]);
+        if (data.length > 0 && data[0].id !== lastLogIdRef.current) {
+          lastLogIdRef.current = data[0].id;
+          // Auto-scroll on new entries
+          setTimeout(() => logsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        }
+      }
+    } catch { /* silent */ } finally {
+      if (initial) setLogsLoading(false);
+    }
+  }, []);
 
   const fetchKpis = async (userId: string) => {
     try {
@@ -351,10 +408,15 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
             </TabsTrigger>
             <TabsTrigger value="urls" className="gap-1.5 flex-1">
               <Search className="h-3.5 w-3.5" />
-              URLs scannées
+              URLs
               {scannedUrls.length > 0 && (
                 <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{scannedUrls.length}</Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="gap-1.5 flex-1">
+              <Radio className="h-3.5 w-3.5" />
+              Logs
+              {livePolling && <span className="ml-1 h-2 w-2 rounded-full bg-green-500 animate-pulse" />}
             </TabsTrigger>
           </TabsList>
 
@@ -423,6 +485,78 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
                 </TableBody>
               </Table>
             )}
+          </TabsContent>
+
+          <TabsContent value="logs" className="overflow-hidden flex flex-col flex-1">
+            <div className="flex items-center gap-2 py-2 border-b border-border">
+              <Button
+                variant={livePolling ? 'default' : 'outline'}
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setLivePolling(!livePolling)}
+              >
+                {livePolling ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                {livePolling ? 'Pause' : 'Live'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => user && fetchLogs(user.user_id, true)}
+              >
+                <RefreshCw className="h-3 w-3" />
+                Refresh
+              </Button>
+              <span className="text-xs text-muted-foreground ml-auto">{logs.length} événements</span>
+            </div>
+            <ScrollArea className="flex-1 max-h-[50vh]">
+              {logsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : logs.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Aucun log</p>
+              ) : (
+                <div className="space-y-1 py-2 font-mono text-[11px]">
+                  {logs.map((log) => {
+                    const isError = log.event_type.includes('error');
+                    const isFairUse = log.event_type.startsWith('fair_use:');
+                    const isAudit = log.event_type.includes('audit') || log.event_type.includes('strategic');
+                    const isCrawl = log.event_type.includes('crawl');
+                    const colorClass = isError
+                      ? 'text-red-500'
+                      : isFairUse
+                      ? 'text-amber-500'
+                      : isAudit
+                      ? 'text-purple-500'
+                      : isCrawl
+                      ? 'text-cyan-500'
+                      : 'text-muted-foreground';
+
+                    const time = new Date(log.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const date = new Date(log.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+
+                    // Extract useful info from event_data
+                    let detail = '';
+                    if (log.target_url) detail = log.target_url;
+                    else if (log.event_data) {
+                      const d = log.event_data as Record<string, any>;
+                      detail = d.action || d.function_name || d.error_message || d.url || d.domain || '';
+                      if (typeof detail !== 'string') detail = JSON.stringify(detail).slice(0, 120);
+                    }
+
+                    return (
+                      <div key={log.id} className={`flex items-start gap-2 px-2 py-0.5 hover:bg-muted/50 rounded ${isError ? 'bg-red-500/5' : ''}`}>
+                        <span className="text-muted-foreground/60 shrink-0 w-[70px]">{date} {time}</span>
+                        <span className={`shrink-0 w-[180px] truncate ${colorClass}`}>{log.event_type}</span>
+                        <span className="text-muted-foreground truncate">{detail}</span>
+                      </div>
+                    );
+                  })}
+                  <div ref={logsEndRef} />
+                </div>
+              )}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </DialogContent>
