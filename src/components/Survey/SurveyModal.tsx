@@ -8,7 +8,7 @@ import { X, Star, Camera, Send, MessageCircle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import html2canvas from 'html2canvas';
+
 
 interface ContentBlock {
   id: string;
@@ -158,6 +158,7 @@ export function SurveyModal() {
 
   const handleScreenshot = async (blockId: string) => {
     try {
+      const { default: html2canvas } = await import('html2canvas');
       const canvas = await html2canvas(document.body, { useCORS: true, scale: 0.5 });
       const dataUrl = canvas.toDataURL('image/png');
       setResponses(r => ({ ...r, [blockId]: dataUrl.substring(0, 500) + '...[captured]' }));

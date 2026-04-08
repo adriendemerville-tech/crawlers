@@ -131,7 +131,7 @@ const ProductShowcaseSection = memo(() => {
                             </div>
                           </div>
                         </div>
-                        <img src={slide.image} alt={slide.title} className="w-full h-auto" loading="lazy" />
+                        <img src={slide.image} alt={slide.title} width={960} height={600} className="w-full h-auto" loading="lazy" />
                       </div>
                     </div>
 
