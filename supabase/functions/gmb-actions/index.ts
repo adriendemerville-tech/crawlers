@@ -32,13 +32,95 @@ async function resolveGmbToken(userId: string, trackedSiteId: string): Promise<G
   if (!connectionId) {
     const { data: gbpConns } = await sb
       .from('google_connections')
-      .select('id, google_email, gmb_account_id, gmb_location_id')
+      .select('id, google_email, gmb_account_id, gmb_location_id, access_token, refresh_token, token_expiry')
       .eq('user_id', userId)
       .like('google_email', 'gbp:%')
       .limit(1)
 
-    if (gbpConns && gbpConns.length > 0 && gbpConns[0].gmb_account_id) {
-      connectionId = gbpConns[0].id
+    if (gbpConns && gbpConns.length > 0) {
+      if (gbpConns[0].gmb_account_id) {
+        connectionId = gbpConns[0].id
+      } else {
+        // Retry discovery: token exists but account/location not yet discovered
+        console.log('[gmb-actions] 🔄 GBP connection found but gmb_account_id is null — retrying discovery...')
+        const conn = gbpConns[0]
+        let token = conn.access_token
+        
+        // Refresh token if expired
+        if (conn.token_expiry && new Date(conn.token_expiry) < new Date() && conn.refresh_token) {
+          const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
+          const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')
+          if (clientId && clientSecret) {
+            try {
+              const refreshResp = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                  client_id: clientId,
+                  client_secret: clientSecret,
+                  refresh_token: conn.refresh_token,
+                  grant_type: 'refresh_token',
+                }),
+              })
+              if (refreshResp.ok) {
+                const refreshData = await refreshResp.json()
+                token = refreshData.access_token
+                const newExpiry = new Date(Date.now() + (refreshData.expires_in || 3600) * 1000).toISOString()
+                await sb.from('google_connections').update({
+                  access_token: token,
+                  token_expiry: newExpiry,
+                }).eq('id', conn.id)
+                console.log('[gmb-actions] ✅ Token refreshed')
+              }
+            } catch (e) {
+              console.error('[gmb-actions] Token refresh failed:', e)
+            }
+          }
+        }
+
+        // Retry account + location discovery
+        try {
+          const acctResp = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (acctResp.ok) {
+            const acctBody = await acctResp.json()
+            const accounts = acctBody.accounts || []
+            console.log(`[gmb-actions] Found ${accounts.length} account(s)`)
+            if (accounts.length > 0) {
+              const accountId = accounts[0].name?.replace('accounts/', '') || null
+              let locationId: string | null = null
+              if (accountId) {
+                const locResp = await fetch(
+                  `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${accountId}/locations?readMask=name,title,storefrontAddress`,
+                  { headers: { Authorization: `Bearer ${token}` } }
+                )
+                if (locResp.ok) {
+                  const locBody = await locResp.json()
+                  const locations = locBody.locations || []
+                  console.log(`[gmb-actions] Found ${locations.length} location(s)`)
+                  if (locations.length > 0) {
+                    locationId = locations[0].name?.split('/').pop() || null
+                  }
+                } else {
+                  console.error(`[gmb-actions] Locations API ${locResp.status}: ${await locResp.text().catch(() => '')}`)
+                }
+              }
+              // Persist discovery results
+              await sb.from('google_connections').update({
+                gmb_account_id: accountId,
+                gmb_location_id: locationId,
+              }).eq('id', conn.id)
+              console.log(`[gmb-actions] ✅ Discovery saved: account=${accountId}, location=${locationId}`)
+              if (accountId) connectionId = conn.id
+            }
+          } else {
+            console.error(`[gmb-actions] Accounts API ${acctResp.status}`)
+          }
+        } catch (e) {
+          console.error('[gmb-actions] Retry discovery error:', e)
+        }
+      }
     }
   }
 
