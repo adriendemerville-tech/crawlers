@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Wand2, Loader2, Link2, ExternalLink, CheckCircle2, ChevronDown, ChevronUp, Zap, Target, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 
 interface LinkSuggestion {
   source_url: string;
@@ -57,6 +58,7 @@ const i18n = {
     deploy: 'Déployer via CMS',
     saved: 'Suggestions sauvegardées dans Cocoon pour validation.',
     error: 'Erreur lors de l\'analyse',
+    progressLabel: 'Progression',
   },
   en: {
     title: 'Retroactive Auto-Linking',
@@ -82,6 +84,7 @@ const i18n = {
     deploy: 'Deploy via CMS',
     saved: 'Suggestions saved in Cocoon for review.',
     error: 'Error during analysis',
+    progressLabel: 'Progress',
   },
   es: {
     title: 'Auto-Enlace Retroactivo',
@@ -107,6 +110,7 @@ const i18n = {
     deploy: 'Desplegar vía CMS',
     saved: 'Sugerencias guardadas en Cocoon para revisión.',
     error: 'Error durante el análisis',
+    progressLabel: 'Progreso',
   },
 };
 
@@ -127,11 +131,21 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
   const [stats, setStats] = useState<BulkStats | null>(null);
   const [results, setResults] = useState<GroupedResult[]>([]);
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, []);
 
   const handleLaunch = async () => {
     setIsRunning(true);
     setStats(null);
     setResults([]);
+    setProgress(0);
 
     try {
       const { data, error } = await supabase.functions.invoke('cocoon-bulk-auto-linking', {
@@ -143,23 +157,68 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
         },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message || 'Erreur réseau');
+
+      // Handle direct error from function (e.g. 400/403)
       if (data?.error) throw new Error(data.error);
 
-      setStats(data.stats);
-      setResults(data.results || []);
+      // Background mode: poll for results
+      if (data?.job_id) {
+        pollJobStatus(data.job_id);
+        return;
+      }
 
-      if (data.stats.total_suggestions > 0) {
-        toast.success(`${data.stats.total_suggestions} liens trouvés sur ${data.stats.pages_analyzed} pages`);
-      } else {
-        toast.info(t.noResults);
+      // Legacy sync response (shouldn't happen but fallback)
+      if (data?.stats) {
+        setStats(data.stats);
+        setResults(data.results || []);
+        setIsRunning(false);
       }
     } catch (err: any) {
       console.error('Bulk auto-linking error:', err);
-      toast.error(t.error);
-    } finally {
+      toast.error(err.message || t.error);
       setIsRunning(false);
     }
+  };
+
+  const pollJobStatus = (jobId: string) => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('cocoon-bulk-auto-linking', {
+          body: { job_id: jobId },
+        });
+
+        if (error || !data) return;
+
+        setProgress(data.progress || 0);
+
+        if (data.status === 'completed') {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          pollingRef.current = null;
+
+          const result = data.result;
+          if (result?.stats) {
+            setStats(result.stats);
+            setResults(result.results || []);
+            if (result.stats.total_suggestions > 0) {
+              toast.success(`${result.stats.total_suggestions} liens trouvés sur ${result.stats.pages_analyzed} pages`);
+            } else {
+              toast.info(t.noResults);
+            }
+          }
+          setIsRunning(false);
+        } else if (data.status === 'failed') {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          pollingRef.current = null;
+          toast.error(data.error || t.error);
+          setIsRunning(false);
+        }
+      } catch {
+        // Silent retry on network error
+      }
+    }, 3000);
   };
 
   const shortenUrl = (url: string) => {
@@ -170,7 +229,10 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => {
+      if (!v && isRunning) return; // Prevent closing while running
+      onOpenChange(v);
+    }}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-[#0d0d14] border-white/10 text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
@@ -193,6 +255,7 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
                   onValueChange={([v]) => setMaxPages(v)}
                   min={5} max={100} step={5}
                   className="flex-1"
+                  disabled={isRunning}
                 />
                 <span className="text-sm font-mono w-8 text-right">{maxPages}</span>
               </div>
@@ -205,6 +268,7 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
                   onValueChange={([v]) => setMaxLinksPerPage(v)}
                   min={1} max={5} step={1}
                   className="flex-1"
+                  disabled={isRunning}
                 />
                 <span className="text-sm font-mono w-8 text-right">{maxLinksPerPage}</span>
               </div>
@@ -217,6 +281,7 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
                   onValueChange={([v]) => setMinConfidence(v / 100)}
                   min={40} max={95} step={5}
                   className="flex-1"
+                  disabled={isRunning}
                 />
                 <span className="text-sm font-mono w-8 text-right">{Math.round(minConfidence * 100)}%</span>
               </div>
@@ -240,6 +305,17 @@ export function CocoonBulkAutoLinking({ open, onOpenChange, trackedSiteId }: Coc
               </>
             )}
           </Button>
+
+          {/* Progress bar */}
+          {isRunning && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-white/40">
+                <span>{t.progressLabel}</span>
+                <span>{progress}%</span>
+              </div>
+              <Progress value={progress} className="h-2 bg-white/5" />
+            </div>
+          )}
         </div>
 
         {/* Stats */}
