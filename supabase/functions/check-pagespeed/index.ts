@@ -18,6 +18,156 @@ interface PageSpeedResult {
   tti: string;
 }
 
+interface LighthouseRecommendation {
+  id: string;
+  title: string;
+  description: string;
+  score: number | null;
+  numericValue: number | null;
+  displayValue: string | null;
+  category: string;
+  impact: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  savingsMs: number | null;
+  savingsBytes: number | null;
+  details: {
+    type: string;
+    items?: Array<{ url?: string; wastedBytes?: number; wastedMs?: number; totalBytes?: number; [key: string]: unknown }>;
+  } | null;
+}
+
+// Audits Lighthouse intéressants pour Code Architect
+const ACTIONABLE_AUDITS = [
+  // Performance
+  'render-blocking-resources',
+  'unused-javascript',
+  'unused-css-rules',
+  'modern-image-formats',
+  'uses-optimized-images',
+  'uses-responsive-images',
+  'offscreen-images',
+  'unminified-javascript',
+  'unminified-css',
+  'efficient-animated-content',
+  'uses-text-compression',
+  'uses-rel-preconnect',
+  'uses-rel-preload',
+  'font-display',
+  'third-party-summary',
+  'largest-contentful-paint-element',
+  'lcp-lazy-loaded',
+  'layout-shift-elements',
+  'long-tasks',
+  'dom-size',
+  'critical-request-chains',
+  'duplicated-javascript',
+  'legacy-javascript',
+  'total-byte-weight',
+  'server-response-time',
+  'redirects',
+  'uses-long-cache-ttl',
+  // Accessibility
+  'image-alt',
+  'color-contrast',
+  'heading-order',
+  'link-name',
+  'button-name',
+  'html-has-lang',
+  'html-lang-valid',
+  'meta-viewport',
+  'document-title',
+  'label',
+  // SEO
+  'meta-description',
+  'crawlable-anchors',
+  'hreflang',
+  'canonical',
+  'robots-txt',
+  'is-crawlable',
+  'structured-data',
+  'tap-targets',
+  'font-size',
+  // Best practices
+  'is-on-https',
+  'no-document-write',
+  'geolocation-on-start',
+  'notification-on-start',
+  'csp-xss',
+];
+
+function extractRecommendations(categoryData: Record<string, any>): LighthouseRecommendation[] {
+  const recommendations: LighthouseRecommendation[] = [];
+  
+  const categoryMap: Record<string, { data: any; category: string }> = {
+    PERFORMANCE: { data: categoryData['PERFORMANCE'], category: 'performance' },
+    ACCESSIBILITY: { data: categoryData['ACCESSIBILITY'], category: 'accessibility' },
+    SEO: { data: categoryData['SEO'], category: 'seo' },
+    BEST_PRACTICES: { data: categoryData['BEST_PRACTICES'], category: 'best-practices' },
+  };
+
+  for (const [, { data, category }] of Object.entries(categoryMap)) {
+    if (!data?.lighthouseResult?.audits) continue;
+    const audits = data.lighthouseResult.audits;
+
+    for (const auditId of ACTIONABLE_AUDITS) {
+      const audit = audits[auditId];
+      if (!audit) continue;
+      // Only include failed or warning audits (score < 1) or informational ones with data
+      if (audit.score === 1 || audit.score === null && !audit.details?.items?.length) continue;
+
+      const savingsMs = audit.details?.overallSavingsMs || null;
+      const savingsBytes = audit.details?.overallSavingsBytes || null;
+
+      let impact: LighthouseRecommendation['impact'] = 'info';
+      if (audit.score !== null) {
+        if (audit.score === 0) impact = 'critical';
+        else if (audit.score <= 0.5) impact = 'high';
+        else if (audit.score <= 0.89) impact = 'medium';
+        else impact = 'low';
+      } else if (savingsMs && savingsMs > 500) {
+        impact = 'high';
+      } else if (savingsBytes && savingsBytes > 50000) {
+        impact = 'medium';
+      }
+
+      // Extract top items (limit to 5 per audit for payload size)
+      let detailItems: any[] | undefined;
+      if (audit.details?.items) {
+        detailItems = audit.details.items.slice(0, 5).map((item: any) => ({
+          url: item.url || item.source?.url || undefined,
+          wastedBytes: item.wastedBytes || item.totalBytes || undefined,
+          wastedMs: item.wastedMs || undefined,
+          totalBytes: item.totalBytes || undefined,
+          label: item.label || item.node?.snippet || undefined,
+        }));
+      }
+
+      recommendations.push({
+        id: auditId,
+        title: audit.title || auditId,
+        description: (audit.description || '').substring(0, 300),
+        score: audit.score,
+        numericValue: audit.numericValue || null,
+        displayValue: audit.displayValue || null,
+        category,
+        impact,
+        savingsMs,
+        savingsBytes,
+        details: detailItems ? { type: audit.details?.type || 'table', items: detailItems } : null,
+      });
+    }
+  }
+
+  // Sort: critical first, then by savings
+  recommendations.sort((a, b) => {
+    const impactOrder = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
+    const diff = impactOrder[a.impact] - impactOrder[b.impact];
+    if (diff !== 0) return diff;
+    return (b.savingsMs || 0) - (a.savingsMs || 0);
+  });
+
+  return recommendations;
+}
+
 function normalizeUrl(url: string): string {
   let normalized = url.trim();
   if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
