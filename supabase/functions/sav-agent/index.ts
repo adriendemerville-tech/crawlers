@@ -3,6 +3,17 @@ import { getServiceClient } from "../_shared/supabaseClient.ts";
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtractionPrompt, parseMemoryExtraction, getPendingSuggestions } from "../_shared/siteMemory.ts";
 import { FELIX_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from "../_shared/agentPersonas.ts";
 import { LEXIQUE_PROMPT_BLOCK } from "../_shared/lexiqueReference.ts";
+
+// Fire-and-forget: trigger dispatch-agent-directives immediately after a new directive
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SERVICE_KEY_DISPATCH = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+function fireDispatchAgentDirectives() {
+  fetch(`${SUPABASE_URL}/functions/v1/dispatch-agent-directives`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${SERVICE_KEY_DISPATCH}`, 'Content-Type': 'application/json' },
+    body: '{}',
+  }).catch(() => {/* fire-and-forget */});
+}
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const FRONTEND_TAXONOMY = `
@@ -861,7 +872,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             status: 'pending',
           });
 
-          const confirmReply = `✅ Directive transmise à l'Agent SEO :\n\n> ${directiveText}\n\n${targetUrl ? `Cible : \`${targetUrl}\`\n` : ''}L'Agent SEO appliquera cette instruction lors de son prochain cycle d'analyse.`;
+          fireDispatchAgentDirectives();
+
+          const confirmReply = `✅ Directive transmise à l'Agent SEO :\n\n> ${directiveText}\n\n${targetUrl ? `Cible : \`${targetUrl}\`\n` : ''}L'Agent SEO sera déclenché immédiatement.`;
 
           // Save conversation
           let savedConvId = conversation_id;
@@ -933,7 +946,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             status: 'pending',
           });
 
-          const confirmReply = `✅ Directive transmise à l'Agent CTO :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent CTO intégrera cette instruction lors de sa prochaine analyse.`;
+          fireDispatchAgentDirectives();
+
+          const confirmReply = `✅ Directive transmise à l'Agent CTO :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent CTO sera déclenché immédiatement.`;
 
           // Save conversation
           let savedConvId = conversation_id;
@@ -1002,7 +1017,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             status: 'pending',
           });
 
-          const confirmReply = `✅ Directive transmise au Supervisor :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}Le Supervisor intégrera cette instruction lors de son prochain audit.`;
+          fireDispatchAgentDirectives();
+
+          const confirmReply = `✅ Directive transmise au Supervisor :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}Le Supervisor sera déclenché immédiatement.`;
 
           let savedConvId = conversation_id;
           try {
@@ -1072,7 +1089,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             status: 'pending',
           });
 
-          const confirmReply = `✅ Directive transmise à l'Agent UX :\n\n> ${directiveText}\n\n${targetComponent ? `Composant cible : \`${targetComponent}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent UX intégrera cette instruction lors de sa prochaine analyse.`;
+          fireDispatchAgentDirectives();
+
+          const confirmReply = `✅ Directive transmise à l'Agent UX :\n\n> ${directiveText}\n\n${targetComponent ? `Composant cible : \`${targetComponent}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent UX sera déclenché immédiatement.`;
 
           let savedConvId = conversation_id;
           try {
