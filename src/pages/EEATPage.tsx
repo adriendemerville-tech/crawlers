@@ -193,7 +193,7 @@ export default function EEATPage() {
 
       <main className="flex-1">
         {/* Hero — no framer-motion for LCP */}
-        <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-primary/5 to-background">
+        <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-amber-500/5 to-background">
           <div className="mx-auto max-w-4xl">
             <nav aria-label="Fil d'Ariane" className="mb-4 text-xs text-muted-foreground">
               <ol className="flex items-center gap-1">
@@ -256,10 +256,10 @@ export default function EEATPage() {
               éditoriale — sont eux des facteurs mesurables et optimisables.
             </p>
 
-            <Card className="bg-primary/5 border-primary/20">
+            <Card className="bg-amber-500/5 border-amber-500/20">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-start gap-3">
-                  <Target className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <Target className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-semibold text-foreground mb-1">Pourquoi l'E-E-A-T est crucial pour le GEO</p>
                     <p className="text-sm text-muted-foreground">
@@ -288,15 +288,15 @@ export default function EEATPage() {
 
             <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
               {pillars.map((p) => (
-                <Card key={p.title} className="border-border/50 hover:border-primary/30 transition-colors">
+                <Card key={p.title} className="border-border/50 hover:border-amber-500/30 transition-colors">
                   <CardContent className="p-5 sm:p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <p.icon className="h-5 w-5 text-primary" />
+                      <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <p.icon className="h-5 w-5 text-amber-500" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl font-black text-primary">{p.letter}</span>
+                          <span className="text-2xl font-black text-amber-500">{p.letter}</span>
                           <h3 className="font-bold text-foreground text-lg">{p.title}</h3>
                         </div>
                         <span className="text-xs text-muted-foreground">{p.titleFr} — Pondération {p.weight}</span>
@@ -306,7 +306,7 @@ export default function EEATPage() {
                     <div className="space-y-1.5">
                       {p.signals.map((s) => (
                         <div key={s} className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
+                          <CheckCircle2 className="h-3 w-3 text-amber-500 shrink-0" />
                           <span>{s}</span>
                         </div>
                       ))}
@@ -337,7 +337,7 @@ export default function EEATPage() {
               {pillars.map((p) => (
                 <Card key={p.title} className="text-center">
                   <CardContent className="p-4">
-                    <p.icon className="h-6 w-6 text-primary mx-auto mb-2" />
+                    <p.icon className="h-6 w-6 text-amber-500 mx-auto mb-2" />
                     <p className="text-xs text-muted-foreground">{p.titleFr}</p>
                     <p className="text-2xl font-black text-foreground">{p.weight}</p>
                   </CardContent>
@@ -374,21 +374,21 @@ export default function EEATPage() {
             <div className="grid sm:grid-cols-3 gap-3">
               <Card>
                 <CardContent className="p-4 text-center">
-                  <Search className="h-6 w-6 text-primary mx-auto mb-2" />
+                  <Search className="h-6 w-6 text-amber-500 mx-auto mb-2" />
                   <p className="font-semibold text-foreground text-sm">Audit Expert</p>
                   <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T intégré dans chaque audit complet avec plan d'action priorisé</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
-                  <Globe className="h-6 w-6 text-primary mx-auto mb-2" />
+                  <Globe className="h-6 w-6 text-amber-500 mx-auto mb-2" />
                   <p className="font-semibold text-foreground text-sm">GEO + Cocoon</p>
                   <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T par nœud dans le graphe sémantique 3D</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
-                  <BarChart3 className="h-6 w-6 text-primary mx-auto mb-2" />
+                  <BarChart3 className="h-6 w-6 text-amber-500 mx-auto mb-2" />
                   <p className="font-semibold text-foreground text-sm">Profondeur LLM</p>
                   <p className="text-xs text-muted-foreground mt-1">L'E-E-A-T influence directement la profondeur de citation par les IA</p>
                 </CardContent>
@@ -410,7 +410,7 @@ export default function EEATPage() {
               {actions.map((a) => (
                 <Card key={a.title} className="border-border/50">
                   <CardContent className="p-5">
-                    <a.icon className="h-6 w-6 text-primary mb-3" />
+                    <a.icon className="h-6 w-6 text-amber-500 mb-3" />
                     <h3 className="font-bold text-foreground mb-2 text-sm">{a.title}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">{a.desc}</p>
                   </CardContent>
@@ -445,7 +445,7 @@ export default function EEATPage() {
         </section>
 
         {/* CTA */}
-        <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-primary/5 to-background">
+        <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-amber-500/5 to-background">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
               Mesurez votre E-E-A-T gratuitement
@@ -456,7 +456,7 @@ export default function EEATPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/app/eeat">
-                <Button size="lg" className="gap-2 w-full sm:w-auto">
+               <Button size="lg" className="gap-2 w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 shadow-lg">
                   Lancer l'audit E-E-A-T gratuit
                   <ArrowRight className="h-4 w-4" />
                 </Button>

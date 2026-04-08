@@ -203,7 +203,8 @@ export default function AppEeat() {
           <Link to="/app/console" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <Shield className="h-5 w-5 text-amber-500" />
+           <Shield className="h-5 w-5 text-amber-500" />
+
           <span className="font-semibold text-sm text-foreground">{t.h1}</span>
           <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">Beta</Badge>
         </div>
@@ -231,7 +232,7 @@ export default function AppEeat() {
                     onKeyDown={e => e.key === 'Enter' && handleScan()}
                     className="flex-1"
                   />
-                  <Button onClick={handleScan} disabled={scanning || !scanUrl.trim()} className="shrink-0">
+                  <Button onClick={handleScan} disabled={scanning || !scanUrl.trim()} className="shrink-0 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0">
                     {scanning ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
                     {scanning ? t.scanning : t.scanBtn}
                   </Button>
@@ -243,7 +244,7 @@ export default function AppEeat() {
                       <span>{scanProgress}%</span>
                     </div>
                     <div className="h-2 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${scanProgress}%` }} />
+                      <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-600 transition-all duration-500" style={{ width: `${scanProgress}%` }} />
                     </div>
                   </div>
                 )}
@@ -293,8 +294,8 @@ export default function AppEeat() {
                   <div className="absolute inset-0 z-20 flex items-start justify-center pt-16 bg-gradient-to-b from-background/60 via-background/90 to-background">
                     <Card className="max-w-sm w-full mx-4 shadow-2xl">
                       <CardHeader className="text-center pb-2">
-                        <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                          <Lock className="h-5 w-5 text-primary" />
+                        <div className="mx-auto w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
+                          <Lock className="h-5 w-5 text-amber-500" />
                         </div>
                         <CardTitle className="text-base">{t.gateTitle}</CardTitle>
                         <CardDescription className="text-xs">{t.gateSubtitle}</CardDescription>
@@ -342,7 +343,7 @@ export default function AppEeat() {
               <div className="grid sm:grid-cols-3 gap-6">
                 {['step1', 'step2', 'step3'].map((s, i) => (
                   <div key={s} className="text-center">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center mx-auto mb-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 font-bold flex items-center justify-center mx-auto mb-3">
                       {i + 1}
                     </div>
                     <h3 className="font-semibold text-sm text-foreground mb-1">{(t as any)[s]}</h3>
