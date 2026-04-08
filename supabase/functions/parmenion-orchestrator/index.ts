@@ -1008,6 +1008,10 @@ ${templateBlock}`;
   console.log(`[Parménion] ✅ Prescribe V2: ${techResults.length} tech + ${contentResults.length} content = ${allToolCalls.length} tool calls total`);
 
   // ── BUILD DECISION FROM TOOL CALLS ──
+  if (items.length === 0) {
+    console.warn('[Parménion] Prescribe V2: no workbench items — skipping decision build');
+    return null;
+  }
   const topItem = items[0];
   const cmsActions: any[] = [];
   const fixes: any[] = [];
