@@ -5,6 +5,7 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts';
 
 // ══════════════════════════════════════════════════════════════
 // INTERFACES - CODE ARCHITECT v4.0 — CLS-ZERO Protocol
