@@ -9,50 +9,43 @@ const corsHeaders = {
 };
 
 const CATEGORIES: Record<number, { label: string; key: string; targetRatio: number }> = {
-  1: { label: "E-commerce & Retail", key: "ecommerce", targetRatio: 0.3 },
+  1: { label: "E-commerce & Retail", key: "ecommerce", targetRatio: 0.30 },
   2: { label: "Média, Blog & Affiliation", key: "media", targetRatio: 0.15 },
-  3: { label: "Lead Gen B2B & Services", key: "leadgen", targetRatio: 0.4 },
-  4: { label: "SaaS & Logiciel", key: "saas", targetRatio: 0.5 },
-  5: { label: "Local & Brick-and-Mortar", key: "local", targetRatio: 0.2 },
-  6: { label: "Marque Statutaire / Luxe", key: "luxury", targetRatio: 0.8 },
+  3: { label: "Lead Gen B2B & Services", key: "leadgen", targetRatio: 0.40 },
+  4: { label: "SaaS & Logiciel", key: "saas", targetRatio: 0.50 },
+  5: { label: "Local & Brick-and-Mortar", key: "local", targetRatio: 0.20 },
+  6: { label: "Marque Statutaire / Luxe", key: "luxury", targetRatio: 0.80 },
 };
 
-// ── Age Factor ──
-// A young site (< 2 years) is expected to have low brand ratio → lenient scoring
-// A mature site (> 8 years) with low brand ratio is alarming → strict scoring
-function calculateAgeFactor(foundingYear: number | null): { factor: number; ageYears: number | null; label: string } {
-  if (!foundingYear) return { factor: 1.0, ageYears: null, label: 'Inconnu' };
+// ── Age helpers ──
+function getAgeYears(foundingYear: number | null): number | null {
+  if (!foundingYear) return null;
+  return new Date().getFullYear() - foundingYear;
+}
 
-  const ageYears = new Date().getFullYear() - foundingYear;
-
-  if (ageYears <= 1) return { factor: 0.5, ageYears, label: 'Startup (<1 an)' };
-  if (ageYears <= 2) return { factor: 0.65, ageYears, label: 'Jeune (1-2 ans)' };
-  if (ageYears <= 4) return { factor: 0.8, ageYears, label: 'En croissance (2-4 ans)' };
-  if (ageYears <= 8) return { factor: 1.0, ageYears, label: 'Établi (4-8 ans)' };
-  if (ageYears <= 15) return { factor: 1.15, ageYears, label: 'Mature (8-15 ans)' };
-  return { factor: 1.3, ageYears, label: 'Historique (>15 ans)' };
+function getAgeLabel(ageYears: number | null): string {
+  if (ageYears == null) return 'Inconnu';
+  if (ageYears <= 1) return 'Startup (<1 an)';
+  if (ageYears <= 2) return 'Jeune (1-2 ans)';
+  if (ageYears <= 4) return 'En croissance (2-4 ans)';
+  if (ageYears <= 8) return 'Établi (4-8 ans)';
+  if (ageYears <= 15) return 'Mature (8-15 ans)';
+  return 'Historique (>15 ans)';
 }
 
 // ── Seasonality Factor ──
-// Adjusts expectations based on current month vs seasonal profile
 function calculateSeasonalityFactor(
   seasonalityProfile: Record<string, unknown> | null,
   isSeasonal: boolean,
 ): { factor: number; monthIndex: number; label: string } {
-  if (!isSeasonal || !seasonalityProfile) {
+  if (!isSeasonal || !seasonalityProfile)
     return { factor: 1.0, monthIndex: 100, label: 'Non saisonnier' };
-  }
 
   const currentMonth = new Date().getMonth() + 1;
   const indices = (seasonalityProfile as any).monthly_indices as Record<number, number> | undefined;
   if (!indices) return { factor: 1.0, monthIndex: 100, label: 'Profil incomplet' };
 
   const monthIndex = indices[currentMonth] || 100;
-
-  // During high season (index > 120), brand searches spike naturally
-  // → slightly raise the target (factor < 1) so IAS isn't artificially inflated
-  // During low season (index < 80), brand ratio naturally drops
-  // → be more lenient (factor > 1) so IAS isn't punished
   const factor = Math.max(0.80, Math.min(1.20, 100 / monthIndex));
 
   const monthNames: Record<number, string> = {
@@ -129,6 +122,195 @@ async function fetchBrandSearchVolume(brandName: string): Promise<number | null>
   return null;
 }
 
+// ═══════════════════════════════════════════════════════════
+// SUB-SCORES (0-100 each)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * 1. ORGANIC TRACTION (Traction Organique)
+ * Measures how well the site attracts non-brand traffic.
+ * For young sites: high non-brand % = EXCELLENT (the site grows organically)
+ * For mature sites: still good but less weighted
+ */
+function calcOrganicTraction(nonBrandRatio: number, ageYears: number | null, totalClicks: number): { score: number; label: string } {
+  if (totalClicks < 10) return { score: 0, label: 'Données insuffisantes' };
+
+  // Base: non-brand ratio directly (higher = better organic traction)
+  let score = Math.round(nonBrandRatio * 100);
+
+  // Young site bonus: non-brand traffic is even more impressive
+  if (ageYears != null && ageYears <= 1) score = Math.min(100, score + 10);
+  else if (ageYears != null && ageYears <= 2) score = Math.min(100, score + 5);
+
+  // Volume bonus: having many clicks amplifies the score
+  if (totalClicks > 1000) score = Math.min(100, score + 5);
+  else if (totalClicks > 500) score = Math.min(100, score + 3);
+
+  let label: string;
+  if (score >= 80) label = 'Excellente traction organique';
+  else if (score >= 60) label = 'Bonne traction organique';
+  else if (score >= 40) label = 'Traction organique modérée';
+  else label = 'Traction organique faible';
+
+  return { score, label };
+}
+
+/**
+ * 2. BRAND MATURITY (Maturité de marque)
+ * Measures brand recognition relative to sector expectations.
+ * Uses the target ratio adjusted by age.
+ */
+function calcBrandMaturity(brandRatio: number, targetRatio: number, ageYears: number | null): { score: number; label: string } {
+  // For young sites, lower brand ratio is expected and NOT penalized
+  let adjustedTarget = targetRatio;
+  if (ageYears != null) {
+    if (ageYears <= 1) adjustedTarget = Math.min(targetRatio, 0.10);
+    else if (ageYears <= 2) adjustedTarget = Math.min(targetRatio, 0.15);
+    else if (ageYears <= 4) adjustedTarget = targetRatio * 0.7;
+  }
+
+  const distance = Math.abs(brandRatio - adjustedTarget);
+  // Score: 100 when exactly at target, decreasing with distance
+  let score = Math.max(0, Math.round(100 - distance * 200));
+
+  // Young site with low brand is NORMAL, give floor
+  if (ageYears != null && ageYears <= 2 && brandRatio < adjustedTarget) {
+    score = Math.max(score, 50); // minimum 50 for young sites
+  }
+
+  let label: string;
+  if (ageYears != null && ageYears <= 2) {
+    label = brandRatio > 0.05 ? 'Marque émergente – en bonne voie' : 'Marque en construction – normal à ce stade';
+  } else if (score >= 70) {
+    label = 'Notoriété de marque alignée';
+  } else if (score >= 40) {
+    label = 'Notoriété en développement';
+  } else {
+    label = brandRatio > targetRatio ? 'Trop dépendant de la marque' : 'Déficit de notoriété';
+  }
+
+  return { score, label };
+}
+
+/**
+ * 3. BRAND PENETRATION (Pénétration de marque)
+ * How many brand searches in Google does the site capture?
+ * Only meaningful if we have search volume data.
+ */
+function calcBrandPenetration(brandClicks: number, searchVolume: number | null): { score: number; label: string } {
+  if (!searchVolume || searchVolume === 0) {
+    return { score: 50, label: 'Volume de recherche non disponible' }; // neutral
+  }
+
+  const penetration = Math.min(1, brandClicks / searchVolume);
+  const score = Math.round(penetration * 100);
+
+  let label: string;
+  if (score >= 60) label = 'Forte captation des recherches de marque';
+  else if (score >= 30) label = 'Captation correcte';
+  else label = 'Faible captation – des clics de marque vous échappent';
+
+  return { score, label };
+}
+
+/**
+ * 4. MOMENTUM (Tendance)
+ * Compares current week clicks vs previous weeks.
+ */
+function calcMomentum(
+  currentWeekClicks: number,
+  previousWeeksClicks: number[],
+): { score: number; label: string } {
+  if (previousWeeksClicks.length === 0 || currentWeekClicks === 0) {
+    return { score: 50, label: 'Pas assez d\'historique' };
+  }
+
+  const avgPrev = previousWeeksClicks.reduce((a, b) => a + b, 0) / previousWeeksClicks.length;
+  if (avgPrev === 0) return { score: 60, label: 'Démarrage' };
+
+  const growth = (currentWeekClicks - avgPrev) / avgPrev;
+
+  // Map growth to 0-100 scale: -50% = 0, 0% = 50, +50% = 100
+  let score = Math.max(0, Math.min(100, Math.round(50 + growth * 100)));
+
+  let label: string;
+  if (growth >= 0.20) label = `Forte croissance (+${Math.round(growth * 100)}%)`;
+  else if (growth >= 0.05) label = `En progression (+${Math.round(growth * 100)}%)`;
+  else if (growth >= -0.05) label = 'Stable';
+  else if (growth >= -0.20) label = `Léger recul (${Math.round(growth * 100)}%)`;
+  else label = `Baisse significative (${Math.round(growth * 100)}%)`;
+
+  return { score, label };
+}
+
+/**
+ * Generate a human-readable diagnostic summary
+ */
+function generateDiagnostic(
+  scores: { organic: number; maturity: number; penetration: number; momentum: number },
+  ageYears: number | null,
+  nonBrandPct: number,
+  brandPct: number,
+  domain: string,
+): string {
+  const parts: string[] = [];
+
+  // Lead with the strongest signal
+  if (scores.organic >= 80) {
+    parts.push(`${Math.round(nonBrandPct)}% de trafic hors-marque : votre contenu attire massivement en organique.`);
+  } else if (scores.organic >= 60) {
+    parts.push(`Bonne diversification du trafic avec ${Math.round(nonBrandPct)}% hors-marque.`);
+  } else {
+    parts.push(`${Math.round(brandPct)}% de trafic de marque : vous dépendez fortement de votre notoriété.`);
+  }
+
+  // Age context
+  if (ageYears != null && ageYears <= 2) {
+    parts.push(`Site jeune (${ageYears} an${ageYears > 1 ? 's' : ''}) : la croissance organique est prioritaire.`);
+  }
+
+  // Momentum
+  if (scores.momentum >= 70) parts.push('Tendance haussière confirmée.');
+  else if (scores.momentum <= 30) parts.push('Attention : tendance baissière détectée.');
+
+  // Maturity insight
+  if (scores.maturity < 40 && ageYears != null && ageYears > 4) {
+    parts.push('La notoriété de marque reste en retrait pour un site de cet âge.');
+  }
+
+  return parts.join(' ');
+}
+
+// ═══════════════════════════════════════════════════════════
+// COMPOSITE IAS SCORE
+// ═══════════════════════════════════════════════════════════
+
+function computeCompositeIAS(
+  organic: number,
+  maturity: number,
+  penetration: number,
+  momentum: number,
+  ageYears: number | null,
+): number {
+  // Weights shift based on site age
+  let wOrganic: number, wMaturity: number, wPenetration: number, wMomentum: number;
+
+  if (ageYears != null && ageYears <= 2) {
+    // Young site: organic traction is king, brand maturity barely matters
+    wOrganic = 0.45; wMaturity = 0.10; wPenetration = 0.15; wMomentum = 0.30;
+  } else if (ageYears != null && ageYears <= 5) {
+    // Growing site: balanced
+    wOrganic = 0.30; wMaturity = 0.25; wPenetration = 0.20; wMomentum = 0.25;
+  } else {
+    // Mature site: brand maturity becomes more important
+    wOrganic = 0.25; wMaturity = 0.30; wPenetration = 0.25; wMomentum = 0.20;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(
+    organic * wOrganic + maturity * wMaturity + penetration * wPenetration + momentum * wMomentum
+  )));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -142,7 +324,7 @@ serve(async (req) => {
       });
     }
 
-    // 1. Get site info (including new fields)
+    // 1. Get site info
     const { data: site, error: siteErr } = await supabase
       .from("tracked_sites")
       .select("domain, site_name, market_sector, products_services, business_type, founding_year, is_seasonal, seasonality_profile")
@@ -194,74 +376,94 @@ serve(async (req) => {
 
     const category = CATEGORIES[categoryId];
     const baseTargetRatio = category.targetRatio;
+    const ageYears = getAgeYears(site.founding_year);
+    const ageLabel = getAgeLabel(ageYears);
 
-    // ═══ NEW: Composite factors ═══
-    const ageResult = calculateAgeFactor(site.founding_year);
     const seasonalityResult = calculateSeasonalityFactor(
       site.seasonality_profile as Record<string, unknown> | null,
       site.is_seasonal ?? false,
     );
 
-    const ageAdjustmentEnabled = settings?.age_adjustment_enabled !== false;
     const seasonalityEnabled = settings?.seasonality_enabled !== false;
-
-    const effectiveAgeFactor = ageAdjustmentEnabled ? ageResult.factor : 1.0;
     const effectiveSeasonalityFactor = seasonalityEnabled ? seasonalityResult.factor : 1.0;
 
-    // Adjusted target ratio: age shifts expectations, seasonality desasonalizes
     const adjustedTargetRatio = Math.max(0.05, Math.min(0.95,
-      baseTargetRatio * effectiveAgeFactor * effectiveSeasonalityFactor
+      baseTargetRatio * effectiveSeasonalityFactor
     ));
 
-    // 3. Get latest GSC data for brand/non-brand split
+    // 3. Get GSC data (last 4 weeks)
     const { data: gscRows } = await supabase
       .from("gsc_history_log")
       .select("top_queries, clicks, week_start_date")
       .eq("tracked_site_id", tracked_site_id)
       .eq("user_id", user_id)
       .order("week_start_date", { ascending: false })
-      .limit(4);
+      .limit(8);
 
     let brandClicks = 0;
     let genericClicks = 0;
+    const weeklyClicks: number[] = [];
 
     if (gscRows && gscRows.length > 0) {
-      for (const row of gscRows) {
+      for (let i = 0; i < gscRows.length; i++) {
+        const row = gscRows[i];
         const queries = (row.top_queries as any[]) || [];
+        let weekBrand = 0;
+        let weekGeneric = 0;
         for (const q of queries) {
           const queryText = q.query || q.keys?.[0] || "";
           const clicks = q.clicks || 0;
           if (isBrandQuery(queryText, brandName, site.domain, site.site_name || "")) {
-            brandClicks += clicks;
+            weekBrand += clicks;
           } else {
-            genericClicks += clicks;
+            weekGeneric += clicks;
           }
         }
+        if (i < 4) {
+          brandClicks += weekBrand;
+          genericClicks += weekGeneric;
+        }
+        weeklyClicks.push(weekBrand + weekGeneric);
       }
     }
 
     const totalClicks = brandClicks + genericClicks;
     const actualRatio = totalClicks > 0 ? brandClicks / totalClicks : 0;
+    const nonBrandRatio = 1 - actualRatio;
 
-    // ═══ Composite IAS Score ═══
-    // Raw IAS: distance from adjusted target
-    const rawDistance = Math.abs(actualRatio - adjustedTargetRatio);
-    const rawIas = Math.max(0, Math.round(100 - rawDistance * 100));
-
-    // Legacy IAS (backward compat, no adjustments)
-    const legacyIas = Math.max(0, Math.round(100 - Math.abs(actualRatio - baseTargetRatio) * 100));
-
-    // Composite IAS with weighted bonuses/penalties
-    // Age penalty: mature sites with bad ratio get penalized harder
-    const agePenalty = effectiveAgeFactor > 1.0 && rawDistance > 0.15
-      ? Math.round((effectiveAgeFactor - 1.0) * rawDistance * 50)
-      : 0;
-
-    const compositeIas = Math.max(0, Math.min(100, rawIas - agePenalty));
-
-    // 4. Fetch brand search volume
+    // 4. Search volume
     const searchVolume = await fetchBrandSearchVolume(brandName);
-    const brandPenetrationRate = searchVolume && searchVolume > 0 ? brandClicks / searchVolume : 0;
+
+    // ═══ SUB-SCORES ═══
+    const organicResult = calcOrganicTraction(nonBrandRatio, ageYears, totalClicks);
+    const maturityResult = calcBrandMaturity(actualRatio, adjustedTargetRatio, ageYears);
+    const penetrationResult = calcBrandPenetration(brandClicks, searchVolume);
+    const momentumResult = calcMomentum(
+      weeklyClicks[0] || 0,
+      weeklyClicks.slice(1),
+    );
+
+    // ═══ COMPOSITE IAS ═══
+    const compositeIas = computeCompositeIAS(
+      organicResult.score,
+      maturityResult.score,
+      penetrationResult.score,
+      momentumResult.score,
+      ageYears,
+    );
+
+    // Legacy compat
+    const rawDistance = Math.abs(actualRatio - adjustedTargetRatio);
+    const legacyIas = Math.max(0, Math.round(100 - rawDistance * 100));
+
+    // Diagnostic text
+    const diagnosticText = generateDiagnostic(
+      { organic: organicResult.score, maturity: maturityResult.score, penetration: penetrationResult.score, momentum: momentumResult.score },
+      ageYears,
+      nonBrandRatio * 100,
+      actualRatio * 100,
+      site.domain,
+    );
 
     // 5. Current week
     const now = new Date();
@@ -270,6 +472,15 @@ serve(async (req) => {
     const weekStart = monday.toISOString().split("T")[0];
 
     // 6. Upsert into ias_history
+    const brandPenetrationRate = searchVolume && searchVolume > 0 ? brandClicks / searchVolume : 0;
+
+    const subScoresDetail = {
+      organic: { score: organicResult.score, label: organicResult.label },
+      maturity: { score: maturityResult.score, label: maturityResult.label },
+      penetration: { score: penetrationResult.score, label: penetrationResult.label },
+      momentum: { score: momentumResult.score, label: momentumResult.label },
+    };
+
     const historyData = {
       tracked_site_id,
       user_id,
@@ -284,12 +495,18 @@ serve(async (req) => {
       total_clicks: totalClicks,
       brand_penetration_rate: parseFloat(brandPenetrationRate.toFixed(4)),
       week_start_date: weekStart,
-      // New composite fields
-      age_factor: parseFloat(effectiveAgeFactor.toFixed(3)),
+      age_factor: 1.0,
       seasonality_factor: parseFloat(effectiveSeasonalityFactor.toFixed(3)),
       composite_ias_score: compositeIas,
       founding_year: site.founding_year,
       is_seasonal: site.is_seasonal ?? false,
+      // New sub-scores
+      organic_traction_score: organicResult.score,
+      brand_maturity_score: maturityResult.score,
+      brand_penetration_score: penetrationResult.score,
+      momentum_score: momentumResult.score,
+      diagnostic_text: diagnosticText,
+      sub_scores_detail: subScoresDetail,
     };
 
     const { error: upsertErr } = await supabase
@@ -307,7 +524,7 @@ serve(async (req) => {
       .update({ business_type: category.key })
       .eq("id", tracked_site_id);
 
-    // ═══ Auto-trigger seasonality detection if not yet done ═══
+    // Auto-trigger seasonality detection if not yet done
     if (!site.seasonality_profile || Object.keys(site.seasonality_profile as object).length === 0) {
       const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
       const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -326,18 +543,25 @@ serve(async (req) => {
       category_id: categoryId,
       category_label: category.label,
       business_type: category.key,
-      // Target ratios
       base_target_ratio: baseTargetRatio,
       adjusted_target_ratio: parseFloat(adjustedTargetRatio.toFixed(4)),
       actual_ratio: parseFloat(actualRatio.toFixed(4)),
-      // Scores
+      // Composite
       ias_score: compositeIas,
       legacy_ias_score: legacyIas,
-      composite_ias_score: compositeIas,
-      // Factors
-      age_factor: effectiveAgeFactor,
-      age_label: ageResult.label,
-      age_years: ageResult.ageYears,
+      // Sub-scores
+      organic_traction_score: organicResult.score,
+      organic_traction_label: organicResult.label,
+      brand_maturity_score: maturityResult.score,
+      brand_maturity_label: maturityResult.label,
+      brand_penetration_score: penetrationResult.score,
+      brand_penetration_label: penetrationResult.label,
+      momentum_score: momentumResult.score,
+      momentum_label: momentumResult.label,
+      diagnostic_text: diagnosticText,
+      // Context
+      age_years: ageYears,
+      age_label: ageLabel,
       seasonality_factor: effectiveSeasonalityFactor,
       seasonality_label: seasonalityResult.label,
       seasonality_month_index: seasonalityResult.monthIndex,
@@ -351,7 +575,7 @@ serve(async (req) => {
       week_start_date: weekStart,
     };
 
-    console.log(`[IAS] ${site.domain}: composite=${compositeIas} (legacy=${legacyIas}), age=${ageResult.label}(×${effectiveAgeFactor}), season=${seasonalityResult.label}(×${effectiveSeasonalityFactor}), target=${adjustedTargetRatio.toFixed(3)}`);
+    console.log(`[IAS] ${site.domain}: composite=${compositeIas} | organic=${organicResult.score} maturity=${maturityResult.score} penetration=${penetrationResult.score} momentum=${momentumResult.score} | age=${ageLabel}`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
