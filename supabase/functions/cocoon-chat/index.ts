@@ -110,6 +110,30 @@ serve(async (req) => {
       }
     }
 
+    // ── Fetch Top 5 Priority Pages ──
+    let priorityPagesBlock = '';
+    if (trackedSiteId) {
+      try {
+        const { data: priorityPages } = await supabase
+          .from('page_priority_scores')
+          .select('page_url, priority_score, top_opportunities')
+          .eq('tracked_site_id', trackedSiteId)
+          .order('priority_score', { ascending: false })
+          .limit(5);
+
+        if (priorityPages?.length) {
+          priorityPagesBlock = `\n\n🎯 TOP 5 PAGES PRIORITAIRES À OPTIMISER :\n`;
+          for (let i = 0; i < priorityPages.length; i++) {
+            const p = priorityPages[i];
+            const opps = (p.top_opportunities as string[]) || [];
+            priorityPagesBlock += `${i + 1}. **${p.page_url}** (score ${p.priority_score}/100)${opps[0] ? ` → ${opps[0]}` : ''}\n`;
+          }
+        }
+      } catch (e) {
+        console.warn('[cocoon-chat] Could not fetch priority pages:', e);
+      }
+    }
+
     // ══════════════════════════════════════════════════════
     // ★ STRATEGIST MODE: Fetch strategy data if requested
     // ══════════════════════════════════════════════════════
@@ -351,7 +375,8 @@ STYLE :
 - Quand tu expliques un concept, sois bref mais clair — tu formes autant que tu conseilles.
 
 WORKFLOW DE PRÉSENTATION (en plusieurs messages) :
-1. PREMIER MESSAGE : Résumé exécutif (3-4 phrases max) + la question prioritaire. Termine par un choix clair pour l'utilisateur.
+1. PREMIER MESSAGE (OBLIGATOIRE) : Commence TOUJOURS par lister les 5 pages prioritaires à optimiser (données ci-dessous). Juste la liste numérotée avec l'URL et l'action clé. Pas d'explication sur la méthode de calcul sauf si l'utilisateur le demande. Puis résumé exécutif (2-3 phrases) + la question prioritaire.
+${priorityPagesBlock || '(Aucune donnée de priorité disponible — lance d\'abord une analyse de priorité.)'}
 2. MESSAGES SUIVANTS : Détaille UN sujet à la fois selon ce que l'utilisateur demande.
 3. DERNIER MESSAGE du cycle : Présente les 3 axes de développement avec 🎯, demande d'en choisir UN.
 

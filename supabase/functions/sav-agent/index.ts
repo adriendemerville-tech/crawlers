@@ -1517,6 +1517,28 @@ ${alertBlock}\n`;
             }
           } catch (_) { /* best effort */ }
         }
+
+        // ── Fetch Top 5 Priority Pages per site ──
+        for (const s of sites) {
+          try {
+            const { data: priorityPages } = await sb
+              .from('page_priority_scores')
+              .select('page_url, priority_score, top_opportunities')
+              .eq('tracked_site_id', s.id)
+              .order('priority_score', { ascending: false })
+              .limit(5);
+
+            if (priorityPages?.length) {
+              contextSnippet += `\n# 🎯 TOP 5 PAGES PRIORITAIRES À OPTIMISER — ${s.domain}\n`;
+              for (let i = 0; i < priorityPages.length; i++) {
+                const p = priorityPages[i];
+                const opps = (p.top_opportunities as string[]) || [];
+                contextSnippet += `${i + 1}. **${p.page_url}** (score ${p.priority_score}/100)${opps[0] ? ` → ${opps[0]}` : ''}\n`;
+              }
+              contextSnippet += `\nIMPORTANT : Quand l'utilisateur parle d'un audit ou demande quoi optimiser, commence TOUJOURS par lister ces 5 pages sans expliquer la méthode de calcul (sauf si on te le demande).\n`;
+            }
+          } catch (_) { /* best effort */ }
+        }
       }
     } catch (e) {
       console.error("Context enrichment error:", e);
