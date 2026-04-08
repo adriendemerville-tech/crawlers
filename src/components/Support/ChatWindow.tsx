@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CrawlersLogo } from './CrawlersLogo';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
+import { ChatReportSearch } from './ChatReportSearch';
 import { ChatMicButton } from './ChatMicButton';
 import { getOnboardingMessages, markOnboardingDone, isOnboardingDone } from '@/utils/felixOnboarding';
 import { captureScreenContext } from '@/utils/screenContext';
