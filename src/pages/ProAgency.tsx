@@ -425,7 +425,7 @@ export default function ProAgency() {
     "@type": "Product",
     "name": "Crawlers.fr Pro Agency — Sans engagement",
     "description": t.metaDescription,
-    "image": "https://crawlers.fr/og-image.png",
+    "image": "https://crawlers.fr/crawlers-logo-violet.png",
     "brand": { "@type": "Brand", "name": "Crawlers.fr" },
     "offers": [
       {
