@@ -116,14 +116,14 @@ Deno.serve(handleRequest(async (req) => {
       // Get user from auth header
       const authHeader = req.headers.get('authorization') || '';
       const token = authHeader.replace('Bearer ', '');
-      let userId = 'anonymous';
+      let userId: string | null = null;
       if (token) {
         const { data: { user } } = await supabase.auth.getUser(token);
         if (user) userId = user.id;
       }
 
       // ── Fair use check ──
-      if (userId !== 'anonymous') {
+      if (userId) {
         const fairUseResult = await checkEeatFairUse(supabase, userId);
         if (!fairUseResult.allowed) {
           return new Response(JSON.stringify({
@@ -136,16 +136,20 @@ Deno.serve(handleRequest(async (req) => {
         }
       }
 
+      // Use a deterministic anonymous UUID for unauthenticated users
+      const jobUserId = userId || '00000000-0000-0000-0000-000000000000';
+
       const { data: job, error: jobErr } = await supabase.from('async_jobs').insert({
         function_name: 'check-eeat',
-        user_id: userId,
+        user_id: jobUserId,
         input_payload: { url, tracked_site_id, forceCrawl },
         status: 'pending',
         progress: 0,
       }).select('id').single();
 
       if (jobErr || !job) {
-        return new Response(JSON.stringify({ error: 'Failed to create job' }), { status: 500, headers: HEADERS });
+        console.error('[check-eeat] Failed to create job:', jobErr);
+        return new Response(JSON.stringify({ error: 'Failed to create job', details: jobErr?.message }), { status: 500, headers: HEADERS });
       }
 
       // Self-invoke (fire-and-forget)
