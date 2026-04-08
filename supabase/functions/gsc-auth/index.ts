@@ -112,22 +112,82 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         if (ga4Resp.ok) {
           const ga4Data = await ga4Resp.json();
           const summaries = ga4Data.accountSummaries || [];
-          // Pick the first property found (most users have 1-2)
           for (const account of summaries) {
             const props = account.propertySummaries || [];
             if (props.length > 0) {
-              // property format: "properties/123456789"
               ga4PropertyId = props[0].property || null;
               console.log(`[gsc-auth] Auto-detected GA4 property: ${ga4PropertyId} for ${googleEmail}`);
               break;
             }
           }
+          if (!ga4PropertyId) {
+            console.log(`[gsc-auth] GA4 Admin API OK but no properties found for ${googleEmail} (${summaries.length} accounts)`);
+          }
         } else {
-          console.log(`[gsc-auth] GA4 Admin API returned ${ga4Resp.status} — scope may not be granted`);
+          const errBody = await ga4Resp.text().catch(() => '');
+          console.log(`[gsc-auth] GA4 Admin API returned ${ga4Resp.status} for ${googleEmail}: ${errBody.slice(0, 200)}`);
         }
       } catch (e) {
         console.log('[gsc-auth] GA4 auto-detect failed (best effort):', e);
       }
+
+      // Auto-detect GMB (Google Business Profile) accounts
+      let gmbAccountId: string | null = null;
+      let gmbLocationId: string | null = null;
+      try {
+        const gmbResp = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        if (gmbResp.ok) {
+          const gmbData = await gmbResp.json();
+          const accounts = gmbData.accounts || [];
+          if (accounts.length > 0) {
+            // accounts[0].name = "accounts/123456"
+            gmbAccountId = accounts[0].name || null;
+            console.log(`[gsc-auth] Auto-detected GMB account: ${gmbAccountId} for ${googleEmail}`);
+
+            // Try to get the first location
+            try {
+              const locResp = await fetch(
+                `https://mybusinessbusinessinformation.googleapis.com/v1/${gmbAccountId}/locations?readMask=name,title,storefrontAddress`,
+                { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+              );
+              if (locResp.ok) {
+                const locData = await locResp.json();
+                const locations = locData.locations || [];
+                if (locations.length > 0) {
+                  gmbLocationId = locations[0].name || null;
+                  console.log(`[gsc-auth] Auto-detected GMB location: ${gmbLocationId} for ${googleEmail}`);
+                }
+              } else {
+                console.log(`[gsc-auth] GMB locations API returned ${locResp.status}`);
+              }
+            } catch (e) {
+              console.log('[gsc-auth] GMB location detection failed:', e);
+            }
+          } else {
+            console.log(`[gsc-auth] GMB accounts API OK but no accounts found for ${googleEmail}`);
+          }
+        } else {
+          const errBody = await gmbResp.text().catch(() => '');
+          console.log(`[gsc-auth] GMB accounts API returned ${gmbResp.status} for ${googleEmail}: ${errBody.slice(0, 200)}`);
+        }
+      } catch (e) {
+        console.log('[gsc-auth] GMB auto-detect failed (best effort):', e);
+      }
+
+      // Determine which scopes were actually granted by reading token info
+      const grantedScopes: string[] = [];
+      try {
+        const tokenInfoResp = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(tokens.access_token)}`);
+        if (tokenInfoResp.ok) {
+          const tokenInfo = await tokenInfoResp.json();
+          if (tokenInfo.scope) {
+            grantedScopes.push(...tokenInfo.scope.split(' '));
+          }
+          console.log(`[gsc-auth] Granted scopes for ${googleEmail}: ${grantedScopes.join(', ')}`);
+        }
+      } catch (_) { /* best effort */ }
 
       // Upsert into google_connections (multi-account support)
       await supabase.from('google_connections').upsert({
@@ -138,6 +198,9 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         token_expiry: expiresAt,
         gsc_site_urls: gscSiteUrls,
         ga4_property_id: ga4PropertyId,
+        gmb_account_id: gmbAccountId,
+        gmb_location_id: gmbLocationId,
+        scopes: grantedScopes,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,google_email' });
 
