@@ -161,6 +161,17 @@ function generateReportHTML(type: string, data: any, url: string, language: stri
 
 // ─── Action: create (share-report) ───
 
+function generateShortCode(): string {
+  const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
+  let result = '';
+  const randomValues = new Uint8Array(6);
+  crypto.getRandomValues(randomValues);
+  for (let i = 0; i < 6; i++) {
+    result += chars[randomValues[i] % chars.length];
+  }
+  return result;
+}
+
 async function handleCreate(body: any) {
   const { type, url, data, language, preRenderedHtml } = body;
   const supabase = getServiceClient();
@@ -175,7 +186,39 @@ async function handleCreate(body: any) {
 
   if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
-  return json({ success: true, shareId: shortId, expiresIn: '7 days' });
+  // Create short link
+  const shortCode = generateShortCode();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  // Extract user_id from JWT if available
+  let userId: string | null = null;
+  try {
+    const authHeader = body._authHeader;
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub;
+    }
+  } catch {}
+
+  if (userId) {
+    await supabase.from('short_links').insert({
+      code: shortCode,
+      target_url: `/temporarylink/${shortId}`,
+      created_by: userId,
+      expires_at: expiresAt,
+    });
+  }
+
+  const shareUrl = `https://crawlers.lovable.app/s/${shortCode}`;
+
+  return json({
+    success: true,
+    shareId: shortId,
+    shortCode,
+    shareUrl,
+    expiresIn: '7 days',
+  });
 }
 
 // ─── Action: resolve (resolve-share) ───
