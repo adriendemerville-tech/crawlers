@@ -121,64 +121,57 @@ async function runViaBrowserless(
     waitForTimeout: 3000,
   };
 
-  // Use Browserless v2 /function endpoint with export default syntax
-  const testScript = `
-    export default async ({ page }) => {
-      const jsErrors = [];
-      page.on('pageerror', (err) => jsErrors.push(err.message));
-      page.on('error', (err) => jsErrors.push(err.message));
+  // Browserless v2 /function: export default, return { data, type }
+  const escapedCode = JSON.stringify(code);
+  const testScript = `export default async ({ page }) => {
+  const jsErrors = [];
+  page.on('pageerror', (err) => jsErrors.push(err.message));
+  page.on('error', (err) => jsErrors.push(err.message));
 
-      await page.goto('${siteUrl}', { waitUntil: 'networkidle2', timeout: 45000 });
+  await page.goto(${JSON.stringify(siteUrl)}, { waitUntil: 'networkidle2', timeout: 45000 });
+  await page.addScriptTag({ content: ${escapedCode} });
+  await new Promise(r => setTimeout(r, 3000));
 
-      // Inject the corrective script
-      await page.addScriptTag({ content: ${JSON.stringify(code)} });
-
-      // Wait for script execution
-      await page.waitForTimeout(3000);
-
-      // Check CLS
-      const cls = await page.evaluate(() => {
-        return new Promise((resolve) => {
-          let clsValue = 0;
-          const observer = new PerformanceObserver((list) => {
-            for (const entry of list.getEntries()) {
-              if (!entry.hadRecentInput) clsValue += entry.value;
-            }
-          });
-          try {
-            observer.observe({ type: 'layout-shift', buffered: true });
-          } catch(e) {}
-          setTimeout(() => resolve(clsValue), 1000);
-        });
-      });
-
-      // Check JSON-LD validity
-      const jsonLdData = await page.evaluate(() => {
-        const scripts = document.querySelectorAll('script[type="application/ld+json"]');
-        const results = [];
-        scripts.forEach((s) => {
-          try {
-            const parsed = JSON.parse(s.textContent || '');
-            results.push({ valid: true, type: parsed['@type'] || 'unknown' });
-          } catch(e) {
-            results.push({ valid: false, error: e.message });
+  const cls = await page.evaluate(() => {
+    return new Promise((resolve) => {
+      let clsValue = 0;
+      try {
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (!entry.hadRecentInput) clsValue += entry.value;
           }
         });
-        return results;
-      });
+        observer.observe({ type: 'layout-shift', buffered: true });
+      } catch(e) {}
+      setTimeout(() => resolve(clsValue), 1000);
+    });
+  });
 
-      return {
-        data: {
-          jsErrors,
-          clsScore: cls,
-          jsonLdValid: jsonLdData.every(j => j.valid),
-          jsonLdCount: jsonLdData.length,
-          pageLoadedOk: true,
-        },
-        type: 'application/json',
-      };
-    };
-  `;
+  const jsonLdData = await page.evaluate(() => {
+    const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+    const results = [];
+    scripts.forEach((s) => {
+      try {
+        const parsed = JSON.parse(s.textContent || '');
+        results.push({ valid: true, type: parsed['@type'] || 'unknown' });
+      } catch(e) {
+        results.push({ valid: false, error: e.message });
+      }
+    });
+    return results;
+  });
+
+  return {
+    data: {
+      jsErrors,
+      clsScore: cls,
+      jsonLdValid: jsonLdData.every(j => j.valid),
+      jsonLdCount: jsonLdData.length,
+      pageLoadedOk: true,
+    },
+    type: 'application/json',
+  };
+};`;
 
   try {
     const response = await fetch(getBrowserlessFunctionUrl(apiKey), {
