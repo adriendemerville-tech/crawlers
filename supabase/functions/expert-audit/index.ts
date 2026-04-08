@@ -2546,31 +2546,47 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
     const isSPA = !!(htmlAnalysis.hasSPAMarkers && htmlAnalysis.isContentJSDependent);
 
     // ═══ ENRICH IDENTITY CARD (fire-and-forget) ═══
-    if (htmlAnalysis.detectedCMS) {
-      // Try to find the tracked site and write CMS via gateway
-      const identityFields: Record<string, unknown> = { cms_platform: htmlAnalysis.detectedCMS };
-      getSiteContext(getUserClient(registryAuthHeader || ''), { domain })
-        .then(ctx => {
-          if (!ctx) return;
-          // We need the site ID — re-fetch it
-          const sb = getUserClient(registryAuthHeader || '');
-          return sb.from('tracked_sites').select('id').ilike('domain', `%${domain}%`).limit(1).maybeSingle()
-            .then(({ data }) => {
-              if (data?.id) {
-                return writeIdentity({
-                  siteId: data.id,
-                  fields: identityFields,
-                  source: 'expert_audit',
-                });
+    {
+      const identityFields: Record<string, unknown> = {};
+      if (htmlAnalysis.detectedCMS) identityFields.cms_platform = htmlAnalysis.detectedCMS;
+
+      const sb = getUserClient(registryAuthHeader || '');
+      sb.from('tracked_sites').select('id, founding_year').ilike('domain', `%${domain}%`).limit(1).maybeSingle()
+        .then(async ({ data: siteRow }) => {
+          if (!siteRow?.id) return;
+
+          // Enrich CMS if detected
+          if (Object.keys(identityFields).length > 0) {
+            writeIdentity({ siteId: siteRow.id, fields: identityFields, source: 'expert_audit' })
+              .then(result => { if (result?.applied?.length) console.log(`[expert-audit] 🏗️ Identity enriched: cms_platform=${htmlAnalysis.detectedCMS}`); })
+              .catch(err => console.warn('[expert-audit] Identity enrichment failed (non-fatal):', err));
+          }
+
+          // Auto-detect founding_year via Wayback Machine if missing
+          if (!siteRow.founding_year) {
+            try {
+              console.log(`[expert-audit] founding_year missing for ${domain}, querying Wayback Machine...`);
+              const wbUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(domain)}&output=json&limit=1&fl=timestamp&sort=timestamp:asc`;
+              const controller = new AbortController();
+              const timeout = setTimeout(() => controller.abort(), 8000);
+              const resp = await fetch(wbUrl, { signal: controller.signal });
+              clearTimeout(timeout);
+              if (resp.ok) {
+                const wbData = await resp.json();
+                if (Array.isArray(wbData) && wbData.length >= 2) {
+                  const year = parseInt(String(wbData[1][0]).substring(0, 4), 10);
+                  if (year >= 1990) {
+                    await sb.from('tracked_sites').update({ founding_year: year }).eq('id', siteRow.id);
+                    console.log(`[expert-audit] 📅 founding_year set to ${year} via Wayback Machine`);
+                  }
+                }
               }
-            });
-        })
-        .then(result => {
-          if (result?.applied?.length) {
-            console.log(`[expert-audit] 🏗️ Identity enriched: cms_platform=${htmlAnalysis.detectedCMS}`);
+            } catch (e) {
+              console.warn('[expert-audit] Wayback lookup failed (non-fatal):', e);
+            }
           }
         })
-        .catch(err => console.warn('[expert-audit] Identity enrichment failed (non-fatal):', err));
+        .catch(err => console.warn('[expert-audit] Site enrichment failed (non-fatal):', err));
     }
 
     const responseBody = {
