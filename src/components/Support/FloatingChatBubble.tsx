@@ -324,20 +324,24 @@ export function FloatingChatBubble() {
         </div>
       )}
 
-      {/* Floating Button — Crawlers robot logo */}
-      <button
-        onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className={`fixed bottom-5 z-[110] h-[3.15rem] w-[3.15rem] rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
-        style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
-        aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
-      >
-        <CrawlersLogo size={56} className="transition-opacity duration-300" />
-      </button>
-      {/* Notification Badge — outside button to avoid overflow clipping */}
-      {(unreadCount > 0 || showOnboardingPulse || showGuestQuizSuggestion || showHallucinationBubble) && !isOpen && (
-        <span className="fixed bottom-[54px] z-[111] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(0.875rem, calc((100vw - 72rem) / 2 + 0.875rem))' }}>
-          {(showOnboardingPulse || showGuestQuizSuggestion) ? '!' : unreadCount > 9 ? '9+' : unreadCount}
-        </span>
+      {/* Floating Button — Crawlers robot logo (hidden when sidebar is expanded) */}
+      {!(isOpen && localStorage.getItem('felix_sidebar_expanded') === '1') && (
+        <>
+          <button
+            onClick={isOpen ? () => setIsOpen(false) : handleOpen}
+            className={`fixed bottom-5 z-[110] h-[3.15rem] w-[3.15rem] rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
+            style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+            aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
+          >
+            <CrawlersLogo size={56} className="transition-opacity duration-300" />
+          </button>
+          {/* Notification Badge — outside button to avoid overflow clipping */}
+          {(unreadCount > 0 || showOnboardingPulse || showGuestQuizSuggestion || showHallucinationBubble) && !isOpen && (
+            <span className="fixed bottom-[54px] z-[111] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(0.875rem, calc((100vw - 72rem) / 2 + 0.875rem))' }}>
+              {(showOnboardingPulse || showGuestQuizSuggestion) ? '!' : unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </>
       )}
     </>
   );
