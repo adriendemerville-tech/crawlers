@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Save, Loader2, Globe, Music, X, Sun, Moon, RefreshCw, CheckCircle2, Search } from 'lucide-react';
+import { User, Save, Loader2, Globe, Music, X, Sun, Moon, RefreshCw, CheckCircle2, Search, EyeOff, Eye } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -387,6 +387,9 @@ export function ProfileSettings() {
 
       {/* Theme Settings */}
       <ThemeSettingsCard />
+
+      {/* Ticker Settings */}
+      <TickerSettingsCard />
     </div>
   );
 }
@@ -417,6 +420,47 @@ function ThemeSettingsCard() {
           </Button>
           <Button variant="outline" onClick={() => setTheme('dark')} className={`gap-2 rounded-sm bg-transparent border-border ${theme === 'dark' ? 'border-foreground font-semibold' : ''}`}>
             <Moon className="h-4 w-4" /> {l.dark}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TickerSettingsCard() {
+  const { language } = useLanguage();
+  const [tickerHidden, setTickerHidden] = useState(() => localStorage.getItem('ticker_hidden_default') === '1');
+
+  const labels = {
+    fr: { title: 'Bandeau d\'alertes', desc: 'Masquer par défaut le bandeau défilant GA4 / GSC dans la console', hide: 'Masqué par défaut', show: 'Visible par défaut' },
+    en: { title: 'Alerts ticker', desc: 'Hide the scrolling GA4 / GSC news ticker by default in the console', hide: 'Hidden by default', show: 'Visible by default' },
+    es: { title: 'Cinta de alertas', desc: 'Ocultar por defecto la cinta de noticias GA4 / GSC en la consola', hide: 'Oculto por defecto', show: 'Visible por defecto' },
+  };
+  const l = labels[language] || labels.fr;
+
+  const toggle = () => {
+    const next = !tickerHidden;
+    setTickerHidden(next);
+    localStorage.setItem('ticker_hidden_default', next ? '1' : '0');
+    toast.success(next ? l.hide : l.show);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          {tickerHidden ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          {l.title}
+        </CardTitle>
+        <CardDescription>{l.desc}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={toggle} className={`gap-2 rounded-sm bg-transparent border-border ${!tickerHidden ? 'border-foreground font-semibold' : ''}`}>
+            <Eye className="h-4 w-4" /> {l.show}
+          </Button>
+          <Button variant="outline" onClick={toggle} className={`gap-2 rounded-sm bg-transparent border-border ${tickerHidden ? 'border-foreground font-semibold' : ''}`}>
+            <EyeOff className="h-4 w-4" /> {l.hide}
           </Button>
         </div>
       </CardContent>
