@@ -85,6 +85,16 @@ Deno.serve(async (req) => {
     pages.push({ loc: `${SITE_URL}/observatoire`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/faq`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/methodologie`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/content-architect`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/matrice`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/aide`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/stratege-cocoon`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/marina`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/sea-seo-bridge`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/a-propos`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/audit-semantique`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/google-business`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/api-integrations`, lastmod: today });
     
     // Landing pages SEO
     pages.push({ loc: `${SITE_URL}/audit-seo-gratuit`, lastmod: today });
