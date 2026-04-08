@@ -1323,6 +1323,40 @@ try {
           // ═══ Collect phase errors into cycle-level array ═══
           allPhaseErrors.push(...phaseErrors);
 
+          // ═══ POST-EXECUTE: Mark workbench items as consumed_by_content ═══
+          if (phase === 'execute' && executionSuccess) {
+            try {
+              const contentActions = executionResults.filter(
+                (r: any) => r.status === 'success' && (
+                  r.cms_action === 'create-post' || r.cms_action === 'update-post' ||
+                  r.cms_action === 'update-page' || r.cms_action === 'create-page' ||
+                  r.function === 'content-architecture-advisor' || r.function === 'cms-push-draft'
+                )
+              );
+              if (contentActions.length > 0) {
+                const { data: markedItems, error: markErr } = await supabase
+                  .from('architect_workbench')
+                  .update({
+                    consumed_by_content: true,
+                    consumed_at: new Date().toISOString(),
+                    status: 'in_progress' as any,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('domain', site.domain)
+                  .eq('status', 'pending')
+                  .in('finding_category', ['missing_page', 'content_gap', 'content_upgrade', 'missing_terms'])
+                  .select('id');
+
+                if (markedItems && markedItems.length > 0) {
+                  console.log(`[AutopilotEngine] ✅ Marked ${markedItems.length} workbench items as consumed_by_content for ${site.domain}`);
+                }
+                if (markErr) console.warn('[AutopilotEngine] consumed_by_content mark error:', markErr.message);
+              }
+            } catch (markE) {
+              console.warn('[AutopilotEngine] consumed_by_content exception:', markE);
+            }
+          }
+
           // ═══ Store execution results in decision log (CRITICAL for pipeline progression) ═══
           const phaseStatus = config.implementation_mode === 'dry_run' ? 'dry_run' 
             : phaseErrors.some(e => e.severity === 'critical') ? 'failed'
