@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink } from 'lucide-react';
+import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink, History, ArrowLeft } from 'lucide-react';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +53,41 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+}
+
+interface ArchivedConversation {
+  id: string;
+  messages: ChatMessage[];
+  archivedAt: string;
+  preview: string; // first user message snippet
+}
+
+const FELIX_ARCHIVE_KEY = 'felix_conversations_archive';
+const FELIX_CURRENT_KEY = 'felix_current_conversation';
+const MAX_ARCHIVES = 20;
+
+function getArchivedConversations(): ArchivedConversation[] {
+  try {
+    return JSON.parse(localStorage.getItem(FELIX_ARCHIVE_KEY) || '[]');
+  } catch { return []; }
+}
+
+function saveArchivedConversations(archives: ArchivedConversation[]) {
+  localStorage.setItem(FELIX_ARCHIVE_KEY, JSON.stringify(archives.slice(0, MAX_ARCHIVES)));
+}
+
+function saveCurrentConversation(messages: ChatMessage[]) {
+  if (messages.length === 0) {
+    localStorage.removeItem(FELIX_CURRENT_KEY);
+    return;
+  }
+  localStorage.setItem(FELIX_CURRENT_KEY, JSON.stringify(messages));
+}
+
+function loadCurrentConversation(): ChatMessage[] {
+  try {
+    return JSON.parse(localStorage.getItem(FELIX_CURRENT_KEY) || '[]');
+  } catch { return []; }
 }
 
 interface ChatWindowProps {
@@ -142,7 +177,8 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadCurrentConversation());
+  const [showHistory, setShowHistory] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -165,7 +201,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     return () => setFelixExpanded(false);
   }, [isExpanded, setFelixExpanded]);
 
-  // Quiz state
+  // Persist current conversation to localStorage on change
+  useEffect(() => {
+    saveCurrentConversation(messages);
+  }, [messages]);
+
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any>; title?: string; isCrawlersQuiz?: boolean } | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
   const [howToCount, setHowToCount] = useState(0);
@@ -878,11 +918,53 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   };
 
   const handleNewConversation = async () => {
+    // Archive current conversation if it has user messages
+    if (messages.length > 0) {
+      const firstUserMsg = messages.find(m => m.role === 'user');
+      const preview = firstUserMsg?.content?.slice(0, 80) || messages[0]?.content?.slice(0, 80) || 'Conversation';
+      const archive: ArchivedConversation = {
+        id: Date.now().toString(),
+        messages: [...messages],
+        archivedAt: new Date().toISOString(),
+        preview,
+      };
+      const existing = getArchivedConversations();
+      saveArchivedConversations([archive, ...existing]);
+    }
     setMessages([]);
     setConversationId(null);
     setShowPhonePrompt(false);
     setPhoneSent(false);
     setBugReportMode('idle');
+    saveCurrentConversation([]);
+  };
+
+  const handleRestoreConversation = (archive: ArchivedConversation) => {
+    // Archive current if non-empty before restoring
+    if (messages.length > 0) {
+      const firstUserMsg = messages.find(m => m.role === 'user');
+      const preview = firstUserMsg?.content?.slice(0, 80) || messages[0]?.content?.slice(0, 80) || 'Conversation';
+      const current: ArchivedConversation = {
+        id: Date.now().toString(),
+        messages: [...messages],
+        archivedAt: new Date().toISOString(),
+        preview,
+      };
+      const existing = getArchivedConversations();
+      saveArchivedConversations([current, ...existing.filter(a => a.id !== archive.id)]);
+    } else {
+      // Just remove the restored one from archives
+      const existing = getArchivedConversations();
+      saveArchivedConversations(existing.filter(a => a.id !== archive.id));
+    }
+    setMessages(archive.messages);
+    setConversationId(null);
+    setShowHistory(false);
+  };
+
+  const handleDeleteArchive = (archiveId: string) => {
+    const existing = getArchivedConversations();
+    saveArchivedConversations(existing.filter(a => a.id !== archiveId));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1416,9 +1498,63 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         </div>
       )}
 
+      {/* History Panel Overlay (expanded mode only) */}
+      {showHistory && isExpanded && (
+        <div className="absolute inset-0 z-20 bg-background/98 backdrop-blur-sm flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 shrink-0">
+            <button onClick={() => setShowHistory(false)} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-xs font-medium text-foreground/80">Historique des conversations</span>
+          </div>
+          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
+            {getArchivedConversations().length === 0 ? (
+              <p className="text-[11px] text-muted-foreground/60 text-center py-8">Aucune conversation archivée</p>
+            ) : (
+              getArchivedConversations().map((archive) => {
+                const date = new Date(archive.archivedAt);
+                const dateStr = `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                return (
+                  <div
+                    key={archive.id}
+                    className="group flex items-start gap-2 rounded-lg px-2.5 py-2 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => handleRestoreConversation(archive)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-foreground/80 truncate">{archive.preview}</p>
+                      <p className="text-[10px] text-muted-foreground/50 mt-0.5">{dateStr} · {archive.messages.length} msg</p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteArchive(archive.id); }}
+                      className="h-5 w-5 shrink-0 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive transition-all"
+                      title="Supprimer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-border/30 px-2 py-1 shrink-0 relative">
         <div className="flex items-center gap-1">
+          {/* History button — expanded mode only */}
+          {isExpanded && (
+            <button
+              onClick={() => setShowHistory(prev => !prev)}
+              className={cn(
+                "h-7 w-7 shrink-0 flex items-center justify-center rounded-full transition-colors",
+                showHistory ? "bg-muted text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50"
+              )}
+              title="Historique"
+            >
+              <History className="h-3.5 w-3.5" />
+            </button>
+          )}
           {user && (
             <ChatAttachmentPicker
               userId={user.id}
