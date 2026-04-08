@@ -161,8 +161,8 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
   return (
     <div className="w-full shrink-0 flex flex-col h-full bg-[#1e293b]">
       {/* Sites list */}
-      <div className="border-b border-white/10">
-        <p className="text-[10px] text-white/30 uppercase tracking-wider px-3 pt-2 pb-1">Mes sites</p>
+      <div className="border-b border-slate-700/60">
+        <p className="text-[10px] text-slate-500 uppercase tracking-wider px-3 pt-2 pb-1">Mes sites</p>
         <ScrollArea className="max-h-[180px]">
           <div className="px-2 pb-2 space-y-0.5">
             {sites.map(site => (
@@ -171,8 +171,8 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                 onClick={() => setActiveSiteId(site.id)}
                 className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center gap-1.5 transition-colors ${
                   activeSiteId === site.id
-                    ? 'bg-[#fbbf24]/10 text-[#fbbf24]'
-                    : 'text-white/50 hover:bg-white/5 hover:text-white/70'
+                    ? 'bg-teal-500/10 text-teal-400'
+                    : 'text-slate-400 hover:bg-slate-700/40 hover:text-slate-300'
                 }`}
               >
                 <Globe className="w-3 h-3 shrink-0" />
@@ -180,7 +180,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
               </button>
             ))}
             {sites.length === 0 && (
-              <p className="text-[10px] text-white/20 px-2 py-2">Aucun site tracké</p>
+              <p className="text-[10px] text-slate-600 px-2 py-2">Aucun site tracké</p>
             )}
           </div>
         </ScrollArea>
@@ -188,7 +188,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
 
       {/* Page type tabs */}
       {activeSiteId && (
-        <div className="border-b border-white/10 px-2 py-1.5 flex gap-0.5">
+        <div className="border-b border-slate-700/60 px-2 py-1.5 flex gap-0.5">
           {PAGE_TYPE_TABS.map(tab => {
             const Icon = tab.icon;
             return (
@@ -197,8 +197,8 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                 onClick={() => setActivePageType(tab.value)}
                 className={`flex-1 text-[9px] py-1.5 rounded flex flex-col items-center gap-0.5 transition-colors ${
                   activePageType === tab.value
-                    ? 'bg-[#fbbf24]/15 text-[#fbbf24]'
-                    : 'text-white/30 hover:bg-white/5 hover:text-white/50'
+                    ? 'bg-teal-500/15 text-teal-400'
+                    : 'text-slate-500 hover:bg-slate-700/30 hover:text-slate-400'
                 }`}
               >
                 <Icon className="w-3 h-3" />
@@ -213,10 +213,10 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
       {activeSiteId && (
         <div className="flex-1 overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-3 py-1.5">
-            <p className="text-[10px] text-white/30 uppercase tracking-wider">Prompts</p>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Prompts</p>
             <button
               onClick={() => setShowNewPreset(true)}
-              className="p-0.5 rounded hover:bg-white/10 text-white/40 hover:text-[#fbbf24] transition-colors"
+              className="p-0.5 rounded hover:bg-slate-700/40 text-slate-500 hover:text-teal-400 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
@@ -229,14 +229,14 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                 value={newPresetName}
                 onChange={e => setNewPresetName(e.target.value)}
                 placeholder="Nom du prompt"
-                className="bg-white/5 border-white/10 text-white text-[10px] h-6 px-2"
+                className="bg-slate-700/50 border-slate-600 text-white text-[10px] h-6 px-2"
                 autoFocus
                 onKeyDown={e => {
                   if (e.key === 'Enter') handleCreatePreset();
                   if (e.key === 'Escape') { setShowNewPreset(false); setNewPresetName(''); }
                 }}
               />
-              <Button size="sm" onClick={handleCreatePreset} className="h-6 px-2 text-[10px] bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e]">
+              <Button size="sm" onClick={handleCreatePreset} className="h-6 px-2 text-[10px] bg-teal-500 hover:bg-teal-600 text-white">
                 OK
               </Button>
             </div>
@@ -253,7 +253,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                   if (preset && activeSite) onSelectPreset(preset, activeSite);
                 }}
               >
-                <SelectTrigger className="bg-white/5 border-white/10 text-white text-[10px] h-7">
+                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white text-[10px] h-7">
                   <SelectValue placeholder="Sélectionner un prompt" />
                 </SelectTrigger>
                 <SelectContent>
@@ -274,8 +274,8 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                   key={preset.id}
                   className={`rounded border transition-colors ${
                     selectedPresetId === preset.id
-                      ? 'border-[#fbbf24]/30 bg-[#fbbf24]/5'
-                      : 'border-white/5 bg-white/[0.02] hover:border-white/10'
+                      ? 'border-teal-500/30 bg-teal-500/5'
+                      : 'border-slate-700/40 bg-slate-800/30 hover:border-slate-600/60'
                   }`}
                 >
                   <div className="flex items-center gap-1 px-2 py-1">
@@ -284,15 +284,15 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                         setSelectedPresetId(preset.id);
                         if (activeSite) onSelectPreset(preset, activeSite);
                       }}
-                      className="flex-1 text-left text-[10px] text-white/70 truncate"
+                      className="flex-1 text-left text-[10px] text-slate-300 truncate"
                     >
                       {preset.name}
                     </button>
                     {preset.is_default && (
-                      <Badge className="text-[8px] px-1 py-0 bg-[#fbbf24]/20 text-[#fbbf24] border-0">défaut</Badge>
+                      <Badge className="text-[8px] px-1 py-0 bg-teal-500/20 text-teal-400 border-0">défaut</Badge>
                     )}
                     {!preset.is_default && (
-                      <button onClick={() => handleSetDefault(preset.id)} className="text-white/20 hover:text-[#fbbf24] transition-colors" title="Définir par défaut">
+                      <button onClick={() => handleSetDefault(preset.id)} className="text-slate-600 hover:text-teal-400 transition-colors" title="Définir par défaut">
                         <Check className="w-2.5 h-2.5" />
                       </button>
                     )}
@@ -301,12 +301,12 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                         setEditingPresetId(editingPresetId === preset.id ? null : preset.id);
                         setEditingText(preset.prompt_text);
                       }}
-                      className="text-white/20 hover:text-white/50 transition-colors"
+                      className="text-slate-600 hover:text-slate-400 transition-colors"
                       title="Éditer"
                     >
                       <ChevronRight className={`w-2.5 h-2.5 transition-transform ${editingPresetId === preset.id ? 'rotate-90' : ''}`} />
                     </button>
-                    <button onClick={() => handleDeletePreset(preset.id)} className="text-white/20 hover:text-red-400 transition-colors" title="Supprimer">
+                    <button onClick={() => handleDeletePreset(preset.id)} className="text-slate-600 hover:text-red-400 transition-colors" title="Supprimer">
                       <Trash2 className="w-2.5 h-2.5" />
                     </button>
                   </div>
@@ -318,13 +318,13 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                         value={editingText}
                         onChange={e => setEditingText(e.target.value)}
                         rows={4}
-                        className="w-full bg-white/5 border border-white/10 rounded text-[10px] text-white/70 p-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-[#fbbf24]/40"
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded text-[10px] text-slate-300 p-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-500/40"
                         placeholder="Instructions spécifiques pour ce prompt..."
                       />
                       <Button
                         size="sm"
                         onClick={() => handleSaveEdit(preset.id)}
-                        className="w-full h-5 text-[9px] bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e]"
+                        className="w-full h-5 text-[9px] bg-teal-500 hover:bg-teal-600 text-white"
                       >
                         Sauvegarder
                       </Button>
@@ -334,14 +334,14 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
               ))}
 
               {presets.length === 0 && !showNewPreset && (
-                <p className="text-[10px] text-white/15 px-1 py-3 text-center">
+                <p className="text-[10px] text-slate-600 px-1 py-3 text-center">
                   Aucun prompt.<br />Cliquez + pour en créer un.
                 </p>
               )}
 
               {/* Single preset: click to apply */}
               {presets.length === 1 && (
-                <div className="sticky bottom-0 pt-2 pb-1 bg-[#0f0a1e]/90 backdrop-blur-sm border-t border-white/5">
+                <div className="sticky bottom-0 pt-2 pb-1 bg-[#1e293b]/90 backdrop-blur-sm border-t border-slate-700/40">
                   <Button
                     size="sm"
                     variant="ghost"
@@ -349,7 +349,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                       setSelectedPresetId(presets[0].id);
                       if (activeSite) onSelectPreset(presets[0], activeSite);
                     }}
-                    className="w-full h-7 text-[10px] text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 font-semibold"
+                    className="w-full h-7 text-[10px] text-teal-400 hover:text-teal-400 hover:bg-teal-500/10 font-semibold"
                   >
                     Appliquer
                   </Button>
