@@ -1,5 +1,4 @@
-import { memo, useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';
@@ -7,15 +6,17 @@ import {
   BarChart3, Network, Code2, PenTool, Eye, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
-import consoleDashboard from '@/assets/screenshots/crawlers.fr_console-seo-monitoring-dashboard.png';
-import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.png';
-import architectCode from '@/assets/screenshots/crawlers.fr_architecte-code-correctif-seo.png';
-import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.png';
+import consoleDashboard from '@/assets/screenshots/crawlers.fr_console-seo-monitoring-dashboard.webp';
+import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.webp';
+import architectCode from '@/assets/screenshots/crawlers.fr_architecte-code-correctif-seo.webp';
+import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.webp';
 
 const ProductShowcaseSection = memo(() => {
   const { language } = useLanguage();
   const [current, setCurrent] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [direction, setDirection] = useState(1);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const slides = [
     {
@@ -61,13 +62,22 @@ const ProductShowcaseSection = memo(() => {
   ];
 
   const navigate = useCallback((dir: 1 | -1) => {
+    if (isTransitioning) return;
     setDirection(dir);
-    setCurrent((prev) => (prev + dir + slides.length) % slides.length);
-  }, [slides.length]);
+    setIsTransitioning(true);
+    // After fade-out, switch slide and fade-in
+    timeoutRef.current = setTimeout(() => {
+      setCurrent((prev) => (prev + dir + slides.length) % slides.length);
+      setIsTransitioning(false);
+    }, 300);
+  }, [slides.length, isTransitioning]);
 
   useEffect(() => {
     const timer = setInterval(() => navigate(1), 6000);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [navigate]);
 
   const slide = slides[current];
@@ -93,7 +103,7 @@ const ProductShowcaseSection = memo(() => {
           </h2>
         </div>
 
-        {/* Carousel */}
+        {/* Carousel — CSS transitions only, no framer-motion */}
         <div className="relative flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
@@ -104,57 +114,64 @@ const ProductShowcaseSection = memo(() => {
           </button>
 
           <div className="flex-1 overflow-hidden">
-            <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
-                key={current}
-                custom={direction}
-                initial={{ opacity: 0, x: direction * 60, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: direction * -60, filter: 'blur(4px)' }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <Link to={slide.link} className="block group cursor-pointer">
-                  <div className="grid gap-8 lg:grid-cols-2 items-center">
-                    {/* Screenshot */}
-                    <div className="relative transition-transform duration-500 ease-out group-hover:scale-[1.02]" style={{ perspective: '1200px' }}>
-                      <div className={`absolute -inset-4 rounded-3xl bg-gradient-to-br ${slide.badgeColor} opacity-[0.07] blur-2xl group-hover:opacity-[0.12] transition-opacity duration-500`} />
-                      <div className="relative rounded-2xl overflow-hidden border-2 border-border/50 shadow-2xl shadow-black/10 dark:shadow-black/30 group-hover:border-primary/30 transition-colors duration-300">
-                        <div className="bg-muted/80 dark:bg-muted/40 border-b border-border/50 px-4 py-2.5 flex items-center gap-2">
-                          <div className="flex gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
-                          </div>
-                          <div className="flex-1 mx-8">
-                            <div className="bg-background/60 rounded-md px-3 py-1 text-[10px] text-muted-foreground font-mono text-center truncate">
-                              crawlers.fr
-                            </div>
+            <div
+              className="transition-all duration-300 ease-out"
+              style={{
+                opacity: isTransitioning ? 0 : 1,
+                transform: isTransitioning
+                  ? `translateX(${direction * 40}px)`
+                  : 'translateX(0)',
+              }}
+            >
+              <Link to={slide.link} className="block group cursor-pointer">
+                <div className="grid gap-8 lg:grid-cols-2 items-center">
+                  {/* Screenshot */}
+                  <div className="relative transition-transform duration-500 ease-out group-hover:scale-[1.02]" style={{ perspective: '1200px' }}>
+                    <div className={`absolute -inset-4 rounded-3xl bg-gradient-to-br ${slide.badgeColor} opacity-[0.07] blur-2xl group-hover:opacity-[0.12] transition-opacity duration-500`} />
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-border/50 shadow-2xl shadow-black/10 dark:shadow-black/30 group-hover:border-primary/30 transition-colors duration-300">
+                      <div className="bg-muted/80 dark:bg-muted/40 border-b border-border/50 px-4 py-2.5 flex items-center gap-2">
+                        <div className="flex gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+                        </div>
+                        <div className="flex-1 mx-8">
+                          <div className="bg-background/60 rounded-md px-3 py-1 text-[10px] text-muted-foreground font-mono text-center truncate">
+                            crawlers.fr
                           </div>
                         </div>
-                        <img src={slide.image} alt={slide.title} width={960} height={600} className="w-full h-auto" loading="lazy" />
                       </div>
-                    </div>
-
-                    {/* Text */}
-                    <div className="space-y-4">
-                      <Badge className={`${slide.badgeColor} border-current/20 text-xs font-semibold px-3 py-1`}>
-                        <Icon className="w-3.5 h-3.5 mr-1.5" />
-                        {slide.title}
-                      </Badge>
-                      <h3 className="text-2xl sm:text-3xl font-bold text-foreground font-display leading-tight">
-                        {slide.title}
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed text-base sm:text-lg">
-                        {slide.desc}
-                      </p>
-                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:underline">
-                        {language === 'fr' ? 'Découvrir' : 'Discover'} →
-                      </span>
+                      <img
+                        src={slide.image}
+                        alt={slide.title}
+                        width={480}
+                        height={300}
+                        className="w-full h-auto"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            </AnimatePresence>
+
+                  {/* Text */}
+                  <div className="space-y-4">
+                    <Badge className={`${slide.badgeColor} border-current/20 text-xs font-semibold px-3 py-1`}>
+                      <Icon className="w-3.5 h-3.5 mr-1.5" />
+                      {slide.title}
+                    </Badge>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-foreground font-display leading-tight">
+                      {slide.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed text-base sm:text-lg">
+                      {slide.desc}
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:underline">
+                      {language === 'fr' ? 'Découvrir' : 'Discover'} →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </div>
           </div>
 
           <button
