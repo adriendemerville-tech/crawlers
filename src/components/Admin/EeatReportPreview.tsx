@@ -406,9 +406,26 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
               {result.score}<span className="text-lg text-muted-foreground">/100</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">Score global E-E-A-T</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {result.scoring?.method === 'weighted_algorithmic_v2' 
+                ? 'Calcul pondéré : E×1.5 · Ex×2.5 · A×2.5 · T×4' 
+                : 'Score LLM'}
+            </p>
             <p className={`text-xs mt-2 px-4 py-1.5 inline-block rounded-full ${getScoreBadgeClasses(result.score)}`}>
               {getScoreLabel(result.score)}
             </p>
+            {result.scoring?.trustPenalties && result.scoring.trustPenalties.length > 0 && (
+              <div className="mt-2 space-y-0.5">
+                {result.scoring.trustPenalties.map((p, i) => (
+                  <p key={i} className="text-[10px] text-destructive">⚠️ {p}</p>
+                ))}
+              </div>
+            )}
+            {result.scoring?.domainAge && (
+              <p className="text-[10px] text-muted-foreground mt-1">
+                📅 Domaine créé en {result.scoring.domainAge.foundingYear} ({result.scoring.domainAge.years} ans)
+              </p>
+            )}
             {result.crawlInfo && (
               <p className="text-xs text-muted-foreground mt-2">
                 📄 {result.crawlInfo.pagesAnalyzed} pages analysées ({result.crawlInfo.source === 'cache' ? 'crawl récent en cache' : 'crawl intermédiaire'})
