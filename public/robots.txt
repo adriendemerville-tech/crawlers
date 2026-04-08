@@ -56,6 +56,7 @@
 # Autoriser tous les robots (pages publiques)
 User-agent: *
 Allow: /
+Allow: /app/eeat
 Disallow: /app/
 Crawl-delay: 1
 
