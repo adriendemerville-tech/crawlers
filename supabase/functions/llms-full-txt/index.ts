@@ -40,6 +40,8 @@ const TOOLS = [
   { name: "CMS Direct", access: "Pro Agency", desc: "Connexion directe WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo." },
   { name: "Autopilote Parménion", access: "Pro Agency", desc: "Maintenance SEO prédictive automatisée avec ML." },
   { name: "Rapport E-E-A-T", access: "Pro Agency", desc: "Audit E-E-A-T evidence-based avec scoring sur 100." },
+  { name: "Score de Priorité (SPO)", access: "Pro Agency", desc: "Score 0-100 identifiant les pages à optimiser en priorité (8 signaux : CTR, conversion, position, maillage, indexation, contenu, backlinks, cannibalisation)." },
+  { name: "Vérification Indexation", access: "Pro Agency", desc: "Vérifie le statut d'indexation Google de vos pages via l'API GSC." },
 ];
 
 function generateLlmsFullTxt(): string {
