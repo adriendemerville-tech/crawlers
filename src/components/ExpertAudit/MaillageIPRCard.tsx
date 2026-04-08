@@ -432,3 +432,74 @@ export function computeMaillageData(nodes: any[]): MaillageData | null {
     prDistribution,
   };
 }
+
+// ══════════════════════════════════════════════════════════════
+// UTILITY: Compute MaillageData from crawl_pages (multi-page crawl)
+// ══════════════════════════════════════════════════════════════
+
+export function computeMaillageFromCrawlPages(pages: {
+  internal_links?: number | null;
+  external_links?: number | null;
+  crawl_depth?: number | null;
+  seo_score?: number | null;
+  http_status?: number | null;
+}[]): MaillageData | null {
+  const validPages = pages.filter(p => (p.http_status ?? 200) === 200);
+  const n = validPages.length;
+  if (n < 3) return null;
+
+  // Link density: avg internal links per page vs total pages
+  const totalInternalLinks = validPages.reduce((sum, p) => sum + (p.internal_links ?? 0), 0);
+  const maxPossible = n * (n - 1);
+  const linkDensity = maxPossible > 0 ? (totalInternalLinks / maxPossible) * 100 : 0;
+
+  // Max depth
+  const maxDepth = Math.max(...validPages.map(p => p.crawl_depth ?? 0), 0);
+
+  // Orphan pages: pages with 0 internal links and depth > 0
+  const orphanPages = validPages.filter(p => (p.internal_links ?? 0) === 0 && (p.crawl_depth ?? 0) > 0).length;
+
+  // PageRank approximation using seo_score as authority proxy
+  const authorities = validPages
+    .map(p => p.seo_score ?? 0)
+    .sort((a, b) => b - a);
+
+  const totalAuthority = authorities.reduce((s, v) => s + v, 0) || 1;
+
+  const buckets = [
+    { label: 'Top 10%', start: 0, end: Math.ceil(n * 0.1) },
+    { label: 'Top 10-25%', start: Math.ceil(n * 0.1), end: Math.ceil(n * 0.25) },
+    { label: 'Top 25-50%', start: Math.ceil(n * 0.25), end: Math.ceil(n * 0.5) },
+    { label: 'Top 50-75%', start: Math.ceil(n * 0.5), end: Math.ceil(n * 0.75) },
+    { label: 'Bottom 25%', start: Math.ceil(n * 0.75), end: n },
+  ];
+
+  const prDistribution = buckets
+    .filter(b => b.start < n)
+    .map(b => {
+      const slice = authorities.slice(b.start, b.end);
+      const bucketSum = slice.reduce((s, v) => s + v, 0);
+      return {
+        label: b.label,
+        percentage: (bucketSum / totalAuthority) * 100,
+        pageCount: slice.length,
+      };
+    });
+
+  // Health score
+  let healthScore = 50;
+  if (linkDensity >= 5 && linkDensity <= 15) healthScore += 20;
+  else if (linkDensity >= 3 && linkDensity <= 20) healthScore += 10;
+  if (maxDepth <= 3) healthScore += 15;
+  else if (maxDepth <= 4) healthScore += 8;
+  const orphanRatio = orphanPages / n;
+  if (orphanRatio === 0) healthScore += 15;
+  else if (orphanRatio < 0.05) healthScore += 8;
+  else healthScore -= 10;
+  const top10Pct = prDistribution[0]?.percentage ?? 0;
+  if (top10Pct < 70) healthScore += 10;
+  else if (top10Pct < 85) healthScore += 5;
+  healthScore = Math.max(0, Math.min(100, Math.round(healthScore)));
+
+  return { healthScore, linkDensity, maxDepth, orphanPages, totalPages: n, prDistribution };
+}
