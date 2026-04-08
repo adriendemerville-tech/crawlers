@@ -1046,7 +1046,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
         setStrategicCachedContext(rawStrategicData._cachedContext);
       }
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
-      window.dispatchEvent(new Event('expert-audit-complete'));
+      window.dispatchEvent(new CustomEvent('expert-audit-complete', { detail: { source: 'audit-expert', url: normalizedUrl } }));
       if (domain) {
         setStrategicCache(domain, strategicData);
         setStrategicCacheInfo({ auditCount: 1, maxBeforeRefresh: STRATEGIC_CACHE_MAX });
