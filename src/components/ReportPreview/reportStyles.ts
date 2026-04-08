@@ -348,6 +348,28 @@ export const getReportStyles = () => `
     color: var(--foreground);
   }
   
+  /* Priority badge styles */
+  .priority-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    z-index: 1;
+  }
+  .priority-badge-critical {
+    background: hsla(0, 84%, 60%, 0.12);
+    color: var(--destructive);
+    border: 1px solid hsla(0, 84%, 60%, 0.25);
+  }
+  .priority-badge-warning {
+    background: hsla(38, 92%, 50%, 0.12);
+    color: var(--warning);
+    border: 1px solid hsla(38, 92%, 50%, 0.25);
+  }
+
   /* GEO factor card styles */
   .factor-card {
     padding: 16px;
