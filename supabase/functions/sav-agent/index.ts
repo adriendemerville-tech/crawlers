@@ -558,6 +558,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
 
           if (aiResp.ok) {
             const aiData = await aiResp.json();
+            logAIUsageFromResponse(sb, "google/gemini-2.5-flash", "sav-agent", aiData.usage);
             let reply = aiData.choices?.[0]?.message?.content || "Je n'ai pas pu récupérer l'état de Parménion.";
             if (reply.length > 3000) reply = reply.substring(0, 2997) + "...";
 
