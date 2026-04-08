@@ -425,6 +425,7 @@ export default function ProAgency() {
     "@type": "Product",
     "name": "Crawlers.fr Pro Agency — Sans engagement",
     "description": t.metaDescription,
+    "image": "https://crawlers.fr/crawlers-logo-violet.png",
     "brand": { "@type": "Brand", "name": "Crawlers.fr" },
     "offers": [
       {
@@ -435,6 +436,18 @@ export default function ProAgency() {
         "availability": "https://schema.org/InStock",
         "priceValidUntil": "2026-12-31",
         "url": "https://crawlers.fr/pro-agency",
+        "shippingDetails": {
+          "@type": "OfferShippingDetails",
+          "shippingRate": { "@type": "MonetaryAmount", "value": "0", "currency": "EUR" },
+          "shippingDestination": { "@type": "DefinedRegion", "addressCountry": "FR" },
+          "deliveryTime": { "@type": "ShippingDeliveryTime", "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "d" }, "transitTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "d" } }
+        },
+        "hasMerchantReturnPolicy": {
+          "@type": "MerchantReturnPolicy",
+          "applicableCountry": "FR",
+          "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted",
+          "merchantReturnDays": 0
+        },
       },
       {
         "@type": "Offer",
@@ -444,6 +457,18 @@ export default function ProAgency() {
         "availability": "https://schema.org/InStock",
         "priceValidUntil": "2026-12-31",
         "url": "https://crawlers.fr/pro-agency",
+        "shippingDetails": {
+          "@type": "OfferShippingDetails",
+          "shippingRate": { "@type": "MonetaryAmount", "value": "0", "currency": "EUR" },
+          "shippingDestination": { "@type": "DefinedRegion", "addressCountry": "FR" },
+          "deliveryTime": { "@type": "ShippingDeliveryTime", "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "d" }, "transitTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "d" } }
+        },
+        "hasMerchantReturnPolicy": {
+          "@type": "MerchantReturnPolicy",
+          "applicableCountry": "FR",
+          "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted",
+          "merchantReturnDays": 0
+        },
       },
     ],
   };
