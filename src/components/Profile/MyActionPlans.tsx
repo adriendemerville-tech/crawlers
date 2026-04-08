@@ -254,28 +254,29 @@ function SortableTaskItem({
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        {showContentArchitect && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onOpenContentArchitect}
-            className="text-xs gap-1 text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            title="Ouvrir dans Content Architect"
-          >
-            <PenLine className="h-3 w-3" />
-            <span className="hidden xl:inline">{contentArchitectLabel}</span>
-          </Button>
-        )}
         {!task.isCompleted && !isArchived && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onOpenArchitect}
-            className="text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Wand2 className="h-3 w-3" />
-            <span className="hidden xl:inline">{architectLabel}</span>
-          </Button>
+          showContentArchitect ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onOpenContentArchitect}
+              className="text-xs gap-1 text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              title="Ouvrir dans Content Architect"
+            >
+              <PenLine className="h-3 w-3" />
+              <span className="hidden xl:inline">{contentArchitectLabel}</span>
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onOpenArchitect}
+              className="text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Wand2 className="h-3 w-3" />
+              <span className="hidden xl:inline">{architectLabel}</span>
+            </Button>
+          )
         )}
       </div>
     </div>
