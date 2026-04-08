@@ -55,6 +55,41 @@ interface ChatMessage {
   timestamp: string;
 }
 
+interface ArchivedConversation {
+  id: string;
+  messages: ChatMessage[];
+  archivedAt: string;
+  preview: string; // first user message snippet
+}
+
+const FELIX_ARCHIVE_KEY = 'felix_conversations_archive';
+const FELIX_CURRENT_KEY = 'felix_current_conversation';
+const MAX_ARCHIVES = 20;
+
+function getArchivedConversations(): ArchivedConversation[] {
+  try {
+    return JSON.parse(localStorage.getItem(FELIX_ARCHIVE_KEY) || '[]');
+  } catch { return []; }
+}
+
+function saveArchivedConversations(archives: ArchivedConversation[]) {
+  localStorage.setItem(FELIX_ARCHIVE_KEY, JSON.stringify(archives.slice(0, MAX_ARCHIVES)));
+}
+
+function saveCurrentConversation(messages: ChatMessage[]) {
+  if (messages.length === 0) {
+    localStorage.removeItem(FELIX_CURRENT_KEY);
+    return;
+  }
+  localStorage.setItem(FELIX_CURRENT_KEY, JSON.stringify(messages));
+}
+
+function loadCurrentConversation(): ChatMessage[] {
+  try {
+    return JSON.parse(localStorage.getItem(FELIX_CURRENT_KEY) || '[]');
+  } catch { return []; }
+}
+
 interface ChatWindowProps {
   onClose: () => void;
   triggerOnboarding?: boolean;
