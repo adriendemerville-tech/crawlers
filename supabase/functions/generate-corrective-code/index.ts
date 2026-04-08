@@ -2767,6 +2767,7 @@ const IMPACT_ESTIMATES: Record<string, { seoPoints: [number, number]; category: 
   fix_semantic_injection:{ seoPoints: [4, 10], category: 'GEO',         description: 'Info Box sémantique renforce l\'autorité thématique' },
   fix_robot_context:    { seoPoints: [6, 15],  category: 'GEO/AEO',     description: 'Calque anti-hallucination clarifie l\'entité pour les LLMs' },
   fix_pagespeed_suite:  { seoPoints: [5, 12],  category: 'Performance', description: 'Suite CLS+LCP+Fonts améliore les Core Web Vitals' },
+  fix_image_format:     { seoPoints: [4, 10],  category: 'Performance', description: 'Conversion WebP/AVIF via <picture> réduit le poids images de 30-70%' },
   fix_hreflang:         { seoPoints: [2, 5],   category: 'SEO Int.',    description: 'Hreflang améliore le SEO international' },
   fix_open_graph:       { seoPoints: [2, 5],   category: 'SEO Social',  description: 'Open Graph optimise les previews sur les réseaux sociaux' },
   fix_twitter_cards:    { seoPoints: [1, 4],   category: 'SEO Social',  description: 'Twitter Cards améliorent la visibilité sur X/Twitter' },

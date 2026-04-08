@@ -94,6 +94,15 @@ export const GENERATIVE_FIXES = {
     isRecommended: true,
     isPremium: false,
   },
+  fix_image_format: {
+    id: 'fix_image_format',
+    category: 'generative' as const,
+    label: 'Conversion Images WebP/AVIF',
+    description: 'Convertit automatiquement les images en WebP/AVIF via <picture> (gain 30-70%)',
+    priority: 'important' as const,
+    isRecommended: true,
+    isPremium: false,
+  },
 } as const;
 
 // Available strategic fixes (Legacy)
