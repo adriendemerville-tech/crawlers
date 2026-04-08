@@ -1,117 +1,368 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { trackTokenUsage } from '../_shared/tokenTracker.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { writeIdentity } from '../_shared/identityGateway.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { read, utils } from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+/* ================================================================== */
+/*  parse-doc-matrix — Native XLSX/CSV parser with variable detection  */
+/*  Detects "Variables" sheets → enriches identity card (back only)     */
+/*  Detects "Prompt Matrix" sheets → returns benchmark rows            */
+/* ================================================================== */
+
+interface VariableEntry {
+  variable: string;
+  value: string;
+}
+
+interface BenchmarkRow {
+  prompt: string;
+  theme?: string;
+  engine?: string;
+  poids: number;
+  axe: string;
+  seuil_bon: number;
+  seuil_moyen: number;
+  seuil_mauvais: number;
+  llm_name?: string;
+}
+
+/* ── Variable field mapping to identity card ─────────────────────── */
+const VARIABLE_TO_IDENTITY: Record<string, string> = {
+  'nom_marque': 'brand_name',
+  'brand_name': 'brand_name',
+  'marque': 'brand_name',
+  'nom_site': 'site_name',
+  'site_name': 'site_name',
+  'secteur': 'market_sector',
+  'market_sector': 'market_sector',
+  'segment_cible': 'target_segment',
+  'target_segment': 'target_segment',
+  'cible': 'target_audience',
+  'target_audience': 'target_audience',
+  'cas_usage': 'primary_use_case',
+  'primary_use_case': 'primary_use_case',
+  'use_case': 'primary_use_case',
+  'localisation': 'location_detail',
+  'location_detail': 'location_detail',
+  'location': 'location_detail',
+  'ville': 'gmb_city',
+  'city': 'gmb_city',
+  'url_marque': 'brand_site_url',
+  'brand_site_url': 'brand_site_url',
+  'brand_url': 'brand_site_url',
+  'zone_commerciale': 'commercial_area',
+  'commercial_area': 'commercial_area',
+  'modele_commercial': 'commercial_model',
+  'commercial_model': 'commercial_model',
+  'type_entite': 'entity_type',
+  'entity_type': 'entity_type',
+  'produits_services': 'products_services',
+  'products_services': 'products_services',
+  'taille_entreprise': 'company_size',
+  'company_size': 'company_size',
+  'concurrents': 'competitors',
+  'competitors': 'competitors',
+  'langue': 'primary_language',
+  'language': 'primary_language',
+};
+
+/* ── Sheet type detection heuristics ─────────────────────────────── */
+
+function isVariableSheet(headers: string[]): boolean {
+  const lower = headers.map(h => h.toLowerCase().trim());
+  return lower.some(h => /^variable/i.test(h) || h === 'var' || h === 'nom') &&
+    lower.some(h => /^valeur|^value|^val$/i.test(h));
+}
+
+function isBenchmarkSheet(headers: string[]): boolean {
+  const lower = headers.map(h => h.toLowerCase().trim());
+  return lower.some(h => /prompt|full_prompt|critere|critère|kpi/i.test(h)) &&
+    (lower.some(h => /engine|moteur|llm/i.test(h)) ||
+      lower.some(h => /theme|thème|axe|categorie|catégorie/i.test(h)));
+}
+
+function isPromptMatrixSheet(headers: string[]): boolean {
+  const lower = headers.map(h => h.toLowerCase().trim());
+  return lower.some(h => /prompt|full_prompt|critere|critère|kpi/i.test(h));
+}
+
+/* ── Parse variables from sheet ──────────────────────────────────── */
+
+function parseVariables(rows: Record<string, any>[], headers: string[]): VariableEntry[] {
+  const varCol = headers.find(h => /^variable|^var$|^nom$/i.test(h.trim()));
+  const valCol = headers.find(h => /^valeur|^value|^val$/i.test(h.trim()));
+  if (!varCol || !valCol) return [];
+
+  return rows
+    .filter(r => r[varCol] && r[valCol])
+    .map(r => ({
+      variable: String(r[varCol]).trim().toLowerCase().replace(/\s+/g, '_'),
+      value: String(r[valCol]).trim(),
+    }));
+}
+
+/* ── Parse benchmark rows from sheet ─────────────────────────────── */
+
+function parseBenchmarkRows(rows: Record<string, any>[], headers: string[]): BenchmarkRow[] {
+  const find = (patterns: RegExp[]) => headers.find(h => patterns.some(p => p.test(h.trim())));
+
+  const promptCol = find([/^full_prompt$/i, /^prompt$/i, /^critere$/i, /^critère$/i, /^kpi$/i]);
+  const themeCol = find([/^theme$/i, /^thème$/i, /^axe$/i, /^categorie$/i, /^catégorie$/i, /^category$/i]);
+  const engineCol = find([/^engine$/i, /^moteur$/i, /^llm$/i, /^model$/i, /^modèle$/i]);
+  const poidsCol = find([/^poids$/i, /^weight$/i, /^coeff$/i]);
+  const seuilBonCol = find([/^seuil_bon$/i, /^bon$/i, /^good$/i]);
+  const seuilMoyenCol = find([/^seuil_moyen$/i, /^moyen$/i, /^medium$/i]);
+  const seuilMauvaisCol = find([/^seuil_mauvais$/i, /^mauvais$/i, /^bad$/i]);
+
+  if (!promptCol) return [];
+
+  return rows
+    .filter(r => r[promptCol] && String(r[promptCol]).trim().length > 0)
+    .map(r => ({
+      prompt: String(r[promptCol]).trim(),
+      theme: themeCol ? String(r[themeCol] || '').trim() : undefined,
+      engine: engineCol ? String(r[engineCol] || '').trim() : undefined,
+      poids: poidsCol ? Number(r[poidsCol]) || 1 : 1,
+      axe: themeCol ? String(r[themeCol] || 'Général').trim() : 'Général',
+      seuil_bon: seuilBonCol ? Number(r[seuilBonCol]) || 70 : 70,
+      seuil_moyen: seuilMoyenCol ? Number(r[seuilMoyenCol]) || 40 : 40,
+      seuil_mauvais: seuilMauvaisCol ? Number(r[seuilMauvaisCol]) || 0 : 0,
+      llm_name: engineCol ? mapEngineName(String(r[engineCol] || '').trim()) : undefined,
+    }));
+}
+
+/* ── Map user engine names to gateway model IDs ──────────────────── */
+
+function mapEngineName(engine: string): string | undefined {
+  if (!engine) return undefined;
+  const lower = engine.toLowerCase();
+  if (/chatgpt|gpt/i.test(lower)) return 'openai/gpt-5-mini';
+  if (/gemini/i.test(lower)) return 'google/gemini-2.5-flash';
+  if (/perplexity/i.test(lower)) return 'google/gemini-2.5-flash'; // proxy via Gemini
+  if (/copilot/i.test(lower)) return 'openai/gpt-5-mini'; // proxy via GPT
+  if (/claude/i.test(lower)) return 'google/gemini-2.5-flash';
+  if (/mistral/i.test(lower)) return 'google/gemini-2.5-flash-lite';
+  return undefined;
+}
+
+/* ── Enrich identity card from variables ─────────────────────────── */
+
+async function enrichIdentityFromVariables(
+  variables: VariableEntry[],
+  trackedSiteId: string | null,
+  userId: string | null,
+): Promise<{ applied: string[]; skipped: string[] }> {
+  if (!trackedSiteId || variables.length === 0) {
+    return { applied: [], skipped: variables.map(v => v.variable) };
+  }
+
+  const fields: Record<string, unknown> = {};
+  const skipped: string[] = [];
+
+  for (const v of variables) {
+    const identityField = VARIABLE_TO_IDENTITY[v.variable];
+    if (identityField) {
+      fields[identityField] = v.value;
+    } else {
+      skipped.push(v.variable);
+    }
+  }
+
+  if (Object.keys(fields).length === 0) {
+    return { applied: [], skipped };
+  }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
-
-    const formData = await req.formData();
-    const file = formData.get('file') as File | null;
-    if (!file) {
-      return new Response(JSON.stringify({ error: 'No file provided' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Read file as base64
-    const arrayBuffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    let base64 = '';
-    const chunk = 8192;
-    for (let i = 0; i < bytes.length; i += chunk) {
-      base64 += String.fromCharCode(...bytes.subarray(i, i + chunk));
-    }
-    base64 = btoa(base64);
-
-    const systemPrompt = `Tu es un extracteur de données tabulaires. On te donne le contenu d'un fichier document (.doc, .docx).
-Tu dois extraire les données de matrice/tableau qu'il contient et les retourner en JSON.
-
-Le format de sortie DOIT être un tableau JSON d'objets avec ces colonnes possibles :
-- prompt (obligatoire) : le texte du prompt, critère ou KPI
-- poids : le poids/coefficient numérique (défaut: 1)
-- axe : l'axe ou catégorie (défaut: "technique")
-- seuil_bon : seuil score bon (défaut: 80)
-- seuil_moyen : seuil score moyen (défaut: 50)
-- seuil_mauvais : seuil score mauvais (défaut: 30)
-- llm_name : nom du modèle LLM si spécifié
-
-Règles :
-- Extrais TOUS les critères/prompts trouvés dans le document
-- Si le document contient un tableau, extrais ses lignes
-- Si c'est une liste de critères/questions, chaque item = une ligne
-- Retourne UNIQUEMENT le tableau JSON, sans markdown, sans explication
-- Si aucune donnée exploitable n'est trouvée, retourne un tableau vide []`;
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Extrais les données de matrice/tableau de ce document "${file.name}". Retourne uniquement le JSON.`,
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:${file.type || 'application/octet-stream'};base64,${base64}`,
-                },
-              },
-            ],
-          },
-        ],
-        temperature: 0.1,
-      }),
+    const result = await writeIdentity({
+      siteId: trackedSiteId,
+      fields,
+      source: 'matrix',
+      userId: userId || undefined,
+      forceDirectWrite: false, // respect hybrid mode for critical fields
     });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('AI gateway error:', response.status, errText);
-      return new Response(JSON.stringify({ error: 'Extraction AI failed', status: response.status }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '[]';
-
-    // Track usage
-    if (data.usage) {
-      trackTokenUsage('parse-doc-matrix', 'google/gemini-2.5-flash', data.usage).catch(() => {});
-    }
-
-    // Parse JSON
-    let rows: any[];
-    try {
-      const cleaned = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-      rows = JSON.parse(cleaned);
-      if (!Array.isArray(rows)) rows = [];
-    } catch {
-      console.error('Failed to parse AI response:', content);
-      rows = [];
-    }
-
-    return new Response(JSON.stringify({ rows, fileName: file.name }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return { applied: result.applied, skipped };
   } catch (e) {
-    console.error('parse-doc-matrix error:', e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('[parse-doc-matrix] Identity enrichment error:', e);
+    return { applied: [], skipped };
   }
-});
+}
+
+/* ── Generate display schema hash ────────────────────────────────── */
+
+function generateSchemaHash(headers: string[], hasEngine: boolean, hasTheme: boolean): string {
+  const sig = headers.sort().join('|') + `|engine:${hasEngine}|theme:${hasTheme}`;
+  let hash = 0;
+  for (let i = 0; i < sig.length; i++) {
+    hash = ((hash << 5) - hash) + sig.charCodeAt(i);
+    hash |= 0;
+  }
+  return `matrix_${Math.abs(hash).toString(36)}`;
+}
+
+/* ── Main handler ─────────────────────────────────────────────────── */
+
+Deno.serve(handleRequest(async (req) => {
+  const formData = await req.formData();
+  const file = formData.get('file') as File | null;
+  const trackedSiteId = formData.get('tracked_site_id') as string | null;
+  const userId = formData.get('user_id') as string | null;
+
+  if (!file) {
+    return jsonError('No file provided', 400);
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  const arrayBuffer = await file.arrayBuffer();
+
+  let allSheets: { name: string; headers: string[]; rows: Record<string, any>[]; sheetType: 'variable' | 'benchmark' | 'prompt' | 'unknown' }[] = [];
+
+  if (ext === 'xlsx' || ext === 'xls' || ext === 'xlsm') {
+    // Native XLSX parsing with SheetJS
+    const workbook = read(new Uint8Array(arrayBuffer), { type: 'array' });
+
+    for (const sheetName of workbook.SheetNames) {
+      const sheet = workbook.Sheets[sheetName];
+      const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+      if (rows.length === 0) continue;
+      const headers = Object.keys(rows[0]);
+
+      let sheetType: 'variable' | 'benchmark' | 'prompt' | 'unknown' = 'unknown';
+      if (isVariableSheet(headers)) sheetType = 'variable';
+      else if (isBenchmarkSheet(headers)) sheetType = 'benchmark';
+      else if (isPromptMatrixSheet(headers)) sheetType = 'prompt';
+
+      allSheets.push({ name: sheetName, headers, rows, sheetType });
+    }
+  } else if (ext === 'csv') {
+    // Simple CSV parse
+    const text = new TextDecoder().decode(new Uint8Array(arrayBuffer));
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length > 1) {
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const rows = lines.slice(1).map(line => {
+        const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        const obj: Record<string, any> = {};
+        headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
+        return obj;
+      });
+
+      let sheetType: 'variable' | 'benchmark' | 'prompt' | 'unknown' = 'unknown';
+      if (isVariableSheet(headers)) sheetType = 'variable';
+      else if (isBenchmarkSheet(headers)) sheetType = 'benchmark';
+      else if (isPromptMatrixSheet(headers)) sheetType = 'prompt';
+
+      allSheets.push({ name: file.name, headers, rows, sheetType });
+    }
+  } else {
+    return jsonError('Unsupported file format. Use .xlsx, .xls, .xlsm, or .csv', 400);
+  }
+
+  if (allSheets.length === 0) {
+    return jsonError('No data found in file', 400);
+  }
+
+  console.log(`[parse-doc-matrix] Parsed ${allSheets.length} sheets: ${allSheets.map(s => `${s.name}(${s.sheetType})`).join(', ')}`);
+
+  // Step 1: Process variable sheets → enrich identity card (back only)
+  const variableSheets = allSheets.filter(s => s.sheetType === 'variable');
+  let identityResult = { applied: [] as string[], skipped: [] as string[] };
+
+  for (const vs of variableSheets) {
+    const variables = parseVariables(vs.rows, vs.headers);
+    if (variables.length > 0) {
+      console.log(`[parse-doc-matrix] Found ${variables.length} variables in "${vs.name}" → enriching identity card`);
+      const result = await enrichIdentityFromVariables(variables, trackedSiteId, userId);
+      identityResult.applied.push(...result.applied);
+      identityResult.skipped.push(...result.skipped);
+    }
+  }
+
+  // Step 2: Process benchmark / prompt sheets
+  const benchmarkSheets = allSheets.filter(s => s.sheetType === 'benchmark');
+  const promptSheets = allSheets.filter(s => s.sheetType === 'prompt');
+  const dataSheets = benchmarkSheets.length > 0 ? benchmarkSheets : promptSheets;
+
+  let benchmarkRows: BenchmarkRow[] = [];
+  let isBenchmarkMode = benchmarkSheets.length > 0;
+  let detectedEngines: string[] = [];
+  let detectedThemes: string[] = [];
+
+  for (const ds of dataSheets) {
+    const rows = parseBenchmarkRows(ds.rows, ds.headers);
+    benchmarkRows.push(...rows);
+  }
+
+  if (isBenchmarkMode) {
+    detectedEngines = [...new Set(benchmarkRows.map(r => r.engine).filter(Boolean) as string[])];
+    detectedThemes = [...new Set(benchmarkRows.map(r => r.theme).filter(Boolean) as string[])];
+  }
+
+  // Generate display schema
+  const allHeaders = dataSheets.flatMap(s => s.headers);
+  const schemaHash = generateSchemaHash(allHeaders, detectedEngines.length > 0, detectedThemes.length > 0);
+
+  // Build display schema config
+  const displaySchema = {
+    schema_hash: schemaHash,
+    is_benchmark: isBenchmarkMode,
+    engines: detectedEngines,
+    themes: detectedThemes,
+    columns: isBenchmarkMode ? [
+      { key: 'theme', label: 'Thème', type: 'text' },
+      { key: 'prompt', label: 'Prompt', type: 'text' },
+      ...detectedEngines.map(e => ({ key: `engine_${e}`, label: e, type: 'score' })),
+    ] : [
+      { key: 'prompt', label: 'KPI', type: 'text' },
+      { key: 'axe', label: 'Catégorie', type: 'badge' },
+      { key: 'poids', label: 'Poids', type: 'number' },
+      { key: 'score', label: 'Score', type: 'score' },
+    ],
+  };
+
+  // Save display schema to DB if user is authenticated
+  if (userId) {
+    try {
+      const supabaseAdmin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      await supabaseAdmin.from('matrix_display_schemas').upsert({
+        user_id: userId,
+        schema_hash: schemaHash,
+        schema_name: file.name,
+        columns_config: displaySchema.columns,
+        scoring_config: { is_benchmark: isBenchmarkMode, engines: detectedEngines, themes: detectedThemes },
+        source_file_signature: file.name,
+        usage_count: 1,
+      }, { onConflict: 'user_id,schema_hash' });
+    } catch (e) {
+      console.error('[parse-doc-matrix] Schema save error:', e);
+    }
+  }
+
+  // Format rows for frontend
+  const outputRows = benchmarkRows.map((r, i) => ({
+    id: `row-${i}-${Date.now()}`,
+    prompt: r.prompt,
+    theme: r.theme || r.axe,
+    engine: r.engine,
+    poids: r.poids,
+    axe: r.axe,
+    seuil_bon: r.seuil_bon,
+    seuil_moyen: r.seuil_moyen,
+    seuil_mauvais: r.seuil_mauvais,
+    llm_name: r.llm_name,
+  }));
+
+  return jsonOk({
+    fileName: file.name,
+    rows: outputRows,
+    sheets: allSheets.map(s => ({ name: s.name, type: s.sheetType, rowCount: s.rows.length })),
+    identity_enrichment: identityResult,
+    display_schema: displaySchema,
+    is_benchmark: isBenchmarkMode,
+    detected_engines: detectedEngines,
+    detected_themes: detectedThemes,
+  });
+}));
