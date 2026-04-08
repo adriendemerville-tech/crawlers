@@ -1527,6 +1527,10 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {auditMode === 'technical' && (
             <StrategicErrorBoundary onReset={handleNewAudit}>
               <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
+              <NextStepFloatingButton
+                nextStepLabel={language === 'en' ? 'Next: AI Visibility Audit' : language === 'es' ? 'Siguiente: Auditoría GEO' : 'Étape suivante : Audit GEO'}
+                onNextStep={() => handleStrategicAudit()}
+              />
             </StrategicErrorBoundary>
           )}
 
@@ -1555,6 +1559,10 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
                 const normalizedUrl = normalizeUrl(url);
                 setTimeout(() => runStrategicAudit(normalizedUrl), 100);
               }}
+              <NextStepFloatingButton
+                nextStepLabel={language === 'en' ? 'Next: Corrective Code' : language === 'es' ? 'Siguiente: Código Correctivo' : 'Étape suivante : Code Correctif'}
+                onNextStep={() => setIsCodeEditorOpen(true)}
+              />
             />
           )}
 
