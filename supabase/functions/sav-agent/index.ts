@@ -872,7 +872,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             status: 'pending',
           });
 
-          const confirmReply = `✅ Directive transmise à l'Agent SEO :\n\n> ${directiveText}\n\n${targetUrl ? `Cible : \`${targetUrl}\`\n` : ''}L'Agent SEO appliquera cette instruction lors de son prochain cycle d'analyse.`;
+          fireDispatchAgentDirectives();
+
+          const confirmReply = `✅ Directive transmise à l'Agent SEO :\n\n> ${directiveText}\n\n${targetUrl ? `Cible : \`${targetUrl}\`\n` : ''}L'Agent SEO sera déclenché immédiatement.`;
 
           // Save conversation
           let savedConvId = conversation_id;
@@ -944,7 +946,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             status: 'pending',
           });
 
-          const confirmReply = `✅ Directive transmise à l'Agent CTO :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent CTO intégrera cette instruction lors de sa prochaine analyse.`;
+          fireDispatchAgentDirectives();
+
+          const confirmReply = `✅ Directive transmise à l'Agent CTO :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent CTO sera déclenché immédiatement.`;
 
           // Save conversation
           let savedConvId = conversation_id;
@@ -1013,7 +1017,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             status: 'pending',
           });
 
-          const confirmReply = `✅ Directive transmise au Supervisor :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}Le Supervisor intégrera cette instruction lors de son prochain audit.`;
+          fireDispatchAgentDirectives();
+
+          const confirmReply = `✅ Directive transmise au Supervisor :\n\n> ${directiveText}\n\n${targetFunction ? `Fonction cible : \`${targetFunction}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}Le Supervisor sera déclenché immédiatement.`;
 
           let savedConvId = conversation_id;
           try {
@@ -1083,7 +1089,9 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             status: 'pending',
           });
 
-          const confirmReply = `✅ Directive transmise à l'Agent UX :\n\n> ${directiveText}\n\n${targetComponent ? `Composant cible : \`${targetComponent}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent UX intégrera cette instruction lors de sa prochaine analyse.`;
+          fireDispatchAgentDirectives();
+
+          const confirmReply = `✅ Directive transmise à l'Agent UX :\n\n> ${directiveText}\n\n${targetComponent ? `Composant cible : \`${targetComponent}\`\n` : ''}${targetUrl ? `URL cible : \`${targetUrl}\`\n` : ''}L'Agent UX sera déclenché immédiatement.`;
 
           let savedConvId = conversation_id;
           try {
