@@ -1050,12 +1050,17 @@ export default function MatricePrompt() {
         open={xlsxStepperOpen}
         sheetNames={xlsxStepperSheets}
         workbook={xlsxWorkbookRef}
-        onComplete={({ rows, matriceType }) => {
+        onComplete={({ rows, matriceType, identityCard }) => {
           setXlsxStepperOpen(false);
           setActiveMatriceType(matriceType);
           processImportedRows(rows, xlsxFileName);
           setXlsxWorkbookRef(null);
-        }}
+          // Auto-fill URL from identity card if available
+          if (identityCard?.brandUrl && !url.trim()) {
+            setUrl(identityCard.brandUrl);
+            toast.info(`URL pré-remplie depuis la carte d'identité : ${identityCard.brandUrl}`);
+          }
+        }
         onClose={() => { setXlsxStepperOpen(false); setXlsxWorkbookRef(null); }}
       />
     </>
