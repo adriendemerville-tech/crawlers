@@ -139,8 +139,10 @@ export async function executeAuditPlan(
     if (hasCustomPrompt) {
       for (const route of routes) {
         if (route.customPrompt && fn === 'check-llm') {
+          // Hydrate placeholders with the actual URL/brand before sending
+          const hydratedPrompt = hydatePrompt(route.customPrompt, url);
           const customData = await callFunction('check-llm', url, {
-            customPrompt: route.customPrompt,
+            customPrompt: hydratedPrompt,
             targetProvider: route.targetProvider,
           });
           fnResultCache.set(`${fn}:custom:${route.criterionId}`, customData);
