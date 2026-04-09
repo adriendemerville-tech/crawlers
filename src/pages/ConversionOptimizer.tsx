@@ -124,6 +124,7 @@ export default function ConversionOptimizer() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [backfillingAnnotations, setBackfillingAnnotations] = useState(false);
   const [showContentArchitect, setShowContentArchitect] = useState(false);
+  const [freshAnalysis, setFreshAnalysis] = useState(false);
   const fetchHistory = async (siteId: string) => {
     if (!siteId) {
       setHistory([]);
@@ -173,6 +174,7 @@ export default function ConversionOptimizer() {
     setPages([]);
     setSelectedPageUrl('');
     setResult(null);
+    setFreshAnalysis(false);
     setBackfillingAnnotations(false);
 
     (async () => {
@@ -215,6 +217,7 @@ export default function ConversionOptimizer() {
       if (!data?.success) throw new Error(data?.error || 'Analysis failed');
 
       setResult(data as AnalysisResult);
+      setFreshAnalysis(true);
       toast({ title: 'Analyse terminée', description: `Score global : ${data.global_score}/100` });
       await fetchHistory(selectedSiteId);
     } catch (e: any) {
@@ -274,6 +277,7 @@ export default function ConversionOptimizer() {
   };
 
   const loadSavedAnalysis = async (saved: SavedAnalysis) => {
+    setFreshAnalysis(false);
     setResult({
       page_url: saved.page_url,
       page_intent: saved.page_intent,
@@ -388,8 +392,8 @@ export default function ConversionOptimizer() {
                 <Button
                   variant="outline"
                   onClick={() => setShowContentArchitect(true)}
-                  disabled={!result || analyzing}
-                  className={`gap-2 transition-all ${result && !analyzing
+                  disabled={!freshAnalysis || analyzing}
+                  className={`gap-2 transition-all ${freshAnalysis && !analyzing
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
                     : 'bg-transparent text-white/40 border-white/20 cursor-not-allowed'}`}
                 >
