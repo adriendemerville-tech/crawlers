@@ -574,6 +574,7 @@ export type Database = {
           detected_at: string | null
           direction: string
           domain: string
+          email_alert_sent: boolean | null
           id: string
           is_dismissed: boolean | null
           is_read: boolean | null
@@ -595,6 +596,7 @@ export type Database = {
           detected_at?: string | null
           direction?: string
           domain: string
+          email_alert_sent?: boolean | null
           id?: string
           is_dismissed?: boolean | null
           is_read?: boolean | null
@@ -616,6 +618,7 @@ export type Database = {
           detected_at?: string | null
           direction?: string
           domain?: string
+          email_alert_sent?: boolean | null
           id?: string
           is_dismissed?: boolean | null
           is_read?: boolean | null
@@ -2459,6 +2462,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "content_deploy_snapshots_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_gap_results: {
+        Row: {
+          competitor_domain: string
+          competitor_position: number | null
+          created_at: string
+          difficulty: number | null
+          domain: string
+          gap_type: string
+          id: string
+          intent: string | null
+          keyword: string
+          opportunity_score: number | null
+          our_position: number | null
+          search_volume: number | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          competitor_domain: string
+          competitor_position?: number | null
+          created_at?: string
+          difficulty?: number | null
+          domain: string
+          gap_type?: string
+          id?: string
+          intent?: string | null
+          keyword: string
+          opportunity_score?: number | null
+          our_position?: number | null
+          search_volume?: number | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          competitor_domain?: string
+          competitor_position?: number | null
+          created_at?: string
+          difficulty?: number | null
+          domain?: string
+          gap_type?: string
+          id?: string
+          intent?: string | null
+          keyword?: string
+          opportunity_score?: number | null
+          our_position?: number | null
+          search_volume?: number | null
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_gap_results_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
@@ -4839,6 +4901,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      gsc_daily_positions: {
+        Row: {
+          clicks: number | null
+          created_at: string
+          ctr: number | null
+          date_val: string
+          domain: string
+          id: string
+          impressions: number | null
+          position: number
+          query: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          clicks?: number | null
+          created_at?: string
+          ctr?: number | null
+          date_val: string
+          domain: string
+          id?: string
+          impressions?: number | null
+          position: number
+          query: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          clicks?: number | null
+          created_at?: string
+          ctr?: number | null
+          date_val?: string
+          domain?: string
+          id?: string
+          impressions?: number | null
+          position?: number
+          query?: string
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsc_daily_positions_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gsc_history_log: {
         Row: {
