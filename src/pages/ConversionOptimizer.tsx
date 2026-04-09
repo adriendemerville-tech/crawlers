@@ -53,6 +53,7 @@ interface AnalysisResult {
     rect: { x: number; y: number; width: number; height: number; tag?: string } | null;
     axis: string;
     priority: string;
+    suggestionIndex?: number;
   }>;
 }
 
@@ -70,6 +71,7 @@ interface SavedAnalysis {
     rect: { x: number; y: number; width: number; height: number; tag?: string } | null;
     axis: string;
     priority: string;
+    suggestionIndex?: number;
   }>;
   created_at: string;
 }
@@ -100,8 +102,26 @@ export default function ConversionOptimizer() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [history, setHistory] = useState<SavedAnalysis[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [backfillingAnnotations, setBackfillingAnnotations] = useState(false);
 
-  // Load sites
+  const fetchHistory = async (siteId: string) => {
+    if (!siteId) {
+      setHistory([]);
+      return;
+    }
+
+    setLoadingHistory(true);
+    const { data } = await supabase
+      .from('ux_context_analyses')
+      .select('*')
+      .eq('tracked_site_id', siteId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    setHistory((data as any as SavedAnalysis[]) || []);
+    setLoadingHistory(false);
+  };
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -112,7 +132,6 @@ export default function ConversionOptimizer() {
     })();
   }, []);
 
-  // Auto-select site from URL
   useEffect(() => {
     const siteParam = searchParams.get('site');
     if (siteParam && sites.length > 0) {
@@ -120,9 +139,13 @@ export default function ConversionOptimizer() {
     }
   }, [searchParams, sites]);
 
-  // Load crawled pages when site changes
   useEffect(() => {
-    if (!selectedSiteId) { setPages([]); return; }
+    if (!selectedSiteId) {
+      setPages([]);
+      setHistory([]);
+      return;
+    }
+
     const site = sites.find(s => s.id === selectedSiteId);
     if (!site) return;
 
@@ -130,9 +153,9 @@ export default function ConversionOptimizer() {
     setPages([]);
     setSelectedPageUrl('');
     setResult(null);
+    setBackfillingAnnotations(false);
 
     (async () => {
-      // Get latest completed crawl for this domain
       const { data: crawl } = await supabase
         .from('site_crawls')
         .select('id')
@@ -150,27 +173,18 @@ export default function ConversionOptimizer() {
           .order('url');
         setPages((crawlPages as CrawledPage[]) || []);
       }
+
       setLoadingPages(false);
     })();
 
-    // Load history
-    setLoadingHistory(true);
-    supabase
-      .from('ux_context_analyses')
-      .select('*')
-      .eq('tracked_site_id', selectedSiteId)
-      .order('created_at', { ascending: false })
-      .limit(10)
-      .then(({ data }) => {
-        setHistory((data as any as SavedAnalysis[]) || []);
-        setLoadingHistory(false);
-      });
+    void fetchHistory(selectedSiteId);
   }, [selectedSiteId, sites]);
 
   const handleAnalyze = async () => {
     if (!selectedSiteId || !selectedPageUrl) return;
     setAnalyzing(true);
     setResult(null);
+    setBackfillingAnnotations(false);
 
     try {
       const { data, error } = await supabase.functions.invoke('analyze-ux-context', {
@@ -182,15 +196,7 @@ export default function ConversionOptimizer() {
 
       setResult(data as AnalysisResult);
       toast({ title: 'Analyse terminée', description: `Score global : ${data.global_score}/100` });
-
-      // Refresh history
-      const { data: hist } = await supabase
-        .from('ux_context_analyses')
-        .select('*')
-        .eq('tracked_site_id', selectedSiteId)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      setHistory((hist as any as SavedAnalysis[]) || []);
+      await fetchHistory(selectedSiteId);
     } catch (e: any) {
       toast({ title: 'Erreur', description: e.message || 'Analyse échouée', variant: 'destructive' });
     } finally {
@@ -198,7 +204,56 @@ export default function ConversionOptimizer() {
     }
   };
 
-  const loadSavedAnalysis = (saved: SavedAnalysis) => {
+  const hydrateSavedAnalysisAnnotations = async (saved: SavedAnalysis) => {
+    if (!selectedSiteId || !saved.screenshot_url || (saved.annotations?.length ?? 0) > 0) return;
+
+    setBackfillingAnnotations(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-ux-context', {
+        body: {
+          tracked_site_id: selectedSiteId,
+          page_url: saved.page_url,
+          mode: 'annotations-only',
+          analysis_id: saved.id,
+          suggestions: saved.suggestions,
+        },
+      });
+
+      if (error) throw error;
+
+      const nextAnnotations = data?.annotations || [];
+
+      if (nextAnnotations.length === 0) {
+        toast({
+          title: 'Repères visuels introuvables',
+          description: 'Cet ancien audit n’avait pas de coordonnées enregistrées pour tracer les bulles.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setResult((current) => current ? { ...current, annotations: nextAnnotations } : current);
+      setHistory((current) => current.map((item) => (
+        item.id === saved.id ? { ...item, annotations: nextAnnotations } : item
+      )));
+
+      toast({
+        title: 'Vue annotée restaurée',
+        description: `${nextAnnotations.length} repères visuels recalculés sur cette capture.`,
+      });
+    } catch (e: any) {
+      toast({
+        title: 'Erreur',
+        description: e.message || 'Impossible de recalculer les annotations de cet audit.',
+        variant: 'destructive',
+      });
+    } finally {
+      setBackfillingAnnotations(false);
+    }
+  };
+
+  const loadSavedAnalysis = async (saved: SavedAnalysis) => {
     setResult({
       page_url: saved.page_url,
       page_intent: saved.page_intent,
@@ -210,6 +265,10 @@ export default function ConversionOptimizer() {
       annotations: saved.annotations,
     });
     setSelectedPageUrl(saved.page_url);
+
+    if (!saved.annotations?.length) {
+      await hydrateSavedAnalysisAnnotations(saved);
+    }
   };
 
   const scoreColor = (score: number) => {
@@ -238,7 +297,6 @@ export default function ConversionOptimizer() {
 
       <Header />
       <div className="container max-w-5xl mx-auto py-8 px-4 space-y-6">
-        {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/app/console')}>
             <ArrowLeft className="h-4 w-4" />
@@ -252,7 +310,6 @@ export default function ConversionOptimizer() {
           </div>
         </div>
 
-        {/* Site & Page selector */}
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -311,10 +368,8 @@ export default function ConversionOptimizer() {
           </CardContent>
         </Card>
 
-        {/* Results */}
         {result && (
           <div className="space-y-4">
-            {/* Global score + intent */}
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
@@ -330,7 +385,6 @@ export default function ConversionOptimizer() {
               </CardContent>
             </Card>
 
-            {/* 7 Axes grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {Object.entries(result.axes).map(([key, axis]) => {
                 const meta = AXIS_META[key];
@@ -352,22 +406,24 @@ export default function ConversionOptimizer() {
               })}
             </div>
 
-            {/* Annotated Page View */}
             {result.screenshot_url && (
-              <AnnotatedPageView
-                screenshotUrl={result.screenshot_url}
-                screenshotHeight={result.screenshot_height || 3000}
-                annotations={result.annotations || []}
-                suggestions={result.suggestions}
-                onSelectSuggestion={(idx) => {
-                  // Scroll to the suggestion in the list below
-                  const el = document.getElementById(`suggestion-${idx}`);
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }}
-              />
+              <div className="space-y-2">
+                {backfillingAnnotations && (
+                  <p className="text-xs text-muted-foreground">Repositionnement des bulles et des traits en cours sur cet audit…</p>
+                )}
+                <AnnotatedPageView
+                  screenshotUrl={result.screenshot_url}
+                  screenshotHeight={result.screenshot_height || 3000}
+                  annotations={result.annotations || []}
+                  suggestions={result.suggestions}
+                  onSelectSuggestion={(idx) => {
+                    const el = document.getElementById(`suggestion-${idx}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                />
+              </div>
             )}
 
-            {/* Suggestions */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Suggestions d'amélioration</CardTitle>
@@ -408,18 +464,18 @@ export default function ConversionOptimizer() {
           </div>
         )}
 
-        {/* History */}
         {history.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Analyses précédentes</CardTitle>
+              {loadingHistory && <CardDescription>Actualisation de l'historique…</CardDescription>}
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {history.map(h => (
                   <button
                     key={h.id}
-                    onClick={() => loadSavedAnalysis(h)}
+                    onClick={() => void loadSavedAnalysis(h)}
                     className="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors text-left border border-border/30"
                   >
                     <div className="min-w-0 flex-1">

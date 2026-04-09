@@ -5,31 +5,38 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 /**
  * analyze-ux-context — Conversion Optimizer
- * 
+ *
  * Analyzes a crawled page in context (business type, voice_dna, keywords, maturity)
  * and returns scores on 7 axes + textual suggestions.
- * 
+ *
  * Also captures a full-page screenshot via Browserless and extracts bounding boxes
  * for elements containing suggestion text, enabling the annotated page view.
- * 
+ *
  * No re-crawl: uses existing crawl_pages data.
  */
 
 const AXES = [
-  'tone',           // Ton (trop commercial / pas assez, etc.)
-  'cta_pressure',   // Pression CTA (placement, fréquence, agressivité)
-  'alignment',      // Alignement positionnement ↔ page
-  'readability',    // Lisibilité (structure, paragraphes, vocabulaire)
-  'conversion',     // Potentiel de conversion
-  'mobile_ux',      // Expérience mobile
-  'keyword_usage',  // Utilisation des mots-clés
+  'tone',
+  'cta_pressure',
+  'alignment',
+  'readability',
+  'conversion',
+  'mobile_ux',
+  'keyword_usage',
 ];
 
 Deno.serve(handleRequest(async (req) => {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return jsonError('Unauthorized', 401);
 
-  const { tracked_site_id, page_url } = await req.json();
+  const {
+    tracked_site_id,
+    page_url,
+    mode,
+    suggestions: providedSuggestions,
+    analysis_id,
+  } = await req.json();
+
   if (!tracked_site_id || !page_url) {
     return jsonError('tracked_site_id and page_url are required', 400);
   }
@@ -37,7 +44,6 @@ Deno.serve(handleRequest(async (req) => {
   const userClient = getUserClient(authHeader);
   const serviceClient = getServiceClient();
 
-  // Verify user owns the site
   const { data: site, error: siteErr } = await userClient
     .from('tracked_sites')
     .select('id, domain, business_type, voice_dna, target_audience, target_segment, commercial_model, products_services, founding_year, eeat_score, market_sector, short_term_goal, mid_term_goal, primary_use_case, entity_type')
@@ -46,7 +52,27 @@ Deno.serve(handleRequest(async (req) => {
 
   if (siteErr || !site) return jsonError('Site not found or access denied', 404);
 
-  // Get the crawled page data (latest crawl)
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return jsonError('Unauthorized', 401);
+
+  if (mode === 'annotations-only') {
+    const annotations = await findTextPositions(page_url, buildPositionTargets(providedSuggestions));
+
+    if (analysis_id && annotations.length > 0) {
+      const { error: updateErr } = await serviceClient
+        .from('ux_context_analyses')
+        .update({ annotations })
+        .eq('id', analysis_id)
+        .eq('user_id', user.id);
+
+      if (updateErr) {
+        console.error('[analyze-ux-context] Annotation backfill error:', updateErr);
+      }
+    }
+
+    return jsonOk({ success: true, annotations });
+  }
+
   const { data: crawl } = await serviceClient
     .from('site_crawls')
     .select('id')
@@ -67,7 +93,6 @@ Deno.serve(handleRequest(async (req) => {
 
   if (!pageData) return jsonError('Page not found in latest crawl data', 404);
 
-  // Get keywords for this domain
   const { data: keywords } = await serviceClient
     .from('keyword_universe')
     .select('keyword, search_volume, current_position, intent, opportunity_score, target_url')
@@ -75,11 +100,9 @@ Deno.serve(handleRequest(async (req) => {
     .order('opportunity_score', { ascending: false })
     .limit(30);
 
-  // Keywords targeting this specific page
-  const pageKeywords = (keywords || []).filter(k => k.target_url === page_url);
+  const pageKeywords = (keywords || []).filter((keyword) => keyword.target_url === page_url);
   const topKeywords = pageKeywords.length > 0 ? pageKeywords : (keywords || []).slice(0, 10);
 
-  // Build the context for the AI
   const businessContext = {
     business_type: site.business_type,
     market_sector: site.market_sector,
@@ -97,11 +120,9 @@ Deno.serve(handleRequest(async (req) => {
 
   const prompt = buildPrompt(pageData, businessContext, topKeywords);
 
-  // Call Lovable AI
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return jsonError('AI not configured', 500);
 
-  // Run AI analysis and screenshot capture in parallel
   const [aiResp, screenshotResult] = await Promise.all([
     fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -126,11 +147,11 @@ Deno.serve(handleRequest(async (req) => {
                 page_intent: {
                   type: 'string',
                   enum: ['informational', 'transactional', 'navigational', 'support', 'brand', 'mixed'],
-                  description: 'Detected intent of the page'
+                  description: 'Detected intent of the page',
                 },
                 global_score: {
                   type: 'number',
-                  description: 'Overall UX score 0-100'
+                  description: 'Overall UX score 0-100',
                 },
                 axes: {
                   type: 'object',
@@ -150,7 +171,7 @@ Deno.serve(handleRequest(async (req) => {
                   items: {
                     type: 'object',
                     properties: {
-                      axis: { type: 'string', enum: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'] },
+                      axis: { type: 'string', enum: AXES },
                       priority: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
                       title: { type: 'string' },
                       current_text: { type: 'string', description: 'Current text/element being criticized (if applicable)' },
@@ -196,28 +217,13 @@ Deno.serve(handleRequest(async (req) => {
     return jsonError('AI returned invalid JSON', 500);
   }
 
-  // After AI analysis, try to find element positions for suggestions that have current_text
   let annotations: any[] = [];
-  if (screenshotResult?.success && result.suggestions?.length > 0) {
-    // Try to get element positions via a second Browserless call with the text to find
-    const textsToFind = result.suggestions
-      .filter((s: any) => s.current_text && s.current_text.length > 10)
-      .map((s: any) => ({
-        text: s.current_text.slice(0, 100),
-        axis: s.axis,
-        priority: s.priority,
-      }));
+  const positionTargets = buildPositionTargets(result.suggestions);
 
-    if (textsToFind.length > 0) {
-      annotations = await findTextPositions(page_url, textsToFind);
-    }
+  if (screenshotResult?.success && positionTargets.length > 0) {
+    annotations = await findTextPositions(page_url, positionTargets);
   }
 
-  // Get user ID from auth
-  const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return jsonError('Unauthorized', 401);
-
-  // Save to database using service client
   const { error: insertErr } = await serviceClient
     .from('ux_context_analyses')
     .insert({
@@ -239,27 +245,26 @@ Deno.serve(handleRequest(async (req) => {
     console.error('[analyze-ux-context] Insert error:', insertErr);
   }
 
-  // ── Inject critical/high suggestions into architect_workbench ──
   const workbenchItems = (result.suggestions || [])
-    .filter((s: any) => s.priority === 'critical' || s.priority === 'high')
-    .map((s: any) => ({
+    .filter((suggestion: any) => suggestion.priority === 'critical' || suggestion.priority === 'high')
+    .map((suggestion: any) => ({
       domain: site.domain,
       tracked_site_id,
       user_id: user.id,
       source_type: 'ux_context',
       source_function: 'analyze-ux-context',
-      source_record_id: `ux_${tracked_site_id}_${page_url}_${s.axis}_${s.title?.slice(0, 30)}`,
+      source_record_id: `ux_${tracked_site_id}_${page_url}_${suggestion.axis}_${suggestion.title?.slice(0, 30)}`,
       finding_category: 'ux_optimization',
-      severity: s.priority === 'critical' ? 'critical' : 'high',
-      title: `UX: ${s.title}`,
-      description: s.rationale || '',
+      severity: suggestion.priority === 'critical' ? 'critical' : 'high',
+      title: `UX: ${suggestion.title}`,
+      description: suggestion.rationale || '',
       target_url: page_url,
-      target_selector: s.axis === 'cta_pressure' ? 'cta' : s.axis === 'keyword_usage' ? 'content' : s.axis === 'readability' ? 'content' : s.axis,
-      target_operation: s.suggested_text ? 'replace' : 'replace',
+      target_selector: suggestion.axis === 'cta_pressure' ? 'cta' : suggestion.axis === 'keyword_usage' ? 'content' : suggestion.axis === 'readability' ? 'content' : suggestion.axis,
+      target_operation: 'replace',
       payload: {
-        axis: s.axis,
-        current_text: s.current_text || null,
-        suggested_text: s.suggested_text || null,
+        axis: suggestion.axis,
+        current_text: suggestion.current_text || null,
+        suggested_text: suggestion.suggested_text || null,
         global_score: result.global_score,
         page_intent: result.page_intent,
       },
@@ -269,6 +274,7 @@ Deno.serve(handleRequest(async (req) => {
     const { error: wbErr } = await serviceClient
       .from('architect_workbench')
       .upsert(workbenchItems, { onConflict: 'source_type,source_record_id' });
+
     if (wbErr) {
       console.error('[analyze-ux-context] Workbench insert error:', wbErr);
     } else {
@@ -289,7 +295,19 @@ Deno.serve(handleRequest(async (req) => {
   });
 }));
 
-// ─── Screenshot Capture ───
+function buildPositionTargets(suggestions: any[] = []) {
+  if (!Array.isArray(suggestions)) return [];
+
+  return suggestions
+    .map((suggestion, suggestionIndex) => ({
+      text: typeof suggestion?.current_text === 'string' ? suggestion.current_text.slice(0, 140) : '',
+      axis: suggestion?.axis,
+      priority: suggestion?.priority,
+      selector: typeof suggestion?.element_selector === 'string' ? suggestion.element_selector.slice(0, 140) : null,
+      suggestionIndex,
+    }))
+    .filter((target) => target.text.length > 3 || !!target.selector);
+}
 
 async function captureScreenshotWithAnnotations(
   pageUrl: string,
@@ -303,34 +321,32 @@ async function captureScreenshotWithAnnotations(
   }
 
   try {
-    // Browserless v2 /function endpoint
     const script = `export default async ({ page }) => {
   await page.setViewport({ width: 1280, height: 900 });
   await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
   await new Promise(r => setTimeout(r, 2000));
-  
-  // Hide footer before screenshot to focus on content area
+
   const clipHeight = await page.evaluate(() => {
-    const footer = document.querySelector('footer') 
+    const footer = document.querySelector('footer')
       || document.querySelector('[role="contentinfo"]')
       || document.querySelector('.footer, #footer, .site-footer');
     if (footer) {
       const rect = footer.getBoundingClientRect();
       const footerTop = rect.top + window.scrollY;
-      footer.style.display = 'none';
+      (footer as HTMLElement).style.display = 'none';
       return Math.max(footerTop, 900);
     }
     return document.body.scrollHeight;
   });
-  
-  const screenshot = await page.screenshot({ 
-    type: 'jpeg', 
+
+  const screenshot = await page.screenshot({
+    type: 'jpeg',
     quality: 75,
     encoding: 'base64',
     clip: { x: 0, y: 0, width: 1280, height: clipHeight }
   });
-  
-  return { 
+
+  return {
     data: { screenshot, height: clipHeight },
     type: 'application/json'
   };
@@ -349,7 +365,7 @@ async function captureScreenshotWithAnnotations(
 
     const rawData = await resp.json();
     const data = rawData?.data ?? rawData;
-    
+
     if (!data?.screenshot) {
       console.log('[analyze-ux-context] No screenshot in Browserless response');
       return { success: false };
@@ -357,9 +373,8 @@ async function captureScreenshotWithAnnotations(
 
     await trackPaidApiCall('analyze-ux-context', 'browserless', '/function', pageUrl).catch(() => {});
 
-    // Upload to Supabase storage
     const fileName = `${trackedSiteId}/${Date.now()}.jpg`;
-    const imageBuffer = Uint8Array.from(atob(data.screenshot), c => c.charCodeAt(0));
+    const imageBuffer = Uint8Array.from(atob(data.screenshot), (char) => char.charCodeAt(0));
 
     const { error: uploadErr } = await serviceClient.storage
       .from('ux-screenshots')
@@ -379,97 +394,212 @@ async function captureScreenshotWithAnnotations(
 
     console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px)`);
     return { success: true, url: urlData.publicUrl, height: data.height };
-  } catch (e: any) {
-    console.error('[analyze-ux-context] Screenshot capture failed:', e.message);
+  } catch (error: any) {
+    console.error('[analyze-ux-context] Screenshot capture failed:', error.message);
     return { success: false };
   }
 }
 
-// ─── Find text positions on page ───
-
 async function findTextPositions(
   pageUrl: string,
-  textsToFind: Array<{ text: string; axis: string; priority: string }>,
+  targets: Array<{ text: string; axis: string; priority: string; selector?: string | null; suggestionIndex: number }>,
 ): Promise<any[]> {
   const browserlessKey = getBrowserlessKey();
-  if (!browserlessKey) return [];
+  if (!browserlessKey || targets.length === 0) return [];
 
   try {
-    const textsJson = JSON.stringify(textsToFind.map(t => t.text));
-    
+    const targetsJson = JSON.stringify(targets);
+
     const script = `export default async ({ page }) => {
   await page.setViewport({ width: 1280, height: 900 });
   await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
   await new Promise(r => setTimeout(r, 1500));
 
-  const textsToFind = ${textsJson};
-  
-  const results = await page.evaluate((texts) => {
-    const found = [];
-    const bodyHeight = document.body.scrollHeight;
-    
-    for (const searchText of texts) {
-      // Walk the DOM tree to find text nodes containing this text
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      let bestMatch = null;
-      let bestElement = null;
-      
-      while (walker.nextNode()) {
-        const node = walker.currentNode;
-        const nodeText = node.textContent?.trim() || '';
-        if (nodeText.length < 5) continue;
-        
-        // Check if this text node contains part of our search text
-        const searchLower = searchText.toLowerCase().slice(0, 60);
-        const nodeLower = nodeText.toLowerCase();
-        
-        if (nodeLower.includes(searchLower) || searchLower.includes(nodeLower.slice(0, 40))) {
-          const el = node.parentElement;
-          if (el) {
-            const rect = el.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) {
-              bestMatch = {
-                x: rect.left + window.scrollX,
-                y: rect.top + window.scrollY,
-                width: rect.width,
-                height: rect.height,
-                tag: el.tagName.toLowerCase(),
-              };
-              bestElement = el;
+  const targets = ${targetsJson};
+
+  const results = await page.evaluate((inputTargets) => {
+    const normalize = (value) => (value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\\u0300-\\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\\s+/g, ' ')
+      .trim();
+
+    const selectorCandidates = (selector) => {
+      if (!selector) return [];
+      const clean = String(selector).trim();
+      if (!clean) return [];
+
+      const firstSelector = clean.split(',')[0]?.trim() || clean;
+      const lastToken = firstSelector.split(/\\s+/).pop() || firstSelector;
+      const tagOnly = lastToken.match(/^[a-z][a-z0-9-]*/i)?.[0];
+
+      return Array.from(new Set([clean, firstSelector, lastToken, tagOnly].filter(Boolean)));
+    };
+
+    const safeQuerySelector = (selector) => {
+      if (!selector) return null;
+      try {
+        return document.querySelector(selector);
+      } catch {
+        return null;
+      }
+    };
+
+    const safeMatches = (element, selector) => {
+      if (!element || !selector) return false;
+      try {
+        return element.matches(selector);
+      } catch {
+        return false;
+      }
+    };
+
+    const isIgnored = (element) => {
+      if (!element) return true;
+
+      let current = element;
+      for (let depth = 0; current && depth < 6; depth += 1) {
+        const attrs = [
+          current.tagName || '',
+          current.id || '',
+          typeof current.className === 'string' ? current.className : '',
+          current.getAttribute?.('role') || '',
+          current.getAttribute?.('aria-label') || '',
+        ].join(' ').toLowerCase();
+
+        if (
+          attrs.includes('footer')
+          || attrs.includes('cookie')
+          || attrs.includes('consent')
+          || attrs.includes('dialog')
+          || attrs.includes('modal')
+        ) {
+          return true;
+        }
+
+        current = current.parentElement;
+      }
+
+      return false;
+    };
+
+    const rectFromDomRect = (rect, tag) => {
+      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+      return {
+        x: rect.left + window.scrollX,
+        y: rect.top + window.scrollY,
+        width: rect.width,
+        height: rect.height,
+        tag,
+      };
+    };
+
+    const getElementRect = (element) => {
+      if (!element || isIgnored(element)) return null;
+      return rectFromDomRect(element.getBoundingClientRect(), element.tagName.toLowerCase());
+    };
+
+    const getTextNodeRect = (node) => {
+      if (!node || !node.parentElement || isIgnored(node.parentElement)) return null;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      return rectFromDomRect(range.getBoundingClientRect(), node.parentElement.tagName.toLowerCase());
+    };
+
+    const scoreText = (candidateText, targetText, selector, element) => {
+      if (!candidateText && !selector) return 0;
+
+      let score = 0;
+      if (targetText) {
+        if (candidateText.includes(targetText)) score += 120 + Math.min(targetText.length, 40);
+        if (targetText.includes(candidateText) && candidateText.length > 8) score += 80;
+
+        const targetWords = targetText.split(' ').filter((word) => word.length > 2);
+        const matchedWords = targetWords.filter((word) => candidateText.includes(word));
+        score += matchedWords.length * 12;
+
+        if (targetWords.length > 0 && matchedWords.length === targetWords.length) {
+          score += 30;
+        }
+      }
+
+      if (selector && safeMatches(element, selector)) {
+        score += 35;
+      }
+
+      return score;
+    };
+
+    return inputTargets.map((target) => {
+      const normalizedText = normalize(target.text).slice(0, 140);
+      let bestRect = null;
+      let bestScore = 0;
+
+      for (const selector of selectorCandidates(target.selector)) {
+        const element = safeQuerySelector(selector);
+        const rect = getElementRect(element);
+        if (!rect) continue;
+
+        const candidateText = normalize(element?.innerText || element?.textContent || '');
+        const score = Math.max(140, scoreText(candidateText, normalizedText, selector, element));
+        if (score > bestScore) {
+          bestScore = score;
+          bestRect = rect;
+        }
+      }
+
+      if (normalizedText) {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+          const node = walker.currentNode;
+          const parent = node.parentElement;
+          if (!parent || isIgnored(parent)) continue;
+
+          const candidateText = normalize(node.textContent || '');
+          if (candidateText.length < 3) continue;
+
+          const score = scoreText(candidateText, normalizedText, target.selector, parent);
+          if (score > bestScore) {
+            const rect = getTextNodeRect(node);
+            if (rect) {
+              bestScore = score;
+              bestRect = rect;
+            }
+          }
+        }
+
+        for (const element of document.querySelectorAll('h1, h2, h3, h4, p, button, a, li, label, span, [role="button"]')) {
+          if (isIgnored(element)) continue;
+
+          const candidateText = normalize(element.innerText || element.textContent || '');
+          if (candidateText.length < 3) continue;
+
+          const score = scoreText(candidateText, normalizedText, target.selector, element);
+          if (score > bestScore) {
+            const rect = getElementRect(element);
+            if (rect) {
+              bestScore = score;
+              bestRect = rect;
             }
           }
         }
       }
-      
-      // Fallback: try querySelector for common patterns
-      if (!bestMatch) {
-        const shortText = searchText.slice(0, 30);
-        for (const el of document.querySelectorAll('h1, h2, h3, p, button, a, span, li')) {
-          const elText = el.textContent?.trim() || '';
-          if (elText.toLowerCase().includes(shortText.toLowerCase())) {
-            const rect = el.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) {
-              bestMatch = {
-                x: rect.left + window.scrollX,
-                y: rect.top + window.scrollY,
-                width: rect.width,
-                height: rect.height,
-                tag: el.tagName.toLowerCase(),
-              };
-              break;
-            }
-          }
-        }
+
+      if (bestScore < 24) {
+        bestRect = null;
       }
-      
-      found.push({
-        text: searchText,
-        rect: bestMatch,
-      });
-    }
-    
-    return found;
-  }, texts);
+
+      return {
+        text: target.text,
+        rect: bestRect,
+        axis: target.axis,
+        priority: target.priority,
+        suggestionIndex: target.suggestionIndex,
+      };
+    });
+  }, targets);
 
   return { data: results, type: 'application/json' };
 };`;
@@ -492,20 +622,12 @@ async function findTextPositions(
 
     if (!Array.isArray(positions)) return [];
 
-    // Merge positions with axis/priority metadata
-    return positions.map((p: any, i: number) => ({
-      text: p.text,
-      rect: p.rect,
-      axis: textsToFind[i]?.axis,
-      priority: textsToFind[i]?.priority,
-    })).filter((p: any) => p.rect);
-  } catch (e: any) {
-    console.error('[analyze-ux-context] Text position search failed:', e.message);
+    return positions.filter((position: any) => position?.rect);
+  } catch (error: any) {
+    console.error('[analyze-ux-context] Text position search failed:', error.message);
     return [];
   }
 }
-
-// ─── Prompts ───
 
 const SYSTEM_PROMPT = `Tu es un expert UX/CRO (Conversion Rate Optimization) spécialisé dans l'analyse contextuelle de pages web.
 Tu analyses les pages en tenant compte du contexte business, du positionnement, de la maturité et des objectifs du site.
@@ -514,8 +636,8 @@ Tu proposes des reformulations concrètes quand c'est pertinent.
 Réponds toujours en français.`;
 
 function buildPrompt(page: any, ctx: any, keywords: any[]) {
-  const keywordList = keywords.map(k => 
-    `- "${k.keyword}" (vol: ${k.search_volume || '?'}, pos: ${k.current_position || '?'}, intent: ${k.intent || '?'})`
+  const keywordList = keywords.map((keyword) =>
+    `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
   ).join('\n');
 
   return `
