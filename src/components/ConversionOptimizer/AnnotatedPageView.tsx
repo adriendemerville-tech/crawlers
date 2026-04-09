@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, memo } from 'react';
+import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
@@ -37,7 +37,7 @@ const AXIS_LABELS: Record<string, string> = {
   keyword_usage: 'Mots-clés',
 };
 
-function priorityColor(priority: string): { border: string; bg: string; text: string; line: string } {
+function priorityColor(priority: string) {
   switch (priority) {
     case 'critical':
       return { border: 'border-red-500', bg: 'bg-red-500/10', text: 'text-red-500', line: '#ef4444' };
@@ -52,9 +52,7 @@ function priorityColor(priority: string): { border: string; bg: string; text: st
   }
 }
 
-// Build annotations from suggestions + detected positions
 function buildAnnotatedSuggestions(suggestions: Suggestion[], annotations: Annotation[]) {
-  // Map annotations by text match
   const annotationMap = new Map<string, Annotation>();
   for (const a of annotations) {
     if (a.rect && a.text) {
@@ -71,10 +69,24 @@ function buildAnnotatedSuggestions(suggestions: Suggestion[], annotations: Annot
         ...s,
         index: idx,
         rect: annotation?.rect || null,
-        yPosition: annotation?.rect?.y ?? (idx * 200 + 100), // fallback: distribute evenly
+        yPosition: annotation?.rect?.y ?? (idx * 200 + 100),
       };
     })
     .sort((a, b) => a.yPosition - b.yPosition);
+}
+
+// Resolve overlapping bubbles: push apart vertically while staying close to target Y
+function resolveOverlaps(items: { targetY: number }[], bubbleHeight: number, gap: number) {
+  const positions: number[] = [];
+  for (let i = 0; i < items.length; i++) {
+    let y = items[i].targetY;
+    if (i > 0) {
+      const minY = positions[i - 1] + bubbleHeight + gap;
+      y = Math.max(y, minY);
+    }
+    positions.push(Math.max(8, y));
+  }
+  return positions;
 }
 
 export const AnnotatedPageView = memo(function AnnotatedPageView({
@@ -84,15 +96,18 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
   suggestions,
   onSelectSuggestion,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageNaturalSize, setImageNaturalSize] = useState({ w: 1280, h: screenshotHeight || 3000 });
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [viewportHeight, setViewportHeight] = useState(600);
 
-  const annotatedSuggestions = buildAnnotatedSuggestions(suggestions, annotations);
+  const annotatedSuggestions = useMemo(
+    () => buildAnnotatedSuggestions(suggestions, annotations),
+    [suggestions, annotations]
+  );
 
   const handleImageLoad = useCallback(() => {
     if (imageRef.current) {
@@ -104,29 +119,39 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
     setImageLoaded(true);
   }, []);
 
-  // Calculate scale factor between natural screenshot size and displayed size
-  const getScale = useCallback(() => {
-    if (!imageRef.current || !imageLoaded) return 1;
-    return imageRef.current.clientWidth / imageNaturalSize.w;
-  }, [imageLoaded, imageNaturalSize.w]);
+  useEffect(() => {
+    if (scrollRef.current) {
+      setViewportHeight(scrollRef.current.clientHeight);
+    }
+  }, [imageLoaded]);
+
+  const scale = imageLoaded && imageRef.current
+    ? imageRef.current.clientWidth / imageNaturalSize.w
+    : 1;
+
+  // Compute bubble Y positions (aligned with rect center, de-overlapped)
+  const BUBBLE_H = 64;
+  const BUBBLE_GAP = 8;
+  const bubbleTargets = annotatedSuggestions.map(s => ({
+    targetY: (s.rect ? s.rect.y + s.rect.height / 2 : s.yPosition) * scale - BUBBLE_H / 2,
+  }));
+  const bubbleYPositions = resolveOverlaps(bubbleTargets, BUBBLE_H, BUBBLE_GAP);
+
+  // Determine which bubbles are visible based on scroll
+  const isVisible = (topPx: number) => {
+    const reveal = scrollTop + viewportHeight * 0.85; // reveal when 85% into viewport
+    return topPx < reveal;
+  };
 
   return (
     <Card className="overflow-hidden border-border/50">
       <div className="p-3 border-b border-border/50 flex items-center justify-between bg-muted/30">
         <span className="text-sm font-medium text-foreground">Vue annotée</span>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 text-[10px]">
-            <span className="w-2 h-2 rounded-full bg-red-500" /> Critique
-          </span>
-          <span className="flex items-center gap-1 text-[10px]">
-            <span className="w-2 h-2 rounded-full bg-orange-500" /> Haute
-          </span>
-          <span className="flex items-center gap-1 text-[10px]">
-            <span className="w-2 h-2 rounded-full bg-amber-500" /> Moyenne
-          </span>
-          <span className="flex items-center gap-1 text-[10px]">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" /> OK
-          </span>
+          <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-red-500" /> Critique</span>
+          <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-orange-500" /> Haute</span>
+          <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-amber-500" /> Moyenne</span>
+          <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-emerald-500" /> OK</span>
         </div>
       </div>
 
@@ -137,19 +162,23 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
         onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
       >
         {/* Left column: Annotation bubbles */}
-        <div className="w-64 flex-shrink-0 relative border-r border-border/30 bg-muted/10 p-2 space-y-0">
+        <div className="w-60 flex-shrink-0 relative" style={{ minHeight: imageLoaded && imageRef.current ? imageRef.current.clientHeight : screenshotHeight * scale }}>
           {annotatedSuggestions.map((s, i) => {
             const colors = priorityColor(s.priority);
-            const scale = getScale();
-            // Position bubble at the same Y as the element on the screenshot
-            const topPx = s.rect ? s.rect.y * scale : s.yPosition * scale;
+            const topPx = bubbleYPositions[i];
+            const visible = isVisible(topPx);
             const isHovered = hoveredIdx === i;
-            
+
             return (
               <div
                 key={i}
-                className={`absolute left-2 right-2 rounded-lg p-2 cursor-pointer transition-all duration-200 border-2 ${colors.border} ${colors.bg} ${isHovered ? 'shadow-lg z-20 scale-[1.02]' : 'z-10'}`}
-                style={{ top: `${Math.max(8, topPx - 20)}px` }}
+                className={`absolute left-2 right-2 rounded-lg p-2 cursor-pointer border-2 ${colors.border} ${colors.bg} ${isHovered ? 'shadow-lg z-20' : 'z-10'}`}
+                style={{
+                  top: `${topPx}px`,
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? 'translateX(0)' : 'translateX(-20px)',
+                  transition: 'opacity 0.4s ease, transform 0.4s ease',
+                }}
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
                 onClick={() => onSelectSuggestion?.(s.index)}
@@ -158,29 +187,24 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
                   <Badge variant="outline" className={`text-[9px] px-1 py-0 ${colors.text} border-current`}>
                     {AXIS_LABELS[s.axis] || s.axis}
                   </Badge>
-                  <Badge variant="outline" className={`text-[9px] px-1 py-0 ${colors.text} border-current`}>
-                    {s.priority}
-                  </Badge>
                 </div>
                 <p className="text-[11px] font-medium text-foreground leading-tight line-clamp-2">{s.title}</p>
                 {isHovered && s.current_text && (
-                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
-                    « {s.current_text.slice(0, 80)}… »
-                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">« {s.current_text.slice(0, 80)}… »</p>
                 )}
               </div>
             );
           })}
         </div>
 
-        {/* Center: Screenshot with overlaid highlight boxes */}
-        <div ref={containerRef} className="flex-1 relative">
+        {/* Screenshot + overlays + connectors */}
+        <div className="flex-1 relative">
           {!imageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/20">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           )}
-          
+
           <img
             ref={imageRef}
             src={screenshotUrl}
@@ -189,49 +213,45 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
             onLoad={handleImageLoad}
           />
 
-          {/* Overlay: highlight rectangles on the screenshot */}
           {imageLoaded && (
-            <svg
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              style={{ zIndex: 15 }}
-            >
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 15 }}>
               {annotatedSuggestions.map((s, i) => {
-                if (!s.rect) return null;
-                const scale = getScale();
-                const x = s.rect.x * scale;
-                const y = s.rect.y * scale;
-                const w = s.rect.width * scale;
-                const h = s.rect.height * scale;
                 const colors = priorityColor(s.priority);
                 const isHovered = hoveredIdx === i;
+                const bubbleTop = bubbleYPositions[i];
+                const bubbleCenterY = bubbleTop + BUBBLE_H / 2;
+                const visible = isVisible(bubbleTop);
+
+                if (!s.rect) return null;
+
+                const rx = s.rect.x * scale;
+                const ry = s.rect.y * scale;
+                const rw = s.rect.width * scale;
+                const rh = s.rect.height * scale;
+                const rectCenterY = ry + rh / 2;
 
                 return (
-                  <g key={i}>
-                    {/* Highlight rect */}
+                  <g key={i} style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease' }}>
+                    {/* Highlight frame around element */}
                     <rect
-                      x={x}
-                      y={y}
-                      width={w}
-                      height={h}
-                      fill={isHovered ? colors.line + '15' : colors.line + '08'}
+                      x={rx} y={ry} width={rw} height={rh}
+                      fill={isHovered ? colors.line + '18' : 'transparent'}
                       stroke={colors.line}
                       strokeWidth={isHovered ? 3 : 2}
                       strokeDasharray={isHovered ? 'none' : '6 3'}
                       rx={4}
-                      className="transition-all duration-200"
                     />
-                    {/* Connection line from left edge to bubble column */}
+                    {/* Connector line: bubble right edge → rect left edge */}
                     <line
-                      x1={0}
-                      y1={y + h / 2}
-                      x2={x}
-                      y2={y + h / 2}
+                      x1={0} y1={bubbleCenterY}
+                      x2={rx} y2={rectCenterY}
                       stroke={colors.line}
                       strokeWidth={isHovered ? 2 : 1}
-                      strokeDasharray="4 4"
-                      opacity={isHovered ? 0.8 : 0.3}
-                      className="transition-all duration-200"
+                      strokeDasharray="4 3"
+                      opacity={isHovered ? 0.9 : 0.4}
                     />
+                    {/* Small dot at rect end */}
+                    <circle cx={rx} cy={rectCenterY} r={isHovered ? 4 : 3} fill={colors.line} opacity={isHovered ? 0.9 : 0.5} />
                   </g>
                 );
               })}
