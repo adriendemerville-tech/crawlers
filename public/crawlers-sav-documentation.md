@@ -305,12 +305,17 @@ Accessible depuis Console → Mes Sites → bouton UX, ou via /app/conversion-op
 ### Analyse de Logs Serveur
 Ingestion et analyse des fichiers de logs HTTP pour comprendre le comportement réel des robots sur votre site :
 - **40+ bots détectés** : Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, Bytespider, Google-Extended et plus
-- **Budget crawl** : visualisation de la répartition du crawl Google page par page
+- **Budget crawl** : visualisation de la répartition du crawl Google page par page. Le budget crawl est le nombre limité de pages que Google explore par session. Si ce budget est gaspillé sur des pages inutiles (404, paramètres dupliqués, redirections en chaîne), vos pages stratégiques sont moins crawlées et indexées plus lentement.
+- **Récurrence de crawl** : mesure de la fréquence à laquelle chaque bot revient explorer une page. Une page crawlée fréquemment est perçue comme prioritaire par Google. Une page jamais crawlée est ignorée. L'analyse de récurrence identifie les pages sous-crawlées à booster (maillage, sitemap) et les pages sur-crawlées à protéger (robots.txt, noindex).
+- **Bots IA vs moteurs classiques** : répartition du crawl entre bots IA (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) et moteurs classiques (Googlebot, Bingbot). Cette répartition impacte directement votre visibilité GEO : un site jamais crawlé par GPTBot ne sera jamais cité par ChatGPT.
+- **Gaspillage de crawl** : identification des pages crawlées inutilement (404, 500, redirections en chaîne, pages avec paramètres). Le ratio hits/pages révèle l'efficacité de votre budget crawl.
 - **Pages orphelines** : détection des pages jamais visitées par les robots
 - **Erreurs serveur** : identification des 404, 500, redirections en chaîne
 - **Monitoring continu** : ingestion via connecteur Cloudflare Worker ou import direct (Apache, Nginx, IIS)
 - **Sécurité bots** : repérage des scrapers agressifs et bots malveillants
 - **Catégorisation automatique** : chaque bot est classé (search_engine, ai_crawler, social, malicious)
+
+**Pourquoi analyser ses logs ?** Les données GSC montrent les résultats (positions, clics), mais les logs montrent les causes : si Googlebot ne crawle pas une page, elle ne sera jamais indexée. Si GPTBot ne la visite jamais, elle ne sera jamais citée par ChatGPT. L'analyse de logs est le chainon manquant entre le contenu publié et sa visibilité réelle.
 
 Disponible en Pro Agency. Page dédiée : /analyse-logs.
 
