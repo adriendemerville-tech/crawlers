@@ -56,6 +56,7 @@ const AnalyseBotsIA = lazy(() => import("./pages/AnalyseBotsIA"));
 const ScoreGEO = lazy(() => import("./pages/ScoreGEO"));
 const VisibiliteLLM = lazy(() => import("./pages/VisibiliteLLM"));
 const PageSpeedLanding = lazy(() => import("./pages/PageSpeedLanding"));
+const AnalyseLogs = lazy(() => import("./pages/AnalyseLogs"));
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const ComparatifClaudeVsCrawlers = lazy(() => import("./pages/ComparatifClaudeVsCrawlers"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
@@ -181,6 +182,7 @@ const App = () => (
                           <Route path="/score-geo" element={<ScoreGEO />} />
                           <Route path="/visibilite-llm" element={<VisibiliteLLM />} />
                           <Route path="/pagespeed" element={<PageSpeedLanding />} />
+                          <Route path="/analyse-logs" element={<AnalyseLogs />} />
                           <Route path="/app/eeat" element={<AppEeat />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
                           <Route path="/app/site-crawl" element={<SiteCrawl />} />

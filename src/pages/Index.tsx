@@ -47,6 +47,7 @@ const ContentArchitectSection = lazy(() => import('@/components/Homepage/Content
 const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductShowcaseSection').then(m => ({ default: m.ProductShowcaseSection })));
 const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
 const ClaudeVsCrawlersSection = lazy(() => import('@/components/Homepage/ClaudeVsCrawlersSection').then(m => ({ default: m.ClaudeVsCrawlersSection })));
+const LogAnalysisSection = lazy(() => import('@/components/Homepage/LogAnalysisSection').then(m => ({ default: m.LogAnalysisSection })));
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -750,6 +751,11 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* Log Analysis */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <LogAnalysisSection />
+        </Suspense>
 
         <Suspense fallback={<SectionSkeleton />}>
           <HybridSection />
