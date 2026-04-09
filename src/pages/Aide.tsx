@@ -293,6 +293,32 @@ const DOC_SECTIONS: DocSection[] = [
 <p class="mt-2">L'analyse est calibrée sur votre contexte business (type, audience, maturité, voice DNA, objectifs). Les suggestions critiques alimentent automatiquement le <strong>Workbench Architect</strong>.</p>
 <p class="mt-2 text-sm text-muted-foreground">Accessible depuis Console → Mes Sites → bouton UX, ou via <a href="/app/conversion-optimizer" class="text-primary underline">/app/conversion-optimizer</a>. Nécessite un crawl complété.</p>`,
       },
+      {
+        id: 'analyse-logs',
+        title: 'Analyse de Logs Serveur',
+        content: \`Ingestion et analyse de vos fichiers de logs HTTP pour comprendre le comportement réel des robots sur votre site :
+<ul class="list-disc pl-6 mt-1 space-y-1">
+<li><strong>40+ bots détectés</strong> : Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, Bytespider et plus</li>
+<li><strong>Budget crawl</strong> : visualisation de la répartition du crawl Google page par page</li>
+<li><strong>Pages orphelines</strong> : détection des pages jamais visitées par les robots</li>
+<li><strong>Erreurs serveur</strong> : identification des 404, 500, redirections en chaîne</li>
+<li><strong>Monitoring continu</strong> : ingestion via connecteur Cloudflare Worker ou import direct</li>
+<li><strong>Sécurité bots</strong> : repérage des scrapers agressifs et bots malveillants</li>
+</ul>
+<p class="mt-2 text-sm text-muted-foreground">Disponible en Pro Agency. Page dédiée : <a href="/analyse-logs" class="text-primary underline">/analyse-logs</a>.</p>\`,
+      },
+      {
+        id: 'diagnostic-chute',
+        title: 'Diagnostic de Chute',
+        content: \`Détection automatique et prédictive des baisses de trafic :
+<ul class="list-disc pl-6 mt-1 space-y-1">
+<li><strong>Réactif</strong> : détecte les chutes en cours vs baseline 4 semaines</li>
+<li><strong>Prédictif</strong> : alerte en amont quand la probabilité de chute ≥ 80% (régression linéaire sur 8 semaines)</li>
+<li>Cross-analyse multi-sources : GSC, audits techniques, E-E-A-T, backlinks</li>
+<li>Alertes dans le bandeau défilant de la console</li>
+</ul>
+<p class="mt-2 text-sm text-muted-foreground">Gratuit pour les abonnés Pro Agency. 3 crédits par analyse pour les autres.</p>\`,
+      },
     ],
   },
   {
@@ -327,6 +353,8 @@ const DOC_SECTIONS: DocSection[] = [
 <tr class="border-t border-border"><td class="p-2">Tracking SERP/GSC/GA4</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Quiz IA intégrés</td><td class="p-2 text-center">Crawlers</td><td class="p-2 text-center">Tous</td><td class="p-2 text-center">Tous</td></tr>
 <tr class="border-t border-border"><td class="p-2">Conversion Optimizer</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
+<tr class="border-t border-border"><td class="p-2">Analyse de Logs Serveur</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
+<tr class="border-t border-border"><td class="p-2">Diagnostic de Chute</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Content Architect + Calendrier éditorial</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Sites simultanés</td><td class="p-2 text-center">1</td><td class="p-2 text-center">30</td><td class="p-2 text-center">30</td></tr>
 <tr class="border-t border-border"><td class="p-2">Prix</td><td class="p-2 text-center">Gratuit</td><td class="p-2 text-center font-semibold">à partir de 29€/mois*</td><td class="p-2 text-center font-semibold">79€/mois</td></tr>
@@ -676,12 +704,12 @@ const DOC_SECTIONS: DocSection[] = [
       {
         id: 'wrapper-gpt',
         title: 'Crawlers.fr est-il un wrapper GPT ?',
-        content: `Non. Crawlers.fr est une infrastructure serverless de plus de 203 000 lignes de code, avec 15 algorithmes propriétaires, 157 Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.`,
+        content: `Non. Crawlers.fr est une infrastructure serverless de plus de 260 000 lignes de code, avec 15 algorithmes propriétaires, 216+ Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.`,
       },
       {
         id: 'llms-interroges',
         title: 'Quels LLMs Crawlers.fr interroge-t-il ?',
-        content: `5 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic) et Mistral.`,
+        content: `6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Grok (xAI).`,
       },
       {
         id: 'support',
