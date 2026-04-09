@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Loader2, ArrowLeft, Sparkles, AlertTriangle, CheckCircle2, Info, Smartp
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
+import { AnnotatedPageView } from '@/components/UxOptimizer/AnnotatedPageView';
 
 interface TrackedSite {
   id: string;
