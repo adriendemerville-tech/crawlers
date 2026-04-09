@@ -282,6 +282,27 @@ Deno.serve(handleRequest(async (req) => {
     }
   }
 
+  // Analyze image formats
+  const imageFormats = screenshotResult?.imageFormats || [];
+  const unoptimizedImages = imageFormats.filter((img: any) => 
+    ['jpg', 'jpeg', 'png', 'bmp', 'gif'].includes(img.ext)
+  );
+  const optimizedImages = imageFormats.filter((img: any) => 
+    ['webp', 'avif', 'svg'].includes(img.ext)
+  );
+  const imageFormatReport = {
+    total: imageFormats.length,
+    unoptimized: unoptimizedImages.length,
+    optimized: optimizedImages.length,
+    details: imageFormats.map((img: any) => ({
+      src: img.src,
+      format: img.ext,
+      is_optimized: ['webp', 'avif', 'svg'].includes(img.ext),
+      dimensions: `${img.width}x${img.height}`,
+      alt: img.alt,
+    })),
+  };
+
   return jsonOk({
     success: true,
     page_url,
@@ -292,6 +313,7 @@ Deno.serve(handleRequest(async (req) => {
     screenshot_url: screenshotResult?.url || null,
     screenshot_height: screenshotResult?.height || null,
     annotations,
+    image_format_report: imageFormatReport,
   });
 }));
 
@@ -313,7 +335,7 @@ async function captureScreenshotWithAnnotations(
   pageUrl: string,
   trackedSiteId: string,
   serviceClient: any,
-): Promise<{ success: boolean; url?: string; height?: number }> {
+): Promise<{ success: boolean; url?: string; height?: number; imageFormats?: any[] }> {
   const browserlessKey = getBrowserlessKey();
   if (!browserlessKey) {
     console.log('[analyze-ux-context] No Browserless key, skipping screenshot');
@@ -345,6 +367,20 @@ async function captureScreenshotWithAnnotations(
 
   const fullHeight = await page.evaluate(() => document.body.scrollHeight);
 
+  // Extract image formats
+  const imageFormats = await page.evaluate(() => {
+    const imgs = Array.from(document.querySelectorAll('img[src]'));
+    return imgs.map(img => {
+      const src = img.src || '';
+      const ext = src.split('?')[0].split('#')[0].split('.').pop()?.toLowerCase() || 'unknown';
+      const alt = img.alt || '';
+      const width = img.naturalWidth || img.width || 0;
+      const height = img.naturalHeight || img.height || 0;
+      const fileSize = null; // not available client-side
+      return { src, ext, alt, width, height };
+    }).filter(i => i.src && !i.src.startsWith('data:'));
+  });
+
   const screenshot = await page.screenshot({
     type: 'jpeg',
     quality: 75,
@@ -353,7 +389,7 @@ async function captureScreenshotWithAnnotations(
   });
 
   return {
-    data: { screenshot, height: fullHeight },
+    data: { screenshot, height: fullHeight, imageFormats },
     type: 'application/json'
   };
 };`;
@@ -398,8 +434,8 @@ async function captureScreenshotWithAnnotations(
       .from('ux-screenshots')
       .getPublicUrl(fileName);
 
-    console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px)`);
-    return { success: true, url: urlData.publicUrl, height: data.height };
+    console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px, images: ${(data.imageFormats || []).length})`);
+    return { success: true, url: urlData.publicUrl, height: data.height, imageFormats: data.imageFormats || [] };
   } catch (error: any) {
     console.error('[analyze-ux-context] Screenshot capture failed:', error.message);
     return { success: false };
