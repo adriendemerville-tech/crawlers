@@ -3,13 +3,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2, CreditCard } from 'lucide-react';
 import { detectMatriceType, type MatriceType, type DetectionResult } from '@/utils/matrice/typeDetector';
 import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCleaner';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
 type Step = 'type' | 'sheet' | 'clean' | 'confirm';
+
+/** Detected identity card variables from a "Variable" sheet */
+export interface IdentityCard {
+  variables: Record<string, string>; // e.g. { "[MARQUE]": "Studio GforCréa", "[SITE_MARQUE]": "https://..." }
+  brandUrl?: string; // extracted from [SITE_MARQUE] or similar
+  brandName?: string; // extracted from [MARQUE] or similar
+}
 
 interface Props {
   open: boolean;
@@ -20,6 +27,7 @@ interface Props {
     sheetName: string;
     matriceType: MatriceType;
     cleaningResult: CleaningResult;
+    identityCard?: IdentityCard;
   }) => void;
   onClose: () => void;
 }
@@ -44,6 +52,53 @@ const STEPS_SINGLE: { key: Step; label: string }[] = [
   { key: 'confirm', label: 'Import' },
 ];
 
+/* ── Variable sheet detection ──────────────────────────────────────── */
+
+const VARIABLE_SHEET_PATTERNS = [
+  /^variable/i, /^identit[eé]/i, /^carte/i, /^identity/i, /^config/i,
+];
+
+const VARIABLE_COLUMN_PATTERNS = [
+  /^variable$/i, /^cl[eé]$/i, /^key$/i, /^param[eè]tre$/i,
+];
+
+const VALUE_COLUMN_PATTERNS = [
+  /^valeur$/i, /^value$/i, /^retenue$/i, /^contenu$/i,
+];
+
+function isVariableSheet(sheetName: string, headers: string[]): boolean {
+  // Check sheet name
+  if (VARIABLE_SHEET_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
+  // Check if first column looks like variable keys (e.g. [MARQUE], [SITE_MARQUE])
+  if (headers.length >= 2 && VARIABLE_COLUMN_PATTERNS.some(p => p.test(headers[0]))) return true;
+  return false;
+}
+
+function extractIdentityCard(rows: Record<string, any>[], headers: string[]): IdentityCard {
+  const variables: Record<string, string> = {};
+
+  // Find the key column and value column
+  const keyCol = headers.find(h => VARIABLE_COLUMN_PATTERNS.some(p => p.test(h))) || headers[0];
+  // Prefer "retenue" (validated value), then "valeur" (raw value)
+  const valueCol = headers.find(h => /^retenue$/i.test(h))
+    || headers.find(h => VALUE_COLUMN_PATTERNS.some(p => p.test(h)))
+    || headers[1];
+
+  for (const row of rows) {
+    const key = String(row[keyCol] ?? '').trim();
+    const val = String(row[valueCol] ?? '').trim();
+    if (key && val) {
+      variables[key] = val;
+    }
+  }
+
+  // Extract brand URL and name
+  const brandUrl = variables['[SITE_MARQUE]'] || variables['[URL]'] || variables['[SITE]'] || undefined;
+  const brandName = variables['[MARQUE]'] || variables['[BRAND]'] || variables['[NOM]'] || undefined;
+
+  return { variables, brandUrl, brandName };
+}
+
 /* ── Component ─────────────────────────────────────────────────────── */
 
 export default function ImportStepper({ open, sheetNames, workbook, onComplete, onClose }: Props) {
@@ -54,10 +109,33 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const [rawRows, setRawRows] = useState<Record<string, any>[]>([]);
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [cleaning, setCleaning] = useState<CleaningResult | null>(null);
+  const [identityCard, setIdentityCard] = useState<IdentityCard | null>(null);
+  const [detectedVariableSheets, setDetectedVariableSheets] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const hasMultipleSheets = sheetNames.length > 1;
   const steps = hasMultipleSheets ? STEPS_MULTI : STEPS_SINGLE;
+
+  // ── Auto-detect variable sheets on open ─────────────────────────────
+  useEffect(() => {
+    if (!open || !workbook || sheetNames.length === 0) return;
+    const detectVariableSheets = async () => {
+      const { utils } = await import('xlsx');
+      const varSheets: string[] = [];
+      for (const name of sheetNames) {
+        const sheet = workbook.Sheets[name];
+        const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+        if (rows.length > 0) {
+          const h = Object.keys(rows[0]);
+          if (isVariableSheet(name, h)) {
+            varSheets.push(name);
+          }
+        }
+      }
+      setDetectedVariableSheets(varSheets);
+    };
+    detectVariableSheets();
+  }, [open, workbook, sheetNames]);
 
   // ── Toggle a sheet in multi-select ──────────────────────────────────
   const toggleSheet = (name: string) => {
@@ -66,39 +144,68 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
     );
   };
 
-  // ── Parse selected sheets and merge rows ───────────────────────────
+  // ── Parse selected sheets: separate Variable sheets from data sheets ─
   const parseSheetsAndClean = useCallback(async (sheets: string[]) => {
     if (!workbook || !selectedType || sheets.length === 0) return;
     setLoading(true);
     try {
       const { utils } = await import('xlsx');
-      let allRows: Record<string, any>[] = [];
+      let dataRows: Record<string, any>[] = [];
+      let card: IdentityCard | null = null;
+      const dataSheetNames: string[] = [];
 
       for (const sheetName of sheets) {
         const sheet = workbook.Sheets[sheetName];
         const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
-        if (rows.length > 0) {
-          console.log(`[ImportStepper] Sheet "${sheetName}": ${rows.length} rows, ${Object.keys(rows[0]).length} cols`);
-          allRows = allRows.concat(rows);
-        } else {
+        if (rows.length === 0) {
           console.warn('[ImportStepper] Empty sheet:', sheetName);
+          continue;
         }
+
+        const h = Object.keys(rows[0]);
+
+        // Check if this is a Variable/Identity sheet
+        if (isVariableSheet(sheetName, h)) {
+          console.log(`[ImportStepper] Variable sheet detected: "${sheetName}" (${rows.length} vars)`);
+          card = extractIdentityCard(rows, h);
+          continue; // Don't merge Variable rows into data rows
+        }
+
+        console.log(`[ImportStepper] Data sheet "${sheetName}": ${rows.length} rows, ${h.length} cols`);
+        dataSheetNames.push(sheetName);
+        dataRows = dataRows.concat(rows);
       }
 
-      if (!allRows.length) {
+      setIdentityCard(card);
+
+      if (!dataRows.length) {
+        // If only variable sheets were selected, warn user
+        if (card) {
+          console.warn('[ImportStepper] Only variable sheets selected, no prompt data');
+        }
         setLoading(false);
         return;
       }
 
-      const h = Object.keys(allRows[0]);
+      // ── Union ALL headers from all data rows ────────────────────────
+      const headerSet = new Set<string>();
+      for (const row of dataRows) {
+        for (const key of Object.keys(row)) {
+          headerSet.add(key);
+        }
+      }
+      const h = Array.from(headerSet);
       setHeaders(h);
-      setRawRows(allRows);
+      setRawRows(dataRows);
 
-      const det = detectMatriceType(h, allRows.slice(0, 10));
+      const det = detectMatriceType(h, dataRows.slice(0, 10));
       setDetection(det);
-      console.log(`[ImportStepper] Merged: ${allRows.length} rows, detected=${det.type} (${Math.round(det.confidence * 100)}%)`);
+      console.log(`[ImportStepper] Merged: ${dataRows.length} rows from ${dataSheetNames.length} data sheet(s), headers: ${h.length}, detected=${det.type} (${Math.round(det.confidence * 100)}%)`);
+      if (card) {
+        console.log(`[ImportStepper] Identity card: ${Object.keys(card.variables).length} vars, brand="${card.brandName}", url="${card.brandUrl}"`);
+      }
 
-      const result = cleanImportedData(h, allRows);
+      const result = cleanImportedData(h, dataRows);
       setCleaning(result);
       setStep('clean');
     } catch (err) {
@@ -118,6 +225,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       setRawRows([]);
       setDetection(null);
       setCleaning(null);
+      setIdentityCard(null);
       setLoading(false);
     }
   }, [open, sheetNames, workbook]);
@@ -149,6 +257,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       sheetName: selectedSheets.join(' + '),
       matriceType: selectedType,
       cleaningResult: cleaning,
+      identityCard: identityCard || undefined,
     });
   };
 
@@ -233,6 +342,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
             </p>
             {sheetNames.map(name => {
               const isChecked = selectedSheets.includes(name);
+              const isVar = detectedVariableSheets.includes(name);
               return (
                 <button
                   key={name}
@@ -246,8 +356,17 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                     onCheckedChange={() => toggleSheet(name)}
                     className="shrink-0"
                   />
-                  <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  {isVar ? (
+                    <CreditCard className="h-4 w-4 shrink-0 text-amber-500" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
                   <span className="truncate text-sm">{name}</span>
+                  {isVar && (
+                    <Badge variant="outline" className="ml-auto text-[10px] border-amber-500/30 text-amber-500">
+                      Carte d'identité
+                    </Badge>
+                  )}
                 </button>
               );
             })}
@@ -268,6 +387,24 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
             <p className="text-sm text-muted-foreground">
               Nettoyage effectué sur {selectedSheets.length} onglet{selectedSheets.length > 1 ? 's' : ''}. Les colonnes de résultats et données résiduelles ont été retirées.
             </p>
+
+            {/* Identity card detected */}
+            {identityCard && (
+              <div className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <CreditCard className="h-3.5 w-3.5 text-amber-500" />
+                  <span className="font-medium text-amber-600 dark:text-amber-400">
+                    Carte d'identité détectée — {Object.keys(identityCard.variables).length} variables
+                  </span>
+                </div>
+                {identityCard.brandName && (
+                  <span className="text-muted-foreground">Marque : <strong className="text-foreground">{identityCard.brandName}</strong></span>
+                )}
+                {identityCard.brandUrl && (
+                  <span className="text-muted-foreground ml-2">URL : <strong className="text-foreground">{identityCard.brandUrl}</strong></span>
+                )}
+              </div>
+            )}
 
             {/* Show detection mismatch warning */}
             {detection && selectedType && detection.type !== selectedType && detection.confidence >= 0.6 && (
@@ -342,6 +479,12 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                 <span className="text-muted-foreground">Colonnes</span>
                 <span className="font-medium">{cleaning.stats.keptColumns} / {cleaning.stats.originalColumns}</span>
               </div>
+              {identityCard && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Carte d'identité</span>
+                  <span className="font-medium text-amber-500">{Object.keys(identityCard.variables).length} variables</span>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between mt-2">
