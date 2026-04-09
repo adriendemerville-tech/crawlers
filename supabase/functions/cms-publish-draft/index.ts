@@ -477,6 +477,63 @@ try {
 
     const service = getServiceClient();
 
+    // ── Check if this is crawlers.fr (internal SPA — no external CMS) ──
+    const { data: trackedSite } = await service
+      .from("tracked_sites")
+      .select("domain")
+      .eq("id", tracked_site_id)
+      .single();
+
+    const isCrawlersFr = trackedSite?.domain?.replace(/^www\./, '') === 'crawlers.fr';
+
+    if (isCrawlersFr) {
+      const htmlContent = buildHtml(result_data, images, keyword);
+      const title = result_data?.content_structure?.recommended_h1 || keyword || "Draft";
+      const metaDescription = result_data?.metadata_enrichment?.meta_description || "";
+      const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+
+      if (resolvedContentType === 'page') {
+        // Landing page → seo_page_drafts
+        const { data: draft, error: draftErr } = await service
+          .from("seo_page_drafts")
+          .insert({
+            user_id: user.id,
+            page_type: 'landing',
+            domain: 'crawlers.fr',
+            target_keyword: keyword || null,
+            title,
+            slug,
+            meta_title: title,
+            meta_description: metaDescription,
+            content: htmlContent,
+            status: 'draft',
+          } as any)
+          .select()
+          .single();
+
+        if (draftErr) throw new Error(`Internal landing draft error: ${draftErr.message}`);
+        return jsonOk({ success: true, platform: 'internal', content_type: 'landing', data: draft });
+      } else {
+        // Blog article → blog_articles (draft)
+        const { data: article, error: artErr } = await service
+          .from("blog_articles")
+          .insert({
+            title,
+            slug,
+            excerpt: metaDescription,
+            content: htmlContent,
+            image_url: images?.find((img: any) => img.placement === 'header')?.dataUri || null,
+            status: 'draft',
+          } as any)
+          .select()
+          .single();
+
+        if (artErr) throw new Error(`Internal blog draft error: ${artErr.message}`);
+        return jsonOk({ success: true, platform: 'internal', content_type: 'post', data: article });
+      }
+    }
+
+    // ── External CMS flow ──
     const { data: conn, error: connErr } = await service
       .from("cms_connections")
       .select("*")
