@@ -2,6 +2,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { writeIdentity } from '../_shared/identityGateway.ts';
 
 /**
  * analyze-ux-context — Conversion Optimizer
@@ -103,6 +104,19 @@ Deno.serve(handleRequest(async (req) => {
   const pageKeywords = (keywords || []).filter((keyword) => keyword.target_url === page_url);
   const topKeywords = pageKeywords.length > 0 ? pageKeywords : (keywords || []).slice(0, 10);
 
+  // Check identity card completeness
+  const identityFields = [
+    site.business_type, site.market_sector, site.commercial_model,
+    site.target_audience, site.target_segment, site.products_services,
+    site.entity_type,
+  ];
+  const filledCount = identityFields.filter(f => f && String(f).trim()).length;
+  const identityIncomplete = filledCount < 3;
+
+  if (identityIncomplete) {
+    console.log(`[analyze-ux-context] Identity card incomplete (${filledCount}/7 fields). Using page content as fallback context.`);
+  }
+
   const businessContext = {
     business_type: site.business_type,
     market_sector: site.market_sector,
@@ -116,6 +130,7 @@ Deno.serve(handleRequest(async (req) => {
     entity_type: site.entity_type,
     goals: { short: site.short_term_goal, mid: site.mid_term_goal },
     primary_use_case: site.primary_use_case,
+    _incomplete: identityIncomplete,
   };
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -202,6 +217,18 @@ Deno.serve(handleRequest(async (req) => {
                     recommendation: { type: 'string', description: 'Concrete improvement suggestion in French, or empty if image is good' },
                   },
                   required: ['src', 'descriptiveness', 'relevance', 'persuasiveness', 'verdict'],
+                },
+              },
+              identity_inference: {
+                type: 'object',
+                description: 'If business context fields are missing/undefined, infer them from page content. Only fill fields you are confident about.',
+                properties: {
+                  business_type: { type: 'string', description: 'e.g. e-commerce, SaaS, agency, blog, portfolio, association' },
+                  market_sector: { type: 'string', description: 'e.g. cosmétique, immobilier, santé, tech' },
+                  commercial_model: { type: 'string', description: 'e.g. B2C, B2B, B2B2C, marketplace' },
+                  target_audience: { type: 'string', description: 'Primary audience description' },
+                  products_services: { type: 'string', description: 'Main products or services offered' },
+                  entity_type: { type: 'string', description: 'e.g. entreprise, association, freelance, média' },
                 },
               },
             },
@@ -299,6 +326,30 @@ Deno.serve(handleRequest(async (req) => {
       console.error('[analyze-ux-context] Workbench insert error:', wbErr);
     } else {
       console.log(`[analyze-ux-context] Injected ${workbenchItems.length} items into workbench`);
+    }
+  }
+
+  // ── Identity enrichment: if card was incomplete and AI inferred fields, write them back ──
+  if (identityIncomplete && result.identity_inference) {
+    const inferred = result.identity_inference as Record<string, unknown>;
+    const fieldsToWrite: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(inferred)) {
+      if (value && String(value).trim() && !(businessContext as any)[key]) {
+        fieldsToWrite[key] = value;
+      }
+    }
+    if (Object.keys(fieldsToWrite).length > 0) {
+      try {
+        const writeResult = await writeIdentity({
+          siteId: tracked_site_id,
+          fields: fieldsToWrite,
+          source: 'llm_auto',
+          userId: user.id,
+        });
+        console.log(`[analyze-ux-context] 🪪 Identity enriched: ${writeResult.applied.join(', ')} (${writeResult.applied.length} fields)`);
+      } catch (err: any) {
+        console.warn(`[analyze-ux-context] Identity enrichment failed:`, err.message);
+      }
     }
   }
 
@@ -764,6 +815,9 @@ ${imageList}
 - Objectif court terme: ${ctx.goals?.short || 'non défini'}
 - Objectif moyen terme: ${ctx.goals?.mid || 'non défini'}
 - Usage principal: ${ctx.primary_use_case || 'non défini'}
+${ctx._incomplete ? `
+⚠️ **ATTENTION** : La carte d'identité de ce site est largement incomplète. Utilise le contenu de la page (texte, H1, meta description, images, CTAs) pour DÉDUIRE le contexte business. Base tes recommandations sur ce que tu observes dans la page, pas sur les champs "non défini". Remplis également le champ identity_inference avec les valeurs que tu déduis (business_type, market_sector, commercial_model, target_audience, products_services, entity_type).
+` : ''}
 
 ## Mots-clés ciblés
 ${keywordList || 'Aucun mot-clé trouvé'}
