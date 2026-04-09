@@ -2069,7 +2069,91 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               }
             })
             .catch(err => console.warn('[Marina] Identity enrichment failed (non-fatal):', err));
-        }
+       }
+      }
+
+      // ─── Enrich voice_dna (fire-and-forget) ───
+      if (trackedSiteId) {
+        (async () => {
+          try {
+            console.log(`[Marina] Enriching voice_dna for ${domain}...`);
+            await callFunction('analyze-voice-tone', {
+              tracked_site_id: trackedSiteId,
+              domain,
+            });
+            console.log(`[Marina] ✅ voice_dna enriched for ${domain}`);
+          } catch (e) {
+            console.warn('[Marina] voice_dna enrichment failed (non-fatal):', e);
+          }
+        })();
+      }
+
+      // ─── Enrich keyword_universe from strategic data (fire-and-forget) ───
+      if (trackedSiteId && strategicData) {
+        (async () => {
+          try {
+            const kp = strategicData.keyword_positioning || strategicData.keywordPositioning || {};
+            const allKw: any[] = [];
+
+            // Extract main keywords
+            if (Array.isArray(kp.main_keywords)) {
+              for (const kw of kp.main_keywords) {
+                if (kw?.keyword) allKw.push({
+                  keyword: kw.keyword,
+                  search_volume: kw.volume || 0,
+                  difficulty: kw.difficulty || null,
+                  position: kw.current_rank ? parseInt(String(kw.current_rank)) : null,
+                  intent: kw.strategic_analysis?.intent || 'default',
+                  target_url: kw.target_url || kw.page_url || url,
+                });
+              }
+            }
+
+            // Extract quick wins
+            if (Array.isArray(kp.quick_wins)) {
+              for (const qw of kp.quick_wins) {
+                const kwd = qw.keyword || qw.title;
+                if (kwd) allKw.push({
+                  keyword: kwd,
+                  search_volume: qw.volume || 0,
+                  position: qw.current_rank ? parseInt(String(qw.current_rank)) : null,
+                  intent: 'transactional',
+                  is_quick_win: true,
+                  quick_win_type: 'strategic',
+                  quick_win_action: qw.action || qw.recommended_action || '',
+                  target_url: qw.url || qw.page_url || url,
+                });
+              }
+            }
+
+            // Extract content gaps as keywords
+            if (Array.isArray(kp.content_gaps)) {
+              for (const cg of kp.content_gaps) {
+                const kwd = cg.keyword || cg.title;
+                if (kwd) allKw.push({
+                  keyword: kwd,
+                  search_volume: cg.volume || 0,
+                  intent: 'informational',
+                  target_url: cg.suggested_url || url,
+                });
+              }
+            }
+
+            if (allKw.length > 0) {
+              console.log(`[Marina] Enriching keyword_universe with ${allKw.length} keywords for ${domain}`);
+              await sb.rpc('upsert_keyword_universe', {
+                p_domain: domain,
+                p_user_id: parentJob.user_id,
+                p_keywords: allKw,
+                p_source: 'marina',
+                p_tracked_site_id: trackedSiteId,
+              });
+              console.log(`[Marina] ✅ keyword_universe enriched for ${domain}`);
+            }
+          } catch (e) {
+            console.warn('[Marina] keyword_universe enrichment failed (non-fatal):', e);
+          }
+        })();
       }
 
       const llmVisibilityPromise = (async () => {
