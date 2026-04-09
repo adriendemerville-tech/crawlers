@@ -40,6 +40,21 @@ interface Suggestion {
   rationale: string;
 }
 
+interface ImageFormatDetail {
+  src: string;
+  format: string;
+  is_optimized: boolean;
+  dimensions: string;
+  alt: string;
+}
+
+interface ImageFormatReport {
+  total: number;
+  unoptimized: number;
+  optimized: number;
+  details: ImageFormatDetail[];
+}
+
 interface AnalysisResult {
   page_url: string;
   page_intent: string;
@@ -55,6 +70,7 @@ interface AnalysisResult {
     priority: string;
     suggestionIndex?: number;
   }>;
+  image_format_report?: ImageFormatReport;
 }
 
 interface SavedAnalysis {
