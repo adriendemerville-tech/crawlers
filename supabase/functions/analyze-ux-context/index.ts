@@ -259,8 +259,9 @@ Deno.serve(handleRequest(async (req) => {
 
   const aiData = await aiResp.json();
 
-  // Track LLM cost
+  // Track LLM cost (both analytics_events and ai_gateway_usage)
   trackTokenUsage('analyze-ux-context', 'google/gemini-3-flash-preview', aiData.usage, page_url).catch(() => {});
+  logAIUsageFromResponse(getServiceClient(), 'google/gemini-3-flash-preview', 'analyze-ux-context', aiData.usage);
 
   const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
   if (!toolCall?.function?.arguments) {
