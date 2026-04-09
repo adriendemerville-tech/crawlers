@@ -293,6 +293,8 @@ export default function MatricePrompt() {
         prompt: val('prompt', `KPI #${i + 1}`),
         poids: val('poids', DEFAULTS.poids),
         axe: val('axe', DEFAULTS.axe),
+        theme: val('theme', ''),
+        engine: val('engine', ''),
         seuil_bon: val('seuil_bon', DEFAULTS.seuil_bon),
         seuil_moyen: val('seuil_moyen', DEFAULTS.seuil_moyen),
         seuil_mauvais: val('seuil_mauvais', DEFAULTS.seuil_mauvais),
