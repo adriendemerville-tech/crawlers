@@ -1027,6 +1027,8 @@ ${kwCtx}
 
 ${briefBlock}
 
+${diversityBlock}
+
 ${keywordEnrichment.promptBlock}
 
 ⚠️⚠️⚠️ RÈGLE CRITIQUE — SÉPARATION DIAGNOSTIC / CONTENU ⚠️⚠️⚠️
