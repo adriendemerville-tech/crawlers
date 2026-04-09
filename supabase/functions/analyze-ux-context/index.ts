@@ -434,6 +434,7 @@ Deno.serve(handleRequest(async (req) => {
     annotations,
     image_format_report: imageFormatReport,
     image_analysis: result.image_analysis || [],
+    indexation_status: indexationStatus,
   });
 }));
 
