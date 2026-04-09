@@ -32,6 +32,8 @@ interface MatrixRow {
   prompt: string;
   poids: number;
   axe: string;
+  theme?: string;
+  engine?: string;
   seuil_bon: number;
   seuil_moyen: number;
   seuil_mauvais: number;
