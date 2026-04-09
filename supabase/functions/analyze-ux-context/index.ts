@@ -346,28 +346,45 @@ async function captureScreenshotWithAnnotations(
     const script = `export default async ({ page }) => {
   await page.setViewport({ width: 1280, height: 900 });
   await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
-  await new Promise(r => setTimeout(r, 3000));
+  await new Promise(r => setTimeout(r, 2000));
 
-  // Wait for images to load
+  // Scroll progressively to trigger lazy-loaded images
+  const scrollHeight = await page.evaluate(() => document.body.scrollHeight);
+  const step = 600;
+  for (let y = 0; y < scrollHeight; y += step) {
+    await page.evaluate((top) => window.scrollTo(0, top), y);
+    await new Promise(r => setTimeout(r, 200));
+  }
+  // Scroll back to top
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await new Promise(r => setTimeout(r, 1000));
+
+  // Force-load remaining lazy images
   await page.evaluate(() => {
     return Promise.all(
-      Array.from(document.querySelectorAll('img[src], img[data-src], img[loading="lazy"]'))
-        .map(img => {
-          if (img.complete && img.naturalHeight > 0) return Promise.resolve();
-          img.loading = 'eager';
-          if (img.dataset.src && !img.src) img.src = img.dataset.src;
-          return new Promise(resolve => {
-            img.addEventListener('load', resolve, { once: true });
-            img.addEventListener('error', resolve, { once: true });
-            setTimeout(resolve, 4000);
-          });
+      Array.from(document.querySelectorAll('img[src], img[data-src], img[loading="lazy"], source[srcset]'))
+        .map(el => {
+          if (el.tagName === 'IMG') {
+            el.loading = 'eager';
+            if (el.dataset.src && !el.src) el.src = el.dataset.src;
+            if (el.dataset.srcset && !el.srcset) el.srcset = el.dataset.srcset;
+            if (el.complete && el.naturalHeight > 0) return Promise.resolve();
+            return new Promise(resolve => {
+              el.addEventListener('load', resolve, { once: true });
+              el.addEventListener('error', resolve, { once: true });
+              setTimeout(resolve, 4000);
+            });
+          }
+          return Promise.resolve();
         })
     );
   });
 
+  await new Promise(r => setTimeout(r, 1000));
+
   const fullHeight = await page.evaluate(() => document.body.scrollHeight);
 
-  // Extract image formats
+  // Extract image formats + context
   const imageFormats = await page.evaluate(() => {
     const imgs = Array.from(document.querySelectorAll('img[src]'));
     return imgs.map(img => {
@@ -376,8 +393,12 @@ async function captureScreenshotWithAnnotations(
       const alt = img.alt || '';
       const width = img.naturalWidth || img.width || 0;
       const height = img.naturalHeight || img.height || 0;
-      const fileSize = null; // not available client-side
-      return { src, ext, alt, width, height };
+      // Get surrounding context
+      const parent = img.closest('section, article, div, figure');
+      const nearbyText = parent ? (parent.textContent || '').slice(0, 200).trim() : '';
+      const isHero = !!(img.closest('header, .hero, [class*="hero"], [class*="banner"]'));
+      const isDecorative = (width < 50 || height < 50 || alt === '');
+      return { src, ext, alt, width, height, nearbyText, isHero, isDecorative };
     }).filter(i => i.src && !i.src.startsWith('data:'));
   });
 
