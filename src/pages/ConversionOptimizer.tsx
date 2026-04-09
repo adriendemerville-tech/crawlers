@@ -580,6 +580,29 @@ export default function ConversionOptimizer() {
           </Card>
         )}
       </div>
+
+      {showContentArchitect && result && (
+        <Suspense fallback={null}>
+          <CocoonContentArchitectModal
+            isOpen={showContentArchitect}
+            onClose={() => setShowContentArchitect(false)}
+            nodes={[]}
+            domain={selectedSite?.domain}
+            trackedSiteId={selectedSiteId}
+            prefillUrl={result.page_url}
+            prefillPrompt={
+              `Optimisation CRO issue du Conversion Optimizer (score ${result.global_score}/100).\n\n` +
+              `Objectif : appliquer les corrections suivantes sur la page :\n\n` +
+              result.suggestions
+                .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
+                .map((s, i) => `${i + 1}. [${s.priority.toUpperCase()}] ${s.title} — ${s.rationale}${s.suggested_text ? `\n   → Texte suggéré : "${s.suggested_text}"` : ''}`)
+                .join('\n\n')
+            }
+            isExistingPage={true}
+            colorTheme="green"
+          />
+        </Suspense>
+      )}
     </>
   );
 }
