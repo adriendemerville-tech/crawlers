@@ -9,6 +9,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { AuditPlan, AuditRoute } from './resolveAuditRoutes';
+import { hydatePrompt } from './promptSanitizer';
 
 export interface MatrixResult {
   criterionId: string;
