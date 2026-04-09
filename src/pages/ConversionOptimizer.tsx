@@ -276,6 +276,7 @@ export default function ConversionOptimizer() {
   };
 
   const loadSavedAnalysis = async (saved: SavedAnalysis) => {
+    setFreshAnalysis(false);
     setResult({
       page_url: saved.page_url,
       page_intent: saved.page_intent,
