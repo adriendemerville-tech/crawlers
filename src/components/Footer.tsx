@@ -36,6 +36,7 @@ function FooterComponent() {
     { icon: FileText, label: t3(language, 'Matrice d\'audit', 'Audit Matrix', 'Matriz de auditoría'), href: '/matrice', description: t3(language, 'Audit matriciel personnalisé XLSX/CSV/DOCX', 'Custom matrix audit XLSX/CSV/DOCX', 'Auditoría matricial personalizada XLSX/CSV/DOCX'), isRoute: true },
     { icon: Terminal, label: 'Marina API', href: '/marina#api', description: t3(language, 'API asynchrone de rapports SEO & GEO en marque blanche', 'Async white-label SEO & GEO reporting API', 'API asíncrona de informes SEO & GEO de marca blanca'), isRoute: true },
     { icon: Shield, label: 'Audit E-E-A-T', href: '/eeat', description: t3(language, 'Score de crédibilité Google E-E-A-T', 'Google E-E-A-T credibility score', 'Puntuación de credibilidad Google E-E-A-T'), isRoute: true },
+    { icon: Eye, label: 'UX Optimizer', href: '/ux-optimizer', description: t3(language, 'Audit UX/CRO contextuel par IA', 'Contextual AI UX/CRO audit', 'Auditoría UX/CRO contextual con IA'), isRoute: true },
   ];
 
   const resourcesLinks = [
