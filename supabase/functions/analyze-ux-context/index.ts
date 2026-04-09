@@ -219,6 +219,18 @@ Deno.serve(handleRequest(async (req) => {
                   required: ['src', 'descriptiveness', 'relevance', 'persuasiveness', 'verdict'],
                 },
               },
+              identity_inference: {
+                type: 'object',
+                description: 'If business context fields are missing/undefined, infer them from page content. Only fill fields you are confident about.',
+                properties: {
+                  business_type: { type: 'string', description: 'e.g. e-commerce, SaaS, agency, blog, portfolio, association' },
+                  market_sector: { type: 'string', description: 'e.g. cosmétique, immobilier, santé, tech' },
+                  commercial_model: { type: 'string', description: 'e.g. B2C, B2B, B2B2C, marketplace' },
+                  target_audience: { type: 'string', description: 'Primary audience description' },
+                  products_services: { type: 'string', description: 'Main products or services offered' },
+                  entity_type: { type: 'string', description: 'e.g. entreprise, association, freelance, média' },
+                },
+              },
             },
             required: ['page_intent', 'global_score', 'axes', 'suggestions'],
             additionalProperties: false,
