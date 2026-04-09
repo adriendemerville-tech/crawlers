@@ -80,7 +80,7 @@ const startTime = Date.now();
     await logRun(supabase, 'scheduled', 0, 0, 0, [{ error: String(e) }], Date.now() - startTime);
     return jsonError(String(e), 500);
   }
-});
+}));
 
 async function logRun(
   supabase: any, runType: string, sites: number, alerts: number, diagnostics: number,
