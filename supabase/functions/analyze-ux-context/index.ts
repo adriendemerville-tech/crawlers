@@ -118,81 +118,101 @@ Deno.serve(handleRequest(async (req) => {
     primary_use_case: site.primary_use_case,
   };
 
-  const prompt = buildPrompt(pageData, businessContext, topKeywords);
-
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return jsonError('AI not configured', 500);
 
-  const [aiResp, screenshotResult] = await Promise.all([
-    fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt },
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'ux_analysis_result',
-            description: 'Return structured UX analysis with scores and suggestions',
-            parameters: {
-              type: 'object',
-              properties: {
-                page_intent: {
-                  type: 'string',
-                  enum: ['informational', 'transactional', 'navigational', 'support', 'brand', 'mixed'],
-                  description: 'Detected intent of the page',
+  // Capture screenshot first to get image data for the AI prompt
+  const screenshotResult = await captureScreenshotWithAnnotations(page_url, tracked_site_id, serviceClient);
+
+  const imageFormatsForPrompt = (screenshotResult?.imageFormats || [])
+    .filter((img: any) => !img.isDecorative && img.width >= 50 && img.height >= 50)
+    .slice(0, 20);
+
+  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt);
+
+  const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-3-flash-preview',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: prompt },
+      ],
+      tools: [{
+        type: 'function',
+        function: {
+          name: 'ux_analysis_result',
+          description: 'Return structured UX analysis with scores and suggestions',
+          parameters: {
+            type: 'object',
+            properties: {
+              page_intent: {
+                type: 'string',
+                enum: ['informational', 'transactional', 'navigational', 'support', 'brand', 'mixed'],
+                description: 'Detected intent of the page',
+              },
+              global_score: {
+                type: 'number',
+                description: 'Overall UX score 0-100',
+              },
+              axes: {
+                type: 'object',
+                properties: {
+                  tone: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  cta_pressure: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  alignment: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  readability: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  conversion: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  mobile_ux: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  keyword_usage: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
                 },
-                global_score: {
-                  type: 'number',
-                  description: 'Overall UX score 0-100',
-                },
-                axes: {
+                required: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'],
+              },
+              suggestions: {
+                type: 'array',
+                items: {
                   type: 'object',
                   properties: {
-                    tone: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    cta_pressure: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    alignment: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    readability: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    conversion: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    mobile_ux: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    keyword_usage: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                    axis: { type: 'string', enum: AXES },
+                    priority: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+                    title: { type: 'string' },
+                    current_text: { type: 'string', description: 'Current text/element being criticized (if applicable)' },
+                    suggested_text: { type: 'string', description: 'Proposed replacement text' },
+                    rationale: { type: 'string' },
+                    element_selector: { type: 'string', description: 'CSS-like description of the element (e.g. "h1", "nav .cta-button", "section.hero p")' },
                   },
-                  required: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'],
-                },
-                suggestions: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      axis: { type: 'string', enum: AXES },
-                      priority: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
-                      title: { type: 'string' },
-                      current_text: { type: 'string', description: 'Current text/element being criticized (if applicable)' },
-                      suggested_text: { type: 'string', description: 'Proposed replacement text' },
-                      rationale: { type: 'string' },
-                      element_selector: { type: 'string', description: 'CSS-like description of the element (e.g. "h1", "nav .cta-button", "section.hero p")' },
-                    },
-                    required: ['axis', 'priority', 'title', 'rationale'],
-                  },
+                  required: ['axis', 'priority', 'title', 'rationale'],
                 },
               },
-              required: ['page_intent', 'global_score', 'axes', 'suggestions'],
-              additionalProperties: false,
+              image_analysis: {
+                type: 'array',
+                description: 'Analysis of each significant image on the page (skip decorative/tiny images)',
+                items: {
+                  type: 'object',
+                  properties: {
+                    src: { type: 'string', description: 'Image URL (from the list provided)' },
+                    descriptiveness: { type: 'number', description: 'How well the image describes/illustrates surrounding content (0-100)' },
+                    relevance: { type: 'number', description: 'How relevant is this image to the page intent and business context (0-100)' },
+                    persuasiveness: { type: 'number', description: 'How convincing/persuasive is this image for conversion goals (0-100)' },
+                    verdict: { type: 'string', description: 'Short assessment in French (1-2 sentences)' },
+                    recommendation: { type: 'string', description: 'Concrete improvement suggestion in French, or empty if image is good' },
+                  },
+                  required: ['src', 'descriptiveness', 'relevance', 'persuasiveness', 'verdict'],
+                },
+              },
             },
+            required: ['page_intent', 'global_score', 'axes', 'suggestions'],
+            additionalProperties: false,
           },
-        }],
-        tool_choice: { type: 'function', function: { name: 'ux_analysis_result' } },
-      }),
+        },
+      }],
+      tool_choice: { type: 'function', function: { name: 'ux_analysis_result' } },
     }),
-    captureScreenshotWithAnnotations(page_url, tracked_site_id, serviceClient),
-  ]);
+  });
 
   if (!aiResp.ok) {
     if (aiResp.status === 429) return jsonError('Rate limit exceeded, please try again later', 429);
@@ -314,6 +334,7 @@ Deno.serve(handleRequest(async (req) => {
     screenshot_height: screenshotResult?.height || null,
     annotations,
     image_format_report: imageFormatReport,
+    image_analysis: result.image_analysis || [],
   });
 }));
 
@@ -346,28 +367,45 @@ async function captureScreenshotWithAnnotations(
     const script = `export default async ({ page }) => {
   await page.setViewport({ width: 1280, height: 900 });
   await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
-  await new Promise(r => setTimeout(r, 3000));
+  await new Promise(r => setTimeout(r, 2000));
 
-  // Wait for images to load
+  // Scroll progressively to trigger lazy-loaded images
+  const scrollHeight = await page.evaluate(() => document.body.scrollHeight);
+  const step = 600;
+  for (let y = 0; y < scrollHeight; y += step) {
+    await page.evaluate((top) => window.scrollTo(0, top), y);
+    await new Promise(r => setTimeout(r, 200));
+  }
+  // Scroll back to top
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await new Promise(r => setTimeout(r, 1000));
+
+  // Force-load remaining lazy images
   await page.evaluate(() => {
     return Promise.all(
-      Array.from(document.querySelectorAll('img[src], img[data-src], img[loading="lazy"]'))
-        .map(img => {
-          if (img.complete && img.naturalHeight > 0) return Promise.resolve();
-          img.loading = 'eager';
-          if (img.dataset.src && !img.src) img.src = img.dataset.src;
-          return new Promise(resolve => {
-            img.addEventListener('load', resolve, { once: true });
-            img.addEventListener('error', resolve, { once: true });
-            setTimeout(resolve, 4000);
-          });
+      Array.from(document.querySelectorAll('img[src], img[data-src], img[loading="lazy"], source[srcset]'))
+        .map(el => {
+          if (el.tagName === 'IMG') {
+            el.loading = 'eager';
+            if (el.dataset.src && !el.src) el.src = el.dataset.src;
+            if (el.dataset.srcset && !el.srcset) el.srcset = el.dataset.srcset;
+            if (el.complete && el.naturalHeight > 0) return Promise.resolve();
+            return new Promise(resolve => {
+              el.addEventListener('load', resolve, { once: true });
+              el.addEventListener('error', resolve, { once: true });
+              setTimeout(resolve, 4000);
+            });
+          }
+          return Promise.resolve();
         })
     );
   });
 
+  await new Promise(r => setTimeout(r, 1000));
+
   const fullHeight = await page.evaluate(() => document.body.scrollHeight);
 
-  // Extract image formats
+  // Extract image formats + context
   const imageFormats = await page.evaluate(() => {
     const imgs = Array.from(document.querySelectorAll('img[src]'));
     return imgs.map(img => {
@@ -376,8 +414,12 @@ async function captureScreenshotWithAnnotations(
       const alt = img.alt || '';
       const width = img.naturalWidth || img.width || 0;
       const height = img.naturalHeight || img.height || 0;
-      const fileSize = null; // not available client-side
-      return { src, ext, alt, width, height };
+      // Get surrounding context
+      const parent = img.closest('section, article, div, figure');
+      const nearbyText = parent ? (parent.textContent || '').slice(0, 200).trim() : '';
+      const isHero = !!(img.closest('header, .hero, [class*="hero"], [class*="banner"]'));
+      const isDecorative = (width < 50 || height < 50 || alt === '');
+      return { src, ext, alt, width, height, nearbyText, isHero, isDecorative };
     }).filter(i => i.src && !i.src.startsWith('data:'));
   });
 
@@ -677,10 +719,16 @@ Tu ne donnes pas de conseils génériques. Chaque recommandation est calibrée p
 Tu proposes des reformulations concrètes quand c'est pertinent.
 Réponds toujours en français.`;
 
-function buildPrompt(page: any, ctx: any, keywords: any[]) {
+function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = []) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
   ).join('\n');
+
+  const imageList = images.length > 0
+    ? images.map((img, i) =>
+        `${i + 1}. ${img.src}\n   - Alt: "${img.alt || '(vide)'}"\n   - Dimensions: ${img.width}x${img.height}\n   - Format: ${img.ext}\n   - Position: ${img.isHero ? 'Hero/Banner' : 'Corps de page'}\n   - Contexte textuel proche: "${(img.nearbyText || '').slice(0, 150)}"`
+      ).join('\n')
+    : 'Aucune image significative détectée';
 
   return `
 ## Page à analyser
@@ -698,6 +746,9 @@ function buildPrompt(page: any, ctx: any, keywords: any[]) {
 
 ### Contenu de la page (extrait):
 ${(page.body_text_truncated || '').slice(0, 3000)}
+
+## Images détectées sur la page
+${imageList}
 
 ## Contexte Business
 - Type: ${ctx.business_type || 'non défini'}
@@ -730,5 +781,12 @@ Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte b
 
 Pour chaque suggestion, propose une reformulation concrète quand c'est pertinent (current_text → suggested_text).
 Pour les éléments visuels identifiables, indique un element_selector CSS approximatif (ex: "h1", "section.hero .cta", "footer nav").
+
+## Analyse des images
+Pour chaque image significative listée ci-dessus, évalue :
+- **Descriptivité** (0-100) : L'image illustre-t-elle bien le contenu environnant ? L'alt-text est-il correct ?
+- **Pertinence** (0-100) : L'image est-elle pertinente par rapport à l'intention de la page et au contexte business ?
+- **Pouvoir de conviction** (0-100) : L'image renforce-t-elle la conversion (crédibilité, émotion, preuve sociale, produit) ?
+Donne un verdict court et une recommandation concrète si nécessaire. Utilise le champ image_analysis.
 `;
 }

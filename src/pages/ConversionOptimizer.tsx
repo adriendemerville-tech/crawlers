@@ -75,6 +75,16 @@ interface AnalysisResult {
     suggestionIndex?: number;
   }>;
   image_format_report?: ImageFormatReport;
+  image_analysis?: ImageAnalysis[];
+}
+
+interface ImageAnalysis {
+  src: string;
+  descriptiveness: number;
+  relevance: number;
+  persuasiveness: number;
+  verdict: string;
+  recommendation?: string;
 }
 
 interface SavedAnalysis {
@@ -492,6 +502,58 @@ export default function ConversionOptimizer() {
                     <CheckCircle2 className="h-4 w-4" />
                     Toutes les {result.image_format_report.total} images utilisent des formats optimisés (WebP, AVIF, SVG)
                   </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {result.image_analysis && result.image_analysis.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-violet-500" />
+                    Analyse qualitative des images ({result.image_analysis.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Évaluation de la descriptivité, pertinence et pouvoir de conviction de chaque image
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                    {result.image_analysis.map((img, i) => {
+                      const avgScore = Math.round((img.descriptiveness + img.relevance + img.persuasiveness) / 3);
+                      const scoreClr = avgScore >= 70 ? 'text-emerald-600' : avgScore >= 40 ? 'text-amber-600' : 'text-red-500';
+                      const fileName = img.src.split('/').pop()?.split('?')[0] || img.src;
+                      return (
+                        <div key={i} className="border border-border/40 rounded-lg p-3 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-xs font-mono text-muted-foreground truncate flex-1" title={img.src}>{fileName}</p>
+                            <span className={`text-sm font-bold ${scoreClr}`}>{avgScore}/100</span>
+                          </div>
+                          <div className="flex gap-4 text-xs">
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-muted-foreground">Descriptif</span>
+                              <span className="font-semibold">{img.descriptiveness}</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-muted-foreground">Pertinence</span>
+                              <span className="font-semibold">{img.relevance}</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-muted-foreground">Conviction</span>
+                              <span className="font-semibold">{img.persuasiveness}</span>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{img.verdict}</p>
+                          {img.recommendation && (
+                            <p className="text-xs text-violet-500 flex items-start gap-1">
+                              <Info className="h-3 w-3 mt-0.5 shrink-0" />
+                              {img.recommendation}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             )}
