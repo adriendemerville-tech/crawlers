@@ -544,7 +544,8 @@ export default function Lexique() {
   const sortedLetters = Object.keys(groupedTerms).sort();
 
   // PDF Generation function
-  const generatePDF = () => {
+  const generatePDF = async () => {
+    const { jsPDF, autoTable } = await loadPDFLibraries();
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;

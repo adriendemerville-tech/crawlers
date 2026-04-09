@@ -84,7 +84,8 @@ function extractActionDetails(ev: IkAction): { url: string; action: string; desc
   return { url, action: actionLabel, description: desc, date, time };
 }
 
-export function generateParmenionReport(events: IkAction[], domain: string = 'iktracker.fr') {
+export async function generateParmenionReport(events: IkAction[], domain: string = 'iktracker.fr') {
+  const { jsPDF, autoTable } = await loadPDFLibraries();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
   const now = new Date();
