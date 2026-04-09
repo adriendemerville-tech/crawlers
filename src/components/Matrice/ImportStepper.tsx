@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2, CreditCard } from 'lucide-react';
 import { detectMatriceType, type MatriceType, type DetectionResult } from '@/utils/matrice/typeDetector';
 import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCleaner';
+import { sanitizeAllPrompts } from '@/utils/matrice/promptSanitizer';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
@@ -206,6 +207,11 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       }
 
       const result = cleanImportedData(h, dataRows);
+
+      // Sanitize prompts: replace hardcoded URLs/brand names with placeholders
+      result.cleanedRows = sanitizeAllPrompts(result.cleanedRows, card ?? undefined);
+      console.log('[ImportStepper] Prompts sanitized — hardcoded URLs/brands replaced with placeholders');
+
       setCleaning(result);
       setStep('clean');
     } catch (err) {
