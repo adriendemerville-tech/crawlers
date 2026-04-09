@@ -558,18 +558,18 @@ export default function ConversionOptimizer() {
               </Card>
             )}
 
-            {result.image_analysis && result.image_analysis.length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4 text-violet-500" />
-                    Analyse qualitative des images ({result.image_analysis.length})
-                  </CardTitle>
-                  <CardDescription>
-                    Évaluation de la descriptivité, pertinence et pouvoir de conviction de chaque image
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4 text-violet-500" />
+                  Analyse qualitative des images {result.image_analysis && result.image_analysis.length > 0 ? `(${result.image_analysis.length})` : ''}
+                </CardTitle>
+                <CardDescription>
+                  Évaluation de la descriptivité, pertinence et pouvoir de conviction de chaque image
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {result.image_analysis && result.image_analysis.length > 0 ? (
                   <div className="space-y-3 max-h-[400px] overflow-y-auto">
                     {result.image_analysis.map((img, i) => {
                       const avgScore = Math.round((img.descriptiveness + img.relevance + img.persuasiveness) / 3);
@@ -606,9 +606,14 @@ export default function ConversionOptimizer() {
                       );
                     })}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                ) : (
+                  <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Info className="h-3.5 w-3.5" />
+                    Aucune image significative détectée sur cette page, ou l'IA n'a pas retourné d'analyse d'images pour cet audit.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
             {result.screenshot_url && (
               <div className="space-y-2">
