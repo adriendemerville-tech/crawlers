@@ -387,6 +387,7 @@ const categoryConfig = {
   performance: { icon: Zap, label: { fr: 'Performance', en: 'Performance', es: 'Rendimiento' } },
   technical: { icon: FileCode, label: { fr: 'Technique', en: 'Technical', es: 'Técnico' } },
   ai: { icon: Brain, label: { fr: 'IA', en: 'AI', es: 'IA' } },
+  ux: { icon: MousePointerClick, label: { fr: 'UX & Conversion', en: 'UX & Conversion', es: 'UX & Conversión' } },
 };
 
 const pageContent = {
