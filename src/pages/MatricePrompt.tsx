@@ -761,7 +761,7 @@ export default function MatricePrompt() {
 
           {/* Import row: import button + explanation */}
           <div className="flex items-center gap-3 mb-4">
-            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileImport} />
+            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.xlsm,.doc,.docx" className="hidden" onChange={handleFileImport} />
             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={docParsing} className="gap-2 shrink-0">
               {docParsing ? <><Loader2 className="h-4 w-4 animate-spin" /> Parsing…</> : <><Upload className="h-4 w-4" /> Importer</>}
             </Button>

@@ -657,7 +657,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                     {docParsing ? 'Parsing…' : hasImport ? 'Remplacer' : 'Importer'}
                   </span>
                 </Button>
-                <input type="file" accept=".csv,.tsv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileUpload} />
+                <input type="file" accept=".csv,.tsv,.xlsx,.xls,.xlsm,.doc,.docx" className="hidden" onChange={handleFileUpload} />
               </label>
             </div>
           </div>
@@ -682,7 +682,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                       Choisir un fichier
                     </span>
                   </Button>
-                  <input type="file" accept=".csv,.tsv,.xlsx,.xls,.doc,.docx" className="hidden" onChange={handleFileUpload} />
+                  <input type="file" accept=".csv,.tsv,.xlsx,.xls,.xlsm,.doc,.docx" className="hidden" onChange={handleFileUpload} />
                 </label>
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={loadDemoData}>
                   <FlaskConical className="h-3.5 w-3.5" />
