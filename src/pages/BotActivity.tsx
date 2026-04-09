@@ -213,7 +213,6 @@ export default function BotActivityPage() {
                     const intent = getBotIntent(entry.bot_name);
                     const intentLabel = getIntentLabel(intent);
                     const intentColor = getIntentColor(intent);
-                    const icon = getBotIcon(entry.bot_name);
 
                     return (
                       <motion.div
@@ -223,7 +222,7 @@ export default function BotActivityPage() {
                         transition={{ delay: i * 0.03, duration: 0.2 }}
                         className="flex items-center gap-3 py-3 px-4 hover:bg-muted/20 transition-colors"
                       >
-                        <span className="text-lg flex-shrink-0 w-7 text-center">{icon}</span>
+                        <Bot className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-sm">{entry.bot_name || 'Bot inconnu'}</span>
