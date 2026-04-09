@@ -576,14 +576,16 @@ export function MyTracking() {
                         >
                           {h.language === 'fr' ? 'Auditer' : h.language === 'es' ? 'Auditar' : 'Audit'}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1.5"
-                          onClick={() => navigate(`/app/conversion-optimizer?site=${h.currentSite!.id}`)}
-                        >
-                          UX
-                        </Button>
+                        {h.latestStats && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5"
+                            onClick={() => navigate(`/app/conversion-optimizer?site=${h.currentSite!.id}`)}
+                          >
+                            UX
+                          </Button>
+                        )}
                         {h.latestStats && !isMobile && (
                           <Button
                             size="sm"
