@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Loader2, ArrowLeft, Sparkles, AlertTriangle, CheckCircle2, Info, Smartp
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
+import { AnnotatedPageView } from '@/components/UxOptimizer/AnnotatedPageView';
 
 interface TrackedSite {
   id: string;
@@ -45,6 +46,14 @@ interface AnalysisResult {
   global_score: number;
   axes: Record<string, AxisResult>;
   suggestions: Suggestion[];
+  screenshot_url?: string | null;
+  screenshot_height?: number | null;
+  annotations?: Array<{
+    text: string;
+    rect: { x: number; y: number; width: number; height: number; tag?: string } | null;
+    axis: string;
+    priority: string;
+  }>;
 }
 
 interface SavedAnalysis {
@@ -331,6 +340,21 @@ export default function UxOptimizer() {
               })}
             </div>
 
+            {/* Annotated Page View */}
+            {result.screenshot_url && (
+              <AnnotatedPageView
+                screenshotUrl={result.screenshot_url}
+                screenshotHeight={result.screenshot_height || 3000}
+                annotations={result.annotations || []}
+                suggestions={result.suggestions}
+                onSelectSuggestion={(idx) => {
+                  // Scroll to the suggestion in the list below
+                  const el = document.getElementById(`suggestion-${idx}`);
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              />
+            )}
+
             {/* Suggestions */}
             <Card>
               <CardHeader className="pb-3">
@@ -344,7 +368,7 @@ export default function UxOptimizer() {
                     .map((s, i) => {
                       const meta = AXIS_META[s.axis];
                       return (
-                        <div key={i} className="border border-border/50 rounded-lg p-3 space-y-2">
+                        <div key={i} id={`suggestion-${i}`} className="border border-border/50 rounded-lg p-3 space-y-2 scroll-mt-20">
                           <div className="flex items-center gap-2 flex-wrap">
                             {priorityBadge(s.priority)}
                             {meta && <Badge variant="outline" className="text-[10px]">{meta.label}</Badge>}
