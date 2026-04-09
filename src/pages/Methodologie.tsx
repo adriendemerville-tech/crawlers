@@ -601,6 +601,50 @@ export default function Methodologie() {
             </p>
           </div>
         </section>
+
+        {/* ── Sources & Ressources ── */}
+        <section className={`py-12 px-4 border-t ${A.separator}`}>
+          <div className="mx-auto max-w-3xl">
+            <h2 className={`text-xl font-bold mb-6 ${A.heading}`}>
+              {t3(language, 'Sources & Ressources', 'Sources & Resources', 'Fuentes y Recursos')}
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                { title: 'Google Search Central — Crawling & Indexing', url: 'https://developers.google.com/search/docs/crawling-indexing' },
+                { title: 'Schema.org — Structured Data Reference', url: 'https://schema.org/docs/gs.html' },
+                { title: 'Google — Core Web Vitals', url: 'https://web.dev/articles/vitals' },
+                { title: 'W3C — Web Content Accessibility Guidelines', url: 'https://www.w3.org/WAI/standards-guidelines/wcag/' },
+                { title: 'Anthropic — Claude Pricing', url: 'https://www.anthropic.com/pricing' },
+                { title: 'Google — Search Quality Evaluator Guidelines (E-E-A-T)', url: 'https://static.googleusercontent.com/media/guidelines.raterhub.com/en//searchqualityevaluatorguidelines.pdf' },
+              ].map(s => (
+                <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer" className={`flex items-start gap-2 text-sm p-3 rounded-lg border ${A.separator} hover:bg-[#f0f0f0] dark:hover:bg-neutral-800 transition-colors`}>
+                  <BookOpen className={`h-4 w-4 ${A.muted} shrink-0 mt-0.5`} />
+                  <span className={A.body}>{s.title}</span>
+                </a>
+              ))}
+            </div>
+            <div className="mt-8">
+              <h3 className={`text-lg font-semibold mb-4 ${A.heading}`}>
+                {t3(language, 'Pages associées', 'Related Pages', 'Páginas relacionadas')}
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { to: '/audit-expert', label: 'Audit Expert SEO/GEO' },
+                  { to: '/score-geo', label: 'Score GEO' },
+                  { to: '/comparatif-claude-vs-crawlers', label: 'Claude vs Crawlers' },
+                  { to: '/tarifs', label: 'Tarifs' },
+                  { to: '/analyse-bots-ia', label: 'Analyse Bots IA' },
+                  { to: '/blog', label: 'Blog' },
+                  { to: '/data-flow-diagram', label: 'Data Flow' },
+                ].map(l => (
+                  <Link key={l.to} to={l.to} className={`text-sm px-3 py-1.5 rounded-full border ${A.badge} hover:bg-[#e8e8e8] dark:hover:bg-neutral-700 transition-colors`}>
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       <Suspense fallback={null}>
         <Footer />
