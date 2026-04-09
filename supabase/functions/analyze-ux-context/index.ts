@@ -315,8 +315,12 @@ Deno.serve(handleRequest(async (req) => {
   let annotations: any[] = [];
   const positionTargets = buildPositionTargets(result.suggestions);
 
-  if (screenshotResult?.success && positionTargets.length > 0) {
-    annotations = await findTextPositions(page_url, positionTargets);
+  // Add image analysis items as annotation targets
+  const imageAnnotationTargets = buildImageAnnotationTargets(result.image_analysis || [], screenshotResult?.imageFormats || []);
+  const allTargets = [...positionTargets, ...imageAnnotationTargets];
+
+  if (screenshotResult?.success && allTargets.length > 0) {
+    annotations = await findTextPositions(page_url, allTargets);
   }
 
   const { error: insertErr } = await serviceClient
@@ -450,6 +454,26 @@ function buildPositionTargets(suggestions: any[] = []) {
       suggestionIndex,
     }))
     .filter((target) => target.text.length > 3 || !!target.selector);
+}
+
+function buildImageAnnotationTargets(imageAnalysis: any[], imageFormats: any[]) {
+  if (!Array.isArray(imageAnalysis) || imageAnalysis.length === 0) return [];
+
+  return imageAnalysis.map((img, idx) => {
+    // Try to find the image's alt text for positioning
+    const matchedFormat = imageFormats.find((f: any) => f.src === img.src);
+    const altText = matchedFormat?.alt || img.src.split('/').pop()?.split('?')[0] || '';
+    return {
+      text: altText.slice(0, 140),
+      axis: 'image_quality',
+      priority: ((img.descriptiveness + img.relevance + img.persuasiveness) / 3) < 50 ? 'high' : 'medium',
+      selector: `img[src*="${img.src.split('/').pop()?.split('?')[0]?.slice(0, 60) || ''}"]`,
+      suggestionIndex: 9000 + idx, // High offset to avoid collision with suggestion indices
+      isImageAnnotation: true,
+      imageVerdict: img.verdict || '',
+      imageRecommendation: img.recommendation || '',
+    };
+  });
 }
 
 async function captureScreenshotWithAnnotations(
