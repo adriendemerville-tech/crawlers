@@ -335,7 +335,12 @@ export function BlogManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Import Banner */}
+      <Tabs defaultValue="articles" className="w-full">
+        <TabsList>
+          <TabsTrigger value="articles" className="gap-2"><FileText className="h-4 w-4" />Articles</TabsTrigger>
+          <TabsTrigger value="landings" className="gap-2"><Layout className="h-4 w-4" />Landing Pages</TabsTrigger>
+        </TabsList>
+        <TabsContent value="articles" className="space-y-6">
       {staticArticlesNotImported.length > 0 && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="py-4">
