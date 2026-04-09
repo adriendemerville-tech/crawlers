@@ -8,7 +8,7 @@ import { Activity, ArrowLeft, Pause, Play, Filter, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getBotIntent, getIntentLabel, getIntentColor, getBotIcon, BotIntent } from '@/components/BotActivity/botIntentMap';
+import { getBotIntent, getIntentLabel, getIntentColor, BotIntent } from '@/components/BotActivity/botIntentMap';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -182,9 +182,9 @@ export default function BotActivityPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes les intentions</SelectItem>
-                <SelectItem value="training">🟢 Entraînement</SelectItem>
-                <SelectItem value="fetch_user">🔶 Fetch utilisateur</SelectItem>
-                <SelectItem value="indexing">🔵 Indexation</SelectItem>
+                <SelectItem value="training">Entrainement</SelectItem>
+                <SelectItem value="fetch_user">Fetch utilisateur</SelectItem>
+                <SelectItem value="indexing">Indexation</SelectItem>
               </SelectContent>
             </Select>
             <span className="text-xs text-muted-foreground ml-auto">
