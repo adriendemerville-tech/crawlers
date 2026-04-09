@@ -1,7 +1,7 @@
 import { useState, useCallback, ElementType } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
-import { BotActivityWidget } from '@/components/BotActivity/BotActivityWidget';
+
 import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -310,7 +310,7 @@ export function MyTracking() {
     <div className="space-y-6">
       <AnomalyAlertsBanner trackedSiteId={h.selectedSite} domain={h.currentSite?.domain || ''} simulatedDataEnabled={h.simulatedDataEnabled} />
       <ActiveCrawlBanner />
-      <BotActivityWidget />
+      
       <Card>
         <CardHeader className="pb-2 pt-3 px-4">
           <CardTitle>{t.title}</CardTitle>
