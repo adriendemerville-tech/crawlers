@@ -434,8 +434,8 @@ async function captureScreenshotWithAnnotations(
       .from('ux-screenshots')
       .getPublicUrl(fileName);
 
-    console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px)`);
-    return { success: true, url: urlData.publicUrl, height: data.height };
+    console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px, images: ${(data.imageFormats || []).length})`);
+    return { success: true, url: urlData.publicUrl, height: data.height, imageFormats: data.imageFormats || [] };
   } catch (error: any) {
     console.error('[analyze-ux-context] Screenshot capture failed:', error.message);
     return { success: false };
