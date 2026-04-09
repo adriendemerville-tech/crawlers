@@ -123,7 +123,7 @@ export default function ConversionOptimizer() {
   const [history, setHistory] = useState<SavedAnalysis[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [backfillingAnnotations, setBackfillingAnnotations] = useState(false);
-
+  const [showContentArchitect, setShowContentArchitect] = useState(false);
   const fetchHistory = async (siteId: string) => {
     if (!siteId) {
       setHistory([]);
