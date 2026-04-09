@@ -776,7 +776,7 @@ Tu ne donnes pas de conseils génériques. Chaque recommandation est calibrée p
 Tu proposes des reformulations concrètes quand c'est pertinent.
 Réponds toujours en français.`;
 
-function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = []) {
+function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = []) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
   ).join('\n');
@@ -786,6 +786,25 @@ function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = []) {
         `${i + 1}. ${img.src}\n   - Alt: "${img.alt || '(vide)'}"\n   - Dimensions: ${img.width}x${img.height}\n   - Format: ${img.ext}\n   - Position: ${img.isHero ? 'Hero/Banner' : 'Corps de page'}\n   - Contexte textuel proche: "${(img.nearbyText || '').slice(0, 150)}"`
       ).join('\n')
     : 'Aucune image significative détectée';
+
+  // Build CRO matrix section grouped by page type
+  let croMatrixSection = '';
+  if (croMatrix.length > 0) {
+    const pageTypes = [...new Set(croMatrix.map((r: any) => r.page_type))];
+    const lines = pageTypes.map((pt: string) => {
+      const vars = croMatrix
+        .filter((r: any) => r.page_type === pt)
+        .map((r: any) => `${r.variable_label} (${r.variable_key}): ${r.is_required ? '✅ REQUIS' : '⬜ optionnel'}`)
+        .join(', ');
+      return `- **${pt}** : ${vars}`;
+    });
+    croMatrixSection = `
+## Matrice CRO de référence (variables requises par type de page)
+Détecte d'abord le TYPE de cette page (home, product, service, landing, blog_article, category, about, contact), puis vérifie la PRÉSENCE ou l'ABSENCE de chaque variable CRO marquée "REQUIS" pour ce type. Signale chaque variable requise manquante comme une suggestion de priorité "high" ou "critical".
+
+${lines.join('\n')}
+`;
+  }
 
   return `
 ## Page à analyser
@@ -824,10 +843,9 @@ ${imageList}
 ${ctx._incomplete ? `
 ⚠️ **ATTENTION** : La carte d'identité de ce site est largement incomplète. Utilise le contenu de la page (texte, H1, meta description, images, CTAs) pour DÉDUIRE le contexte business. Base tes recommandations sur ce que tu observes dans la page, pas sur les champs "non défini". Remplis également le champ identity_inference avec les valeurs que tu déduis (business_type, market_sector, commercial_model, target_audience, products_services, entity_type).
 ` : ''}
-
 ## Mots-clés ciblés
 ${keywordList || 'Aucun mot-clé trouvé'}
-
+${croMatrixSection}
 ## Instructions
 Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte business ci-dessus :
 
@@ -838,6 +856,8 @@ Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte b
 5. **Conversion** : Éléments de conversion présents ? Preuves sociales ? Urgence ? Proposition de valeur claire ?
 6. **Expérience mobile** : Structure adaptée au mobile ? Taille des blocs de texte ? Accessibilité des CTAs ?
 7. **Utilisation des mots-clés** : Les mots-clés ciblés sont-ils utilisés naturellement ? Dans les bons éléments (H1, H2, body) ? Densité appropriée ?
+
+**IMPORTANT** : Utilise la matrice CRO ci-dessus pour vérifier systématiquement la présence de chaque variable REQUISE pour le type de page détecté. Chaque variable requise absente doit générer une suggestion spécifique.
 
 Pour chaque suggestion, propose une reformulation concrète quand c'est pertinent (current_text → suggested_text).
 Pour les éléments visuels identifiables, indique un element_selector CSS approximatif (ex: "h1", "section.hero .cta", "footer nav").
