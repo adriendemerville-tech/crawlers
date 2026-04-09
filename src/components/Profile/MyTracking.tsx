@@ -584,7 +584,7 @@ export function MyTracking() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                          className="gap-1.5"
                           onClick={() => navigate(`/app/conversion-optimizer?site=${h.currentSite!.id}`)}
                         >
                           UX
