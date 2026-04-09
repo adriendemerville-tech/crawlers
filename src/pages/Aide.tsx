@@ -326,6 +326,8 @@ const DOC_SECTIONS: DocSection[] = [
 <tr class="border-t border-border"><td class="p-2">Crawl multi-pages</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">5 000 p/mois</td><td class="p-2 text-center">50 000 p/mois</td></tr>
 <tr class="border-t border-border"><td class="p-2">Tracking SERP/GSC/GA4</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Quiz IA intégrés</td><td class="p-2 text-center">Crawlers</td><td class="p-2 text-center">Tous</td><td class="p-2 text-center">Tous</td></tr>
+<tr class="border-t border-border"><td class="p-2">UX Optimizer</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
+<tr class="border-t border-border"><td class="p-2">Content Architect + Calendrier éditorial</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Sites simultanés</td><td class="p-2 text-center">1</td><td class="p-2 text-center">30</td><td class="p-2 text-center">30</td></tr>
 <tr class="border-t border-border"><td class="p-2">Prix</td><td class="p-2 text-center">Gratuit</td><td class="p-2 text-center font-semibold">à partir de 29€/mois*</td><td class="p-2 text-center font-semibold">79€/mois</td></tr>
 </tbody>
