@@ -28,6 +28,15 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   "/sea-seo-bridge": { title: "SEA → SEO Bridge — Économies Google Ads | Crawlers.fr", description: "Identifiez les mots-clés payants capturables en SEO et calculez vos économies mensuelles potentielles." },
   "/data-flow-diagram": { title: "Architecture & flux de données — Crawlers.fr", description: "Découvrez comment Crawlers.fr protège vos données Google avec un pare-feu de données et un traitement interne." },
   "/observatoire": { title: "Observatoire SEO & GEO — Tendances 2026 | Crawlers.fr", description: "Suivez les tendances SEO et GEO en temps réel : évolution des SERP, adoption IA, métriques sectorielles." },
+  "/conversion-optimizer": { title: "Conversion Optimizer — Audit UX/CRO par IA | Crawlers.fr", description: "Audit UX/CRO contextuel sur 7 axes : ton, CTA, alignement, lisibilité, conversion, mobile, mots-clés. Capture annotée." },
+  "/analyse-logs": { title: "Analyse de Logs Serveur — Crawl Google & IA | Crawlers.fr", description: "Analysez vos logs serveur : 40+ bots détectés, budget crawl, pages orphelines, monitoring continu via Cloudflare." },
+  "/eeat": { title: "Audit E-E-A-T — Scoring pondéré sur 100 | Crawlers.fr", description: "Évaluation complète des signaux E-E-A-T evidence-based avec scoring pondéré et pénalités automatiques." },
+  "/analyse-bots-ia": { title: "Analyse Bots IA — GPTBot, ClaudeBot, Google-Extended | Crawlers.fr", description: "Vérifiez l'accès des bots IA à votre site et optimisez votre robots.txt pour la visibilité LLM." },
+  "/score-geo": { title: "Score GEO — Optimisation moteurs IA | Crawlers.fr", description: "Note 0-100 mesurant votre optimisation pour ChatGPT, Gemini, Perplexity et les moteurs IA génératifs." },
+  "/visibilite-llm": { title: "Visibilité LLM — Présence dans les IA | Crawlers.fr", description: "Mesurez votre présence dans ChatGPT, Gemini, Perplexity, Claude et Grok sur vos mots-clés cibles." },
+  "/pagespeed": { title: "PageSpeed — Core Web Vitals | Crawlers.fr", description: "Analyse Core Web Vitals (LCP, FID, CLS, TTFB) mobile et desktop via Google PageSpeed Insights." },
+  "/comparatif-claude-code-vs-crawlers": { title: "Claude Code vs Crawlers — Comparatif SEO | Crawlers.fr", description: "Comparaison Claude Code vs Crawlers.fr pour l'audit et l'optimisation SEO/GEO." },
+  "/aide": { title: "Centre d'aide Crawlers.fr — Documentation SEO, GEO & IA", description: "Documentation complète de la plateforme : audits, scores, crédits, intégrations et assistants IA." },
 };
 
 const baseUrl = "https://crawlers.fr";
