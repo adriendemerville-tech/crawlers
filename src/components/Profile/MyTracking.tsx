@@ -584,7 +584,7 @@ export function MyTracking() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                          className="gap-1.5"
                           onClick={() => navigate(`/app/conversion-optimizer?site=${h.currentSite!.id}`)}
                         >
                           UX
@@ -593,7 +593,7 @@ export function MyTracking() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="gap-1.5 border-[#a78bfa]/40 text-[#a78bfa] bg-transparent hover:bg-[#a78bfa]/10 hover:text-[#a78bfa]"
+                            className="gap-1.5"
                             disabled={h.isLoadingAudit}
                             onClick={async () => {
                               h.setArchitectSiteId(h.currentSite!.id);
