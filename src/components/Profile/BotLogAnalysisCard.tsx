@@ -4,8 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Activity, Bot, Globe, TrendingUp, RefreshCw } from 'lucide-react';
+import { Activity, Bot, Globe, TrendingUp, RefreshCw, Radio } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Link } from 'react-router-dom';
 
 interface BotLogAnalysisCardProps {
   trackedSiteId: string;
@@ -192,7 +193,15 @@ export function BotLogAnalysisCard({ trackedSiteId, domain, simulatedDataEnabled
 
         {/* Area Chart */}
         <div className="rounded-lg border bg-card p-4">
-          <p className="text-sm font-medium text-foreground mb-3">{t.chartTitle}</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-medium text-foreground">{t.chartTitle}</p>
+            <Link to="/app/bot-activity">
+              <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] text-muted-foreground hover:text-foreground border-border/50">
+                <Radio className="h-3 w-3" />
+                Live
+              </Button>
+            </Link>
+          </div>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
