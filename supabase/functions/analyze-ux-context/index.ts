@@ -282,6 +282,27 @@ Deno.serve(handleRequest(async (req) => {
     }
   }
 
+  // Analyze image formats
+  const imageFormats = screenshotResult?.imageFormats || [];
+  const unoptimizedImages = imageFormats.filter((img: any) => 
+    ['jpg', 'jpeg', 'png', 'bmp', 'gif'].includes(img.ext)
+  );
+  const optimizedImages = imageFormats.filter((img: any) => 
+    ['webp', 'avif', 'svg'].includes(img.ext)
+  );
+  const imageFormatReport = {
+    total: imageFormats.length,
+    unoptimized: unoptimizedImages.length,
+    optimized: optimizedImages.length,
+    details: imageFormats.map((img: any) => ({
+      src: img.src,
+      format: img.ext,
+      is_optimized: ['webp', 'avif', 'svg'].includes(img.ext),
+      dimensions: `${img.width}x${img.height}`,
+      alt: img.alt,
+    })),
+  };
+
   return jsonOk({
     success: true,
     page_url,
@@ -292,6 +313,7 @@ Deno.serve(handleRequest(async (req) => {
     screenshot_url: screenshotResult?.url || null,
     screenshot_height: screenshotResult?.height || null,
     annotations,
+    image_format_report: imageFormatReport,
   });
 }));
 
