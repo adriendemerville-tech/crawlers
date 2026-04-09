@@ -91,6 +91,7 @@ const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
 const ApiIntegrations = lazy(() => import("./pages/ApiIntegrations"));
 const ConversionOptimizer = lazy(() => import("./pages/ConversionOptimizer"));
 const ConversionOptimizerLanding = lazy(() => import("./pages/ConversionOptimizerLanding"));
+const BotActivity = lazy(() => import("./pages/BotActivity"));
 
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
