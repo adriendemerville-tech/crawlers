@@ -288,6 +288,20 @@ Suivi hebdomadaire de vos positions Google :
 - Agent SEO : optimisation automatique du contenu (blog : libre, landing pages : max 10% de modification)
 - Agent CTO : maintenance algorithmique automatique, self-critique et proposition de patches
 
+### UX Optimizer
+Audit UX/CRO contextuel par IA sur 7 axes :
+- **Ton & Voix** : adaptation au positionnement et à l'audience cible
+- **Pression CTA** : placement, fréquence, wording des appels à l'action
+- **Alignement** : cohérence page ↔ positionnement ↔ modèle commercial
+- **Lisibilité** : structure, paragraphes, vocabulaire adapté
+- **Conversion** : preuves sociales, proposition de valeur, éléments de réassurance
+- **Expérience mobile** : accessibilité des CTAs, taille des blocs de texte
+- **Utilisation des mots-clés** : densité, naturalité, placement (H1, H2, body)
+
+L'analyse est calibrée sur le contexte business (type, audience, maturité, voice DNA, objectifs). Les suggestions critiques (critical/high) alimentent automatiquement le **Workbench Architect** avec `source_function = 'analyze-ux-context'`, permettant l'exécution par Code Architect ou Content Architect.
+
+Accessible depuis Console → Mes Sites → bouton UX, ou via /app/ux-optimizer. Nécessite un crawl complété. Aucun re-crawl : utilise les données existantes de `crawl_pages`.
+
 ### Marina — Pipeline de Prospection B2B
 Marina est un pipeline d'audit automatisé disponible via API publique et dashboard admin.
 
