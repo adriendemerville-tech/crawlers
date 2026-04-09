@@ -209,6 +209,43 @@ Deno.serve(handleRequest(async (req) => {
     console.error('[analyze-ux-context] Insert error:', insertErr);
   }
 
+  // ── Inject critical/high suggestions into architect_workbench ──
+  const workbenchItems = (result.suggestions || [])
+    .filter((s: any) => s.priority === 'critical' || s.priority === 'high')
+    .map((s: any) => ({
+      domain: site.domain,
+      tracked_site_id,
+      user_id: user.id,
+      source_type: 'ux_context',
+      source_function: 'analyze-ux-context',
+      source_record_id: `ux_${tracked_site_id}_${page_url}_${s.axis}_${s.title?.slice(0, 30)}`,
+      finding_category: 'ux_optimization',
+      severity: s.priority === 'critical' ? 'critical' : 'high',
+      title: `UX: ${s.title}`,
+      description: s.rationale || '',
+      target_url: page_url,
+      target_selector: s.axis === 'cta_pressure' ? 'cta' : s.axis === 'keyword_usage' ? 'content' : s.axis === 'readability' ? 'content' : s.axis,
+      target_operation: s.suggested_text ? 'replace' : 'replace',
+      payload: {
+        axis: s.axis,
+        current_text: s.current_text || null,
+        suggested_text: s.suggested_text || null,
+        global_score: result.global_score,
+        page_intent: result.page_intent,
+      },
+    }));
+
+  if (workbenchItems.length > 0) {
+    const { error: wbErr } = await serviceClient
+      .from('architect_workbench')
+      .upsert(workbenchItems, { onConflict: 'source_type,source_record_id' });
+    if (wbErr) {
+      console.error('[analyze-ux-context] Workbench insert error:', wbErr);
+    } else {
+      console.log(`[analyze-ux-context] Injected ${workbenchItems.length} items into workbench`);
+    }
+  }
+
   return jsonOk({
     success: true,
     page_url,
