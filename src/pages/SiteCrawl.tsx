@@ -2342,33 +2342,56 @@ export default function SiteCrawl() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {pastCrawls.filter(c => c.status !== 'running' && c.status !== 'pending').map(c => {
+                  {pastCrawls.filter(c => c.status !== 'running' && c.status !== 'pending').map((c, _i, arr) => {
                     const isActive = viewingCrawlId === c.id;
+                    // Check if this is the latest crawl for its domain
+                    const isLatestForDomain = arr.findIndex(x => x.domain === c.domain) === arr.indexOf(c);
                     return (
-                      <button
-                        type="button"
-                        key={c.id}
-                        onClick={() => viewCrawl(c)}
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors text-left ${isActive ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
-                      >
-                        <div>
-                          <div className="text-sm font-medium text-foreground">{c.domain}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
+                      <div key={c.id} className="group relative">
+                        <button
+                          type="button"
+                          onClick={() => viewCrawl(c)}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors text-left ${isActive ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
+                        >
+                          <div>
+                            <div className="text-sm font-medium text-foreground">{c.domain}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {c.avg_score && (
-                            <span className={`text-sm font-bold ${getScoreColor(c.avg_score)}`}>{c.avg_score}/200</span>
-                          )}
-                          {c.status === 'error' && (
-                            <Badge variant="destructive">
-                              {c.status}
-                            </Badge>
-                          )}
-                          <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      </button>
+                          <div className="flex items-center gap-3">
+                            {c.avg_score && (
+                              <span className={`text-sm font-bold ${getScoreColor(c.avg_score)}`}>{c.avg_score}/200</span>
+                            )}
+                            {c.status === 'error' && (
+                              <Badge variant="destructive">
+                                {c.status}
+                              </Badge>
+                            )}
+                            <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                        </button>
+                        {/* Delete button — hidden for latest crawl of each domain */}
+                        {!isLatestForDomain && (
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              await supabase.from('site_crawls').delete().eq('id', c.id);
+                              setPastCrawls(prev => prev.filter(x => x.id !== c.id));
+                              if (viewingCrawlId === c.id) {
+                                setViewingCrawlId(null);
+                                setPages([]);
+                              }
+                              toast.success(language === 'fr' ? 'Crawl supprimé' : 'Crawl deleted');
+                            }}
+                            className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive"
+                            title={language === 'fr' ? 'Supprimer ce crawl' : 'Delete this crawl'}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
