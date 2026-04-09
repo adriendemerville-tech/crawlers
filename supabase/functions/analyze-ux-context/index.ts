@@ -182,6 +182,22 @@ Deno.serve(handleRequest(async (req) => {
                     required: ['axis', 'priority', 'title', 'rationale'],
                   },
                 },
+                image_analysis: {
+                  type: 'array',
+                  description: 'Analysis of each significant image on the page',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      src: { type: 'string', description: 'Image URL (from the list provided)' },
+                      descriptiveness: { type: 'number', description: 'How well the image describes/illustrates the content (0-100)' },
+                      relevance: { type: 'number', description: 'How relevant is this image to the page intent and business context (0-100)' },
+                      persuasiveness: { type: 'number', description: 'How convincing/persuasive is this image for conversion (0-100)' },
+                      verdict: { type: 'string', description: 'Short assessment in French (1-2 sentences)' },
+                      recommendation: { type: 'string', description: 'Concrete improvement suggestion in French, or null if image is good' },
+                    },
+                    required: ['src', 'descriptiveness', 'relevance', 'persuasiveness', 'verdict'],
+                  },
+                },
               },
               required: ['page_intent', 'global_score', 'axes', 'suggestions'],
               additionalProperties: false,
