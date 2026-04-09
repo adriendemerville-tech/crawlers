@@ -1,5 +1,4 @@
 // Dynamic imports to avoid 140KB bundle on initial load
-import type jsPDF from 'jspdf';
 
 const loadPDFLibraries = async () => {
   const [jspdfModule, autoTableModule] = await Promise.all([
