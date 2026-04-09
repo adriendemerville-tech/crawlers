@@ -3019,11 +3019,34 @@ Allow: /`}</pre>
 
         <p>Crawlers.fr n'est pas un chatbot. C'est une plateforme qui crawle, connecte, mesure, analyse et génère — avec la précision d'un outil spécialisé et la puissance de l'IA en couche d'intelligence, pas en substitut de méthode.</p>
 
+        <h2>Sources & Ressources</h2>
+
+        <p>Pour approfondir les concepts abordés dans cet article :</p>
+        <ul>
+          <li><a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener noreferrer">Anthropic — Tarifs Claude Pro & API</a></li>
+          <li><a href="https://docs.anthropic.com/en/docs/claude-code" target="_blank" rel="noopener noreferrer">Anthropic — Documentation Claude Code</a></li>
+          <li><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener noreferrer">Model Context Protocol (MCP) — Spécification officielle</a></li>
+          <li><a href="https://developers.google.com/search/docs/crawling-indexing" target="_blank" rel="noopener noreferrer">Google Search Central — Crawling & Indexation</a></li>
+          <li><a href="https://schema.org/docs/gs.html" target="_blank" rel="noopener noreferrer">Schema.org — Guide des données structurées</a></li>
+          <li><a href="https://web.dev/articles/vitals" target="_blank" rel="noopener noreferrer">Google — Core Web Vitals</a></li>
+        </ul>
+
         <RichLinkCard
           href="/comparatif-claude-vs-crawlers"
           title="Comparatif détaillé : Claude Stack vs Crawlers.fr"
           description="14 critères passés au crible — tableau comparatif complet."
+        />
 
+        <RichLinkCard
+          href="/methodologie"
+          title="Méthodologie Crawlers.fr — 7 algorithmes propriétaires"
+          description="Comment Crawlers analyse votre site : pipeline, algorithmes et architecture."
+        />
+
+        <RichLinkCard
+          href="/score-geo"
+          title="Score GEO — Visibilité dans les moteurs IA"
+          description="Mesurez votre visibilité dans ChatGPT, Gemini, Perplexity et Claude."
         />
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />

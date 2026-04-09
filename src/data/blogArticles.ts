@@ -834,8 +834,11 @@ export const blogArticles: BlogArticle[] = [
     },
     sources: [
       { title: 'Anthropic — Claude Pricing', url: 'https://www.anthropic.com/pricing' },
-      { title: 'Anthropic — Claude Code', url: 'https://docs.anthropic.com/en/docs/claude-code' },
-      { title: 'Model Context Protocol', url: 'https://modelcontextprotocol.io/' },
+      { title: 'Anthropic — Claude Code Documentation', url: 'https://docs.anthropic.com/en/docs/claude-code' },
+      { title: 'Model Context Protocol (MCP)', url: 'https://modelcontextprotocol.io/' },
+      { title: 'Google Search Central — Crawling & Indexing', url: 'https://developers.google.com/search/docs/crawling-indexing' },
+      { title: 'Schema.org — Structured Data Guide', url: 'https://schema.org/docs/gs.html' },
+      { title: 'Google — Core Web Vitals', url: 'https://web.dev/articles/vitals' },
       { title: 'Crawlers.fr — Méthodologie', url: 'https://crawlers.fr/methodologie' },
     ],
   },

@@ -119,11 +119,19 @@ export default function ComparatifClaudeVsCrawlers() {
         <title>Claude Cowork + Code vs Crawlers.fr — Comparatif SEO/GEO 2026</title>
         <meta name="description" content="Claude Cowork, Claude Code et MCP vs Crawlers.fr : comparatif détaillé pour freelances SEO. 14 critères, tarifs, limites, intégrations. Pourquoi 29€/mois de Crawlers remplace votre stack Claude." />
         <link rel="canonical" href={`${SITE_URL}/comparatif-claude-vs-crawlers`} />
-        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:title" content="Claude vs Crawlers.fr — Le vrai comparatif SEO/GEO 2026" />
         <meta property="og:description" content="14 critères passés au crible. Pourquoi le stack Claude ne remplace pas un outil qui crawle, connecte Google et audite vraiment." />
         <meta property="og:url" content={`${SITE_URL}/comparatif-claude-vs-crawlers`} />
+        <meta property="og:image" content={`${SITE_URL}/og-image.png`} />
+        <meta property="og:locale" content="fr_FR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Claude vs Crawlers.fr — Le vrai comparatif SEO/GEO 2026" />
+        <meta name="twitter:description" content="14 critères passés au crible. Pourquoi 29€/mois de Crawlers remplacent votre stack Claude." />
+        <meta name="twitter:image" content={`${SITE_URL}/og-image.png`} />
+        <meta name="author" content="Adrien de Volontat" />
         <script type="application/ld+json">{JSON.stringify(articleSD)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSD)}</script>
       </Helmet>
@@ -328,6 +336,43 @@ export default function ComparatifClaudeVsCrawlers() {
                 <p className={A.muted}>
                   Claude est un surhomme. Crawlers est une armée de plusieurs légions. Ceux qui confient leur SEO/GEO à un assistant IA gagnent de la vitesse sur les tâches, mais perdent en précision partout ailleurs.
                 </p>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Sources & Liens ── */}
+          <section className={`py-12 px-4 ${A.sectionAlt}`}>
+            <div className="mx-auto max-w-3xl">
+              <h2 className={`text-xl font-bold mb-6 ${A.heading}`}>Sources & Ressources</h2>
+              <div className="grid gap-3 sm:grid-cols-2 mb-8">
+                {[
+                  { title: 'Anthropic — Claude Pricing', url: 'https://www.anthropic.com/pricing' },
+                  { title: 'Anthropic — Claude Code Documentation', url: 'https://docs.anthropic.com/en/docs/claude-code' },
+                  { title: 'Model Context Protocol (MCP)', url: 'https://modelcontextprotocol.io/' },
+                  { title: 'Google Search Central — Crawling', url: 'https://developers.google.com/search/docs/crawling-indexing' },
+                  { title: 'Schema.org — Structured Data', url: 'https://schema.org/docs/gs.html' },
+                  { title: 'Google — Core Web Vitals', url: 'https://web.dev/articles/vitals' },
+                ].map(s => (
+                  <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer" className={`flex items-start gap-2 text-sm p-3 rounded-lg border ${A.separator} hover:bg-[#f0f0f0] dark:hover:bg-neutral-800 transition-colors`}>
+                    <Globe className="h-4 w-4 text-[#6b6b6b] shrink-0 mt-0.5" />
+                    <span className={A.body}>{s.title}</span>
+                  </a>
+                ))}
+              </div>
+              <h3 className={`text-lg font-semibold mb-4 ${A.heading}`}>Pages associées</h3>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { to: '/methodologie', label: 'Méthodologie' },
+                  { to: '/audit-expert', label: 'Audit Expert' },
+                  { to: '/score-geo', label: 'Score GEO' },
+                  { to: '/tarifs', label: 'Tarifs' },
+                  { to: '/blog/claude-cowork-code-vs-crawlers-seo-geo', label: 'Article blog détaillé' },
+                  { to: '/analyse-bots-ia', label: 'Analyse Bots IA' },
+                ].map(l => (
+                  <Link key={l.to} to={l.to} className={`text-sm px-3 py-1.5 rounded-full border ${A.badge} hover:bg-[#e8e8e8] dark:hover:bg-neutral-700 transition-colors`}>
+                    {l.label}
+                  </Link>
+                ))}
               </div>
             </div>
           </section>
