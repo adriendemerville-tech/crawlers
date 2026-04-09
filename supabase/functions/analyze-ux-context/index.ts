@@ -133,11 +133,12 @@ Deno.serve(handleRequest(async (req) => {
     _incomplete: identityIncomplete,
   };
 
-  // Fetch CRO variable matrix for all page types
+  // Fetch content requirements matrix (CRO consumer only for this function)
   const { data: croMatrix } = await serviceClient
-    .from('cro_variable_matrix')
-    .select('variable_key, variable_label, variable_description, page_type, is_required')
-    .order('variable_key');
+    .from('content_requirements_matrix')
+    .select('variable_key, variable_label, variable_description, page_type, search_intent, is_required, weight')
+    .eq('consumer', 'cro')
+    .order('weight', { ascending: false });
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return jsonError('AI not configured', 500);
@@ -787,20 +788,27 @@ function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], c
       ).join('\n')
     : 'Aucune image significative détectée';
 
-  // Build CRO matrix section grouped by page type
+  // Build CRO matrix section grouped by page type + intent
   let croMatrixSection = '';
   if (croMatrix.length > 0) {
     const pageTypes = [...new Set(croMatrix.map((r: any) => r.page_type))];
     const lines = pageTypes.map((pt: string) => {
-      const vars = croMatrix
-        .filter((r: any) => r.page_type === pt)
-        .map((r: any) => `${r.variable_label} (${r.variable_key}): ${r.is_required ? '✅ REQUIS' : '⬜ optionnel'}`)
-        .join(', ');
-      return `- **${pt}** : ${vars}`;
+      const ptVars = croMatrix.filter((r: any) => r.page_type === pt);
+      const intents = [...new Set(ptVars.map((r: any) => r.search_intent))];
+      const intentLines = intents.map((intent: string) => {
+        const vars = ptVars
+          .filter((r: any) => r.search_intent === intent)
+          .map((r: any) => `${r.variable_label} [w:${r.weight}]: ${r.is_required ? '✅ REQUIS' : '⬜'}`)
+          .join(', ');
+        return `  - ${intent === 'all' ? 'Toute intention' : intent}: ${vars}`;
+      });
+      return `- **${pt}**\n${intentLines.join('\n')}`;
     });
     croMatrixSection = `
-## Matrice CRO de référence (variables requises par type de page)
-Détecte d'abord le TYPE de cette page (home, product, service, landing, blog_article, category, about, contact), puis vérifie la PRÉSENCE ou l'ABSENCE de chaque variable CRO marquée "REQUIS" pour ce type. Signale chaque variable requise manquante comme une suggestion de priorité "high" ou "critical".
+## Matrice CRO de référence (variables requises par type de page × intention de recherche)
+Détecte d'abord le TYPE de cette page (home, product, service, landing, blog_article, category, about, contact) et l'INTENTION de recherche (informational, navigational, commercial, transactional).
+Puis vérifie la PRÉSENCE ou l'ABSENCE de chaque variable CRO marquée "REQUIS" pour cette combinaison type+intention. Les règles avec intention "all" s'appliquent toujours.
+Signale chaque variable requise manquante comme une suggestion de priorité proportionnelle au poids [w:XX].
 
 ${lines.join('\n')}
 `;

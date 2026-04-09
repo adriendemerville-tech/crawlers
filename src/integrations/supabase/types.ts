@@ -2881,6 +2881,51 @@ export type Database = {
         }
         Relationships: []
       }
+      content_requirements_matrix: {
+        Row: {
+          consumer: string
+          created_at: string
+          id: string
+          is_required: boolean
+          page_type: string
+          search_intent: string
+          source: string
+          updated_at: string
+          variable_description: string | null
+          variable_key: string
+          variable_label: string
+          weight: number
+        }
+        Insert: {
+          consumer?: string
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          page_type: string
+          search_intent?: string
+          source?: string
+          updated_at?: string
+          variable_description?: string | null
+          variable_key: string
+          variable_label: string
+          weight?: number
+        }
+        Update: {
+          consumer?: string
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          page_type?: string
+          search_intent?: string
+          source?: string
+          updated_at?: string
+          variable_description?: string | null
+          variable_key?: string
+          variable_label?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       crawl_index_history: {
         Row: {
           crawl_id: string | null
@@ -3232,42 +3277,6 @@ export type Database = {
           stripe_session_id?: string | null
           transaction_type?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      cro_variable_matrix: {
-        Row: {
-          created_at: string
-          id: string
-          is_required: boolean
-          page_type: string
-          source: string
-          updated_at: string
-          variable_description: string | null
-          variable_key: string
-          variable_label: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_required?: boolean
-          page_type: string
-          source?: string
-          updated_at?: string
-          variable_description?: string | null
-          variable_key: string
-          variable_label: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_required?: boolean
-          page_type?: string
-          source?: string
-          updated_at?: string
-          variable_description?: string | null
-          variable_key?: string
-          variable_label?: string
         }
         Relationships: []
       }
