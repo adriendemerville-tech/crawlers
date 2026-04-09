@@ -133,6 +133,12 @@ Deno.serve(handleRequest(async (req) => {
     _incomplete: identityIncomplete,
   };
 
+  // Fetch CRO variable matrix for all page types
+  const { data: croMatrix } = await serviceClient
+    .from('cro_variable_matrix')
+    .select('variable_key, variable_label, variable_description, page_type, is_required')
+    .order('variable_key');
+
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return jsonError('AI not configured', 500);
 
@@ -143,7 +149,7 @@ Deno.serve(handleRequest(async (req) => {
     .filter((img: any) => !img.isDecorative && img.width >= 50 && img.height >= 50)
     .slice(0, 20);
 
-  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt);
+  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || []);
 
   const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
