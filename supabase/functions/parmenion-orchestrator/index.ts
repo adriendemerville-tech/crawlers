@@ -1060,7 +1060,10 @@ RÈGLES:
 - emit_editorial_content: pour CRÉER un nouvel article OU une nouvelle page (combler un gap)
   - Utilise action "create-post" pour les contenus blog éditoriaux (actualités, décryptages, comparatifs, procédures, analyses, FAQ éditoriales)
   - Utilise action "create-page" pour les pages statiques (landing pages, pages de conversion, FAQ globales)
-  - DIVERSIFIE : ne crée pas uniquement des articles. Si un gap correspond à une page de service/conversion, utilise create-page.
+  - DIVERSIFIE les types d'articles : présentation, actualité, comparatif, tutoriel, opinion, guide. Respecte les quotas indiqués dans le bloc DIVERSITÉ ci-dessus.
+  - OBLIGATOIRE : chaque article DOIT inclure "article_type" (presentation|actualite|comparatif|tutoriel|opinion|guide) et "semantic_ring" (1|2|3)
+  - Les GUIDES ne doivent JAMAIS représenter plus de 5% des articles. Si le quota est atteint, choisis un AUTRE type.
+  - MAILLAGE MÈRE-FILLE : chaque article d'un ring supérieur DOIT contenir un lien vers une page du ring inférieur.
 ${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content pour créer UN NOUVEAU CONTENU pertinent pour le secteur "${sectorName}". Cette directive est prioritaire et NON NÉGOCIABLE.\n` : ''}
 - status TOUJOURS "draft". author_name: "Équipe ${siteName}"
 - LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères Markdown). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
