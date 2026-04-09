@@ -353,7 +353,7 @@ async function captureScreenshotWithAnnotations(
   });
 
   return {
-    data: { screenshot, height: clipHeight },
+    data: { screenshot, height: fullHeight },
     type: 'application/json'
   };
 };`;
