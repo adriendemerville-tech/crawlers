@@ -1,7 +1,8 @@
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
-import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { trackPaidApiCall, trackTokenUsage } from '../_shared/tokenTracker.ts';
+import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
 
 /**
@@ -257,6 +258,11 @@ Deno.serve(handleRequest(async (req) => {
   }
 
   const aiData = await aiResp.json();
+
+  // Track LLM cost (both analytics_events and ai_gateway_usage)
+  trackTokenUsage('analyze-ux-context', 'google/gemini-3-flash-preview', aiData.usage, page_url).catch(() => {});
+  logAIUsageFromResponse(getServiceClient(), 'google/gemini-3-flash-preview', 'analyze-ux-context', aiData.usage);
+
   const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
   if (!toolCall?.function?.arguments) {
     console.error('[analyze-ux-context] No tool call in AI response');

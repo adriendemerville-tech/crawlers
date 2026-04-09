@@ -3,6 +3,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { preCrawlForAudit, formatPreCrawlForPrompt } from '../_shared/preCrawlForAudit.ts';
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -628,6 +631,10 @@ Réponds UNIQUEMENT en JSON valide :
   const llmData = await llmResp.json();
   const content = llmData.choices?.[0]?.message?.content || '';
 
+  // Track LLM cost (both analytics_events and ai_gateway_usage)
+  trackTokenUsage('check-eeat', 'google/gemini-2.5-flash', llmData.usage, targetUrl).catch(() => {});
+  logAIUsageFromResponse(getServiceClient(), 'google/gemini-2.5-flash', 'check-eeat', llmData.usage);
+
   let analysis: any = {};
   try {
     let jsonStr = content.replace(/```json?\s*/gi, '').replace(/```/g, '').trim();
@@ -847,6 +854,7 @@ async function fetchBacklinkData(domain: string): Promise<any> {
     });
 
     const summaryData = await summaryResp.json();
+    trackPaidApiCall('check-eeat', 'dataforseo', 'backlinks/summary', domain).catch(() => {});
     const result = summaryData?.tasks?.[0]?.result?.[0];
 
     if (!result) {
@@ -862,6 +870,7 @@ async function fetchBacklinkData(domain: string): Promise<any> {
         body: JSON.stringify([{ target: domain, limit: 10, order_by: ['backlinks,desc'] }]),
       });
       const anchorData = await anchorResp.json();
+      trackPaidApiCall('check-eeat', 'dataforseo', 'backlinks/anchors', domain).catch(() => {});
       anchorDistribution = (anchorData?.tasks?.[0]?.result?.[0]?.items || []).map((a: any) => ({
         anchor: a.anchor,
         backlinks: a.backlinks,
@@ -883,6 +892,7 @@ async function fetchBacklinkData(domain: string): Promise<any> {
         }]),
       });
       const blData = await blResp.json();
+      trackPaidApiCall('check-eeat', 'dataforseo', 'backlinks/backlinks', domain).catch(() => {});
       referringPages = (blData?.tasks?.[0]?.result?.[0]?.items || []).map((b: any) => ({
         sourceUrl: b.url_from || '',
         targetUrl: b.url_to || '',
