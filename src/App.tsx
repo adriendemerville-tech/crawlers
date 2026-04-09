@@ -203,6 +203,7 @@ const App = () => (
                           <Route path="/google-business" element={<GoogleBusinessPage />} />
                           <Route path="/api-integrations" element={<ApiIntegrations />} />
                           <Route path="/app/conversion-optimizer" element={<ConversionOptimizer />} />
+                          <Route path="/app/bot-activity" element={<BotActivity />} />
                           <Route path="/privacy-google-ads" element={<Navigate to="/api-integrations#google-ads" replace />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
