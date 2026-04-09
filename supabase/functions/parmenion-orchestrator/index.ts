@@ -1,6 +1,6 @@
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
+import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType, computeArticleDistribution, determineSemanticRing, buildDiversityPromptBlock, detectArticleType, type ArticleDistribution, type SemanticRing } from '../_shared/contentBrief.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
