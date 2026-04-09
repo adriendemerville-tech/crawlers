@@ -277,6 +277,22 @@ const DOC_SECTIONS: DocSection[] = [
 <li><strong>Agent CTO</strong> : maintenance algorithmique automatique, self-critique et proposition de patches</li>
 </ul>`,
       },
+      {
+        id: 'ux-optimizer',
+        title: 'UX Optimizer',
+        content: `Audit UX/CRO contextuel par IA sur 7 axes :
+<ul class="list-disc pl-6 mt-1 space-y-1">
+<li><strong>Ton & Voix</strong> : adaptation au positionnement et à l'audience cible</li>
+<li><strong>Pression CTA</strong> : placement, fréquence, wording des appels à l'action</li>
+<li><strong>Alignement</strong> : cohérence page ↔ positionnement ↔ modèle commercial</li>
+<li><strong>Lisibilité</strong> : structure, paragraphes, vocabulaire adapté</li>
+<li><strong>Conversion</strong> : preuves sociales, proposition de valeur, éléments de réassurance</li>
+<li><strong>Expérience mobile</strong> : accessibilité des CTAs, taille des blocs de texte</li>
+<li><strong>Utilisation des mots-clés</strong> : densité, naturalité, placement (H1, H2, body)</li>
+</ul>
+<p class="mt-2">L'analyse est calibrée sur votre contexte business (type, audience, maturité, voice DNA, objectifs). Les suggestions critiques alimentent automatiquement le <strong>Workbench Architect</strong>.</p>
+<p class="mt-2 text-sm text-muted-foreground">Accessible depuis Console → Mes Sites → bouton UX, ou via <a href="/app/ux-optimizer" class="text-primary underline">/app/ux-optimizer</a>. Nécessite un crawl complété.</p>`,
+      },
     ],
   },
   {
