@@ -631,8 +631,9 @@ Réponds UNIQUEMENT en JSON valide :
   const llmData = await llmResp.json();
   const content = llmData.choices?.[0]?.message?.content || '';
 
-  // Track LLM cost
+  // Track LLM cost (both analytics_events and ai_gateway_usage)
   trackTokenUsage('check-eeat', 'google/gemini-2.5-flash', llmData.usage, targetUrl).catch(() => {});
+  logAIUsageFromResponse(getServiceClient(), 'google/gemini-2.5-flash', 'check-eeat', llmData.usage);
 
   let analysis: any = {};
   try {
