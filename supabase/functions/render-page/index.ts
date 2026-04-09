@@ -53,10 +53,41 @@ function escapeHtml(str: string): string {
   return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-/** Convert basic Markdown to HTML (headings, bold, italic, links, lists, paragraphs) */
+/** Convert Markdown table to HTML <table> */
+function markdownTableToHtml(tableBlock: string): string {
+  const lines = tableBlock.trim().split("\n").filter(l => l.trim());
+  if (lines.length < 2) return `<p>${escapeHtml(tableBlock)}</p>`;
+
+  // Check if line 2 is separator (|---|---|)
+  const isSeparator = /^\|?[\s-:|]+\|/.test(lines[1]);
+  if (!isSeparator) return `<p>${escapeHtml(tableBlock)}</p>`;
+
+  const parseRow = (line: string): string[] =>
+    line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length);
+
+  const headers = parseRow(lines[0]);
+  const dataLines = lines.slice(2);
+
+  let html = `<table>\n<thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>\n<tbody>\n`;
+  for (const line of dataLines) {
+    const cells = parseRow(line);
+    html += `<tr>${cells.map(c => `<td>${escapeHtml(c)}</td>`).join("")}</tr>\n`;
+  }
+  html += `</tbody>\n</table>`;
+  return html;
+}
+
+/** Convert basic Markdown to HTML (headings, bold, italic, links, lists, tables, paragraphs) */
 function markdownToHtml(md: string): string {
   if (!md) return "";
-  let html = md
+
+  // First, extract and convert tables
+  const tableRegex = /((?:^\|.+\|$\n?){2,})/gm;
+  let processed = md.replace(tableRegex, (match) => {
+    return `\n%%TABLE_START%%${markdownTableToHtml(match)}%%TABLE_END%%\n`;
+  });
+
+  let html = processed
     .replace(/^### (.+)$/gm, "<h3>$1</h3>")
     .replace(/^## (.+)$/gm, "<h2>$1</h2>")
     .replace(/^# (.+)$/gm, "<h1>$1</h1>")
@@ -71,9 +102,12 @@ function markdownToHtml(md: string): string {
       const trimmed = block.trim();
       if (!trimmed) return "";
       if (/^<[hulo]/.test(trimmed)) return trimmed;
+      if (trimmed.includes("%%TABLE_START%%")) return trimmed.replace(/%%TABLE_START%%/g, "").replace(/%%TABLE_END%%/g, "");
       return `<p>${trimmed}</p>`;
     })
     .join("\n");
+  // Clean any remaining markers
+  html = html.replace(/%%TABLE_START%%/g, "").replace(/%%TABLE_END%%/g, "");
   return html;
 }
 
@@ -95,7 +129,6 @@ function extractFaqFromContent(content: string): Array<{ question: string; answe
     const match = lines[i].match(questionRe);
     if (match) {
       const question = match[1].trim();
-      // Collect answer lines until next heading or end
       const answerLines: string[] = [];
       for (let j = i + 1; j < lines.length; j++) {
         if (/^#{1,3}\s/.test(lines[j])) break;
@@ -113,7 +146,19 @@ function extractFaqFromContent(content: string): Array<{ question: string; answe
       }
     }
   }
-  return faqs.slice(0, 10); // Max 10 FAQ items
+  return faqs.slice(0, 10);
+}
+
+/** Extract tables from markdown content as plain text for llms.txt */
+function extractTablesAsText(content: string): string[] {
+  if (!content) return [];
+  const tables: string[] = [];
+  const tableRegex = /((?:^\|.+\|$\n?){2,})/gm;
+  let match;
+  while ((match = tableRegex.exec(content)) !== null) {
+    tables.push(match[1].trim());
+  }
+  return tables;
 }
 
 /** Generate BreadcrumbList JSON-LD */
@@ -143,6 +188,84 @@ function faqJsonLd(faqs: Array<{ question: string; answer: string }>): object {
   };
 }
 
+// ── Informational section generators (neutral, no CTA) ──
+
+/** Generate a neutral informational section with external sources for SEO/GEO context */
+function generateInfoSection(route: string): string {
+  const sections: Record<string, string> = {
+    "/tarifs": `<section aria-label="Contexte tarifaire">
+      <h2>Comprendre les modèles de tarification des outils SEO</h2>
+      <p>Les outils d'audit SEO adoptent généralement trois modèles : l'abonnement mensuel, le paiement à l'usage (crédits) ou le modèle freemium. Selon une <a href="https://www.gartner.com/en/marketing" rel="noopener">étude Gartner</a>, 68 % des PME préfèrent les modèles à la consommation pour maîtriser leurs coûts.</p>
+      <p>Le marché français des outils SEO est estimé à plus de 200 millions d'euros en 2026. Les tarifs varient de 0 € (outils basiques) à plus de 500 €/mois pour les solutions enterprise. Pour comparer les offres, le <a href="https://www.journaldunet.com/solutions/seo-referencement/">Journal du Net</a> publie régulièrement des comparatifs.</p>
+      <p>Ressources : <a href="${baseUrl}/methodologie">Méthodologie d'audit Crawlers.fr</a> · <a href="${baseUrl}/lexique">Lexique SEO & GEO</a> · <a href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide" rel="noopener">Google SEO Starter Guide</a></p>
+    </section>`,
+    "/audit-expert": `<section aria-label="Contexte audit SEO">
+      <h2>Qu'est-ce qu'un audit SEO technique ?</h2>
+      <p>Un audit SEO technique consiste à analyser l'infrastructure d'un site web pour identifier les facteurs bloquant son référencement naturel. Selon <a href="https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers" rel="noopener">Google Search Central</a>, les problèmes d'indexation représentent la première cause de perte de visibilité.</p>
+      <p>Les critères standards incluent : la vitesse de chargement (<a href="https://web.dev/vitals/" rel="noopener">Core Web Vitals</a>), l'accessibilité mobile, les données structurées (<a href="https://schema.org/" rel="noopener">Schema.org</a>), la configuration du robots.txt et du sitemap XML.</p>
+      <p>Pour approfondir : <a href="${baseUrl}/guide-audit-seo">Guide complet de l'audit SEO</a> · <a href="${baseUrl}/methodologie">Méthodologie 168 critères</a> · <a href="https://search.google.com/search-console/about" rel="noopener">Google Search Console</a></p>
+    </section>`,
+    "/generative-engine-optimization": `<section aria-label="Contexte GEO">
+      <h2>Le GEO : une discipline émergente</h2>
+      <p>Le Generative Engine Optimization (GEO) désigne l'ensemble des techniques visant à améliorer la visibilité d'un site dans les réponses des moteurs IA génératifs comme ChatGPT, Gemini ou Perplexity. Le terme a été formalisé par des chercheurs de <a href="https://arxiv.org/abs/2311.09735" rel="noopener">Princeton et Georgia Tech (2023)</a>.</p>
+      <p>Contrairement au SEO classique, le GEO repose sur la citation des sources, la qualité des données structurées et la présence dans les corpus d'entraînement des LLMs. Le fichier <code>llms.txt</code> est un standard émergent pour guider les agents IA.</p>
+      <p>Lectures complémentaires : <a href="${baseUrl}/lexique">Lexique SEO & GEO</a> · <a href="${baseUrl}/blog">Blog Crawlers.fr</a> · <a href="https://llmstxt.org/" rel="noopener">llmstxt.org — Standard llms.txt</a></p>
+    </section>`,
+    "/pro-agency": `<section aria-label="Contexte agences SEO">
+      <h2>L'évolution du métier d'agence SEO en 2026</h2>
+      <p>Les agences SEO font face à une double transformation : l'essor de l'IA générative dans les SERP et l'exigence croissante de ROI mesurable. D'après le <a href="https://www.semrush.com/blog/state-of-search/" rel="noopener">State of Search 2025 de Semrush</a>, 47 % des agences intègrent désormais l'optimisation GEO dans leurs prestations.</p>
+      <p>Les fonctionnalités clés pour les agences incluent : le suivi multi-sites, les rapports en marque blanche, la connexion CMS directe et la maintenance prédictive automatisée.</p>
+      <p>Pour en savoir plus : <a href="${baseUrl}/tarifs">Grille tarifaire complète</a> · <a href="${baseUrl}/marina">Marina API — rapports en marque blanche</a> · <a href="https://www.abondance.com/" rel="noopener">Abondance.com — Actualités SEO</a></p>
+    </section>`,
+    "/features/cocoon": `<section aria-label="Contexte cocon sémantique">
+      <h2>Le cocon sémantique en SEO</h2>
+      <p>Le concept de cocon sémantique, popularisé par Laurent Bourrelly, structure le contenu d'un site en clusters thématiques reliés par un maillage interne hiérarchique (pages mères → pages filles). Cette architecture améliore la compréhension thématique par les moteurs de recherche.</p>
+      <p>Des études de <a href="https://moz.com/learn/seo/internal-link" rel="noopener">Moz</a> montrent que le maillage interne reste l'un des leviers SEO les plus sous-exploités. Un cocon bien structuré peut augmenter le trafic organique de 30 à 50 % sur les thématiques ciblées.</p>
+      <p>Ressources : <a href="${baseUrl}/lexique">Définition dans le lexique</a> · <a href="${baseUrl}/methodologie">Méthodologie d'audit</a> · <a href="https://ahrefs.com/blog/internal-links-for-seo/" rel="noopener">Ahrefs — Internal Links for SEO</a></p>
+    </section>`,
+    "/comparatif-crawlers-semrush": `<section aria-label="Contexte marché outils SEO">
+      <h2>Le marché des outils SEO en France</h2>
+      <p>Le marché français compte plus de 30 solutions professionnelles d'audit SEO. Les critères de choix principaux sont : la couverture de critères, le rapport qualité-prix, le support francophone et la prise en compte des évolutions (Core Web Vitals, IA générative).</p>
+      <p>Selon <a href="https://www.statista.com/outlook/tmo/digital-advertising/search-advertising/france" rel="noopener">Statista</a>, le search advertising en France pèse 5,2 milliards d'euros en 2026, rendant l'optimisation SEO d'autant plus stratégique.</p>
+      <p>Comparatifs tiers : <a href="https://www.blogdumoderateur.com/" rel="noopener">Blog du Modérateur</a> · <a href="https://www.leptidigital.fr/" rel="noopener">Leptidigital</a></p>
+    </section>`,
+  };
+
+  // Default informational section for pages not specifically covered
+  const defaultSection = `<section aria-label="Ressources complémentaires">
+    <h2>Ressources et références</h2>
+    <p>Pour approfondir les sujets abordés sur cette page :</p>
+    <ul>
+      <li><a href="https://developers.google.com/search/docs" rel="noopener">Documentation Google Search Central</a> — Guide officiel du référencement</li>
+      <li><a href="https://schema.org/" rel="noopener">Schema.org</a> — Référentiel des données structurées</li>
+      <li><a href="https://web.dev/vitals/" rel="noopener">Web Vitals</a> — Métriques de performance web par Google</li>
+      <li><a href="${baseUrl}/lexique">Lexique SEO & GEO Crawlers.fr</a> — 150+ définitions</li>
+      <li><a href="${baseUrl}/blog">Blog Crawlers.fr</a> — Articles et guides pratiques</li>
+    </ul>
+  </section>`;
+
+  return sections[route] || defaultSection;
+}
+
+/** Generate pricing table as static HTML */
+function generatePricingTableHtml(): string {
+  return `<section aria-label="Grille tarifaire">
+    <h2>Barème tarifaire Crawlers.fr</h2>
+    <table>
+      <thead>
+        <tr><th>Plan</th><th>Prix</th><th>Fonctionnalités incluses</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Gratuit</td><td>0 €</td><td>Bots IA, Score GEO, Visibilité LLM, PageSpeed, Audit Expert (inscription), Matrice d'audit</td></tr>
+        <tr><td>Crédits à l'unité</td><td>0,90 € / crédit</td><td>Crawl multi-pages, Audit comparé, Marina API, fonctions premium à la demande</td></tr>
+        <tr><td>Pro Agency</td><td>29 € / mois</td><td>Tout illimité, Cocoon 3D, Content Architect, CMS Direct, GSC/GA4, GMB, Autopilote Parménion</td></tr>
+        <tr><td>Pro Agency+</td><td>79 € / mois</td><td>Pro Agency + crawl 50 000 pages, API Marina illimitée, support prioritaire</td></tr>
+      </tbody>
+    </table>
+    <p><small>Tarifs en vigueur au 1er avril 2026, HT. Pas d'engagement, résiliation à tout moment.</small></p>
+  </section>`;
+}
+
 // ── Route-specific breadcrumb labels ──
 const ROUTE_LABELS: Record<string, string> = {
   "/": "Accueil",
@@ -168,6 +291,9 @@ const ROUTE_LABELS: Record<string, string> = {
   "/observatoire": "Observatoire",
 };
 
+// ── Routes that should include the pricing table ──
+const ROUTES_WITH_PRICING = ["/tarifs", "/pro-agency", "/comparatif-crawlers-semrush", "/"];
+
 // ── HTML generators ──
 
 function generateStaticHTML(route: string, meta: { title: string; description: string }): string {
@@ -189,6 +315,9 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
     "isPartOf": { "@type": "WebSite", "name": "Crawlers.fr", "url": baseUrl },
     "publisher": PUBLISHER_ORG,
   };
+
+  const pricingHtml = ROUTES_WITH_PRICING.includes(route) ? generatePricingTableHtml() : "";
+  const infoHtml = generateInfoSection(route);
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -225,6 +354,8 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
   <main>
     <h1>${escapeHtml(meta.title)}</h1>
     <p>${escapeHtml(meta.description)}</p>
+    ${pricingHtml}
+    ${infoHtml}
     <section><h2>Navigation</h2><ul>
 ${Object.entries(PUBLIC_ROUTES).map(([r, m]) => `      <li><a href="${baseUrl}${r}">${escapeHtml(m.title)}</a></li>`).join("\n")}
     </ul></section>
@@ -243,14 +374,12 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
   const wordCount = countWords(article.content || "");
   const dateModified = article.updated_at || article.published_at;
 
-  // Breadcrumb: Accueil > Blog > Article
   const breadcrumb = breadcrumbJsonLd([
     { name: "Accueil", url: baseUrl },
     { name: "Blog", url: `${baseUrl}/blog` },
     { name: article.title, url: fullUrl },
   ]);
 
-  // BlogPosting enriched
   const blogPosting: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -268,10 +397,8 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
     "isPartOf": { "@type": "Blog", "name": "Blog Crawlers.fr", "url": `${baseUrl}/blog` },
   };
 
-  // Auto-detect FAQ from content
   const faqs = extractFaqFromContent(article.content || "");
 
-  // Build JSON-LD scripts
   let jsonLdScripts = `
   <script type="application/ld+json">${JSON.stringify(blogPosting)}</script>
   <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>`;
@@ -279,6 +406,20 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
   if (faqs.length >= 2) {
     jsonLdScripts += `\n  <script type="application/ld+json">${JSON.stringify(faqJsonLd(faqs))}</script>`;
   }
+
+  // Generate neutral informational footer for blog articles
+  const articleInfoSection = `<section aria-label="Ressources complémentaires">
+      <h2>Pour aller plus loin</h2>
+      <ul>
+        <li><a href="https://developers.google.com/search/docs" rel="noopener">Google Search Central</a> — Documentation officielle SEO</li>
+        <li><a href="https://schema.org/" rel="noopener">Schema.org</a> — Référentiel des données structurées</li>
+        <li><a href="https://web.dev/vitals/" rel="noopener">Web Vitals</a> — Métriques de performance Google</li>
+        <li><a href="https://llmstxt.org/" rel="noopener">llmstxt.org</a> — Standard llms.txt pour l'IA</li>
+        <li><a href="${baseUrl}/lexique">Lexique SEO & GEO</a> — 150+ termes définis</li>
+        <li><a href="${baseUrl}/guide-audit-seo">Guide complet de l'audit SEO</a></li>
+        <li><a href="${baseUrl}/generative-engine-optimization">Comprendre le GEO</a></li>
+      </ul>
+    </section>`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -330,6 +471,7 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
         ${contentHtml}
       </div>
     </article>
+    ${articleInfoSection}
     <nav aria-label="Articles du blog">
       <a href="${baseUrl}/blog">← Retour au blog</a>
     </nav>
@@ -369,7 +511,6 @@ Deno.serve(async (req) => {
     if (blogMatch) {
       const slug = blogMatch[1];
 
-      // Check cache first
       if (!noCache) {
         const { data: cached } = await supabase
           .from("prerender_cache")
@@ -390,7 +531,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Fetch article from DB (include updated_at)
       const { data: article, error } = await supabase
         .from("blog_articles")
         .select("slug, title, excerpt, content, image_url, published_at, updated_at")
@@ -406,7 +546,6 @@ Deno.serve(async (req) => {
 
       const html = generateBlogArticleHTML(article);
 
-      // Cache it (24h)
       const contentHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(html))
         .then((buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join(""));
 
@@ -451,6 +590,40 @@ Deno.serve(async (req) => {
       }
 
       const fullUrl = `${baseUrl}/landing/${landing.slug}`;
+      const contentHtml = markdownToHtml(landing.content || '');
+      
+      // Extract any tables from content for enhanced rendering
+      const landingInfoSection = `<section aria-label="Ressources complémentaires">
+        <h2>Ressources et références</h2>
+        <ul>
+          <li><a href="https://developers.google.com/search/docs" rel="noopener">Google Search Central</a></li>
+          <li><a href="https://schema.org/" rel="noopener">Schema.org — Données structurées</a></li>
+          <li><a href="${baseUrl}/lexique">Lexique SEO & GEO</a></li>
+          <li><a href="${baseUrl}/blog">Blog Crawlers.fr</a></li>
+          <li><a href="${baseUrl}/guide-audit-seo">Guide complet de l'audit SEO</a></li>
+        </ul>
+      </section>`;
+
+      // Detect FAQ in landing content
+      const landingFaqs = extractFaqFromContent(landing.content || "");
+      let landingJsonLd = `<script type="application/ld+json">${JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": landing.title,
+        "description": landing.meta_description || "",
+        "url": fullUrl,
+        "publisher": PUBLISHER_ORG,
+        ...(landing.published_at ? { "datePublished": landing.published_at } : {}),
+      })}</script>
+  <script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd([
+        { name: "Accueil", url: baseUrl },
+        { name: landing.title, url: fullUrl },
+      ]))}</script>`;
+
+      if (landingFaqs.length >= 2) {
+        landingJsonLd += `\n  <script type="application/ld+json">${JSON.stringify(faqJsonLd(landingFaqs))}</script>`;
+      }
+
       const landingHtml = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -464,28 +637,37 @@ Deno.serve(async (req) => {
   <meta property="og:description" content="${escapeHtml(landing.meta_description || '')}">
   <meta property="og:url" content="${fullUrl}">
   <meta property="og:type" content="website">
-  <script type="application/ld+json">${JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": landing.title,
-    "description": landing.meta_description || "",
-    "url": fullUrl,
-    "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": baseUrl },
-    ...(landing.published_at ? { "datePublished": landing.published_at } : {}),
-  })}</script>
+  <meta property="og:site_name" content="Crawlers.fr">
+  <meta property="og:image" content="${baseUrl}/og-image.png">
+  <meta property="og:locale" content="fr_FR">
+  <link rel="alternate" hreflang="fr" href="${fullUrl}">
+  <link rel="alternate" hreflang="x-default" href="${fullUrl}">
+  ${landingJsonLd}
 </head>
 <body>
+  <header><nav>
+    <a href="${baseUrl}">Crawlers.fr</a>
+    <a href="${baseUrl}/audit-expert">Audit Expert</a>
+    <a href="${baseUrl}/blog">Blog</a>
+    <a href="${baseUrl}/tarifs">Tarifs</a>
+  </nav></header>
   <main>
+    <nav aria-label="Fil d'Ariane">
+      <ol>
+        <li><a href="${baseUrl}">Accueil</a></li>
+        <li>${escapeHtml(landing.title)}</li>
+      </ol>
+    </nav>
     <article>
       <h1>${escapeHtml(landing.title)}</h1>
-      ${markdownToHtml(landing.content || '')}
+      ${contentHtml}
     </article>
+    ${landingInfoSection}
   </main>
   <footer><p>© 2026 Crawlers.fr — Plateforme d'audit SEO & GEO</p></footer>
 </body>
 </html>`;
 
-      // Cache 24h
       await supabase.from("prerender_cache").upsert({
         route,
         html_content: landingHtml,
@@ -516,7 +698,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check cache
     if (!noCache) {
       const { data: cached } = await supabase
         .from("prerender_cache")
