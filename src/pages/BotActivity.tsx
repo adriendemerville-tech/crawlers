@@ -13,6 +13,22 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+
+/** Parse a ts value that may be a Unix epoch in seconds (1970-based) or a valid ISO string */
+function safeParseTs(ts: string): Date {
+  const d = new Date(ts);
+  // If the parsed date is before 2020, it's likely a Unix epoch stored as a timestamp column
+  // e.g. "1970-01-21 13:11:46" = 1,776,706s = real date in 2026
+  if (d.getFullYear() < 2020) {
+    // Extract epoch seconds from the 1970-based date
+    const epochMs = d.getTime();
+    if (epochMs > 0 && epochMs < 4_102_444_800_000) {
+      // Interpret as seconds, multiply by 1000
+      return new Date(epochMs * 1000);
+    }
+  }
+  return d;
+}
 import { Helmet } from 'react-helmet-async';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -244,10 +260,10 @@ export default function BotActivityPage() {
                         </div>
                         <div className="flex-shrink-0 text-right">
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(entry.ts), { addSuffix: true, locale: fr })}
+                            {formatDistanceToNow(safeParseTs(entry.ts), { addSuffix: true, locale: fr })}
                           </span>
                           <p className="text-[10px] text-muted-foreground/50">
-                            {format(new Date(entry.ts), 'HH:mm:ss')}
+                            {format(safeParseTs(entry.ts), 'HH:mm:ss')}
                           </p>
                         </div>
                       </motion.div>
