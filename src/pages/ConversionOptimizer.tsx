@@ -558,7 +558,7 @@ export default function ConversionOptimizer() {
               </Card>
             )}
 
-
+            {result.screenshot_url && (
               <div className="space-y-2">
                 {backfillingAnnotations && (
                   <p className="text-xs text-muted-foreground">Repositionnement des bulles et des traits en cours sur cet audit…</p>
