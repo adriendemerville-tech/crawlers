@@ -1,6 +1,6 @@
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
-import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType } from '../_shared/contentBrief.ts';
+import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType, computeArticleDistribution, determineSemanticRing, buildDiversityPromptBlock, detectArticleType, type ArticleDistribution, type SemanticRing } from '../_shared/contentBrief.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
@@ -503,8 +503,10 @@ const CONTENT_TOOLS = [
               category: { type: 'string' },
               tags: { type: 'array', items: { type: 'string' } },
               schema_org: { type: 'object' },
+              article_type: { type: 'string', enum: ['presentation', 'actualite', 'comparatif', 'tutoriel', 'opinion', 'guide'], description: 'Type d\'article selon la taxonomie éditoriale. OBLIGATOIRE.' },
+              semantic_ring: { type: 'integer', enum: [1, 2, 3], description: 'Anneau sémantique: 1=cœur de cible, 2=second cercle, 3=expansion large' },
             },
-            required: ['title', 'slug', 'content', 'excerpt', 'meta_description', 'status'],
+            required: ['title', 'slug', 'content', 'excerpt', 'meta_description', 'status', 'article_type', 'semantic_ring'],
           },
         },
         required: ['action', 'body'],
@@ -921,6 +923,69 @@ RÈGLES:
     console.log(`[Parménion] 🔑 Keyword enrichment: ${keywordEnrichment.totalKeywords} keywords from ${keywordEnrichment.sources.join(', ')}`);
     console.log(`[Parménion] 📋 ContentBrief: type=${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}`);
 
+    // ── ARTICLE TYPE DIVERSITY & SEMANTIC RING ──
+    let diversityBlock = '';
+    try {
+      // Query existing articles via CMS scanner or direct DB
+      const { data: existingPosts } = await supabase
+        .from('iktracker_content_cache')
+        .select('title, category, tags')
+        .eq('tracked_site_id', context.tracked_site_id)
+        .eq('content_type', 'post');
+      
+      // Fallback: also check blog_articles for internal sites
+      let allArticles = (existingPosts || []).map((p: any) => ({
+        title: p.title, category: p.category, tags: p.tags,
+      }));
+      if (context.domain === 'crawlers.fr') {
+        const { data: blogPosts } = await supabase
+          .from('blog_articles')
+          .select('title, slug')
+          .in('status', ['published', 'draft']);
+        if (blogPosts) {
+          allArticles = [...allArticles, ...blogPosts.map((b: any) => ({ title: b.title, category: '', tags: [] }))];
+        }
+      }
+
+      const distribution = computeArticleDistribution(allArticles);
+      
+      // Compute semantic ring coverage
+      const ringCounts = { ring1: 0, ring2: 0, ring3: 0 };
+      for (const article of allArticles) {
+        const tags = (article.tags || []).map((t: string) => t.toLowerCase());
+        if (tags.includes('ring_3') || tags.includes('semantic_ring:3')) ringCounts.ring3++;
+        else if (tags.includes('ring_2') || tags.includes('semantic_ring:2')) ringCounts.ring2++;
+        else ringCounts.ring1++; // Default: untagged articles count as ring 1
+      }
+      
+      const ringInfo = determineSemanticRing(ringCounts);
+      
+      // Find parent pages for linking (pages from the ring below)
+      const parentRing = Math.max(1, ringInfo.ring - 1) as SemanticRing;
+      const { data: parentNodes } = await supabase
+        .from('cocoon_sessions')
+        .select('nodes_snapshot')
+        .eq('tracked_site_id', context.tracked_site_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      const parentPages: string[] = [];
+      if (parentNodes?.nodes_snapshot && Array.isArray(parentNodes.nodes_snapshot)) {
+        const sortedNodes = parentNodes.nodes_snapshot
+          .filter((n: any) => n.url && n.pagerank_score > 0)
+          .sort((a: any, b: any) => (b.pagerank_score || 0) - (a.pagerank_score || 0));
+        for (const node of sortedNodes.slice(0, 10)) {
+          parentPages.push(`${node.url} (${node.title || 'sans titre'})`);
+        }
+      }
+      
+      diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages);
+      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}]`);
+    } catch (e) {
+      console.warn('[Parménion] Diversity computation failed:', e);
+    }
+
     // ── LOG GENERATION for performance correlation training ──
     try {
       const siteInfo = context.siteInfo || {};
@@ -962,6 +1027,8 @@ ${kwCtx}
 
 ${briefBlock}
 
+${diversityBlock}
+
 ${keywordEnrichment.promptBlock}
 
 ⚠️⚠️⚠️ RÈGLE CRITIQUE — SÉPARATION DIAGNOSTIC / CONTENU ⚠️⚠️⚠️
@@ -993,7 +1060,10 @@ RÈGLES:
 - emit_editorial_content: pour CRÉER un nouvel article OU une nouvelle page (combler un gap)
   - Utilise action "create-post" pour les contenus blog éditoriaux (actualités, décryptages, comparatifs, procédures, analyses, FAQ éditoriales)
   - Utilise action "create-page" pour les pages statiques (landing pages, pages de conversion, FAQ globales)
-  - DIVERSIFIE : ne crée pas uniquement des articles. Si un gap correspond à une page de service/conversion, utilise create-page.
+  - DIVERSIFIE les types d'articles : présentation, actualité, comparatif, tutoriel, opinion, guide. Respecte les quotas indiqués dans le bloc DIVERSITÉ ci-dessus.
+  - OBLIGATOIRE : chaque article DOIT inclure "article_type" (presentation|actualite|comparatif|tutoriel|opinion|guide) et "semantic_ring" (1|2|3)
+  - Les GUIDES ne doivent JAMAIS représenter plus de 5% des articles. Si le quota est atteint, choisis un AUTRE type.
+  - MAILLAGE MÈRE-FILLE : chaque article d'un ring supérieur DOIT contenir un lien vers une page du ring inférieur.
 ${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content pour créer UN NOUVEAU CONTENU pertinent pour le secteur "${sectorName}". Cette directive est prioritaire et NON NÉGOCIABLE.\n` : ''}
 - status TOUJOURS "draft". author_name: "Équipe ${siteName}"
 - LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères Markdown). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
