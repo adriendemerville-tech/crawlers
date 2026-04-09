@@ -25,29 +25,29 @@ const axes = [
 ];
 
 const workflow = [
-  { step: '1', title: 'Sélectionnez votre site', desc: 'Choisissez un site tracké dans votre console. UX Optimizer utilise les données déjà crawlées — aucun re-crawl nécessaire.', features: ['Données issues du crawl existant', 'Aucune latence supplémentaire'] },
+  { step: '1', title: 'Sélectionnez votre site', desc: 'Choisissez un site tracké dans votre console. Conversion Optimizer utilise les données déjà crawlées — aucun re-crawl nécessaire.', features: ['Données issues du crawl existant', 'Aucune latence supplémentaire'] },
   { step: '2', title: 'Choisissez la page à analyser', desc: 'Sélectionnez une URL parmi les pages crawlées. L\'outil charge automatiquement le contenu, les mots-clés ciblés et le contexte business.', features: ['Dropdown des pages crawlées', 'Croisement keyword_universe'] },
   { step: '3', title: 'Analyse IA contextuelle', desc: 'L\'IA évalue la page sur 7 axes UX/CRO en tenant compte de votre positionnement, maturité, audience cible et objectifs business.', features: ['Score global 0-100', '7 axes détaillés', 'Suggestions concrètes avec reformulations'] },
   { step: '4', title: 'Prescriptions Workbench', desc: 'Les suggestions critiques alimentent automatiquement le Workbench Architect pour exécution par Code Architect ou Content Architect.', features: ['Fusion automatique des doublons', 'Priorisation unifiée'] },
 ];
 
 const faq = [
-  { q: 'UX Optimizer re-crawle-t-il les pages ?', a: 'Non. UX Optimizer utilise exclusivement les données du dernier crawl complété. Aucune requête supplémentaire n\'est envoyée vers votre site.' },
+  { q: 'Conversion Optimizer re-crawle-t-il les pages ?', a: 'Non. Conversion Optimizer utilise exclusivement les données du dernier crawl complété. Aucune requête supplémentaire n\'est envoyée vers votre site.' },
   { q: 'Quels axes sont analysés ?', a: '7 axes : Ton & Voix, Pression CTA, Alignement positionnement, Lisibilité, Potentiel de conversion, Expérience mobile, Utilisation des mots-clés.' },
   { q: 'Comment les suggestions sont-elles priorisées ?', a: 'Chaque suggestion reçoit une priorité (critical, high, medium, low). Les suggestions critical et high sont automatiquement injectées dans le Workbench Architect pour exécution.' },
-  { q: 'Quelle est la différence avec Content Architect ?', a: 'Content Architect crée du contenu neuf. UX Optimizer analyse le contenu existant et propose des reformulations ciblées pour améliorer la conversion et l\'expérience utilisateur.' },
-  { q: 'Faut-il un abonnement Pro Agency ?', a: 'UX Optimizer nécessite un site tracké avec un crawl complété. Le crawl multi-pages est disponible avec l\'abonnement Pro Agency.' },
+  { q: 'Quelle est la différence avec Content Architect ?', a: 'Content Architect crée du contenu neuf. Conversion Optimizer analyse le contenu existant et propose des reformulations ciblées pour améliorer la conversion et l\'expérience utilisateur.' },
+  { q: 'Faut-il un abonnement Pro Agency ?', a: 'Conversion Optimizer nécessite un site tracké avec un crawl complété. Le crawl multi-pages est disponible avec l\'abonnement Pro Agency.' },
 ];
 
-const UxOptimizerLanding = memo(() => {
-  useCanonicalHreflang('/ux-optimizer');
+const ConversionOptimizerLanding = memo(() => {
+  useCanonicalHreflang('/conversion-optimizer');
 
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "SoftwareApplication",
-        "name": "UX Optimizer by Crawlers.fr",
+        "name": "Conversion Optimizer by Crawlers.fr",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
         "description": "Analysez le ton, les CTAs, la lisibilité et le potentiel de conversion de chaque page de votre site, calibré sur votre contexte business.",
@@ -61,7 +61,7 @@ const UxOptimizerLanding = memo(() => {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-          { "@type": "ListItem", "position": 2, "name": "UX Optimizer", "item": "https://crawlers.fr/ux-optimizer" },
+          { "@type": "ListItem", "position": 2, "name": "Conversion Optimizer", "item": "https://crawlers.fr/conversion-optimizer" },
         ]
       },
       {
@@ -78,15 +78,15 @@ const UxOptimizerLanding = memo(() => {
   return (
     <>
       <Helmet>
-        <title>UX Optimizer — Audit UX/CRO contextuel par IA | Crawlers.fr</title>
+        <title>Conversion Optimizer — Audit UX/CRO contextuel par IA | Crawlers.fr</title>
         <meta name="description" content="Analysez le ton, les CTAs, la lisibilité et le potentiel de conversion de chaque page. Analyse IA calibrée sur votre contexte business, maturité et objectifs." />
-        <link rel="canonical" href="https://crawlers.fr/ux-optimizer" />
-        <meta property="og:title" content="UX Optimizer — Audit UX/CRO contextuel par IA | Crawlers.fr" />
+        <link rel="canonical" href="https://crawlers.fr/conversion-optimizer" />
+        <meta property="og:title" content="Conversion Optimizer — Audit UX/CRO contextuel par IA | Crawlers.fr" />
         <meta property="og:description" content="7 axes d'analyse UX : ton, CTAs, alignement, lisibilité, conversion, mobile, mots-clés. Calibré sur votre business." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://crawlers.fr/ux-optimizer" />
+        <meta property="og:url" content="https://crawlers.fr/conversion-optimizer" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="UX Optimizer — Audit UX/CRO contextuel | Crawlers.fr" />
+        <meta name="twitter:title" content="Conversion Optimizer — Audit UX/CRO contextuel | Crawlers.fr" />
         <meta name="twitter:description" content="Analyse UX/CRO contextuelle sur 7 axes. Suggestions concrètes avec reformulations." />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
@@ -114,13 +114,13 @@ const UxOptimizerLanding = memo(() => {
             </h1>
 
             <p className="mx-auto mt-6 max-w-3xl text-lg text-muted-foreground">
-              UX Optimizer évalue le ton, les CTAs, la lisibilité et le potentiel de conversion de chaque page — calibré sur votre business, votre audience et vos objectifs.
+              Conversion Optimizer évalue le ton, les CTAs, la lisibilité et le potentiel de conversion de chaque page — calibré sur votre business, votre audience et vos objectifs.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link to="/auth">
                 <Button size="lg" className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-violet-500/20">
-                  <Sparkles className="h-4 w-4" /> Essayer UX Optimizer <ArrowRight className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4" /> Essayer Conversion Optimizer <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/content-architect">
@@ -251,9 +251,9 @@ const UxOptimizerLanding = memo(() => {
                   <PenTool className="h-8 w-8 text-emerald-400" />
                 </div>
                 <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">UX Optimizer + Content Architect</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">Conversion Optimizer + Content Architect</h3>
                   <p className="text-sm text-muted-foreground">
-                    UX Optimizer diagnostique. Content Architect crée. Ensemble, ils transforment vos recommandations UX en contenus optimisés publiés directement sur votre CMS.
+                    Conversion Optimizer diagnostique. Content Architect crée. Ensemble, ils transforment vos recommandations UX en contenus optimisés publiés directement sur votre CMS.
                   </p>
                 </div>
                 <Link to="/content-architect">
@@ -309,5 +309,5 @@ const UxOptimizerLanding = memo(() => {
   );
 });
 
-UxOptimizerLanding.displayName = 'UxOptimizerLanding';
-export default UxOptimizerLanding;
+ConversionOptimizerLanding.displayName = 'ConversionOptimizerLanding';
+export default ConversionOptimizerLanding;

@@ -875,7 +875,7 @@ const ContentArchitectPage = memo(() => {
           </div>
         </section>
 
-        {/* ═══ CROSS CTA — UX Optimizer ═══ */}
+        {/* ═══ CROSS CTA — Conversion Optimizer ═══ */}
         <section className="py-16 border-t border-border">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <Card className="border-violet-500/20 bg-gradient-to-r from-violet-500/5 to-purple-500/5">
@@ -886,12 +886,12 @@ const ContentArchitectPage = memo(() => {
                 <div className="flex-1 text-center sm:text-left">
                   <h3 className="text-lg font-semibold text-foreground mb-1">Avant de créer, diagnostiquez.</h3>
                   <p className="text-sm text-muted-foreground">
-                    UX Optimizer analyse le ton, les CTAs et la conversion de vos pages existantes sur 7 axes — calibré sur votre business. Les suggestions alimentent directement Content Architect.
+                    Conversion Optimizer analyse le ton, les CTAs et la conversion de vos pages existantes sur 7 axes — calibré sur votre business. Les suggestions alimentent directement Content Architect.
                   </p>
                 </div>
-                <Link to="/ux-optimizer">
+                <Link to="/conversion-optimizer">
                   <Button className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 whitespace-nowrap">
-                    UX Optimizer <ArrowRight className="h-4 w-4" />
+                    Conversion Optimizer <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
               </CardContent>

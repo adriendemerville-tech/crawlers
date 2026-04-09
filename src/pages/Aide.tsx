@@ -278,8 +278,8 @@ const DOC_SECTIONS: DocSection[] = [
 </ul>`,
       },
       {
-        id: 'ux-optimizer',
-        title: 'UX Optimizer',
+        id: 'conversion-optimizer',
+        title: 'Conversion Optimizer',
         content: `Audit UX/CRO contextuel par IA sur 7 axes :
 <ul class="list-disc pl-6 mt-1 space-y-1">
 <li><strong>Ton & Voix</strong> : adaptation au positionnement et à l'audience cible</li>
@@ -291,7 +291,7 @@ const DOC_SECTIONS: DocSection[] = [
 <li><strong>Utilisation des mots-clés</strong> : densité, naturalité, placement (H1, H2, body)</li>
 </ul>
 <p class="mt-2">L'analyse est calibrée sur votre contexte business (type, audience, maturité, voice DNA, objectifs). Les suggestions critiques alimentent automatiquement le <strong>Workbench Architect</strong>.</p>
-<p class="mt-2 text-sm text-muted-foreground">Accessible depuis Console → Mes Sites → bouton UX, ou via <a href="/app/ux-optimizer" class="text-primary underline">/app/ux-optimizer</a>. Nécessite un crawl complété.</p>`,
+<p class="mt-2 text-sm text-muted-foreground">Accessible depuis Console → Mes Sites → bouton UX, ou via <a href="/app/conversion-optimizer" class="text-primary underline">/app/conversion-optimizer</a>. Nécessite un crawl complété.</p>`,
       },
     ],
   },
@@ -326,7 +326,7 @@ const DOC_SECTIONS: DocSection[] = [
 <tr class="border-t border-border"><td class="p-2">Crawl multi-pages</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">5 000 p/mois</td><td class="p-2 text-center">50 000 p/mois</td></tr>
 <tr class="border-t border-border"><td class="p-2">Tracking SERP/GSC/GA4</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Quiz IA intégrés</td><td class="p-2 text-center">Crawlers</td><td class="p-2 text-center">Tous</td><td class="p-2 text-center">Tous</td></tr>
-<tr class="border-t border-border"><td class="p-2">UX Optimizer</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
+<tr class="border-t border-border"><td class="p-2">Conversion Optimizer</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Content Architect + Calendrier éditorial</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Sites simultanés</td><td class="p-2 text-center">1</td><td class="p-2 text-center">30</td><td class="p-2 text-center">30</td></tr>
 <tr class="border-t border-border"><td class="p-2">Prix</td><td class="p-2 text-center">Gratuit</td><td class="p-2 text-center font-semibold">à partir de 29€/mois*</td><td class="p-2 text-center font-semibold">79€/mois</td></tr>

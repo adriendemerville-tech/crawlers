@@ -165,13 +165,13 @@ export const ContentArchitectSection = memo(() => {
             </Button>
           </Link>
 
-          {/* UX Optimizer mention */}
+          {/* Conversion Optimizer mention */}
           <div className="flex flex-col items-center gap-2 pt-4 border-t border-border/30 max-w-lg mx-auto">
             <p className="text-xs text-muted-foreground">
               {language === 'fr' ? 'Besoin d\'analyser le ton, les CTAs et la conversion de vos pages existantes ?' : language === 'es' ? '¿Necesita analizar el tono, los CTAs y la conversión de sus páginas?' : 'Need to analyze tone, CTAs and conversion on existing pages?'}
             </p>
-            <Link to="/ux-optimizer" className="inline-flex items-center gap-1.5 text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors">
-              UX Optimizer — {language === 'fr' ? 'Audit UX/CRO contextuel' : language === 'es' ? 'Auditoría UX/CRO contextual' : 'Contextual UX/CRO audit'}
+            <Link to="/conversion-optimizer" className="inline-flex items-center gap-1.5 text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors">
+              Conversion Optimizer — {language === 'fr' ? 'Audit UX/CRO contextuel' : language === 'es' ? 'Auditoría UX/CRO contextual' : 'Contextual UX/CRO audit'}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>

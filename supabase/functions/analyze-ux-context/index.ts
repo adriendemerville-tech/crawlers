@@ -4,7 +4,7 @@ import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browser
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 /**
- * analyze-ux-context — UX Optimizer
+ * analyze-ux-context — Conversion Optimizer
  * 
  * Analyzes a crawled page in context (business type, voice_dna, keywords, maturity)
  * and returns scores on 7 axes + textual suggestions.

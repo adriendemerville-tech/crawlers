@@ -89,8 +89,8 @@ const APropos = lazy(() => import("./pages/APropos"));
 const AuditSemantique = lazy(() => import("./pages/AuditSemantique"));
 const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
 const ApiIntegrations = lazy(() => import("./pages/ApiIntegrations"));
-const UxOptimizer = lazy(() => import("./pages/UxOptimizer"));
-const UxOptimizerLanding = lazy(() => import("./pages/UxOptimizerLanding"));
+const ConversionOptimizer = lazy(() => import("./pages/ConversionOptimizer"));
+const ConversionOptimizerLanding = lazy(() => import("./pages/ConversionOptimizerLanding"));
 
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
@@ -168,7 +168,7 @@ const App = () => (
                           <Route path="/pro-agency" element={<ProAgency />} />
                           <Route path="/observatoire" element={<Observatoire />} />
                           <Route path="/content-architect" element={<ContentArchitectPage />} />
-                          <Route path="/ux-optimizer" element={<UxOptimizerLanding />} />
+                          <Route path="/conversion-optimizer" element={<ConversionOptimizerLanding />} />
                           <Route path="/faq" element={<Faq />} />
                           <Route path="/methodologie" element={<Methodologie />} />
                           <Route path="/cgvu" element={<CGVU />} />
@@ -201,7 +201,7 @@ const App = () => (
                           <Route path="/audit-semantique" element={<AuditSemantique />} />
                           <Route path="/google-business" element={<GoogleBusinessPage />} />
                           <Route path="/api-integrations" element={<ApiIntegrations />} />
-                          <Route path="/app/ux-optimizer" element={<UxOptimizer />} />
+                          <Route path="/app/conversion-optimizer" element={<ConversionOptimizer />} />
                           <Route path="/privacy-google-ads" element={<Navigate to="/api-integrations#google-ads" replace />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
