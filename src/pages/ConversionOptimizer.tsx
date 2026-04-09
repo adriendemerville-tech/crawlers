@@ -375,15 +375,28 @@ export default function ConversionOptimizer() {
                   <span className="text-amber-500">Aucun crawl trouvé — lancez un crawl d'abord</span>
                 )}
               </p>
-              <Button
-                variant="outline"
-                onClick={handleAnalyze}
-                disabled={!selectedPageUrl || analyzing}
-                className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
-              >
-                {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
-                {analyzing ? 'Analyse en cours...' : 'Analyser'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleAnalyze}
+                  disabled={!selectedPageUrl || analyzing}
+                  className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                >
+                  {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
+                  {analyzing ? 'Analyse en cours...' : 'Analyser'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowContentArchitect(true)}
+                  disabled={!result || analyzing}
+                  className={`gap-2 transition-all ${result && !analyzing
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                    : 'bg-transparent text-white/40 border-white/20 cursor-not-allowed'}`}
+                >
+                  <PenTool className="h-4 w-4" />
+                  Optimiser
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
