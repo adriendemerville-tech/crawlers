@@ -32,6 +32,8 @@ interface MatrixRow {
   prompt: string;
   poids: number;
   axe: string;
+  theme?: string;
+  engine?: string;
   seuil_bon: number;
   seuil_moyen: number;
   seuil_mauvais: number;
@@ -291,6 +293,8 @@ export default function MatricePrompt() {
         prompt: val('prompt', `KPI #${i + 1}`),
         poids: val('poids', DEFAULTS.poids),
         axe: val('axe', DEFAULTS.axe),
+        theme: val('theme', ''),
+        engine: val('engine', ''),
         seuil_bon: val('seuil_bon', DEFAULTS.seuil_bon),
         seuil_moyen: val('seuil_moyen', DEFAULTS.seuil_moyen),
         seuil_mauvais: val('seuil_mauvais', DEFAULTS.seuil_mauvais),
@@ -444,8 +448,8 @@ export default function MatricePrompt() {
         const benchmarkItems = selectedRows.map(row => ({
           id: row.id,
           prompt: row.prompt,
-          theme: (row as any).theme || row.axe || 'Général',
-          engine: (row as any).engine || 'ChatGPT',
+          theme: row.theme || row.axe || 'Général',
+          engine: row.engine || 'ChatGPT',
           poids: row.poids,
           axe: row.axe,
           seuil_bon: row.seuil_bon,
