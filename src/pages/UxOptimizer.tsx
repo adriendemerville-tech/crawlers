@@ -340,6 +340,21 @@ export default function UxOptimizer() {
               })}
             </div>
 
+            {/* Annotated Page View */}
+            {result.screenshot_url && (
+              <AnnotatedPageView
+                screenshotUrl={result.screenshot_url}
+                screenshotHeight={result.screenshot_height || 3000}
+                annotations={result.annotations || []}
+                suggestions={result.suggestions}
+                onSelectSuggestion={(idx) => {
+                  // Scroll to the suggestion in the list below
+                  const el = document.getElementById(`suggestion-${idx}`);
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              />
+            )}
+
             {/* Suggestions */}
             <Card>
               <CardHeader className="pb-3">
