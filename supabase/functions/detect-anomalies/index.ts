@@ -6,8 +6,8 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 /**
  * detect-anomalies: Z-score anomaly detection across all data sources
  * 
- * Sources: GSC, GA4, GMB, Google Ads, IAS, SERP
- * Method: Z-score on 8-week rolling window
+ * Sources: GSC, GA4, GMB, Google Ads, IAS, SERP, GSC Daily Positions
+ * Method: Z-score on 8-week rolling window + daily J-1 ranking anomaly
  * Thresholds: z > 2 → green (hausse), z < -1.5 → orange, z < -2 → red (baisse)
  * 
  * Modes:
@@ -38,7 +38,7 @@ function classifyAnomaly(z: number): { severity: string; direction: string } | n
   if (z <= -2) return { severity: 'danger', direction: 'down' };
   if (z <= -1.5) return { severity: 'warning', direction: 'down' };
   if (z >= 1.5) return { severity: 'info', direction: 'up' };
-  return null; // No anomaly
+  return null;
 }
 
 Deno.serve(handleRequest(async (req) => {
@@ -51,38 +51,35 @@ try {
     const body = await req.json();
     const supabase = getServiceClient();
 
-    // Determine which sites to analyze
-    let siteIds: { id: string; domain: string }[] = [];
+    let siteIds: { id: string; domain: string; user_id: string }[] = [];
 
     if (body.all) {
-      // Cron mode: all active sites
       const { data: sites } = await supabase
         .from('tracked_sites')
-        .select('id, domain')
+        .select('id, domain, user_id')
         .eq('is_active', true)
         .limit(200);
-      siteIds = sites || [];
+      siteIds = (sites || []).map((s: any) => ({ id: s.id, domain: s.domain, user_id: s.user_id }));
     } else if (body.tracked_site_id) {
       const { data: site } = await supabase
         .from('tracked_sites')
-        .select('id, domain')
+        .select('id, domain, user_id')
         .eq('id', body.tracked_site_id)
         .maybeSingle();
-      if (site) siteIds = [site];
+      if (site) siteIds = [{ id: site.id, domain: site.domain, user_id: site.user_id }];
     } else {
-      // All sites for this user
       const { data: sites } = await supabase
         .from('tracked_sites')
-        .select('id, domain')
+        .select('id, domain, user_id')
         .eq('user_id', auth.userId)
         .eq('is_active', true);
-      siteIds = sites || [];
+      siteIds = (sites || []).map((s: any) => ({ id: s.id, domain: s.domain, user_id: s.user_id }));
     }
 
     let totalAlerts = 0;
 
     for (const site of siteIds) {
-      const alerts = await detectForSite(supabase, site.id, site.domain, auth.userId);
+      const alerts = await detectForSite(supabase, site.id, site.domain, site.user_id);
       totalAlerts += alerts;
     }
 
@@ -98,8 +95,95 @@ try {
   }
 }));
 
+// ── Send email alert for critical anomalies ──
+async function sendDeclineAlert(supabase: any, userId: string, domain: string, alerts: any[]) {
+  // Only send for danger-level alerts (decline)
+  const dangerAlerts = alerts.filter(a => a.severity === 'danger' && a.direction === 'down');
+  if (dangerAlerts.length === 0) return;
+
+  // Get user email
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, first_name, notification_preferences')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (!profile?.email) return;
+
+  // Check notification preferences
+  const prefs = profile.notification_preferences as any || {};
+  if (prefs.anomaly_alerts === false) return;
+
+  // Don't send more than one alert email per domain per day
+  const today = new Date().toISOString().split('T')[0];
+  const { data: recentLog } = await supabase
+    .from('email_send_log')
+    .select('id')
+    .eq('recipient_email', profile.email)
+    .eq('template_name', 'decline-alert')
+    .gte('created_at', `${today}T00:00:00Z`)
+    .maybeSingle();
+
+  if (recentLog) return;
+
+  const alertLines = dangerAlerts.slice(0, 5).map((a: any) => 
+    `• <strong>${a.metric_name}</strong> (${a.metric_source}) : ${a.description}`
+  ).join('<br/>');
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #1a0533, #2d1b69); padding: 24px; border-radius: 12px 12px 0 0;">
+        <h1 style="color: #fff; margin: 0; font-size: 20px;">⚠️ Alerte de déclin détectée</h1>
+        <p style="color: #c4b5fd; margin: 8px 0 0; font-size: 14px;">${domain}</p>
+      </div>
+      <div style="background: #fff; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+        <p style="color: #374151; font-size: 14px; line-height: 1.6;">
+          ${profile.first_name ? `Bonjour ${profile.first_name},` : 'Bonjour,'}<br/><br/>
+          Crawlers a détecté <strong>${dangerAlerts.length} anomalie${dangerAlerts.length > 1 ? 's' : ''} critique${dangerAlerts.length > 1 ? 's' : ''}</strong> sur <strong>${domain}</strong> :
+        </p>
+        <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; margin: 16px 0; border-radius: 0 8px 8px 0; font-size: 13px; color: #991b1b; line-height: 1.8;">
+          ${alertLines}
+        </div>
+        <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">
+          Ces alertes sont basées sur une analyse Z-score de vos données des 8 dernières semaines. 
+          Connectez-vous à votre console pour voir le détail et les recommandations.
+        </p>
+        <a href="https://crawlers.fr/app/console" style="display: inline-block; background: #7c3aed; color: #fff; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; margin-top: 12px;">Voir la console</a>
+      </div>
+    </div>
+  `;
+
+  try {
+    await supabase.rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
+        to: profile.email,
+        from: 'alertes@notify.crawlers.fr',
+        sender_domain: 'notify.crawlers.fr',
+        subject: `⚠️ Alerte déclin — ${domain} : ${dangerAlerts.length} anomalie${dangerAlerts.length > 1 ? 's' : ''} détectée${dangerAlerts.length > 1 ? 's' : ''}`,
+        html,
+        text: `Alerte de déclin détectée sur ${domain}. ${dangerAlerts.length} anomalie(s) critique(s). Connectez-vous à https://crawlers.fr/app/console`,
+        purpose: 'transactional',
+        label: 'decline-alert',
+        idempotency_key: `decline-alert-${domain}-${today}`,
+        queued_at: new Date().toISOString(),
+      },
+    });
+
+    // Mark alerts as email-sent
+    for (const a of dangerAlerts) {
+      if (a.id) {
+        await supabase.from('anomaly_alerts').update({ email_alert_sent: true }).eq('id', a.id);
+      }
+    }
+
+    console.log(`[detect-anomalies] 📧 Decline alert email sent to ${profile.email} for ${domain}`);
+  } catch (e) {
+    console.error(`[detect-anomalies] Email send error:`, e);
+  }
+}
+
 async function detectForSite(supabase: any, trackedSiteId: string, domain: string, userId: string): Promise<number> {
-  // Fetch site identity card for seasonality awareness
   let isSeasonal = false;
   let seasonalityProfile: any = null;
   try {
@@ -111,8 +195,8 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
     }
   } catch (_) { /* non-blocking */ }
 
-  // Fetch all historical data in parallel (8 weeks + current)
-  const [gscRes, ga4Res, gmbRes, adsRes, serpRes, idxRes] = await Promise.all([
+  // Fetch all historical data in parallel (8 weeks + current) + daily positions
+  const [gscRes, ga4Res, gmbRes, adsRes, serpRes, idxRes, dailyRes] = await Promise.all([
     supabase
       .from('gsc_history_log')
       .select('clicks, impressions, ctr, avg_position, week_start_date')
@@ -144,17 +228,23 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
       .eq('data_type', 'serp_kpis')
       .order('created_at', { ascending: false })
       .limit(9),
-    // Indexation checks — compute current ratio
     supabase
       .from('indexation_checks')
       .select('verdict')
       .eq('tracked_site_id', trackedSiteId),
+    // Daily positions for ranking anomaly (last 14 days)
+    supabase
+      .from('gsc_daily_positions')
+      .select('query, position, clicks, date_val')
+      .eq('tracked_site_id', trackedSiteId)
+      .gte('date_val', new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0])
+      .order('date_val', { ascending: true }),
   ]);
 
   const series: MetricSeries[] = [];
 
   // --- GSC metrics ---
-  const gsc = (gscRes.data || []).reverse(); // oldest first
+  const gsc = (gscRes.data || []).reverse();
   if (gsc.length >= 5) {
     const current = gsc[gsc.length - 1];
     const history = gsc.slice(0, -1);
@@ -245,19 +335,70 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
     }
   }
 
+  // --- Daily ranking anomaly detection (J-1 granularity) ---
+  const dailyData = dailyRes.data || [];
+  if (dailyData.length > 0) {
+    // Group by query
+    const queryMap = new Map<string, { positions: number[]; clicks: number[]; dates: string[] }>();
+    for (const row of dailyData) {
+      const q = row.query;
+      if (!queryMap.has(q)) queryMap.set(q, { positions: [], clicks: [], dates: [] });
+      const entry = queryMap.get(q)!;
+      entry.positions.push(Number(row.position));
+      entry.clicks.push(row.clicks || 0);
+      entry.dates.push(row.date_val);
+    }
+
+    let rankingDropCount = 0;
+    const droppedQueries: string[] = [];
+
+    for (const [query, data] of queryMap.entries()) {
+      if (data.positions.length < 5) continue; // Need at least 5 days of data
+
+      const current = data.positions[data.positions.length - 1];
+      const history = data.positions.slice(0, -1);
+      const { z, mean } = computeZScore(history, current);
+
+      // For positions, higher z = worse (position increased = rank dropped)
+      // Detect significant drops: position went from <10 to >15 (left first page)
+      if (z >= 2 && mean <= 10 && current > 15) {
+        rankingDropCount++;
+        if (droppedQueries.length < 5) {
+          droppedQueries.push(`"${query}" (${Math.round(mean)} → ${Math.round(current)})`);
+        }
+      }
+    }
+
+    if (rankingDropCount > 0) {
+      newAlerts.push({
+        tracked_site_id: trackedSiteId,
+        user_id: userId,
+        domain,
+        metric_name: 'Chute de ranking quotidienne',
+        metric_source: 'gsc_daily',
+        severity: rankingDropCount >= 5 ? 'danger' : 'warning',
+        direction: 'down',
+        z_score: -2.5,
+        current_value: rankingDropCount,
+        baseline_mean: 0,
+        baseline_stddev: 1,
+        change_pct: 0,
+        affected_pages: rankingDropCount,
+        description: `📉 ${rankingDropCount} mot${rankingDropCount > 1 ? 's' : ''}-clé${rankingDropCount > 1 ? 's' : ''} ont quitté la 1ère page : ${droppedQueries.join(', ')}`,
+      });
+    }
+  }
+
   for (const s of series) {
     const { z, mean, stddev } = computeZScore(s.values, s.current);
 
-    // Seasonal sites: relax thresholds to avoid false positives during expected dips
     const adjustedClassification = isSeasonal
-      ? classifyAnomaly(z * 0.75) // Reduce z-score sensitivity by 25% for seasonal sites
+      ? classifyAnomaly(z * 0.75)
       : classifyAnomaly(z);
     if (!adjustedClassification) continue;
 
-    // For position, direction is inverted (lower is better)
     let { severity, direction } = adjustedClassification;
     if (s.metric_name === 'Position moyenne' || s.metric_name === 'Taux de rebond' || s.metric_name === 'Coût publicitaire') {
-      // Inverted metrics: going down is good
       if (direction === 'up') {
         severity = 'danger';
         direction = 'down';
@@ -296,8 +437,15 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
       .eq('tracked_site_id', trackedSiteId)
       .eq('is_dismissed', false);
 
-    const { error } = await supabase.from('anomaly_alerts').insert(newAlerts);
+    const { error, data: insertedAlerts } = await supabase.from('anomaly_alerts').insert(newAlerts).select('id, severity, direction');
     if (error) console.error(`[detect-anomalies] Insert error for ${domain}:`, error);
+
+    // Send decline email alert for danger-level anomalies
+    const alertsWithIds = (insertedAlerts || []).map((inserted: any, i: number) => ({
+      ...newAlerts[i],
+      id: inserted.id,
+    }));
+    await sendDeclineAlert(supabase, userId, domain, alertsWithIds);
   }
 
   return newAlerts.length;
