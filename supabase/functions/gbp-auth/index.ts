@@ -181,7 +181,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
 
       return new Response(null, {
         status: 302,
-        headers: { Location: `${redirectBase}/console?gbp_connected=true&google_email=${encodeURIComponent(googleEmail)}` },
+        headers: { Location: `${redirectBase}/console?tab=gmb&gbp_connected=true&google_email=${encodeURIComponent(googleEmail)}` },
       })
 
     } catch (e) {
