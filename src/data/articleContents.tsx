@@ -3023,7 +3023,7 @@ Allow: /`}</pre>
           href="/comparatif-claude-vs-crawlers"
           title="Comparatif détaillé : Claude Stack vs Crawlers.fr"
           description="14 critères passés au crible — tableau comparatif complet."
-          type="internal"
+
         />
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
@@ -3071,7 +3071,7 @@ Allow: /`}</pre>
           href="/comparatif-claude-vs-crawlers"
           title="Detailed comparison: Claude Stack vs Crawlers.fr"
           description="14 criteria analyzed — full comparison table."
-          type="internal"
+
         />
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
@@ -3105,7 +3105,7 @@ Allow: /`}</pre>
           href="/comparatif-claude-vs-crawlers"
           title="Comparativa detallada: Stack Claude vs Crawlers.fr"
           description="14 criterios analizados — tabla comparativa completa."
-          type="internal"
+
         />
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
