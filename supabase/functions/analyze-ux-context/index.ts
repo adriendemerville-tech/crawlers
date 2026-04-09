@@ -104,6 +104,19 @@ Deno.serve(handleRequest(async (req) => {
   const pageKeywords = (keywords || []).filter((keyword) => keyword.target_url === page_url);
   const topKeywords = pageKeywords.length > 0 ? pageKeywords : (keywords || []).slice(0, 10);
 
+  // Check identity card completeness
+  const identityFields = [
+    site.business_type, site.market_sector, site.commercial_model,
+    site.target_audience, site.target_segment, site.products_services,
+    site.entity_type,
+  ];
+  const filledCount = identityFields.filter(f => f && String(f).trim()).length;
+  const identityIncomplete = filledCount < 3;
+
+  if (identityIncomplete) {
+    console.log(`[analyze-ux-context] Identity card incomplete (${filledCount}/7 fields). Using page content as fallback context.`);
+  }
+
   const businessContext = {
     business_type: site.business_type,
     market_sector: site.market_sector,
@@ -117,6 +130,7 @@ Deno.serve(handleRequest(async (req) => {
     entity_type: site.entity_type,
     goals: { short: site.short_term_goal, mid: site.mid_term_goal },
     primary_use_case: site.primary_use_case,
+    _incomplete: identityIncomplete,
   };
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
