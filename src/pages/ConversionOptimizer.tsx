@@ -422,6 +422,59 @@ export default function ConversionOptimizer() {
               })}
             </div>
 
+            {result.image_format_report && result.image_format_report.unoptimized > 0 && (
+              <Card className="border-amber-500/30 bg-amber-500/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-amber-500" />
+                    Formats d'images non optimisés
+                  </CardTitle>
+                  <CardDescription>
+                    {result.image_format_report.unoptimized} image{result.image_format_report.unoptimized > 1 ? 's' : ''} sur {result.image_format_report.total} utilisent un format non optimal (JPG, PNG, GIF). 
+                    Convertissez-les en <strong>WebP</strong> ou <strong>AVIF</strong> pour réduire le temps de chargement de 25 à 80%.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {result.image_format_report.details
+                      .filter(img => !img.is_optimized)
+                      .map((img, i) => {
+                        const filename = img.src.split('/').pop()?.split('?')[0] || img.src;
+                        return (
+                          <div key={i} className="flex items-center gap-2 text-xs py-1 px-2 rounded bg-background/50">
+                            <Badge variant="outline" className="text-amber-600 border-amber-500/30 uppercase text-[10px] font-mono">
+                              {img.format}
+                            </Badge>
+                            <span className="truncate flex-1 text-muted-foreground" title={img.src}>
+                              {filename}
+                            </span>
+                            <span className="text-muted-foreground/60 shrink-0">{img.dimensions}</span>
+                            <span className="text-emerald-600 shrink-0">→ WebP</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                  {result.image_format_report.optimized > 0 && (
+                    <p className="text-xs text-emerald-600 mt-3 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {result.image_format_report.optimized} image{result.image_format_report.optimized > 1 ? 's' : ''} déjà optimisée{result.image_format_report.optimized > 1 ? 's' : ''} (WebP/AVIF/SVG)
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {result.image_format_report && result.image_format_report.unoptimized === 0 && result.image_format_report.total > 0 && (
+              <Card className="border-emerald-500/30 bg-emerald-500/5">
+                <CardContent className="pt-4 pb-3">
+                  <p className="text-sm flex items-center gap-2 text-emerald-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Toutes les {result.image_format_report.total} images utilisent des formats optimisés (WebP, AVIF, SVG)
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             {result.screenshot_url && (
               <div className="space-y-2">
                 {backfillingAnnotations && (
