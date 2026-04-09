@@ -667,6 +667,11 @@ const Index = () => {
           <ProductShowcaseSection />
         </Suspense>
 
+        {/* Claude vs Crawlers — Comparison */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <ClaudeVsCrawlersSection />
+        </Suspense>
+
         {/* Google Cross Data — SEA→SEO Bridge */}
         <Suspense fallback={<SectionSkeleton />}>
           <GoogleCrossDataSection />
@@ -1031,9 +1036,6 @@ const Index = () => {
             </div>
           </div>
         </section>
-        <Suspense fallback={<SectionSkeleton />}>
-          <ClaudeVsCrawlersSection />
-        </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
           <TestimonialsCarousel />
         </Suspense>
