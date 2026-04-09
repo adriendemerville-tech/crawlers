@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { detectMatriceType, type MatriceType, type DetectionResult } from '@/utils/matrice/typeDetector';
 import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCleaner';
@@ -32,7 +33,7 @@ const TYPE_LABELS: Record<MatriceType, { label: string; desc: string; color: str
 
 const STEPS_MULTI: { key: Step; label: string }[] = [
   { key: 'type', label: 'Type' },
-  { key: 'sheet', label: 'Onglet' },
+  { key: 'sheet', label: 'Onglets' },
   { key: 'clean', label: 'Nettoyage' },
   { key: 'confirm', label: 'Import' },
 ];
@@ -47,7 +48,7 @@ const STEPS_SINGLE: { key: Step; label: string }[] = [
 
 export default function ImportStepper({ open, sheetNames, workbook, onComplete, onClose }: Props) {
   const [step, setStep] = useState<Step>('type');
-  const [selectedSheet, setSelectedSheet] = useState<string>('');
+  const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<MatriceType | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
   const [rawRows, setRawRows] = useState<Record<string, any>[]>([]);
@@ -58,31 +59,46 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const hasMultipleSheets = sheetNames.length > 1;
   const steps = hasMultipleSheets ? STEPS_MULTI : STEPS_SINGLE;
 
-  // ── Parse a sheet and proceed to clean ─────────────────────────────
-  const parseSheetAndClean = useCallback(async (sheetName: string) => {
-    if (!workbook || !selectedType) return;
+  // ── Toggle a sheet in multi-select ──────────────────────────────────
+  const toggleSheet = (name: string) => {
+    setSelectedSheets(prev =>
+      prev.includes(name) ? prev.filter(s => s !== name) : [...prev, name]
+    );
+  };
+
+  // ── Parse selected sheets and merge rows ───────────────────────────
+  const parseSheetsAndClean = useCallback(async (sheets: string[]) => {
+    if (!workbook || !selectedType || sheets.length === 0) return;
     setLoading(true);
-    setSelectedSheet(sheetName);
     try {
       const { utils } = await import('xlsx');
-      const sheet = workbook.Sheets[sheetName];
-      const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
-      if (!rows.length) {
-        console.warn('[ImportStepper] Empty sheet:', sheetName);
+      let allRows: Record<string, any>[] = [];
+
+      for (const sheetName of sheets) {
+        const sheet = workbook.Sheets[sheetName];
+        const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+        if (rows.length > 0) {
+          console.log(`[ImportStepper] Sheet "${sheetName}": ${rows.length} rows, ${Object.keys(rows[0]).length} cols`);
+          allRows = allRows.concat(rows);
+        } else {
+          console.warn('[ImportStepper] Empty sheet:', sheetName);
+        }
+      }
+
+      if (!allRows.length) {
         setLoading(false);
         return;
       }
-      const h = Object.keys(rows[0]);
+
+      const h = Object.keys(allRows[0]);
       setHeaders(h);
-      setRawRows(rows);
+      setRawRows(allRows);
 
-      // Auto-detect for info
-      const det = detectMatriceType(h, rows.slice(0, 10));
+      const det = detectMatriceType(h, allRows.slice(0, 10));
       setDetection(det);
-      console.log(`[ImportStepper] Sheet "${sheetName}": ${rows.length} rows, ${h.length} cols, detected=${det.type} (${Math.round(det.confidence * 100)}%)`);
+      console.log(`[ImportStepper] Merged: ${allRows.length} rows, detected=${det.type} (${Math.round(det.confidence * 100)}%)`);
 
-      // Clean and go to clean step
-      const result = cleanImportedData(h, rows);
+      const result = cleanImportedData(h, allRows);
       setCleaning(result);
       setStep('clean');
     } catch (err) {
@@ -96,7 +112,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   useEffect(() => {
     if (open && sheetNames.length > 0 && workbook) {
       setStep('type');
-      setSelectedSheet(sheetNames[0] || '');
+      setSelectedSheets([]);
       setSelectedType(null);
       setHeaders([]);
       setRawRows([]);
@@ -114,9 +130,15 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
     if (hasMultipleSheets) {
       setStep('sheet');
     } else {
-      // Single sheet → parse it directly
-      parseSheetAndClean(sheetNames[0]);
+      setSelectedSheets([sheetNames[0]]);
+      parseSheetsAndClean([sheetNames[0]]);
     }
+  };
+
+  // ── Sheets confirmed → parse and merge ─────────────────────────────
+  const handleSheetsConfirm = () => {
+    if (selectedSheets.length === 0) return;
+    parseSheetsAndClean(selectedSheets);
   };
 
   // ── Final import ───────────────────────────────────────────────────
@@ -124,7 +146,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
     if (!cleaning || !selectedType) return;
     onComplete({
       rows: cleaning.cleanedRows,
-      sheetName: selectedSheet,
+      sheetName: selectedSheets.join(' + '),
       matriceType: selectedType,
       cleaningResult: cleaning,
     });
@@ -203,26 +225,38 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
           </div>
         )}
 
-        {/* ── Step: Sheet (only if multiple) ───────────────────────── */}
+        {/* ── Step: Sheet (multi-select with checkboxes) ───────────── */}
         {!loading && step === 'sheet' && (
           <div className="flex flex-col gap-2">
             <p className="text-sm text-muted-foreground mb-1">
-              Ce fichier contient {sheetNames.length} onglets. Lequel importer ?
+              Ce fichier contient {sheetNames.length} onglets. Lesquels importer ?
             </p>
-            {sheetNames.map(name => (
-              <Button
-                key={name}
-                variant="outline"
-                className="justify-start gap-2 h-auto py-3"
-                onClick={() => parseSheetAndClean(name)}
-              >
-                <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="truncate">{name}</span>
-              </Button>
-            ))}
-            <div className="flex justify-start mt-2">
+            {sheetNames.map(name => {
+              const isChecked = selectedSheets.includes(name);
+              return (
+                <button
+                  key={name}
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-left
+                    ${isChecked ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border hover:border-muted-foreground/30'}
+                  `}
+                  onClick={() => toggleSheet(name)}
+                >
+                  <Checkbox
+                    checked={isChecked}
+                    onCheckedChange={() => toggleSheet(name)}
+                    className="shrink-0"
+                  />
+                  <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate text-sm">{name}</span>
+                </button>
+              );
+            })}
+            <div className="flex justify-between mt-2">
               <Button variant="ghost" size="sm" onClick={() => setStep('type')}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Type
+              </Button>
+              <Button size="sm" onClick={handleSheetsConfirm} disabled={selectedSheets.length === 0}>
+                Continuer ({selectedSheets.length}) <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>
@@ -232,7 +266,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         {!loading && step === 'clean' && cleaning && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
-              Nettoyage effectué. Les colonnes de résultats et données résiduelles ont été retirées.
+              Nettoyage effectué sur {selectedSheets.length} onglet{selectedSheets.length > 1 ? 's' : ''}. Les colonnes de résultats et données résiduelles ont été retirées.
             </p>
 
             {/* Show detection mismatch warning */}
@@ -273,7 +307,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
 
             <div className="flex justify-between mt-2">
               <Button variant="ghost" size="sm" onClick={() => setStep(hasMultipleSheets ? 'sheet' : 'type')}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> {hasMultipleSheets ? 'Onglet' : 'Type'}
+                <ArrowLeft className="h-4 w-4 mr-1" /> {hasMultipleSheets ? 'Onglets' : 'Type'}
               </Button>
               <Button size="sm" onClick={() => setStep('confirm')}>
                 Continuer <ArrowRight className="h-4 w-4 ml-1" />
@@ -297,8 +331,8 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Onglet</span>
-                <span className="font-medium">{selectedSheet}</span>
+                <span className="text-muted-foreground">Onglet{selectedSheets.length > 1 ? 's' : ''}</span>
+                <span className="font-medium text-right max-w-[200px] truncate">{selectedSheets.join(' + ')}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Critères</span>
