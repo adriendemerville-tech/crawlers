@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight, Eye, Target, Type, MousePointerClick, BarChart3,
-  Smartphone, Search, Sparkles, CheckCircle2, Layers, Zap, PenTool, ArrowDown
+  Smartphone, Search, TrendingUp, CheckCircle2, Layers, Zap, PenTool, ArrowDown
 } from 'lucide-react';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -100,7 +100,7 @@ const ConversionOptimizerLanding = memo(() => {
 
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
             <div>
-              <Badge variant="outline" className="mb-6 border-violet-500/30 bg-violet-500/10 text-violet-400 gap-1.5">
+              <Badge variant="outline" className="mb-6 border-emerald-600/30 bg-emerald-600/10 text-emerald-500 gap-1.5">
                 <Eye className="h-3 w-3" />
                 Nouveau
               </Badge>
@@ -108,7 +108,7 @@ const ConversionOptimizerLanding = memo(() => {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight">
               Analysez l'UX de vos pages{' '}
-              <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-400 bg-clip-text text-transparent">
                 en contexte
               </span>
             </h1>
@@ -119,12 +119,12 @@ const ConversionOptimizerLanding = memo(() => {
 
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link to="/auth">
-                <Button size="lg" className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-violet-500/20">
-                  <Sparkles className="h-4 w-4" /> Essayer Conversion Optimizer <ArrowRight className="h-4 w-4" />
+                <Button size="lg" className="gap-2 bg-gradient-to-r from-emerald-700 to-green-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-emerald-500/20">
+                  <TrendingUp className="h-4 w-4" /> Essayer Conversion Optimizer <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/content-architect">
-                <Button size="lg" variant="outline" className="gap-2 border-violet-500/30 hover:bg-violet-500/5">
+                <Button size="lg" variant="outline" className="gap-2 border-emerald-600/30 hover:bg-emerald-600/5">
                   <PenTool className="h-4 w-4" /> Content Architect
                 </Button>
               </Link>
@@ -164,11 +164,11 @@ const ConversionOptimizerLanding = memo(() => {
               {axes.map((axis, i) => {
                 const Icon = axis.icon;
                 return (
-                  <Card key={i} className="border-border/50 hover:border-violet-500/30 hover:bg-violet-500/[0.03] transition-all duration-300">
+                  <Card key={i} className="border-border/50 hover:border-emerald-600/30 hover:bg-violet-500/[0.03] transition-all duration-300">
                     <CardContent className="p-5">
                       <div className="flex gap-4">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                          <Icon className="h-5 w-5 text-violet-400" />
+                        <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-emerald-600/10 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-emerald-500" />
                         </div>
                         <div>
                           <h3 className="font-semibold text-sm text-foreground mb-1">{axis.title}</h3>
@@ -180,11 +180,11 @@ const ConversionOptimizerLanding = memo(() => {
                 );
               })}
               {/* 7th axis spans full on last row */}
-              <Card className="border-border/50 hover:border-violet-500/30 hover:bg-violet-500/[0.03] transition-all duration-300 sm:col-span-2 lg:col-span-1">
+              <Card className="border-border/50 hover:border-emerald-600/30 hover:bg-violet-500/[0.03] transition-all duration-300 sm:col-span-2 lg:col-span-1">
                 <CardContent className="p-5 text-center">
                   <div className="inline-flex items-center gap-3 mb-2">
-                    <div className="h-10 w-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                      <Layers className="h-5 w-5 text-violet-400" />
+                    <div className="h-10 w-10 rounded-lg bg-emerald-600/10 flex items-center justify-center">
+                      <Layers className="h-5 w-5 text-emerald-500" />
                     </div>
                     <h3 className="font-semibold text-sm text-foreground">Workbench Architect</h3>
                   </div>
@@ -208,11 +208,11 @@ const ConversionOptimizerLanding = memo(() => {
             <div className="space-y-8">
               {workflow.map((step, i) => (
                 <div key={i}>
-                  <Card className="overflow-hidden border-border/50 hover:border-violet-500/20 transition-colors">
+                  <Card className="overflow-hidden border-border/50 hover:border-emerald-600/20 transition-colors">
                     <CardContent className="p-6 sm:p-8">
                       <div className="flex flex-col sm:flex-row gap-6">
                         <div className="flex-shrink-0">
-                          <span className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/20 text-2xl font-bold text-violet-400">
+                          <span className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-emerald-600/20 to-green-500/20 border border-emerald-600/20 text-2xl font-bold text-emerald-500">
                             {step.step}
                           </span>
                         </div>
@@ -222,7 +222,7 @@ const ConversionOptimizerLanding = memo(() => {
                           <div className="grid sm:grid-cols-2 gap-2">
                             {step.features.map((f, j) => (
                               <div key={j} className="flex items-center gap-2 text-sm">
-                                <CheckCircle2 className="h-4 w-4 text-violet-400 flex-shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
                                 <span className="text-foreground/80">{f}</span>
                               </div>
                             ))}
@@ -233,7 +233,7 @@ const ConversionOptimizerLanding = memo(() => {
                   </Card>
                   {i < workflow.length - 1 && (
                     <div className="flex justify-center py-2">
-                      <ArrowDown className="h-5 w-5 text-violet-400/40" />
+                      <ArrowDown className="h-5 w-5 text-emerald-500/40" />
                     </div>
                   )}
                 </div>
@@ -295,8 +295,8 @@ const ConversionOptimizerLanding = memo(() => {
               Inscrivez-vous, lancez un crawl et analysez vos pages en quelques secondes.
             </p>
             <Link to="/auth">
-              <Button size="lg" className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-violet-500/20">
-                <Sparkles className="h-4 w-4" />
+              <Button size="lg" className="gap-2 bg-gradient-to-r from-emerald-700 to-green-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-emerald-500/20">
+                <TrendingUp className="h-4 w-4" />
                 Commencer gratuitement
                 <ArrowRight className="h-4 w-4" />
               </Button>
