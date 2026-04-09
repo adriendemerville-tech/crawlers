@@ -174,6 +174,7 @@ export default function ConversionOptimizer() {
     setPages([]);
     setSelectedPageUrl('');
     setResult(null);
+    setFreshAnalysis(false);
     setBackfillingAnnotations(false);
 
     (async () => {
@@ -391,8 +392,8 @@ export default function ConversionOptimizer() {
                 <Button
                   variant="outline"
                   onClick={() => setShowContentArchitect(true)}
-                  disabled={!result || analyzing}
-                  className={`gap-2 transition-all ${result && !analyzing
+                  disabled={!freshAnalysis || analyzing}
+                  className={`gap-2 transition-all ${freshAnalysis && !analyzing
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
                     : 'bg-transparent text-white/40 border-white/20 cursor-not-allowed'}`}
                 >
