@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2, Link2, Star } from 'lucide-react';
+import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2, Link2, Star, MousePointerClick } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense} from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ interface GlossaryTerm {
   term: string;
   acronym?: string;
   definition: string;
-  category: 'seo' | 'geo' | 'performance' | 'technical' | 'ai';
+  category: 'seo' | 'geo' | 'performance' | 'technical' | 'ai' | 'ux';
   toolLink?: { path: string; label: string };
 }
 
@@ -218,6 +218,45 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Page Pilier", definition: "Page centrale et exhaustive d'un cluster thématique, couvrant un sujet large et renvoyant vers des pages satellites plus spécifiques.", category: "seo" },
     { term: "Autorité Topique", definition: "Reconnaissance par les moteurs de recherche qu'un site fait autorité sur un sujet spécifique, grâce à la profondeur et la cohérence de son contenu.", category: "seo" },
     { term: "Quick Win SEO", definition: "Optimisation SEO à fort impact et faible effort. Typiquement : améliorer un titre, ajouter une meta description ou corriger un lien cassé sur une page à fort trafic.", category: "seo" },
+
+    // ══════════════════════════════════════════════════════════════
+    // UX / UI Design & Conversion (CRO)
+    // ══════════════════════════════════════════════════════════════
+    { term: "UX", acronym: "User Experience", definition: "Ensemble des perceptions et émotions ressenties par un utilisateur lors de son interaction avec un site ou une application. L'UX englobe l'ergonomie, l'architecture de l'information, la navigation et la satisfaction globale.", category: "ux" },
+    { term: "UI", acronym: "User Interface", definition: "Interface visuelle avec laquelle l'utilisateur interagit : boutons, formulaires, typographie, couleurs, icônes. L'UI est la couche graphique de l'UX.", category: "ux" },
+    { term: "CRO", acronym: "Conversion Rate Optimization", definition: "Discipline visant à augmenter le pourcentage de visiteurs qui réalisent une action souhaitée (achat, inscription, demande de devis). Combine UX, copywriting, tests A/B et analyse de données.", category: "ux", toolLink: { path: "/app/conversion-optimizer", label: "Lancer un audit CRO" } },
+    { term: "Taux de Conversion", definition: "Pourcentage de visiteurs effectuant une action cible (achat, inscription, clic CTA). Formule : (Conversions / Visiteurs) × 100. Indicateur central du CRO.", category: "ux", toolLink: { path: "/app/conversion-optimizer", label: "Optimisez votre taux" } },
+    { term: "CTA", acronym: "Call-to-Action", definition: "Élément visuel (bouton, lien, bannière) incitant l'utilisateur à effectuer une action précise. Un bon CTA est visible, clair dans son intention et crée un sentiment d'urgence maîtrisé.", category: "ux", toolLink: { path: "/app/conversion-optimizer", label: "Auditez vos CTAs" } },
+    { term: "Pression CTA", definition: "Densité et agressivité des appels à l'action sur une page. Trop de CTAs crée une fatigue cognitive et fait fuir l'utilisateur. L'équilibre est clé : guider sans harceler.", category: "ux", toolLink: { path: "/app/conversion-optimizer", label: "Mesurez votre pression CTA" } },
+    { term: "Test A/B", definition: "Méthode expérimentale comparant deux versions d'une page (A et B) pour déterminer laquelle génère le meilleur taux de conversion. Basé sur la signification statistique.", category: "ux" },
+    { term: "Heatmap", definition: "Carte de chaleur visualisant les zones les plus cliquées, survolées ou scrollées d'une page. Outil clé pour comprendre le comportement réel des utilisateurs.", category: "ux" },
+    { term: "Funnel de Conversion", definition: "Entonnoir représentant les étapes successives du parcours utilisateur, de la découverte à la conversion. Chaque étape perd un pourcentage d'utilisateurs (taux de chute).", category: "ux" },
+    { term: "Landing Page", definition: "Page d'atterrissage conçue spécifiquement pour convertir un visiteur venant d'une source précise (publicité, email, lien organique). Optimisée pour un seul objectif.", category: "ux" },
+    { term: "Bounce Rate", definition: "Taux de rebond : pourcentage de visiteurs quittant le site après avoir consulté une seule page. Un taux élevé peut indiquer un problème d'UX, de contenu ou de ciblage.", category: "ux" },
+    { term: "Wireframe", definition: "Maquette schématique en fil de fer représentant la structure et la disposition des éléments d'une page sans design graphique. Première étape du processus de conception UI.", category: "ux" },
+    { term: "Prototype", definition: "Maquette interactive simulant le comportement d'un site ou d'une application avant développement. Permet de tester les parcours utilisateurs et de valider l'UX.", category: "ux" },
+    { term: "Design System", definition: "Bibliothèque centralisée de composants UI réutilisables, de règles typographiques, de palettes de couleurs et de guidelines assurant la cohérence visuelle d'un produit.", category: "ux" },
+    { term: "Affordance", definition: "Capacité d'un élément d'interface à suggérer visuellement son mode d'utilisation. Un bouton en relief 'afforde' le clic, un champ vide 'afforde' la saisie.", category: "ux" },
+    { term: "Cognitive Load", definition: "Charge cognitive imposée à l'utilisateur pour comprendre et utiliser une interface. Un design efficace minimise cette charge pour faciliter la prise de décision.", category: "ux" },
+    { term: "Micro-interaction", definition: "Petite animation ou feedback visuel répondant à une action utilisateur (survol, clic, chargement). Améliore la perception de réactivité et le plaisir d'utilisation.", category: "ux" },
+    { term: "Accessibilité", acronym: "a11y", definition: "Conception d'interfaces utilisables par tous, y compris les personnes en situation de handicap. Inclut les contrastes de couleurs, la navigation clavier, les lecteurs d'écran (WCAG).", category: "ux" },
+    { term: "WCAG", acronym: "Web Content Accessibility Guidelines", definition: "Directives internationales d'accessibilité web définissant 3 niveaux de conformité (A, AA, AAA). Le niveau AA est le standard légal minimum en Europe.", category: "ux" },
+    { term: "Hierarchy Visuelle", definition: "Organisation visuelle guidant l'œil de l'utilisateur vers les éléments importants via la taille, la couleur, le contraste, l'espacement et le positionnement.", category: "ux" },
+    { term: "White Space", definition: "Espace vide (ou négatif) autour et entre les éléments d'une interface. Améliore la lisibilité, la respiration visuelle et la hiérarchie du contenu.", category: "ux" },
+    { term: "Copywriting", definition: "Art d'écrire des textes persuasifs et engageants pour le web. En CRO, le copywriting des CTAs, titres et descriptions impacte directement le taux de conversion.", category: "ux" },
+    { term: "Social Proof", definition: "Preuve sociale : témoignages, avis clients, logos partenaires, compteurs ('10 000 utilisateurs') qui renforcent la confiance et incitent à la conversion.", category: "ux" },
+    { term: "Friction", definition: "Tout obstacle ou difficulté qui ralentit ou empêche un utilisateur de compléter une action souhaitée. Formulaires trop longs, étapes inutiles, temps de chargement.", category: "ux" },
+    { term: "Conversion Optimizer", definition: "Outil Crawlers.fr d'audit UX/CRO contextuel analysant une page sur 7 axes : ton, pression CTA, alignement, lisibilité, conversion, expérience mobile et mots-clés. Génère des suggestions priorisées avec vue annotée.", category: "ux", toolLink: { path: "/app/conversion-optimizer", label: "Lancer Conversion Optimizer" } },
+    { term: "Persona", definition: "Profil fictif représentant un segment d'utilisateurs cibles avec ses besoins, motivations, frustrations et comportements. Guide les décisions UX et marketing.", category: "ux" },
+    { term: "Parcours Utilisateur", definition: "Cartographie de toutes les étapes et points de contact entre un utilisateur et un produit/service, de la découverte à la fidélisation. Base du design centré utilisateur.", category: "ux" },
+    { term: "Scroll Depth", definition: "Profondeur de scroll : pourcentage de la page parcouru par l'utilisateur. Indique si le contenu sous le fold est vu et s'il engage.", category: "ux" },
+    { term: "Eye Tracking", definition: "Technique mesurant les mouvements oculaires pour comprendre où les utilisateurs regardent sur une page. Révèle les zones d'attention et les angles morts.", category: "ux" },
+    { term: "F-Pattern", definition: "Schéma de lecture en forme de F observé en eye tracking : les utilisateurs lisent d'abord les premières lignes horizontalement puis parcourent verticalement la colonne gauche.", category: "ux" },
+    { term: "Z-Pattern", definition: "Schéma de lecture en Z typique des pages avec peu de texte (landing pages). L'œil suit un trajet diagonal du coin supérieur gauche au coin inférieur droit.", category: "ux" },
+    { term: "Mobile UX", definition: "Expérience utilisateur spécifique aux appareils mobiles : zones de pouce accessibles, taille des cibles tactiles (min 48px), navigation simplifiée, contenu adapté.", category: "ux" },
+    { term: "Dark Pattern", definition: "Technique de design manipulatoire trompant l'utilisateur pour qu'il effectue une action non désirée (inscription cachée, bouton de refus invisible). Éthiquement condamnable et légalement risqué.", category: "ux" },
+    { term: "Fitts's Law", definition: "Loi d'ergonomie : le temps pour atteindre une cible est fonction de sa distance et de sa taille. Un CTA plus grand et plus proche est plus facile à cliquer.", category: "ux" },
+    { term: "Hick's Law", definition: "Loi UX : le temps de décision augmente avec le nombre d'options. Réduire les choix sur une page de conversion accélère la prise de décision.", category: "ux" },
   ],
   en: [
     // SEO Terms
@@ -297,6 +336,32 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Internal Linking", definition: "All hyperlinks connecting pages within the same site. Optimized linking distributes authority, guides crawl, and improves UX.", category: "seo" },
     { term: "Topic Cluster", definition: "Group of pages covering the same subject, organized around a pillar page and connected by internal links. Strengthens topical authority.", category: "seo" },
     { term: "Quick Win SEO", definition: "High-impact, low-effort SEO optimization: improving a title, adding a meta description, or fixing a broken link on a high-traffic page.", category: "seo" },
+
+    // UX / UI Design & Conversion (CRO)
+    { term: "UX", acronym: "User Experience", definition: "All perceptions and emotions felt by a user during interaction with a site or application. UX covers ergonomics, information architecture, navigation and overall satisfaction.", category: "ux" },
+    { term: "UI", acronym: "User Interface", definition: "Visual interface the user interacts with: buttons, forms, typography, colors, icons. UI is the graphical layer of UX.", category: "ux" },
+    { term: "CRO", acronym: "Conversion Rate Optimization", definition: "Discipline aimed at increasing the percentage of visitors who perform a desired action (purchase, signup, quote request). Combines UX, copywriting, A/B testing and data analysis.", category: "ux", toolLink: { path: "/app/conversion-optimizer", label: "Run a CRO audit" } },
+    { term: "Conversion Rate", definition: "Percentage of visitors performing a target action (purchase, signup, CTA click). Formula: (Conversions / Visitors) × 100. Core CRO metric.", category: "ux" },
+    { term: "CTA", acronym: "Call-to-Action", definition: "Visual element (button, link, banner) prompting the user to perform a specific action. A good CTA is visible, clear in intent, and creates controlled urgency.", category: "ux" },
+    { term: "CTA Pressure", definition: "Density and aggressiveness of calls-to-action on a page. Too many CTAs creates cognitive fatigue and drives users away. Balance is key.", category: "ux" },
+    { term: "A/B Testing", definition: "Experimental method comparing two page versions (A and B) to determine which generates the best conversion rate. Based on statistical significance.", category: "ux" },
+    { term: "Heatmap", definition: "Heat map visualizing the most clicked, hovered or scrolled zones of a page. Key tool for understanding actual user behavior.", category: "ux" },
+    { term: "Conversion Funnel", definition: "Funnel representing successive steps of the user journey, from discovery to conversion. Each step loses a percentage of users (drop-off rate).", category: "ux" },
+    { term: "Landing Page", definition: "Page designed specifically to convert a visitor from a precise source (ad, email, organic link). Optimized for a single objective.", category: "ux" },
+    { term: "Bounce Rate", definition: "Percentage of visitors leaving the site after viewing a single page. A high rate may indicate UX, content or targeting issues.", category: "ux" },
+    { term: "Design System", definition: "Centralized library of reusable UI components, typography rules, color palettes and guidelines ensuring visual consistency across a product.", category: "ux" },
+    { term: "Affordance", definition: "An interface element's ability to visually suggest its mode of use. A raised button 'affords' clicking, an empty field 'affords' typing.", category: "ux" },
+    { term: "Cognitive Load", definition: "Mental effort required to understand and use an interface. Effective design minimizes this load to facilitate decision-making.", category: "ux" },
+    { term: "Accessibility", acronym: "a11y", definition: "Designing interfaces usable by everyone, including people with disabilities. Includes color contrast, keyboard navigation, screen readers (WCAG).", category: "ux" },
+    { term: "Visual Hierarchy", definition: "Visual organization guiding the user's eye toward important elements via size, color, contrast, spacing and positioning.", category: "ux" },
+    { term: "Copywriting", definition: "Art of writing persuasive, engaging web copy. In CRO, CTA, title and description copywriting directly impacts conversion rates.", category: "ux" },
+    { term: "Social Proof", definition: "Testimonials, customer reviews, partner logos, counters ('10,000 users') that build trust and encourage conversion.", category: "ux" },
+    { term: "Friction", definition: "Any obstacle or difficulty that slows or prevents a user from completing a desired action. Long forms, unnecessary steps, loading times.", category: "ux" },
+    { term: "Conversion Optimizer", definition: "Crawlers.fr contextual UX/CRO audit tool analyzing a page across 7 axes: tone, CTA pressure, alignment, readability, conversion, mobile UX and keywords.", category: "ux", toolLink: { path: "/app/conversion-optimizer", label: "Launch Conversion Optimizer" } },
+    { term: "Dark Pattern", definition: "Manipulative design technique tricking users into unintended actions (hidden signup, invisible decline button). Ethically condemned and legally risky.", category: "ux" },
+    { term: "F-Pattern", definition: "F-shaped reading pattern observed in eye tracking: users read the first lines horizontally then scan vertically down the left column.", category: "ux" },
+    { term: "Fitts's Law", definition: "Ergonomics law: time to reach a target depends on its distance and size. A larger, closer CTA is easier to click.", category: "ux" },
+    { term: "Hick's Law", definition: "UX law: decision time increases with the number of options. Reducing choices on a conversion page speeds up decision-making.", category: "ux" },
   ],
   es: [
     // SEO Terms
@@ -348,14 +413,15 @@ const categoryConfig = {
   performance: { icon: Zap, label: { fr: 'Performance', en: 'Performance', es: 'Rendimiento' } },
   technical: { icon: FileCode, label: { fr: 'Technique', en: 'Technical', es: 'Técnico' } },
   ai: { icon: Brain, label: { fr: 'IA', en: 'AI', es: 'IA' } },
+  ux: { icon: MousePointerClick, label: { fr: 'UX & Conversion', en: 'UX & Conversion', es: 'UX & Conversión' } },
 };
 
 const pageContent = {
   fr: {
-    title: "Lexique SEO, GEO & Performance 2026",
-    metaTitle: "Lexique SEO, GEO & Performance 2026 - Définitions simples | Crawlers.fr",
-    metaDescription: "Dictionnaire complet des termes SEO, GEO et Performance web. Définitions simples et claires des acronymes : LCP, CLS, LLM, SGE, E-E-A-T et plus. Référence 2026 pour la France.",
-    intro: "Retrouvez toutes les définitions essentielles du référencement naturel, de l'optimisation pour les moteurs génératifs et de la performance web. Ce lexique 2026 est votre référence pour comprendre le SEO et le GEO en France.",
+    title: "Lexique SEO, GEO, UX & Performance 2026",
+    metaTitle: "Lexique SEO, GEO, UX & Performance 2026 - Définitions simples | Crawlers.fr",
+    metaDescription: "Dictionnaire complet des termes SEO, GEO, UX/CRO et Performance web. Définitions simples : LCP, CLS, CTA, CRO, E-E-A-T et plus. Référence 2026.",
+    intro: "Retrouvez toutes les définitions essentielles du référencement naturel, de l'optimisation pour les moteurs génératifs, de l'UX/conversion et de la performance web. Ce lexique 2026 est votre référence.",
     searchPlaceholder: "Rechercher un terme...",
     termsCount: "termes définis",
     categories: "Catégories",
@@ -369,10 +435,10 @@ const pageContent = {
     shareText: "📚 Découvrez le lexique complet SEO, GEO & Performance 2026 - Plus de 70 définitions claires pour maîtriser le référencement et l'IA générative !",
   },
   en: {
-    title: "SEO, GEO & Performance Glossary 2026",
-    metaTitle: "SEO, GEO & Performance Glossary 2026 - Simple Definitions | Crawlers.fr",
-    metaDescription: "Complete dictionary of SEO, GEO and web Performance terms. Simple and clear definitions of acronyms: LCP, CLS, LLM, SGE, E-E-A-T and more. 2026 reference for Great Britain and USA.",
-    intro: "Find all essential definitions of search engine optimization, generative engine optimization and web performance. This 2026 glossary is your reference for understanding SEO and GEO in Great Britain and USA.",
+    title: "SEO, GEO, UX & Performance Glossary 2026",
+    metaTitle: "SEO, GEO, UX & Performance Glossary 2026 - Simple Definitions | Crawlers.fr",
+    metaDescription: "Complete dictionary of SEO, GEO, UX/CRO and web Performance terms. Simple definitions: LCP, CLS, CTA, CRO, E-E-A-T and more. 2026 reference.",
+    intro: "Find all essential definitions of SEO, generative engine optimization, UX/conversion and web performance. This 2026 glossary is your reference.",
     searchPlaceholder: "Search a term...",
     termsCount: "terms defined",
     categories: "Categories",
