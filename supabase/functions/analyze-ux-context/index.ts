@@ -777,6 +777,38 @@ Tu ne donnes pas de conseils génériques. Chaque recommandation est calibrée p
 Tu proposes des reformulations concrètes quand c'est pertinent.
 Réponds toujours en français.`;
 
+/**
+ * Build a prompt section that flags missing identity card fields as conversion risks.
+ * If key business context is unknown, the page likely fails to communicate it to visitors too.
+ */
+function buildIdentityGapsSection(ctx: any): string {
+  const IDENTITY_CRO_MAP: { field: string; label: string; impact: string }[] = [
+    { field: 'products_services', label: 'Produits/services', impact: 'Un visiteur ne peut pas convertir s\'il ne comprend pas clairement ce que l\'entreprise propose.' },
+    { field: 'target_audience', label: 'Audience cible', impact: 'Sans audience définie, le ton, le vocabulaire et les CTAs risquent d\'être mal calibrés.' },
+    { field: 'commercial_model', label: 'Modèle commercial', impact: 'Le parcours de conversion (achat, devis, RDV, essai) est flou sans modèle commercial clair.' },
+    { field: 'business_type', label: 'Type de business', impact: 'Le positionnement et la proposition de valeur ne peuvent pas être évalués sans type de business.' },
+    { field: 'market_sector', label: 'Secteur d\'activité', impact: 'Les preuves sociales et signaux de confiance attendus varient selon le secteur.' },
+    { field: 'entity_type', label: 'Type d\'entité', impact: 'Freelance, agence, SaaS, e-commerce : chaque entité a des leviers de conversion spécifiques.' },
+    { field: 'target_segment', label: 'Segment cible', impact: 'B2B, B2C, B2B2C : le niveau de détail attendu et le cycle de décision diffèrent radicalement.' },
+  ];
+
+  const missing = IDENTITY_CRO_MAP.filter(({ field }) => {
+    const val = ctx[field];
+    return !val || (typeof val === 'string' && val.trim() === '');
+  });
+
+  if (missing.length === 0) return '';
+
+  const lines = missing.map(m => `- **${m.label}** : manquant → ${m.impact}`).join('\n');
+
+  return `
+## ⚠️ Lacunes de la Carte d'Identité (impact Conversion)
+Les informations suivantes ne sont pas renseignées dans la fiche du site. Si la page ne les communique pas clairement non plus, c'est un PROBLÈME DE CONVERSION MAJEUR. Vérifie dans le contenu de la page si ces éléments sont explicites pour un visiteur. S'ils sont absents ou flous, génère une suggestion de priorité "critical" pour chacun.
+
+${lines}
+`;
+}
+
 function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = []) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
@@ -851,6 +883,8 @@ ${imageList}
 ${ctx._incomplete ? `
 ⚠️ **ATTENTION** : La carte d'identité de ce site est largement incomplète. Utilise le contenu de la page (texte, H1, meta description, images, CTAs) pour DÉDUIRE le contexte business. Base tes recommandations sur ce que tu observes dans la page, pas sur les champs "non défini". Remplis également le champ identity_inference avec les valeurs que tu déduis (business_type, market_sector, commercial_model, target_audience, products_services, entity_type).
 ` : ''}
+${buildIdentityGapsSection(ctx)}
+
 ## Mots-clés ciblés
 ${keywordList || 'Aucun mot-clé trouvé'}
 ${croMatrixSection}
