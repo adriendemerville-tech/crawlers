@@ -211,7 +211,7 @@ async function analyzeSite(
     change_pct: trends.clicksChange4w,
     description: alertDescription,
     affected_pages: ctx.raw.crawlPages?.filter((p: any) => (p.seo_score || 0) < 80).length || null,
-  }));
+  });
 
   return { alert: true, diagnostic: true };
 }
