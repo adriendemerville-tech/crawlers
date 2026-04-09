@@ -118,97 +118,101 @@ Deno.serve(handleRequest(async (req) => {
     primary_use_case: site.primary_use_case,
   };
 
-  const prompt = buildPrompt(pageData, businessContext, topKeywords);
-
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return jsonError('AI not configured', 500);
 
-  const [aiResp, screenshotResult] = await Promise.all([
-    fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt },
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'ux_analysis_result',
-            description: 'Return structured UX analysis with scores and suggestions',
-            parameters: {
-              type: 'object',
-              properties: {
-                page_intent: {
-                  type: 'string',
-                  enum: ['informational', 'transactional', 'navigational', 'support', 'brand', 'mixed'],
-                  description: 'Detected intent of the page',
+  // Capture screenshot first to get image data for the AI prompt
+  const screenshotResult = await captureScreenshotWithAnnotations(page_url, tracked_site_id, serviceClient);
+
+  const imageFormatsForPrompt = (screenshotResult?.imageFormats || [])
+    .filter((img: any) => !img.isDecorative && img.width >= 50 && img.height >= 50)
+    .slice(0, 20);
+
+  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt);
+
+  const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-3-flash-preview',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: prompt },
+      ],
+      tools: [{
+        type: 'function',
+        function: {
+          name: 'ux_analysis_result',
+          description: 'Return structured UX analysis with scores and suggestions',
+          parameters: {
+            type: 'object',
+            properties: {
+              page_intent: {
+                type: 'string',
+                enum: ['informational', 'transactional', 'navigational', 'support', 'brand', 'mixed'],
+                description: 'Detected intent of the page',
+              },
+              global_score: {
+                type: 'number',
+                description: 'Overall UX score 0-100',
+              },
+              axes: {
+                type: 'object',
+                properties: {
+                  tone: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  cta_pressure: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  alignment: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  readability: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  conversion: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  mobile_ux: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  keyword_usage: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
                 },
-                global_score: {
-                  type: 'number',
-                  description: 'Overall UX score 0-100',
-                },
-                axes: {
+                required: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'],
+              },
+              suggestions: {
+                type: 'array',
+                items: {
                   type: 'object',
                   properties: {
-                    tone: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    cta_pressure: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    alignment: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    readability: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    conversion: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    mobile_ux: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                    keyword_usage: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                    axis: { type: 'string', enum: AXES },
+                    priority: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+                    title: { type: 'string' },
+                    current_text: { type: 'string', description: 'Current text/element being criticized (if applicable)' },
+                    suggested_text: { type: 'string', description: 'Proposed replacement text' },
+                    rationale: { type: 'string' },
+                    element_selector: { type: 'string', description: 'CSS-like description of the element (e.g. "h1", "nav .cta-button", "section.hero p")' },
                   },
-                  required: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'],
-                },
-                suggestions: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      axis: { type: 'string', enum: AXES },
-                      priority: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
-                      title: { type: 'string' },
-                      current_text: { type: 'string', description: 'Current text/element being criticized (if applicable)' },
-                      suggested_text: { type: 'string', description: 'Proposed replacement text' },
-                      rationale: { type: 'string' },
-                      element_selector: { type: 'string', description: 'CSS-like description of the element (e.g. "h1", "nav .cta-button", "section.hero p")' },
-                    },
-                    required: ['axis', 'priority', 'title', 'rationale'],
-                  },
-                },
-                image_analysis: {
-                  type: 'array',
-                  description: 'Analysis of each significant image on the page',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      src: { type: 'string', description: 'Image URL (from the list provided)' },
-                      descriptiveness: { type: 'number', description: 'How well the image describes/illustrates the content (0-100)' },
-                      relevance: { type: 'number', description: 'How relevant is this image to the page intent and business context (0-100)' },
-                      persuasiveness: { type: 'number', description: 'How convincing/persuasive is this image for conversion (0-100)' },
-                      verdict: { type: 'string', description: 'Short assessment in French (1-2 sentences)' },
-                      recommendation: { type: 'string', description: 'Concrete improvement suggestion in French, or null if image is good' },
-                    },
-                    required: ['src', 'descriptiveness', 'relevance', 'persuasiveness', 'verdict'],
-                  },
+                  required: ['axis', 'priority', 'title', 'rationale'],
                 },
               },
-              required: ['page_intent', 'global_score', 'axes', 'suggestions'],
-              additionalProperties: false,
+              image_analysis: {
+                type: 'array',
+                description: 'Analysis of each significant image on the page (skip decorative/tiny images)',
+                items: {
+                  type: 'object',
+                  properties: {
+                    src: { type: 'string', description: 'Image URL (from the list provided)' },
+                    descriptiveness: { type: 'number', description: 'How well the image describes/illustrates surrounding content (0-100)' },
+                    relevance: { type: 'number', description: 'How relevant is this image to the page intent and business context (0-100)' },
+                    persuasiveness: { type: 'number', description: 'How convincing/persuasive is this image for conversion goals (0-100)' },
+                    verdict: { type: 'string', description: 'Short assessment in French (1-2 sentences)' },
+                    recommendation: { type: 'string', description: 'Concrete improvement suggestion in French, or empty if image is good' },
+                  },
+                  required: ['src', 'descriptiveness', 'relevance', 'persuasiveness', 'verdict'],
+                },
+              },
             },
+            required: ['page_intent', 'global_score', 'axes', 'suggestions'],
+            additionalProperties: false,
           },
-        }],
-        tool_choice: { type: 'function', function: { name: 'ux_analysis_result' } },
-      }),
+        },
+      }],
+      tool_choice: { type: 'function', function: { name: 'ux_analysis_result' } },
     }),
-    captureScreenshotWithAnnotations(page_url, tracked_site_id, serviceClient),
-  ]);
+  });
 
   if (!aiResp.ok) {
     if (aiResp.status === 429) return jsonError('Rate limit exceeded, please try again later', 429);
