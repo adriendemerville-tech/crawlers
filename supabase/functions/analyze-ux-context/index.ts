@@ -334,6 +334,7 @@ Deno.serve(handleRequest(async (req) => {
     screenshot_height: screenshotResult?.height || null,
     annotations,
     image_format_report: imageFormatReport,
+    image_analysis: result.image_analysis || [],
   });
 }));
 
