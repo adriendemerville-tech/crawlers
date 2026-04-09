@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAISidebar } from '@/contexts/AISidebarContext';
 import { CrawlersLogo } from './CrawlersLogo';
 import { isOnboardingDone } from '@/utils/felixOnboarding';
 import { playNotificationSound } from '@/utils/notificationSound';
@@ -19,6 +20,7 @@ export function FloatingChatBubble() {
   });
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
+  const { cocoonExpanded } = useAISidebar();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
   const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
@@ -325,7 +327,7 @@ export function FloatingChatBubble() {
       )}
 
       {/* Floating Button — Crawlers robot logo (hidden when sidebar is expanded) */}
-      {!(isOpen && localStorage.getItem('felix_sidebar_expanded') === '1') && (
+      {!(isOpen && localStorage.getItem('felix_sidebar_expanded') === '1') && !cocoonExpanded && (
         <>
           <button
             onClick={isOpen ? () => setIsOpen(false) : handleOpen}

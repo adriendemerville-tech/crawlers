@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { FolderSearch, Search, Loader2, X, FileText, Globe, Network, BarChart3, Shield, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -37,11 +38,24 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const [panelPos, setPanelPos] = useState<{ bottom: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isOpen) {
+      // Position the portal panel above the trigger button
+      if (triggerRef.current) {
+        const rect = triggerRef.current.closest('.border-t')?.getBoundingClientRect();
+        if (rect) {
+          setPanelPos({
+            bottom: window.innerHeight - rect.top + 4,
+            left: rect.left,
+            width: rect.width,
+          });
+        }
+      }
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
 
@@ -206,6 +220,7 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
   if (!isOpen) {
     return (
       <button
+        ref={triggerRef}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(true);
@@ -220,85 +235,97 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
 
   return (
     <>
-      {/* Invisible trigger button to keep layout slot */}
+      {/* Trigger button in layout */}
       <button
+        ref={triggerRef}
         onClick={() => { setIsOpen(false); setQuery(''); setResults([]); }}
         className="h-7 w-7 shrink-0 flex items-center justify-center rounded-full text-primary bg-primary/10 transition-colors"
         title="Fermer la recherche"
       >
         <FolderSearch className="h-3.5 w-3.5" />
       </button>
-      {/* Panel positioned relative to the parent border-t container */}
-      <div ref={panelRef} className="absolute bottom-full left-0 right-0 mb-1 z-30">
-        <div className="mx-2 rounded-xl border border-border/50 bg-background/98 shadow-lg backdrop-blur-md overflow-hidden">
-        {/* Search input */}
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30">
-          <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => handleInputChange(e.target.value)}
-            placeholder="crawl, SEO, GEO, domaine…"
-            className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 outline-none"
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setIsOpen(false);
-                setQuery('');
-              }
-            }}
-          />
-          {loading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/50" />}
-          <button
-            onClick={() => { setIsOpen(false); setQuery(''); setResults([]); }}
-            className="h-5 w-5 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </div>
+      {/* Portal panel to escape overflow-hidden */}
+      {panelPos && createPortal(
+        <div
+          ref={panelRef}
+          className="fixed z-[120]"
+          style={{
+            bottom: panelPos.bottom,
+            left: panelPos.left,
+            width: panelPos.width,
+          }}
+        >
+          <div className="mx-2 rounded-xl border border-border/50 bg-background/98 shadow-lg backdrop-blur-md overflow-hidden">
+            {/* Search input */}
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30">
+              <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder="crawl, SEO, GEO, domaine…"
+                className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setIsOpen(false);
+                    setQuery('');
+                  }
+                }}
+              />
+              {loading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/50" />}
+              <button
+                onClick={() => { setIsOpen(false); setQuery(''); setResults([]); }}
+                className="h-5 w-5 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
 
-        {/* Results */}
-        {results.length > 0 && (
-          <div className="max-h-48 overflow-y-auto">
-            {results.map((r) => {
-              const cfg = TYPE_CONFIG[r.type] || TYPE_CONFIG.seo;
-              const Icon = cfg.icon;
-              return (
-                <button
-                  key={`${r.type}-${r.id}`}
-                  onClick={() => handleSelect(r)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted/40 transition-colors text-left group"
-                >
-                  <Icon className={cn('h-3.5 w-3.5 shrink-0', cfg.color)} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-medium text-foreground truncate">{r.label}</span>
-                      <span className={cn('text-[9px] font-semibold uppercase tracking-wider px-1 py-0.5 rounded', cfg.color, 'bg-current/5')}>
-                        {cfg.label}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-muted-foreground/60 truncate">
-                      {r.domain} · {format(new Date(r.date), 'dd MMM yyyy', { locale: fr })}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
+            {/* Results */}
+            {results.length > 0 && (
+              <div className="max-h-48 overflow-y-auto">
+                {results.map((r) => {
+                  const cfg = TYPE_CONFIG[r.type] || TYPE_CONFIG.seo;
+                  const Icon = cfg.icon;
+                  return (
+                    <button
+                      key={`${r.type}-${r.id}`}
+                      onClick={() => handleSelect(r)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted/40 transition-colors text-left group"
+                    >
+                      <Icon className={cn('h-3.5 w-3.5 shrink-0', cfg.color)} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-medium text-foreground truncate">{r.label}</span>
+                          <span className={cn('text-[9px] font-semibold uppercase tracking-wider px-1 py-0.5 rounded', cfg.color, 'bg-current/5')}>
+                            {cfg.label}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground/60 truncate">
+                          {r.domain} · {format(new Date(r.date), 'dd MMM yyyy', { locale: fr })}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-        {query && !loading && results.length === 0 && (
-          <div className="px-3 py-3 text-center text-[11px] text-muted-foreground/50">
-            Aucun rapport trouvé
-          </div>
-        )}
+            {query && !loading && results.length === 0 && (
+              <div className="px-3 py-3 text-center text-[11px] text-muted-foreground/50">
+                Aucun rapport trouvé
+              </div>
+            )}
 
-        {!query && (
-          <div className="px-3 py-2.5 text-[10px] text-muted-foreground/40 text-center">
-            Tapez un mot-clé ou un domaine
+            {!query && (
+              <div className="px-3 py-2.5 text-[10px] text-muted-foreground/40 text-center">
+                Tapez un mot-clé ou un domaine
+              </div>
+            )}
           </div>
-        )}
-        </div>
-      </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
