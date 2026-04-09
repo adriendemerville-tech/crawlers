@@ -359,7 +359,7 @@ export default function MatricePrompt() {
         },
         error: () => toast.error('Erreur de parsing CSV'),
       });
-    } else if (ext === 'xlsx' || ext === 'xls') {
+    } else if (ext === 'xlsx' || ext === 'xls' || ext === 'xlsm') {
       const fileName = file.name.replace(/\.(xlsx|xls)$/i, '');
       const reader = new FileReader();
       reader.onload = async (evt) => {
