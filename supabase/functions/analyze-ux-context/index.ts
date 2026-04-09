@@ -257,6 +257,10 @@ Deno.serve(handleRequest(async (req) => {
   }
 
   const aiData = await aiResp.json();
+
+  // Track LLM cost
+  trackTokenUsage('analyze-ux-context', 'google/gemini-3-flash-preview', aiData.usage, page_url).catch(() => {});
+
   const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
   if (!toolCall?.function?.arguments) {
     console.error('[analyze-ux-context] No tool call in AI response');
