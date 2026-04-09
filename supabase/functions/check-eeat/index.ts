@@ -5,6 +5,7 @@ import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
