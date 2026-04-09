@@ -296,7 +296,7 @@ const DOC_SECTIONS: DocSection[] = [
       {
         id: 'analyse-logs',
         title: 'Analyse de Logs Serveur',
-        content: \`Ingestion et analyse de vos fichiers de logs HTTP pour comprendre le comportement réel des robots sur votre site :
+        content: `Ingestion et analyse de vos fichiers de logs HTTP pour comprendre le comportement réel des robots sur votre site :
 <ul class="list-disc pl-6 mt-1 space-y-1">
 <li><strong>40+ bots détectés</strong> : Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, Bytespider et plus</li>
 <li><strong>Budget crawl</strong> : visualisation de la répartition du crawl Google page par page</li>
@@ -305,19 +305,19 @@ const DOC_SECTIONS: DocSection[] = [
 <li><strong>Monitoring continu</strong> : ingestion via connecteur Cloudflare Worker ou import direct</li>
 <li><strong>Sécurité bots</strong> : repérage des scrapers agressifs et bots malveillants</li>
 </ul>
-<p class="mt-2 text-sm text-muted-foreground">Disponible en Pro Agency. Page dédiée : <a href="/analyse-logs" class="text-primary underline">/analyse-logs</a>.</p>\`,
+<p class="mt-2 text-sm text-muted-foreground">Disponible en Pro Agency. Page dédiée : <a href="/analyse-logs" class="text-primary underline">/analyse-logs</a>.</p>`,
       },
       {
         id: 'diagnostic-chute',
         title: 'Diagnostic de Chute',
-        content: \`Détection automatique et prédictive des baisses de trafic :
+        content: `Détection automatique et prédictive des baisses de trafic :
 <ul class="list-disc pl-6 mt-1 space-y-1">
 <li><strong>Réactif</strong> : détecte les chutes en cours vs baseline 4 semaines</li>
 <li><strong>Prédictif</strong> : alerte en amont quand la probabilité de chute ≥ 80% (régression linéaire sur 8 semaines)</li>
 <li>Cross-analyse multi-sources : GSC, audits techniques, E-E-A-T, backlinks</li>
 <li>Alertes dans le bandeau défilant de la console</li>
 </ul>
-<p class="mt-2 text-sm text-muted-foreground">Gratuit pour les abonnés Pro Agency. 3 crédits par analyse pour les autres.</p>\`,
+<p class="mt-2 text-sm text-muted-foreground">Gratuit pour les abonnés Pro Agency. 3 crédits par analyse pour les autres.</p>`,
       },
     ],
   },
