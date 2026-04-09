@@ -432,7 +432,30 @@ export default function ConversionOptimizer() {
         </Card>
 
         {result && (
-          <div className="space-y-4">
+           <div className="space-y-4">
+            {result.indexation_status && result.indexation_status.warnings.length > 0 && (
+              <Card className={`border-l-4 ${result.indexation_status.is_indexable && result.indexation_status.is_indexed ? 'border-l-yellow-500' : 'border-l-destructive'}`}>
+                <CardContent className="pt-4 pb-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${result.indexation_status.is_indexable && result.indexation_status.is_indexed ? 'text-yellow-500' : 'text-destructive'}`} />
+                    <div className="space-y-1">
+                      <p className="font-medium text-sm">
+                        {!result.indexation_status.is_indexable ? 'Page non indexable' : !result.indexation_status.is_indexed ? 'Page non indexée' : 'Avertissements d\'indexation'}
+                      </p>
+                      {result.indexation_status.warnings.map((w, i) => (
+                        <p key={i} className="text-xs text-muted-foreground">{w}</p>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {result.indexation_status && result.indexation_status.is_indexable && result.indexation_status.is_indexed && result.indexation_status.warnings.length === 0 && (
+              <div className="flex items-center gap-2 text-xs text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Page indexable et indexée par Google</span>
+              </div>
+            )}
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
