@@ -719,12 +719,29 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
             </div>
           )}
 
+          {/* Parsed data confirmation banner */}
+          {hasImport && !importReady && (
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+              <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
+              <span className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                Vérifiez le tableau ci-dessous — votre document a été correctement parsé
+              </span>
+              <Badge variant="outline" className="ml-auto text-[10px] border-emerald-500/30 text-emerald-600">
+                {matrixRows.length} critères
+              </Badge>
+            </div>
+          )}
+
           {/* URL Audit field */}
           {hasImport && (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+            <div className={cn(
+              "rounded-lg border p-4 space-y-3 transition-opacity duration-500",
+              importReady ? "border-primary/20 bg-primary/5 opacity-100" : "border-border/30 bg-muted/20 opacity-60"
+            )}>
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium">Auditer une URL avec vos critères</span>
+                {!importReady && <span className="text-[10px] text-muted-foreground">(vérification en cours...)</span>}
               </div>
               <div className="flex items-center gap-2">
                 <Input
@@ -732,13 +749,14 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                   value={auditUrl}
                   onChange={e => setAuditUrl(e.target.value)}
                   className="h-9 text-sm flex-1"
-                  onKeyDown={e => e.key === 'Enter' && !auditing && handleLaunchAudit()}
+                  disabled={!importReady}
+                  onKeyDown={e => e.key === 'Enter' && !auditing && importReady && handleLaunchAudit()}
                 />
                 <Button
                   size="sm"
                   className="gap-1.5 h-9"
                   onClick={handleLaunchAudit}
-                  disabled={auditing || !auditUrl.trim()}
+                  disabled={auditing || !auditUrl.trim() || !importReady}
                 >
                   {auditing ? (
                     <>
