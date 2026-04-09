@@ -198,6 +198,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
   const [auditUrl, setAuditUrl] = useState('');
   const [auditing, setAuditing] = useState(false);
   const [auditResults, setAuditResults] = useState<Record<number, { score: number; details: string }> | null>(null);
+  const [importReady, setImportReady] = useState(true); // false right after import, true after delay
 
   // Filters
   const [filterAxe, setFilterAxe] = useState<string>('all');
