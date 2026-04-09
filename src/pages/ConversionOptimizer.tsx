@@ -148,6 +148,7 @@ export default function ConversionOptimizer() {
   const [backfillingAnnotations, setBackfillingAnnotations] = useState(false);
   const [showContentArchitect, setShowContentArchitect] = useState(false);
   const [freshAnalysis, setFreshAnalysis] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const fetchHistory = async (siteId: string) => {
     if (!siteId) {
       setHistory([]);
