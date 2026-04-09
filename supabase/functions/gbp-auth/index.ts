@@ -37,14 +37,14 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
     if (error) {
       return new Response(null, {
         status: 302,
-        headers: { Location: `${redirectBase}/console?gbp_error=${encodeURIComponent(error)}` },
+        headers: { Location: `${redirectBase}/console?tab=gmb&gbp_error=${encodeURIComponent(error)}` },
       })
     }
 
     if (!code || !userId) {
       return new Response(null, {
         status: 302,
-        headers: { Location: `${redirectBase}/console?gbp_error=missing_code` },
+        headers: { Location: `${redirectBase}/console?tab=gmb&gbp_error=missing_code` },
       })
     }
 
@@ -67,7 +67,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
         console.error('[gbp-auth] Token exchange failed:', errText)
         return new Response(null, {
           status: 302,
-          headers: { Location: `${redirectBase}/console?gbp_error=token_exchange_failed` },
+          headers: { Location: `${redirectBase}/console?tab=gmb&gbp_error=token_exchange_failed` },
         })
       }
 
@@ -188,7 +188,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
       console.error('[gbp-auth] callback error:', e)
       return new Response(null, {
         status: 302,
-        headers: { Location: `${redirectBase}/console?gbp_error=internal` },
+        headers: { Location: `${redirectBase}/console?tab=gmb&gbp_error=internal` },
       })
     }
   }
