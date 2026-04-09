@@ -1,5 +1,12 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// Dynamic imports to avoid 140KB bundle on initial load
+
+const loadPDFLibraries = async () => {
+  const [jspdfModule, autoTableModule] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable')
+  ]);
+  return { jsPDF: jspdfModule.default, autoTable: autoTableModule.default };
+};
 
 interface IkAction {
   id: string;
@@ -76,7 +83,8 @@ function extractActionDetails(ev: IkAction): { url: string; action: string; desc
   return { url, action: actionLabel, description: desc, date, time };
 }
 
-export function generateParmenionReport(events: IkAction[], domain: string = 'iktracker.fr') {
+export async function generateParmenionReport(events: IkAction[], domain: string = 'iktracker.fr') {
+  const { jsPDF, autoTable } = await loadPDFLibraries();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
   const now = new Date();

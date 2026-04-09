@@ -7,8 +7,14 @@ import { useState, useMemo, useEffect, useCallback, lazy, Suspense} from 'react'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// jspdf loaded dynamically on PDF export to avoid 140KB on initial load
+const loadPDFLibraries = async () => {
+  const [jspdfModule, autoTableModule] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable')
+  ]);
+  return { jsPDF: jspdfModule.default, autoTable: autoTableModule.default };
+};
 import { toast } from 'sonner';
 import { ExpertTermsGrid } from '@/components/Lexique/ExpertTermsGrid';
 import { TrustBadge, SoftwareApplicationSchema } from '@/components/TrustBadge';
@@ -538,7 +544,8 @@ export default function Lexique() {
   const sortedLetters = Object.keys(groupedTerms).sort();
 
   // PDF Generation function
-  const generatePDF = () => {
+  const generatePDF = async () => {
+    const { jsPDF, autoTable } = await loadPDFLibraries();
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
