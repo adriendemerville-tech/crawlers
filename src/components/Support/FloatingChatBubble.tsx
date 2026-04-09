@@ -339,7 +339,7 @@ export function FloatingChatBubble() {
           </button>
           {/* Notification Badge — outside button to avoid overflow clipping */}
           {(unreadCount > 0 || showOnboardingPulse || showGuestQuizSuggestion || showHallucinationBubble) && !isOpen && (
-            <span className="fixed bottom-[54px] z-[111] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(0.875rem, calc((100vw - 72rem) / 2 + 0.875rem))' }}>
+            <span className="fixed bottom-[54px] z-[111] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(1.625rem, calc((100vw - 72rem) / 2 + 1.625rem))' }}>
               {(showOnboardingPulse || showGuestQuizSuggestion) ? '!' : unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
