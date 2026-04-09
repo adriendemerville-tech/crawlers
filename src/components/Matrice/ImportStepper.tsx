@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2, CreditCard } from 'lucide-react';
 import { detectMatriceType, type MatriceType, type DetectionResult } from '@/utils/matrice/typeDetector';
 import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCleaner';
+import { sanitizeAllPrompts } from '@/utils/matrice/promptSanitizer';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
