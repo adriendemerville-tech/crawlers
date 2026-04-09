@@ -14,7 +14,8 @@ import { toast } from 'sonner';
 import { 
   FileText, Plus, Edit, Trash2, Eye, EyeOff, Archive, 
   Send, RotateCcw, Search, Calendar, User, Image, Link,
-  CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Download, Upload, ExternalLink, Info
+  CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Download, Upload, ExternalLink, Info,
+  Layout
 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { blogArticles } from '@/data/blogArticles';
