@@ -60,11 +60,6 @@ function FooterComponent() {
       href: '/lexique',
       description: t3(language, 'Définitions des termes SEO et GEO', 'SEO and GEO terms definitions', 'Definiciones de términos SEO y GEO')
     },
-    { 
-      label: 'Blog',
-      href: '/blog',
-      description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
-    },
     {
       label: t3(language, 'Cocoon — Architecture Sémantique', 'Cocoon — Semantic Architecture', 'Cocoon — Arquitectura Semántica'),
       href: '/features/cocoon',
