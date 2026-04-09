@@ -57,6 +57,7 @@ const ScoreGEO = lazy(() => import("./pages/ScoreGEO"));
 const VisibiliteLLM = lazy(() => import("./pages/VisibiliteLLM"));
 const PageSpeedLanding = lazy(() => import("./pages/PageSpeedLanding"));
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
+const ComparatifClaudeVsCrawlers = lazy(() => import("./pages/ComparatifClaudeVsCrawlers"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
 const Observatoire = lazy(() => import("./pages/Observatoire"));
@@ -160,6 +161,7 @@ const App = () => (
                           <Route path="/landing/:slug" element={<LandingPage />} />
                           
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
+                          <Route path="/comparatif-claude-vs-crawlers" element={<ComparatifClaudeVsCrawlers />} />
                           <Route path="/modifier-code-wordpress" element={<ModifierCodeWordPress />} />
                           <Route path="/pro-agency" element={<ProAgency />} />
                           <Route path="/observatoire" element={<Observatoire />} />
