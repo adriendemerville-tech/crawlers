@@ -207,6 +207,11 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       }
 
       const result = cleanImportedData(h, dataRows);
+
+      // Sanitize prompts: replace hardcoded URLs/brand names with placeholders
+      result.cleanedRows = sanitizeAllPrompts(result.cleanedRows, card ?? undefined);
+      console.log('[ImportStepper] Prompts sanitized — hardcoded URLs/brands replaced with placeholders');
+
       setCleaning(result);
       setStep('clean');
     } catch (err) {
