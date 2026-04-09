@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, ArrowLeft, Sparkles, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
+import { Header } from '@/components/Header';
 
 interface TrackedSite {
   id: string;
@@ -215,6 +216,7 @@ export default function UxOptimizer() {
         <meta name="description" content="Analysez l'UX de vos pages en contexte business pour optimiser le ton, les CTA et la conversion." />
       </Helmet>
 
+      <Header />
       <div className="container max-w-5xl mx-auto py-8 px-4 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
