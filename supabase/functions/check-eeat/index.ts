@@ -851,6 +851,7 @@ async function fetchBacklinkData(domain: string): Promise<any> {
     });
 
     const summaryData = await summaryResp.json();
+    trackPaidApiCall('check-eeat', 'dataforseo', 'backlinks/summary', domain).catch(() => {});
     const result = summaryData?.tasks?.[0]?.result?.[0];
 
     if (!result) {
@@ -866,6 +867,7 @@ async function fetchBacklinkData(domain: string): Promise<any> {
         body: JSON.stringify([{ target: domain, limit: 10, order_by: ['backlinks,desc'] }]),
       });
       const anchorData = await anchorResp.json();
+      trackPaidApiCall('check-eeat', 'dataforseo', 'backlinks/anchors', domain).catch(() => {});
       anchorDistribution = (anchorData?.tasks?.[0]?.result?.[0]?.items || []).map((a: any) => ({
         anchor: a.anchor,
         backlinks: a.backlinks,
@@ -887,6 +889,7 @@ async function fetchBacklinkData(domain: string): Promise<any> {
         }]),
       });
       const blData = await blResp.json();
+      trackPaidApiCall('check-eeat', 'dataforseo', 'backlinks/backlinks', domain).catch(() => {});
       referringPages = (blData?.tasks?.[0]?.result?.[0]?.items || []).map((b: any) => ({
         sourceUrl: b.url_from || '',
         targetUrl: b.url_to || '',
