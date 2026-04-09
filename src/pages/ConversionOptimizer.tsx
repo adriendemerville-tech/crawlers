@@ -382,12 +382,18 @@ export default function ConversionOptimizer() {
               </div>
             </div>
 
+            {selectedSite && pages.length === 0 && !loadingPages && (
+              <div className="flex items-center gap-2 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                <p className="text-xs text-amber-500">
+                  Aucun crawl trouvé pour ce site. Lancez un crawl et un audit complet avant d'utiliser le Conversion Optimizer.
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
                 {pages.length > 0 && `${pages.length} pages crawlées disponibles`}
-                {selectedSite && pages.length === 0 && !loadingPages && (
-                  <span className="text-amber-500">Aucun crawl trouvé — lancez un crawl d'abord</span>
-                )}
               </p>
               <div className="flex items-center gap-2">
                 <Button
