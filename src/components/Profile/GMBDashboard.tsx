@@ -992,7 +992,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
                 size="sm"
                 className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
                 disabled={isGated || gbpLoading}
-                onClick={handleGbpConnect}
+                onClick={gbpConnected ? handleRefreshLocations : handleGbpConnect}
               >
                 {gbpLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                 {t.add}
