@@ -84,7 +84,7 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
 
       // Check GSC/GA4 from profiles + google_connections
       const gscOk = !!profile?.gsc_access_token;
-      const ga4Ok = !!profile?.ga4_property_id;
+      let ga4FromProfile = false;
 
       if (!ga4Ok || !gscOk) {
         const { data: conns } = await supabase
