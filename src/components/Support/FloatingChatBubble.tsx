@@ -20,6 +20,7 @@ export function FloatingChatBubble() {
   });
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
+  const { cocoonExpanded } = useAISidebar();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
   const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
