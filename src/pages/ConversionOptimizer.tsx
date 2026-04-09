@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon, PenTool, Trash2 } from 'lucide-react';
+import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon, PenTool, Trash2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
@@ -14,6 +14,9 @@ import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPag
 
 const CocoonContentArchitectModal = lazy(() =>
   import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
+);
+const CROReportPreviewModal = lazy(() =>
+  import('@/components/ConversionOptimizer/CROReportPreviewModal').then(m => ({ default: m.CROReportPreviewModal }))
 );
 
 interface TrackedSite {
@@ -145,6 +148,7 @@ export default function ConversionOptimizer() {
   const [backfillingAnnotations, setBackfillingAnnotations] = useState(false);
   const [showContentArchitect, setShowContentArchitect] = useState(false);
   const [freshAnalysis, setFreshAnalysis] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const fetchHistory = async (siteId: string) => {
     if (!siteId) {
       setHistory([]);
@@ -414,6 +418,15 @@ export default function ConversionOptimizer() {
                 >
                   {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
                   {analyzing ? 'Analyse en cours...' : 'Analyser'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReport(true)}
+                  disabled={!result}
+                  className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                >
+                  <FileText className="h-4 w-4" />
+                  Rapport
                 </Button>
                 <Button
                   variant="outline"
@@ -716,6 +729,16 @@ export default function ConversionOptimizer() {
             }
             isExistingPage={true}
             colorTheme="green"
+          />
+        </Suspense>
+      )}
+      {showReport && result && (
+        <Suspense fallback={null}>
+          <CROReportPreviewModal
+            isOpen={showReport}
+            onClose={() => setShowReport(false)}
+            data={result}
+            domain={selectedSite?.domain || ''}
           />
         </Suspense>
       )}
