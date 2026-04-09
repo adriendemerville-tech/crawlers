@@ -719,10 +719,16 @@ Tu ne donnes pas de conseils génériques. Chaque recommandation est calibrée p
 Tu proposes des reformulations concrètes quand c'est pertinent.
 Réponds toujours en français.`;
 
-function buildPrompt(page: any, ctx: any, keywords: any[]) {
+function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = []) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
   ).join('\n');
+
+  const imageList = images.length > 0
+    ? images.map((img, i) =>
+        `${i + 1}. ${img.src}\n   - Alt: "${img.alt || '(vide)'}"\n   - Dimensions: ${img.width}x${img.height}\n   - Format: ${img.ext}\n   - Position: ${img.isHero ? 'Hero/Banner' : 'Corps de page'}\n   - Contexte textuel proche: "${(img.nearbyText || '').slice(0, 150)}"`
+      ).join('\n')
+    : 'Aucune image significative détectée';
 
   return `
 ## Page à analyser
@@ -740,6 +746,9 @@ function buildPrompt(page: any, ctx: any, keywords: any[]) {
 
 ### Contenu de la page (extrait):
 ${(page.body_text_truncated || '').slice(0, 3000)}
+
+## Images détectées sur la page
+${imageList}
 
 ## Contexte Business
 - Type: ${ctx.business_type || 'non défini'}
@@ -772,5 +781,13 @@ Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte b
 
 Pour chaque suggestion, propose une reformulation concrète quand c'est pertinent (current_text → suggested_text).
 Pour les éléments visuels identifiables, indique un element_selector CSS approximatif (ex: "h1", "section.hero .cta", "footer nav").
+
+## Analyse des images
+Pour chaque image significative listée ci-dessus, évalue :
+- **Descriptivité** (0-100) : L'image illustre-t-elle bien le contenu environnant ? L'alt-text est-il correct ?
+- **Pertinence** (0-100) : L'image est-elle pertinente par rapport à l'intention de la page et au contexte business ?
+- **Pouvoir de conviction** (0-100) : L'image renforce-t-elle la conversion (crédibilité, émotion, preuve sociale, produit) ?
+Donne un verdict court et une recommandation concrète si nécessaire. Utilise le champ image_analysis.
 `;
+}
 }
