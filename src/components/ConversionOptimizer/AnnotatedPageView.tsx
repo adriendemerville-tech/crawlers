@@ -8,6 +8,7 @@ interface Annotation {
   rect: { x: number; y: number; width: number; height: number; tag?: string } | null;
   axis: string;
   priority: string;
+  suggestionIndex?: number;
 }
 
 interface Suggestion {
@@ -37,6 +38,14 @@ const AXIS_LABELS: Record<string, string> = {
   keyword_usage: 'Mots-clés',
 };
 
+const BUBBLE_COLUMN_WIDTH = 288;
+const BUBBLE_HEIGHT = 68;
+const BUBBLE_GAP = 12;
+
+function annotationKey(value?: string) {
+  return (value || '').toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 80);
+}
+
 function priorityColor(priority: string) {
   switch (priority) {
     case 'critical':
@@ -48,44 +57,54 @@ function priorityColor(priority: string) {
     case 'low':
       return { border: 'border-emerald-500', bg: 'bg-emerald-500/10', text: 'text-emerald-500', line: '#10b981' };
     default:
-      return { border: 'border-muted', bg: 'bg-muted/10', text: 'text-muted-foreground', line: '#6b7280' };
+      return { border: 'border-border', bg: 'bg-muted/10', text: 'text-muted-foreground', line: '#6b7280' };
   }
 }
 
 function buildAnnotatedSuggestions(suggestions: Suggestion[], annotations: Annotation[]) {
-  const annotationMap = new Map<string, Annotation>();
-  for (const a of annotations) {
-    if (a.rect && a.text) {
-      annotationMap.set(a.text.toLowerCase().slice(0, 60), a);
+  const annotationsByIndex = new Map<number, Annotation>();
+  const annotationsByText = new Map<string, Annotation>();
+
+  for (const annotation of annotations) {
+    if (typeof annotation.suggestionIndex === 'number' && annotation.rect) {
+      annotationsByIndex.set(annotation.suggestionIndex, annotation);
+    }
+
+    const key = annotationKey(annotation.text);
+    if (annotation.rect && key) {
+      annotationsByText.set(key, annotation);
     }
   }
 
   return suggestions
-    .filter(s => s.current_text)
-    .map((s, idx) => {
-      const key = (s.current_text || '').toLowerCase().slice(0, 60);
-      const annotation = annotationMap.get(key);
+    .filter((suggestion) => suggestion.current_text)
+    .map((suggestion, index) => {
+      const annotation = annotationsByIndex.get(index) ?? annotationsByText.get(annotationKey(suggestion.current_text));
+
       return {
-        ...s,
-        index: idx,
+        ...suggestion,
+        index,
         rect: annotation?.rect || null,
-        yPosition: annotation?.rect?.y ?? (idx * 200 + 100),
+        yPosition: annotation?.rect?.y ?? 0,
       };
     })
     .sort((a, b) => a.yPosition - b.yPosition);
 }
 
-// Resolve overlapping bubbles: push apart vertically while staying close to target Y
 function resolveOverlaps(items: { targetY: number }[], bubbleHeight: number, gap: number) {
   const positions: number[] = [];
-  for (let i = 0; i < items.length; i++) {
+
+  for (let i = 0; i < items.length; i += 1) {
     let y = items[i].targetY;
+
     if (i > 0) {
       const minY = positions[i - 1] + bubbleHeight + gap;
       y = Math.max(y, minY);
     }
+
     positions.push(Math.max(8, y));
   }
+
   return positions;
 }
 
@@ -109,6 +128,17 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
     [suggestions, annotations]
   );
 
+  const positionedSuggestions = useMemo(
+    () => annotatedSuggestions.filter((suggestion) => suggestion.rect),
+    [annotatedSuggestions]
+  );
+
+  const updateViewportHeight = useCallback(() => {
+    if (scrollRef.current) {
+      setViewportHeight(scrollRef.current.clientHeight);
+    }
+  }, []);
+
   const handleImageLoad = useCallback(() => {
     if (imageRef.current) {
       setImageNaturalSize({
@@ -116,147 +146,163 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
         h: imageRef.current.naturalHeight,
       });
     }
+
     setImageLoaded(true);
-  }, []);
+    updateViewportHeight();
+  }, [updateViewportHeight]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      setViewportHeight(scrollRef.current.clientHeight);
-    }
-  }, [imageLoaded]);
+    updateViewportHeight();
+    window.addEventListener('resize', updateViewportHeight);
+
+    return () => window.removeEventListener('resize', updateViewportHeight);
+  }, [updateViewportHeight]);
 
   const scale = imageLoaded && imageRef.current
     ? imageRef.current.clientWidth / imageNaturalSize.w
     : 1;
 
-  // Compute bubble Y positions (aligned with rect center, de-overlapped)
-  const BUBBLE_H = 64;
-  const BUBBLE_GAP = 8;
-  const bubbleTargets = annotatedSuggestions.map(s => ({
-    targetY: (s.rect ? s.rect.y + s.rect.height / 2 : s.yPosition) * scale - BUBBLE_H / 2,
-  }));
-  const bubbleYPositions = resolveOverlaps(bubbleTargets, BUBBLE_H, BUBBLE_GAP);
+  const contentHeight = imageLoaded && imageRef.current
+    ? imageRef.current.clientHeight
+    : Math.max(500, Math.min(screenshotHeight || 900, 900));
 
-  // Determine which bubbles are visible based on scroll
+  const bubbleTargets = positionedSuggestions.map((suggestion) => ({
+    targetY: ((suggestion.rect?.y || 0) + (suggestion.rect?.height || 0) / 2) * scale - BUBBLE_HEIGHT / 2,
+  }));
+
+  const bubbleYPositions = resolveOverlaps(bubbleTargets, BUBBLE_HEIGHT, BUBBLE_GAP);
+
   const isVisible = (topPx: number) => {
-    const reveal = scrollTop + viewportHeight * 0.85; // reveal when 85% into viewport
-    return topPx < reveal;
+    const revealLine = scrollTop + viewportHeight * 0.85;
+    return topPx < revealLine;
   };
 
   return (
     <Card className="overflow-hidden border-border/50">
-      <div className="p-3 border-b border-border/50 flex items-center justify-between bg-muted/30">
+      <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 p-3">
         <span className="text-sm font-medium text-foreground">Vue annotée</span>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-red-500" /> Critique</span>
-          <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-orange-500" /> Haute</span>
-          <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-amber-500" /> Moyenne</span>
-          <span className="flex items-center gap-1 text-[10px]"><span className="w-2 h-2 rounded-full bg-emerald-500" /> OK</span>
+          <span className="flex items-center gap-1 text-[10px]"><span className="h-2 w-2 rounded-full bg-red-500" /> Critique</span>
+          <span className="flex items-center gap-1 text-[10px]"><span className="h-2 w-2 rounded-full bg-orange-500" /> Haute</span>
+          <span className="flex items-center gap-1 text-[10px]"><span className="h-2 w-2 rounded-full bg-amber-500" /> Moyenne</span>
+          <span className="flex items-center gap-1 text-[10px]"><span className="h-2 w-2 rounded-full bg-emerald-500" /> OK</span>
         </div>
       </div>
 
       <div
         ref={scrollRef}
-        className="relative flex overflow-y-auto"
+        className="relative overflow-y-auto overflow-x-hidden"
         style={{ maxHeight: 'calc(100vh - 280px)', minHeight: '500px' }}
-        onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
+        onScroll={(event) => setScrollTop((event.target as HTMLDivElement).scrollTop)}
       >
-        {/* Left column: Annotation bubbles */}
-        <div className="w-60 flex-shrink-0 relative" style={{ minHeight: imageLoaded && imageRef.current ? imageRef.current.clientHeight : screenshotHeight * scale }}>
-          {annotatedSuggestions.map((s, i) => {
-            const colors = priorityColor(s.priority);
-            const topPx = bubbleYPositions[i];
-            const visible = isVisible(topPx);
-            const isHovered = hoveredIdx === i;
+        <div className="relative flex min-w-full" style={{ minHeight: contentHeight }}>
+          {imageLoaded && positionedSuggestions.length > 0 && (
+            <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
+              {positionedSuggestions.map((suggestion, index) => {
+                if (!suggestion.rect) return null;
 
-            return (
-              <div
-                key={i}
-                className={`absolute left-2 right-2 rounded-lg p-2 cursor-pointer border-2 ${colors.border} ${colors.bg} ${isHovered ? 'shadow-lg z-20' : 'z-10'}`}
-                style={{
-                  top: `${topPx}px`,
-                  opacity: visible ? 1 : 0,
-                  transform: visible ? 'translateX(0)' : 'translateX(-20px)',
-                  transition: 'opacity 0.4s ease, transform 0.4s ease',
-                }}
-                onMouseEnter={() => setHoveredIdx(i)}
-                onMouseLeave={() => setHoveredIdx(null)}
-                onClick={() => onSelectSuggestion?.(s.index)}
-              >
-                <div className="flex items-center gap-1 mb-0.5">
-                  <Badge variant="outline" className={`text-[9px] px-1 py-0 ${colors.text} border-current`}>
-                    {AXIS_LABELS[s.axis] || s.axis}
-                  </Badge>
-                </div>
-                <p className="text-[11px] font-medium text-foreground leading-tight line-clamp-2">{s.title}</p>
-                {isHovered && s.current_text && (
-                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">« {s.current_text.slice(0, 80)}… »</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Screenshot + overlays + connectors */}
-        <div className="flex-1 relative">
-          {!imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/20">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          )}
-
-          <img
-            ref={imageRef}
-            src={screenshotUrl}
-            alt="Capture de la page analysée"
-            className="w-full h-auto block"
-            onLoad={handleImageLoad}
-          />
-
-          {imageLoaded && (
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 15 }}>
-              {annotatedSuggestions.map((s, i) => {
-                const colors = priorityColor(s.priority);
-                const isHovered = hoveredIdx === i;
-                const bubbleTop = bubbleYPositions[i];
-                const bubbleCenterY = bubbleTop + BUBBLE_H / 2;
+                const colors = priorityColor(suggestion.priority);
+                const isHovered = hoveredIdx === index;
+                const bubbleTop = bubbleYPositions[index];
+                const bubbleCenterY = bubbleTop + BUBBLE_HEIGHT / 2;
                 const visible = isVisible(bubbleTop);
 
-                if (!s.rect) return null;
+                const rectX = BUBBLE_COLUMN_WIDTH + suggestion.rect.x * scale;
+                const rectY = suggestion.rect.y * scale;
+                const rectWidth = Math.max(18, suggestion.rect.width * scale);
+                const rectHeight = Math.max(18, suggestion.rect.height * scale);
+                const rectCenterY = rectY + rectHeight / 2;
 
-                const rx = s.rect.x * scale;
-                const ry = s.rect.y * scale;
-                const rw = s.rect.width * scale;
-                const rh = s.rect.height * scale;
-                const rectCenterY = ry + rh / 2;
+                const startX = BUBBLE_COLUMN_WIDTH - 12;
+                const elbowX = startX + 20;
+                const nearTargetX = Math.max(elbowX + 12, rectX - 12);
 
                 return (
-                  <g key={i} style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease' }}>
-                    {/* Highlight frame around element */}
+                  <g key={`${suggestion.index}-${suggestion.title}`} style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.35s ease' }}>
+                    <path
+                      d={`M ${startX} ${bubbleCenterY} L ${elbowX} ${bubbleCenterY} L ${nearTargetX} ${rectCenterY} L ${rectX} ${rectCenterY}`}
+                      fill="none"
+                      stroke={colors.line}
+                      strokeWidth={isHovered ? 2.5 : 1.5}
+                      strokeDasharray={isHovered ? 'none' : '5 4'}
+                      opacity={isHovered ? 0.95 : 0.7}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                     <rect
-                      x={rx} y={ry} width={rw} height={rh}
-                      fill={isHovered ? colors.line + '18' : 'transparent'}
+                      x={rectX}
+                      y={rectY}
+                      width={rectWidth}
+                      height={rectHeight}
+                      rx={4}
+                      fill={isHovered ? `${colors.line}18` : 'transparent'}
                       stroke={colors.line}
                       strokeWidth={isHovered ? 3 : 2}
                       strokeDasharray={isHovered ? 'none' : '6 3'}
-                      rx={4}
                     />
-                    {/* Connector line: bubble right edge → rect left edge */}
-                    <line
-                      x1={0} y1={bubbleCenterY}
-                      x2={rx} y2={rectCenterY}
-                      stroke={colors.line}
-                      strokeWidth={isHovered ? 2 : 1}
-                      strokeDasharray="4 3"
-                      opacity={isHovered ? 0.9 : 0.4}
-                    />
-                    {/* Small dot at rect end */}
-                    <circle cx={rx} cy={rectCenterY} r={isHovered ? 4 : 3} fill={colors.line} opacity={isHovered ? 0.9 : 0.5} />
+                    <circle cx={rectX} cy={rectCenterY} r={isHovered ? 4 : 3} fill={colors.line} opacity={0.9} />
                   </g>
                 );
               })}
             </svg>
           )}
+
+          <div className="relative z-20 flex-shrink-0" style={{ width: BUBBLE_COLUMN_WIDTH, minHeight: contentHeight }}>
+            {positionedSuggestions.map((suggestion, index) => {
+              const colors = priorityColor(suggestion.priority);
+              const topPx = bubbleYPositions[index];
+              const visible = imageLoaded && isVisible(topPx);
+              const isHovered = hoveredIdx === index;
+
+              return (
+                <div
+                  key={`${suggestion.index}-${suggestion.title}`}
+                  className={`absolute left-2 right-2 cursor-pointer rounded-lg border-2 p-2 ${colors.border} ${colors.bg} ${isHovered ? 'z-30 shadow-lg' : 'z-20'}`}
+                  style={{
+                    top: `${topPx}px`,
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? 'translateX(0)' : 'translateX(-20px)',
+                    transition: 'opacity 0.4s ease, transform 0.4s ease',
+                  }}
+                  onMouseEnter={() => setHoveredIdx(index)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  onClick={() => onSelectSuggestion?.(suggestion.index)}
+                >
+                  <div className="mb-0.5 flex items-center gap-1">
+                    <Badge variant="outline" className={`border-current px-1 py-0 text-[9px] ${colors.text}`}>
+                      {AXIS_LABELS[suggestion.axis] || suggestion.axis}
+                    </Badge>
+                  </div>
+                  <p className="line-clamp-2 text-[11px] font-medium leading-tight text-foreground">{suggestion.title}</p>
+                  {isHovered && suggestion.current_text && (
+                    <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground">« {suggestion.current_text.slice(0, 80)}… »</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="relative flex-1">
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted/20">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            <img
+              ref={imageRef}
+              src={screenshotUrl}
+              alt="Capture de la page analysée"
+              className="block h-auto w-full"
+              onLoad={handleImageLoad}
+            />
+
+            {imageLoaded && annotatedSuggestions.length > 0 && positionedSuggestions.length === 0 && (
+              <div className="absolute inset-x-6 top-6 z-20 rounded-lg border border-border bg-background/92 p-3 text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
+                Cet audit n’a pas de coordonnées visuelles enregistrées, donc les bulles reliées ne peuvent pas être affichées sur cette capture.
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Card>
