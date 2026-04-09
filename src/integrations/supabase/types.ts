@@ -3235,6 +3235,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cro_variable_matrix: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean
+          page_type: string
+          source: string
+          updated_at: string
+          variable_description: string | null
+          variable_key: string
+          variable_label: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          page_type: string
+          source?: string
+          updated_at?: string
+          variable_description?: string | null
+          variable_key: string
+          variable_label: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          page_type?: string
+          source?: string
+          updated_at?: string
+          variable_description?: string | null
+          variable_key?: string
+          variable_label?: string
+        }
+        Relationships: []
+      }
       cross_agent_insights: {
         Row: {
           created_at: string
