@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft } from 'lucide-react';
+import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { detectMatriceType, type MatriceType, type DetectionResult } from '@/utils/matrice/typeDetector';
 import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCleaner';
 
@@ -40,18 +40,49 @@ const STEPS: { key: Step; label: string }[] = [
 /* ── Component ─────────────────────────────────────────────────────── */
 
 export default function ImportStepper({ open, sheetNames, workbook, onComplete, onClose }: Props) {
-  const [step, setStep] = useState<Step>(sheetNames.length > 1 ? 'sheet' : 'type');
-  const [selectedSheet, setSelectedSheet] = useState<string>(sheetNames[0] || '');
+  const [step, setStep] = useState<Step>('sheet');
+  const [selectedSheet, setSelectedSheet] = useState<string>('');
   const [selectedType, setSelectedType] = useState<MatriceType | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
   const [rawRows, setRawRows] = useState<Record<string, any>[]>([]);
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [cleaning, setCleaning] = useState<CleaningResult | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // ── Sheet selection ────────────────────────────────────────────────
+  const handleSheetSelect = useCallback(async (sheetName: string) => {
+    if (!workbook) return;
+    setLoading(true);
+    setSelectedSheet(sheetName);
+    try {
+      const { utils } = await import('xlsx');
+      const sheet = workbook.Sheets[sheetName];
+      const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+      if (!rows.length) {
+        console.warn('[ImportStepper] Empty sheet:', sheetName);
+        setLoading(false);
+        return;
+      }
+      const h = Object.keys(rows[0]);
+      setHeaders(h);
+      setRawRows(rows);
+
+      // Auto-detect type
+      const det = detectMatriceType(h, rows.slice(0, 10));
+      setDetection(det);
+      setSelectedType(det.type);
+      setStep('type');
+      console.log(`[ImportStepper] Sheet "${sheetName}": ${rows.length} rows, ${h.length} cols, detected=${det.type} (${Math.round(det.confidence * 100)}%)`);
+    } catch (err) {
+      console.error('[ImportStepper] Sheet parse error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [workbook]);
 
   // Reset state when modal opens with new data
-  
-  useMemo(() => {
-    if (open && sheetNames.length > 0) {
+  useEffect(() => {
+    if (open && sheetNames.length > 0 && workbook) {
       setStep(sheetNames.length > 1 ? 'sheet' : 'type');
       setSelectedSheet(sheetNames[0] || '');
       setSelectedType(null);
@@ -59,35 +90,16 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       setRawRows([]);
       setDetection(null);
       setCleaning(null);
+      setLoading(false);
+
+      // Auto-select if single sheet
+      if (sheetNames.length === 1) {
+        handleSheetSelect(sheetNames[0]);
+      }
     }
-  }, [open, sheetNames]);
+  }, [open, sheetNames, workbook, handleSheetSelect]);
 
   const currentStepIndex = STEPS.findIndex(s => s.key === step);
-
-  // ── Sheet selection ────────────────────────────────────────────────
-  const handleSheetSelect = async (sheetName: string) => {
-    setSelectedSheet(sheetName);
-    const { utils } = await import('xlsx');
-    const sheet = workbook.Sheets[sheetName];
-    const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
-    if (!rows.length) return;
-    const h = Object.keys(rows[0]);
-    setHeaders(h);
-    setRawRows(rows);
-
-    // Auto-detect type
-    const det = detectMatriceType(h, rows.slice(0, 10));
-    setDetection(det);
-    setSelectedType(det.type);
-    setStep('type');
-  };
-
-  // If single sheet, auto-load on open
-  useMemo(() => {
-    if (sheetNames.length === 1 && workbook && rawRows.length === 0) {
-      handleSheetSelect(sheetNames[0]);
-    }
-  }, [sheetNames, workbook]);
 
   // ── Type confirmation → trigger clean ──────────────────────────────
   const handleTypeConfirm = () => {
@@ -138,8 +150,16 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
           })}
         </div>
 
+        {/* ── Loading state ────────────────────────────────────────── */}
+        {loading && (
+          <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-sm">Parsing du fichier…</span>
+          </div>
+        )}
+
         {/* ── Step: Sheet ──────────────────────────────────────────── */}
-        {step === 'sheet' && (
+        {!loading && step === 'sheet' && (
           <div className="flex flex-col gap-2">
             <p className="text-sm text-muted-foreground mb-1">
               Ce fichier contient {sheetNames.length} onglets. Lequel importer ?
@@ -159,7 +179,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         )}
 
         {/* ── Step: Type ───────────────────────────────────────────── */}
-        {step === 'type' && detection && (
+        {!loading && step === 'type' && detection && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
               Type détecté automatiquement à partir des {headers.length} colonnes.
@@ -223,7 +243,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         )}
 
         {/* ── Step: Clean ──────────────────────────────────────────── */}
-        {step === 'clean' && cleaning && (
+        {!loading && step === 'clean' && cleaning && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
               Nettoyage effectué. Les colonnes de résultats et données résiduelles ont été retirées.
@@ -270,7 +290,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         )}
 
         {/* ── Step: Confirm ────────────────────────────────────────── */}
-        {step === 'confirm' && cleaning && selectedType && (
+        {!loading && step === 'confirm' && cleaning && selectedType && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
               Prêt à importer. Récapitulatif :
