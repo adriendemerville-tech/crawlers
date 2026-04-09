@@ -324,26 +324,32 @@ async function captureScreenshotWithAnnotations(
     const script = `export default async ({ page }) => {
   await page.setViewport({ width: 1280, height: 900 });
   await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, 3000));
 
-  const clipHeight = await page.evaluate(() => {
-    const footer = document.querySelector('footer')
-      || document.querySelector('[role="contentinfo"]')
-      || document.querySelector('.footer, #footer, .site-footer');
-    if (footer) {
-      const rect = footer.getBoundingClientRect();
-      const footerTop = rect.top + window.scrollY;
-      (footer as HTMLElement).style.display = 'none';
-      return Math.max(footerTop, 900);
-    }
-    return document.body.scrollHeight;
+  // Wait for images to load
+  await page.evaluate(() => {
+    return Promise.all(
+      Array.from(document.querySelectorAll('img[src], img[data-src], img[loading="lazy"]'))
+        .map(img => {
+          if (img.complete && img.naturalHeight > 0) return Promise.resolve();
+          img.loading = 'eager';
+          if (img.dataset.src && !img.src) img.src = img.dataset.src;
+          return new Promise(resolve => {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+            setTimeout(resolve, 4000);
+          });
+        })
+    );
   });
+
+  const fullHeight = await page.evaluate(() => document.body.scrollHeight);
 
   const screenshot = await page.screenshot({
     type: 'jpeg',
     quality: 75,
     encoding: 'base64',
-    clip: { x: 0, y: 0, width: 1280, height: clipHeight }
+    fullPage: true,
   });
 
   return {
