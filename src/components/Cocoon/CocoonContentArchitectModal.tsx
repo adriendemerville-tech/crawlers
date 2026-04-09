@@ -36,6 +36,7 @@ interface CocoonContentArchitectModalProps {
   hasCmsConnection?: boolean;
   draftData?: Record<string, any> | null;
   prefillUrl?: string;
+  prefillPrompt?: string;
   isExistingPage?: boolean;
   demoMode?: boolean;
   colorTheme?: 'cocoon' | 'green';
@@ -116,7 +117,7 @@ const DEMO_IMAGES: import('./ImageStylePicker').GeneratedImageItem[] = [
   { dataUri: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80', style: 'infographic' as any, placement: 'body' },
 ];
 
-export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, isExistingPage = false, demoMode = false, colorTheme = 'cocoon' }: CocoonContentArchitectModalProps) {
+export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, trackedSiteId, hasCmsConnection, draftData, prefillUrl, prefillPrompt, isExistingPage = false, demoMode = false, colorTheme = 'cocoon' }: CocoonContentArchitectModalProps) {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
   const [activePanel, setActivePanel] = useState<PanelId | null>('prompt');
@@ -250,6 +251,11 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   useEffect(() => {
     if (isOpen && prefillUrl && !url) setUrl(prefillUrl);
   }, [isOpen, prefillUrl]);
+
+  // ── Auto-fill prompt from prefill ──
+  useEffect(() => {
+    if (isOpen && prefillPrompt && !prompt) setPrompt(prefillPrompt);
+  }, [isOpen, prefillPrompt]);
 
   // ── Restore persisted images ──
   useEffect(() => {

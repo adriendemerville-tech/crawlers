@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,11 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon } from 'lucide-react';
+import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon, PenTool } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPageView';
+
+const CocoonContentArchitectModal = lazy(() =>
+  import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
+);
 
 interface TrackedSite {
   id: string;
@@ -119,7 +123,7 @@ export default function ConversionOptimizer() {
   const [history, setHistory] = useState<SavedAnalysis[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [backfillingAnnotations, setBackfillingAnnotations] = useState(false);
-
+  const [showContentArchitect, setShowContentArchitect] = useState(false);
   const fetchHistory = async (siteId: string) => {
     if (!siteId) {
       setHistory([]);
@@ -371,15 +375,28 @@ export default function ConversionOptimizer() {
                   <span className="text-amber-500">Aucun crawl trouvé — lancez un crawl d'abord</span>
                 )}
               </p>
-              <Button
-                variant="outline"
-                onClick={handleAnalyze}
-                disabled={!selectedPageUrl || analyzing}
-                className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
-              >
-                {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
-                {analyzing ? 'Analyse en cours...' : 'Analyser'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleAnalyze}
+                  disabled={!selectedPageUrl || analyzing}
+                  className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                >
+                  {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
+                  {analyzing ? 'Analyse en cours...' : 'Analyser'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowContentArchitect(true)}
+                  disabled={!result || analyzing}
+                  className={`gap-2 transition-all ${result && !analyzing
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                    : 'bg-transparent text-white/40 border-white/20 cursor-not-allowed'}`}
+                >
+                  <PenTool className="h-4 w-4" />
+                  Optimiser
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -563,6 +580,29 @@ export default function ConversionOptimizer() {
           </Card>
         )}
       </div>
+
+      {showContentArchitect && result && (
+        <Suspense fallback={null}>
+          <CocoonContentArchitectModal
+            isOpen={showContentArchitect}
+            onClose={() => setShowContentArchitect(false)}
+            nodes={[]}
+            domain={selectedSite?.domain}
+            trackedSiteId={selectedSiteId}
+            prefillUrl={result.page_url}
+            prefillPrompt={
+              `Optimisation CRO issue du Conversion Optimizer (score ${result.global_score}/100).\n\n` +
+              `Objectif : appliquer les corrections suivantes sur la page :\n\n` +
+              result.suggestions
+                .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
+                .map((s, i) => `${i + 1}. [${s.priority.toUpperCase()}] ${s.title} — ${s.rationale}${s.suggested_text ? `\n   → Texte suggéré : "${s.suggested_text}"` : ''}`)
+                .join('\n\n')
+            }
+            isExistingPage={true}
+            colorTheme="green"
+          />
+        </Suspense>
+      )}
     </>
   );
 }
