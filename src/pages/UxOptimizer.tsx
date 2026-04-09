@@ -368,7 +368,7 @@ export default function UxOptimizer() {
                     .map((s, i) => {
                       const meta = AXIS_META[s.axis];
                       return (
-                        <div key={i} className="border border-border/50 rounded-lg p-3 space-y-2">
+                        <div key={i} id={`suggestion-${i}`} className="border border-border/50 rounded-lg p-3 space-y-2 scroll-mt-20">
                           <div className="flex items-center gap-2 flex-wrap">
                             {priorityBadge(s.priority)}
                             {meta && <Badge variant="outline" className="text-[10px]">{meta.label}</Badge>}
