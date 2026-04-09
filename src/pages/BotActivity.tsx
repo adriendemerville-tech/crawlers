@@ -260,10 +260,10 @@ export default function BotActivityPage() {
                         </div>
                         <div className="flex-shrink-0 text-right">
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(entry.ts), { addSuffix: true, locale: fr })}
+                            {formatDistanceToNow(safeParseTs(entry.ts), { addSuffix: true, locale: fr })}
                           </span>
                           <p className="text-[10px] text-muted-foreground/50">
-                            {format(new Date(entry.ts), 'HH:mm:ss')}
+                            {format(safeParseTs(entry.ts), 'HH:mm:ss')}
                           </p>
                         </div>
                       </motion.div>
