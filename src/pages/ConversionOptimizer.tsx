@@ -559,10 +559,10 @@ export default function ConversionOptimizer() {
             <CardContent>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {history.map(h => (
-                  <button
+                  <div
                     key={h.id}
+                    className="group relative w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors text-left border border-border/30 cursor-pointer"
                     onClick={() => void loadSavedAnalysis(h)}
-                    className="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors text-left border border-border/30"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm truncate">{h.page_url}</p>
@@ -573,7 +573,18 @@ export default function ConversionOptimizer() {
                     <span className={`text-lg font-bold ml-3 ${scoreColor(h.global_score)}`}>
                       {h.global_score}
                     </span>
-                  </button>
+                    <button
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                      title="Supprimer"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await supabase.from('ux_context_analyses').delete().eq('id', h.id);
+                        setHistory(prev => prev.filter(x => x.id !== h.id));
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 ))}
               </div>
             </CardContent>
