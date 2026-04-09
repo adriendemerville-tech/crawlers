@@ -838,6 +838,7 @@ export default function MatricePrompt() {
                 placeholder="https://example.com"
                 value={url}
                 onChange={e => setUrl(e.target.value)}
+                onFocus={() => { if (url === 'https://example.com') setUrl(''); }}
                 className="flex-1"
               />
               <Button
