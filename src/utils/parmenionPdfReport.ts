@@ -1,5 +1,13 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// Dynamic imports to avoid 140KB bundle on initial load
+import type jsPDF from 'jspdf';
+
+const loadPDFLibraries = async () => {
+  const [jspdfModule, autoTableModule] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable')
+  ]);
+  return { jsPDF: jspdfModule.default, autoTable: autoTableModule.default };
+};
 
 interface IkAction {
   id: string;

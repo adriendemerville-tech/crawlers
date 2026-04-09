@@ -63,9 +63,9 @@ export function TestimonialsCarousel() {
               <motion.blockquote
                 key={current}
                 custom={direction}
-                initial={{ opacity: 0, x: direction * 40, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: direction * -40, filter: 'blur(4px)' }}
+                initial={{ opacity: 0, x: direction * 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: direction * -40 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="w-full text-center"
               >
