@@ -54,7 +54,7 @@ const adminTranslations = {
     ciTests: 'CI Tests',
     contentUsers: 'Contenu & Users',
     users: 'Utilisateurs',
-    blog: 'Blog',
+    cms: 'CMS',
     support: 'SAV',
     affiliates: 'Perks',
     technical: 'Technique',
@@ -80,7 +80,7 @@ const adminTranslations = {
     ciTests: 'CI Tests',
     contentUsers: 'Content & Users',
     users: 'Users',
-    blog: 'Blog',
+    cms: 'CMS',
     support: 'Support',
     affiliates: 'Perks',
     technical: 'Technical',
@@ -106,7 +106,7 @@ const adminTranslations = {
     ciTests: 'CI Tests',
     contentUsers: 'Contenido & Usuarios',
     users: 'Usuarios',
-    blog: 'Blog',
+    cms: 'CMS',
     support: 'Soporte',
     affiliates: 'Perks',
     technical: 'Técnico',
@@ -236,7 +236,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       label: t.contentUsers,
       items: [
         ...(canSeeUsers ? [{ id: 'users', label: t.users, icon: Users, group: 'content' }] : []),
-        { id: 'blog', label: t.blog, icon: FileText, group: 'content' },
+        { id: 'cms', label: t.cms, icon: FileText, group: 'content' },
         { id: 'support', label: t.support, icon: MessageCircle, group: 'content', notifKey: 'support' as const },
         { id: 'sav-ia', label: 'SAV IA', icon: Bot, group: 'content' },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
@@ -284,7 +284,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'scanned-urls': return <ScannedUrlsRegistry />;
       case 'matrix-errors': return <MatrixErrorsRegistry />;
       case 'users': return wrap(<UserManagement />);
-      case 'blog': return wrap(<BlogManagement />);
+      case 'cms': return wrap(<BlogManagement />);
       case 'support': return wrap(<SupportManagement />);
       case 'sav-ia': return <SavDashboard />;
       case 'affiliates': return wrap(<AffiliateManagement />);
