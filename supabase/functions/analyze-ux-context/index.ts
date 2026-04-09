@@ -345,6 +345,20 @@ async function captureScreenshotWithAnnotations(
 
   const fullHeight = await page.evaluate(() => document.body.scrollHeight);
 
+  // Extract image formats
+  const imageFormats = await page.evaluate(() => {
+    const imgs = Array.from(document.querySelectorAll('img[src]'));
+    return imgs.map(img => {
+      const src = img.src || '';
+      const ext = src.split('?')[0].split('#')[0].split('.').pop()?.toLowerCase() || 'unknown';
+      const alt = img.alt || '';
+      const width = img.naturalWidth || img.width || 0;
+      const height = img.naturalHeight || img.height || 0;
+      const fileSize = null; // not available client-side
+      return { src, ext, alt, width, height };
+    }).filter(i => i.src && !i.src.startsWith('data:'));
+  });
+
   const screenshot = await page.screenshot({
     type: 'jpeg',
     quality: 75,
@@ -353,7 +367,7 @@ async function captureScreenshotWithAnnotations(
   });
 
   return {
-    data: { screenshot, height: fullHeight },
+    data: { screenshot, height: fullHeight, imageFormats },
     type: 'application/json'
   };
 };`;
