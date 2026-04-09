@@ -205,6 +205,9 @@ export default function ConversionOptimizer() {
       global_score: saved.global_score,
       axes: saved.axis_scores,
       suggestions: saved.suggestions,
+      screenshot_url: saved.screenshot_url,
+      screenshot_height: saved.screenshot_height,
+      annotations: saved.annotations,
     });
     setSelectedPageUrl(saved.page_url);
   };
