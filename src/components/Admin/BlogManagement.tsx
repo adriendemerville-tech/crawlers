@@ -374,7 +374,7 @@ export function BlogManagement() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Gestion du Blog
+                Gestion CMS
               </CardTitle>
               <CardDescription>
                 {articles.length} article{articles.length !== 1 ? 's' : ''} en base • {blogArticles.length} articles statiques
