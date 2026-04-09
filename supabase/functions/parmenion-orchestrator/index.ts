@@ -923,6 +923,69 @@ RÈGLES:
     console.log(`[Parménion] 🔑 Keyword enrichment: ${keywordEnrichment.totalKeywords} keywords from ${keywordEnrichment.sources.join(', ')}`);
     console.log(`[Parménion] 📋 ContentBrief: type=${contentBrief.page_type}, tone=${contentBrief.tone}, angle=${contentBrief.angle}, h2=${contentBrief.h2_count.min}-${contentBrief.h2_count.max}`);
 
+    // ── ARTICLE TYPE DIVERSITY & SEMANTIC RING ──
+    let diversityBlock = '';
+    try {
+      // Query existing articles via CMS scanner or direct DB
+      const { data: existingPosts } = await supabase
+        .from('iktracker_content_cache')
+        .select('title, category, tags')
+        .eq('tracked_site_id', context.tracked_site_id)
+        .eq('content_type', 'post');
+      
+      // Fallback: also check blog_articles for internal sites
+      let allArticles = (existingPosts || []).map((p: any) => ({
+        title: p.title, category: p.category, tags: p.tags,
+      }));
+      if (context.domain === 'crawlers.fr') {
+        const { data: blogPosts } = await supabase
+          .from('blog_articles')
+          .select('title, slug')
+          .in('status', ['published', 'draft']);
+        if (blogPosts) {
+          allArticles = [...allArticles, ...blogPosts.map((b: any) => ({ title: b.title, category: '', tags: [] }))];
+        }
+      }
+
+      const distribution = computeArticleDistribution(allArticles);
+      
+      // Compute semantic ring coverage
+      const ringCounts = { ring1: 0, ring2: 0, ring3: 0 };
+      for (const article of allArticles) {
+        const tags = (article.tags || []).map((t: string) => t.toLowerCase());
+        if (tags.includes('ring_3') || tags.includes('semantic_ring:3')) ringCounts.ring3++;
+        else if (tags.includes('ring_2') || tags.includes('semantic_ring:2')) ringCounts.ring2++;
+        else ringCounts.ring1++; // Default: untagged articles count as ring 1
+      }
+      
+      const ringInfo = determineSemanticRing(ringCounts);
+      
+      // Find parent pages for linking (pages from the ring below)
+      const parentRing = Math.max(1, ringInfo.ring - 1) as SemanticRing;
+      const { data: parentNodes } = await supabase
+        .from('cocoon_sessions')
+        .select('nodes_snapshot')
+        .eq('tracked_site_id', context.tracked_site_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      const parentPages: string[] = [];
+      if (parentNodes?.nodes_snapshot && Array.isArray(parentNodes.nodes_snapshot)) {
+        const sortedNodes = parentNodes.nodes_snapshot
+          .filter((n: any) => n.url && n.pagerank_score > 0)
+          .sort((a: any, b: any) => (b.pagerank_score || 0) - (a.pagerank_score || 0));
+        for (const node of sortedNodes.slice(0, 10)) {
+          parentPages.push(`${node.url} (${node.title || 'sans titre'})`);
+        }
+      }
+      
+      diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages);
+      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}]`);
+    } catch (e) {
+      console.warn('[Parménion] Diversity computation failed:', e);
+    }
+
     // ── LOG GENERATION for performance correlation training ──
     try {
       const siteInfo = context.siteInfo || {};
