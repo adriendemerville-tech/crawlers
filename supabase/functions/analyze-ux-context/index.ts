@@ -306,16 +306,29 @@ async function captureScreenshotWithAnnotations(
   await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
   await new Promise(r => setTimeout(r, 2000));
   
-  const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
+  // Hide footer before screenshot to focus on content area
+  const clipHeight = await page.evaluate(() => {
+    const footer = document.querySelector('footer') 
+      || document.querySelector('[role="contentinfo"]')
+      || document.querySelector('.footer, #footer, .site-footer');
+    if (footer) {
+      const rect = footer.getBoundingClientRect();
+      const footerTop = rect.top + window.scrollY;
+      footer.style.display = 'none';
+      return Math.max(footerTop, 900);
+    }
+    return document.body.scrollHeight;
+  });
+  
   const screenshot = await page.screenshot({ 
-    fullPage: true, 
     type: 'jpeg', 
     quality: 75,
-    encoding: 'base64'
+    encoding: 'base64',
+    clip: { x: 0, y: 0, width: 1280, height: clipHeight }
   });
   
   return { 
-    data: { screenshot, height: bodyHeight },
+    data: { screenshot, height: clipHeight },
     type: 'application/json'
   };
 };`;
