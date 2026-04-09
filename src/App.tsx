@@ -168,6 +168,7 @@ const App = () => (
                           <Route path="/pro-agency" element={<ProAgency />} />
                           <Route path="/observatoire" element={<Observatoire />} />
                           <Route path="/content-architect" element={<ContentArchitectPage />} />
+                          <Route path="/ux-optimizer" element={<UxOptimizerLanding />} />
                           <Route path="/faq" element={<Faq />} />
                           <Route path="/methodologie" element={<Methodologie />} />
                           <Route path="/cgvu" element={<CGVU />} />
