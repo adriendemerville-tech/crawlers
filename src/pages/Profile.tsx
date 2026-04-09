@@ -31,6 +31,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
 import { WelcomeBackModal } from '@/components/WelcomeBackModal';
+import { GoogleServicesOnboardingModal } from '@/components/Console/GoogleServicesOnboardingModal';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 
 
@@ -142,6 +143,7 @@ function ProfileContent() {
   const t = translations[language];
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [showGoogleOnboarding, setShowGoogleOnboarding] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -163,6 +165,19 @@ function ProfileContent() {
         setSimulatedDataEnabled(true);
       });
   }, [user]);
+
+  // Show Google onboarding once for new Pro users
+  useEffect(() => {
+    if (!user || !isAgencyPro) return;
+    const key = `google_onboarding_shown_${user.id}`;
+    if (!localStorage.getItem(key)) {
+      const timer = setTimeout(() => {
+        setShowGoogleOnboarding(true);
+        localStorage.setItem(key, '1');
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [user, isAgencyPro]);
 
   const initialTab = searchParams.get('tab') || 'tracking';
   const isProUser = isAgencyPro || isAdmin;
@@ -396,7 +411,7 @@ function ProfileContent() {
 
                 {hasAdminAccess && (
                   <TabsContent value="admin">
-                    <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} onSimulatedDataChange={setSimulatedDataEnabled} />
+                    <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} onSimulatedDataChange={setSimulatedDataEnabled} onShowGoogleOnboarding={() => setShowGoogleOnboarding(true)} />
                   </TabsContent>
                 )}
               </Suspense>
@@ -414,7 +429,8 @@ function ProfileContent() {
             currentBalance={balance}
           />
         )}
-      </div>
+       </div>
+      <GoogleServicesOnboardingModal open={showGoogleOnboarding} onOpenChange={setShowGoogleOnboarding} />
     </>
   );
 }

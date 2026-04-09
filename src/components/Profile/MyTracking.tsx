@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot, Play, Pause } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot, Play, Pause, Activity } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -517,6 +517,40 @@ export function MyTracking() {
                                 </Button>
                               </PopoverTrigger>
                             </Popover>
+                          );
+                        })()}
+
+                        {/* GA4 toggle button */}
+                        {(() => {
+                          const ga4Connected = h.ga4EnabledLocal && h.gscConnected;
+                          return (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className={cn(
+                                "h-8 w-8 relative group",
+                                ga4Connected
+                                  ? "border-emerald-500/50 text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10"
+                                  : "text-muted-foreground"
+                              )}
+                              onClick={() => {
+                                if (ga4Connected) {
+                                  h.handleGa4ToggleLocal(false);
+                                } else {
+                                  h.handleGa4ToggleLocal(true);
+                                }
+                              }}
+                              disabled={h.ga4TogglingLocal}
+                            >
+                              {h.ga4TogglingLocal ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Activity className="h-3.5 w-3.5" />
+                              )}
+                              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                GA4
+                              </span>
+                            </Button>
                           );
                         })()}
 

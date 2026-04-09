@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award, Plug } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -140,9 +140,10 @@ interface AdminDashboardProps {
   canSeeIntelligence?: boolean;
   isAuditor?: boolean;
   onSimulatedDataChange?: (enabled: boolean) => void;
+  onShowGoogleOnboarding?: () => void;
 }
 
-export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false, onSimulatedDataChange }: AdminDashboardProps) {
+export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false, onSimulatedDataChange, onShowGoogleOnboarding }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
@@ -420,6 +421,15 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                     <PenLine className="h-3 w-3 shrink-0" />
                     <span className="truncate">Content Architect (crawlers.fr)</span>
                   </button>
+                  {onShowGoogleOnboarding && (
+                    <button
+                      onClick={onShowGoogleOnboarding}
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                    >
+                      <Plug className="h-3 w-3 shrink-0" />
+                      <span className="truncate">Modal Google Services</span>
+                    </button>
+                  )}
                 </div>
               )}
             </nav>
