@@ -46,6 +46,14 @@ interface AnalysisResult {
   global_score: number;
   axes: Record<string, AxisResult>;
   suggestions: Suggestion[];
+  screenshot_url?: string | null;
+  screenshot_height?: number | null;
+  annotations?: Array<{
+    text: string;
+    rect: { x: number; y: number; width: number; height: number; tag?: string } | null;
+    axis: string;
+    priority: string;
+  }>;
 }
 
 interface SavedAnalysis {
