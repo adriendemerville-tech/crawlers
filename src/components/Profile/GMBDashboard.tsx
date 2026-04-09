@@ -976,6 +976,15 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
         </div>
       )}
 
+      {showSimulated && !isGated && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          {language === 'fr' ? 'Données simulées — disponible pour vous sous quelques jours.'
+            : language === 'es' ? 'Datos simulados — disponible para usted en unos días.'
+            : 'Simulated data — available for you within a few days.'}
+        </div>
+      )}
+
       <div className="flex gap-4">
         {/* Location sidebar + GBP connect */}
         <div className="flex flex-col gap-1 shrink-0 w-44">
