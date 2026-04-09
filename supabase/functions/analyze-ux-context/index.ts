@@ -335,7 +335,7 @@ async function captureScreenshotWithAnnotations(
   pageUrl: string,
   trackedSiteId: string,
   serviceClient: any,
-): Promise<{ success: boolean; url?: string; height?: number }> {
+): Promise<{ success: boolean; url?: string; height?: number; imageFormats?: any[] }> {
   const browserlessKey = getBrowserlessKey();
   if (!browserlessKey) {
     console.log('[analyze-ux-context] No Browserless key, skipping screenshot');
