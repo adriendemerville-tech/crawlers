@@ -476,7 +476,10 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
       toast.success(`${mappedRows.length} critères importés depuis ${pendingFileName} (import précédent remplacé)`);
       setShowMappingDialog(false);
       setAuditResults(null);
-      fetchData();
+      setImportReady(false);
+      fetchData().then(() => {
+        setTimeout(() => setImportReady(true), 1500);
+      });
     } catch (err: any) {
       toast.error(`Erreur d'import : ${err.message}`);
     }
