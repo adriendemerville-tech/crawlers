@@ -14,6 +14,196 @@
 
 export type PageType = 'landing' | 'product' | 'article' | 'homepage' | 'faq' | 'category';
 
+// ═══ ARTICLE TYPE TAXONOMY ═══
+// 6 types d'articles de blog avec quotas de distribution
+
+export type ArticleType = 
+  | 'presentation'   // Présentation produit/service/outil
+  | 'actualite'      // News, tendances, nouveautés sectorielles
+  | 'comparatif'     // Comparaisons, vs, benchmarks
+  | 'tutoriel'       // Tuto pas-à-pas, how-to
+  | 'opinion'        // Avis, décryptage, prise de position
+  | 'guide';         // Guide complet/référence
+
+/** Max % par type d'article. Les guides ne doivent pas dépasser 5%. */
+export const ARTICLE_TYPE_QUOTAS: Record<ArticleType, { maxPct: number; description: string }> = {
+  presentation: { maxPct: 20, description: 'Présentation produit, outil, service' },
+  actualite:    { maxPct: 30, description: 'Actualités, tendances, nouveautés du secteur' },
+  comparatif:   { maxPct: 20, description: 'Comparatifs, benchmarks, vs' },
+  tutoriel:     { maxPct: 25, description: 'Tutoriels pas-à-pas, how-to pratiques' },
+  opinion:      { maxPct: 15, description: 'Avis d\'expert, décryptages, prises de position' },
+  guide:        { maxPct: 5,  description: 'Guides complets de référence (RARE — max 5%)' },
+};
+
+// ═══ SEMANTIC RING SYSTEM (Concentric Expansion) ═══
+// Ring 1 = core topic, Ring 2 = second circle, Ring 3+ = broader semantic space
+
+export type SemanticRing = 1 | 2 | 3;
+
+export interface SemanticRingConfig {
+  ring: SemanticRing;
+  label: string;
+  description: string;
+  parentLinkingRule: string;
+}
+
+export const SEMANTIC_RINGS: Record<SemanticRing, SemanticRingConfig> = {
+  1: {
+    ring: 1,
+    label: 'Cœur de cible',
+    description: 'Thématiques directement liées au produit/service principal du site',
+    parentLinkingRule: 'Lien vers la homepage ou la landing principale du service',
+  },
+  2: {
+    ring: 2,
+    label: 'Second cercle',
+    description: 'Thématiques adjacentes qui enrichissent les silos du cœur de cible',
+    parentLinkingRule: 'Chaque article DOIT contenir un lien vers un article mère du Ring 1 (même silo)',
+  },
+  3: {
+    ring: 3,
+    label: 'Espace sémantique élargi',
+    description: 'Thématiques connexes au secteur, autorité topicale large',
+    parentLinkingRule: 'Chaque article DOIT contenir un lien vers un article mère du Ring 2, qui lui-même lie vers le Ring 1',
+  },
+};
+
+/** Detect article type from keyword/title signals */
+export function detectArticleType(keyword: string, title: string, description: string): ArticleType {
+  const combined = `${keyword} ${title} ${description}`.toLowerCase();
+  
+  if (combined.match(/comparatif|vs|versus|meilleur|top\s?\d|alternative|concurrent/)) return 'comparatif';
+  if (combined.match(/comment|tuto|tutoriel|tutorial|étape|pas.à.pas|how.to|configurer|installer|mettre en place/)) return 'tutoriel';
+  if (combined.match(/avis|opinion|décryptage|analyse|notre point|pourquoi.*(bien|mal)|faut-il/)) return 'opinion';
+  if (combined.match(/actualit|tendance|nouveaut|mise.à.jour|vient.de|annonce|lancement|\d{4}/)) return 'actualite';
+  if (combined.match(/présentation|découvrir|qu.?est.?ce|introduction|fonctionnalit|overview/)) return 'presentation';
+  if (combined.match(/guide.complet|guide.ultime|tout.savoir|a.à.z|de.a.à.z/)) return 'guide';
+  
+  // Default: rotate between high-quota types
+  return 'actualite';
+}
+
+/** Compute current article type distribution from existing articles */
+export interface ArticleDistribution {
+  total: number;
+  counts: Record<ArticleType, number>;
+  percentages: Record<ArticleType, number>;
+  recommended: ArticleType;
+  overRepresented: ArticleType[];
+}
+
+export function computeArticleDistribution(
+  existingArticles: { category?: string; tags?: string[]; title?: string }[]
+): ArticleDistribution {
+  const counts: Record<ArticleType, number> = {
+    presentation: 0, actualite: 0, comparatif: 0,
+    tutoriel: 0, opinion: 0, guide: 0,
+  };
+  
+  for (const article of existingArticles) {
+    const cat = (article.category || '').toLowerCase();
+    const title = (article.title || '').toLowerCase();
+    const tags = (article.tags || []).map(t => t.toLowerCase()).join(' ');
+    const combined = `${cat} ${title} ${tags}`;
+    
+    const type = detectArticleType(combined, title, '');
+    counts[type]++;
+  }
+  
+  const total = existingArticles.length || 1;
+  const percentages = {} as Record<ArticleType, number>;
+  const overRepresented: ArticleType[] = [];
+  
+  for (const [type, count] of Object.entries(counts)) {
+    const pct = (count / total) * 100;
+    percentages[type as ArticleType] = Math.round(pct);
+    if (pct > ARTICLE_TYPE_QUOTAS[type as ArticleType].maxPct) {
+      overRepresented.push(type as ArticleType);
+    }
+  }
+  
+  // Recommend the most underrepresented type (excluding guide if already at 5%+)
+  let recommended: ArticleType = 'actualite';
+  let maxDeficit = -Infinity;
+  for (const [type, quota] of Object.entries(ARTICLE_TYPE_QUOTAS)) {
+    const deficit = quota.maxPct - percentages[type as ArticleType];
+    if (deficit > maxDeficit) {
+      maxDeficit = deficit;
+      recommended = type as ArticleType;
+    }
+  }
+  
+  return { total, counts, percentages, recommended, overRepresented };
+}
+
+/** Determine which semantic ring to target based on existing coverage */
+export function determineSemanticRing(
+  ringCounts: { ring1: number; ring2: number; ring3: number },
+  ring1Threshold: number = 8,
+  ring2Threshold: number = 15,
+): { ring: SemanticRing; reason: string } {
+  if (ringCounts.ring1 < ring1Threshold) {
+    return { ring: 1, reason: `Cœur de cible incomplet (${ringCounts.ring1}/${ring1Threshold} articles). Priorité: couvrir les thématiques principales.` };
+  }
+  if (ringCounts.ring2 < ring2Threshold) {
+    return { ring: 2, reason: `Second cercle en construction (${ringCounts.ring2}/${ring2Threshold} articles). Enrichir les silos avec des thématiques adjacentes.` };
+  }
+  return { ring: 3, reason: `Expansion sémantique large (Ring 1: ${ringCounts.ring1}, Ring 2: ${ringCounts.ring2}). Élargir l'autorité topicale.` };
+}
+
+/** Build a prompt block describing article type + ring constraints */
+export function buildDiversityPromptBlock(
+  distribution: ArticleDistribution,
+  ringInfo: { ring: SemanticRing; reason: string },
+  parentPages: string[],
+): string {
+  const ringConfig = SEMANTIC_RINGS[ringInfo.ring];
+  const lines: string[] = [];
+  
+  lines.push(`═══ DIVERSITÉ ÉDITORIALE & EXPANSION SÉMANTIQUE ═══`);
+  lines.push('');
+  
+  // Article type distribution
+  lines.push(`── TYPES D'ARTICLES (QUOTAS OBLIGATOIRES) ──`);
+  lines.push(`Distribution actuelle (${distribution.total} articles existants):`);
+  for (const [type, quota] of Object.entries(ARTICLE_TYPE_QUOTAS)) {
+    const pct = distribution.percentages[type as ArticleType] || 0;
+    const status = pct > quota.maxPct ? '⛔ SURREPRÉSENTÉ' : pct === 0 ? '🟢 À CRÉER' : '✅';
+    lines.push(`  ${status} ${type}: ${pct}% (quota max: ${quota.maxPct}%) — ${quota.description}`);
+  }
+  lines.push('');
+  if (distribution.overRepresented.length > 0) {
+    lines.push(`⚠️ TYPES INTERDITS pour ce cycle (quota dépassé): ${distribution.overRepresented.join(', ')}`);
+    lines.push(`→ NE PAS créer de ${distribution.overRepresented.join(' ni de ')}.`);
+  }
+  lines.push(`✅ TYPE RECOMMANDÉ: ${distribution.recommended} (${ARTICLE_TYPE_QUOTAS[distribution.recommended].description})`);
+  lines.push('');
+  
+  // Semantic ring
+  lines.push(`── ANNEAU SÉMANTIQUE: RING ${ringInfo.ring} — ${ringConfig.label.toUpperCase()} ──`);
+  lines.push(`${ringInfo.reason}`);
+  lines.push(`Description: ${ringConfig.description}`);
+  lines.push('');
+  lines.push(`⚠️ RÈGLE DE MAILLAGE MÈRE-FILLE (OBLIGATOIRE):`);
+  lines.push(`${ringConfig.parentLinkingRule}`);
+  if (parentPages.length > 0) {
+    lines.push(`Pages mères disponibles pour le maillage:`);
+    for (const p of parentPages.slice(0, 8)) {
+      lines.push(`  → ${p}`);
+    }
+  }
+  lines.push('');
+  lines.push(`Le contenu généré DOIT:`);
+  lines.push(`1. Être de type "${distribution.recommended}" (sauf si l'opportunité impose un autre type non-surreprésenté)`);
+  lines.push(`2. Appartenir au Ring ${ringInfo.ring} (${ringConfig.label})`);
+  lines.push(`3. Contenir au moins 1 lien vers une page mère du ring inférieur`);
+  lines.push(`4. Inclure "article_type" et "semantic_ring" dans les tags de l'article`);
+  lines.push('');
+  lines.push(`═══ FIN DIVERSITÉ ═══`);
+  
+  return lines.join('\n');
+}
+
 export type ToneProfile = 
   | 'expert-technique'      // jargon_distance 1-3
   | 'expert-accessible'     // jargon_distance 4-5
