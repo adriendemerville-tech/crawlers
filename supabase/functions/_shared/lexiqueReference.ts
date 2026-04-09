@@ -58,6 +58,13 @@ Quand l'utilisateur mentionne un terme technique, utilise ces définitions. Tu p
 - **Stratégie 360°** : 4 diagnostics parallèles + plan priorisé + 3 axes.
 - **Autopilote** : Mode automatisé de Parménion avec seuils de risque configurables.
 - **Auto-Maillage IA** : IA trouvant les meilleurs emplacements d'ancres internes.
+- **Conversion Optimizer** : Audit UX/CRO contextuel sur 7 axes : ton, CTAs, lisibilité, mobile, mots-clés.
+- **Analyse de Logs** : Analyse des logs serveur pour comprendre le comportement des bots sur un site.
+- **Budget Crawl** : Nombre de pages que Google explore sur un site par session. Optimisable via l'analyse de logs.
+- **Récurrence de Crawl** : Fréquence à laquelle un bot revient explorer une page. Indicateur de priorité perçue.
+- **Bot IA Crawler** : Robot d'indexation IA (GPTBot, ClaudeBot, PerplexityBot) explorant les sites pour alimenter les LLMs.
+- **Hit de Crawl** : Requête HTTP d'un bot sur une page. Le ratio hits/pages révèle l'efficacité du budget crawl.
+- **Gaspillage de Crawl** : Pages crawlées inutilement (404, redirections, paramètres) consommant le budget crawl.
 - **JSON-LD** : Format de données structurées recommandé par Google.
 - **Schema.org** : Vocabulaire standardisé de données structurées.
 - **Robots.txt** : Fichier indiquant aux robots les pages à crawler ou ignorer.
