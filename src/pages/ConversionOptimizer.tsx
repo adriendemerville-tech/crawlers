@@ -216,6 +216,7 @@ export default function ConversionOptimizer() {
       if (!data?.success) throw new Error(data?.error || 'Analysis failed');
 
       setResult(data as AnalysisResult);
+      setFreshAnalysis(true);
       toast({ title: 'Analyse terminée', description: `Score global : ${data.global_score}/100` });
       await fetchHistory(selectedSiteId);
     } catch (e: any) {
