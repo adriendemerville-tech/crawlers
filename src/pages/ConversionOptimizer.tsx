@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search } from 'lucide-react';
+import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
