@@ -718,10 +718,17 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
     const gbpOk = params.get('gbp_connected');
     if (gbpError) {
       toast.error(language === 'fr' ? `Erreur Google Business : ${gbpError}` : `GBP error: ${gbpError}`);
-      window.history.replaceState({}, '', window.location.pathname);
+      // Keep tab=gmb, remove error params
+      params.delete('gbp_error');
+      params.set('tab', 'gmb');
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
     } else if (gbpOk) {
-      toast.success(language === 'fr' ? 'Google Business connecté avec succès !' : 'Google Business connected!');
-      window.history.replaceState({}, '', window.location.pathname);
+      toast.success(language === 'fr' ? 'Connexion réussie ! Votre compte Google Business est connecté.' : 'Connection successful! Your Google Business account is connected.');
+      // Keep tab=gmb, remove callback params
+      params.delete('gbp_connected');
+      params.delete('google_email');
+      params.set('tab', 'gmb');
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
     }
   }, [language]);
 
@@ -991,7 +998,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
                 variant="ghost"
                 size="sm"
                 className="mt-1 gap-1 text-xs text-muted-foreground hover:text-foreground justify-start"
-                disabled={isGated || gbpLoading}
+                disabled={gbpLoading}
                 onClick={gbpConnected ? handleRefreshLocations : handleGbpConnect}
               >
                 {gbpLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
