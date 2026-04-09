@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 
 const PAGES = [
   { route: "/", title: "Accueil", desc: "Page d'accueil avec audit SEO & GEO instantané, Score GEO, visibilité LLM et PageSpeed." },
