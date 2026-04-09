@@ -75,6 +75,16 @@ interface AnalysisResult {
     suggestionIndex?: number;
   }>;
   image_format_report?: ImageFormatReport;
+  image_analysis?: ImageAnalysis[];
+}
+
+interface ImageAnalysis {
+  src: string;
+  descriptiveness: number;
+  relevance: number;
+  persuasiveness: number;
+  verdict: string;
+  recommendation?: string;
 }
 
 interface SavedAnalysis {
