@@ -15,6 +15,9 @@ import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPag
 const CocoonContentArchitectModal = lazy(() =>
   import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
 );
+const CROReportPreviewModal = lazy(() =>
+  import('@/components/ConversionOptimizer/CROReportPreviewModal').then(m => ({ default: m.CROReportPreviewModal }))
+);
 
 interface TrackedSite {
   id: string;
