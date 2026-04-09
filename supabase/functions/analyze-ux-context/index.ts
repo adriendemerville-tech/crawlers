@@ -790,4 +790,3 @@ Pour chaque image significative listée ci-dessus, évalue :
 Donne un verdict court et une recommandation concrète si nécessaire. Utilise le champ image_analysis.
 `;
 }
-}
