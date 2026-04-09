@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ImportStepper from '@/components/Matrice/ImportStepper';
+import { cn } from '@/lib/utils';
 
 // ── Types ──────────────────────────────────────────────────────
 
