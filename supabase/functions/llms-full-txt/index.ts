@@ -24,6 +24,14 @@ const PAGES = [
   { route: "/sea-seo-bridge", title: "SEA → SEO Bridge", desc: "Identifiez les mots-clés Google Ads capturables en SEO et calculez vos économies." },
   { route: "/data-flow-diagram", title: "Architecture données", desc: "Pare-feu de données : comment Crawlers.fr protège vos données Google (GSC, GA4, GMB)." },
   { route: "/observatoire", title: "Observatoire SEO & GEO", desc: "Tendances SEO et GEO en temps réel : SERP, adoption IA, métriques sectorielles." },
+  { route: "/conversion-optimizer", title: "Conversion Optimizer", desc: "Audit UX/CRO contextuel par IA sur 7 axes : ton, CTA, alignement, lisibilité, conversion, mobile, mots-clés. Capture plein écran annotée." },
+  { route: "/analyse-logs", title: "Analyse de Logs Serveur", desc: "Analysez vos logs serveur : budget crawl, 40+ bots détectés (Googlebot, GPTBot, ClaudeBot), pages orphelines, anomalies d'indexation." },
+  { route: "/eeat", title: "Audit E-E-A-T", desc: "Évaluation complète des signaux E-E-A-T evidence-based avec scoring pondéré sur 100." },
+  { route: "/analyse-bots-ia", title: "Analyse Bots IA", desc: "Vérifiez l'accès de GPTBot, ClaudeBot, Google-Extended à votre site et optimisez votre robots.txt." },
+  { route: "/score-geo", title: "Score GEO", desc: "Note 0-100 mesurant l'optimisation de votre site pour les moteurs IA génératifs." },
+  { route: "/visibilite-llm", title: "Visibilité LLM", desc: "Mesurez la présence de votre marque dans ChatGPT, Gemini, Perplexity, Claude et Grok." },
+  { route: "/pagespeed", title: "PageSpeed", desc: "Analyse Core Web Vitals (LCP, FID, CLS, TTFB) via Google PageSpeed Insights." },
+  { route: "/comparatif-claude-code-vs-crawlers", title: "Claude Code vs Crawlers", desc: "Comparaison Claude Code vs Crawlers.fr pour l'audit et l'optimisation SEO/GEO." },
 ];
 
 const TOOLS = [
@@ -43,6 +51,10 @@ const TOOLS = [
   { name: "Rapport E-E-A-T", access: "Pro Agency", desc: "Audit E-E-A-T evidence-based avec scoring sur 100." },
   { name: "Score de Priorité (SPO)", access: "Pro Agency", desc: "Score 0-100 identifiant les pages à optimiser en priorité (8 signaux : CTR, conversion, position, maillage, indexation, contenu, backlinks, cannibalisation)." },
   { name: "Vérification Indexation", access: "Pro Agency", desc: "Vérifie le statut d'indexation Google de vos pages via l'API GSC." },
+  { name: "Conversion Optimizer", access: "Pro Agency", desc: "Audit UX/CRO contextuel IA sur 7 axes (ton, CTA, alignement, lisibilité, conversion, mobile, mots-clés) avec capture plein écran annotée et rapport PDF/HTML." },
+  { name: "Analyse de Logs Serveur", access: "Pro Agency", desc: "Ingestion et analyse des logs serveur : 40+ bots détectés (Googlebot, GPTBot, ClaudeBot), budget crawl, pages orphelines, monitoring continu via Cloudflare." },
+  { name: "Diagnostic de Chute", access: "Pro Agency", desc: "Détection réactive et prédictive des baisses de trafic avec régression linéaire sur 8 semaines. Cross-analyse GSC, audits techniques, E-E-A-T." },
+  { name: "Stratégie 360°", access: "Pro Agency", desc: "Diagnostic multi-axes automatisé (contenu, sémantique, structure, autorité) avec plan d'action intelligent et boucle rétro-active." },
 ];
 
 async function fetchArticleSummaries(supabase: any): Promise<string> {
