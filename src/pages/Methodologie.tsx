@@ -226,7 +226,7 @@ export default function Methodologie() {
               transition={{ delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-3 justify-center mb-16"
             >
-              <Link to="/audit-expert" className={`inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-colors ${A.ctaBg}`}>
+              <Link to="/audit-expert" className="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-colors bg-[#5b21b6] hover:bg-[#4c1d95] text-white">
                 {t3(language, 'Tester sur mon site — Gratuit', 'Test on My Site — Free', 'Probar en mi sitio — Gratis')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
