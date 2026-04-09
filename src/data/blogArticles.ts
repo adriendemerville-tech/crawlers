@@ -787,61 +787,6 @@ export const blogArticles: BlogArticle[] = [
       { title: 'Crawlers.fr — Indice d\'Alignement Stratégique', url: 'https://crawlers.fr/indice-alignement-strategique' },
     ],
   },
-  // --- ARTICLE CLAUDE VS CRAWLERS ---
-  {
-    slug: 'claude-cowork-code-vs-crawlers-seo-geo',
-    type: 'pillar',
-    title: {
-      fr: 'Claude Cowork + Code + MCP vs Crawlers.fr : Pourquoi 29€/mois remplacent votre stack IA',
-      en: 'Claude Cowork + Code + MCP vs Crawlers.fr: Why €29/month Replaces Your AI Stack',
-      es: 'Claude Cowork + Code + MCP vs Crawlers.fr: Por qué 29€/mes reemplaza tu stack IA',
-    },
-    description: {
-      fr: 'Comparaison sans concession entre le stack Claude (Cowork, Code, MCP) et Crawlers.fr pour les freelances SEO/GEO. Un cerveau sans membres vs une armée de légions.',
-      en: 'No-holds-barred comparison between the Claude stack (Cowork, Code, MCP) and Crawlers.fr for SEO/GEO freelancers. A brain without limbs vs an army of legions.',
-      es: 'Comparación sin concesiones entre el stack Claude (Cowork, Code, MCP) y Crawlers.fr para freelances SEO/GEO. Un cerebro sin miembros vs un ejército de legiones.',
-    },
-    heroImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80',
-    heroAlt: {
-      fr: 'Circuit imprimé représentant la comparaison entre intelligence artificielle généraliste et outil SEO spécialisé',
-      en: 'Circuit board representing the comparison between generalist AI and specialized SEO tool',
-      es: 'Circuito impreso representando la comparación entre IA generalista y herramienta SEO especializada',
-    },
-    author: 'Adrien de Volontat',
-    date: '2026-04-09',
-    summaryPoints: {
-      fr: [
-        'Claude Cowork plafonne vos requêtes sans prévenir — Crawlers offre des quotas transparents.',
-        'Claude ne crawle pas les sites : il déduit, il suppose, il ne vérifie jamais les données brutes.',
-        'Crawlers se connecte à GSC, GA4, GTM et Ads — Claude n\'a aucune intégration Google native.',
-        'Pour 29€/mois, Crawlers remplace des heures de prompting, de copier-coller et de vérification d\'hallucinations.',
-        'À l\'ère du contenu IA, la précision de la méthode fait la différence entre volume et valeur.',
-      ],
-      en: [
-        'Claude Cowork silently throttles your requests — Crawlers offers transparent quotas.',
-        'Claude doesn\'t crawl sites: it deduces, assumes, never verifies raw data.',
-        'Crawlers connects to GSC, GA4, GTM and Ads — Claude has no native Google integration.',
-        'For €29/month, Crawlers replaces hours of prompting, copy-pasting and hallucination checking.',
-        'In the AI content era, method precision separates volume from value.',
-      ],
-      es: [
-        'Claude Cowork limita tus peticiones sin avisar — Crawlers ofrece cuotas transparentes.',
-        'Claude no rastrea sitios: deduce, supone, nunca verifica los datos brutos.',
-        'Crawlers se conecta a GSC, GA4, GTM y Ads — Claude no tiene integración nativa con Google.',
-        'Por 29€/mes, Crawlers reemplaza horas de prompting, copy-paste y verificación de alucinaciones.',
-        'En la era del contenido IA, la precisión del método separa el volumen del valor.',
-      ],
-    },
-    sources: [
-      { title: 'Anthropic — Claude Pricing', url: 'https://www.anthropic.com/pricing' },
-      { title: 'Anthropic — Claude Code Documentation', url: 'https://docs.anthropic.com/en/docs/claude-code' },
-      { title: 'Model Context Protocol (MCP)', url: 'https://modelcontextprotocol.io/' },
-      { title: 'Google Search Central — Crawling & Indexing', url: 'https://developers.google.com/search/docs/crawling-indexing' },
-      { title: 'Schema.org — Structured Data Guide', url: 'https://schema.org/docs/gs.html' },
-      { title: 'Google — Core Web Vitals', url: 'https://web.dev/articles/vitals' },
-      { title: 'Crawlers.fr — Méthodologie', url: 'https://crawlers.fr/methodologie' },
-    ],
-  },
 ];
 
 // Fonction helper pour récupérer un article par son slug
