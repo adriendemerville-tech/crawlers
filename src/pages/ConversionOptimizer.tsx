@@ -666,20 +666,20 @@ export default function ConversionOptimizer() {
                 {history.map(h => (
                   <div
                     key={h.id}
-                    className="group relative w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors text-left border border-border/30 cursor-pointer"
+                    className="group relative w-full flex items-center py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors text-left border border-border/30 cursor-pointer"
                     onClick={() => void loadSavedAnalysis(h)}
                   >
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 mr-2">
                       <p className="text-sm truncate">{h.page_url}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(h.created_at).toLocaleDateString('fr-FR')} — {h.page_intent}
                       </p>
                     </div>
-                    <span className={`text-lg font-bold ml-3 ${scoreColor(h.global_score)}`}>
+                    <span className={`text-lg font-bold shrink-0 ${scoreColor(h.global_score)}`}>
                       {h.global_score}
                     </span>
                     <button
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                      className="shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive self-center"
                       title="Supprimer"
                       onClick={async (e) => {
                         e.stopPropagation();
