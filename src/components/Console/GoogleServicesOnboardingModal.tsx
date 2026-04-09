@@ -81,23 +81,17 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
     if (!open || !user) return;
     const check = async () => {
       const connected = new Set<string>();
-
-      // Check GSC/GA4 from profiles + google_connections
       const gscOk = !!profile?.gsc_access_token;
-      let ga4FromProfile = false;
 
-      if (!ga4Ok || !gscOk) {
-        const { data: conns } = await supabase
-          .from('google_connections')
-          .select('id, ga4_property_id, gsc_site_urls')
-          .eq('user_id', user.id);
-        if (conns?.length) {
-          if (conns.some(c => !!c.ga4_property_id)) connected.add('ga4');
-          if (conns.some(c => c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0)) connected.add('gsc');
-        }
+      const { data: conns } = await supabase
+        .from('google_connections')
+        .select('id, ga4_property_id, gsc_site_urls')
+        .eq('user_id', user.id);
+      if (conns?.length) {
+        if (conns.some(c => !!c.ga4_property_id)) connected.add('ga4');
+        if (conns.some(c => c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0)) connected.add('gsc');
       }
       if (gscOk) connected.add('gsc');
-      if (ga4Ok) connected.add('ga4');
 
       // Check Ads
       const { data: adsData } = await (supabase as any)
