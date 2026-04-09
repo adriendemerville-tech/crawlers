@@ -90,6 +90,7 @@ const AuditSemantique = lazy(() => import("./pages/AuditSemantique"));
 const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
 const ApiIntegrations = lazy(() => import("./pages/ApiIntegrations"));
 const UxOptimizer = lazy(() => import("./pages/UxOptimizer"));
+const UxOptimizerLanding = lazy(() => import("./pages/UxOptimizerLanding"));
 
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
