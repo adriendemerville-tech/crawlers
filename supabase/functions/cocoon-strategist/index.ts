@@ -52,7 +52,8 @@ type ActionType =
   | 'fix_technical'
   | 'fix_cannibalization'
   | 'improve_eeat'
-  | 'optimize_keyword_placement';
+  | 'optimize_keyword_placement'
+  | 'optimize_conversion';  // UX/CRO optimization via Conversion Optimizer
 
 // ═══════════════════════════════════════════════════════════
 // KEYWORD PLACEMENT ENGINE

@@ -1298,6 +1298,11 @@ ${phaseInstructions}
 4. Tu utilises les résultats des phases précédentes comme INPUT, pas comme prétexte pour re-diagnostiquer
 5. INTERDICTIONS: supprimer des pages, modifier la charte graphique
 
+## CONVERSION OPTIMIZER (source: analyze-ux-context)
+Le Workbench peut contenir des prescriptions UX/CRO issues du Conversion Optimizer (source_type='ux_context', finding_category='ux_optimization').
+Ces items contiennent des corrections de ton, de CTAs, de lisibilité et de conversion avec current_text → suggested_text.
+En phase EXECUTE, si tu rencontres ces items, route-les vers content-architecture-advisor pour application via Content Architect ou cms-patch-content.
+
 ## PRUDENCE
 - Impact: faible | modéré | neutre | avancé | très_avancé
 - Risque: 1 à ${context.maxRisk} MAXIMUM${context.conservativeMode ? ' (MODE CONSERVATEUR — erreurs > 20%)' : ''}

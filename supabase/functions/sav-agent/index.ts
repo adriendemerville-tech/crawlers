@@ -66,6 +66,7 @@ En dessous : graphique "Évolution" avec courbes Score SEO, Score GEO, Taux de c
 - /site-crawl → crawl multi-pages (jusqu'à 5000 pages, Pro Agency)
 - /cocoon → cocon sémantique 3D (Three.js, TF-IDF, chat IA intégré)
 - /architecte-generatif → Code Architect (métadonnées, JSON-LD, données structurées)
+- /app/conversion-optimizer → Conversion Optimizer (audit UX/CRO contextuel sur 7 axes : ton, CTAs, alignement, lisibilité, conversion, mobile, mots-clés)
 
 ## Code Architect (modal, ouvert via "Optimiser" depuis Mes sites ou post-audit)
 Onglets internes : Basique | Super | Stratégie | Contenu (admin) | Scribe β (admin) | Multi (admin)
@@ -161,6 +162,7 @@ Tu as accès aux données des sites trackés de l'utilisateur. Utilise-les pour 
 - Si l'utilisateur a déjà un cocon, suggère d'utiliser le mode Stratégie 360° (bouton boussole) pour obtenir un diagnostic complet avec plan d'action priorisé et axes de développement
 - Si l'utilisateur a un établissement local, suggère la connexion Google My Business pour piloter ses avis et ses performances locales
 - Si GMB est connecté mais peu utilisé, rappelle les fonctionnalités disponibles (avis, posts, performances)
+- **Conversion Optimizer** : Si l'utilisateur parle de taux de conversion, de CTAs, de ton inadapté, de pages qui ne convertissent pas, ou de problèmes UX/CRO, propose un audit Conversion Optimizer (/app/conversion-optimizer). Tu peux aussi proposer d'envoyer les optimisations dans Content Architect pour ouvrir sa modal pré-remplie. Le workflow type est : "Je peux lancer un audit Conversion Optimizer sur cette page, puis envoyer les corrections dans Content Architect pour les appliquer directement."
 
 # PÉRIMÈTRE
 Tu peux répondre sur :
@@ -173,6 +175,7 @@ Tu peux répondre sur :
 - Le fonctionnement du diagnostic et de la stratégie Cocoon (sans détails techniques)
 - Google My Business : connexion, gestion des fiches, avis, posts, performances locales
 - **Content Architect** (hors /cocoon uniquement) : tu peux guider l'utilisateur dans l'interface (toolbar, panneaux, preview), expliquer le workflow (prompt → structure → génération → preview → publication CMS), et prendre la main en suggérant des instructions à injecter ou en lançant une génération. Tu connais les 7 panneaux (Prompt, Structure, Images, Données structurées, Brouillon, Bibliothèque, Options), le bouton "Injecter", et les boutons "Enregistrer" et "Publier vers le CMS" en haut à droite de la preview.
+- **Conversion Optimizer** : audit UX/CRO contextuel par IA sur 7 axes (ton, pression CTA, alignement, lisibilité, conversion, mobile, mots-clés). Accessible via /app/conversion-optimizer. Nécessite un site tracké avec un crawl complété. Les suggestions critiques/hautes alimentent le Workbench Architect. Tu peux proposer de lancer un audit, puis d'envoyer les optimisations vers Content Architect pour application directe.
 
 Tu ne peux PAS :
 - Modifier un abonnement ou rembourser (escalade)
@@ -1416,6 +1419,7 @@ ${alertBlock}\n`;
                   'cocoon-strategist': 'Stratège Cocoon',
                   'audit-strategique-ia': 'Audit Stratégique',
                   'audit_recommendations_registry': 'Audit Technique',
+                  'analyze-ux-context': 'Conversion Optimizer',
                   'sav-agent': 'Félix',
                 };
                 contextSnippet += `\n### 🏗️ Workbench ${s.display_name || s.domain} (${wbItems.length} findings actifs)\n`;
