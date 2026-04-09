@@ -24,10 +24,17 @@ const FIELD_ALIASES: Record<string, string[]> = {
   axe: [
     'axe', 'axis', 'catégorie', 'categorie', 'category', 'cat',
     'domaine', 'domain', 'section', 'groupe', 'group', 'type',
-    'pilier', 'pillar', 'thème', 'theme', 'topic', 'famille', 'family',
+    'pilier', 'pillar', 'famille', 'family',
     'rubrique', 'thématique', 'thematique', 'sous-thème', 'sous-theme',
     'volet', 'classe', 'class', 'segment', 'dimension', 'area',
     'branche', 'branch', 'module', 'aspect', 'champ', 'field',
+  ],
+  theme: [
+    'thème', 'theme', 'topic', 'sujet benchmark', 'thème benchmark',
+  ],
+  engine: [
+    'engine', 'moteur ia', 'moteur', 'llm engine', 'ia engine',
+    'chatgpt', 'gemini', 'perplexity', 'copilot',
   ],
   seuil_bon: [
     'seuil_bon', 'seuil bon', 'threshold good', 'bon', 'good',
@@ -46,7 +53,7 @@ const FIELD_ALIASES: Record<string, string[]> = {
   ],
   llm_name: [
     'llm_name', 'llm', 'model', 'modèle', 'modele', 'ai model',
-    'moteur', 'engine', 'ia', 'ai',
+    'ia', 'ai',
   ],
 };
 
@@ -54,7 +61,6 @@ const FIELD_ALIASES: Record<string, string[]> = {
 const RESULT_COLUMN_PATTERNS = [
   /score/i, /mentionne/i, /cit[eé]/i, /recommand/i, /rang/i,
   /url_/i, /type_de_source/i, /prioritaire/i, /^id$/i,
-  /chatgpt/i, /gemini/i, /perplexity/i, /copilot/i, /claude/i,
   /result/i, /résultat/i, /found/i, /trouvé/i, /brand/i, /marque/i,
 ];
 
