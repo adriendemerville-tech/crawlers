@@ -327,7 +327,7 @@ export function FloatingChatBubble() {
       )}
 
       {/* Floating Button — Crawlers robot logo (hidden when sidebar is expanded) */}
-      {!(isOpen && localStorage.getItem('felix_sidebar_expanded') === '1') && (
+      {!(isOpen && localStorage.getItem('felix_sidebar_expanded') === '1') && !cocoonExpanded && (
         <>
           <button
             onClick={isOpen ? () => setIsOpen(false) : handleOpen}
