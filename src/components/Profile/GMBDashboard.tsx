@@ -798,6 +798,38 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
     }
   };
 
+  // Refresh locations from already-connected GBP account (used by "Ajouter" button)
+  const handleRefreshLocations = async () => {
+    setGbpLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase.functions.invoke('gbp-auth', {
+        body: { action: 'status', user_id: user.id },
+      });
+      if (error) throw error;
+      if (data?.connected && data.locations?.length > 0) {
+        setOrderedLocations(data.locations);
+        if (!selectedLocationId || !data.locations.find((l: any) => l.id === selectedLocationId)) {
+          setSelectedLocationId(data.locations[0]?.id || null);
+        }
+        toast.success(language === 'fr' ? `${data.locations.length} établissement(s) trouvé(s)` : `${data.locations.length} location(s) found`);
+      } else if (data?.connected) {
+        toast.info(language === 'fr' 
+          ? 'Aucun nouvel établissement trouvé. Vérifiez votre compte Google Business.' 
+          : 'No new locations found. Check your Google Business account.');
+      } else {
+        toast.error(language === 'fr' ? 'Connexion GBP expirée, reconnectez-vous.' : 'GBP connection expired, please reconnect.');
+        setGbpConnected(false);
+      }
+    } catch (err) {
+      console.error('[GMBDashboard] Refresh locations error:', err);
+      toast.error(language === 'fr' ? 'Erreur lors du rafraîchissement' : 'Refresh error');
+    } finally {
+      setGbpLoading(false);
+    }
+  };
+
   const handleGbpDisconnect = async () => {
     setGbpDisconnecting(true);
     try {
