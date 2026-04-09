@@ -34,18 +34,18 @@ function ClaudeVsCrawlersSectionComponent() {
           </span>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
             {language === 'fr'
-              ? <>Claude Code + Cowork <span className="text-muted-foreground/50">vs</span> Crawlers.fr</>
+              ? <>Claude Code + Cowork <span className="text-primary-foreground">vs</span> Crawlers.fr</>
               : language === 'es'
-              ? <>Claude Code + Cowork <span className="text-muted-foreground/50">vs</span> Crawlers.fr</>
-              : <>Claude Code + Cowork <span className="text-muted-foreground/50">vs</span> Crawlers.fr</>
+              ? <>Claude Code + Cowork <span className="text-primary-foreground">vs</span> Crawlers.fr</>
+              : <>Claude Code + Cowork <span className="text-primary-foreground">vs</span> Crawlers.fr</>
             }
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
             {language === 'fr'
-              ? 'L\'IA généraliste devine. Un outil spécialisé mesure, crawle et corrige. 29 €/mois au lieu de bricoler des prompts.'
+              ? 'L\'IA généraliste devine. Un outil spécialisé mesure, crawle et corrige.'
               : language === 'es'
-              ? 'La IA generalista adivina. Una herramienta especializada mide, rastrea y corrige. 29 €/mes en lugar de improvisar prompts.'
-              : 'Generalist AI guesses. A specialized tool measures, crawls, and fixes. €29/mo instead of hacking prompts.'}
+              ? 'La IA generalista adivina. Una herramienta especializada mide, rastrea y corrige.'
+              : 'Generalist AI guesses. A specialized tool measures, crawls, and fixes.'}
           </p>
         </div>
 
