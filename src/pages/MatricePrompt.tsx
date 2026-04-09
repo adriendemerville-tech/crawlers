@@ -448,8 +448,8 @@ export default function MatricePrompt() {
         const benchmarkItems = selectedRows.map(row => ({
           id: row.id,
           prompt: row.prompt,
-          theme: (row as any).theme || row.axe || 'Général',
-          engine: (row as any).engine || 'ChatGPT',
+          theme: row.theme || row.axe || 'Général',
+          engine: row.engine || 'ChatGPT',
           poids: row.poids,
           axe: row.axe,
           seuil_bon: row.seuil_bon,
