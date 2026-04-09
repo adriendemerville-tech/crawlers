@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2, Link2, Star } from 'lucide-react';
+import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2, Link2, Star, MousePointerClick } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense} from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
