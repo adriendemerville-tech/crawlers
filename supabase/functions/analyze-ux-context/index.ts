@@ -1,11 +1,16 @@
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
+import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
+import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 /**
  * analyze-ux-context — UX Optimizer
  * 
  * Analyzes a crawled page in context (business type, voice_dna, keywords, maturity)
  * and returns scores on 7 axes + textual suggestions.
+ * 
+ * Also captures a full-page screenshot via Browserless and extracts bounding boxes
+ * for elements containing suggestion text, enabling the annotated page view.
  * 
  * No re-crawl: uses existing crawl_pages data.
  */
@@ -96,72 +101,77 @@ Deno.serve(handleRequest(async (req) => {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return jsonError('AI not configured', 500);
 
-  const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-3-flash-preview',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: prompt },
-      ],
-      tools: [{
-        type: 'function',
-        function: {
-          name: 'ux_analysis_result',
-          description: 'Return structured UX analysis with scores and suggestions',
-          parameters: {
-            type: 'object',
-            properties: {
-              page_intent: {
-                type: 'string',
-                enum: ['informational', 'transactional', 'navigational', 'support', 'brand', 'mixed'],
-                description: 'Detected intent of the page'
-              },
-              global_score: {
-                type: 'number',
-                description: 'Overall UX score 0-100'
-              },
-              axes: {
-                type: 'object',
-                properties: {
-                  tone: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                  cta_pressure: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                  alignment: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                  readability: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                  conversion: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                  mobile_ux: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
-                  keyword_usage: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+  // Run AI analysis and screenshot capture in parallel
+  const [aiResp, screenshotResult] = await Promise.all([
+    fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-flash-preview',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: prompt },
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'ux_analysis_result',
+            description: 'Return structured UX analysis with scores and suggestions',
+            parameters: {
+              type: 'object',
+              properties: {
+                page_intent: {
+                  type: 'string',
+                  enum: ['informational', 'transactional', 'navigational', 'support', 'brand', 'mixed'],
+                  description: 'Detected intent of the page'
                 },
-                required: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'],
-              },
-              suggestions: {
-                type: 'array',
-                items: {
+                global_score: {
+                  type: 'number',
+                  description: 'Overall UX score 0-100'
+                },
+                axes: {
                   type: 'object',
                   properties: {
-                    axis: { type: 'string', enum: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'] },
-                    priority: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
-                    title: { type: 'string' },
-                    current_text: { type: 'string', description: 'Current text/element being criticized (if applicable)' },
-                    suggested_text: { type: 'string', description: 'Proposed replacement text' },
-                    rationale: { type: 'string' },
+                    tone: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                    cta_pressure: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                    alignment: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                    readability: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                    conversion: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                    mobile_ux: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                    keyword_usage: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
                   },
-                  required: ['axis', 'priority', 'title', 'rationale'],
+                  required: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'],
+                },
+                suggestions: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      axis: { type: 'string', enum: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'] },
+                      priority: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+                      title: { type: 'string' },
+                      current_text: { type: 'string', description: 'Current text/element being criticized (if applicable)' },
+                      suggested_text: { type: 'string', description: 'Proposed replacement text' },
+                      rationale: { type: 'string' },
+                      element_selector: { type: 'string', description: 'CSS-like description of the element (e.g. "h1", "nav .cta-button", "section.hero p")' },
+                    },
+                    required: ['axis', 'priority', 'title', 'rationale'],
+                  },
                 },
               },
+              required: ['page_intent', 'global_score', 'axes', 'suggestions'],
+              additionalProperties: false,
             },
-            required: ['page_intent', 'global_score', 'axes', 'suggestions'],
-            additionalProperties: false,
           },
-        },
-      }],
-      tool_choice: { type: 'function', function: { name: 'ux_analysis_result' } },
+        }],
+        tool_choice: { type: 'function', function: { name: 'ux_analysis_result' } },
+      }),
     }),
-  });
+    captureScreenshotWithAnnotations(page_url, tracked_site_id, serviceClient),
+  ]);
 
   if (!aiResp.ok) {
     if (aiResp.status === 429) return jsonError('Rate limit exceeded, please try again later', 429);
@@ -184,6 +194,23 @@ Deno.serve(handleRequest(async (req) => {
   } catch {
     console.error('[analyze-ux-context] Failed to parse AI arguments');
     return jsonError('AI returned invalid JSON', 500);
+  }
+
+  // After AI analysis, try to find element positions for suggestions that have current_text
+  let annotations: any[] = [];
+  if (screenshotResult?.success && result.suggestions?.length > 0) {
+    // Try to get element positions via a second Browserless call with the text to find
+    const textsToFind = result.suggestions
+      .filter((s: any) => s.current_text && s.current_text.length > 10)
+      .map((s: any) => ({
+        text: s.current_text.slice(0, 100),
+        axis: s.axis,
+        priority: s.priority,
+      }));
+
+    if (textsToFind.length > 0) {
+      annotations = await findTextPositions(page_url, textsToFind);
+    }
   }
 
   // Get user ID from auth
@@ -253,8 +280,214 @@ Deno.serve(handleRequest(async (req) => {
     global_score: result.global_score,
     axes: result.axes,
     suggestions: result.suggestions,
+    screenshot_url: screenshotResult?.url || null,
+    screenshot_height: screenshotResult?.height || null,
+    annotations,
   });
 }));
+
+// ─── Screenshot Capture ───
+
+async function captureScreenshotWithAnnotations(
+  pageUrl: string,
+  trackedSiteId: string,
+  serviceClient: any,
+): Promise<{ success: boolean; url?: string; height?: number }> {
+  const browserlessKey = getBrowserlessKey();
+  if (!browserlessKey) {
+    console.log('[analyze-ux-context] No Browserless key, skipping screenshot');
+    return { success: false };
+  }
+
+  try {
+    // Browserless v2 /function endpoint
+    const script = `export default async ({ page }) => {
+  await page.setViewport({ width: 1280, height: 900 });
+  await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
+  await new Promise(r => setTimeout(r, 2000));
+  
+  const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
+  const screenshot = await page.screenshot({ 
+    fullPage: true, 
+    type: 'jpeg', 
+    quality: 75,
+    encoding: 'base64'
+  });
+  
+  return { 
+    data: { screenshot, height: bodyHeight },
+    type: 'application/json'
+  };
+};`;
+
+    const resp = await fetch(getBrowserlessFunctionUrl(browserlessKey), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/javascript' },
+      body: script,
+    });
+
+    if (!resp.ok) {
+      console.log(`[analyze-ux-context] Browserless screenshot error: ${resp.status}`);
+      return { success: false };
+    }
+
+    const rawData = await resp.json();
+    const data = rawData?.data ?? rawData;
+    
+    if (!data?.screenshot) {
+      console.log('[analyze-ux-context] No screenshot in Browserless response');
+      return { success: false };
+    }
+
+    await trackPaidApiCall('analyze-ux-context', 'browserless', '/function', pageUrl).catch(() => {});
+
+    // Upload to Supabase storage
+    const fileName = `${trackedSiteId}/${Date.now()}.jpg`;
+    const imageBuffer = Uint8Array.from(atob(data.screenshot), c => c.charCodeAt(0));
+
+    const { error: uploadErr } = await serviceClient.storage
+      .from('ux-screenshots')
+      .upload(fileName, imageBuffer, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+    if (uploadErr) {
+      console.error('[analyze-ux-context] Screenshot upload error:', uploadErr);
+      return { success: false };
+    }
+
+    const { data: urlData } = serviceClient.storage
+      .from('ux-screenshots')
+      .getPublicUrl(fileName);
+
+    console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px)`);
+    return { success: true, url: urlData.publicUrl, height: data.height };
+  } catch (e: any) {
+    console.error('[analyze-ux-context] Screenshot capture failed:', e.message);
+    return { success: false };
+  }
+}
+
+// ─── Find text positions on page ───
+
+async function findTextPositions(
+  pageUrl: string,
+  textsToFind: Array<{ text: string; axis: string; priority: string }>,
+): Promise<any[]> {
+  const browserlessKey = getBrowserlessKey();
+  if (!browserlessKey) return [];
+
+  try {
+    const textsJson = JSON.stringify(textsToFind.map(t => t.text));
+    
+    const script = `export default async ({ page }) => {
+  await page.setViewport({ width: 1280, height: 900 });
+  await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
+  await new Promise(r => setTimeout(r, 1500));
+
+  const textsToFind = ${textsJson};
+  
+  const results = await page.evaluate((texts) => {
+    const found = [];
+    const bodyHeight = document.body.scrollHeight;
+    
+    for (const searchText of texts) {
+      // Walk the DOM tree to find text nodes containing this text
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let bestMatch = null;
+      let bestElement = null;
+      
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const nodeText = node.textContent?.trim() || '';
+        if (nodeText.length < 5) continue;
+        
+        // Check if this text node contains part of our search text
+        const searchLower = searchText.toLowerCase().slice(0, 60);
+        const nodeLower = nodeText.toLowerCase();
+        
+        if (nodeLower.includes(searchLower) || searchLower.includes(nodeLower.slice(0, 40))) {
+          const el = node.parentElement;
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              bestMatch = {
+                x: rect.left + window.scrollX,
+                y: rect.top + window.scrollY,
+                width: rect.width,
+                height: rect.height,
+                tag: el.tagName.toLowerCase(),
+              };
+              bestElement = el;
+            }
+          }
+        }
+      }
+      
+      // Fallback: try querySelector for common patterns
+      if (!bestMatch) {
+        const shortText = searchText.slice(0, 30);
+        for (const el of document.querySelectorAll('h1, h2, h3, p, button, a, span, li')) {
+          const elText = el.textContent?.trim() || '';
+          if (elText.toLowerCase().includes(shortText.toLowerCase())) {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              bestMatch = {
+                x: rect.left + window.scrollX,
+                y: rect.top + window.scrollY,
+                width: rect.width,
+                height: rect.height,
+                tag: el.tagName.toLowerCase(),
+              };
+              break;
+            }
+          }
+        }
+      }
+      
+      found.push({
+        text: searchText,
+        rect: bestMatch,
+      });
+    }
+    
+    return found;
+  }, texts);
+
+  return { data: results, type: 'application/json' };
+};`;
+
+    const resp = await fetch(getBrowserlessFunctionUrl(browserlessKey), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/javascript' },
+      body: script,
+    });
+
+    if (!resp.ok) {
+      console.log(`[analyze-ux-context] Text position search error: ${resp.status}`);
+      return [];
+    }
+
+    await trackPaidApiCall('analyze-ux-context', 'browserless', '/function-positions', pageUrl).catch(() => {});
+
+    const rawData = await resp.json();
+    const positions = rawData?.data ?? rawData;
+
+    if (!Array.isArray(positions)) return [];
+
+    // Merge positions with axis/priority metadata
+    return positions.map((p: any, i: number) => ({
+      text: p.text,
+      rect: p.rect,
+      axis: textsToFind[i]?.axis,
+      priority: textsToFind[i]?.priority,
+    })).filter((p: any) => p.rect);
+  } catch (e: any) {
+    console.error('[analyze-ux-context] Text position search failed:', e.message);
+    return [];
+  }
+}
 
 // ─── Prompts ───
 
@@ -316,5 +549,6 @@ Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte b
 7. **Utilisation des mots-clés** : Les mots-clés ciblés sont-ils utilisés naturellement ? Dans les bons éléments (H1, H2, body) ? Densité appropriée ?
 
 Pour chaque suggestion, propose une reformulation concrète quand c'est pertinent (current_text → suggested_text).
+Pour les éléments visuels identifiables, indique un element_selector CSS approximatif (ex: "h1", "section.hero .cta", "footer nav").
 `;
 }
