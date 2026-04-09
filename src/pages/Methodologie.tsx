@@ -306,6 +306,20 @@ export default function Methodologie() {
                 À l'ère de l'explosion du contenu, la précision de la méthode et de la stratégie fait la différence entre les experts qui traitent du volume et ceux qui créent de la valeur pour leurs clients — en leur permettant de s'élever au-dessus de la mêlée.
               </p>
             </EditorialBlock>
+
+            <EditorialBlock icon={AlertTriangle} title="29€/mois vs le stack Claude : le calcul est vite fait" index={4}>
+              <p className="mb-4">
+                Claude plafonne vos requêtes sans prévenir, Crawlers vous laisse libre de travailler. Claude nécessite de comprendre les automations, Crawlers a déjà géré toutes les intégrations pour vous. Claude Code génère du code générique truffé d'hallucinations, Crawlers génère du code correctif validé sur vos données réelles.
+              </p>
+              <p className="mb-4">
+                Pour un freelance SEO, le calcul est simple : Claude Pro (20$/mois) + API Code (variable) + heures de prompting + heures de vérification d'hallucinations = un coût réel de <strong className={A.accent}>plusieurs centaines d'euros par mois</strong>. Crawlers Pro Agency : <strong className={A.accent}>29€/mois, tout inclus</strong>.
+              </p>
+              <p>
+                <Link to="/comparatif-claude-vs-crawlers" className={`font-medium underline underline-offset-2 ${A.accent}`}>
+                  → Voir le comparatif complet Claude vs Crawlers
+                </Link>
+              </p>
+            </EditorialBlock>
           </div>
         </section>
 
