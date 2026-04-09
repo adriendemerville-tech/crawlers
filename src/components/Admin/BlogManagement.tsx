@@ -898,6 +898,240 @@ Exemple de structure :
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+        <TabsContent value="landings" className="space-y-6">
+          <LandingPagesManagement />
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+}
+
+// ── Landing Pages Management Sub-Component ──
+
+function LandingPagesManagement() {
+  const [landings, setLandings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingLanding, setEditingLanding] = useState<any | null>(null);
+  const [formData, setFormData] = useState({ title: '', slug: '', meta_title: '', meta_description: '', content: '', target_keyword: '', status: 'draft' });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { fetchLandings(); }, []);
+
+  const fetchLandings = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('seo_page_drafts' as any)
+      .select('*')
+      .eq('page_type', 'landing')
+      .order('created_at', { ascending: false });
+    if (!error) setLandings((data as any[]) || []);
+    setLoading(false);
+  };
+
+  const generateSlug = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+
+  const openEditor = (l?: any) => {
+    if (l) {
+      setEditingLanding(l);
+      setFormData({ title: l.title || '', slug: l.slug || '', meta_title: l.meta_title || '', meta_description: l.meta_description || '', content: l.content || '', target_keyword: l.target_keyword || '', status: l.status || 'draft' });
+    } else {
+      setEditingLanding(null);
+      setFormData({ title: '', slug: '', meta_title: '', meta_description: '', content: '', target_keyword: '', status: 'draft' });
+    }
+    setIsEditorOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!formData.title.trim()) { toast.error('Titre requis'); return; }
+    setSaving(true);
+    const slug = formData.slug || generateSlug(formData.title);
+    const payload: any = { ...formData, slug, page_type: 'landing', domain: 'crawlers.fr', published_at: formData.status === 'published' ? new Date().toISOString() : null };
+    
+    try {
+      if (editingLanding) {
+        const { error } = await supabase.from('seo_page_drafts' as any).update(payload).eq('id', editingLanding.id);
+        if (error) throw error;
+        toast.success('Landing page mise à jour');
+      } else {
+        const { error } = await supabase.from('seo_page_drafts' as any).insert(payload);
+        if (error) throw error;
+        toast.success('Landing page créée');
+      }
+      setIsEditorOpen(false);
+      fetchLandings();
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur');
+    } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('seo_page_drafts' as any).delete().eq('id', id);
+    if (error) toast.error('Erreur suppression');
+    else { toast.success('Supprimée'); fetchLandings(); }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    const updateData: any = { status: newStatus };
+    if (newStatus === 'published') updateData.published_at = new Date().toISOString();
+    const { error } = await supabase.from('seo_page_drafts' as any).update(updateData).eq('id', id);
+    if (!error) { toast.success('Statut mis à jour'); fetchLandings(); }
+  };
+
+  const filtered = landings.filter(l => {
+    const matchSearch = (l.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || (l.slug || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchStatus = statusFilter === 'all' || l.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const STATUS_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
+    draft: { label: 'Brouillon', icon: Clock },
+    published: { label: 'Publiée', icon: CheckCircle },
+    archived: { label: 'Archivée', icon: Archive },
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2"><Layout className="h-5 w-5" />Landing Pages</CardTitle>
+              <CardDescription>{landings.length} landing page{landings.length !== 1 ? 's' : ''}</CardDescription>
+            </div>
+            <Button onClick={() => openEditor()} className="gap-2"><Plus className="h-4 w-4" />Nouvelle landing</Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Rechercher..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Statut" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous</SelectItem>
+                <SelectItem value="draft">Brouillons</SelectItem>
+                <SelectItem value="published">Publiées</SelectItem>
+                <SelectItem value="archived">Archivées</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground"><Layout className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Aucune landing page</p></div>
+          ) : (
+            <div className="rounded-lg border overflow-hidden overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Page</TableHead>
+                    <TableHead>Mot-clé</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="hidden sm:table-cell">Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map(l => {
+                    const st = STATUS_LABELS[l.status] || STATUS_LABELS.draft;
+                    const StIcon = st.icon;
+                    return (
+                      <TableRow key={l.id}>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="font-medium line-clamp-1">{l.title}</p>
+                            <p className="text-xs text-muted-foreground font-mono">/landing/{l.slug}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{l.target_keyword || '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline"><StIcon className="h-3 w-3 mr-1" />{st.label}</Badge>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                          {new Date(l.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => openEditor(l)}><Edit className="h-4 w-4" /></Button>
+                            {l.status === 'draft' && (
+                              <Button size="sm" variant="ghost" onClick={() => handleStatusChange(l.id, 'published')}><Eye className="h-4 w-4" /></Button>
+                            )}
+                            {l.status === 'published' && (
+                              <Button size="sm" variant="ghost" onClick={() => handleStatusChange(l.id, 'draft')}><EyeOff className="h-4 w-4" /></Button>
+                            )}
+                            <Button size="sm" variant="ghost" onClick={() => handleDelete(l.id)}><Trash2 className="h-4 w-4" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Editor Dialog */}
+      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingLanding ? 'Modifier la landing' : 'Nouvelle landing page'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Titre</Label>
+                <Input value={formData.title} onChange={e => setFormData(p => ({ ...p, title: e.target.value, slug: editingLanding ? p.slug : generateSlug(e.target.value) }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Slug</Label>
+                <Input value={formData.slug} onChange={e => setFormData(p => ({ ...p, slug: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Meta Title</Label>
+                <Input value={formData.meta_title} onChange={e => setFormData(p => ({ ...p, meta_title: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Mot-clé cible</Label>
+                <Input value={formData.target_keyword} onChange={e => setFormData(p => ({ ...p, target_keyword: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Meta Description</Label>
+              <Textarea value={formData.meta_description} onChange={e => setFormData(p => ({ ...p, meta_description: e.target.value }))} rows={2} />
+            </div>
+            <div className="space-y-2">
+              <Label>Contenu (HTML/Markdown)</Label>
+              <Textarea value={formData.content} onChange={e => setFormData(p => ({ ...p, content: e.target.value }))} rows={12} className="font-mono text-sm" />
+            </div>
+            <div className="space-y-2">
+              <Label>Statut</Label>
+              <Select value={formData.status} onValueChange={v => setFormData(p => ({ ...p, status: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Brouillon</SelectItem>
+                  <SelectItem value="published">Publié</SelectItem>
+                  <SelectItem value="archived">Archivé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditorOpen(false)}>Annuler</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
