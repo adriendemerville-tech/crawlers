@@ -732,6 +732,16 @@ export default function ConversionOptimizer() {
           />
         </Suspense>
       )}
+      {showReport && result && (
+        <Suspense fallback={null}>
+          <CROReportPreviewModal
+            isOpen={showReport}
+            onClose={() => setShowReport(false)}
+            data={result}
+            domain={selectedSite?.domain || ''}
+          />
+        </Suspense>
+      )}
     </>
   );
 }
