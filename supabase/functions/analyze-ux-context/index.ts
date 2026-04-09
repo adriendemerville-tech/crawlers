@@ -86,14 +86,49 @@ Deno.serve(handleRequest(async (req) => {
 
   if (!crawl) return jsonError('No completed crawl found for this site. Run a crawl first.', 404);
 
-  const { data: pageData } = await serviceClient
-    .from('crawl_pages')
-    .select('url, title, meta_description, h1, h2_count, h3_count, word_count, body_text_truncated, internal_links, external_links, images_total, images_without_alt, has_schema_org, schema_org_types, tone_analysis, seo_score, issues, anchor_texts')
-    .eq('crawl_id', crawl.id)
-    .eq('url', page_url)
-    .maybeSingle();
+  const [{ data: pageData }, { data: indexCheck }] = await Promise.all([
+    serviceClient
+      .from('crawl_pages')
+      .select('url, title, meta_description, h1, h2_count, h3_count, word_count, body_text_truncated, internal_links, external_links, images_total, images_without_alt, has_schema_org, schema_org_types, tone_analysis, seo_score, issues, anchor_texts, has_noindex, is_indexable, has_canonical, canonical_url')
+      .eq('crawl_id', crawl.id)
+      .eq('url', page_url)
+      .maybeSingle(),
+    serviceClient
+      .from('indexation_checks')
+      .select('verdict, coverage_state, indexing_state, robots_txt_state, checked_at')
+      .eq('tracked_site_id', tracked_site_id)
+      .eq('page_url', page_url)
+      .order('checked_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   if (!pageData) return jsonError('Page not found in latest crawl data', 404);
+
+  // Build indexation status
+  const indexationWarnings: string[] = [];
+  const isNoindex = !!(pageData as any).has_noindex;
+  const isNotIndexable = (pageData as any).is_indexable === false;
+  const canonicalMismatch = (pageData as any).has_canonical && (pageData as any).canonical_url && (pageData as any).canonical_url !== page_url;
+  const gscVerdict = indexCheck?.verdict || null;
+  const gscNotIndexed = gscVerdict && gscVerdict !== 'PASS';
+
+  if (isNoindex) indexationWarnings.push('Page has a noindex directive — it will never appear in search results. Conversion optimization has limited impact.');
+  if (isNotIndexable) indexationWarnings.push('Page is not indexable (blocked by robots.txt or other directive).');
+  if (canonicalMismatch) indexationWarnings.push(`Canonical tag points to a different URL (${(pageData as any).canonical_url}). Google may ignore this page in favor of the canonical.`);
+  if (gscNotIndexed) indexationWarnings.push(`GSC reports this page is NOT indexed (verdict: ${gscVerdict}, state: ${indexCheck?.coverage_state || 'unknown'}). Optimizing conversion on a non-indexed page has no SEO impact.`);
+  if (!indexCheck) indexationWarnings.push('No GSC indexation data available for this page. Consider running an indexation check.');
+
+  const indexationStatus = {
+    is_indexable: !isNoindex && !isNotIndexable && !canonicalMismatch,
+    is_indexed: gscVerdict === 'PASS',
+    gsc_verdict: gscVerdict,
+    gsc_coverage_state: indexCheck?.coverage_state || null,
+    gsc_checked_at: indexCheck?.checked_at || null,
+    has_noindex: isNoindex,
+    canonical_mismatch: canonicalMismatch ? (pageData as any).canonical_url : null,
+    warnings: indexationWarnings,
+  };
 
   const { data: keywords } = await serviceClient
     .from('keyword_universe')
@@ -399,6 +434,7 @@ Deno.serve(handleRequest(async (req) => {
     annotations,
     image_format_report: imageFormatReport,
     image_analysis: result.image_analysis || [],
+    indexation_status: indexationStatus,
   });
 }));
 
