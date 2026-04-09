@@ -220,6 +220,7 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
   if (!isOpen) {
     return (
       <button
+        ref={triggerRef}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(true);
