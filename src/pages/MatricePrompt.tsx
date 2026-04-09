@@ -1060,7 +1060,7 @@ export default function MatricePrompt() {
             setUrl(identityCard.brandUrl);
             toast.info(`URL pré-remplie depuis la carte d'identité : ${identityCard.brandUrl}`);
           }
-        }
+        }}
         onClose={() => { setXlsxStepperOpen(false); setXlsxWorkbookRef(null); }}
       />
     </>
