@@ -418,10 +418,10 @@ const categoryConfig = {
 
 const pageContent = {
   fr: {
-    title: "Lexique SEO, GEO & Performance 2026",
-    metaTitle: "Lexique SEO, GEO & Performance 2026 - Définitions simples | Crawlers.fr",
-    metaDescription: "Dictionnaire complet des termes SEO, GEO et Performance web. Définitions simples et claires des acronymes : LCP, CLS, LLM, SGE, E-E-A-T et plus. Référence 2026 pour la France.",
-    intro: "Retrouvez toutes les définitions essentielles du référencement naturel, de l'optimisation pour les moteurs génératifs et de la performance web. Ce lexique 2026 est votre référence pour comprendre le SEO et le GEO en France.",
+    title: "Lexique SEO, GEO, UX & Performance 2026",
+    metaTitle: "Lexique SEO, GEO, UX & Performance 2026 - Définitions simples | Crawlers.fr",
+    metaDescription: "Dictionnaire complet des termes SEO, GEO, UX/CRO et Performance web. Définitions simples : LCP, CLS, CTA, CRO, E-E-A-T et plus. Référence 2026.",
+    intro: "Retrouvez toutes les définitions essentielles du référencement naturel, de l'optimisation pour les moteurs génératifs, de l'UX/conversion et de la performance web. Ce lexique 2026 est votre référence.",
     searchPlaceholder: "Rechercher un terme...",
     termsCount: "termes définis",
     categories: "Catégories",
