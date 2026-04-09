@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { preCrawlForAudit, formatPreCrawlForPrompt } from '../_shared/preCrawlForAudit.ts';
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
