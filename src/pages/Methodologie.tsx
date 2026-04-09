@@ -10,7 +10,8 @@ import {
   Search, Code, BarChart3, Target, Zap, Eye, Link2,
   ListChecks, TrendingUp, BookOpen, ArrowRight, CheckCircle2,
   Layers, Database, Lock, RefreshCw, Activity, Cpu,
-  Server, GitBranch, Workflow
+  Server, GitBranch, Workflow, Crosshair, AlertTriangle,
+  Network, Fingerprint
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,23 @@ import { t3 } from '@/utils/i18n';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
-// Animated counter component
+/* ── Anthracite palette tokens ── */
+const A = {
+  heading: 'text-[#2d2d2d] dark:text-neutral-100',
+  body: 'text-[#4a4a4a] dark:text-neutral-300',
+  muted: 'text-[#6b6b6b] dark:text-neutral-400',
+  accent: 'text-[#3d3d3d] dark:text-neutral-200',
+  badge: 'border-[#d1d1d1] dark:border-neutral-600 bg-[#f5f5f5] dark:bg-neutral-800 text-[#4a4a4a] dark:text-neutral-300',
+  cardBg: 'bg-[#fafafa] dark:bg-neutral-900 border-[#e5e5e5] dark:border-neutral-700',
+  iconBg: 'bg-[#ededed] dark:bg-neutral-800',
+  iconColor: 'text-[#3d3d3d] dark:text-neutral-300',
+  sectionAlt: 'bg-[#f7f7f7] dark:bg-neutral-900/50',
+  ctaBg: 'bg-[#2d2d2d] dark:bg-neutral-800 hover:bg-[#1a1a1a] dark:hover:bg-neutral-700 text-white',
+  ctaOutline: 'border-[#c4c4c4] dark:border-neutral-600 text-[#3d3d3d] dark:text-neutral-200 hover:bg-[#f0f0f0] dark:hover:bg-neutral-800',
+  separator: 'border-[#e5e5e5] dark:border-neutral-700',
+  highlight: 'text-[#5b21b6] dark:text-violet-400', // subtle violet for rare emphasis
+};
+
 function AnimatedStat({ value, suffix = '', label }: { value: number; suffix?: string; label: string }) {
   return (
     <motion.div
@@ -29,19 +46,18 @@ function AnimatedStat({ value, suffix = '', label }: { value: number; suffix?: s
       transition={{ duration: 0.5 }}
     >
       <motion.div
-        className="text-3xl sm:text-4xl font-bold text-primary"
+        className={`text-3xl sm:text-4xl font-bold ${A.heading}`}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
       >
         {value}{suffix}
       </motion.div>
-      <div className="text-sm text-muted-foreground mt-1">{label}</div>
+      <div className={`text-sm mt-1 ${A.muted}`}>{label}</div>
     </motion.div>
   );
 }
 
-// Pipeline step component
 function PipelineStep({ icon: Icon, title, description, step, isLast = false }: {
   icon: React.ElementType; title: string; description: string; step: number; isLast?: boolean;
 }) {
@@ -54,17 +70,42 @@ function PipelineStep({ icon: Icon, title, description, step, isLast = false }: 
       transition={{ delay: step * 0.1 }}
     >
       <div className="flex flex-col items-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm shrink-0">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-full ${A.ctaBg} font-bold text-sm shrink-0`}>
           {step}
         </div>
-        {!isLast && <div className="w-px flex-1 bg-border mt-2" />}
+        {!isLast && <div className={`w-px flex-1 ${A.separator} mt-2`} style={{ borderLeftWidth: 1, borderLeftStyle: 'solid' }} />}
       </div>
       <div className="pb-8">
         <div className="flex items-center gap-2 mb-1">
-          <Icon className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold text-foreground">{title}</h3>
+          <Icon className={`h-4 w-4 ${A.iconColor}`} />
+          <h3 className={`font-semibold ${A.heading}`}>{title}</h3>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+        <p className={`text-sm leading-relaxed ${A.body}`}>{description}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ── Editorial section component ── */
+function EditorialBlock({ icon: Icon, title, children, index = 0 }: {
+  icon: React.ElementType; title: string; children: React.ReactNode; index?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.08 }}
+      className="mb-10 last:mb-0"
+    >
+      <div className="flex items-start gap-3 mb-3">
+        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${A.iconBg} shrink-0 mt-0.5`}>
+          <Icon className={`h-4.5 w-4.5 ${A.iconColor}`} />
+        </div>
+        <h3 className={`text-lg sm:text-xl font-bold ${A.heading} leading-snug`}>{title}</h3>
+      </div>
+      <div className={`text-[15px] leading-[1.75] ${A.body} pl-12`}>
+        {children}
       </div>
     </motion.div>
   );
@@ -75,65 +116,20 @@ export default function Methodologie() {
   useCanonicalHreflang('/methodologie');
 
   const auditCategories = [
-    {
-      icon: Bot, color: 'text-blue-500',
-      title: t3(language, 'Crawlability IA', 'AI Crawlability', 'Crawlability IA'),
-      points: ['robots.txt & User-Agent', 'llms.txt & ai-plugin.json', 'X-Robots-Tag HTTP', 'GPTBot, ClaudeBot, Bingbot'],
-      count: 6
-    },
-    {
-      icon: Globe, color: 'text-emerald-500',
-      title: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'),
-      points: ['JSON-LD & Open Graph', 'Hiérarchie H1-H6', 'Citabilité LLM', 'Fraîcheur des contenus'],
-      count: 7
-    },
-    {
-      icon: Brain, color: 'text-violet-500',
-      title: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'),
-      points: ['Citation multi-modèles', 'Sentiment IA', 'Part de voix', 'Hallucinations factuelles'],
-      count: 6
-    },
-    {
-      icon: Gauge, color: 'text-orange-500',
-      title: t3(language, 'Core Web Vitals', 'Core Web Vitals', 'Core Web Vitals'),
-      points: ['LCP, FCP, CLS, TTFB', 'Requêtes HTTP', 'DOM & ressources', 'Mobile responsive'],
-      count: 8
-    },
-    {
-      icon: Radar, color: 'text-rose-500',
-      title: t3(language, 'Audit Expert SEO/GEO', 'Expert SEO/GEO', 'Auditoría Experta'),
-      points: ['E-E-A-T complet', 'Paysage concurrentiel', 'Zero-Click risk', 'Intelligence de marché'],
-      count: 8
-    },
-    {
-      icon: Search, color: 'text-cyan-500',
-      title: t3(language, 'Mots-clés & Requêtes', 'Keywords & Queries', 'Palabras clave'),
-      points: ['Positionnement SERP', 'Requêtes LLM ciblées', 'Intentions de recherche', 'Contenu prioritaire'],
-      count: 5
-    },
-    {
-      icon: Code, color: 'text-amber-500',
-      title: t3(language, 'Code Correctif', 'Corrective Code', 'Código correctivo'),
-      points: ['JSON-LD injection', 'Balises méta & OG', 'Alt images', 'SDK + kill switch'],
-      count: 6
-    },
-    {
-      icon: Eye, color: 'text-pink-500',
-      title: t3(language, 'Résilience Contenu', 'Content Resilience', 'Resiliencia'),
-      points: ['Dark Social Readiness', 'Quotability Index', 'Summary Resilience', 'Red Teaming'],
-      count: 8
-    },
-    {
-      icon: TrendingUp, color: 'text-teal-500',
-      title: t3(language, 'Suivi & KPI', 'Tracking & KPI', 'Seguimiento'),
-      points: ['Google Search Console', 'Historique & tendances', 'Export PDF', 'Plan d\'action'],
-      count: 6
-    },
+    { icon: Bot, title: t3(language, 'Crawlability IA', 'AI Crawlability', 'Crawlability IA'), points: ['robots.txt & User-Agent', 'llms.txt & ai-plugin.json', 'X-Robots-Tag HTTP', 'GPTBot, ClaudeBot, Bingbot'], count: 6 },
+    { icon: Globe, title: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'), points: ['JSON-LD & Open Graph', 'Hiérarchie H1-H6', 'Citabilité LLM', 'Fraîcheur des contenus'], count: 7 },
+    { icon: Brain, title: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'), points: ['Citation multi-modèles', 'Sentiment IA', 'Part de voix', 'Hallucinations factuelles'], count: 6 },
+    { icon: Gauge, title: t3(language, 'Core Web Vitals', 'Core Web Vitals', 'Core Web Vitals'), points: ['LCP, FCP, CLS, TTFB', 'Requêtes HTTP', 'DOM & ressources', 'Mobile responsive'], count: 8 },
+    { icon: Radar, title: t3(language, 'Audit Expert SEO/GEO', 'Expert SEO/GEO', 'Auditoría Experta'), points: ['E-E-A-T complet', 'Paysage concurrentiel', 'Zero-Click risk', 'Intelligence de marché'], count: 8 },
+    { icon: Search, title: t3(language, 'Mots-clés & Requêtes', 'Keywords & Queries', 'Palabras clave'), points: ['Positionnement SERP', 'Requêtes LLM ciblées', 'Intentions de recherche', 'Contenu prioritaire'], count: 5 },
+    { icon: Code, title: t3(language, 'Code Correctif', 'Corrective Code', 'Código correctivo'), points: ['JSON-LD injection', 'Balises méta & OG', 'Alt images', 'SDK + kill switch'], count: 6 },
+    { icon: Eye, title: t3(language, 'Résilience Contenu', 'Content Resilience', 'Resiliencia'), points: ['Dark Social Readiness', 'Quotability Index', 'Summary Resilience', 'Red Teaming'], count: 8 },
+    { icon: TrendingUp, title: t3(language, 'Suivi & KPI', 'Tracking & KPI', 'Seguimiento'), points: ['Google Search Console', 'Historique & tendances', 'Export PDF', "Plan d'action"], count: 6 },
   ];
 
   const algorithms = [
     { name: 'TF-IDF Sémantique', description: 'Pertinence thématique et visualisation 3D du cocon', icon: Layers },
-    { name: 'Score IAS', description: 'Indice d\'Alignement Stratégique — 23 variables croisées', icon: Target },
+    { name: 'Score IAS', description: "Indice d'Alignement Stratégique — 23 variables croisées", icon: Target },
     { name: 'GEO Score', description: 'Visibilité dans les moteurs de réponse IA', icon: Globe },
     { name: 'Triangle Prédictif', description: 'Prédiction trafic corrélée GSC/GA4 — MAPE < 15%', icon: TrendingUp },
     { name: 'Part de Voix', description: '40% LLM + 35% SERP + 25% ETV', icon: BarChart3 },
@@ -142,12 +138,12 @@ export default function Methodologie() {
   ];
 
   const pipelineSteps = [
-    { icon: Search, title: 'Crawl & Collecte', description: 'Crawl du site (jusqu\'à 5 000 pages), extraction HTML, détection robots.txt, llms.txt, ai-plugin.json. Collecte simultanée des données SERP, GSC, GA4 et PageSpeed.' },
+    { icon: Search, title: 'Crawl & Collecte', description: "Crawl du site (jusqu'à 5 000 pages), extraction HTML, détection robots.txt, llms.txt, ai-plugin.json. Collecte simultanée des données SERP, GSC, GA4 et PageSpeed." },
     { icon: Database, title: 'Normalisation & Cache', description: 'Les données brutes sont normalisées, déduplicquées et mises en cache (TTL intelligent). Architecture multi-fallback sur toutes les APIs critiques.' },
-    { icon: Cpu, title: 'Analyse Algorithmique', description: '7 algorithmes propriétaires s\'exécutent en parallèle : TF-IDF, GEO Score, IAS, Part de Voix, Triangle Prédictif, Empreinte Lexicale, PageRank Interne.' },
+    { icon: Cpu, title: 'Analyse Algorithmique', description: "7 algorithmes propriétaires s'exécutent en parallèle : TF-IDF, GEO Score, IAS, Part de Voix, Triangle Prédictif, Empreinte Lexicale, PageRank Interne." },
     { icon: Brain, title: 'Enrichissement LLM', description: 'Interrogation parallèle de ChatGPT, Gemini, Perplexity et Claude pour mesurer la visibilité, détecter les hallucinations et évaluer la citabilité.' },
     { icon: Code, title: 'Génération de Correctifs', description: 'Code correctif personnalisé (JSON-LD, balises méta, maillage) prêt à déployer via WordPress, GTM ou SDK sécurisé avec kill switch distant.' },
-    { icon: BarChart3, title: 'Scoring & Rapport', description: 'Score global sur 200 points, export PDF, plan d\'action priorisé par impact et suivi dans le temps via la console de monitoring.' },
+    { icon: BarChart3, title: 'Scoring & Rapport', description: "Score global sur 200 points, export PDF, plan d'action priorisé par impact et suivi dans le temps via la console de monitoring." },
   ];
 
   const structuredData = {
@@ -192,13 +188,12 @@ export default function Methodologie() {
 
         {/* ── Hero ── */}
         <section className="relative py-20 px-4 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/2 to-background" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] dark:from-neutral-900 via-background to-background" />
           <div className="relative mx-auto max-w-4xl text-center">
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary mb-6"
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm mb-6 ${A.badge}`}
             >
               <BookOpen className="h-4 w-4" />
               <span>{t3(language, 'Transparence & Rigueur', 'Transparency & Rigor', 'Transparencia y Rigor')}</span>
@@ -207,16 +202,16 @@ export default function Methodologie() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight"
+              className={`text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight tracking-tight ${A.heading}`}
             >
               {t3(language, 'Comment Crawlers.fr', 'How Crawlers.fr', 'Cómo Crawlers.fr')}{' '}
-              <span className="text-primary">{t3(language, 'analyse votre site', 'analyzes your site', 'analiza su sitio')}</span>
+              <span className={A.highlight}>{t3(language, 'analyse votre site', 'analyzes your site', 'analiza su sitio')}</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-10"
+              className={`text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-10 ${A.body}`}
             >
               {t3(language,
                 '7 algorithmes propriétaires, 9 catégories d\'analyse, architecture multi-fallback résiliente. Chaque score est calculé, jamais estimé.',
@@ -225,29 +220,23 @@ export default function Methodologie() {
               )}
             </motion.p>
 
-            {/* Hero CTA */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-3 justify-center mb-16"
             >
-              <Button asChild size="xl" variant="hero">
-                <Link to="/audit-expert">
-                  {t3(language, 'Tester sur mon site — Gratuit', 'Test on My Site — Free', 'Probar en mi sitio — Gratis')}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/data-flow-diagram">
-                  {t3(language, 'Voir le Data Flow', 'View Data Flow', 'Ver el Data Flow')}
-                </Link>
-              </Button>
+              <Link to="/audit-expert" className={`inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-colors ${A.ctaBg}`}>
+                {t3(language, 'Tester sur mon site — Gratuit', 'Test on My Site — Free', 'Probar en mi sitio — Gratis')}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link to="/data-flow-diagram" className={`inline-flex items-center justify-center gap-2 rounded-lg border px-6 py-3 text-sm font-semibold transition-colors ${A.ctaOutline}`}>
+                {t3(language, 'Voir le Data Flow', 'View Data Flow', 'Ver el Data Flow')}
+              </Link>
             </motion.div>
 
-            {/* Key Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto">
-              <AnimatedStat value={totalPoints} suffix="+" label={t3(language, 'Points d\'audit', 'Audit points', 'Puntos de auditoría')} />
+              <AnimatedStat value={totalPoints} suffix="+" label={t3(language, "Points d'audit", 'Audit points', 'Puntos de auditoría')} />
               <AnimatedStat value={7} label={t3(language, 'Algorithmes', 'Algorithms', 'Algoritmos')} />
               <AnimatedStat value={111} label="Edge Functions" />
               <AnimatedStat value={10} suffix="+" label={t3(language, 'Sources de données', 'Data sources', 'Fuentes de datos')} />
@@ -255,8 +244,73 @@ export default function Methodologie() {
           </div>
         </section>
 
+        {/* ══════════════════════════════════════════════════════════ */}
+        {/* ── SECTION ÉDITORIALE : Pourquoi la méthode fait tout ── */}
+        {/* ══════════════════════════════════════════════════════════ */}
+        <section className={`py-20 px-4 ${A.sectionAlt} border-y ${A.separator}`}>
+          <div className="mx-auto max-w-3xl">
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-center mb-14"
+            >
+              <h2 className={`text-2xl sm:text-3xl font-bold mb-4 ${A.heading}`}>
+                {t3(language,
+                  'Pourquoi la plupart des outils SEO-IA ne sont pas fiables',
+                  'Why most AI-SEO tools are unreliable',
+                  'Por qué la mayoría de herramientas SEO-IA no son fiables'
+                )}
+              </h2>
+              <p className={`max-w-2xl mx-auto ${A.muted}`}>
+                {t3(language,
+                  'Pas un manifeste. Des faits techniques. Ce qui sépare l\'audit vérifiable de l\'estimation générative.',
+                  'Not a manifesto. Technical facts. What separates verifiable audit from generative estimation.',
+                  'No es un manifiesto. Hechos técnicos.'
+                )}
+              </p>
+            </motion.div>
+
+            <EditorialBlock icon={AlertTriangle} title="Un cerveau sans membres" index={0}>
+              <p className="mb-4">
+                La plupart des nouveaux outils SEO « IA-first » ne crawlent pas les sites. Ils s'appuient uniquement sur la réponse des LLMs, sans pouvoir mesurer la profondeur du crawl du modèle en question. <strong className={A.accent}>Crawlers crawle lui-même chaque page</strong> pour s'assurer concrètement que les audits n'oublient rien.
+              </p>
+              <p className="mb-4">
+                L'IA ne fait pas tout. C'est une couche d'intelligence ultra sophistiquée. Mais un cerveau sans membres — sans jambes pour parcourir le web, sans mains pour saisir les données, sans doigts pour décortiquer le code et la data — c'est un cerveau hors sol, peu digne de confiance.
+              </p>
+              <p className={`italic ${A.muted}`}>
+                Quel est véritablement le gain si, in fine, il faut autant de temps pour auditer la méthode que de temps gagné en audit et en recommandations ?
+              </p>
+            </EditorialBlock>
+
+            <EditorialBlock icon={Crosshair} title="Les benchmarks sans logs ne détectent rien" index={1}>
+              <p>
+                Les benchmarks de visibilité qui ne croisent pas avec les logs serveur ne détectent pas vraiment les crawls des bots de ChatGPT, Gemini et de leurs concurrents. Ils essaient de les <em>déduire</em>. Crawlers analyse les logs réels pour identifier précisément quel bot a crawlé quelle page, à quelle fréquence, et avec quelle profondeur — pas une estimation statistique, une observation factuelle.
+              </p>
+            </EditorialBlock>
+
+            <EditorialBlock icon={Network} title="Les données de Dieu le Père" index={2}>
+              <p className="mb-4">
+                La vraie différence de Crawlers, c'est qu'il va chercher les données de la source primaire : Google. Tout outil qui ne demande pas à se connecter à <strong className={A.accent}>GSC, GA4, GTM et Ads</strong> est un outil qui se prive des meilleures données en temps réel — celles des utilisateurs finaux, et de la conversion.
+              </p>
+              <p>
+                Sans ces signaux, vous pilotez à l'aveugle. Les données tierces sont utiles en complément, jamais en substitution.
+              </p>
+            </EditorialBlock>
+
+            <EditorialBlock icon={Fingerprint} title="Une armée de plusieurs légions" index={3}>
+              <p className="mb-4">
+                Claude Cowork est un surhomme. Crawlers est une armée de plusieurs légions. À bien y réfléchir, ceux qui confient leur SEO/GEO à un assistant IA généraliste gagnent de la vitesse sur les tâches, mais ils en perdent partout ailleurs. Surtout, <strong className={A.accent}>ils perdent énormément en précision</strong> : l'IA juge de l'IA qui juge de l'IA, mais n'interroge jamais les micro-données brutes — celles du code, celles des audiences, celles des utilisateurs.
+              </p>
+              <p className={`border-l-2 border-[#c4c4c4] dark:border-neutral-600 pl-4 ${A.muted} italic`}>
+                À l'ère de l'explosion du contenu, la précision de la méthode et de la stratégie fait la différence entre les experts qui traitent du volume et ceux qui créent de la valeur pour leurs clients — en leur permettant de s'élever au-dessus de la mêlée.
+              </p>
+            </EditorialBlock>
+          </div>
+        </section>
+
         {/* ── Pipeline Visuel ── */}
-        <section className="py-16 px-4 bg-muted/20">
+        <section className="py-16 px-4">
           <div className="mx-auto max-w-3xl">
             <motion.div
               initial={{ opacity: 0 }}
@@ -264,32 +318,25 @@ export default function Methodologie() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                {t3(language, 'Pipeline d\'analyse — De l\'URL au score', 'Analysis Pipeline — From URL to Score', 'Pipeline de análisis — De la URL al score')}
+              <h2 className={`text-2xl sm:text-3xl font-bold mb-3 ${A.heading}`}>
+                {t3(language, "Pipeline d'analyse — De l'URL au score", 'Analysis Pipeline — From URL to Score', 'Pipeline de análisis — De la URL al score')}
               </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
+              <p className={`max-w-xl mx-auto ${A.muted}`}>
                 {t3(language,
                   'Chaque audit suit un pipeline en 6 étapes, conçu pour la fiabilité et la reproductibilité.',
                   'Each audit follows a 6-step pipeline, designed for reliability and reproducibility.',
-                  'Cada auditoría sigue un pipeline de 6 pasos, diseñado para fiabilidad y reproducibilidad.'
+                  'Cada auditoría sigue un pipeline de 6 pasos.'
                 )}
               </p>
             </motion.div>
             {pipelineSteps.map((step, i) => (
-              <PipelineStep
-                key={step.title}
-                icon={step.icon}
-                title={step.title}
-                description={step.description}
-                step={i + 1}
-                isLast={i === pipelineSteps.length - 1}
-              />
+              <PipelineStep key={step.title} icon={step.icon} title={step.title} description={step.description} step={i + 1} isLast={i === pipelineSteps.length - 1} />
             ))}
           </div>
         </section>
 
         {/* ── 9 Catégories ── */}
-        <section className="py-16 px-4">
+        <section className={`py-16 px-4 ${A.sectionAlt}`}>
           <div className="mx-auto max-w-6xl">
             <motion.div
               initial={{ opacity: 0 }}
@@ -297,10 +344,10 @@ export default function Methodologie() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                {t3(language, '9 catégories, +60 points d\'audit', '9 Categories, 60+ Audit Points', '9 categorías, +60 puntos de auditoría')}
+              <h2 className={`text-2xl sm:text-3xl font-bold mb-3 ${A.heading}`}>
+                {t3(language, "9 catégories, +60 points d'audit", '9 Categories, 60+ Audit Points', '9 categorías, +60 puntos de auditoría')}
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
+              <p className={`max-w-2xl mx-auto ${A.muted}`}>
                 {t3(language,
                   'Signaux techniques classiques croisés avec les indicateurs de l\'ère générative.',
                   'Classic technical signals cross-referenced with generative era indicators.',
@@ -317,16 +364,16 @@ export default function Methodologie() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <Card className="h-full border-border/50 hover:border-primary/30 transition-all hover:shadow-lg group">
+                  <Card className={`h-full ${A.cardBg} hover:shadow-md transition-all group`}>
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center justify-between text-base">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/15 transition-colors">
-                            <cat.icon className="h-4.5 w-4.5 text-primary" />
+                          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${A.iconBg} transition-colors`}>
+                            <cat.icon className={`h-4.5 w-4.5 ${A.iconColor}`} />
                           </div>
-                          <span>{cat.title}</span>
+                          <span className={A.heading}>{cat.title}</span>
                         </div>
-                        <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        <span className={`text-xs font-normal px-2 py-0.5 rounded-full ${A.badge}`}>
                           {cat.count} pts
                         </span>
                       </CardTitle>
@@ -334,8 +381,8 @@ export default function Methodologie() {
                     <CardContent>
                       <ul className="space-y-1.5">
                         {cat.points.map((point, j) => (
-                          <li key={j} className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                          <li key={j} className={`flex items-center gap-2 text-sm ${A.body}`}>
+                            <CheckCircle2 className={`h-3.5 w-3.5 ${A.muted} shrink-0`} />
                             {point}
                           </li>
                         ))}
@@ -349,28 +396,26 @@ export default function Methodologie() {
         </section>
 
         {/* ── CTA intermédiaire ── */}
-        <section className="py-12 px-4 bg-primary/5 border-y border-primary/10">
+        <section className={`py-12 px-4 border-y ${A.separator}`}>
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
+            <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${A.heading}`}>
               {t3(language, 'Voyez ce que révèle votre site', 'See What Your Site Reveals', 'Vea lo que revela su sitio')}
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className={`mb-6 ${A.muted}`}>
               {t3(language,
                 'Lancez un audit gratuit en 30 secondes. Aucune carte bancaire requise.',
                 'Launch a free audit in 30 seconds. No credit card required.',
-                'Lance una auditoría gratuita en 30 segundos. Sin tarjeta de crédito.'
+                'Lance una auditoría gratuita en 30 segundos.'
               )}
             </p>
-            <Button asChild size="lg" variant="hero">
-              <Link to="/audit-expert">
-                {t3(language, 'Lancer mon audit gratuit', 'Launch My Free Audit', 'Lanzar mi auditoría gratuita')}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <Link to="/audit-expert" className={`inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-colors ${A.ctaBg}`}>
+              {t3(language, 'Lancer mon audit gratuit', 'Launch My Free Audit', 'Lanzar mi auditoría gratuita')}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
 
-        {/* ── 7 Algorithmes propriétaires ── */}
+        {/* ── 7 Algorithmes ── */}
         <section className="py-16 px-4">
           <div className="mx-auto max-w-5xl">
             <motion.div
@@ -379,18 +424,18 @@ export default function Methodologie() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary mb-4">
+              <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm mb-4 ${A.badge}`}>
                 <Cpu className="h-4 w-4" />
                 <span>{t3(language, 'Propriétaire', 'Proprietary', 'Propietario')}</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+              <h2 className={`text-2xl sm:text-3xl font-bold mb-3 ${A.heading}`}>
                 {t3(language, '7 algorithmes propriétaires en production', '7 Proprietary Algorithms in Production', '7 algoritmos propietarios en producción')}
               </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
+              <p className={`max-w-xl mx-auto ${A.muted}`}>
                 {t3(language,
                   'Chaque algorithme est calibré sur des données réelles et mis à jour en continu.',
                   'Each algorithm is calibrated on real data and continuously updated.',
-                  'Cada algoritmo está calibrado con datos reales y se actualiza continuamente.'
+                  'Cada algoritmo está calibrado con datos reales.'
                 )}
               </p>
             </motion.div>
@@ -403,15 +448,15 @@ export default function Methodologie() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.06 }}
                 >
-                  <Card className="h-full border-border/50 bg-gradient-to-br from-card to-muted/20 hover:shadow-md transition-all">
+                  <Card className={`h-full ${A.cardBg} hover:shadow-md transition-all`}>
                     <CardContent className="p-5">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                          <algo.icon className="h-5 w-5 text-primary" />
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${A.iconBg} shrink-0`}>
+                          <algo.icon className={`h-5 w-5 ${A.iconColor}`} />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-foreground mb-1">{algo.name}</h3>
-                          <p className="text-sm text-muted-foreground">{algo.description}</p>
+                          <h3 className={`font-semibold mb-1 ${A.heading}`}>{algo.name}</h3>
+                          <p className={`text-sm ${A.body}`}>{algo.description}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -423,7 +468,7 @@ export default function Methodologie() {
         </section>
 
         {/* ── Architecture technique ── */}
-        <section className="py-16 px-4 bg-muted/20">
+        <section className={`py-16 px-4 ${A.sectionAlt}`}>
           <div className="mx-auto max-w-5xl">
             <motion.div
               initial={{ opacity: 0 }}
@@ -431,8 +476,8 @@ export default function Methodologie() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                {t3(language, 'Architecture — Ce qui garantit la fiabilité', 'Architecture — What Guarantees Reliability', 'Arquitectura — Lo que garantiza la fiabilidad')}
+              <h2 className={`text-2xl sm:text-3xl font-bold mb-3 ${A.heading}`}>
+                {t3(language, 'Architecture — Ce qui garantit la fiabilité', 'Architecture — What Guarantees Reliability', 'Arquitectura')}
               </h2>
             </motion.div>
             <div className="grid gap-6 md:grid-cols-3">
@@ -440,7 +485,7 @@ export default function Methodologie() {
                 {
                   icon: RefreshCw, title: t3(language, 'Résilience', 'Resilience', 'Resiliencia'),
                   items: [
-                    t3(language, 'Multi-fallback sur toutes les APIs critiques', 'Multi-fallback on all critical APIs', 'Multi-fallback en todas las APIs críticas'),
+                    t3(language, 'Multi-fallback sur toutes les APIs critiques', 'Multi-fallback on all critical APIs', 'Multi-fallback en todas las APIs'),
                     t3(language, 'Circuit Breaker anti-cascade', 'Anti-cascade Circuit Breaker', 'Circuit Breaker anti-cascada'),
                     t3(language, 'Queue asynchrone avec progression temps réel', 'Async queue with real-time progress', 'Cola asíncrona con progreso en tiempo real'),
                     t3(language, 'Cache intelligent TTL', 'Intelligent TTL cache', 'Caché inteligente TTL'),
@@ -449,10 +494,10 @@ export default function Methodologie() {
                 {
                   icon: Lock, title: t3(language, 'Sécurité & RGPD', 'Security & GDPR', 'Seguridad y RGPD'),
                   items: [
-                    t3(language, 'Hébergement européen, RGPD natif', 'European hosting, native GDPR', 'Alojamiento europeo, RGPD nativo'),
-                    t3(language, 'Row-Level Security par utilisateur', 'User Row-Level Security', 'Row-Level Security por usuario'),
-                    t3(language, 'Protection financière côté serveur', 'Server-side financial protection', 'Protección financiera del lado del servidor'),
-                    t3(language, 'Cloudflare Turnstile anti-bot', 'Cloudflare Turnstile anti-bot', 'Cloudflare Turnstile anti-bot'),
+                    t3(language, 'Hébergement européen, RGPD natif', 'European hosting, native GDPR', 'Alojamiento europeo'),
+                    t3(language, 'Row-Level Security par utilisateur', 'User Row-Level Security', 'RLS por usuario'),
+                    t3(language, 'Protection financière côté serveur', 'Server-side financial protection', 'Protección financiera'),
+                    t3(language, 'Cloudflare Turnstile anti-bot', 'Cloudflare Turnstile anti-bot', 'Cloudflare Turnstile'),
                   ]
                 },
                 {
@@ -472,18 +517,18 @@ export default function Methodologie() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                 >
-                  <Card className="h-full border-border/50">
+                  <Card className={`h-full ${A.cardBg}`}>
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2.5 text-base">
-                        <block.icon className="h-5 w-5 text-primary" />
+                      <CardTitle className={`flex items-center gap-2.5 text-base ${A.heading}`}>
+                        <block.icon className={`h-5 w-5 ${A.iconColor}`} />
                         {block.title}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">
                         {block.items.map((item, j) => (
-                          <li key={j} className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-primary/60 mt-0.5 shrink-0" />
+                          <li key={j} className={`flex items-start gap-2 text-sm ${A.body}`}>
+                            <CheckCircle2 className={`h-3.5 w-3.5 ${A.muted} mt-0.5 shrink-0`} />
                             {item}
                           </li>
                         ))}
@@ -496,54 +541,49 @@ export default function Methodologie() {
           </div>
         </section>
 
-
         {/* ── CTA Final ── */}
-        <section className="py-16 px-4 bg-gradient-to-b from-primary/5 to-background border-t border-primary/10">
+        <section className={`py-16 px-4 border-t ${A.separator}`}>
           <div className="mx-auto max-w-3xl text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+              <h2 className={`text-2xl sm:text-3xl font-bold mb-4 ${A.heading}`}>
                 {t3(language, 'Testez cette méthodologie sur votre site', 'Test This Methodology on Your Site', 'Pruebe esta metodología en su sitio')}
               </h2>
-              <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
+              <p className={`mb-8 max-w-lg mx-auto ${A.muted}`}>
                 {t3(language,
                   'Audit gratuit en 30 secondes. Aucune carte bancaire. Résultats immédiats.',
                   'Free audit in 30 seconds. No credit card. Immediate results.',
-                  'Auditoría gratuita en 30 segundos. Sin tarjeta. Resultados inmediatos.'
+                  'Auditoría gratuita en 30 segundos.'
                 )}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild size="xl" variant="hero">
-                  <Link to="/audit-expert">
-                    {t3(language, 'Lancer mon audit gratuit', 'Launch My Free Audit', 'Lanzar mi auditoría gratuita')}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/tarifs">
-                    {t3(language, 'Voir tous les tarifs', 'View All Pricing', 'Ver todos los precios')}
-                  </Link>
-                </Button>
+                <Link to="/audit-expert" className={`inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-colors ${A.ctaBg}`}>
+                  {t3(language, 'Lancer mon audit gratuit', 'Launch My Free Audit', 'Lanzar mi auditoría gratuita')}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link to="/tarifs" className={`inline-flex items-center justify-center gap-2 rounded-lg border px-6 py-3 text-sm font-semibold transition-colors ${A.ctaOutline}`}>
+                  {t3(language, 'Voir tous les tarifs', 'View All Pricing', 'Ver todos los precios')}
+                </Link>
               </div>
             </motion.div>
           </div>
         </section>
 
         {/* ── Disclaimer ── */}
-        <section className="py-8 px-4 bg-muted/20 border-t border-border">
+        <section className={`py-8 px-4 ${A.sectionAlt} border-t ${A.separator}`}>
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm text-muted-foreground italic">
+            <p className={`text-sm italic ${A.muted}`}>
               {t3(language,
                 'Les algorithmes, pondérations et modes de calcul utilisés par Crawlers.fr sont propriétaires et ne sont pas divulgués. Cette page présente le périmètre d\'analyse, pas la méthodologie de scoring.',
-                'The algorithms, weightings and calculation methods used by Crawlers.fr are proprietary and not disclosed. This page presents the analysis scope, not the scoring methodology.',
-                'Los algoritmos, ponderaciones y métodos de cálculo utilizados por Crawlers.fr son propietarios y no se divulgan.'
+                'The algorithms, weightings and calculation methods used by Crawlers.fr are proprietary and not disclosed.',
+                'Los algoritmos, ponderaciones y métodos de cálculo son propietarios y no se divulgan.'
               )}
             </p>
-            <p className="text-xs text-muted-foreground mt-3">
-              {t3(language, 'Dernière mise à jour : Mars 2026', 'Last updated: March 2026', 'Última actualización: Marzo 2026')}
+            <p className={`text-xs mt-3 ${A.muted}`}>
+              {t3(language, 'Dernière mise à jour : Avril 2026', 'Last updated: April 2026', 'Última actualización: Abril 2026')}
             </p>
           </div>
         </section>
