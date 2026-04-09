@@ -421,6 +421,15 @@ export default function ConversionOptimizer() {
                 </Button>
                 <Button
                   variant="outline"
+                  onClick={() => setShowReport(true)}
+                  disabled={!result}
+                  className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                >
+                  <FileText className="h-4 w-4" />
+                  Rapport
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => setShowContentArchitect(true)}
                   disabled={!freshAnalysis || analyzing}
                   className={`gap-2 transition-all ${freshAnalysis && !analyzing
