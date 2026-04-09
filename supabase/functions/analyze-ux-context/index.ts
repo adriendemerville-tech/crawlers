@@ -2,6 +2,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { writeIdentity } from '../_shared/identityGateway.ts';
 
 /**
  * analyze-ux-context — Conversion Optimizer
