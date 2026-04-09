@@ -799,7 +799,7 @@ try {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+}));
 
 // ═══ Helpers ═══
 
@@ -878,7 +878,7 @@ function findSourcePagesForField(
           title: page.title,
           element: el.name,
           excerpt: el.text.slice(0, 200),
-        }));
+        });
         break; // One match per page is enough
       }
     }
