@@ -10,7 +10,7 @@ import { Loader2, ArrowLeft, Sparkles, AlertTriangle, CheckCircle2, Info, Smartp
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { AnnotatedPageView } from '@/components/UxOptimizer/AnnotatedPageView';
+import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPageView';
 
 interface TrackedSite {
   id: string;
@@ -78,7 +78,7 @@ const AXIS_META: Record<string, { label: string; icon: typeof Type; color: strin
 
 const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 
-export default function UxOptimizer() {
+export default function ConversionOptimizer() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -221,7 +221,7 @@ export default function UxOptimizer() {
   return (
     <>
       <Helmet>
-        <title>UX Optimizer | Crawlers</title>
+        <title>Conversion Optimizer | Crawlers</title>
         <meta name="description" content="Analysez l'UX de vos pages en contexte business pour optimiser le ton, les CTA et la conversion." />
       </Helmet>
 
@@ -235,7 +235,7 @@ export default function UxOptimizer() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-primary" />
-              UX Optimizer
+              Conversion Optimizer
             </h1>
             <p className="text-sm text-muted-foreground">Analyse UX contextuelle de vos pages crawlées</p>
           </div>
