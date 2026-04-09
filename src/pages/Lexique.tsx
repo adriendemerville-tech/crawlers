@@ -35,7 +35,7 @@ interface GlossaryTerm {
   term: string;
   acronym?: string;
   definition: string;
-  category: 'seo' | 'geo' | 'performance' | 'technical' | 'ai';
+  category: 'seo' | 'geo' | 'performance' | 'technical' | 'ai' | 'ux';
   toolLink?: { path: string; label: string };
 }
 
