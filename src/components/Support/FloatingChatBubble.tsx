@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAISidebar } from '@/contexts/AISidebarContext';
 import { CrawlersLogo } from './CrawlersLogo';
 import { isOnboardingDone } from '@/utils/felixOnboarding';
 import { playNotificationSound } from '@/utils/notificationSound';
