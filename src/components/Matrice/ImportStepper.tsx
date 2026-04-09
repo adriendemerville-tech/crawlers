@@ -8,7 +8,7 @@ import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCl
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
-type Step = 'sheet' | 'type' | 'clean' | 'confirm';
+type Step = 'type' | 'sheet' | 'clean' | 'confirm';
 
 interface Props {
   open: boolean;
@@ -30,8 +30,14 @@ const TYPE_LABELS: Record<MatriceType, { label: string; desc: string; color: str
   benchmark: { label: 'Benchmark LLM', desc: 'Test de citation par moteur IA — heatmap thème × engine', color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' },
 };
 
-const STEPS: { key: Step; label: string }[] = [
+const STEPS_MULTI: { key: Step; label: string }[] = [
+  { key: 'type', label: 'Type' },
   { key: 'sheet', label: 'Onglet' },
+  { key: 'clean', label: 'Nettoyage' },
+  { key: 'confirm', label: 'Import' },
+];
+
+const STEPS_SINGLE: { key: Step; label: string }[] = [
   { key: 'type', label: 'Type' },
   { key: 'clean', label: 'Nettoyage' },
   { key: 'confirm', label: 'Import' },
@@ -40,7 +46,7 @@ const STEPS: { key: Step; label: string }[] = [
 /* ── Component ─────────────────────────────────────────────────────── */
 
 export default function ImportStepper({ open, sheetNames, workbook, onComplete, onClose }: Props) {
-  const [step, setStep] = useState<Step>('sheet');
+  const [step, setStep] = useState<Step>('type');
   const [selectedSheet, setSelectedSheet] = useState<string>('');
   const [selectedType, setSelectedType] = useState<MatriceType | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -49,9 +55,12 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const [cleaning, setCleaning] = useState<CleaningResult | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ── Sheet selection ────────────────────────────────────────────────
-  const handleSheetSelect = useCallback(async (sheetName: string) => {
-    if (!workbook) return;
+  const hasMultipleSheets = sheetNames.length > 1;
+  const steps = hasMultipleSheets ? STEPS_MULTI : STEPS_SINGLE;
+
+  // ── Parse a sheet and proceed to clean ─────────────────────────────
+  const parseSheetAndClean = useCallback(async (sheetName: string) => {
+    if (!workbook || !selectedType) return;
     setLoading(true);
     setSelectedSheet(sheetName);
     try {
@@ -67,23 +76,26 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       setHeaders(h);
       setRawRows(rows);
 
-      // Auto-detect type
+      // Auto-detect for info
       const det = detectMatriceType(h, rows.slice(0, 10));
       setDetection(det);
-      setSelectedType(det.type);
-      setStep('type');
       console.log(`[ImportStepper] Sheet "${sheetName}": ${rows.length} rows, ${h.length} cols, detected=${det.type} (${Math.round(det.confidence * 100)}%)`);
+
+      // Clean and go to clean step
+      const result = cleanImportedData(h, rows);
+      setCleaning(result);
+      setStep('clean');
     } catch (err) {
       console.error('[ImportStepper] Sheet parse error:', err);
     } finally {
       setLoading(false);
     }
-  }, [workbook]);
+  }, [workbook, selectedType]);
 
-  // Reset state when modal opens with new data
+  // Reset state when modal opens
   useEffect(() => {
     if (open && sheetNames.length > 0 && workbook) {
-      setStep(sheetNames.length > 1 ? 'sheet' : 'type');
+      setStep('type');
       setSelectedSheet(sheetNames[0] || '');
       setSelectedType(null);
       setHeaders([]);
@@ -91,22 +103,20 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       setDetection(null);
       setCleaning(null);
       setLoading(false);
-
-      // Auto-select if single sheet
-      if (sheetNames.length === 1) {
-        handleSheetSelect(sheetNames[0]);
-      }
     }
-  }, [open, sheetNames, workbook, handleSheetSelect]);
+  }, [open, sheetNames, workbook]);
 
-  const currentStepIndex = STEPS.findIndex(s => s.key === step);
+  const currentStepIndex = steps.findIndex(s => s.key === step);
 
-  // ── Type confirmation → trigger clean ──────────────────────────────
+  // ── Type confirmed → go to sheet or parse directly ─────────────────
   const handleTypeConfirm = () => {
     if (!selectedType) return;
-    const result = cleanImportedData(headers, rawRows);
-    setCleaning(result);
-    setStep('clean');
+    if (hasMultipleSheets) {
+      setStep('sheet');
+    } else {
+      // Single sheet → parse it directly
+      parseSheetAndClean(sheetNames[0]);
+    }
   };
 
   // ── Final import ───────────────────────────────────────────────────
@@ -129,9 +139,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
 
         {/* ── Stepper bar ──────────────────────────────────────────── */}
         <div className="flex items-center gap-1 mb-4">
-          {STEPS.map((s, i) => {
-            // Skip sheet step if single sheet
-            if (s.key === 'sheet' && sheetNames.length <= 1) return null;
+          {steps.map((s, i) => {
             const isActive = s.key === step;
             const isDone = i < currentStepIndex;
             return (
@@ -144,7 +152,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                   {isDone && <CheckCircle2 className="h-3 w-3" />}
                   {s.label}
                 </div>
-                {i < STEPS.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground/30 shrink-0" />}
+                {i < steps.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground/30 shrink-0" />}
               </div>
             );
           })}
@@ -158,7 +166,44 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
           </div>
         )}
 
-        {/* ── Step: Sheet ──────────────────────────────────────────── */}
+        {/* ── Step: Type (FIRST) ───────────────────────────────────── */}
+        {!loading && step === 'type' && (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              Quel type d'audit souhaitez-vous réaliser ?
+            </p>
+
+            <div className="flex flex-col gap-2">
+              {(Object.keys(TYPE_LABELS) as MatriceType[]).map(t => {
+                const info = TYPE_LABELS[t];
+                const isSelected = selectedType === t;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedType(t)}
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-left
+                      ${isSelected ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border hover:border-muted-foreground/30'}
+                    `}
+                  >
+                    <div className="flex-1">
+                      <span className="font-medium text-sm">{info.label}</span>
+                      <p className="text-xs text-muted-foreground mt-0.5">{info.desc}</p>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full border-2 transition-colors ${isSelected ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`} />
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end mt-2">
+              <Button size="sm" onClick={handleTypeConfirm} disabled={!selectedType}>
+                Continuer <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step: Sheet (only if multiple) ───────────────────────── */}
         {!loading && step === 'sheet' && (
           <div className="flex flex-col gap-2">
             <p className="text-sm text-muted-foreground mb-1">
@@ -169,74 +214,15 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                 key={name}
                 variant="outline"
                 className="justify-start gap-2 h-auto py-3"
-                onClick={() => handleSheetSelect(name)}
+                onClick={() => parseSheetAndClean(name)}
               >
                 <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="truncate">{name}</span>
               </Button>
             ))}
-          </div>
-        )}
-
-        {/* ── Step: Type ───────────────────────────────────────────── */}
-        {!loading && step === 'type' && detection && (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-muted-foreground">
-              Type détecté automatiquement à partir des {headers.length} colonnes.
-              Vous pouvez corriger si nécessaire.
-            </p>
-
-            {detection.confidence < 0.5 && (
-              <p className="text-xs text-amber-400">
-                ⚠ Confiance faible ({Math.round(detection.confidence * 100)}%) — vérifiez le type.
-              </p>
-            )}
-
-            <div className="flex flex-col gap-2">
-              {(Object.keys(TYPE_LABELS) as MatriceType[]).map(t => {
-                const info = TYPE_LABELS[t];
-                const isSelected = selectedType === t;
-                const isDetected = detection.type === t;
-                return (
-                  <button
-                    key={t}
-                    onClick={() => setSelectedType(t)}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-left
-                      ${isSelected ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border hover:border-muted-foreground/30'}
-                    `}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{info.label}</span>
-                        {isDetected && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            détecté
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{info.desc}</p>
-                    </div>
-                    <div className={`w-4 h-4 rounded-full border-2 transition-colors ${isSelected ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`} />
-                  </button>
-                );
-              })}
-            </div>
-
-            {(detection.matchedGeo.length > 0 || detection.matchedSeo.length > 0) && (
-              <div className="text-xs text-muted-foreground mt-1">
-                <Search className="h-3 w-3 inline mr-1" />
-                Signaux : {detection.matchedGeo.length} GEO, {detection.matchedSeo.length} SEO
-              </div>
-            )}
-
-            <div className="flex justify-between mt-2">
-              {sheetNames.length > 1 && (
-                <Button variant="ghost" size="sm" onClick={() => setStep('sheet')}>
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Onglet
-                </Button>
-              )}
-              <Button size="sm" className="ml-auto" onClick={handleTypeConfirm} disabled={!selectedType}>
-                Continuer <ArrowRight className="h-4 w-4 ml-1" />
+            <div className="flex justify-start mt-2">
+              <Button variant="ghost" size="sm" onClick={() => setStep('type')}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> Type
               </Button>
             </div>
           </div>
@@ -248,6 +234,13 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
             <p className="text-sm text-muted-foreground">
               Nettoyage effectué. Les colonnes de résultats et données résiduelles ont été retirées.
             </p>
+
+            {/* Show detection mismatch warning */}
+            {detection && selectedType && detection.type !== selectedType && detection.confidence >= 0.6 && (
+              <p className="text-xs text-amber-400">
+                ⚠ Les colonnes suggèrent plutôt « {TYPE_LABELS[detection.type].label} » ({Math.round(detection.confidence * 100)}% confiance).
+              </p>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg bg-muted/50 border border-border">
@@ -279,8 +272,8 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
             )}
 
             <div className="flex justify-between mt-2">
-              <Button variant="ghost" size="sm" onClick={() => setStep('type')}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> Type
+              <Button variant="ghost" size="sm" onClick={() => setStep(hasMultipleSheets ? 'sheet' : 'type')}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> {hasMultipleSheets ? 'Onglet' : 'Type'}
               </Button>
               <Button size="sm" onClick={() => setStep('confirm')}>
                 Continuer <ArrowRight className="h-4 w-4 ml-1" />
@@ -298,14 +291,14 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Onglet</span>
-                <span className="font-medium">{selectedSheet}</span>
-              </div>
-              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Type</span>
                 <Badge variant="outline" className={TYPE_LABELS[selectedType].color}>
                   {TYPE_LABELS[selectedType].label}
                 </Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Onglet</span>
+                <span className="font-medium">{selectedSheet}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Critères</span>
