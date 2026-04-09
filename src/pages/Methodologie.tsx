@@ -556,17 +556,18 @@ export default function Methodologie() {
         </section>
 
         {/* ── CTA Final ── */}
-        <section className={`py-16 px-4 border-t ${A.separator}`}>
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="py-16 px-4 bg-gradient-to-br from-[#5b21b6] via-[#4c1d95] to-[#2e1065] relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.3),transparent_60%)]" />
+          <div className="relative mx-auto max-w-3xl text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <h2 className={`text-2xl sm:text-3xl font-bold mb-4 ${A.heading}`}>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-[#fbbf24]">
                 {t3(language, 'Testez cette méthodologie sur votre site', 'Test This Methodology on Your Site', 'Pruebe esta metodología en su sitio')}
               </h2>
-              <p className={`mb-8 max-w-lg mx-auto ${A.muted}`}>
+              <p className="mb-8 max-w-lg mx-auto text-violet-200">
                 {t3(language,
                   'Audit gratuit en 30 secondes. Aucune carte bancaire. Résultats immédiats.',
                   'Free audit in 30 seconds. No credit card. Immediate results.',
@@ -574,11 +575,11 @@ export default function Methodologie() {
                 )}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link to="/audit-expert" className={`inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-colors ${A.ctaBg}`}>
+                <Link to="/audit-expert" className="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-colors bg-[#fbbf24] hover:bg-[#f59e0b] text-[#2e1065]">
                   {t3(language, 'Lancer mon audit gratuit', 'Launch My Free Audit', 'Lanzar mi auditoría gratuita')}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link to="/tarifs" className={`inline-flex items-center justify-center gap-2 rounded-lg border px-6 py-3 text-sm font-semibold transition-colors ${A.ctaOutline}`}>
+                <Link to="/tarifs" className="inline-flex items-center justify-center gap-2 rounded-lg border border-violet-400/40 px-6 py-3 text-sm font-semibold transition-colors text-[#fbbf24] hover:bg-white/10">
                   {t3(language, 'Voir tous les tarifs', 'View All Pricing', 'Ver todos los precios')}
                 </Link>
               </div>
