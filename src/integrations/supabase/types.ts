@@ -9690,6 +9690,56 @@ export type Database = {
           },
         ]
       }
+      ux_context_analyses: {
+        Row: {
+          axis_scores: Json | null
+          business_context: Json | null
+          created_at: string
+          global_score: number | null
+          id: string
+          model_used: string | null
+          page_intent: string | null
+          page_url: string
+          suggestions: Json | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          axis_scores?: Json | null
+          business_context?: Json | null
+          created_at?: string
+          global_score?: number | null
+          id?: string
+          model_used?: string | null
+          page_intent?: string | null
+          page_url: string
+          suggestions?: Json | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          axis_scores?: Json | null
+          business_context?: Json | null
+          created_at?: string
+          global_score?: number | null
+          id?: string
+          model_used?: string | null
+          page_intent?: string | null
+          page_url?: string
+          suggestions?: Json | null
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ux_context_analyses_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verification_codes: {
         Row: {
           code: string

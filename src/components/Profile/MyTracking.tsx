@@ -581,6 +581,14 @@ export function MyTracking() {
                         >
                           {h.language === 'fr' ? 'Auditer' : h.language === 'es' ? 'Auditar' : 'Audit'}
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                          onClick={() => navigate(`/app/ux-optimizer?site=${h.currentSite!.id}`)}
+                        >
+                          UX
+                        </Button>
                         {h.latestStats && !isMobile && (
                           <Button
                             size="sm"
