@@ -329,6 +329,30 @@ Deno.serve(handleRequest(async (req) => {
     }
   }
 
+  // ── Identity enrichment: if card was incomplete and AI inferred fields, write them back ──
+  if (identityIncomplete && result.identity_inference) {
+    const inferred = result.identity_inference as Record<string, unknown>;
+    const fieldsToWrite: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(inferred)) {
+      if (value && String(value).trim() && !(businessContext as any)[key]) {
+        fieldsToWrite[key] = value;
+      }
+    }
+    if (Object.keys(fieldsToWrite).length > 0) {
+      try {
+        const writeResult = await writeIdentity({
+          siteId: tracked_site_id,
+          fields: fieldsToWrite,
+          source: 'llm_auto',
+          userId: user.id,
+        });
+        console.log(`[analyze-ux-context] 🪪 Identity enriched: ${writeResult.applied.join(', ')} (${writeResult.applied.length} fields)`);
+      } catch (err: any) {
+        console.warn(`[analyze-ux-context] Identity enrichment failed:`, err.message);
+      }
+    }
+  }
+
   // Analyze image formats
   const imageFormats = screenshotResult?.imageFormats || [];
   const unoptimizedImages = imageFormats.filter((img: any) => 
