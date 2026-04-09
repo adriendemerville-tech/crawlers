@@ -299,9 +299,10 @@ export default function ConversionOptimizer() {
                 )}
               </p>
               <Button
+                variant="outline"
                 onClick={handleAnalyze}
                 disabled={!selectedPageUrl || analyzing}
-                className="gap-2"
+                className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
               >
                 {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
                 {analyzing ? 'Analyse en cours...' : 'Analyser'}
