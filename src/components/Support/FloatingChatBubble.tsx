@@ -332,7 +332,7 @@ export function FloatingChatBubble() {
           <button
             onClick={isOpen ? () => setIsOpen(false) : handleOpen}
             className={`fixed bottom-5 z-[110] h-[3.15rem] w-[3.15rem] rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
-            style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+            style={{ right: 'max(2rem, calc((100vw - 72rem) / 2 + 1.75rem))' }}
             aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
           >
             <CrawlersLogo size={56} className="transition-opacity duration-300" />
