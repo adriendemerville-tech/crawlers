@@ -137,7 +137,7 @@ function HeroSectionComponent() {
 
         {/* Secondary CTAs */}
         <div className="mt-6 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-          <Link to="/auth" className="text-sm font-medium text-primary hover:text-primary/80 underline underline-offset-4 transition-colors">
+          <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-violet-500">
             {language === 'fr' ? '20 crédits offerts à l\'inscription →' : language === 'es' ? '20 créditos gratis al registrarse →' : '20 free credits on signup →'}
           </Link>
         </div>
