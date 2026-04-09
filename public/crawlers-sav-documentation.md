@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "4.0"
-date: "2026-04-08"
+version: "5.0"
+date: "2026-04-09"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -301,6 +301,18 @@ Audit UX/CRO contextuel par IA sur 7 axes :
 L'analyse est calibrée sur le contexte business (type, audience, maturité, voice DNA, objectifs). Les suggestions critiques (critical/high) alimentent automatiquement le **Workbench Architect** avec `source_function = 'analyze-ux-context'`, permettant l'exécution par Code Architect ou Content Architect.
 
 Accessible depuis Console → Mes Sites → bouton UX, ou via /app/conversion-optimizer. Nécessite un crawl complété. Aucun re-crawl : utilise les données existantes de `crawl_pages`.
+
+### Analyse de Logs Serveur
+Ingestion et analyse des fichiers de logs HTTP pour comprendre le comportement réel des robots sur votre site :
+- **40+ bots détectés** : Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, Bytespider, Google-Extended et plus
+- **Budget crawl** : visualisation de la répartition du crawl Google page par page
+- **Pages orphelines** : détection des pages jamais visitées par les robots
+- **Erreurs serveur** : identification des 404, 500, redirections en chaîne
+- **Monitoring continu** : ingestion via connecteur Cloudflare Worker ou import direct (Apache, Nginx, IIS)
+- **Sécurité bots** : repérage des scrapers agressifs et bots malveillants
+- **Catégorisation automatique** : chaque bot est classé (search_engine, ai_crawler, social, malicious)
+
+Disponible en Pro Agency. Page dédiée : /analyse-logs.
 
 ### Marina — Pipeline de Prospection B2B
 Marina est un pipeline d'audit automatisé disponible via API publique et dashboard admin.

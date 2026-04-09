@@ -108,6 +108,16 @@ Deno.serve(async (req) => {
     pages.push({ loc: `${SITE_URL}/indice-alignement-strategique`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/cocoon`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/features/cocoon`, lastmod: today });
+    
+    // Landing pages nouvelles
+    pages.push({ loc: `${SITE_URL}/analyse-logs`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/conversion-optimizer`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/eeat`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/analyse-bots-ia`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/score-geo`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/visibilite-llm`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/pagespeed`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/comparatif-claude-code-vs-crawlers`, lastmod: today });
 
     // ========================================
     // BLOG INDEX

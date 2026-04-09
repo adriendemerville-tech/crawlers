@@ -96,10 +96,10 @@ const Index = () => {
     : 'Audit SEO & GEO expert gratuit | Crawlers.fr';
 
   const seoDescription = language === 'es'
-    ? 'ChatGPT, Gemini, SGE: ¿tu sitio es citado o ignorado? Obtén tu Score GEO en 30 segundos. Auditoría técnica y estratégica completa.'
+    ? 'ChatGPT, Gemini, SGE: ¿tu sitio es citado o ignorado? Auditoría SEO/GEO 168 criterios, Conversion Optimizer, análisis de logs y Content Architect.'
     : language === 'en'
-    ? 'ChatGPT, Gemini, SGE: is your site cited or ignored? Get your GEO Score in 30 seconds. Complete technical & strategic audit.'
-    : 'ChatGPT, Gemini, SGE : votre site est-il cité ou ignoré ? Score GEO en 30 sec. Audit technique et stratégique complet. Gratuit sans inscription.';
+    ? 'ChatGPT, Gemini, SGE: is your site cited or ignored? 168-criteria SEO/GEO audit, Conversion Optimizer, log analysis & Content Architect.'
+    : 'Audit SEO & GEO 168 critères, Conversion Optimizer, analyse de logs serveur, Content Architect IA. Score GEO gratuit en 30 sec.';
 
   // Auto-redirect subscribed users to console with loading animation
   const { user: authUser } = useAuth();
