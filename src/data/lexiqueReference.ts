@@ -94,6 +94,13 @@ export const LEXIQUE_REFERENCE: LexiqueEntry[] = [
   { term: 'Architect Workbench', def: "Table centralisée priorisant les findings de tous les diagnostics." },
   { term: 'Télémétrie', def: "Mesure automatique par crawl HTML : balises, Schema.org, liens." },
   { term: 'Heuristique', def: "Score calculé par règles pondérées sur signaux bruts." },
+  { term: 'Conversion Optimizer', def: "Audit UX/CRO contextuel sur 7 axes : ton, CTAs, lisibilité, mobile, mots-clés." },
+  { term: 'Analyse de Logs', def: "Analyse des logs serveur pour comprendre le comportement des bots sur votre site." },
+  { term: 'Budget Crawl', def: "Nombre de pages que Google explore sur un site par session. Optimisable via l'analyse de logs." },
+  { term: 'Récurrence de Crawl', def: "Fréquence à laquelle un bot revient explorer une page. Indicateur de priorité perçue." },
+  { term: 'Bot IA Crawler', def: "Robot d'indexation IA (GPTBot, ClaudeBot, PerplexityBot) qui explore les sites pour alimenter les LLMs." },
+  { term: 'Hit de Crawl', def: "Requête HTTP d'un bot sur une page. Le ratio hits/pages révèle l'efficacité du budget crawl." },
+  { term: 'Gaspillage de Crawl', def: "Pages crawlées inutilement (404, redirections, paramètres) consommant le budget crawl." },
 
   // ── APIs ──
   { term: 'DataForSEO', def: "API de données SERP et mots-clés." },
