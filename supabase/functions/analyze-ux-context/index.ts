@@ -230,6 +230,9 @@ Deno.serve(handleRequest(async (req) => {
       suggestions: result.suggestions,
       business_context: businessContext,
       model_used: 'google/gemini-3-flash-preview',
+      screenshot_url: screenshotResult?.url || null,
+      screenshot_height: screenshotResult?.height || null,
+      annotations: annotations || [],
     });
 
   if (insertErr) {

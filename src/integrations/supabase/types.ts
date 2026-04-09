@@ -9692,6 +9692,7 @@ export type Database = {
       }
       ux_context_analyses: {
         Row: {
+          annotations: Json | null
           axis_scores: Json | null
           business_context: Json | null
           created_at: string
@@ -9700,11 +9701,14 @@ export type Database = {
           model_used: string | null
           page_intent: string | null
           page_url: string
+          screenshot_height: number | null
+          screenshot_url: string | null
           suggestions: Json | null
           tracked_site_id: string
           user_id: string
         }
         Insert: {
+          annotations?: Json | null
           axis_scores?: Json | null
           business_context?: Json | null
           created_at?: string
@@ -9713,11 +9717,14 @@ export type Database = {
           model_used?: string | null
           page_intent?: string | null
           page_url: string
+          screenshot_height?: number | null
+          screenshot_url?: string | null
           suggestions?: Json | null
           tracked_site_id: string
           user_id: string
         }
         Update: {
+          annotations?: Json | null
           axis_scores?: Json | null
           business_context?: Json | null
           created_at?: string
@@ -9726,6 +9733,8 @@ export type Database = {
           model_used?: string | null
           page_intent?: string | null
           page_url?: string
+          screenshot_height?: number | null
+          screenshot_url?: string | null
           suggestions?: Json | null
           tracked_site_id?: string
           user_id?: string

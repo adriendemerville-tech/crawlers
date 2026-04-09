@@ -63,6 +63,14 @@ interface SavedAnalysis {
   global_score: number;
   axis_scores: Record<string, AxisResult>;
   suggestions: Suggestion[];
+  screenshot_url?: string | null;
+  screenshot_height?: number | null;
+  annotations?: Array<{
+    text: string;
+    rect: { x: number; y: number; width: number; height: number; tag?: string } | null;
+    axis: string;
+    priority: string;
+  }>;
   created_at: string;
 }
 
@@ -197,6 +205,9 @@ export default function ConversionOptimizer() {
       global_score: saved.global_score,
       axes: saved.axis_scores,
       suggestions: saved.suggestions,
+      screenshot_url: saved.screenshot_url,
+      screenshot_height: saved.screenshot_height,
+      annotations: saved.annotations,
     });
     setSelectedPageUrl(saved.page_url);
   };
