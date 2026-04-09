@@ -43,8 +43,19 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
   const [panelPos, setPanelPos] = useState<{ bottom: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isOpen) {
+      // Position the portal panel above the trigger button
+      if (triggerRef.current) {
+        const rect = triggerRef.current.closest('.border-t')?.getBoundingClientRect();
+        if (rect) {
+          setPanelPos({
+            bottom: window.innerHeight - rect.top + 4,
+            left: rect.left,
+            width: rect.width,
+          });
+        }
+      }
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
 
