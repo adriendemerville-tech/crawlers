@@ -262,7 +262,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     const ext = file.name.split('.').pop()?.toLowerCase();
    const isDoc = ext === 'doc' || ext === 'docx';
     const isCsv = ext === 'csv' || ext === 'tsv';
-    const isXlsx = ext === 'xlsx' || ext === 'xls';
+    const isXlsx = ext === 'xlsx' || ext === 'xls' || ext === 'xlsm';
 
     if (!isDoc && !isCsv && !isXlsx) {
       toast.error('Format non supporté. Utilisez .csv, .xlsx, .doc ou .docx');
