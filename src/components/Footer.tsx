@@ -31,12 +31,12 @@ function FooterComponent() {
     { icon: Gauge, label: t3(language, 'Indice d\'Alignement Stratégique', 'Strategic Alignment Index', 'Índice de Alineamiento Estratégico'), href: '/indice-alignement-strategique', description: t3(language, 'Alignement stratégique Brand / Non-Brand', 'Strategic Brand / Non-Brand alignment', 'Alineamiento estratégico Marca / Genérico'), isRoute: true },
     { icon: Network, label: 'Cocoon', href: '/app/cocoon', description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'), isRoute: true },
     { icon: Brain, label: 'Code Architect', href: '/architecte-generatif', description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'), isRoute: true },
+    { icon: Eye, label: 'Conversion Optimizer', href: '/conversion-optimizer', description: t3(language, 'Audit UX/CRO contextuel par IA', 'Contextual AI UX/CRO audit', 'Auditoría UX/CRO contextual con IA'), isRoute: true },
     { icon: Brain, label: 'Content Architect', href: '/content-architect', description: t3(language, 'Génération et optimisation de contenus IA', 'AI content generation and optimization', 'Generación y optimización de contenidos IA'), isRoute: true },
     { icon: Globe, label: 'Google Business', href: '/google-business', description: t3(language, 'Optimisation de votre fiche Google Business', 'Google Business profile optimization', 'Optimización de su ficha Google Business'), isRoute: true },
     { icon: FileText, label: t3(language, 'Matrice d\'audit', 'Audit Matrix', 'Matriz de auditoría'), href: '/matrice', description: t3(language, 'Audit matriciel personnalisé XLSX/CSV/DOCX', 'Custom matrix audit XLSX/CSV/DOCX', 'Auditoría matricial personalizada XLSX/CSV/DOCX'), isRoute: true },
     { icon: Terminal, label: 'Marina API', href: '/marina#api', description: t3(language, 'API asynchrone de rapports SEO & GEO en marque blanche', 'Async white-label SEO & GEO reporting API', 'API asíncrona de informes SEO & GEO de marca blanca'), isRoute: true },
     { icon: Shield, label: 'Audit E-E-A-T', href: '/eeat', description: t3(language, 'Score de crédibilité Google E-E-A-T', 'Google E-E-A-T credibility score', 'Puntuación de credibilidad Google E-E-A-T'), isRoute: true },
-    { icon: Eye, label: 'Conversion Optimizer', href: '/conversion-optimizer', description: t3(language, 'Audit UX/CRO contextuel par IA', 'Contextual AI UX/CRO audit', 'Auditoría UX/CRO contextual con IA'), isRoute: true },
   ];
 
   const resourcesLinks = [
@@ -59,11 +59,6 @@ function FooterComponent() {
       label: t3(language, 'Lexique SEO/GEO', 'SEO/GEO Glossary', 'Glosario SEO/GEO'),
       href: '/lexique',
       description: t3(language, 'Définitions des termes SEO et GEO', 'SEO and GEO terms definitions', 'Definiciones de términos SEO y GEO')
-    },
-    { 
-      label: 'Blog',
-      href: '/blog',
-      description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
     },
     {
       label: t3(language, 'Cocoon — Architecture Sémantique', 'Cocoon — Semantic Architecture', 'Cocoon — Arquitectura Semántica'),
