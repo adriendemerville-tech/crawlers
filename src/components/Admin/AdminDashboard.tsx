@@ -140,9 +140,10 @@ interface AdminDashboardProps {
   canSeeIntelligence?: boolean;
   isAuditor?: boolean;
   onSimulatedDataChange?: (enabled: boolean) => void;
+  onShowGoogleOnboarding?: () => void;
 }
 
-export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false, onSimulatedDataChange }: AdminDashboardProps) {
+export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false, onSimulatedDataChange, onShowGoogleOnboarding }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
