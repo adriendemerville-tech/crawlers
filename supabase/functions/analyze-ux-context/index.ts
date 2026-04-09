@@ -133,11 +133,12 @@ Deno.serve(handleRequest(async (req) => {
     _incomplete: identityIncomplete,
   };
 
-  // Fetch CRO variable matrix for all page types
+  // Fetch content requirements matrix (CRO consumer only for this function)
   const { data: croMatrix } = await serviceClient
-    .from('cro_variable_matrix')
-    .select('variable_key, variable_label, variable_description, page_type, is_required')
-    .order('variable_key');
+    .from('content_requirements_matrix')
+    .select('variable_key, variable_label, variable_description, page_type, search_intent, is_required, weight')
+    .eq('consumer', 'cro')
+    .order('weight', { ascending: false });
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return jsonError('AI not configured', 500);
