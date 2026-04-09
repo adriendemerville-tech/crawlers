@@ -76,6 +76,16 @@ interface AnalysisResult {
   }>;
   image_format_report?: ImageFormatReport;
   image_analysis?: ImageAnalysis[];
+  indexation_status?: {
+    is_indexable: boolean;
+    is_indexed: boolean;
+    gsc_verdict: string | null;
+    gsc_coverage_state: string | null;
+    gsc_checked_at: string | null;
+    has_noindex: boolean;
+    canonical_mismatch: string | null;
+    warnings: string[];
+  };
 }
 
 interface ImageAnalysis {
