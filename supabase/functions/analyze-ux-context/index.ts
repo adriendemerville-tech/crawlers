@@ -815,6 +815,9 @@ ${imageList}
 - Objectif court terme: ${ctx.goals?.short || 'non défini'}
 - Objectif moyen terme: ${ctx.goals?.mid || 'non défini'}
 - Usage principal: ${ctx.primary_use_case || 'non défini'}
+${ctx._incomplete ? `
+⚠️ **ATTENTION** : La carte d'identité de ce site est largement incomplète. Utilise le contenu de la page (texte, H1, meta description, images, CTAs) pour DÉDUIRE le contexte business. Base tes recommandations sur ce que tu observes dans la page, pas sur les champs "non défini". Remplis également le champ identity_inference avec les valeurs que tu déduis (business_type, market_sector, commercial_model, target_audience, products_services, entity_type).
+` : ''}
 
 ## Mots-clés ciblés
 ${keywordList || 'Aucun mot-clé trouvé'}
