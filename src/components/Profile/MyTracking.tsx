@@ -33,8 +33,6 @@ import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
-import { AutopilotModal } from '@/components/Profile/AutopilotModal';
-import { AutopilotModificationRegistry } from '@/components/Profile/AutopilotModificationRegistry';
 import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
