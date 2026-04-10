@@ -25,6 +25,7 @@ const AXES = [
   'conversion',
   'mobile_ux',
   'keyword_usage',
+  'chunkability',
 ];
 
 Deno.serve(handleRequest(async (req) => {
@@ -185,8 +186,8 @@ Deno.serve(handleRequest(async (req) => {
   const imageFormatsForPrompt = (screenshotResult?.imageFormats || [])
     .filter((img: any) => !img.isDecorative && img.width >= 50 && img.height >= 50)
     .slice(0, 20);
-
-  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || []);
+  const chunkabilityData = screenshotResult?.chunkabilitySignals || null;
+  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || [], chunkabilityData);
 
   const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -227,8 +228,9 @@ Deno.serve(handleRequest(async (req) => {
                   conversion: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
                   mobile_ux: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
                   keyword_usage: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
+                  chunkability: { type: 'object', properties: { score: { type: 'number' }, verdict: { type: 'string' }, detail: { type: 'string' } }, required: ['score', 'verdict', 'detail'] },
                 },
-                required: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage'],
+                required: ['tone', 'cta_pressure', 'alignment', 'readability', 'conversion', 'mobile_ux', 'keyword_usage', 'chunkability'],
               },
               suggestions: {
                 type: 'array',
@@ -547,6 +549,76 @@ async function captureScreenshotWithAnnotations(
     }).filter(i => i.src && !i.src.startsWith('data:'));
   });
 
+  // ── Chunkability signals extraction ──
+  const chunkabilitySignals = await page.evaluate(() => {
+    const body = document.body;
+    const allText = body.innerText || '';
+    const totalWords = allText.split(/\\s+/).filter(w => w.length > 0).length;
+
+    // 1. Heading structure analysis
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+    const h1Count = headings.filter(h => h.tagName === 'H1').length;
+    const h2Count = headings.filter(h => h.tagName === 'H2').length;
+    const h3Count = headings.filter(h => h.tagName === 'H3').length;
+    const headingLevels = headings.map(h => parseInt(h.tagName[1]));
+    let hierarchyBreaks = 0;
+    for (let i = 1; i < headingLevels.length; i++) {
+      if (headingLevels[i] - headingLevels[i - 1] > 1) hierarchyBreaks++;
+    }
+
+    // 2. Section length analysis (text between headings)
+    const sectionWordCounts = [];
+    for (let i = 0; i < headings.length; i++) {
+      let textContent = '';
+      let sibling = headings[i].nextElementSibling;
+      while (sibling && !['H1','H2','H3','H4','H5','H6'].includes(sibling.tagName)) {
+        textContent += (sibling.innerText || sibling.textContent || '') + ' ';
+        sibling = sibling.nextElementSibling;
+      }
+      const words = textContent.trim().split(/\\s+/).filter(w => w.length > 0).length;
+      if (words > 0) sectionWordCounts.push(words);
+    }
+    const optimalSections = sectionWordCounts.filter(w => w >= 150 && w <= 400).length;
+    const oversizedSections = sectionWordCounts.filter(w => w > 800).length;
+    const tinySections = sectionWordCounts.filter(w => w < 50 && w > 0).length;
+
+    // 3. Semantic tags usage
+    const semanticTags = ['article', 'section', 'aside', 'nav', 'figure', 'figcaption', 'main', 'header', 'footer'];
+    const semanticCount = semanticTags.reduce((sum, tag) => sum + document.querySelectorAll(tag).length, 0);
+    const divCount = document.querySelectorAll('div').length;
+
+    // 4. Lists & tables
+    const listCount = document.querySelectorAll('ul, ol').length;
+    const listItemCount = document.querySelectorAll('li').length;
+    const tableCount = document.querySelectorAll('table').length;
+
+    // 5. Structured data
+    const jsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]');
+    const hasJsonLd = jsonLdScripts.length > 0;
+    const hasMicrodata = document.querySelectorAll('[itemscope]').length > 0;
+
+    // 6. Boilerplate ratio (nav + footer text vs total)
+    const navFooterText = Array.from(document.querySelectorAll('nav, footer'))
+      .map(el => (el.innerText || '').trim())
+      .join(' ');
+    const navFooterWords = navFooterText.split(/\\s+/).filter(w => w.length > 0).length;
+    const boilerplateRatio = totalWords > 0 ? navFooterWords / totalWords : 0;
+
+    return {
+      totalWords,
+      headingCount: headings.length,
+      h1Count, h2Count, h3Count,
+      hierarchyBreaks,
+      sectionCount: sectionWordCounts.length,
+      sectionWordCounts: sectionWordCounts.slice(0, 20),
+      optimalSections, oversizedSections, tinySections,
+      semanticCount, divCount,
+      listCount, listItemCount, tableCount,
+      hasJsonLd, hasMicrodata, jsonLdCount: jsonLdScripts.length,
+      boilerplateRatio: Math.round(boilerplateRatio * 100) / 100,
+    };
+  });
+
   const screenshot = await page.screenshot({
     type: 'jpeg',
     quality: 75,
@@ -555,7 +627,7 @@ async function captureScreenshotWithAnnotations(
   });
 
   return {
-    data: { screenshot, height: fullHeight, imageFormats },
+    data: { screenshot, height: fullHeight, imageFormats, chunkabilitySignals },
     type: 'application/json'
   };
 };`;
@@ -601,7 +673,7 @@ async function captureScreenshotWithAnnotations(
       .getPublicUrl(fileName);
 
     console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px, images: ${(data.imageFormats || []).length})`);
-    return { success: true, url: urlData.publicUrl, height: data.height, imageFormats: data.imageFormats || [] };
+    return { success: true, url: urlData.publicUrl, height: data.height, imageFormats: data.imageFormats || [], chunkabilitySignals: data.chunkabilitySignals || null };
   } catch (error: any) {
     console.error('[analyze-ux-context] Screenshot capture failed:', error.message);
     return { success: false };
@@ -874,7 +946,7 @@ ${lines}
 `;
 }
 
-function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = []) {
+function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = [], chunkability: any = null) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
   ).join('\n');
@@ -908,6 +980,46 @@ Puis vérifie la PRÉSENCE ou l'ABSENCE de chaque variable CRO marquée "REQUIS"
 Signale chaque variable requise manquante comme une suggestion de priorité proportionnelle au poids [w:XX].
 
 ${lines.join('\n')}
+`;
+  }
+
+  // Build chunkability telemetry section
+  let chunkabilitySection = '';
+  if (chunkability) {
+    const c = chunkability;
+    const semanticRatio = c.divCount > 0 ? Math.round((c.semanticCount / (c.semanticCount + c.divCount)) * 100) : 0;
+    chunkabilitySection = `
+## 📐 Signaux de Chunkability (télémétrie DOM)
+Ces métriques mesurent la capacité de la page à être découpée en segments sémantiques exploitables par les LLM (RAG, citation, résumé).
+
+### Structure des titres (Hn)
+- Nombre total de headings : ${c.headingCount} (H1: ${c.h1Count}, H2: ${c.h2Count}, H3: ${c.h3Count})
+- Ruptures de hiérarchie (ex: H1→H4 sans H2/H3) : ${c.hierarchyBreaks}
+- Ratio headings/mots : ${c.totalWords > 0 ? Math.round((c.headingCount / c.totalWords) * 1000) / 10 : 0} pour 1000 mots
+
+### Longueur des sections (mots entre deux Hn)
+- Nombre de sections : ${c.sectionCount}
+- Sections optimales (150-400 mots) : ${c.optimalSections}/${c.sectionCount}
+- Sections surdimensionnées (>800 mots) : ${c.oversizedSections}
+- Sections trop courtes (<50 mots) : ${c.tinySections}
+${c.sectionWordCounts.length > 0 ? `- Distribution : [${c.sectionWordCounts.join(', ')}] mots` : ''}
+
+### Balises sémantiques HTML5
+- Balises sémantiques (article, section, aside, nav, figure, main…) : ${c.semanticCount}
+- Balises div génériques : ${c.divCount}
+- Ratio sémantique : ${semanticRatio}%
+
+### Listes et tableaux
+- Listes (ul/ol) : ${c.listCount} avec ${c.listItemCount} items
+- Tableaux : ${c.tableCount}
+
+### Données structurées
+- JSON-LD : ${c.hasJsonLd ? `Oui (${c.jsonLdCount} blocs)` : 'Non'}
+- Microdata : ${c.hasMicrodata ? 'Oui' : 'Non'}
+
+### Densité sémantique
+- Ratio boilerplate (nav+footer) / texte total : ${Math.round(c.boilerplateRatio * 100)}%
+- Mots totaux : ${c.totalWords}
 `;
   }
 
@@ -953,8 +1065,9 @@ ${buildIdentityGapsSection(ctx)}
 ## Mots-clés ciblés
 ${keywordList || 'Aucun mot-clé trouvé'}
 ${croMatrixSection}
+${chunkabilitySection}
 ## Instructions
-Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte business ci-dessus :
+Analyse cette page selon les **8 axes** suivants, en prenant en compte le contexte business ci-dessus :
 
 1. **Ton** : Le ton est-il adapté à l'audience et au positionnement ? Trop commercial ? Pas assez ? Trop technique ?
 2. **Pression CTA** : Les CTAs sont-ils bien placés ? Trop fréquents ? Pas assez ? Le wording est-il adapté à l'intention de la page ?
@@ -963,6 +1076,14 @@ Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte b
 5. **Conversion** : Éléments de conversion présents ? Preuves sociales ? Urgence ? Proposition de valeur claire ?
 6. **Expérience mobile** : Structure adaptée au mobile ? Taille des blocs de texte ? Accessibilité des CTAs ?
 7. **Utilisation des mots-clés** : Les mots-clés ciblés sont-ils utilisés naturellement ? Dans les bons éléments (H1, H2, body) ? Densité appropriée ?
+8. **Chunkability (IA-readiness)** : La page est-elle structurée pour être correctement "découpée" (chunked) par les LLM et systèmes RAG ?
+   Évalue en utilisant les signaux de télémétrie DOM fournis ci-dessus :
+   - **Structure Hn** (25%) : Hiérarchie H1→H2→H3 sans sauts, nombre suffisant de headings par rapport au volume de texte
+   - **Longueur des sections** (20%) : Les blocs entre deux Hn font-ils entre 150 et 400 mots (zone optimale LLM) ? Pénalise les sections >800 mots (impossible à chunker proprement) et <50 mots (trop fragmenté)
+   - **Balises sémantiques** (15%) : Usage d'article, section, aside, nav, figure au lieu de div génériques — permet aux parsers IA d'identifier les segments
+   - **Listes & tableaux** (15%) : Présence de ul/ol/table structurés qui facilitent l'extraction factuelle RAG
+   - **Données structurées** (15%) : JSON-LD et microdata — les chunks sont pré-annotés sémantiquement pour les LLM
+   - **Densité sémantique** (10%) : Ratio texte utile vs boilerplate (nav, footer, pubs) — un ratio boilerplate >40% dilue les chunks
 
 **IMPORTANT** : Utilise la matrice CRO ci-dessus pour vérifier systématiquement la présence de chaque variable REQUISE pour le type de page détecté. Chaque variable requise absente doit générer une suggestion spécifique.
 

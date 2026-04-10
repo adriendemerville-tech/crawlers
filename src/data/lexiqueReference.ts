@@ -94,7 +94,7 @@ export const LEXIQUE_REFERENCE: LexiqueEntry[] = [
   { term: 'Architect Workbench', def: "Table centralisée priorisant les findings de tous les diagnostics." },
   { term: 'Télémétrie', def: "Mesure automatique par crawl HTML : balises, Schema.org, liens." },
   { term: 'Heuristique', def: "Score calculé par règles pondérées sur signaux bruts." },
-  { term: 'Conversion Optimizer', def: "Audit UX/CRO contextuel sur 7 axes : ton, CTAs, lisibilité, mobile, mots-clés." },
+  { term: 'Conversion Optimizer', def: "Audit UX/CRO contextuel sur 8 axes : ton, CTAs, lisibilité, mobile, mots-clés, alignement, conversion et chunkability IA." },
   { term: 'Analyse de Logs', def: "Analyse des logs serveur pour comprendre le comportement des bots sur votre site." },
   { term: 'Budget Crawl', def: "Nombre de pages que Google explore sur un site par session. Optimisable via l'analyse de logs." },
   { term: 'Récurrence de Crawl', def: "Fréquence à laquelle un bot revient explorer une page. Indicateur de priorité perçue." },
