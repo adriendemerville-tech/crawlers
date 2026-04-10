@@ -547,7 +547,6 @@ Si aucun changement détecté, retourne : { "changes": [], "summary": "Aucun cha
         "cycle en cours", "dernier cycle", "prochain cycle",
         "diagnostic autopilot", "observations autopilot",
       ];
-      const lowerMsgCheck = lastUserMsg.toLowerCase();
       const isParmenionQuestion = parmenionKeywords.some(kw => lowerMsgCheck.includes(kw));
       
       if (isParmenionQuestion) {
