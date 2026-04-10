@@ -111,9 +111,9 @@ const SocialContentCreator = memo(() => {
       <main className="min-h-screen bg-background">
         {/* Hero */}
         <section className="relative overflow-hidden py-20 lg:py-28">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+          <div className="absolute inset-0 bg-gradient-to-br from-muted/50 via-transparent to-accent/5" />
           <div className="relative max-w-5xl mx-auto px-4 text-center">
-            <Badge variant="outline" className="mb-6 text-sm px-4 py-1.5 border-primary/30">
+            <Badge variant="outline" className="mb-6 text-sm px-4 py-1.5 border-border">
               <Share2 className="h-3.5 w-3.5 mr-1.5" /> 5 contenus gratuits / mois
             </Badge>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-tight mb-6">
@@ -145,9 +145,9 @@ const SocialContentCreator = memo(() => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {features.map((f, i) => (
-                <Card key={i} className="border-border/50 hover:border-primary/30 transition-colors">
+                <Card key={i} className="border-border/50 hover:border-foreground/20 transition-colors">
                   <CardContent className="pt-6">
-                    <f.icon className="h-8 w-8 text-primary mb-3" />
+                    <f.icon className="h-8 w-8 text-muted-foreground mb-3" />
                     <h3 className="font-semibold text-foreground mb-2">{f.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                   </CardContent>
@@ -169,9 +169,9 @@ const SocialContentCreator = memo(() => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {smartFeatures.map((f, i) => (
-                <Card key={i} className="border-primary/20 bg-primary/5">
+                <Card key={i} className="border-border bg-muted/30">
                   <CardContent className="pt-6">
-                    <f.icon className="h-10 w-10 text-primary mb-4" />
+                    <f.icon className="h-10 w-10 text-foreground mb-4" />
                     <h3 className="font-bold text-foreground mb-2">{f.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                   </CardContent>
@@ -188,7 +188,7 @@ const SocialContentCreator = memo(() => {
             <div className="space-y-8">
               {workflow.map((w, i) => (
                 <div key={i} className="flex gap-6 items-start">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-lg">
                     {w.step}
                   </div>
                   <div>
@@ -211,14 +211,14 @@ const SocialContentCreator = memo(() => {
                 { plan: 'Pro Agency', posts: '30 posts/mois', features: ['Publication directe 3 plateformes', 'Smart Linking', 'Calendrier éditorial', 'Analytics basiques'], highlight: true },
                 { plan: 'Pro Agency+', posts: '100 posts/mois', features: ['Tout Pro Agency', 'Traduction auto', 'Modération commentaires', 'Analytics avancées'] },
               ].map((tier, i) => (
-                <Card key={i} className={tier.highlight ? 'border-primary ring-2 ring-primary/20' : 'border-border/50'}>
+                <Card key={i} className={tier.highlight ? 'border-foreground ring-2 ring-foreground/10' : 'border-border/50'}>
                   <CardContent className="pt-6 text-center">
                     <h3 className="font-bold text-foreground mb-1">{tier.plan}</h3>
-                    <p className="text-2xl font-bold text-primary mb-4">{tier.posts}</p>
+                    <p className="text-2xl font-bold text-foreground mb-4">{tier.posts}</p>
                     <ul className="text-sm text-muted-foreground space-y-2 text-left">
                       {tier.features.map((f, j) => (
                         <li key={j} className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className="h-4 w-4 text-foreground flex-shrink-0 mt-0.5" />
                           {f}
                         </li>
                       ))}

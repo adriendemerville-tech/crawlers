@@ -155,7 +155,7 @@ export function GoogleDriveFolderPicker({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <HardDrive className="h-5 w-5 text-primary" />
+            <HardDrive className="h-5 w-5 text-muted-foreground" />
             Sélectionner un dossier Google Drive
           </DialogTitle>
           <DialogDescription>
@@ -210,13 +210,13 @@ export function GoogleDriveFolderPicker({
                   onDoubleClick={() => folder.hasChildren && navigateToFolder(folder)}
                   className={`w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-md text-sm transition-colors group ${
                     selectedId === folder.id
-                      ? 'bg-primary/10 text-primary border border-primary/30'
+                      ? 'bg-muted text-foreground border border-foreground/20'
                       : 'hover:bg-muted/50 text-foreground border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     {selectedId === folder.id ? (
-                      <FolderOpen className="h-4.5 w-4.5 text-primary" />
+                      <FolderOpen className="h-4.5 w-4.5 text-foreground" />
                     ) : (
                       <Folder className="h-4.5 w-4.5 text-muted-foreground group-hover:text-foreground" />
                     )}
@@ -224,7 +224,7 @@ export function GoogleDriveFolderPicker({
                   </div>
                   <div className="flex items-center gap-1.5">
                     {selectedId === folder.id && (
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="h-4 w-4 text-foreground" />
                     )}
                     {folder.hasChildren && (
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-50" />
