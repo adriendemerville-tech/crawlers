@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Zap, ArrowRight, TrendingUp, Target, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { SIMULATED_ACTION_ITEMS } from '@/data/socialSimulatedData';
 
 interface SocialActionPlanProps {
   domain: string;
@@ -16,10 +18,16 @@ interface SocialActionPlanProps {
 }
 
 export const SocialActionPlan = memo(function SocialActionPlan({ domain, trackedSiteId, onCreateFromItem }: SocialActionPlanProps) {
+  const { isDemoMode } = useDemoMode();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isDemoMode) {
+      setItems(SIMULATED_ACTION_ITEMS);
+      setLoading(false);
+      return;
+    }
     if (!domain) return;
     const loadItems = async () => {
       try {
@@ -36,7 +44,7 @@ export const SocialActionPlan = memo(function SocialActionPlan({ domain, tracked
       finally { setLoading(false); }
     };
     loadItems();
-  }, [domain]);
+  }, [domain, isDemoMode]);
 
   const severityColor = (s: string) => {
     if (s === 'critical') return 'bg-destructive/20 text-destructive';
@@ -72,7 +80,7 @@ export const SocialActionPlan = memo(function SocialActionPlan({ domain, tracked
                     <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] text-muted-foreground">{item.finding_category}</span>
-                      <span className="text-[10px] text-primary font-medium">Score: {item.total_score}</span>
+                      <span className="text-[10px] text-primary font-medium">Score: {item.total_score || item.score}</span>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onCreateFromItem?.(item)}>
