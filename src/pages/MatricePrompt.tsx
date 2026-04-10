@@ -487,6 +487,9 @@ export default function MatricePrompt() {
     });
   }, [rows, sortField, sortDir]);
 
+  /* --- Smart labels based on matrice type --- */
+  const smartLabels = useMemo(() => getSmartDefaults(activeMatriceType).labels, [activeMatriceType]);
+
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
   const someSelected = rows.some(r => r.selected);
