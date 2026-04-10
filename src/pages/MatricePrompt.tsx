@@ -1098,6 +1098,7 @@ export default function MatricePrompt() {
 
               <div className="px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center gap-4">
                 <span>{selectedRows.length}/{rows.length} KPIs sélectionnés</span>
+                <Badge variant="outline" className="text-[9px]">{activeScoring.label}</Badge>
                 {results && (() => {
                   const active = results.filter((r: any) => selectedRows.some(s => s.id === r.id || s.prompt === r.prompt));
                   const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
@@ -1106,8 +1107,8 @@ export default function MatricePrompt() {
                   const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
                   return (
                     <span className="ml-auto font-medium text-foreground flex gap-4">
-                      <span>Parsé : {parsedScore}/100</span>
-                      <span className="text-primary">Crawlers : {crawlersScore}/100</span>
+                      <span>{activeScoring.display.scoreLabel} : {activeScoring.display.formatScore(parsedScore)}</span>
+                      <span className="text-primary">Crawlers : {activeScoring.display.formatScore(crawlersScore)}</span>
                     </span>
                   );
                 })()}
