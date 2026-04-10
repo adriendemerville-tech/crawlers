@@ -21,12 +21,21 @@ export const SocialActionPlan = memo(function SocialActionPlan({ domain, tracked
 
   useEffect(() => {
     if (!domain) return;
-    supabase.rpc('score_workbench_priority', {
-      p_domain: domain,
-      p_user_id: (supabase as any).auth?.user?.()?.id,
-      p_limit: 15,
-      p_lane: 'content',
-    }).then(({ data }) => {
+    const loadItems = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.rpc('score_workbench_priority', {
+          p_domain: domain,
+          p_user_id: user.id,
+          p_limit: 15,
+          p_lane: 'content',
+        });
+        setItems(data || []);
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    loadItems();
       setItems(data || []);
       setLoading(false);
     }).catch(() => setLoading(false));
