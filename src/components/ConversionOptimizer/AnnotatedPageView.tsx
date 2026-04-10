@@ -450,6 +450,18 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
               onLoad={handleImageLoad}
             />
 
+            {/* Manual annotation overlay - positioned over the screenshot */}
+            {imageLoaded && onManualAnnotationsChange && (
+              <ManualAnnotationOverlay
+                isDrawing={drawingMode}
+                scale={scale}
+                offsetX={0}
+                annotations={manualAnnotations}
+                onAdd={handleAddManual}
+                onRemove={handleRemoveManual}
+              />
+            )}
+
             {imageLoaded && annotatedSuggestions.length > 0 && positionedSuggestions.length === 0 && (
               <div className="absolute inset-x-6 top-6 z-20 rounded-lg border border-border bg-background/92 p-3 text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
                 Cet audit n'a pas de coordonnées visuelles enregistrées, donc les bulles reliées ne peuvent pas être affichées sur cette capture.
