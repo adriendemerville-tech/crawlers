@@ -2423,12 +2423,42 @@ Confirme en 1-2 phrases que tu lances l'action et que tu le rediriges vers la pa
 IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> (invisible pour l'utilisateur).`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt + navigationPrompt;
+    // ── Build dynamic config prompt from felix_config ──
+    let configPrompt = "";
+    if (Object.keys(felixConfig).length > 0) {
+      const toneMap: Record<string, string> = {
+        collegial: "Tu es un collègue sympa et direct.",
+        formel: "Tu es professionnel et formel. Vouvoiement systématique.",
+        decontracte: "Tu es très décontracté, presque familier. Tutoiement naturel.",
+        technique: "Tu es technique et précis. Jargon SEO bienvenu.",
+      };
+      const parts: string[] = ["\n\n# CONFIGURATION DYNAMIQUE (felix_config)"];
+      if (felixConfig.tone && toneMap[felixConfig.tone]) parts.push(`- Ton : ${toneMap[felixConfig.tone]}`);
+      if (felixConfig.vouvoiement === 'toujours') parts.push("- TOUJOURS vouvoyer, peu importe le style de l'utilisateur.");
+      else if (felixConfig.vouvoiement === 'jamais') parts.push("- TOUJOURS tutoyer.");
+      if (felixConfig.emojis === 'always') parts.push("- Utilise des emojis dans tes réponses.");
+      else if (felixConfig.emojis === 'never') parts.push("- AUCUN emoji, jamais.");
+      if (felixConfig.greeting_style === 'warm') parts.push("- Commence par une salutation légère et chaleureuse.");
+      if (felixConfig.cta_style === 'direct') parts.push("- Propose activement les fonctionnalités payantes (Pro Agency, crédits).");
+      else if (felixConfig.cta_style === 'none') parts.push("- Ne fais AUCUNE suggestion commerciale.");
+      if (felixConfig.user_level_detection === 'true') parts.push("- Adapte ton niveau technique au profil détecté (débutant → vulgarise, expert → jargon).");
+      if (felixConfig.proactive_suggestions === 'false') parts.push("- Ne fais PAS de suggestions proactives. Réponds uniquement à la question posée.");
+      if (felixConfig.max_tokens) parts.push(`- Limite tes réponses à ~${felixConfig.max_tokens} caractères max.`);
+      if (felixConfig.confidentiality_strict === 'false') parts.push("- Tu peux mentionner l'architecture interne si l'utilisateur est admin.");
+      configPrompt = parts.join('\n');
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt + navigationPrompt + configPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
       ...messages.slice(-20),
     ];
+
+    const felixModel = felixConfig.model || "google/gemini-2.5-flash";
+    const felixMaxTokens = isCreator
+      ? parseInt(felixConfig.max_tokens_creator || '2000', 10)
+      : screenHint ? 1200 : parseInt(felixConfig.max_tokens || '600', 10);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -2437,10 +2467,10 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: felixModel,
         messages: aiMessages,
         stream: false,
-        max_tokens: isCreator ? 2000 : screenHint ? 1200 : 600,
+        max_tokens: felixMaxTokens,
       }),
     });
 
