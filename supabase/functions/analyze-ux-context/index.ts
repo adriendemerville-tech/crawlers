@@ -490,19 +490,19 @@ async function captureScreenshotWithAnnotations(
   try {
     const script = `export default async ({ page }) => {
   await page.setViewport({ width: 1280, height: 900 });
-  await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 30000 });
-  await new Promise(r => setTimeout(r, 2000));
+  await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 45000 });
+  await new Promise(r => setTimeout(r, 4000));
 
   // Scroll progressively to trigger lazy-loaded images
   const scrollHeight = await page.evaluate(() => document.body.scrollHeight);
-  const step = 600;
+  const step = 400;
   for (let y = 0; y < scrollHeight; y += step) {
     await page.evaluate((top) => window.scrollTo(0, top), y);
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 350));
   }
   // Scroll back to top
   await page.evaluate(() => window.scrollTo(0, 0));
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 2000));
 
   // Force-load remaining lazy images
   await page.evaluate(() => {
