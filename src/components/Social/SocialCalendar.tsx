@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { fetchCalendarEvents, type SocialCalendarEvent } from '@/lib/api/socialHub';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { SIMULATED_CALENDAR_EVENTS } from '@/data/socialSimulatedData';
 
 interface SocialCalendarProps {
   trackedSiteId: string;
@@ -17,6 +19,7 @@ const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
 export const SocialCalendar = memo(function SocialCalendar({ trackedSiteId, onCreatePost }: SocialCalendarProps) {
+  const { isDemoMode } = useDemoMode();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<SocialCalendarEvent[]>([]);
 
@@ -25,9 +28,13 @@ export const SocialCalendar = memo(function SocialCalendar({ trackedSiteId, onCr
   const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
 
   useEffect(() => {
+    if (isDemoMode) {
+      setEvents(SIMULATED_CALENDAR_EVENTS as unknown as SocialCalendarEvent[]);
+      return;
+    }
     if (!trackedSiteId) return;
     fetchCalendarEvents(trackedSiteId, monthStr).then(setEvents).catch(console.error);
-  }, [trackedSiteId, monthStr]);
+  }, [trackedSiteId, monthStr, isDemoMode]);
 
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);

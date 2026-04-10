@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Linkedin, Facebook, Instagram, Heart, MessageCircle, Share2, Eye, ExternalLink } from 'lucide-react';
 import { fetchPosts, type SocialPost } from '@/lib/api/socialHub';
 import { supabase } from '@/integrations/supabase/client';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { SIMULATED_FEED_POSTS } from '@/data/socialSimulatedData';
 
 interface SocialFeedColumnsProps {
   trackedSiteId?: string;
@@ -20,14 +22,15 @@ const PlatformIcon = ({ platform }: { platform: string }) => {
   return <Instagram className="h-4 w-4" />;
 };
 
-const PostCard = memo(function PostCard({ post, platform }: { post: SocialPost; platform: string }) {
+const PostCard = memo(function PostCard({ post, platform, isDemoMode }: { post: SocialPost; platform: string; isDemoMode?: boolean }) {
   const content = platform === 'linkedin' ? post.content_linkedin : platform === 'facebook' ? post.content_facebook : post.content_instagram;
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<any>((post as any).metrics || null);
 
   useEffect(() => {
+    if (isDemoMode || (post as any).metrics) return;
     supabase.from('social_post_metrics' as any).select('*').eq('post_id', post.id).eq('platform', platform).order('measured_at', { ascending: false }).limit(1)
       .then(({ data }) => { if (data?.[0]) setMetrics(data[0]); });
-  }, [post.id, platform]);
+  }, [post.id, platform, isDemoMode]);
 
   if (!content) return null;
 
@@ -61,11 +64,16 @@ const PostCard = memo(function PostCard({ post, platform }: { post: SocialPost; 
 });
 
 export const SocialFeedColumns = memo(function SocialFeedColumns({ trackedSiteId }: SocialFeedColumnsProps) {
+  const { isDemoMode } = useDemoMode();
   const [posts, setPosts] = useState<SocialPost[]>([]);
 
   useEffect(() => {
+    if (isDemoMode) {
+      setPosts(SIMULATED_FEED_POSTS as unknown as SocialPost[]);
+      return;
+    }
     fetchPosts(trackedSiteId, 'published').then(setPosts).catch(console.error);
-  }, [trackedSiteId]);
+  }, [trackedSiteId, isDemoMode]);
 
   const platforms = ['linkedin', 'facebook', 'instagram'] as const;
 
@@ -87,7 +95,7 @@ export const SocialFeedColumns = memo(function SocialFeedColumns({ trackedSiteId
                 {platformPosts.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-8">Aucun post publié</p>
                 ) : (
-                  platformPosts.map(post => <PostCard key={post.id} post={post} platform={platform} />)
+                  platformPosts.map(post => <PostCard key={post.id} post={post} platform={platform} isDemoMode={isDemoMode} />)
                 )}
               </ScrollArea>
             </CardContent>

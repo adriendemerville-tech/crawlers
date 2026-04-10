@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart3, Eye, Heart, MessageCircle, Share2, MousePointerClick, RefreshCw, Loader2 } from 'lucide-react';
 import { refreshStats } from '@/lib/api/socialHub';
 import { supabase } from '@/integrations/supabase/client';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { SIMULATED_SOCIAL_STATS, SIMULATED_PLATFORM_STATS } from '@/data/socialSimulatedData';
 
 interface StatsAgg {
   impressions: number;
@@ -23,15 +25,22 @@ interface SocialStatsDashboardProps {
 }
 
 export const SocialStatsDashboard = memo(function SocialStatsDashboard({ trackedSiteId }: SocialStatsDashboardProps) {
+  const { isDemoMode } = useDemoMode();
   const [stats, setStats] = useState<StatsAgg>({ impressions: 0, clicks: 0, likes: 0, shares: 0, comments: 0, posts: 0 });
   const [platformStats, setPlatformStats] = useState<Record<string, StatsAgg>>({});
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadStats = async () => {
+    if (isDemoMode) {
+      setStats(SIMULATED_SOCIAL_STATS);
+      setPlatformStats(SIMULATED_PLATFORM_STATS);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      // Get all posts
       let query = supabase.from('social_posts' as any).select('id').eq('status', 'published');
       if (trackedSiteId) query = query.eq('tracked_site_id', trackedSiteId);
       const { data: posts } = await query;
@@ -45,7 +54,6 @@ export const SocialStatsDashboard = memo(function SocialStatsDashboard({ tracked
         .in('post_id', postIds)
         .order('measured_at', { ascending: false });
 
-      // Aggregate — take latest metric per post+platform
       const latest = new Map<string, any>();
       for (const m of (metrics || []) as any[]) {
         const key = `${m.post_id}_${m.platform}`;
@@ -77,9 +85,10 @@ export const SocialStatsDashboard = memo(function SocialStatsDashboard({ tracked
     finally { setLoading(false); }
   };
 
-  useEffect(() => { loadStats(); }, [trackedSiteId]);
+  useEffect(() => { loadStats(); }, [trackedSiteId, isDemoMode]);
 
   const handleRefresh = async () => {
+    if (isDemoMode) return;
     setRefreshing(true);
     try {
       await refreshStats();
@@ -101,7 +110,7 @@ export const SocialStatsDashboard = memo(function SocialStatsDashboard({ tracked
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Statistiques</CardTitle>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing || isDemoMode}>
             {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           </Button>
         </div>
