@@ -54,6 +54,11 @@ export const SocialPostEditor = memo(function SocialPostEditor({
   const [newHashtag, setNewHashtag] = useState('');
   const [smartLink, setSmartLink] = useState<{ url: string; short: string } | null>(null);
   const [activePlatform, setActivePlatform] = useState('linkedin');
+
+  const handlePlatformChange = useCallback((p: string) => {
+    setActivePlatform(p);
+    onPlatformChange?.(p);
+  }, [onPlatformChange]);
   const [generating, setGenerating] = useState(false);
   const [translating, setTranslating] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
