@@ -183,6 +183,17 @@ interface RobotsAnalysis {
   exists: boolean;
   permissive: boolean;
   content: string;
+  qualityScore: number; // 0-100
+  qualityDetails: {
+    length: number;
+    hasSitemapDirective: boolean;
+    hasMultipleUserAgents: boolean;
+    hasAIBotRules: boolean;
+    hasCrawlDelay: boolean;
+    hasComments: boolean;
+    specificity: 'none' | 'basic' | 'detailed' | 'advanced';
+    issues: string[];
+  };
 }
 
 function normalizeUrl(url: string): string {
