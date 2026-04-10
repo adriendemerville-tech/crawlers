@@ -236,6 +236,8 @@ export default function ConversionOptimizer() {
     setAnalyzing(true);
     setResult(null);
     setBackfillingAnnotations(false);
+    setManualAnnotations([]);
+    setDrawingMode(false);
 
     try {
       const { data, error } = await supabase.functions.invoke('analyze-ux-context', {
