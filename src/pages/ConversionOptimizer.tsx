@@ -256,6 +256,41 @@ export default function ConversionOptimizer() {
     }
   };
 
+  const handleRecalculate = useCallback(async () => {
+    if (!selectedSiteId || !selectedPageUrl || manualAnnotations.length === 0) return;
+    setRecalculating(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-ux-context', {
+        body: {
+          tracked_site_id: selectedSiteId,
+          page_url: selectedPageUrl,
+          mode: 'manual-suggestions',
+          manual_annotations: manualAnnotations,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Recalculation failed');
+
+      const newSuggestions = data.suggestions || [];
+      setResult((current) => current ? {
+        ...current,
+        suggestions: [...current.suggestions, ...newSuggestions],
+      } : current);
+
+      setDrawingMode(false);
+      toast({
+        title: 'Suggestions ajoutées',
+        description: `${newSuggestions.length} nouvelles recommandations générées.${data.workbench_injected > 0 ? ` ${data.workbench_injected} envoyées au Workbench.` : ''}`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message || 'Recalcul échoué', variant: 'destructive' });
+    } finally {
+      setRecalculating(false);
+    }
+  }, [selectedSiteId, selectedPageUrl, manualAnnotations, toast]);
+
   const hydrateSavedAnalysisAnnotations = async (saved: SavedAnalysis) => {
     if (!selectedSiteId || !saved.screenshot_url || (saved.annotations?.length ?? 0) > 0) return;
 
