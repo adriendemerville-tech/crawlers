@@ -573,11 +573,9 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
         .map((k: any) => `- "${k.keyword}" (pos: ${k.position || '?'}, vol: ${k.volume || '?'})`)
       if (kwList.length > 0) {
         keywordCloudBlock = `
-── UNIVERS MOTS-CLÉS DE RÉFÉRENCE (${kwList.length} termes classés) ──
-⚠️ CRITIQUE : Ce nuage de mots-clés représente le positionnement RÉEL du site. Le contenu généré DOIT s'inscrire dans cet univers sémantique.
-${kwList.slice(0, 30).join('\n')}
-
-RÈGLE : Le contenu doit cibler, enrichir ou compléter ces mots-clés. Tout contenu hors de cet univers thématique est INTERDIT.
+── UNIVERS MOTS-CLÉS (${kwList.length} termes) ──
+${kwList.slice(0, 20).join('\n')}
+RÈGLE : Le contenu doit s'inscrire dans cet univers sémantique.
 `
         console.log(`[content-advisor] ☁️ Keyword cloud injected: ${kwList.length} keywords`)
       }
