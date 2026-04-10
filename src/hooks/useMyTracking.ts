@@ -861,7 +861,7 @@ export function useMyTracking() {
     // IKTracker
     ikTrackerConnected, ikTrackerToggling, handleToggleIkTracker, isIkTrackerSite,
     // GSC
-    gscConnecting, gscData, gscLoading, gscConnected, gscAggregatedRows,
+    gscConnecting, gscData, gscLoading, gscConnected, gscHasToken, gscSiteVerified, gscAggregatedRows,
     handleConnectGsc, fetchGscData,
     gscDateMode, setGscDateMode, gscSinceDate, setGscSinceDate,
     gscRangeStart, setGscRangeStart, gscRangeEnd, setGscRangeEnd,
