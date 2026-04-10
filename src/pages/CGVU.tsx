@@ -25,7 +25,8 @@ const sections = [
   { id: 'disponibilite', title: '12. Disponibilité du Service' },
   { id: 'responsabilite', title: '12 bis. Limitation de Responsabilité' },
   { id: 'modification', title: '13. Modification des CGVU' },
-  { id: 'litiges', title: '14. Droit Applicable & Litiges' },
+  { id: 'social', title: '14. Social Content Hub — Publication & OAuth' },
+  { id: 'litiges', title: '15. Droit Applicable & Litiges' },
 ];
 
 const CGVU = () => {
