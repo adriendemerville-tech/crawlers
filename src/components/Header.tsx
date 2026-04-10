@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug, CreditCard, PenLine, HelpCircle, ChevronRight } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, Network, Grid3X3, Bug, CreditCard, PenLine, HelpCircle, ChevronRight, Share2 } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -371,7 +371,7 @@ export function Header() {
               </Button>
           )}
 
-          {/* Console-only shortcuts: Audit, Crawl, Comparé, Matrice */}
+          {/* Console-only shortcuts: Audit, Crawl, Comparé, Matrice, Social Hub */}
           {location.pathname === '/app/console' && (
             <div className="flex items-center gap-0.5">
               <Link to="/audit-expert" className="sm:hidden">
@@ -396,6 +396,13 @@ export function Header() {
                 <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
                   <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   Matrice
+                </Button>
+              </Link>
+              <Link to="/app/social">
+                <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                  <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  Social Hub
+                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
                 </Button>
               </Link>
             </div>
