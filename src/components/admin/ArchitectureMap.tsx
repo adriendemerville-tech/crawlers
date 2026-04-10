@@ -314,6 +314,7 @@ const ArchitectureMap: React.FC = () => {
               <g key={name}
                 onMouseEnter={() => setHovered(name)}
                 onMouseLeave={() => setHovered(null)}
+                onClick={() => handleCardClick(name)}
                 style={{ cursor: "pointer" }}
               >
                 {[0, 1, 2, 3].map(idx => {
@@ -352,6 +353,7 @@ const ArchitectureMap: React.FC = () => {
             <g key={name}
               onMouseEnter={() => setHovered(name)}
               onMouseLeave={() => setHovered(null)}
+              onClick={() => handleCardClick(name)}
               style={{ cursor: "pointer" }}
             >
               <rect x={pos.x} y={pos.y} width={pos.w} height={pos.h} rx={7}
