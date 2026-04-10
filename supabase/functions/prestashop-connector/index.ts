@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getAuthenticatedUser } from '../_shared/auth.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: prestashop-connector
@@ -18,7 +19,7 @@ import { assertSafeUrl } from '../_shared/ssrf.ts'
  * - create_draft: Create a CMS page as draft (active=0)
  */
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
