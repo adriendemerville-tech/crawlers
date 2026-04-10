@@ -53,6 +53,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  expandedContent?: string; // optional detailed version (e.g. architecture-map)
 }
 
 interface ArchivedConversation {
@@ -97,6 +98,7 @@ interface ChatWindowProps {
   autoStartCrawlersQuiz?: boolean;
   autoEnterpriseContact?: boolean;
   initialGreeting?: string | null;
+  initialExpandedGreeting?: string | null;
 }
 
 // NLP detection for bug/problem intent
@@ -170,7 +172,7 @@ function detectCrawlersHowTo(message: string): boolean {
   return matchCount >= 1;
 }
 
-export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz, autoEnterpriseContact, initialGreeting }: ChatWindowProps) {
+export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz, autoEnterpriseContact, initialGreeting, initialExpandedGreeting }: ChatWindowProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
@@ -349,10 +351,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         role: 'assistant',
         content: initialGreeting,
         timestamp: new Date().toISOString(),
+        expandedContent: initialExpandedGreeting || undefined,
       };
       setMessages([greetingMsg]);
     }
-  }, [initialGreeting]);
+  }, [initialGreeting, initialExpandedGreeting]);
 
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
