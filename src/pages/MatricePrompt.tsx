@@ -407,7 +407,8 @@ export default function MatricePrompt() {
   const [xlsxWorkbookRef, setXlsxWorkbookRef] = useState<any>(null);
   const [xlsxFileName, setXlsxFileName] = useState('');
   const [activeMatriceType, setActiveMatriceType] = useState<MatriceType>('seo');
-
+  const [activeScoringMethod, setActiveScoringMethod] = useState<ScoringMethodId>('score_100');
+  const activeScoring = useMemo(() => getScoringConfig(activeScoringMethod), [activeScoringMethod]);
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
