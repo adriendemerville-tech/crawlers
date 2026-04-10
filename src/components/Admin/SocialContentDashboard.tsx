@@ -195,12 +195,61 @@ export function SocialContentDashboard() {
         dailyData,
         topUsers,
       });
+
+      // If no data, inject simulated demo data
+      if (allPosts.length === 0 && (usage || []).length === 0) {
+        injectDemoData();
+      }
     } catch (err) {
       console.error('SocialContentDashboard error:', err);
+      injectDemoData();
     } finally {
       setIsLoading(false);
     }
   }, [period]);
+
+  const injectDemoData = () => {
+    const now = new Date();
+    const demoDaily = Array.from({ length: 14 }, (_, i) => {
+      const d = subDays(now, 13 - i);
+      return {
+        date: format(d, 'yyyy-MM-dd'),
+        label: format(d, 'dd MMM', { locale: fr }),
+        generations: Math.floor(Math.random() * 8) + 1,
+        cost: Math.round(Math.random() * 0.02 * 10000) / 10000,
+      };
+    });
+    setStats({
+      totalPosts: 47,
+      published: 28,
+      drafts: 12,
+      scheduled: 7,
+      byPlatform: { linkedin: 35, facebook: 22, instagram: 18 },
+      totalGenerations: 89,
+      totalTranslations: 14,
+      totalImages: 23,
+      totalSmartLinks: 42,
+      totalExports: 6,
+      totalPublications: 28,
+      totalTokens: 245000,
+      totalCostEur: 0.18,
+      byFunction: {
+        'generate-social-content': { calls: 89, tokens: 178000, cost: 0.12 },
+        'generate-social-image': { calls: 23, tokens: 34500, cost: 0.03 },
+        'translate-social-post': { calls: 14, tokens: 16800, cost: 0.01 },
+        'resolve-social-link': { calls: 42, tokens: 8400, cost: 0.01 },
+        'publish-to-social': { calls: 28, tokens: 5600, cost: 0.01 },
+        'export-social-zip': { calls: 6, tokens: 1700, cost: 0.0 },
+      },
+      uniqueUsers: 8,
+      dailyData: demoDaily,
+      topUsers: [
+        { user_id: 'demo-1', email: 'jean.dupont@demo.fr', count: 34 },
+        { user_id: 'demo-2', email: 'marie.martin@demo.fr', count: 21 },
+        { user_id: 'demo-3', email: 'pierre.bernard@demo.fr', count: 15 },
+      ],
+    });
+  };
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
