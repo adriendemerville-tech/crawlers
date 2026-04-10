@@ -118,7 +118,7 @@ function computeCorrelation(input: CorrelationInputV2): { impact_score: number; 
   const ctrScore = normalize(ctrDelta * 100, 5)
   const positionScore = normalize(positionDelta, 10)
 
-  // ─── GA4 Delta calculations (NEW) ─────────────────────────────
+  // ─── GA4 Delta calculations ─────────────────────────────
   let ga4SessionsScore = 0
   let ga4EngagementScore = 0
   let ga4BounceScore = 0
@@ -128,17 +128,14 @@ function computeCorrelation(input: CorrelationInputV2): { impact_score: number; 
   if (ga4Baseline && ga4Current) {
     hasGa4 = true
 
-    // Sessions delta
     const sessionsDelta = ga4Current.sessions - ga4Baseline.sessions
     const sessionsDeltaPct = ga4Baseline.sessions > 0
       ? (sessionsDelta / ga4Baseline.sessions) * 100 : 0
     ga4SessionsScore = normalize(sessionsDeltaPct, 50)
 
-    // Engagement rate delta (0-1 scale)
-    const engDelta = (ga4Current.engagement_rate - ga4Baseline.engagement_rate) * 100 // to pp
-    ga4EngagementScore = normalize(engDelta, 10) // ±10pp
+    const engDelta = (ga4Current.engagement_rate - ga4Baseline.engagement_rate) * 100
+    ga4EngagementScore = normalize(engDelta, 10)
 
-    // Bounce rate delta (inverted: lower = better)
     const bounceDelta = (ga4Baseline.bounce_rate - ga4Current.bounce_rate) * 100
     ga4BounceScore = normalize(bounceDelta, 10)
 
@@ -152,7 +149,6 @@ function computeCorrelation(input: CorrelationInputV2): { impact_score: number; 
   }
 
   // ─── Blended impact score ─────────────────────────────────────
-  // With GA4: rebalance weights to include engagement signals
   const weights = hasGa4 ? {
     clicks: 0.25,
     impressions: 0.15,
@@ -223,6 +219,69 @@ function computeCorrelation(input: CorrelationInputV2): { impact_score: number; 
       action_plan_progress: Math.round(actionPlanProgress),
       computed_at: new Date().toISOString(),
     },
+  }
+}
+
+/**
+ * Retrospective calibration: adjusts future impact predictions based on
+ * historical error ratios from completed snapshots (actual_results + past snapshots).
+ * Returns a multiplier to apply to raw impact_score.
+ */
+async function getRetrospectiveCalibration(supabase: any, auditType: string): Promise<{ multiplier: number; sampleSize: number; avgError: number }> {
+  try {
+    // Fetch completed snapshots with known impact scores
+    const { data: completedSnapshots } = await supabase
+      .from('audit_impact_snapshots')
+      .select('impact_score, reliability_grade, audit_type, correlation_data')
+      .eq('measurement_phase', 'complete')
+      .eq('audit_type', auditType)
+      .not('impact_score', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(30)
+
+    if (!completedSnapshots || completedSnapshots.length < 5) {
+      return { multiplier: 1.0, sampleSize: 0, avgError: 0 }
+    }
+
+    // Also check actual_results for prediction accuracy
+    const { data: actualResults } = await supabase
+      .from('actual_results')
+      .select('accuracy_gap')
+      .not('accuracy_gap', 'is', null)
+      .order('recorded_at', { ascending: false })
+      .limit(30)
+
+    // Calculate systematic bias from actual results
+    let biasMultiplier = 1.0
+    if (actualResults && actualResults.length >= 5) {
+      const avgGap = actualResults.reduce((s: number, r: any) => s + (r.accuracy_gap || 0), 0) / actualResults.length
+      // If we consistently over-predict (gap > 0), reduce future scores
+      // If we under-predict (gap < 0), boost future scores
+      biasMultiplier = Math.max(0.7, Math.min(1.3, 1.0 - avgGap * 0.005))
+    }
+
+    // Calculate grade distribution bias from snapshots
+    const gradeScores: Record<string, number> = { A: 4, B: 3, C: 2, D: 1, F: 0 }
+    const avgGradeScore = completedSnapshots.reduce((s: number, snap: any) => {
+      return s + (gradeScores[snap.reliability_grade] || 2)
+    }, 0) / completedSnapshots.length
+
+    // If average grade is mediocre (< 2.5), apply conservative multiplier
+    const gradeMultiplier = avgGradeScore < 2.0 ? 0.85 : avgGradeScore < 2.5 ? 0.92 : 1.0
+
+    const finalMultiplier = Math.round(biasMultiplier * gradeMultiplier * 100) / 100
+    const avgError = actualResults && actualResults.length > 0
+      ? Math.round(actualResults.reduce((s: number, r: any) => s + Math.abs(r.accuracy_gap || 0), 0) / actualResults.length * 10) / 10
+      : 0
+
+    return {
+      multiplier: finalMultiplier,
+      sampleSize: completedSnapshots.length + (actualResults?.length || 0),
+      avgError,
+    }
+  } catch (e) {
+    console.warn('[measure] Retrospective calibration failed:', e)
+    return { multiplier: 1.0, sampleSize: 0, avgError: 0 }
   }
 }
 

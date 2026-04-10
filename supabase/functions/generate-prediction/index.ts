@@ -29,6 +29,42 @@ function computeTDI(errorCount: number): number {
   return errorCount > 0 ? Math.pow(errorCount, 1.5) : 0;
 }
 
+/** 
+ * Calibrated TDI using historical correlation from actual_results.
+ * If we have enough data, adjust the exponent based on observed accuracy.
+ */
+async function computeCalibratedTDI(supabase: any, errorCount: number, domain?: string): Promise<number> {
+  if (errorCount === 0) return 0;
+  
+  try {
+    // Fetch recent actual_results to calibrate TDI exponent
+    const { data: results } = await supabase
+      .from('actual_results')
+      .select('accuracy_gap, context_data')
+      .not('accuracy_gap', 'is', null)
+      .order('recorded_at', { ascending: false })
+      .limit(50);
+    
+    if (!results || results.length < 10) {
+      return computeTDI(errorCount); // Not enough data, use default
+    }
+    
+    // Calculate average absolute accuracy gap
+    const avgGap = results.reduce((s: number, r: any) => s + Math.abs(r.accuracy_gap || 0), 0) / results.length;
+    
+    // If predictions are consistently too high (gap > 0), reduce TDI impact (lower exponent)
+    // If predictions are consistently too low (gap < 0), increase TDI impact
+    const biasDirection = results.reduce((s: number, r: any) => s + (r.accuracy_gap || 0), 0) / results.length;
+    
+    // Adjust exponent: base 1.5, range [1.2, 1.8]
+    const adjustedExponent = Math.max(1.2, Math.min(1.8, 1.5 - biasDirection * 0.01));
+    
+    return Math.pow(errorCount, adjustedExponent);
+  } catch {
+    return computeTDI(errorCount);
+  }
+}
+
 function domainRoot(domain: string): string {
   return domain.replace(/^www\./, '').split('.')[0].toLowerCase();
 }
@@ -38,18 +74,38 @@ function isBrand(keyword: string, root: string): boolean {
   return kw.includes(root) || kw.includes(root.replace(/-/g, ' '));
 }
 
-type Intent = 'high_intent' | 'low_intent';
+type Intent = 'transactional' | 'commercial' | 'navigational' | 'informational';
 
+/** 4-level intent classification (upgraded from binary high/low) */
 function classifyIntent(keyword: string): Intent {
   const kw = keyword.toLowerCase();
-  const highSignals = [
+  const transactional = [
     'acheter','buy','prix','price','tarif','devis','promo','discount',
-    'commande','livraison','shop','boutique','comparatif','avis',
-    'près de','near me','à proximité','horaire','itinéraire',
-    'reservation','réservation','location','louer','souscrire',
+    'commande','livraison','shop','boutique','commander','souscrire',
+    'reservation','réservation','location','louer','panier','checkout',
   ];
-  return highSignals.some(s => kw.includes(s)) ? 'high_intent' : 'low_intent';
+  const commercial = [
+    'comparatif','avis','meilleur','best','review','top','alternative',
+    'vs','test','classement','ranking','guide d\'achat','comparaison',
+  ];
+  const navigational = [
+    'connexion','login','mon compte','dashboard','contact','about',
+    'horaire','itinéraire','adresse','téléphone','accès','near me',
+    'à proximité','près de',
+  ];
+  if (transactional.some(s => kw.includes(s))) return 'transactional';
+  if (commercial.some(s => kw.includes(s))) return 'commercial';
+  if (navigational.some(s => kw.includes(s))) return 'navigational';
+  return 'informational';
 }
+
+/** Intent-based CTR multiplier for traffic estimation */
+const INTENT_CTR_MULTIPLIER: Record<Intent, number> = {
+  transactional: 1.3,
+  commercial: 1.1,
+  navigational: 0.8, // often brand-specific, lower organic CTR
+  informational: 1.0,
+};
 
 function classifyDepth(data: Record<string, any>): 'thin' | 'utility' | 'authority' {
   const cqs = Number(data.content_quality_score) || 0;
@@ -86,6 +142,65 @@ function resolveSector(ext: Record<string, any>): string {
     if (raw.includes(pattern)) return sector;
   }
   return 'Services';
+}
+
+/**
+ * Learned seasonality: try to use site-specific GSC historical data first.
+ * Falls back to the hardcoded SEASONALITY_MATRIX if insufficient data.
+ */
+async function learnedSeasonalFactor90d(supabase: any, siteId: string | null, sector: string): Promise<{ factor: number; source: 'learned' | 'matrix' }> {
+  if (siteId) {
+    try {
+      // Fetch 12+ months of GSC history
+      const { data: gscHistory } = await supabase
+        .from('gsc_history_log')
+        .select('clicks, week_start_date')
+        .eq('tracked_site_id', siteId)
+        .order('week_start_date', { ascending: true })
+        .limit(60); // ~14 months
+      
+      if (gscHistory && gscHistory.length >= 40) { // need ~10 months minimum
+        // Aggregate clicks by month
+        const monthlyClicks: Record<number, number[]> = {};
+        for (let m = 0; m < 12; m++) monthlyClicks[m] = [];
+        
+        for (const row of gscHistory) {
+          const month = new Date(row.week_start_date).getMonth();
+          monthlyClicks[month].push(row.clicks || 0);
+        }
+        
+        // Calculate monthly averages
+        const monthlyAvgs: number[] = [];
+        for (let m = 0; m < 12; m++) {
+          const vals = monthlyClicks[m];
+          monthlyAvgs.push(vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0);
+        }
+        
+        const overallAvg = monthlyAvgs.reduce((a, b) => a + b, 0) / 12;
+        if (overallAvg > 0) {
+          // Calculate seasonal indices
+          const indices = monthlyAvgs.map(v => v / overallAvg);
+          
+          // 90-day factor (current month + next 2)
+          const m0 = new Date().getMonth();
+          const factor = (indices[m0] + indices[(m0 + 1) % 12] + indices[(m0 + 2) % 12]) / 3;
+          
+          return { factor: Math.round(factor * 1000) / 1000, source: 'learned' };
+        }
+      }
+    } catch (e) {
+      console.warn('[generate-prediction] Learned seasonality failed, falling back to matrix:', e);
+    }
+  }
+  
+  // Fallback to static matrix
+  const now = new Date();
+  const m0 = now.getMonth();
+  const coeffs = SEASONALITY_MATRIX[sector] || SEASONALITY_MATRIX['Services'];
+  const c1 = coeffs[m0];
+  const c2 = coeffs[(m0 + 1) % 12];
+  const c3 = coeffs[(m0 + 2) % 12];
+  return { factor: Math.round(((c1 + c2 + c3) / 3) * 1000) / 1000, source: 'matrix' };
 }
 
 function seasonalFactor90d(sector: string): number {
