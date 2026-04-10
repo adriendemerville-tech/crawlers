@@ -75,7 +75,7 @@ export function SocialContentDashboard() {
         : undefined;
 
       // Fetch social posts
-      let postsQuery = supabase.from('social_posts').select('id, status, platforms, created_at, user_id');
+      let postsQuery = supabase.from('social_posts').select('id, status, publish_platforms, created_at, user_id');
       if (sinceDate) postsQuery = postsQuery.gte('created_at', sinceDate);
       const { data: posts } = await postsQuery;
 
@@ -105,8 +105,8 @@ export function SocialContentDashboard() {
 
       const byPlatform: Record<string, number> = {};
       allPosts.forEach(p => {
-        const platforms = (p.platforms || []) as string[];
-        platforms.forEach(pl => { byPlatform[pl] = (byPlatform[pl] || 0) + 1; });
+        const pls = (p.publish_platforms || []) as string[];
+        pls.forEach(pl => { byPlatform[pl] = (byPlatform[pl] || 0) + 1; });
       });
 
       // Process AI usage
