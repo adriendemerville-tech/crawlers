@@ -882,7 +882,7 @@ export function MyTracking() {
                         } else if (rec.recommendation_key === 'identity_card') {
                           h.setShowIdentityModal(true);
                         } else if (rec.recommendation_key === 'autopilot') {
-                          h.setShowAutopilotModal(true);
+                          toast.info('Autopilote actif en arrière-plan.');
                         } else {
                           toast.info(rec.title);
                         }
