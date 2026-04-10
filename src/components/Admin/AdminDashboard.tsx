@@ -302,7 +302,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'eeat': return <EeatScoringAdmin />;
       case 'marina': return <MarinaDashboard />;
       case 'prospects': return <ProspectPipelineDashboard />;
-      case 'social-hub': return <SocialContentDashboard />;
+      case 'social-hub': return <SocialContentDashboard simulatedDataEnabled={simulatedDataEnabled} />;
       default: return <AnalyticsDashboard />;
     }
   };
