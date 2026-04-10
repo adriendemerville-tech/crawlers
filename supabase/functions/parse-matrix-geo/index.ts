@@ -81,13 +81,106 @@ Contexte important : ${note.whyItMatters}`;
   return `Tu es un moteur de recherche IA. Réponds de manière factuelle et structurée.`;
 }
 
-/** Build scoring rubric instructions from imported Scoring Guide */
+/** Build scoring rubric instructions from imported Scoring Guide — dynamic field extraction */
 function buildScoringRubric(scoringGuide?: ScoringFieldInput[]): string {
   if (!scoringGuide?.length) return '';
   const rubricLines = scoringGuide.map(f => 
     `- **${f.field}** : ${f.whatToCode} (Valeurs: ${f.allowedValues}) → ${f.meaning}`
   ).join('\n');
-  return `\n\nGRILLE D'ÉVALUATION À APPLIQUER :\n${rubricLines}\n\nUtilise cette grille pour structurer ton analyse de citation.`;
+  return `\n\nGRILLE D'ÉVALUATION À APPLIQUER — code CHAQUE champ :\n${rubricLines}`;
+}
+
+/** Build the dynamic JSON schema for LLM scoring response based on Scoring Guide */
+function buildScoringJsonSchema(scoringGuide?: ScoringFieldInput[]): string {
+  // Base fields always present (citation analysis)
+  const baseFields: Record<string, string> = {
+    cited: '<bool>',
+    rank: '<number|null>',
+    context: '<phrase où la marque apparaît>',
+  };
+
+  // Add all Scoring Guide fields dynamically
+  if (scoringGuide?.length) {
+    for (const f of scoringGuide) {
+      // Map Scoring Guide field names to JSON keys (snake_case)
+      const key = f.field
+        .replace(/([A-Z])/g, '_$1').toLowerCase()
+        .replace(/^_/, '')
+        .replace(/__+/g, '_');
+      baseFields[key] = `<${f.allowedValues}>`;
+    }
+  }
+
+  return JSON.stringify(
+    Object.fromEntries(Object.entries(baseFields).map(([k, v]) => [k, v])),
+    null, 0
+  ).replace(/"/g, '');
+}
+
+/** Convert a coded Scoring Guide field value to a 0-100 numeric score */
+function rubricFieldToNumeric(field: ScoringFieldInput, value: string): number {
+  const v = (value || '').trim().toLowerCase();
+  const allowed = field.allowedValues || '';
+
+  // Boolean (Oui/Non)
+  if (/^oui\s*,\s*non$/i.test(allowed)) return /^oui|^yes|^true/i.test(v) ? 100 : 0;
+
+  // Rank (0 = absent, 1, 2, 3, 4, 5, 6+)
+  if (/\b0\s*=\s*(absent|absente)/i.test(allowed)) {
+    const rank = parseInt(v);
+    if (isNaN(rank) || rank === 0) return 0;
+    return Math.max(10, 100 - (rank - 1) * 20);
+  }
+
+  // Percentage ranges
+  if (/\d+\s*%/.test(allowed)) {
+    const pctMatch = v.match(/(\d+)/);
+    if (pctMatch) return Math.min(100, parseInt(pctMatch[1]));
+    if (/100\s*%/.test(v)) return 100;
+    if (/75-99/.test(v)) return 87;
+    if (/51-74/.test(v)) return 62;
+    if (/^50\s*%/.test(v)) return 50;
+    if (/25-49/.test(v)) return 37;
+    if (/1-24/.test(v)) return 12;
+    return 0;
+  }
+
+  // Count (0, 1, 2, 3+)
+  if (/^0\s*,\s*1\s*,\s*2/.test(allowed)) {
+    const count = parseInt(v);
+    if (isNaN(count) || count === 0) return 0;
+    if (count === 1) return 33;
+    if (count === 2) return 66;
+    return 100;
+  }
+
+  // Direction (Positive/Neutre/Négative)
+  if (/positive.*neutre.*n[ée]gative/i.test(allowed)) {
+    if (/positive/i.test(v)) return 100;
+    if (/neutre/i.test(v)) return 50;
+    if (/n[ée]gative/i.test(v)) return 0;
+    return 0;
+  }
+
+  // Accuracy (Exacte/Partiellement/Inexacte)
+  if (/exacte.*partiellement/i.test(allowed)) {
+    if (/^exacte/i.test(v)) return 100;
+    if (/partiellement/i.test(v)) return 50;
+    if (/inexacte/i.test(v)) return 0;
+    return 25;
+  }
+
+  // Source type
+  if (/propri[ée]taire.*tierce/i.test(allowed)) {
+    if (/propri[ée]taire/i.test(v)) return 100;
+    if (/mixte/i.test(v)) return 75;
+    if (/tierce/i.test(v)) return 50;
+    return 0;
+  }
+
+  const num = parseFloat(v);
+  if (!isNaN(num)) return Math.min(100, Math.max(0, num));
+  return 50;
 }
 
 /* ── LLM GEO evaluation (standard mode) ─────────────────────────── */
