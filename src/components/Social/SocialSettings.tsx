@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import {
   Settings, Linkedin, Facebook, Instagram, Link2, Unlink,
-  CheckCircle2, AlertCircle, ExternalLink, Shield, Key, RefreshCw
+  CheckCircle2, AlertCircle, ExternalLink, Shield, Key, RefreshCw, HardDrive, FolderOpen
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,6 +43,8 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
   ]);
   const [autoPublish, setAutoPublish] = useState(false);
   const [defaultHashtags, setDefaultHashtags] = useState('');
+  const [gdriveFolder, setGdriveFolder] = useState('');
+  const [gdriveConnected, setGdriveConnected] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Load existing social connections
@@ -238,6 +240,64 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
             />
             <p className="text-xs text-muted-foreground">
               Ces hashtags seront ajoutés automatiquement à chaque nouvelle publication.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Google Drive Export */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <HardDrive className="h-5 w-5 text-primary" />
+            Google Drive — Export
+          </CardTitle>
+          <CardDescription>
+            Configurez le dossier de destination pour l'export direct vers Google Drive.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
+            <div className="flex items-center gap-3">
+              <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${gdriveConnected ? 'bg-emerald-500/10' : 'bg-muted'}`}>
+                <HardDrive className={`h-5 w-5 ${gdriveConnected ? 'text-emerald-600' : 'text-muted-foreground'}`} />
+              </div>
+              <div>
+                <span className="font-semibold text-sm text-foreground">Google Drive</span>
+                <Badge variant="outline" className={`ml-2 text-[10px] ${gdriveConnected ? 'border-emerald-500/40 text-emerald-600' : 'text-muted-foreground'} gap-1`}>
+                  {gdriveConnected ? <><CheckCircle2 className="h-2.5 w-2.5" /> Connecté</> : <><AlertCircle className="h-2.5 w-2.5" /> Non connecté</>}
+                </Badge>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant={gdriveConnected ? 'ghost' : 'default'}
+              className="gap-1.5 text-xs"
+              onClick={() => {
+                toast.info('Connexion Google Drive OAuth en préparation…');
+                toast('L\'intégration Google Drive sera bientôt disponible via les connecteurs.', { icon: '🔗', duration: 5000 });
+              }}
+            >
+              <ExternalLink className="h-3 w-3" /> {gdriveConnected ? 'Reconnecter' : 'Connecter'}
+            </Button>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Label htmlFor="gdrive-folder" className="text-sm flex items-center gap-2">
+              <FolderOpen className="h-4 w-4 text-muted-foreground" />
+              Dossier de destination
+            </Label>
+            <Input
+              id="gdrive-folder"
+              placeholder="/Crawlers/Social Hub/Exports"
+              value={gdriveFolder}
+              onChange={(e) => setGdriveFolder(e.target.value)}
+              className="text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              Chemin du dossier dans votre Google Drive où seront exportés les contenus sociaux.
             </p>
           </div>
         </CardContent>

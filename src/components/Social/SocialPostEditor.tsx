@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
-  Smile, AtSign, Hash, Link2, Globe, Sparkles, Send, Download, Save, Loader2, Languages, Wand2
+  Smile, AtSign, Hash, Link2, Globe, Sparkles, Send, Download, Save, Loader2, Languages, Wand2, HardDrive
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateContent, resolveSmartLink, shortenLink, translatePost } from '@/lib/api/socialHub';
@@ -255,6 +255,15 @@ export const SocialPostEditor = memo(function SocialPostEditor({
           {onExport && (
             <Button variant="outline" onClick={onExport} className="gap-1.5">
               <Download className="h-4 w-4" /> Export .zip
+            </Button>
+          )}
+          {onExport && (
+            <Button variant="outline" onClick={() => {
+              toast.info('Export vers Google Drive en cours…');
+              // TODO: call edge function to upload to Google Drive folder
+              toast('Google Drive : configurez le dossier de destination dans l\'onglet Réglages', { icon: '📁', duration: 4000 });
+            }} className="gap-1.5">
+              <HardDrive className="h-4 w-4" /> Google Drive
             </Button>
           )}
         </div>
