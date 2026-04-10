@@ -44,7 +44,11 @@ function estimateCostEur(model: string, pt: number, ct: number): number {
 
 const PIE_COLORS = ['#8b5cf6', '#f59e0b', '#06b6d4', '#10b981', '#6366f1', '#ec4899', '#f97316'];
 
-export function SocialContentDashboard() {
+interface SocialContentDashboardProps {
+  simulatedDataEnabled?: boolean;
+}
+
+export function SocialContentDashboard({ simulatedDataEnabled = false }: SocialContentDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [period, setPeriod] = useState<'7d' | '30d' | 'all'>('30d');
   const [stats, setStats] = useState({
@@ -69,6 +73,11 @@ export function SocialContentDashboard() {
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
+    if (simulatedDataEnabled) {
+      injectDemoData();
+      setIsLoading(false);
+      return;
+    }
     try {
       const sinceDate = period === '7d' ? subDays(new Date(), 7).toISOString()
         : period === '30d' ? subDays(new Date(), 30).toISOString()
@@ -206,7 +215,7 @@ export function SocialContentDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [period]);
+  }, [period, simulatedDataEnabled]);
 
   const injectDemoData = () => {
     const now = new Date();
