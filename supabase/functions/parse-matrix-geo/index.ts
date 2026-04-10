@@ -159,7 +159,9 @@ Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string c
 /* ── Benchmark evaluation: send full prompt as-is to engine ──────── */
 
 async function evaluateBenchmark(
-  prompt: string, brandUrl: string, engine: string, llmName: string, retryCount = 0
+  prompt: string, brandUrl: string, engine: string, llmName: string,
+  engineNotes?: EngineNoteInput[], scoringRubric?: ScoringFieldInput[],
+  retryCount = 0
 ): Promise<{ score: number; raw: Record<string, any>; citation_found: boolean; citation_rank: number | null; citation_context: string }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 0, raw: { error: 'No API key' }, citation_found: false, citation_rank: null, citation_context: '' }
@@ -168,8 +170,8 @@ async function evaluateBenchmark(
   const RETRY_DELAYS = [2000, 5000]
 
   try {
-    // Step 1: Send the full prompt to the simulated engine
-    const enginePrompt = getEngineSystemPrompt(engine);
+    // Step 1: Send the full prompt to the simulated engine (enriched with Engine Notes)
+    const enginePrompt = getEngineSystemPrompt(engine, engineNotes);
     const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
