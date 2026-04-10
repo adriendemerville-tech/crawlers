@@ -99,15 +99,18 @@ function buildAnnotatedSuggestions(suggestions: Suggestion[], annotations: Annot
     }
   }
 
+  // Include ALL suggestions — not just those with current_text.
+  // User-added manual annotations are separate and additive.
   const items: AnnotatedItem[] = suggestions
-    .filter((suggestion) => suggestion.current_text)
     .map((suggestion, index) => {
-      const annotation = annotationsByIndex.get(index) ?? annotationsByText.get(annotationKey(suggestion.current_text));
+      const annotation = annotationsByIndex.get(index)
+        ?? annotationsByText.get(annotationKey(suggestion.current_text))
+        ?? annotationsByText.get(annotationKey(suggestion.title));
       return {
         ...suggestion,
         index,
         rect: annotation?.rect || null,
-        yPosition: annotation?.rect?.y ?? 0,
+        yPosition: annotation?.rect?.y ?? (index * 120), // fallback: stack evenly
       };
     });
 
@@ -196,8 +199,10 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
     [suggestions, annotations]
   );
 
+  // Show ALL suggestions as bubbles — those with rects get connector lines,
+  // those without still appear in the bubble column at estimated positions.
   const positionedSuggestions = useMemo(
-    () => annotatedSuggestions.filter((suggestion) => suggestion.rect),
+    () => annotatedSuggestions,
     [annotatedSuggestions]
   );
 
@@ -323,7 +328,7 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
           {imageLoaded && positionedSuggestions.length > 0 && (
             <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
               {positionedSuggestions.map((suggestion, index) => {
-                if (!suggestion.rect) return null;
+                if (!suggestion.rect) return null; // No rect = no connector line
 
                 const isImage = suggestion.isImageAnnotation;
                 const colors = isImage
@@ -345,7 +350,6 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
                 // Straight horizontal connector from bubble to element
                 const startX = BUBBLE_COLUMN_WIDTH - 8;
                 const endX = rectX;
-                // Use the element's Y center for the line
                 const lineY = rectCenterY;
 
                 return (
@@ -371,7 +375,6 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
                       fill={`${colors.line}${isHovered ? '20' : '0d'}`}
                       stroke={colors.line}
                       strokeWidth={isHovered ? 3 : 2}
-                      strokeDasharray={isHovered ? 'none' : 'none'}
                     />
                     {/* Anchor dot on element */}
                     <circle cx={endX} cy={rectCenterY} r={isHovered ? 4 : 3} fill={colors.line} opacity={0.9} />
@@ -462,9 +465,9 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
               />
             )}
 
-            {imageLoaded && annotatedSuggestions.length > 0 && positionedSuggestions.length === 0 && (
+            {imageLoaded && annotatedSuggestions.length > 0 && annotatedSuggestions.every(s => !s.rect) && (
               <div className="absolute inset-x-6 top-6 z-20 rounded-lg border border-border bg-background/92 p-3 text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
-                Cet audit n'a pas de coordonnées visuelles enregistrées, donc les bulles reliées ne peuvent pas être affichées sur cette capture.
+                Cet audit n'a pas de coordonnées visuelles enregistrées. Les bulles sont affichées sans lignes de liaison.
               </div>
             )}
           </div>
