@@ -119,6 +119,23 @@ export async function getSiteContext(
   // Enrich and cache
   const enriched = await ensureSiteContext(site)
   if (enriched) {
+    // Attach seasonal context
+    try {
+      const sector = enriched.market_sector || null
+      const { data: seasonalData } = await supabase.rpc('get_active_seasonal_context', {
+        p_sector: sector,
+        p_geo: enriched.primary_language === 'fr' ? 'FR' : 'FR',
+      })
+      if (seasonalData && seasonalData.length > 0) {
+        ;(enriched as any).seasonal_context = seasonalData
+        ;(enriched as any).current_season_summary = seasonalData
+          .filter((s: any) => s.is_in_peak || s.is_in_prep)
+          .map((s: any) => `${s.event_name} (${s.is_in_peak ? 'pic actuel' : `prépa, J-${s.days_until_start}`})`)
+          .join(', ') || null
+      }
+    } catch (e) {
+      console.warn('[getSiteContext] seasonal context fetch failed:', e)
+    }
     setCache(cacheKey, enriched)
   }
   return enriched
