@@ -2487,7 +2487,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
     }
 
     const data = await response.json();
-    logAIUsageFromResponse(sb, "google/gemini-2.5-flash", "sav-agent", data.usage);
+    logAIUsageFromResponse(sb, felixModel, "sav-agent", data.usage);
     let rawReply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
 
     // Extract and persist memory from LLM response
