@@ -163,3 +163,23 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.strategic-orchestrator]
     verify_jwt = false
+  [functions.generate-social-content]
+    verify_jwt = false
+  [functions.generate-social-image]
+    verify_jwt = false
+  [functions.publish-to-social]
+    verify_jwt = false
+  [functions.export-social-zip]
+    verify_jwt = false
+  [functions.fetch-social-stats]
+    verify_jwt = false
+  [functions.manage-social-comments]
+    verify_jwt = false
+  [functions.shorten-social-link]
+    verify_jwt = false
+  [functions.resolve-social-link]
+    verify_jwt = false
+  [functions.suggest-social-embed]
+    verify_jwt = false
+  [functions.translate-social-post]
+    verify_jwt = false
