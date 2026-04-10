@@ -29,36 +29,63 @@ const domains: Record<string, Domain> = {
   AGENCE: { color: "#FFD166", tables: ["agency_clients", "agency_client_sites", "agency_team_members", "agency_invitations"], functions: ["manage-team", "share-actions", "share-report"] },
 };
 
-// Directed connections: [source, target]
+// Directed connections: [data_source, data_consumer] — particle flows in direction of data
 const solidLinks: [string, string][] = [
-  ["AUDIT", "SERP & VISIBILITY"], ["AUTOPILOT", "AGENTS IA"], ["AUTOPILOT", "CONTENT"],
-  ["AUTOPILOT", "CMS & DEPLOY"], ["AUDIT", "CRAWL"], ["MARINA", "CRAWL"],
-  ["AUDIT", "GEO & LOCAL"], ["SERP & VISIBILITY", "COCOON"],
+  // SERP sends visibility data to AUDIT (audit invokes SERP to GET data)
+  ["SERP & VISIBILITY", "AUDIT"],
+  // AUTOPILOT sends directives TO agents/content/CMS
+  ["AUTOPILOT", "AGENTS IA"], ["AUTOPILOT", "CONTENT"], ["AUTOPILOT", "CMS & DEPLOY"],
+  // CRAWL sends crawl data to AUDIT & MARINA (they invoke crawl to GET data)
+  ["CRAWL", "AUDIT"], ["CRAWL", "MARINA"],
+  // GEO sends geo data to AUDIT
+  ["GEO & LOCAL", "AUDIT"],
+  // SERP feeds visibility data into COCOON
+  ["SERP & VISIBILITY", "COCOON"],
 ];
 
+// Dashed = table reads (SELECT): [table_owner/data_source, reader/consumer]
 const dashedLinks: [string, string][] = [
-  ["AGENTS IA", "AUDIT"], ["AGENTS IA", "CONTENT"], ["AGENTS IA", "CORE"],
-  ["AGENTS IA", "PROFIL"], ["AGENTS IA", "BLOG"], ["CONTENT", "AUDIT"],
-  ["CONTENT", "SERP & VISIBILITY"], ["CONTENT", "CORE"], ["ABONNEMENT", "CORE"],
-  ["AUDIT", "CORE"], ["AUDIT", "GEO & LOCAL"], ["AUDIT", "SERP & VISIBILITY"],
-  ["PROFIL", "AUDIT"], ["PROFIL", "PAIEMENT"], ["PROFIL", "BLOG"],
-  ["PROFIL", "CMS & DEPLOY"], ["PROFIL", "COCOON"], ["PROFIL", "GEO & LOCAL"],
-  ["PROFIL", "CORE"], ["PROFIL", "CONTENT"], ["PROFIL", "ABONNEMENT"],
-  ["AUTOPILOT", "CORE"], ["AUTOPILOT", "AUDIT"], ["AUTOPILOT", "AGENTS IA"],
-  ["COCOON", "AUDIT"], ["COCOON", "CRAWL"], ["COCOON", "CORE"],
-  ["SERP & VISIBILITY", "CORE"], ["SERP & VISIBILITY", "PROFIL"],
-  ["CMS & DEPLOY", "BLOG"], ["CMS & DEPLOY", "COCOON"], ["CMS & DEPLOY", "CONTENT"],
-  ["CMS & DEPLOY", "CORE"], ["COCOON", "SERP & VISIBILITY"], ["CONTENT", "COCOON"],
-  ["CONTENT", "ABONNEMENT"], ["CONTENT", "CRAWL"], ["CRAWL", "GSC & GA4"],
-  ["CRAWL", "CORE"], ["ABONNEMENT", "AUDIT"], ["PROFIL", "AGENCE"],
-  ["PROFIL", "CRAWL"], ["PROFIL", "GSC & GA4"], ["AGENTS IA", "CMS & DEPLOY"],
-  ["SERP & VISIBILITY", "CRAWL"], ["GSC & GA4", "CORE"], ["GSC & GA4", "ABONNEMENT"],
-  ["GSC & GA4", "SERP & VISIBILITY"], ["GEO & LOCAL", "GSC & GA4"],
-  ["GEO & LOCAL", "CORE"], ["SOCIAL", "CORE"], ["CMS & DEPLOY", "AUDIT"],
-  ["AGENCE", "CORE"], ["MARINA", "AUDIT"], ["MARINA", "CRAWL"],
-  ["MARINA", "CORE"], ["MARINA", "COCOON"], ["AGENTS IA", "COCOON"],
-  ["AGENCE", "ABONNEMENT"], ["PAIEMENT", "AUDIT"], ["PAIEMENT", "CORE"],
-  ["PAIEMENT", "ABONNEMENT"],
+  // AGENTS IA reads FROM these domains
+  ["AUDIT", "AGENTS IA"], ["CONTENT", "AGENTS IA"], ["CORE", "AGENTS IA"],
+  ["PROFIL", "AGENTS IA"], ["BLOG", "AGENTS IA"], ["COCOON", "AGENTS IA"],
+  // AGENTS IA pushes proposals TO CMS
+  ["AGENTS IA", "CMS & DEPLOY"],
+  // CONTENT reads FROM these domains
+  ["AUDIT", "CONTENT"], ["SERP & VISIBILITY", "CONTENT"], ["CORE", "CONTENT"],
+  ["COCOON", "CONTENT"], ["ABONNEMENT", "CONTENT"], ["CRAWL", "CONTENT"],
+  // AUDIT reads FROM these domains
+  ["CORE", "AUDIT"], ["GEO & LOCAL", "AUDIT"], ["SERP & VISIBILITY", "AUDIT"],
+  // ABONNEMENT reads FROM CORE; AUDIT feeds billing data TO ABONNEMENT
+  ["CORE", "ABONNEMENT"], ["AUDIT", "ABONNEMENT"],
+  // PROFIL reads FROM these domains
+  ["AUDIT", "PROFIL"], ["PAIEMENT", "PROFIL"], ["BLOG", "PROFIL"],
+  ["CMS & DEPLOY", "PROFIL"], ["COCOON", "PROFIL"], ["GEO & LOCAL", "PROFIL"],
+  ["CORE", "PROFIL"], ["CONTENT", "PROFIL"], ["ABONNEMENT", "PROFIL"],
+  ["AGENCE", "PROFIL"], ["CRAWL", "PROFIL"], ["GSC & GA4", "PROFIL"],
+  // AUTOPILOT reads FROM these domains
+  ["CORE", "AUTOPILOT"], ["AUDIT", "AUTOPILOT"], ["AGENTS IA", "AUTOPILOT"],
+  // COCOON reads FROM these domains
+  ["AUDIT", "COCOON"], ["CRAWL", "COCOON"], ["CORE", "COCOON"],
+  ["SERP & VISIBILITY", "COCOON"],
+  // SERP & VISIBILITY reads FROM these domains
+  ["CORE", "SERP & VISIBILITY"], ["PROFIL", "SERP & VISIBILITY"],
+  ["CRAWL", "SERP & VISIBILITY"],
+  // CMS & DEPLOY reads FROM these domains
+  ["BLOG", "CMS & DEPLOY"], ["COCOON", "CMS & DEPLOY"], ["CONTENT", "CMS & DEPLOY"],
+  ["CORE", "CMS & DEPLOY"], ["AUDIT", "CMS & DEPLOY"],
+  // GSC & GA4 data flows
+  ["GSC & GA4", "CRAWL"], ["CORE", "GSC & GA4"], ["ABONNEMENT", "GSC & GA4"],
+  ["GSC & GA4", "SERP & VISIBILITY"], ["GSC & GA4", "GEO & LOCAL"],
+  // GEO & LOCAL reads FROM CORE
+  ["CORE", "GEO & LOCAL"],
+  // SOCIAL reads FROM CORE
+  ["CORE", "SOCIAL"],
+  // MARINA reads FROM these domains (Marina imports/consumes data)
+  ["AUDIT", "MARINA"], ["CRAWL", "MARINA"], ["CORE", "MARINA"], ["COCOON", "MARINA"],
+  // AGENCE reads FROM these domains
+  ["CORE", "AGENCE"], ["ABONNEMENT", "AGENCE"],
+  // PAIEMENT data flows
+  ["CORE", "PAIEMENT"], ["AUDIT", "PAIEMENT"], ["PAIEMENT", "ABONNEMENT"],
 ];
 
 // ── Layout ───────────────────────────────────────────────────
@@ -408,13 +435,13 @@ const ArchitectureMap: React.FC = () => {
         </text>
 
         {/* ── Legend ── */}
-        <g transform={`translate(${SVG_W - 320}, ${SVG_H - 90})`}>
-          <rect x={0} y={0} width={300} height={75} rx={6} fill="#151a27" stroke="#2a3040" />
+        <g transform={`translate(${SVG_W - 340}, ${SVG_H - 90})`}>
+          <rect x={0} y={0} width={320} height={75} rx={6} fill="#151a27" stroke="#2a3040" />
           <text x={10} y={18} fill="#ccc" fontSize={10} fontWeight="bold">LEGENDE</text>
           <line x1={10} y1={30} x2={40} y2={30} stroke="#aaa" strokeWidth={2} />
-          <text x={48} y={34} fill="#999" fontSize={9}>Appel inter-functions (invoke)</text>
+          <text x={48} y={34} fill="#999" fontSize={9}>Appel inter-functions — flux = sens de la donnée</text>
           <line x1={10} y1={46} x2={40} y2={46} stroke="#777" strokeWidth={1.5} strokeDasharray="6 4" />
-          <text x={48} y={50} fill="#999" fontSize={9}>Lecture table cross-domaine (SELECT)</text>
+          <text x={48} y={50} fill="#999" fontSize={9}>Lecture table (SELECT) — flux = source → consommateur</text>
           <text x={10} y={66} fill="#888" fontSize={8}>Col. gauche = tables | Col. droite (italique) = functions</text>
         </g>
       </svg>
