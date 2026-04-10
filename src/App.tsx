@@ -94,6 +94,7 @@ const ConversionOptimizer = lazy(() => import("./pages/ConversionOptimizer"));
 const ConversionOptimizerLanding = lazy(() => import("./pages/ConversionOptimizerLanding"));
 const BotActivity = lazy(() => import("./pages/BotActivity"));
 const SocialHub = lazy(() => import("./pages/SocialHub"));
+const SocialContentCreator = lazy(() => import("./pages/SocialContentCreator"));
 
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
@@ -208,6 +209,7 @@ const App = () => (
                           <Route path="/app/conversion-optimizer" element={<ConversionOptimizer />} />
                           <Route path="/app/bot-activity" element={<BotActivity />} />
                           <Route path="/app/social" element={<SocialHub />} />
+                          <Route path="/social-content-creator" element={<SocialContentCreator />} />
                           <Route path="/privacy-google-ads" element={<Navigate to="/api-integrations#google-ads" replace />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
