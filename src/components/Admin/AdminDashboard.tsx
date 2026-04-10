@@ -267,6 +267,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'eeat', label: 'E-E-A-T', icon: Award, group: 'automation' },
         { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
         { id: 'prospects', label: 'Prospection', icon: Users, group: 'automation' },
+        { id: 'social-hub', label: 'Social Hub', icon: MessageSquare, group: 'automation' },
       ],
     },
   ];
@@ -301,6 +302,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'eeat': return <EeatScoringAdmin />;
       case 'marina': return <MarinaDashboard />;
       case 'prospects': return <ProspectPipelineDashboard />;
+      case 'social-hub': return <SocialContentDashboard />;
       default: return <AnalyticsDashboard />;
     }
   };
