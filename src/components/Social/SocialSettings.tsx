@@ -3,6 +3,7 @@
  * Manage API connections and social media accounts (LinkedIn, Facebook, Instagram).
  */
 import { useState, useEffect } from 'react';
+import { GoogleDriveFolderPicker } from './GoogleDriveFolderPicker';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
   const [defaultHashtags, setDefaultHashtags] = useState('');
   const [gdriveFolder, setGdriveFolder] = useState('');
   const [gdriveConnected, setGdriveConnected] = useState(false);
+  const [gdriveFolderPickerOpen, setGdriveFolderPickerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Load existing social connections
@@ -289,17 +291,38 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
               <FolderOpen className="h-4 w-4 text-muted-foreground" />
               Dossier de destination
             </Label>
-            <Input
-              id="gdrive-folder"
-              placeholder="/Crawlers/Social Hub/Exports"
-              value={gdriveFolder}
-              onChange={(e) => setGdriveFolder(e.target.value)}
-              className="text-sm"
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                id="gdrive-folder"
+                placeholder="/Crawlers/Social Hub/Exports"
+                value={gdriveFolder}
+                onChange={(e) => setGdriveFolder(e.target.value)}
+                className="text-sm"
+                readOnly
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setGdriveFolderPickerOpen(true)}
+                className="shrink-0 gap-1.5 text-xs"
+              >
+                <FolderOpen className="h-3.5 w-3.5" /> Parcourir
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Chemin du dossier dans votre Google Drive où seront exportés les contenus sociaux.
+              Cliquez sur « Parcourir » pour naviguer dans votre arborescence Google Drive.
             </p>
           </div>
+
+          <GoogleDriveFolderPicker
+            open={gdriveFolderPickerOpen}
+            onOpenChange={setGdriveFolderPickerOpen}
+            onSelect={(_folderId, folderPath) => {
+              setGdriveFolder(folderPath);
+              toast.success(`Dossier sélectionné : ${folderPath}`);
+            }}
+            currentFolderPath={gdriveFolder}
+          />
         </CardContent>
       </Card>
 
