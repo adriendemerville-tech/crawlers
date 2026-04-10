@@ -351,7 +351,10 @@ export default function ConversionOptimizer() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <TrendingUp className="h-6 w-6 text-emerald-700" />
+              <span className="relative inline-flex items-center justify-center h-7 w-7">
+                <TrendingUp className="h-6 w-6 text-emerald-700" />
+                <Euro className="absolute -top-1.5 left-1/2 -translate-x-1/2 h-3 w-3 text-emerald-600" />
+              </span>
               Conversion Optimizer
             </h1>
             <p className="text-sm text-muted-foreground">Analyse UX contextuelle de vos pages crawlées</p>
