@@ -722,6 +722,7 @@ export default function ConversionOptimizer() {
                           <div className="flex items-center gap-2 flex-wrap">
                             {priorityBadge(s.priority)}
                             {meta && <Badge variant="outline" className="text-[10px]">{meta.label}</Badge>}
+                            {(s as any).is_manual && <Badge className="bg-cyan-500/15 text-cyan-600 text-[10px]">Manuel</Badge>}
                             <span className="text-sm font-medium">{s.title}</span>
                           </div>
                           <p className="text-xs text-muted-foreground">{s.rationale}</p>
