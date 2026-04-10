@@ -219,15 +219,13 @@ const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, tra
 
 export default function ComparatifPlateforme() {
   const { language } = useLanguage();
-  const { canonical, hreflangLinks } = useCanonicalHreflang('/comparatif-plateforme-seo-ia');
+  useCanonicalHreflang('/comparatif-plateforme-seo-ia');
 
   return (
     <>
       <Helmet>
         <title>Crawlers vs Claude vs OpenAI — Plateforme SEO/GEO dédiée vs Agents IA</title>
         <meta name="description" content="Pourquoi une plateforme spécialisée SEO/GEO qui stocke et croise les données surpasse les agents IA généralistes comme Claude, ChatGPT ou Cowork pour le référencement." />
-        <link rel="canonical" href={canonical} />
-        {hreflangLinks.map(l => <link key={l.hreflang} rel="alternate" hrefLang={l.hreflang} href={l.href} />)}
         <script type="application/ld+json">{JSON.stringify(articleSD)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSD)}</script>
         <script type="application/ld+json">{JSON.stringify(faqSD)}</script>
