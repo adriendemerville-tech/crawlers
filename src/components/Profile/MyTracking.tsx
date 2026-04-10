@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot, Play, Pause, Activity } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot, Activity } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -33,8 +33,6 @@ import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
-import { AutopilotModal } from '@/components/Profile/AutopilotModal';
-import { AutopilotModificationRegistry } from '@/components/Profile/AutopilotModificationRegistry';
 import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
@@ -419,24 +417,6 @@ export function MyTracking() {
                         </p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* Autopilot button */}
-                        {h.isAdmin && !h.isDemoMode && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={`gap-1.5 ${
-                              h.autopilotStatus === 'active'
-                                ? 'border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/5'
-                                : h.autopilotStatus === 'paused'
-                                  ? 'border-primary/30 text-primary hover:bg-primary/5'
-                                  : 'border-muted-foreground/20 text-muted-foreground hover:bg-muted/50'
-                            }`}
-                            onClick={() => h.setShowAutopilotModal(true)}
-                          >
-                            {h.autopilotStatus === 'active' ? <Play className="h-3.5 w-3.5" /> : h.autopilotStatus === 'paused' ? <Pause className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
-                            <span className="hidden sm:inline">Autopilote</span>
-                          </Button>
-                        )}
 
                         {/* Connect/Disconnect site button */}
                         {(() => {
@@ -902,7 +882,7 @@ export function MyTracking() {
                         } else if (rec.recommendation_key === 'identity_card') {
                           h.setShowIdentityModal(true);
                         } else if (rec.recommendation_key === 'autopilot') {
-                          h.setShowAutopilotModal(true);
+                          toast.info('Autopilote actif en arrière-plan.');
                         } else {
                           toast.info(rec.title);
                         }
@@ -1110,13 +1090,6 @@ export function MyTracking() {
         <SiteIdentityModal open={h.showIdentityModal} onOpenChange={h.setShowIdentityModal} site={h.currentSite} onUpdate={() => h.fetchSites()} />
       )}
 
-      {/* Autopilot Modal */}
-      {h.currentSite && h.isAdmin && !h.isDemoMode && (
-        <AutopilotModal open={h.showAutopilotModal} onOpenChange={h.setShowAutopilotModal} trackedSiteId={h.currentSite.id} siteDomain={h.currentSite.domain} />
-      )}
-
-      {/* Modification Registry */}
-      {h.isAdmin && !h.isDemoMode && <AutopilotModificationRegistry trackedSiteId={h.selectedSite} />}
     </div>
   );
 }

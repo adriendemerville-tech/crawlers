@@ -108,8 +108,6 @@ export function useMyTracking() {
   const [llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey] = useState(0);
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
-  const [showAutopilotModal, setShowAutopilotModal] = useState(false);
-  const [autopilotStatus, setAutopilotStatus] = useState<'none' | 'active' | 'paused'>('none');
 
   // ─── IKTracker ───
   const [ikTrackerConnected, setIkTrackerConnected] = useState<boolean | null>(null);
@@ -210,25 +208,6 @@ export function useMyTracking() {
     };
     loadSimulatedFlag();
   }, []);
-
-  // ─── Autopilot status ───
-  useEffect(() => {
-    if (!selectedSite || !user || !isAdmin || isDemoMode) {
-      setAutopilotStatus('none');
-      return;
-    }
-    (async () => {
-      const { data } = await supabase
-        .from('autopilot_configs')
-        .select('is_active')
-        .eq('tracked_site_id', selectedSite)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (!data) setAutopilotStatus('none');
-      else if (data.is_active) setAutopilotStatus('active');
-      else setAutopilotStatus('paused');
-    })();
-  }, [selectedSite, user, isAdmin, isDemoMode, showAutopilotModal]);
 
   // ─── IKTracker check ───
   const isIkTrackerSite = (domain: string) => domain.replace(/^www\./, '').includes('iktracker');
@@ -862,7 +841,6 @@ export function useMyTracking() {
     llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey,
     showIdentityModal, setShowIdentityModal,
     simulatedDataEnabled,
-    showAutopilotModal, setShowAutopilotModal, autopilotStatus,
     // IKTracker
     ikTrackerConnected, ikTrackerToggling, handleToggleIkTracker, isIkTrackerSite,
     // GSC
