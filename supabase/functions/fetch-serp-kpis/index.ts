@@ -121,7 +121,7 @@ try {
 
               trackPaidApiCall('fetch-serp-kpis', 'serpapi', 'google_search (fallback)');
               
-              return jsonOk({ data: fallbackData }));
+              return jsonOk({ data: fallbackData });
             }
           } catch (serpErr) {
             console.error('[fetch-serp-kpis] SerpAPI fallback error:', serpErr);
