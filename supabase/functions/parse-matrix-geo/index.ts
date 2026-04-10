@@ -194,7 +194,7 @@ async function evaluateBenchmark(
       await resp.text()
       if ((status === 429 || status >= 500) && retryCount < MAX_RETRIES) {
         await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
-        return evaluateBenchmark(prompt, brandUrl, engine, llmName, retryCount + 1)
+        return evaluateBenchmark(prompt, brandUrl, engine, llmName, engineNotes, scoringRubric, retryCount + 1)
       }
       return { score: 0, raw: { error: `API error ${status}` }, citation_found: false, citation_rank: null, citation_context: '' }
     }
@@ -203,7 +203,14 @@ async function evaluateBenchmark(
     const engineResponse = data.choices?.[0]?.message?.content || ''
     trackTokenUsage('parse-matrix-geo', llmName || 'google/gemini-2.5-flash', data.usage, brandUrl)
 
-    // Step 2: Analyze the response for citation and rank
+    // Step 2: Analyze the response for citation and rank (enriched with Scoring Guide)
+    const rubricInstructions = buildScoringRubric(scoringRubric);
+    const scoringSystemPrompt = `Tu analyses la réponse d'un moteur IA pour vérifier si une marque/site est cité.
+Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context": "<phrase où la marque apparaît>", "brand_mention": <bool>, "brand_site_cited": <bool>, "brand_url_count": <number>, "recommendation_direction": "<Positive|Neutre|Négative|N/A>", "description_accuracy": "<Exacte|Partiellement exacte|Inexacte|Impossible à vérifier>", "primary_source_type": "<Propriétaire|Tierce|Mixte|Aucune>"}
+- cited: true si la marque/URL est mentionnée (même partiellement, par nom de domaine ou nom de marque)
+- rank: position dans la liste de recommandations (1 = premier cité, 2 = deuxième, etc. null si absent)
+- context: la phrase exacte de citation (vide si non cité)${rubricInstructions}`;
+
     const scoringResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -213,11 +220,7 @@ async function evaluateBenchmark(
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash-lite',
         messages: [
-          { role: 'system', content: `Tu analyses la réponse d'un moteur IA pour vérifier si une marque/site est cité.
-Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context": "<phrase où la marque apparaît>"}
-- cited: true si la marque/URL est mentionnée (même partiellement, par nom de domaine ou nom de marque)
-- rank: position dans la liste de recommandations (1 = premier cité, 2 = deuxième, etc. null si absent)
-- context: la phrase exacte de citation (vide si non cité)` },
+          { role: 'system', content: scoringSystemPrompt },
           { role: 'user', content: `URL/Marque à chercher: ${brandUrl}\n\nRéponse du moteur IA (${engine}):\n${engineResponse.substring(0, 3000)}` },
         ],
         temperature: 0.1,
