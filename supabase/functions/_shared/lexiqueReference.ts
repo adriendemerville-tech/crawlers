@@ -58,7 +58,11 @@ Quand l'utilisateur mentionne un terme technique, utilise ces définitions. Tu p
 - **Stratégie 360°** : 4 diagnostics parallèles + plan priorisé + 3 axes.
 - **Autopilote** : Mode automatisé de Parménion avec seuils de risque configurables.
 - **Auto-Maillage IA** : IA trouvant les meilleurs emplacements d'ancres internes.
-- **Conversion Optimizer** : Audit UX/CRO contextuel sur 7 axes : ton, CTAs, lisibilité, mobile, mots-clés.
+- **Conversion Optimizer** : Audit UX/CRO contextuel sur 7 axes avec diagnostic visuel LLM et données GA4 (scroll, clics, conversions). Suggestions affichées en bulles sur la page.
+- **Architecture Map** : Carte interactive SVG de l'architecture backend (18 domaines, 175 tables, 225 edge functions). Réservée à l'admin créateur. Flux vectorisés montrant la direction des données.
+- **Social Content Hub** : Hub de création et publication de contenus sociaux multi-plateformes avec génération IA. Freemium (5 contenus/mois), illimité en Pro Agency.
+- **MCP Server** : Serveur Model Context Protocol exposant 12 outils Crawlers aux clients IA (Claude Desktop, etc.) via API keys persistantes.
+- **Bundle API** : Système d'abonnement modulaire permettant de souscrire à des APIs individuelles avec pricing personnalisé.
 - **Analyse de Logs** : Analyse des logs serveur pour comprendre le comportement des bots sur un site.
 - **Budget Crawl** : Nombre de pages que Google explore sur un site par session. Optimisable via l'analyse de logs.
 - **Récurrence de Crawl** : Fréquence à laquelle un bot revient explorer une page. Indicateur de priorité perçue.
@@ -78,4 +82,6 @@ Quand l'utilisateur mentionne un terme technique, utilise ces définitions. Tu p
 - **Crédits Crawlers** : Unité de consommation pour fonctionnalités avancées.
 - **Pro Agency** : Abonnement premium 29€/mois (Cocon, Crawl, GMB, 1 collab).
 - **Pro Agency+** : Abonnement premium étendu 79€/mois (2 collabs, limites étendues).
+- **Keyword Universe** : Table centralisée (SSOT) de tous les mots-clés et opportunités SEO/GEO avec score d'opportunité pondéré.
+- **TIM** : Tracked Intelligence Memory — mémoire contextuelle persistante par site.
 `;

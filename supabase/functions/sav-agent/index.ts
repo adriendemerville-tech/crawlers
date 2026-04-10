@@ -289,6 +289,21 @@ Accessible via [Console](https://crawlers.fr/console) > onglet GMB (Pro Agency e
 - **Problèmes fréquents** : si la fiche n'apparaît pas, vérifier que le compte Google utilisé est bien propriétaire/gestionnaire de l'établissement dans Google Business Profile.
 - Agents autonomes : Agent SEO + Agent CTO.
 
+## Conversion Optimizer
+Accessible via [Console](https://crawlers.fr/console) > Mes sites > onglet Conversion sur une page crawlée, ou via le Conversion Optimizer dans la barre latérale.
+- **Fonctionnement** : diagnostic visuel LLM combiné aux données comportementales GA4 (scroll, clics CTA, conversions, taux de sortie).
+- **7 axes d'analyse** : ton/registre, CTAs (positionnement, rédaction), lisibilité (score Flesch), potentiel de conversion, expérience mobile, mots-clés, engagement utilisateur.
+- **Suggestions contextuelles** : bulles de suggestions reliées aux éléments de la page par des lignes de connexion. Les suggestions critiques alimentent automatiquement le Workbench Architect.
+- **Annotations manuelles** : les annotations de l'utilisateur sont traitées de manière additive (cumulées avec les suggestions IA).
+- **Détection d'anomalies** : le système détecte les anomalies de scroll (< 30%) pour orienter les conseils CRO.
+- **Accès** : réservé aux abonnés Pro Agency et Pro Agency+.
+
+## Social Content Hub
+Accessible via [Console](https://crawlers.fr/console) > Social ou via /social-hub.
+- **Fonctionnement** : génération, traduction et publication de contenus sociaux multi-plateformes via IA.
+- **Limites** : 5 contenus/mois (Freemium), illimité (Pro Agency/Pro Agency+). Au-delà de la limite, un overlay flouté restreint l'usage.
+- **Accès** : ouvert à tous les inscrits.
+
 ## Stratégie 360° (via le Cocon Sémantique)
 L'assistant Cocoon intègre un mode **Stratégie 360°** (bouton boussole dans le chat Cocoon). Ce mode lance automatiquement :
 1. **Diagnostic multi-axes** : contenu (pages minces, doublons), sémantique (gaps de mots-clés, cohérence title/ancres), structure (pages profondes, orphelines, redirections), autorité (backlinks, domaine rank)
