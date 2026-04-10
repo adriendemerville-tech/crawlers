@@ -443,6 +443,15 @@ try {
       }
     }
 
+    // ── Load Felix config from DB ──
+    let felixConfig: Record<string, string> = {};
+    try {
+      const { data: cfgRows } = await sb.from("felix_config").select("config_key, config_value");
+      if (cfgRows) {
+        for (const row of cfgRows) felixConfig[row.config_key] = row.config_value;
+      }
+    } catch (_) { /* non-blocking */ }
+
     // ── Detect backend query intent from creator ──
     if (isCreatorMode) {
       const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
