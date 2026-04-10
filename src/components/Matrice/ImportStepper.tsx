@@ -19,6 +19,28 @@ export interface IdentityCard {
   brandName?: string; // extracted from [MARQUE] or similar
 }
 
+/** Per-engine citation instructions extracted from "Engine notes" sheet */
+export interface EngineNote {
+  engine: string;
+  howToAskCitations: string;
+  whyItMatters: string;
+  sourceUrl: string;
+}
+
+/** Scoring rubric field from "Scoring Guide" sheet */
+export interface ScoringField {
+  field: string;
+  whatToCode: string;
+  allowedValues: string;
+  meaning: string;
+}
+
+/** Metadata extracted from secondary sheets (Engine notes + Scoring Guide) */
+export interface MatrixMetadata {
+  engineNotes: EngineNote[];
+  scoringGuide: ScoringField[];
+}
+
 interface Props {
   open: boolean;
   sheetNames: string[];
@@ -29,6 +51,7 @@ interface Props {
     matriceType: MatriceType;
     cleaningResult: CleaningResult;
     identityCard?: IdentityCard;
+    metadata?: MatrixMetadata;
   }) => void;
   onClose: () => void;
 }
