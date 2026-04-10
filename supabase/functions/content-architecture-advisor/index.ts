@@ -49,7 +49,8 @@ interface AdvisorInput {
   target_audience_segment?: 'primary' | 'secondary' | 'untapped' | 'all'
 }
 
-Deno.serve(handleRequest(async (req) => {
+// ── Heavy processing logic (extracted for waitUntil) ──
+async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Promise<Response> {
 // ── ASYNC JOB POLLING (GET ?job_id=xxx) ──
   const reqUrl = new URL(req.url)
   const pollJobId = reqUrl.searchParams.get('job_id')
@@ -112,7 +113,7 @@ Deno.serve(handleRequest(async (req) => {
       })
     }
 
-    // ── ASYNC MODE: Enqueue and self-invoke ──
+    // ── ASYNC MODE: Enqueue and respond 202, then process via waitUntil ──
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
     const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const jobId = body._job_id
@@ -120,7 +121,7 @@ Deno.serve(handleRequest(async (req) => {
     const jobSb = jobId ? getServiceClient() : null
 
     if (body.async === true && !jobId) {
-      // Create async job and self-invoke
+      // Create async job
       const sb = getServiceClient()
       const { data: job, error: jobError } = await sb
         .from('async_jobs')
@@ -336,7 +337,7 @@ Deno.serve(handleRequest(async (req) => {
       .eq('domain', domain)
       .in('finding_category', ['keyword_data', 'quick_win', 'content_gap', 'missing_terms', 'serp_analysis', 'missing_page', 'content_upgrade', 'competitive_gap'])
       .order('created_at', { ascending: false })
-      .limit(100)
+      .limit(40)
 
     if (wbKeywordItems && wbKeywordItems.length > 0) {
       // We have strategic audit data in workbench — reconstruct keyword/SERP context
@@ -514,7 +515,7 @@ Deno.serve(handleRequest(async (req) => {
         .eq('consumed_by_content', false)
         .eq('status', 'pending')
         .order('severity', { ascending: true })
-        .limit(30),
+        .limit(12),
       // Fetch keyword cloud from SERP snapshots (reference universe)
       tracked_site_id
         ? serviceClient.from('serp_snapshots').select('sample_keywords')
@@ -572,11 +573,9 @@ Deno.serve(handleRequest(async (req) => {
         .map((k: any) => `- "${k.keyword}" (pos: ${k.position || '?'}, vol: ${k.volume || '?'})`)
       if (kwList.length > 0) {
         keywordCloudBlock = `
-── UNIVERS MOTS-CLÉS DE RÉFÉRENCE (${kwList.length} termes classés) ──
-⚠️ CRITIQUE : Ce nuage de mots-clés représente le positionnement RÉEL du site. Le contenu généré DOIT s'inscrire dans cet univers sémantique.
-${kwList.slice(0, 30).join('\n')}
-
-RÈGLE : Le contenu doit cibler, enrichir ou compléter ces mots-clés. Tout contenu hors de cet univers thématique est INTERDIT.
+── UNIVERS MOTS-CLÉS (${kwList.length} termes) ──
+${kwList.slice(0, 20).join('\n')}
+RÈGLE : Le contenu doit s'inscrire dans cet univers sémantique.
 `
         console.log(`[content-advisor] ☁️ Keyword cloud injected: ${kwList.length} keywords`)
       }
@@ -897,11 +896,10 @@ RÈGLE : Le mot-clé principal "${keyword}" DOIT être cohérent avec l'univers 
 ${workbenchItems.length > 0 ? `
 ── DIAGNOSTICS CONSOLIDÉS (Workbench Partagé) ──
 Les diagnostics suivants ont été identifiés par les différents modules d'analyse et sont assignés au Content Architect :
-${workbenchItems.slice(0, 15).map((item: any, i: number) => `${i + 1}. [${(item.severity || 'medium').toUpperCase()}] ${item.title}${item.target_url ? ` (${item.target_url})` : ''}
-   Source: ${item.source_type} | Catégorie: ${item.finding_category}
-   ${item.description ? `Description: ${item.description.substring(0, 200)}` : ''}`).join('\n\n')}
+${workbenchItems.slice(0, 8).map((item: any, i: number) => `${i + 1}. [${(item.severity || 'medium').toUpperCase()}] ${item.title}${item.target_url ? ` (${item.target_url})` : ''}
+   ${item.description ? item.description.substring(0, 120) : ''}`).join('\n')}
 
-RÈGLE : Intègre ces findings dans ta recommandation. Chaque diagnostic pertinent pour le contenu cible doit se refléter dans la structure ou la stratégie proposée.
+RÈGLE : Intègre ces findings dans ta recommandation.
 ` : ''}
 
 ${workbenchQuickWins.length > 0 ? `
@@ -1178,7 +1176,7 @@ FRAÎCHEUR & DÉNOMINATION:
         }],
         tool_choice: { type: 'function', function: { name: 'content_architecture_recommendation' } },
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(120000),
     })
 
     if (!aiResponse.ok) {
@@ -1465,4 +1463,39 @@ FRAÎCHEUR & DÉNOMINATION:
 
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-}));
+}
+
+// ── Deno.serve with waitUntil for background jobs ──
+Deno.serve(handleRequest(async (req) => {
+  // Check if this is a background job (self-invoked with _job_id)
+  const clonedReq = req.clone()
+  let isBackgroundJob = false
+  try {
+    if (req.method === 'POST') {
+      const peekBody = await clonedReq.json()
+      isBackgroundJob = !!peekBody._job_id
+    }
+  } catch {}
+
+  if (isBackgroundJob) {
+    // Use waitUntil to process in background — return 200 immediately
+    // The actual result is written to async_jobs table
+    const promise = processAdvisorRequest(req, true).catch(err => {
+      console.error('[content-advisor] waitUntil error:', err)
+    })
+    // @ts-ignore - EdgeRuntime.waitUntil is available in Supabase Edge Functions
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+      EdgeRuntime.waitUntil(promise)
+    } else {
+      // Fallback: just fire and forget
+      promise.catch(() => {})
+    }
+    return new Response(JSON.stringify({ status: 'processing' }), {
+      status: 200,
+      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+    })
+  }
+
+  // Normal synchronous request
+  return processAdvisorRequest(req, false)
+}))
