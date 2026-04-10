@@ -44,6 +44,7 @@ const HybridSection = lazy(() => import('@/components/HomepageSections').then(m 
 const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
 const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
 const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
+const SocialHubSection = lazy(() => import('@/components/Homepage/SocialHubSection').then(m => ({ default: m.SocialHubSection })));
 const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductShowcaseSection').then(m => ({ default: m.ProductShowcaseSection })));
 const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
 const ClaudeVsCrawlersSection = lazy(() => import('@/components/Homepage/ClaudeVsCrawlersSection').then(m => ({ default: m.ClaudeVsCrawlersSection })));
@@ -886,6 +887,11 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* Social Hub — SEO × Social × GEO */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <SocialHubSection />
+        </Suspense>
 
         {/* CTA Matrice — Freelance SEO */}
         <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-indigo-950/10 via-background to-violet-950/10 py-14 md:py-20">
