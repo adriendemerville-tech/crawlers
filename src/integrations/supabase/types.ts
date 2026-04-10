@@ -7971,6 +7971,69 @@ export type Database = {
         }
         Relationships: []
       }
+      seasonal_context: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_day: number | null
+          end_month: number | null
+          event_name: string
+          event_type: string
+          geo_zones: string[] | null
+          id: string
+          impact_level: string | null
+          is_recurring: boolean | null
+          metadata: Json | null
+          peak_keywords: string[] | null
+          prep_weeks_before: number | null
+          sectors: string[] | null
+          source: string | null
+          start_day: number | null
+          start_month: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_day?: number | null
+          end_month?: number | null
+          event_name: string
+          event_type?: string
+          geo_zones?: string[] | null
+          id?: string
+          impact_level?: string | null
+          is_recurring?: boolean | null
+          metadata?: Json | null
+          peak_keywords?: string[] | null
+          prep_weeks_before?: number | null
+          sectors?: string[] | null
+          source?: string | null
+          start_day?: number | null
+          start_month?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_day?: number | null
+          end_month?: number | null
+          event_name?: string
+          event_type?: string
+          geo_zones?: string[] | null
+          id?: string
+          impact_level?: string | null
+          is_recurring?: boolean | null
+          metadata?: Json | null
+          peak_keywords?: string[] | null
+          prep_weeks_before?: number | null
+          sectors?: string[] | null
+          source?: string | null
+          start_day?: number | null
+          start_month?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       semantic_nodes: {
         Row: {
           audit_report_id: string | null
@@ -10166,6 +10229,20 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_active_seasonal_context: {
+        Args: { p_geo?: string; p_sector?: string }
+        Returns: {
+          days_until_start: number
+          description: string
+          event_name: string
+          event_type: string
+          impact_level: string
+          is_in_peak: boolean
+          is_in_prep: boolean
+          peak_keywords: string[]
+          prep_weeks_before: number
+        }[]
       }
       get_bot_log_summary: {
         Args: { p_tracked_site_id: string }
