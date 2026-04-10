@@ -1013,8 +1013,8 @@ export default function MatricePrompt() {
                             className="border-muted-foreground/40 data-[state=checked]:bg-muted-foreground/60 data-[state=checked]:border-muted-foreground/60"
                           />
                         </TableCell>
-                        <TableCell className="font-medium text-sm max-w-xs">
-                          <span className="truncate block">{row.prompt}</span>
+                        <TableCell className="font-medium text-sm" style={{ minWidth: '240px', maxWidth: '480px' }}>
+                          <span className="block whitespace-pre-wrap break-words leading-relaxed">{row.prompt}</span>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${getAxeBadgeClass(row.axe)}`}>
