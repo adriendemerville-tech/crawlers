@@ -306,6 +306,7 @@ export function useMyTracking() {
   const fetchGscData = useCallback(async () => {
     if (!user || !currentSiteDomain) return;
     setGscLoading(true);
+    setGscSiteVerified(false);
     try {
       const { data, error } = await supabase.functions.invoke('gsc-auth', {
         body: {
@@ -318,25 +319,39 @@ export function useMyTracking() {
       });
       if (error) throw error;
       if (data?.error) {
-        if (data.error === 'GSC not connected') return;
+        if (data.error === 'GSC not connected') {
+          setGscSiteVerified(false);
+          return;
+        }
+        // Site not found in GSC properties → not verified for this site
+        if (data.error?.includes?.('not found') || data.error?.includes?.('not verified') || data.error?.includes?.('Forbidden')) {
+          setGscSiteVerified(false);
+          setGscData(null);
+          return;
+        }
         throw new Error(data.error);
       }
-      setGscData(data);
+      // Data returned successfully → this site is verified in GSC
+      const hasRows = data?.rows?.length > 0 || data?.total_clicks > 0 || data?.total_impressions > 0;
+      setGscSiteVerified(true);
+      setGscData(hasRows ? data : null);
     } catch (err: unknown) {
       console.error('GSC fetch error:', err);
+      setGscSiteVerified(false);
     } finally {
       setGscLoading(false);
     }
   }, [user, currentSiteDomain, gscStartDate, gscEndDate]);
 
   useEffect(() => {
-    if (gscConnected && currentSiteDomain) {
+    if (gscHasToken && currentSiteDomain) {
       fetchGscData();
     } else {
       setGscData(null);
+      setGscSiteVerified(false);
       setGscLoading(false);
     }
-  }, [gscConnected, currentSiteDomain, fetchGscData]);
+  }, [gscHasToken, currentSiteDomain, fetchGscData]);
 
   // ─── GSC aggregation ───
   const gscAggregatedRows = useMemo(() => {
