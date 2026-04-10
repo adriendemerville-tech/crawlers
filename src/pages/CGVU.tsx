@@ -468,10 +468,42 @@ const CGVU = () => {
 
             {/* Article 14 */}
             <section id="litiges">
-              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">14. Droit Applicable & Litiges</h2>
+              <section id="social">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">14. Social Content Hub — Publication & OAuth</h2>
+              <p>
+                Le module <strong>Social Content Hub</strong> permet la publication de contenus sur des plateformes tierces (LinkedIn, Facebook, Instagram) via les APIs officielles de ces plateformes (LinkedIn Marketing API, Meta Graph API).
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14.1 Connexion OAuth</h3>
+              <p>
+                L'Utilisateur autorise Crawlers.fr à accéder à ses comptes sociaux via le protocole OAuth 2.0. Les tokens d'accès sont <strong>chiffrés au repos</strong> et ne sont utilisés que pour les actions de publication, de lecture des statistiques et de modération des commentaires explicitement déclenchées par l'Utilisateur.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14.2 Responsabilité du contenu publié</h3>
+              <p>
+                L'Utilisateur est <strong>seul responsable</strong> du contenu publié via le Social Content Hub. Crawlers.fr agit en tant que prestataire technique et ne contrôle pas le fond des publications. L'Utilisateur s'engage à respecter les conditions d'utilisation de chaque plateforme cible.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14.3 Quotas de publication</h3>
+              <p>
+                Le nombre de publications mensuelles est limité selon le plan souscrit : <strong>5 posts/mois</strong> (gratuit), <strong>30 posts/mois</strong> (Pro Agency), <strong>100 posts/mois</strong> (Pro Agency+). Le compteur est réinitialisé le 1er de chaque mois.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14.4 Révocation d'accès</h3>
+              <p>
+                L'Utilisateur peut révoquer l'accès OAuth à tout moment depuis les paramètres de sécurité de chaque plateforme sociale. La révocation entraîne l'impossibilité de publier via le Social Hub jusqu'à une nouvelle autorisation.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14.5 Données sociales</h3>
+              <p>
+                Les métriques d'engagement (impressions, clics, likes, partages) sont collectées uniquement à des fins d'affichage dans le tableau de bord de l'Utilisateur. Elles ne sont <strong>jamais partagées avec des tiers</strong> ni utilisées pour entraîner des modèles d'intelligence artificielle.
+              </p>
+              </section>
+
+              <section id="litiges">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">15. Droit Applicable & Litiges</h2>
               <p>
                 Les présentes CGVU sont soumises au <strong>droit français</strong>. Tout litige relatif à l'interprétation, l'exécution ou la résiliation des présentes CGVU sera soumis à la compétence exclusive des tribunaux compétents du ressort du siège social de l'Éditeur, sauf disposition légale impérative contraire.
               </p>
+              <p>
+                Conformément aux articles L.611-1 et suivants du Code de la consommation, le consommateur est informé qu'il peut recourir gratuitement à un médiateur de la consommation en vue de la résolution amiable de tout litige.
+              </p>
+              </section>
               <p>
                 Conformément aux articles L.611-1 et suivants du Code de la consommation, le consommateur est informé qu'il peut recourir gratuitement à un médiateur de la consommation en vue de la résolution amiable de tout litige.
               </p>
