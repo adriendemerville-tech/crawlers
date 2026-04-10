@@ -404,7 +404,7 @@ const ArchitectureMap: React.FC = () => {
           CRAWLERS — Architecture Backend
         </text>
         <text x={20} y={48} fill="#888" fontSize={11} fontFamily="system-ui">
-          175 tables | 225 edge functions | 18 domaines — Survol pour explorer les connexions
+          175 tables | 225 edge functions | 18 domaines — Survol pour explorer, clic pour l'explication Félix
         </text>
 
         {/* ── Legend ── */}
