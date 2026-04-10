@@ -666,8 +666,16 @@ export default function MatricePrompt() {
     const raw = result.parsed_raw || {};
     const justification = raw.justification || raw.seo_justification || '';
     const prompt = row.prompt.length > 60 ? row.prompt.substring(0, 57) + '…' : row.prompt;
+
+    if (activeMatriceType === 'benchmark') {
+      const context = result.citation_context || raw.scoring?.context || '';
+      if (score === 0) return `Pour « ${prompt} », la marque n'a pas été citée par le moteur IA.`;
+      let explanation = `Pour « ${prompt} », la marque apparaît en rang ${score}.`;
+      if (context) explanation += ` Citation : "${context.length > 100 ? context.substring(0, 97) + '…' : context}"`;
+      return explanation;
+    }
+
     const verdict = score >= row.seuil_bon ? 'bon' : score >= row.seuil_moyen ? 'moyen' : 'insuffisant';
-    
     let explanation = `Le LLM a évalué « ${prompt} » et a attribué ${score}/100 (verdict : ${verdict}).`;
     if (justification) {
       explanation += ` Justification : ${justification.length > 120 ? justification.substring(0, 117) + '…' : justification}`;
@@ -991,8 +999,8 @@ export default function MatricePrompt() {
                        </span>
                      </TableHead>
                      {results && <TableHead className="w-20">Type</TableHead>}
-                     {results && <TableHead className="w-24 text-center">Parsé</TableHead>}
-                     {results && <TableHead className="w-24 text-center">Crawlers</TableHead>}
+                      {results && <TableHead className="w-24 text-center">{activeMatriceType === 'benchmark' ? 'Rang' : 'Parsé'}</TableHead>}
+                      {results && <TableHead className="w-24 text-center">{activeMatriceType === 'benchmark' ? 'Résultat' : 'Crawlers'}</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
