@@ -139,7 +139,8 @@ const clientIp = getClientIp(req)
   if (!acquireConcurrency('audit-matrice', 100)) return concurrencyResponse(corsHeaders)
 
   try {
-    const { url, items } = await req.json() as { url: string; items: ItemInput[] }
+    const { url, items, scoring_rubric } = await req.json() as { url: string; items: ItemInput[]; scoring_rubric?: any[] }
+    if (scoring_rubric?.length) console.log(`[audit-matrice] Scoring rubric loaded: ${scoring_rubric.length} fields`)
 
     if (!url || !items || items.length === 0) {
       return new Response(JSON.stringify({ success: false, error: 'url and items[] required' }), {
