@@ -537,7 +537,7 @@ export default function MatricePrompt() {
           citationRate: fnData.citation_rate,
         });
 
-        toast.success(`Benchmark terminé — Score: ${fnData.global_score}/100, Citations: ${fnData.citation_rate}%`);
+        toast.success(`Benchmark terminé — Rang moyen: ${fnData.avg_rank || fnData.global_score}, Citations: ${fnData.citation_rate}%`);
         setAnalyzing(false);
         return;
       }
@@ -666,8 +666,16 @@ export default function MatricePrompt() {
     const raw = result.parsed_raw || {};
     const justification = raw.justification || raw.seo_justification || '';
     const prompt = row.prompt.length > 60 ? row.prompt.substring(0, 57) + '…' : row.prompt;
+
+    if (activeMatriceType === 'benchmark') {
+      const context = result.citation_context || raw.scoring?.context || '';
+      if (score === 0) return `Pour « ${prompt} », la marque n'a pas été citée par le moteur IA.`;
+      let explanation = `Pour « ${prompt} », la marque apparaît en rang ${score}.`;
+      if (context) explanation += ` Citation : "${context.length > 100 ? context.substring(0, 97) + '…' : context}"`;
+      return explanation;
+    }
+
     const verdict = score >= row.seuil_bon ? 'bon' : score >= row.seuil_moyen ? 'moyen' : 'insuffisant';
-    
     let explanation = `Le LLM a évalué « ${prompt} » et a attribué ${score}/100 (verdict : ${verdict}).`;
     if (justification) {
       explanation += ` Justification : ${justification.length > 120 ? justification.substring(0, 117) + '…' : justification}`;
@@ -713,6 +721,13 @@ export default function MatricePrompt() {
 
 
     const getScoreColor = (score: number, bon: number, moyen: number) => {
+    // Benchmark mode: lower is better (rank-based: 1=best, 3=acceptable)
+    if (activeMatriceType === 'benchmark') {
+      if (score === 0) return 'text-red-600'; // Not cited
+      if (score <= bon) return 'text-green-600'; // e.g. rank ≤ 3
+      if (score <= moyen) return 'text-yellow-600'; // e.g. rank ≤ 10
+      return 'text-red-600'; // rank > 10
+    }
     if (score >= bon) return 'text-green-600';
     if (score >= moyen) return 'text-yellow-600';
     return 'text-red-600';
@@ -984,8 +999,8 @@ export default function MatricePrompt() {
                        </span>
                      </TableHead>
                      {results && <TableHead className="w-20">Type</TableHead>}
-                     {results && <TableHead className="w-24 text-center">Parsé</TableHead>}
-                     {results && <TableHead className="w-24 text-center">Crawlers</TableHead>}
+                      {results && <TableHead className="w-24 text-center">{activeMatriceType === 'benchmark' ? 'Rang' : 'Parsé'}</TableHead>}
+                      {results && <TableHead className="w-24 text-center">{activeMatriceType === 'benchmark' ? 'Résultat' : 'Crawlers'}</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1037,7 +1052,9 @@ export default function MatricePrompt() {
                           <TableCell className={`font-bold text-center group/parsed ${resultRow ? getScoreColor(resultRow.parsed_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? (
                               <span className="inline-flex items-center gap-1">
-                                {resultRow.parsed_score}/100
+                                {activeMatriceType === 'benchmark'
+                                  ? (resultRow.parsed_score === 0 ? 'Non cité' : `Rang ${resultRow.parsed_score}`)
+                                  : `${resultRow.parsed_score}/100`}
                                 <HoverCard openDelay={200}>
                                   <HoverCardTrigger asChild>
                                     <button className="opacity-0 group-hover/parsed:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
@@ -1045,7 +1062,11 @@ export default function MatricePrompt() {
                                     </button>
                                   </HoverCardTrigger>
                                   <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
-                                    <p className="font-semibold text-foreground mb-1">Score Parsé — {resultRow.parsed_score}/100</p>
+                                    <p className="font-semibold text-foreground mb-1">
+                                      {activeMatriceType === 'benchmark'
+                                        ? `Rang — ${resultRow.parsed_score === 0 ? 'Non cité' : `#${resultRow.parsed_score}`}`
+                                        : `Score Parsé — ${resultRow.parsed_score}/100`}
+                                    </p>
                                     <p className="text-muted-foreground">{buildParsedExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
                                 </HoverCard>
@@ -1057,7 +1078,9 @@ export default function MatricePrompt() {
                           <TableCell className={`font-bold text-center group/crawlers ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? (
                               <span className="inline-flex items-center gap-1">
-                                {resultRow.crawlers_score}/100
+                                {activeMatriceType === 'benchmark'
+                                  ? (resultRow.crawlers_score === 0 ? 'Non cité' : `Rang ${resultRow.crawlers_score}`)
+                                  : `${resultRow.crawlers_score}/100`}
                                 <HoverCard openDelay={200}>
                                   <HoverCardTrigger asChild>
                                     <button className="opacity-0 group-hover/crawlers:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
@@ -1065,7 +1088,11 @@ export default function MatricePrompt() {
                                     </button>
                                   </HoverCardTrigger>
                                   <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
-                                    <p className="font-semibold text-foreground mb-1">Score Crawlers — {resultRow.crawlers_score}/100</p>
+                                    <p className="font-semibold text-foreground mb-1">
+                                      {activeMatriceType === 'benchmark'
+                                        ? `Rang — ${resultRow.crawlers_score === 0 ? 'Non cité' : `#${resultRow.crawlers_score}`}`
+                                        : `Score Crawlers — ${resultRow.crawlers_score}/100`}
+                                    </p>
                                     <p className="text-muted-foreground">{buildCrawlersExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
                                 </HoverCard>
