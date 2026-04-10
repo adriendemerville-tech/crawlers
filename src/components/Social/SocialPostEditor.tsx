@@ -39,6 +39,8 @@ interface SocialPostEditorProps {
   onPublish?: () => void;
   onExport?: () => void;
   saving?: boolean;
+  onContentChange?: (platform: string, content: string, hashtags: string[]) => void;
+  onPlatformChange?: (platform: string) => void;
 }
 
 export const SocialPostEditor = memo(function SocialPostEditor({
