@@ -997,8 +997,8 @@ export default function MatricePrompt() {
                        </span>
                      </TableHead>
                      {results && <TableHead className="w-20">Type</TableHead>}
-                      {results && <TableHead className="w-24 text-center">{activeMatriceType === 'benchmark' ? 'Rang' : 'Parsé'}</TableHead>}
-                      {results && <TableHead className="w-24 text-center">{activeMatriceType === 'benchmark' ? 'Résultat' : 'Crawlers'}</TableHead>}
+                      {results && <TableHead className="w-24 text-center">{activeScoring.display.scoreLabel}</TableHead>}
+                      {results && <TableHead className="w-24 text-center">{activeScoring.direction === 'lower_better' ? activeScoring.display.resultLabel : 'Crawlers'}</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
