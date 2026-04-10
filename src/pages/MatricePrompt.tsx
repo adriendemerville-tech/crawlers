@@ -1044,7 +1044,9 @@ export default function MatricePrompt() {
                           <TableCell className={`font-bold text-center group/parsed ${resultRow ? getScoreColor(resultRow.parsed_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? (
                               <span className="inline-flex items-center gap-1">
-                                {resultRow.parsed_score}/100
+                                {activeMatriceType === 'benchmark'
+                                  ? (resultRow.parsed_score === 0 ? 'Non cité' : `Rang ${resultRow.parsed_score}`)
+                                  : `${resultRow.parsed_score}/100`}
                                 <HoverCard openDelay={200}>
                                   <HoverCardTrigger asChild>
                                     <button className="opacity-0 group-hover/parsed:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
@@ -1052,7 +1054,11 @@ export default function MatricePrompt() {
                                     </button>
                                   </HoverCardTrigger>
                                   <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
-                                    <p className="font-semibold text-foreground mb-1">Score Parsé — {resultRow.parsed_score}/100</p>
+                                    <p className="font-semibold text-foreground mb-1">
+                                      {activeMatriceType === 'benchmark'
+                                        ? `Rang — ${resultRow.parsed_score === 0 ? 'Non cité' : `#${resultRow.parsed_score}`}`
+                                        : `Score Parsé — ${resultRow.parsed_score}/100`}
+                                    </p>
                                     <p className="text-muted-foreground">{buildParsedExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
                                 </HoverCard>
@@ -1064,7 +1070,9 @@ export default function MatricePrompt() {
                           <TableCell className={`font-bold text-center group/crawlers ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? (
                               <span className="inline-flex items-center gap-1">
-                                {resultRow.crawlers_score}/100
+                                {activeMatriceType === 'benchmark'
+                                  ? (resultRow.crawlers_score === 0 ? 'Non cité' : `Rang ${resultRow.crawlers_score}`)
+                                  : `${resultRow.crawlers_score}/100`}
                                 <HoverCard openDelay={200}>
                                   <HoverCardTrigger asChild>
                                     <button className="opacity-0 group-hover/crawlers:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
@@ -1072,7 +1080,11 @@ export default function MatricePrompt() {
                                     </button>
                                   </HoverCardTrigger>
                                   <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
-                                    <p className="font-semibold text-foreground mb-1">Score Crawlers — {resultRow.crawlers_score}/100</p>
+                                    <p className="font-semibold text-foreground mb-1">
+                                      {activeMatriceType === 'benchmark'
+                                        ? `Rang — ${resultRow.crawlers_score === 0 ? 'Non cité' : `#${resultRow.crawlers_score}`}`
+                                        : `Score Crawlers — ${resultRow.crawlers_score}/100`}
+                                    </p>
                                     <p className="text-muted-foreground">{buildCrawlersExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
                                 </HoverCard>
