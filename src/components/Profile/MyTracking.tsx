@@ -585,7 +585,7 @@ export function MyTracking() {
                             className="gap-1.5"
                             onClick={() => navigate(`/app/conversion-optimizer?site=${h.currentSite!.id}`)}
                           >
-                            UX
+                            <span className="relative">UX<Euro className="absolute -bottom-0.5 -right-2.5 h-2.5 w-2.5 text-muted-foreground" /></span>
                           </Button>
                         )}
                         {h.latestStats && !isMobile && (
