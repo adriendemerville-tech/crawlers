@@ -122,9 +122,10 @@ export async function getSiteContext(
     // Attach seasonal context
     try {
       const sector = enriched.market_sector || null
+      const geo = 'FR'
       const { data: seasonalData } = await supabase.rpc('get_active_seasonal_context', {
         p_sector: sector,
-        p_geo: enriched.primary_language === 'fr' ? 'FR' : 'FR',
+        p_geo: geo,
       })
       if (seasonalData && seasonalData.length > 0) {
         ;(enriched as any).seasonal_context = seasonalData
@@ -132,6 +133,20 @@ export async function getSiteContext(
           .filter((s: any) => s.is_in_peak || s.is_in_prep)
           .map((s: any) => `${s.event_name} (${s.is_in_peak ? 'pic actuel' : `prépa, J-${s.days_until_start}`})`)
           .join(', ') || null
+      } else if (sector) {
+        // No seasonal data for this sector — trigger on-demand ingest (fire-and-forget)
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+        if (supabaseUrl && serviceKey) {
+          fetch(`${supabaseUrl}/functions/v1/ingest-seasonal-context`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${serviceKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ mode: 'on-demand', sector, geo }),
+          }).catch(e => console.warn('[getSiteContext] on-demand seasonal ingest failed:', e))
+        }
       }
     } catch (e) {
       console.warn('[getSiteContext] seasonal context fetch failed:', e)
