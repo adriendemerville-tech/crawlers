@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -493,7 +494,7 @@ function generateBlogArticleHTML(article: { slug: string; title: string; excerpt
 // Bot user-agent detection regex
 const BOT_UA_RE = /googlebot|bingbot|yandex|baiduspider|duckduckbot|slurp|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|applebot-extended|gptbot|oai-searchbot|chatgpt-user|google-extended|perplexitybot|claudebot|claude-user|claude-searchbot|claude-web|anthropic-ai|ccbot|bytespider|amazonbot|meta-externalagent|cohere-ai|ahrefsbot|semrushbot|mj12bot|dotbot|rogerbot|screaming frog/i;
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -756,4 +757,4 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}, 'render-page'))

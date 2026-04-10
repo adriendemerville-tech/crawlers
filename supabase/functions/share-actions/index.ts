@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -338,7 +339,7 @@ async function handleResolveShort(body: any) {
 
 // ─── Router ───
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -357,4 +358,4 @@ Deno.serve(async (req) => {
     console.error("share-actions error:", e);
     return json({ success: false, error: e.message }, 500);
   }
-});
+}, 'share-actions'))

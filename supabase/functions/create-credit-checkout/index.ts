@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@14.21.0";
 import { getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -16,7 +17,7 @@ const CREDIT_PACKAGES = {
 
 type PackageType = keyof typeof CREDIT_PACKAGES;
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -117,4 +118,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-});
+}, 'create-credit-checkout'))

@@ -4,6 +4,7 @@
  */
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,7 +59,7 @@ async function fetchInstagramStats(accessToken: string, mediaId: string) {
   } catch { return null; }
 }
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -123,4 +124,4 @@ Deno.serve(async (req) => {
     console.error('[fetch-social-stats] Error:', error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-});
+}, 'fetch-social-stats'))

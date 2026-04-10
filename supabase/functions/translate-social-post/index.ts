@@ -6,6 +6,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { callOpenRouter } from '../_shared/openRouterAI.ts';
 import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,7 +24,7 @@ const LANG_NAMES: Record<string, string> = {
 
 const MODEL = 'google/gemini-2.5-flash-lite';
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -101,4 +102,4 @@ Réponds en JSON:
     console.error('[translate-social-post] Error:', error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-});
+}, 'translate-social-post'))

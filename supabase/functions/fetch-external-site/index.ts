@@ -2,6 +2,7 @@ import { assertSafeUrl } from '../_shared/ssrf.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const TIMEOUT_MS = 15_000;
 
@@ -23,7 +24,7 @@ function isSPAHtml(html: string): boolean {
   return (hasSPARoot || hasModuleScripts) && textOnly.length < 500;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -256,4 +257,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+}, 'fetch-external-site'))

@@ -5,6 +5,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { stealthFetch } from '../_shared/stealthFetch.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Agent SEO Autonome v2
@@ -684,7 +685,7 @@ async function createCodeProposals(supabase: any, target: PageTarget, score: Seo
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -953,4 +954,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}, 'agent-seo'))

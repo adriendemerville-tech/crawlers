@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * check-llm-depth v3 — Natural conversational discoverability analysis
@@ -491,7 +492,7 @@ async function runDepthConversation(
   // Track which gateway is active (may change on fallback)
   let activeGateway: Gateway = modelDef.gateway
 
-  for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS); i++) {
+  for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS, 'check-llm-depth')) i++) {
     messages.push({ role: 'user', content: prompts[i] })
     anglesTested.push(anglesLabels[i] || `Phase ${i + 1}`)
 
@@ -619,7 +620,7 @@ async function persistResults(
 
 // ─── Main handler ────────────────────────────────────────────────────────────
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
