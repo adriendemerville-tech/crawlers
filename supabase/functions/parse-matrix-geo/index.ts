@@ -275,7 +275,7 @@ Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context":
   } catch (e) {
     if (retryCount < MAX_RETRIES) {
       await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
-      return evaluateBenchmark(prompt, brandUrl, engine, llmName, retryCount + 1)
+      return evaluateBenchmark(prompt, brandUrl, engine, llmName, engineNotes, scoringRubric, retryCount + 1)
     }
     return { score: 0, raw: { error: e instanceof Error ? e.message : 'Unknown' }, citation_found: false, citation_rank: null, citation_context: '' }
   }
