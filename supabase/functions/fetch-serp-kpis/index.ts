@@ -412,4 +412,4 @@ try {
     console.error('[fetch-serp-kpis] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-})
+}))
