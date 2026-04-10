@@ -7,7 +7,7 @@
 // ── Known field aliases (lowercase) ─────────────────────────────────────
 const FIELD_ALIASES: Record<string, string[]> = {
   prompt: [
-    'prompt', 'kpi', 'critère', 'critere', 'criteria', 'criterion',
+    'prompt', 'full_prompt', 'full prompt', 'kpi', 'critère', 'critere', 'criteria', 'criterion',
     'indicateur', 'indicator', 'metric', 'métrique', 'metrique',
     'question', 'check', 'vérification', 'verification', 'test',
     'audit point', 'point d\'audit', 'règle', 'regle', 'rule',
@@ -176,35 +176,41 @@ export function mapColumns(
     return { mappings, unmapped, warnings };
   }
 
-  // Phase 1: Fuzzy match on headers
+  // Phase 1: Collect ALL (header, field, score) candidates, then greedily assign best matches
+  const candidates: { header: string; field: string; score: number }[] = [];
+
   for (const header of headers) {
     const headerLower = header.toLowerCase().trim();
-    let bestField = '';
-    let bestScore = 0;
 
     for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+      let bestScoreForField = 0;
+
       // Exact match
       if (aliases.includes(headerLower)) {
-        bestField = field;
-        bestScore = 1;
-        break;
-      }
-      // Fuzzy match
-      for (const alias of aliases) {
-        const score = diceSimilarity(headerLower, alias);
-        const containsBonus = headerLower.includes(alias) || alias.includes(headerLower) ? 0.2 : 0;
-        const total = Math.min(1, score + containsBonus);
-        if (total > bestScore) {
-          bestScore = total;
-          bestField = field;
+        bestScoreForField = 1;
+      } else {
+        // Fuzzy match
+        for (const alias of aliases) {
+          const score = diceSimilarity(headerLower, alias);
+          const containsBonus = headerLower.includes(alias) || alias.includes(headerLower) ? 0.2 : 0;
+          const total = Math.min(1, score + containsBonus);
+          if (total > bestScoreForField) bestScoreForField = total;
         }
       }
-    }
 
-    if (bestScore >= 0.45 && !usedFields.has(bestField)) {
-      mappings[header] = { field: bestField, confidence: bestScore, source: 'header' };
-      usedFields.add(bestField);
+      if (bestScoreForField >= 0.45) {
+        candidates.push({ header, field, score: bestScoreForField });
+      }
     }
+  }
+
+  // Sort by score descending so best matches are assigned first
+  candidates.sort((a, b) => b.score - a.score);
+
+  for (const { header, field, score } of candidates) {
+    if (usedFields.has(field) || mappings[header]) continue;
+    mappings[header] = { field, confidence: score, source: 'header' };
+    usedFields.add(field);
   }
 
   // Phase 2: Content analysis for unmapped columns
