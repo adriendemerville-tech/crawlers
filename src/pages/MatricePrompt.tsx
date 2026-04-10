@@ -21,6 +21,7 @@ import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 import ImportStepper from '@/components/Matrice/ImportStepper';
 import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
+import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -42,6 +43,7 @@ interface MatrixRow {
   isDefault: Record<string, boolean>;
 }
 
+// Static fallback defaults (overridden by smart defaults when matrice type is known)
 const DEFAULTS = {
   poids: 1,
   axe: 'Général',
