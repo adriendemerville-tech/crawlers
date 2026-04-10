@@ -231,6 +231,55 @@ const ArchitectureMap: React.FC = () => {
           );
         })}
 
+        {/* ── CORE Rampart (fortification) ── */}
+        {(() => {
+          const corePos = positions.CORE;
+          if (!corePos) return null;
+          const pad = 18;
+          const labelH = 52;
+          const rx = corePos.x - pad;
+          const ry = corePos.y - pad - labelH;
+          const rw = corePos.w + pad * 2;
+          const rh = corePos.h + pad * 2 + labelH;
+          const coreActive = isActive("CORE");
+          const coreHov = hovered === "CORE";
+          const rampartOpacity = hovered && !coreActive ? 0.2 : 1;
+          const rampartStroke = coreHov ? "#fff" : coreActive ? "#4a90d9" : "#2a3a5a";
+          const orchestrationFns = [
+            "parmenion-orchestrator", "supervisor-actions", "dispatch-agent-directives",
+            "autopilot-engine", "ensure-profile", "session-heartbeat"
+          ];
+          return (
+            <g style={{ transition: "opacity 0.3s" }} opacity={rampartOpacity}>
+              {/* Rampart background */}
+              <rect x={rx} y={ry} width={rw} height={rh} rx={10}
+                fill="#0d1525" stroke={rampartStroke} strokeWidth={2.5}
+                strokeDasharray={coreHov ? "none" : "none"}
+                style={{ transition: "stroke 0.3s" }}
+              />
+              {/* Inner glow line */}
+              <rect x={rx + 3} y={ry + 3} width={rw - 6} height={rh - 6} rx={8}
+                fill="none" stroke={coreHov ? "#4a90d966" : "#1d355722"} strokeWidth={1}
+                style={{ transition: "stroke 0.3s" }}
+              />
+              {/* Label */}
+              <text x={rx + 12} y={ry + 18} fill="#7aa2d4" fontSize={11} fontWeight="bold"
+                letterSpacing={1.5} style={{ textTransform: "uppercase" } as React.CSSProperties}
+              >CORE — ORCHESTRATION HUB</text>
+              {/* Orchestration functions list */}
+              {orchestrationFns.map((fn, i) => (
+                <text key={fn} x={rx + 12 + (i % 3) * (rw / 3)} y={ry + 34 + Math.floor(i / 3) * 13}
+                  fill="#5a7da8" fontSize={7.5} fontStyle="italic"
+                >{fn}</text>
+              ))}
+              {/* Separator line */}
+              <line x1={rx + 8} y1={ry + labelH - 4} x2={rx + rw - 8} y2={ry + labelH - 4}
+                stroke="#2a3a5a" strokeWidth={0.8}
+              />
+            </g>
+          );
+        })()}
+
         {/* ── Cards ── */}
         {Object.entries(domains).map(([name, d]) => {
           const pos = positions[name];
@@ -241,7 +290,7 @@ const ArchitectureMap: React.FC = () => {
           const isCore = name === "CORE";
 
           if (isCore) {
-            // Render 4 sub-cards
+            // Render 4 sub-cards inside rampart
             return (
               <g key={name}
                 onMouseEnter={() => setHovered(name)}
