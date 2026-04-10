@@ -155,7 +155,7 @@ export function GoogleDriveFolderPicker({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <HardDrive className="h-5 w-5 text-muted-foreground" />
+            <HardDrive className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Sélectionner un dossier Google Drive
           </DialogTitle>
           <DialogDescription>
@@ -210,13 +210,13 @@ export function GoogleDriveFolderPicker({
                   onDoubleClick={() => folder.hasChildren && navigateToFolder(folder)}
                   className={`w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-md text-sm transition-colors group ${
                     selectedId === folder.id
-                      ? 'bg-muted text-foreground border border-foreground/20'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                       : 'hover:bg-muted/50 text-foreground border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     {selectedId === folder.id ? (
-                      <FolderOpen className="h-4.5 w-4.5 text-foreground" />
+                      <FolderOpen className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Folder className="h-4.5 w-4.5 text-muted-foreground group-hover:text-foreground" />
                     )}
@@ -224,7 +224,7 @@ export function GoogleDriveFolderPicker({
                   </div>
                   <div className="flex items-center gap-1.5">
                     {selectedId === folder.id && (
-                      <Check className="h-4 w-4 text-foreground" />
+                      <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     )}
                     {folder.hasChildren && (
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-50" />
@@ -273,7 +273,7 @@ export function GoogleDriveFolderPicker({
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-sm">
             Annuler
           </Button>
-          <Button onClick={handleConfirm} className="gap-1.5 text-sm">
+          <Button onClick={handleConfirm} className="gap-1.5 text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0">
             <Check className="h-4 w-4" />
             {selectedId ? 'Sélectionner ce dossier' : 'Utiliser ce dossier'}
           </Button>

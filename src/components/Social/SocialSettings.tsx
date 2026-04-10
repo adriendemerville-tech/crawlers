@@ -121,7 +121,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Link2 className="h-5 w-5 text-muted-foreground" />
+            <Link2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Comptes réseaux sociaux
           </CardTitle>
           <CardDescription>
@@ -175,7 +175,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
                       </Button>
                     </>
                   ) : (
-                    <Button size="sm" className="gap-1.5 text-xs" onClick={() => handleConnect(conn.platform)}>
+                    <Button size="sm" className="gap-1.5 text-xs bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0" onClick={() => handleConnect(conn.platform)}>
                       <ExternalLink className="h-3 w-3" /> Connecter
                     </Button>
                   )}
@@ -190,7 +190,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Key className="h-5 w-5 text-muted-foreground" />
+            <Key className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Configuration API
           </CardTitle>
           <CardDescription>
@@ -251,7 +251,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <HardDrive className="h-5 w-5 text-muted-foreground" />
+            <HardDrive className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Google Drive — Export
           </CardTitle>
           <CardDescription>
@@ -330,7 +330,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="h-5 w-5 text-muted-foreground" />
+            <Shield className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Permissions & Sécurité
           </CardTitle>
         </CardHeader>
