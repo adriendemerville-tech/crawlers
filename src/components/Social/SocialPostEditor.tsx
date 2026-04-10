@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
-  Smile, AtSign, Hash, Link2, Globe, Sparkles, Send, Download, Save, Loader2, Languages, Wand2
+  Smile, AtSign, Hash, Link2, Globe, Sparkles, Send, Download, Save, Loader2, Languages, Wand2, HardDrive
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateContent, resolveSmartLink, shortenLink, translatePost } from '@/lib/api/socialHub';
