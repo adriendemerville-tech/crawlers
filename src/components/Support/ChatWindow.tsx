@@ -49,7 +49,25 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-interface ChatMessage {
+function ExpandableDetail({ expandedContent }: { expandedContent: string }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+      >
+        {expanded ? '▾ Résumé' : '▸ En savoir plus'}
+      </button>
+      {expanded && (
+        <div className="mt-2 pt-2 border-t border-muted-foreground/10 whitespace-pre-wrap break-words prose prose-xs dark:prose-invert max-w-none text-[12px] leading-relaxed [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+          <ReactMarkdown>{expandedContent}</ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
+}
+
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
