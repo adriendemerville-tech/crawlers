@@ -39,19 +39,55 @@ interface BenchmarkResult extends GeoResult {
 
 /* ── Engine-specific system prompts ──────────────────────────────── */
 
-const ENGINE_PROMPTS: Record<string, string> = {
+const DEFAULT_ENGINE_PROMPTS: Record<string, string> = {
   chatgpt: `Tu simules ChatGPT. Réponds à la question de l'utilisateur comme le ferait ChatGPT. Sois factuel, cite des sources si pertinent.`,
   gemini: `Tu simules Google Gemini. Réponds comme Gemini le ferait : synthétique, avec des données vérifiables.`,
   perplexity: `Tu simules Perplexity AI. Réponds avec des citations de sources, des liens, une synthèse structurée.`,
   copilot: `Tu simules Microsoft Copilot. Réponds de manière concise et pratique, avec des suggestions actionnables.`,
+  claude: `Tu simules Claude (Anthropic). Réponds de manière nuancée, analytique, avec des citations de sources quand pertinent.`,
 };
 
-function getEngineSystemPrompt(engine: string): string {
+interface EngineNoteInput {
+  engine: string;
+  howToAskCitations: string;
+  whyItMatters: string;
+  sourceUrl: string;
+}
+
+interface ScoringFieldInput {
+  field: string;
+  whatToCode: string;
+  allowedValues: string;
+  meaning: string;
+}
+
+function getEngineSystemPrompt(engine: string, engineNotes?: EngineNoteInput[]): string {
   const lower = engine.toLowerCase();
-  for (const [key, prompt] of Object.entries(ENGINE_PROMPTS)) {
+  
+  // Try matching from imported engine notes first (higher fidelity)
+  if (engineNotes?.length) {
+    const note = engineNotes.find(n => lower.includes(n.engine.toLowerCase()));
+    if (note) {
+      return `Tu simules ${note.engine}. ${note.howToAskCitations}
+
+Contexte important : ${note.whyItMatters}`;
+    }
+  }
+  
+  // Fallback to defaults
+  for (const [key, prompt] of Object.entries(DEFAULT_ENGINE_PROMPTS)) {
     if (lower.includes(key)) return prompt;
   }
   return `Tu es un moteur de recherche IA. Réponds de manière factuelle et structurée.`;
+}
+
+/** Build scoring rubric instructions from imported Scoring Guide */
+function buildScoringRubric(scoringGuide?: ScoringFieldInput[]): string {
+  if (!scoringGuide?.length) return '';
+  const rubricLines = scoringGuide.map(f => 
+    `- **${f.field}** : ${f.whatToCode} (Valeurs: ${f.allowedValues}) → ${f.meaning}`
+  ).join('\n');
+  return `\n\nGRILLE D'ÉVALUATION À APPLIQUER :\n${rubricLines}\n\nUtilise cette grille pour structurer ton analyse de citation.`;
 }
 
 /* ── LLM GEO evaluation (standard mode) ─────────────────────────── */
