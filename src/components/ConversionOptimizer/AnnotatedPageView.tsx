@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Loader2, ImageIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, ImageIcon, PenLine, X } from 'lucide-react';
+import { ManualAnnotationOverlay, type ManualAnnotation } from './ManualAnnotationOverlay';
 
 interface Annotation {
   text: string;
@@ -29,6 +31,10 @@ interface Props {
   annotations: Annotation[];
   suggestions: Suggestion[];
   onSelectSuggestion?: (index: number) => void;
+  manualAnnotations?: ManualAnnotation[];
+  onManualAnnotationsChange?: (annotations: ManualAnnotation[]) => void;
+  drawingMode?: boolean;
+  onDrawingModeChange?: (active: boolean) => void;
 }
 
 const AXIS_LABELS: Record<string, string> = {
@@ -170,6 +176,10 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
   annotations,
   suggestions,
   onSelectSuggestion,
+  manualAnnotations = [],
+  onManualAnnotationsChange,
+  drawingMode = false,
+  onDrawingModeChange,
 }: Props) {
   const imageRef = useRef<HTMLImageElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -265,10 +275,34 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
     }
   }, []);
 
+  const handleAddManual = useCallback((annotation: ManualAnnotation) => {
+    onManualAnnotationsChange?.([...manualAnnotations, annotation]);
+  }, [manualAnnotations, onManualAnnotationsChange]);
+
+  const handleRemoveManual = useCallback((id: string) => {
+    onManualAnnotationsChange?.(manualAnnotations.filter(a => a.id !== id));
+  }, [manualAnnotations, onManualAnnotationsChange]);
+
   return (
     <Card className="overflow-hidden border-border/50">
       <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 p-3">
-        <span className="text-sm font-medium text-foreground">Vue annotée</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground">Vue annotée</span>
+          {onDrawingModeChange && (
+            <Button
+              size="sm"
+              variant={drawingMode ? 'default' : 'outline'}
+              className="h-7 text-xs gap-1"
+              onClick={() => onDrawingModeChange(!drawingMode)}
+            >
+              {drawingMode ? <X className="h-3 w-3" /> : <PenLine className="h-3 w-3" />}
+              {drawingMode ? 'Quitter annotation' : 'Annoter'}
+            </Button>
+          )}
+          {manualAnnotations.length > 0 && (
+            <Badge variant="secondary" className="text-[10px]">{manualAnnotations.length} ajout{manualAnnotations.length > 1 ? 's' : ''}</Badge>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-[10px]"><span className="h-2 w-2 rounded-full bg-red-500" /> Critique</span>
           <span className="flex items-center gap-1 text-[10px]"><span className="h-2 w-2 rounded-full bg-orange-500" /> Haute</span>
@@ -415,6 +449,18 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
               className="block h-auto w-full"
               onLoad={handleImageLoad}
             />
+
+            {/* Manual annotation overlay - positioned over the screenshot */}
+            {imageLoaded && onManualAnnotationsChange && (
+              <ManualAnnotationOverlay
+                isDrawing={drawingMode}
+                scale={scale}
+                offsetX={0}
+                annotations={manualAnnotations}
+                onAdd={handleAddManual}
+                onRemove={handleRemoveManual}
+              />
+            )}
 
             {imageLoaded && annotatedSuggestions.length > 0 && positionedSuggestions.length === 0 && (
               <div className="absolute inset-x-6 top-6 z-20 rounded-lg border border-border bg-background/92 p-3 text-sm text-muted-foreground shadow-sm backdrop-blur-sm">

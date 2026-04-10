@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon, PenTool, Trash2, FileText, Euro } from 'lucide-react';
+import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon, PenTool, Trash2, FileText, Euro, RefreshCw, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPageView';
+import type { ManualAnnotation } from '@/components/ConversionOptimizer/ManualAnnotationOverlay';
 
 const CocoonContentArchitectModal = lazy(() =>
   import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
@@ -150,6 +151,9 @@ export default function ConversionOptimizer() {
   const [showContentArchitect, setShowContentArchitect] = useState(false);
   const [freshAnalysis, setFreshAnalysis] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [manualAnnotations, setManualAnnotations] = useState<ManualAnnotation[]>([]);
+  const [drawingMode, setDrawingMode] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
   const fetchHistory = async (siteId: string) => {
     if (!siteId) {
       setHistory([]);
@@ -232,6 +236,8 @@ export default function ConversionOptimizer() {
     setAnalyzing(true);
     setResult(null);
     setBackfillingAnnotations(false);
+    setManualAnnotations([]);
+    setDrawingMode(false);
 
     try {
       const { data, error } = await supabase.functions.invoke('analyze-ux-context', {
@@ -251,6 +257,41 @@ export default function ConversionOptimizer() {
       setAnalyzing(false);
     }
   };
+
+  const handleRecalculate = useCallback(async () => {
+    if (!selectedSiteId || !selectedPageUrl || manualAnnotations.length === 0) return;
+    setRecalculating(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-ux-context', {
+        body: {
+          tracked_site_id: selectedSiteId,
+          page_url: selectedPageUrl,
+          mode: 'manual-suggestions',
+          manual_annotations: manualAnnotations,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Recalculation failed');
+
+      const newSuggestions = data.suggestions || [];
+      setResult((current) => current ? {
+        ...current,
+        suggestions: [...current.suggestions, ...newSuggestions],
+      } : current);
+
+      setDrawingMode(false);
+      toast({
+        title: 'Suggestions ajoutées',
+        description: `${newSuggestions.length} nouvelles recommandations générées.${data.workbench_injected > 0 ? ` ${data.workbench_injected} envoyées au Workbench.` : ''}`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message || 'Recalcul échoué', variant: 'destructive' });
+    } finally {
+      setRecalculating(false);
+    }
+  }, [selectedSiteId, selectedPageUrl, manualAnnotations, toast]);
 
   const hydrateSavedAnalysisAnnotations = async (saved: SavedAnalysis) => {
     if (!selectedSiteId || !saved.screenshot_url || (saved.annotations?.length ?? 0) > 0) return;
@@ -633,7 +674,35 @@ export default function ConversionOptimizer() {
                     const el = document.getElementById(`suggestion-${idx}`);
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }}
+                  manualAnnotations={manualAnnotations}
+                  onManualAnnotationsChange={setManualAnnotations}
+                  drawingMode={drawingMode}
+                  onDrawingModeChange={setDrawingMode}
                 />
+                {manualAnnotations.length > 0 && (
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => { setManualAnnotations([]); setDrawingMode(false); }}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" /> Effacer les annotations
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="text-xs bg-emerald-600 hover:bg-emerald-700"
+                      onClick={handleRecalculate}
+                      disabled={recalculating}
+                    >
+                      {recalculating ? (
+                        <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Calcul en cours…</>
+                      ) : (
+                        <><RefreshCw className="h-3 w-3 mr-1" /> Recalculer ({manualAnnotations.length} annotation{manualAnnotations.length > 1 ? 's' : ''})</>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -653,6 +722,7 @@ export default function ConversionOptimizer() {
                           <div className="flex items-center gap-2 flex-wrap">
                             {priorityBadge(s.priority)}
                             {meta && <Badge variant="outline" className="text-[10px]">{meta.label}</Badge>}
+                            {(s as any).is_manual && <Badge className="bg-cyan-500/15 text-cyan-600 text-[10px]">Manuel</Badge>}
                             <span className="text-sm font-medium">{s.title}</span>
                           </div>
                           <p className="text-xs text-muted-foreground">{s.rationale}</p>
