@@ -1066,118 +1066,143 @@ FRAÎCHEUR & DÉNOMINATION:
     })();
 
     // Route: ≤4 → flash (simple), 5-8 → flash-preview (standard), ≥9 → pro (complex)
-    const selectedModel = complexityScore >= 9
-      ? 'google/gemini-2.5-pro'
+    const modelTiers: string[] = complexityScore >= 9
+      ? ['google/gemini-2.5-pro', 'google/gemini-2.5-flash']
       : complexityScore >= 5
-        ? 'google/gemini-3-flash-preview'
-        : 'google/gemini-2.5-flash';
+        ? ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash']
+        : ['google/gemini-2.5-flash'];
 
-    console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${selectedModel} (brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
+    const LLM_TIMEOUT_MS = 150000; // 150s (was 120s)
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'content_architecture_recommendation',
-            description: 'Returns the optimal content architecture recommendation',
-            parameters: {
-              type: 'object',
-              properties: {
-                content_structure: {
-                  type: 'object',
-                  properties: {
-                    recommended_h1: { type: 'string' },
-                    hn_hierarchy: { type: 'array', items: { type: 'object' } },
-                    word_count_range: { type: 'object', properties: { min: { type: 'number' }, max: { type: 'number' }, ideal: { type: 'number' } } },
-                    sections: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, purpose: { type: 'string' }, body_text: { type: 'string', description: 'Full written content for this section (paragraphs, lists, etc.)' }, word_count: { type: 'number' }, priority: { type: 'string' } }, required: ['title', 'body_text', 'word_count'] } },
-                    tldr_summary: { type: 'string' },
-                    media_recommendations: { type: 'array', items: { type: 'object', properties: { type: { type: 'string' }, description: { type: 'string' }, alt_text: { type: 'string' }, placement: { type: 'string' } } } },
-                    introduction: { type: 'string', description: 'Introductory paragraph (chapô) of 2-4 sentences' },
-                  },
-                  required: ['recommended_h1', 'hn_hierarchy', 'word_count_range', 'sections', 'introduction'],
-                },
-                keyword_strategy: {
-                  type: 'object',
-                  properties: {
-                    primary_keyword: { type: 'object' },
-                    secondary_keywords: { type: 'array', items: { type: 'object' } },
-                    lsi_terms: { type: 'array', items: { type: 'object' } },
-                    semantic_ratio: { type: 'object' },
-                  },
-                  required: ['primary_keyword', 'secondary_keywords', 'lsi_terms', 'semantic_ratio'],
-                },
-                metadata_enrichment: {
-                  type: 'object',
-                  properties: {
-                    meta_title: { type: 'string' },
-                    meta_description: { type: 'string' },
-                    json_ld_schemas: { type: 'array', items: { type: 'object' } },
-                    og_tags: { type: 'object' },
-                    structured_data_notes: { type: 'string' },
-                  },
-                  required: ['meta_title', 'meta_description', 'json_ld_schemas'],
-                },
-                internal_linking: {
-                  type: 'object',
-                  properties: {
-                    recommended_internal_links: { type: 'number' },
-                    anchor_strategy: { type: 'array', items: { type: 'object', properties: { anchor_text: { type: 'string' }, target_url: { type: 'string', description: 'Concrete URL to link to' }, target_intent: { type: 'string' }, placement_section: { type: 'string', description: 'Which section this link should appear in' } }, required: ['anchor_text', 'target_url', 'target_intent'] } },
-                    cluster_opportunities: { type: 'array', items: { type: 'string' } },
-                    silo_reinforcement: { type: 'string', description: 'How this content strengthens the silo structure' },
-                  },
-                },
-                strategic_objectives_addressed: {
-                  type: 'array',
-                  description: 'How each strategic objective is concretely addressed in the content',
-                  items: { type: 'object', properties: { objective_type: { type: 'string' }, addressed: { type: 'boolean' }, how: { type: 'string' }, sections_involved: { type: 'array', items: { type: 'string' } } }, required: ['objective_type', 'addressed', 'how'] },
-                },
-                coherence_check: {
-                  type: 'object',
-                  properties: {
-                    innovation_level: { type: 'string', enum: ['conservative', 'moderate', 'disruptive'] },
-                    sector_fit: { type: 'string', enum: ['high', 'medium', 'low'] },
-                    tone_continuity: { type: 'string', enum: ['aligned', 'slight_shift', 'breaking'] },
-                    bounce_risk: { type: 'string', enum: ['low', 'medium', 'high'] },
-                    warnings: { type: 'array', items: { type: 'string' } },
-                  },
-                  required: ['innovation_level', 'sector_fit', 'tone_continuity', 'bounce_risk'],
-                },
-                geo_criteria_applied: {
-                  type: 'array',
-                  items: {
+    async function callLLMWithRetry(): Promise<Response> {
+      for (let attempt = 0; attempt < modelTiers.length; attempt++) {
+        const model = modelTiers[attempt];
+        const isRetry = attempt > 0;
+        if (isRetry) {
+          console.log(`[content-advisor] ⚡ Retry with faster model: ${model} (attempt ${attempt + 1})`);
+        }
+        console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${model} (brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
+        try {
+          const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              tools: [{
+                type: 'function',
+                function: {
+                  name: 'content_architecture_recommendation',
+                  description: 'Returns the optimal content architecture recommendation',
+                  parameters: {
                     type: 'object',
                     properties: {
-                      criterion: { type: 'number' },
-                      name: { type: 'string' },
-                      activated: { type: 'boolean' },
-                      reason: { type: 'string' },
-                      weight: { type: 'string', enum: ['standard', 'reinforced'] },
+                      content_structure: {
+                        type: 'object',
+                        properties: {
+                          recommended_h1: { type: 'string' },
+                          hn_hierarchy: { type: 'array', items: { type: 'object' } },
+                          word_count_range: { type: 'object', properties: { min: { type: 'number' }, max: { type: 'number' }, ideal: { type: 'number' } } },
+                          sections: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, purpose: { type: 'string' }, body_text: { type: 'string', description: 'Full written content for this section (paragraphs, lists, etc.)' }, word_count: { type: 'number' }, priority: { type: 'string' } }, required: ['title', 'body_text', 'word_count'] } },
+                          tldr_summary: { type: 'string' },
+                          media_recommendations: { type: 'array', items: { type: 'object', properties: { type: { type: 'string' }, description: { type: 'string' }, alt_text: { type: 'string' }, placement: { type: 'string' } } } },
+                          introduction: { type: 'string', description: 'Introductory paragraph (chapô) of 2-4 sentences' },
+                        },
+                        required: ['recommended_h1', 'hn_hierarchy', 'word_count_range', 'sections', 'introduction'],
+                      },
+                      keyword_strategy: {
+                        type: 'object',
+                        properties: {
+                          primary_keyword: { type: 'object' },
+                          secondary_keywords: { type: 'array', items: { type: 'object' } },
+                          lsi_terms: { type: 'array', items: { type: 'object' } },
+                          semantic_ratio: { type: 'object' },
+                        },
+                        required: ['primary_keyword', 'secondary_keywords', 'lsi_terms', 'semantic_ratio'],
+                      },
+                      metadata_enrichment: {
+                        type: 'object',
+                        properties: {
+                          meta_title: { type: 'string' },
+                          meta_description: { type: 'string' },
+                          json_ld_schemas: { type: 'array', items: { type: 'object' } },
+                          og_tags: { type: 'object' },
+                          structured_data_notes: { type: 'string' },
+                        },
+                        required: ['meta_title', 'meta_description', 'json_ld_schemas'],
+                      },
+                      internal_linking: {
+                        type: 'object',
+                        properties: {
+                          recommended_internal_links: { type: 'number' },
+                          anchor_strategy: { type: 'array', items: { type: 'object', properties: { anchor_text: { type: 'string' }, target_url: { type: 'string', description: 'Concrete URL to link to' }, target_intent: { type: 'string' }, placement_section: { type: 'string', description: 'Which section this link should appear in' } }, required: ['anchor_text', 'target_url', 'target_intent'] } },
+                          cluster_opportunities: { type: 'array', items: { type: 'string' } },
+                          silo_reinforcement: { type: 'string', description: 'How this content strengthens the silo structure' },
+                        },
+                      },
+                      strategic_objectives_addressed: {
+                        type: 'array',
+                        description: 'How each strategic objective is concretely addressed in the content',
+                        items: { type: 'object', properties: { objective_type: { type: 'string' }, addressed: { type: 'boolean' }, how: { type: 'string' }, sections_involved: { type: 'array', items: { type: 'string' } } }, required: ['objective_type', 'addressed', 'how'] },
+                      },
+                      coherence_check: {
+                        type: 'object',
+                        properties: {
+                          innovation_level: { type: 'string', enum: ['conservative', 'moderate', 'disruptive'] },
+                          sector_fit: { type: 'string', enum: ['high', 'medium', 'low'] },
+                          tone_continuity: { type: 'string', enum: ['aligned', 'slight_shift', 'breaking'] },
+                          bounce_risk: { type: 'string', enum: ['low', 'medium', 'high'] },
+                          warnings: { type: 'array', items: { type: 'string' } },
+                        },
+                        required: ['innovation_level', 'sector_fit', 'tone_continuity', 'bounce_risk'],
+                      },
+                      geo_criteria_applied: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            criterion: { type: 'number' },
+                            name: { type: 'string' },
+                            activated: { type: 'boolean' },
+                            reason: { type: 'string' },
+                            weight: { type: 'string', enum: ['standard', 'reinforced'] },
+                          },
+                          required: ['criterion', 'name', 'activated', 'reason', 'weight'],
+                        },
+                      },
+                      confidence_score: { type: 'number' },
+                      rationale: { type: 'string' },
                     },
-                    required: ['criterion', 'name', 'activated', 'reason', 'weight'],
+                    required: ['content_structure', 'keyword_strategy', 'metadata_enrichment', 'coherence_check', 'geo_criteria_applied', 'confidence_score', 'rationale'],
                   },
                 },
-                confidence_score: { type: 'number' },
-                rationale: { type: 'string' },
-              },
-              required: ['content_structure', 'keyword_strategy', 'metadata_enrichment', 'coherence_check', 'geo_criteria_applied', 'confidence_score', 'rationale'],
-            },
-          },
-        }],
-        tool_choice: { type: 'function', function: { name: 'content_architecture_recommendation' } },
-      }),
-      signal: AbortSignal.timeout(120000),
-    })
+              }],
+              tool_choice: { type: 'function', function: { name: 'content_architecture_recommendation' } },
+            }),
+            signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+          });
+          // If we got a response (even error), return it — only retry on timeout
+          return resp;
+        } catch (err) {
+          const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+          const isLastAttempt = attempt === modelTiers.length - 1;
+          if (isTimeout && !isLastAttempt) {
+            console.warn(`[content-advisor] ⏱️ Model ${model} timed out after ${LLM_TIMEOUT_MS / 1000}s, falling back...`);
+            continue;
+          }
+          throw err; // Re-throw if not timeout or last attempt
+        }
+      }
+      throw new Error('All model tiers exhausted');
+    }
+
+    const aiResponse = await callLLMWithRetry();
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text()
