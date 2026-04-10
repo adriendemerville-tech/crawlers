@@ -1124,7 +1124,7 @@ ${lines}
 `;
 }
 
-function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = [], chunkability: any = null) {
+function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = [], chunkability: any = null, ga4Context: any = {}) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
   ).join('\n');
