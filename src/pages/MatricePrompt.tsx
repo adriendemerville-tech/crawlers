@@ -22,6 +22,7 @@ import ImportStepper from '@/components/Matrice/ImportStepper';
 import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
+import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScoringMethod, detectScoringSheet, SCORING_REGISTRY } from '@/utils/matrice/scoringDetector';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -311,7 +312,7 @@ export default function MatricePrompt() {
     if (rawRows.length === 0) return;
 
     // Use smart defaults based on detected matrice type
-    const smartDef = matriceType ? getSmartDefaults(matriceType) : DEFAULTS;
+    const smartDef = matriceType ? getSmartDefaults(matriceType, activeScoringMethod) : getSmartDefaults('seo');
 
     // Step 1: Fuzzy column mapping
     const headers = Object.keys(rawRows[0] || {});
@@ -406,7 +407,8 @@ export default function MatricePrompt() {
   const [xlsxWorkbookRef, setXlsxWorkbookRef] = useState<any>(null);
   const [xlsxFileName, setXlsxFileName] = useState('');
   const [activeMatriceType, setActiveMatriceType] = useState<MatriceType>('seo');
-
+  const [activeScoringMethod, setActiveScoringMethod] = useState<ScoringMethodId>('score_100');
+  const activeScoring = useMemo(() => getScoringConfig(activeScoringMethod), [activeScoringMethod]);
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -487,8 +489,8 @@ export default function MatricePrompt() {
     });
   }, [rows, sortField, sortDir]);
 
-  /* --- Smart labels based on matrice type --- */
-  const smartLabels = useMemo(() => getSmartDefaults(activeMatriceType).labels, [activeMatriceType]);
+  /* --- Smart labels based on matrice type + scoring method --- */
+  const smartLabels = useMemo(() => getSmartDefaults(activeMatriceType, activeScoringMethod).labels, [activeMatriceType, activeScoringMethod]);
 
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
@@ -667,16 +669,18 @@ export default function MatricePrompt() {
     const justification = raw.justification || raw.seo_justification || '';
     const prompt = row.prompt.length > 60 ? row.prompt.substring(0, 57) + '…' : row.prompt;
 
-    if (activeMatriceType === 'benchmark') {
+    if (activeScoring.direction === 'lower_better') {
       const context = result.citation_context || raw.scoring?.context || '';
       if (score === 0) return `Pour « ${prompt} », la marque n'a pas été citée par le moteur IA.`;
-      let explanation = `Pour « ${prompt} », la marque apparaît en rang ${score}.`;
+      let explanation = `Pour « ${prompt} », la marque apparaît en ${activeScoring.display.formatScore(score)}.`;
       if (context) explanation += ` Citation : "${context.length > 100 ? context.substring(0, 97) + '…' : context}"`;
       return explanation;
     }
 
-    const verdict = score >= row.seuil_bon ? 'bon' : score >= row.seuil_moyen ? 'moyen' : 'insuffisant';
-    let explanation = `Le LLM a évalué « ${prompt} » et a attribué ${score}/100 (verdict : ${verdict}).`;
+    const formatted = activeScoring.display.formatScore(score);
+    const color = activeScoring.display.formatColor(score, row.seuil_bon, row.seuil_moyen);
+    const verdict = color === 'green' ? 'bon' : color === 'yellow' ? 'moyen' : 'insuffisant';
+    let explanation = `Le LLM a évalué « ${prompt} » et a attribué ${formatted} (verdict : ${verdict}).`;
     if (justification) {
       explanation += ` Justification : ${justification.length > 120 ? justification.substring(0, 117) + '…' : justification}`;
     }
@@ -692,15 +696,15 @@ export default function MatricePrompt() {
     const engineScore = rawData.seo_engine;
     const detectedType = result.detected_type || 'auto';
     const prompt = row.prompt.length > 60 ? row.prompt.substring(0, 57) + '…' : row.prompt;
-    const verdict = score >= row.seuil_bon ? 'bon' : score >= row.seuil_moyen ? 'moyen' : 'insuffisant';
+    const color = activeScoring.display.formatColor(score, row.seuil_bon, row.seuil_moyen);
+    const verdict = color === 'green' ? 'bon' : color === 'yellow' ? 'moyen' : 'insuffisant';
     
-    let explanation = `Pour « ${prompt} », Crawlers a mesuré ${score}/100 (${verdict}) via ses micro-fonctions (type détecté : ${detectedType}).`;
+    let explanation = `Pour « ${prompt} », Crawlers a mesuré ${activeScoring.display.formatScore(score)} (${verdict}) via ses micro-fonctions (type détecté : ${detectedType}).`;
     
     if (engineScore != null) {
       explanation += ` Score moteur technique pur : ${engineScore}/100, pondéré à 60% avec le score LLM à 40%.`;
     }
     
-    // Surface specific raw findings
     const details: string[] = [];
     if (rawData.title_length != null) details.push(`title: ${rawData.title_length} car.`);
     if (rawData.meta_desc_length != null) details.push(`meta desc: ${rawData.meta_desc_length} car.`);
@@ -721,15 +725,9 @@ export default function MatricePrompt() {
 
 
     const getScoreColor = (score: number, bon: number, moyen: number) => {
-    // Benchmark mode: lower is better (rank-based: 1=best, 3=acceptable)
-    if (activeMatriceType === 'benchmark') {
-      if (score === 0) return 'text-red-600'; // Not cited
-      if (score <= bon) return 'text-green-600'; // e.g. rank ≤ 3
-      if (score <= moyen) return 'text-yellow-600'; // e.g. rank ≤ 10
-      return 'text-red-600'; // rank > 10
-    }
-    if (score >= bon) return 'text-green-600';
-    if (score >= moyen) return 'text-yellow-600';
+    const color = activeScoring.display.formatColor(score, bon, moyen);
+    if (color === 'green') return 'text-green-600';
+    if (color === 'yellow') return 'text-yellow-600';
     return 'text-red-600';
   };
 
@@ -999,8 +997,8 @@ export default function MatricePrompt() {
                        </span>
                      </TableHead>
                      {results && <TableHead className="w-20">Type</TableHead>}
-                      {results && <TableHead className="w-24 text-center">{activeMatriceType === 'benchmark' ? 'Rang' : 'Parsé'}</TableHead>}
-                      {results && <TableHead className="w-24 text-center">{activeMatriceType === 'benchmark' ? 'Résultat' : 'Crawlers'}</TableHead>}
+                      {results && <TableHead className="w-24 text-center">{activeScoring.display.scoreLabel}</TableHead>}
+                      {results && <TableHead className="w-24 text-center">{activeScoring.direction === 'lower_better' ? activeScoring.display.resultLabel : 'Crawlers'}</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1015,8 +1013,8 @@ export default function MatricePrompt() {
                             className="border-muted-foreground/40 data-[state=checked]:bg-muted-foreground/60 data-[state=checked]:border-muted-foreground/60"
                           />
                         </TableCell>
-                        <TableCell className="font-medium text-sm max-w-xs">
-                          <span className="truncate block">{row.prompt}</span>
+                        <TableCell className="font-medium text-sm" style={{ minWidth: '240px', maxWidth: '480px' }}>
+                          <span className="block whitespace-pre-wrap break-words leading-relaxed">{row.prompt}</span>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${getAxeBadgeClass(row.axe)}`}>
@@ -1052,9 +1050,7 @@ export default function MatricePrompt() {
                           <TableCell className={`font-bold text-center group/parsed ${resultRow ? getScoreColor(resultRow.parsed_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? (
                               <span className="inline-flex items-center gap-1">
-                                {activeMatriceType === 'benchmark'
-                                  ? (resultRow.parsed_score === 0 ? 'Non cité' : `Rang ${resultRow.parsed_score}`)
-                                  : `${resultRow.parsed_score}/100`}
+                                {activeScoring.display.formatScore(resultRow.parsed_score)}
                                 <HoverCard openDelay={200}>
                                   <HoverCardTrigger asChild>
                                     <button className="opacity-0 group-hover/parsed:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
@@ -1063,9 +1059,7 @@ export default function MatricePrompt() {
                                   </HoverCardTrigger>
                                   <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
                                     <p className="font-semibold text-foreground mb-1">
-                                      {activeMatriceType === 'benchmark'
-                                        ? `Rang — ${resultRow.parsed_score === 0 ? 'Non cité' : `#${resultRow.parsed_score}`}`
-                                        : `Score Parsé — ${resultRow.parsed_score}/100`}
+                                      {activeScoring.display.scoreLabel} — {activeScoring.display.formatScore(resultRow.parsed_score)}
                                     </p>
                                     <p className="text-muted-foreground">{buildParsedExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
@@ -1078,9 +1072,7 @@ export default function MatricePrompt() {
                           <TableCell className={`font-bold text-center group/crawlers ${resultRow ? getScoreColor(resultRow.crawlers_score, row.seuil_bon, row.seuil_moyen) : ''}`}>
                             {resultRow ? (
                               <span className="inline-flex items-center gap-1">
-                                {activeMatriceType === 'benchmark'
-                                  ? (resultRow.crawlers_score === 0 ? 'Non cité' : `Rang ${resultRow.crawlers_score}`)
-                                  : `${resultRow.crawlers_score}/100`}
+                                {activeScoring.display.formatScore(resultRow.crawlers_score)}
                                 <HoverCard openDelay={200}>
                                   <HoverCardTrigger asChild>
                                     <button className="opacity-0 group-hover/crawlers:opacity-100 transition-opacity text-muted-foreground hover:text-primary">
@@ -1089,9 +1081,7 @@ export default function MatricePrompt() {
                                   </HoverCardTrigger>
                                   <HoverCardContent side="top" className="w-80 text-xs font-normal text-left">
                                     <p className="font-semibold text-foreground mb-1">
-                                      {activeMatriceType === 'benchmark'
-                                        ? `Rang — ${resultRow.crawlers_score === 0 ? 'Non cité' : `#${resultRow.crawlers_score}`}`
-                                        : `Score Crawlers — ${resultRow.crawlers_score}/100`}
+                                      {activeScoring.display.resultLabel} — {activeScoring.display.formatScore(resultRow.crawlers_score)}
                                     </p>
                                     <p className="text-muted-foreground">{buildCrawlersExplanation(row, resultRow)}</p>
                                   </HoverCardContent>
@@ -1108,6 +1098,7 @@ export default function MatricePrompt() {
 
               <div className="px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center gap-4">
                 <span>{selectedRows.length}/{rows.length} KPIs sélectionnés</span>
+                <Badge variant="outline" className="text-[9px]">{activeScoring.label}</Badge>
                 {results && (() => {
                   const active = results.filter((r: any) => selectedRows.some(s => s.id === r.id || s.prompt === r.prompt));
                   const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
@@ -1116,8 +1107,8 @@ export default function MatricePrompt() {
                   const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
                   return (
                     <span className="ml-auto font-medium text-foreground flex gap-4">
-                      <span>Parsé : {parsedScore}/100</span>
-                      <span className="text-primary">Crawlers : {crawlersScore}/100</span>
+                      <span>{activeScoring.display.scoreLabel} : {activeScoring.display.formatScore(parsedScore)}</span>
+                      <span className="text-primary">Crawlers : {activeScoring.display.formatScore(crawlersScore)}</span>
                     </span>
                   );
                 })()}
@@ -1139,12 +1130,18 @@ export default function MatricePrompt() {
         open={xlsxStepperOpen}
         sheetNames={xlsxStepperSheets}
         workbook={xlsxWorkbookRef}
-        onComplete={({ rows, matriceType, identityCard }) => {
+        onComplete={({ rows: importedRows, matriceType, identityCard }) => {
           setXlsxStepperOpen(false);
           setActiveMatriceType(matriceType);
-          processImportedRows(rows, xlsxFileName, matriceType);
+          // Auto-detect scoring method from imported data
+          const headers = importedRows.length > 0 ? Object.keys(importedRows[0]) : [];
+          const detection = detectScoringMethod(headers, importedRows.slice(0, 10), matriceType);
+          setActiveScoringMethod(detection.method);
+          if (detection.source !== 'default') {
+            toast.info(`Méthode de scoring détectée : ${getScoringConfig(detection.method).label} (confiance: ${Math.round(detection.confidence * 100)}%)`, { duration: 4000 });
+          }
+          processImportedRows(importedRows, xlsxFileName, matriceType);
           setXlsxWorkbookRef(null);
-          // Auto-fill URL from identity card if available
           if (identityCard?.brandUrl && !url.trim()) {
             setUrl(identityCard.brandUrl);
             toast.info(`URL pré-remplie depuis la carte d'identité : ${identityCard.brandUrl}`);

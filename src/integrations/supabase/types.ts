@@ -1057,6 +1057,7 @@ export type Database = {
           error_message: string | null
           id: string
           parsed_criteria: Json | null
+          scoring_method: string | null
           source_file_name: string
           source_file_type: string
           status: string
@@ -1074,6 +1075,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           parsed_criteria?: Json | null
+          scoring_method?: string | null
           source_file_name: string
           source_file_type: string
           status?: string
@@ -1091,6 +1093,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           parsed_criteria?: Json | null
+          scoring_method?: string | null
           source_file_name?: string
           source_file_type?: string
           status?: string

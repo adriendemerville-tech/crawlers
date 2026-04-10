@@ -1,0 +1,1 @@
+ALTER TABLE public.audit_matrix_sessions ADD COLUMN IF NOT EXISTS scoring_method text DEFAULT 'score_100';
