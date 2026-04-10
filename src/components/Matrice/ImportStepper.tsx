@@ -537,7 +537,29 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
               </div>
             )}
 
-            {/* Show detection mismatch warning */}
+            {/* Matrix metadata detected */}
+            {matrixMetadata && (
+              <div className="p-2.5 rounded-lg bg-cyan-500/5 border border-cyan-500/20 text-xs space-y-1">
+                {matrixMetadata.engineNotes.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-cyan-500" />
+                    <span className="text-muted-foreground">
+                      Instructions moteur : <strong className="text-foreground">{matrixMetadata.engineNotes.map(e => e.engine).join(', ')}</strong>
+                      <span className="text-muted-foreground/60 ml-1">— enrichira chaque prompt selon son engine</span>
+                    </span>
+                  </div>
+                )}
+                {matrixMetadata.scoringGuide.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <BarChart3 className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-muted-foreground">
+                      Grille de scoring : <strong className="text-foreground">{matrixMetadata.scoringGuide.length} critères</strong>
+                      <span className="text-muted-foreground/60 ml-1">— servira de rubrique d'évaluation</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
             {detection && selectedType && detection.type !== selectedType && detection.confidence >= 0.6 && (
               <p className="text-xs text-amber-400">
                 ⚠ Les colonnes suggèrent plutôt « {TYPE_LABELS[detection.type].label} » ({Math.round(detection.confidence * 100)}% confiance).
