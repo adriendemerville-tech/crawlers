@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network, ChevronUp, Terminal, Eye } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network, ChevronUp, Terminal, Eye, Share2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
@@ -34,7 +34,7 @@ function FooterComponent() {
     { icon: Brain, label: 'Code Architect', href: '/architecte-generatif', description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'), isRoute: true },
     { icon: Eye, label: 'Conversion Optimizer', href: '/conversion-optimizer', description: t3(language, 'Audit UX/CRO contextuel par IA', 'Contextual AI UX/CRO audit', 'Auditoría UX/CRO contextual con IA'), isRoute: true },
     { icon: Brain, label: 'Content Architect', href: '/content-architect', description: t3(language, 'Génération et optimisation de contenus IA', 'AI content generation and optimization', 'Generación y optimización de contenidos IA'), isRoute: true },
-    { icon: Globe, label: 'Social Content Hub', href: '/social-content-creator', description: t3(language, 'Publication sociale SEO/GEO multi-plateformes', 'SEO/GEO social publishing multi-platform', 'Publicación social SEO/GEO multiplataforma'), isRoute: true },
+    { icon: Share2, label: 'Social Content Hub', href: '/social-content-creator', description: t3(language, 'Publication sociale SEO/GEO multi-plateformes', 'SEO/GEO social publishing multi-platform', 'Publicación social SEO/GEO multiplataforma'), isRoute: true },
     { icon: Globe, label: 'Google Business', href: '/google-business', description: t3(language, 'Optimisation de votre fiche Google Business', 'Google Business profile optimization', 'Optimización de su ficha Google Business'), isRoute: true },
     { icon: FileText, label: t3(language, 'Matrice d\'audit', 'Audit Matrix', 'Matriz de auditoría'), href: '/matrice', description: t3(language, 'Audit matriciel personnalisé XLSX/CSV/DOCX', 'Custom matrix audit XLSX/CSV/DOCX', 'Auditoría matricial personalizada XLSX/CSV/DOCX'), isRoute: true },
     { icon: Terminal, label: 'Marina API', href: '/marina#api', description: t3(language, 'API asynchrone de rapports SEO & GEO en marque blanche', 'Async white-label SEO & GEO reporting API', 'API asíncrona de informes SEO & GEO de marca blanca'), isRoute: true },
