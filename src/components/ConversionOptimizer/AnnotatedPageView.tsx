@@ -328,7 +328,7 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
           {imageLoaded && positionedSuggestions.length > 0 && (
             <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
               {positionedSuggestions.map((suggestion, index) => {
-                if (!suggestion.rect) return null;
+                if (!suggestion.rect) return null; // No rect = no connector line
 
                 const isImage = suggestion.isImageAnnotation;
                 const colors = isImage
@@ -350,7 +350,6 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
                 // Straight horizontal connector from bubble to element
                 const startX = BUBBLE_COLUMN_WIDTH - 8;
                 const endX = rectX;
-                // Use the element's Y center for the line
                 const lineY = rectCenterY;
 
                 return (
@@ -376,7 +375,6 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
                       fill={`${colors.line}${isHovered ? '20' : '0d'}`}
                       stroke={colors.line}
                       strokeWidth={isHovered ? 3 : 2}
-                      strokeDasharray={isHovered ? 'none' : 'none'}
                     />
                     {/* Anchor dot on element */}
                     <circle cx={endX} cy={rectCenterY} r={isHovered ? 4 : 3} fill={colors.line} opacity={0.9} />
