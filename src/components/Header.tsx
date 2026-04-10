@@ -371,13 +371,19 @@ export function Header() {
               </Button>
           )}
 
-          {/* Console-only shortcuts: Audit, Crawl, Comparé, Matrice, Social Hub */}
+          {/* Console-only shortcuts: Audit, Matrice, Crawl, Comparé, Social Hub */}
           {location.pathname === '/app/console' && (
             <div className="flex items-center gap-0.5">
               <Link to="/audit-expert" className="sm:hidden">
                 <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10 ${isAuditExpertPage ? 'border border-[#3b82f6]' : ''}`}>
                   <Sparkles className="h-3 w-3" />
                   Audit
+                </Button>
+              </Link>
+              <Link to="/matrice">
+                <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
+                  <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  Matrice
                 </Button>
               </Link>
               <Link to="/app/site-crawl" className="sm:hidden">
@@ -390,12 +396,6 @@ export function Header() {
                 <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-muted-foreground hover:text-foreground`}>
                   <Scale className="h-3 w-3" />
                   Comparé
-                </Button>
-              </Link>
-              <Link to="/matrice">
-                <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
-                  <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  Matrice
                 </Button>
               </Link>
               <Link to="/app/social">
