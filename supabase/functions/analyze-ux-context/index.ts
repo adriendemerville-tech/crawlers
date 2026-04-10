@@ -966,14 +966,24 @@ Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte b
 
 **IMPORTANT** : Utilise la matrice CRO ci-dessus pour vérifier systématiquement la présence de chaque variable REQUISE pour le type de page détecté. Chaque variable requise absente doit générer une suggestion spécifique.
 
+**MINIMUM 10 SUGGESTIONS OBLIGATOIRES** : Tu DOIS fournir au moins 10 suggestions couvrant un maximum de zones distinctes de la page. Couvre au minimum :
+- La zone hero / above-the-fold (titre, sous-titre, premier CTA)
+- La navigation / menu principal
+- Chaque section de contenu principale (services, à propos, témoignages, etc.)
+- Le footer (informations de contact, liens légaux, réseaux sociaux)
+- Les éléments de réassurance (ou leur absence)
+- Les CTAs secondaires (milieu et bas de page)
+Chaque suggestion DOIT avoir un current_text (le texte exact visible sur la page) ET un element_selector CSS précis pour permettre l'annotation visuelle sur le screenshot.
+
 Pour chaque suggestion, propose une reformulation concrète quand c'est pertinent (current_text → suggested_text).
-Pour les éléments visuels identifiables, indique un element_selector CSS approximatif (ex: "h1", "section.hero .cta", "footer nav").
+Pour les éléments visuels identifiables, indique un element_selector CSS approximatif (ex: "h1", "section.hero .cta", "footer nav", "nav a", "footer .contact").
 
 ## Analyse des images
-Pour chaque image significative listée ci-dessus, évalue :
+Pour CHAQUE image significative listée ci-dessus (pas uniquement le logo), évalue :
 - **Descriptivité** (0-100) : L'image illustre-t-elle bien le contenu environnant ? L'alt-text est-il correct ?
 - **Pertinence** (0-100) : L'image est-elle pertinente par rapport à l'intention de la page et au contexte business ?
 - **Pouvoir de conviction** (0-100) : L'image renforce-t-elle la conversion (crédibilité, émotion, preuve sociale, produit) ?
 Donne un verdict court et une recommandation concrète si nécessaire. Utilise le champ image_analysis.
+Tu DOIS analyser TOUTES les images non-décoratives (photos produit, photos d'ambiance, photos portrait, illustrations métier). Ne te limite pas au logo.
 `;
 }
