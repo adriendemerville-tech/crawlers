@@ -119,34 +119,44 @@ export async function getSiteContext(
   // Enrich and cache
   const enriched = await ensureSiteContext(site)
   if (enriched) {
-    // Attach seasonal context
+    // Attach seasonal context + news
     try {
       const sector = enriched.market_sector || null
       const geo = 'FR'
-      const { data: seasonalData } = await supabase.rpc('get_active_seasonal_context', {
-        p_sector: sector,
-        p_geo: geo,
-      })
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+
+      // Fetch seasonal events + news in parallel
+      const [seasonalRes, newsRes] = await Promise.all([
+        supabase.rpc('get_active_seasonal_context', { p_sector: sector, p_geo: geo }),
+        supabase.rpc('get_seasonal_news', { p_sector: sector, p_geo: geo, p_limit: 5 }),
+      ])
+
+      const seasonalData = seasonalRes.data
+      const newsData = newsRes.data
+
       if (seasonalData && seasonalData.length > 0) {
         ;(enriched as any).seasonal_context = seasonalData
         ;(enriched as any).current_season_summary = seasonalData
           .filter((s: any) => s.is_in_peak || s.is_in_prep)
           .map((s: any) => `${s.event_name} (${s.is_in_peak ? 'pic actuel' : `prépa, J-${s.days_until_start}`})`)
           .join(', ') || null
-      } else if (sector) {
-        // No seasonal data for this sector — trigger on-demand ingest (fire-and-forget)
-        const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-        if (supabaseUrl && serviceKey) {
-          fetch(`${supabaseUrl}/functions/v1/ingest-seasonal-context`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${serviceKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ mode: 'on-demand', sector, geo }),
-          }).catch(e => console.warn('[getSiteContext] on-demand seasonal ingest failed:', e))
-        }
+      } else if (sector && supabaseUrl && serviceKey) {
+        // No seasonal data — trigger on-demand ingest (fire-and-forget)
+        fetch(`${supabaseUrl}/functions/v1/ingest-seasonal-context`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'on-demand', sector, geo }),
+        }).catch(e => console.warn('[getSiteContext] on-demand seasonal ingest failed:', e))
+      }
+
+      // Attach news
+      if (newsData && newsData.length > 0) {
+        ;(enriched as any).seasonal_news = newsData
+        ;(enriched as any).news_summary = newsData
+          .slice(0, 3)
+          .map((n: any) => `[${n.news_type}] ${n.headline}`)
+          .join(' | ')
       }
     } catch (e) {
       console.warn('[getSiteContext] seasonal context fetch failed:', e)
