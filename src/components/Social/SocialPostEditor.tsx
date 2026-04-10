@@ -63,6 +63,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
   const [generating, setGenerating] = useState(false);
   const [translating, setTranslating] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [drivePickerOpen, setDrivePickerOpen] = useState(false);
 
   const currentContent = activePlatform === 'linkedin' ? linkedin : activePlatform === 'facebook' ? facebook : instagram;
   const setCurrentContent = activePlatform === 'linkedin' ? setLinkedin : activePlatform === 'facebook' ? setFacebook : setInstagram;
