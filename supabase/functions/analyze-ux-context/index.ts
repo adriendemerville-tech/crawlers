@@ -282,15 +282,33 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
     warnings: indexationWarnings,
   };
 
-  const { data: keywords } = await serviceClient
-    .from('keyword_universe')
-    .select('keyword, search_volume, current_position, intent, opportunity_score, target_url')
-    .eq('domain', site.domain)
-    .order('opportunity_score', { ascending: false })
-    .limit(30);
+  const [{ data: keywords }, { data: behavioralMetrics }] = await Promise.all([
+    serviceClient
+      .from('keyword_universe')
+      .select('keyword, search_volume, current_position, intent, opportunity_score, target_url')
+      .eq('domain', site.domain)
+      .order('opportunity_score', { ascending: false })
+      .limit(30),
+    serviceClient
+      .from('ga4_behavioral_metrics')
+      .select('page_path, avg_engagement_time, engaged_sessions, engagement_rate, scroll_events, scroll_rate, click_events, conversions, conversion_rate, entries, period_start, period_end')
+      .eq('tracked_site_id', tracked_site_id)
+      .order('period_end', { ascending: false })
+      .limit(100),
+  ]);
 
-  const pageKeywords = (keywords || []).filter((keyword) => keyword.target_url === page_url);
-  const topKeywords = pageKeywords.length > 0 ? pageKeywords : (keywords || []).slice(0, 10);
+  // Match behavioral data to the analyzed page
+  const pageUrlObj = (() => { try { return new URL(page_url); } catch { return null; } })();
+  const pagePath = pageUrlObj?.pathname || page_url;
+  const pageMetrics = (behavioralMetrics || []).find((m: any) => m.page_path === pagePath || page_url.endsWith(m.page_path));
+  // Also get site-wide averages for comparison
+  const allMetrics = behavioralMetrics || [];
+  const siteAvg = allMetrics.length > 0 ? {
+    avg_engagement_time: allMetrics.reduce((s: number, m: any) => s + (m.avg_engagement_time || 0), 0) / allMetrics.length,
+    engagement_rate: allMetrics.reduce((s: number, m: any) => s + (m.engagement_rate || 0), 0) / allMetrics.length,
+    scroll_rate: allMetrics.reduce((s: number, m: any) => s + (m.scroll_rate || 0), 0) / allMetrics.length,
+    conversion_rate: allMetrics.reduce((s: number, m: any) => s + (m.conversion_rate || 0), 0) / allMetrics.length,
+  } : null;
 
   // Check identity card completeness
   const identityFields = [
