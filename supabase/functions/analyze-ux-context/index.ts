@@ -356,7 +356,10 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
     .filter((img: any) => !img.isDecorative && img.width >= 50 && img.height >= 50)
     .slice(0, 20);
   const chunkabilityData = screenshotResult?.chunkabilitySignals || null;
-  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || [], chunkabilityData);
+  const pageKeywords = (keywords || []).filter((keyword: any) => keyword.target_url === page_url);
+  const topKeywords = pageKeywords.length > 0 ? pageKeywords : (keywords || []).slice(0, 10);
+  const ga4Context = { pageMetrics, siteAvg };
+  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || [], chunkabilityData, ga4Context);
 
   const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
