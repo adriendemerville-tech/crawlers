@@ -282,15 +282,33 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
     warnings: indexationWarnings,
   };
 
-  const { data: keywords } = await serviceClient
-    .from('keyword_universe')
-    .select('keyword, search_volume, current_position, intent, opportunity_score, target_url')
-    .eq('domain', site.domain)
-    .order('opportunity_score', { ascending: false })
-    .limit(30);
+  const [{ data: keywords }, { data: behavioralMetrics }] = await Promise.all([
+    serviceClient
+      .from('keyword_universe')
+      .select('keyword, search_volume, current_position, intent, opportunity_score, target_url')
+      .eq('domain', site.domain)
+      .order('opportunity_score', { ascending: false })
+      .limit(30),
+    serviceClient
+      .from('ga4_behavioral_metrics')
+      .select('page_path, avg_engagement_time, engaged_sessions, engagement_rate, scroll_events, scroll_rate, click_events, conversions, conversion_rate, entries, period_start, period_end')
+      .eq('tracked_site_id', tracked_site_id)
+      .order('period_end', { ascending: false })
+      .limit(100),
+  ]);
 
-  const pageKeywords = (keywords || []).filter((keyword) => keyword.target_url === page_url);
-  const topKeywords = pageKeywords.length > 0 ? pageKeywords : (keywords || []).slice(0, 10);
+  // Match behavioral data to the analyzed page
+  const pageUrlObj = (() => { try { return new URL(page_url); } catch { return null; } })();
+  const pagePath = pageUrlObj?.pathname || page_url;
+  const pageMetrics = (behavioralMetrics || []).find((m: any) => m.page_path === pagePath || page_url.endsWith(m.page_path));
+  // Also get site-wide averages for comparison
+  const allMetrics = behavioralMetrics || [];
+  const siteAvg = allMetrics.length > 0 ? {
+    avg_engagement_time: allMetrics.reduce((s: number, m: any) => s + (m.avg_engagement_time || 0), 0) / allMetrics.length,
+    engagement_rate: allMetrics.reduce((s: number, m: any) => s + (m.engagement_rate || 0), 0) / allMetrics.length,
+    scroll_rate: allMetrics.reduce((s: number, m: any) => s + (m.scroll_rate || 0), 0) / allMetrics.length,
+    conversion_rate: allMetrics.reduce((s: number, m: any) => s + (m.conversion_rate || 0), 0) / allMetrics.length,
+  } : null;
 
   // Check identity card completeness
   const identityFields = [
@@ -338,7 +356,10 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
     .filter((img: any) => !img.isDecorative && img.width >= 50 && img.height >= 50)
     .slice(0, 20);
   const chunkabilityData = screenshotResult?.chunkabilitySignals || null;
-  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || [], chunkabilityData);
+  const pageKeywords = (keywords || []).filter((keyword: any) => keyword.target_url === page_url);
+  const topKeywords = pageKeywords.length > 0 ? pageKeywords : (keywords || []).slice(0, 10);
+  const ga4Context = { pageMetrics, siteAvg };
+  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || [], chunkabilityData, ga4Context);
 
   const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -1103,7 +1124,51 @@ ${lines}
 `;
 }
 
-function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = [], chunkability: any = null) {
+function buildGA4BehavioralSection(ga4Context: any): string {
+  const { pageMetrics, siteAvg } = ga4Context || {};
+  if (!pageMetrics) return '\n## 📊 Données comportementales GA4\nAucune donnée GA4 comportementale disponible pour cette page. Les recommandations seront basées uniquement sur l\'analyse visuelle et structurelle.\n';
+
+  const pm = pageMetrics;
+  const avg = siteAvg || {};
+
+  const delta = (val: number, ref: number) => {
+    if (!ref) return '';
+    const pct = Math.round(((val - ref) / ref) * 100);
+    return pct > 0 ? ` (↑ +${pct}% vs moyenne site)` : pct < 0 ? ` (↓ ${pct}% vs moyenne site)` : ' (= moyenne site)';
+  };
+
+  return `
+## 📊 Données comportementales GA4 (période : ${pm.period_start || '?'} → ${pm.period_end || '?'})
+Ces données RÉELLES de trafic doivent guider tes recommandations. Corrèle chaque signal faible à une suggestion concrète.
+
+### Engagement
+- Temps d'engagement moyen : ${Math.round(pm.avg_engagement_time || 0)}s${delta(pm.avg_engagement_time || 0, avg.avg_engagement_time || 0)}
+- Taux d'engagement : ${Math.round((pm.engagement_rate || 0) * 100)}%${delta(pm.engagement_rate || 0, avg.engagement_rate || 0)}
+- Sessions engagées : ${pm.engaged_sessions || 0}
+- Entrées sur la page : ${pm.entries || 0}
+
+### Scroll (profondeur 90%)
+- Événements scroll : ${pm.scroll_events || 0}
+- Taux de scroll (% visiteurs atteignant 90%) : ${Math.round(pm.scroll_rate || 0)}%${delta(pm.scroll_rate || 0, avg.scroll_rate || 0)}
+${(pm.scroll_rate || 0) < 30 ? '⚠️ Moins de 30% des visiteurs scrollent à 90% → le contenu below-the-fold est probablement invisible. Concentre les CTAs et infos critiques dans le premier viewport.' : ''}
+
+### Clics
+- Événements click : ${pm.click_events || 0}
+${pm.click_events === 0 ? '⚠️ Aucun clic détecté → soit les CTAs sont absents/invisibles, soit le tracking est mal configuré.' : ''}
+
+### Conversions
+- Conversions : ${pm.conversions || 0}
+- Taux de conversion : ${Math.round((pm.conversion_rate || 0) * 100) / 100}%${delta(pm.conversion_rate || 0, avg.conversion_rate || 0)}
+${(pm.conversion_rate || 0) === 0 ? '⚠️ Aucune conversion détectée sur cette page. Analyse les freins : absence de CTA, friction de formulaire, manque de réassurance.' : ''}
+
+### Diagnostic comportemental automatique
+${(pm.engagement_rate || 0) < 0.4 ? '🔴 ENGAGEMENT FAIBLE : La majorité des visiteurs ne s\'engagent pas avec la page. Le contenu above-the-fold, le titre et la proposition de valeur doivent être revus en priorité.' : ''}
+${(pm.scroll_rate || 0) > 0 && (pm.scroll_rate || 0) < 20 ? '🔴 SCROLL CRITIQUE : Presque personne ne voit le contenu en bas de page. Restructurer le contenu pour placer les informations clés en haut.' : ''}
+${(pm.conversion_rate || 0) > 0 && (pm.engagement_rate || 0) > 0.6 && (pm.conversion_rate || 0) < 1 ? '🟡 FUITE DE CONVERSION : Les visiteurs s\'engagent mais ne convertissent pas. Le problème est probablement dans le parcours CTA → formulaire → confirmation.' : ''}
+`;
+}
+
+function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = [], chunkability: any = null, ga4Context: any = {}) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
   ).join('\n');
@@ -1223,6 +1288,7 @@ ${buildIdentityGapsSection(ctx)}
 ${keywordList || 'Aucun mot-clé trouvé'}
 ${croMatrixSection}
 ${chunkabilitySection}
+${buildGA4BehavioralSection(ga4Context)}
 ## Instructions
 Analyse cette page selon les **8 axes** suivants, en prenant en compte le contexte business ci-dessus :
 

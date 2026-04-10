@@ -111,6 +111,10 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
         if (metrics.top_pages?.length > 0) {
           await persistGA4TopPages(supabase, user_id, trackedSiteId, startD, endD, metrics.top_pages)
         }
+        // Persist behavioral metrics per page
+        if (metrics.behavioral_pages?.length > 0) {
+          await persistGA4BehavioralMetrics(supabase, user_id, trackedSiteId, startD, endD, metrics.behavioral_pages)
+        }
       }
 
       return jsonOk({ success: true, property_id: resolvedPropertyId, ...metrics })
@@ -344,10 +348,168 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
     }))
   }
 
+  // ─── Report 4: Behavioral metrics per page (scroll, clicks, conversions, engagement) ──
+  const behavioralResp = await fetch(`${GA4_API}/properties/${numericId}:runReport`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'pagePath' }],
+      metrics: [
+        { name: 'userEngagementDuration' },
+        { name: 'engagedSessions' },
+        { name: 'engagementRate' },
+        { name: 'eventCount' },
+        { name: 'screenPageViews' },
+        { name: 'sessions' },
+        { name: 'conversions' },
+      ],
+      dimensionFilter: undefined,
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+      limit: 50,
+    }),
+  })
+
+  let behavioralPages: any[] = []
+  if (behavioralResp.ok) {
+    const data = await behavioralResp.json()
+    behavioralPages = (data.rows || []).map((r: any) => {
+      const sessions = parseInt(r.metricValues?.[5]?.value || '1') || 1
+      const pageviews = parseInt(r.metricValues?.[4]?.value || '0')
+      const conversions = parseInt(r.metricValues?.[6]?.value || '0')
+      return {
+        path: r.dimensionValues?.[0]?.value,
+        avg_engagement_time: parseFloat(r.metricValues?.[0]?.value || '0') / Math.max(sessions, 1),
+        engaged_sessions: parseInt(r.metricValues?.[1]?.value || '0'),
+        engagement_rate: parseFloat(r.metricValues?.[2]?.value || '0'),
+        total_events: parseInt(r.metricValues?.[3]?.value || '0'),
+        pageviews,
+        sessions,
+        conversions,
+        conversion_rate: sessions > 0 ? (conversions / sessions) * 100 : 0,
+      }
+    })
+  } else {
+    const err = await behavioralResp.text()
+    console.error('[GA4] Behavioral metrics error:', err)
+  }
+
+  // ─── Report 5: Scroll events per page ──────────────────────────
+  const scrollResp = await fetch(`${GA4_API}/properties/${numericId}:runReport`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'pagePath' }],
+      metrics: [{ name: 'eventCount' }],
+      dimensionFilter: {
+        filter: {
+          fieldName: 'eventName',
+          stringFilter: { value: 'scroll', matchType: 'EXACT' },
+        },
+      },
+      orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+      limit: 50,
+    }),
+  })
+
+  const scrollMap: Record<string, number> = {}
+  if (scrollResp.ok) {
+    const data = await scrollResp.json()
+    for (const r of data.rows || []) {
+      const path = r.dimensionValues?.[0]?.value
+      if (path) scrollMap[path] = parseInt(r.metricValues?.[0]?.value || '0')
+    }
+}
+
+/**
+ * Persist GA4 behavioral metrics per page (engagement, scroll, clicks, conversions).
+ */
+async function persistGA4BehavioralMetrics(
+  supabase: any,
+  userId: string,
+  trackedSiteId: string,
+  startDate: string,
+  endDate: string,
+  behavioralPages: any[],
+) {
+  const rows = behavioralPages.map((p: any) => ({
+    tracked_site_id: trackedSiteId,
+    user_id: userId,
+    page_path: p.path,
+    period_start: startDate,
+    period_end: endDate,
+    avg_engagement_time: p.avg_engagement_time || 0,
+    engaged_sessions: p.engaged_sessions || 0,
+    engagement_rate: p.engagement_rate || 0,
+    scroll_events: p.scroll_events || 0,
+    scroll_rate: p.scroll_rate || 0,
+    click_events: p.click_events || 0,
+    outbound_clicks: 0,
+    conversions: p.conversions || 0,
+    conversion_rate: p.conversion_rate || 0,
+    form_submissions: 0,
+    exit_rate: 0,
+    entries: p.sessions || 0,
+  }))
+
+  if (rows.length > 0) {
+    const { error } = await supabase
+      .from('ga4_behavioral_metrics')
+      .upsert(rows, { onConflict: 'tracked_site_id,page_path,period_start,period_end' })
+    if (error) console.error('[GA4] Behavioral metrics persist error:', error.message)
+  }
+}
+
+  // ─── Report 6: Click events per page ───────────────────────────
+  const clickResp = await fetch(`${GA4_API}/properties/${numericId}:runReport`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'pagePath' }],
+      metrics: [{ name: 'eventCount' }],
+      dimensionFilter: {
+        filter: {
+          fieldName: 'eventName',
+          stringFilter: { value: 'click', matchType: 'EXACT' },
+        },
+      },
+      orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+      limit: 50,
+    }),
+  })
+
+  const clickMap: Record<string, number> = {}
+  if (clickResp.ok) {
+    const data = await clickResp.json()
+    for (const r of data.rows || []) {
+      const path = r.dimensionValues?.[0]?.value
+      if (path) clickMap[path] = parseInt(r.metricValues?.[0]?.value || '0')
+    }
+  }
+
+  // Enrich behavioral pages with scroll & click data
+  for (const bp of behavioralPages) {
+    bp.scroll_events = scrollMap[bp.path] || 0
+    bp.scroll_rate = bp.sessions > 0 ? (bp.scroll_events / bp.sessions) * 100 : 0
+    bp.click_events = clickMap[bp.path] || 0
+  }
+
   return {
     metrics: coreMetrics,
     daily_series: dailySeries,
     top_pages: topPages,
+    behavioral_pages: behavioralPages,
     period: { start_date: startDate, end_date: endDate },
     measured_at: new Date().toISOString(),
   }
