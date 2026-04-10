@@ -22,6 +22,7 @@ import ImportStepper from '@/components/Matrice/ImportStepper';
 import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
+import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScoringMethod, detectScoringSheet, SCORING_REGISTRY } from '@/utils/matrice/scoringDetector';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
