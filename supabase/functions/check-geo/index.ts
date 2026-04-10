@@ -777,36 +777,48 @@ Deno.serve(async (req) => {
 
     console.log('[GEO-AUDIT] Starting analysis for:', normalizedUrl);
 
-    // Fetch robots.txt
+    // Fetch robots.txt AND page HTML in parallel for speed
     let robotsTxt: string | null = null;
-    try {
-      const robotsResponse = await fetch(robotsTxtUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GEOChecker/1.0)' }
-      });
-      if (robotsResponse.ok) {
-        robotsTxt = await robotsResponse.text();
-      }
-    } catch (e) {
-      console.log('[GEO-AUDIT] Failed to fetch robots.txt:', e);
-    }
-
-    // Fetch the page (with JS rendering fallback for SPAs via shared renderPage)
     let pageHtml = '';
     let usedRendering = false;
-    try {
-      const renderResult = await fetchAndRenderPage(normalizedUrl, {
-        timeout: 15000,
-      });
-      pageHtml = renderResult.html;
-      usedRendering = renderResult.usedRendering;
-      console.log(`[GEO-AUDIT] Page fetched: ${pageHtml.length} chars${usedRendering ? ' (JS rendered)' : ''}, framework: ${renderResult.framework || 'none'}`);
-    } catch (e) {
-      console.log('[GEO-AUDIT] Failed to fetch page:', e);
+
+    const [robotsResult, renderResult] = await Promise.allSettled([
+      // robots.txt with 5s timeout
+      (async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        try {
+          const resp = await fetch(robotsTxtUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GEOChecker/1.0)' },
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          return resp.ok ? await resp.text() : null;
+        } catch (e) {
+          clearTimeout(timeout);
+          console.log('[GEO-AUDIT] robots.txt fetch failed:', e instanceof Error ? e.message : e);
+          return null;
+        }
+      })(),
+      // Page render with 12s timeout (reduced from 15s)
+      fetchAndRenderPage(normalizedUrl, { timeout: 12000 }),
+    ]);
+
+    if (robotsResult.status === 'fulfilled') {
+      robotsTxt = robotsResult.value;
+    }
+
+    if (renderResult.status === 'fulfilled') {
+      pageHtml = renderResult.value.html;
+      usedRendering = renderResult.value.usedRendering;
+      console.log(`[GEO-AUDIT] Page fetched: ${pageHtml.length} chars${usedRendering ? ' (JS rendered)' : ''}, framework: ${renderResult.value.framework || 'none'}`);
+    } else {
+      console.log('[GEO-AUDIT] Failed to fetch page:', renderResult.reason);
       return new Response(
         JSON.stringify({ 
           success: false, 
           reliabilityScore: 0, 
-          blockingError: `Impossible de récupérer la page: ${e instanceof Error ? e.message : 'Erreur réseau'}` 
+          blockingError: `Impossible de récupérer la page: ${renderResult.reason instanceof Error ? renderResult.reason.message : 'Erreur réseau'}` 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
