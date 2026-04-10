@@ -127,6 +127,7 @@ const AXIS_META: Record<string, { label: string; icon: typeof Type; color: strin
   conversion: { label: 'Conversion', icon: BarChart3, color: 'text-red-500' },
   mobile_ux: { label: 'Mobile UX', icon: Smartphone, color: 'text-cyan-500' },
   keyword_usage: { label: 'Mots-clés', icon: Search, color: 'text-amber-500' },
+  chunkability: { label: 'Chunkability IA', icon: PenTool, color: 'text-indigo-500' },
 };
 
 const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };

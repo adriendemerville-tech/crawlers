@@ -673,7 +673,7 @@ async function captureScreenshotWithAnnotations(
       .getPublicUrl(fileName);
 
     console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px, images: ${(data.imageFormats || []).length})`);
-    return { success: true, url: urlData.publicUrl, height: data.height, imageFormats: data.imageFormats || [] };
+    return { success: true, url: urlData.publicUrl, height: data.height, imageFormats: data.imageFormats || [], chunkabilitySignals: data.chunkabilitySignals || null };
   } catch (error: any) {
     console.error('[analyze-ux-context] Screenshot capture failed:', error.message);
     return { success: false };
