@@ -51,8 +51,8 @@ const SocialHub = memo(function SocialHub() {
   // Load tracked sites
   useEffect(() => {
     if (!user) return;
-    supabase.from('tracked_sites').select('id, domain, display_name').eq('user_id', user.id).then(({ data }) => {
-      const s = (data || []) as TrackedSite[];
+    supabase.from('tracked_sites').select('id, domain').eq('user_id', user.id).then(({ data }) => {
+      const s = ((data || []) as unknown as TrackedSite[]).map(site => ({ ...site, display_name: site.domain }));
       setSites(s);
       if (s.length > 0 && !selectedSiteId) {
         setSelectedSiteId(s[0].id);
