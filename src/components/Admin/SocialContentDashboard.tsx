@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import {
   RefreshCw, MessageSquare, Calendar, Globe, Languages, ImageIcon,
-  TrendingUp, Zap, Users, Hash, Link2, ArrowUpRight, BarChart3
+  TrendingUp, Zap, Users, Hash, Link2, ArrowUpRight, BarChart3, Share2
 } from 'lucide-react';
 import { subDays, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -236,7 +236,7 @@ export function SocialContentDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
+            <Share2 className="h-5 w-5 text-primary" />
             Social Content Hub — Dashboard
           </h2>
           <p className="text-xs text-muted-foreground">Statistiques d'usage et coûts de production</p>
