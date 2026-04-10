@@ -3,6 +3,7 @@
  * character counter, smart link, and translation.
  */
 import { memo, useState, useCallback, useRef } from 'react';
+import { GoogleDriveFolderPicker } from './GoogleDriveFolderPicker';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
   const [generating, setGenerating] = useState(false);
   const [translating, setTranslating] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [drivePickerOpen, setDrivePickerOpen] = useState(false);
 
   const currentContent = activePlatform === 'linkedin' ? linkedin : activePlatform === 'facebook' ? facebook : instagram;
   const setCurrentContent = activePlatform === 'linkedin' ? setLinkedin : activePlatform === 'facebook' ? setFacebook : setInstagram;
@@ -258,14 +260,18 @@ export const SocialPostEditor = memo(function SocialPostEditor({
             </Button>
           )}
           {onExport && (
-            <Button variant="outline" onClick={() => {
-              toast.info('Export vers Google Drive en cours…');
-              // TODO: call edge function to upload to Google Drive folder
-              toast('Google Drive : configurez le dossier de destination dans l\'onglet Réglages', { icon: '📁', duration: 4000 });
-            }} className="gap-1.5">
+            <Button variant="outline" onClick={() => setDrivePickerOpen(true)} className="gap-1.5">
               <HardDrive className="h-4 w-4" /> Google Drive
             </Button>
           )}
+          <GoogleDriveFolderPicker
+            open={drivePickerOpen}
+            onOpenChange={setDrivePickerOpen}
+            onSelect={(folderId, folderPath) => {
+              toast.success(`Export vers ${folderPath}`, { icon: '📁' });
+              // TODO: call edge function to upload to selected Google Drive folder
+            }}
+          />
         </div>
       </CardContent>
     </Card>
