@@ -200,6 +200,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
                 onChange={e => {
                   const setter = platform === 'linkedin' ? setLinkedin : platform === 'facebook' ? setFacebook : setInstagram;
                   setter(e.target.value);
+                  onContentChange?.(platform, e.target.value, hashtags);
                 }}
                 placeholder={`Rédigez votre post ${platform}...`}
                 className="min-h-[200px] resize-y"
