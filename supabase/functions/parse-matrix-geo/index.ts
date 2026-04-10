@@ -299,18 +299,26 @@ Deno.serve(handleRequest(async (req) => {
         if (i + BATCH_SIZE < benchmark_items.length) await new Promise(r => setTimeout(r, 1000))
       }
 
-      // Build heatmap data: theme × engine
+      // Build heatmap data: theme × engine (aggregate multiple items per cell)
       const themes = [...new Set(results.map(r => r.theme))]
       const engines = [...new Set(results.map(r => r.engine))]
-      const heatmap: Record<string, Record<string, { score: number; cited: boolean; rank: number | null }>> = {}
+      const heatmap: Record<string, Record<string, { score: number; cited: boolean; rank: number | null; count: number; cited_count: number }>> = {}
 
       for (const theme of themes) {
         heatmap[theme] = {}
         for (const engine of engines) {
-          const match = results.find(r => r.theme === theme && r.engine === engine)
-          heatmap[theme][engine] = match
-            ? { score: match.crawlers_score, cited: match.citation_found, rank: match.citation_rank }
-            : { score: -1, cited: false, rank: null }
+          const matches = results.filter(r => r.theme === theme && r.engine === engine)
+          if (matches.length === 0) {
+            heatmap[theme][engine] = { score: -1, cited: false, rank: null, count: 0, cited_count: 0 }
+          } else {
+            const totalWeight = matches.reduce((s, m) => s + m.poids, 0)
+            const avgScore = totalWeight > 0
+              ? Math.round(matches.reduce((s, m) => s + m.crawlers_score * m.poids, 0) / totalWeight)
+              : Math.round(matches.reduce((s, m) => s + m.crawlers_score, 0) / matches.length)
+            const citedCount = matches.filter(m => m.citation_found).length
+            const bestRank = matches.filter(m => m.citation_rank !== null).sort((a, b) => (a.citation_rank ?? 99) - (b.citation_rank ?? 99))[0]?.citation_rank ?? null
+            heatmap[theme][engine] = { score: avgScore, cited: citedCount > 0, rank: bestRank, count: matches.length, cited_count: citedCount }
+          }
         }
       }
 
