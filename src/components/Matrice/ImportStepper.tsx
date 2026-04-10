@@ -375,6 +375,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       matriceType: selectedType,
       cleaningResult: cleaning,
       identityCard: identityCard || undefined,
+      metadata: matrixMetadata || undefined,
     });
   };
 
