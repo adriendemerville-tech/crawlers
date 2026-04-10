@@ -559,7 +559,8 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                   </div>
                 )}
               </div>
-            )
+            )}
+
             {detection && selectedType && detection.type !== selectedType && detection.confidence >= 0.6 && (
               <p className="text-xs text-amber-400">
                 ⚠ Les colonnes suggèrent plutôt « {TYPE_LABELS[detection.type].label} » ({Math.round(detection.confidence * 100)}% confiance).
