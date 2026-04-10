@@ -419,24 +419,6 @@ export function MyTracking() {
                         </p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* Autopilot button */}
-                        {h.isAdmin && !h.isDemoMode && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={`gap-1.5 ${
-                              h.autopilotStatus === 'active'
-                                ? 'border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/5'
-                                : h.autopilotStatus === 'paused'
-                                  ? 'border-primary/30 text-primary hover:bg-primary/5'
-                                  : 'border-muted-foreground/20 text-muted-foreground hover:bg-muted/50'
-                            }`}
-                            onClick={() => h.setShowAutopilotModal(true)}
-                          >
-                            {h.autopilotStatus === 'active' ? <Play className="h-3.5 w-3.5" /> : h.autopilotStatus === 'paused' ? <Pause className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
-                            <span className="hidden sm:inline">Autopilote</span>
-                          </Button>
-                        )}
 
                         {/* Connect/Disconnect site button */}
                         {(() => {
@@ -1110,13 +1092,6 @@ export function MyTracking() {
         <SiteIdentityModal open={h.showIdentityModal} onOpenChange={h.setShowIdentityModal} site={h.currentSite} onUpdate={() => h.fetchSites()} />
       )}
 
-      {/* Autopilot Modal */}
-      {h.currentSite && h.isAdmin && !h.isDemoMode && (
-        <AutopilotModal open={h.showAutopilotModal} onOpenChange={h.setShowAutopilotModal} trackedSiteId={h.currentSite.id} siteDomain={h.currentSite.domain} />
-      )}
-
-      {/* Modification Registry */}
-      {h.isAdmin && !h.isDemoMode && <AutopilotModificationRegistry trackedSiteId={h.selectedSite} />}
     </div>
   );
 }
