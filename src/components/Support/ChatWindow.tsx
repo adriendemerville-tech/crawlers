@@ -1283,6 +1283,9 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                           }}
                         >{msg.content}</ReactMarkdown>
                       </div>
+                      {msg.expandedContent && (
+                        <ExpandableDetail expandedContent={msg.expandedContent} />
+                      )}
                       {(() => {
                         const linkRegex = /\[([^\]]+)\]\(https?:\/\/crawlers\.fr(\/[^\s)]+)\)/g;
                         const actions: { label: string; path: string }[] = [];
