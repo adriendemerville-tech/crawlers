@@ -121,7 +121,7 @@ try {
 
               trackPaidApiCall('fetch-serp-kpis', 'serpapi', 'google_search (fallback)');
               
-              return jsonOk({ data: fallbackData }));
+              return jsonOk({ data: fallbackData });
             }
           } catch (serpErr) {
             console.error('[fetch-serp-kpis] SerpAPI fallback error:', serpErr);
@@ -139,7 +139,7 @@ try {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      return jsonError('DataForSEO API error', status: resp.status, 502)
+      return jsonError(`DataForSEO API error (status: ${resp.status})`, 502)
     }
 
     const data = await resp.json()
@@ -412,4 +412,4 @@ try {
     console.error('[fetch-serp-kpis] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-})
+}))
