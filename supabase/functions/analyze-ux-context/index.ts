@@ -76,6 +76,156 @@ Deno.serve(handleRequest(async (req) => {
     return jsonOk({ success: true, annotations });
   }
 
+  // ── Manual suggestions mode: generate recommendations only for user-added annotations ──
+  if (mode === 'manual-suggestions') {
+    const { manual_annotations, existing_suggestions, page_context } = await req.json().catch(() => ({})) || {};
+    const manualAnnotations = JSON.parse(JSON.stringify(manual_annotations || providedSuggestions || []));
+    
+    if (!Array.isArray(manualAnnotations) || manualAnnotations.length === 0) {
+      return jsonError('manual_annotations array is required', 400);
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) return jsonError('AI not configured', 500);
+
+    // Build a focused prompt for manual annotations only
+    const annotationDescriptions = manualAnnotations.map((a: any, i: number) => {
+      const axisLabel = {
+        tone: 'Ton', cta_pressure: 'CTA', alignment: 'Alignement', readability: 'Lisibilité',
+        conversion: 'Conversion', mobile_ux: 'Mobile UX', keyword_usage: 'Mots-clés', chunkability: 'Chunkability IA',
+      }[a.axis] || a.axis;
+      return `${i + 1}. [${axisLabel}] Priorité: ${a.priority} — Zone: (${Math.round(a.rect.x)}, ${Math.round(a.rect.y)}, ${Math.round(a.rect.width)}×${Math.round(a.rect.height)}) — Commentaire: "${a.comment}"`;
+    }).join('\n');
+
+    const manualPrompt = `L'utilisateur a annoté manuellement ${manualAnnotations.length} zone(s) sur la capture de la page ${page_url}.
+Pour CHAQUE annotation, génère UNE suggestion d'amélioration concrète et actionnable.
+
+## Annotations de l'utilisateur
+${annotationDescriptions}
+
+## Contexte business
+- Type: ${site.business_type || 'inconnu'}
+- Secteur: ${site.market_sector || 'inconnu'}
+- Audience: ${site.target_audience || 'inconnue'}
+- Modèle: ${site.commercial_model || 'inconnu'}
+
+Génère exactement ${manualAnnotations.length} suggestion(s), une par annotation. Chaque suggestion doit avoir le même axe et la même priorité que l'annotation correspondante.
+Propose un current_text probable et un suggested_text amélioré quand c'est applicable.`;
+
+    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: manualPrompt },
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'manual_suggestions_result',
+            description: 'Return suggestions for user-annotated zones',
+            parameters: {
+              type: 'object',
+              properties: {
+                suggestions: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      axis: { type: 'string', enum: AXES },
+                      priority: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+                      title: { type: 'string' },
+                      current_text: { type: 'string' },
+                      suggested_text: { type: 'string' },
+                      rationale: { type: 'string' },
+                    },
+                    required: ['axis', 'priority', 'title', 'rationale'],
+                  },
+                },
+              },
+              required: ['suggestions'],
+            },
+          },
+        }],
+        tool_choice: { type: 'function', function: { name: 'manual_suggestions_result' } },
+      }),
+    });
+
+    if (!aiResp.ok) {
+      const errText = await aiResp.text();
+      console.error('[analyze-ux-context] Manual suggestions AI error:', aiResp.status, errText);
+      return jsonError('AI analysis failed for manual suggestions', 500);
+    }
+
+    const aiData = await aiResp.json();
+    logAIUsageFromResponse(getServiceClient(), 'google/gemini-2.5-flash', 'analyze-ux-context-manual', aiData.usage);
+
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall?.function?.arguments) {
+      return jsonError('AI returned unexpected format for manual suggestions', 500);
+    }
+
+    let manualResult;
+    try {
+      manualResult = JSON.parse(toolCall.function.arguments);
+    } catch {
+      return jsonError('AI returned invalid JSON for manual suggestions', 500);
+    }
+
+    // Tag each suggestion as manual
+    const taggedSuggestions = (manualResult.suggestions || []).map((s: any, i: number) => ({
+      ...s,
+      is_manual: true,
+      manual_annotation_id: manualAnnotations[i]?.id || null,
+    }));
+
+    // Inject critical/high manual suggestions into workbench
+    const workbenchItems = taggedSuggestions
+      .filter((s: any) => s.priority === 'critical' || s.priority === 'high')
+      .map((s: any) => ({
+        domain: site.domain,
+        tracked_site_id,
+        user_id: user.id,
+        source_type: 'ux_context',
+        source_function: 'analyze-ux-context-manual',
+        source_record_id: `ux_manual_${tracked_site_id}_${s.manual_annotation_id || Date.now()}`,
+        finding_category: 'ux_optimization',
+        severity: s.priority === 'critical' ? 'critical' : 'high',
+        title: `UX (manuel): ${s.title}`,
+        description: s.rationale || '',
+        target_url: page_url,
+        target_selector: s.axis === 'cta_pressure' ? 'cta' : s.axis === 'keyword_usage' ? 'content' : s.axis,
+        target_operation: 'replace',
+        payload: {
+          axis: s.axis,
+          current_text: s.current_text || null,
+          suggested_text: s.suggested_text || null,
+          is_manual: true,
+        },
+      }));
+
+    if (workbenchItems.length > 0) {
+      const { error: wbErr } = await serviceClient
+        .from('architect_workbench')
+        .upsert(workbenchItems, { onConflict: 'source_type,source_record_id' });
+
+      if (wbErr) {
+        console.error('[analyze-ux-context] Manual workbench insert error:', wbErr);
+      }
+    }
+
+    return jsonOk({
+      success: true,
+      suggestions: taggedSuggestions,
+      workbench_injected: workbenchItems.length,
+    });
+  }
+
   const { data: crawl } = await serviceClient
     .from('site_crawls')
     .select('id')
