@@ -946,7 +946,7 @@ ${lines}
 `;
 }
 
-function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = []) {
+function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = [], chunkability: any = null) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
   ).join('\n');
@@ -980,6 +980,46 @@ Puis vérifie la PRÉSENCE ou l'ABSENCE de chaque variable CRO marquée "REQUIS"
 Signale chaque variable requise manquante comme une suggestion de priorité proportionnelle au poids [w:XX].
 
 ${lines.join('\n')}
+`;
+  }
+
+  // Build chunkability telemetry section
+  let chunkabilitySection = '';
+  if (chunkability) {
+    const c = chunkability;
+    const semanticRatio = c.divCount > 0 ? Math.round((c.semanticCount / (c.semanticCount + c.divCount)) * 100) : 0;
+    chunkabilitySection = `
+## 📐 Signaux de Chunkability (télémétrie DOM)
+Ces métriques mesurent la capacité de la page à être découpée en segments sémantiques exploitables par les LLM (RAG, citation, résumé).
+
+### Structure des titres (Hn)
+- Nombre total de headings : ${c.headingCount} (H1: ${c.h1Count}, H2: ${c.h2Count}, H3: ${c.h3Count})
+- Ruptures de hiérarchie (ex: H1→H4 sans H2/H3) : ${c.hierarchyBreaks}
+- Ratio headings/mots : ${c.totalWords > 0 ? Math.round((c.headingCount / c.totalWords) * 1000) / 10 : 0} pour 1000 mots
+
+### Longueur des sections (mots entre deux Hn)
+- Nombre de sections : ${c.sectionCount}
+- Sections optimales (150-400 mots) : ${c.optimalSections}/${c.sectionCount}
+- Sections surdimensionnées (>800 mots) : ${c.oversizedSections}
+- Sections trop courtes (<50 mots) : ${c.tinySections}
+${c.sectionWordCounts.length > 0 ? `- Distribution : [${c.sectionWordCounts.join(', ')}] mots` : ''}
+
+### Balises sémantiques HTML5
+- Balises sémantiques (article, section, aside, nav, figure, main…) : ${c.semanticCount}
+- Balises div génériques : ${c.divCount}
+- Ratio sémantique : ${semanticRatio}%
+
+### Listes et tableaux
+- Listes (ul/ol) : ${c.listCount} avec ${c.listItemCount} items
+- Tableaux : ${c.tableCount}
+
+### Données structurées
+- JSON-LD : ${c.hasJsonLd ? `Oui (${c.jsonLdCount} blocs)` : 'Non'}
+- Microdata : ${c.hasMicrodata ? 'Oui' : 'Non'}
+
+### Densité sémantique
+- Ratio boilerplate (nav+footer) / texte total : ${Math.round(c.boilerplateRatio * 100)}%
+- Mots totaux : ${c.totalWords}
 `;
   }
 
@@ -1025,8 +1065,9 @@ ${buildIdentityGapsSection(ctx)}
 ## Mots-clés ciblés
 ${keywordList || 'Aucun mot-clé trouvé'}
 ${croMatrixSection}
+${chunkabilitySection}
 ## Instructions
-Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte business ci-dessus :
+Analyse cette page selon les **8 axes** suivants, en prenant en compte le contexte business ci-dessus :
 
 1. **Ton** : Le ton est-il adapté à l'audience et au positionnement ? Trop commercial ? Pas assez ? Trop technique ?
 2. **Pression CTA** : Les CTAs sont-ils bien placés ? Trop fréquents ? Pas assez ? Le wording est-il adapté à l'intention de la page ?
@@ -1035,6 +1076,14 @@ Analyse cette page selon les 7 axes suivants, en prenant en compte le contexte b
 5. **Conversion** : Éléments de conversion présents ? Preuves sociales ? Urgence ? Proposition de valeur claire ?
 6. **Expérience mobile** : Structure adaptée au mobile ? Taille des blocs de texte ? Accessibilité des CTAs ?
 7. **Utilisation des mots-clés** : Les mots-clés ciblés sont-ils utilisés naturellement ? Dans les bons éléments (H1, H2, body) ? Densité appropriée ?
+8. **Chunkability (IA-readiness)** : La page est-elle structurée pour être correctement "découpée" (chunked) par les LLM et systèmes RAG ?
+   Évalue en utilisant les signaux de télémétrie DOM fournis ci-dessus :
+   - **Structure Hn** (25%) : Hiérarchie H1→H2→H3 sans sauts, nombre suffisant de headings par rapport au volume de texte
+   - **Longueur des sections** (20%) : Les blocs entre deux Hn font-ils entre 150 et 400 mots (zone optimale LLM) ? Pénalise les sections >800 mots (impossible à chunker proprement) et <50 mots (trop fragmenté)
+   - **Balises sémantiques** (15%) : Usage d'article, section, aside, nav, figure au lieu de div génériques — permet aux parsers IA d'identifier les segments
+   - **Listes & tableaux** (15%) : Présence de ul/ol/table structurés qui facilitent l'extraction factuelle RAG
+   - **Données structurées** (15%) : JSON-LD et microdata — les chunks sont pré-annotés sémantiquement pour les LLM
+   - **Densité sémantique** (10%) : Ratio texte utile vs boilerplate (nav, footer, pubs) — un ratio boilerplate >40% dilue les chunks
 
 **IMPORTANT** : Utilise la matrice CRO ci-dessus pour vérifier systématiquement la présence de chaque variable REQUISE pour le type de page détecté. Chaque variable requise absente doit générer une suggestion spécifique.
 
