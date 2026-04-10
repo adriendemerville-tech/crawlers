@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
+import { buildDomainExplanation } from "./architectureKnowledge";
 
 // ── Domain data ──────────────────────────────────────────────
 interface Domain {
@@ -140,6 +141,7 @@ const ArchitectureMap: React.FC = () => {
   const [hovered, setHovered] = useState<string | null>(null);
   const positions = useMemo(computePositions, []);
   const adjacency = useMemo(buildAdjacency, []);
+  const clickCooldown = useRef(false);
 
   const isActive = useCallback((name: string) => {
     if (!hovered) return false;
@@ -150,6 +152,23 @@ const ArchitectureMap: React.FC = () => {
     if (!hovered) return false;
     return (hovered === a || hovered === b) && (adjacency[hovered]?.has(a) || adjacency[hovered]?.has(b) || hovered === a || hovered === b);
   }, [hovered, adjacency]);
+
+  const handleCardClick = useCallback((domainName: string) => {
+    if (clickCooldown.current) return;
+    clickCooldown.current = true;
+    setTimeout(() => { clickCooldown.current = false; }, 500);
+
+    const connected = Array.from(adjacency[domainName] || []);
+    const { summary, detail } = buildDomainExplanation(domainName, connected);
+
+    window.dispatchEvent(new CustomEvent('felix-open-with-message', {
+      detail: {
+        message: summary,
+        expandedMessage: detail,
+        source: 'architecture-map',
+      },
+    }));
+  }, [adjacency]);
 
   return (
     <div className="w-full bg-[#0B0F19] rounded-xl overflow-hidden select-none" style={{ aspectRatio: `${SVG_W}/${SVG_H}` }}>
@@ -295,6 +314,7 @@ const ArchitectureMap: React.FC = () => {
               <g key={name}
                 onMouseEnter={() => setHovered(name)}
                 onMouseLeave={() => setHovered(null)}
+                onClick={() => handleCardClick(name)}
                 style={{ cursor: "pointer" }}
               >
                 {[0, 1, 2, 3].map(idx => {
@@ -333,6 +353,7 @@ const ArchitectureMap: React.FC = () => {
             <g key={name}
               onMouseEnter={() => setHovered(name)}
               onMouseLeave={() => setHovered(null)}
+              onClick={() => handleCardClick(name)}
               style={{ cursor: "pointer" }}
             >
               <rect x={pos.x} y={pos.y} width={pos.w} height={pos.h} rx={7}
@@ -383,7 +404,7 @@ const ArchitectureMap: React.FC = () => {
           CRAWLERS — Architecture Backend
         </text>
         <text x={20} y={48} fill="#888" fontSize={11} fontFamily="system-ui">
-          175 tables | 225 edge functions | 18 domaines — Survol pour explorer les connexions
+          175 tables | 225 edge functions | 18 domaines — Survol pour explorer, clic pour l'explication Félix
         </text>
 
         {/* ── Legend ── */}

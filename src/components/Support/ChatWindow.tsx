@@ -49,10 +49,30 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function ExpandableDetail({ expandedContent }: { expandedContent: string }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+      >
+        {expanded ? '▾ Résumé' : '▸ En savoir plus'}
+      </button>
+      {expanded && (
+        <div className="mt-2 pt-2 border-t border-muted-foreground/10 whitespace-pre-wrap break-words prose prose-xs dark:prose-invert max-w-none text-[12px] leading-relaxed [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+          <ReactMarkdown>{expandedContent}</ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  expandedContent?: string;
 }
 
 interface ArchivedConversation {
@@ -97,6 +117,7 @@ interface ChatWindowProps {
   autoStartCrawlersQuiz?: boolean;
   autoEnterpriseContact?: boolean;
   initialGreeting?: string | null;
+  initialExpandedGreeting?: string | null;
 }
 
 // NLP detection for bug/problem intent
@@ -170,7 +191,7 @@ function detectCrawlersHowTo(message: string): boolean {
   return matchCount >= 1;
 }
 
-export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz, autoEnterpriseContact, initialGreeting }: ChatWindowProps) {
+export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, autoStartCrawlersQuiz, autoEnterpriseContact, initialGreeting, initialExpandedGreeting }: ChatWindowProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
@@ -349,10 +370,11 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
         role: 'assistant',
         content: initialGreeting,
         timestamp: new Date().toISOString(),
+        expandedContent: initialExpandedGreeting || undefined,
       };
       setMessages([greetingMsg]);
     }
-  }, [initialGreeting]);
+  }, [initialGreeting, initialExpandedGreeting]);
 
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [siteIdentities, setSiteIdentities] = useState<import('@/utils/sttVocabulary').SiteIdentity[]>([]);
@@ -1280,6 +1302,9 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
                           }}
                         >{msg.content}</ReactMarkdown>
                       </div>
+                      {msg.expandedContent && (
+                        <ExpandableDetail expandedContent={msg.expandedContent} />
+                      )}
                       {(() => {
                         const linkRegex = /\[([^\]]+)\]\(https?:\/\/crawlers\.fr(\/[^\s)]+)\)/g;
                         const actions: { label: string; path: string }[] = [];

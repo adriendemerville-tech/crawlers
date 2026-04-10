@@ -72,10 +72,12 @@ export function FloatingChatBubble() {
 
   // Listen for "Nous écrire" from Aide page — open Félix with greeting
   const [felixGreeting, setFelixGreeting] = useState<string | null>(null);
+  const [felixExpandedGreeting, setFelixExpandedGreeting] = useState<string | null>(null);
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       setFelixGreeting(detail?.message || "Que puis-je faire pour t'aider ?");
+      setFelixExpandedGreeting(detail?.expandedMessage || null);
       setIsOpen(true);
     };
     window.addEventListener('felix-open-with-message', handler);
@@ -257,12 +259,13 @@ export function FloatingChatBubble() {
           </div>
         }>
           <ChatWindow
-            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); setFelixGreeting(null); }}
+            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); setFelixGreeting(null); setFelixExpandedGreeting(null); }}
             triggerOnboarding={triggerOnboarding}
             onOnboardingConsumed={() => setTriggerOnboarding(false)}
             autoStartCrawlersQuiz={autoStartCrawlersQuiz}
             autoEnterpriseContact={autoEnterpriseContact}
             initialGreeting={felixGreeting}
+            initialExpandedGreeting={felixExpandedGreeting}
           />
         </Suspense>
       )}
