@@ -49,7 +49,8 @@ interface AdvisorInput {
   target_audience_segment?: 'primary' | 'secondary' | 'untapped' | 'all'
 }
 
-Deno.serve(handleRequest(async (req) => {
+// ── Heavy processing logic (extracted for waitUntil) ──
+async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Promise<Response> {
 // ── ASYNC JOB POLLING (GET ?job_id=xxx) ──
   const reqUrl = new URL(req.url)
   const pollJobId = reqUrl.searchParams.get('job_id')
