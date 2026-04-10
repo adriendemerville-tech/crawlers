@@ -90,6 +90,11 @@ const translations = {
         title: 'Support prioritaire',
         description: 'Accédez à un support dédié avec des temps de réponse réduits et une assistance personnalisée.',
       },
+      {
+        icon: 'Globe',
+        title: 'Social Content Hub',
+        description: '30 posts sociaux/mois publiés sur LinkedIn, Facebook et Instagram. Smart Linking automatique vers vos pages SEO.',
+      },
     ],
     // Comparison — side by side
     comparisonTitle: 'Choisissez votre formule Pro',
@@ -102,6 +107,7 @@ const translations = {
       ['Crawl multi-pages', '5 000 pages/mois', '50 000 pages/mois', 'Illimité'],
       ['Pages par scan', '10 pages', '50 pages', 'Illimité'],
       ['URL suivis (tracking)', '30 inclus', '30 inclus', 'Illimité'],
+      ['Posts sociaux/mois', '30', '100', 'Illimité'],
       ['Correctif multi-pages', '✓', '✓', '✓'],
       ['Marque blanche', '✓', '✓', '✓'],
       ['Multi-comptes', '2 comptes', '3 comptes', 'Sur mesure'],

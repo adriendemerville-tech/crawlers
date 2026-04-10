@@ -37,13 +37,14 @@
 #
 # PRO AGENCY : 29€/mois (sans engagement)
 # - Console multi-sites, Cocoon 3D, IAS, GMB, Content Architect
+# - Social Content Hub (30 posts/mois LinkedIn, Facebook, Instagram)
 # - Autopilote Parménion, connexion CMS directe, GSC/GA4
 # - Architecte Génératif Multi-Pages, correction automatique
 # - 5 000 pages crawl/mois, 2 comptes, White Label
 #
 # PRO AGENCY+ : 99€/mois (sans engagement)
 # - Tout Pro Agency + 50 000 pages crawl/mois, 3 comptes
-# - 200 contenus/mois, support prioritaire
+# - 200 contenus/mois, 100 posts sociaux/mois, support prioritaire
 #
 # Langues : Français (FR), English (EN), Español (ES)
 # Zones : Europe, Amérique du Nord, Amérique du Sud

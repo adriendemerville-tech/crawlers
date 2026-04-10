@@ -80,6 +80,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, '10 pages par scan', '10 pages per scan', '10 páginas por escaneo'),
     t3(language, 'Audits & codes correctifs illimités', 'Unlimited audits & corrective code', 'Auditorías y código ilimitados'),
     t3(language, '80 créations de pages (Content Architect)', '80 page creations (Content Architect)', '80 creaciones de páginas (Content Architect)'),
+    t3(language, '30 posts sociaux/mois (Social Hub)', '30 social posts/month (Social Hub)', '30 posts sociales/mes (Social Hub)'),
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
     t3(language, 'Marque blanche + 2 comptes', 'White label + 2 accounts', 'Marca blanca + 2 cuentas'),
   ];
@@ -90,6 +91,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, 'Audits & codes correctifs illimités', 'Unlimited audits & corrective code', 'Auditorías y código ilimitados'),
     t3(language, 'Benchmark LLM & Profondeur LLM illimités', 'Unlimited LLM Benchmark & Depth', 'Benchmark LLM y Profundidad LLM ilimitados'),
     t3(language, '150 créations de pages (Content Architect)', '150 page creations (Content Architect)', '150 creaciones de páginas (Content Architect)'),
+    t3(language, '100 posts sociaux/mois (Social Hub)', '100 social posts/month (Social Hub)', '100 posts sociales/mes (Social Hub)'),
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
     t3(language, 'API Marina en marque blanche complète', 'Marina API with full white label', 'API Marina con marca blanca completa'),
     t3(language, 'Analyse des logs', 'Log analysis', 'Análisis de logs'),
