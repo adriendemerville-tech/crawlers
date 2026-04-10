@@ -25,7 +25,7 @@ export const SocialPreview = memo(function SocialPreview({ platform, content, im
         <CardContent className="p-0">
           <div className="p-4">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">{name[0]}</div>
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-lg">{name[0]}</div>
               <div>
                 <p className="font-semibold text-sm text-foreground">{name}</p>
                 <p className="text-xs text-muted-foreground">À l'instant · 🌐</p>
@@ -35,10 +35,10 @@ export const SocialPreview = memo(function SocialPreview({ platform, content, im
           </div>
           {imageUrl && <img src={imageUrl} alt="Post" className="w-full h-64 object-cover" />}
           <div className="px-4 py-2 border-t border-border flex items-center justify-between text-muted-foreground">
-            <button className="flex items-center gap-1 text-xs hover:text-primary transition-colors"><ThumbsUp className="h-4 w-4" /> J'aime</button>
-            <button className="flex items-center gap-1 text-xs hover:text-primary transition-colors"><MessageCircle className="h-4 w-4" /> Commenter</button>
-            <button className="flex items-center gap-1 text-xs hover:text-primary transition-colors"><Share2 className="h-4 w-4" /> Partager</button>
-            <button className="flex items-center gap-1 text-xs hover:text-primary transition-colors"><Send className="h-4 w-4" /> Envoyer</button>
+            <button className="flex items-center gap-1 text-xs hover:text-foreground transition-colors"><ThumbsUp className="h-4 w-4" /> J'aime</button>
+            <button className="flex items-center gap-1 text-xs hover:text-foreground transition-colors"><MessageCircle className="h-4 w-4" /> Commenter</button>
+            <button className="flex items-center gap-1 text-xs hover:text-foreground transition-colors"><Share2 className="h-4 w-4" /> Partager</button>
+            <button className="flex items-center gap-1 text-xs hover:text-foreground transition-colors"><Send className="h-4 w-4" /> Envoyer</button>
           </div>
         </CardContent>
       </Card>

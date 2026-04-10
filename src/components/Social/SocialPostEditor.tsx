@@ -237,9 +237,9 @@ export const SocialPostEditor = memo(function SocialPostEditor({
         {/* Smart link display */}
         {smartLink && (
           <div className="flex items-center gap-2 p-2 bg-muted rounded-md text-xs">
-            <Link2 className="h-3.5 w-3.5 text-primary" />
+            <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-muted-foreground truncate">{smartLink.url}</span>
-            <span className="text-primary font-medium">→ {smartLink.short}</span>
+            <span className="text-foreground font-medium">→ {smartLink.short}</span>
           </div>
         )}
 
@@ -250,7 +250,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
             Sauvegarder
           </Button>
           {onPublish && (
-            <Button variant="default" onClick={onPublish} className="gap-1.5 bg-primary">
+            <Button variant="secondary" onClick={onPublish} className="gap-1.5">
               <Send className="h-4 w-4" /> Publier
             </Button>
           )}

@@ -121,7 +121,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Link2 className="h-5 w-5 text-primary" />
+            <Link2 className="h-5 w-5 text-muted-foreground" />
             Comptes réseaux sociaux
           </CardTitle>
           <CardDescription>
@@ -190,7 +190,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Key className="h-5 w-5 text-primary" />
+            <Key className="h-5 w-5 text-muted-foreground" />
             Configuration API
           </CardTitle>
           <CardDescription>
@@ -251,7 +251,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <HardDrive className="h-5 w-5 text-primary" />
+            <HardDrive className="h-5 w-5 text-muted-foreground" />
             Google Drive — Export
           </CardTitle>
           <CardDescription>
@@ -330,7 +330,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="h-5 w-5 text-primary" />
+            <Shield className="h-5 w-5 text-muted-foreground" />
             Permissions & Sécurité
           </CardTitle>
         </CardHeader>
