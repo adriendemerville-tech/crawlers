@@ -456,6 +456,78 @@ try {
     if (isCreatorMode) {
       const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
       
+      // ── Felix self-configuration detection ──
+      const felixConfigKeywords = ['ton', 'tone', 'longueur', 'verbosité', 'max_tokens', 'modèle', 'model', 'cta', 'vouvoiement', 'tutoiement', 'emojis', 'emoji', 'greeting', 'salutation', 'proactif', 'proactive', 'confidentialité', 'niveau', 'level', 'paramètre', 'config'];
+      const isFelixConfigIntent = felixConfigKeywords.some(kw => lowerMsgCheck.includes(kw)) && 
+        (/(?:change|mets|passe|configure|règle|ajuste|définis|set|switch|active|désactive|augmente|réduis|coupe)/i.test(lastUserMsg));
+      
+      if (isFelixConfigIntent) {
+        try {
+          // Use LLM to extract config changes from natural language
+          const configExtractionPrompt = `Tu es un parseur de configuration. L'utilisateur creator veut modifier les paramètres de Félix.
+
+Paramètres disponibles et valeurs possibles :
+- tone: collegial | formel | decontracte | technique
+- max_tokens: nombre (200-3000)
+- max_tokens_creator: nombre (500-5000)
+- vouvoiement: auto | toujours | jamais
+- emojis: mirror | always | never
+- cta_style: subtle | direct | none
+- greeting_style: skip | warm
+- user_level_detection: true | false
+- proactive_suggestions: true | false
+- model: google/gemini-2.5-flash | google/gemini-2.5-pro | openai/gpt-5-mini | openai/gpt-5
+- confidentiality_strict: true | false
+
+Valeurs actuelles :
+${Object.entries(felixConfig).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+
+Message du creator : "${lastUserMsg}"
+
+Réponds UNIQUEMENT en JSON : { "changes": [{"key": "...", "value": "..."}], "summary": "résumé en français des changements" }
+Si aucun changement détecté, retourne : { "changes": [], "summary": "Aucun changement détecté" }`;
+
+          const configResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: [{ role: "user", content: configExtractionPrompt }],
+              stream: false,
+              max_tokens: 300,
+            }),
+          });
+
+          if (configResp.ok) {
+            const configData = await configResp.json();
+            const configText = configData.choices?.[0]?.message?.content || "";
+            const jsonMatch = configText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (parsed.changes?.length > 0) {
+                const appliedChanges: string[] = [];
+                for (const change of parsed.changes) {
+                  const { error } = await sb.from("felix_config")
+                    .update({ config_value: String(change.value), updated_by: user_id })
+                    .eq("config_key", change.key);
+                  if (!error) {
+                    felixConfig[change.key] = String(change.value);
+                    appliedChanges.push(`**${change.key}** → \`${change.value}\``);
+                  }
+                }
+                if (appliedChanges.length > 0) {
+                  const configReply = `✅ Configuration mise à jour :\n${appliedChanges.join('\n')}\n\n${parsed.summary || 'Changements appliqués immédiatement.'}`;
+                  return jsonOk({ reply: configReply, conversation_id: conversation_id, felix_config_updated: true });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("[sav-agent] Felix config update error:", e);
+          // Fall through to normal processing
+        }
+      }
+
       // ── Parménion intent detection ──
       const parmenionKeywords = [
         "parménion", "parmenion", "autopilot", "autopilote",
