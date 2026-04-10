@@ -59,6 +59,7 @@ const PageSpeedLanding = lazy(() => import("./pages/PageSpeedLanding"));
 const AnalyseLogs = lazy(() => import("./pages/AnalyseLogs"));
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const ComparatifClaudeVsCrawlers = lazy(() => import("./pages/ComparatifClaudeVsCrawlers"));
+const ComparatifPlateforme = lazy(() => import("./pages/ComparatifPlateforme"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
 const Observatoire = lazy(() => import("./pages/Observatoire"));
@@ -168,6 +169,7 @@ const App = () => (
                           
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
                           <Route path="/comparatif-claude-vs-crawlers" element={<ComparatifClaudeVsCrawlers />} />
+                          <Route path="/comparatif-plateforme-seo-ia" element={<ComparatifPlateforme />} />
                           <Route path="/modifier-code-wordpress" element={<ModifierCodeWordPress />} />
                           <Route path="/pro-agency" element={<ProAgency />} />
                           <Route path="/observatoire" element={<Observatoire />} />
