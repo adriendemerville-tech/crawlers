@@ -841,7 +841,6 @@ export function useMyTracking() {
     llmBenchmarkRefreshKey, setLlmBenchmarkRefreshKey,
     showIdentityModal, setShowIdentityModal,
     simulatedDataEnabled,
-    simulatedDataEnabled,
     // IKTracker
     ikTrackerConnected, ikTrackerToggling, handleToggleIkTracker, isIkTrackerSite,
     // GSC
