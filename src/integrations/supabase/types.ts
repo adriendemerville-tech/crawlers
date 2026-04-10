@@ -8034,6 +8034,62 @@ export type Database = {
         }
         Relationships: []
       }
+      seasonal_news_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          geo_zone: string
+          headline: string
+          id: string
+          keywords: string[] | null
+          news_type: string
+          related_event_id: string | null
+          relevance_score: number | null
+          sector: string
+          source_name: string | null
+          source_url: string | null
+          summary: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          geo_zone?: string
+          headline: string
+          id?: string
+          keywords?: string[] | null
+          news_type?: string
+          related_event_id?: string | null
+          relevance_score?: number | null
+          sector: string
+          source_name?: string | null
+          source_url?: string | null
+          summary?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          geo_zone?: string
+          headline?: string
+          id?: string
+          keywords?: string[] | null
+          news_type?: string
+          related_event_id?: string | null
+          relevance_score?: number | null
+          sector?: string
+          source_name?: string | null
+          source_url?: string | null
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasonal_news_cache_related_event_id_fkey"
+            columns: ["related_event_id"]
+            isOneToOne: false
+            referencedRelation: "seasonal_context"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       semantic_nodes: {
         Row: {
           audit_report_id: string | null
@@ -10250,6 +10306,19 @@ export type Database = {
       }
       get_database_size: { Args: never; Returns: Json }
       get_max_sessions: { Args: { p_user_id: string }; Returns: number }
+      get_seasonal_news: {
+        Args: { p_geo?: string; p_limit?: number; p_sector?: string }
+        Returns: {
+          created_at: string
+          headline: string
+          keywords: string[]
+          news_type: string
+          relevance_score: number
+          source_name: string
+          source_url: string
+          summary: string
+        }[]
+      }
       get_site_revenue: {
         Args: {
           p_end_date: string
