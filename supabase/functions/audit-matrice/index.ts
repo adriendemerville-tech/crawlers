@@ -34,38 +34,176 @@ interface ItemResult {
 }
 
 /* ================================================================== */
+/*  Scoring Guide → composite score engine                             */
+/* ================================================================== */
+
+interface ScoringField {
+  field: string
+  whatToCode: string
+  allowedValues: string
+  meaning?: string
+}
+
+interface CodedField {
+  field: string
+  value: string
+  numericValue: number
+}
+
+/**
+ * Converts a coded rubric field value into a 0-100 numeric score.
+ * Dynamically adapts to any Scoring Guide structure by analyzing allowed values.
+ */
+function fieldValueToNumeric(field: ScoringField, value: string): number {
+  const v = (value || '').trim().toLowerCase()
+  const allowed = field.allowedValues || ''
+
+  // Boolean fields (Oui/Non)
+  if (/^oui\s*,\s*non$/i.test(allowed) || /^yes\s*,\s*no$/i.test(allowed)) {
+    return /^oui|^yes|^true/i.test(v) ? 100 : 0
+  }
+
+  // Rank fields (0 = absent, 1, 2, 3, 4, 5, 6+)
+  if (/\b0\s*=\s*(absent|absente)/i.test(allowed)) {
+    const rank = parseInt(v)
+    if (isNaN(rank) || rank === 0) return 0
+    // Rank 1 = 100, 2 = 80, 3 = 60, 4 = 40, 5 = 20, 6+ = 10
+    return Math.max(10, 100 - (rank - 1) * 20)
+  }
+
+  // Percentage range fields (0 %, 1-24 %, 25-49 %, ...)
+  if (/\d+\s*%/.test(allowed)) {
+    const pctMatch = v.match(/(\d+)/)
+    if (pctMatch) {
+      const pct = parseInt(pctMatch[1])
+      return Math.min(100, pct)
+    }
+    // Range labels
+    if (/100\s*%/.test(v)) return 100
+    if (/75-99|75\s*%/.test(v)) return 87
+    if (/51-74/.test(v)) return 62
+    if (/^50\s*%/.test(v)) return 50
+    if (/25-49/.test(v)) return 37
+    if (/1-24/.test(v)) return 12
+    if (/^0\s*%/.test(v)) return 0
+    return 50
+  }
+
+  // Count fields (0, 1, 2, 3+)
+  if (/^0\s*,\s*1\s*,\s*2/.test(allowed)) {
+    const count = parseInt(v)
+    if (isNaN(count) || count === 0) return 0
+    if (count === 1) return 33
+    if (count === 2) return 66
+    return 100 // 3+
+  }
+
+  // Direction/sentiment fields (Positive, Neutre, Négative, N/A)
+  if (/positive.*neutre.*n[ée]gative/i.test(allowed)) {
+    if (/positive/i.test(v)) return 100
+    if (/neutre/i.test(v)) return 50
+    if (/n[ée]gative/i.test(v)) return 0
+    return 0 // N/A
+  }
+
+  // Accuracy fields (Exacte, Partiellement exacte, Inexacte, ...)
+  if (/exacte.*partiellement/i.test(allowed)) {
+    if (/^exacte/i.test(v)) return 100
+    if (/partiellement/i.test(v)) return 50
+    if (/inexacte/i.test(v)) return 0
+    return 25 // Impossible à vérifier
+  }
+
+  // Source type fields (Propriétaire, Tierce, Mixte, Aucune)
+  if (/propri[ée]taire.*tierce/i.test(allowed)) {
+    if (/propri[ée]taire/i.test(v)) return 100
+    if (/mixte/i.test(v)) return 75
+    if (/tierce/i.test(v)) return 50
+    return 0 // Aucune
+  }
+
+  // Fallback: try to parse as number
+  const num = parseFloat(v)
+  if (!isNaN(num)) return Math.min(100, Math.max(0, num))
+
+  return 50
+}
+
+/**
+ * Computes composite score from coded fields.
+ * All fields are equally weighted unless the rubric specifies otherwise.
+ */
+function computeCompositeScore(codedFields: CodedField[], rubric: ScoringField[]): number {
+  if (!codedFields.length) return 50
+
+  // Filter out non-scoring meta fields (e.g. Priority_Prompt which is a filter, not a score)
+  const scoringFields = codedFields.filter(f => {
+    const def = rubric.find(r => r.field === f.field)
+    // Skip fields that are binary filters rather than quality indicators
+    if (def && /filtr|permet de filtrer/i.test(def.meaning || '')) return false
+    return true
+  })
+
+  if (!scoringFields.length) return 50
+
+  const total = scoringFields.reduce((sum, f) => sum + f.numericValue, 0)
+  return Math.round(total / scoringFields.length)
+}
+
+/* ================================================================== */
 /*  LLM prompt evaluation                                              */
 /* ================================================================== */
 
-async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, scoringRubric?: any[], retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
+async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, scoringRubric?: ScoringField[], retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 50, raw: { error: 'No API key', note: 'LLM evaluation unavailable' } }
 
   const MAX_RETRIES = 2
   const RETRY_DELAYS = [2000, 5000]
+  const useStructuredScoring = scoringRubric && scoringRubric.length > 0
 
   try {
-    // Build rubric appendix if scoring guide is available
-    let rubricAppendix = ''
-    if (scoringRubric?.length) {
-      rubricAppendix = '\n\nGrille de scoring à appliquer :\n' + scoringRubric.map((f: any) =>
-        `- ${f.field}: ${f.whatToCode} (Valeurs: ${f.allowedValues})`
-      ).join('\n')
-    }
+    let systemPrompt: string
+    let expectedFormat: string
 
-    const systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.${rubricAppendix}
+    if (useStructuredScoring) {
+      // ── DYNAMIC STRUCTURED SCORING ──
+      // Build field definitions from the parsed Scoring Guide
+      const fieldDefs = scoringRubric.map((f, i) =>
+        `${i + 1}. "${f.field}": ${f.whatToCode}\n   Valeurs autorisées: ${f.allowedValues}`
+      ).join('\n')
+
+      const fieldKeys = scoringRubric.map(f => `"${f.field}"`).join(', ')
+      expectedFormat = `{${scoringRubric.map(f => `"${f.field}": "<value>"`).join(', ')}}`
+
+      systemPrompt = `Tu es un évaluateur expert. On te donne un prompt envoyé à un moteur IA (LLM) et la réponse obtenue (ou le contexte HTML si disponible).
+
+Tu dois CODER chaque champ d'évaluation ci-dessous en utilisant UNIQUEMENT les valeurs autorisées.
+
+CHAMPS À CODER:
+${fieldDefs}
+
+RÈGLES STRICTES:
+- Utilise UNIQUEMENT les valeurs listées dans "Valeurs autorisées" pour chaque champ
+- Si tu ne peux pas déterminer une valeur, utilise la valeur la plus conservative
+- Ne donne PAS de score numérique global — code chaque champ individuellement
+- Analyse le PROMPT et le CONTENU pour déterminer chaque valeur
+
+Réponds UNIQUEMENT avec un JSON contenant les clés: ${fieldKeys}`
+    } else {
+      // ── FALLBACK: classic 0-100 scoring ──
+      systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.
 
 Réponds UNIQUEMENT avec un JSON: {"score": <number>, "justification": "<string courte>"}`
+      expectedFormat = '{"score": <number>, "justification": "<string>"}'
+    }
 
     const userPrompt = `URL: ${url}
 
-EXTRAIT HTML (contenu principal):
-${htmlSummary}
-
-CRITÈRE À ÉVALUER:
+${htmlSummary ? `EXTRAIT HTML (contenu principal):\n${htmlSummary}\n\n` : ''}CRITÈRE / PROMPT À ÉVALUER:
 ${prompt}
 
-Score de 0 à 100 pour ce critère:`
+Réponds avec le JSON (${expectedFormat}):`
 
     const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -79,7 +217,7 @@ Score de 0 à 100 pour ce critère:`
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.2,
+        temperature: 0.1, // Lower for more deterministic coding
       }),
       signal: AbortSignal.timeout(30000),
     })
@@ -109,12 +247,41 @@ Score de 0 à 100 pour ce critère:`
 
     try {
       const parsed = JSON.parse(jsonContent)
-      const score = Math.min(100, Math.max(0, Math.round(Number(parsed.score) || 50)))
-      return { score, raw: { llm_response: parsed, model: llmName } }
+
+      if (useStructuredScoring) {
+        // ── DYNAMIC COMPOSITE SCORE ──
+        const codedFields: CodedField[] = scoringRubric.map(fieldDef => {
+          const rawValue = String(parsed[fieldDef.field] || '')
+          return {
+            field: fieldDef.field,
+            value: rawValue,
+            numericValue: fieldValueToNumeric(fieldDef, rawValue),
+          }
+        })
+
+        const compositeScore = computeCompositeScore(codedFields, scoringRubric)
+
+        return {
+          score: compositeScore,
+          raw: {
+            scoring_method: 'structured_rubric',
+            coded_fields: codedFields,
+            composite_score: compositeScore,
+            llm_raw_response: parsed,
+            model: llmName,
+            rubric_fields_count: scoringRubric.length,
+          },
+        }
+      } else {
+        // ── CLASSIC 0-100 ──
+        const score = Math.min(100, Math.max(0, Math.round(Number(parsed.score) || 50)))
+        return { score, raw: { scoring_method: 'classic_0_100', llm_response: parsed, model: llmName } }
+      }
     } catch {
+      // JSON parse failed — fallback to number extraction
       const numMatch = content.match(/(\d{1,3})/)
-      if (numMatch) return { score: Math.min(100, parseInt(numMatch[1])), raw: { llm_raw: content.substring(0, 200), model: llmName } }
-      return { score: 50, raw: { llm_raw: content.substring(0, 200), parse_error: true } }
+      if (numMatch) return { score: Math.min(100, parseInt(numMatch[1])), raw: { scoring_method: 'fallback_regex', llm_raw: content.substring(0, 200), model: llmName } }
+      return { score: 50, raw: { scoring_method: 'fallback_default', llm_raw: content.substring(0, 200), parse_error: true } }
     }
   } catch (e) {
     if (retryCount < MAX_RETRIES) {
