@@ -443,10 +443,91 @@ try {
       }
     }
 
+    // ── Load Felix config from DB ──
+    let felixConfig: Record<string, string> = {};
+    try {
+      const { data: cfgRows } = await sb.from("felix_config").select("config_key, config_value");
+      if (cfgRows) {
+        for (const row of cfgRows) felixConfig[row.config_key] = row.config_value;
+      }
+    } catch (_) { /* non-blocking */ }
+
     // ── Detect backend query intent from creator ──
     if (isCreatorMode) {
       const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
       
+      // ── Felix self-configuration detection ──
+      const felixConfigKeywords = ['ton', 'tone', 'longueur', 'verbosité', 'max_tokens', 'modèle', 'model', 'cta', 'vouvoiement', 'tutoiement', 'emojis', 'emoji', 'greeting', 'salutation', 'proactif', 'proactive', 'confidentialité', 'niveau', 'level', 'paramètre', 'config'];
+      const isFelixConfigIntent = felixConfigKeywords.some(kw => lowerMsgCheck.includes(kw)) && 
+        (/(?:change|mets|passe|configure|règle|ajuste|définis|set|switch|active|désactive|augmente|réduis|coupe)/i.test(lastUserMsg));
+      
+      if (isFelixConfigIntent) {
+        try {
+          // Use LLM to extract config changes from natural language
+          const configExtractionPrompt = `Tu es un parseur de configuration. L'utilisateur creator veut modifier les paramètres de Félix.
+
+Paramètres disponibles et valeurs possibles :
+- tone: collegial | formel | decontracte | technique
+- max_tokens: nombre (200-3000)
+- max_tokens_creator: nombre (500-5000)
+- vouvoiement: auto | toujours | jamais
+- emojis: mirror | always | never
+- cta_style: subtle | direct | none
+- greeting_style: skip | warm
+- user_level_detection: true | false
+- proactive_suggestions: true | false
+- model: google/gemini-2.5-flash | google/gemini-2.5-pro | openai/gpt-5-mini | openai/gpt-5
+- confidentiality_strict: true | false
+
+Valeurs actuelles :
+${Object.entries(felixConfig).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+
+Message du creator : "${lastUserMsg}"
+
+Réponds UNIQUEMENT en JSON : { "changes": [{"key": "...", "value": "..."}], "summary": "résumé en français des changements" }
+Si aucun changement détecté, retourne : { "changes": [], "summary": "Aucun changement détecté" }`;
+
+          const configResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: [{ role: "user", content: configExtractionPrompt }],
+              stream: false,
+              max_tokens: 300,
+            }),
+          });
+
+          if (configResp.ok) {
+            const configData = await configResp.json();
+            const configText = configData.choices?.[0]?.message?.content || "";
+            const jsonMatch = configText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (parsed.changes?.length > 0) {
+                const appliedChanges: string[] = [];
+                for (const change of parsed.changes) {
+                  const { error } = await sb.from("felix_config")
+                    .update({ config_value: String(change.value), updated_by: user_id })
+                    .eq("config_key", change.key);
+                  if (!error) {
+                    felixConfig[change.key] = String(change.value);
+                    appliedChanges.push(`**${change.key}** → \`${change.value}\``);
+                  }
+                }
+                if (appliedChanges.length > 0) {
+                  const configReply = `✅ Configuration mise à jour :\n${appliedChanges.join('\n')}\n\n${parsed.summary || 'Changements appliqués immédiatement.'}`;
+                  return jsonOk({ reply: configReply, conversation_id: conversation_id, felix_config_updated: true });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("[sav-agent] Felix config update error:", e);
+          // Fall through to normal processing
+        }
+      }
+
       // ── Parménion intent detection ──
       const parmenionKeywords = [
         "parménion", "parmenion", "autopilot", "autopilote",
@@ -2342,12 +2423,42 @@ Confirme en 1-2 phrases que tu lances l'action et que tu le rediriges vers la pa
 IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> (invisible pour l'utilisateur).`;
     }
 
-    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt + navigationPrompt;
+    // ── Build dynamic config prompt from felix_config ──
+    let configPrompt = "";
+    if (Object.keys(felixConfig).length > 0) {
+      const toneMap: Record<string, string> = {
+        collegial: "Tu es un collègue sympa et direct.",
+        formel: "Tu es professionnel et formel. Vouvoiement systématique.",
+        decontracte: "Tu es très décontracté, presque familier. Tutoiement naturel.",
+        technique: "Tu es technique et précis. Jargon SEO bienvenu.",
+      };
+      const parts: string[] = ["\n\n# CONFIGURATION DYNAMIQUE (felix_config)"];
+      if (felixConfig.tone && toneMap[felixConfig.tone]) parts.push(`- Ton : ${toneMap[felixConfig.tone]}`);
+      if (felixConfig.vouvoiement === 'toujours') parts.push("- TOUJOURS vouvoyer, peu importe le style de l'utilisateur.");
+      else if (felixConfig.vouvoiement === 'jamais') parts.push("- TOUJOURS tutoyer.");
+      if (felixConfig.emojis === 'always') parts.push("- Utilise des emojis dans tes réponses.");
+      else if (felixConfig.emojis === 'never') parts.push("- AUCUN emoji, jamais.");
+      if (felixConfig.greeting_style === 'warm') parts.push("- Commence par une salutation légère et chaleureuse.");
+      if (felixConfig.cta_style === 'direct') parts.push("- Propose activement les fonctionnalités payantes (Pro Agency, crédits).");
+      else if (felixConfig.cta_style === 'none') parts.push("- Ne fais AUCUNE suggestion commerciale.");
+      if (felixConfig.user_level_detection === 'true') parts.push("- Adapte ton niveau technique au profil détecté (débutant → vulgarise, expert → jargon).");
+      if (felixConfig.proactive_suggestions === 'false') parts.push("- Ne fais PAS de suggestions proactives. Réponds uniquement à la question posée.");
+      if (felixConfig.max_tokens) parts.push(`- Limite tes réponses à ~${felixConfig.max_tokens} caractères max.`);
+      if (felixConfig.confidentiality_strict === 'false') parts.push("- Tu peux mentionner l'architecture interne si l'utilisateur est admin.");
+      configPrompt = parts.join('\n');
+    }
+
+    const fullSystemPrompt = SYSTEM_PROMPT + LEXIQUE_PROMPT_BLOCK + langHint + contextSnippet + liveSearchContext + screenHint + guestHint + escalationHint + greetingHint + creatorHint + memoryPrompt + architectPrompt + navigationPrompt + configPrompt;
 
     const aiMessages = [
       { role: "system", content: fullSystemPrompt },
       ...messages.slice(-20),
     ];
+
+    const felixModel = felixConfig.model || "google/gemini-2.5-flash";
+    const felixMaxTokens = isCreator
+      ? parseInt(felixConfig.max_tokens_creator || '2000', 10)
+      : screenHint ? 1200 : parseInt(felixConfig.max_tokens || '600', 10);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -2356,10 +2467,10 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: felixModel,
         messages: aiMessages,
         stream: false,
-        max_tokens: isCreator ? 2000 : screenHint ? 1200 : 600,
+        max_tokens: felixMaxTokens,
       }),
     });
 
@@ -2376,7 +2487,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
     }
 
     const data = await response.json();
-    logAIUsageFromResponse(sb, "google/gemini-2.5-flash", "sav-agent", data.usage);
+    logAIUsageFromResponse(sb, felixModel, "sav-agent", data.usage);
     let rawReply = data.choices?.[0]?.message?.content || "Je transmets votre question à l'équipe.";
 
     // Extract and persist memory from LLM response
