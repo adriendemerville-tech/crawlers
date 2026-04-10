@@ -4165,6 +4165,83 @@ export type Database = {
         }
         Relationships: []
       }
+      ga4_behavioral_metrics: {
+        Row: {
+          avg_engagement_time: number | null
+          click_events: number | null
+          conversion_rate: number | null
+          conversions: number | null
+          created_at: string
+          engaged_sessions: number | null
+          engagement_rate: number | null
+          entries: number | null
+          exit_rate: number | null
+          form_submissions: number | null
+          id: string
+          measured_at: string
+          outbound_clicks: number | null
+          page_path: string
+          period_end: string
+          period_start: string
+          scroll_events: number | null
+          scroll_rate: number | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          avg_engagement_time?: number | null
+          click_events?: number | null
+          conversion_rate?: number | null
+          conversions?: number | null
+          created_at?: string
+          engaged_sessions?: number | null
+          engagement_rate?: number | null
+          entries?: number | null
+          exit_rate?: number | null
+          form_submissions?: number | null
+          id?: string
+          measured_at?: string
+          outbound_clicks?: number | null
+          page_path: string
+          period_end: string
+          period_start: string
+          scroll_events?: number | null
+          scroll_rate?: number | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          avg_engagement_time?: number | null
+          click_events?: number | null
+          conversion_rate?: number | null
+          conversions?: number | null
+          created_at?: string
+          engaged_sessions?: number | null
+          engagement_rate?: number | null
+          entries?: number | null
+          exit_rate?: number | null
+          form_submissions?: number | null
+          id?: string
+          measured_at?: string
+          outbound_clicks?: number | null
+          page_path?: string
+          period_end?: string
+          period_start?: string
+          scroll_events?: number | null
+          scroll_rate?: number | null
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ga4_behavioral_metrics_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ga4_daily_metrics: {
         Row: {
           created_at: string
