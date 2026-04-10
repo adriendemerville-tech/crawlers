@@ -410,9 +410,11 @@ export default function Auth() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full h-11" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button type="submit" className="w-1/2 h-11 bg-[hsl(215,20%,28%)] hover:bg-[hsl(215,25%,35%)] text-white border-0 shadow-lg" disabled={isLoading}>
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
+                    </Button>
+                  </div>
                   <div className="text-right">
                     <button
                       type="button"
