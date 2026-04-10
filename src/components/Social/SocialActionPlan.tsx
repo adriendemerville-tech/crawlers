@@ -36,9 +36,6 @@ export const SocialActionPlan = memo(function SocialActionPlan({ domain, tracked
       finally { setLoading(false); }
     };
     loadItems();
-      setItems(data || []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
   }, [domain]);
 
   const severityColor = (s: string) => {
