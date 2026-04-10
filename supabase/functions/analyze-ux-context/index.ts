@@ -80,8 +80,7 @@ Deno.serve(handleRequest(async (req) => {
 
   // ── Manual suggestions mode: generate recommendations only for user-added annotations ──
   if (mode === 'manual-suggestions') {
-    const { manual_annotations, existing_suggestions, page_context } = await req.json().catch(() => ({})) || {};
-    const manualAnnotations = JSON.parse(JSON.stringify(manual_annotations || providedSuggestions || []));
+    const manualAnnotations = bodyManualAnnotations || [];
     
     if (!Array.isArray(manualAnnotations) || manualAnnotations.length === 0) {
       return jsonError('manual_annotations array is required', 400);
