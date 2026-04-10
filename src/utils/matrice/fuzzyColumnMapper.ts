@@ -64,6 +64,12 @@ const RESULT_COLUMN_PATTERNS = [
   /result/i, /résultat/i, /found/i, /trouvé/i, /brand/i, /marque/i,
 ];
 
+// ── Columns to always skip (never map to any field) ─────────────────────
+const ALWAYS_SKIP_PATTERNS = [
+  /^id$/i, /^_id$/i, /^uuid$/i, /^index$/i, /^#$/i, /^n°$/i, /^num$/i,
+  /^row_?id$/i, /^line$/i, /^ligne$/i,
+];
+
 // ── Fuzzy similarity (Dice coefficient on bigrams) ──────────────────────
 function bigrams(s: string): Set<string> {
   const bg = new Set<string>();
