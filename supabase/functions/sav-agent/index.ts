@@ -1263,12 +1263,90 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
       const parmenionAutoKw = ["parménion", "parmenion", "autopilot", "autopilote", "cycle en cours", "dernier cycle"];
       const errorsAutoKw = ["registre des erreurs", "erreurs récentes", "erreurs edge", "erreurs backend", "cocoon errors", "erreurs cocoon", "errors registry", "dernières erreurs", "journal des erreurs", "log des erreurs", "erreurs de production"];
       const contentArchitectAutoKw = ["historique de publication", "publications content architect", "batch operations", "historique content architect", "pages publiées", "historique cocoon", "dernières publications", "publication history", "contenus publiés", "déploiements content"];
+      // Stats / metrics keywords — delegate to admin-backend-query
+      const statsAutoKw = ["combien de script", "combien de audit", "combien de rapport", "combien d'audit", "combien d'utilisateur", "combien de crawl", "combien de user", "combien de pages", "combien de crédit", "combien de session", "combien de bug", "combien de conversation", "statistiques plateforme", "stats plateforme", "stats globales", "statistiques globales", "activité plateforme", "activité des users", "activité utilisateurs", "scripts générés", "audits générés", "rapports générés", "audits lancés", "crawls lancés", "aujourd'hui", "cette semaine", "ce mois"];
 
       const wantsParmenion = parmenionAutoKw.some(kw => lowerAutoCheck.includes(kw));
       const wantsErrors = errorsAutoKw.some(kw => lowerAutoCheck.includes(kw));
       const wantsContentHistory = contentArchitectAutoKw.some(kw => lowerAutoCheck.includes(kw));
+      // Stats: must match a "combien" or stats keyword AND a time/entity keyword
+      const hasStatsIntent = statsAutoKw.some(kw => lowerAutoCheck.includes(kw)) && 
+        (lowerAutoCheck.includes("combien") || lowerAutoCheck.includes("statistique") || lowerAutoCheck.includes("stats") || lowerAutoCheck.includes("activité") || lowerAutoCheck.includes("générés") || lowerAutoCheck.includes("lancés"));
 
-      if (wantsParmenion || wantsErrors || wantsContentHistory) {
+      if (wantsParmenion || wantsErrors || wantsContentHistory || hasStatsIntent) {
+
+        // ── Stats delegation to admin-backend-query ──
+        if (hasStatsIntent && !wantsParmenion && !wantsErrors && !wantsContentHistory) {
+          try {
+            const authHeader = req.headers.get("Authorization") || "";
+            const queryResp = await fetch(
+              `${Deno.env.get("SUPABASE_URL")}/functions/v1/admin-backend-query`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: authHeader,
+                  "Content-Type": "application/json",
+                  apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+                },
+                body: JSON.stringify({ question: lastUserMsg }),
+              }
+            );
+
+            if (queryResp.ok) {
+              const queryData = await queryResp.json();
+              if (!queryData.blocked) {
+                let statsReply = "";
+                if (queryData.error) {
+                  statsReply = `❌ Erreur : ${queryData.error}`;
+                } else {
+                  statsReply = `📊 **${queryData.description}**\n\n`;
+                  if (Array.isArray(queryData.results)) {
+                    if (queryData.results.length === 0) {
+                      statsReply += "Aucun résultat.";
+                    } else if (queryData.results.length === 1 && Object.keys(queryData.results[0]).length <= 4) {
+                      const entries = Object.entries(queryData.results[0]);
+                      statsReply += entries.map(([k, v]) => `**${k}** : ${v}`).join("\n");
+                    } else {
+                      const cols = Object.keys(queryData.results[0]);
+                      statsReply += `| ${cols.join(" | ")} |\n`;
+                      statsReply += `| ${cols.map(() => "---").join(" | ")} |\n`;
+                      for (const row of queryData.results.slice(0, 20)) {
+                        const vals = cols.map(c => {
+                          const v = (row as any)[c];
+                          if (v === null) return "-";
+                          if (typeof v === "object") return JSON.stringify(v).slice(0, 60);
+                          return String(v).slice(0, 60);
+                        });
+                        statsReply += `| ${vals.join(" | ")} |\n`;
+                      }
+                    }
+                    statsReply += `\n\n_${queryData.row_count} résultat(s)_`;
+                  }
+                }
+
+                if (statsReply.length > 3000) statsReply = statsReply.substring(0, 2997) + "...";
+
+                let savedConvId = conversation_id;
+                try {
+                  const allMessages = [...messages, { role: "assistant", content: statsReply }];
+                  if (conversation_id) {
+                    await sb.from("sav_conversations").update({ messages: allMessages, message_count: allMessages.length }).eq("id", conversation_id);
+                  } else {
+                    const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+                    const { data: newConv } = await sb.from("sav_conversations").insert({ user_id, user_email: prof?.email || null, messages: allMessages, message_count: allMessages.length }).select("id").single();
+                    savedConvId = newConv?.id;
+                  }
+                } catch (e) { console.error("Save stats conv error:", e); }
+
+                return jsonOk({ reply: statsReply, conversation_id: savedConvId || conversation_id });
+              }
+            }
+          } catch (e) {
+            console.error("Stats auto-detect error:", e);
+            // Fall through
+          }
+        }
+
         try {
           let creatorContext = "\n\n# CONTEXTE CRÉATEUR (AUTO-DETECT)\n";
 
