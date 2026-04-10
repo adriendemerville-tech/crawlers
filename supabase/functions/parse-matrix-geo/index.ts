@@ -165,7 +165,7 @@ async function evaluateBenchmark(
     const engineResponse = data.choices?.[0]?.message?.content || ''
     trackTokenUsage('parse-matrix-geo', llmName || 'google/gemini-2.5-flash', data.usage, brandUrl)
 
-    // Step 2: Score the response with a fast LLM
+    // Step 2: Analyze the response for citation and rank
     const scoringResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -176,11 +176,10 @@ async function evaluateBenchmark(
         model: 'google/gemini-2.5-flash-lite',
         messages: [
           { role: 'system', content: `Tu analyses la réponse d'un moteur IA pour vérifier si une marque/site est cité.
-Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context": "<phrase où la marque apparaît>", "score": <0-100>}
-- cited: true si la marque/URL est mentionnée
-- rank: position dans la liste de recommandations (1 = premier cité, null si absent)
-- context: la phrase exacte de citation (vide si non cité)
-- score: 0 si non cité, 100 si cité en premier, dégression selon le rang` },
+Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context": "<phrase où la marque apparaît>"}
+- cited: true si la marque/URL est mentionnée (même partiellement, par nom de domaine ou nom de marque)
+- rank: position dans la liste de recommandations (1 = premier cité, 2 = deuxième, etc. null si absent)
+- context: la phrase exacte de citation (vide si non cité)` },
           { role: 'user', content: `URL/Marque à chercher: ${brandUrl}\n\nRéponse du moteur IA (${engine}):\n${engineResponse.substring(0, 3000)}` },
         ],
         temperature: 0.1,
@@ -203,19 +202,34 @@ Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context":
     const scoringContent = scoringData.choices?.[0]?.message?.content || ''
     trackTokenUsage('parse-matrix-geo', 'google/gemini-2.5-flash-lite', scoringData.usage, brandUrl)
 
-    const parsed = parseScoreResponse(scoringContent)
-    const scoringRaw = parsed.raw as any
+    // Parse the citation analysis (not a score)
+    let citationParsed: any = {}
+    try {
+      let jsonStr = scoringContent
+      if (jsonStr.includes('```json')) jsonStr = jsonStr.split('```json')[1].split('```')[0].trim()
+      else if (jsonStr.includes('```')) jsonStr = jsonStr.split('```')[1].split('```')[0].trim()
+      citationParsed = JSON.parse(jsonStr)
+    } catch {
+      citationParsed = { cited: false, rank: null, context: '' }
+    }
+
+    const cited = citationParsed.cited ?? false
+    const rank = cited ? (citationParsed.rank ?? null) : null
+
+    // For benchmark: score IS the rank (1=best). 0 means not cited.
+    // This is NOT a 0-100 score — it's a ranking position.
+    const benchmarkScore = cited ? (rank ?? 99) : 0
 
     return {
-      score: scoringRaw.score ?? parsed.score,
+      score: benchmarkScore,
       raw: {
         engine_response_preview: engineResponse.substring(0, 300),
-        scoring: scoringRaw,
+        scoring: citationParsed,
         engine,
       },
-      citation_found: scoringRaw.cited ?? false,
-      citation_rank: scoringRaw.rank ?? null,
-      citation_context: scoringRaw.context ?? '',
+      citation_found: cited,
+      citation_rank: rank,
+      citation_context: citationParsed.context ?? '',
     }
   } catch (e) {
     if (retryCount < MAX_RETRIES) {
@@ -311,27 +325,25 @@ Deno.serve(handleRequest(async (req) => {
           if (matches.length === 0) {
             heatmap[theme][engine] = { score: -1, cited: false, rank: null, count: 0, cited_count: 0 }
           } else {
-            const totalWeight = matches.reduce((s, m) => s + m.poids, 0)
-            const avgScore = totalWeight > 0
-              ? Math.round(matches.reduce((s, m) => s + m.crawlers_score * m.poids, 0) / totalWeight)
-              : Math.round(matches.reduce((s, m) => s + m.crawlers_score, 0) / matches.length)
             const citedCount = matches.filter(m => m.citation_found).length
             const bestRank = matches.filter(m => m.citation_rank !== null).sort((a, b) => (a.citation_rank ?? 99) - (b.citation_rank ?? 99))[0]?.citation_rank ?? null
-            heatmap[theme][engine] = { score: avgScore, cited: citedCount > 0, rank: bestRank, count: matches.length, cited_count: citedCount }
+            // For benchmark heatmap: score = best rank (lower is better), 0 = not cited
+            heatmap[theme][engine] = { score: bestRank ?? 0, cited: citedCount > 0, rank: bestRank, count: matches.length, cited_count: citedCount }
           }
         }
       }
-
-      const totalWeight = results.reduce((s, r) => s + r.poids, 0)
-      const globalScore = totalWeight > 0
-        ? Math.round(results.reduce((s, r) => s + r.crawlers_score * r.poids, 0) / totalWeight)
-        : 0
 
       const citationRate = results.length > 0
         ? Math.round(results.filter(r => r.citation_found).length / results.length * 100)
         : 0
 
-      console.log(`[parse-matrix-geo] Benchmark complete. Global: ${globalScore}/100, Citation rate: ${citationRate}%`)
+      // Global score for benchmark: average best rank among cited items
+      const citedResults = results.filter(r => r.citation_found && r.citation_rank != null)
+      const avgRank = citedResults.length > 0
+        ? +(citedResults.reduce((s, r) => s + (r.citation_rank ?? 0), 0) / citedResults.length).toFixed(1)
+        : 0
+
+      console.log(`[parse-matrix-geo] Benchmark complete. Avg rank: ${avgRank}, Citation rate: ${citationRate}%`)
 
       return jsonOk({
         success: true, url: normalizedUrl, mode: 'benchmark',
