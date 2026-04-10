@@ -537,7 +537,7 @@ export default function MatricePrompt() {
           citationRate: fnData.citation_rate,
         });
 
-        toast.success(`Benchmark terminé — Score: ${fnData.global_score}/100, Citations: ${fnData.citation_rate}%`);
+        toast.success(`Benchmark terminé — Rang moyen: ${fnData.avg_rank || fnData.global_score}, Citations: ${fnData.citation_rate}%`);
         setAnalyzing(false);
         return;
       }
@@ -713,6 +713,13 @@ export default function MatricePrompt() {
 
 
     const getScoreColor = (score: number, bon: number, moyen: number) => {
+    // Benchmark mode: lower is better (rank-based: 1=best, 3=acceptable)
+    if (activeMatriceType === 'benchmark') {
+      if (score === 0) return 'text-red-600'; // Not cited
+      if (score <= bon) return 'text-green-600'; // e.g. rank ≤ 3
+      if (score <= moyen) return 'text-yellow-600'; // e.g. rank ≤ 10
+      return 'text-red-600'; // rank > 10
+    }
     if (score >= bon) return 'text-green-600';
     if (score >= moyen) return 'text-yellow-600';
     return 'text-red-600';
