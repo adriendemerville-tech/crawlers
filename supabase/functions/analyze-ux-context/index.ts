@@ -599,13 +599,19 @@ function buildPositionTargets(suggestions: any[] = []) {
   if (!Array.isArray(suggestions)) return [];
 
   return suggestions
-    .map((suggestion, suggestionIndex) => ({
-      text: typeof suggestion?.current_text === 'string' ? suggestion.current_text.slice(0, 140) : '',
-      axis: suggestion?.axis,
-      priority: suggestion?.priority,
-      selector: typeof suggestion?.element_selector === 'string' ? suggestion.element_selector.slice(0, 140) : null,
-      suggestionIndex,
-    }))
+    .map((suggestion, suggestionIndex) => {
+      // Use current_text first, then title as fallback for positioning
+      const text = typeof suggestion?.current_text === 'string' && suggestion.current_text.length > 3
+        ? suggestion.current_text.slice(0, 140)
+        : typeof suggestion?.title === 'string' ? suggestion.title.slice(0, 140) : '';
+      return {
+        text,
+        axis: suggestion?.axis,
+        priority: suggestion?.priority,
+        selector: typeof suggestion?.element_selector === 'string' ? suggestion.element_selector.slice(0, 140) : null,
+        suggestionIndex,
+      };
+    })
     .filter((target) => target.text.length > 3 || !!target.selector);
 }
 
