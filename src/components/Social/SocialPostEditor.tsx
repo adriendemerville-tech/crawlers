@@ -39,10 +39,12 @@ interface SocialPostEditorProps {
   onPublish?: () => void;
   onExport?: () => void;
   saving?: boolean;
+  onContentChange?: (platform: string, content: string, hashtags: string[]) => void;
+  onPlatformChange?: (platform: string) => void;
 }
 
 export const SocialPostEditor = memo(function SocialPostEditor({
-  trackedSiteId, domain, initialContent, initialTitle, initialHashtags, onSave, onPublish, onExport, saving
+  trackedSiteId, domain, initialContent, initialTitle, initialHashtags, onSave, onPublish, onExport, saving, onContentChange, onPlatformChange
 }: SocialPostEditorProps) {
   const [title, setTitle] = useState(initialTitle || '');
   const [linkedin, setLinkedin] = useState(initialContent?.linkedin || '');
@@ -52,6 +54,11 @@ export const SocialPostEditor = memo(function SocialPostEditor({
   const [newHashtag, setNewHashtag] = useState('');
   const [smartLink, setSmartLink] = useState<{ url: string; short: string } | null>(null);
   const [activePlatform, setActivePlatform] = useState('linkedin');
+
+  const handlePlatformChange = useCallback((p: string) => {
+    setActivePlatform(p);
+    onPlatformChange?.(p);
+  }, [onPlatformChange]);
   const [generating, setGenerating] = useState(false);
   const [translating, setTranslating] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -135,7 +142,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Platform tabs */}
-        <Tabs value={activePlatform} onValueChange={setActivePlatform}>
+        <Tabs value={activePlatform} onValueChange={handlePlatformChange}>
           <TabsList className="grid grid-cols-3">
             <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
             <TabsTrigger value="facebook">Facebook</TabsTrigger>
@@ -193,6 +200,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
                 onChange={e => {
                   const setter = platform === 'linkedin' ? setLinkedin : platform === 'facebook' ? setFacebook : setInstagram;
                   setter(e.target.value);
+                  onContentChange?.(platform, e.target.value, hashtags);
                 }}
                 placeholder={`Rédigez votre post ${platform}...`}
                 className="min-h-[200px] resize-y"
