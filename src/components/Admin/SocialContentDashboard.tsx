@@ -73,6 +73,11 @@ export function SocialContentDashboard({ simulatedDataEnabled = false }: SocialC
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
+    if (simulatedDataEnabled) {
+      injectDemoData();
+      setIsLoading(false);
+      return;
+    }
     try {
       const sinceDate = period === '7d' ? subDays(new Date(), 7).toISOString()
         : period === '30d' ? subDays(new Date(), 30).toISOString()
