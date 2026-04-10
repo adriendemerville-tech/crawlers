@@ -1130,12 +1130,18 @@ export default function MatricePrompt() {
         open={xlsxStepperOpen}
         sheetNames={xlsxStepperSheets}
         workbook={xlsxWorkbookRef}
-        onComplete={({ rows, matriceType, identityCard }) => {
+        onComplete={({ rows: importedRows, matriceType, identityCard }) => {
           setXlsxStepperOpen(false);
           setActiveMatriceType(matriceType);
-          processImportedRows(rows, xlsxFileName, matriceType);
+          // Auto-detect scoring method from imported data
+          const headers = importedRows.length > 0 ? Object.keys(importedRows[0]) : [];
+          const detection = detectScoringMethod(headers, importedRows.slice(0, 10), matriceType);
+          setActiveScoringMethod(detection.method);
+          if (detection.source !== 'default') {
+            toast.info(`Méthode de scoring détectée : ${getScoringConfig(detection.method).label} (confiance: ${Math.round(detection.confidence * 100)}%)`, { duration: 4000 });
+          }
+          processImportedRows(importedRows, xlsxFileName, matriceType);
           setXlsxWorkbookRef(null);
-          // Auto-fill URL from identity card if available
           if (identityCard?.brandUrl && !url.trim()) {
             setUrl(identityCard.brandUrl);
             toast.info(`URL pré-remplie depuis la carte d'identité : ${identityCard.brandUrl}`);
