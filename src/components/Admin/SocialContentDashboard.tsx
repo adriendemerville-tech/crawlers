@@ -215,7 +215,7 @@ export function SocialContentDashboard({ simulatedDataEnabled = false }: SocialC
     } finally {
       setIsLoading(false);
     }
-  }, [period]);
+  }, [period, simulatedDataEnabled]);
 
   const injectDemoData = () => {
     const now = new Date();
