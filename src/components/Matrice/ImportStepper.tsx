@@ -91,11 +91,56 @@ const VALUE_COLUMN_PATTERNS = [
 ];
 
 function isVariableSheet(sheetName: string, headers: string[]): boolean {
-  // Check sheet name
   if (VARIABLE_SHEET_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
-  // Check if first column looks like variable keys (e.g. [MARQUE], [SITE_MARQUE])
   if (headers.length >= 2 && VARIABLE_COLUMN_PATTERNS.some(p => p.test(headers[0]))) return true;
   return false;
+}
+
+/* ── Engine Notes / Scoring Guide detection ────────────────────────── */
+
+const ENGINE_NOTES_PATTERNS = [/^engine.?notes?/i, /^notes?.?moteur/i, /^citation.?guide/i];
+const SCORING_GUIDE_PATTERNS = [/^scoring.?guide/i, /^grille.?scoring/i, /^scoring$/i, /^codage/i];
+
+function isEngineNotesSheet(sheetName: string, headers: string[]): boolean {
+  if (ENGINE_NOTES_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
+  const hJoined = headers.map(h => h.toLowerCase()).join('|');
+  return hJoined.includes('how_to_ask') && hJoined.includes('engine');
+}
+
+function isScoringGuideSheet(sheetName: string, headers: string[]): boolean {
+  if (SCORING_GUIDE_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
+  const hJoined = headers.map(h => h.toLowerCase()).join('|');
+  return hJoined.includes('what_to_code') && hJoined.includes('allowed_values');
+}
+
+function extractEngineNotes(rows: Record<string, any>[], headers: string[]): EngineNote[] {
+  const engineCol = headers.find(h => /^engine$/i.test(h)) || headers[0];
+  const howCol = headers.find(h => /how_to_ask/i.test(h)) || headers[1];
+  const whyCol = headers.find(h => /why_it_matters/i.test(h)) || headers[2];
+  const srcCol = headers.find(h => /source_url/i.test(h)) || headers[3];
+  return rows
+    .filter(r => String(r[engineCol] ?? '').trim())
+    .map(r => ({
+      engine: String(r[engineCol] ?? '').trim(),
+      howToAskCitations: String(r[howCol] ?? '').trim(),
+      whyItMatters: String(r[whyCol] ?? '').trim(),
+      sourceUrl: String(r[srcCol] ?? '').trim(),
+    }));
+}
+
+function extractScoringGuide(rows: Record<string, any>[], headers: string[]): ScoringField[] {
+  const fieldCol = headers.find(h => /^field$/i.test(h)) || headers[0];
+  const whatCol = headers.find(h => /what_to_code/i.test(h)) || headers[1];
+  const valuesCol = headers.find(h => /allowed_values/i.test(h)) || headers[2];
+  const meaningCol = headers.find(h => /^meaning$/i.test(h)) || headers[3];
+  return rows
+    .filter(r => String(r[fieldCol] ?? '').trim())
+    .map(r => ({
+      field: String(r[fieldCol] ?? '').trim(),
+      whatToCode: String(r[whatCol] ?? '').trim(),
+      allowedValues: String(r[valuesCol] ?? '').trim(),
+      meaning: String(r[meaningCol] ?? '').trim(),
+    }));
 }
 
 function extractIdentityCard(rows: Record<string, any>[], headers: string[]): IdentityCard {
