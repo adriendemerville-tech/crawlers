@@ -672,7 +672,35 @@ export default function ConversionOptimizer() {
                     const el = document.getElementById(`suggestion-${idx}`);
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }}
+                  manualAnnotations={manualAnnotations}
+                  onManualAnnotationsChange={setManualAnnotations}
+                  drawingMode={drawingMode}
+                  onDrawingModeChange={setDrawingMode}
                 />
+                {manualAnnotations.length > 0 && (
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => { setManualAnnotations([]); setDrawingMode(false); }}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" /> Effacer les annotations
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="text-xs bg-emerald-600 hover:bg-emerald-700"
+                      onClick={handleRecalculate}
+                      disabled={recalculating}
+                    >
+                      {recalculating ? (
+                        <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Calcul en cours…</>
+                      ) : (
+                        <><RefreshCw className="h-3 w-3 mr-1" /> Recalculer ({manualAnnotations.length} annotation{manualAnnotations.length > 1 ? 's' : ''})</>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
