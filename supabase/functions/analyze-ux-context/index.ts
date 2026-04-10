@@ -678,8 +678,7 @@ async function findTextPositions(
         ].join(' ').toLowerCase();
 
         if (
-          attrs.includes('footer')
-          || attrs.includes('cookie')
+          attrs.includes('cookie')
           || attrs.includes('consent')
           || attrs.includes('dialog')
           || attrs.includes('modal')
