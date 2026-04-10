@@ -72,10 +72,12 @@ export function FloatingChatBubble() {
 
   // Listen for "Nous écrire" from Aide page — open Félix with greeting
   const [felixGreeting, setFelixGreeting] = useState<string | null>(null);
+  const [felixExpandedGreeting, setFelixExpandedGreeting] = useState<string | null>(null);
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       setFelixGreeting(detail?.message || "Que puis-je faire pour t'aider ?");
+      setFelixExpandedGreeting(detail?.expandedMessage || null);
       setIsOpen(true);
     };
     window.addEventListener('felix-open-with-message', handler);
