@@ -176,6 +176,10 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
   annotations,
   suggestions,
   onSelectSuggestion,
+  manualAnnotations = [],
+  onManualAnnotationsChange,
+  drawingMode = false,
+  onDrawingModeChange,
 }: Props) {
   const imageRef = useRef<HTMLImageElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
