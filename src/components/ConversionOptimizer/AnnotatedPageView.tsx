@@ -275,10 +275,34 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
     }
   }, []);
 
+  const handleAddManual = useCallback((annotation: ManualAnnotation) => {
+    onManualAnnotationsChange?.([...manualAnnotations, annotation]);
+  }, [manualAnnotations, onManualAnnotationsChange]);
+
+  const handleRemoveManual = useCallback((id: string) => {
+    onManualAnnotationsChange?.(manualAnnotations.filter(a => a.id !== id));
+  }, [manualAnnotations, onManualAnnotationsChange]);
+
   return (
     <Card className="overflow-hidden border-border/50">
       <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 p-3">
-        <span className="text-sm font-medium text-foreground">Vue annotée</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground">Vue annotée</span>
+          {onDrawingModeChange && (
+            <Button
+              size="sm"
+              variant={drawingMode ? 'default' : 'outline'}
+              className="h-7 text-xs gap-1"
+              onClick={() => onDrawingModeChange(!drawingMode)}
+            >
+              {drawingMode ? <X className="h-3 w-3" /> : <PenLine className="h-3 w-3" />}
+              {drawingMode ? 'Quitter annotation' : 'Annoter'}
+            </Button>
+          )}
+          {manualAnnotations.length > 0 && (
+            <Badge variant="secondary" className="text-[10px]">{manualAnnotations.length} ajout{manualAnnotations.length > 1 ? 's' : ''}</Badge>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-[10px]"><span className="h-2 w-2 rounded-full bg-red-500" /> Critique</span>
           <span className="flex items-center gap-1 text-[10px]"><span className="h-2 w-2 rounded-full bg-orange-500" /> Haute</span>
