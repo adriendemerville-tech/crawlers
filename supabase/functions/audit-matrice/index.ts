@@ -92,7 +92,7 @@ Score de 0 à 100 pour ce critère:`
         const delay = RETRY_DELAYS[retryCount] || 5000
         console.log(`[audit-matrice] LLM ${status}, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
         await new Promise(r => setTimeout(r, delay))
-        return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+        return evaluateWithLlm(prompt, url, htmlSummary, llmName, scoringRubric, retryCount + 1)
       }
 
       if (status === 402) return { score: 50, raw: { error: 'Payment required', status: 402 } }
