@@ -72,7 +72,7 @@ function BlurredDemoOverlay({ monthlyUsage, onUpgrade, onBack }: { monthlyUsage:
                 <p className="text-xs text-muted-foreground line-clamp-2">{post.content_linkedin}</p>
                 <div className="flex flex-wrap gap-1">
                   {post.hashtags?.map(h => (
-                    <span key={h} className="text-[10px] text-primary">{h}</span>
+                    <span key={h} className="text-[10px] text-muted-foreground">{h}</span>
                   ))}
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
@@ -107,7 +107,7 @@ function BlurredDemoOverlay({ monthlyUsage, onUpgrade, onBack }: { monthlyUsage:
       {/* Overlay message */}
       <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/60 backdrop-blur-[2px]">
         <div className="text-center max-w-md px-6 py-8 bg-card border border-border rounded-xl shadow-xl">
-          <Lock className="h-12 w-12 mx-auto text-primary mb-4" />
+          <Lock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">Limite gratuite atteinte</h2>
           <p className="text-muted-foreground mb-1">
             Vous avez utilisé <span className="font-semibold text-foreground">{monthlyUsage}/{FREE_MONTHLY_LIMIT}</span> contenus gratuits ce mois-ci.
@@ -265,7 +265,7 @@ const SocialHub = memo(function SocialHub() {
           <div className="max-w-7xl mx-auto px-4 py-6">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Share2 className="h-6 w-6 text-primary" /> Social Content Hub
+                <Share2 className="h-6 w-6 text-muted-foreground" /> Social Content Hub
                 <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-500">beta</Badge>
               </h1>
               <p className="text-sm text-muted-foreground mt-1">Créez, planifiez et publiez du contenu social optimisé</p>
@@ -294,13 +294,13 @@ const SocialHub = memo(function SocialHub() {
           {/* Top bar */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Share2 className="h-6 w-6 text-primary" /> Social Content Hub
+              <Share2 className="h-6 w-6 text-muted-foreground" /> Social Content Hub
               <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-500">beta</Badge>
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Créez, planifiez et publiez du contenu social optimisé
               {!isPro && (
-                <span className="ml-2 text-xs text-primary">
+                <span className="ml-2 text-xs text-muted-foreground">
                   ({monthlyUsage}/{FREE_MONTHLY_LIMIT} contenus gratuits ce mois)
                 </span>
               )}
