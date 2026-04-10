@@ -1112,7 +1112,7 @@ export default function MatricePrompt() {
         onComplete={({ rows, matriceType, identityCard }) => {
           setXlsxStepperOpen(false);
           setActiveMatriceType(matriceType);
-          processImportedRows(rows, xlsxFileName);
+          processImportedRows(rows, xlsxFileName, matriceType);
           setXlsxWorkbookRef(null);
           // Auto-fill URL from identity card if available
           if (identityCard?.brandUrl && !url.trim()) {
