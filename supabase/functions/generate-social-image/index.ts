@@ -2,13 +2,17 @@
  * generate-social-image — AI-powered canvas image generation/editing
  * Takes a prompt + optional existing canvas data, returns updated canvas JSON.
  */
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
-import { callOpenRouterText } from '../_shared/openRouterAI.ts';
+import { callOpenRouter } from '../_shared/openRouterAI.ts';
+import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const MODEL = 'google/gemini-2.5-flash';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -56,17 +60,35 @@ Le canvas utilise ce format:
 ${branding ? `Branding du site: couleurs ${JSON.stringify(branding.colors || {})}, polices: ${JSON.stringify(branding.fonts || [])}` : ''}
 ${canvas_data ? `Canvas existant à modifier: ${JSON.stringify(canvas_data)}` : 'Crée un nouveau canvas.'}`;
 
-    const result = await callOpenRouterText({
-      model: 'google/gemini-2.5-flash',
+    const result = await callOpenRouter({
+      model: MODEL,
       system: systemPrompt,
       user: `Prompt créatif: ${prompt}\nPlateforme: ${platform || 'linkedin'}\nDimensions: ${dim.w}x${dim.h}px\nRéponds uniquement en JSON (le canvas).`,
       maxTokens: 2000,
       temperature: 0.8,
     });
 
+    const supabase = getServiceClient();
+
+    // Log AI usage for cost tracking
+    logAIUsageFromResponse(supabase, MODEL, 'generate-social-image', result.usage);
+
+    // Log analytics event for finance tracking
+    supabase.from('analytics_events').insert({
+      event_type: 'ai_token_usage',
+      event_data: {
+        function_name: 'generate-social-image',
+        model: MODEL,
+        prompt_tokens: result.usage?.prompt_tokens || 0,
+        completion_tokens: result.usage?.completion_tokens || 0,
+        total_tokens: result.usage?.total_tokens || 0,
+      },
+      user_id: auth.userId,
+    }).then(() => {}).catch(() => {});
+
     let canvasResult;
     try {
-      let text = result.trim();
+      let text = result.content.trim();
       if (text.startsWith('```')) text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
       canvasResult = JSON.parse(text);
     } catch {

@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award, Plug } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award, Plug, MessageSquare } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -30,6 +30,7 @@ import { ParmenionDashboard } from './ParmenionDashboard';
 import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { MarinaDashboard } from './MarinaDashboard';
 import { ProspectPipelineDashboard } from './ProspectPipelineDashboard';
+import { SocialContentDashboard } from './SocialContentDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 const CocoonContentArchitectModal = lazy(() =>
   import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
@@ -266,6 +267,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'eeat', label: 'E-E-A-T', icon: Award, group: 'automation' },
         { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
         { id: 'prospects', label: 'Prospection', icon: Users, group: 'automation' },
+        { id: 'social-hub', label: 'Social Hub', icon: MessageSquare, group: 'automation' },
       ],
     },
   ];
@@ -300,6 +302,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'eeat': return <EeatScoringAdmin />;
       case 'marina': return <MarinaDashboard />;
       case 'prospects': return <ProspectPipelineDashboard />;
+      case 'social-hub': return <SocialContentDashboard />;
       default: return <AnalyticsDashboard />;
     }
   };
