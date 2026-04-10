@@ -429,7 +429,7 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl overflow-hidden">
+      <DialogContent className="max-w-3xl max-h-[85vh] my-4 mx-4 overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             Carte d'identité
