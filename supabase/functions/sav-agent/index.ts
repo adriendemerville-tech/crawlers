@@ -1864,6 +1864,41 @@ ${alertBlock}\n`;
           } catch (_) { /* best effort */ }
         }
 
+          // ── SEASONAL CONTEXT + NEWS ──
+          try {
+            const { data: seasonalCtx } = await sb.rpc('get_active_seasonal_context', {
+              p_sector: (s as any).market_sector || null,
+              p_geo: 'FR',
+            });
+            if (seasonalCtx?.length) {
+              const peaks = seasonalCtx.filter((sc: any) => sc.is_in_peak);
+              const preps = seasonalCtx.filter((sc: any) => sc.is_in_prep && !sc.is_in_peak);
+              if (peaks.length || preps.length) {
+                contextSnippet += `\n### 🗓️ Contexte saisonnier ${s.domain}\n`;
+                for (const p of peaks) {
+                  contextSnippet += `  🔴 PIC ACTUEL: ${p.event_name} — Keywords: ${(p.peak_keywords || []).join(', ')}\n`;
+                }
+                for (const p of preps) {
+                  contextSnippet += `  🟡 PRÉPA (J-${p.days_until_start}): ${p.event_name} — Keywords: ${(p.peak_keywords || []).join(', ')}\n`;
+                }
+                contextSnippet += `  → Vérifie si ${s.domain} a des pages couvrant ces sujets. Si oui, sont-elles à jour et performantes ?\n`;
+              }
+            }
+
+            // Fetch sector news
+            const { data: sectorNews } = await sb.rpc('get_seasonal_news', {
+              p_sector: (s as any).market_sector || null,
+              p_geo: 'FR',
+              p_limit: 3,
+            });
+            if (sectorNews?.length) {
+              contextSnippet += `\n### 📰 Actualités sectorielles ${s.domain}\n`;
+              for (const n of sectorNews) {
+                contextSnippet += `  [${n.news_type}] ${n.headline}\n    → ${n.summary || ''}\n`;
+              }
+            }
+          } catch (_) { /* best effort */ }
+
         // ── Fetch Top 5 Priority Pages per site ──
         for (const s of sites) {
           try {
