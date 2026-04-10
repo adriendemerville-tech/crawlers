@@ -42,7 +42,7 @@ const faq = [
   { q: 'Le Social Content Hub remplace-t-il Hootsuite ou Buffer ?', a: 'Il ne s\'agit pas d\'un simple planificateur. Le Social Hub croise vos données SEO/GEO (mots-clés, cocon, EEAT, saisonnalité) avec la distribution sociale. Aucun outil concurrent ne propose ce croisement de données.' },
   { q: 'Quelles plateformes sont supportées ?', a: 'LinkedIn (API Marketing v2), Facebook et Instagram (Meta Graph API). Les publications utilisent les APIs officielles — pas de scraping.' },
   { q: 'Comment fonctionne le Smart Linking ?', a: 'L\'algorithme score chaque page de votre site sur 3 axes : pertinence du mot-clé (keyword_universe), position dans le cocon sémantique et score EEAT. La page avec le meilleur score composite est automatiquement suggérée.' },
-  { q: 'Faut-il un abonnement Pro Agency ?', a: 'Oui, le Social Content Hub est réservé aux abonnés Pro Agency (29€/mois) et Pro Agency+ (99€/mois). Le quota mensuel de posts est de 30 (Pro) et 100 (Pro+).' },
+  { q: 'Faut-il un abonnement Pro Agency ?', a: '5 contenus sont gratuits chaque mois pour tous les utilisateurs inscrits. Au-delà, le plan Pro Agency (29€/mois) débloque un accès illimité, la publication directe et les analytics avancées.' },
   { q: 'Mes données sociales restent-elles privées ?', a: 'Oui. Les tokens OAuth sont chiffrés. Les contenus générés par l\'IA n\'utilisent que vos données de site (mots-clés, cocon) — jamais vos données personnelles.' },
   { q: 'Qu\'est-ce que le Smart Embed ?', a: 'Quand un de vos posts LinkedIn ou Facebook performe bien (engagement élevé), le système suggère de l\'intégrer en oEmbed/iframe dans une page de votre site pour renforcer les signaux sociaux et enrichir le contenu.' },
 ];
