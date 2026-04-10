@@ -32,13 +32,15 @@ Deno.serve(handleRequest(async (req) => {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return jsonError('Unauthorized', 401);
 
+  const body = await req.json();
   const {
     tracked_site_id,
     page_url,
     mode,
     suggestions: providedSuggestions,
     analysis_id,
-  } = await req.json();
+    manual_annotations: bodyManualAnnotations,
+  } = body;
 
   if (!tracked_site_id || !page_url) {
     return jsonError('tracked_site_id and page_url are required', 400);
