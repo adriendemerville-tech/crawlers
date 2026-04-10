@@ -2498,10 +2498,10 @@ Deno.serve(handleRequest(async (req) => {
     if (htmlAnalysis.h1Count === 1) semanticScore += 20;
     if (htmlAnalysis.wordCount >= 500) semanticScore += 20;
     
-    // D. AI Ready (30 pts)
+    // D. AI Ready (50 pts) — expanded with robots.txt & llms.txt quality
     let aiReadyScore = 0;
     if (htmlAnalysis.hasSchemaOrg) {
-      aiReadyScore += 15;
+      aiReadyScore += 12;
       if (htmlAnalysis.isSchemaJsGenerated) {
         aiReadyScore -= 3;
         console.log('[Expert-Audit] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
@@ -2511,7 +2511,16 @@ Deno.serve(handleRequest(async (req) => {
       aiReadyScore -= 4;
       console.log('[Expert-Audit] ⚠️ Title/Meta/OG is JS-generated — AI Ready score penalized (-4)');
     }
-    if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
+    if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 8;
+    // Robots.txt quality bonus (up to 10 pts)
+    if (robotsAnalysis.exists) {
+      aiReadyScore += Math.round(robotsAnalysis.qualityScore / 10); // 0-10 pts
+    }
+    // llms.txt quality bonus (up to 15 pts)
+    if (llmsTxtAnalysis.exists) {
+      aiReadyScore += 5; // existence bonus
+      aiReadyScore += Math.round(llmsTxtAnalysis.qualityScore / 10); // 0-10 pts quality
+    }
     
     // E. Security (20 pts) - Enhanced with HSTS
     let securityScore = 0;
@@ -2557,14 +2566,19 @@ Deno.serve(handleRequest(async (req) => {
       },
       aiReady: {
         score: aiReadyScore,
-        maxScore: 30,
+        maxScore: 50,
         hasSchemaOrg: htmlAnalysis.hasSchemaOrg,
         schemaTypes: htmlAnalysis.schemaTypes,
         isSchemaJsGenerated: htmlAnalysis.isSchemaJsGenerated,
         isMetaJsGenerated: htmlAnalysis.isMetaJsGenerated,
         hasRobotsTxt: robotsAnalysis.exists,
         robotsPermissive: robotsAnalysis.permissive,
+        robotsQualityScore: robotsAnalysis.qualityScore,
+        robotsQualityDetails: robotsAnalysis.qualityDetails,
         allowsAIBots: crawlersResult?.allowsAIBots,
+        hasLlmsTxt: llmsTxtAnalysis.exists,
+        llmsTxtQualityScore: llmsTxtAnalysis.qualityScore,
+        llmsTxtQualityDetails: llmsTxtAnalysis.qualityDetails,
       },
       security: {
         score: securityScore,
