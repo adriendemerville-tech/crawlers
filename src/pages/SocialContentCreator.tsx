@@ -114,7 +114,7 @@ const SocialContentCreator = memo(() => {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
           <div className="relative max-w-5xl mx-auto px-4 text-center">
             <Badge variant="outline" className="mb-6 text-sm px-4 py-1.5 border-primary/30">
-              <Share2 className="h-3.5 w-3.5 mr-1.5" /> Pro Agency
+              <Share2 className="h-3.5 w-3.5 mr-1.5" /> 5 contenus gratuits / mois
             </Badge>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-tight mb-6">
               Social Content Hub
