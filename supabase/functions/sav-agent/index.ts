@@ -466,6 +466,7 @@ try {
     // ── Detect backend query intent from creator ──
     if (isCreatorMode) {
       const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const lowerMsgCheck = lastUserMsg.toLowerCase();
       
       // ── Felix self-configuration detection ──
       const felixConfigKeywords = ['ton', 'tone', 'longueur', 'verbosité', 'max_tokens', 'modèle', 'model', 'cta', 'vouvoiement', 'tutoiement', 'emojis', 'emoji', 'greeting', 'salutation', 'proactif', 'proactive', 'confidentialité', 'niveau', 'level', 'paramètre', 'config'];
@@ -546,7 +547,6 @@ Si aucun changement détecté, retourne : { "changes": [], "summary": "Aucun cha
         "cycle en cours", "dernier cycle", "prochain cycle",
         "diagnostic autopilot", "observations autopilot",
       ];
-      const lowerMsgCheck = lastUserMsg.toLowerCase();
       const isParmenionQuestion = parmenionKeywords.some(kw => lowerMsgCheck.includes(kw));
       
       if (isParmenionQuestion) {
