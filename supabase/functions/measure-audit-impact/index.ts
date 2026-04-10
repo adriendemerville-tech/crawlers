@@ -416,7 +416,7 @@ try {
           updatePayload.next_measurement_at = null
         }
 
-        // If reaching T+90 or complete, compute final correlation with GA4
+        // If reaching T+90 or complete, compute final correlation with GA4 + retrospective calibration
         if (phase.nextPhase === 'complete' || phase.nextPhase === 't90') {
           const latestGsc = gscCurrent || snapshot.gsc_t60 || snapshot.gsc_t30
           if (latestGsc && snapshot.gsc_baseline) {
@@ -427,13 +427,26 @@ try {
               totalRecos: snapshot.recommendations_count || 0,
               codeDeployed,
               actionPlanProgress,
-              // GA4 enrichment: compare baseline vs current
               ga4Baseline: snapshot.ga4_baseline as GA4Engagement | null,
               ga4Current: ga4Current || snapshot.ga4_t60 || snapshot.ga4_t30,
             })
-            updatePayload.impact_score = correlation.impact_score
+            
+            // Apply retrospective calibration from historical data
+            const calibration = await getRetrospectiveCalibration(supabase, snapshot.audit_type)
+            const calibratedScore = Math.round(correlation.impact_score * calibration.multiplier)
+            
+            updatePayload.impact_score = calibratedScore
             updatePayload.reliability_grade = correlation.reliability_grade
-            updatePayload.correlation_data = correlation.correlation_data
+            updatePayload.correlation_data = {
+              ...correlation.correlation_data,
+              calibration: {
+                multiplier: calibration.multiplier,
+                sample_size: calibration.sampleSize,
+                avg_error: calibration.avgError,
+                raw_score: correlation.impact_score,
+                calibrated_score: calibratedScore,
+              },
+            }
           }
         }
 
