@@ -252,7 +252,7 @@ export function FloatingChatBubble() {
       {/* Chat Window - lazy loaded */}
       {isOpen && (
         <Suspense fallback={
-          <div className="fixed bottom-20 z-[110] w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center" style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}>
+          <div className="fixed bottom-20 z-[110] w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center" style={{ right: 'max(0.625rem, calc((100vw - 72rem) / 2 + 0.5rem))' }}>
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         }>
@@ -271,7 +271,7 @@ export function FloatingChatBubble() {
       {showOnboardingPulse && !isOpen && (
         <div
           className="fixed bottom-[72px] z-[110] max-w-[220px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
-          style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+           style={{ right: 'max(0.625rem, calc((100vw - 72rem) / 2 + 0.5rem))' }}
           onClick={handleOpen}
         >
           <button
@@ -289,7 +289,7 @@ export function FloatingChatBubble() {
       {guestBubbleVisible && !isOpen && !showOnboardingPulse && (
         <div
           className="fixed bottom-[72px] z-[110] max-w-[240px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
-          style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+           style={{ right: 'max(0.625rem, calc((100vw - 72rem) / 2 + 0.5rem))' }}
           onClick={() => { setShowGuestQuizSuggestion(false); setIsOpen(true); }}
         >
           <button
@@ -307,7 +307,7 @@ export function FloatingChatBubble() {
       {showHallucinationBubble && !isOpen && (
         <div
           className="fixed bottom-[72px] z-[110] max-w-[260px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group animate-bounce"
-          style={{ right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}
+          style={{ right: 'max(0.625rem, calc((100vw - 72rem) / 2 + 0.5rem))' }}
           onClick={() => {
             setShowHallucinationBubble(false);
             setIsOpen(true);
@@ -332,14 +332,14 @@ export function FloatingChatBubble() {
           <button
             onClick={isOpen ? () => setIsOpen(false) : handleOpen}
             className={`fixed bottom-5 z-[110] h-[3.15rem] w-[3.15rem] rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
-            style={{ right: 'max(2rem, calc((100vw - 72rem) / 2 + 1.75rem))' }}
+            style={{ right: 'max(1rem, calc((100vw - 72rem) / 2 + 0.875rem))' }}
             aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
           >
             <CrawlersLogo size={56} className="transition-opacity duration-300" />
           </button>
           {/* Notification Badge — outside button to avoid overflow clipping */}
           {(unreadCount > 0 || showOnboardingPulse || showGuestQuizSuggestion || showHallucinationBubble) && !isOpen && (
-            <span className="fixed bottom-[54px] z-[111] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(1.625rem, calc((100vw - 72rem) / 2 + 1.625rem))' }}>
+            <span className="fixed bottom-[54px] z-[111] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(0.8rem, calc((100vw - 72rem) / 2 + 0.8rem))' }}>
               {(showOnboardingPulse || showGuestQuizSuggestion) ? '!' : unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
