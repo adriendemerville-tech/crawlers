@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2, CreditCard } from 'lucide-react';
+import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2, CreditCard, BookOpen, BarChart3 } from 'lucide-react';
 import { detectMatriceType, type MatriceType, type DetectionResult } from '@/utils/matrice/typeDetector';
 import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCleaner';
 import { sanitizeAllPrompts } from '@/utils/matrice/promptSanitizer';
@@ -19,6 +19,28 @@ export interface IdentityCard {
   brandName?: string; // extracted from [MARQUE] or similar
 }
 
+/** Per-engine citation instructions extracted from "Engine notes" sheet */
+export interface EngineNote {
+  engine: string;
+  howToAskCitations: string;
+  whyItMatters: string;
+  sourceUrl: string;
+}
+
+/** Scoring rubric field from "Scoring Guide" sheet */
+export interface ScoringField {
+  field: string;
+  whatToCode: string;
+  allowedValues: string;
+  meaning: string;
+}
+
+/** Metadata extracted from secondary sheets (Engine notes + Scoring Guide) */
+export interface MatrixMetadata {
+  engineNotes: EngineNote[];
+  scoringGuide: ScoringField[];
+}
+
 interface Props {
   open: boolean;
   sheetNames: string[];
@@ -29,6 +51,7 @@ interface Props {
     matriceType: MatriceType;
     cleaningResult: CleaningResult;
     identityCard?: IdentityCard;
+    metadata?: MatrixMetadata;
   }) => void;
   onClose: () => void;
 }
@@ -68,11 +91,56 @@ const VALUE_COLUMN_PATTERNS = [
 ];
 
 function isVariableSheet(sheetName: string, headers: string[]): boolean {
-  // Check sheet name
   if (VARIABLE_SHEET_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
-  // Check if first column looks like variable keys (e.g. [MARQUE], [SITE_MARQUE])
   if (headers.length >= 2 && VARIABLE_COLUMN_PATTERNS.some(p => p.test(headers[0]))) return true;
   return false;
+}
+
+/* ── Engine Notes / Scoring Guide detection ────────────────────────── */
+
+const ENGINE_NOTES_PATTERNS = [/^engine.?notes?/i, /^notes?.?moteur/i, /^citation.?guide/i];
+const SCORING_GUIDE_PATTERNS = [/^scoring.?guide/i, /^grille.?scoring/i, /^scoring$/i, /^codage/i];
+
+function isEngineNotesSheet(sheetName: string, headers: string[]): boolean {
+  if (ENGINE_NOTES_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
+  const hJoined = headers.map(h => h.toLowerCase()).join('|');
+  return hJoined.includes('how_to_ask') && hJoined.includes('engine');
+}
+
+function isScoringGuideSheet(sheetName: string, headers: string[]): boolean {
+  if (SCORING_GUIDE_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
+  const hJoined = headers.map(h => h.toLowerCase()).join('|');
+  return hJoined.includes('what_to_code') && hJoined.includes('allowed_values');
+}
+
+function extractEngineNotes(rows: Record<string, any>[], headers: string[]): EngineNote[] {
+  const engineCol = headers.find(h => /^engine$/i.test(h)) || headers[0];
+  const howCol = headers.find(h => /how_to_ask/i.test(h)) || headers[1];
+  const whyCol = headers.find(h => /why_it_matters/i.test(h)) || headers[2];
+  const srcCol = headers.find(h => /source_url/i.test(h)) || headers[3];
+  return rows
+    .filter(r => String(r[engineCol] ?? '').trim())
+    .map(r => ({
+      engine: String(r[engineCol] ?? '').trim(),
+      howToAskCitations: String(r[howCol] ?? '').trim(),
+      whyItMatters: String(r[whyCol] ?? '').trim(),
+      sourceUrl: String(r[srcCol] ?? '').trim(),
+    }));
+}
+
+function extractScoringGuide(rows: Record<string, any>[], headers: string[]): ScoringField[] {
+  const fieldCol = headers.find(h => /^field$/i.test(h)) || headers[0];
+  const whatCol = headers.find(h => /what_to_code/i.test(h)) || headers[1];
+  const valuesCol = headers.find(h => /allowed_values/i.test(h)) || headers[2];
+  const meaningCol = headers.find(h => /^meaning$/i.test(h)) || headers[3];
+  return rows
+    .filter(r => String(r[fieldCol] ?? '').trim())
+    .map(r => ({
+      field: String(r[fieldCol] ?? '').trim(),
+      whatToCode: String(r[whatCol] ?? '').trim(),
+      allowedValues: String(r[valuesCol] ?? '').trim(),
+      meaning: String(r[meaningCol] ?? '').trim(),
+    }));
 }
 
 function extractIdentityCard(rows: Record<string, any>[], headers: string[]): IdentityCard {
@@ -112,17 +180,20 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const [cleaning, setCleaning] = useState<CleaningResult | null>(null);
   const [identityCard, setIdentityCard] = useState<IdentityCard | null>(null);
   const [detectedVariableSheets, setDetectedVariableSheets] = useState<string[]>([]);
+  const [detectedMetaSheets, setDetectedMetaSheets] = useState<Record<string, 'engine_notes' | 'scoring_guide'>>({});
+  const [matrixMetadata, setMatrixMetadata] = useState<MatrixMetadata | null>(null);
   const [loading, setLoading] = useState(false);
 
   const hasMultipleSheets = sheetNames.length > 1;
   const steps = hasMultipleSheets ? STEPS_MULTI : STEPS_SINGLE;
 
-  // ── Auto-detect variable sheets on open ─────────────────────────────
+  // ── Auto-detect variable + metadata sheets on open ──────────────────
   useEffect(() => {
     if (!open || !workbook || sheetNames.length === 0) return;
-    const detectVariableSheets = async () => {
+    const detectSpecialSheets = async () => {
       const { utils } = await import('xlsx');
       const varSheets: string[] = [];
+      const metaSheets: Record<string, 'engine_notes' | 'scoring_guide'> = {};
       for (const name of sheetNames) {
         const sheet = workbook.Sheets[name];
         const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
@@ -130,12 +201,17 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
           const h = Object.keys(rows[0]);
           if (isVariableSheet(name, h)) {
             varSheets.push(name);
+          } else if (isEngineNotesSheet(name, h)) {
+            metaSheets[name] = 'engine_notes';
+          } else if (isScoringGuideSheet(name, h)) {
+            metaSheets[name] = 'scoring_guide';
           }
         }
       }
       setDetectedVariableSheets(varSheets);
+      setDetectedMetaSheets(metaSheets);
     };
-    detectVariableSheets();
+    detectSpecialSheets();
   }, [open, workbook, sheetNames]);
 
   // ── Toggle a sheet in multi-select ──────────────────────────────────
@@ -153,6 +229,8 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       const { utils } = await import('xlsx');
       let dataRows: Record<string, any>[] = [];
       let card: IdentityCard | null = null;
+      let engineNotes: EngineNote[] = [];
+      let scoringGuide: ScoringField[] = [];
       const dataSheetNames: string[] = [];
 
       for (const sheetName of sheets) {
@@ -169,7 +247,21 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         if (isVariableSheet(sheetName, h)) {
           console.log(`[ImportStepper] Variable sheet detected: "${sheetName}" (${rows.length} vars)`);
           card = extractIdentityCard(rows, h);
-          continue; // Don't merge Variable rows into data rows
+          continue;
+        }
+
+        // Check Engine Notes sheet
+        if (isEngineNotesSheet(sheetName, h)) {
+          engineNotes = extractEngineNotes(rows, h);
+          console.log(`[ImportStepper] Engine notes extracted: ${engineNotes.length} engines (${engineNotes.map(e => e.engine).join(', ')})`);
+          continue;
+        }
+
+        // Check Scoring Guide sheet
+        if (isScoringGuideSheet(sheetName, h)) {
+          scoringGuide = extractScoringGuide(rows, h);
+          console.log(`[ImportStepper] Scoring guide extracted: ${scoringGuide.length} fields (${scoringGuide.map(f => f.field).join(', ')})`);
+          continue;
         }
 
         console.log(`[ImportStepper] Data sheet "${sheetName}": ${rows.length} rows, ${h.length} cols`);
@@ -177,7 +269,25 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         dataRows = dataRows.concat(rows);
       }
 
+      // Also parse non-selected meta sheets automatically (they enrich, not data)
+      for (const [metaName, metaType] of Object.entries(detectedMetaSheets)) {
+        if (sheets.includes(metaName)) continue; // already processed
+        const sheet = workbook.Sheets[metaName];
+        const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+        if (rows.length === 0) continue;
+        const h = Object.keys(rows[0]);
+        if (metaType === 'engine_notes' && engineNotes.length === 0) {
+          engineNotes = extractEngineNotes(rows, h);
+          console.log(`[ImportStepper] Auto-extracted engine notes from "${metaName}": ${engineNotes.length} engines`);
+        } else if (metaType === 'scoring_guide' && scoringGuide.length === 0) {
+          scoringGuide = extractScoringGuide(rows, h);
+          console.log(`[ImportStepper] Auto-extracted scoring guide from "${metaName}": ${scoringGuide.length} fields`);
+        }
+      }
+
       setIdentityCard(card);
+      const meta: MatrixMetadata = { engineNotes, scoringGuide };
+      setMatrixMetadata(meta.engineNotes.length > 0 || meta.scoringGuide.length > 0 ? meta : null);
 
       if (!dataRows.length) {
         // If only variable sheets were selected, warn user
@@ -232,6 +342,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       setDetection(null);
       setCleaning(null);
       setIdentityCard(null);
+      setMatrixMetadata(null);
       setLoading(false);
     }
   }, [open, sheetNames, workbook]);
@@ -264,6 +375,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       matriceType: selectedType,
       cleaningResult: cleaning,
       identityCard: identityCard || undefined,
+      metadata: matrixMetadata || undefined,
     });
   };
 
@@ -349,6 +461,20 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
             {sheetNames.map(name => {
               const isChecked = selectedSheets.includes(name);
               const isVar = detectedVariableSheets.includes(name);
+              const metaType = detectedMetaSheets[name];
+              const isMetaSheet = !!metaType;
+              const sheetIcon = isVar ? <CreditCard className="h-4 w-4 shrink-0 text-amber-500" />
+                : metaType === 'engine_notes' ? <BookOpen className="h-4 w-4 shrink-0 text-cyan-500" />
+                : metaType === 'scoring_guide' ? <BarChart3 className="h-4 w-4 shrink-0 text-emerald-500" />
+                : <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />;
+              const badgeLabel = isVar ? "Carte d'identité"
+                : metaType === 'engine_notes' ? 'Instructions moteur'
+                : metaType === 'scoring_guide' ? 'Grille scoring'
+                : null;
+              const badgeColor = isVar ? 'border-amber-500/30 text-amber-500'
+                : metaType === 'engine_notes' ? 'border-cyan-500/30 text-cyan-500'
+                : metaType === 'scoring_guide' ? 'border-emerald-500/30 text-emerald-500'
+                : '';
               return (
                 <button
                   key={name}
@@ -362,16 +488,15 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                     onCheckedChange={() => toggleSheet(name)}
                     className="shrink-0"
                   />
-                  {isVar ? (
-                    <CreditCard className="h-4 w-4 shrink-0 text-amber-500" />
-                  ) : (
-                    <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  )}
+                  {sheetIcon}
                   <span className="truncate text-sm">{name}</span>
-                  {isVar && (
-                    <Badge variant="outline" className="ml-auto text-[10px] border-amber-500/30 text-amber-500">
-                      Carte d'identité
+                  {badgeLabel && (
+                    <Badge variant="outline" className={`ml-auto text-[10px] ${badgeColor}`}>
+                      {badgeLabel}
                     </Badge>
+                  )}
+                  {isMetaSheet && !isChecked && (
+                    <span className="text-[9px] text-muted-foreground/60">auto</span>
                   )}
                 </button>
               );
@@ -412,7 +537,30 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
               </div>
             )}
 
-            {/* Show detection mismatch warning */}
+            {/* Matrix metadata detected */}
+            {matrixMetadata && (
+              <div className="p-2.5 rounded-lg bg-cyan-500/5 border border-cyan-500/20 text-xs space-y-1">
+                {matrixMetadata.engineNotes.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-cyan-500" />
+                    <span className="text-muted-foreground">
+                      Instructions moteur : <strong className="text-foreground">{matrixMetadata.engineNotes.map(e => e.engine).join(', ')}</strong>
+                      <span className="text-muted-foreground/60 ml-1">— enrichira chaque prompt selon son engine</span>
+                    </span>
+                  </div>
+                )}
+                {matrixMetadata.scoringGuide.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <BarChart3 className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-muted-foreground">
+                      Grille de scoring : <strong className="text-foreground">{matrixMetadata.scoringGuide.length} critères</strong>
+                      <span className="text-muted-foreground/60 ml-1">— servira de rubrique d'évaluation</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {detection && selectedType && detection.type !== selectedType && detection.confidence >= 0.6 && (
               <p className="text-xs text-amber-400">
                 ⚠ Les colonnes suggèrent plutôt « {TYPE_LABELS[detection.type].label} » ({Math.round(detection.confidence * 100)}% confiance).

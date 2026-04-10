@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
-import ImportStepper from '@/components/Matrice/ImportStepper';
+import ImportStepper, { type MatrixMetadata } from '@/components/Matrice/ImportStepper';
 import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
@@ -85,6 +85,7 @@ export default function MatricePrompt() {
   const [errorDesc, setErrorDesc] = useState('');
   const [submittingError, setSubmittingError] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [activeMetadata, setActiveMetadata] = useState<MatrixMetadata | null>(null);
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
 
@@ -523,7 +524,13 @@ export default function MatricePrompt() {
         }));
 
         const { data: fnData, error: fnError } = await supabase.functions.invoke('parse-matrix-geo', {
-          body: { url: url.trim(), benchmark_items: benchmarkItems, mode: 'benchmark' },
+          body: {
+            url: url.trim(),
+            benchmark_items: benchmarkItems,
+            mode: 'benchmark',
+            engine_notes: activeMetadata?.engineNotes,
+            scoring_rubric: activeMetadata?.scoringGuide,
+          },
         });
 
         if (fnError || !fnData?.success) {
@@ -563,7 +570,12 @@ export default function MatricePrompt() {
         : 'audit-matrice';
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke(functionName, {
-        body: { url: url.trim(), items },
+        body: {
+          url: url.trim(),
+          items,
+          engine_notes: activeMetadata?.engineNotes,
+          scoring_rubric: activeMetadata?.scoringGuide,
+        },
       });
 
       if (fnError || !fnData?.success) {
@@ -1130,15 +1142,22 @@ export default function MatricePrompt() {
         open={xlsxStepperOpen}
         sheetNames={xlsxStepperSheets}
         workbook={xlsxWorkbookRef}
-        onComplete={({ rows: importedRows, matriceType, identityCard }) => {
+        onComplete={({ rows: importedRows, matriceType, identityCard, metadata }) => {
           setXlsxStepperOpen(false);
           setActiveMatriceType(matriceType);
+          setActiveMetadata(metadata || null);
           // Auto-detect scoring method from imported data
           const headers = importedRows.length > 0 ? Object.keys(importedRows[0]) : [];
           const detection = detectScoringMethod(headers, importedRows.slice(0, 10), matriceType);
           setActiveScoringMethod(detection.method);
           if (detection.source !== 'default') {
             toast.info(`Méthode de scoring détectée : ${getScoringConfig(detection.method).label} (confiance: ${Math.round(detection.confidence * 100)}%)`, { duration: 4000 });
+          }
+          if (metadata) {
+            const parts: string[] = [];
+            if (metadata.engineNotes.length > 0) parts.push(`${metadata.engineNotes.length} instructions moteur`);
+            if (metadata.scoringGuide.length > 0) parts.push(`${metadata.scoringGuide.length} critères de scoring`);
+            if (parts.length > 0) toast.success(`Métadonnées intégrées : ${parts.join(', ')}`, { duration: 4000 });
           }
           processImportedRows(importedRows, xlsxFileName, matriceType);
           setXlsxWorkbookRef(null);

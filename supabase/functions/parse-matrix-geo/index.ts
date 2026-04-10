@@ -39,19 +39,55 @@ interface BenchmarkResult extends GeoResult {
 
 /* ── Engine-specific system prompts ──────────────────────────────── */
 
-const ENGINE_PROMPTS: Record<string, string> = {
+const DEFAULT_ENGINE_PROMPTS: Record<string, string> = {
   chatgpt: `Tu simules ChatGPT. Réponds à la question de l'utilisateur comme le ferait ChatGPT. Sois factuel, cite des sources si pertinent.`,
   gemini: `Tu simules Google Gemini. Réponds comme Gemini le ferait : synthétique, avec des données vérifiables.`,
   perplexity: `Tu simules Perplexity AI. Réponds avec des citations de sources, des liens, une synthèse structurée.`,
   copilot: `Tu simules Microsoft Copilot. Réponds de manière concise et pratique, avec des suggestions actionnables.`,
+  claude: `Tu simules Claude (Anthropic). Réponds de manière nuancée, analytique, avec des citations de sources quand pertinent.`,
 };
 
-function getEngineSystemPrompt(engine: string): string {
+interface EngineNoteInput {
+  engine: string;
+  howToAskCitations: string;
+  whyItMatters: string;
+  sourceUrl: string;
+}
+
+interface ScoringFieldInput {
+  field: string;
+  whatToCode: string;
+  allowedValues: string;
+  meaning: string;
+}
+
+function getEngineSystemPrompt(engine: string, engineNotes?: EngineNoteInput[]): string {
   const lower = engine.toLowerCase();
-  for (const [key, prompt] of Object.entries(ENGINE_PROMPTS)) {
+  
+  // Try matching from imported engine notes first (higher fidelity)
+  if (engineNotes?.length) {
+    const note = engineNotes.find(n => lower.includes(n.engine.toLowerCase()));
+    if (note) {
+      return `Tu simules ${note.engine}. ${note.howToAskCitations}
+
+Contexte important : ${note.whyItMatters}`;
+    }
+  }
+  
+  // Fallback to defaults
+  for (const [key, prompt] of Object.entries(DEFAULT_ENGINE_PROMPTS)) {
     if (lower.includes(key)) return prompt;
   }
   return `Tu es un moteur de recherche IA. Réponds de manière factuelle et structurée.`;
+}
+
+/** Build scoring rubric instructions from imported Scoring Guide */
+function buildScoringRubric(scoringGuide?: ScoringFieldInput[]): string {
+  if (!scoringGuide?.length) return '';
+  const rubricLines = scoringGuide.map(f => 
+    `- **${f.field}** : ${f.whatToCode} (Valeurs: ${f.allowedValues}) → ${f.meaning}`
+  ).join('\n');
+  return `\n\nGRILLE D'ÉVALUATION À APPLIQUER :\n${rubricLines}\n\nUtilise cette grille pour structurer ton analyse de citation.`;
 }
 
 /* ── LLM GEO evaluation (standard mode) ─────────────────────────── */
@@ -123,7 +159,9 @@ Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string c
 /* ── Benchmark evaluation: send full prompt as-is to engine ──────── */
 
 async function evaluateBenchmark(
-  prompt: string, brandUrl: string, engine: string, llmName: string, retryCount = 0
+  prompt: string, brandUrl: string, engine: string, llmName: string,
+  engineNotes?: EngineNoteInput[], scoringRubric?: ScoringFieldInput[],
+  retryCount = 0
 ): Promise<{ score: number; raw: Record<string, any>; citation_found: boolean; citation_rank: number | null; citation_context: string }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 0, raw: { error: 'No API key' }, citation_found: false, citation_rank: null, citation_context: '' }
@@ -132,8 +170,8 @@ async function evaluateBenchmark(
   const RETRY_DELAYS = [2000, 5000]
 
   try {
-    // Step 1: Send the full prompt to the simulated engine
-    const enginePrompt = getEngineSystemPrompt(engine);
+    // Step 1: Send the full prompt to the simulated engine (enriched with Engine Notes)
+    const enginePrompt = getEngineSystemPrompt(engine, engineNotes);
     const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -156,7 +194,7 @@ async function evaluateBenchmark(
       await resp.text()
       if ((status === 429 || status >= 500) && retryCount < MAX_RETRIES) {
         await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
-        return evaluateBenchmark(prompt, brandUrl, engine, llmName, retryCount + 1)
+        return evaluateBenchmark(prompt, brandUrl, engine, llmName, engineNotes, scoringRubric, retryCount + 1)
       }
       return { score: 0, raw: { error: `API error ${status}` }, citation_found: false, citation_rank: null, citation_context: '' }
     }
@@ -165,7 +203,14 @@ async function evaluateBenchmark(
     const engineResponse = data.choices?.[0]?.message?.content || ''
     trackTokenUsage('parse-matrix-geo', llmName || 'google/gemini-2.5-flash', data.usage, brandUrl)
 
-    // Step 2: Analyze the response for citation and rank
+    // Step 2: Analyze the response for citation and rank (enriched with Scoring Guide)
+    const rubricInstructions = buildScoringRubric(scoringRubric);
+    const scoringSystemPrompt = `Tu analyses la réponse d'un moteur IA pour vérifier si une marque/site est cité.
+Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context": "<phrase où la marque apparaît>", "brand_mention": <bool>, "brand_site_cited": <bool>, "brand_url_count": <number>, "recommendation_direction": "<Positive|Neutre|Négative|N/A>", "description_accuracy": "<Exacte|Partiellement exacte|Inexacte|Impossible à vérifier>", "primary_source_type": "<Propriétaire|Tierce|Mixte|Aucune>"}
+- cited: true si la marque/URL est mentionnée (même partiellement, par nom de domaine ou nom de marque)
+- rank: position dans la liste de recommandations (1 = premier cité, 2 = deuxième, etc. null si absent)
+- context: la phrase exacte de citation (vide si non cité)${rubricInstructions}`;
+
     const scoringResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -175,11 +220,7 @@ async function evaluateBenchmark(
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash-lite',
         messages: [
-          { role: 'system', content: `Tu analyses la réponse d'un moteur IA pour vérifier si une marque/site est cité.
-Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context": "<phrase où la marque apparaît>"}
-- cited: true si la marque/URL est mentionnée (même partiellement, par nom de domaine ou nom de marque)
-- rank: position dans la liste de recommandations (1 = premier cité, 2 = deuxième, etc. null si absent)
-- context: la phrase exacte de citation (vide si non cité)` },
+          { role: 'system', content: scoringSystemPrompt },
           { role: 'user', content: `URL/Marque à chercher: ${brandUrl}\n\nRéponse du moteur IA (${engine}):\n${engineResponse.substring(0, 3000)}` },
         ],
         temperature: 0.1,
@@ -234,7 +275,7 @@ Réponds UNIQUEMENT en JSON: {"cited": <bool>, "rank": <number|null>, "context":
   } catch (e) {
     if (retryCount < MAX_RETRIES) {
       await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
-      return evaluateBenchmark(prompt, brandUrl, engine, llmName, retryCount + 1)
+      return evaluateBenchmark(prompt, brandUrl, engine, llmName, engineNotes, scoringRubric, retryCount + 1)
     }
     return { score: 0, raw: { error: e instanceof Error ? e.message : 'Unknown' }, citation_found: false, citation_rank: null, citation_context: '' }
   }
@@ -267,12 +308,17 @@ Deno.serve(handleRequest(async (req) => {
 
   try {
     const body = await req.json()
-    const { url, items, benchmark_items, mode } = body as {
+    const { url, items, benchmark_items, mode, engine_notes, scoring_rubric } = body as {
       url: string;
       items?: GeoItem[];
       benchmark_items?: BenchmarkItem[];
       mode?: 'standard' | 'benchmark';
+      engine_notes?: EngineNoteInput[];
+      scoring_rubric?: ScoringFieldInput[];
     }
+    
+    if (engine_notes?.length) console.log(`[parse-matrix-geo] Engine notes loaded: ${engine_notes.map(n => n.engine).join(', ')}`)
+    if (scoring_rubric?.length) console.log(`[parse-matrix-geo] Scoring rubric loaded: ${scoring_rubric.length} fields`)
 
     if (!url) {
       return jsonError('url required', 400)
@@ -295,7 +341,8 @@ Deno.serve(handleRequest(async (req) => {
         const batchResults = await Promise.all(
           batch.map(async (item): Promise<BenchmarkResult> => {
             const { score, raw, citation_found, citation_rank, citation_context } = await evaluateBenchmark(
-              item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-2.5-flash'
+              item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-2.5-flash',
+              engine_notes, scoring_rubric
             )
             return {
               id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,

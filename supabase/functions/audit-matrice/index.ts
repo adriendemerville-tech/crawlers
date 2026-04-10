@@ -37,7 +37,7 @@ interface ItemResult {
 /*  LLM prompt evaluation                                              */
 /* ================================================================== */
 
-async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
+async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, scoringRubric?: any[], retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 50, raw: { error: 'No API key', note: 'LLM evaluation unavailable' } }
 
@@ -45,7 +45,15 @@ async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string,
   const RETRY_DELAYS = [2000, 5000]
 
   try {
-    const systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.
+    // Build rubric appendix if scoring guide is available
+    let rubricAppendix = ''
+    if (scoringRubric?.length) {
+      rubricAppendix = '\n\nGrille de scoring à appliquer :\n' + scoringRubric.map((f: any) =>
+        `- ${f.field}: ${f.whatToCode} (Valeurs: ${f.allowedValues})`
+      ).join('\n')
+    }
+
+    const systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.${rubricAppendix}
 
 Réponds UNIQUEMENT avec un JSON: {"score": <number>, "justification": "<string courte>"}`
 
@@ -84,7 +92,7 @@ Score de 0 à 100 pour ce critère:`
         const delay = RETRY_DELAYS[retryCount] || 5000
         console.log(`[audit-matrice] LLM ${status}, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
         await new Promise(r => setTimeout(r, delay))
-        return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+        return evaluateWithLlm(prompt, url, htmlSummary, llmName, scoringRubric, retryCount + 1)
       }
 
       if (status === 402) return { score: 50, raw: { error: 'Payment required', status: 402 } }
@@ -113,7 +121,7 @@ Score de 0 à 100 pour ce critère:`
       const delay = RETRY_DELAYS[retryCount] || 5000
       console.log(`[audit-matrice] LLM error "${e instanceof Error ? e.message : 'unknown'}", retrying in ${delay}ms`)
       await new Promise(r => setTimeout(r, delay))
-      return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+      return evaluateWithLlm(prompt, url, htmlSummary, llmName, scoringRubric, retryCount + 1)
     }
     return { score: 50, raw: { error: e instanceof Error ? e.message : 'Unknown error', retries: retryCount } }
   }
@@ -131,7 +139,8 @@ const clientIp = getClientIp(req)
   if (!acquireConcurrency('audit-matrice', 100)) return concurrencyResponse(corsHeaders)
 
   try {
-    const { url, items } = await req.json() as { url: string; items: ItemInput[] }
+    const { url, items, scoring_rubric } = await req.json() as { url: string; items: ItemInput[]; scoring_rubric?: any[] }
+    if (scoring_rubric?.length) console.log(`[audit-matrice] Scoring rubric loaded: ${scoring_rubric.length} fields`)
 
     if (!url || !items || items.length === 0) {
       return new Response(JSON.stringify({ success: false, error: 'url and items[] required' }), {
@@ -222,7 +231,8 @@ const clientIp = getClientIp(req)
     for (const item of detectedTypes) {
       const llmPromise = evaluateWithLlm(
         item.prompt, normalizedUrl, htmlSummary,
-        item.llm_name || 'google/gemini-2.5-flash'
+        item.llm_name || 'google/gemini-2.5-flash',
+        scoring_rubric
       )
 
       if (item._type === 'prompt') {
