@@ -68,10 +68,11 @@ function ExpandableDetail({ expandedContent }: { expandedContent: string }) {
   );
 }
 
+interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
-  expandedContent?: string; // optional detailed version (e.g. architecture-map)
+  expandedContent?: string;
 }
 
 interface ArchivedConversation {
