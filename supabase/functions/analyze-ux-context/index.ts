@@ -525,7 +525,7 @@ async function captureScreenshotWithAnnotations(
     );
   });
 
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 2500));
 
   const fullHeight = await page.evaluate(() => document.body.scrollHeight);
 
