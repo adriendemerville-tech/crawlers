@@ -99,15 +99,18 @@ function buildAnnotatedSuggestions(suggestions: Suggestion[], annotations: Annot
     }
   }
 
+  // Include ALL suggestions — not just those with current_text.
+  // User-added manual annotations are separate and additive.
   const items: AnnotatedItem[] = suggestions
-    .filter((suggestion) => suggestion.current_text)
     .map((suggestion, index) => {
-      const annotation = annotationsByIndex.get(index) ?? annotationsByText.get(annotationKey(suggestion.current_text));
+      const annotation = annotationsByIndex.get(index)
+        ?? annotationsByText.get(annotationKey(suggestion.current_text))
+        ?? annotationsByText.get(annotationKey(suggestion.title));
       return {
         ...suggestion,
         index,
         rect: annotation?.rect || null,
-        yPosition: annotation?.rect?.y ?? 0,
+        yPosition: annotation?.rect?.y ?? (index * 120), // fallback: stack evenly
       };
     });
 
@@ -196,8 +199,10 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
     [suggestions, annotations]
   );
 
+  // Show ALL suggestions as bubbles — those with rects get connector lines,
+  // those without still appear in the bubble column at estimated positions.
   const positionedSuggestions = useMemo(
-    () => annotatedSuggestions.filter((suggestion) => suggestion.rect),
+    () => annotatedSuggestions,
     [annotatedSuggestions]
   );
 
