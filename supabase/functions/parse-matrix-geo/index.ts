@@ -347,7 +347,8 @@ Deno.serve(handleRequest(async (req) => {
 
       return jsonOk({
         success: true, url: normalizedUrl, mode: 'benchmark',
-        global_score: globalScore, citation_rate: citationRate,
+        global_score: avgRank, citation_rate: citationRate,
+        avg_rank: avgRank,
         total_items: results.length, audit_type: 'geo_benchmark',
         themes, engines, heatmap, results,
       })
