@@ -142,7 +142,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Platform tabs */}
-        <Tabs value={activePlatform} onValueChange={setActivePlatform}>
+        <Tabs value={activePlatform} onValueChange={handlePlatformChange}>
           <TabsList className="grid grid-cols-3">
             <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
             <TabsTrigger value="facebook">Facebook</TabsTrigger>
