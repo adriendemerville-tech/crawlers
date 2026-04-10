@@ -111,6 +111,10 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
         if (metrics.top_pages?.length > 0) {
           await persistGA4TopPages(supabase, user_id, trackedSiteId, startD, endD, metrics.top_pages)
         }
+        // Persist behavioral metrics per page
+        if (metrics.behavioral_pages?.length > 0) {
+          await persistGA4BehavioralMetrics(supabase, user_id, trackedSiteId, startD, endD, metrics.behavioral_pages)
+        }
       }
 
       return jsonOk({ success: true, property_id: resolvedPropertyId, ...metrics })
