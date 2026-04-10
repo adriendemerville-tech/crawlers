@@ -1244,6 +1244,7 @@ ${buildIdentityGapsSection(ctx)}
 ${keywordList || 'Aucun mot-clé trouvé'}
 ${croMatrixSection}
 ${chunkabilitySection}
+${buildGA4BehavioralSection(ga4Context)}
 ## Instructions
 Analyse cette page selon les **8 axes** suivants, en prenant en compte le contexte business ci-dessus :
 
