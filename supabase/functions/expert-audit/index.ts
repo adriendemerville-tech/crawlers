@@ -987,33 +987,75 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
 
 async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
   console.log('Checking robots.txt...');
+  const emptyQuality = { length: 0, hasSitemapDirective: false, hasMultipleUserAgents: false, hasAIBotRules: false, hasCrawlDelay: false, hasComments: false, specificity: 'none' as const, issues: [] };
   
   try {
     const domain = new URL(url).origin;
     const robotsUrl = `${domain}/robots.txt`;
     
     const response = await fetch(robotsUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)'
-      }
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
     });
     
     if (!response.ok) {
-      return { exists: false, permissive: true, content: '' };
+      return { exists: false, permissive: true, content: '', qualityScore: 0, qualityDetails: emptyQuality };
     }
     
     const content = await response.text();
-    
-    // Check if robots.txt blocks everything
     const hasDisallowAll = /Disallow:\s*\/\s*$/m.test(content) && /User-agent:\s*\*/m.test(content);
+    
+    // Quality analysis
+    const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const hasSitemapDirective = /^Sitemap:\s*https?:\/\//mi.test(content);
+    const userAgentMatches = content.match(/^User-agent:\s*.+/gmi) || [];
+    const hasMultipleUserAgents = new Set(userAgentMatches.map(u => u.replace(/^User-agent:\s*/i, '').trim().toLowerCase())).size > 1;
+    const aiBotsPattern = /GPTBot|ChatGPT-User|ClaudeBot|Claude-Web|Anthropic|Google-Extended|GoogleOther|Applebot-Extended|Bytespider|CCBot|PerplexityBot|Amazonbot|FacebookBot|cohere-ai/i;
+    const hasAIBotRules = aiBotsPattern.test(content);
+    const hasCrawlDelay = /^Crawl-delay:/mi.test(content);
+    const hasComments = /^#/m.test(content);
+    
+    // Specificity rating
+    let specificity: 'none' | 'basic' | 'detailed' | 'advanced' = 'basic';
+    if (hasMultipleUserAgents && hasSitemapDirective) specificity = 'detailed';
+    if (hasMultipleUserAgents && hasAIBotRules && hasSitemapDirective) specificity = 'advanced';
+    
+    // Quality score (0-100)
+    const issues: string[] = [];
+    let qualityScore = 0;
+    
+    // Length & completeness (25 pts)
+    if (lines.length >= 5) qualityScore += 10; else issues.push('Fichier trop court (< 5 lignes actives)');
+    if (lines.length >= 15) qualityScore += 10;
+    if (lines.length >= 30) qualityScore += 5;
+    
+    // Sitemap (20 pts)
+    if (hasSitemapDirective) qualityScore += 20; else issues.push('Aucune directive Sitemap déclarée');
+    
+    // Specificity (20 pts)
+    if (hasMultipleUserAgents) qualityScore += 15; else issues.push('Un seul User-agent (* générique) — manque de granularité');
+    if (hasComments) qualityScore += 5;
+    
+    // AI bot governance (25 pts)
+    if (hasAIBotRules) qualityScore += 25; else issues.push('Aucune règle spécifique pour les bots IA (GPTBot, ClaudeBot, etc.)');
+    
+    // Crawl-delay (5 pts)
+    if (hasCrawlDelay) qualityScore += 5;
+    
+    // Penalty: blocks everything
+    if (hasDisallowAll) { qualityScore = Math.max(0, qualityScore - 30); issues.push('Disallow: / bloque tout le site'); }
+    
+    // Penalty: too short
+    if (content.length < 50) { qualityScore = Math.min(qualityScore, 10); issues.push('Contenu quasi vide'); }
     
     return {
       exists: true,
       permissive: !hasDisallowAll,
-      content: content.substring(0, 500)
+      content: content.substring(0, 1500),
+      qualityScore: Math.min(100, qualityScore),
+      qualityDetails: { length: content.length, hasSitemapDirective, hasMultipleUserAgents, hasAIBotRules, hasCrawlDelay, hasComments, specificity, issues },
     };
   } catch {
-    return { exists: false, permissive: true, content: '' };
+    return { exists: false, permissive: true, content: '', qualityScore: 0, qualityDetails: emptyQuality };
   }
 }
 
