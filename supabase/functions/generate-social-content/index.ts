@@ -5,12 +5,15 @@
  */
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
-import { callOpenRouterText } from '../_shared/openRouterAI.ts';
+import { callOpenRouter } from '../_shared/openRouterAI.ts';
+import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const MODEL = 'google/gemini-2.5-flash';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -101,22 +104,25 @@ Réponds en JSON strict:
   "suggested_emoji": "🚀"
 }`;
 
-    const result = await callOpenRouterText({
-      model: 'google/gemini-2.5-flash',
+    const result = await callOpenRouter({
+      model: MODEL,
       system: systemPrompt,
       user: userPrompt,
       maxTokens: 2000,
       temperature: 0.7,
     });
 
+    // Log AI usage for cost tracking
+    logAIUsageFromResponse(supabase, MODEL, 'generate-social-content', result.usage);
+
     // Parse JSON response
     let parsed;
     try {
-      let text = result.trim();
+      let text = result.content.trim();
       if (text.startsWith('```')) text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
       parsed = JSON.parse(text);
     } catch {
-      parsed = { content_linkedin: result, content_facebook: result, content_instagram: result, hashtags: [], suggested_title: finalTopic };
+      parsed = { content_linkedin: result.content, content_facebook: result.content, content_instagram: result.content, hashtags: [], suggested_title: finalTopic };
     }
 
     // Check & increment quota
@@ -132,6 +138,20 @@ Réponds en JSON strict:
     if (used >= limit && !auth.isAdmin) {
       return new Response(JSON.stringify({ error: 'Quota mensuel de posts atteint', used, limit }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
+    // Log analytics event for finance tracking
+    supabase.from('analytics_events').insert({
+      event_type: 'ai_token_usage',
+      event_data: {
+        function_name: 'generate-social-content',
+        model: MODEL,
+        prompt_tokens: result.usage?.prompt_tokens || 0,
+        completion_tokens: result.usage?.completion_tokens || 0,
+        total_tokens: result.usage?.total_tokens || 0,
+      },
+      user_id: auth.userId,
+      url: finalTopic,
+    }).then(() => {}).catch(() => {});
 
     return new Response(JSON.stringify({ success: true, ...parsed, quota: { used, limit } }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,9 +1,11 @@
 /**
  * translate-social-post — Translates social post content to EN/ES
- * using Gemini Flash for cost-efficient translation.
+ * using Gemini Flash Lite for cost-efficient translation.
  */
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
-import { callOpenRouterText } from '../_shared/openRouterAI.ts';
+import { callOpenRouter } from '../_shared/openRouterAI.ts';
+import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,6 +20,8 @@ const LANG_NAMES: Record<string, string> = {
   it: 'Italian',
   pt: 'Portuguese',
 };
+
+const MODEL = 'google/gemini-2.5-flash-lite';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -55,21 +59,39 @@ Réponds en JSON:
   "translated_hashtags": ["tag1", "tag2", ...]
 }`;
 
-    const result = await callOpenRouterText({
-      model: 'google/gemini-2.5-flash-lite',
+    const result = await callOpenRouter({
+      model: MODEL,
       system: systemPrompt,
       user: userPrompt,
       maxTokens: 1500,
       temperature: 0.3,
     });
 
+    const supabase = getServiceClient();
+
+    // Log AI usage for cost tracking
+    logAIUsageFromResponse(supabase, MODEL, 'translate-social-post', result.usage);
+
+    // Log analytics event for finance tracking
+    supabase.from('analytics_events').insert({
+      event_type: 'ai_token_usage',
+      event_data: {
+        function_name: 'translate-social-post',
+        model: MODEL,
+        prompt_tokens: result.usage?.prompt_tokens || 0,
+        completion_tokens: result.usage?.completion_tokens || 0,
+        total_tokens: result.usage?.total_tokens || 0,
+      },
+      user_id: auth.userId,
+    }).then(() => {}).catch(() => {});
+
     let parsed;
     try {
-      let text = result.trim();
+      let text = result.content.trim();
       if (text.startsWith('```')) text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
       parsed = JSON.parse(text);
     } catch {
-      parsed = { translated_content: result, translated_hashtags: [] };
+      parsed = { translated_content: result.content, translated_hashtags: [] };
     }
 
     return new Response(JSON.stringify({ success: true, ...parsed, target_language }), {
