@@ -121,7 +121,7 @@ Score de 0 à 100 pour ce critère:`
       const delay = RETRY_DELAYS[retryCount] || 5000
       console.log(`[audit-matrice] LLM error "${e instanceof Error ? e.message : 'unknown'}", retrying in ${delay}ms`)
       await new Promise(r => setTimeout(r, delay))
-      return evaluateWithLlm(prompt, url, htmlSummary, llmName, retryCount + 1)
+      return evaluateWithLlm(prompt, url, htmlSummary, llmName, scoringRubric, retryCount + 1)
     }
     return { score: 50, raw: { error: e instanceof Error ? e.message : 'Unknown error', retries: retryCount } }
   }
