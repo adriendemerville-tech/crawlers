@@ -450,16 +450,19 @@ const ip = getClientIp(req);
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
       const pageType = classifyPageType(page.url, page.title || "", page.h1 || "", page.page_type_override);
       
-      // Enrich tokenization: title + h1 + meta + keywords + URL path + anchors + BODY TEXT
+      // Enrich tokenization with zone weighting: title×3, h1×2, body×1 + bi-grams
       const pathSegments = new URL(page.url).pathname.split(/[\/\-_]/).filter(s => s.length >= 3).join(" ");
       const anchorTexts = (page.anchor_texts || [])
         .filter((a: any) => a.type === "internal")
         .map((a: any) => a.text || "")
         .join(" ");
-      // Include body_text_truncated for much richer semantic analysis
       const bodyText = (page.body_text_truncated || "").substring(0, 3000);
-      const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")} ${pathSegments} ${anchorTexts} ${bodyText}`;
-      tokenizedDocs.push(tokenize(fullText));
+      const fullBodyText = `${page.meta_description || ""} ${keywords.join(" ")} ${pathSegments} ${anchorTexts} ${bodyText}`;
+      tokenizedDocs.push(tokenizeZoned({
+        title: page.title || "",
+        h1: page.h1 || "",
+        body: fullBodyText,
+      }));
 
       // Try to enrich from audit data
       const normalizedUrl = page.url.replace(/\/+$/, "").toLowerCase();
