@@ -11,6 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPageView';
+import { ProAccessGate } from '@/components/ProAccessGate';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import type { ManualAnnotation } from '@/components/ConversionOptimizer/ManualAnnotationOverlay';
 
 const CocoonContentArchitectModal = lazy(() =>
@@ -137,6 +140,11 @@ export default function ConversionOptimizer() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+  const { isAdmin } = useAdmin();
+
+  // Pro access check
+  const hasAccess = isAdmin || ['agency_pro', 'agency_premium'].includes(profile?.plan_type || '');
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>(searchParams.get('site') || '');
@@ -384,6 +392,20 @@ export default function ConversionOptimizer() {
         <title>Conversion Optimizer | Crawlers</title>
         <meta name="description" content="Analysez l'UX de vos pages en contexte business pour optimiser le ton, les CTA et la conversion." />
       </Helmet>
+
+      {!hasAccess && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 backdrop-blur-md bg-background/60" />
+          <div className="relative z-10 h-full">
+            <ProAccessGate
+              featureName="Conversion Optimizer"
+              featureDescription="Analysez le ton, les CTAs et la conversion de vos pages."
+              returnPath="/app/console"
+              returnLabel="Retour à Mes sites"
+            />
+          </div>
+        </div>
+      )}
 
       <Header />
       <div className="container max-w-5xl mx-auto py-8 px-4 space-y-6">
