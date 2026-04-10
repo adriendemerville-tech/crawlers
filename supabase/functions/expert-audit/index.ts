@@ -183,6 +183,17 @@ interface RobotsAnalysis {
   exists: boolean;
   permissive: boolean;
   content: string;
+  qualityScore: number; // 0-100
+  qualityDetails: {
+    length: number;
+    hasSitemapDirective: boolean;
+    hasMultipleUserAgents: boolean;
+    hasAIBotRules: boolean;
+    hasCrawlDelay: boolean;
+    hasComments: boolean;
+    specificity: 'none' | 'basic' | 'detailed' | 'advanced';
+    issues: string[];
+  };
 }
 
 function normalizeUrl(url: string): string {
@@ -976,33 +987,75 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
 
 async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
   console.log('Checking robots.txt...');
+  const emptyQuality = { length: 0, hasSitemapDirective: false, hasMultipleUserAgents: false, hasAIBotRules: false, hasCrawlDelay: false, hasComments: false, specificity: 'none' as const, issues: [] };
   
   try {
     const domain = new URL(url).origin;
     const robotsUrl = `${domain}/robots.txt`;
     
     const response = await fetch(robotsUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)'
-      }
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
     });
     
     if (!response.ok) {
-      return { exists: false, permissive: true, content: '' };
+      return { exists: false, permissive: true, content: '', qualityScore: 0, qualityDetails: emptyQuality };
     }
     
     const content = await response.text();
-    
-    // Check if robots.txt blocks everything
     const hasDisallowAll = /Disallow:\s*\/\s*$/m.test(content) && /User-agent:\s*\*/m.test(content);
+    
+    // Quality analysis
+    const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const hasSitemapDirective = /^Sitemap:\s*https?:\/\//mi.test(content);
+    const userAgentMatches = content.match(/^User-agent:\s*.+/gmi) || [];
+    const hasMultipleUserAgents = new Set(userAgentMatches.map(u => u.replace(/^User-agent:\s*/i, '').trim().toLowerCase())).size > 1;
+    const aiBotsPattern = /GPTBot|ChatGPT-User|ClaudeBot|Claude-Web|Anthropic|Google-Extended|GoogleOther|Applebot-Extended|Bytespider|CCBot|PerplexityBot|Amazonbot|FacebookBot|cohere-ai/i;
+    const hasAIBotRules = aiBotsPattern.test(content);
+    const hasCrawlDelay = /^Crawl-delay:/mi.test(content);
+    const hasComments = /^#/m.test(content);
+    
+    // Specificity rating
+    let specificity: 'none' | 'basic' | 'detailed' | 'advanced' = 'basic';
+    if (hasMultipleUserAgents && hasSitemapDirective) specificity = 'detailed';
+    if (hasMultipleUserAgents && hasAIBotRules && hasSitemapDirective) specificity = 'advanced';
+    
+    // Quality score (0-100)
+    const issues: string[] = [];
+    let qualityScore = 0;
+    
+    // Length & completeness (25 pts)
+    if (lines.length >= 5) qualityScore += 10; else issues.push('Fichier trop court (< 5 lignes actives)');
+    if (lines.length >= 15) qualityScore += 10;
+    if (lines.length >= 30) qualityScore += 5;
+    
+    // Sitemap (20 pts)
+    if (hasSitemapDirective) qualityScore += 20; else issues.push('Aucune directive Sitemap déclarée');
+    
+    // Specificity (20 pts)
+    if (hasMultipleUserAgents) qualityScore += 15; else issues.push('Un seul User-agent (* générique) — manque de granularité');
+    if (hasComments) qualityScore += 5;
+    
+    // AI bot governance (25 pts)
+    if (hasAIBotRules) qualityScore += 25; else issues.push('Aucune règle spécifique pour les bots IA (GPTBot, ClaudeBot, etc.)');
+    
+    // Crawl-delay (5 pts)
+    if (hasCrawlDelay) qualityScore += 5;
+    
+    // Penalty: blocks everything
+    if (hasDisallowAll) { qualityScore = Math.max(0, qualityScore - 30); issues.push('Disallow: / bloque tout le site'); }
+    
+    // Penalty: too short
+    if (content.length < 50) { qualityScore = Math.min(qualityScore, 10); issues.push('Contenu quasi vide'); }
     
     return {
       exists: true,
       permissive: !hasDisallowAll,
-      content: content.substring(0, 500)
+      content: content.substring(0, 1500),
+      qualityScore: Math.min(100, qualityScore),
+      qualityDetails: { length: content.length, hasSitemapDirective, hasMultipleUserAgents, hasAIBotRules, hasCrawlDelay, hasComments, specificity, issues },
     };
   } catch {
-    return { exists: false, permissive: true, content: '' };
+    return { exists: false, permissive: true, content: '', qualityScore: 0, qualityDetails: emptyQuality };
   }
 }
 
@@ -1011,10 +1064,26 @@ interface LlmsTxtAnalysis {
   exists: boolean;
   contentLength: number;
   hasStructuredFormat: boolean;
+  qualityScore: number; // 0-100
+  qualityDetails: {
+    wordCount: number;
+    hasHeadings: boolean;
+    headingCount: number;
+    hasMission: boolean;
+    hasServices: boolean;
+    hasUrls: boolean;
+    urlCount: number;
+    hasContactInfo: boolean;
+    hasInstructions: boolean;
+    hasFAQ: boolean;
+    completenessLevel: 'absent' | 'minimal' | 'basic' | 'good' | 'excellent';
+    issues: string[];
+  };
 }
 
 async function checkLlmsTxt(url: string): Promise<LlmsTxtAnalysis> {
   console.log('Checking llms.txt...');
+  const emptyQuality = { wordCount: 0, hasHeadings: false, headingCount: 0, hasMission: false, hasServices: false, hasUrls: false, urlCount: 0, hasContactInfo: false, hasInstructions: false, hasFAQ: false, completenessLevel: 'absent' as const, issues: [] };
   try {
     const origin = new URL(url).origin;
     const controller = new AbortController();
@@ -1024,13 +1093,72 @@ async function checkLlmsTxt(url: string): Promise<LlmsTxtAnalysis> {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
     });
     clearTimeout(timeoutId);
-    if (!response.ok) return { exists: false, contentLength: 0, hasStructuredFormat: false };
+    if (!response.ok) return { exists: false, contentLength: 0, hasStructuredFormat: false, qualityScore: 0, qualityDetails: emptyQuality };
     const content = await response.text();
-    // Check for structured formatting (headings, sections)
+    const contentLower = content.toLowerCase();
+    
+    // Structured format
     const hasStructuredFormat = /^#\s/m.test(content) || /^\*\*/m.test(content) || content.includes('## ');
-    return { exists: true, contentLength: content.length, hasStructuredFormat };
+    
+    // Quality analysis
+    const words = content.split(/\s+/).filter(w => w.length > 0);
+    const wordCount = words.length;
+    const headings = content.match(/^#{1,3}\s.+/gm) || [];
+    const hasHeadings = headings.length > 0;
+    const urls = content.match(/https?:\/\/[^\s)>\]]+/g) || [];
+    
+    // Semantic coverage detection
+    const hasMission = /mission|about|à propos|qui sommes|who we are|notre entreprise|our company|purpose/i.test(content);
+    const hasServices = /services?|produits?|products?|solutions?|offres?|capabilities|fonctionnalit/i.test(content);
+    const hasContactInfo = /contact|email|@|téléphone|phone|adresse|address/i.test(content);
+    const hasInstructions = /instruction|comportement|behavior|usage|guideline|règle|rule|do not|ne pas/i.test(content);
+    const hasFAQ = /faq|questions?|foire aux questions|frequently asked/i.test(content);
+    
+    const issues: string[] = [];
+    let qualityScore = 0;
+    
+    // Length (20 pts)
+    if (wordCount >= 50) qualityScore += 5; else issues.push('Contenu trop court (< 50 mots)');
+    if (wordCount >= 150) qualityScore += 5;
+    if (wordCount >= 300) qualityScore += 5;
+    if (wordCount >= 500) qualityScore += 5;
+    
+    // Structure (20 pts)
+    if (hasHeadings) qualityScore += 10; else issues.push('Aucun heading Markdown (#) pour structurer le contenu');
+    if (headings.length >= 3) qualityScore += 5;
+    if (headings.length >= 6) qualityScore += 5;
+    
+    // Semantic coverage (40 pts)
+    if (hasMission) qualityScore += 10; else issues.push('Section mission/identité absente');
+    if (hasServices) qualityScore += 10; else issues.push('Section services/produits absente');
+    if (hasInstructions) qualityScore += 10; else issues.push('Aucune instruction de comportement pour les LLM');
+    if (hasFAQ) qualityScore += 5;
+    if (hasContactInfo) qualityScore += 5; else issues.push('Aucune info de contact');
+    
+    // URLs / resources (15 pts)
+    if (urls.length > 0) qualityScore += 5; else issues.push('Aucun lien URL vers des ressources clés');
+    if (urls.length >= 3) qualityScore += 5;
+    if (urls.length >= 6) qualityScore += 5;
+    
+    // Freshness signals (5 pts)
+    const yearPattern = new RegExp(`(202[4-9]|203\\d)`, 'g');
+    if (yearPattern.test(content)) qualityScore += 5; else issues.push('Aucune date récente — risque de contenu obsolète');
+    
+    // Completeness level
+    let completenessLevel: 'absent' | 'minimal' | 'basic' | 'good' | 'excellent' = 'minimal';
+    if (qualityScore >= 30) completenessLevel = 'basic';
+    if (qualityScore >= 55) completenessLevel = 'good';
+    if (qualityScore >= 80) completenessLevel = 'excellent';
+    
+    return {
+      exists: true,
+      contentLength: content.length,
+      hasStructuredFormat,
+      qualityScore: Math.min(100, qualityScore),
+      qualityDetails: { wordCount, hasHeadings, headingCount: headings.length, hasMission, hasServices, hasUrls: urls.length > 0, urlCount: urls.length, hasContactInfo, hasInstructions, hasFAQ, completenessLevel, issues },
+    };
   } catch {
-    return { exists: false, contentLength: 0, hasStructuredFormat: false };
+    return { exists: false, contentLength: 0, hasStructuredFormat: false, qualityScore: 0, qualityDetails: emptyQuality };
   }
 }
 
@@ -1836,6 +1964,32 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     });
   }
 
+  // ═══ ROBOTS.TXT QUALITY SCORING ═══
+  if (scores.aiReady?.robotsQualityScore !== undefined) {
+    const rq = scores.aiReady.robotsQualityDetails;
+    const rqScore = scores.aiReady.robotsQualityScore;
+    if (scores.aiReady.hasRobotsTxt && rqScore < 50) {
+      const weaknesses: string[] = [];
+      const fixes: string[] = [];
+      if (rq && !rq.hasSitemapDirective) { weaknesses.push('Aucune directive Sitemap déclarée'); fixes.push("Ajouter 'Sitemap: https://votresite.com/sitemap.xml' dans robots.txt"); }
+      if (rq && !rq.hasMultipleUserAgents) { weaknesses.push('Un seul User-agent générique (*) — manque de granularité'); fixes.push("Ajouter des blocs User-agent spécifiques (Googlebot, Bingbot, GPTBot, ClaudeBot)"); }
+      if (rq && !rq.hasAIBotRules) { weaknesses.push('Aucune règle pour les bots IA (GPTBot, ClaudeBot, PerplexityBot, etc.)'); fixes.push("Ajouter des directives Allow/Disallow explicites pour chaque bot IA majeur"); }
+      if (rq && !rq.hasComments) { fixes.push("Ajouter des commentaires (#) pour documenter la stratégie de crawl"); }
+      if (rq && rq.length < 200) { weaknesses.push(`Fichier court (${rq.length} caractères) — couverture insuffisante`); }
+
+      recommendations.push({
+        id: 'robots-quality-low',
+        priority: rqScore < 25 ? 'important' : 'optional',
+        category: 'ia',
+        icon: rqScore < 25 ? '🟠' : '🟡',
+        title: `Robots.txt : qualité rédactionnelle faible (${rqScore}/100)`,
+        description: `Votre robots.txt existe mais manque de complétude et de granularité (score qualité : ${rqScore}/100). Un robots.txt bien rédigé avec des règles spécifiques par bot améliore la gouvernance du crawl et la visibilité GEO.`,
+        weaknesses,
+        fixes,
+      });
+    }
+  }
+
   // ═══ SITEMAP CHECK ═══
   if (sitemapAnalysis) {
     if (!sitemapAnalysis.exists) {
@@ -2125,6 +2279,31 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
         "Mettre à jour régulièrement pour refléter l'offre actuelle"
       ]
     });
+  } else if (llmsTxtAnalysis && llmsTxtAnalysis.exists && llmsTxtAnalysis.qualityScore < 55) {
+    // llms.txt exists but quality is low
+    const lq = llmsTxtAnalysis.qualityDetails;
+    const weaknesses: string[] = [];
+    const fixes: string[] = [];
+    
+    if (lq.wordCount < 150) { weaknesses.push(`Contenu trop court (${lq.wordCount} mots — objectif : 300+)`); fixes.push("Enrichir le contenu à minimum 300 mots pour une couverture sémantique suffisante"); }
+    if (!lq.hasHeadings) { weaknesses.push('Aucun heading Markdown (#) — pas de structure'); fixes.push("Structurer avec des headings : # Identité, ## Services, ## Instructions, ## Ressources"); }
+    if (!lq.hasMission) { weaknesses.push("Section mission/identité absente"); fixes.push("Ajouter un paragraphe décrivant la mission et le positionnement de l'entreprise"); }
+    if (!lq.hasServices) { weaknesses.push("Aucune mention de services/produits"); fixes.push("Lister les services, produits et expertises clés"); }
+    if (!lq.hasInstructions) { weaknesses.push("Aucune instruction de comportement pour les LLM"); fixes.push("Ajouter une section ## Instructions avec les règles d'interaction (ton, restrictions, périmètre)"); }
+    if (!lq.hasUrls || lq.urlCount < 3) { weaknesses.push(`Peu de liens vers des ressources (${lq.urlCount} URL${lq.urlCount > 1 ? 's' : ''})`); fixes.push("Inclure des liens vers les pages clés : page d'accueil, services, contact, FAQ, documentation"); }
+    if (!lq.hasContactInfo) { fixes.push("Ajouter les informations de contact pour les agents IA"); }
+    if (!lq.hasFAQ) { fixes.push("Ajouter une section FAQ avec les questions fréquentes sur votre activité"); }
+
+    recommendations.push({
+      id: 'llms-txt-quality-low',
+      priority: llmsTxtAnalysis.qualityScore < 30 ? 'important' : 'optional',
+      category: 'ia',
+      icon: llmsTxtAnalysis.qualityScore < 30 ? '🟠' : '🟡',
+      title: `llms.txt : couverture sémantique insuffisante (${llmsTxtAnalysis.qualityScore}/100)`,
+      description: `Votre llms.txt existe (${lq.completenessLevel}) mais manque de complétude : ${weaknesses.length} lacune${weaknesses.length > 1 ? 's' : ''} identifiée${weaknesses.length > 1 ? 's' : ''}. Un llms.txt complet améliore la façon dont les IA comprennent et citent votre entité.`,
+      weaknesses,
+      fixes,
+    });
   }
 
   // ═══ SPECIALIZED SITEMAPS (Image/Video) ═══
@@ -2370,10 +2549,10 @@ Deno.serve(handleRequest(async (req) => {
     if (htmlAnalysis.h1Count === 1) semanticScore += 20;
     if (htmlAnalysis.wordCount >= 500) semanticScore += 20;
     
-    // D. AI Ready (30 pts)
+    // D. AI Ready (50 pts) — expanded with robots.txt & llms.txt quality
     let aiReadyScore = 0;
     if (htmlAnalysis.hasSchemaOrg) {
-      aiReadyScore += 15;
+      aiReadyScore += 12;
       if (htmlAnalysis.isSchemaJsGenerated) {
         aiReadyScore -= 3;
         console.log('[Expert-Audit] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
@@ -2383,7 +2562,16 @@ Deno.serve(handleRequest(async (req) => {
       aiReadyScore -= 4;
       console.log('[Expert-Audit] ⚠️ Title/Meta/OG is JS-generated — AI Ready score penalized (-4)');
     }
-    if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
+    if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 8;
+    // Robots.txt quality bonus (up to 10 pts)
+    if (robotsAnalysis.exists) {
+      aiReadyScore += Math.round(robotsAnalysis.qualityScore / 10); // 0-10 pts
+    }
+    // llms.txt quality bonus (up to 15 pts)
+    if (llmsTxtAnalysis.exists) {
+      aiReadyScore += 5; // existence bonus
+      aiReadyScore += Math.round(llmsTxtAnalysis.qualityScore / 10); // 0-10 pts quality
+    }
     
     // E. Security (20 pts) - Enhanced with HSTS
     let securityScore = 0;
@@ -2429,14 +2617,19 @@ Deno.serve(handleRequest(async (req) => {
       },
       aiReady: {
         score: aiReadyScore,
-        maxScore: 30,
+        maxScore: 50,
         hasSchemaOrg: htmlAnalysis.hasSchemaOrg,
         schemaTypes: htmlAnalysis.schemaTypes,
         isSchemaJsGenerated: htmlAnalysis.isSchemaJsGenerated,
         isMetaJsGenerated: htmlAnalysis.isMetaJsGenerated,
         hasRobotsTxt: robotsAnalysis.exists,
         robotsPermissive: robotsAnalysis.permissive,
+        robotsQualityScore: robotsAnalysis.qualityScore,
+        robotsQualityDetails: robotsAnalysis.qualityDetails,
         allowsAIBots: crawlersResult?.allowsAIBots,
+        hasLlmsTxt: llmsTxtAnalysis.exists,
+        llmsTxtQualityScore: llmsTxtAnalysis.qualityScore,
+        llmsTxtQualityDetails: llmsTxtAnalysis.qualityDetails,
       },
       security: {
         score: securityScore,
