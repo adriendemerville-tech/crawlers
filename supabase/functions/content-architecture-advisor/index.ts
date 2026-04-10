@@ -1466,4 +1466,39 @@ FRAÎCHEUR & DÉNOMINATION:
 
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
   }
-}));
+}
+
+// ── Deno.serve with waitUntil for background jobs ──
+Deno.serve(handleRequest(async (req) => {
+  // Check if this is a background job (self-invoked with _job_id)
+  const clonedReq = req.clone()
+  let isBackgroundJob = false
+  try {
+    if (req.method === 'POST') {
+      const peekBody = await clonedReq.json()
+      isBackgroundJob = !!peekBody._job_id
+    }
+  } catch {}
+
+  if (isBackgroundJob) {
+    // Use waitUntil to process in background — return 200 immediately
+    // The actual result is written to async_jobs table
+    const promise = processAdvisorRequest(req, true).catch(err => {
+      console.error('[content-advisor] waitUntil error:', err)
+    })
+    // @ts-ignore - EdgeRuntime.waitUntil is available in Supabase Edge Functions
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+      EdgeRuntime.waitUntil(promise)
+    } else {
+      // Fallback: just fire and forget
+      promise.catch(() => {})
+    }
+    return new Response(JSON.stringify({ status: 'processing' }), {
+      status: 200,
+      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+    })
+  }
+
+  // Normal synchronous request
+  return processAdvisorRequest(req, false)
+}))
