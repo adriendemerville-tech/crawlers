@@ -257,6 +257,15 @@ export const SocialPostEditor = memo(function SocialPostEditor({
               <Download className="h-4 w-4" /> Export .zip
             </Button>
           )}
+          {onExport && (
+            <Button variant="outline" onClick={() => {
+              toast.info('Export vers Google Drive en cours…');
+              // TODO: call edge function to upload to Google Drive folder
+              toast('Google Drive : configurez le dossier de destination dans l\'onglet Réglages', { icon: '📁', duration: 4000 });
+            }} className="gap-1.5">
+              <HardDrive className="h-4 w-4" /> Google Drive
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
