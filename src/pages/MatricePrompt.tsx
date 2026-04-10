@@ -21,6 +21,7 @@ import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 import ImportStepper from '@/components/Matrice/ImportStepper';
 import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
+import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -42,6 +43,7 @@ interface MatrixRow {
   isDefault: Record<string, boolean>;
 }
 
+// Static fallback defaults (overridden by smart defaults when matrice type is known)
 const DEFAULTS = {
   poids: 1,
   axe: 'Général',
@@ -305,8 +307,11 @@ export default function MatricePrompt() {
   };
 
   /* --- Parse raw rows into MatrixRow[] using fuzzy column mapper and persist --- */
-  const processImportedRows = useCallback(async (rawRows: any[], fileName: string) => {
+  const processImportedRows = useCallback(async (rawRows: any[], fileName: string, matriceType?: MatriceType) => {
     if (rawRows.length === 0) return;
+
+    // Use smart defaults based on detected matrice type
+    const smartDef = matriceType ? getSmartDefaults(matriceType) : DEFAULTS;
 
     // Step 1: Fuzzy column mapping
     const headers = Object.keys(rawRows[0] || {});
@@ -345,14 +350,14 @@ export default function MatricePrompt() {
       return {
         id: `row-${i}-${Date.now()}`,
         prompt: val('prompt', `KPI #${i + 1}`),
-        poids: val('poids', DEFAULTS.poids),
-        axe: val('axe', DEFAULTS.axe),
+        poids: val('poids', smartDef.poids),
+        axe: val('axe', smartDef.axe),
         theme: val('theme', ''),
         engine: val('engine', ''),
-        seuil_bon: val('seuil_bon', DEFAULTS.seuil_bon),
-        seuil_moyen: val('seuil_moyen', DEFAULTS.seuil_moyen),
-        seuil_mauvais: val('seuil_mauvais', DEFAULTS.seuil_mauvais),
-        llm_name: val('llm_name', DEFAULTS.llm_name),
+        seuil_bon: val('seuil_bon', smartDef.seuil_bon),
+        seuil_moyen: val('seuil_moyen', smartDef.seuil_moyen),
+        seuil_mauvais: val('seuil_mauvais', smartDef.seuil_mauvais),
+        llm_name: val('llm_name', smartDef.llm_name),
         selected: true,
         isDefault,
       };
@@ -481,6 +486,9 @@ export default function MatricePrompt() {
       return sortDir === 'asc' ? cmp : -cmp;
     });
   }, [rows, sortField, sortDir]);
+
+  /* --- Smart labels based on matrice type --- */
+  const smartLabels = useMemo(() => getSmartDefaults(activeMatriceType).labels, [activeMatriceType]);
 
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
@@ -947,31 +955,31 @@ export default function MatricePrompt() {
                      </TableHead>
                      <TableHead className="w-28 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('axe')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.axe || 'Catégorie'}
+                         {columnLabels.axe || smartLabels.axe}
                          {sortField === 'axe' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
                      <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('poids')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.poids || 'Poids'}
+                         {columnLabels.poids || smartLabels.poids}
                          {sortField === 'poids' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
                      <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_bon')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_bon || 'Bon'}
+                         {columnLabels.seuil_bon || smartLabels.seuil_bon}
                          {sortField === 'seuil_bon' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
                      <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_moyen')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_moyen || 'Moyen'}
+                         {columnLabels.seuil_moyen || smartLabels.seuil_moyen}
                          {sortField === 'seuil_moyen' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
                      <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_mauvais')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_mauvais || 'Mauvais'}
+                         {columnLabels.seuil_mauvais || smartLabels.seuil_mauvais}
                          {sortField === 'seuil_mauvais' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
@@ -1107,7 +1115,7 @@ export default function MatricePrompt() {
         onComplete={({ rows, matriceType, identityCard }) => {
           setXlsxStepperOpen(false);
           setActiveMatriceType(matriceType);
-          processImportedRows(rows, xlsxFileName);
+          processImportedRows(rows, xlsxFileName, matriceType);
           setXlsxWorkbookRef(null);
           // Auto-fill URL from identity card if available
           if (identityCard?.brandUrl && !url.trim()) {

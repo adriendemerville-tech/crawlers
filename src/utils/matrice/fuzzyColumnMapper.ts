@@ -64,6 +64,12 @@ const RESULT_COLUMN_PATTERNS = [
   /result/i, /résultat/i, /found/i, /trouvé/i, /brand/i, /marque/i,
 ];
 
+// ── Columns to always skip (never map to any field) ─────────────────────
+const ALWAYS_SKIP_PATTERNS = [
+  /^id$/i, /^_id$/i, /^uuid$/i, /^index$/i, /^#$/i, /^n°$/i, /^num$/i,
+  /^row_?id$/i, /^line$/i, /^ligne$/i,
+];
+
 // ── Fuzzy similarity (Dice coefficient on bigrams) ──────────────────────
 function bigrams(s: string): Set<string> {
   const bg = new Set<string>();
@@ -182,6 +188,9 @@ export function mapColumns(
   for (const header of headers) {
     const headerLower = header.toLowerCase().trim();
 
+    // Skip columns that should never be mapped (id, uuid, index, etc.)
+    if (ALWAYS_SKIP_PATTERNS.some(p => p.test(headerLower))) continue;
+
     for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
       let bestScoreForField = 0;
 
@@ -219,6 +228,8 @@ export function mapColumns(
     const contentAnalysis: { header: string; type: ContentType }[] = [];
 
     for (const header of unmappedHeaders) {
+      // Skip always-skipped columns in content analysis too
+      if (ALWAYS_SKIP_PATTERNS.some(p => p.test(header.toLowerCase().trim()))) continue;
       const values = sampleRows.map(row => row[header]);
       const type = analyzeColumnContent(values);
       contentAnalysis.push({ header, type });
