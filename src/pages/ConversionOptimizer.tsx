@@ -409,6 +409,10 @@ export default function ConversionOptimizer() {
 
       <Header />
       <div className="container max-w-5xl mx-auto py-8 px-4 space-y-6">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/app/console')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <span className="relative inline-flex items-center justify-center h-7 w-7">
