@@ -7070,6 +7070,7 @@ export type Database = {
           plan_type: string
           referral_code: string | null
           referred_by: string | null
+          social_posts_this_month: number | null
           stripe_subscription_id: string | null
           subscription_expires_at: string | null
           subscription_status: string | null
@@ -7121,6 +7122,7 @@ export type Database = {
           plan_type?: string
           referral_code?: string | null
           referred_by?: string | null
+          social_posts_this_month?: number | null
           stripe_subscription_id?: string | null
           subscription_expires_at?: string | null
           subscription_status?: string | null
@@ -7172,6 +7174,7 @@ export type Database = {
           plan_type?: string
           referral_code?: string | null
           referred_by?: string | null
+          social_posts_this_month?: number | null
           stripe_subscription_id?: string | null
           subscription_expires_at?: string | null
           subscription_status?: string | null
@@ -9017,6 +9020,405 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      social_accounts: {
+        Row: {
+          access_token: string | null
+          account_id: string | null
+          account_name: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          page_id: string | null
+          platform: string
+          refresh_token: string | null
+          scopes: string[] | null
+          status: string
+          token_expires_at: string | null
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          page_id?: string | null
+          platform: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          token_expires_at?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          page_id?: string | null
+          platform?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          token_expires_at?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_accounts_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_calendars: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          event_date: string
+          event_time: string | null
+          id: string
+          is_auto_generated: boolean | null
+          metadata: Json | null
+          platforms: string[] | null
+          post_id: string | null
+          recurrence: string | null
+          recurrence_end: string | null
+          seasonal_context_id: string | null
+          title: string
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          event_date: string
+          event_time?: string | null
+          id?: string
+          is_auto_generated?: boolean | null
+          metadata?: Json | null
+          platforms?: string[] | null
+          post_id?: string | null
+          recurrence?: string | null
+          recurrence_end?: string | null
+          seasonal_context_id?: string | null
+          title: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          is_auto_generated?: boolean | null
+          metadata?: Json | null
+          platforms?: string[] | null
+          post_id?: string | null
+          recurrence?: string | null
+          recurrence_end?: string | null
+          seasonal_context_id?: string | null
+          title?: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_calendars_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_calendars_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_image_assets: {
+        Row: {
+          canvas_snapshot: Json | null
+          created_at: string
+          file_name: string
+          file_size: number | null
+          generation_prompt: string | null
+          height: number | null
+          id: string
+          metadata: Json | null
+          mime_type: string | null
+          post_id: string | null
+          storage_path: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          canvas_snapshot?: Json | null
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          generation_prompt?: string | null
+          height?: number | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          post_id?: string | null
+          storage_path: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          canvas_snapshot?: Json | null
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          generation_prompt?: string | null
+          height?: number | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          post_id?: string | null
+          storage_path?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_image_assets_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_post_metrics: {
+        Row: {
+          clicks: number | null
+          comments: number | null
+          created_at: string
+          engagement_rate: number | null
+          id: string
+          impressions: number | null
+          likes: number | null
+          measured_at: string
+          platform: string
+          post_id: string
+          raw_data: Json | null
+          reach: number | null
+          saves: number | null
+          shares: number | null
+        }
+        Insert: {
+          clicks?: number | null
+          comments?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          likes?: number | null
+          measured_at?: string
+          platform: string
+          post_id: string
+          raw_data?: Json | null
+          reach?: number | null
+          saves?: number | null
+          shares?: number | null
+        }
+        Update: {
+          clicks?: number | null
+          comments?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          likes?: number | null
+          measured_at?: string
+          platform?: string
+          post_id?: string
+          raw_data?: Json | null
+          reach?: number | null
+          saves?: number | null
+          shares?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_post_metrics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_posts: {
+        Row: {
+          canvas_data: Json | null
+          content_facebook: string | null
+          content_instagram: string | null
+          content_linkedin: string | null
+          created_at: string
+          error_message: string | null
+          external_ids: Json | null
+          hashtags: string[] | null
+          id: string
+          image_urls: string[] | null
+          mentions: Json | null
+          metadata: Json | null
+          publish_platforms: string[] | null
+          published_at: string | null
+          scheduled_at: string | null
+          seasonal_context_id: string | null
+          smart_link_short: string | null
+          smart_link_url: string | null
+          source_keyword: string | null
+          status: string
+          template_id: string | null
+          title: string | null
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+          utm_params: Json | null
+          workbench_item_id: string | null
+        }
+        Insert: {
+          canvas_data?: Json | null
+          content_facebook?: string | null
+          content_instagram?: string | null
+          content_linkedin?: string | null
+          created_at?: string
+          error_message?: string | null
+          external_ids?: Json | null
+          hashtags?: string[] | null
+          id?: string
+          image_urls?: string[] | null
+          mentions?: Json | null
+          metadata?: Json | null
+          publish_platforms?: string[] | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          seasonal_context_id?: string | null
+          smart_link_short?: string | null
+          smart_link_url?: string | null
+          source_keyword?: string | null
+          status?: string
+          template_id?: string | null
+          title?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+          utm_params?: Json | null
+          workbench_item_id?: string | null
+        }
+        Update: {
+          canvas_data?: Json | null
+          content_facebook?: string | null
+          content_instagram?: string | null
+          content_linkedin?: string | null
+          created_at?: string
+          error_message?: string | null
+          external_ids?: Json | null
+          hashtags?: string[] | null
+          id?: string
+          image_urls?: string[] | null
+          mentions?: Json | null
+          metadata?: Json | null
+          publish_platforms?: string[] | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          seasonal_context_id?: string | null
+          smart_link_short?: string | null
+          smart_link_url?: string | null
+          source_keyword?: string | null
+          status?: string
+          template_id?: string | null
+          title?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+          utm_params?: Json | null
+          workbench_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_posts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "social_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_templates: {
+        Row: {
+          canvas_data: Json
+          category: string | null
+          created_at: string
+          id: string
+          is_system: boolean | null
+          name: string
+          platform: string | null
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+          variables: Json | null
+        }
+        Insert: {
+          canvas_data?: Json
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_system?: boolean | null
+          name: string
+          platform?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+          variables?: Json | null
+        }
+        Update: {
+          canvas_data?: Json
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          platform?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+          variables?: Json | null
+        }
+        Relationships: []
       }
       solution_library: {
         Row: {
