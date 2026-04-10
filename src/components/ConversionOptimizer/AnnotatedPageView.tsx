@@ -274,20 +274,20 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
                 const rectCenterY = rectY + rectHeight / 2;
 
                 const startX = BUBBLE_COLUMN_WIDTH - 12;
-                const elbowX = startX + 20;
-                const nearTargetX = Math.max(elbowX + 12, rectX - 12);
+                // Horizontal line: bubble center Y drives the line, rect anchor matches it
+                const lineY = bubbleCenterY;
 
                 return (
                   <g key={`${suggestion.index}-${suggestion.title}`} style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.35s ease' }}>
-                    <path
-                      d={`M ${startX} ${bubbleCenterY} L ${elbowX} ${bubbleCenterY} L ${nearTargetX} ${rectCenterY} L ${rectX} ${rectCenterY}`}
-                      fill="none"
+                    <line
+                      x1={startX}
+                      y1={lineY}
+                      x2={rectX}
+                      y2={lineY}
                       stroke={colors.line}
                       strokeWidth={isHovered ? 2.5 : 1.5}
-                      strokeDasharray={isHovered ? 'none' : '5 4'}
                       opacity={isHovered ? 0.95 : 0.7}
                       strokeLinecap="round"
-                      strokeLinejoin="round"
                     />
                     <rect
                       x={rectX}
@@ -298,7 +298,6 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
                       fill={isHovered ? `${colors.line}18` : 'transparent'}
                       stroke={colors.line}
                       strokeWidth={isHovered ? 3 : 2}
-                      strokeDasharray={isHovered ? 'none' : '6 3'}
                     />
                     <circle cx={rectX} cy={rectCenterY} r={isHovered ? 4 : 3} fill={colors.line} opacity={0.9} />
                   </g>
