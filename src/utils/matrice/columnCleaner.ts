@@ -57,6 +57,12 @@ const REMOVE_PATTERNS: { pattern: RegExp; reason: string }[] = [
   { pattern: /^n°$/i, reason: 'Row number' },
   { pattern: /^#$/i, reason: 'Row number' },
 
+  // Template / instruction metadata (not the actual prompt)
+  { pattern: /^base_prompt/i, reason: 'Prompt template column' },
+  { pattern: /^engine_instruction/i, reason: 'Engine instruction column' },
+  { pattern: /^engine_source/i, reason: 'Engine source column' },
+  { pattern: /^primary_signal/i, reason: 'Signal metadata column' },
+
   // IDs & technical refs
   { pattern: /^id$/i, reason: 'ID column' },
   { pattern: /^ref$/i, reason: 'Reference column' },

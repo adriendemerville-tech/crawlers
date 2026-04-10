@@ -7,7 +7,7 @@
 // ── Known field aliases (lowercase) ─────────────────────────────────────
 const FIELD_ALIASES: Record<string, string[]> = {
   prompt: [
-    'prompt', 'kpi', 'critère', 'critere', 'criteria', 'criterion',
+    'prompt', 'full_prompt', 'full prompt', 'kpi', 'critère', 'critere', 'criteria', 'criterion',
     'indicateur', 'indicator', 'metric', 'métrique', 'metrique',
     'question', 'check', 'vérification', 'verification', 'test',
     'audit point', 'point d\'audit', 'règle', 'regle', 'rule',
