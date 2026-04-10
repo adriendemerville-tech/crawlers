@@ -952,31 +952,31 @@ export default function MatricePrompt() {
                      </TableHead>
                      <TableHead className="w-28 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('axe')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.axe || 'Catégorie'}
+                         {columnLabels.axe || smartLabels.axe}
                          {sortField === 'axe' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
                      <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('poids')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.poids || 'Poids'}
+                         {columnLabels.poids || smartLabels.poids}
                          {sortField === 'poids' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
                      <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_bon')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_bon || 'Bon'}
+                         {columnLabels.seuil_bon || smartLabels.seuil_bon}
                          {sortField === 'seuil_bon' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
                      <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_moyen')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_moyen || 'Moyen'}
+                         {columnLabels.seuil_moyen || smartLabels.seuil_moyen}
                          {sortField === 'seuil_moyen' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
                      <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_mauvais')}>
                        <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_mauvais || 'Mauvais'}
+                         {columnLabels.seuil_mauvais || smartLabels.seuil_mauvais}
                          {sortField === 'seuil_mauvais' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
