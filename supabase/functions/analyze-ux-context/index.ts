@@ -1124,6 +1124,50 @@ ${lines}
 `;
 }
 
+function buildGA4BehavioralSection(ga4Context: any): string {
+  const { pageMetrics, siteAvg } = ga4Context || {};
+  if (!pageMetrics) return '\n## 📊 Données comportementales GA4\nAucune donnée GA4 comportementale disponible pour cette page. Les recommandations seront basées uniquement sur l\'analyse visuelle et structurelle.\n';
+
+  const pm = pageMetrics;
+  const avg = siteAvg || {};
+
+  const delta = (val: number, ref: number) => {
+    if (!ref) return '';
+    const pct = Math.round(((val - ref) / ref) * 100);
+    return pct > 0 ? ` (↑ +${pct}% vs moyenne site)` : pct < 0 ? ` (↓ ${pct}% vs moyenne site)` : ' (= moyenne site)';
+  };
+
+  return `
+## 📊 Données comportementales GA4 (période : ${pm.period_start || '?'} → ${pm.period_end || '?'})
+Ces données RÉELLES de trafic doivent guider tes recommandations. Corrèle chaque signal faible à une suggestion concrète.
+
+### Engagement
+- Temps d'engagement moyen : ${Math.round(pm.avg_engagement_time || 0)}s${delta(pm.avg_engagement_time || 0, avg.avg_engagement_time || 0)}
+- Taux d'engagement : ${Math.round((pm.engagement_rate || 0) * 100)}%${delta(pm.engagement_rate || 0, avg.engagement_rate || 0)}
+- Sessions engagées : ${pm.engaged_sessions || 0}
+- Entrées sur la page : ${pm.entries || 0}
+
+### Scroll (profondeur 90%)
+- Événements scroll : ${pm.scroll_events || 0}
+- Taux de scroll (% visiteurs atteignant 90%) : ${Math.round(pm.scroll_rate || 0)}%${delta(pm.scroll_rate || 0, avg.scroll_rate || 0)}
+${(pm.scroll_rate || 0) < 30 ? '⚠️ Moins de 30% des visiteurs scrollent à 90% → le contenu below-the-fold est probablement invisible. Concentre les CTAs et infos critiques dans le premier viewport.' : ''}
+
+### Clics
+- Événements click : ${pm.click_events || 0}
+${pm.click_events === 0 ? '⚠️ Aucun clic détecté → soit les CTAs sont absents/invisibles, soit le tracking est mal configuré.' : ''}
+
+### Conversions
+- Conversions : ${pm.conversions || 0}
+- Taux de conversion : ${Math.round((pm.conversion_rate || 0) * 100) / 100}%${delta(pm.conversion_rate || 0, avg.conversion_rate || 0)}
+${(pm.conversion_rate || 0) === 0 ? '⚠️ Aucune conversion détectée sur cette page. Analyse les freins : absence de CTA, friction de formulaire, manque de réassurance.' : ''}
+
+### Diagnostic comportemental automatique
+${(pm.engagement_rate || 0) < 0.4 ? '🔴 ENGAGEMENT FAIBLE : La majorité des visiteurs ne s\'engagent pas avec la page. Le contenu above-the-fold, le titre et la proposition de valeur doivent être revus en priorité.' : ''}
+${(pm.scroll_rate || 0) > 0 && (pm.scroll_rate || 0) < 20 ? '🔴 SCROLL CRITIQUE : Presque personne ne voit le contenu en bas de page. Restructurer le contenu pour placer les informations clés en haut.' : ''}
+${(pm.conversion_rate || 0) > 0 && (pm.engagement_rate || 0) > 0.6 && (pm.conversion_rate || 0) < 1 ? '🟡 FUITE DE CONVERSION : Les visiteurs s\'engagent mais ne convertissent pas. Le problème est probablement dans le parcours CTA → formulaire → confirmation.' : ''}
+`;
+}
+
 function buildPrompt(page: any, ctx: any, keywords: any[], images: any[] = [], croMatrix: any[] = [], chunkability: any = null, ga4Context: any = {}) {
   const keywordList = keywords.map((keyword) =>
     `- "${keyword.keyword}" (vol: ${keyword.search_volume || '?'}, pos: ${keyword.current_position || '?'}, intent: ${keyword.intent || '?'})`
