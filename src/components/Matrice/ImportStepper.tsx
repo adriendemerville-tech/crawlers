@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2, CreditCard } from 'lucide-react';
+import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, Loader2, CreditCard, BookOpen, BarChart3 } from 'lucide-react';
 import { detectMatriceType, type MatriceType, type DetectionResult } from '@/utils/matrice/typeDetector';
 import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCleaner';
 import { sanitizeAllPrompts } from '@/utils/matrice/promptSanitizer';
@@ -461,6 +461,20 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
             {sheetNames.map(name => {
               const isChecked = selectedSheets.includes(name);
               const isVar = detectedVariableSheets.includes(name);
+              const metaType = detectedMetaSheets[name];
+              const isMetaSheet = !!metaType;
+              const sheetIcon = isVar ? <CreditCard className="h-4 w-4 shrink-0 text-amber-500" />
+                : metaType === 'engine_notes' ? <BookOpen className="h-4 w-4 shrink-0 text-cyan-500" />
+                : metaType === 'scoring_guide' ? <BarChart3 className="h-4 w-4 shrink-0 text-emerald-500" />
+                : <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />;
+              const badgeLabel = isVar ? "Carte d'identité"
+                : metaType === 'engine_notes' ? 'Instructions moteur'
+                : metaType === 'scoring_guide' ? 'Grille scoring'
+                : null;
+              const badgeColor = isVar ? 'border-amber-500/30 text-amber-500'
+                : metaType === 'engine_notes' ? 'border-cyan-500/30 text-cyan-500'
+                : metaType === 'scoring_guide' ? 'border-emerald-500/30 text-emerald-500'
+                : '';
               return (
                 <button
                   key={name}
@@ -474,16 +488,15 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                     onCheckedChange={() => toggleSheet(name)}
                     className="shrink-0"
                   />
-                  {isVar ? (
-                    <CreditCard className="h-4 w-4 shrink-0 text-amber-500" />
-                  ) : (
-                    <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  )}
+                  {sheetIcon}
                   <span className="truncate text-sm">{name}</span>
-                  {isVar && (
-                    <Badge variant="outline" className="ml-auto text-[10px] border-amber-500/30 text-amber-500">
-                      Carte d'identité
+                  {badgeLabel && (
+                    <Badge variant="outline" className={`ml-auto text-[10px] ${badgeColor}`}>
+                      {badgeLabel}
                     </Badge>
+                  )}
+                  {isMetaSheet && !isChecked && (
+                    <span className="text-[9px] text-muted-foreground/60">auto</span>
                   )}
                 </button>
               );
