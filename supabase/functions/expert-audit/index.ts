@@ -2279,6 +2279,31 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
         "Mettre à jour régulièrement pour refléter l'offre actuelle"
       ]
     });
+  } else if (llmsTxtAnalysis && llmsTxtAnalysis.exists && llmsTxtAnalysis.qualityScore < 55) {
+    // llms.txt exists but quality is low
+    const lq = llmsTxtAnalysis.qualityDetails;
+    const weaknesses: string[] = [];
+    const fixes: string[] = [];
+    
+    if (lq.wordCount < 150) { weaknesses.push(`Contenu trop court (${lq.wordCount} mots — objectif : 300+)`); fixes.push("Enrichir le contenu à minimum 300 mots pour une couverture sémantique suffisante"); }
+    if (!lq.hasHeadings) { weaknesses.push('Aucun heading Markdown (#) — pas de structure'); fixes.push("Structurer avec des headings : # Identité, ## Services, ## Instructions, ## Ressources"); }
+    if (!lq.hasMission) { weaknesses.push("Section mission/identité absente"); fixes.push("Ajouter un paragraphe décrivant la mission et le positionnement de l'entreprise"); }
+    if (!lq.hasServices) { weaknesses.push("Aucune mention de services/produits"); fixes.push("Lister les services, produits et expertises clés"); }
+    if (!lq.hasInstructions) { weaknesses.push("Aucune instruction de comportement pour les LLM"); fixes.push("Ajouter une section ## Instructions avec les règles d'interaction (ton, restrictions, périmètre)"); }
+    if (!lq.hasUrls || lq.urlCount < 3) { weaknesses.push(`Peu de liens vers des ressources (${lq.urlCount} URL${lq.urlCount > 1 ? 's' : ''})`); fixes.push("Inclure des liens vers les pages clés : page d'accueil, services, contact, FAQ, documentation"); }
+    if (!lq.hasContactInfo) { fixes.push("Ajouter les informations de contact pour les agents IA"); }
+    if (!lq.hasFAQ) { fixes.push("Ajouter une section FAQ avec les questions fréquentes sur votre activité"); }
+
+    recommendations.push({
+      id: 'llms-txt-quality-low',
+      priority: llmsTxtAnalysis.qualityScore < 30 ? 'important' : 'optional',
+      category: 'ia',
+      icon: llmsTxtAnalysis.qualityScore < 30 ? '🟠' : '🟡',
+      title: `llms.txt : couverture sémantique insuffisante (${llmsTxtAnalysis.qualityScore}/100)`,
+      description: `Votre llms.txt existe (${lq.completenessLevel}) mais manque de complétude : ${weaknesses.length} lacune${weaknesses.length > 1 ? 's' : ''} identifiée${weaknesses.length > 1 ? 's' : ''}. Un llms.txt complet améliore la façon dont les IA comprennent et citent votre entité.`,
+      weaknesses,
+      fixes,
+    });
   }
 
   // ═══ SPECIALIZED SITEMAPS (Image/Video) ═══
