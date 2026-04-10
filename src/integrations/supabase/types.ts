@@ -1633,6 +1633,62 @@ export type Database = {
         }
         Relationships: []
       }
+      canva_connections: {
+        Row: {
+          access_token: string | null
+          canva_team_id: string | null
+          canva_user_id: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          refresh_token: string | null
+          scopes: string[] | null
+          status: string
+          token_expires_at: string | null
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          canva_team_id?: string | null
+          canva_user_id?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          token_expires_at?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          canva_team_id?: string | null
+          canva_user_id?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          token_expires_at?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canva_connections_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cms_connections: {
         Row: {
           api_key: string | null
