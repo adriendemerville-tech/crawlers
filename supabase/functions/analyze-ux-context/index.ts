@@ -627,7 +627,7 @@ async function captureScreenshotWithAnnotations(
   });
 
   return {
-    data: { screenshot, height: fullHeight, imageFormats },
+    data: { screenshot, height: fullHeight, imageFormats, chunkabilitySignals },
     type: 'application/json'
   };
 };`;
