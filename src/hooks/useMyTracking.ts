@@ -117,7 +117,9 @@ export function useMyTracking() {
   const [gscConnecting, setGscConnecting] = useState(false);
   const [gscData, setGscData] = useState<GscData | null>(null);
   const [gscLoading, setGscLoading] = useState(false);
-  const gscConnected = !!profile?.gsc_access_token;
+  const gscHasToken = !!profile?.gsc_access_token;
+  const [gscSiteVerified, setGscSiteVerified] = useState(false);
+  const gscConnected = gscHasToken && gscSiteVerified;
 
   // ─── GA4 toggle ───
   const [ga4EnabledLocal, setGa4EnabledLocal] = useState(false);
