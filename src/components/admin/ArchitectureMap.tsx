@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
+import { buildDomainExplanation } from "./architectureKnowledge";
 
 // ── Domain data ──────────────────────────────────────────────
 interface Domain {
