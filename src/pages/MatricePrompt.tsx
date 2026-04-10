@@ -1142,15 +1142,22 @@ export default function MatricePrompt() {
         open={xlsxStepperOpen}
         sheetNames={xlsxStepperSheets}
         workbook={xlsxWorkbookRef}
-        onComplete={({ rows: importedRows, matriceType, identityCard }) => {
+        onComplete={({ rows: importedRows, matriceType, identityCard, metadata }) => {
           setXlsxStepperOpen(false);
           setActiveMatriceType(matriceType);
+          setActiveMetadata(metadata || null);
           // Auto-detect scoring method from imported data
           const headers = importedRows.length > 0 ? Object.keys(importedRows[0]) : [];
           const detection = detectScoringMethod(headers, importedRows.slice(0, 10), matriceType);
           setActiveScoringMethod(detection.method);
           if (detection.source !== 'default') {
             toast.info(`Méthode de scoring détectée : ${getScoringConfig(detection.method).label} (confiance: ${Math.round(detection.confidence * 100)}%)`, { duration: 4000 });
+          }
+          if (metadata) {
+            const parts: string[] = [];
+            if (metadata.engineNotes.length > 0) parts.push(`${metadata.engineNotes.length} instructions moteur`);
+            if (metadata.scoringGuide.length > 0) parts.push(`${metadata.scoringGuide.length} critères de scoring`);
+            if (parts.length > 0) toast.success(`Métadonnées intégrées : ${parts.join(', ')}`, { duration: 4000 });
           }
           processImportedRows(importedRows, xlsxFileName, matriceType);
           setXlsxWorkbookRef(null);
