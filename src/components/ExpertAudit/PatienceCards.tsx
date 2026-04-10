@@ -54,21 +54,23 @@ export function PatienceCards({ isActive, position, sector }: PatienceCardsProps
           .eq('card_type', 'news')
           .eq('is_active', true)
           .order('relevance_score', { ascending: false })
-          .limit(10),
+          .limit(10)
+          .then(r => r),
         supabase
           .from('patience_cards' as any)
           .select('id, card_type, content, category')
           .eq('card_type', 'tip')
           .eq('is_active', true)
           .order('relevance_score', { ascending: false })
-          .limit(10),
+          .limit(10)
+          .then(r => r),
       ];
 
       // Fetch sector-specific seasonal news if sector available
       if (sector) {
         promises.push(
-          supabase.rpc('get_seasonal_news' as any, { p_sector: sector, p_geo: 'FR', p_limit: 5 }),
-          supabase.rpc('get_active_seasonal_context' as any, { p_sector: sector, p_geo: 'FR' }),
+          supabase.rpc('get_seasonal_news' as any, { p_sector: sector, p_geo: 'FR', p_limit: 5 }).then(r => r),
+          supabase.rpc('get_active_seasonal_context' as any, { p_sector: sector, p_geo: 'FR' }).then(r => r),
         );
       }
 
