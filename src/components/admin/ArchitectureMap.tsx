@@ -435,13 +435,13 @@ const ArchitectureMap: React.FC = () => {
         </text>
 
         {/* ── Legend ── */}
-        <g transform={`translate(${SVG_W - 320}, ${SVG_H - 90})`}>
-          <rect x={0} y={0} width={300} height={75} rx={6} fill="#151a27" stroke="#2a3040" />
+        <g transform={`translate(${SVG_W - 340}, ${SVG_H - 90})`}>
+          <rect x={0} y={0} width={320} height={75} rx={6} fill="#151a27" stroke="#2a3040" />
           <text x={10} y={18} fill="#ccc" fontSize={10} fontWeight="bold">LEGENDE</text>
           <line x1={10} y1={30} x2={40} y2={30} stroke="#aaa" strokeWidth={2} />
-          <text x={48} y={34} fill="#999" fontSize={9}>Appel inter-functions (invoke)</text>
+          <text x={48} y={34} fill="#999" fontSize={9}>Appel inter-functions — flux = sens de la donnée</text>
           <line x1={10} y1={46} x2={40} y2={46} stroke="#777" strokeWidth={1.5} strokeDasharray="6 4" />
-          <text x={48} y={50} fill="#999" fontSize={9}>Lecture table cross-domaine (SELECT)</text>
+          <text x={48} y={50} fill="#999" fontSize={9}>Lecture table (SELECT) — flux = source → consommateur</text>
           <text x={10} y={66} fill="#888" fontSize={8}>Col. gauche = tables | Col. droite (italique) = functions</text>
         </g>
       </svg>
