@@ -220,10 +220,13 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
 
   const bubbleHeights = positionedSuggestions.map((s, i) => estimateBubbleHeight(s, hoveredIdx === i));
 
-  const bubbleTargets = positionedSuggestions.map((suggestion, i) => ({
-    targetY: ((suggestion.rect?.y || 0) + (suggestion.rect?.height || 0) / 2) * scale - bubbleHeights[i] / 2,
-    height: bubbleHeights[i],
-  }));
+  const bubbleTargets = positionedSuggestions.map((suggestion, i) => {
+    const rectCenterY = ((suggestion.rect?.y || 0) + (suggestion.rect?.height || 0) / 2) * scale;
+    return {
+      targetY: rectCenterY - bubbleHeights[i] / 2,
+      height: bubbleHeights[i],
+    };
+  });
 
   const bubbleYPositions = resolveOverlaps(bubbleTargets, BUBBLE_GAP);
 
