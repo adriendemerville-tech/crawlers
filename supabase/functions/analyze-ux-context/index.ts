@@ -186,8 +186,8 @@ Deno.serve(handleRequest(async (req) => {
   const imageFormatsForPrompt = (screenshotResult?.imageFormats || [])
     .filter((img: any) => !img.isDecorative && img.width >= 50 && img.height >= 50)
     .slice(0, 20);
-
-  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || []);
+  const chunkabilityData = screenshotResult?.chunkabilitySignals || null;
+  const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || [], chunkabilityData);
 
   const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
