@@ -139,7 +139,7 @@ try {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      return jsonError('DataForSEO API error', status: resp.status, 502)
+      return jsonError(`DataForSEO API error (status: ${resp.status})`, 502)
     }
 
     const data = await resp.json()
