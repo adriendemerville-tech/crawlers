@@ -119,27 +119,39 @@ function extractPostSummaries(data: unknown): IktrackerPostSummary[] {
   return []
 }
 
-async function listPostsForDedup(apiKey: string, maxPosts = 300) {
-  const pageSize = 100
-  const postsBySlug = new Map<string, IktrackerPostSummary>()
+async function listPostsForDedup(apiKey: string, maxPosts = 300, retries = 2): Promise<IktrackerPostSummary[]> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const pageSize = 100
+      const postsBySlug = new Map<string, IktrackerPostSummary>()
 
-  for (let offset = 0; offset < maxPosts; offset += pageSize) {
-    const result = await listPosts(apiKey, Math.min(pageSize, maxPosts - offset), offset, true)
-    const pagePosts = extractPostSummaries(result.data)
+      for (let offset = 0; offset < maxPosts; offset += pageSize) {
+        const result = await listPosts(apiKey, Math.min(pageSize, maxPosts - offset), offset, true)
+        const pagePosts = extractPostSummaries(result.data)
 
-    for (const post of pagePosts) {
-      const dedupKey = post.slug || `${normalizeForComparison(post.title || '')}:${post.status || 'unknown'}`
-      if (!postsBySlug.has(dedupKey)) {
-        postsBySlug.set(dedupKey, post)
+        for (const post of pagePosts) {
+          const dedupKey = post.slug || `${normalizeForComparison(post.title || '')}:${post.status || 'unknown'}`
+          if (!postsBySlug.has(dedupKey)) {
+            postsBySlug.set(dedupKey, post)
+          }
+        }
+
+        if (pagePosts.length < pageSize) {
+          break
+        }
+      }
+
+      return Array.from(postsBySlug.values())
+    } catch (e) {
+      console.warn(`[iktracker-actions] listPostsForDedup attempt ${attempt + 1}/${retries + 1} failed:`, e)
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)))
+      } else {
+        throw e // re-throw on final attempt
       }
     }
-
-    if (pagePosts.length < pageSize) {
-      break
-    }
   }
-
-  return Array.from(postsBySlug.values())
+  return [] // unreachable but TS needs it
 }
 
 async function getPost(apiKey: string, slug: string) {
@@ -265,7 +277,8 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
         }
       }
     } catch (e) {
-      console.warn('[iktracker-actions] Semantic dedup check failed, proceeding with creation:', e)
+      console.error('[iktracker-actions] Semantic dedup check FAILED after retries — BLOCKING creation to prevent duplicates:', e)
+      return { status: 503, data: null, error: 'Dedup check failed — article creation blocked to prevent duplicates. Retry later.', _dedup_blocked: true }
     }
   }
 
