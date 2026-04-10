@@ -308,12 +308,17 @@ Deno.serve(handleRequest(async (req) => {
 
   try {
     const body = await req.json()
-    const { url, items, benchmark_items, mode } = body as {
+    const { url, items, benchmark_items, mode, engine_notes, scoring_rubric } = body as {
       url: string;
       items?: GeoItem[];
       benchmark_items?: BenchmarkItem[];
       mode?: 'standard' | 'benchmark';
+      engine_notes?: EngineNoteInput[];
+      scoring_rubric?: ScoringFieldInput[];
     }
+    
+    if (engine_notes?.length) console.log(`[parse-matrix-geo] Engine notes loaded: ${engine_notes.map(n => n.engine).join(', ')}`)
+    if (scoring_rubric?.length) console.log(`[parse-matrix-geo] Scoring rubric loaded: ${scoring_rubric.length} fields`)
 
     if (!url) {
       return jsonError('url required', 400)
@@ -336,7 +341,8 @@ Deno.serve(handleRequest(async (req) => {
         const batchResults = await Promise.all(
           batch.map(async (item): Promise<BenchmarkResult> => {
             const { score, raw, citation_found, citation_rank, citation_context } = await evaluateBenchmark(
-              item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-2.5-flash'
+              item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-2.5-flash',
+              engine_notes, scoring_rubric
             )
             return {
               id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
