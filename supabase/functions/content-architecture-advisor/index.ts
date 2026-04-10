@@ -113,7 +113,7 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
       })
     }
 
-    // ── ASYNC MODE: Enqueue and self-invoke ──
+    // ── ASYNC MODE: Enqueue and respond 202, then process via waitUntil ──
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
     const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const jobId = body._job_id
@@ -121,7 +121,7 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     const jobSb = jobId ? getServiceClient() : null
 
     if (body.async === true && !jobId) {
-      // Create async job and self-invoke
+      // Create async job
       const sb = getServiceClient()
       const { data: job, error: jobError } = await sb
         .from('async_jobs')
