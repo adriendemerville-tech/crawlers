@@ -38,6 +38,25 @@ const REMOVE_PATTERNS: { pattern: RegExp; reason: string }[] = [
   // Source type results
   { pattern: /type_de_source/i, reason: 'Source type result' },
 
+  // Brand / identity (should be in identity card, not in prompt data)
+  { pattern: /^brand$/i, reason: 'Brand column' },
+  { pattern: /^marque$/i, reason: 'Brand column' },
+  { pattern: /^brand_name/i, reason: 'Brand column' },
+  { pattern: /^nom_marque/i, reason: 'Brand column' },
+  { pattern: /^company$/i, reason: 'Brand column' },
+  { pattern: /^entreprise$/i, reason: 'Brand column' },
+
+  // Row metadata / flags
+  { pattern: /^row_id$/i, reason: 'Row ID' },
+  { pattern: /^row_num/i, reason: 'Row number' },
+  { pattern: /^prompt_id$/i, reason: 'Prompt ID' },
+  { pattern: /^priority_flag/i, reason: 'Priority flag result' },
+  { pattern: /^flag$/i, reason: 'Flag column' },
+  { pattern: /^index$/i, reason: 'Index column' },
+  { pattern: /^num[eé]ro$/i, reason: 'Row number' },
+  { pattern: /^n°$/i, reason: 'Row number' },
+  { pattern: /^#$/i, reason: 'Row number' },
+
   // IDs & technical refs
   { pattern: /^id$/i, reason: 'ID column' },
   { pattern: /^ref$/i, reason: 'Reference column' },
