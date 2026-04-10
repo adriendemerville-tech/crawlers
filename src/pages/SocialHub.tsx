@@ -44,7 +44,8 @@ const SocialHub = memo(function SocialHub() {
   const [currentPost, setCurrentPost] = useState<SocialPost | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewPlatform, setPreviewPlatform] = useState<'linkedin' | 'facebook' | 'instagram'>('linkedin');
-  const [previewContent, setPreviewContent] = useState('');
+  const [liveContent, setLiveContent] = useState<{ linkedin: string; facebook: string; instagram: string }>({ linkedin: '', facebook: '', instagram: '' });
+  const [liveHashtags, setLiveHashtags] = useState<string[]>([]);
 
   const isPro = isAgencyPro || planType === 'agency_premium';
 
