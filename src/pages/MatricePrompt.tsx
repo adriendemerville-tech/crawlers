@@ -669,16 +669,18 @@ export default function MatricePrompt() {
     const justification = raw.justification || raw.seo_justification || '';
     const prompt = row.prompt.length > 60 ? row.prompt.substring(0, 57) + '…' : row.prompt;
 
-    if (activeMatriceType === 'benchmark') {
+    if (activeScoring.direction === 'lower_better') {
       const context = result.citation_context || raw.scoring?.context || '';
       if (score === 0) return `Pour « ${prompt} », la marque n'a pas été citée par le moteur IA.`;
-      let explanation = `Pour « ${prompt} », la marque apparaît en rang ${score}.`;
+      let explanation = `Pour « ${prompt} », la marque apparaît en ${activeScoring.display.formatScore(score)}.`;
       if (context) explanation += ` Citation : "${context.length > 100 ? context.substring(0, 97) + '…' : context}"`;
       return explanation;
     }
 
-    const verdict = score >= row.seuil_bon ? 'bon' : score >= row.seuil_moyen ? 'moyen' : 'insuffisant';
-    let explanation = `Le LLM a évalué « ${prompt} » et a attribué ${score}/100 (verdict : ${verdict}).`;
+    const formatted = activeScoring.display.formatScore(score);
+    const color = activeScoring.display.formatColor(score, row.seuil_bon, row.seuil_moyen);
+    const verdict = color === 'green' ? 'bon' : color === 'yellow' ? 'moyen' : 'insuffisant';
+    let explanation = `Le LLM a évalué « ${prompt} » et a attribué ${formatted} (verdict : ${verdict}).`;
     if (justification) {
       explanation += ` Justification : ${justification.length > 120 ? justification.substring(0, 117) + '…' : justification}`;
     }
@@ -694,15 +696,15 @@ export default function MatricePrompt() {
     const engineScore = rawData.seo_engine;
     const detectedType = result.detected_type || 'auto';
     const prompt = row.prompt.length > 60 ? row.prompt.substring(0, 57) + '…' : row.prompt;
-    const verdict = score >= row.seuil_bon ? 'bon' : score >= row.seuil_moyen ? 'moyen' : 'insuffisant';
+    const color = activeScoring.display.formatColor(score, row.seuil_bon, row.seuil_moyen);
+    const verdict = color === 'green' ? 'bon' : color === 'yellow' ? 'moyen' : 'insuffisant';
     
-    let explanation = `Pour « ${prompt} », Crawlers a mesuré ${score}/100 (${verdict}) via ses micro-fonctions (type détecté : ${detectedType}).`;
+    let explanation = `Pour « ${prompt} », Crawlers a mesuré ${activeScoring.display.formatScore(score)} (${verdict}) via ses micro-fonctions (type détecté : ${detectedType}).`;
     
     if (engineScore != null) {
       explanation += ` Score moteur technique pur : ${engineScore}/100, pondéré à 60% avec le score LLM à 40%.`;
     }
     
-    // Surface specific raw findings
     const details: string[] = [];
     if (rawData.title_length != null) details.push(`title: ${rawData.title_length} car.`);
     if (rawData.meta_desc_length != null) details.push(`meta desc: ${rawData.meta_desc_length} car.`);
@@ -723,15 +725,9 @@ export default function MatricePrompt() {
 
 
     const getScoreColor = (score: number, bon: number, moyen: number) => {
-    // Benchmark mode: lower is better (rank-based: 1=best, 3=acceptable)
-    if (activeMatriceType === 'benchmark') {
-      if (score === 0) return 'text-red-600'; // Not cited
-      if (score <= bon) return 'text-green-600'; // e.g. rank ≤ 3
-      if (score <= moyen) return 'text-yellow-600'; // e.g. rank ≤ 10
-      return 'text-red-600'; // rank > 10
-    }
-    if (score >= bon) return 'text-green-600';
-    if (score >= moyen) return 'text-yellow-600';
+    const color = activeScoring.display.formatColor(score, bon, moyen);
+    if (color === 'green') return 'text-green-600';
+    if (color === 'yellow') return 'text-yellow-600';
     return 'text-red-600';
   };
 
