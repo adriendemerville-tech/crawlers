@@ -337,7 +337,7 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
       .eq('domain', domain)
       .in('finding_category', ['keyword_data', 'quick_win', 'content_gap', 'missing_terms', 'serp_analysis', 'missing_page', 'content_upgrade', 'competitive_gap'])
       .order('created_at', { ascending: false })
-      .limit(100)
+      .limit(40)
 
     if (wbKeywordItems && wbKeywordItems.length > 0) {
       // We have strategic audit data in workbench — reconstruct keyword/SERP context
@@ -515,7 +515,7 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
         .eq('consumed_by_content', false)
         .eq('status', 'pending')
         .order('severity', { ascending: true })
-        .limit(30),
+        .limit(12),
       // Fetch keyword cloud from SERP snapshots (reference universe)
       tracked_site_id
         ? serviceClient.from('serp_snapshots').select('sample_keywords')
@@ -898,11 +898,10 @@ RÈGLE : Le mot-clé principal "${keyword}" DOIT être cohérent avec l'univers 
 ${workbenchItems.length > 0 ? `
 ── DIAGNOSTICS CONSOLIDÉS (Workbench Partagé) ──
 Les diagnostics suivants ont été identifiés par les différents modules d'analyse et sont assignés au Content Architect :
-${workbenchItems.slice(0, 15).map((item: any, i: number) => `${i + 1}. [${(item.severity || 'medium').toUpperCase()}] ${item.title}${item.target_url ? ` (${item.target_url})` : ''}
-   Source: ${item.source_type} | Catégorie: ${item.finding_category}
-   ${item.description ? `Description: ${item.description.substring(0, 200)}` : ''}`).join('\n\n')}
+${workbenchItems.slice(0, 8).map((item: any, i: number) => `${i + 1}. [${(item.severity || 'medium').toUpperCase()}] ${item.title}${item.target_url ? ` (${item.target_url})` : ''}
+   ${item.description ? item.description.substring(0, 120) : ''}`).join('\n')}
 
-RÈGLE : Intègre ces findings dans ta recommandation. Chaque diagnostic pertinent pour le contenu cible doit se refléter dans la structure ou la stratégie proposée.
+RÈGLE : Intègre ces findings dans ta recommandation.
 ` : ''}
 
 ${workbenchQuickWins.length > 0 ? `
@@ -1179,7 +1178,7 @@ FRAÎCHEUR & DÉNOMINATION:
         }],
         tool_choice: { type: 'function', function: { name: 'content_architecture_recommendation' } },
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(120000),
     })
 
     if (!aiResponse.ok) {
