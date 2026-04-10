@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon, PenTool, Trash2, FileText } from 'lucide-react';
+import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon, PenTool, Trash2, FileText, Euro } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
@@ -351,7 +351,10 @@ export default function ConversionOptimizer() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <TrendingUp className="h-6 w-6 text-emerald-700" />
+              <span className="relative inline-flex items-center justify-center h-7 w-7">
+                <TrendingUp className="h-6 w-6 text-emerald-700" />
+                <Euro className="absolute -top-1.5 left-1/2 -translate-x-1/2 h-3 w-3 text-emerald-600" />
+              </span>
               Conversion Optimizer
             </h1>
             <p className="text-sm text-muted-foreground">Analyse UX contextuelle de vos pages crawlées</p>
