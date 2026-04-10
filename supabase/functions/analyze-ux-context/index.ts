@@ -549,6 +549,76 @@ async function captureScreenshotWithAnnotations(
     }).filter(i => i.src && !i.src.startsWith('data:'));
   });
 
+  // ── Chunkability signals extraction ──
+  const chunkabilitySignals = await page.evaluate(() => {
+    const body = document.body;
+    const allText = body.innerText || '';
+    const totalWords = allText.split(/\\s+/).filter(w => w.length > 0).length;
+
+    // 1. Heading structure analysis
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+    const h1Count = headings.filter(h => h.tagName === 'H1').length;
+    const h2Count = headings.filter(h => h.tagName === 'H2').length;
+    const h3Count = headings.filter(h => h.tagName === 'H3').length;
+    const headingLevels = headings.map(h => parseInt(h.tagName[1]));
+    let hierarchyBreaks = 0;
+    for (let i = 1; i < headingLevels.length; i++) {
+      if (headingLevels[i] - headingLevels[i - 1] > 1) hierarchyBreaks++;
+    }
+
+    // 2. Section length analysis (text between headings)
+    const sectionWordCounts = [];
+    for (let i = 0; i < headings.length; i++) {
+      let textContent = '';
+      let sibling = headings[i].nextElementSibling;
+      while (sibling && !['H1','H2','H3','H4','H5','H6'].includes(sibling.tagName)) {
+        textContent += (sibling.innerText || sibling.textContent || '') + ' ';
+        sibling = sibling.nextElementSibling;
+      }
+      const words = textContent.trim().split(/\\s+/).filter(w => w.length > 0).length;
+      if (words > 0) sectionWordCounts.push(words);
+    }
+    const optimalSections = sectionWordCounts.filter(w => w >= 150 && w <= 400).length;
+    const oversizedSections = sectionWordCounts.filter(w => w > 800).length;
+    const tinySections = sectionWordCounts.filter(w => w < 50 && w > 0).length;
+
+    // 3. Semantic tags usage
+    const semanticTags = ['article', 'section', 'aside', 'nav', 'figure', 'figcaption', 'main', 'header', 'footer'];
+    const semanticCount = semanticTags.reduce((sum, tag) => sum + document.querySelectorAll(tag).length, 0);
+    const divCount = document.querySelectorAll('div').length;
+
+    // 4. Lists & tables
+    const listCount = document.querySelectorAll('ul, ol').length;
+    const listItemCount = document.querySelectorAll('li').length;
+    const tableCount = document.querySelectorAll('table').length;
+
+    // 5. Structured data
+    const jsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]');
+    const hasJsonLd = jsonLdScripts.length > 0;
+    const hasMicrodata = document.querySelectorAll('[itemscope]').length > 0;
+
+    // 6. Boilerplate ratio (nav + footer text vs total)
+    const navFooterText = Array.from(document.querySelectorAll('nav, footer'))
+      .map(el => (el.innerText || '').trim())
+      .join(' ');
+    const navFooterWords = navFooterText.split(/\\s+/).filter(w => w.length > 0).length;
+    const boilerplateRatio = totalWords > 0 ? navFooterWords / totalWords : 0;
+
+    return {
+      totalWords,
+      headingCount: headings.length,
+      h1Count, h2Count, h3Count,
+      hierarchyBreaks,
+      sectionCount: sectionWordCounts.length,
+      sectionWordCounts: sectionWordCounts.slice(0, 20),
+      optimalSections, oversizedSections, tinySections,
+      semanticCount, divCount,
+      listCount, listItemCount, tableCount,
+      hasJsonLd, hasMicrodata, jsonLdCount: jsonLdScripts.length,
+      boilerplateRatio: Math.round(boilerplateRatio * 100) / 100,
+    };
+  });
+
   const screenshot = await page.screenshot({
     type: 'jpeg',
     quality: 75,
