@@ -1064,10 +1064,26 @@ interface LlmsTxtAnalysis {
   exists: boolean;
   contentLength: number;
   hasStructuredFormat: boolean;
+  qualityScore: number; // 0-100
+  qualityDetails: {
+    wordCount: number;
+    hasHeadings: boolean;
+    headingCount: number;
+    hasMission: boolean;
+    hasServices: boolean;
+    hasUrls: boolean;
+    urlCount: number;
+    hasContactInfo: boolean;
+    hasInstructions: boolean;
+    hasFAQ: boolean;
+    completenessLevel: 'absent' | 'minimal' | 'basic' | 'good' | 'excellent';
+    issues: string[];
+  };
 }
 
 async function checkLlmsTxt(url: string): Promise<LlmsTxtAnalysis> {
   console.log('Checking llms.txt...');
+  const emptyQuality = { wordCount: 0, hasHeadings: false, headingCount: 0, hasMission: false, hasServices: false, hasUrls: false, urlCount: 0, hasContactInfo: false, hasInstructions: false, hasFAQ: false, completenessLevel: 'absent' as const, issues: [] };
   try {
     const origin = new URL(url).origin;
     const controller = new AbortController();
@@ -1077,13 +1093,72 @@ async function checkLlmsTxt(url: string): Promise<LlmsTxtAnalysis> {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
     });
     clearTimeout(timeoutId);
-    if (!response.ok) return { exists: false, contentLength: 0, hasStructuredFormat: false };
+    if (!response.ok) return { exists: false, contentLength: 0, hasStructuredFormat: false, qualityScore: 0, qualityDetails: emptyQuality };
     const content = await response.text();
-    // Check for structured formatting (headings, sections)
+    const contentLower = content.toLowerCase();
+    
+    // Structured format
     const hasStructuredFormat = /^#\s/m.test(content) || /^\*\*/m.test(content) || content.includes('## ');
-    return { exists: true, contentLength: content.length, hasStructuredFormat };
+    
+    // Quality analysis
+    const words = content.split(/\s+/).filter(w => w.length > 0);
+    const wordCount = words.length;
+    const headings = content.match(/^#{1,3}\s.+/gm) || [];
+    const hasHeadings = headings.length > 0;
+    const urls = content.match(/https?:\/\/[^\s)>\]]+/g) || [];
+    
+    // Semantic coverage detection
+    const hasMission = /mission|about|à propos|qui sommes|who we are|notre entreprise|our company|purpose/i.test(content);
+    const hasServices = /services?|produits?|products?|solutions?|offres?|capabilities|fonctionnalit/i.test(content);
+    const hasContactInfo = /contact|email|@|téléphone|phone|adresse|address/i.test(content);
+    const hasInstructions = /instruction|comportement|behavior|usage|guideline|règle|rule|do not|ne pas/i.test(content);
+    const hasFAQ = /faq|questions?|foire aux questions|frequently asked/i.test(content);
+    
+    const issues: string[] = [];
+    let qualityScore = 0;
+    
+    // Length (20 pts)
+    if (wordCount >= 50) qualityScore += 5; else issues.push('Contenu trop court (< 50 mots)');
+    if (wordCount >= 150) qualityScore += 5;
+    if (wordCount >= 300) qualityScore += 5;
+    if (wordCount >= 500) qualityScore += 5;
+    
+    // Structure (20 pts)
+    if (hasHeadings) qualityScore += 10; else issues.push('Aucun heading Markdown (#) pour structurer le contenu');
+    if (headings.length >= 3) qualityScore += 5;
+    if (headings.length >= 6) qualityScore += 5;
+    
+    // Semantic coverage (40 pts)
+    if (hasMission) qualityScore += 10; else issues.push('Section mission/identité absente');
+    if (hasServices) qualityScore += 10; else issues.push('Section services/produits absente');
+    if (hasInstructions) qualityScore += 10; else issues.push('Aucune instruction de comportement pour les LLM');
+    if (hasFAQ) qualityScore += 5;
+    if (hasContactInfo) qualityScore += 5; else issues.push('Aucune info de contact');
+    
+    // URLs / resources (15 pts)
+    if (urls.length > 0) qualityScore += 5; else issues.push('Aucun lien URL vers des ressources clés');
+    if (urls.length >= 3) qualityScore += 5;
+    if (urls.length >= 6) qualityScore += 5;
+    
+    // Freshness signals (5 pts)
+    const yearPattern = new RegExp(`(202[4-9]|203\\d)`, 'g');
+    if (yearPattern.test(content)) qualityScore += 5; else issues.push('Aucune date récente — risque de contenu obsolète');
+    
+    // Completeness level
+    let completenessLevel: 'absent' | 'minimal' | 'basic' | 'good' | 'excellent' = 'minimal';
+    if (qualityScore >= 30) completenessLevel = 'basic';
+    if (qualityScore >= 55) completenessLevel = 'good';
+    if (qualityScore >= 80) completenessLevel = 'excellent';
+    
+    return {
+      exists: true,
+      contentLength: content.length,
+      hasStructuredFormat,
+      qualityScore: Math.min(100, qualityScore),
+      qualityDetails: { wordCount, hasHeadings, headingCount: headings.length, hasMission, hasServices, hasUrls: urls.length > 0, urlCount: urls.length, hasContactInfo, hasInstructions, hasFAQ, completenessLevel, issues },
+    };
   } catch {
-    return { exists: false, contentLength: 0, hasStructuredFormat: false };
+    return { exists: false, contentLength: 0, hasStructuredFormat: false, qualityScore: 0, qualityDetails: emptyQuality };
   }
 }
 
