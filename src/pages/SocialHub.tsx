@@ -201,21 +201,26 @@ const SocialHub = memo(function SocialHub() {
                   onPublish={handlePublish}
                   onExport={handleExport}
                   saving={saving}
+                  onPlatformChange={(p) => setPreviewPlatform(p as 'linkedin' | 'facebook' | 'instagram')}
+                  onContentChange={(platform, content, hashtags) => {
+                    setLiveContent(prev => ({ ...prev, [platform]: content }));
+                    setLiveHashtags(hashtags);
+                  }}
                 />
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs cursor-pointer" onClick={() => setPreviewPlatform('linkedin')}>LinkedIn</Badge>
-                    <Badge variant="outline" className="text-xs cursor-pointer" onClick={() => setPreviewPlatform('facebook')}>Facebook</Badge>
-                    <Badge variant="outline" className="text-xs cursor-pointer" onClick={() => setPreviewPlatform('instagram')}>Instagram</Badge>
+                    <Badge variant={previewPlatform === 'linkedin' ? 'default' : 'outline'} className="text-xs cursor-pointer" onClick={() => setPreviewPlatform('linkedin')}>LinkedIn</Badge>
+                    <Badge variant={previewPlatform === 'facebook' ? 'default' : 'outline'} className="text-xs cursor-pointer" onClick={() => setPreviewPlatform('facebook')}>Facebook</Badge>
+                    <Badge variant={previewPlatform === 'instagram' ? 'default' : 'outline'} className="text-xs cursor-pointer" onClick={() => setPreviewPlatform('instagram')}>Instagram</Badge>
                   </div>
                   <SocialPreview
                     platform={previewPlatform}
-                    content={
+                    content={liveContent[previewPlatform] || (
                       previewPlatform === 'linkedin' ? (currentPost?.content_linkedin || '') :
                       previewPlatform === 'facebook' ? (currentPost?.content_facebook || '') :
                       (currentPost?.content_instagram || '')
-                    }
-                    hashtags={currentPost?.hashtags}
+                    )}
+                    hashtags={liveHashtags.length > 0 ? liveHashtags : currentPost?.hashtags}
                     accountName={selectedDomain}
                   />
                 </div>
