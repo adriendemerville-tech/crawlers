@@ -74,6 +74,7 @@ export function ActiveCrawlBanner() {
       const { data } = await supabase
         .from('site_crawls')
         .select('id, domain, status, crawled_pages, total_pages')
+        .eq('user_id', user.id)
         .in('status', ['queued', 'mapping', 'crawling', 'analyzing'])
         .order('created_at', { ascending: false })
         .limit(5);
