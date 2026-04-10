@@ -308,22 +308,24 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
                 const rectHeight = Math.max(18, suggestion.rect.height * scale);
                 const rectCenterY = rectY + rectHeight / 2;
 
-                // Connector: L-shaped path from bubble right edge to element left edge
+                // Straight horizontal connector from bubble to element
                 const startX = BUBBLE_COLUMN_WIDTH - 8;
                 const endX = rectX;
-                const midX = startX + (endX - startX) * 0.4;
+                // Use the element's Y center for the line
+                const lineY = rectCenterY;
 
                 return (
                   <g key={`${suggestion.index}-${suggestion.title}`} style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.35s ease' }}>
-                    {/* L-shaped connector line: horizontal from bubble, then vertical to element Y, then horizontal to element */}
-                    <path
-                      d={`M ${startX} ${bubbleCenterY} L ${midX} ${bubbleCenterY} L ${midX} ${rectCenterY} L ${endX} ${rectCenterY}`}
-                      fill="none"
+                    {/* Horizontal line from bubble column edge to element */}
+                    <line
+                      x1={startX}
+                      y1={lineY}
+                      x2={endX}
+                      y2={lineY}
                       stroke={colors.line}
                       strokeWidth={isHovered ? 2.5 : 1.5}
                       opacity={isHovered ? 0.95 : 0.55}
                       strokeLinecap="round"
-                      strokeLinejoin="round"
                     />
                     {/* Element highlight rectangle */}
                     <rect
