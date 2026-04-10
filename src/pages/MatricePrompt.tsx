@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
-import ImportStepper from '@/components/Matrice/ImportStepper';
+import ImportStepper, { type MatrixMetadata } from '@/components/Matrice/ImportStepper';
 import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
@@ -85,6 +85,7 @@ export default function MatricePrompt() {
   const [errorDesc, setErrorDesc] = useState('');
   const [submittingError, setSubmittingError] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [activeMetadata, setActiveMetadata] = useState<MatrixMetadata | null>(null);
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
 
@@ -523,7 +524,13 @@ export default function MatricePrompt() {
         }));
 
         const { data: fnData, error: fnError } = await supabase.functions.invoke('parse-matrix-geo', {
-          body: { url: url.trim(), benchmark_items: benchmarkItems, mode: 'benchmark' },
+          body: {
+            url: url.trim(),
+            benchmark_items: benchmarkItems,
+            mode: 'benchmark',
+            engine_notes: activeMetadata?.engineNotes,
+            scoring_rubric: activeMetadata?.scoringGuide,
+          },
         });
 
         if (fnError || !fnData?.success) {
@@ -563,7 +570,12 @@ export default function MatricePrompt() {
         : 'audit-matrice';
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke(functionName, {
-        body: { url: url.trim(), items },
+        body: {
+          url: url.trim(),
+          items,
+          engine_notes: activeMetadata?.engineNotes,
+          scoring_rubric: activeMetadata?.scoringGuide,
+        },
       });
 
       if (fnError || !fnData?.success) {
