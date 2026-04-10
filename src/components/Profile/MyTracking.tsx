@@ -537,7 +537,7 @@ export function MyTracking() {
                         })()}
 
 
-                        {!h.gscConnected && !isMobile && (
+                        {!h.gscHasToken && !isMobile && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -694,8 +694,10 @@ export function MyTracking() {
                         {/* LLM Depth */}
                         <LLMDepthCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} key={`llm-depth-${h.currentSite.id}-${h.llmBenchmarkRefreshKey}`} />
 
-                        {/* IAS */}
-                        <IASCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} isPremium={h.isAgencyPro} />
+                        {/* IAS — only if site is verified in GSC */}
+                        {h.gscSiteVerified && (
+                          <IASCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} isPremium={h.isAgencyPro} />
+                        )}
 
                         {/* Keyword Cloud */}
                         {h.latestSerpData?.sample_keywords && (
