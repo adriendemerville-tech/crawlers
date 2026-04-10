@@ -1,3 +1,4 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getServiceClient, getUserClient } from "../_shared/supabaseClient.ts";
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -14,6 +15,29 @@ import { corsHeaders } from '../_shared/cors.ts'
 const SCHEMA_REFERENCE = `
 # DATABASE SCHEMA (public)
 
+## GLOSSAIRE MÉTIER → TABLES
+- "scripts" ou "correctifs générés" → site_script_rules (chaque ligne = 1 script injecté via SDK/GTM/WP). Comptage: COUNT(*) sur site_script_rules
+- "audits" ou "audits lancés" → audits (chaque ligne = 1 audit déclenché par un user). audit_raw_data contient les payloads bruts
+- "rapports" ou "rapports PDF" → pdf_audits (chaque ligne = 1 rapport PDF généré). status = 'processed' = terminé
+- "crawls" → site_crawls (chaque ligne = 1 crawl multi-pages)
+- "plans d'action" → action_plans
+- "utilisateurs" ou "inscrits" → profiles
+- "conversations support" → sav_conversations
+- "bugs signalés" → user_bug_reports
+- "crédits utilisés" → credit_transactions WHERE transaction_type = 'usage'
+- "sessions cocoon" → cocoon_sessions
+- "publications content architect" → cocoon_batch_operations (operation_type, status, total_pages, processed_pages)
+- "erreurs cocoon" → cocoon_errors (domain, problem_description, is_crawled)
+- "cycles autopilote / parménion" → parmenion_decision_log (cycle_number, goal_type, action_type, status, is_error)
+
+## PÉRIODES TEMPORELLES
+- "aujourd'hui" → created_at >= date_trunc('day', now())
+- "hier" → created_at >= date_trunc('day', now() - interval '1 day') AND created_at < date_trunc('day', now())
+- "cette semaine" → created_at >= date_trunc('week', now())
+- "ce mois" ou "ce mois-ci" → created_at >= date_trunc('month', now())
+- "la semaine dernière" → created_at >= date_trunc('week', now() - interval '1 week') AND created_at < date_trunc('week', now())
+- "le mois dernier" → created_at >= date_trunc('month', now() - interval '1 month') AND created_at < date_trunc('month', now())
+
 ## Core tables
 - profiles: user_id (uuid PK), email, first_name, last_name, plan_type (free|agency_pro), subscription_status, credits_balance, persona_type, affiliate_code_used, referral_code, created_at, updated_at
 - user_roles: id, user_id, role (admin|viewer|viewer_level2|auditor), expires_at
@@ -21,17 +45,21 @@ const SCHEMA_REFERENCE = `
 - credit_transactions: id, user_id, amount, transaction_type (usage|bonus|purchase|refund), description, created_at
 
 ## Audits & Analysis
-- audits: id, user_id, url, domain, fixes_count, dynamic_price, payment_status, created_at
+- audits: id, user_id, url, domain, fixes_count, dynamic_price, payment_status, created_at — CHAQUE LIGNE = 1 AUDIT LANCÉ
 - audit_raw_data: id, user_id, url, domain, audit_type, source_functions, created_at
 - audit_recommendations_registry: id, user_id, url, domain, audit_type, title, category, priority, is_resolved, fix_type
-- pdf_audits: id, user_id, domain, url, audit_type, status, created_at
+- pdf_audits: id, user_id, domain, url, audit_type, status, created_at — CHAQUE LIGNE = 1 RAPPORT PDF GÉNÉRÉ
 - audit_cache: id, cache_key, function_name, expires_at
 - audit_impact_snapshots: id, user_id, url, domain, audit_type, impact_score, measurement_phase
 
 ## Crawl
-- site_crawls: id, user_id, domain, url, status (pending|crawling|completed|error), total_pages, crawled_pages, avg_score, created_at
+- site_crawls: id, user_id, domain, url, status (queued|mapping|crawling|analyzing|completed|error), total_pages, crawled_pages, avg_score, created_at, completed_at
 - crawl_pages: id, crawl_id, url, path, http_status, seo_score, word_count, h1, title, has_schema_org, is_indexable, internal_links, external_links
 - crawl_jobs: id, crawl_id, user_id, domain, status, total_count, processed_count, priority
+
+## Scripts correctifs
+- site_script_rules: id, user_id, domain_id, url_pattern, payload_type, payload_data, created_at — CHAQUE LIGNE = 1 SCRIPT CORRECTIF GÉNÉRÉ
+- site_script_rules_history: id, rule_id, domain_id, user_id, url_pattern, payload_type, payload_data, version, created_at
 
 ## Cocoon
 - cocoon_sessions: id, user_id, tracked_site_id, domain, nodes_count, clusters_count, chat_turns, avg_geo_score, avg_eeat_score, created_at
@@ -40,6 +68,13 @@ const SCHEMA_REFERENCE = `
 - cocoon_tasks: id, user_id, tracked_site_id, title, priority, status
 - cocoon_diagnostic_results: id, user_id, tracked_site_id, diagnostic_type, scores, findings
 - cocoon_recommendations: id, user_id, tracked_site_id, domain, summary, is_applied
+- cocoon_batch_operations: id, user_id, tracked_site_id, domain, operation_type, mode, status, total_pages, processed_pages, failed_pages, created_at, completed_at, error_message — PUBLICATIONS CONTENT ARCHITECT
+- cocoon_errors: id, domain, problem_description, created_at, is_crawled, ai_response — REGISTRE DES ERREURS COCOON
+
+## Autopilote (Parménion)
+- parmenion_decision_log: id, domain, cycle_number, goal_type, goal_description, action_type, status, impact_level, risk_predicted, risk_calibrated, is_error, error_category, calibration_note, execution_error, impact_predicted, impact_actual, estimated_tokens, functions_called, scope_reductions, goal_changed, created_at
+- autopilot_configs: id, user_id, tracked_site_id, is_active, status, implementation_mode, total_cycles_run, last_cycle_at, cooldown_hours
+- autopilot_modification_log: id, user_id, tracked_site_id, action_type, phase, description, page_url, status, cycle_number, created_at
 
 ## Support & SAV
 - sav_conversations: id, user_id, user_email, messages, message_count, escalated, phone_callback, created_at
@@ -52,6 +87,9 @@ const SCHEMA_REFERENCE = `
 
 ## Agents
 - cto_agent_logs: id, function_analyzed, confidence_score, decision, analysis_summary, self_critique, created_at
+- agent_cto_directives: id, user_id, directive_text, target_function, status, consumed_at, created_at
+- agent_seo_directives: id, user_id, directive_text, target_slug, status, consumed_at, created_at
+- agent_ux_directives: id, user_id, directive_text, target_component, status, consumed_at, created_at
 - predictions: id, url, domain, predicted_traffic, model_version, created_at
 - actual_results: id, prediction_id, real_traffic_after_90_days, accuracy_gap
 
@@ -67,7 +105,6 @@ const SCHEMA_REFERENCE = `
 ## Content
 - blog_articles: id, title, slug, content, status, published_at
 - action_plans: id, user_id, url, audit_type, title, tasks, is_archived
-- site_script_rules: id, user_id, domain_id, url_pattern, payload_type, payload_data
 
 ## Monitoring
 - anomaly_alerts: id, user_id, tracked_site_id, domain, metric_name, severity, direction, z_score, is_read
@@ -79,24 +116,16 @@ const SCHEMA_REFERENCE = `
 - agency_team_members: id, owner_user_id, member_user_id, role
 - agency_invitations: id, owner_user_id, email, role, status, token
 
+## AI Usage
+- ai_gateway_usage: id, model, gateway, edge_function, prompt_tokens, completion_tokens, total_tokens, estimated_cost_usd, is_fallback, created_at
+
 ## Functions (RPC)
 - has_role(_user_id, _role) → boolean
 - check_fair_use_v2(p_user_id, p_action, p_hourly_limit, p_daily_limit) → jsonb
 - get_database_size() → jsonb
 - use_credit(p_user_id, p_description, p_amount) → jsonb
-- downgrade_expired_subscriptions() → integer
-- recalculate_reliability() → void
-
-## Edge Functions (121 total, key ones)
-Audits: audit-expert-seo, audit-strategique-ia, audit-compare, audit-local-seo
-Crawl: crawl-site, calculate-cocoon-logic, calculate-internal-pagerank
-Cocoon: cocoon-chat, cocoon-strategist, cocoon-diag-content/semantic/structure/authority
-Strategy: content-architecture-advisor, detect-anomalies
-Visibility: check-llm, check-llm-depth, diagnose-hallucination, calculate-llm-volumes
-Code: generate-corrective-code, process-script-queue
-SAV: sav-agent, submit-bug-report
-Agent: supervisor-actions (CTO)
-Auth: stripe-webhook, gsc-auth, gmb-actions
+- parmenion_error_rate(p_domain, p_last_n) → jsonb
+- parmenion_recent_errors(p_domain, p_limit) → table
 `;
 
 const QUERY_SYSTEM_PROMPT = `Tu es un assistant base de données READ-ONLY pour Crawlers.fr.
