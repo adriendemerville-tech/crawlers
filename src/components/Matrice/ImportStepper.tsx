@@ -180,17 +180,20 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const [cleaning, setCleaning] = useState<CleaningResult | null>(null);
   const [identityCard, setIdentityCard] = useState<IdentityCard | null>(null);
   const [detectedVariableSheets, setDetectedVariableSheets] = useState<string[]>([]);
+  const [detectedMetaSheets, setDetectedMetaSheets] = useState<Record<string, 'engine_notes' | 'scoring_guide'>>({});
+  const [matrixMetadata, setMatrixMetadata] = useState<MatrixMetadata | null>(null);
   const [loading, setLoading] = useState(false);
 
   const hasMultipleSheets = sheetNames.length > 1;
   const steps = hasMultipleSheets ? STEPS_MULTI : STEPS_SINGLE;
 
-  // ── Auto-detect variable sheets on open ─────────────────────────────
+  // ── Auto-detect variable + metadata sheets on open ──────────────────
   useEffect(() => {
     if (!open || !workbook || sheetNames.length === 0) return;
-    const detectVariableSheets = async () => {
+    const detectSpecialSheets = async () => {
       const { utils } = await import('xlsx');
       const varSheets: string[] = [];
+      const metaSheets: Record<string, 'engine_notes' | 'scoring_guide'> = {};
       for (const name of sheetNames) {
         const sheet = workbook.Sheets[name];
         const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
@@ -198,12 +201,17 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
           const h = Object.keys(rows[0]);
           if (isVariableSheet(name, h)) {
             varSheets.push(name);
+          } else if (isEngineNotesSheet(name, h)) {
+            metaSheets[name] = 'engine_notes';
+          } else if (isScoringGuideSheet(name, h)) {
+            metaSheets[name] = 'scoring_guide';
           }
         }
       }
       setDetectedVariableSheets(varSheets);
+      setDetectedMetaSheets(metaSheets);
     };
-    detectVariableSheets();
+    detectSpecialSheets();
   }, [open, workbook, sheetNames]);
 
   // ── Toggle a sheet in multi-select ──────────────────────────────────
@@ -221,6 +229,8 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       const { utils } = await import('xlsx');
       let dataRows: Record<string, any>[] = [];
       let card: IdentityCard | null = null;
+      let engineNotes: EngineNote[] = [];
+      let scoringGuide: ScoringField[] = [];
       const dataSheetNames: string[] = [];
 
       for (const sheetName of sheets) {
@@ -237,7 +247,21 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         if (isVariableSheet(sheetName, h)) {
           console.log(`[ImportStepper] Variable sheet detected: "${sheetName}" (${rows.length} vars)`);
           card = extractIdentityCard(rows, h);
-          continue; // Don't merge Variable rows into data rows
+          continue;
+        }
+
+        // Check Engine Notes sheet
+        if (isEngineNotesSheet(sheetName, h)) {
+          engineNotes = extractEngineNotes(rows, h);
+          console.log(`[ImportStepper] Engine notes extracted: ${engineNotes.length} engines (${engineNotes.map(e => e.engine).join(', ')})`);
+          continue;
+        }
+
+        // Check Scoring Guide sheet
+        if (isScoringGuideSheet(sheetName, h)) {
+          scoringGuide = extractScoringGuide(rows, h);
+          console.log(`[ImportStepper] Scoring guide extracted: ${scoringGuide.length} fields (${scoringGuide.map(f => f.field).join(', ')})`);
+          continue;
         }
 
         console.log(`[ImportStepper] Data sheet "${sheetName}": ${rows.length} rows, ${h.length} cols`);
@@ -245,7 +269,25 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         dataRows = dataRows.concat(rows);
       }
 
+      // Also parse non-selected meta sheets automatically (they enrich, not data)
+      for (const [metaName, metaType] of Object.entries(detectedMetaSheets)) {
+        if (sheets.includes(metaName)) continue; // already processed
+        const sheet = workbook.Sheets[metaName];
+        const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+        if (rows.length === 0) continue;
+        const h = Object.keys(rows[0]);
+        if (metaType === 'engine_notes' && engineNotes.length === 0) {
+          engineNotes = extractEngineNotes(rows, h);
+          console.log(`[ImportStepper] Auto-extracted engine notes from "${metaName}": ${engineNotes.length} engines`);
+        } else if (metaType === 'scoring_guide' && scoringGuide.length === 0) {
+          scoringGuide = extractScoringGuide(rows, h);
+          console.log(`[ImportStepper] Auto-extracted scoring guide from "${metaName}": ${scoringGuide.length} fields`);
+        }
+      }
+
       setIdentityCard(card);
+      const meta: MatrixMetadata = { engineNotes, scoringGuide };
+      setMatrixMetadata(meta.engineNotes.length > 0 || meta.scoringGuide.length > 0 ? meta : null);
 
       if (!dataRows.length) {
         // If only variable sheets were selected, warn user
@@ -300,6 +342,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
       setDetection(null);
       setCleaning(null);
       setIdentityCard(null);
+      setMatrixMetadata(null);
       setLoading(false);
     }
   }, [open, sheetNames, workbook]);
