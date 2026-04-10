@@ -46,54 +46,49 @@ export function PatienceCards({ isActive, position, sector }: PatienceCardsProps
   useEffect(() => {
     if (!isActive) return;
     const fetchCards = async () => {
-      // Fetch patience cards + seasonal data in parallel
-      const promises: Promise<any>[] = [
+      const [newsRes, tipRes] = await Promise.all([
         supabase
           .from('patience_cards' as any)
           .select('id, card_type, content, category')
           .eq('card_type', 'news')
           .eq('is_active', true)
           .order('relevance_score', { ascending: false })
-          .limit(10)
-          .then(r => r),
+          .limit(10),
         supabase
           .from('patience_cards' as any)
           .select('id, card_type, content, category')
           .eq('card_type', 'tip')
           .eq('is_active', true)
           .order('relevance_score', { ascending: false })
-          .limit(10)
-          .then(r => r),
-      ];
-
-      // Fetch sector-specific seasonal news if sector available
-      if (sector) {
-        promises.push(
-          supabase.rpc('get_seasonal_news' as any, { p_sector: sector, p_geo: 'FR', p_limit: 5 }).then(r => r),
-          supabase.rpc('get_active_seasonal_context' as any, { p_sector: sector, p_geo: 'FR' }).then(r => r),
-        );
-      }
-
-      const results = await Promise.all(promises);
-      const [newsRes, tipRes, ...seasonalResults] = results;
+          .limit(10),
+      ]);
 
       const newsCards = (newsRes.data as any[]) || [];
       const tipCards = (tipRes.data as any[]) || [];
 
-      // If we have seasonal news, use them for the news card instead of generic patience cards
-      if (seasonalResults.length >= 1 && seasonalResults[0]?.data?.length > 0) {
-        const sNews = seasonalResults[0].data as SeasonalNews[];
-        const picked = sNews[Math.floor(Math.random() * Math.min(sNews.length, 3))];
+      // Fetch sector-specific seasonal data if sector available
+      let sectorNews: SeasonalNews[] = [];
+      let sectorEvents: SeasonalEvent[] = [];
+      if (sector) {
+        const [newsResult, eventResult] = await Promise.all([
+          supabase.rpc('get_seasonal_news' as any, { p_sector: sector, p_geo: 'FR', p_limit: 5 }),
+          supabase.rpc('get_active_seasonal_context' as any, { p_sector: sector, p_geo: 'FR' }),
+        ]);
+        sectorNews = (newsResult.data as SeasonalNews[]) || [];
+        sectorEvents = (eventResult.data as SeasonalEvent[]) || [];
+      }
+
+      // Prioritize seasonal news over generic patience cards
+      if (sectorNews.length > 0) {
+        const picked = sectorNews[Math.floor(Math.random() * Math.min(sectorNews.length, 3))];
         setSeasonalNews(picked);
-        // Don't set generic news card — seasonal takes priority
       } else if (newsCards.length > 0) {
         setNewsCard(newsCards[Math.floor(Math.random() * newsCards.length)] as PatienceCard);
       }
 
-      // If we have seasonal events, show them as contextual tips
-      if (seasonalResults.length >= 2 && seasonalResults[1]?.data?.length > 0) {
-        const events = seasonalResults[1].data as SeasonalEvent[];
-        const activeEvent = events.find(e => e.is_in_peak) || events.find(e => e.is_in_prep);
+      // Seasonal events as contextual tips
+      if (sectorEvents.length > 0) {
+        const activeEvent = sectorEvents.find(e => e.is_in_peak) || sectorEvents.find(e => e.is_in_prep);
         if (activeEvent) setSeasonalEvent(activeEvent);
       }
 
