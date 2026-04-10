@@ -11,6 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPageView';
+import { ProAccessGate } from '@/components/ProAccessGate';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import type { ManualAnnotation } from '@/components/ConversionOptimizer/ManualAnnotationOverlay';
 
 const CocoonContentArchitectModal = lazy(() =>
