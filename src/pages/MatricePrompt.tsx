@@ -312,7 +312,7 @@ export default function MatricePrompt() {
     if (rawRows.length === 0) return;
 
     // Use smart defaults based on detected matrice type
-    const smartDef = matriceType ? getSmartDefaults(matriceType) : DEFAULTS;
+    const smartDef = matriceType ? getSmartDefaults(matriceType, activeScoringMethod) : getSmartDefaults('seo');
 
     // Step 1: Fuzzy column mapping
     const headers = Object.keys(rawRows[0] || {});
