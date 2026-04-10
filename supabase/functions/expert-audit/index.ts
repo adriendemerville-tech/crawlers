@@ -1964,6 +1964,32 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     });
   }
 
+  // ═══ ROBOTS.TXT QUALITY SCORING ═══
+  if (scores.aiReady?.robotsQualityScore !== undefined) {
+    const rq = scores.aiReady.robotsQualityDetails;
+    const rqScore = scores.aiReady.robotsQualityScore;
+    if (scores.aiReady.hasRobotsTxt && rqScore < 50) {
+      const weaknesses: string[] = [];
+      const fixes: string[] = [];
+      if (rq && !rq.hasSitemapDirective) { weaknesses.push('Aucune directive Sitemap déclarée'); fixes.push("Ajouter 'Sitemap: https://votresite.com/sitemap.xml' dans robots.txt"); }
+      if (rq && !rq.hasMultipleUserAgents) { weaknesses.push('Un seul User-agent générique (*) — manque de granularité'); fixes.push("Ajouter des blocs User-agent spécifiques (Googlebot, Bingbot, GPTBot, ClaudeBot)"); }
+      if (rq && !rq.hasAIBotRules) { weaknesses.push('Aucune règle pour les bots IA (GPTBot, ClaudeBot, PerplexityBot, etc.)'); fixes.push("Ajouter des directives Allow/Disallow explicites pour chaque bot IA majeur"); }
+      if (rq && !rq.hasComments) { fixes.push("Ajouter des commentaires (#) pour documenter la stratégie de crawl"); }
+      if (rq && rq.length < 200) { weaknesses.push(`Fichier court (${rq.length} caractères) — couverture insuffisante`); }
+
+      recommendations.push({
+        id: 'robots-quality-low',
+        priority: rqScore < 25 ? 'important' : 'optional',
+        category: 'ia',
+        icon: rqScore < 25 ? '🟠' : '🟡',
+        title: `Robots.txt : qualité rédactionnelle faible (${rqScore}/100)`,
+        description: `Votre robots.txt existe mais manque de complétude et de granularité (score qualité : ${rqScore}/100). Un robots.txt bien rédigé avec des règles spécifiques par bot améliore la gouvernance du crawl et la visibilité GEO.`,
+        weaknesses,
+        fixes,
+      });
+    }
+  }
+
   // ═══ SITEMAP CHECK ═══
   if (sitemapAnalysis) {
     if (!sitemapAnalysis.exists) {
