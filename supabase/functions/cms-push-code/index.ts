@@ -2,6 +2,7 @@ import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { verifyInjectionOwnership } from '../_shared/ownershipCheck.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * cms-push-code
@@ -538,7 +539,7 @@ async function fallbackToWidgetRules(
 }
 
 // ── Main Handler ──
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -693,4 +694,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
-});
+}, 'cms-push-code'))

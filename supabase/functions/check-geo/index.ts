@@ -8,6 +8,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // ============================================================================
 // INTERFACES EXPERT
@@ -725,7 +726,7 @@ function checkSitemap(robotsTxt: string | null): boolean {
 // MAIN HANDLER
 // ============================================================================
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -1401,4 +1402,4 @@ function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
   } finally {
     releaseConcurrency('check-geo');
   }
-});
+}, 'check-geo'))

@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const SITE_URL = 'https://crawlers.fr';
 
@@ -54,7 +55,7 @@ ${urlEntries}
 </urlset>`;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -237,4 +238,4 @@ Deno.serve(async (req) => {
       }
     );
   }
-});
+}, 'sitemap'))

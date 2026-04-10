@@ -1,4 +1,5 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: view-report
@@ -11,7 +12,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
  *        GET /view-report?path=<storage_path>
  */
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -79,4 +80,4 @@ Deno.serve(async (req) => {
     console.error(`[view-report] Unexpected error:`, err);
     return new Response('Internal server error', { status: 500 });
   }
-});
+}, 'view-report'))

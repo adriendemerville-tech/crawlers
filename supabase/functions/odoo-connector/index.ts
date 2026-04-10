@@ -1,5 +1,6 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 async function getUserFromRequest(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -87,7 +88,7 @@ async function odooExecute(
   return parseXmlRpcResponse(xml);
 }
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -243,6 +244,6 @@ async function getConnection(service: any, userId: string, trackedSiteId: string
     .eq("platform", "odoo")
     .eq("status", "active")
     .maybeSingle();
-  if (error || !data) throw new Error("No active Odoo connection found");
+  if (error || !data) throw new Error("No active Odoo connection found", 'odoo-connector'))
   return data;
 }

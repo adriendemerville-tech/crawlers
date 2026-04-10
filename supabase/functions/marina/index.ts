@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: Marina
@@ -2569,7 +2570,7 @@ async function triggerNextPendingJob() {
 }
 
 // ─── Main server ───
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -2829,4 +2830,4 @@ Deno.serve(async (req) => {
     console.error('[Marina] Error:', error);
     return json({ error: error instanceof Error ? error.message : 'Internal error' }, 500);
   }
-});
+}, 'marina'))

@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -341,7 +342,7 @@ function computeMaturityLevel(criteria: MaturityCriteria): string {
   return 'beginner';
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(handleRequest(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -554,4 +555,4 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}, 'smart-recommendations'))

@@ -7,6 +7,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // ── Brand signal interface ──
 interface BrandSignal { source: string; value: string; weight: number }
@@ -325,7 +326,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
 }
 
 // ── MAIN HANDLER ──
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   const json = (data: any, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -371,4 +372,4 @@ Deno.serve(async (req) => {
     console.error('❌ [strategic-crawl] Fatal:', error);
     return json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, 500);
   }
-});
+}, 'strategic-crawl'))

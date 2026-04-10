@@ -1,6 +1,7 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // ==================== UTILITIES ====================
 
@@ -925,7 +926,7 @@ async function crossCheckSerpRankings(
 
 // ==================== MAIN HANDLER ====================
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   
   const json = (data: any, status = 200) =>
@@ -1058,4 +1059,4 @@ Deno.serve(async (req) => {
     console.error('audit-compare error:', e);
     return json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
   }
-});
+}, 'audit-compare'))

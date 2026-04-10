@@ -6,6 +6,7 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -1986,7 +1987,7 @@ Réponds avec ce JSON:
 
 // ==================== MAIN SERVER ====================
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -2293,4 +2294,4 @@ Deno.serve(async (req) => {
   } finally {
     releaseConcurrency('audit-expert-seo');
   }
-});
+}, 'audit-expert-seo'))

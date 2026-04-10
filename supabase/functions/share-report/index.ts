@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 interface ShareReportRequest {
   type: 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'expert-audit';
@@ -412,7 +413,7 @@ function generateShortId(): string {
   return result;
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(handleRequest(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -467,4 +468,4 @@ Deno.serve(async (req: Request) => {
       }
     );
   }
-});
+}, 'share-report'))

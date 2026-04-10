@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: dry-run-script
@@ -26,7 +27,7 @@ interface DryRunResult {
   screenshotUrl?: string;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -264,7 +265,7 @@ function syntaxOnlyCheck(code: string, startTime: number): DryRunResult {
   try {
     new Function(code);
   } catch (e) {
-    jsErrors.push(e instanceof Error ? e.message : 'Syntax error');
+    jsErrors.push(e instanceof Error ? e.message : 'Syntax error', 'dry-run-script'))
   }
 
   return {

@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: prospect-pipeline
@@ -163,7 +164,7 @@ function jsonError(msg: string, status = 400) {
   return new Response(JSON.stringify({ error: msg }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -424,4 +425,4 @@ Deno.serve(async (req) => {
     console.error('prospect-pipeline error:', e);
     return jsonError(e.message || 'Internal error', 500);
   }
-});
+}, 'prospect-pipeline'))
