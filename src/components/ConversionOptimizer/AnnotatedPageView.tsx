@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Loader2, ImageIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, ImageIcon, PenLine, X } from 'lucide-react';
+import { ManualAnnotationOverlay, type ManualAnnotation } from './ManualAnnotationOverlay';
 
 interface Annotation {
   text: string;
@@ -29,6 +31,10 @@ interface Props {
   annotations: Annotation[];
   suggestions: Suggestion[];
   onSelectSuggestion?: (index: number) => void;
+  manualAnnotations?: ManualAnnotation[];
+  onManualAnnotationsChange?: (annotations: ManualAnnotation[]) => void;
+  drawingMode?: boolean;
+  onDrawingModeChange?: (active: boolean) => void;
 }
 
 const AXIS_LABELS: Record<string, string> = {
