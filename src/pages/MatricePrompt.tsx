@@ -489,8 +489,8 @@ export default function MatricePrompt() {
     });
   }, [rows, sortField, sortDir]);
 
-  /* --- Smart labels based on matrice type --- */
-  const smartLabels = useMemo(() => getSmartDefaults(activeMatriceType).labels, [activeMatriceType]);
+  /* --- Smart labels based on matrice type + scoring method --- */
+  const smartLabels = useMemo(() => getSmartDefaults(activeMatriceType, activeScoringMethod).labels, [activeMatriceType, activeScoringMethod]);
 
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
