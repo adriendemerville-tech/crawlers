@@ -107,7 +107,7 @@ function BlurredDemoOverlay({ monthlyUsage, onUpgrade, onBack }: { monthlyUsage:
       {/* Overlay message */}
       <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/60 backdrop-blur-[2px]">
         <div className="text-center max-w-md px-6 py-8 bg-card border border-border rounded-xl shadow-xl">
-          <Lock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <Lock className="h-12 w-12 mx-auto text-emerald-600 dark:text-emerald-400 mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">Limite gratuite atteinte</h2>
           <p className="text-muted-foreground mb-1">
             Vous avez utilisé <span className="font-semibold text-foreground">{monthlyUsage}/{FREE_MONTHLY_LIMIT}</span> contenus gratuits ce mois-ci.
@@ -265,7 +265,7 @@ const SocialHub = memo(function SocialHub() {
           <div className="max-w-7xl mx-auto px-4 py-6">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Share2 className="h-6 w-6 text-muted-foreground" /> Social Content Hub
+                <Share2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" /> Social Content Hub
                 <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-500">beta</Badge>
               </h1>
               <p className="text-sm text-muted-foreground mt-1">Créez, planifiez et publiez du contenu social optimisé</p>
@@ -294,7 +294,7 @@ const SocialHub = memo(function SocialHub() {
           {/* Top bar */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Share2 className="h-6 w-6 text-muted-foreground" /> Social Content Hub
+              <Share2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" /> Social Content Hub
               <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-500">beta</Badge>
             </h1>
             <p className="text-sm text-muted-foreground mt-1">

@@ -75,10 +75,10 @@ export const SocialCalendar = memo(function SocialCalendar({ trackedSiteId, onCr
             return (
               <div
                 key={day}
-                className={`min-h-[80px] border border-border rounded-md p-1 text-xs cursor-pointer hover:bg-muted/50 transition-colors ${isToday(day) ? 'bg-muted/60 border-foreground/20' : ''}`}
+                className={`min-h-[80px] border border-border rounded-md p-1 text-xs cursor-pointer hover:bg-muted/50 transition-colors ${isToday(day) ? 'bg-emerald-500/5 border-emerald-500/30' : ''}`}
                 onClick={() => onCreatePost?.(`${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`)}
               >
-                <span className={`font-medium ${isToday(day) ? 'text-foreground font-bold' : 'text-foreground'}`}>{day}</span>
+                <span className={`font-medium ${isToday(day) ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-foreground'}`}>{day}</span>
                 <div className="mt-1 space-y-0.5">
                   {dayEvents.slice(0, 2).map(ev => (
                     <div key={ev.id} className="truncate px-1 py-0.5 rounded text-[10px]" style={{ backgroundColor: ev.color + '20', color: ev.color }}>

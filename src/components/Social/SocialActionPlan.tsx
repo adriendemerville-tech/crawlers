@@ -70,7 +70,7 @@ export const SocialActionPlan = memo(function SocialActionPlan({ domain, tracked
             <div className="space-y-2">
               {items.map((item, i) => (
                 <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors group">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-muted text-foreground flex items-center justify-center text-xs font-bold">{i + 1}</div>
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">{i + 1}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
@@ -80,7 +80,7 @@ export const SocialActionPlan = memo(function SocialActionPlan({ domain, tracked
                     <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] text-muted-foreground">{item.finding_category}</span>
-                      <span className="text-[10px] text-foreground font-medium">Score: {item.total_score || item.score}</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Score: {item.total_score || item.score}</span>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onCreateFromItem?.(item)}>
