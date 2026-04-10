@@ -177,7 +177,7 @@ export default function MatricePrompt() {
     setUrl('https://example.com');
   }, [isDemoMode, rows.length]);
 
-  // Load a specific batch's prompts
+  // Load a specific batch's prompts + any persisted results
   const loadBatch = async (batchId: string) => {
     if (!user) return;
     const { data, error } = await supabase
@@ -203,7 +203,61 @@ export default function MatricePrompt() {
       isDefault: (row.is_default_flags as Record<string, boolean>) || {},
     }));
     setRows(parsed);
-    setResults(null);
+
+    // Try to load persisted results for this batch's prompt items
+    const dbIds = parsed.map(p => p.dbId).filter(Boolean) as string[];
+    if (dbIds.length > 0) {
+      const { data: savedResults } = await supabase
+        .from('matrix_audit_results')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('prompt_item_id', dbIds)
+        .order('created_at', { ascending: false });
+
+      if (savedResults && savedResults.length > 0) {
+        // Group by session_id and take the most recent session
+        const sessionIds = [...new Set(savedResults.map((r: any) => r.session_id))];
+        const latestSessionId = sessionIds[0]; // already ordered desc
+        const latestResults = savedResults.filter((r: any) => r.session_id === latestSessionId);
+
+        // Map back to the format expected by the UI
+        const restoredResults = latestResults.map((r: any) => {
+          const matchedRow = parsed.find(p => p.dbId === r.prompt_item_id);
+          return {
+            id: matchedRow?.id || r.prompt_item_id,
+            prompt: r.prompt,
+            axe: r.axe,
+            poids: r.poids,
+            crawlers_score: r.crawlers_score ?? r.csv_weighted_score,
+            parsed_score: r.csv_weighted_score ?? r.crawlers_score,
+            detected_type: (r.raw_data as any)?.detected_type || null,
+            raw_data: r.raw_data || {},
+            seuil_bon: r.seuil_bon,
+            seuil_moyen: r.seuil_moyen,
+            seuil_mauvais: r.seuil_mauvais,
+            dbId: r.prompt_item_id,
+          };
+        });
+
+        if (restoredResults.length > 0) {
+          setResults(restoredResults);
+          // Also restore the URL from the session
+          const { data: sessionData } = await supabase
+            .from('matrix_audit_sessions')
+            .select('url')
+            .eq('id', latestSessionId)
+            .single();
+          if (sessionData?.url) setUrl(sessionData.url);
+        } else {
+          setResults(null);
+        }
+      } else {
+        setResults(null);
+      }
+    } else {
+      setResults(null);
+    }
+
     localStorage.setItem(LAST_BATCH_KEY, batchId);
   };
 
