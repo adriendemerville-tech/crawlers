@@ -307,8 +307,11 @@ export default function MatricePrompt() {
   };
 
   /* --- Parse raw rows into MatrixRow[] using fuzzy column mapper and persist --- */
-  const processImportedRows = useCallback(async (rawRows: any[], fileName: string) => {
+  const processImportedRows = useCallback(async (rawRows: any[], fileName: string, matriceType?: MatriceType) => {
     if (rawRows.length === 0) return;
+
+    // Use smart defaults based on detected matrice type
+    const smartDef = matriceType ? getSmartDefaults(matriceType) : DEFAULTS;
 
     // Step 1: Fuzzy column mapping
     const headers = Object.keys(rawRows[0] || {});
@@ -347,14 +350,14 @@ export default function MatricePrompt() {
       return {
         id: `row-${i}-${Date.now()}`,
         prompt: val('prompt', `KPI #${i + 1}`),
-        poids: val('poids', DEFAULTS.poids),
-        axe: val('axe', DEFAULTS.axe),
+        poids: val('poids', smartDef.poids),
+        axe: val('axe', smartDef.axe),
         theme: val('theme', ''),
         engine: val('engine', ''),
-        seuil_bon: val('seuil_bon', DEFAULTS.seuil_bon),
-        seuil_moyen: val('seuil_moyen', DEFAULTS.seuil_moyen),
-        seuil_mauvais: val('seuil_mauvais', DEFAULTS.seuil_mauvais),
-        llm_name: val('llm_name', DEFAULTS.llm_name),
+        seuil_bon: val('seuil_bon', smartDef.seuil_bon),
+        seuil_moyen: val('seuil_moyen', smartDef.seuil_moyen),
+        seuil_mauvais: val('seuil_mauvais', smartDef.seuil_mauvais),
+        llm_name: val('llm_name', smartDef.llm_name),
         selected: true,
         isDefault,
       };
