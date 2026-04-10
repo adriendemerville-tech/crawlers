@@ -1253,6 +1253,150 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
       }
     }
 
+    // ── Creator-only auto-detect: Parménion, Errors registry, Content Architect history ──
+    // No /createur: prefix needed — just isCreator
+    if (isCreator && !isCreatorMode) {
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      const lowerAutoCheck = lastUserMsg.toLowerCase();
+
+      // Keywords for the 3 registries
+      const parmenionAutoKw = ["parménion", "parmenion", "autopilot", "autopilote", "cycle en cours", "dernier cycle"];
+      const errorsAutoKw = ["registre des erreurs", "erreurs récentes", "erreurs edge", "erreurs backend", "cocoon errors", "erreurs cocoon", "errors registry", "dernières erreurs", "journal des erreurs", "log des erreurs", "erreurs de production"];
+      const contentArchitectAutoKw = ["historique de publication", "publications content architect", "batch operations", "historique content architect", "pages publiées", "historique cocoon", "dernières publications", "publication history", "contenus publiés", "déploiements content"];
+
+      const wantsParmenion = parmenionAutoKw.some(kw => lowerAutoCheck.includes(kw));
+      const wantsErrors = errorsAutoKw.some(kw => lowerAutoCheck.includes(kw));
+      const wantsContentHistory = contentArchitectAutoKw.some(kw => lowerAutoCheck.includes(kw));
+
+      if (wantsParmenion || wantsErrors || wantsContentHistory) {
+        try {
+          let creatorContext = "\n\n# CONTEXTE CRÉATEUR (AUTO-DETECT)\n";
+
+          // ── Parménion ──
+          if (wantsParmenion) {
+            const [decisionsResp, configsResp] = await Promise.all([
+              sb.from("parmenion_decision_log")
+                .select("cycle_number, goal_type, goal_description, action_type, status, impact_level, risk_predicted, is_error, error_category, impact_predicted, impact_actual, created_at, domain, execution_error")
+                .order("created_at", { ascending: false })
+                .limit(10),
+              sb.from("autopilot_configs")
+                .select("tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, implementation_mode, cooldown_hours")
+                .limit(5),
+            ]);
+
+            creatorContext += "\n## Parménion — État autopilote\n";
+            if (configsResp.data?.length) {
+              for (const cfg of configsResp.data) {
+                creatorContext += `- Site ${cfg.tracked_site_id}: ${cfg.is_active ? '🟢 ACTIF' : '⏸️ PAUSE'} | Mode: ${cfg.implementation_mode} | ${cfg.total_cycles_run || 0} cycles | Dernier: ${cfg.last_cycle_at?.slice(0, 16) || 'jamais'}\n`;
+              }
+            }
+            if (decisionsResp.data?.length) {
+              creatorContext += "\n### Dernières décisions\n";
+              for (const d of decisionsResp.data) {
+                creatorContext += `- Cycle ${d.cycle_number} — ${d.domain} (${d.created_at?.slice(0, 16)}) : ${d.goal_description} | ${d.action_type} → ${d.status}${d.is_error ? ' ⚠️ ERREUR: ' + (d.error_category || '') : ''}${d.execution_error ? ' ❌ ' + d.execution_error : ''}\n`;
+              }
+            }
+          }
+
+          // ── Registre des erreurs ──
+          if (wantsErrors) {
+            const [cocoonErrResp, parmenionErrResp] = await Promise.all([
+              sb.from("cocoon_errors")
+                .select("domain, problem_description, created_at, is_crawled, ai_response")
+                .order("created_at", { ascending: false })
+                .limit(15),
+              sb.from("parmenion_decision_log")
+                .select("cycle_number, domain, goal_description, error_category, calibration_note, execution_error, created_at")
+                .eq("is_error", true)
+                .order("created_at", { ascending: false })
+                .limit(10),
+            ]);
+
+            creatorContext += "\n## Registre des erreurs\n";
+            if (cocoonErrResp.data?.length) {
+              creatorContext += "\n### Erreurs Cocoon récentes\n";
+              for (const e of cocoonErrResp.data) {
+                creatorContext += `- [${e.created_at?.slice(0, 16)}] ${e.domain} : ${e.problem_description?.slice(0, 120)}${e.is_crawled ? ' (crawled)' : ''}${e.ai_response ? ' → Réponse IA fournie' : ''}\n`;
+              }
+            }
+            if (parmenionErrResp.data?.length) {
+              creatorContext += "\n### Erreurs Parménion récentes\n";
+              for (const e of parmenionErrResp.data) {
+                creatorContext += `- [${e.created_at?.slice(0, 16)}] Cycle ${e.cycle_number} — ${e.domain} : ${e.goal_description} | ${e.error_category || 'non catégorisée'}${e.calibration_note ? ' — ' + e.calibration_note : ''}${e.execution_error ? ' ❌ ' + e.execution_error : ''}\n`;
+              }
+            }
+            if (!cocoonErrResp.data?.length && !parmenionErrResp.data?.length) {
+              creatorContext += "Aucune erreur récente détectée. ✅\n";
+            }
+          }
+
+          // ── Historique de publication Content Architect ──
+          if (wantsContentHistory) {
+            const batchResp = await sb.from("cocoon_batch_operations")
+              .select("domain, operation_type, mode, status, total_pages, processed_pages, failed_pages, created_at, completed_at, error_message")
+              .order("created_at", { ascending: false })
+              .limit(15);
+
+            creatorContext += "\n## Historique de publication Content Architect\n";
+            if (batchResp.data?.length) {
+              for (const b of batchResp.data) {
+                creatorContext += `- [${b.created_at?.slice(0, 16)}] ${b.domain} : ${b.operation_type} (${b.mode}) → ${b.status} | ${b.processed_pages}/${b.total_pages} pages${b.failed_pages ? ` (${b.failed_pages} échecs)` : ''}${b.completed_at ? ' | Terminé: ' + b.completed_at.slice(0, 16) : ''}${b.error_message ? ' ❌ ' + b.error_message : ''}\n`;
+              }
+            } else {
+              creatorContext += "Aucune opération de publication récente.\n";
+            }
+          }
+
+          creatorContext += "\n## INSTRUCTIONS\nTu es en mode créateur auto-détecté. Présente ces données de manière claire et structurée. Utilise un ton direct et technique adapté au créateur de la plateforme.";
+
+          // Build prompt and call LLM
+          const autoPrompt = SYSTEM_PROMPT + creatorContext + `\n\n# MODE CRÉATEUR\nCet utilisateur est le créateur de la plateforme.`;
+          const aiMessages = [
+            { role: "system", content: autoPrompt },
+            ...messages.slice(-20),
+          ];
+
+          const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: aiMessages,
+              stream: false,
+              max_tokens: 2500,
+            }),
+          });
+
+          if (aiResp.ok) {
+            const aiData = await aiResp.json();
+            logAIUsageFromResponse(sb, "google/gemini-2.5-flash", "sav-agent", aiData.usage);
+            let reply = aiData.choices?.[0]?.message?.content || "Je n'ai pas pu récupérer ces informations.";
+            if (reply.length > 3000) reply = reply.substring(0, 2997) + "...";
+
+            let savedConvId = conversation_id;
+            try {
+              const allMessages = [...messages, { role: "assistant", content: reply }];
+              if (conversation_id) {
+                await sb.from("sav_conversations").update({ messages: allMessages, message_count: allMessages.length }).eq("id", conversation_id);
+              } else {
+                const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+                const { data: newConv } = await sb.from("sav_conversations").insert({ user_id, user_email: prof?.email || null, messages: allMessages, message_count: allMessages.length }).select("id").single();
+                savedConvId = newConv?.id;
+              }
+            } catch (e) { console.error("Save creator auto-detect conv error:", e); }
+
+            return jsonOk({ reply, conversation_id: savedConvId || conversation_id });
+          }
+        } catch (e) {
+          console.error("Creator auto-detect context error:", e);
+          // Fall through to normal flow
+        }
+      }
+    }
+
     // ── Enrich context (skip for guests) ──
     let contextSnippet = "";
     let userFirstName = "";
