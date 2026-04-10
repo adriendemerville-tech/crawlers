@@ -37,7 +37,7 @@ interface ItemResult {
 /*  LLM prompt evaluation                                              */
 /* ================================================================== */
 
-async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
+async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, scoringRubric?: any[], retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 50, raw: { error: 'No API key', note: 'LLM evaluation unavailable' } }
 
@@ -45,7 +45,15 @@ async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string,
   const RETRY_DELAYS = [2000, 5000]
 
   try {
-    const systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.
+    // Build rubric appendix if scoring guide is available
+    let rubricAppendix = ''
+    if (scoringRubric?.length) {
+      rubricAppendix = '\n\nGrille de scoring à appliquer :\n' + scoringRubric.map((f: any) =>
+        `- ${f.field}: ${f.whatToCode} (Valeurs: ${f.allowedValues})`
+      ).join('\n')
+    }
+
+    const systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.${rubricAppendix}
 
 Réponds UNIQUEMENT avec un JSON: {"score": <number>, "justification": "<string courte>"}`
 
