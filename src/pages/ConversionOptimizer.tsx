@@ -140,6 +140,11 @@ export default function ConversionOptimizer() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+  const { isAdmin } = useAdmin();
+
+  // Pro access check
+  const hasAccess = isAdmin || ['agency_pro', 'agency_premium'].includes(profile?.plan_type || '');
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>(searchParams.get('site') || '');
