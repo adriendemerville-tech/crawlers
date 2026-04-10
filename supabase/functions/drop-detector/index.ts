@@ -278,10 +278,10 @@ function calculateTrends(weeks: any[]): Trends {
   };
 }
 
-function predictDrop(weeks: any[], threshold: number): { willDrop: boolean; probability: number; projectedClicks: number } {
+function predictDrop(weeks: any[], threshold: number): { willDrop: boolean; probability: number; projectedClicks: number; structuralBreak: boolean; breakConfidence: number } {
   const clicks = weeks.map((w: any) => w.clicks || 0);
   const n = Math.min(8, clicks.length);
-  if (n < 4) return { willDrop: false, probability: 0, projectedClicks: clicks[0] };
+  if (n < 4) return { willDrop: false, probability: 0, projectedClicks: clicks[0], structuralBreak: false, breakConfidence: 0 };
 
   // Linear regression
   let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
@@ -298,7 +298,7 @@ function predictDrop(weeks: any[], threshold: number): { willDrop: boolean; prob
   const currentAvg = clicks.slice(0, 3).reduce((a: number, b: number) => a + b, 0) / 3;
   const projectedChange = ((projected - currentAvg) / (currentAvg || 1)) * 100;
 
-  // Calculate confidence based on R² and consistency of decline
+  // R² for regression quality
   const yMean = sumY / n;
   let ssTot = 0, ssRes = 0;
   for (let i = 0; i < n; i++) {
@@ -309,6 +309,35 @@ function predictDrop(weeks: any[], threshold: number): { willDrop: boolean; prob
   }
   const r2 = 1 - ssRes / (ssTot || 1);
 
+  // ─── NEW: Simplified Chow structural break test ───
+  // Split series in two halves and compare means
+  // Detects algorithm update "step-down" patterns that linear regression misses
+  let structuralBreak = false;
+  let breakConfidence = 0;
+  if (n >= 6) {
+    const splitPoint = Math.floor(n / 2);
+    const firstHalf = clicks.slice(splitPoint); // older weeks (ascending order in array)
+    const secondHalf = clicks.slice(0, splitPoint); // recent weeks
+    
+    const mean1 = firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length;
+    const mean2 = secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length;
+    
+    // Pooled variance
+    const var1 = firstHalf.reduce((s: number, v: number) => s + Math.pow(v - mean1, 2), 0) / firstHalf.length;
+    const var2 = secondHalf.reduce((s: number, v: number) => s + Math.pow(v - mean2, 2), 0) / secondHalf.length;
+    const pooledVar = (var1 * firstHalf.length + var2 * secondHalf.length) / n;
+    const pooledStd = Math.sqrt(pooledVar) || 1;
+    
+    // T-statistic for difference in means
+    const tStat = Math.abs(mean1 - mean2) / (pooledStd * Math.sqrt(1/firstHalf.length + 1/secondHalf.length));
+    
+    // Simplified: t > 2.0 suggests significant structural break (p ≈ 0.05 for small samples)
+    if (tStat > 2.0 && mean2 < mean1) {
+      structuralBreak = true;
+      breakConfidence = Math.min(99, Math.round(tStat * 20));
+    }
+  }
+
   // Consecutive declining weeks boost confidence
   let consecutiveDeclines = 0;
   for (let i = 0; i < clicks.length - 1; i++) {
@@ -316,18 +345,41 @@ function predictDrop(weeks: any[], threshold: number): { willDrop: boolean; prob
     else break;
   }
 
-  // Probability: R² * decline magnitude * consecutive weeks factor
+  // ─── NEW: Statistical confidence interval instead of ad-hoc formula ───
+  // Prediction interval: projected ± t * SE where SE = sqrt(MSE * (1 + 1/n + (x-x̄)²/Σ(xi-x̄)²))
+  const mse = ssRes / Math.max(1, n - 2);
+  const xMean = sumX / n;
+  const xProjected = n + 2;
+  const se = Math.sqrt(mse * (1 + 1/n + Math.pow(xProjected - xMean, 2) / (sumX2 - n * xMean * xMean || 1)));
+  
+  // t-value for ~95% CI with n-2 df (simplified lookup for small samples)
+  const tCritical = n <= 4 ? 2.776 : n <= 6 ? 2.447 : n <= 8 ? 2.306 : 2.228;
+  const upperBound = projected + tCritical * se;
+  const lowerBound = projected - tCritical * se;
+  
+  // Probability based on: how much of the CI is below the drop threshold
   let probability = 0;
-  if (projectedChange < -10) {
+  const dropTarget = currentAvg * (1 - 0.10); // 10% drop target
+  if (projected < dropTarget) {
+    // If point estimate is below threshold, probability depends on CI width
+    const ciWidth = upperBound - lowerBound;
+    const distBelowThreshold = dropTarget - projected;
     probability = Math.min(99, Math.round(
-      Math.abs(projectedChange) * r2 * (1 + consecutiveDeclines * 0.15) * 1.5
+      (0.5 + distBelowThreshold / (ciWidth || 1) * 0.5) * 100 * r2 * (1 + consecutiveDeclines * 0.1)
     ));
+  }
+
+  // Structural break boosts probability
+  if (structuralBreak && probability < 50) {
+    probability = Math.max(probability, Math.round(breakConfidence * 0.7));
   }
 
   return {
     willDrop: probability >= threshold,
     probability,
     projectedClicks: Math.round(projected),
+    structuralBreak,
+    breakConfidence,
   };
 }
 

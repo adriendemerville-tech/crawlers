@@ -20,7 +20,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  * Access: Pro Agency / Admin only
  */
 
-// ─── TF-IDF Vectorization ───
+// ─── TF-IDF Vectorization (v2: stemming + bi-grams + zone weighting) ───
 
 const STOPWORDS = new Set([
   "le", "la", "les", "de", "du", "des", "un", "une", "et", "en", "à", "au", "aux",
@@ -32,12 +32,64 @@ const STOPWORDS = new Set([
   "not", "but", "can", "will", "our", "your", "they", "have", "been", "had", "were",
 ]);
 
-function tokenize(text: string): string[] {
-  return (text.toLowerCase().match(/[a-zàâäéèêëïîôùûüç]{3,}/g) || [])
-    .filter((w) => !STOPWORDS.has(w));
+/** Lightweight Porter-like stemmer for French & English */
+function stem(word: string): string {
+  let w = word.toLowerCase();
+  // French suffixes (ordered by length, longest first)
+  const frSuffixes = ['issements', 'issement', 'ations', 'ements', 'ement', 'ation', 'iques', 'iques', 'ables', 'eurs', 'euse', 'ique', 'able', 'ment', 'tion', 'eur', 'eux', 'ées', 'ant', 'ent', 'ons', 'és', 'er', 'ir', 'ée', 'és', 'es', 'ée'];
+  // English suffixes
+  const enSuffixes = ['ations', 'ments', 'ness', 'tion', 'ment', 'able', 'ible', 'ness', 'ings', 'ally', 'ful', 'ous', 'ive', 'ing', 'ies', 'ily', 'ity', 'ent', 'ant', 'ers', 'ion', 'ed', 'ly', 'er', 'es', 'al'];
+  const suffixes = [...frSuffixes, ...enSuffixes];
+  for (const suffix of suffixes) {
+    if (w.length > suffix.length + 3 && w.endsWith(suffix)) {
+      return w.slice(0, -suffix.length);
+    }
+  }
+  return w;
 }
 
-/** Build TF-IDF vectors for a corpus of documents */
+/** Zone-weighted token weights: title×3, h1×2, body×1 */
+interface ZonedContent {
+  title?: string;
+  h1?: string;
+  body: string;
+}
+
+function tokenize(text: string): string[] {
+  return (text.toLowerCase().match(/[a-zàâäéèêëïîôùûüç]{3,}/g) || [])
+    .filter((w) => !STOPWORDS.has(w))
+    .map(stem);
+}
+
+/** Generate bi-grams from token array */
+function generateBigrams(tokens: string[]): string[] {
+  const bigrams: string[] = [];
+  for (let i = 0; i < tokens.length - 1; i++) {
+    bigrams.push(`${tokens[i]}_${tokens[i + 1]}`);
+  }
+  return bigrams;
+}
+
+/** Tokenize with zone weighting: title tokens appear 3x, h1 tokens 2x */
+function tokenizeZoned(content: ZonedContent): string[] {
+  const titleTokens = content.title ? tokenize(content.title) : [];
+  const h1Tokens = content.h1 ? tokenize(content.h1) : [];
+  const bodyTokens = tokenize(content.body);
+  
+  // Zone weighting via repetition
+  const weighted: string[] = [];
+  for (const t of titleTokens) { weighted.push(t, t, t); } // ×3
+  for (const t of h1Tokens) { weighted.push(t, t); } // ×2
+  weighted.push(...bodyTokens); // ×1
+  
+  // Add bi-grams from body for semantic context
+  const bodyBigrams = generateBigrams(bodyTokens).slice(0, 50); // cap at 50 bi-grams
+  weighted.push(...bodyBigrams);
+  
+  return weighted;
+}
+
+/** Build TF-IDF vectors for a corpus of documents (v2: with stemming + bi-grams) */
 function buildTfIdfVectors(docs: string[][]): Map<string, number>[] {
   const n = docs.length;
   if (n === 0) return [];
@@ -51,7 +103,7 @@ function buildTfIdfVectors(docs: string[][]): Map<string, number>[] {
     }
   }
 
-  // Build TF-IDF vector per document
+  // Build TF-IDF vector per document with sublinear TF
   return docs.map((doc) => {
     const tf = new Map<string, number>();
     for (const term of doc) {
@@ -61,7 +113,7 @@ function buildTfIdfVectors(docs: string[][]): Map<string, number>[] {
     const tfidf = new Map<string, number>();
     for (const [term, count] of tf) {
       const termDf = df.get(term) || 1;
-      // TF = log(1 + count), IDF = log(N / df)
+      // TF = log(1 + count), IDF = log(N / df) — sublinear to reduce high-freq bias
       const score = Math.log(1 + count) * Math.log(n / termDf);
       if (score > 0) tfidf.set(term, score);
     }
@@ -398,16 +450,19 @@ const ip = getClientIp(req);
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
       const pageType = classifyPageType(page.url, page.title || "", page.h1 || "", page.page_type_override);
       
-      // Enrich tokenization: title + h1 + meta + keywords + URL path + anchors + BODY TEXT
+      // Enrich tokenization with zone weighting: title×3, h1×2, body×1 + bi-grams
       const pathSegments = new URL(page.url).pathname.split(/[\/\-_]/).filter(s => s.length >= 3).join(" ");
       const anchorTexts = (page.anchor_texts || [])
         .filter((a: any) => a.type === "internal")
         .map((a: any) => a.text || "")
         .join(" ");
-      // Include body_text_truncated for much richer semantic analysis
       const bodyText = (page.body_text_truncated || "").substring(0, 3000);
-      const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")} ${pathSegments} ${anchorTexts} ${bodyText}`;
-      tokenizedDocs.push(tokenize(fullText));
+      const fullBodyText = `${page.meta_description || ""} ${keywords.join(" ")} ${pathSegments} ${anchorTexts} ${bodyText}`;
+      tokenizedDocs.push(tokenizeZoned({
+        title: page.title || "",
+        h1: page.h1 || "",
+        body: fullBodyText,
+      }));
 
       // Try to enrich from audit data
       const normalizedUrl = page.url.replace(/\/+$/, "").toLowerCase();

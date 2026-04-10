@@ -102,10 +102,41 @@ try {
 
     console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
 
-    // ═══ PHASE 1: Check error rate → conservative mode? ═══
+    // ═══ PHASE 1: Segmented feedback — Check error rate by action type ═══
     const { data: errorRateData } = await supabase.rpc('parmenion_error_rate', { p_domain: domain });
-    const conservativeMode = errorRateData?.conservative_mode === true;
+    
+    // Segmented reliability: track error rates per action_type for smarter gating
+    const { data: segmentedFeedback } = await supabase
+      .from('parmenion_decision_log')
+      .select('action_type, is_error, status, impact_predicted, impact_actual')
+      .eq('domain', domain)
+      .in('status', ['completed'])
+      .not('action_type', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    
+    // Build per-action-type reliability scores
+    const actionReliability: Record<string, { total: number; errors: number; rate: number }> = {};
+    if (segmentedFeedback) {
+      for (const entry of segmentedFeedback) {
+        const at = entry.action_type || 'unknown';
+        if (!actionReliability[at]) actionReliability[at] = { total: 0, errors: 0, rate: 0 };
+        actionReliability[at].total++;
+        if (entry.is_error) actionReliability[at].errors++;
+      }
+      for (const [key, val] of Object.entries(actionReliability)) {
+        val.rate = val.total > 0 ? Math.round((val.errors / val.total) * 100) : 0;
+      }
+    }
+    
+    // Conservative mode: triggered if overall error rate > 20% OR if current phase's action types are unreliable
+    const overallConservative = errorRateData?.conservative_mode === true;
+    const phaseActionTypes = currentPhase === 'execute' ? ['code_fix', 'content_push', 'redirect'] : [];
+    const phaseUnreliable = phaseActionTypes.some(at => (actionReliability[at]?.rate || 0) > 30);
+    const conservativeMode = overallConservative || phaseUnreliable;
     const maxRisk = conservativeMode ? MAX_RISK_CONSERVATIVE : MAX_RISK_NORMAL;
+    
+    console.log(`[Parménion] Segmented feedback: ${JSON.stringify(actionReliability)}, conservative: ${conservativeMode}`);
 
     // ═══ PHASE 2: Gather context ═══
     const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes, siteKeywordsRes, siteInfoRes, identityCard] = await Promise.all([

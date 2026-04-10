@@ -24,20 +24,63 @@ interface MetricSeries {
   label_fn?: (val: number, pct: number) => string;
 }
 
-function computeZScore(values: number[], current: number): { z: number; mean: number; stddev: number } {
-  if (values.length < 4) return { z: 0, mean: current, stddev: 0 };
+/**
+ * Compute Z-score with adaptive thresholds based on Coefficient of Variation (CV).
+ * High-CV series (volatile) get relaxed thresholds; low-CV series (stable) get tighter ones.
+ * Also detects sustained trends via consecutive-decline counting.
+ */
+function computeZScore(values: number[], current: number): { z: number; mean: number; stddev: number; cv: number; trendStrength: number } {
+  if (values.length < 4) return { z: 0, mean: current, stddev: 0, cv: 0, trendStrength: 0 };
   const mean = values.reduce((s, v) => s + v, 0) / values.length;
   const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length;
   const stddev = Math.sqrt(variance);
-  if (stddev === 0) return { z: 0, mean, stddev: 0 };
-  return { z: (current - mean) / stddev, mean, stddev };
+  const cv = mean > 0 ? stddev / mean : 0;
+  if (stddev === 0) return { z: 0, mean, stddev: 0, cv: 0, trendStrength: 0 };
+  
+  // Trend detection: count consecutive direction changes
+  let consecutiveDeclines = 0;
+  for (let i = 0; i < values.length - 1; i++) {
+    if (values[i] < values[i + 1]) consecutiveDeclines++;
+    else break;
+  }
+  // trendStrength: 0-1 scale, >0.5 means sustained decline
+  const trendStrength = Math.min(1, consecutiveDeclines / Math.max(3, values.length * 0.5));
+  
+  return { z: (current - mean) / stddev, mean, stddev, cv, trendStrength };
 }
 
-function classifyAnomaly(z: number): { severity: string; direction: string } | null {
-  if (z >= 2) return { severity: 'success', direction: 'up' };
-  if (z <= -2) return { severity: 'danger', direction: 'down' };
-  if (z <= -1.5) return { severity: 'warning', direction: 'down' };
-  if (z >= 1.5) return { severity: 'info', direction: 'up' };
+/**
+ * Adaptive anomaly classification:
+ * - Low CV (<0.15): tight thresholds (z ±1.5/±1.8) — stable metrics should alert early
+ * - Medium CV (0.15-0.40): standard thresholds (z ±1.5/±2.0)
+ * - High CV (>0.40): relaxed thresholds (z ±2.0/±2.5) — volatile metrics need bigger deviations
+ * - Sustained trend bonus: lower threshold by 0.3 if 3+ consecutive declines
+ */
+function classifyAnomaly(z: number, cv = 0, trendStrength = 0): { severity: string; direction: string } | null {
+  // Adaptive thresholds based on CV
+  let dangerThreshold: number, warningThreshold: number, successThreshold: number, infoThreshold: number;
+  
+  if (cv < 0.15) {
+    // Stable series: tighter thresholds
+    dangerThreshold = -1.8; warningThreshold = -1.3; successThreshold = 1.8; infoThreshold = 1.3;
+  } else if (cv > 0.40) {
+    // Volatile series: relaxed thresholds
+    dangerThreshold = -2.5; warningThreshold = -2.0; successThreshold = 2.5; infoThreshold = 2.0;
+  } else {
+    // Standard thresholds
+    dangerThreshold = -2.0; warningThreshold = -1.5; successThreshold = 2.0; infoThreshold = 1.5;
+  }
+  
+  // Sustained trend bonus: if 3+ consecutive declines, lower threshold by 0.3
+  if (trendStrength > 0.5) {
+    dangerThreshold += 0.3; // less negative = easier to trigger
+    warningThreshold += 0.3;
+  }
+
+  if (z >= successThreshold) return { severity: 'success', direction: 'up' };
+  if (z <= dangerThreshold) return { severity: 'danger', direction: 'down' };
+  if (z <= warningThreshold) return { severity: 'warning', direction: 'down' };
+  if (z >= infoThreshold) return { severity: 'info', direction: 'up' };
   return null;
 }
 
@@ -390,11 +433,10 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
   }
 
   for (const s of series) {
-    const { z, mean, stddev } = computeZScore(s.values, s.current);
+    const { z, mean, stddev, cv, trendStrength } = computeZScore(s.values, s.current);
 
-    const adjustedClassification = isSeasonal
-      ? classifyAnomaly(z * 0.75)
-      : classifyAnomaly(z);
+    const adjustedZ = isSeasonal ? z * 0.75 : z;
+    const adjustedClassification = classifyAnomaly(adjustedZ, cv, trendStrength);
     if (!adjustedClassification) continue;
 
     let { severity, direction } = adjustedClassification;
