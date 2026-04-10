@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import {
-  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock
+  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
@@ -28,6 +28,7 @@ import { SocialCalendar } from '@/components/Social/SocialCalendar';
 import { SocialStatsDashboard } from '@/components/Social/SocialStatsDashboard';
 import { SocialFeedColumns } from '@/components/Social/SocialFeedColumns';
 import { SocialActionPlan } from '@/components/Social/SocialActionPlan';
+import { SocialSettings } from '@/components/Social/SocialSettings';
 import { createPost, updatePost, publishPost, exportZip, fetchPosts, type SocialPost } from '@/lib/api/socialHub';
 import { useNavigate } from 'react-router-dom';
 
@@ -291,42 +292,43 @@ const SocialHub = memo(function SocialHub() {
       <main className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 py-6">
           {/* Top bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Share2 className="h-6 w-6 text-primary" /> Social Content Hub
-                <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-500">beta</Badge>
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Créez, planifiez et publiez du contenu social optimisé
-                {!isPro && (
-                  <span className="ml-2 text-xs text-primary">
-                    ({monthlyUsage}/{FREE_MONTHLY_LIMIT} contenus gratuits ce mois)
-                  </span>
-                )}
-              </p>
-            </div>
-            <Select value={selectedSiteId} onValueChange={handleSiteChange}>
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Sélectionner un site..." />
-              </SelectTrigger>
-              <SelectContent>
-                {sites.map(s => (
-                  <SelectItem key={s.id} value={s.id}>{s.display_name || s.domain}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Share2 className="h-6 w-6 text-primary" /> Social Content Hub
+              <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-500">beta</Badge>
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Créez, planifiez et publiez du contenu social optimisé
+              {!isPro && (
+                <span className="ml-2 text-xs text-primary">
+                  ({monthlyUsage}/{FREE_MONTHLY_LIMIT} contenus gratuits ce mois)
+                </span>
+              )}
+            </p>
           </div>
 
-          {/* Tabs */}
+          {/* Tabs + site selector on same line */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-6 flex-wrap h-auto gap-1">
-              <TabsTrigger value="editor" className="gap-1.5"><PenTool className="h-4 w-4" /> Éditeur</TabsTrigger>
-              <TabsTrigger value="calendar" className="gap-1.5"><CalendarDays className="h-4 w-4" /> Calendrier</TabsTrigger>
-              <TabsTrigger value="feed" className="gap-1.5"><Columns3 className="h-4 w-4" /> Feed</TabsTrigger>
-              <TabsTrigger value="stats" className="gap-1.5"><BarChart3 className="h-4 w-4" /> Stats</TabsTrigger>
-              <TabsTrigger value="actions" className="gap-1.5"><Target className="h-4 w-4" /> Plan d'actions</TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+              <TabsList className="flex-wrap h-auto gap-1">
+                <TabsTrigger value="editor" className="gap-1.5"><PenTool className="h-4 w-4" /> Éditeur</TabsTrigger>
+                <TabsTrigger value="calendar" className="gap-1.5"><CalendarDays className="h-4 w-4" /> Calendrier</TabsTrigger>
+                <TabsTrigger value="feed" className="gap-1.5"><Columns3 className="h-4 w-4" /> Feed</TabsTrigger>
+                <TabsTrigger value="stats" className="gap-1.5"><BarChart3 className="h-4 w-4" /> Stats</TabsTrigger>
+                <TabsTrigger value="actions" className="gap-1.5"><Target className="h-4 w-4" /> Plan d'actions</TabsTrigger>
+                <TabsTrigger value="settings" className="gap-1.5"><Settings className="h-4 w-4" /> Réglages</TabsTrigger>
+              </TabsList>
+              <Select value={selectedSiteId} onValueChange={handleSiteChange}>
+                <SelectTrigger className="w-[220px] shrink-0">
+                  <SelectValue placeholder="Sélectionner un site..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {sites.map(s => (
+                    <SelectItem key={s.id} value={s.id}>{s.display_name || s.domain}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* EDITOR TAB */}
             <TabsContent value="editor">
@@ -395,6 +397,14 @@ const SocialHub = memo(function SocialHub() {
                 domain={selectedDomain}
                 trackedSiteId={selectedSiteId}
                 onCreateFromItem={handleCreateFromWorkbench}
+              />
+            </TabsContent>
+
+            {/* SETTINGS TAB */}
+            <TabsContent value="settings">
+              <SocialSettings
+                trackedSiteId={selectedSiteId}
+                domain={selectedDomain}
               />
             </TabsContent>
           </Tabs>
