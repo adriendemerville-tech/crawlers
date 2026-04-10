@@ -1197,7 +1197,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     <div className={cn(
       "fixed z-[110] flex flex-col overflow-hidden overscroll-contain border border-border/50 bg-background/95 shadow-2xl backdrop-blur-lg transition-all duration-300 ease-in-out",
       isExpanded
-        ? "top-0 right-0 h-full w-[24rem] rounded-none border-r-0 border-t-0 border-b-0"
+        ? "top-0 right-0 h-dvh w-[24rem] rounded-none border-r-0 border-t-0 border-b-0"
         : cn("bottom-20 rounded-2xl w-[17.5rem] sm:w-[22rem]", quizData ? "h-[63vh] max-h-[63vh]" : "h-[55vh] max-h-[55vh]")
     )} style={isExpanded ? undefined : { right: 'max(1.25rem, calc((100vw - 72rem) / 2 + 1rem))' }}>
       {/* Header */}
