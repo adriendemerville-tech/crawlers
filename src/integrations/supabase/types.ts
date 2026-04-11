@@ -660,6 +660,7 @@ export type Database = {
           source_record_id: string | null
           source_type: Database["public"]["Enums"]["diagnostic_source_type"]
           status: Database["public"]["Enums"]["workbench_item_status"]
+          suggested_injection_type: string | null
           target_operation: string | null
           target_selector: string | null
           target_url: string | null
@@ -688,6 +689,7 @@ export type Database = {
           source_record_id?: string | null
           source_type: Database["public"]["Enums"]["diagnostic_source_type"]
           status?: Database["public"]["Enums"]["workbench_item_status"]
+          suggested_injection_type?: string | null
           target_operation?: string | null
           target_selector?: string | null
           target_url?: string | null
@@ -716,6 +718,7 @@ export type Database = {
           source_record_id?: string | null
           source_type?: Database["public"]["Enums"]["diagnostic_source_type"]
           status?: Database["public"]["Enums"]["workbench_item_status"]
+          suggested_injection_type?: string | null
           target_operation?: string | null
           target_selector?: string | null
           target_url?: string | null
@@ -725,6 +728,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "architect_workbench_suggested_injection_type_fkey"
+            columns: ["suggested_injection_type"]
+            isOneToOne: false
+            referencedRelation: "injection_catalog"
+            referencedColumns: ["slug"]
+          },
           {
             foreignKeyName: "architect_workbench_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
@@ -5562,6 +5572,51 @@ export type Database = {
           target_domain?: string
           target_site_id?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      injection_catalog: {
+        Row: {
+          category: Database["public"]["Enums"]["injection_category"]
+          created_at: string
+          description: string
+          display_order: number
+          id: string
+          is_premium: boolean
+          label: string
+          required_data: Json
+          seo_impact: string
+          slug: string
+          template_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["injection_category"]
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_premium?: boolean
+          label: string
+          required_data?: Json
+          seo_impact?: string
+          slug: string
+          template_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["injection_category"]
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_premium?: boolean
+          label?: string
+          required_data?: Json
+          seo_impact?: string
+          slug?: string
+          template_code?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -11036,6 +11091,12 @@ export type Database = {
         | "proactive_scan"
         | "felix"
         | "ux_context"
+      injection_category:
+        | "schema_jsonld"
+        | "meta_html"
+        | "root_files"
+        | "html_css_inline"
+        | "technical_attributes"
       log_connector_type:
         | "cloudflare"
         | "agent"
@@ -11235,6 +11296,13 @@ export const Constants = {
         "proactive_scan",
         "felix",
         "ux_context",
+      ],
+      injection_category: [
+        "schema_jsonld",
+        "meta_html",
+        "root_files",
+        "html_css_inline",
+        "technical_attributes",
       ],
       log_connector_type: [
         "cloudflare",
