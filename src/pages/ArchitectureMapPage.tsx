@@ -6,14 +6,14 @@ import ArchitectureMap from "@/components/admin/ArchitectureMap";
 
 const ArchitectureMapPage = () => {
   const { user } = useAuth();
-  const { isAdmin, loading } = useAdmin();
+  const { isAdmin, isViewer, loading } = useAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
+    if (!loading && (!user || (!isAdmin && !isViewer))) {
       navigate("/", { replace: true });
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, isViewer, loading, navigate]);
 
   if (loading) {
     return (
@@ -23,7 +23,7 @@ const ArchitectureMapPage = () => {
     );
   }
 
-  if (!user || !isAdmin) return null;
+  if (!user || (!isAdmin && !isViewer)) return null;
 
   return (
     <div className="min-h-screen bg-[#0B0F19] p-4 md:p-8">
