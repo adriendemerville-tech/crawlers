@@ -10,9 +10,11 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2, RotateCcw,
-  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText, PenTool
+  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText, PenTool, Search, Lock, Shield
 } from 'lucide-react';
 import { ContentArchitectureAdvisor } from '@/components/ContentAdvisor/ContentArchitectureAdvisor';
+import { InjectionSearchBar, CatalogEntry } from './InjectionSearchBar';
+import { CodeValidator } from './CodeValidator';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { ScribeTab } from './ScribeTab';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
@@ -174,6 +176,9 @@ export function SmartConfigurator({
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasCmsConnectionForContent, setHasCmsConnectionForContent] = useState(false);
   const [contentDelegationStatus, setContentDelegationStatus] = useState<'idle' | 'generating' | 'ready' | 'deployed'>('idle');
+  const [selectedInjection, setSelectedInjection] = useState<CatalogEntry | null>(null);
+  const [codeValidated, setCodeValidated] = useState(false);
+  const [editableCode, setEditableCode] = useState('');
   
   const { language } = useLanguage();
   const { toast } = useToast();
