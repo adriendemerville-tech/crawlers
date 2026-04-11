@@ -186,11 +186,13 @@ function rubricFieldToNumeric(field: ScoringFieldInput, value: string): number {
 /* ── LLM GEO evaluation (standard mode) ─────────────────────────── */
 
 async function evaluateGeo(
-  prompt: string, url: string, llmName: string, retryCount = 0
+  prompt: string, url: string, _llmName: string, retryCount = 0
 ): Promise<{ score: number; raw: Record<string, any> }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 50, raw: { error: 'No API key' } }
 
+  // ── Gemini Pro for GEO evaluation (high quality) ──
+  const GEO_MODEL = 'google/gemini-2.5-pro'
   const MAX_RETRIES = 2
   const RETRY_DELAYS = [2000, 5000]
 
@@ -215,14 +217,14 @@ Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string c
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: llmName || 'google/gemini-2.5-flash',
+        model: GEO_MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `URL: ${url}\n\nCRITÈRE GEO À ÉVALUER:\n${prompt}\n\nScore de 0 à 100:` },
         ],
         temperature: 0.2,
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(45000),
     })
 
     if (!resp.ok) {
