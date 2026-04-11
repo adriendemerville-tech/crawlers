@@ -370,7 +370,7 @@ export function Header() {
               </Button>
             </Link>
           )}
-        </div>
+        </div>}
 
         {/* Right side: Audit CTA, Credits, Theme, User */}
         <div className="flex items-center gap-3">
