@@ -256,30 +256,54 @@ async function evaluateBenchmark(
   engineNotes?: EngineNoteInput[], scoringRubric?: ScoringFieldInput[],
   retryCount = 0
 ): Promise<{ score: number; raw: Record<string, any>; citation_found: boolean; citation_rank: number | null; citation_context: string }> {
+  const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY')
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-  if (!LOVABLE_API_KEY) return { score: 0, raw: { error: 'No API key' }, citation_found: false, citation_rank: null, citation_context: '' }
+  if (!OPENROUTER_API_KEY && !LOVABLE_API_KEY) return { score: 0, raw: { error: 'No API key' }, citation_found: false, citation_rank: null, citation_context: '' }
 
   const MAX_RETRIES = 2
   const RETRY_DELAYS = [2000, 5000]
 
+  // ── Map engine name to real OpenRouter model for authentic responses ──
+  const ENGINE_TO_REAL_MODEL: Record<string, string> = {
+    chatgpt: 'openai/gpt-4o',
+    gpt: 'openai/gpt-4o',
+    gemini: 'google/gemini-2.5-pro',
+    perplexity: 'perplexity/sonar-pro',
+    copilot: 'openai/gpt-4o',
+    claude: 'anthropic/claude-3.5-sonnet',
+    mistral: 'mistralai/mistral-large-latest',
+  }
+
+  const engineLower = engine.toLowerCase()
+  const realModel = Object.entries(ENGINE_TO_REAL_MODEL).find(([k]) => engineLower.includes(k))?.[1] || 'openai/gpt-4o'
+
   try {
-    // Step 1: Send the full prompt to the simulated engine (enriched with Engine Notes)
-    const enginePrompt = getEngineSystemPrompt(engine, engineNotes);
-    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // ── Step 1: Send prompt to the REAL LLM via OpenRouter ──
+    const useOpenRouter = !!OPENROUTER_API_KEY
+    const apiUrl = useOpenRouter ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://ai.gateway.lovable.dev/v1/chat/completions'
+    const apiKey = useOpenRouter ? OPENROUTER_API_KEY! : LOVABLE_API_KEY!
+    const model = useOpenRouter ? realModel : (llmName || 'google/gemini-2.5-flash')
+    const extraHeaders: Record<string, string> = useOpenRouter
+      ? { 'HTTP-Referer': 'https://crawlers.lovable.app', 'X-Title': 'Crawlers.fr' }
+      : {}
+
+    console.log(`[parse-matrix-geo] Benchmark → ${engine} via ${useOpenRouter ? 'OpenRouter' : 'Lovable AI'} (${model})`)
+
+    const resp = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
+        ...extraHeaders,
       },
       body: JSON.stringify({
-        model: llmName || 'google/gemini-2.5-flash',
+        model,
         messages: [
-          { role: 'system', content: enginePrompt },
           { role: 'user', content: prompt },
         ],
         temperature: 0.3,
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(45000),
     })
 
     if (!resp.ok) {
@@ -289,14 +313,15 @@ async function evaluateBenchmark(
         await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
         return evaluateBenchmark(prompt, brandUrl, engine, llmName, engineNotes, scoringRubric, retryCount + 1)
       }
-      return { score: 0, raw: { error: `API error ${status}` }, citation_found: false, citation_rank: null, citation_context: '' }
+      return { score: 0, raw: { error: `API error ${status}`, model, gateway: useOpenRouter ? 'openrouter' : 'lovable' }, citation_found: false, citation_rank: null, citation_context: '' }
     }
 
     const data = await resp.json()
     const engineResponse = data.choices?.[0]?.message?.content || ''
-    trackTokenUsage('parse-matrix-geo', llmName || 'google/gemini-2.5-flash', data.usage, brandUrl)
+    trackTokenUsage('parse-matrix-geo', model, data.usage, brandUrl)
 
-    // Step 2: Analyze the response for citation and scoring fields (dynamic from Scoring Guide)
+    // ── Step 2: Analyze citation & score with Gemini Pro (high quality scoring) ──
+    const SCORING_MODEL = 'google/gemini-2.5-pro'
     const rubricInstructions = buildScoringRubric(scoringRubric);
     const dynamicJsonSchema = buildScoringJsonSchema(scoringRubric);
 
@@ -308,6 +333,12 @@ Réponds UNIQUEMENT en JSON avec ces champs: ${dynamicJsonSchema}
 
 IMPORTANT: Pour chaque champ de la grille, utilise UNIQUEMENT les valeurs autorisées listées.`;
 
+    if (!LOVABLE_API_KEY) {
+      // Can't score without Lovable AI — return raw citation detection
+      const cited = engineResponse.toLowerCase().includes(brandUrl.replace(/^https?:\/\//, '').replace(/\/$/, '').split('/')[0].toLowerCase())
+      return { score: cited ? 50 : 0, raw: { engine_response_preview: engineResponse.substring(0, 500), model, gateway: useOpenRouter ? 'openrouter' : 'lovable', scoring_skipped: true }, citation_found: cited, citation_rank: null, citation_context: '' }
+    }
+
     const scoringResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -315,14 +346,14 @@ IMPORTANT: Pour chaque champ de la grille, utilise UNIQUEMENT les valeurs autori
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: SCORING_MODEL,
         messages: [
           { role: 'system', content: scoringSystemPrompt },
-          { role: 'user', content: `URL/Marque à chercher: ${brandUrl}\n\nRéponse du moteur IA (${engine}):\n${engineResponse.substring(0, 3000)}` },
+          { role: 'user', content: `URL/Marque à chercher: ${brandUrl}\n\nRéponse du moteur IA (${engine}, modèle réel: ${model}):\n${engineResponse.substring(0, 4000)}` },
         ],
         temperature: 0.1,
       }),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(30000),
     })
 
     if (!scoringResp.ok) {
