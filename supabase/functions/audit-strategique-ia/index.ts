@@ -2768,7 +2768,7 @@ Deno.serve(handleRequest(async (req) => {
       userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
     }
 
-    // Inject site identity card context into prompt for better strategic analysis
+    // Inject site identity card context + GMB data into prompt for better strategic analysis
     if (siteIdentityCtx) {
       const idParts: string[] = [];
       if (siteIdentityCtx.market_sector) idParts.push(`Secteur: ${siteIdentityCtx.market_sector}`);
@@ -2780,8 +2780,12 @@ Deno.serve(handleRequest(async (req) => {
       if (siteIdentityCtx.company_size) idParts.push(`Taille: ${siteIdentityCtx.company_size}`);
       if (siteIdentityCtx.business_type) idParts.push(`Activité: ${siteIdentityCtx.business_type}`);
       if (siteIdentityCtx.competitors) idParts.push(`Concurrents connus: ${siteIdentityCtx.competitors}`);
+      if ((siteIdentityCtx as any).brand_name) idParts.push(`Marque: ${(siteIdentityCtx as any).brand_name}`);
+      if ((siteIdentityCtx as any).gmb_presence) idParts.push(`GMB: ${(siteIdentityCtx as any).gmb_presence}`);
+      if ((siteIdentityCtx as any).gmb_city) idParts.push(`Ville GMB: ${(siteIdentityCtx as any).gmb_city}`);
+      if ((siteIdentityCtx as any).is_local_business) idParts.push(`Business local: oui`);
       if (idParts.length > 0) {
-        userPrompt = `📇 CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\nUtilise ces données pour contextualiser TOUTE l'analyse.\n` + userPrompt;
+        userPrompt = `📇 CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\n⚠️ VÉRIFICATION: Compare ces données avec ce que tu observes dans le contenu de la page. Signale toute incohérence. Privilégie TOUJOURS les données observées sur le site.\nUtilise ces données pour contextualiser TOUTE l'analyse.\n` + userPrompt;
       }
     }
 
