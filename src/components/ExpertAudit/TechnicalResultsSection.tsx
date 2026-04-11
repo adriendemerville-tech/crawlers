@@ -157,6 +157,16 @@ export function TechnicalResultsSection({ result, url, t, onReportClick }: Props
         {result.rawData?.crawlersData && <AIBotsCard data={result.rawData.crawlersData} />}
       </div>
 
+      {/* LocalBusiness Schema Diagnostic — auto-triggered if local schema detected */}
+      {result.scores.aiReady.schemaTypes && (
+        <LocalBusinessDiagnosticCard
+          url={result.url}
+          domain={result.domain}
+          schemaTypes={result.scores.aiReady.schemaTypes}
+          htmlContent={result.rawData?.htmlContent}
+        />
+      )}
+
       {/* Dark Social, Freshness, Conversion Friction */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {result.rawData?.htmlAnalysis?.darkSocial && <DarkSocialCard data={result.rawData.htmlAnalysis.darkSocial} />}
