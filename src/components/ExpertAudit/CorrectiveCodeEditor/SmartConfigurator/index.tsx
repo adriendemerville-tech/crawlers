@@ -10,9 +10,11 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2, RotateCcw,
-  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText, PenTool
+  Download, Link2, AlertCircle, Plug, Cable, Crown, FileText, PenTool, Search, Lock, Shield
 } from 'lucide-react';
 import { ContentArchitectureAdvisor } from '@/components/ContentAdvisor/ContentArchitectureAdvisor';
+import { InjectionSearchBar, CatalogEntry } from './InjectionSearchBar';
+import { CodeValidator } from './CodeValidator';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { ScribeTab } from './ScribeTab';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
@@ -174,6 +176,9 @@ export function SmartConfigurator({
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasCmsConnectionForContent, setHasCmsConnectionForContent] = useState(false);
   const [contentDelegationStatus, setContentDelegationStatus] = useState<'idle' | 'generating' | 'ready' | 'deployed'>('idle');
+  const [selectedInjection, setSelectedInjection] = useState<CatalogEntry | null>(null);
+  const [codeValidated, setCodeValidated] = useState(false);
+  const [editableCode, setEditableCode] = useState('');
   
   const { language } = useLanguage();
   const { toast } = useToast();
@@ -1550,6 +1555,16 @@ export function SmartConfigurator({
                     Multi
                   </TabsTrigger>
                 )}
+                <TabsTrigger 
+                  value="injections" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-rose-500 data-[state=active]:bg-transparent py-3 px-3 relative"
+                >
+                  <Search className="w-4 h-4 mr-1" />
+                  Injections
+                  {!isAgencyPro && !isAdmin && (
+                    <Lock className="w-3 h-3 ml-1 text-muted-foreground" />
+                  )}
+                </TabsTrigger>
               </TabsList>
 
               <ScrollArea className="flex-1 min-h-0">
@@ -1613,6 +1628,48 @@ export function SmartConfigurator({
                     <MultiPageRouter domain={siteDomain} siteId={activeSiteId} />
                   </TabsContent>
                 )}
+
+                <TabsContent forceMount value="injections" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
+                  <InjectionSearchBar
+                    isSubscriber={isAgencyPro || isAdmin}
+                    onSelectInjection={(entry) => {
+                      setSelectedInjection(entry);
+                      setCodeValidated(false);
+                      setEditableCode('');
+                      // Auto-generate code for this injection type
+                      sonnerToast.info(`${entry.label} sélectionné — génération du code…`);
+                    }}
+                    selectedSlug={selectedInjection?.slug}
+                  />
+                  {selectedInjection && (
+                    <div className="mt-4 space-y-3">
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium">{selectedInjection.label}</span>
+                          <Badge variant="outline" className="text-[10px]">{selectedInjection.category.replace('_', ' ')}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{selectedInjection.description}</p>
+                        {selectedInjection.required_data?.fields && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {(selectedInjection.required_data.fields as string[]).map((f: string) => (
+                              <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <CodeValidator
+                        code={editableCode || generatedCode}
+                        injectionType={selectedInjection.slug}
+                        onValidated={(result) => setCodeValidated(result.valid)}
+                        onCorrectedCode={(code) => {
+                          setEditableCode(code);
+                          setGeneratedCode(code);
+                          setCodeValidated(true);
+                        }}
+                      />
+                    </div>
+                  )}
+                </TabsContent>
               </ScrollArea>
             </Tabs>
           </div>
@@ -1738,8 +1795,13 @@ export function SmartConfigurator({
                     </Button>
                     <Button
                       onClick={handleApplyToWordPress}
-                      disabled={isApplying || applySuccess}
-                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white border-0 text-xs h-8 px-3"
+                      disabled={isApplying || applySuccess || (activeTab === 'injections' && !codeValidated)}
+                      className={`gap-1.5 text-white border-0 text-xs h-8 px-3 ${
+                        activeTab === 'injections' && !codeValidated
+                          ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                          : 'bg-emerald-600 hover:bg-emerald-700'
+                      }`}
+                      title={activeTab === 'injections' && !codeValidated ? 'Validez le code avant d\'injecter' : undefined}
                     >
                       {isApplying ? (
                         <>
@@ -1750,6 +1812,11 @@ export function SmartConfigurator({
                         <>
                           <Check className="w-3 h-3" />
                           Injecté ✓
+                        </>
+                      ) : activeTab === 'injections' && !codeValidated ? (
+                        <>
+                          <Shield className="w-3 h-3" />
+                          Valider d'abord
                         </>
                       ) : (
                         <>
@@ -1800,7 +1867,20 @@ export function SmartConfigurator({
                 >
                   <ScrollArea className="h-full">
                     <div className="p-4">
-                      <CodeBlock code={generatedCode} isTyping={false} allowScroll />
+                      {activeTab === 'injections' ? (
+                        <textarea
+                          value={editableCode || generatedCode}
+                          onChange={(e) => {
+                            setEditableCode(e.target.value);
+                            setCodeValidated(false);
+                          }}
+                          className="w-full h-[500px] font-mono text-xs bg-zinc-950 text-emerald-400 p-4 rounded-lg border border-zinc-800 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                          spellCheck={false}
+                          placeholder="Le code généré apparaîtra ici. Vous pouvez le modifier librement."
+                        />
+                      ) : (
+                        <CodeBlock code={generatedCode} isTyping={false} allowScroll />
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
