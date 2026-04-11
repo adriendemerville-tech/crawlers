@@ -15,6 +15,7 @@ const translations = {
     title: 'Social Hub',
     subtitle: 'Le chaînon manquant entre SEO, réseaux sociaux et GEO',
     description: 'La plupart des outils sociaux ignorent vos données SEO. Crawlers.fr croise vos mots-clés, votre cocon sémantique et vos scores E-E-A-T pour générer des publications sociales qui renforcent votre visibilité organique — et alimentent les moteurs de réponse IA.',
+    enrichment: 'En retour, les données issues de vos réseaux sociaux (nom commercial, secteur, taille d\'équipe, description…) viennent enrichir automatiquement la carte d\'identité de votre site — pour une compréhension plus fine de votre marque et une stratégie SEO/GEO véritablement alignée sur votre business.',
     features: [
       {
         icon: Search,
