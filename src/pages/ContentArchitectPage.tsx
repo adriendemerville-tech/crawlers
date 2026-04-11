@@ -797,6 +797,35 @@ const ContentArchitectPage = memo(() => {
           </div>
         </section>
 
+        {/* ═══ FAN-OUT QUERIES ═══ */}
+        <section className="py-16 sm:py-24">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div className="prose prose-lg dark:prose-invert max-w-none">
+              <h2>Requêtes fan-out : le terrain invisible du GEO</h2>
+              <p>
+                Quand un utilisateur demande à Perplexity « quel est le meilleur outil SEO pour une agence ? », le moteur ne lance pas une seule recherche.
+                Il <strong>décompose la question en 3 à 8 sous-requêtes</strong> — les <em>requêtes fan-out</em> — qui explorent chacune un angle :
+                fonctionnalités, prix, avis, comparatifs, alternatives, cas d'usage.
+              </p>
+              <p>
+                <strong>Ne pas couvrir ces axes, c'est être invisible sur une partie de la réponse finale.</strong> Content Architect intègre un bloc{' '}
+                « Requêtes fan-out à couvrir » qui liste les axes détectés pour votre mot-clé cible, avec un pourcentage de couverture en temps réel.
+                Chaque axe non couvert est une opportunité manquée d'être cité comme source.
+              </p>
+              <p>
+                Notre détection repose sur une approche hybride à haute précision (~80%) : simulation LLM des sous-requêtes probables
+                et rétro-ingénierie des sources citées par Perplexity pour extraire les axes réels.
+                Les résultats sont persistés dans l'Univers de Mots-clés et alimentent également l'Audit GEO (carte FanOut) et le Dashboard (widget FanOut Radar).
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <em>Il est possible que d'ici quelques mois, les moteurs de réponse IA soient plus transparents sur les requêtes
+                formulées en interne par leurs agents RAG. En attendant cette évolution, notre méthode hybride reste la plus fiable
+                pour anticiper la décomposition de vos thématiques cibles.</em>
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* ═══ PRICING ═══ */}
         <section className="border-y border-border bg-muted/20 py-16 sm:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
