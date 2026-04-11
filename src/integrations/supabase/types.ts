@@ -5736,6 +5736,7 @@ export type Database = {
           is_quick_win: boolean | null
           keyword: string
           opportunity_score: number | null
+          parent_query_id: string | null
           quick_win_action: string | null
           quick_win_type: string | null
           search_volume: number | null
@@ -5757,6 +5758,7 @@ export type Database = {
           is_quick_win?: boolean | null
           keyword: string
           opportunity_score?: number | null
+          parent_query_id?: string | null
           quick_win_action?: string | null
           quick_win_type?: string | null
           search_volume?: number | null
@@ -5778,6 +5780,7 @@ export type Database = {
           is_quick_win?: boolean | null
           keyword?: string
           opportunity_score?: number | null
+          parent_query_id?: string | null
           quick_win_action?: string | null
           quick_win_type?: string | null
           search_volume?: number | null
@@ -5789,6 +5792,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "keyword_universe_parent_query_id_fkey"
+            columns: ["parent_query_id"]
+            isOneToOne: false
+            referencedRelation: "keyword_universe"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "keyword_universe_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
