@@ -372,6 +372,51 @@ export function Header() {
           )}
         </div>}
 
+        {/* Console-only centered shortcuts: Matrice, Crawl, Audit, Cocoon, Content, Social Hub */}
+        {location.pathname === '/app/console' && (
+          <div className="hidden sm:flex items-center gap-0.5 absolute left-1/2 -translate-x-1/2">
+            <Link to="/matrice">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
+                <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                Matrice
+              </Button>
+            </Link>
+            <Link to="/app/site-crawl">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-purple-500 hover:text-purple-400 hover:bg-purple-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                <Bug className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                Crawl
+              </Button>
+            </Link>
+            <Link to="/audit-expert">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-[#1e3a5f] dark:text-[#60a5fa] hover:bg-[#1e3a5f]/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                Audit
+              </Button>
+            </Link>
+            <Link to="/app/cocoon">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                Cocoon
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowContentArchitect(true)}
+              className="gap-1 px-2 text-xs text-green-700 dark:text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-700/10 sm:text-sm sm:gap-1.5 sm:px-3"
+            >
+              <PenLine className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              Content
+            </Button>
+            <Link to="/app/social">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)] sm:text-sm sm:gap-1.5 sm:px-3">
+                <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                Social Hub
+                <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {/* Right side: Audit CTA, Credits, Theme, User */}
         <div className="flex items-center gap-3">
 
