@@ -475,8 +475,19 @@ try {
         })
         break
       case 'get-injection-body-end':
-        result = await getInjectionBodyEnd(apiKey)
+      case 'get-injections': {
+        // get-injections is an alias; location param filters (defaults to body_end)
+        const location = (params.location as string) || 'body_end'
+        if (location === 'head') {
+          result = await getInjectionHead(apiKey)
+        } else if (location.startsWith('page/') || location.startsWith('page:')) {
+          const pageKey = location.replace(/^page[/:]/, '')
+          result = await getInjectionPage(apiKey, pageKey)
+        } else {
+          result = await getInjectionBodyEnd(apiKey)
+        }
         break
+      }
       case 'push-code-body':
         result = await putInjectionBodyEnd(apiKey, {
           content: params.code || params.content,
