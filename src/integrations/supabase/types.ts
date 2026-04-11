@@ -10132,12 +10132,15 @@ export type Database = {
           identity_confidence: number | null
           identity_enriched_at: string | null
           identity_source: string | null
+          is_local_business: boolean | null
           is_seasonal: boolean | null
           jargon_distance: Json | null
           last_audit_at: string | null
           last_sov_update: string | null
           last_widget_ping: string | null
           legal_structure: string | null
+          local_schema_audit: Json | null
+          local_schema_status: string | null
           location_detail: string | null
           main_serp_competitor: string | null
           market_sector: string | null
@@ -10188,12 +10191,15 @@ export type Database = {
           identity_confidence?: number | null
           identity_enriched_at?: string | null
           identity_source?: string | null
+          is_local_business?: boolean | null
           is_seasonal?: boolean | null
           jargon_distance?: Json | null
           last_audit_at?: string | null
           last_sov_update?: string | null
           last_widget_ping?: string | null
           legal_structure?: string | null
+          local_schema_audit?: Json | null
+          local_schema_status?: string | null
           location_detail?: string | null
           main_serp_competitor?: string | null
           market_sector?: string | null
@@ -10244,12 +10250,15 @@ export type Database = {
           identity_confidence?: number | null
           identity_enriched_at?: string | null
           identity_source?: string | null
+          is_local_business?: boolean | null
           is_seasonal?: boolean | null
           jargon_distance?: Json | null
           last_audit_at?: string | null
           last_sov_update?: string | null
           last_widget_ping?: string | null
           legal_structure?: string | null
+          local_schema_audit?: Json | null
+          local_schema_status?: string | null
           location_detail?: string | null
           main_serp_competitor?: string | null
           market_sector?: string | null
