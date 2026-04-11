@@ -163,7 +163,6 @@ export function TechnicalResultsSection({ result, url, t, onReportClick }: Props
           url={result.url}
           domain={result.domain}
           schemaTypes={result.scores.aiReady.schemaTypes}
-          />
         />
       )}
 
