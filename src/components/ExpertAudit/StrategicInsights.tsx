@@ -289,6 +289,11 @@ export function StrategicInsights({
             <SimulatedLLMDepthCard analysis={analysis} domain={domain} />
           </RevealWrapper>
 
+          {/* 9c. Décomposition RAG fan-out */}
+          <RevealWrapper delay={7200} isDataCard enabled={progressiveReveal}>
+            <FanOutCard analysis={analysis} domain={domain} />
+          </RevealWrapper>
+
           {/* 9c. Bot Log Chart — GPT & Gemini */}
           <RevealWrapper delay={7500} isDataCard enabled={progressiveReveal}>
             <BotLogChartCard domain={domain} />
