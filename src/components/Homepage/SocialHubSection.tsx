@@ -15,6 +15,7 @@ const translations = {
     title: 'Social Hub',
     subtitle: 'Le chaînon manquant entre SEO, réseaux sociaux et GEO',
     description: 'La plupart des outils sociaux ignorent vos données SEO. Crawlers.fr croise vos mots-clés, votre cocon sémantique et vos scores E-E-A-T pour générer des publications sociales qui renforcent votre visibilité organique — et alimentent les moteurs de réponse IA.',
+    enrichment: 'En retour, les données issues de vos réseaux sociaux (nom commercial, secteur, taille d\'équipe, description…) viennent enrichir automatiquement la carte d\'identité de votre site — pour une compréhension plus fine de votre marque et une stratégie SEO/GEO véritablement alignée sur votre business.',
     features: [
       {
         icon: Search,
@@ -56,6 +57,7 @@ const translations = {
     title: 'Social Hub',
     subtitle: 'The missing link between SEO, social media, and GEO',
     description: 'Most social tools ignore your SEO data. Crawlers.fr crosses your keywords, semantic cocoon, and E-E-A-T scores to generate social posts that boost your organic visibility — and feed AI answer engines.',
+    enrichment: 'In return, data from your social profiles (business name, industry, team size, description…) automatically enriches your site\'s identity card — for a deeper understanding of your brand and an SEO/GEO strategy truly aligned with your business.',
     features: [
       {
         icon: Search,
@@ -97,6 +99,7 @@ const translations = {
     title: 'Social Hub',
     subtitle: 'El eslabón perdido entre SEO, redes sociales y GEO',
     description: 'La mayoría de herramientas sociales ignoran sus datos SEO. Crawlers.fr cruza sus palabras clave, cocoon semántico y puntuaciones E-E-A-T para generar publicaciones que refuerzan su visibilidad orgánica — y alimentan los motores de respuesta IA.',
+    enrichment: 'A cambio, los datos de sus perfiles sociales (nombre comercial, sector, tamaño del equipo, descripción…) enriquecen automáticamente la tarjeta de identidad de su sitio — para una comprensión más profunda de su marca y una estrategia SEO/GEO alineada con su negocio.',
     features: [
       {
         icon: Search,
@@ -174,6 +177,9 @@ export const SocialHubSection = memo(() => {
           >
             <p className="text-muted-foreground leading-relaxed text-[15px]">
               {t.description}
+            </p>
+            <p className="text-muted-foreground leading-relaxed text-[15px] italic border-l-2 border-emerald-500/30 pl-4">
+              {t.enrichment}
             </p>
 
             <div className="grid gap-5">
