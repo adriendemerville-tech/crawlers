@@ -25,6 +25,7 @@ import { FreshnessSignalsCard } from './FreshnessSignalsCard';
 import { ConversionFrictionCard } from './ConversionFrictionCard';
 import { MethodologyPopover } from './MethodologyPopover';
 import { ExpertAuditResult } from '@/types/expertAudit';
+import { LocalBusinessDiagnosticCard } from './LocalBusinessDiagnosticCard';
 
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
@@ -155,6 +156,15 @@ export function TechnicalResultsSection({ result, url, t, onReportClick }: Props
 
         {result.rawData?.crawlersData && <AIBotsCard data={result.rawData.crawlersData} />}
       </div>
+
+      {/* LocalBusiness Schema Diagnostic — auto-triggered if local schema detected */}
+      {result.scores.aiReady.schemaTypes && (
+        <LocalBusinessDiagnosticCard
+          url={result.url}
+          domain={result.domain}
+          schemaTypes={result.scores.aiReady.schemaTypes}
+        />
+      )}
 
       {/* Dark Social, Freshness, Conversion Friction */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

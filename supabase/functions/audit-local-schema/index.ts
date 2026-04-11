@@ -330,94 +330,152 @@ function generateLocalBusinessSchema(
 handleRequest(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  const { tracked_site_id, html_content, user_id } = await req.json();
-  if (!tracked_site_id || !user_id) {
-    return jsonError('Missing tracked_site_id or user_id', 400);
+  const body = await req.json();
+  const { tracked_site_id, html_content, user_id, url: inputUrl, domain: inputDomain } = body;
+
+  if (!user_id) {
+    return jsonError('Missing user_id', 400);
   }
 
   const supabase = getServiceClient();
 
-  // Fetch site data
-  const { data: site } = await supabase
-    .from('tracked_sites')
-    .select('domain, brand_name, entity_type, location_detail, gmb_presence, gmb_city')
-    .eq('id', tracked_site_id)
-    .single();
-
-  if (!site) return jsonError('Site not found', 404);
-
-  // Fetch GMB data if available
+  let siteDomain = inputDomain || '';
+  let brandName: string | null = null;
+  let entityType: string | null = null;
+  let locationDetail: string | null = null;
   let gmbData: any = null;
-  const { data: gmbLocation } = await supabase
-    .from('gmb_locations')
-    .select('location_name, category, address, phone, hours, place_id, website')
-    .eq('tracked_site_id', tracked_site_id)
-    .maybeSingle();
 
-  if (gmbLocation) {
-    // Also get performance data for rating
-    const { data: perf } = await supabase
-      .from('gmb_performance')
-      .select('avg_rating, total_reviews')
-      .eq('gmb_location_id', gmbLocation.place_id || '')
-      .order('measured_at', { ascending: false })
-      .limit(1)
+  // Mode 1: tracked_site_id provided → full data from DB + GMB
+  if (tracked_site_id) {
+    const { data: site } = await supabase
+      .from('tracked_sites')
+      .select('domain, brand_name, entity_type, location_detail, gmb_presence, gmb_city')
+      .eq('id', tracked_site_id)
+      .single();
+
+    if (site) {
+      siteDomain = site.domain;
+      brandName = site.brand_name;
+      entityType = site.entity_type;
+      locationDetail = site.location_detail;
+
+      // Fetch GMB data
+      const { data: gmbLocation } = await supabase
+        .from('gmb_locations')
+        .select('location_name, category, address, phone, hours, place_id, website')
+        .eq('tracked_site_id', tracked_site_id)
+        .maybeSingle();
+
+      if (gmbLocation) {
+        const { data: perf } = await supabase
+          .from('gmb_performance')
+          .select('avg_rating, total_reviews')
+          .eq('gmb_location_id', gmbLocation.place_id || '')
+          .order('measured_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        gmbData = {
+          ...gmbLocation,
+          avg_rating: perf?.avg_rating || null,
+          total_reviews: perf?.total_reviews || null,
+        };
+      }
+    }
+  }
+  // Mode 2: URL-only mode (from expert audit) — also try to find tracked site by domain
+  else if (inputDomain || inputUrl) {
+    siteDomain = inputDomain || new URL(inputUrl).hostname.replace(/^www\./, '');
+
+    // Try to find a tracked site for this user + domain to get GMB data
+    const { data: site } = await supabase
+      .from('tracked_sites')
+      .select('id, brand_name, entity_type, location_detail')
+      .eq('user_id', user_id)
+      .eq('domain', siteDomain)
       .maybeSingle();
 
-    gmbData = {
-      ...gmbLocation,
-      avg_rating: perf?.avg_rating || null,
-      total_reviews: perf?.total_reviews || null,
-    };
+    if (site) {
+      brandName = site.brand_name;
+      entityType = site.entity_type;
+      locationDetail = site.location_detail;
+
+      // Fetch GMB data via the found tracked site
+      const { data: gmbLocation } = await supabase
+        .from('gmb_locations')
+        .select('location_name, category, address, phone, hours, place_id, website')
+        .eq('tracked_site_id', site.id)
+        .maybeSingle();
+
+      if (gmbLocation) {
+        const { data: perf } = await supabase
+          .from('gmb_performance')
+          .select('avg_rating, total_reviews')
+          .eq('gmb_location_id', gmbLocation.place_id || '')
+          .order('measured_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        gmbData = {
+          ...gmbLocation,
+          avg_rating: perf?.avg_rating || null,
+          total_reviews: perf?.total_reviews || null,
+        };
+      }
+    }
+  } else {
+    return jsonError('Missing tracked_site_id, url, or domain', 400);
   }
 
-  // If no HTML provided, try to fetch the homepage
+  // Fetch HTML if not provided
   let html = html_content || '';
-  if (!html) {
+  if (!html && siteDomain) {
     try {
-      const resp = await fetch(`https://${site.domain}`, {
+      const resp = await fetch(`https://${siteDomain}`, {
         headers: { 'User-Agent': 'Crawlers-LocalSchema-Auditor/1.0' },
         signal: AbortSignal.timeout(10000),
       });
       if (resp.ok) html = await resp.text();
     } catch (e) {
-      console.warn(`[audit-local-schema] Could not fetch ${site.domain}:`, e);
+      console.warn(`[audit-local-schema] Could not fetch ${siteDomain}:`, e);
     }
   }
 
   // Detect local signals
   const signals = detectLocalSignals(html);
-  const { isLocal, confidence } = isLocalBusiness(signals, !!gmbData, site.entity_type);
+  const { isLocal, confidence } = isLocalBusiness(signals, !!gmbData, entityType);
 
   // Audit schema
-  const audit = auditLocalSchema(signals, gmbData, site.domain, site.brand_name);
+  const audit = auditLocalSchema(signals, gmbData, siteDomain, brandName);
 
   // Generate schema if local business
   let generatedSchema: Record<string, unknown> | null = null;
   if (isLocal) {
-    generatedSchema = generateLocalBusinessSchema(audit, gmbData, site.domain, site.brand_name, site.location_detail);
+    generatedSchema = generateLocalBusinessSchema(audit, gmbData, siteDomain, brandName, locationDetail);
     audit.generated_schema = generatedSchema;
   }
 
-  // Save to tracked_sites via identity gateway
-  await writeIdentity({
-    siteId: tracked_site_id,
-    fields: {
-      is_local_business: isLocal,
-      local_schema_status: audit.status,
-      local_schema_audit: {
-        score: audit.score,
-        status: audit.status,
-        signals: audit.signals,
-        recommended_type: audit.recommended_type,
-        detection_confidence: confidence,
-        gmb_connected: !!gmbData,
-        audited_at: new Date().toISOString(),
+  // Save to tracked_sites if we have a tracked_site_id
+  if (tracked_site_id) {
+    await writeIdentity({
+      siteId: tracked_site_id,
+      fields: {
+        is_local_business: isLocal,
+        local_schema_status: audit.status,
+        local_schema_audit: {
+          score: audit.score,
+          status: audit.status,
+          signals: audit.signals,
+          recommended_type: audit.recommended_type,
+          detection_confidence: confidence,
+          gmb_connected: !!gmbData,
+          audited_at: new Date().toISOString(),
+        },
       },
-    },
-    source: 'expert_audit',
-    userId: user_id,
-  });
+      source: 'expert_audit',
+      userId: user_id,
+    });
+  }
 
   return jsonOk({
     is_local_business: isLocal,
