@@ -2643,6 +2643,78 @@ Deno.serve(handleRequest(async (req) => {
     
     const recommendations = generateRecommendations(scores, htmlAnalysis, psiData, crawlersResult, sitemapAnalysis, llmsTxtAnalysis, specializedSitemaps);
     
+    // ═══ FETCH IDENTITY CARD + GOOGLE SERVICES DATA ═══
+    let identityBlock = '';
+    const authHeader = req.headers.get('Authorization') || '';
+    try {
+      const sb = getUserClient(authHeader);
+      const { data: { user } } = await sb.auth.getUser();
+      
+      if (user) {
+        // Fetch identity card
+        const siteContext = await getSiteContext(sb, { domain, userId: user.id });
+        
+        // Fetch GMB data if user has a tracked site
+        let gmbInfo = '';
+        if (siteContext) {
+          const { data: trackedSite } = await sb
+            .from('tracked_sites')
+            .select('id, gmb_presence, gmb_city, is_local_business, local_schema_status')
+            .eq('user_id', user.id)
+            .ilike('domain', `%${domain}%`)
+            .limit(1)
+            .maybeSingle();
+
+          if (trackedSite?.id) {
+            const { data: gmbLocation } = await sb
+              .from('gmb_locations')
+              .select('location_name, category, address, phone, hours, place_id')
+              .eq('tracked_site_id', trackedSite.id)
+              .maybeSingle();
+
+            if (gmbLocation) {
+              const { data: gmbPerf } = await sb
+                .from('gmb_performance')
+                .select('avg_rating, total_reviews')
+                .eq('gmb_location_id', gmbLocation.place_id || '')
+                .order('measured_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              gmbInfo = `\nDONNÉES GOOGLE BUSINESS PROFILE (vérifiées):
+- Nom: ${gmbLocation.location_name || '—'}
+- Catégorie: ${gmbLocation.category || '—'}
+- Adresse: ${gmbLocation.address || '—'}
+- Téléphone: ${gmbLocation.phone || '—'}
+- Note Google: ${gmbPerf?.avg_rating || '—'}/5 (${gmbPerf?.total_reviews || 0} avis)
+- Local Business détecté: ${trackedSite.is_local_business ? 'oui' : 'non'}
+- Schema LocalBusiness: ${trackedSite.local_schema_status || 'inconnu'}`;
+            }
+          }
+        }
+
+        if (siteContext) {
+          identityBlock = `
+CARTE D'IDENTITÉ DU SITE (source: base de données utilisateur — à VÉRIFIER):
+- Nom de marque: ${(siteContext as any).brand_name || '—'}
+- Secteur: ${(siteContext as any).market_sector || '—'}
+- Produits/Services: ${(siteContext as any).products_services || '—'}
+- Audience cible: ${(siteContext as any).target_audience || '—'}
+- Zone commerciale: ${(siteContext as any).commercial_area || '—'}
+- Taille entreprise: ${(siteContext as any).company_size || '—'}
+- Type d'entité: ${(siteContext as any).entity_type || '—'}
+- CMS: ${(siteContext as any).cms_platform || '—'}
+- Langue principale: ${(siteContext as any).primary_language || '—'}
+- Confiance carte: ${(siteContext as any).identity_confidence || 0}%
+- Source: ${(siteContext as any).identity_source || 'inconnue'}${gmbInfo}
+
+⚠️ CONSIGNE DE VÉRIFICATION: Compare ces informations avec ce que tu observes dans les données techniques (title, meta desc, contenu, schema.org). Si une info de la carte d'identité contredit les données crawlées, SIGNALE-LE dans ta présentation (ex: "La carte indique X mais le site affiche Y"). Privilégie TOUJOURS les données observées sur le site.`;
+        }
+      }
+    } catch (idErr) {
+      console.warn('[expert-audit] Identity card fetch failed (non-fatal):', idErr);
+    }
+
     // Generate narrative introduction using AI
     let introduction = null;
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -2661,12 +2733,12 @@ Deno.serve(handleRequest(async (req) => {
             messages: [
               { 
                 role: 'system', 
-                content: `Tu es un expert SEO technique. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO. Réponds UNIQUEMENT en JSON valide.`
+                content: `Tu es un expert SEO technique. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO. Tu reçois la carte d'identité du site issue de la base de données ET les données techniques crawlées. Tu dois CROISER les deux sources et signaler toute incohérence. Réponds UNIQUEMENT en JSON valide.`
               },
               { 
                 role: 'user', 
                 content: `Analyse les données suivantes pour le site ${domain} (${normalizedUrl}) et génère 3 paragraphes d'introduction:
-
+${identityBlock}
 DONNÉES TECHNIQUES:
 - Score total: ${totalScore}/200
 - Performance: ${performanceScore}/40 (LCP: ${(audits['largest-contentful-paint']?.numericValue / 1000).toFixed(1)}s, TBT: ${Math.round(audits['total-blocking-time']?.numericValue || 0)}ms)
@@ -2679,7 +2751,7 @@ DONNÉES TECHNIQUES:
 
 Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1400 caractères MAX au total, espaces compris. Nombre de phrases libre, répartition libre entre les 3 champs):
 {
-  "presentation": "Présentation concise du site, core business, secteur et zone géographique.",
+  "presentation": "Présentation contextuelle du site basée sur la carte d'identité ET les données crawlées. Mentionne le secteur, la zone géographique et le type d'activité. Si des données GMB sont disponibles, intègre-les. Signale toute incohérence entre carte d'identité et données observées.",
   "strengths": "Atouts techniques ET sémantiques/référencement.",
   "improvement": "Données moins bonnes et pourquoi c'est prioritaire à corriger."
 }`
