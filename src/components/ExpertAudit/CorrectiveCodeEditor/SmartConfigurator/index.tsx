@@ -1795,8 +1795,13 @@ export function SmartConfigurator({
                     </Button>
                     <Button
                       onClick={handleApplyToWordPress}
-                      disabled={isApplying || applySuccess}
-                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white border-0 text-xs h-8 px-3"
+                      disabled={isApplying || applySuccess || (activeTab === 'injections' && !codeValidated)}
+                      className={`gap-1.5 text-white border-0 text-xs h-8 px-3 ${
+                        activeTab === 'injections' && !codeValidated
+                          ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                          : 'bg-emerald-600 hover:bg-emerald-700'
+                      }`}
+                      title={activeTab === 'injections' && !codeValidated ? 'Validez le code avant d\'injecter' : undefined}
                     >
                       {isApplying ? (
                         <>
@@ -1807,6 +1812,11 @@ export function SmartConfigurator({
                         <>
                           <Check className="w-3 h-3" />
                           Injecté ✓
+                        </>
+                      ) : activeTab === 'injections' && !codeValidated ? (
+                        <>
+                          <Shield className="w-3 h-3" />
+                          Valider d'abord
                         </>
                       ) : (
                         <>
