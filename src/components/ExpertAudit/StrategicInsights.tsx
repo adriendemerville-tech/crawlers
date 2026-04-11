@@ -36,6 +36,7 @@ import { ExpertiseSentimentCard } from './ExpertiseSentimentCard';
 import { RedTeamCard } from './RedTeamCard';
 import { GoogleMyBusinessCard } from './GoogleMyBusinessCard';
 import { SimulatedLLMDepthCard } from './SimulatedLLMDepthCard';
+import { FanOutCard } from './FanOutCard';
 import { BotLogChartCard } from './BotLogChartCard';
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
