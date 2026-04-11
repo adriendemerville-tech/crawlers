@@ -6,7 +6,7 @@ import ArchitectureMap from "@/components/admin/ArchitectureMap";
 
 const ArchitectureMapPage = () => {
   const { user } = useAuth();
-  const { isAdmin, loading } = useAdmin();
+  const { isAdmin, isViewer, loading } = useAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
