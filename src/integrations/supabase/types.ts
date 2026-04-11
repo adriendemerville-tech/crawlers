@@ -649,6 +649,7 @@ export type Database = {
           consumed_by_code: boolean
           consumed_by_content: boolean
           created_at: string
+          deployed_at: string | null
           description: string | null
           domain: string
           finding_category: string
@@ -668,6 +669,7 @@ export type Database = {
           tracked_site_id: string | null
           updated_at: string
           user_id: string
+          validate_attempts: number
         }
         Insert: {
           action_type?:
@@ -678,6 +680,7 @@ export type Database = {
           consumed_by_code?: boolean
           consumed_by_content?: boolean
           created_at?: string
+          deployed_at?: string | null
           description?: string | null
           domain: string
           finding_category: string
@@ -697,6 +700,7 @@ export type Database = {
           tracked_site_id?: string | null
           updated_at?: string
           user_id: string
+          validate_attempts?: number
         }
         Update: {
           action_type?:
@@ -707,6 +711,7 @@ export type Database = {
           consumed_by_code?: boolean
           consumed_by_content?: boolean
           created_at?: string
+          deployed_at?: string | null
           description?: string | null
           domain?: string
           finding_category?: string
@@ -726,6 +731,7 @@ export type Database = {
           tracked_site_id?: string | null
           updated_at?: string
           user_id?: string
+          validate_attempts?: number
         }
         Relationships: [
           {
@@ -11188,6 +11194,7 @@ export type Database = {
         | "pending"
         | "assigned"
         | "in_progress"
+        | "deployed"
         | "done"
         | "skipped"
     }
@@ -11398,6 +11405,7 @@ export const Constants = {
         "pending",
         "assigned",
         "in_progress",
+        "deployed",
         "done",
         "skipped",
       ],
