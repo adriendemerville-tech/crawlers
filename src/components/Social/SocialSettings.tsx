@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { enrichIdentityFromSocial } from '@/lib/api/socialHub';
 
 interface SocialConnection {
   platform: 'linkedin' | 'facebook' | 'instagram';
