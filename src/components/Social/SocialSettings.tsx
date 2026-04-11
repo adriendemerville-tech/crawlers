@@ -100,7 +100,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
           try {
             const result = await enrichIdentityFromSocial(trackedSiteId, record.id);
             if (result?.success) {
-              const enrichedCount = Object.values(result.results || {}).reduce((acc: number, r: any) => acc + (r.fields_extracted || 0), 0);
+              const enrichedCount = Object.values(result.results || {}).reduce((acc: number, r: any) => acc + ((r as any).fields_extracted || 0), 0) as number;
               if (enrichedCount > 0) {
                 toast.success(`Carte d'identité enrichie : ${enrichedCount} champs mis à jour depuis ${record.platform}`, { icon: '🪪' });
               }
