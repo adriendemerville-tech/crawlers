@@ -1,5 +1,6 @@
 import { PenLine } from 'lucide-react';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
+import { FanOutSuggestions } from './FanOutSuggestions';
 
 interface ContentArchitectPromptPanelProps {
   trackedSiteId?: string;
@@ -21,6 +22,13 @@ export function ContentArchitectPromptPanel({
          <PenLine className="w-3.5 h-3.5 text-slate-500 stroke-[1.5]" />
          <h3 className="text-xs font-semibold text-slate-300">Prompt & Presets</h3>
       </div>
+
+      {/* Fan-out suggestions */}
+      {domain && trackedSiteId && (
+        <div className="px-2 pt-2">
+          <FanOutSuggestions domain={domain} trackedSiteId={trackedSiteId} currentContent={prompt} />
+        </div>
+      )}
 
       {/* Site presets — fills all remaining space */}
       <div className="flex-1 overflow-hidden">

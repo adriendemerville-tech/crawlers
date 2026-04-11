@@ -36,6 +36,7 @@ import { ExpertiseSentimentCard } from './ExpertiseSentimentCard';
 import { RedTeamCard } from './RedTeamCard';
 import { GoogleMyBusinessCard } from './GoogleMyBusinessCard';
 import { SimulatedLLMDepthCard } from './SimulatedLLMDepthCard';
+import { FanOutCard } from './FanOutCard';
 import { BotLogChartCard } from './BotLogChartCard';
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
@@ -286,6 +287,11 @@ export function StrategicInsights({
           {/* 9b. Profondeur LLM (simulated) */}
           <RevealWrapper delay={7000} isDataCard enabled={progressiveReveal}>
             <SimulatedLLMDepthCard analysis={analysis} domain={domain} />
+          </RevealWrapper>
+
+          {/* 9c. Décomposition RAG fan-out */}
+          <RevealWrapper delay={7200} isDataCard enabled={progressiveReveal}>
+            <FanOutCard analysis={analysis} domain={domain} />
           </RevealWrapper>
 
           {/* 9c. Bot Log Chart — GPT & Gemini */}

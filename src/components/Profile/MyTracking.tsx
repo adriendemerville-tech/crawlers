@@ -29,6 +29,7 @@ import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
 import { SmartRecommendationsPanel } from '@/components/Profile/SmartRecommendationsPanel';
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
+import { FanOutRadarWidget } from '@/components/Profile/FanOutRadarWidget';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
@@ -694,6 +695,9 @@ export function MyTracking() {
 
                         {/* LLM Depth */}
                         <LLMDepthCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} key={`llm-depth-${h.currentSite.id}-${h.llmBenchmarkRefreshKey}`} />
+
+                        {/* Fan-Out Radar */}
+                        <FanOutRadarWidget trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
 
                         {/* IAS — only if site is verified in GSC */}
                         {h.gscSiteVerified && (
