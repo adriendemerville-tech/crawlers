@@ -239,13 +239,13 @@ Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string c
 
     const data = await resp.json()
     const content = data.choices?.[0]?.message?.content || ''
-    trackTokenUsage('parse-matrix-geo', llmName || 'google/gemini-2.5-flash', data.usage, url)
+    trackTokenUsage('parse-matrix-geo', GEO_MODEL, data.usage, url)
 
     return parseScoreResponse(content)
   } catch (e) {
     if (retryCount < MAX_RETRIES) {
       await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
-      return evaluateGeo(prompt, url, llmName, retryCount + 1)
+      return evaluateGeo(prompt, url, _llmName, retryCount + 1)
     }
     return { score: 50, raw: { error: e instanceof Error ? e.message : 'Unknown' } }
   }
