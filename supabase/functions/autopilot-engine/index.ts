@@ -1343,7 +1343,7 @@ try {
           // ═══ Collect phase errors into cycle-level array ═══
           allPhaseErrors.push(...phaseErrors);
 
-          // ═══ POST-EXECUTE: Mark workbench items as consumed_by_content ═══
+           // ═══ POST-EXECUTE: Mark workbench items as 'deployed' for counter-audit ═══
           if (phase === 'execute' && executionSuccess) {
             try {
               const contentActions = executionResults.filter(
@@ -1354,26 +1354,59 @@ try {
                 )
               );
               if (contentActions.length > 0) {
+                // Mark content items as 'deployed' — the cron autopilot-validate-deployed
+                // will counter-audit them (presence + mechanical + semantic + quality)
+                // before promoting to 'done' or marking 'failed'.
                 const { data: markedItems, error: markErr } = await supabase
                   .from('architect_workbench')
                   .update({
                     consumed_by_content: true,
                     consumed_at: new Date().toISOString(),
-                    status: 'in_progress' as any,
+                    status: 'deployed' as any,
+                    deployed_at: new Date().toISOString(),
+                    validate_attempts: 0,
                     updated_at: new Date().toISOString(),
                   })
                   .eq('domain', site.domain)
-                  .eq('status', 'pending')
+                  .in('status', ['pending', 'in_progress'])
                   .in('finding_category', ['missing_page', 'content_gap', 'content_upgrade', 'missing_terms'])
                   .select('id');
 
                 if (markedItems && markedItems.length > 0) {
-                  console.log(`[AutopilotEngine] ✅ Marked ${markedItems.length} workbench items as consumed_by_content for ${site.domain}`);
+                  console.log(`[AutopilotEngine] 🚀 Marked ${markedItems.length} workbench items as 'deployed' for counter-audit on ${site.domain}`);
                 }
-                if (markErr) console.warn('[AutopilotEngine] consumed_by_content mark error:', markErr.message);
+                if (markErr) console.warn('[AutopilotEngine] deployed mark error:', markErr.message);
+              }
+
+              // Mark tech items as 'deployed' too
+              const techActions = executionResults.filter(
+                (r: any) => r.status === 'success' && (
+                  r.function === 'generate-corrective-code' || r.cms_action === 'inject-code'
+                )
+              );
+              if (techActions.length > 0) {
+                const { data: techMarked, error: techErr } = await supabase
+                  .from('architect_workbench')
+                  .update({
+                    consumed_by_code: true,
+                    consumed_at: new Date().toISOString(),
+                    status: 'deployed' as any,
+                    deployed_at: new Date().toISOString(),
+                    validate_attempts: 0,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('domain', site.domain)
+                  .in('status', ['pending', 'in_progress'])
+                  .not('finding_category', 'in', '("missing_page","content_gap","content_upgrade","missing_terms")')
+                  .select('id');
+
+                if (techMarked && techMarked.length > 0) {
+                  console.log(`[AutopilotEngine] 🚀 Marked ${techMarked.length} tech workbench items as 'deployed' for counter-audit on ${site.domain}`);
+                }
+                if (techErr) console.warn('[AutopilotEngine] tech deployed mark error:', techErr.message);
               }
             } catch (markE) {
-              console.warn('[AutopilotEngine] consumed_by_content exception:', markE);
+              console.warn('[AutopilotEngine] POST-EXECUTE deployed exception:', markE);
             }
           }
 
