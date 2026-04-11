@@ -419,6 +419,9 @@ IMPORTANT: Pour chaque champ de la grille, utilise UNIQUEMENT les valeurs autori
         score: benchmarkScore,
         raw: {
           engine_response_preview: engineResponse.substring(0, 300),
+          real_model: model,
+          real_gateway: useOpenRouter ? 'openrouter' : 'lovable',
+          scoring_model: SCORING_MODEL,
           scoring: citationParsed,
           scoring_method: scoringMethod,
           coded_fields: codedFields,
@@ -438,6 +441,9 @@ IMPORTANT: Pour chaque champ de la grille, utilise UNIQUEMENT les valeurs autori
       score: benchmarkScore,
       raw: {
         engine_response_preview: engineResponse.substring(0, 300),
+        real_model: model,
+        real_gateway: useOpenRouter ? 'openrouter' : 'lovable',
+        scoring_model: SCORING_MODEL,
         scoring: citationParsed,
         scoring_method: 'rank_based',
         engine,
