@@ -369,7 +369,23 @@ async function getAutopilotSummary(apiKey: string) {
 Deno.serve(handleRequest(async (req) => {
 try {
     const apiKey = await getApiKey()
-    const { action, ...params } = await req.json()
+
+    // Support both GET (query params) and POST (JSON body)
+    let action: string | null = null
+    let params: Record<string, unknown> = {}
+
+    const url = new URL(req.url)
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      action = url.searchParams.get('action')
+      for (const [key, value] of url.searchParams.entries()) {
+        if (key !== 'action') params[key] = value
+      }
+    } else {
+      const body = await req.json()
+      action = body.action
+      const { action: _, ...rest } = body
+      params = rest
+    }
 
     if (!action) {
       return jsonError('action required', 400)
