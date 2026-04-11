@@ -190,3 +190,15 @@ export async function suggestEmbed(params: { page_url?: string; keyword?: string
   if (error) throw error;
   return data;
 }
+
+/**
+ * Enrich site identity card from connected social accounts (Meta, LinkedIn).
+ * Extracts brand info, sector, address, etc. and applies priority resolution.
+ */
+export async function enrichIdentityFromSocial(trackedSiteId: string, socialAccountId?: string) {
+  const { data, error } = await supabase.functions.invoke('enrich-identity-social', {
+    body: { tracked_site_id: trackedSiteId, social_account_id: socialAccountId },
+  });
+  if (error) throw error;
+  return data;
+}
