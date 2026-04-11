@@ -696,6 +696,9 @@ export function MyTracking() {
                         {/* LLM Depth */}
                         <LLMDepthCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} key={`llm-depth-${h.currentSite.id}-${h.llmBenchmarkRefreshKey}`} />
 
+                        {/* Fan-Out Radar */}
+                        <FanOutRadarWidget trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
+
                         {/* IAS — only if site is verified in GSC */}
                         {h.gscSiteVerified && (
                           <IASCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} isPremium={h.isAgencyPro} />
