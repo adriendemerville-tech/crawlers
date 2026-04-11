@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { enrichIdentityFromSocial } from '@/lib/api/socialHub';
 
 interface SocialConnection {
   platform: 'linkedin' | 'facebook' | 'instagram';
@@ -84,6 +85,34 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
     };
 
     loadConnections();
+
+    // Auto-enrich identity when a social account is added/updated for this site
+    const channel = supabase
+      .channel(`social_accounts_${trackedSiteId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'social_accounts',
+        filter: `tracked_site_id=eq.${trackedSiteId}`,
+      }, async (payload: any) => {
+        const record = payload.new;
+        if (record?.status === 'active' && record?.tracked_site_id === trackedSiteId) {
+          try {
+            const result = await enrichIdentityFromSocial(trackedSiteId, record.id);
+            if (result?.success) {
+              const enrichedCount = Object.values(result.results || {}).reduce((acc: number, r: any) => acc + ((r as any).fields_extracted || 0), 0) as number;
+              if (enrichedCount > 0) {
+                toast.success(`Carte d'identité enrichie : ${enrichedCount} champs mis à jour depuis ${record.platform}`, { icon: '🪪' });
+              }
+            }
+          } catch (e) {
+            console.error('[SocialSettings] Identity enrichment failed:', e);
+          }
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user, trackedSiteId]);
 
   const handleConnect = async (platform: string) => {
