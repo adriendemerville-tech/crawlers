@@ -1628,6 +1628,48 @@ export function SmartConfigurator({
                     <MultiPageRouter domain={siteDomain} siteId={activeSiteId} />
                   </TabsContent>
                 )}
+
+                <TabsContent forceMount value="injections" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
+                  <InjectionSearchBar
+                    isSubscriber={isAgencyPro || isAdmin}
+                    onSelectInjection={(entry) => {
+                      setSelectedInjection(entry);
+                      setCodeValidated(false);
+                      setEditableCode('');
+                      // Auto-generate code for this injection type
+                      sonnerToast.info(`${entry.label} sélectionné — génération du code…`);
+                    }}
+                    selectedSlug={selectedInjection?.slug}
+                  />
+                  {selectedInjection && (
+                    <div className="mt-4 space-y-3">
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium">{selectedInjection.label}</span>
+                          <Badge variant="outline" className="text-[10px]">{selectedInjection.category.replace('_', ' ')}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{selectedInjection.description}</p>
+                        {selectedInjection.required_data?.fields && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {(selectedInjection.required_data.fields as string[]).map((f: string) => (
+                              <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <CodeValidator
+                        code={editableCode || generatedCode}
+                        injectionType={selectedInjection.slug}
+                        onValidated={(result) => setCodeValidated(result.valid)}
+                        onCorrectedCode={(code) => {
+                          setEditableCode(code);
+                          setGeneratedCode(code);
+                          setCodeValidated(true);
+                        }}
+                      />
+                    </div>
+                  )}
+                </TabsContent>
               </ScrollArea>
             </Tabs>
           </div>
