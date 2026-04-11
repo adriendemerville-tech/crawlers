@@ -25,6 +25,7 @@ import { FreshnessSignalsCard } from './FreshnessSignalsCard';
 import { ConversionFrictionCard } from './ConversionFrictionCard';
 import { MethodologyPopover } from './MethodologyPopover';
 import { ExpertAuditResult } from '@/types/expertAudit';
+import { LocalBusinessDiagnosticCard } from './LocalBusinessDiagnosticCard';
 
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
