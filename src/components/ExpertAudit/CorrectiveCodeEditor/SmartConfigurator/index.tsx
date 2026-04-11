@@ -1867,7 +1867,20 @@ export function SmartConfigurator({
                 >
                   <ScrollArea className="h-full">
                     <div className="p-4">
-                      <CodeBlock code={generatedCode} isTyping={false} allowScroll />
+                      {activeTab === 'injections' ? (
+                        <textarea
+                          value={editableCode || generatedCode}
+                          onChange={(e) => {
+                            setEditableCode(e.target.value);
+                            setCodeValidated(false);
+                          }}
+                          className="w-full h-[500px] font-mono text-xs bg-zinc-950 text-emerald-400 p-4 rounded-lg border border-zinc-800 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                          spellCheck={false}
+                          placeholder="Le code généré apparaîtra ici. Vous pouvez le modifier librement."
+                        />
+                      ) : (
+                        <CodeBlock code={generatedCode} isTyping={false} allowScroll />
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
