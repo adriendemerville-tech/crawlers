@@ -699,6 +699,9 @@ export function MyTracking() {
                           <IASCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} isPremium={h.isAgencyPro} />
                         )}
 
+                        {/* LocalBusiness Schema Audit */}
+                        <LocalSchemaCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} />
+
                         {/* Keyword Cloud */}
                         {h.latestSerpData?.sample_keywords && (
                           <KeywordCloud keywords={h.latestSerpData.sample_keywords} />
