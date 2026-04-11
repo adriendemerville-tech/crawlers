@@ -187,6 +187,7 @@ const t = {
       { q: 'Les brouillons sont-ils disponibles pour tous ?', a: 'Les brouillons sont visibles par tous mais consultables uniquement avec un abonnement Pro Agency ou Pro Agency+.' },
       { q: 'Comment fonctionne la publication CMS ?', a: 'Content Architect injecte uniquement le corps de la page (titre, HTML, méta, images). Le header, footer et styles sont gérés par votre thème CMS.' },
       { q: 'Le contenu est-il optimisé pour les moteurs IA (GEO) ?', a: 'Oui. Structure E-E-A-T, schema.org, FAQ directes et structure sémantique que les moteurs génératifs peuvent citer.' },
+      { q: 'Qu\'est-ce que la couverture des requêtes fan-out ?', a: 'Les moteurs IA décomposent chaque question en sous-requêtes internes (fan-out). Content Architect affiche une checklist des axes à couvrir dans votre contenu pour maximiser vos chances d\'être cité comme source.' },
     ],
     ctaFinal: {
       title: 'Prêt à automatiser votre création de contenu ?',
@@ -792,6 +793,35 @@ const ContentArchitectPage = memo(() => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ FAN-OUT QUERIES ═══ */}
+        <section className="py-16 sm:py-24">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div className="prose prose-lg dark:prose-invert max-w-none">
+              <h2>Requêtes fan-out : le terrain invisible du GEO</h2>
+              <p>
+                Quand un utilisateur demande à Perplexity « quel est le meilleur outil SEO pour une agence ? », le moteur ne lance pas une seule recherche.
+                Il <strong>décompose la question en 3 à 8 sous-requêtes</strong> — les <em>requêtes fan-out</em> — qui explorent chacune un angle :
+                fonctionnalités, prix, avis, comparatifs, alternatives, cas d'usage.
+              </p>
+              <p>
+                <strong>Ne pas couvrir ces axes, c'est être invisible sur une partie de la réponse finale.</strong> Content Architect intègre un bloc{' '}
+                « Requêtes fan-out à couvrir » qui liste les axes détectés pour votre mot-clé cible, avec un pourcentage de couverture en temps réel.
+                Chaque axe non couvert est une opportunité manquée d'être cité comme source.
+              </p>
+              <p>
+                Notre détection repose sur une approche hybride à haute précision (~80%) : simulation LLM des sous-requêtes probables
+                et rétro-ingénierie des sources citées par Perplexity pour extraire les axes réels.
+                Les résultats sont persistés dans l'Univers de Mots-clés et alimentent également l'Audit GEO (carte FanOut) et le Dashboard (widget FanOut Radar).
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <em>Il est possible que d'ici quelques mois, les moteurs de réponse IA soient plus transparents sur les requêtes
+                formulées en interne par leurs agents RAG. En attendant cette évolution, notre méthode hybride reste la plus fiable
+                pour anticiper la décomposition de vos thématiques cibles.</em>
+              </p>
             </div>
           </div>
         </section>

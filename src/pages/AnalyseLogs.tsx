@@ -240,6 +240,22 @@ const AnalyseLogs = () => {
                 <Link to="/pagespeed" className="text-primary">performance</Link> et de{' '}
                 <Link to="/app/site-crawl" className="text-primary">crawl multi-pages</Link>.
               </p>
+
+              <h3>Requêtes fan-out : comprendre comment les IA décomposent vos thématiques</h3>
+              <p>
+                Quand un utilisateur pose une question à Perplexity, ChatGPT ou Gemini, le moteur ne se contente pas d'une seule recherche.
+                Il <strong>décompose la requête en sous-questions</strong> (« fan-out ») — chaque axe faisant l'objet d'une recherche RAG indépendante.
+                Comprendre quels bots crawlent quelles pages de votre site, c'est aussi comprendre quels axes thématiques les IA explorent pour construire leurs réponses.
+              </p>
+              <p>
+                Crawlers.fr croise l'analyse de logs avec la <strong>détection des requêtes fan-out</strong> : nous simulons les sous-requêtes que les agents RAG vont formuler,
+                et nous vérifions dans vos logs si les bots IA visitent effectivement les pages qui couvrent ces axes.
+                Un bot qui ne visite jamais votre page « guide des prix » alors que l'axe « budget » est un fan-out fréquent ? C'est un signal d'alerte directement actionnable.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <em>Note : il est probable que d'ici quelques mois, les moteurs de réponse IA deviennent plus transparents sur les requêtes formulées en interne par leurs agents.
+                En attendant, notre approche hybride (simulation LLM + rétro-ingénierie des citations) offre une précision estimée à ~80%.</em>
+              </p>
             </div>
           </div>
         </section>
