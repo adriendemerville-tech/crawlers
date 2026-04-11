@@ -34,6 +34,7 @@ import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
 import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
+import { LocalSchemaCard } from '@/components/Profile/LocalSchemaCard';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -698,6 +699,9 @@ export function MyTracking() {
                         {h.gscSiteVerified && (
                           <IASCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} isPremium={h.isAgencyPro} />
                         )}
+
+                        {/* LocalBusiness Schema Audit */}
+                        <LocalSchemaCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} />
 
                         {/* Keyword Cloud */}
                         {h.latestSerpData?.sample_keywords && (

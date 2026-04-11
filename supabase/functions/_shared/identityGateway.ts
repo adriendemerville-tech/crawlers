@@ -34,6 +34,7 @@ const MINOR_FIELDS = new Set([
   'client_targets', 'jargon_distance',
   'short_term_goal', 'mid_term_goal', 'main_serp_competitor', 'confusion_risk',
   'target_segment', 'primary_use_case', 'location_detail', 'brand_site_url',
+  'is_local_business', 'local_schema_status', 'local_schema_audit',
 ])
 
 const ALL_ALLOWED_FIELDS = new Set([...CRITICAL_FIELDS, ...MINOR_FIELDS])
