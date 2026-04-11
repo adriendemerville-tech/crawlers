@@ -32,13 +32,11 @@ export function FanOutCard({ analysis, domain, trackedSiteId, userId }: FanOutCa
   // Determine the best query to analyze (not just the homepage)
   const targetQuery = useMemo(() => {
     // Priority 1: main keyword from strategic analysis
-    const mainKw = analysis.keywords?.[0]?.keyword 
-      || analysis.mainKeywords?.[0]
-      || analysis.keyword_positioning?.[0]?.keyword;
+    const mainKw = analysis.keyword_positioning?.main_keywords?.[0]?.keyword;
     if (mainKw) return mainKw;
 
     // Priority 2: brand + sector from identity
-    const brand = analysis.brandPerception?.brandName || domain;
+    const brand = analysis.brandPerception?.semanticUniverse?.split(' ')[0] || domain;
     const sector = analysis.brandPerception?.marketPosition || '';
     return `${brand} ${sector}`.trim();
   }, [analysis, domain]);
