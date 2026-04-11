@@ -154,9 +154,12 @@ function computeCompositeScore(codedFields: CodedField[], rubric: ScoringField[]
 /*  LLM prompt evaluation                                              */
 /* ================================================================== */
 
-async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, llmName: string, scoringRubric?: ScoringField[], retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
+async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string, _llmName: string, scoringRubric?: ScoringField[], retryCount = 0): Promise<{ score: number; raw: Record<string, any> }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) return { score: 50, raw: { error: 'No API key', note: 'LLM evaluation unavailable' } }
+
+  // ── GPT-5 for parsing/scoring (high precision), regardless of item llm_name ──
+  const PARSING_MODEL = 'openai/gpt-5'
 
   const MAX_RETRIES = 2
   const RETRY_DELAYS = [2000, 5000]
@@ -168,7 +171,6 @@ async function evaluateWithLlm(prompt: string, url: string, htmlSummary: string,
 
     if (useStructuredScoring) {
       // ── DYNAMIC STRUCTURED SCORING ──
-      // Build field definitions from the parsed Scoring Guide
       const fieldDefs = scoringRubric.map((f, i) =>
         `${i + 1}. "${f.field}": ${f.whatToCode}\n   Valeurs autorisées: ${f.allowedValues}`
       ).join('\n')
@@ -191,7 +193,6 @@ RÈGLES STRICTES:
 
 Réponds UNIQUEMENT avec un JSON contenant les clés: ${fieldKeys}`
     } else {
-      // ── FALLBACK: classic 0-100 scoring ──
       systemPrompt = `Tu es un expert SEO. On te donne une URL et un extrait du contenu HTML. Tu dois évaluer un critère SEO spécifique et retourner un score de 0 à 100.
 
 Réponds UNIQUEMENT avec un JSON: {"score": <number>, "justification": "<string courte>"}`
@@ -212,14 +213,14 @@ Réponds avec le JSON (${expectedFormat}):`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: llmName || 'google/gemini-2.5-flash',
+        model: PARSING_MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.1, // Lower for more deterministic coding
+        temperature: 0.1,
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(45000),
     })
 
     if (!resp.ok) {
@@ -239,7 +240,7 @@ Réponds avec le JSON (${expectedFormat}):`
 
     const data = await resp.json()
     const content = data.choices?.[0]?.message?.content || ''
-    trackTokenUsage('audit-matrice', llmName || 'google/gemini-2.5-flash', data.usage, url)
+    trackTokenUsage('audit-matrice', PARSING_MODEL, data.usage, url)
 
     let jsonContent = content
     if (content.includes('```json')) jsonContent = content.split('```json')[1].split('```')[0].trim()
