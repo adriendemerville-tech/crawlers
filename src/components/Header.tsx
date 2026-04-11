@@ -274,17 +274,27 @@ export function Header() {
 
         {/* Center: Navigation links - desktop */}
         <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          {/* Crawl */}
+          {/* 1. Matrice (gris) */}
+          <Link to="/matrice">
+            <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
+              <Grid3X3 className="h-3.5 w-3.5" />
+              <span className="text-sm font-semibold">Matrice</span>
+            </Button>
+          </Link>
+
+          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+
+          {/* 2. Crawl (violet) */}
           {isAuditExpertPage ? (
             <a href="/app/site-crawl" target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
                 <Bug className="h-3.5 w-3.5" />
                 <span className="text-sm font-semibold">Crawl</span>
               </Button>
             </a>
           ) : (
             <Link to="/app/site-crawl">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-muted/60 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
                 <Bug className="h-3.5 w-3.5" />
                 <span className="text-sm font-semibold">Crawl</span>
               </Button>
@@ -293,15 +303,15 @@ export function Header() {
 
           <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
-          {/* Audit */}
+          {/* 3. Audit (bleu foncé) */}
           {isAuditExpertPage ? (
-            <Button variant="ghost" size="sm" className="gap-1.5 text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10 border border-[#3b82f6]">
+            <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:bg-[#1e3a5f]/10 border border-[#1e3a5f] dark:border-[#60a5fa]">
               <Sparkles className="h-4 w-4" />
               <span className="text-sm font-semibold">Audit</span>
             </Button>
           ) : (
             <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:text-[#1e3a5f] dark:hover:text-[#93c5fd] hover:bg-[#1e3a5f]/10">
                 <Sparkles className="h-4 w-4" />
                 <span className="text-sm font-semibold">Audit</span>
               </Button>
@@ -310,7 +320,7 @@ export function Header() {
 
           <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
-          {/* Cocoon */}
+          {/* 4. Cocoon (jaune d'or) */}
           {isAuditExpertPage ? (
             <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
@@ -327,17 +337,28 @@ export function Header() {
 
           <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
-          {/* Content Architect */}
+          {/* 5. Content Architect (vert foncé) */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowContentArchitect(true)}
-            className="gap-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+            className="gap-1.5 text-green-700 dark:text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-700/10"
           >
             <PenLine className="h-3.5 w-3.5" />
             <span className="text-muted-foreground text-[10px] font-normal mr-1">beta</span>
             <span className="text-sm font-semibold">Content</span>
           </Button>
+
+          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+
+          {/* 6. Social Hub (vert glow) */}
+          <Link to="/app/social">
+            <Button variant="ghost" size="sm" className="gap-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)]">
+              <Share2 className="h-3.5 w-3.5" />
+              <span className="text-sm font-semibold">Social Hub</span>
+              <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
+            </Button>
+          </Link>
 
 
           {/* Console — for paid users, hidden on console page and audit-expert page */}
@@ -371,15 +392,9 @@ export function Header() {
               </Button>
           )}
 
-          {/* Console-only shortcuts: Audit, Matrice, Crawl, Comparé, Social Hub */}
+          {/* Console-only shortcuts: Matrice, Crawl, Audit, Cocoon, Content, Social Hub */}
           {location.pathname === '/app/console' && (
             <div className="flex items-center gap-0.5">
-              <Link to="/audit-expert" className="sm:hidden">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#3b82f6]/10 ${isAuditExpertPage ? 'border border-[#3b82f6]' : ''}`}>
-                  <Sparkles className="h-3 w-3" />
-                  Audit
-                </Button>
-              </Link>
               <Link to="/matrice">
                 <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
                   <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -387,26 +402,29 @@ export function Header() {
                 </Button>
               </Link>
               <Link to="/app/site-crawl">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-purple-500 hover:text-purple-400 hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-purple-500 hover:text-purple-400 hover:bg-purple-500/10 sm:text-sm sm:gap-1.5 sm:px-3 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
                   <Bug className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   Crawl
                 </Button>
               </Link>
-              <Link to="/app/audit-compare" className="sm:hidden">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-muted-foreground hover:text-foreground`}>
-                  <Scale className="h-3 w-3" />
-                  Comparé
+              <Link to="/audit-expert">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-[#1e3a5f] dark:text-[#60a5fa] hover:bg-[#1e3a5f]/10 sm:text-sm sm:gap-1.5 sm:px-3 ${isAuditExpertPage ? 'border border-[#1e3a5f] dark:border-[#60a5fa]' : ''}`}>
+                  <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  Audit
                 </Button>
               </Link>
-              <div className="ml-2">
-                <Link to="/app/social">
-                  <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
-                    <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                    Social Hub
-                    <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
-                  </Button>
-                </Link>
-              </div>
+              <Link to="/app/cocoon" className="sm:hidden">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-amber-500 hover:text-amber-400 hover:bg-amber-500/10`}>
+                  Cocoon
+                </Button>
+              </Link>
+              <Link to="/app/social">
+                <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)] sm:text-sm sm:gap-1.5 sm:px-3">
+                  <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  Social Hub
+                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
+                </Button>
+              </Link>
             </div>
           )}
 
