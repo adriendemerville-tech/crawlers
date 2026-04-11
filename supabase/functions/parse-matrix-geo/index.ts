@@ -369,7 +369,7 @@ IMPORTANT: Pour chaque champ de la grille, utilise UNIQUEMENT les valeurs autori
 
     const scoringData = await scoringResp.json()
     const scoringContent = scoringData.choices?.[0]?.message?.content || ''
-    trackTokenUsage('parse-matrix-geo', 'google/gemini-2.5-flash-lite', scoringData.usage, brandUrl)
+    trackTokenUsage('parse-matrix-geo', SCORING_MODEL, scoringData.usage, brandUrl)
 
     // Parse the citation analysis
     let citationParsed: any = {}
