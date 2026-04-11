@@ -275,7 +275,10 @@ const DOC_SECTIONS: DocSection[] = [
         content: `<ul class="list-disc pl-6 space-y-1">
 <li><strong>Agent SEO</strong> : optimisation automatique du contenu (blog : libre, landing pages : max 10% de modification)</li>
 <li><strong>Agent CTO</strong> : maintenance algorithmique automatique, self-critique et proposition de patches</li>
-</ul>`,
+<li><strong>Agent UX</strong> : audit design et création de composants, analyse des surfaces d'interaction</li>
+<li><strong>Supervisor</strong> : orchestration des agents avec basculement de modèle IA à la volée</li>
+</ul>
+<p class="mt-2 text-sm text-muted-foreground">Le Plan de Tâches Agents permet de configurer les phases diagnostic → prescription pour chaque agent via la Console Admin.</p>`,
       },
       {
         id: 'conversion-optimizer',
@@ -704,12 +707,24 @@ const DOC_SECTIONS: DocSection[] = [
       {
         id: 'wrapper-gpt',
         title: 'Crawlers.fr est-il un wrapper GPT ?',
-        content: `Non. Crawlers.fr est une infrastructure serverless de plus de 260 000 lignes de code, avec 15 algorithmes propriétaires, 216+ Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.`,
+        content: `Non. Crawlers.fr est une infrastructure serverless de plus de 300 000 lignes de code, avec 15 algorithmes propriétaires, 229+ Edge Functions, un système multi-fallback sur toutes les APIs critiques, et une architecture RGPD native. Ce n'est pas un wrapper IA.`,
       },
       {
         id: 'llms-interroges',
         title: 'Quels LLMs Crawlers.fr interroge-t-il ?',
         content: `6 LLMs interrogés en parallèle : ChatGPT (OpenAI), Gemini (Google), Perplexity, Claude (Anthropic), Mistral et Grok (xAI).`,
+      },
+      {
+        id: 'fan-out-queries',
+        title: "Qu'est-ce que la détection des requêtes fan-out ?",
+        content: `Les moteurs de réponse IA (Perplexity, ChatGPT, Gemini) ne traitent pas votre requête telle quelle — ils la <strong>décomposent</strong> en sous-requêtes internes (« fan-out ») pour couvrir tous les angles de la question.
+<p class="mt-2">Crawlers.fr détecte ces axes de décomposition via une approche hybride :</p>
+<ul class="list-disc pl-6 mt-1 space-y-1">
+<li><strong>Simulation LLM</strong> : prédiction des sous-requêtes que les agents RAG vont formuler</li>
+<li><strong>Rétro-ingénierie</strong> : analyse des sources citées par Perplexity pour extraire les axes réels</li>
+</ul>
+<p class="mt-2">Les résultats alimentent le <strong>Content Architect</strong> (checklist de couverture), l'<strong>Audit GEO</strong> (carte FanOut) et le <strong>Dashboard</strong> (widget FanOut Radar).</p>
+<p class="mt-2 text-sm text-muted-foreground">Accessible depuis l'Audit Stratégique GEO et le Content Architect. Requiert un abonnement Pro Agency.</p>`,
       },
       {
         id: 'support',

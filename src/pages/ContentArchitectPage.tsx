@@ -187,6 +187,7 @@ const t = {
       { q: 'Les brouillons sont-ils disponibles pour tous ?', a: 'Les brouillons sont visibles par tous mais consultables uniquement avec un abonnement Pro Agency ou Pro Agency+.' },
       { q: 'Comment fonctionne la publication CMS ?', a: 'Content Architect injecte uniquement le corps de la page (titre, HTML, méta, images). Le header, footer et styles sont gérés par votre thème CMS.' },
       { q: 'Le contenu est-il optimisé pour les moteurs IA (GEO) ?', a: 'Oui. Structure E-E-A-T, schema.org, FAQ directes et structure sémantique que les moteurs génératifs peuvent citer.' },
+      { q: 'Qu\'est-ce que la couverture des requêtes fan-out ?', a: 'Les moteurs IA décomposent chaque question en sous-requêtes internes (fan-out). Content Architect affiche une checklist des axes à couvrir dans votre contenu pour maximiser vos chances d\'être cité comme source.' },
     ],
     ctaFinal: {
       title: 'Prêt à automatiser votre création de contenu ?',
