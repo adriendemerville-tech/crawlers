@@ -273,7 +273,7 @@ export function Header() {
         </div>
 
         {/* Center: Navigation links - desktop */}
-        <div className={`hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 ${isProfilePage ? 'sm:hidden' : ''}`}>
+        {!isProfilePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           {/* 1. Matrice (gris) */}
           <Link to="/matrice">
             <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
