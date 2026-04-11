@@ -79,7 +79,11 @@ export function AgentTaskPlanRegistry() {
         .from(cfg.table as any)
         .update({ status: 'pending', consumed_at: null } as any)
         .eq('id', d.id);
-      toast({ title: '⚡ Tâche forcée', description: 'La directive a été remise en file d\'attente.' });
+
+      // Fire-and-forget: trigger dispatcher immediately
+      supabase.functions.invoke('dispatch-agent-directives', { body: {} }).catch(() => {});
+
+      toast({ title: '⚡ Tâche forcée', description: 'La directive a été remise en file et le dispatcher déclenché.' });
       loadAll();
     } catch (e: any) {
       toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
