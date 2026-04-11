@@ -1555,6 +1555,16 @@ export function SmartConfigurator({
                     Multi
                   </TabsTrigger>
                 )}
+                <TabsTrigger 
+                  value="injections" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-rose-500 data-[state=active]:bg-transparent py-3 px-3 relative"
+                >
+                  <Search className="w-4 h-4 mr-1" />
+                  Injections
+                  {!isAgencyPro && !isAdmin && (
+                    <Lock className="w-3 h-3 ml-1 text-muted-foreground" />
+                  )}
+                </TabsTrigger>
               </TabsList>
 
               <ScrollArea className="flex-1 min-h-0">
