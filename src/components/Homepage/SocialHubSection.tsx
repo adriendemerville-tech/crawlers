@@ -181,7 +181,6 @@ export const SocialHubSection = memo(() => {
             <p className="text-muted-foreground leading-relaxed text-[15px] italic border-l-2 border-emerald-500/30 pl-4">
               {t.enrichment}
             </p>
-            </p>
 
             <div className="grid gap-5">
               {t.features.map((feat, i) => {
