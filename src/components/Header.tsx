@@ -274,15 +274,19 @@ export function Header() {
 
         {/* Center: Navigation links - desktop */}
         {!isProfilePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          {/* 1. Matrice (gris) */}
-          <Link to="/matrice">
-            <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
-              <Grid3X3 className="h-3.5 w-3.5" />
-              <span className="text-sm font-semibold">Matrice</span>
-            </Button>
-          </Link>
+          {/* 1. Matrice (gris) — masqué sur la home */}
+          {!isHomePage && (
+            <>
+              <Link to="/matrice">
+                <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
+                  <Grid3X3 className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Matrice</span>
+                </Button>
+              </Link>
 
-          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+              <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+            </>
+          )}
 
           {/* 2. Crawl (violet) */}
           {isAuditExpertPage ? (
