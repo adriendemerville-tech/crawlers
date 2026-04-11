@@ -386,9 +386,9 @@ export function Header() {
                   Matrice
                 </Button>
               </Link>
-              <Link to="/app/site-crawl" className="sm:hidden">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-purple-500 hover:text-purple-400 hover:bg-muted/60 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
-                  <Bug className="h-3 w-3" />
+              <Link to="/app/site-crawl">
+                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs text-purple-500 hover:text-purple-400 hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+                  <Bug className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   Crawl
                 </Button>
               </Link>
@@ -398,13 +398,15 @@ export function Header() {
                   Comparé
                 </Button>
               </Link>
-              <Link to="/app/social">
-                <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
-                  <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  Social Hub
-                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
-                </Button>
-              </Link>
+              <div className="ml-2">
+                <Link to="/app/social">
+                  <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                    <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    Social Hub
+                    <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
+                  </Button>
+                </Link>
+              </div>
             </div>
           )}
 
