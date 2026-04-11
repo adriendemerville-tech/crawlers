@@ -8911,6 +8911,53 @@ export type Database = {
         }
         Relationships: []
       }
+      site_identity_sources: {
+        Row: {
+          created_at: string
+          fetched_at: string
+          id: string
+          mapped_fields: Json
+          priority: number
+          raw_data: Json
+          source_type: string
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          mapped_fields?: Json
+          priority?: number
+          raw_data?: Json
+          source_type: string
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          mapped_fields?: Json
+          priority?: number
+          raw_data?: Json
+          source_type?: string
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_identity_sources_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_memory: {
         Row: {
           category: string
@@ -10949,6 +10996,7 @@ export type Database = {
         Args: { link_code: string }
         Returns: undefined
       }
+      jsonb_object_keys_count: { Args: { j: Json }; Returns: number }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -10994,6 +11042,10 @@ export type Database = {
         }[]
       }
       recalculate_reliability: { Args: never; Returns: undefined }
+      resolve_identity_priority: {
+        Args: { p_tracked_site_id: string }
+        Returns: Json
+      }
       score_workbench_priority: {
         Args: {
           p_domain: string
