@@ -11156,6 +11156,27 @@ export type Database = {
         Args: { p_tracked_site_id: string }
         Returns: Json
       }
+      score_spiral_priority: {
+        Args: {
+          p_domain: string
+          p_exclude_assigned?: boolean
+          p_lane?: string
+          p_limit?: number
+          p_user_id: string
+        }
+        Returns: {
+          action_type: string
+          cluster_maturity: number
+          cluster_name: string
+          finding_category: string
+          item_id: string
+          ring: number
+          severity: string
+          spiral_score: number
+          target_url: string
+          title: string
+        }[]
+      }
       score_workbench_priority: {
         Args: {
           p_domain: string
