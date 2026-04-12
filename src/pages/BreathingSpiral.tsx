@@ -201,6 +201,7 @@ function BreathingSpiralPage() {
     publisher: { '@type': 'Organization', name: 'Crawlers.fr', logo: { '@type': 'ImageObject', url: `${SITE_URL}/favicon.svg` } },
     datePublished: '2026-04-12',
     dateModified: '2026-04-12',
+    image: `${SITE_URL}/favicon.svg`,
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
     inLanguage: 'fr-FR',
   };
@@ -231,6 +232,14 @@ function BreathingSpiralPage() {
         acceptedAnswer: {
           '@type': 'Answer',
           text: 'Le spiral_score est une note composite de 0 à 100 qui agrège 9 signaux pondérés : proximité d\'anneau (18%), maturité cluster (18%), sévérité (12%), urgence anomalie (12%), boost saisonnier (10%), déclin vélocité (8%), couverture mots-clés (8%), momentum concurrent (7%) et urgence GMB (7%). Il est recalculé toutes les 6 heures.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Comment la Breathing Spiral valide-t-elle ses décisions ?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Chaque décision est évaluée à T+30 jours via un reward_signal (-100 à +100). Ce signal compare l\'impact réel (delta clics, positions, CTR, impressions) au score de priorité attribué au moment de la décision. Une pénalité supplémentaire est appliquée si un item sur-priorisé produit un résultat négatif. Ce mécanisme de rétroaction permet d\'affiner progressivement les poids du scoring.',
         },
       },
     ],
