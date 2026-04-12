@@ -97,7 +97,7 @@ const ConversionOptimizerLanding = lazy(() => import("./pages/ConversionOptimize
 const BotActivity = lazy(() => import("./pages/BotActivity"));
 const SocialHub = lazy(() => import("./pages/SocialHub"));
 const SocialContentCreator = lazy(() => import("./pages/SocialContentCreator"));
-
+const BreathingSpiral = lazy(() => import("./pages/BreathingSpiral"));
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
 const LegacyRapportRedirect = () => {
@@ -167,6 +167,7 @@ const App = () => (
                           <Route path="/blog" element={<Blog />} />
                           <Route path="/blog/:slug" element={<ArticlePage />} />
                           <Route path="/landing/:slug" element={<LandingPage />} />
+                          <Route path="/breathing-spiral" element={<BreathingSpiral />} />
                           
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
                           <Route path="/comparatif-claude-vs-crawlers" element={<ComparatifClaudeVsCrawlers />} />
