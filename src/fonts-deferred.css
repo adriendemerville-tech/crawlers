@@ -1,0 +1,3 @@
+/* Non-critical display fonts — loaded after first paint via dynamic import */
+@import '@fontsource-variable/quicksand';
+@import '@fontsource-variable/space-grotesk';
