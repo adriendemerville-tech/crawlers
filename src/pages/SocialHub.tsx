@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import {
-  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings
+  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings, ImageIcon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
@@ -29,6 +29,7 @@ import { SocialStatsDashboard } from '@/components/Social/SocialStatsDashboard';
 import { SocialFeedColumns } from '@/components/Social/SocialFeedColumns';
 import { SocialActionPlan } from '@/components/Social/SocialActionPlan';
 import { SocialSettings } from '@/components/Social/SocialSettings';
+import { SocialImageLibrary, type LibraryImage } from '@/components/Social/SocialImageLibrary';
 import { createPost, updatePost, publishPost, exportZip, fetchPosts, type SocialPost } from '@/lib/api/socialHub';
 import { useNavigate } from 'react-router-dom';
 
