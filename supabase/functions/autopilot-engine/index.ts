@@ -344,6 +344,7 @@ try {
 
         const cycleNumber = (config.total_cycles_run || 0) + 1;
         const cycleStartTime = Date.now();
+        const CYCLE_DEADLINE_MS = 8.5 * 60 * 1000; // FIX #4: 8.5 min watchdog to prevent Edge Function timeout
 
         // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
         // 'route' is handled inline after 'prescribe', not as a separate orchestrator call
@@ -358,6 +359,16 @@ try {
         const allPhaseResults: Array<{ phase: string; decision_id: string; status: string; executionResults: any[] }> = [];
 
         for (const phase of PIPELINE_PHASES) {
+          // FIX #4: Watchdog — abort if approaching Edge Function timeout
+          const elapsed = Date.now() - cycleStartTime;
+          if (elapsed > CYCLE_DEADLINE_MS) {
+            console.warn(`[AutopilotEngine] ⏰ Watchdog: cycle exceeded ${CYCLE_DEADLINE_MS / 1000}s (${Math.round(elapsed / 1000)}s elapsed), aborting at phase ${phase} for ${site.domain}`);
+            allPhaseErrors.push({ phase, function: 'watchdog', severity: 'critical', message: `Cycle timeout after ${Math.round(elapsed / 1000)}s`, retryable: true });
+            hasCriticalError = true;
+            cycleSuccess = false;
+            break;
+          }
+
           console.log(`[AutopilotEngine] ═══ Phase ${phase.toUpperCase()} for ${site.domain}, cycle #${cycleNumber} ═══`);
 
           // ═══ Call Parménion orchestrator for this phase (with forced_phase) ═══
@@ -462,7 +473,9 @@ try {
             if (populateErr2) console.warn('[AutopilotEngine] Post-diagnose populate error:', populateErr2.message);
             else console.log(`[AutopilotEngine] ✅ Post-diagnose workbench: ${JSON.stringify(populateResult2)}`);
 
-            // 2. Recycle stale consumed workbench items (>24h)
+            // FIX #3: Recycling logic — use deployed_at IS NULL to find truly stuck items
+            // Items that were consumed but never deployed are stuck in the loop
+            const recycleThreshold = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
             const { data: recycled, error: recycleErr } = await supabase
               .from('architect_workbench')
               .update({ 
@@ -474,7 +487,8 @@ try {
               })
               .eq('domain', site.domain)
               .eq('status', 'in_progress')
-              .lt('consumed_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+              .is('deployed_at', null)
+              .lt('updated_at', recycleThreshold)
               .select('id');
             
             if (recycled && recycled.length > 0) {
@@ -770,64 +784,8 @@ try {
                       console.log(`[AutopilotEngine] create-post for slug "${cmsAction.body.slug}" — iktracker will auto-upsert if exists`);
                     }
 
-                    // ── Auto-generate image for new articles ──
-                    if (inferredAction === 'create-post' && cmsAction.body) {
-                      try {
-                        const articleTitle = cmsAction.body.title || '';
-                        const articleExcerpt = cmsAction.body.excerpt || cmsAction.body.meta_description || '';
-                        const imagePrompt = `Evocative visual illustration for a blog article about: ${articleTitle}. Context: ${articleExcerpt}. Do NOT include any text, title or lettering.`.slice(0, 500);
-                        
-                        console.log(`[AutopilotEngine] Generating image for IKtracker article: "${articleTitle}"`);
-                        
-                        const imgResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
-                          method: 'POST',
-                          headers: {
-                            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                            prompt: imagePrompt,
-                            style: 'cinematic',
-                          }),
-                        });
-
-                        if (imgResponse.ok) {
-                          const imgResult = await imgResponse.json().catch(() => null);
-                          if (imgResult?.dataUri) {
-                            // Upload to storage bucket for a persistent URL
-                            const imgFileName = `parmenion/${site.domain}/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
-                            const base64Match = imgResult.dataUri.match(/^data:image\/\w+;base64,(.+)$/);
-                            
-                            if (base64Match) {
-                              const binaryStr = atob(base64Match[1]);
-                              const bytes = new Uint8Array(binaryStr.length);
-                              for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-                              
-                              const { error: uploadErr } = await supabase.storage
-                                .from('image-references')
-                                .upload(imgFileName, bytes, { contentType: 'image/png', upsert: true });
-
-                              if (!uploadErr) {
-                                const { data: urlData } = supabase.storage
-                                  .from('image-references')
-                                  .getPublicUrl(imgFileName);
-                                
-                                cmsAction.body.image_url = urlData.publicUrl;
-                                console.log(`[AutopilotEngine] Image generated and uploaded for "${articleTitle}": ${urlData.publicUrl}`);
-                              } else {
-                                console.warn(`[AutopilotEngine] Image upload failed:`, uploadErr);
-                                // Fallback: embed as data URI
-                                cmsAction.body.image_url = imgResult.dataUri;
-                              }
-                            }
-                          }
-                        } else {
-                          console.warn(`[AutopilotEngine] Image generation failed for "${articleTitle}": ${imgResponse.status}`);
-                        }
-                      } catch (imgErr) {
-                        console.warn(`[AutopilotEngine] Image generation error (non-blocking):`, imgErr);
-                      }
-                    }
+                    // FIX #5: Image generation deferred AFTER iktracker-actions dedup
+                    // The image will be generated only if the CMS call succeeds (see below)
 
                     const actionBody = {
                       action: inferredAction,
@@ -849,6 +807,67 @@ try {
                     });
 
                     const funcResult = await funcResponse.json().catch(() => ({}));
+                    
+                    // FIX #5: Generate image AFTER successful CMS call (dedup already done server-side)
+                    let imageGenerated = false;
+                    if (funcResponse.ok && inferredAction === 'create-post' && cmsAction.body && !cmsAction.body.image_url) {
+                      try {
+                        const articleTitle = cmsAction.body.title || '';
+                        const articleExcerpt = cmsAction.body.excerpt || cmsAction.body.meta_description || '';
+                        const imagePrompt = `Evocative visual illustration for a blog article about: ${articleTitle}. Context: ${articleExcerpt}. Do NOT include any text, title or lettering.`.slice(0, 500);
+                        
+                        console.log(`[AutopilotEngine] Generating image for article: "${articleTitle}" (post-dedup)`);
+                        
+                        const imgResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ prompt: imagePrompt, style: 'cinematic' }),
+                          signal: AbortSignal.timeout(30000),
+                        });
+
+                        if (imgResponse.ok) {
+                          const imgResult = await imgResponse.json().catch(() => null);
+                          if (imgResult?.dataUri) {
+                            const imgFileName = `parmenion/${site.domain}/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
+                            const base64Match = imgResult.dataUri.match(/^data:image\/\w+;base64,(.+)$/);
+                            
+                            if (base64Match) {
+                              const binaryStr = atob(base64Match[1]);
+                              const bytes = new Uint8Array(binaryStr.length);
+                              for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                              
+                              const { error: uploadErr } = await supabase.storage
+                                .from('image-references')
+                                .upload(imgFileName, bytes, { contentType: 'image/png', upsert: true });
+
+                              if (!uploadErr) {
+                                const { data: urlData } = supabase.storage
+                                  .from('image-references')
+                                  .getPublicUrl(imgFileName);
+                                
+                                // Update the post with the image URL
+                                const slug = cmsAction.body.slug || funcResult?.result?.slug;
+                                if (slug) {
+                                  await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
+                                    method: 'POST',
+                                    headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ action: 'update-post', slug, updates: { image_url: urlData.publicUrl } }),
+                                  }).catch(() => {});
+                                }
+                                imageGenerated = true;
+                                console.log(`[AutopilotEngine] Image uploaded for "${articleTitle}": ${urlData.publicUrl}`);
+                              }
+                            }
+                          }
+                        }
+                      } catch (imgErr) {
+                        console.warn(`[AutopilotEngine] Image generation error (non-blocking):`, imgErr);
+                      }
+                    }
+                    
                     executionResults.push({
                       function: 'iktracker-actions',
                       cms_action: cmsAction.action,
@@ -856,7 +875,7 @@ try {
                       status: funcResponse.ok ? 'success' : 'error',
                       http_status: funcResponse.status,
                       result: funcResult,
-                      image_generated: !!cmsAction.body?.image_url,
+                      image_generated: imageGenerated,
                     });
                     if (!funcResponse.ok) {
                       phaseErrors.push({ phase, function: 'iktracker-actions', severity: 'degraded', message: `CMS action ${cmsAction.action} failed: HTTP ${funcResponse.status}`, retryable: true });
@@ -1344,19 +1363,23 @@ try {
           allPhaseErrors.push(...phaseErrors);
 
            // ═══ POST-EXECUTE: Mark workbench items as 'deployed' for counter-audit ═══
-          if (phase === 'execute' && executionSuccess) {
+          // FIX #2: Only mark items as 'deployed' if REAL CMS actions succeeded (not just executionSuccess=true)
+          if (phase === 'execute') {
+            const realContentSuccesses = executionResults.filter(
+              (r: any) => r.status === 'success' && r.cms_action && (
+                r.cms_action === 'create-post' || r.cms_action === 'update-post' ||
+                r.cms_action === 'update-page' || r.cms_action === 'create-page'
+              )
+            );
+            const realCodeSuccesses = executionResults.filter(
+              (r: any) => r.status === 'success' && (
+                r.function === 'generate-corrective-code' || r.cms_action === 'inject-code' ||
+                (r.function === 'cms-push-code' && r.triggered_by)
+              )
+            );
+
             try {
-              const contentActions = executionResults.filter(
-                (r: any) => r.status === 'success' && (
-                  r.cms_action === 'create-post' || r.cms_action === 'update-post' ||
-                  r.cms_action === 'update-page' || r.cms_action === 'create-page' ||
-                  r.function === 'content-architecture-advisor' || r.function === 'cms-push-draft'
-                )
-              );
-              if (contentActions.length > 0) {
-                // Mark content items as 'deployed' — the cron autopilot-validate-deployed
-                // will counter-audit them (presence + mechanical + semantic + quality)
-                // before promoting to 'done' or marking 'failed'.
+              if (realContentSuccesses.length > 0) {
                 const { data: markedItems, error: markErr } = await supabase
                   .from('architect_workbench')
                   .update({
@@ -1373,18 +1396,14 @@ try {
                   .select('id');
 
                 if (markedItems && markedItems.length > 0) {
-                  console.log(`[AutopilotEngine] 🚀 Marked ${markedItems.length} workbench items as 'deployed' for counter-audit on ${site.domain}`);
+                  console.log(`[AutopilotEngine] 🚀 Marked ${markedItems.length} workbench items as 'deployed' (${realContentSuccesses.length} real CMS successes) for ${site.domain}`);
                 }
                 if (markErr) console.warn('[AutopilotEngine] deployed mark error:', markErr.message);
+              } else {
+                console.log(`[AutopilotEngine] ⚠️ POST-EXECUTE: No real content CMS successes found — skipping deployed mark for ${site.domain}`);
               }
 
-              // Mark tech items as 'deployed' too
-              const techActions = executionResults.filter(
-                (r: any) => r.status === 'success' && (
-                  r.function === 'generate-corrective-code' || r.cms_action === 'inject-code'
-                )
-              );
-              if (techActions.length > 0) {
+              if (realCodeSuccesses.length > 0) {
                 const { data: techMarked, error: techErr } = await supabase
                   .from('architect_workbench')
                   .update({
@@ -1401,7 +1420,7 @@ try {
                   .select('id');
 
                 if (techMarked && techMarked.length > 0) {
-                  console.log(`[AutopilotEngine] 🚀 Marked ${techMarked.length} tech workbench items as 'deployed' for counter-audit on ${site.domain}`);
+                  console.log(`[AutopilotEngine] 🚀 Marked ${techMarked.length} tech workbench items as 'deployed' for ${site.domain}`);
                 }
                 if (techErr) console.warn('[AutopilotEngine] tech deployed mark error:', techErr.message);
               }

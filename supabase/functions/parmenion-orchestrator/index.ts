@@ -717,9 +717,10 @@ async function enrichKeywordsForPrescribe(
     return { promptBlock: '', totalKeywords: 0, sources: [] };
   }
 
+  // FIX #1: Limit keywords from 40 to 15 to reduce prompt bloat causing 0 tool calls
   const sorted = Array.from(keywordMap.entries())
     .sort((a, b) => (b[1].volume ?? 0) - (a[1].volume ?? 0))
-    .slice(0, 40);
+    .slice(0, 15);
 
   const kwLines = sorted.map(([kw, data]) => {
     const parts = [kw];
@@ -808,15 +809,16 @@ async function prescribeWithDualPrompts(context: {
   const siteCtx = context.siteInfo
     ? `Site: ${context.siteInfo.site_name || context.domain} | Secteur: ${context.siteInfo.market_sector || '?'} | Audience: ${context.siteInfo.target_audience || '?'}`
     : `Site: ${context.domain}`;
+  // FIX #1: Truncate keywords to 15 to reduce prompt bloat
   const kwCtx = context.siteKeywords.length > 0
-    ? `Mots-clés du site: ${context.siteKeywords.slice(0, 30).join(', ')}`
+    ? `Mots-clés du site: ${context.siteKeywords.slice(0, 15).join(', ')}`
     : '';
 
   function buildItemsList(lot: any[]): string {
     return lot.map((it: any, i: number) =>
       `${i + 1}. [Tier ${it.tier}: ${TIER_NAMES[it.tier] || '?'}] Score: ${it.total_score} | ${it.severity}
    "${it.title}" → page: ${it.target_url || '?'} | champ: ${it.target_selector || 'auto'} | op: ${it.target_operation || 'replace'}
-   ${it.description?.slice(0, 300) || ''}`
+   ${it.description?.slice(0, 150) || ''}`
     ).join('\n\n');
   }
 
@@ -888,16 +890,22 @@ RÈGLES:
     
     // Detect page types for each content item and build per-type instructions
     const typeInstructions = new Map<string, string>();
-    for (const item of contentItems) {
+    // FIX #1: Only process first 3 content items to reduce prompt size
+    for (const item of contentItems.slice(0, 3)) {
       const pageType = detectPageType(item);
       if (pageType && templates.has(pageType) && !typeInstructions.has(pageType)) {
         typeInstructions.set(pageType, buildTemplateInstructions(templates.get(pageType)));
       }
       item._detected_page_type = pageType;
     }
+    // Detect page type for remaining items without loading templates
+    for (const item of contentItems.slice(3)) {
+      item._detected_page_type = detectPageType(item);
+    }
     
+    // FIX #1: Only inject the first template to keep prompt under token limit
     const templateBlock = typeInstructions.size > 0
-      ? `\n\nTEMPLATES PAR TYPE DE PAGE (APPLIQUE LE TEMPLATE CORRESPONDANT AU TYPE DÉTECTÉ):\n${Array.from(typeInstructions.values()).join('\n\n')}`
+      ? `\n\nTEMPLATE DE CONTENU (APPLIQUE CE TEMPLATE):\n${Array.from(typeInstructions.values()).slice(0, 1).join('\n')}`
       : '';
 
     // ── KEYWORD ENRICHMENT: aggregate from multiple sources ──
