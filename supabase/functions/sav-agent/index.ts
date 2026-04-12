@@ -1780,83 +1780,124 @@ ${alertBlock}\n`;
         // For each site, fetch latest audit & crawl info (use s.user_id for proper data isolation)
         for (const s of sites.slice(0, 5)) {
           const siteOwnerId = s.user_id || user_id;
-          // Latest audit
-          const { data: audits } = await sb
+          // ── RAW AUDIT DATA: fetch payload for ALL audit types ──
+          const { data: allAudits } = await sb
             .from("audit_raw_data")
-            .select("audit_type, created_at")
+            .select("audit_type, created_at, raw_payload")
             .eq("domain", s.domain)
             .eq("user_id", siteOwnerId)
             .order("created_at", { ascending: false })
-            .limit(3);
-
-          if (audits?.length) {
-            contextSnippet += `  Audits ${s.domain}: ${audits.map(a => `${a.audit_type} (${a.created_at?.slice(0, 10)})`).join(', ')}\n`;
-          } else {
-            contextSnippet += `  ⚠ ${s.domain}: aucun audit réalisé\n`;
-          }
-
-          // Latest crawl
-          const { data: crawls } = await sb
-            .from("site_crawls")
-            .select("status, total_pages, crawled_pages, avg_score, created_at")
-            .eq("domain", s.domain)
-            .eq("user_id", siteOwnerId)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-          if (crawls?.length) {
-            const c = crawls[0];
-            contextSnippet += `  Dernier crawl ${s.domain}: ${c.status} (${c.created_at?.slice(0, 10)}) — ${c.crawled_pages}/${c.total_pages} pages, score moy: ${c.avg_score || '?'}\n`;
-          } else {
-            contextSnippet += `  ⚠ ${s.domain}: aucun crawl réalisé\n`;
-          }
-
-          // Action plans
-          const { data: plans } = await sb
-            .from("action_plans")
-            .select("title, audit_type, is_archived, created_at")
-            .eq("url", s.domain)
-            .eq("user_id", siteOwnerId)
-            .eq("is_archived", false)
-            .limit(3);
-
-          if (plans?.length) {
-            contextSnippet += `  Plans d'action actifs ${s.domain}: ${plans.map(p => p.title).join(', ')}\n`;
-          }
-
-          // Injected scripts
-          const { data: scripts } = await sb
-            .from("audit_recommendations_registry")
-            .select("title, is_resolved, category")
-            .eq("domain", s.domain)
-            .eq("user_id", siteOwnerId)
             .limit(5);
 
-          if (scripts?.length) {
-            const applied = scripts.filter(sc => sc.is_resolved).length;
-            contextSnippet += `  Scripts ${s.domain}: ${applied}/${scripts.length} recommandations appliquées\n`;
-          }
+          if (allAudits?.length) {
+            contextSnippet += `  Audits ${s.domain}: ${allAudits.map(a => `${a.audit_type} (${a.created_at?.slice(0, 10)})`).join(', ')}\n`;
 
-          // EEAT audit data
-          const { data: eeatAudit } = await sb
-            .from("audit_raw_data")
-            .select("raw_payload, created_at")
-            .eq("domain", s.domain)
-            .eq("audit_type", "eeat")
-            .eq("user_id", siteOwnerId)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+            // Extract key data from each audit's raw_payload
+            for (const audit of allAudits) {
+              const rp = audit.raw_payload as any;
+              if (!rp) continue;
 
-          if (eeatAudit?.raw_payload) {
-            const ep = eeatAudit.raw_payload as any;
-            contextSnippet += `  E-E-A-T ${s.domain} (${eeatAudit.created_at?.slice(0, 10)}): score ${ep.score}/100 — Exp: ${ep.experience}, Expert: ${ep.expertise}, Auth: ${ep.authoritativeness}, Trust: ${ep.trustworthiness}\n`;
-            if (ep.issues?.length) {
-              contextSnippet += `    Problèmes E-E-A-T: ${ep.issues.slice(0, 3).join('; ')}\n`;
+              try {
+                switch (audit.audit_type) {
+                  case 'eeat': {
+                    contextSnippet += `  E-E-A-T ${s.domain} (${audit.created_at?.slice(0, 10)}): score ${rp.score}/100 — Exp: ${rp.experience}, Expert: ${rp.expertise}, Auth: ${rp.authoritativeness}, Trust: ${rp.trustworthiness}\n`;
+                    if (rp.issues?.length) contextSnippet += `    Problèmes E-E-A-T: ${rp.issues.slice(0, 3).join('; ')}\n`;
+                    if (rp.strengths?.length) contextSnippet += `    Forces E-E-A-T: ${rp.strengths.slice(0, 3).join('; ')}\n`;
+                    break;
+                  }
+                  case 'technical':
+                  case 'seo': {
+                    // Scores globaux
+                    if (rp.scores) {
+                      const sc = rp.scores;
+                      contextSnippet += `  Scores techniques ${s.domain}: Performance ${sc.performance ?? '?'}, SEO ${sc.seo ?? '?'}, Accessibilité ${sc.accessibility ?? '?'}, Bonnes pratiques ${sc.bestPractices ?? '?'}\n`;
+                    }
+                    // Bots IA — détail complet
+                    if (rp.ai_bots || rp.bots || rp.crawlers) {
+                      const bots = rp.ai_bots || rp.bots || rp.crawlers;
+                      if (Array.isArray(bots)) {
+                        const blocked = bots.filter((b: any) => b.blocked || b.status === 'blocked' || b.allowed === false);
+                        const allowed = bots.filter((b: any) => !b.blocked && b.status !== 'blocked' && b.allowed !== false);
+                        contextSnippet += `  🤖 Bots IA ${s.domain}: ${allowed.length} autorisés, ${blocked.length} bloqués\n`;
+                        if (blocked.length > 0) {
+                          contextSnippet += `    🔴 Bloqués: ${blocked.map((b: any) => b.name || b.bot_name || b.bot).join(', ')}\n`;
+                        }
+                        if (allowed.length > 0) {
+                          contextSnippet += `    ✅ Autorisés: ${allowed.map((b: any) => b.name || b.bot_name || b.bot).join(', ')}\n`;
+                        }
+                      }
+                    }
+                    // Robots.txt
+                    if (rp.robots_txt || rp.robotsTxt) {
+                      const rt = rp.robots_txt || rp.robotsTxt;
+                      contextSnippet += `  robots.txt ${s.domain}: ${rt.exists ? '✅ Existe' : '❌ Absent'}${rt.has_sitemap ? ', sitemap déclaré' : ''}${rt.has_disallow_all ? ', ⚠ Disallow: / détecté' : ''}\n`;
+                    }
+                    // CWV / Performance
+                    if (rp.core_web_vitals || rp.cwv) {
+                      const cwv = rp.core_web_vitals || rp.cwv;
+                      contextSnippet += `  CWV ${s.domain}: LCP ${cwv.lcp ?? '?'}ms, FID/INP ${cwv.inp ?? cwv.fid ?? '?'}ms, CLS ${cwv.cls ?? '?'}\n`;
+                    }
+                    // Sémantique
+                    if (rp.meta_title || rp.title) {
+                      contextSnippet += `  Title ${s.domain}: "${(rp.meta_title || rp.title)?.slice(0, 60)}"\n`;
+                    }
+                    if (rp.h1) {
+                      contextSnippet += `  H1 ${s.domain}: "${(typeof rp.h1 === 'string' ? rp.h1 : rp.h1?.text || rp.h1?.[0])?.slice(0, 60)}"\n`;
+                    }
+                    // JSON-LD
+                    if (rp.json_ld || rp.jsonLd || rp.structured_data) {
+                      const jld = rp.json_ld || rp.jsonLd || rp.structured_data;
+                      if (jld.types?.length) contextSnippet += `  JSON-LD ${s.domain}: ${jld.types.join(', ')}\n`;
+                      else if (Array.isArray(jld)) contextSnippet += `  JSON-LD ${s.domain}: ${jld.length} schémas détectés\n`;
+                    }
+                    // Weaknesses / Strengths
+                    if (rp.weaknesses?.length) {
+                      contextSnippet += `  ⚠ Faiblesses ${s.domain}: ${rp.weaknesses.slice(0, 5).map((w: any) => typeof w === 'string' ? w : w.title || w.description || JSON.stringify(w)).join(' | ')}\n`;
+                    }
+                    if (rp.strengths?.length) {
+                      contextSnippet += `  ✅ Forces ${s.domain}: ${rp.strengths.slice(0, 3).map((w: any) => typeof w === 'string' ? w : w.title || w.description || JSON.stringify(w)).join(' | ')}\n`;
+                    }
+                    // Recommendations
+                    if (rp.recommendations?.length) {
+                      contextSnippet += `  📋 Recommandations ${s.domain} (${rp.recommendations.length}): ${rp.recommendations.slice(0, 3).map((r: any) => r.title || r.description || '').join(' | ')}\n`;
+                    }
+                    break;
+                  }
+                  case 'strategic':
+                  case 'strategic_parallel': {
+                    if (rp.keyword_positioning?.main_keywords?.length) {
+                      const kws = rp.keyword_positioning.main_keywords.slice(0, 5);
+                      contextSnippet += `  Mots-clés ${s.domain}: ${kws.map((k: any) => `${k.keyword} (vol:${k.volume}, pos:#${k.current_rank || '?'})`).join(', ')}\n`;
+                    }
+                    if (rp.keyword_positioning?.quick_wins?.length) {
+                      contextSnippet += `  Quick wins ${s.domain}: ${rp.keyword_positioning.quick_wins.slice(0, 3).map((q: any) => q.keyword || q.title).join(', ')}\n`;
+                    }
+                    if (rp.priority_content?.missing_pages?.length) {
+                      contextSnippet += `  Pages manquantes ${s.domain}: ${rp.priority_content.missing_pages.slice(0, 3).map((p: any) => p.title).join(', ')}\n`;
+                    }
+                    if (rp.strengths?.length) {
+                      contextSnippet += `  Forces stratégiques: ${rp.strengths.slice(0, 3).join('; ')}\n`;
+                    }
+                    if (rp.weaknesses?.length) {
+                      contextSnippet += `  Faiblesses stratégiques: ${rp.weaknesses.slice(0, 3).join('; ')}\n`;
+                    }
+                    break;
+                  }
+                  default: {
+                    // Generic fallback: extract scores, strengths, weaknesses from any audit
+                    if (rp.score !== undefined) contextSnippet += `  ${audit.audit_type} ${s.domain}: score ${rp.score}\n`;
+                    if (rp.strengths?.length) contextSnippet += `  Forces (${audit.audit_type}): ${rp.strengths.slice(0, 3).join('; ')}\n`;
+                    if (rp.weaknesses?.length) contextSnippet += `  Faiblesses (${audit.audit_type}): ${rp.weaknesses.slice(0, 3).join('; ')}\n`;
+                    if (rp.recommendations?.length) contextSnippet += `  Recos (${audit.audit_type}): ${rp.recommendations.slice(0, 3).map((r: any) => r.title || r).join('; ')}\n`;
+                    break;
+                  }
+                }
+              } catch (auditErr) {
+                console.error(`[sav-agent] Error extracting ${audit.audit_type} payload for ${s.domain}:`, auditErr);
+              }
             }
-            if (ep.strengths?.length) {
-              contextSnippet += `    Forces E-E-A-T: ${ep.strengths.slice(0, 3).join('; ')}\n`;
-            }
+          } else {
+            contextSnippet += `  ⚠ ${s.domain}: aucun audit réalisé\n`;
           }
 
           // GSC connection check
