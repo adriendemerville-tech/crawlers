@@ -36,6 +36,7 @@ spiral_score =
 3. **Cluster Maturity** : % items deployed/done par cluster
 4. **GMB Urgency** : chute ranking local ou perte d'avis
 5. **Conversion Weight** : coefficient basé sur ga4_behavioral_metrics.conversion_rate
+6. **News Context** : détection d'événements perturbateurs via anomaly_alerts (sévérité, amplitude, source GSC) — déclenche la contraction défensive
 
 ### Respiration de la spirale
 | Événement | Direction | Effet | Mécanisme |
@@ -53,6 +54,13 @@ spiral_score =
 - **Invalidation Stratège** : plans marqués `needs_refresh` si >30% de l'ordre change
 - **Auto-génération** : velocity_decay crée automatiquement des items `content_upgrade` pour le contenu qui décline
 - **Seuil Ring 1** : maturité > 70% requise avant expansion vers Ring 2
+- **Trigger cluster_maturity** : recalcul automatique de la maturité du cluster quand un item passe `deployed`/`done`, cascade sur `spiral_score` des items frères
+- **Backfill** : fonction `backfill_workbench_spiral_data()` pour rattacher les items existants aux clusters et recalculer leurs scores
+
+### Consommation par agent (score_spiral_priority)
+Tous les agents consomment désormais `score_spiral_priority` au lieu de `score_workbench_priority` :
+- Le scoring retourne `spiral_score` (et non plus `total_score`)
+- Parménion utilise directement `score_spiral_priority` avec dual-lane (tech/content)
 
 ### Cycle de vie Workbench
 ```
