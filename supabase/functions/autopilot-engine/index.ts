@@ -784,64 +784,8 @@ try {
                       console.log(`[AutopilotEngine] create-post for slug "${cmsAction.body.slug}" — iktracker will auto-upsert if exists`);
                     }
 
-                    // ── Auto-generate image for new articles ──
-                    if (inferredAction === 'create-post' && cmsAction.body) {
-                      try {
-                        const articleTitle = cmsAction.body.title || '';
-                        const articleExcerpt = cmsAction.body.excerpt || cmsAction.body.meta_description || '';
-                        const imagePrompt = `Evocative visual illustration for a blog article about: ${articleTitle}. Context: ${articleExcerpt}. Do NOT include any text, title or lettering.`.slice(0, 500);
-                        
-                        console.log(`[AutopilotEngine] Generating image for IKtracker article: "${articleTitle}"`);
-                        
-                        const imgResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
-                          method: 'POST',
-                          headers: {
-                            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                            prompt: imagePrompt,
-                            style: 'cinematic',
-                          }),
-                        });
-
-                        if (imgResponse.ok) {
-                          const imgResult = await imgResponse.json().catch(() => null);
-                          if (imgResult?.dataUri) {
-                            // Upload to storage bucket for a persistent URL
-                            const imgFileName = `parmenion/${site.domain}/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
-                            const base64Match = imgResult.dataUri.match(/^data:image\/\w+;base64,(.+)$/);
-                            
-                            if (base64Match) {
-                              const binaryStr = atob(base64Match[1]);
-                              const bytes = new Uint8Array(binaryStr.length);
-                              for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-                              
-                              const { error: uploadErr } = await supabase.storage
-                                .from('image-references')
-                                .upload(imgFileName, bytes, { contentType: 'image/png', upsert: true });
-
-                              if (!uploadErr) {
-                                const { data: urlData } = supabase.storage
-                                  .from('image-references')
-                                  .getPublicUrl(imgFileName);
-                                
-                                cmsAction.body.image_url = urlData.publicUrl;
-                                console.log(`[AutopilotEngine] Image generated and uploaded for "${articleTitle}": ${urlData.publicUrl}`);
-                              } else {
-                                console.warn(`[AutopilotEngine] Image upload failed:`, uploadErr);
-                                // Fallback: embed as data URI
-                                cmsAction.body.image_url = imgResult.dataUri;
-                              }
-                            }
-                          }
-                        } else {
-                          console.warn(`[AutopilotEngine] Image generation failed for "${articleTitle}": ${imgResponse.status}`);
-                        }
-                      } catch (imgErr) {
-                        console.warn(`[AutopilotEngine] Image generation error (non-blocking):`, imgErr);
-                      }
-                    }
+                    // FIX #5: Image generation deferred AFTER iktracker-actions dedup
+                    // The image will be generated only if the CMS call succeeds (see below)
 
                     const actionBody = {
                       action: inferredAction,
