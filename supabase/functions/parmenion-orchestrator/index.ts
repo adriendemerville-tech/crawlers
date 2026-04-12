@@ -246,21 +246,21 @@ try {
     if (currentPhase === 'prescribe') {
       const userId = authUserId || bodyUserId || tracked_site_id;
       
-      // Option B: Query BOTH lanes independently in parallel
+      // Option B: Query BOTH lanes independently in parallel via Breathing Spiral scoring
       const [techRes, contentRes] = await Promise.all([
-        supabase.rpc('score_workbench_priority', {
+        supabase.rpc('score_spiral_priority', {
           p_domain: domain,
           p_user_id: userId,
           p_limit: 8,
           p_lane: 'tech',
-          p_force_content: false,
+          p_exclude_assigned: false,
         }),
-        supabase.rpc('score_workbench_priority', {
+        supabase.rpc('score_spiral_priority', {
           p_domain: domain,
           p_user_id: userId,
           p_limit: 8,
           p_lane: 'content',
-          p_force_content: forceContent,
+          p_exclude_assigned: false,
         }),
       ]);
       
