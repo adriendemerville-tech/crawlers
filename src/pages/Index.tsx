@@ -129,16 +129,26 @@ const Index = () => {
     }
   }, [authUser, isSubscribed, isAdminUser, navTo]);
 
-  // Fetch hide_home_leadmagnet config
+  // Fetch hide_home_leadmagnet config — deferred to avoid blocking render
   useEffect(() => {
-    supabase
-      .from('system_config')
-      .select('value')
-      .eq('key', 'hide_home_leadmagnet')
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.value === true) setHideLeadmagnet(true);
-      });
+    const ctrl = new AbortController();
+    const loadConfig = () => {
+      supabase
+        .from('system_config')
+        .select('value')
+        .eq('key', 'hide_home_leadmagnet')
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.value === true) setHideLeadmagnet(true);
+        });
+    };
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(loadConfig, { timeout: 3000 });
+      return () => { cancelIdleCallback(id); ctrl.abort(); };
+    } else {
+      const timer = setTimeout(loadConfig, 1500);
+      return () => { clearTimeout(timer); ctrl.abort(); };
+    }
   }, []);
 
 
