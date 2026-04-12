@@ -1003,7 +1003,22 @@ async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
     }
     
     const content = await response.text();
-    const hasDisallowAll = /Disallow:\s*\/\s*$/m.test(content) && /User-agent:\s*\*/m.test(content);
+    // Check if User-agent: * has a blanket Disallow: /
+    // Must verify the Disallow: / is actually under the * block, not under a specific bot block
+    const hasDisallowAll = (() => {
+      const lines = content.split('\n');
+      let inWildcardBlock = false;
+      for (const line of lines) {
+        const trimmed = line.trim().toLowerCase();
+        if (trimmed.startsWith('user-agent:')) {
+          const agent = trimmed.substring(11).trim();
+          inWildcardBlock = agent === '*';
+        } else if (inWildcardBlock && /^disallow:\s*\/\s*$/.test(trimmed)) {
+          return true;
+        }
+      }
+      return false;
+    })();
     
     // Quality analysis
     const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
