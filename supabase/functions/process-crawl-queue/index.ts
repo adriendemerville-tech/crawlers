@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
+import { classifyAndAssignRings } from '../_shared/spiralClassifier.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
@@ -1278,6 +1279,14 @@ Donne 5-8 recommandations max, classées par impact.`;
         p_tracked_site_id: tsRow?.id || null,
       });
       console.log(`[Worker] ✅ keyword_universe: ${kwPayload.length} keywords upserted from crawl`);
+
+      // ── Spiral ring classification ──
+      classifyAndAssignRings(
+        job.domain,
+        job.user_id,
+        tsRow?.id || null,
+        kwPayload.map(kw => ({ keyword: kw.keyword, target_url: kw.target_url })),
+      ).catch(e => console.warn('[Worker] spiral classification failed (non-fatal):', e));
     }
   } catch (e) {
     console.warn('[Worker] keyword_universe upsert failed (non-fatal):', e);
