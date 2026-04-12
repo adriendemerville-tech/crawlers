@@ -1,6 +1,6 @@
 /**
  * Social Post Editor — Rich text editor with emoji, @mentions, hashtags,
- * character counter, smart link, and translation.
+ * character counter, smart link, translation, and image management.
  */
 import { memo, useState, useCallback, useRef } from 'react';
 import { GoogleDriveFolderPicker } from './GoogleDriveFolderPicker';
@@ -13,10 +13,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
-  Smile, AtSign, Hash, Link2, Globe, Sparkles, Send, Download, Save, Loader2, Languages, Wand2, HardDrive
+  Smile, AtSign, Hash, Link2, Globe, Sparkles, Send, Download, Save, Loader2, Languages, Wand2, HardDrive, ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateContent, resolveSmartLink, shortenLink, translatePost } from '@/lib/api/socialHub';
+import { type LibraryImage } from './SocialImageLibrary';
 
 const EMOJI_LIST = ['🚀', '✅', '💡', '🔥', '📈', '💪', '🎯', '⚡', '🏆', '✨', '👉', '📊', '🔑', '💰', '🌟', '❤️', '👏', '🙌', '📢', '🤝', '🧠', '🎉', '💎', '📌', '🔔'];
 
