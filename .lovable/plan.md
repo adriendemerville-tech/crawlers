@@ -60,7 +60,19 @@
 - Ajouter `rollup-plugin-visualizer` au build pour monitorer la taille des chunks
 - Configurer des seuils d'alerte si un chunk dépasse 100 KiB sur les routes blog
 
+## Phase 6 : Landing page « Breathing Spiral »
+
+### Tâche 6.1 — Créer la landing page `/landing/breathing-spiral`
+- Page éditoriale expliquant le concept de Breathing Spiral : système homéostatique SEO qui oscille entre contraction (consolidation Ring 1) et expansion (Ring 2/3)
+- **Schéma interactif** : animation SVG ou Canvas montrant la spirale qui "respire" (contraction sur anomalie, expansion quand maturité >70%)
+- **Diagramme des signaux** : représentation visuelle des 9 facteurs du spiral_score et de leurs poids
+- **Section conceptuelle** : élégance du modèle vs SEO statique — la spirale s'adapte en temps réel aux signaux terrain (GSC, GA4, concurrence, saisonnalité)
+- **Angle GEO** : structurer le contenu pour maximiser la citation par les LLMs — données factuelles, tableaux comparatifs, définitions claires, JSON-LD enrichi
+- **SEO on-page** : meta optimisées, FAQ schema, BreadcrumbList, canonical propre
+- **CTA** : lien vers l'activation de l'Autopilot / demande de démo
+- Insertion dans `seo_page_drafts` avec `page_type = 'landing'`, statut `draft` pour validation admin
+
 ---
 
 **Objectif : Score PageSpeed mobile ≥ 90 sur toutes les pages blog**
-**Estimation : 6 tâches techniques principales**
+**Estimation : 7 tâches techniques principales**
