@@ -298,17 +298,39 @@ try {
       // If workbench is empty but content is forced, create a synthetic content item
       if (scoredWorkbenchItems.length === 0 && forceContent) {
         console.log(`[Parménion] ⚠️ Workbench empty but force_content=true, creating synthetic content item`);
+        // FIX: Inject full identity card context into synthetic item to prevent hallucinations
+        const identitySummary = siteInfo ? [
+          siteInfo.site_name && `Site: ${siteInfo.site_name}`,
+          siteInfo.market_sector && `Secteur: ${siteInfo.market_sector}`,
+          siteInfo.products_services && `Produits/Services: ${siteInfo.products_services}`,
+          siteInfo.target_audience && `Cible: ${siteInfo.target_audience}`,
+          siteInfo.commercial_area && `Zone: ${siteInfo.commercial_area}`,
+          siteInfo.entity_type && `Type: ${siteInfo.entity_type}`,
+          siteInfo.commercial_model && `Modèle: ${siteInfo.commercial_model}`,
+        ].filter(Boolean).join('. ') : '';
+        
+        const syntheticKeyword = siteKeywords[0] || siteInfo?.products_services?.split(',')[0]?.trim() || domain.replace(/\.\w+$/, '');
+        const syntheticDescription = identitySummary
+          ? `Article de blog pertinent pour ${siteInfo?.site_name || domain}. CONTEXTE IDENTITAIRE OBLIGATOIRE: ${identitySummary}. Le contenu DOIT correspondre à cette identité.`
+          : `Article de blog ou page de contenu pour renforcer l'autorité sémantique du site ${domain}`;
+        
         scoredWorkbenchItems.push({
           id: '00000000-0000-0000-0000-000000000000',
-          title: `Création de contenu éditorial pour ${domain}`,
-          description: `Article de blog ou page de contenu pour renforcer l'autorité sémantique du site ${domain}`,
+          title: `Création de contenu éditorial pour ${siteInfo?.site_name || domain}`,
+          description: syntheticDescription,
           finding_category: 'missing_page',
           severity: 'high',
           target_url: `https://${domain}`,
           target_selector: null,
           target_operation: 'create',
           action_type: 'content',
-          payload: { keyword: siteKeywords[0] || domain.replace(/\.\w+$/, '') },
+          payload: {
+            keyword: syntheticKeyword,
+            identity_context: identitySummary || null,
+            market_sector: siteInfo?.market_sector || null,
+            target_audience: siteInfo?.target_audience || null,
+            products_services: siteInfo?.products_services || null,
+          },
           source_type: 'forced_cycle',
           tier: 9,
           base_score: 75,
