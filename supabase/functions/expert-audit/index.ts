@@ -1928,30 +1928,37 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     });
   }
 
-  // ═══ AI BOTS SPECIFIC CHECK (GPTBot, ClaudeBot, PerplexityBot) ═══
+  // ═══ AI BOTS CHECK — all 6 bots, explicit naming of blocked ones ═══
   if (crawlersResult) {
-    const criticalBots = [
-      { key: 'gptBot', name: 'GPTBot', company: 'OpenAI' },
-      { key: 'claudeBot', name: 'ClaudeBot', company: 'Anthropic' },
-      { key: 'perplexityBot', name: 'PerplexityBot', company: 'Perplexity' },
+    const allBots = [
+      { key: 'gptBot', name: 'GPTBot', company: 'OpenAI', critical: true },
+      { key: 'ccBot', name: 'CCBot', company: 'Common Crawl', critical: false },
+      { key: 'googleExtended', name: 'Google-Extended', company: 'Google (Gemini)', critical: true },
+      { key: 'claudeBot', name: 'ClaudeBot', company: 'Anthropic', critical: true },
+      { key: 'appleBotExtended', name: 'Applebot-Extended', company: 'Apple Intelligence', critical: false },
+      { key: 'perplexityBot', name: 'PerplexityBot', company: 'Perplexity', critical: true },
     ];
-    const blockedCritical = criticalBots.filter(b => !crawlersResult.allowsAIBots?.[b.key]);
+    const blockedBots = allBots.filter(b => !crawlersResult.allowsAIBots?.[b.key]);
+    const blockedCritical = blockedBots.filter(b => b.critical);
+    const blockedNonCritical = blockedBots.filter(b => !b.critical);
     
-    if (blockedCritical.length > 0) {
+    if (blockedBots.length > 0) {
+      const isCritical = blockedCritical.length > 0;
       recommendations.push({
-        id: 'critical-bots-blocked',
-        priority: 'critical',
+        id: 'ai-bots-blocked',
+        priority: isCritical ? 'critical' : 'important',
         category: 'ia',
-        icon: '🔴',
-        title: `Bots IA critiques bloqués : ${blockedCritical.map(b => b.name).join(', ')}`,
-        description: `${blockedCritical.length} crawler(s) IA essentiels sont bloqués dans votre robots.txt. Sans accès, votre site est INVISIBLE pour les moteurs génératifs correspondants. C'est un blocage critique pour la visibilité GEO.`,
+        icon: isCritical ? '🔴' : '🟠',
+        title: `${blockedBots.length} bot(s) IA bloqué(s) : ${blockedBots.map(b => b.name).join(', ')}`,
+        description: isCritical
+          ? `${blockedCritical.length} crawler(s) IA critiques sont explicitement bloqués dans votre robots.txt (${blockedCritical.map(b => b.name).join(', ')}). Sans accès, votre site est INVISIBLE pour les moteurs génératifs correspondants.${blockedNonCritical.length > 0 ? ` ${blockedNonCritical.length} bot(s) secondaire(s) également bloqué(s) : ${blockedNonCritical.map(b => b.name).join(', ')}.` : ''}`
+          : `${blockedNonCritical.length} bot(s) IA secondaire(s) explicitement bloqué(s) : ${blockedNonCritical.map(b => b.name).join(', ')}. Impact GEO limité mais réduit la couverture des datasets d'entraînement.`,
         weaknesses: [
-          ...blockedCritical.map(b => `${b.name} (${b.company}) : BLOQUÉ — votre contenu ne sera pas cité dans ${b.company}`),
-          "Perte totale de visibilité dans les réponses IA de ces moteurs",
-          "Les utilisateurs qui cherchent via ChatGPT, Claude ou Perplexity ne vous trouveront jamais"
+          ...blockedBots.map(b => `${b.name} (${b.company}) : BLOQUÉ${b.critical ? ' — bot critique, perte de visibilité GEO directe' : ' — bot secondaire, impact limité'}`),
+          ...(blockedCritical.length > 0 ? ["Perte de visibilité dans les réponses IA des moteurs concernés"] : []),
         ],
         fixes: [
-          ...blockedCritical.map(b => `Ajouter 'User-agent: ${b.name}\\nAllow: /' dans robots.txt`),
+          ...blockedBots.map(b => `Ajouter 'User-agent: ${b.name}\\nAllow: /' dans robots.txt`),
           "Supprimer les directives Disallow ciblant ces bots",
           "Vérifier qu'aucun meta tag 'noindex' ne cible ces agents"
         ]
