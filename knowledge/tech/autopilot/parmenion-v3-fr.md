@@ -6,7 +6,7 @@ Updated: 2026-04-12
 ### Vue d'ensemble
 Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise le `spiral_score` pour prioriser les actions et un dual-lane scoring (tech + contenu) avec budget partagé configurable. La spirale se contracte ou s'expand automatiquement en fonction des 9 signaux temps réel (voir `breathing-spiral-strategy-fr.md`).
 
-### FIX critique v3.2 (2026-04-12) — 5 corrections
+### FIX critique v3.2 (2026-04-12) — 6 corrections
 
 **Problème racine** : Parménion tournait depuis ~71 cycles sans produire aucun déploiement. 78 items workbench étaient bloqués en `in_progress` sans jamais passer à `deployed`.
 
@@ -16,6 +16,7 @@ Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, cap
 3. **Boucle de recyclage** : `consumed_at` était rafraîchi à chaque cycle, empêchant le seuil de 24h de se déclencher
 4. **Pas de watchdog global** : Aucune protection contre les timeouts Edge Function (150s max)
 5. **Images gaspillées** : Génération d'image AVANT la déduplication iktracker-actions
+6. **Synthetic items aveugles** : Les items synthétiques (workbench vide + force_content) n'injectaient pas la carte d'identité, causant des hallucinations massives (ex: article IKtracker décrivant un "tracker de données" au lieu d'un calculateur d'indemnités kilométriques)
 
 **Corrections appliquées** :
 
@@ -49,8 +50,17 @@ Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, cap
 - L'image est uploadée puis injectée via `update-post` séparé
 - Timeout de 30s sur la génération d'image
 
+#### FIX #6 — Enrichissement synthetic items + Semantic Gate (`parmenion-orchestrator` + `autopilot-engine`)
+- Les synthetic items injectent désormais `identity_context`, `market_sector`, `target_audience`, `products_services` dans le payload
+- Le mot-clé synthétique tombe en fallback sur `products_services` avant le nom de domaine brut
+- La description synthétique inclut le résumé complet de la carte d'identité
+- **Semantic Gate** dans `autopilot-engine` : après chaque `create-post` réussi, vérifie que ≥15% des termes d'identité (secteur, produits, cible, nom) apparaissent dans le contenu
+- Si l'overlap est insuffisant → suppression automatique du post halluciné + log d'erreur + skip
+- L'engine récupère désormais `site_name, market_sector, products_services, target_audience, entity_type, commercial_model` depuis `tracked_sites`
+
 #### Migration ponctuelle
 - Reset des ~78 items `in_progress` avec `deployed_at IS NULL` et `updated_at < 48h` → `pending`
+- Suppression manuelle de l'article halluciné `iktracker-guide-complet-2026`
 
 ### Limites
 - Max 10 actions CMS par cycle
