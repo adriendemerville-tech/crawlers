@@ -344,6 +344,7 @@ try {
 
         const cycleNumber = (config.total_cycles_run || 0) + 1;
         const cycleStartTime = Date.now();
+        const CYCLE_DEADLINE_MS = 8.5 * 60 * 1000; // FIX #4: 8.5 min watchdog to prevent Edge Function timeout
 
         // ═══ FULL PIPELINE: Loop through ALL phases in a single cycle ═══
         // 'route' is handled inline after 'prescribe', not as a separate orchestrator call
@@ -358,6 +359,16 @@ try {
         const allPhaseResults: Array<{ phase: string; decision_id: string; status: string; executionResults: any[] }> = [];
 
         for (const phase of PIPELINE_PHASES) {
+          // FIX #4: Watchdog — abort if approaching Edge Function timeout
+          const elapsed = Date.now() - cycleStartTime;
+          if (elapsed > CYCLE_DEADLINE_MS) {
+            console.warn(`[AutopilotEngine] ⏰ Watchdog: cycle exceeded ${CYCLE_DEADLINE_MS / 1000}s (${Math.round(elapsed / 1000)}s elapsed), aborting at phase ${phase} for ${site.domain}`);
+            allPhaseErrors.push({ phase, function: 'watchdog', severity: 'critical', message: `Cycle timeout after ${Math.round(elapsed / 1000)}s`, retryable: true });
+            hasCriticalError = true;
+            cycleSuccess = false;
+            break;
+          }
+
           console.log(`[AutopilotEngine] ═══ Phase ${phase.toUpperCase()} for ${site.domain}, cycle #${cycleNumber} ═══`);
 
           // ═══ Call Parménion orchestrator for this phase (with forced_phase) ═══
@@ -462,7 +473,9 @@ try {
             if (populateErr2) console.warn('[AutopilotEngine] Post-diagnose populate error:', populateErr2.message);
             else console.log(`[AutopilotEngine] ✅ Post-diagnose workbench: ${JSON.stringify(populateResult2)}`);
 
-            // 2. Recycle stale consumed workbench items (>24h)
+            // FIX #3: Recycling logic — use deployed_at IS NULL to find truly stuck items
+            // Items that were consumed but never deployed are stuck in the loop
+            const recycleThreshold = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
             const { data: recycled, error: recycleErr } = await supabase
               .from('architect_workbench')
               .update({ 
@@ -474,7 +487,8 @@ try {
               })
               .eq('domain', site.domain)
               .eq('status', 'in_progress')
-              .lt('consumed_at', new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+              .is('deployed_at', null)
+              .lt('updated_at', recycleThreshold)
               .select('id');
             
             if (recycled && recycled.length > 0) {
@@ -1344,19 +1358,23 @@ try {
           allPhaseErrors.push(...phaseErrors);
 
            // ═══ POST-EXECUTE: Mark workbench items as 'deployed' for counter-audit ═══
-          if (phase === 'execute' && executionSuccess) {
+          // FIX #2: Only mark items as 'deployed' if REAL CMS actions succeeded (not just executionSuccess=true)
+          if (phase === 'execute') {
+            const realContentSuccesses = executionResults.filter(
+              (r: any) => r.status === 'success' && r.cms_action && (
+                r.cms_action === 'create-post' || r.cms_action === 'update-post' ||
+                r.cms_action === 'update-page' || r.cms_action === 'create-page'
+              )
+            );
+            const realCodeSuccesses = executionResults.filter(
+              (r: any) => r.status === 'success' && (
+                r.function === 'generate-corrective-code' || r.cms_action === 'inject-code' ||
+                (r.function === 'cms-push-code' && r.triggered_by)
+              )
+            );
+
             try {
-              const contentActions = executionResults.filter(
-                (r: any) => r.status === 'success' && (
-                  r.cms_action === 'create-post' || r.cms_action === 'update-post' ||
-                  r.cms_action === 'update-page' || r.cms_action === 'create-page' ||
-                  r.function === 'content-architecture-advisor' || r.function === 'cms-push-draft'
-                )
-              );
-              if (contentActions.length > 0) {
-                // Mark content items as 'deployed' — the cron autopilot-validate-deployed
-                // will counter-audit them (presence + mechanical + semantic + quality)
-                // before promoting to 'done' or marking 'failed'.
+              if (realContentSuccesses.length > 0) {
                 const { data: markedItems, error: markErr } = await supabase
                   .from('architect_workbench')
                   .update({
@@ -1373,18 +1391,14 @@ try {
                   .select('id');
 
                 if (markedItems && markedItems.length > 0) {
-                  console.log(`[AutopilotEngine] 🚀 Marked ${markedItems.length} workbench items as 'deployed' for counter-audit on ${site.domain}`);
+                  console.log(`[AutopilotEngine] 🚀 Marked ${markedItems.length} workbench items as 'deployed' (${realContentSuccesses.length} real CMS successes) for ${site.domain}`);
                 }
                 if (markErr) console.warn('[AutopilotEngine] deployed mark error:', markErr.message);
+              } else {
+                console.log(`[AutopilotEngine] ⚠️ POST-EXECUTE: No real content CMS successes found — skipping deployed mark for ${site.domain}`);
               }
 
-              // Mark tech items as 'deployed' too
-              const techActions = executionResults.filter(
-                (r: any) => r.status === 'success' && (
-                  r.function === 'generate-corrective-code' || r.cms_action === 'inject-code'
-                )
-              );
-              if (techActions.length > 0) {
+              if (realCodeSuccesses.length > 0) {
                 const { data: techMarked, error: techErr } = await supabase
                   .from('architect_workbench')
                   .update({
@@ -1401,7 +1415,7 @@ try {
                   .select('id');
 
                 if (techMarked && techMarked.length > 0) {
-                  console.log(`[AutopilotEngine] 🚀 Marked ${techMarked.length} tech workbench items as 'deployed' for counter-audit on ${site.domain}`);
+                  console.log(`[AutopilotEngine] 🚀 Marked ${techMarked.length} tech workbench items as 'deployed' for ${site.domain}`);
                 }
                 if (techErr) console.warn('[AutopilotEngine] tech deployed mark error:', techErr.message);
               }
