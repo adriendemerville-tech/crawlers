@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network, ChevronUp, Terminal, Eye, Share2 } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network, ChevronUp, Terminal, Eye, Share2, Activity } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
@@ -39,6 +39,7 @@ function FooterComponent() {
     { icon: FileText, label: t3(language, 'Matrice d\'audit', 'Audit Matrix', 'Matriz de auditoría'), href: '/matrice', description: t3(language, 'Audit matriciel personnalisé XLSX/CSV/DOCX', 'Custom matrix audit XLSX/CSV/DOCX', 'Auditoría matricial personalizada XLSX/CSV/DOCX'), isRoute: true },
     { icon: Terminal, label: 'Marina API', href: '/marina#api', description: t3(language, 'API asynchrone de rapports SEO & GEO en marque blanche', 'Async white-label SEO & GEO reporting API', 'API asíncrona de informes SEO & GEO de marca blanca'), isRoute: true },
     { icon: Shield, label: 'Audit E-E-A-T', href: '/eeat', description: t3(language, 'Score de crédibilité Google E-E-A-T', 'Google E-E-A-T credibility score', 'Puntuación de credibilidad Google E-E-A-T'), isRoute: true },
+    { icon: Activity, label: 'Breathing Spiral', href: '/breathing-spiral', description: t3(language, 'Priorisation dynamique SEO/GEO en temps réel', 'Dynamic real-time SEO/GEO prioritization', 'Priorización dinámica SEO/GEO en tiempo real'), isRoute: true },
   ];
 
   const resourcesLinks = [
