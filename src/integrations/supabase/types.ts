@@ -645,14 +645,20 @@ export type Database = {
             | Database["public"]["Enums"]["architect_action_type"]
             | null
           assigned_to: string | null
+          cluster_id: string | null
+          cluster_maturity_pct: number | null
+          competitor_momentum_score: number | null
           consumed_at: string | null
           consumed_by_code: boolean
           consumed_by_content: boolean
+          conversion_weight: number | null
+          cooldown_until: string | null
           created_at: string
           deployed_at: string | null
           description: string | null
           domain: string
           finding_category: string
+          gmb_urgency_score: number | null
           id: string
           payload: Json | null
           priority_tag: string | null
@@ -660,6 +666,7 @@ export type Database = {
           source_function: string | null
           source_record_id: string | null
           source_type: Database["public"]["Enums"]["diagnostic_source_type"]
+          spiral_score: number | null
           status: Database["public"]["Enums"]["workbench_item_status"]
           suggested_injection_type: string | null
           target_operation: string | null
@@ -670,20 +677,27 @@ export type Database = {
           updated_at: string
           user_id: string
           validate_attempts: number
+          velocity_decay_score: number | null
         }
         Insert: {
           action_type?:
             | Database["public"]["Enums"]["architect_action_type"]
             | null
           assigned_to?: string | null
+          cluster_id?: string | null
+          cluster_maturity_pct?: number | null
+          competitor_momentum_score?: number | null
           consumed_at?: string | null
           consumed_by_code?: boolean
           consumed_by_content?: boolean
+          conversion_weight?: number | null
+          cooldown_until?: string | null
           created_at?: string
           deployed_at?: string | null
           description?: string | null
           domain: string
           finding_category: string
+          gmb_urgency_score?: number | null
           id?: string
           payload?: Json | null
           priority_tag?: string | null
@@ -691,6 +705,7 @@ export type Database = {
           source_function?: string | null
           source_record_id?: string | null
           source_type: Database["public"]["Enums"]["diagnostic_source_type"]
+          spiral_score?: number | null
           status?: Database["public"]["Enums"]["workbench_item_status"]
           suggested_injection_type?: string | null
           target_operation?: string | null
@@ -701,20 +716,27 @@ export type Database = {
           updated_at?: string
           user_id: string
           validate_attempts?: number
+          velocity_decay_score?: number | null
         }
         Update: {
           action_type?:
             | Database["public"]["Enums"]["architect_action_type"]
             | null
           assigned_to?: string | null
+          cluster_id?: string | null
+          cluster_maturity_pct?: number | null
+          competitor_momentum_score?: number | null
           consumed_at?: string | null
           consumed_by_code?: boolean
           consumed_by_content?: boolean
+          conversion_weight?: number | null
+          cooldown_until?: string | null
           created_at?: string
           deployed_at?: string | null
           description?: string | null
           domain?: string
           finding_category?: string
+          gmb_urgency_score?: number | null
           id?: string
           payload?: Json | null
           priority_tag?: string | null
@@ -722,6 +744,7 @@ export type Database = {
           source_function?: string | null
           source_record_id?: string | null
           source_type?: Database["public"]["Enums"]["diagnostic_source_type"]
+          spiral_score?: number | null
           status?: Database["public"]["Enums"]["workbench_item_status"]
           suggested_injection_type?: string | null
           target_operation?: string | null
@@ -732,8 +755,16 @@ export type Database = {
           updated_at?: string
           user_id?: string
           validate_attempts?: number
+          velocity_decay_score?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "architect_workbench_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "cluster_definitions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "architect_workbench_suggested_injection_type_fkey"
             columns: ["suggested_injection_type"]
@@ -1701,6 +1732,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "canva_connections_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cluster_definitions: {
+        Row: {
+          cluster_name: string
+          created_at: string | null
+          deployed_items: number | null
+          id: string
+          keywords: string[] | null
+          maturity_pct: number | null
+          ring: number
+          total_items: number | null
+          tracked_site_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cluster_name: string
+          created_at?: string | null
+          deployed_items?: number | null
+          id?: string
+          keywords?: string[] | null
+          maturity_pct?: number | null
+          ring?: number
+          total_items?: number | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cluster_name?: string
+          created_at?: string | null
+          deployed_items?: number | null
+          id?: string
+          keywords?: string[] | null
+          maturity_pct?: number | null
+          ring?: number
+          total_items?: number | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cluster_definitions_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
@@ -5733,6 +5814,7 @@ export type Database = {
       keyword_universe: {
         Row: {
           best_position: number | null
+          cluster_id: string | null
           current_position: number | null
           difficulty: number | null
           domain: string
@@ -5746,6 +5828,7 @@ export type Database = {
           quick_win_action: string | null
           quick_win_type: string | null
           search_volume: number | null
+          semantic_ring: number | null
           source_details: Json | null
           sources: string[]
           target_url: string | null
@@ -5755,6 +5838,7 @@ export type Database = {
         }
         Insert: {
           best_position?: number | null
+          cluster_id?: string | null
           current_position?: number | null
           difficulty?: number | null
           domain: string
@@ -5768,6 +5852,7 @@ export type Database = {
           quick_win_action?: string | null
           quick_win_type?: string | null
           search_volume?: number | null
+          semantic_ring?: number | null
           source_details?: Json | null
           sources?: string[]
           target_url?: string | null
@@ -5777,6 +5862,7 @@ export type Database = {
         }
         Update: {
           best_position?: number | null
+          cluster_id?: string | null
           current_position?: number | null
           difficulty?: number | null
           domain?: string
@@ -5790,6 +5876,7 @@ export type Database = {
           quick_win_action?: string | null
           quick_win_type?: string | null
           search_volume?: number | null
+          semantic_ring?: number | null
           source_details?: Json | null
           sources?: string[]
           target_url?: string | null
@@ -5798,6 +5885,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "keyword_universe_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "cluster_definitions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "keyword_universe_parent_query_id_fkey"
             columns: ["parent_query_id"]
