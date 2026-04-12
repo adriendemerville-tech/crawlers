@@ -11093,6 +11093,7 @@ export type Database = {
           total_score: number
         }[]
       }
+      title_similarity: { Args: { a: string; b: string }; Returns: number }
       upsert_analyzed_url: {
         Args: { p_domain: string; p_url: string }
         Returns: undefined
