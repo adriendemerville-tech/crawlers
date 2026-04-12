@@ -1228,6 +1228,61 @@ Donne 5-8 recommandations max, classées par impact.`;
     sourceFunctions: ['process-crawl-queue', 'crawl-site'],
   }).catch(() => {});
 
+  // ═══ P2: FEED keyword_universe SSOT from crawl pages ═══
+  try {
+    // Look up tracked_site_id for this domain
+    const { data: tsRow } = await supabase
+      .from('tracked_sites')
+      .select('id')
+      .ilike('domain', `%${job.domain}%`)
+      .limit(1)
+      .maybeSingle();
+
+    // Extract unique keywords from page titles and H1s
+    const kwMap = new Map<string, { keyword: string; target_url: string; intent: string }>();
+    for (const page of pages) {
+      const p = page as any;
+      if (p.has_noindex) continue; // Skip noindexed pages
+
+      // Title keyword
+      if (p.title && p.title.length > 3) {
+        const titleKw = p.title.trim().toLowerCase().substring(0, 100);
+        if (!kwMap.has(titleKw)) {
+          kwMap.set(titleKw, { keyword: titleKw, target_url: p.url, intent: 'navigational' });
+        }
+      }
+
+      // H1 keyword (if different from title)
+      if (p.h1 && p.h1.length > 3) {
+        const h1Kw = p.h1.trim().toLowerCase().substring(0, 100);
+        if (!kwMap.has(h1Kw) && h1Kw !== p.title?.trim().toLowerCase()) {
+          kwMap.set(h1Kw, { keyword: h1Kw, target_url: p.url, intent: 'informational' });
+        }
+      }
+    }
+
+    const kwPayload = Array.from(kwMap.values()).slice(0, 200).map(kw => ({
+      keyword: kw.keyword,
+      search_volume: 0,
+      position: null,
+      intent: kw.intent,
+      target_url: kw.target_url,
+    }));
+
+    if (kwPayload.length > 0) {
+      await supabase.rpc('upsert_keyword_universe', {
+        p_domain: job.domain,
+        p_user_id: job.user_id,
+        p_keywords: kwPayload,
+        p_source: 'crawl',
+        p_tracked_site_id: tsRow?.id || null,
+      });
+      console.log(`[Worker] ✅ keyword_universe: ${kwPayload.length} keywords upserted from crawl`);
+    }
+  } catch (e) {
+    console.warn('[Worker] keyword_universe upsert failed (non-fatal):', e);
+  }
+
   await supabase.from('crawl_jobs').update({
     status: 'completed',
     completed_at: new Date().toISOString(),

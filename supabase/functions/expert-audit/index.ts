@@ -2805,6 +2805,59 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
         'technical',
         recommendations
       ).catch(err => console.error('Erreur sauvegarde registre:', err));
+
+      // ═══ P1: FEED keyword_universe SSOT from expert-audit ═══
+      (async () => {
+        try {
+          const sb = getUserClient(registryAuthHeader);
+          const { data: { user: kwUser } } = await sb.auth.getUser();
+          if (!kwUser) return;
+
+          // Extract keywords from HTML analysis
+          const kwPayload: Array<Record<string, unknown>> = [];
+
+          // Title as keyword
+          if (htmlAnalysis.titleContent) {
+            const titleKw = htmlAnalysis.titleContent.trim().toLowerCase().substring(0, 100);
+            if (titleKw.length > 3) {
+              kwPayload.push({ keyword: titleKw, search_volume: 0, position: null, intent: 'navigational', target_url: normalizedUrl });
+            }
+          }
+
+          // H1 as keyword (if different from title)
+          if (htmlAnalysis.h1Content) {
+            const h1Kw = (Array.isArray(htmlAnalysis.h1Content) ? htmlAnalysis.h1Content[0] : htmlAnalysis.h1Content)?.trim().toLowerCase().substring(0, 100);
+            if (h1Kw && h1Kw.length > 3 && h1Kw !== htmlAnalysis.titleContent?.trim().toLowerCase()) {
+              kwPayload.push({ keyword: h1Kw, search_volume: 0, position: null, intent: 'informational', target_url: normalizedUrl });
+            }
+          }
+
+          // Meta description keywords (extract key phrases)
+          if (htmlAnalysis.metaDescContent && htmlAnalysis.metaDescContent.length > 20) {
+            const metaKw = htmlAnalysis.metaDescContent.trim().toLowerCase().substring(0, 100);
+            if (metaKw.length > 10) {
+              kwPayload.push({ keyword: metaKw, search_volume: 0, position: null, intent: 'informational', target_url: normalizedUrl });
+            }
+          }
+
+          // Look up tracked_site_id
+          const { data: tsRow } = await sb.from('tracked_sites').select('id').ilike('domain', `%${domain}%`).limit(1).maybeSingle();
+
+          if (kwPayload.length > 0) {
+            const svcClient = getServiceClient();
+            await svcClient.rpc('upsert_keyword_universe', {
+              p_domain: domain,
+              p_user_id: kwUser.id,
+              p_keywords: kwPayload,
+              p_source: 'expert-audit',
+              p_tracked_site_id: tsRow?.id || null,
+            });
+            console.log(`[expert-audit] ✅ keyword_universe: ${kwPayload.length} keywords upserted`);
+          }
+        } catch (e) {
+          console.warn('[expert-audit] keyword_universe upsert failed (non-fatal):', e);
+        }
+      })();
     }
     
     // ═══ SPA DETECTION FLAG ═══
