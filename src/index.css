@@ -1,7 +1,7 @@
-/* Import only the latin subset for French content (critical font — already uses font-display: swap) */
+/* Critical font only — Inter for body text (font-display: swap via fontsource) */
 @import '@fontsource-variable/inter/wght.css';
-@import '@fontsource-variable/quicksand';
-@import '@fontsource-variable/space-grotesk';
+
+/* Defer non-critical display fonts — loaded after first paint */
 
 @tailwind base;
 @tailwind components;
