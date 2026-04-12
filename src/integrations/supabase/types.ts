@@ -11009,6 +11009,10 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string }
         Returns: Json
       }
+      backfill_workbench_spiral_data: {
+        Args: { p_domain?: string }
+        Returns: Json
+      }
       check_fair_use_v2: {
         Args: {
           p_action: string
@@ -11168,12 +11172,20 @@ export type Database = {
           action_type: string
           cluster_maturity: number
           cluster_name: string
+          description: string
           finding_category: string
           item_id: string
+          lane: string
+          payload: Json
+          priority_tag: string
           ring: number
           severity: string
+          source_type: string
           spiral_score: number
+          target_operation: string
+          target_selector: string
           target_url: string
+          tier: number
           title: string
         }[]
       }

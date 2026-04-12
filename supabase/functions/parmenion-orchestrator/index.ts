@@ -246,21 +246,21 @@ try {
     if (currentPhase === 'prescribe') {
       const userId = authUserId || bodyUserId || tracked_site_id;
       
-      // Option B: Query BOTH lanes independently in parallel
+      // Option B: Query BOTH lanes independently in parallel via Breathing Spiral scoring
       const [techRes, contentRes] = await Promise.all([
-        supabase.rpc('score_workbench_priority', {
+        supabase.rpc('score_spiral_priority', {
           p_domain: domain,
           p_user_id: userId,
           p_limit: 8,
           p_lane: 'tech',
-          p_force_content: false,
+          p_exclude_assigned: false,
         }),
-        supabase.rpc('score_workbench_priority', {
+        supabase.rpc('score_spiral_priority', {
           p_domain: domain,
           p_user_id: userId,
           p_limit: 8,
           p_lane: 'content',
-          p_force_content: forceContent,
+          p_exclude_assigned: false,
         }),
       ]);
       
@@ -284,7 +284,7 @@ try {
       
       console.log(`[Parménion] 📊 Dual-lane scoring: ${allocatedTech.length}/${techItems.length} tech (${techSlots} slots) + ${allocatedContent.length}/${contentItems.length} content (${contentSlots} slots). Force content: ${forceContent}, Budget: ${budgetPct}%`);
       if (scoredWorkbenchItems.length > 0) {
-        console.log(`[Parménion] 📊 Top tech: tier ${allocatedTech[0]?.tier ?? 'none'} score ${allocatedTech[0]?.total_score ?? 0} | Top content: tier ${allocatedContent[0]?.tier ?? 'none'} score ${allocatedContent[0]?.total_score ?? 0}`);
+        console.log(`[Parménion] 📊 Top tech: tier ${allocatedTech[0]?.tier ?? 'none'} spiral_score ${allocatedTech[0]?.spiral_score ?? 0} | Top content: tier ${allocatedContent[0]?.tier ?? 'none'} spiral_score ${allocatedContent[0]?.spiral_score ?? 0}`);
       }
     }
 
@@ -315,7 +315,7 @@ try {
           severity_bonus: 100,
           aging_bonus: 0,
           gate_malus: 0,
-          total_score: 175,
+          spiral_score: 175,
           created_at: new Date().toISOString(),
           lane: 'content',
         });
@@ -833,7 +833,7 @@ async function prescribeWithDualPrompts(context: {
 
   function buildItemsList(lot: any[]): string {
     return lot.map((it: any, i: number) =>
-      `${i + 1}. [Tier ${it.tier}: ${TIER_NAMES[it.tier] || '?'}] Score: ${it.total_score} | ${it.severity}
+      `${i + 1}. [Tier ${it.tier}: ${TIER_NAMES[it.tier] || '?'}] Score: ${it.spiral_score} | ${it.severity}
    "${it.title}" → page: ${it.target_url || '?'} | champ: ${it.target_selector || 'auto'} | op: ${it.target_operation || 'replace'}
    ${it.description?.slice(0, 150) || ''}`
     ).join('\n\n');
@@ -1218,7 +1218,7 @@ ${templateBlock}`;
       risk_score: Math.min(context.maxRisk, topItem.tier <= 1 ? 2 : 1),
       iterations: 0,
       goal_changed: false,
-      reasoning: `Scoring pyramidal: top item tier ${topItem.tier} (${TIER_NAMES[topItem.tier]}), score ${topItem.total_score}. ${allToolCalls.length} actions produites via dual-prompt.`,
+      reasoning: `Breathing Spiral scoring: top item tier ${topItem.tier} (${TIER_NAMES[topItem.tier]}), spiral_score ${topItem.spiral_score}. ${allToolCalls.length} actions produites via dual-prompt.`,
     },
     action: {
       type: fixes.length > 0 && cmsActions.length > 0 ? 'mixed' : fixes.length > 0 ? 'code' : 'cms',
@@ -1622,7 +1622,7 @@ Fonctions autorisées: generate-corrective-code, content-architecture-advisor`;
   };
 
   const itemsTable = items.map((it: any, i: number) => 
-    `${i + 1}. [Tier ${it.tier}: ${tierNames[it.tier] || '?'}] Score: ${it.total_score} | ${it.severity} | ${it.finding_category}
+    `${i + 1}. [Tier ${it.tier}: ${tierNames[it.tier] || '?'}] Score: ${it.spiral_score} | ${it.severity} | ${it.finding_category}
    "${it.title}" → ${it.target_url || 'N/A'}
    ${it.description?.slice(0, 200) || ''}
    action_type: ${it.action_type} | payload: ${JSON.stringify(it.payload)?.slice(0, 500)}`
