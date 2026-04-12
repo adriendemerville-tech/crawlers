@@ -201,6 +201,7 @@ function BreathingSpiralPage() {
     publisher: { '@type': 'Organization', name: 'Crawlers.fr', logo: { '@type': 'ImageObject', url: `${SITE_URL}/favicon.svg` } },
     datePublished: '2026-04-12',
     dateModified: '2026-04-12',
+    image: `${SITE_URL}/favicon.svg`,
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
     inLanguage: 'fr-FR',
   };
@@ -231,6 +232,14 @@ function BreathingSpiralPage() {
         acceptedAnswer: {
           '@type': 'Answer',
           text: 'Le spiral_score est une note composite de 0 à 100 qui agrège 9 signaux pondérés : proximité d\'anneau (18%), maturité cluster (18%), sévérité (12%), urgence anomalie (12%), boost saisonnier (10%), déclin vélocité (8%), couverture mots-clés (8%), momentum concurrent (7%) et urgence GMB (7%). Il est recalculé toutes les 6 heures.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Comment la Breathing Spiral valide-t-elle ses décisions ?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Chaque décision est évaluée à T+30 jours via un reward_signal (-100 à +100). Ce signal compare l\'impact réel (delta clics, positions, CTR, impressions) au score de priorité attribué au moment de la décision. Une pénalité supplémentaire est appliquée si un item sur-priorisé produit un résultat négatif. Ce mécanisme de rétroaction permet d\'affiner progressivement les poids du scoring.',
         },
       },
     ],
@@ -451,6 +460,47 @@ function BreathingSpiralPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Reward Signal / Feedback Loop ── */}
+          <section className="py-16 sm:py-20">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 text-center">
+                Boucle de rétroaction : le scoring qui apprend
+              </h2>
+              <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
+                Chaque décision prise par la spirale est évaluée à T+30 jours.
+                Le <strong>reward_signal</strong> mesure l'impact réel pour affiner les poids du scoring.
+              </p>
+
+              <div className="grid sm:grid-cols-3 gap-6 mb-10">
+                {[
+                  { step: '1', title: 'Capture', desc: 'Le spiral_score de l\'item choisi est enregistré au moment de la décision (spiral_score_at_decision).' },
+                  { step: '2', title: 'Mesure à T+30', desc: 'Delta clics (40%), delta position (25%), delta CTR (20%) et delta impressions (15%) sont comparés à la baseline.' },
+                  { step: '3', title: 'Reward Signal', desc: 'Un score de -100 à +100 est calculé. Pénalité de sur-priorisation si le spiral_score était élevé mais l\'outcome négatif.' },
+                ].map((s) => (
+                  <Card key={s.step}>
+                    <CardContent className="pt-6">
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm mb-3">
+                        {s.step}
+                      </div>
+                      <h3 className="font-semibold text-foreground mb-2">{s.title}</h3>
+                      <p className="text-sm text-muted-foreground">{s.desc}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="p-4 rounded-lg bg-muted/50 border text-sm text-muted-foreground">
+                <p className="mb-1 text-foreground font-semibold">Formule du reward_signal :</p>
+                <code className="text-xs font-mono block overflow-x-auto">
+                  reward = (Δclicks × 0.40) + (−Δposition × 0.25) + (ΔCTR × 0.20) + (Δimpressions × 0.15) − over_prioritization_penalty
+                </code>
+                <p className="mt-2 text-xs">
+                  Ce dataset <em>spiral_score ↔ reward_signal</em> permettra à terme une régression pour calibrer automatiquement les 9 poids du scoring.
+                </p>
               </div>
             </div>
           </section>
