@@ -1,10 +1,10 @@
 # Memory: tech/autopilot/workbench-v2-fr
-Updated: 2026-04-08
+Updated: 2026-04-12
 
 ## Architect Workbench — Table centralisée des diagnostics
 
 ### Table `architect_workbench`
-Centralise les diagnostics et données stratégiques pour les outils Content Architect, Code Architect et l'Autopilote Parménion.
+Centralise les diagnostics et données stratégiques pour les outils Content Architect, Code Architect et l'Autopilote Parménion. Le scoring est piloté par le **spiral_score** de la Breathing Spiral (voir `breathing-spiral-strategy-fr.md`).
 
 ### Colonnes clés
 | Colonne | Type | Description |
@@ -48,7 +48,7 @@ score_workbench_priority(p_domain, p_user_id, p_limit, p_lane, p_force_content)
 Retourne les items scorés avec :
 - `tier` (0-10 selon la pyramide)
 - `base_score`, `severity_bonus`, `aging_bonus`, `gate_malus`
-- `total_score` = base + severity + aging - gate
+- `total_score` = base + severity + aging - gate (remplacé par `spiral_score` dans le contexte Breathing Spiral)
 - `target_selector`, `target_operation` (coordonnées de ciblage)
 - `lane` (tech / content)
 - `priority_tag` (priority / recommended / optional)
