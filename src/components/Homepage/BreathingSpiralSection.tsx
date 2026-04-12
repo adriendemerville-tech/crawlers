@@ -293,9 +293,9 @@ export const BreathingSpiralSection = memo(() => {
             >
               <p className="text-sm text-foreground font-medium">
                 {t3(language,
-                  '🌀 Aucun autre outil SEO ne fait ça. Les plateformes classiques vous donnent un score et une liste. La Breathing Spiral transforme ces données en un organisme vivant qui s\'adapte à votre réalité business.',
-                  '🌀 No other SEO tool does this. Traditional platforms give you a score and a list. The Breathing Spiral transforms that data into a living organism that adapts to your business reality.',
-                  '🌀 Ninguna otra herramienta SEO hace esto. Las plataformas clásicas le dan un score y una lista. La Breathing Spiral transforma esos datos en un organismo vivo que se adapta a su realidad empresarial.'
+                  '🌀 Les plateformes classiques vous donnent un score et une liste de tâches. La Breathing Spiral transforme ces données en un organisme vivant qui s\'adapte à votre réalité business, et gère en direct la transformation de vos pages.',
+                  '🌀 Traditional platforms give you a score and a task list. The Breathing Spiral transforms that data into a living organism that adapts to your business reality, and manages your page transformations in real-time.',
+                  '🌀 Las plataformas clásicas le dan un score y una lista de tareas. La Breathing Spiral transforma esos datos en un organismo vivo que se adapta a su realidad empresarial, y gestiona en directo la transformación de sus páginas.'
                 )}
               </p>
             </motion.div>
