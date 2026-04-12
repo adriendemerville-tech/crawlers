@@ -768,6 +768,11 @@ const Index = () => {
           <IdentityFirstSection />
         </Suspense>
 
+        {/* Breathing Spiral — Innovation de rupture */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <BreathingSpiralSection />
+        </Suspense>
+
 
         {/* Active crawl notification banner */}
         <div className="max-w-3xl mx-auto px-4 mb-4">
