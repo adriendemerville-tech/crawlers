@@ -52,7 +52,7 @@ interface SocialPostEditorProps {
 }
 
 export const SocialPostEditor = memo(function SocialPostEditor({
-  trackedSiteId, domain, initialContent, initialTitle, initialHashtags, onSave, onPublish, onExport, saving, onContentChange, onPlatformChange
+  trackedSiteId, domain, initialContent, initialTitle, initialHashtags, selectedImageUrl, referenceImages, onSave, onPublish, onExport, saving, onContentChange, onPlatformChange, onToggleLibrary
 }: SocialPostEditorProps) {
   const [title, setTitle] = useState(initialTitle || '');
   const [linkedin, setLinkedin] = useState(initialContent?.linkedin || '');
