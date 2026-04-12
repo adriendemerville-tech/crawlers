@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import {
-  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings
+  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings, ImageIcon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
@@ -29,6 +29,7 @@ import { SocialStatsDashboard } from '@/components/Social/SocialStatsDashboard';
 import { SocialFeedColumns } from '@/components/Social/SocialFeedColumns';
 import { SocialActionPlan } from '@/components/Social/SocialActionPlan';
 import { SocialSettings } from '@/components/Social/SocialSettings';
+import { SocialImageLibrary, type LibraryImage } from '@/components/Social/SocialImageLibrary';
 import { createPost, updatePost, publishPost, exportZip, fetchPosts, type SocialPost } from '@/lib/api/socialHub';
 import { useNavigate } from 'react-router-dom';
 
@@ -145,6 +146,9 @@ const SocialHub = memo(function SocialHub() {
   const [liveHashtags, setLiveHashtags] = useState<string[]>([]);
   const [monthlyUsage, setMonthlyUsage] = useState<number>(0);
   const [usageLoaded, setUsageLoaded] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(undefined);
+  const [referenceImages, setReferenceImages] = useState<LibraryImage[]>([]);
 
   const isPro = isAgencyPro || planType === 'agency_premium' || isAdmin;
   const isOverFreeLimit = !isPro && monthlyUsage >= FREE_MONTHLY_LIMIT;
@@ -332,7 +336,7 @@ const SocialHub = memo(function SocialHub() {
 
             {/* EDITOR TAB */}
             <TabsContent value="editor">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className={`grid gap-6 ${showLibrary ? 'grid-cols-1 lg:grid-cols-[1fr_1fr_280px]' : 'grid-cols-1 lg:grid-cols-2'}`}>
                 <SocialPostEditor
                   trackedSiteId={selectedSiteId}
                   domain={selectedDomain}
@@ -343,6 +347,8 @@ const SocialHub = memo(function SocialHub() {
                   } : undefined}
                   initialTitle={currentPost?.title || ''}
                   initialHashtags={currentPost?.hashtags || []}
+                  selectedImageUrl={selectedImageUrl}
+                  referenceImages={referenceImages}
                   onSave={handleSave}
                   onPublish={handlePublish}
                   onExport={handleExport}
@@ -352,6 +358,7 @@ const SocialHub = memo(function SocialHub() {
                     setLiveContent(prev => ({ ...prev, [platform]: content }));
                     setLiveHashtags(hashtags);
                   }}
+                  onToggleLibrary={() => setShowLibrary(prev => !prev)}
                 />
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
@@ -366,10 +373,28 @@ const SocialHub = memo(function SocialHub() {
                       previewPlatform === 'facebook' ? (currentPost?.content_facebook || '') :
                       (currentPost?.content_instagram || '')
                     )}
+                    imageUrl={selectedImageUrl}
                     hashtags={liveHashtags.length > 0 ? liveHashtags : currentPost?.hashtags}
                     accountName={selectedDomain}
                   />
                 </div>
+
+                {/* Image Library Panel */}
+                {showLibrary && (
+                  <div className="border border-border rounded-lg overflow-hidden h-[600px]">
+                    <SocialImageLibrary
+                      trackedSiteId={selectedSiteId}
+                      onInsertImage={(url) => setSelectedImageUrl(url)}
+                      onUseAsReference={(img) => {
+                        setReferenceImages(prev => {
+                          const exists = prev.find(r => r.path === img.path);
+                          if (exists) return prev.filter(r => r.path !== img.path);
+                          return [...prev, img];
+                        });
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </TabsContent>
 

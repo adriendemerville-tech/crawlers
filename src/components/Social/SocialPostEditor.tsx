@@ -1,6 +1,6 @@
 /**
  * Social Post Editor — Rich text editor with emoji, @mentions, hashtags,
- * character counter, smart link, and translation.
+ * character counter, smart link, translation, and image management.
  */
 import { memo, useState, useCallback, useRef } from 'react';
 import { GoogleDriveFolderPicker } from './GoogleDriveFolderPicker';
@@ -13,10 +13,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
-  Smile, AtSign, Hash, Link2, Globe, Sparkles, Send, Download, Save, Loader2, Languages, Wand2, HardDrive
+  Smile, AtSign, Hash, Link2, Globe, Sparkles, Send, Download, Save, Loader2, Languages, Wand2, HardDrive, ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateContent, resolveSmartLink, shortenLink, translatePost } from '@/lib/api/socialHub';
+import { type LibraryImage } from './SocialImageLibrary';
 
 const EMOJI_LIST = ['🚀', '✅', '💡', '🔥', '📈', '💪', '🎯', '⚡', '🏆', '✨', '👉', '📊', '🔑', '💰', '🌟', '❤️', '👏', '🙌', '📢', '🤝', '🧠', '🎉', '💎', '📌', '🔔'];
 
@@ -28,6 +29,10 @@ interface SocialPostEditorProps {
   initialContent?: { linkedin?: string; facebook?: string; instagram?: string };
   initialTitle?: string;
   initialHashtags?: string[];
+  /** Currently selected image URL for the post */
+  selectedImageUrl?: string;
+  /** Reference images selected from library for AI prompt */
+  referenceImages?: LibraryImage[];
   onSave: (data: {
     title: string;
     content_linkedin: string;
@@ -36,16 +41,18 @@ interface SocialPostEditorProps {
     hashtags: string[];
     smart_link_url?: string;
     smart_link_short?: string;
+    image_url?: string;
   }) => void;
   onPublish?: () => void;
   onExport?: () => void;
   saving?: boolean;
   onContentChange?: (platform: string, content: string, hashtags: string[]) => void;
   onPlatformChange?: (platform: string) => void;
+  onToggleLibrary?: () => void;
 }
 
 export const SocialPostEditor = memo(function SocialPostEditor({
-  trackedSiteId, domain, initialContent, initialTitle, initialHashtags, onSave, onPublish, onExport, saving, onContentChange, onPlatformChange
+  trackedSiteId, domain, initialContent, initialTitle, initialHashtags, selectedImageUrl, referenceImages, onSave, onPublish, onExport, saving, onContentChange, onPlatformChange, onToggleLibrary
 }: SocialPostEditorProps) {
   const [title, setTitle] = useState(initialTitle || '');
   const [linkedin, setLinkedin] = useState(initialContent?.linkedin || '');
@@ -83,7 +90,16 @@ export const SocialPostEditor = memo(function SocialPostEditor({
     if (!title.trim()) { toast.error('Entrez un sujet / titre'); return; }
     setGenerating(true);
     try {
-      const result = await generateContent({ topic: title, tracked_site_id: trackedSiteId, platforms: ['linkedin', 'facebook', 'instagram'] });
+      // Include reference image names in custom instructions if any
+      const refInstructions = referenceImages?.length
+        ? `L'utilisateur a sélectionné ces images comme références visuelles : ${referenceImages.map((r, i) => `${i + 1}. "${r.name}"`).join(', ')}. Adapte le contenu pour accompagner ces visuels.`
+        : undefined;
+      const result = await generateContent({
+        topic: title,
+        tracked_site_id: trackedSiteId,
+        platforms: ['linkedin', 'facebook', 'instagram'],
+        custom_instructions: refInstructions,
+      });
       if (result.content_linkedin) setLinkedin(result.content_linkedin);
       if (result.content_facebook) setFacebook(result.content_facebook);
       if (result.content_instagram) setInstagram(result.content_instagram);
@@ -125,7 +141,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
   };
 
   const handleSave = () => {
-    onSave({ title, content_linkedin: linkedin, content_facebook: facebook, content_instagram: instagram, hashtags, smart_link_url: smartLink?.url, smart_link_short: smartLink?.short });
+    onSave({ title, content_linkedin: linkedin, content_facebook: facebook, content_instagram: instagram, hashtags, smart_link_url: smartLink?.url, smart_link_short: smartLink?.short, image_url: selectedImageUrl });
   };
 
   return (
@@ -193,7 +209,36 @@ export const SocialPostEditor = memo(function SocialPostEditor({
                     <button onClick={() => handleTranslate('es')} className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded">🇪🇸 Español</button>
                   </PopoverContent>
                 </Popover>
+
+                {/* Image library toggle */}
+                {onToggleLibrary && (
+                  <Button variant="ghost" size="sm" className="h-8 px-2 gap-1" onClick={onToggleLibrary}>
+                    <ImageIcon className="h-4 w-4" />
+                    <span className="text-xs hidden sm:inline">Images</span>
+                    {referenceImages && referenceImages.length > 0 && (
+                      <Badge variant="secondary" className="h-4 px-1 text-[9px] ml-0.5">{referenceImages.length} ref</Badge>
+                    )}
+                  </Button>
+                )}
               </div>
+
+              {/* Selected image preview */}
+              {selectedImageUrl && (
+                <div className="mb-2 rounded-lg overflow-hidden border border-border relative">
+                  <img src={selectedImageUrl} alt="Image du post" className="w-full h-32 object-cover" />
+                  <Badge variant="secondary" className="absolute top-2 left-2 text-[9px]">Image du post</Badge>
+                </div>
+              )}
+
+              {/* Reference images indicator */}
+              {referenceImages && referenceImages.length > 0 && (
+                <div className="mb-2 flex items-center gap-1.5 p-2 bg-muted/50 rounded-md">
+                  <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="text-[10px] text-muted-foreground">
+                    Références IA : {referenceImages.map(r => r.name).join(', ')}
+                  </span>
+                </div>
+              )}
 
               {/* Textarea */}
               <Textarea
