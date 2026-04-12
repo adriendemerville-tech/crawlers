@@ -167,6 +167,7 @@ const App = () => (
                           <Route path="/blog" element={<Blog />} />
                           <Route path="/blog/:slug" element={<ArticlePage />} />
                           <Route path="/landing/:slug" element={<LandingPage />} />
+                          <Route path="/breathing-spiral" element={<BreathingSpiral />} />
                           
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
                           <Route path="/comparatif-claude-vs-crawlers" element={<ComparatifClaudeVsCrawlers />} />
