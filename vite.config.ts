@@ -115,12 +115,12 @@ export default defineConfig(({ mode }) => ({
     modulePreloadPlugin(),
     headersPlugin(),
     // Bundle audit: generates stats.html to visualize chunk sizes
-    mode === "production" && visualizer({
+    mode === "production" && (visualizer({
       filename: 'dist/stats.html',
       gzipSize: true,
       brotliSize: true,
       template: 'treemap',
-    }),
+    }) as unknown as Plugin),
   ].filter(Boolean),
   resolve: {
     alias: {
