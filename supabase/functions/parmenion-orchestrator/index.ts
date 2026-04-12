@@ -1210,50 +1210,72 @@ ${templateBlock}`;
 }
 
 async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], model = 'google/gemini-2.5-flash'): Promise<any[]> {
-  try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-        tools,
-        tool_choice: 'required',
-      }),
-      signal: AbortSignal.timeout(60_000),
-    });
-
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('[Parménion] LLM tool call error:', response.status, err.slice(0, 300));
-      return [];
-    }
-
-    const result = await response.json();
-    const message = result.choices?.[0]?.message;
-    const toolCalls = message?.tool_calls || [];
+  // Retry strategy: try primary model, then fallback model
+  const FALLBACK_MODELS = [model, 'google/gemini-2.5-flash'];
+  // De-duplicate if primary is already flash
+  const modelsToTry = [...new Set(FALLBACK_MODELS)];
+  
+  for (let attempt = 0; attempt < modelsToTry.length; attempt++) {
+    const currentModel = modelsToTry[attempt];
+    const isRetry = attempt > 0;
+    const timeout = currentModel.includes('pro') ? 120_000 : 90_000;
     
-    if (toolCalls.length === 0) {
-      // Log when LLM responds with text instead of tool calls
-      const textContent = message?.content || '';
-      console.warn(`[Parménion] ⚠️ LLM returned 0 tool calls (model: ${model}). Text response: ${textContent.slice(0, 200)}${textContent.length > 200 ? '…' : ''}`);
-      console.warn(`[Parménion] finish_reason: ${result.choices?.[0]?.finish_reason}, tools count: ${tools.length}`);
+    try {
+      if (isRetry) {
+        console.log(`[Parménion] 🔄 Retry ${attempt}/${modelsToTry.length - 1} with model ${currentModel}`);
+      }
+      
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: currentModel,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: isRetry ? 0.4 : 0.2,
+          tools,
+          tool_choice: 'required',
+        }),
+        signal: AbortSignal.timeout(timeout),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        console.error(`[Parménion] LLM tool call error (${currentModel}):`, response.status, err.slice(0, 300));
+        continue; // try next model
+      }
+
+      const result = await response.json();
+      const message = result.choices?.[0]?.message;
+      const toolCalls = message?.tool_calls || [];
+      
+      if (toolCalls.length === 0) {
+        const textContent = message?.content || '';
+        console.warn(`[Parménion] ⚠️ LLM returned 0 tool calls (model: ${currentModel}, attempt: ${attempt + 1}). Text: ${textContent.slice(0, 200)}${textContent.length > 200 ? '…' : ''}`);
+        console.warn(`[Parménion] finish_reason: ${result.choices?.[0]?.finish_reason}, tools count: ${tools.length}`);
+        continue; // try next model
+      }
+      
+      if (isRetry) {
+        console.log(`[Parménion] ✅ Retry succeeded with ${currentModel}: ${toolCalls.length} tool calls`);
+      }
+      
+      return toolCalls.map((tc: any) => ({
+        name: tc.function.name,
+        arguments: typeof tc.function.arguments === 'string' 
+          ? JSON.parse(tc.function.arguments) 
+          : tc.function.arguments,
+      }));
+    } catch (e) {
+      console.error(`[Parménion] LLM tool call failed (${currentModel}, attempt ${attempt + 1}):`, e);
+      continue; // try next model
     }
-    
-    return toolCalls.map((tc: any) => ({
-      name: tc.function.name,
-      arguments: typeof tc.function.arguments === 'string' 
-        ? JSON.parse(tc.function.arguments) 
-        : tc.function.arguments,
-    }));
-  } catch (e) {
-    console.error('[Parménion] LLM tool call failed:', e);
-    return [];
   }
+  
+  console.error(`[Parménion] ❌ All ${modelsToTry.length} LLM attempts failed for tool calls`);
+  return [];
 }
 
 // ═══════════════════════════════════════════════════════════════
