@@ -146,6 +146,9 @@ const SocialHub = memo(function SocialHub() {
   const [liveHashtags, setLiveHashtags] = useState<string[]>([]);
   const [monthlyUsage, setMonthlyUsage] = useState<number>(0);
   const [usageLoaded, setUsageLoaded] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(undefined);
+  const [referenceImages, setReferenceImages] = useState<LibraryImage[]>([]);
 
   const isPro = isAgencyPro || planType === 'agency_premium' || isAdmin;
   const isOverFreeLimit = !isPro && monthlyUsage >= FREE_MONTHLY_LIMIT;
