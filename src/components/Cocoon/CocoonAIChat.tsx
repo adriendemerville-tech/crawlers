@@ -1793,43 +1793,47 @@ Termina con un resumen ejecutivo y próximos pasos.`,
 
               return (
               <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-                <div
-                  className={`relative max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed group ${
-                    isUser
-                      ? 'bg-[#fbbf24]/15 text-white border border-[#fbbf24]/20 rounded-br-md'
-                      : 'bg-white/5 text-white/80 border border-white/10 rounded-bl-md'
-                  }`}
-                  style={{ fontSize: `${fontSize}px` }}
-                >
-                  {isAssistant ? (
-                    <div className="prose prose-invert max-w-none
-                      [&_p]:mb-3 [&_p]:mt-1 [&_p:last-child]:mb-0
-                      [&_ul]:mb-3 [&_ul]:mt-1 [&_ul]:pl-4
-                      [&_ol]:mb-3 [&_ol]:mt-1 [&_ol]:pl-4
-                      [&_li]:mb-1.5 [&_li]:leading-relaxed
-                      [&_h1]:text-[1.15em] [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2
-                      [&_h2]:text-[1.1em] [&_h2]:font-semibold [&_h2]:mt-3.5 [&_h2]:mb-2
-                      [&_h3]:text-[1.05em] [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1.5
-                      [&_strong]:text-white [&_strong]:font-semibold
-                      [&_code]:text-[0.85em] [&_code]:bg-white/10 [&_code]:px-1 [&_code]:rounded
-                      [&_hr]:my-3 [&_hr]:border-white/10
-                      [&_blockquote]:border-l-2 [&_blockquote]:border-violet-400/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-white/60"
-                      style={{ fontSize: 'inherit' }}
-                    >
-                      <ReactMarkdown
-                        components={{
-                          p: ({ children }) => <p>{typeof children === 'string' ? injectLexiconLinks(children) : children}</p>,
-                          li: ({ children }) => <li>{typeof children === 'string' ? injectLexiconLinks(children) : children}</li>,
-                          strong: ({ children }) => <strong>{typeof children === 'string' ? injectLexiconLinks(children as string) : children}</strong>,
-                        } as Components}
+                <div className="group flex flex-col items-end">
+                  <div
+                    className={`relative max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed ${
+                      isUser
+                        ? 'bg-[#fbbf24]/15 text-white border border-[#fbbf24]/20 rounded-br-md'
+                        : 'bg-white/5 text-white/80 border border-white/10 rounded-bl-md'
+                    }`}
+                    style={{ fontSize: `${fontSize}px` }}
+                  >
+                    {isAssistant ? (
+                      <div className="prose prose-invert max-w-none
+                        [&_p]:mb-3 [&_p]:mt-1 [&_p:last-child]:mb-0
+                        [&_ul]:mb-3 [&_ul]:mt-1 [&_ul]:pl-4
+                        [&_ol]:mb-3 [&_ol]:mt-1 [&_ol]:pl-4
+                        [&_li]:mb-1.5 [&_li]:leading-relaxed
+                        [&_h1]:text-[1.15em] [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2
+                        [&_h2]:text-[1.1em] [&_h2]:font-semibold [&_h2]:mt-3.5 [&_h2]:mb-2
+                        [&_h3]:text-[1.05em] [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1.5
+                        [&_strong]:text-white [&_strong]:font-semibold
+                        [&_code]:text-[0.85em] [&_code]:bg-white/10 [&_code]:px-1 [&_code]:rounded
+                        [&_hr]:my-3 [&_hr]:border-white/10
+                        [&_blockquote]:border-l-2 [&_blockquote]:border-violet-400/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-white/60"
+                        style={{ fontSize: 'inherit' }}
                       >
-                        {msg.content}
-                      </ReactMarkdown>
-                    </div>
-                  ) : displayContent}
-                  {/* Copy button for assistant messages */}
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => <p>{typeof children === 'string' ? injectLexiconLinks(children) : children}</p>,
+                            li: ({ children }) => <li>{typeof children === 'string' ? injectLexiconLinks(children) : children}</li>,
+                            strong: ({ children }) => <strong>{typeof children === 'string' ? injectLexiconLinks(children as string) : children}</strong>,
+                          } as Components}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    ) : displayContent}
+                  </div>
+                  {/* Copy button below bottom-right corner of the bubble */}
                   {isAssistant && !isLoading && (
-                    <CopyButton text={msg.content} />
+                    <div className="mt-0.5 mr-1">
+                      <CopyButton text={msg.content} />
+                    </div>
                   )}
                 </div>
               </div>
