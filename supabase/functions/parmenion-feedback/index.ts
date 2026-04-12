@@ -198,6 +198,8 @@ try {
       results.push({
         id: decision.id,
         domain: decision.domain,
+        spiral_score_at_decision: decision.spiral_score_at_decision,
+        reward_signal: rewardSignal,
         impact_predicted: impactPredicted,
         impact_actual: impactActual,
         risk_predicted: decision.risk_predicted,
