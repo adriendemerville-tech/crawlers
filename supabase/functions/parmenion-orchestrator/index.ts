@@ -1210,19 +1210,25 @@ ${templateBlock}`;
 }
 
 async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], model = 'google/gemini-2.5-flash'): Promise<any[]> {
-  // Retry strategy: try primary model, then fallback model
-  const FALLBACK_MODELS = [model, 'google/gemini-2.5-flash'];
-  // De-duplicate if primary is already flash
-  const modelsToTry = [...new Set(FALLBACK_MODELS)];
+  // Retry strategy: 
+  // 1. Primary model with tool_choice=required
+  // 2. Same model with tool_choice=auto (some models respond better)
+  // 3. Fallback model with tool_choice=required
+  const attempts: Array<{ model: string; toolChoice: string; temp: number }> = [
+    { model, toolChoice: 'required', temp: 0.2 },
+    { model, toolChoice: 'auto', temp: 0.3 },
+  ];
+  if (model !== 'google/gemini-2.5-flash') {
+    attempts.push({ model: 'google/gemini-2.5-flash', toolChoice: 'required', temp: 0.3 });
+  }
   
-  for (let attempt = 0; attempt < modelsToTry.length; attempt++) {
-    const currentModel = modelsToTry[attempt];
-    const isRetry = attempt > 0;
+  for (let i = 0; i < attempts.length; i++) {
+    const { model: currentModel, toolChoice, temp } = attempts[i];
     const timeout = currentModel.includes('pro') ? 120_000 : 90_000;
     
     try {
-      if (isRetry) {
-        console.log(`[Parménion] 🔄 Retry ${attempt}/${modelsToTry.length - 1} with model ${currentModel}`);
+      if (i > 0) {
+        console.log(`[Parménion] 🔄 Retry ${i}/${attempts.length - 1}: model=${currentModel}, tool_choice=${toolChoice}`);
       }
       
       const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -1234,17 +1240,17 @@ async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], mo
         body: JSON.stringify({
           model: currentModel,
           messages: [{ role: 'user', content: prompt }],
-          temperature: isRetry ? 0.4 : 0.2,
+          temperature: temp,
           tools,
-          tool_choice: 'required',
+          tool_choice: toolChoice,
         }),
         signal: AbortSignal.timeout(timeout),
       });
 
       if (!response.ok) {
         const err = await response.text();
-        console.error(`[Parménion] LLM tool call error (${currentModel}):`, response.status, err.slice(0, 300));
-        continue; // try next model
+        console.error(`[Parménion] LLM error (${currentModel}, ${toolChoice}):`, response.status, err.slice(0, 300));
+        continue;
       }
 
       const result = await response.json();
@@ -1253,13 +1259,12 @@ async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], mo
       
       if (toolCalls.length === 0) {
         const textContent = message?.content || '';
-        console.warn(`[Parménion] ⚠️ LLM returned 0 tool calls (model: ${currentModel}, attempt: ${attempt + 1}). Text: ${textContent.slice(0, 200)}${textContent.length > 200 ? '…' : ''}`);
-        console.warn(`[Parménion] finish_reason: ${result.choices?.[0]?.finish_reason}, tools count: ${tools.length}`);
-        continue; // try next model
+        console.warn(`[Parménion] ⚠️ 0 tool calls (model: ${currentModel}, choice: ${toolChoice}, attempt: ${i + 1}). finish_reason: ${result.choices?.[0]?.finish_reason}. Text: ${textContent.slice(0, 200)}${textContent.length > 200 ? '…' : ''}`);
+        continue;
       }
       
-      if (isRetry) {
-        console.log(`[Parménion] ✅ Retry succeeded with ${currentModel}: ${toolCalls.length} tool calls`);
+      if (i > 0) {
+        console.log(`[Parménion] ✅ Retry ${i} succeeded (${currentModel}, ${toolChoice}): ${toolCalls.length} tool calls`);
       }
       
       return toolCalls.map((tc: any) => ({
@@ -1269,12 +1274,12 @@ async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], mo
           : tc.function.arguments,
       }));
     } catch (e) {
-      console.error(`[Parménion] LLM tool call failed (${currentModel}, attempt ${attempt + 1}):`, e);
-      continue; // try next model
+      console.error(`[Parménion] LLM failed (${currentModel}, attempt ${i + 1}):`, e);
+      continue;
     }
   }
   
-  console.error(`[Parménion] ❌ All ${modelsToTry.length} LLM attempts failed for tool calls`);
+  console.error(`[Parménion] ❌ All ${attempts.length} LLM attempts failed for tool calls`);
   return [];
 }
 
