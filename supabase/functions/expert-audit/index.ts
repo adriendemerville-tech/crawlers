@@ -9,6 +9,7 @@ import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releas
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { writeIdentity } from '../_shared/identityGateway.ts'
+import { classifyAndAssignRings } from '../_shared/spiralClassifier.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 // Mapping des recommandations vers les types de fix pour le générateur de code
@@ -2853,6 +2854,14 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
               p_tracked_site_id: tsRow?.id || null,
             });
             console.log(`[expert-audit] ✅ keyword_universe: ${kwPayload.length} keywords upserted`);
+
+            // ── Spiral ring classification (fire-and-forget) ──
+            classifyAndAssignRings(
+              domain,
+              kwUser.id,
+              tsRow?.id || null,
+              kwPayload.map(kw => ({ keyword: kw.keyword, target_url: kw.target_url })),
+            ).catch(e => console.warn('[expert-audit] spiral classification failed (non-fatal):', e));
           }
         } catch (e) {
           console.warn('[expert-audit] keyword_universe upsert failed (non-fatal):', e);
