@@ -49,6 +49,7 @@ const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductS
 const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
 const ClaudeVsCrawlersSection = lazy(() => import('@/components/Homepage/ClaudeVsCrawlersSection').then(m => ({ default: m.ClaudeVsCrawlersSection })));
 const LogAnalysisSection = lazy(() => import('@/components/Homepage/LogAnalysisSection').then(m => ({ default: m.LogAnalysisSection })));
+const BreathingSpiralSection = lazy(() => import('@/components/Homepage/BreathingSpiralSection').then(m => ({ default: m.BreathingSpiralSection })));
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
