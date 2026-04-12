@@ -315,7 +315,7 @@ try {
         // ═══ Get site domain ═══
         const { data: site } = await supabase
           .from('tracked_sites')
-          .select('domain')
+          .select('domain, site_name, market_sector, products_services, target_audience, entity_type, commercial_model')
           .eq('id', config.tracked_site_id)
           .single();
 
