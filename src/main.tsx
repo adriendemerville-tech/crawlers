@@ -8,6 +8,11 @@ initGlobalErrorListener();
 
 createRoot(document.getElementById("root")!).render(<App />);
 
+// Load non-critical display fonts after first paint
+requestIdleCallback(() => {
+  import('./fonts-deferred.css');
+}, { timeout: 2000 });
+
 // Signal to the critical CSS that React has mounted — reveal body
 if (typeof window.__markReady === 'function') {
   window.__markReady();
