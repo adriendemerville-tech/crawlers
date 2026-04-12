@@ -336,7 +336,7 @@ const SocialHub = memo(function SocialHub() {
 
             {/* EDITOR TAB */}
             <TabsContent value="editor">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className={`grid gap-6 ${showLibrary ? 'grid-cols-1 lg:grid-cols-[1fr_1fr_280px]' : 'grid-cols-1 lg:grid-cols-2'}`}>
                 <SocialPostEditor
                   trackedSiteId={selectedSiteId}
                   domain={selectedDomain}
@@ -347,6 +347,8 @@ const SocialHub = memo(function SocialHub() {
                   } : undefined}
                   initialTitle={currentPost?.title || ''}
                   initialHashtags={currentPost?.hashtags || []}
+                  selectedImageUrl={selectedImageUrl}
+                  referenceImages={referenceImages}
                   onSave={handleSave}
                   onPublish={handlePublish}
                   onExport={handleExport}
@@ -356,6 +358,7 @@ const SocialHub = memo(function SocialHub() {
                     setLiveContent(prev => ({ ...prev, [platform]: content }));
                     setLiveHashtags(hashtags);
                   }}
+                  onToggleLibrary={() => setShowLibrary(prev => !prev)}
                 />
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
@@ -370,10 +373,28 @@ const SocialHub = memo(function SocialHub() {
                       previewPlatform === 'facebook' ? (currentPost?.content_facebook || '') :
                       (currentPost?.content_instagram || '')
                     )}
+                    imageUrl={selectedImageUrl}
                     hashtags={liveHashtags.length > 0 ? liveHashtags : currentPost?.hashtags}
                     accountName={selectedDomain}
                   />
                 </div>
+
+                {/* Image Library Panel */}
+                {showLibrary && (
+                  <div className="border border-border rounded-lg overflow-hidden h-[600px]">
+                    <SocialImageLibrary
+                      trackedSiteId={selectedSiteId}
+                      onInsertImage={(url) => setSelectedImageUrl(url)}
+                      onUseAsReference={(img) => {
+                        setReferenceImages(prev => {
+                          const exists = prev.find(r => r.path === img.path);
+                          if (exists) return prev.filter(r => r.path !== img.path);
+                          return [...prev, img];
+                        });
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </TabsContent>
 
