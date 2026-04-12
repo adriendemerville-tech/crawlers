@@ -1,5 +1,5 @@
 /**
- * compute-spiral-signals — Daily pre-computation of dynamic spiral scores
+ * compute-spiral-signals — Breathing Spiral: pre-computation of dynamic spiral scores
  * 
  * Cron: every 6 hours (or triggered post-event)
  * 
