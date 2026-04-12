@@ -929,6 +929,45 @@ try {
 
                     const funcResult = await funcResponse.json().catch(() => ({}));
                     
+                    // ═══ FIX #6: SEMANTIC GATE — verify content aligns with site identity ═══
+                    if (funcResponse.ok && inferredAction === 'create-post' && cmsAction.body && site.market_sector) {
+                      const contentText = `${cmsAction.body.title || ''} ${cmsAction.body.excerpt || ''} ${(cmsAction.body.body || '').slice(0, 500)}`.toLowerCase();
+                      const identityTerms = [
+                        site.market_sector,
+                        site.products_services,
+                        site.target_audience,
+                        site.site_name,
+                      ].filter(Boolean).join(' ').toLowerCase().split(/[\s,;]+/).filter(t => t.length > 3);
+                      
+                      // Check if at least 20% of identity terms appear in content
+                      const matchedTerms = identityTerms.filter(term => contentText.includes(term));
+                      const identityOverlap = identityTerms.length > 0 ? matchedTerms.length / identityTerms.length : 1;
+                      
+                      if (identityOverlap < 0.15) {
+                        console.error(`[AutopilotEngine] 🚫 SEMANTIC GATE BLOCKED: Content for "${cmsAction.body.title}" has only ${Math.round(identityOverlap * 100)}% identity overlap (need ≥15%). Matched: [${matchedTerms.join(', ')}] / Total: [${identityTerms.slice(0, 10).join(', ')}]`);
+                        // Delete the just-created post to prevent hallucinated content from staying live
+                        const slugToDelete = cmsAction.body.slug || funcResult?.result?.slug;
+                        if (slugToDelete) {
+                          await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'delete-post', slug: slugToDelete }),
+                          }).catch(() => {});
+                          console.log(`[AutopilotEngine] 🗑️ Deleted hallucinated post: ${slugToDelete}`);
+                        }
+                        executionResults.push({
+                          function: 'iktracker-actions',
+                          cms_action: 'create-post',
+                          target: slugToDelete || 'unknown',
+                          status: 'rejected',
+                          reason: `Semantic gate: ${Math.round(identityOverlap * 100)}% identity overlap (min 15%)`,
+                        });
+                        continue; // Skip image generation and success reporting
+                      } else {
+                        console.log(`[AutopilotEngine] ✅ Semantic gate passed: ${Math.round(identityOverlap * 100)}% identity overlap for "${cmsAction.body.title}"`);
+                      }
+                    }
+
                     // FIX #5: Generate image AFTER successful CMS call (dedup already done server-side)
                     let imageGenerated = false;
                     if (funcResponse.ok && inferredAction === 'create-post' && cmsAction.body && !cmsAction.body.image_url) {
