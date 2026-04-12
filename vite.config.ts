@@ -2,6 +2,7 @@ import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { visualizer } from "rollup-plugin-visualizer";
 import fs from "fs";
 
 // Plugin to make CSS non-blocking since critical CSS is already inlined in index.html
@@ -113,6 +114,13 @@ export default defineConfig(({ mode }) => ({
     asyncCssPlugin(),
     modulePreloadPlugin(),
     headersPlugin(),
+    // Bundle audit: generates stats.html to visualize chunk sizes
+    mode === "production" && visualizer({
+      filename: 'dist/stats.html',
+      gzipSize: true,
+      brotliSize: true,
+      template: 'treemap',
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
