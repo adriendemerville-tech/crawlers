@@ -90,7 +90,16 @@ export const SocialPostEditor = memo(function SocialPostEditor({
     if (!title.trim()) { toast.error('Entrez un sujet / titre'); return; }
     setGenerating(true);
     try {
-      const result = await generateContent({ topic: title, tracked_site_id: trackedSiteId, platforms: ['linkedin', 'facebook', 'instagram'] });
+      // Include reference image names in custom instructions if any
+      const refInstructions = referenceImages?.length
+        ? `L'utilisateur a sélectionné ces images comme références visuelles : ${referenceImages.map((r, i) => `${i + 1}. "${r.name}"`).join(', ')}. Adapte le contenu pour accompagner ces visuels.`
+        : undefined;
+      const result = await generateContent({
+        topic: title,
+        tracked_site_id: trackedSiteId,
+        platforms: ['linkedin', 'facebook', 'instagram'],
+        custom_instructions: refInstructions,
+      });
       if (result.content_linkedin) setLinkedin(result.content_linkedin);
       if (result.content_facebook) setFacebook(result.content_facebook);
       if (result.content_instagram) setInstagram(result.content_instagram);
