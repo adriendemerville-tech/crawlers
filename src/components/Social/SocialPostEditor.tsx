@@ -209,7 +209,36 @@ export const SocialPostEditor = memo(function SocialPostEditor({
                     <button onClick={() => handleTranslate('es')} className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded">🇪🇸 Español</button>
                   </PopoverContent>
                 </Popover>
+
+                {/* Image library toggle */}
+                {onToggleLibrary && (
+                  <Button variant="ghost" size="sm" className="h-8 px-2 gap-1" onClick={onToggleLibrary}>
+                    <ImageIcon className="h-4 w-4" />
+                    <span className="text-xs hidden sm:inline">Images</span>
+                    {referenceImages && referenceImages.length > 0 && (
+                      <Badge variant="secondary" className="h-4 px-1 text-[9px] ml-0.5">{referenceImages.length} ref</Badge>
+                    )}
+                  </Button>
+                )}
               </div>
+
+              {/* Selected image preview */}
+              {selectedImageUrl && (
+                <div className="mb-2 rounded-lg overflow-hidden border border-border relative">
+                  <img src={selectedImageUrl} alt="Image du post" className="w-full h-32 object-cover" />
+                  <Badge variant="secondary" className="absolute top-2 left-2 text-[9px]">Image du post</Badge>
+                </div>
+              )}
+
+              {/* Reference images indicator */}
+              {referenceImages && referenceImages.length > 0 && (
+                <div className="mb-2 flex items-center gap-1.5 p-2 bg-muted/50 rounded-md">
+                  <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="text-[10px] text-muted-foreground">
+                    Références IA : {referenceImages.map(r => r.name).join(', ')}
+                  </span>
+                </div>
+              )}
 
               {/* Textarea */}
               <Textarea
