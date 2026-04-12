@@ -46,6 +46,36 @@ function classifyErrorCategory(predicted: string, actual: string, riskPredicted:
   return 'general_miscalibration';
 }
 
+/**
+ * Compute a formal reward signal (-100 to +100).
+ * Positive = action improved metrics; Negative = harmful/neutral despite high priority.
+ * 
+ * Components: 40% clicks, 25% position (inverted), 20% CTR, 15% impressions.
+ * Over-prioritization penalty if spiral_score was high but outcome poor.
+ */
+function computeRewardSignal(
+  clicksDelta: number,
+  ctrDelta: number,
+  impressionsDelta: number,
+  positionDelta: number,
+  spiralScoreAtDecision: number | null,
+): number {
+  const clicksReward = Math.max(-25, Math.min(25, clicksDelta * 0.5));
+  const positionReward = Math.max(-25, Math.min(25, -positionDelta * 3));
+  const ctrReward = Math.max(-25, Math.min(25, ctrDelta * 0.8));
+  const impressionsReward = Math.max(-25, Math.min(25, impressionsDelta * 0.3));
+
+  let reward = clicksReward * 0.40 + positionReward * 0.25 + ctrReward * 0.20 + impressionsReward * 0.15;
+
+  // Over-prioritization penalty
+  if (spiralScoreAtDecision && spiralScoreAtDecision > 60 && reward < -5) {
+    const overPrioPenalty = (spiralScoreAtDecision - 60) / 40 * 10;
+    reward -= overPrioPenalty;
+  }
+
+  return Math.max(-100, Math.min(100, Math.round(reward * 100) / 100));
+}
+
 Deno.serve(handleRequest(async (req) => {
 try {
     const auth = await getAuthenticatedUser(req);
