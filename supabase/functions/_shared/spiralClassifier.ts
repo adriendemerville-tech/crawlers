@@ -1,5 +1,8 @@
 /**
- * spiralClassifier — Classifies keywords into semantic rings and assigns clusters
+ * spiralClassifier — Breathing Spiral: Classifies keywords into semantic rings and assigns clusters
+ * 
+ * Part of the Breathing Spiral system — a homeostatic SEO engine that dynamically
+ * oscillates between contraction (Ring 1 consolidation) and expansion (Ring 2/3 growth).
  * 
  * Ring 1 (Core): Keywords directly matching the site's market_sector + products_services
  * Ring 2 (Adjacent): Keywords related to target_audience, use cases, or complementary topics

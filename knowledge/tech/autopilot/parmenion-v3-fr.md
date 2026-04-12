@@ -1,10 +1,10 @@
 # Memory: tech/autopilot/parmenion-v3-fr
 Updated: 2026-04-12
 
-## Parménion v3 — Orchestrateur Autopilot (post-fix 2026-04-12)
+## Parménion v3 — Orchestrateur Breathing Spiral (post-fix 2026-04-12)
 
 ### Vue d'ensemble
-Parménion (v3) est l'unique macro-orchestrateur capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise un dual-lane scoring (tech + contenu) avec budget partagé configurable.
+Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise le `spiral_score` pour prioriser les actions et un dual-lane scoring (tech + contenu) avec budget partagé configurable. La spirale se contracte ou s'expand automatiquement en fonction des 9 signaux temps réel (voir `breathing-spiral-strategy-fr.md`).
 
 ### FIX critique v3.2 (2026-04-12) — 5 corrections
 

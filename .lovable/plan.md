@@ -1,5 +1,5 @@
 
-# Plan de performance mobile — Pages Blog
+# Plan de performance mobile — Pages Blog (Breathing Spiral)
 
 ## Phase 1 : Réduire le JavaScript critique (Impact LCP & FCP majeur)
 

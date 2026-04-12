@@ -1,5 +1,5 @@
 # Memory: features/admin/sav-monitoring-fr
-Updated: 2026-04-08
+Updated: 2026-04-12
 
 Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des conversations de l'agent 'Crawler'. Il permet de suivre les indicateurs de satisfaction, les demandes d'escalade vers un rappel téléphonique et le registre des numéros de téléphone collectés (purgés sous 48h via `cleanup_expired_phone_callbacks()`). Cette interface assure le contrôle qualité des réponses générées par l'IA et la gestion des demandes de support complexes.
 
@@ -106,7 +106,7 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
   - Backlinks (8%) : pages avec autorité externe existante
   - Cannibalization (7%) : pages concurrentes sur les mêmes mots-clés
 - Top 200 pages stockées par site
-- Consommé par : Cocoon (première liste), Félix (contexte audit), Autopilote, Marina
+- Consommé par : Cocoon (première liste), Félix (contexte audit), Autopilote (Breathing Spiral), Marina
 
 ## Vérification d'Indexation (`indexation_checks`)
 - Edge Function : `check-indexation`
