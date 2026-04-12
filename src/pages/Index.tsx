@@ -13,7 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
-import matriceScreenshot from '@/assets/screenshots/crawlers.fr_matrice-audit-seo-grille-personnalisee.webp';
+// Lazy reference — avoid static import that bloats critical bundle
+const matriceScreenshot = new URL('@/assets/screenshots/crawlers.fr_matrice-audit-seo-grille-personnalisee.webp', import.meta.url).href;
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
