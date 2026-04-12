@@ -141,7 +141,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
   };
 
   const handleSave = () => {
-    onSave({ title, content_linkedin: linkedin, content_facebook: facebook, content_instagram: instagram, hashtags, smart_link_url: smartLink?.url, smart_link_short: smartLink?.short });
+    onSave({ title, content_linkedin: linkedin, content_facebook: facebook, content_instagram: instagram, hashtags, smart_link_url: smartLink?.url, smart_link_short: smartLink?.short, image_url: selectedImageUrl });
   };
 
   return (
