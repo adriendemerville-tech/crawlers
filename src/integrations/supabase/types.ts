@@ -6992,10 +6992,12 @@ export type Database = {
           is_error: boolean
           measured_at: string | null
           pipeline_phase: string | null
+          reward_signal: number | null
           risk_calibrated: number | null
           risk_iterations: number
           risk_predicted: number
           scope_reductions: number
+          spiral_score_at_decision: number | null
           status: string
           t30_clicks: number | null
           t30_ctr: number | null
@@ -7036,10 +7038,12 @@ export type Database = {
           is_error?: boolean
           measured_at?: string | null
           pipeline_phase?: string | null
+          reward_signal?: number | null
           risk_calibrated?: number | null
           risk_iterations?: number
           risk_predicted?: number
           scope_reductions?: number
+          spiral_score_at_decision?: number | null
           status?: string
           t30_clicks?: number | null
           t30_ctr?: number | null
@@ -7080,10 +7084,12 @@ export type Database = {
           is_error?: boolean
           measured_at?: string | null
           pipeline_phase?: string | null
+          reward_signal?: number | null
           risk_calibrated?: number | null
           risk_iterations?: number
           risk_predicted?: number
           scope_reductions?: number
+          spiral_score_at_decision?: number | null
           status?: string
           t30_clicks?: number | null
           t30_ctr?: number | null

@@ -62,6 +62,14 @@ Tous les agents consomment désormais `score_spiral_priority` au lieu de `score_
 - Le scoring retourne `spiral_score` (et non plus `total_score`)
 - Parménion utilise directement `score_spiral_priority` avec dual-lane (tech/content)
 
+### Boucle de rétroaction (Reward Signal)
+- **`spiral_score_at_decision`** : capturé dans `parmenion_decision_log` à chaque cycle pour tracer la priorité attribuée
+- **`reward_signal`** (-100 à +100) : calculé à T+30 par `parmenion-feedback` (cron quotidien 3h UTC)
+  - Composantes : 40% Δclicks + 25% Δposition (inversé) + 20% ΔCTR + 15% Δimpressions
+  - **Pénalité de sur-priorisation** : si `spiral_score_at_decision > 60` mais outcome négatif → malus supplémentaire
+- Ce dataset (spiral_score ↔ reward_signal) permettra à terme une régression pour affiner les 9 poids du spiral_score
+- **Phase actuelle** : collecte de données (bootstrapping empirique). Affinage automatique prévu Q4 2026
+
 ### Cycle de vie Workbench
 ```
 pending → in_progress → deployed → done (ou failed)

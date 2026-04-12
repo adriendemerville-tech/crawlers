@@ -429,6 +429,7 @@ try {
       action_payload: decision.action.payload,
       functions_called: decision.action.functions,
       status: 'planned',
+      spiral_score_at_decision: scoredWorkbenchItems[0]?.spiral_score ?? null,
     };
 
     const { data: logData, error: logError } = await supabase
