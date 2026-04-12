@@ -576,6 +576,127 @@ try {
               console.warn('[AutopilotEngine] EEAT check error:', eeatErr);
             }
 
+            // ═══ P5: SEASONAL CONTEXT BOOST — Reprioritize workbench items near seasonal peaks ═══
+            try {
+              const { data: seasonalEvents } = await supabase.rpc('get_active_seasonal_context', {
+                p_sector: site.market_sector || null,
+                p_geo: 'FR',
+              });
+
+              if (seasonalEvents && seasonalEvents.length > 0) {
+                const peakKeywords = new Set<string>();
+                for (const ev of seasonalEvents) {
+                  if (ev.is_in_peak || ev.is_in_prep) {
+                    for (const kw of (ev.peak_keywords || [])) {
+                      peakKeywords.add(kw.toLowerCase());
+                    }
+                  }
+                }
+
+                if (peakKeywords.size > 0) {
+                  // Fetch pending content workbench items and boost those matching seasonal keywords
+                  const { data: pendingItems } = await supabase
+                    .from('architect_workbench')
+                    .select('id, title, payload')
+                    .eq('domain', site.domain)
+                    .eq('user_id', config.user_id)
+                    .eq('status', 'pending')
+                    .in('finding_category', ['content_gap', 'missing_page', 'content_upgrade', 'keyword_data', 'quick_win'])
+                    .limit(50);
+
+                  let boosted = 0;
+                  for (const item of (pendingItems || [])) {
+                    const titleLower = (item.title || '').toLowerCase();
+                    const payloadKw = (item.payload as any)?.keyword?.toLowerCase() || '';
+                    const matches = [...peakKeywords].some(kw => titleLower.includes(kw) || payloadKw.includes(kw));
+                    
+                    if (matches) {
+                      const existingPayload = (item.payload || {}) as Record<string, unknown>;
+                      await supabase.from('architect_workbench').update({
+                        priority_tag: 'seasonal_boost',
+                        payload: { ...existingPayload, seasonal_roi_boost: 150, seasonal_match: true },
+                      }).eq('id', item.id);
+                      boosted++;
+                    }
+                  }
+                  if (boosted > 0) {
+                    console.log(`[AutopilotEngine] 🌸 Seasonal boost: ${boosted} items repriorized (${peakKeywords.size} peak keywords from ${seasonalEvents.length} events)`);
+                  }
+                }
+              }
+            } catch (seasonErr) {
+              console.warn('[AutopilotEngine] Seasonal boost error:', seasonErr);
+            }
+
+            // ═══ P7: ENRICH WORKBENCH ITEMS with diversified keywords from keyword_universe ═══
+            try {
+              const { data: topKeywords } = await supabase
+                .from('keyword_universe')
+                .select('keyword, opportunity_score, search_volume, intent')
+                .eq('domain', site.domain)
+                .eq('user_id', config.user_id)
+                .order('opportunity_score', { ascending: false })
+                .limit(50);
+
+              if (topKeywords && topKeywords.length > 0) {
+                // Get pending content items without target_keywords
+                const { data: unenrichedItems } = await supabase
+                  .from('architect_workbench')
+                  .select('id, title, payload')
+                  .eq('domain', site.domain)
+                  .eq('user_id', config.user_id)
+                  .eq('status', 'pending')
+                  .in('finding_category', ['content_gap', 'missing_page', 'content_upgrade', 'keyword_data', 'quick_win', 'topical_authority'])
+                  .limit(30);
+
+                // Track which keywords are already used to maximize diversity
+                const usedKeywords = new Set<string>();
+                let enriched = 0;
+
+                for (const item of (unenrichedItems || [])) {
+                  const existingPayload = (item.payload || {}) as Record<string, unknown>;
+                  if (existingPayload.target_keywords) continue; // Already enriched
+
+                  // Find 3-5 relevant keywords not yet used
+                  const titleWords = new Set((item.title || '').toLowerCase().split(/\s+/).filter(w => w.length > 3));
+                  const assignedKws: typeof topKeywords = [];
+
+                  for (const kw of topKeywords) {
+                    if (usedKeywords.has(kw.keyword)) continue;
+                    // Score relevance: keyword shares words with item title
+                    const kwWords = kw.keyword.toLowerCase().split(/\s+/);
+                    const hasOverlap = kwWords.some(w => titleWords.has(w));
+                    if (hasOverlap || assignedKws.length < 2) { // At least 2 even without overlap
+                      assignedKws.push(kw);
+                      usedKeywords.add(kw.keyword);
+                      if (assignedKws.length >= 5) break;
+                    }
+                  }
+
+                  if (assignedKws.length > 0) {
+                    await supabase.from('architect_workbench').update({
+                      payload: {
+                        ...existingPayload,
+                        target_keywords: assignedKws.map(k => k.keyword),
+                        target_keywords_detail: assignedKws.map(k => ({
+                          keyword: k.keyword,
+                          volume: k.search_volume,
+                          score: k.opportunity_score,
+                          intent: k.intent,
+                        })),
+                      },
+                    }).eq('id', item.id);
+                    enriched++;
+                  }
+                }
+                if (enriched > 0) {
+                  console.log(`[AutopilotEngine] 🔑 Keyword enrichment: ${enriched} workbench items got diversified keywords`);
+                }
+              }
+            } catch (kwErr) {
+              console.warn('[AutopilotEngine] Keyword enrichment error:', kwErr);
+            }
+
           } catch (recycleE) {
             console.warn('[AutopilotEngine] Post-diagnose processing exception:', recycleE);
           }
