@@ -29,6 +29,10 @@ interface SocialPostEditorProps {
   initialContent?: { linkedin?: string; facebook?: string; instagram?: string };
   initialTitle?: string;
   initialHashtags?: string[];
+  /** Currently selected image URL for the post */
+  selectedImageUrl?: string;
+  /** Reference images selected from library for AI prompt */
+  referenceImages?: LibraryImage[];
   onSave: (data: {
     title: string;
     content_linkedin: string;
@@ -37,12 +41,14 @@ interface SocialPostEditorProps {
     hashtags: string[];
     smart_link_url?: string;
     smart_link_short?: string;
+    image_url?: string;
   }) => void;
   onPublish?: () => void;
   onExport?: () => void;
   saving?: boolean;
   onContentChange?: (platform: string, content: string, hashtags: string[]) => void;
   onPlatformChange?: (platform: string) => void;
+  onToggleLibrary?: () => void;
 }
 
 export const SocialPostEditor = memo(function SocialPostEditor({
