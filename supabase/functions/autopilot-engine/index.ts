@@ -807,6 +807,67 @@ try {
                     });
 
                     const funcResult = await funcResponse.json().catch(() => ({}));
+                    
+                    // FIX #5: Generate image AFTER successful CMS call (dedup already done server-side)
+                    let imageGenerated = false;
+                    if (funcResponse.ok && inferredAction === 'create-post' && cmsAction.body && !cmsAction.body.image_url) {
+                      try {
+                        const articleTitle = cmsAction.body.title || '';
+                        const articleExcerpt = cmsAction.body.excerpt || cmsAction.body.meta_description || '';
+                        const imagePrompt = `Evocative visual illustration for a blog article about: ${articleTitle}. Context: ${articleExcerpt}. Do NOT include any text, title or lettering.`.slice(0, 500);
+                        
+                        console.log(`[AutopilotEngine] Generating image for article: "${articleTitle}" (post-dedup)`);
+                        
+                        const imgResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ prompt: imagePrompt, style: 'cinematic' }),
+                          signal: AbortSignal.timeout(30000),
+                        });
+
+                        if (imgResponse.ok) {
+                          const imgResult = await imgResponse.json().catch(() => null);
+                          if (imgResult?.dataUri) {
+                            const imgFileName = `parmenion/${site.domain}/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
+                            const base64Match = imgResult.dataUri.match(/^data:image\/\w+;base64,(.+)$/);
+                            
+                            if (base64Match) {
+                              const binaryStr = atob(base64Match[1]);
+                              const bytes = new Uint8Array(binaryStr.length);
+                              for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                              
+                              const { error: uploadErr } = await supabase.storage
+                                .from('image-references')
+                                .upload(imgFileName, bytes, { contentType: 'image/png', upsert: true });
+
+                              if (!uploadErr) {
+                                const { data: urlData } = supabase.storage
+                                  .from('image-references')
+                                  .getPublicUrl(imgFileName);
+                                
+                                // Update the post with the image URL
+                                const slug = cmsAction.body.slug || funcResult?.result?.slug;
+                                if (slug) {
+                                  await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
+                                    method: 'POST',
+                                    headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ action: 'update-post', slug, updates: { image_url: urlData.publicUrl } }),
+                                  }).catch(() => {});
+                                }
+                                imageGenerated = true;
+                                console.log(`[AutopilotEngine] Image uploaded for "${articleTitle}": ${urlData.publicUrl}`);
+                              }
+                            }
+                          }
+                        }
+                      } catch (imgErr) {
+                        console.warn(`[AutopilotEngine] Image generation error (non-blocking):`, imgErr);
+                      }
+                    }
+                    
                     executionResults.push({
                       function: 'iktracker-actions',
                       cms_action: cmsAction.action,
@@ -814,7 +875,7 @@ try {
                       status: funcResponse.ok ? 'success' : 'error',
                       http_status: funcResponse.status,
                       result: funcResult,
-                      image_generated: !!cmsAction.body?.image_url,
+                      image_generated: imageGenerated,
                     });
                     if (!funcResponse.ok) {
                       phaseErrors.push({ phase, function: 'iktracker-actions', severity: 'degraded', message: `CMS action ${cmsAction.action} failed: HTTP ${funcResponse.status}`, retryable: true });
