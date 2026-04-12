@@ -139,7 +139,7 @@ try {
     console.log(`[Parménion] Segmented feedback: ${JSON.stringify(actionReliability)}, conservative: ${conservativeMode}`);
 
     // ═══ PHASE 2: Gather context ═══
-    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes, siteKeywordsRes, siteInfoRes, identityCard] = await Promise.all([
+    const [diagnosticsRes, cocoonRes, errorsRes, recoRegistryRes, auditRawRes, siteKeywordsRes, siteInfoRes, identityCard, kwUniverseRes] = await Promise.all([
       supabase.from('cocoon_diagnostic_results')
         .select('diagnostic_type, scores, findings, created_at')
         .eq('tracked_site_id', tracked_site_id)
@@ -175,6 +175,12 @@ try {
         .eq('id', tracked_site_id)
         .maybeSingle(),
       getSiteContext(supabase, { trackedSiteId: tracked_site_id }),
+      // ═══ P4: Read keyword_universe SSOT for diversified keywords ═══
+      supabase.from('keyword_universe')
+        .select('keyword, search_volume, current_position, opportunity_score, intent')
+        .eq('domain', domain)
+        .order('opportunity_score', { ascending: false })
+        .limit(50),
     ]);
 
     const diagnostics = diagnosticsRes.data || [];
@@ -183,11 +189,22 @@ try {
     const pendingRecommendations = recoRegistryRes.data || [];
     const rawAuditData = auditRawRes.data || [];
 
+    // ═══ P4: Merge keyword_universe into siteKeywords (SSOT priority) ═══
     const siteKeywords: string[] = [];
+    const kwUniverseData = kwUniverseRes.data || [];
+    
+    // First: keyword_universe keywords (SSOT, highest priority)
+    for (const kw of kwUniverseData) {
+      if (kw.keyword && !siteKeywords.includes(kw.keyword)) {
+        siteKeywords.push(kw.keyword);
+      }
+    }
+    
+    // Then: legacy SERP KPI keywords (fallback)
     const serpKpis = (siteKeywordsRes as any)?.data?.result_data;
     if (serpKpis?.sample_keywords) {
       for (const kw of serpKpis.sample_keywords) {
-        if (kw.keyword) siteKeywords.push(kw.keyword);
+        if (kw.keyword && !siteKeywords.includes(kw.keyword)) siteKeywords.push(kw.keyword);
       }
     }
     const siteInfo = (siteInfoRes as any)?.data || null;
