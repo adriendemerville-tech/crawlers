@@ -136,6 +136,13 @@ try {
 
       const errorCategory = isError ? classifyErrorCategory(impactPredicted, impactActual, decision.risk_predicted) : null;
 
+      // Compute formal reward signal (-100 to +100)
+      // Positive = beneficial action, Negative = harmful or wasted effort
+      const rewardSignal = computeRewardSignal(
+        clicksDelta, ctrDelta, impressionsDelta, positionDelta,
+        decision.spiral_score_at_decision
+      );
+
       // Update the decision log
       const { error: updateError } = await supabase
         .from('parmenion_decision_log')
@@ -150,6 +157,7 @@ try {
           t30_impressions: t30Impressions,
           t30_ctr: t30Ctr,
           t30_position: t30Position,
+          reward_signal: rewardSignal,
         })
         .eq('id', decision.id);
 
