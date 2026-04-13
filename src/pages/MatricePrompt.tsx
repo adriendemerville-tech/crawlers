@@ -902,9 +902,14 @@ export default function MatricePrompt() {
               <AlertTriangle className="h-3.5 w-3.5" /> Signaler une erreur
             </Button>
             {results && results.length > 0 && (
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenReport}>
-                <FileText className="h-4 w-4" /> Rapport
-              </Button>
+              <>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExportCsv}>
+                  <FileSpreadsheet className="h-4 w-4" /> Export CSV
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenReport}>
+                  <FileText className="h-4 w-4" /> Rapport
+                </Button>
+              </>
             )}
           </div>
 
