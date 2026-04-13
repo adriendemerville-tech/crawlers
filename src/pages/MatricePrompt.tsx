@@ -1175,7 +1175,7 @@ export default function MatricePrompt() {
             if (metadata.scoringGuide.length > 0) parts.push(`${metadata.scoringGuide.length} critères de scoring`);
             if (parts.length > 0) toast.success(`Métadonnées intégrées : ${parts.join(', ')}`, { duration: 4000 });
           }
-          processImportedRows(importedRows, xlsxFileName, matriceType);
+          processImportedRows(importedRows, xlsxFileName, matriceType, detection.method);
           setXlsxWorkbookRef(null);
           if (identityCard?.brandUrl && !url.trim()) {
             setUrl(identityCard.brandUrl);
