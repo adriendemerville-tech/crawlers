@@ -687,9 +687,10 @@ export default function MatricePrompt() {
       let domain = '';
       try { domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { domain = url; }
 
-      // Calculate global scores
-      const tw = auditResults.reduce((s: number, r: any) => s + r.poids, 0);
-      const crawlersGlobal = tw > 0 ? Math.round(auditResults.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
+      // Calculate global scores (simple average if no file weights)
+      const useWeights = hasFileScoring.poids;
+      const tw = useWeights ? auditResults.reduce((s: number, r: any) => s + r.poids, 0) : auditResults.length;
+      const crawlersGlobal = tw > 0 ? Math.round(auditResults.reduce((s: number, r: any) => s + r.crawlers_score * (useWeights ? r.poids : 1), 0) / tw) : 0;
 
       // Persist audit session (only if logged in)
       if (user) {
