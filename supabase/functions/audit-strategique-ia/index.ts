@@ -1944,12 +1944,15 @@ RÈGLES:
 - profile_url: UNIQUEMENT URLs listées dans E-E-A-T ci-dessus. COPIE-COLLE. Max 2 profils avec URL. Sinon null.
 - Fondateur: cite si CERTAIN. Sinon "fondateur non identifié". founder_authority="unknown" par défaut.
 - eeat_score EVIDENCE-BASED: Crawlé: +1pt(AuthorJsonLD,Person/ProfilePage,Wikidata,Organization) +0.5pt(sameAs,AuthorBio,LI company,LI perso,Citations,CaseStudies). Max tech ~7pts. Inféré: +1-3pts marque connue. Sans signal tech: max 3. Avec tech sans incarnation: max 7. Avec incarnation: 7-9. 10: Wikidata ou marque certaine.
+- MALUS AUTORITÉ PROPORTIONNÉ (business digital = SaaS, e-commerce, marketplace, plateforme, agence, média, app) : 0 backlink éditorial + domaine ≥2 ans → -2pts. 0 backlink éditorial + domaine <2 ans → -1pt. 1-3 backlinks éditoriaux → -0.5pt. 4+ backlinks éditoriaux → pas de malus. Mentions presse détectées (brand-mentions) → +0.5pt bonus. Un artisan, médecin ou commerce local n'est PAS concerné.
+- PARADOXE VENDEUR: Si le site VEND un service X (audit EEAT, optimisation SEO, conseil en stratégie, etc.) mais N'EXHIBE PAS les signaux de X sur son propre site, c'est un paradoxe à signaler explicitement dans les failles. Exemple: un SaaS qui vend des audits E-E-A-T mais n'a aucun signal EEAT visible lui-même.
 - NE PRÉTENDS PAS connaître: nb abonnés, existence GMB, fraîcheur posts. analysis thought_leadership: sépare "Signaux vérifiés" vs "Signaux estimés".
+- proof_sources: pour chaque source sociale, qualifier le statut comme "verified" (URL crawlée trouvée), "inferred" (mentionné dans le contenu sans URL), ou "absent". NE JAMAIS qualifier comme "verified" sans preuve URL. NE JAMAIS inventer des profils.
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots. Score similarité H1/contenu.
 - lexical_footprint: jargonRatio+concreteRatio=100. ATTENTION: "jargon" = UNIQUEMENT les formules vides/corporate sans substance (ex: "solutions innovantes", "accompagnement sur-mesure", "leader de la transformation"). La terminologie métier précise (ex: "assurance vie", "prévoyance collective", "taux de rendement", "SCPI") est du vocabulaire CONCRET, PAS du jargon. Un site professionnel avec du vocabulaire technique spécifique à son secteur doit avoir un concreteRatio élevé (75-95). Seuls les buzzwords creux sans valeur informative comptent comme jargon.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain).
-- red_team: 3 failles/objections client sceptique.
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain). COHÉRENCE TONALE: si le contenu utilise un ton générique/IA (formulations lisses, sans aspérité, sans opinion tranchée) tout en prétendant être expert → rating max 2. Un vrai expert a des opinions, utilise son vocabulaire métier, fait référence à son expérience.
+- red_team: 3 failles/objections client sceptique. INCLURE le paradoxe vendeur si détecté.
 - Base recommandations sur état des lieux SEO réel si fourni.
 - missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais absents du site. Indiquer importance, usage concurrent, et placement suggéré.
 - semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP. Score objectif.

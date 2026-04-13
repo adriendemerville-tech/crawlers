@@ -316,12 +316,15 @@ RÈGLES:
 - profile_url: UNIQUEMENT URLs listées dans E-E-A-T ci-dessus. COPIE-COLLE. Max 2 profils avec URL. Sinon null.
 - Fondateur: cite si CERTAIN. Sinon "fondateur non identifié". founder_authority="unknown" par défaut.
 - eeat_score EVIDENCE-BASED: Crawlé: +1pt(AuthorJsonLD,Person/ProfilePage,Wikidata,Organization) +0.5pt(sameAs,AuthorBio,LI company,LI perso,Citations,CaseStudies). Max tech ~7pts. Inféré: +1-3pts marque connue. Sans signal tech: max 3. Avec tech sans incarnation: max 7. Avec incarnation: 7-9. 10: Wikidata ou marque certaine.
+- MALUS AUTORITÉ PROPORTIONNÉ (business digital) : 0 backlink éditorial + domaine ≥2 ans → -2pts. 0 backlink éditorial + domaine <2 ans → -1pt. 1-3 backlinks éditoriaux → -0.5pt. 4+ → pas de malus. Mentions presse → +0.5pt bonus.
+- PARADOXE VENDEUR: Si le site vend un service X mais n'exhibe pas les signaux de X → faille à signaler.
 - NE PRÉTENDS PAS connaître: nb abonnés, existence GMB, fraîcheur posts. analysis thought_leadership: sépare "Signaux vérifiés" vs "Signaux estimés".
+- proof_sources: qualifier chaque source comme "verified" (URL crawlée), "inferred" (mentionné sans URL), ou "absent". NE JAMAIS inventer.
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots. Score similarité H1/contenu.
 - lexical_footprint: jargonRatio+concreteRatio=100. ATTENTION: "jargon" = UNIQUEMENT les formules vides/corporate sans substance.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain). social_proof: vérifie la présence de témoignages/études de cas (has_testimonials), d'avis clients (has_reviews), de liens vers des réalisations concrètes/portfolio (has_portfolio_links). details = résumé de ce qui a été trouvé ou manque.
-- red_team: 3 failles/objections client sceptique.
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain). COHÉRENCE TONALE: ton générique/IA + prétention d'expertise → max 2. social_proof: vérifie la présence de témoignages/études de cas (has_testimonials), d'avis clients (has_reviews), de liens vers des réalisations concrètes/portfolio (has_portfolio_links). details = résumé de ce qui a été trouvé ou manque.
+- red_team: 3 failles/objections client sceptique. INCLURE le paradoxe vendeur si détecté.
 - missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais absents du site.
 - semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP.
 - serp_recommendations: MIN 3 actions concrètes et actionnables.

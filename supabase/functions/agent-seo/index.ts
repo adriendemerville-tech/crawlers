@@ -300,7 +300,7 @@ function computeSeoScoreV2(html: string, textContent: string, pageType: 'blog' |
   if (jsonLd.hasArticle && pageType === 'blog') metaScore += 10;
   else if (pageType === 'blog' && !jsonLd.hasArticle) opportunities.push('Ajouter un schema BlogPosting ou Article');
 
-  // 6. E-E-A-T SIGNALS (from strategic audit)
+  // 6. E-E-A-T SIGNALS (enhanced: qualified case studies, dated content, CTA-only anchors)
   const eeat: EEATSignals = {
     hasAuthorInfo: /author|auteur|par\s|écrit\sby|written\sby/i.test(html),
     hasSocialLinks: /linkedin\.com|twitter\.com|x\.com|facebook\.com/i.test(html),
@@ -311,14 +311,43 @@ function computeSeoScoreV2(html: string, textContent: string, pageType: 'blog' |
     hasExternalAuthority: externalLinkMatches.length >= 2,
   };
 
+  // Qualified case studies: check for proper nouns, company names, specific figures
+  const caseStudyVerifiable = eeat.hasCaseStudies && (
+    /[A-ZÀ-Ü][a-zà-ü]{2,}\s+[A-ZÀ-Ü][a-zà-ü]{2,}/.test(textContent) || // proper noun pair
+    /(?:SAS|SARL|SASU|Inc\.|Ltd\.|GmbH|LLC)/i.test(textContent) ||
+    /\d{2,}[\s.,]?\d*\s*(?:%|€|\$|k€|clients?|utilisateurs?)/i.test(textContent)
+  );
+
   let eeatScore = 0;
   if (eeat.hasAuthorInfo) eeatScore += 20;
   if (eeat.hasSocialLinks) eeatScore += 15;
   if (eeat.hasLinkedIn) eeatScore += 10;
-  if (eeat.hasCaseStudies) eeatScore += 15;
+  // Case studies: full bonus only if verifiable, reduced if generic
+  if (eeat.hasCaseStudies) eeatScore += caseStudyVerifiable ? 15 : 5;
   if (eeat.hasNumbers) eeatScore += 15;
   if (eeat.hasCTA) eeatScore += 10;
   if (eeat.hasExternalAuthority) eeatScore += 15;
+
+  // Penalty: all internal link anchors are generic CTAs
+  const genericCtaAnchors = anchors.filter(a => /^(découvrir|en savoir plus|cliquez ici|lire la suite|voir plus|click here|learn more|read more|voir|lire)$/i.test(a.trim()));
+  if (internalLinkMatches.length > 3 && genericCtaAnchors.length / internalLinkMatches.length > 0.6) {
+    linkScore = Math.max(0, linkScore - 10);
+    issues.push(`${Math.round(genericCtaAnchors.length / internalLinkMatches.length * 100)}% des ancres internes sont génériques (CTA vides)`);
+  }
+
+  // Bonus: content has datePublished < 12 months
+  const datePublishedMatch = html.match(/datePublished["']\s*:\s*["'](\d{4}-\d{2}-\d{2})/i) ||
+    html.match(/datetime=["'](\d{4}-\d{2}-\d{2})/i);
+  if (datePublishedMatch) {
+    const pubDate = new Date(datePublishedMatch[1]);
+    const monthsAgo = (Date.now() - pubDate.getTime()) / (30 * 24 * 60 * 60 * 1000);
+    if (monthsAgo <= 12) {
+      contentDepthScore = Math.min(100, contentDepthScore + 8);
+    } else if (monthsAgo > 24) {
+      issues.push(`Contenu daté de ${Math.round(monthsAgo)} mois — signal de "content decay"`);
+    }
+  }
+
   if (eeatScore < 40) opportunities.push('Renforcer les signaux E-E-A-T (auteur, preuves sociales, données)');
 
   // OVERALL SCORE (weighted)
