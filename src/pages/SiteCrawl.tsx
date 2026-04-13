@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, ArrowLeft, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2, FolderTree, Folder, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,843 +14,101 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCredits } from '@/contexts/CreditsContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useAdmin } from '@/hooks/useAdmin';
-import { toast } from 'sonner';
-import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ReportPreviewModal } from '@/components/ReportPreview';
 import { SiteCrawlReportData } from '@/components/ReportPreview/generators/siteCrawlHtmlGenerator';
 import { HttpStatusChart } from '@/components/SiteCrawl/HttpStatusChart';
 import { StrategicErrorBoundary } from '@/components/ExpertAudit/StrategicErrorBoundary';
 import { MaillageIPRCard, computeMaillageFromCrawlPages } from '@/components/ExpertAudit/MaillageIPRCard';
-import { autoSaveActionPlan } from '@/utils/autoSaveActionPlan';
-
-const crawlI18n = {
-  fr: {
-    pageTitle: 'Crawl Multi-Pages SEO — Analysez votre site complet | Crawlers.fr',
-    pageDesc: 'Analysez toutes les pages de votre site en un clic. Score SEO/200 par page, détection d\'erreurs, synthèse IA globale.',
-    badge: 'Crawl Multi-Pages',
-    h1_1: 'Auditez votre site',
-    h1_2: 'page par page',
-    subtitle: 'Crawl complet avec score SEO/200 par page, détection d\'erreurs techniques et synthèse IA globale.',
-    whyTitle: 'Pourquoi auditer plusieurs pages de votre site ?',
-    whyText: 'Un audit SEO mono-page ne révèle qu\'une infime partie de vos problèmes techniques. En analysant l\'ensemble de vos URLs, vous identifiez les balises manquantes, les erreurs de maillage interne, les pages orphelines et les contenus dupliqués qui freinent votre indexation.',
-    scoreTitle: 'Un score SEO/200 par page, une synthèse IA globale',
-    scoreText: 'Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L\'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable.',
-    placeholder: 'https://votre-site.fr',
-    launchBtn: 'Analyser',
-    detectBtn: 'Détecter',
-    detecting: 'Détection en cours…',
-    crawling: 'Crawl en cours…',
-    pagesToAnalyze: 'Pages à analyser',
-    unlimited: 'Illimité',
-    credits: 'crédits',
-    insufficientCredits: 'Crédits insuffisants. Requis :',
-    available: 'disponibles :',
-    mapping: 'Mapping du site…',
-    queued: 'En file d\'attente…',
-    analyzing: 'Synthèse IA en cours…',
-    crawlingProgress: 'Analyse en cours :',
-    pages: 'pages',
-    pagesDiscovered: 'pages découvertes — audit lancé en arrière-plan',
-    auditQueued: 'pages découvertes — audit en file d\'attente…',
-    auditDone: 'Audit terminé :',
-    pagesAnalyzed: 'pages analysées !',
-    viewReport: 'Voir le rapport',
-    pagesAnalyzedLabel: 'Pages analysées',
-    avgScore: 'Score moyen',
-    perfectPages: 'Pages parfaites',
-    totalErrors: 'Erreurs totales',
-    aiSummary: 'Synthèse IA',
-    priorityRecs: 'Recommandations prioritaires',
-    pagesAffected: 'pages concernées',
-    topErrors: 'Erreurs les plus fréquentes',
-    crawledPages: 'Pages crawlées',
-    sortScoreAsc: 'Score ↑ (pires d\'abord)',
-    sortScoreDesc: 'Score ↓ (meilleurs)',
-    sortPath: 'Chemin A→Z',
-    noTitle: '(sans titre)',
-    words: 'Mots:',
-    imgsNoAlt: 'Imgs sans alt:',
-    weight: 'Poids:',
-    previousCrawls: 'Crawls précédents',
-    runningCrawls: 'Crawl en cours',
-    errorCrawl: 'Erreur lors du crawl',
-    advancedOptions: 'Options avancées',
-    stopCrawl: 'Stopper',
-    crawlStopped: 'Crawl stoppé — données en cache conservées',
-    crawlDepth: 'Profondeur max',
-    depthUnlimited: 'Illimitée',
-    depthLevel: 'Niveau',
-    urlFilter: 'Filtre URL (regex)',
-    urlFilterPlaceholder: '/blog/.*|/produits/.*',
-    customSelectors: 'Extraction custom (CSS)',
-    selectorName: 'Nom',
-    selectorValue: 'Sélecteur CSS',
-    addSelector: 'Ajouter',
-    sitemapExport: 'Exporter Sitemap XML',
-    compareCrawls: 'Comparer les crawls',
-    selectCrawlA: 'Crawl A',
-    selectCrawlB: 'Crawl B',
-    compare: 'Comparer',
-    comparisonResults: 'Résultat de la comparaison',
-    newPages: 'Pages ajoutées',
-    removedPages: 'Pages supprimées',
-    improvedPages: 'Pages améliorées',
-    degradedPages: 'Pages dégradées',
-    duplicateContent: 'Contenu quasi-dupliqué',
-    schemaErrors: 'Erreurs Schema.org',
-  },
-  en: {
-    pageTitle: 'Multi-Page SEO Crawl — Analyze your full site | Crawlers.fr',
-    pageDesc: 'Analyze all pages of your site in one click. SEO score/200 per page, error detection, global AI synthesis.',
-    badge: 'Multi-Page Crawl',
-    h1_1: 'Audit your site',
-    h1_2: 'page by page',
-    subtitle: 'Full crawl with SEO score/200 per page, technical error detection and global AI synthesis.',
-    whyTitle: 'Why audit multiple pages of your site?',
-    whyText: 'A single-page SEO audit only reveals a tiny part of your technical issues. By analyzing all your URLs, you identify missing tags, internal linking errors, orphan pages and duplicate content that hinder your indexing.',
-    scoreTitle: 'A SEO/200 score per page, a global AI synthesis',
-    scoreText: 'Each crawled page receives a score out of 200 points covering technical, semantic and structural criteria. AI then consolidates these results into an actionable synthesis.',
-    placeholder: 'https://your-site.com',
-    launchBtn: 'Launch crawl',
-    detectBtn: 'Detect pages',
-    detecting: 'Detecting…',
-    crawling: 'Crawling…',
-    pagesToAnalyze: 'Pages to analyze',
-    unlimited: 'Unlimited',
-    credits: 'credits',
-    insufficientCredits: 'Insufficient credits. Required:',
-    available: 'available:',
-    mapping: 'Mapping site…',
-    queued: 'Queued…',
-    analyzing: 'AI synthesis in progress…',
-    crawlingProgress: 'Analyzing:',
-    pages: 'pages',
-    pagesDiscovered: 'pages discovered — audit launched in background',
-    auditQueued: 'pages discovered — audit queued…',
-    auditDone: 'Audit complete:',
-    pagesAnalyzed: 'pages analyzed!',
-    viewReport: 'View report',
-    pagesAnalyzedLabel: 'Pages analyzed',
-    avgScore: 'Average score',
-    perfectPages: 'Perfect pages',
-    totalErrors: 'Total errors',
-    aiSummary: 'AI Synthesis',
-    priorityRecs: 'Priority recommendations',
-    pagesAffected: 'pages affected',
-    topErrors: 'Most frequent errors',
-    crawledPages: 'Crawled pages',
-    sortScoreAsc: 'Score ↑ (worst first)',
-    sortScoreDesc: 'Score ↓ (best first)',
-    sortPath: 'Path A→Z',
-    noTitle: '(no title)',
-    words: 'Words:',
-    imgsNoAlt: 'Imgs no alt:',
-    weight: 'Weight:',
-    previousCrawls: 'Previous crawls',
-    runningCrawls: 'Crawl in progress',
-    errorCrawl: 'Crawl error',
-    advancedOptions: 'Advanced options',
-    stopCrawl: 'Stop',
-    crawlStopped: 'Crawl stopped — cached data preserved',
-    crawlDepth: 'Max depth',
-    depthUnlimited: 'Unlimited',
-    depthLevel: 'Level',
-    urlFilter: 'URL filter (regex)',
-    urlFilterPlaceholder: '/blog/.*|/products/.*',
-    customSelectors: 'Custom extraction (CSS)',
-    selectorName: 'Name',
-    selectorValue: 'CSS Selector',
-    addSelector: 'Add',
-    sitemapExport: 'Export Sitemap XML',
-    compareCrawls: 'Compare crawls',
-    selectCrawlA: 'Crawl A',
-    selectCrawlB: 'Crawl B',
-    compare: 'Compare',
-    comparisonResults: 'Comparison results',
-    newPages: 'New pages',
-    removedPages: 'Removed pages',
-    improvedPages: 'Improved pages',
-    degradedPages: 'Degraded pages',
-    duplicateContent: 'Near-duplicate content',
-    schemaErrors: 'Schema.org errors',
-  },
-  es: {
-    pageTitle: 'Crawl Multi-Páginas SEO — Analice su sitio completo | Crawlers.fr',
-    pageDesc: 'Analice todas las páginas de su sitio en un clic. Puntuación SEO/200 por página, detección de errores, síntesis IA global.',
-    badge: 'Crawl Multi-Páginas',
-    h1_1: 'Audite su sitio',
-    h1_2: 'página por página',
-    subtitle: 'Crawl completo con puntuación SEO/200 por página, detección de errores técnicos y síntesis IA global.',
-    whyTitle: '¿Por qué auditar varias páginas de su sitio?',
-    whyText: 'Una auditoría SEO de una sola página solo revela una ínfima parte de sus problemas técnicos. Al analizar todas sus URLs, identifica las etiquetas faltantes, los errores de enlazado interno, las páginas huérfanas y el contenido duplicado.',
-    scoreTitle: 'Una puntuación SEO/200 por página, una síntesis IA global',
-    scoreText: 'Cada página rastreada recibe una puntuación sobre 200 puntos que cubre criterios técnicos, semánticos y estructurales. La IA consolida estos resultados en una síntesis accionable.',
-    placeholder: 'https://su-sitio.es',
-    launchBtn: 'Lanzar crawl',
-    detectBtn: 'Detectar páginas',
-    detecting: 'Detectando…',
-    crawling: 'Crawl en curso…',
-    pagesToAnalyze: 'Páginas a analizar',
-    unlimited: 'Ilimitado',
-    credits: 'créditos',
-    insufficientCredits: 'Créditos insuficientes. Requeridos:',
-    available: 'disponibles:',
-    mapping: 'Mapeando sitio…',
-    queued: 'En cola…',
-    analyzing: 'Síntesis IA en curso…',
-    crawlingProgress: 'Analizando:',
-    pages: 'páginas',
-    pagesDiscovered: 'páginas descubiertas — auditoría lanzada en segundo plano',
-    auditQueued: 'páginas descubiertas — auditoría en cola…',
-    auditDone: 'Auditoría completada:',
-    pagesAnalyzed: '¡páginas analizadas!',
-    viewReport: 'Ver informe',
-    pagesAnalyzedLabel: 'Páginas analizadas',
-    avgScore: 'Puntuación media',
-    perfectPages: 'Páginas perfectas',
-    totalErrors: 'Errores totales',
-    aiSummary: 'Síntesis IA',
-    priorityRecs: 'Recomendaciones prioritarias',
-    pagesAffected: 'páginas afectadas',
-    topErrors: 'Errores más frecuentes',
-    crawledPages: 'Páginas rastreadas',
-    sortScoreAsc: 'Puntuación ↑ (peores primero)',
-    sortScoreDesc: 'Puntuación ↓ (mejores)',
-    sortPath: 'Ruta A→Z',
-    noTitle: '(sin título)',
-    words: 'Palabras:',
-    imgsNoAlt: 'Imgs sin alt:',
-    weight: 'Peso:',
-    previousCrawls: 'Crawls anteriores',
-    runningCrawls: 'Crawl en curso',
-    errorCrawl: 'Error de crawl',
-    advancedOptions: 'Opciones avanzadas',
-    stopCrawl: 'Detener',
-    crawlStopped: 'Crawl detenido — datos en caché conservados',
-    crawlDepth: 'Profundidad máx',
-    depthUnlimited: 'Ilimitada',
-    depthLevel: 'Nivel',
-    urlFilter: 'Filtro URL (regex)',
-    urlFilterPlaceholder: '/blog/.*|/productos/.*',
-    customSelectors: 'Extracción personalizada (CSS)',
-    selectorName: 'Nombre',
-    selectorValue: 'Selector CSS',
-    addSelector: 'Añadir',
-    sitemapExport: 'Exportar Sitemap XML',
-    compareCrawls: 'Comparar crawls',
-    selectCrawlA: 'Crawl A',
-    selectCrawlB: 'Crawl B',
-    compare: 'Comparar',
-    comparisonResults: 'Resultado de la comparación',
-    newPages: 'Páginas añadidas',
-    removedPages: 'Páginas eliminadas',
-    improvedPages: 'Páginas mejoradas',
-    degradedPages: 'Páginas degradadas',
-    duplicateContent: 'Contenido quasi-duplicado',
-    schemaErrors: 'Errores Schema.org',
-  },
-};
-
-function getCreditCost(pages: number) {
-  if (pages <= 50) return 5;
-  if (pages <= 100) return 10;
-  if (pages <= 200) return 15;
-  if (pages <= 350) return 25;
-  return 40;
-}
-
-function getScoreColor(score: number) {
-  if (score >= 160) return 'text-emerald-500';
-  if (score >= 120) return 'text-amber-500';
-  return 'text-red-500';
-}
-
-function getScoreBg(score: number) {
-  if (score >= 160) return 'bg-emerald-500/10 border-emerald-500/20';
-  if (score >= 120) return 'bg-amber-500/10 border-amber-500/20';
-  return 'bg-red-500/10 border-red-500/20';
-}
-
-interface CrawlPage {
-  id: string;
-  url: string;
-  path: string;
-  http_status: number | null;
-  title: string | null;
-  h1: string | null;
-  seo_score: number | null;
-  word_count: number | null;
-  images_without_alt: number | null;
-  has_schema_org: boolean | null;
-  has_canonical: boolean | null;
-  has_og: boolean | null;
-  has_noindex: boolean | null;
-  has_nofollow: boolean | null;
-  is_indexable: boolean | null;
-  index_source: string | null;
-  issues: string[];
-  content_hash?: string | null;
-  schema_org_types?: string[];
-  schema_org_errors?: string[];
-  custom_extraction?: Record<string, string>;
-  crawl_depth?: number | null;
-}
-
-interface CrawlResult {
-  id: string;
-  domain: string;
-  url: string;
-  status: string;
-  total_pages: number;
-  crawled_pages: number;
-  avg_score: number | null;
-  ai_summary: string | null;
-  ai_recommendations: any[];
-  created_at: string;
-  completed_at: string | null;
-  tone_consistency_score: number | null;
-}
-
-interface CustomSelector {
-  name: string;
-  selector: string;
-  type: 'css';
-}
-
-interface ComparisonResult {
-  newPages: string[];
-  removedPages: string[];
-  improved: { path: string; before: number; after: number }[];
-  degraded: { path: string; before: number; after: number }[];
-  scoreChange: number;
-}
-
-// ── Sitemap XML Generator ──────────────────────────────────
-function generateSitemapXml(pages: CrawlPage[], domain: string): string {
-  const urls = pages
-    .filter(p => p.http_status === 200 && !(p.issues || []).includes('noindex'))
-    .map(p => {
-      const loc = p.url.startsWith('http') ? p.url : `https://${domain}${p.path}`;
-      return `  <url>\n    <loc>${loc}</loc>\n    <priority>${(p.seo_score || 0) >= 160 ? '1.0' : (p.seo_score || 0) >= 120 ? '0.8' : '0.5'}</priority>\n  </url>`;
-    });
-
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
-}
-
-// ── Fair-Use Limit Modal with 4 credit cards ──────────────
-const CREDIT_PACKAGES = [
-  { id: 'essential', name: 'Essentiel', credits: 10, price: 5, color: 'from-blue-500 to-cyan-500', border: 'border-blue-500/30' },
-  { id: 'pro', name: 'Lite', credits: 50, price: 19, color: 'from-emerald-500 to-green-500', border: 'border-emerald-500/50', popular: true, savings: '24%' },
-  { id: 'premium', name: 'Premium', credits: 150, price: 45, color: 'from-amber-500 to-orange-500', border: 'border-amber-500/30', savings: '40%' },
-];
-
-function FairUseLimitModal({ language, crawlPagesThisMonth, fairUseLimit, onClose }: { language: string; crawlPagesThisMonth: number; fairUseLimit: number; onClose: () => void }) {
-  const [loadingPkg, setLoadingPkg] = useState<string | null>(null);
-
-  const handlePurchase = async (packageId: string) => {
-    setLoadingPkg(packageId);
-    try {
-      const { data, error } = await supabase.functions.invoke('stripe-actions', {
-        body: { action: 'credit-checkout', package_type: packageId },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        // Open in same tab so user returns to /site-crawl with URL preserved
-        window.open(data.url, '_blank', 'noopener');
-        onClose();
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur');
-      setLoadingPkg(null);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-2xl mx-4 rounded-xl border-2 border-amber-500/50 bg-card shadow-2xl shadow-amber-500/10 p-6 space-y-5" onClick={e => e.stopPropagation()}>
-        <div className="text-center">
-          <div className="mx-auto w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
-            <Bot className="h-7 w-7 text-amber-500" />
-          </div>
-          <h3 className="text-xl font-bold text-foreground">
-            {language === 'fr' ? '5 000 pages déjà consommées' : language === 'es' ? '5 000 páginas ya consumidas' : '5,000 pages already consumed'}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            {language === 'fr'
-              ? `Vous avez utilisé ${crawlPagesThisMonth.toLocaleString()} pages sur vos 5 000 incluses ce mois-ci. Rechargez des crédits pour continuer.`
-              : language === 'es'
-              ? `Ha utilizado ${crawlPagesThisMonth.toLocaleString()} páginas de sus 5 000 incluidas este mes.`
-              : `You've used ${crawlPagesThisMonth.toLocaleString()} pages out of your 5,000 included this month.`}
-          </p>
-        </div>
-
-        <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/5 to-amber-600/10 border border-amber-500/20">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{language === 'fr' ? 'Pages utilisées' : 'Pages used'}</span>
-            <span className="font-bold text-amber-500">{crawlPagesThisMonth.toLocaleString()} / 5 000</span>
-          </div>
-          <div className="h-2 rounded-full bg-muted overflow-hidden mt-2">
-            <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${Math.min(100, (crawlPagesThisMonth / fairUseLimit) * 100)}%` }} />
-          </div>
-        </div>
-
-        {/* 4 Credit Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {CREDIT_PACKAGES.map((pkg) => (
-            <div key={pkg.id} className={`relative rounded-xl border-2 p-3 ${pkg.border} ${pkg.popular ? 'ring-2 ring-emerald-500/50' : ''} bg-card hover:border-primary/50 transition-all`}>
-              {pkg.popular && (
-                <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 text-[10px]">
-                  ⭐ {language === 'fr' ? 'Populaire' : 'Popular'}
-                </Badge>
-              )}
-              <div className="flex flex-col items-center text-center h-full justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-sm">{pkg.name}</h4>
-                  <p className="text-xl font-bold mt-1 flex items-center justify-center gap-1">
-                    {pkg.credits} <CreditCoin size="sm" />
-                  </p>
-                  <p className="text-lg font-bold">{pkg.price}€</p>
-                  {pkg.savings && (
-                    <Badge variant="secondary" className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />{pkg.savings}
-                    </Badge>
-                  )}
-                </div>
-                <Button
-                  onClick={() => handlePurchase(pkg.id)}
-                  disabled={loadingPkg !== null}
-                  size="sm"
-                  className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0`}
-                >
-                  {loadingPkg === pkg.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (language === 'fr' ? 'Acheter' : 'Buy')}
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <Button variant="ghost" className="w-full text-muted-foreground" onClick={onClose}>
-          {language === 'fr' ? 'Fermer' : language === 'es' ? 'Cerrar' : 'Close'}
-        </Button>
-      </div>
-    </div>
-  );
-}
+import { FairUseLimitModal } from '@/components/SiteCrawl/FairUseLimitModal';
+import { getScoreColor, getScoreBg } from '@/components/SiteCrawl/types';
+import { useCrawlEngine } from '@/hooks/useCrawlEngine';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export default function SiteCrawl() {
-  const { user, loading } = useAuth();
-  const { balance: credits, isAgencyPro, planType } = useCredits();
-  const { language } = useLanguage();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { isAdmin, loading: adminLoading } = useAdmin();
+  const engine = useCrawlEngine();
   useCanonicalHreflang('/app/site-crawl');
-  const t = crawlI18n[language];
 
-  const isUnlimited = isAgencyPro || isAdmin;
+  const {
+    user, loading, adminLoading, language, t, isAdmin,
+    isUnlimited, isAgencyPro, isAgencyPlus, maxSliderCap,
+    credits, creditCost,
+    url, setUrl,
+    maxPages, setMaxPages,
+    isLoading, crawlResult, pages, setPages,
+    showTopUp, setShowTopUp,
+    progress, phase,
+    expandedPage, setExpandedPage,
+    sortBy, setSortBy,
+    indexFilter, setIndexFilter,
+    pastCrawls,
+    viewingCrawlId,
+    isLoadingPastCrawl,
+    crawlBacklinks,
+    isScanningBacklinks,
+    indexationMap,
+    indexedPagesCount,
+    sitemapPagesCount,
+    totalEstimatedPages,
+    isDetectingPages,
+    detectionDone,
+    discoveredUrls,
+    isReportOpen, setIsReportOpen,
+    sitemapTree, sitemapPages,
+    includeDir, setIncludeDir,
+    excludeDir, setExcludeDir,
+    includePage, setIncludePage,
+    excludePage, setExcludePage,
+    showAdvanced, setShowAdvanced,
+    maxDepth, setMaxDepth,
+    urlFilter, setUrlFilter,
+    customSelectors, newSelectorName, setNewSelectorName,
+    newSelectorValue, setNewSelectorValue,
+    showComparison, setShowComparison,
+    compareCrawlA, setCompareCrawlA,
+    compareCrawlB, setCompareCrawlB,
+    comparisonResult, isComparing,
+    subscribeLoading, showUpsell, showLimitModal, setShowLimitModal,
+    isButtonShaking, crawlPagesThisMonth, FAIR_USE_LIMIT,
+    filteredPages, sortedPages,
+    indexedCount, noindexCount,
+    issueStats, nearDuplicates, schemaErrorPages, completedCrawls,
+    historySectionRef,
+    handleDetect, handleSubmit, handleStopCrawl,
+    handleSitemapExport, handleCompare,
+    handleScanBacklinks, handleSubscribe,
+    handleCleanPastCrawls, handleDeleteCrawl,
+    viewCrawl, resetViewedCrawl,
+    addSelector, removeSelector,
+  } = engine;
 
-  const [url, setUrl] = useState(() => {
-    try {
-      const paramUrl = searchParams.get('url');
-      if (paramUrl) return paramUrl;
-      return localStorage.getItem('crawl_last_url') || '';
-    } catch { return ''; }
-  });
-  const isAgencyPlus = isAdmin || planType === 'agency_premium';
-  const isPaidPlan = isAgencyPro || isAgencyPlus;
-  const maxSliderCap = isAgencyPlus ? 50 : isAgencyPro ? 30 : 20;
-  const [maxPages, setMaxPages] = useState(maxSliderCap);
-  const [isLoading, setIsLoading] = useState(false);
-  const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
-  const [pages, setPages] = useState<CrawlPage[]>([]);
-  const [showTopUp, setShowTopUp] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState('');
-  const [expandedPage, setExpandedPage] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'score_asc' | 'score_desc' | 'path'>('score_asc');
-  const [indexFilter, setIndexFilter] = useState<'all' | 'indexed' | 'noindex'>('all');
-  const [pastCrawls, setPastCrawls] = useState<CrawlResult[]>([]);
-  const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
-  const [isLoadingPastCrawl, setIsLoadingPastCrawl] = useState(false);
-  const [prediction, setPrediction] = useState<any>(null);
-  const [isPredicting, setIsPredicting] = useState(false);
-   const [crawlBacklinks, setCrawlBacklinks] = useState<any[]>([]);
-   const [isScanningBacklinks, setIsScanningBacklinks] = useState(false);
-   const [indexationMap, setIndexationMap] = useState<Record<string, { verdict: string; coverage_state: string | null }>>({});
-  const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
-  const [sitemapPagesCount, setSitemapPagesCount] = useState<number | null>(null);
-  const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
-  const [isDetectingPages, setIsDetectingPages] = useState(false);
-  const [detectionDone, setDetectionDone] = useState(false);
-  const [discoveredUrls, setDiscoveredUrls] = useState<string[]>([]);
-  const [isReportOpen, setIsReportOpen] = useState(false);
-
-  // Sitemap directory & page selectors
-  const [sitemapTree, setSitemapTree] = useState<Array<{ path: string; label: string; count: number }>>([]);
-  const [sitemapPages, setSitemapPages] = useState<Array<{ path: string; label: string }>>([]);
-  const [selectedDirectory, setSelectedDirectory] = useState<string>('');
-  // Filter modes: include_dirs, exclude_dirs, include_pages, exclude_pages
-  const [includeDir, setIncludeDir] = useState<string>('');
-  const [excludeDir, setExcludeDir] = useState<string>('');
-  const [includePage, setIncludePage] = useState<string>('');
-  const [excludePage, setExcludePage] = useState<string>('');
-
-  // Advanced options
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [maxDepth, setMaxDepth] = useState(0); // 0 = unlimited
-  const [urlFilter, setUrlFilter] = useState('');
-  const [customSelectors, setCustomSelectors] = useState<CustomSelector[]>([]);
-  const [newSelectorName, setNewSelectorName] = useState('');
-  const [newSelectorValue, setNewSelectorValue] = useState('');
-
-  // Comparison
-  const [showComparison, setShowComparison] = useState(false);
-  const [compareCrawlA, setCompareCrawlA] = useState('');
-  const [compareCrawlB, setCompareCrawlB] = useState('');
-  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
-  const [isComparing, setIsComparing] = useState(false);
-  const [subscribeLoading, setSubscribeLoading] = useState(false);
-  const [showUpsell, setShowUpsell] = useState(false);
-  const [showLimitModal, setShowLimitModal] = useState(false);
-  const [isButtonShaking, setIsButtonShaking] = useState(false);
-  const [crawlPagesThisMonth, setCrawlPagesThisMonth] = useState(0);
-  const FAIR_USE_LIMIT = isAgencyPlus ? 50000 : 5000;
-  const historySectionRef = useRef<HTMLDivElement | null>(null);
-
-  const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
-
-  // Delayed upsell reveal
-  useEffect(() => {
-    if (isUnlimited) return;
-    const timer = setTimeout(() => setShowUpsell(true), 2500);
-    return () => clearTimeout(timer);
-  }, [isUnlimited]);
-
-  // Load past crawls & crawl_pages_this_month
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('site_crawls')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(20)
-      .then(({ data }) => {
-        if (data) setPastCrawls(data as any);
-      });
-    // Fetch crawl_pages_this_month from profile
-    supabase
-      .from('profiles')
-      .select('crawl_pages_this_month')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) setCrawlPagesThisMonth(data.crawl_pages_this_month || 0);
-      });
-  }, [user, crawlResult?.id]);
-
-  // Auto-load crawl from ?view= query param
-  useEffect(() => {
-    const viewId = searchParams.get('view');
-    if (!viewId) return;
-    (async () => {
-      const { data } = await supabase
-        .from('site_crawls')
-        .select('*')
-        .eq('id', viewId)
-        .single();
-      if (data) {
-        const crawl = data as any;
-        setUrl(crawl.url || crawl.domain || '');
-        setCrawlResult({
-          ...crawl,
-          ai_recommendations: Array.isArray(crawl.ai_recommendations) ? crawl.ai_recommendations : [],
-        });
-        setViewingCrawlId(crawl.id);
-        await loadPages(crawl.id);
-      }
-    })();
-  }, [searchParams]);
-
-  // Auto-start crawl when redirected from Felix
-  const felixAutoStartRef = useRef(false);
-  useEffect(() => {
-    if (felixAutoStartRef.current) return;
-    const fromFelix = searchParams.get('from') === 'felix';
-    const autostart = searchParams.get('autostart') === 'true';
-    const paramUrl = searchParams.get('url');
-    if (fromFelix && autostart && paramUrl && user && !loading) {
-      felixAutoStartRef.current = true;
-      setUrl(paramUrl);
-      // Clear URL params
-      navigate('/app/site-crawl', { replace: true });
-      // Auto-submit after a short delay to let state settle
-      setTimeout(() => {
-        const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-        handleSubmit(fakeEvent);
-      }, 500);
-    }
-  }, [searchParams, user, loading]);
-
-  // Use a ref to track the crawl ID for polling, avoiding re-creating intervals on every crawlResult change
-  const pollingCrawlIdRef = useRef<string | null>(null);
-  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Start polling when crawlResult changes to an active state
-  useEffect(() => {
-    const shouldPoll = crawlResult && !viewingCrawlId && crawlResult.status !== 'completed' && crawlResult.status !== 'error' && crawlResult.status !== 'stopped';
-    
-    if (!shouldPoll) {
-      // Stop any existing polling
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-        pollingCrawlIdRef.current = null;
-      }
-      return;
-    }
-
-    // Don't restart polling if already polling this crawl
-    if (pollingCrawlIdRef.current === crawlResult.id) return;
-
-    // Clear previous interval if any
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-
-    pollingCrawlIdRef.current = crawlResult.id;
-    const crawlId = crawlResult.id;
-
-    pollingIntervalRef.current = setInterval(async () => {
-      try {
-        const { data } = await supabase
-          .from('site_crawls')
-          .select('*')
-          .eq('id', crawlId)
-          .single();
-        if (data) {
-          const r = data as any;
-          const sanitizedResult = {
-            ...r,
-            ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
-          };
-          setCrawlResult(sanitizedResult);
-          if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
-          if (sanitizedResult.status === 'queued') setPhase(t.queued);
-          else if (sanitizedResult.status === 'mapping') setPhase(t.mapping);
-          else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
-          else if (sanitizedResult.status === 'analyzing') setPhase(t.analyzing);
-          if (sanitizedResult.status === 'completed') {
-            clearInterval(pollingIntervalRef.current!);
-            pollingIntervalRef.current = null;
-            pollingCrawlIdRef.current = null;
-            setIsLoading(false);
-            setPhase('');
-            loadPages(sanitizedResult.id);
-            try { const audio = new Audio(microwaveDing); audio.volume = 0.6; audio.play().catch(() => {}); } catch {}
-            toast.success(`✅ ${t.auditDone} ${sanitizedResult.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
-            supabase.functions.invoke('agent-cto', {
-              body: { auditResult: { ai_summary: sanitizedResult.ai_summary, ai_recommendations: sanitizedResult.ai_recommendations, avg_score: sanitizedResult.avg_score, crawled_pages: sanitizedResult.crawled_pages }, auditType: 'crawl', url: sanitizedResult.url, domain: sanitizedResult.domain }
-            }).catch(() => {});
-            // Auto-save crawl action plan
-            if (user && Array.isArray(sanitizedResult.ai_recommendations) && sanitizedResult.ai_recommendations.length > 0) {
-              const crawlTasks = sanitizedResult.ai_recommendations.map((rec: any, i: number) => ({
-                id: `crawl_${sanitizedResult.id}_${i}`,
-                title: typeof rec === 'string' ? rec : (rec?.title || rec?.recommendation || rec?.text || `Recommandation ${i + 1}`),
-                priority: (typeof rec === 'object' && rec?.priority) || 'important' as const,
-                category: (typeof rec === 'object' && rec?.category) || 'crawl',
-                isCompleted: false,
-              }));
-              autoSaveActionPlan({
-                userId: user.id,
-                url: sanitizedResult.url || `https://${sanitizedResult.domain}`,
-                title: `Crawl Multi-Pages — ${sanitizedResult.domain}`,
-                auditType: 'crawl',
-                tasks: crawlTasks,
-              }).catch(() => {});
-            }
-          }
-          if (sanitizedResult.status === 'error') {
-            clearInterval(pollingIntervalRef.current!);
-            pollingIntervalRef.current = null;
-            pollingCrawlIdRef.current = null;
-            setIsLoading(false);
-            setPhase('');
-            toast.error(sanitizedResult.error_message || t.errorCrawl);
-          }
-        }
-      } catch (pollErr) {
-        console.error('[CrawlPoll] Error during polling:', pollErr);
-      }
-    }, 5000);
-
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-        pollingCrawlIdRef.current = null;
-      }
-    };
-  }, [crawlResult?.id, crawlResult?.status, viewingCrawlId]);
-
-  // Pre-scan: detect indexed + sitemap pages when URL changes (debounced)
-  useEffect(() => {
-    setIndexedPagesCount(null);
-    setSitemapPagesCount(null);
-    setTotalEstimatedPages(null);
-    setDetectionDone(false);
-    setDiscoveredUrls([]);
-    setSitemapTree([]);
-    setSitemapPages([]);
-    setSelectedDirectory('');
-    setIncludeDir('');
-    setExcludeDir('');
-    setIncludePage('');
-    setExcludePage('');
-    if (!url || url.length < 5) return;
-
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      try {
-        let normalizedUrl = url.trim();
-        if (!normalizedUrl.startsWith('http')) normalizedUrl = `https://${normalizedUrl}`;
-        const domain = new URL(normalizedUrl).hostname;
-        if (!domain || domain.length < 3) return;
-
-        setIsDetectingPages(true);
-
-        // Query SERP (indexed pages) and sitemap in parallel
-        const [serpRes, sitemapRes] = await Promise.all([
-          supabase.functions.invoke('fetch-serp-kpis', { body: { domain } }),
-          supabase.functions.invoke('fetch-sitemap-tree', { body: { domain } }),
-        ]);
-
-        if (cancelled) return;
-
-        const indexed = serpRes.data?.data?.indexed_pages as number | undefined;
-        const sitemapTotal = sitemapRes.data?.totalUrls as number | undefined;
-
-        if (indexed != null) setIndexedPagesCount(indexed);
-        if (sitemapTotal != null) setSitemapPagesCount(sitemapTotal);
-
-        // Extract top-level directories from sitemap tree
-        const tree = sitemapRes.data?.tree as Array<{ path: string; label: string; count: number; children?: any[] }> | undefined;
-        if (tree && tree.length > 0) {
-          const dirs = tree
-            .filter(n => n.path !== '/' && n.count > 1)
-            .slice(0, 15)
-            .map(n => ({ path: n.path, label: n.label, count: n.count }));
-          setSitemapTree(dirs);
-
-          // Extract individual page patterns from tree URLs
-          const pagePatterns: Array<{ path: string; label: string }> = [];
-          const seen = new Set<string>();
-          for (const node of tree) {
-            const nodeUrls = (node as any).urls;
-            if (Array.isArray(nodeUrls)) {
-              for (const u of nodeUrls.slice(0, 5)) {
-                try {
-                  const parsed = new URL(u);
-                  // Get filename-like pattern (last segment)
-                  const segments = parsed.pathname.split('/').filter(Boolean);
-                  if (segments.length >= 2) {
-                    const pattern = segments.slice(-1)[0];
-                    if (!seen.has(pattern) && pattern.length > 2 && !/^\d+$/.test(pattern)) {
-                      seen.add(pattern);
-                      pagePatterns.push({ path: parsed.pathname, label: pattern });
-                    }
-                  }
-                } catch {}
-              }
-            }
-          }
-          setSitemapPages(pagePatterns.slice(0, 20));
-        }
-
-        // Total estimated = sitemap is the reliable source; indexed_pages (from site: query) is inflated
-        // Use sitemap if available, fallback to indexed only if no sitemap
-        const total = sitemapTotal && sitemapTotal > 0 ? sitemapTotal : (indexed || 0);
-        if (total > 0) {
-          setTotalEstimatedPages(total);
-          // Auto-cap slider — for pro agency users, cap is the sitemap total
-          const capMax = (isAgencyPlus || isAdmin) ? total : Math.min(maxSliderCap, total);
-          if (maxPages > capMax) {
-            setMaxPages(capMax);
-          }
-        }
-      } catch {
-        // Silent — pre-scan is best-effort
-      } finally {
-        if (!cancelled) setIsDetectingPages(false);
-      }
-    }, 1200);
-
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [url]);
-
-  // #8: useMemo for expensive computations (MUST be before early returns)
-  const filteredPages = useMemo(() => {
-    if (indexFilter === 'indexed') return pages.filter(p => p.is_indexable !== false && !(p.issues || []).includes('noindex'));
-    if (indexFilter === 'noindex') return pages.filter(p => p.is_indexable === false || (p.issues || []).includes('noindex'));
-    return pages;
-  }, [pages, indexFilter]);
-
-  const sortedPages = useMemo(() => [...filteredPages].sort((a, b) => {
-    if (sortBy === 'score_asc') return (a.seo_score || 0) - (b.seo_score || 0);
-    if (sortBy === 'score_desc') return (b.seo_score || 0) - (a.seo_score || 0);
-    return a.path.localeCompare(b.path);
-  }), [filteredPages, sortBy]);
-
-  const indexedCount = useMemo(() => pages.filter(p => p.is_indexable !== false && !(p.issues || []).includes('noindex')).length, [pages]);
-  const noindexCount = useMemo(() => pages.length - indexedCount, [pages, indexedCount]);
-
-  const issueStats = useMemo(() => pages.reduce<Record<string, number>>((acc, p) => {
-    (p.issues || []).forEach((issue: string) => {
-      acc[issue] = (acc[issue] || 0) + 1;
-    });
-    return acc;
-  }, {}), [pages]);
-
-  const nearDuplicates = useMemo(() => pages.filter(p => (p.issues || []).includes('near_duplicate_content')), [pages]);
-  const schemaErrorPages = useMemo(() => pages.filter(p => (p.issues || []).includes('schema_org_errors')), [pages]);
-
-  const completedCrawls = useMemo(() => pastCrawls.filter(c => c.status === 'completed'), [pastCrawls]);
-
+  // ── Report data (kept here since it depends on many pieces) ──
   const siteCrawlReportData = useMemo((): SiteCrawlReportData | null => {
     if (!crawlResult) return null;
 
-    // Compute duplicate titles
     const titleMap = new Map<string, string[]>();
     pages.forEach(p => {
-      const t = (p.title || '').trim();
-      if (!t) return;
-      if (!titleMap.has(t)) titleMap.set(t, []);
-      titleMap.get(t)!.push(p.url);
+      const title = (p.title || '').trim();
+      if (!title) return;
+      if (!titleMap.has(title)) titleMap.set(title, []);
+      titleMap.get(title)!.push(p.url);
     });
     const duplicateTitles = Array.from(titleMap.entries())
       .filter(([, urls]) => urls.length > 1)
       .map(([title, urls]) => ({ title, count: urls.length, urls }))
       .sort((a, b) => b.count - a.count);
 
-    // Compute thin content (< 300 words)
     const thinContentPages = pages
       .filter(p => (p.word_count ?? 0) > 0 && (p.word_count ?? 0) < 300 && p.http_status === 200)
       .map(p => ({ url: p.url, path: p.path, word_count: p.word_count ?? 0 }))
       .sort((a, b) => a.word_count - b.word_count);
 
-    // Compute deep pages (depth > 3)
     const deepPages = pages
       .filter(p => (p as any).crawl_depth != null && (p as any).crawl_depth > 3)
       .map(p => ({ url: p.url, path: p.path, depth: (p as any).crawl_depth as number }))
       .sort((a, b) => b.depth - a.depth);
 
-    // Compute broken links
     const brokenLinksArr: Array<{ source_url: string; broken_url: string; status?: number }> = [];
     pages.forEach(p => {
       const bl = (p as any).broken_links;
@@ -865,7 +123,6 @@ export default function SiteCrawl() {
       }
     });
 
-    // Compute indexability ratio
     const indexable = pages.filter(p => p.is_indexable !== false && !(p.issues || []).includes('noindex')).length;
     const noindex = pages.length - indexable;
 
@@ -912,330 +169,6 @@ export default function SiteCrawl() {
       </div>
     );
   }
-
-   async function loadPages(crawlId: string) {
-    try {
-      const [{ data, error }, { data: blData }] = await Promise.all([
-        supabase
-          .from('crawl_pages')
-          .select('*')
-          .eq('crawl_id', crawlId)
-          .order('seo_score', { ascending: true }),
-        supabase
-          .from('crawl_page_backlinks' as any)
-          .select('*')
-          .eq('crawl_id', crawlId)
-          .order('referring_domains', { ascending: false }),
-      ]);
-      if (error) {
-        console.error('[loadPages] Error:', error);
-      }
-      if (data) {
-        // Sanitize fields that must be arrays to prevent React crashes
-        const sanitized = data.map((p: any) => ({
-          ...p,
-          path: p.path || p.url || '',
-          word_count: p.word_count ?? 0,
-          images_without_alt: p.images_without_alt ?? 0,
-          seo_score: p.seo_score ?? 0,
-          issues: Array.isArray(p.issues) ? p.issues : [],
-          schema_org_types: Array.isArray(p.schema_org_types) ? p.schema_org_types : [],
-          schema_org_errors: Array.isArray(p.schema_org_errors) ? p.schema_org_errors : [],
-          broken_links: Array.isArray(p.broken_links) ? p.broken_links : [],
-          anchor_texts: Array.isArray(p.anchor_texts) ? p.anchor_texts : [],
-          custom_extraction: (p.custom_extraction && typeof p.custom_extraction === 'object' && !Array.isArray(p.custom_extraction)) ? p.custom_extraction : {},
-        }));
-        setPages(sanitized as any);
-
-        // Load GSC indexation status for these pages
-        const pageUrls = sanitized.map((p: any) => p.url).filter(Boolean);
-        if (pageUrls.length > 0) {
-          const { data: idxData } = await supabase
-            .from('indexation_checks')
-            .select('page_url, verdict, coverage_state')
-            .in('page_url', pageUrls.slice(0, 500));
-          if (idxData?.length) {
-            const map: Record<string, { verdict: string; coverage_state: string | null }> = {};
-            for (const row of idxData) {
-              map[row.page_url] = { verdict: row.verdict, coverage_state: row.coverage_state };
-            }
-            setIndexationMap(map);
-          }
-        }
-      }
-      setCrawlBacklinks(blData || []);
-    } catch {
-      // Silent — handled by error boundary
-    }
-  }
-
-  async function viewCrawl(crawl: CrawlResult) {
-    setIsLoadingPastCrawl(true);
-    setExpandedPage(null);
-    setViewingCrawlId(crawl.id);
-    setCrawlResult({
-      ...crawl,
-      ai_recommendations: Array.isArray(crawl.ai_recommendations) ? crawl.ai_recommendations : [],
-    });
-    try {
-      await loadPages(crawl.id);
-      requestAnimationFrame(() => {
-        historySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    } catch {
-      toast.error(t.errorCrawl);
-    } finally {
-      setIsLoadingPastCrawl(false);
-    }
-  }
-
-  function resetViewedCrawl() {
-    setViewingCrawlId(null);
-    setCrawlResult(null);
-    setPages([]);
-    setExpandedPage(null);
-    setCrawlBacklinks([]);
-  }
-
-  function addSelector() {
-    if (!newSelectorName.trim() || !newSelectorValue.trim()) return;
-    setCustomSelectors(prev => [...prev, { name: newSelectorName.trim(), selector: newSelectorValue.trim(), type: 'css' }]);
-    setNewSelectorName('');
-    setNewSelectorValue('');
-  }
-
-  function removeSelector(index: number) {
-    setCustomSelectors(prev => prev.filter((_, i) => i !== index));
-  }
-
-  // ── Phase 1: Detect pages (mapping only, no credits) ──
-  async function handleDetect(e: React.FormEvent) {
-    e.preventDefault();
-    if (!user) { navigate('/auth'); return; }
-    try { localStorage.setItem('crawl_last_url', url); } catch {}
-
-    setIsDetectingPages(true);
-    setDetectionDone(false);
-    setDiscoveredUrls([]);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('crawl-site', {
-        body: { url, userId: user.id, mode: 'detect' },
-      });
-
-      if (error) throw error;
-      if (!data.success) {
-        toast.error(data.error || 'Erreur de détection');
-        return;
-      }
-
-      const detectedUrls: string[] = data.urls || [];
-      setDiscoveredUrls(detectedUrls);
-      setTotalEstimatedPages(data.totalDiscovered || detectedUrls.length);
-      setSitemapPagesCount(data.sources?.sitemap || null);
-      setIndexedPagesCount(data.sources?.gscIndexed || null);
-
-      // Update directory tree from detection response
-      if (data.directories?.length > 0) {
-        setSitemapTree(data.directories.slice(0, 15));
-      }
-
-      // Auto-set slider to total discovered
-      const total = detectedUrls.length;
-      if (total > 0) {
-        setMaxPages(Math.min(total, isAdmin ? 500 : maxSliderCap));
-      }
-
-      setDetectionDone(true);
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur de détection');
-    } finally {
-      setIsDetectingPages(false);
-    }
-  }
-
-  // ── Phase 2: Analyze (actual crawl with scraping) ──
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!user) { navigate('/auth'); return; }
-    // #15: persist URL for next session
-    try { localStorage.setItem('crawl_last_url', url); } catch {}
-    
-    // Fair-use limit check for subscribed users
-    if (isUnlimited && (crawlPagesThisMonth >= FAIR_USE_LIMIT || crawlPagesThisMonth + maxPages > FAIR_USE_LIMIT)) {
-      setIsButtonShaking(true);
-      setTimeout(() => {
-        setIsButtonShaking(false);
-        setShowLimitModal(true);
-      }, 600);
-      return;
-    }
-    
-    if (!isUnlimited && credits < creditCost) {
-      toast.error(`${t.insufficientCredits} ${creditCost}, ${t.available} ${credits}`);
-      return;
-    }
-
-    setIsLoading(true);
-    setPhase(t.mapping);
-    setProgress(0);
-    setPages([]);
-    setCrawlResult(null);
-
-    try {
-      // Compute effective URL filter from the 4 filter fields
-      let effectiveFilter = urlFilter.trim();
-      if (!effectiveFilter) {
-        if (includeDir) effectiveFilter = `${includeDir}/.*`;
-        else if (excludeDir) effectiveFilter = `(?!${excludeDir}/).*`;
-        if (includePage) effectiveFilter = effectiveFilter ? `${effectiveFilter}|.*${includePage}.*` : `.*${includePage}.*`;
-        else if (excludePage) {
-          const negPage = `(?!.*${excludePage})`;
-          effectiveFilter = effectiveFilter ? `${negPage}${effectiveFilter}` : `${negPage}.*`;
-        }
-      }
-
-      const { data, error } = await supabase.functions.invoke('crawl-site', {
-        body: { 
-          url, 
-          maxPages, 
-          userId: user.id,
-          maxDepth: maxDepth || 0,
-          urlFilter: effectiveFilter || '',
-          customSelectors,
-        },
-      });
-
-      if (error) throw error;
-      if (!data.success) {
-        toast.error(data.error || t.errorCrawl);
-        setIsLoading(false);
-        return;
-      }
-
-      const { data: crawl } = await supabase
-        .from('site_crawls')
-        .select('*')
-        .eq('id', data.crawlId)
-        .single();
-
-      if (crawl) {
-        const sanitized = {
-          ...crawl as any,
-          ai_recommendations: Array.isArray((crawl as any).ai_recommendations) ? (crawl as any).ai_recommendations : [],
-        };
-        setCrawlResult(sanitized);
-        setPastCrawls(prev => {
-          const next = [sanitized as CrawlResult, ...prev.filter(c => c.id !== (sanitized as CrawlResult).id)];
-          return next.slice(0, 20);
-        });
-        setPhase(`${data.totalPages} ${t.auditQueued}`);
-      }
-      // Silent — no toast for pages discovered
-    } catch (err: any) {
-      toast.error(err.message || t.errorCrawl);
-      setIsLoading(false);
-      setPhase('');
-    }
-  }
-
-  // ── Stop crawl (keep cached pages) ────────────────────────
-  async function handleStopCrawl(crawlId?: string) {
-    const targetId = crawlId || crawlResult?.id;
-    if (!targetId) return;
-    try {
-      await supabase
-        .from('site_crawls')
-        .update({ status: 'stopped', error_message: 'Stopped by user — cached data preserved' })
-        .eq('id', targetId);
-
-      // Stop polling
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-        pollingCrawlIdRef.current = null;
-      }
-
-      // Update local state
-      if (!crawlId || crawlId === crawlResult?.id) {
-        setCrawlResult(prev => prev ? { ...prev, status: 'stopped' } : prev);
-        setIsLoading(false);
-        setPhase('');
-      }
-
-      // Update pastCrawls list
-      setPastCrawls(prev => prev.map(c => c.id === targetId ? { ...c, status: 'stopped' } : c));
-
-      toast.success(t.crawlStopped);
-    } catch (err: any) {
-      toast.error(err.message || 'Error stopping crawl');
-    }
-  }
-
-
-  async function handleSitemapExport() {
-    if (pages.length === 0) return;
-    const domain = crawlResult?.domain || '';
-    const xml = generateSitemapXml(pages, domain);
-    const blob = new Blob([xml], { type: 'application/xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const { getReportFilename } = await import('@/utils/reportFilename');
-    a.download = getReportFilename(domain, 'crawl', 'xml');
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Sitemap XML téléchargé');
-  }
-
-  // ── Crawl comparison ──────────────────────────────────────
-  async function handleCompare() {
-    if (!compareCrawlA || !compareCrawlB || compareCrawlA === compareCrawlB) return;
-    setIsComparing(true);
-    setComparisonResult(null);
-
-    try {
-      const [{ data: pagesA }, { data: pagesB }] = await Promise.all([
-        supabase.from('crawl_pages').select('path, seo_score, url').eq('crawl_id', compareCrawlA),
-        supabase.from('crawl_pages').select('path, seo_score, url').eq('crawl_id', compareCrawlB),
-      ]);
-
-      if (!pagesA || !pagesB) { toast.error('Impossible de charger les données'); return; }
-
-      const mapA = new Map(pagesA.map((p: any) => [p.path, p.seo_score || 0]));
-      const mapB = new Map(pagesB.map((p: any) => [p.path, p.seo_score || 0]));
-
-      const newPages = pagesB.filter((p: any) => !mapA.has(p.path)).map((p: any) => p.path);
-      const removedPages = pagesA.filter((p: any) => !mapB.has(p.path)).map((p: any) => p.path);
-
-      const improved: { path: string; before: number; after: number }[] = [];
-      const degraded: { path: string; before: number; after: number }[] = [];
-
-      for (const [path, scoreB] of mapB.entries()) {
-        const scoreA = mapA.get(path);
-        if (scoreA !== undefined) {
-          if (scoreB > scoreA + 5) improved.push({ path, before: scoreA, after: scoreB });
-          else if (scoreB < scoreA - 5) degraded.push({ path, before: scoreA, after: scoreB });
-        }
-      }
-
-      const avgA = pagesA.length > 0 ? pagesA.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / pagesA.length : 0;
-      const avgB = pagesB.length > 0 ? pagesB.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / pagesB.length : 0;
-
-      setComparisonResult({
-        newPages,
-        removedPages,
-        improved: improved.sort((a, b) => (b.after - b.before) - (a.after - a.before)),
-        degraded: degraded.sort((a, b) => (a.after - a.before) - (b.after - b.before)),
-        scoreChange: Math.round(avgB - avgA),
-      });
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur comparaison');
-    } finally {
-      setIsComparing(false);
-    }
-  }
-
 
   return (
     <>
@@ -1329,24 +262,7 @@ export default function SiteCrawl() {
                   size="lg"
                   className="w-full gap-2 font-bold bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white shadow-lg shadow-violet-500/25"
                   disabled={subscribeLoading}
-                  onClick={async () => {
-                    if (!user) {
-                      navigate('/auth?returnTo=/site-crawl');
-                      return;
-                    }
-                    setSubscribeLoading(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke('stripe-actions', {
-                        body: { action: 'subscription', returnUrl: window.location.href }
-                      });
-                      if (error) throw error;
-                      if (data?.url) window.open(data.url, '_blank', 'noopener');
-                    } catch (e: any) {
-                      toast.error(e.message || 'Erreur');
-                    } finally {
-                      setSubscribeLoading(false);
-                    }
-                  }}
+                  onClick={handleSubscribe}
                 >
                   <Crown className="h-4 w-4 text-yellow-300" />
                   {subscribeLoading
@@ -1375,213 +291,180 @@ export default function SiteCrawl() {
           </div>
 
           {/* Crawl Quota Counter */}
-          {isUnlimited && (
-            <div className="mb-6 flex justify-center">
-              <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/60 border border-violet-500/20">
-                <Bug className="w-4 h-4 text-violet-400 shrink-0" />
-                <div className="flex items-baseline gap-1.5 text-sm">
-                  <span className="font-bold tabular-nums text-foreground">{crawlPagesThisMonth.toLocaleString('fr-FR')}</span>
-                  <span className="text-muted-foreground">/</span>
-                  <span className="font-semibold tabular-nums text-foreground">{FAIR_USE_LIMIT.toLocaleString('fr-FR')}</span>
-                </div>
-                <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      crawlPagesThisMonth / FAIR_USE_LIMIT > 0.9 ? 'bg-red-500' :
-                      crawlPagesThisMonth / FAIR_USE_LIMIT > 0.7 ? 'bg-amber-500' : 'bg-violet-500'
-                    }`}
-                    style={{ width: `${Math.min(100, (crawlPagesThisMonth / FAIR_USE_LIMIT) * 100)}%` }}
-                  />
-                </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {Math.max(0, FAIR_USE_LIMIT - crawlPagesThisMonth).toLocaleString('fr-FR')} {language === 'fr' ? 'pages restantes ce mois-ci' : language === 'es' ? 'páginas restantes este mes' : 'pages remaining this month'}
+          {isUnlimited && crawlPagesThisMonth > 0 && (
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 border">
+                <Hash className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {language === 'fr' ? 'Pages crawlées ce mois :' : 'Pages crawled this month:'}
                 </span>
-                <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-500">
-                  {isAgencyPlus ? 'Pro Agency+' : 'Pro Agency'}
-                </Badge>
+                <span className={`font-bold text-sm ${crawlPagesThisMonth >= FAIR_USE_LIMIT ? 'text-destructive' : 'text-foreground'}`}>
+                  {crawlPagesThisMonth.toLocaleString()} / {FAIR_USE_LIMIT.toLocaleString()}
+                </span>
               </div>
             </div>
           )}
 
-          {/* SEO content moved to bottom */}
-
-          {/* Formulaire */}
-          <Card className="mb-8 border-violet-500/30">
-            <CardContent className="p-6">
-              <form onSubmit={detectionDone ? handleSubmit : handleDetect} className="space-y-6">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-400" />
+          {/* Crawl Form */}
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <form onSubmit={detectionDone ? handleSubmit : handleDetect} className="space-y-4">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       value={url}
                       onChange={e => setUrl(e.target.value)}
                       placeholder={t.placeholder}
-                      className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500 caret-foreground"
-                      required
-                      disabled={isLoading || isDetectingPages}
+                      className="pl-10"
+                      disabled={isLoading}
                     />
                   </div>
-                  <Button type="submit" disabled={isLoading || !url || isDetectingPages || (crawlResult?.status === 'completed' && !viewingCrawlId)} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-shake' : ''}`}>
-                    {isDetectingPages ? <Loader2 className="w-4 h-4 animate-spin" /> : isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
-                    {isDetectingPages ? t.detecting : isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : detectionDone ? t.launchBtn : t.detectBtn}
-                  </Button>
-                  {isLoading && (
+                  {!detectionDone ? (
+                    <Button type="submit" disabled={isLoading || !url || isDetectingPages} className="gap-2">
+                      {isDetectingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                      {isDetectingPages ? t.detecting : t.detectBtn}
+                    </Button>
+                  ) : (
                     <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleStopCrawl()}
-                      className="border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
-                      title={t.stopCrawl}
+                      type="submit"
+                      disabled={isLoading}
+                      className={`gap-2 ${isButtonShaking ? 'animate-shake' : ''}`}
                     >
-                      <Square className="w-3.5 h-3.5 fill-destructive text-destructive" />
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
+                      {isLoading ? t.crawling : t.launchBtn}
                     </Button>
                   )}
                 </div>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                  <div className="flex-1 space-y-2">
-                    <label className="text-sm text-muted-foreground flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        {t.pagesToAnalyze}
-                        {isDetectingPages && <Loader2 className="h-3 w-3 animate-spin text-violet-400" />}
-                        {totalEstimatedPages != null && totalEstimatedPages > 0 && (
-                          <Badge variant="secondary" className="text-[10px] font-normal gap-1">
-                            <FileText className="h-2.5 w-2.5" />
-                            {totalEstimatedPages.toLocaleString()} {language === 'fr' ? 'pages détectées' : language === 'es' ? 'páginas detectadas' : 'pages detected'}
-                          </Badge>
-                        )}
-                        {indexedPagesCount != null && indexedPagesCount > 0 && sitemapPagesCount != null && sitemapPagesCount > 0 && (
-                          <Badge variant="outline" className="text-[9px] font-normal gap-0.5">
-                            {indexedPagesCount.toLocaleString()} {language === 'fr' ? 'indexées' : 'indexed'}
-                            {sitemapPagesCount !== indexedPagesCount && (
-                              <> + {Math.max(0, sitemapPagesCount - indexedPagesCount).toLocaleString()} {language === 'fr' ? 'sitemap' : 'sitemap'}</>
-                            )}
-                          </Badge>
-                        )}
+
+                {/* Page count info */}
+                {(totalEstimatedPages || indexedPagesCount || sitemapPagesCount) && (
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    {sitemapPagesCount != null && (
+                      <span className="flex items-center gap-1"><FolderTree className="w-3 h-3" /> Sitemap: {sitemapPagesCount.toLocaleString()}</span>
+                    )}
+                    {indexedPagesCount != null && (
+                      <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> Indexed: {indexedPagesCount.toLocaleString()}</span>
+                    )}
+                    {totalEstimatedPages != null && (
+                      <span className="font-medium text-foreground">
+                        Total: ~{totalEstimatedPages.toLocaleString()} {t.pages}
                       </span>
-                    </label>
-                    {/* Slider page count selector */}
-                    <div className="flex items-center gap-4">
-                      <Slider
-                        value={[maxPages]}
-                        onValueChange={([val]) => setMaxPages(val)}
-                        min={10}
-                        max={isPaidPlan ? (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.max(10, totalEstimatedPages) : maxSliderCap) : (totalEstimatedPages != null && totalEstimatedPages > 0 ? Math.min(maxSliderCap, Math.max(10, totalEstimatedPages)) : maxSliderCap)}
-                        step={isPaidPlan ? 1 : 5}
-                        disabled={isLoading}
-                        className="flex-1"
-                      />
-                      <span className="text-sm font-bold text-brand-violet tabular-nums min-w-[3ch] text-right">{maxPages}</span>
-                    </div>
+                    )}
                   </div>
-                  {!isUnlimited && (
-                    <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
-                      <CreditCoin size="md" />
-                      <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
-                    </button>
-                  )}
-                </div>
+                )}
 
-                {/* Crawl Filters — from sitemap */}
-                {sitemapTree.length > 0 && (
-                  <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
-                    <div className="flex items-center gap-2 mb-1">
-                      <FolderTree className="w-4 h-4 text-violet-400" />
-                      <span className="text-sm font-medium text-foreground">
-                        {language === 'fr' ? 'Filtrer le périmètre du crawl' : 'Filter crawl scope'}
-                      </span>
-                      <Badge variant="secondary" className="text-[9px] font-normal">
-                        {language === 'fr' ? 'Auto-détecté via sitemap' : 'Auto-detected from sitemap'}
-                      </Badge>
+                {/* Slider */}
+                {detectionDone && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{t.pagesToAnalyze}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-foreground">{maxPages}</span>
+                        {!isUnlimited && (
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            ({creditCost} <CreditCoin size="xs" />)
+                          </span>
+                        )}
+                        {isUnlimited && <Badge variant="secondary" className="text-[10px]">{t.unlimited}</Badge>}
+                      </div>
                     </div>
+                    <Slider
+                      value={[maxPages]}
+                      onValueChange={v => setMaxPages(v[0])}
+                      min={5}
+                      max={isAdmin ? 500 : maxSliderCap}
+                      step={5}
+                      disabled={isLoading}
+                    />
+                    {isLoading && crawlResult && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleStopCrawl()}
+                          className="gap-1.5"
+                        >
+                          <Square className="w-3 h-3 fill-current" />
+                          {t.stopCrawl}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
+                {/* Directory filters */}
+                {detectionDone && sitemapTree.length > 0 && (
+                  <div className="space-y-3 p-3 rounded-lg border bg-muted/30">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      <Filter className="w-3 h-3" />
+                      {language === 'fr' ? 'Filtres de périmètre' : 'Scope filters'}
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Uniquement les répertoires */}
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted-foreground flex items-center gap-1.5">
                           <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                           {language === 'fr' ? 'Uniquement les répertoires' : 'Only directories'}
                         </label>
                         <Select value={includeDir} onValueChange={v => { setIncludeDir(v === '__none__' ? '' : v); if (v && v !== '__none__') setExcludeDir(''); }}>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder={language === 'fr' ? 'Tous (aucun filtre)' : 'All (no filter)'} />
-                          </SelectTrigger>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={language === 'fr' ? 'Tous (aucun filtre)' : 'All (no filter)'} /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__none__">{language === 'fr' ? 'Tous (aucun filtre)' : 'All (no filter)'}</SelectItem>
                             {sitemapTree.map(d => (
                               <SelectItem key={d.path} value={d.path}>
-                                <span className="flex items-center gap-1.5">
-                                  <Folder className="w-3 h-3" /> /{d.label} <span className="text-muted-foreground">({d.count})</span>
-                                </span>
+                                <span className="flex items-center gap-1.5"><Folder className="w-3 h-3" /> /{d.label} <span className="text-muted-foreground">({d.count})</span></span>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
-
-                      {/* Sauf les répertoires */}
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted-foreground flex items-center gap-1.5">
                           <XCircle className="w-3 h-3 text-red-500" />
                           {language === 'fr' ? 'Sauf les répertoires' : 'Exclude directories'}
                         </label>
                         <Select value={excludeDir} onValueChange={v => { setExcludeDir(v === '__none__' ? '' : v); if (v && v !== '__none__') setIncludeDir(''); }}>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder={language === 'fr' ? 'Aucun (aucun filtre)' : 'None (no filter)'} />
-                          </SelectTrigger>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={language === 'fr' ? 'Aucun (aucun filtre)' : 'None (no filter)'} /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__none__">{language === 'fr' ? 'Aucun (aucun filtre)' : 'None (no filter)'}</SelectItem>
                             {sitemapTree.map(d => (
                               <SelectItem key={d.path} value={d.path}>
-                                <span className="flex items-center gap-1.5">
-                                  <Folder className="w-3 h-3" /> /{d.label} <span className="text-muted-foreground">({d.count})</span>
-                                </span>
+                                <span className="flex items-center gap-1.5"><Folder className="w-3 h-3" /> /{d.label} <span className="text-muted-foreground">({d.count})</span></span>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
-
-                      {/* Uniquement les pages */}
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted-foreground flex items-center gap-1.5">
                           <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                           {language === 'fr' ? 'Uniquement les pages' : 'Only pages'}
                         </label>
                         <Select value={includePage} onValueChange={v => { setIncludePage(v === '__none__' ? '' : v); if (v && v !== '__none__') setExcludePage(''); }}>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder={language === 'fr' ? 'Toutes (aucun filtre)' : 'All (no filter)'} />
-                          </SelectTrigger>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={language === 'fr' ? 'Toutes (aucun filtre)' : 'All (no filter)'} /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__none__">{language === 'fr' ? 'Toutes (aucun filtre)' : 'All (no filter)'}</SelectItem>
                             {sitemapPages.map(p => (
                               <SelectItem key={p.path} value={p.path}>
-                                <span className="flex items-center gap-1.5">
-                                  <FileText className="w-3 h-3" /> {p.label}
-                                </span>
+                                <span className="flex items-center gap-1.5"><FileText className="w-3 h-3" /> {p.label}</span>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
-
-                      {/* Sauf les pages */}
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted-foreground flex items-center gap-1.5">
                           <XCircle className="w-3 h-3 text-red-500" />
                           {language === 'fr' ? 'Sauf les pages' : 'Exclude pages'}
                         </label>
                         <Select value={excludePage} onValueChange={v => { setExcludePage(v === '__none__' ? '' : v); if (v && v !== '__none__') setIncludePage(''); }}>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder={language === 'fr' ? 'Aucune (aucun filtre)' : 'None (no filter)'} />
-                          </SelectTrigger>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={language === 'fr' ? 'Aucune (aucun filtre)' : 'None (no filter)'} /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__none__">{language === 'fr' ? 'Aucune (aucun filtre)' : 'None (no filter)'}</SelectItem>
                             {sitemapPages.map(p => (
                               <SelectItem key={p.path} value={p.path}>
-                                <span className="flex items-center gap-1.5">
-                                  <FileText className="w-3 h-3" /> {p.label}
-                                </span>
+                                <span className="flex items-center gap-1.5"><FileText className="w-3 h-3" /> {p.label}</span>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -1589,7 +472,6 @@ export default function SiteCrawl() {
                       </div>
                     </div>
 
-                    {/* Active filter summary */}
                     {(includeDir || excludeDir || includePage || excludePage) && (
                       <div className="flex items-center gap-2 pt-1">
                         <Filter className="w-3 h-3 text-violet-400" />
@@ -1617,39 +499,21 @@ export default function SiteCrawl() {
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-4 pt-3 border-t border-border mt-2">
-                    {/* Crawl Depth */}
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground flex items-center gap-2">
                         <Layers className="w-4 h-4" />
                         {t.crawlDepth}: <span className="font-semibold text-foreground">{maxDepth === 0 ? t.depthUnlimited : `${t.depthLevel} ${maxDepth}`}</span>
                       </label>
-                      <Slider
-                        value={[maxDepth]}
-                        onValueChange={v => setMaxDepth(v[0])}
-                        min={0}
-                        max={10}
-                        step={1}
-                        disabled={isLoading}
-                      />
+                      <Slider value={[maxDepth]} onValueChange={v => setMaxDepth(v[0])} min={0} max={10} step={1} disabled={isLoading} />
                       <p className="text-xs text-muted-foreground">0 = {t.depthUnlimited}</p>
                     </div>
-
-                    {/* URL Filter */}
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground flex items-center gap-2">
                         <Filter className="w-4 h-4" />
                         {t.urlFilter}
                       </label>
-                      <Input
-                        value={urlFilter}
-                        onChange={e => setUrlFilter(e.target.value)}
-                        placeholder={t.urlFilterPlaceholder}
-                        className="font-mono text-sm"
-                        disabled={isLoading}
-                      />
+                      <Input value={urlFilter} onChange={e => setUrlFilter(e.target.value)} placeholder={t.urlFilterPlaceholder} className="font-mono text-sm" disabled={isLoading} />
                     </div>
-
-                    {/* Custom Selectors */}
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground flex items-center gap-2">
                         <Code2 className="w-4 h-4" />
@@ -1666,21 +530,8 @@ export default function SiteCrawl() {
                         </div>
                       ))}
                       <div className="flex gap-2">
-                        <Input
-                          value={newSelectorName}
-                          onChange={e => setNewSelectorName(e.target.value)}
-                          placeholder={t.selectorName}
-                          className="w-32 text-sm"
-                          disabled={isLoading}
-                        />
-                        <Input
-                          value={newSelectorValue}
-                          onChange={e => setNewSelectorValue(e.target.value)}
-                          placeholder={t.selectorValue}
-                          className="flex-1 font-mono text-sm"
-                          disabled={isLoading}
-                          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSelector())}
-                        />
+                        <Input value={newSelectorName} onChange={e => setNewSelectorName(e.target.value)} placeholder={t.selectorName} className="w-32 text-sm" disabled={isLoading} />
+                        <Input value={newSelectorValue} onChange={e => setNewSelectorValue(e.target.value)} placeholder={t.selectorValue} className="flex-1 font-mono text-sm" disabled={isLoading} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSelector())} />
                         <Button type="button" variant="outline" size="sm" onClick={addSelector} disabled={isLoading || !newSelectorName || !newSelectorValue}>
                           <Plus className="w-4 h-4" />
                         </Button>
@@ -1709,9 +560,9 @@ export default function SiteCrawl() {
             </div>
           )}
 
-          {/* Résultats */}
+          {/* Results */}
           {crawlResult && !isLoadingPastCrawl && (crawlResult.status === 'completed' || viewingCrawlId || (pages.length > 0 && !isLoading)) && (
-            <StrategicErrorBoundary onReset={() => { setCrawlResult(null); setPages([]); setViewingCrawlId(null); }}>
+            <StrategicErrorBoundary onReset={() => { resetViewedCrawl(); }}>
             <div ref={historySectionRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {viewingCrawlId && (
@@ -1723,6 +574,7 @@ export default function SiteCrawl() {
                 </div>
               )}
 
+              {/* KPI Cards */}
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 <Card className="border">
                   <CardContent className="p-2.5 text-center">
@@ -1754,7 +606,6 @@ export default function SiteCrawl() {
                     <div className="text-[10px] text-muted-foreground">{t.totalErrors}</div>
                   </CardContent>
                 </Card>
-                {/* Weight benchmark */}
                 {(() => {
                   const pagesWithWeight = pages.filter(p => (p as any).html_size_bytes > 0);
                   if (pagesWithWeight.length === 0) return null;
@@ -1769,7 +620,6 @@ export default function SiteCrawl() {
                     </Card>
                   );
                 })()}
-                {/* Indexed pages inline */}
                 {indexedPagesCount != null && (
                   <Card className="border">
                     <CardContent className="p-2.5 text-center">
@@ -1780,7 +630,6 @@ export default function SiteCrawl() {
                     </CardContent>
                   </Card>
                 )}
-                {/* Tone Consistency KPI */}
                 {crawlResult.tone_consistency_score != null && (
                   <Card className={`border ${crawlResult.tone_consistency_score >= 75 ? 'border-emerald-500/30 bg-emerald-500/5' : crawlResult.tone_consistency_score >= 50 ? 'border-amber-500/30 bg-amber-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
                     <CardContent className="p-2.5 text-center">
@@ -1795,113 +644,64 @@ export default function SiteCrawl() {
                 )}
               </div>
 
-              {/* Near-duplicate & Schema.org alerts */}
-              {(nearDuplicates.length > 0 || schemaErrorPages.length > 0) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {nearDuplicates.length > 0 && (
-                    <Card className="border-amber-500/30 bg-amber-500/5">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <Hash className="w-5 h-5 text-amber-500 shrink-0" />
-                        <div>
-                          <div className="text-sm font-medium text-foreground">{t.duplicateContent}</div>
-                          <div className="text-xs text-muted-foreground">{nearDuplicates.length} {t.pages}</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                  {schemaErrorPages.length > 0 && (
-                    <Card className="border-red-500/30 bg-red-500/5">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
-                        <div>
-                          <div className="text-sm font-medium text-foreground">{t.schemaErrors}</div>
-                          <div className="text-xs text-muted-foreground">{schemaErrorPages.length} {t.pages}</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              )}
+              {/* HTTP Status Chart */}
+              {pages.length > 0 && <HttpStatusChart pages={pages} />}
 
-              {/* Action bar + HTTP Status compact */}
-              <div className="flex flex-wrap items-stretch gap-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button variant="outline" size="sm" className="gap-2" onClick={handleSitemapExport}>
-                    <Download className="w-4 h-4" />
-                    {t.sitemapExport}
-                  </Button>
-                  <Button
-                    onClick={() => setIsReportOpen(true)}
-                    size="default"
-                    className="gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white border border-[hsl(263,50%,25%)] shadow-sm transition-all duration-200"
-                  >
-                    <FileText className="h-4 w-4" />
-                    {t.viewReport}
-                  </Button>
-                </div>
-                {pages.length > 0 && (
-                  <div className="ml-auto w-full sm:w-auto sm:max-w-[280px]">
-                    <HttpStatusChart pages={pages} language={language} />
-                  </div>
-                )}
-              </div>
+              {/* Maillage IPR */}
+              {pages.length > 0 && (() => {
+                const maillageData = computeMaillageFromCrawlPages(pages as any);
+                return maillageData ? <MaillageIPRCard data={maillageData} /> : null;
+              })()}
 
-              {/* Synthèse IA */}
+              {/* AI Summary */}
               {crawlResult.ai_summary && (
-                <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Sparkles className="w-5 h-5 text-primary" />
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-yellow-500" />
                       {t.aiSummary}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-foreground leading-relaxed">{crawlResult.ai_summary}</p>
-                    {crawlResult.ai_recommendations?.length > 0 && (
-                      <div className="mt-4 space-y-3">
-                        <h4 className="text-sm font-semibold text-foreground">{t.priorityRecs}</h4>
-                        {(crawlResult.ai_recommendations as any[]).map((rec: any, i: number) => (
-                          <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                            <Badge variant={rec.priority === 'critical' ? 'destructive' : rec.priority === 'high' ? 'default' : 'secondary'} className="shrink-0 mt-0.5">
-                              {rec.priority}
-                            </Badge>
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium text-foreground">{rec.title}</div>
-                              <div className="text-xs text-muted-foreground mt-0.5">{rec.description}</div>
-                              {rec.affected_pages && (
-                                <div className="text-xs text-muted-foreground mt-1">📄 {rec.affected_pages} {t.pagesAffected}</div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: crawlResult.ai_summary }} />
                   </CardContent>
                 </Card>
               )}
 
-              {/* Maillage Interne (IPR) */}
-              {pages.length >= 3 && (() => {
-                const maillageData = computeMaillageFromCrawlPages(pages.map(p => ({
-                  internal_links: (p as any).internal_links ?? undefined,
-                  external_links: (p as any).external_links ?? undefined,
-                  crawl_depth: p.crawl_depth ?? undefined,
-                  seo_score: p.seo_score ?? undefined,
-                  http_status: p.http_status ?? undefined,
-                })));
-                if (!maillageData) return null;
-                return (
-                  <MaillageIPRCard
-                    data={maillageData}
-                    onExploreCocoon={() => {
-                      const domain = crawlResult?.domain || '';
-                      navigate(`/app/cocoon?domain=${encodeURIComponent(domain)}`);
-                    }}
-                  />
-                );
-              })()}
+              {/* Recommendations */}
+              {crawlResult.ai_recommendations?.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-emerald-500" />
+                      {t.priorityRecs}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {crawlResult.ai_recommendations.map((rec: any, i: number) => (
+                        <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border">
+                          <div className="shrink-0 mt-0.5">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${i < 3 ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-500'}`}>
+                              {i + 1}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-foreground font-medium">
+                              {typeof rec === 'string' ? rec : (rec?.title || rec?.recommendation || rec?.text || `Recommandation ${i + 1}`)}
+                            </p>
+                            {rec?.pages_affected && (
+                              <span className="text-[10px] text-muted-foreground">{rec.pages_affected} {t.pagesAffected}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-
+              {/* Top Errors */}
               {Object.keys(issueStats).length > 0 && (
                 <Card>
                   <CardHeader className="pb-2">
@@ -1911,57 +711,92 @@ export default function SiteCrawl() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {Object.entries(issueStats)
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, 12)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 15)
                         .map(([issue, count]) => (
-                          <div key={issue} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50">
-                            <span className="text-sm text-foreground font-mono">{issue.replace(/_/g, ' ')}</span>
-                            <Badge variant="secondary">{count}</Badge>
-                          </div>
+                          <Badge key={issue} variant="outline" className="gap-1.5 text-xs">
+                            <span className="font-mono">{count}</span>
+                            <span>{issue.replace(/_/g, ' ')}</span>
+                          </Badge>
                         ))}
                     </div>
                   </CardContent>
                 </Card>
               )}
 
-              {/* Pages list */}
+              {/* Near duplicates & Schema errors */}
+              {nearDuplicates.length > 0 && (
+                <Card className="border-amber-500/20 bg-amber-500/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-amber-500" />
+                      {t.duplicateContent} ({nearDuplicates.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {nearDuplicates.map((p, i) => (
+                        <div key={i} className="text-xs font-mono text-muted-foreground truncate">{p.path}</div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {schemaErrorPages.length > 0 && (
+                <Card className="border-destructive/20 bg-destructive/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <XCircle className="w-4 h-4 text-destructive" />
+                      {t.schemaErrors} ({schemaErrorPages.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {schemaErrorPages.map((p, i) => (
+                        <div key={i} className="text-xs font-mono text-muted-foreground truncate">{p.path}</div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Export & Actions bar */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleSitemapExport} disabled={pages.length === 0} className="gap-1.5 text-xs">
+                  <Download className="w-3.5 h-3.5" />
+                  {t.sitemapExport}
+                </Button>
+                {siteCrawlReportData && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsReportOpen(true)} className="gap-1.5 text-xs">
+                    <FileText className="w-3.5 h-3.5" />
+                    {t.viewReport}
+                  </Button>
+                )}
+              </div>
+
+              {/* Crawled Pages list */}
               <Card>
                 <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-muted-foreground" />
-                      {t.crawledPages} ({filteredPages.length})
-                    </CardTitle>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <CardTitle className="text-lg">{t.crawledPages} ({sortedPages.length})</CardTitle>
                     <div className="flex items-center gap-2">
-                      {/* Index/Noindex toggle */}
-                      <div className="flex items-center rounded-lg border bg-muted/50 p-0.5">
-                        <button
-                          onClick={() => setIndexFilter(indexFilter === 'noindex' ? 'indexed' : 'noindex')}
-                          className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                            indexFilter === 'indexed' || indexFilter === 'all'
-                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          ✓ Index ({indexedCount})
+                      {/* Index filter */}
+                      <div className="flex items-center gap-1 text-xs">
+                        <button type="button" onClick={() => setIndexFilter('all')} className={`px-2 py-1 rounded ${indexFilter === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                          {language === 'fr' ? 'Toutes' : 'All'} ({pages.length})
                         </button>
-                        <button
-                          onClick={() => setIndexFilter(indexFilter === 'indexed' ? 'noindex' : 'indexed')}
-                          className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                            indexFilter === 'noindex'
-                              ? 'bg-destructive/15 text-destructive'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          ✗ Noindex ({noindexCount})
+                        <button type="button" onClick={() => setIndexFilter('indexed')} className={`px-2 py-1 rounded ${indexFilter === 'indexed' ? 'bg-emerald-500 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+                          Indexed ({indexedCount})
+                        </button>
+                        <button type="button" onClick={() => setIndexFilter('noindex')} className={`px-2 py-1 rounded ${indexFilter === 'noindex' ? 'bg-destructive text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+                          Noindex ({noindexCount})
                         </button>
                       </div>
                       <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                        <SelectTrigger className="w-44">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="w-44 h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="score_asc">{t.sortScoreAsc}</SelectItem>
                           <SelectItem value="score_desc">{t.sortScoreDesc}</SelectItem>
@@ -1972,33 +807,29 @@ export default function SiteCrawl() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-1">
-                    {sortedPages.map(page => (
-                      <div key={page.id} className="border rounded-lg overflow-hidden">
+                  <div className="space-y-1 max-h-[600px] overflow-y-auto">
+                    {sortedPages.map((page) => (
+                      <div key={page.id} className="rounded-lg border overflow-hidden">
                         <button
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                          type="button"
                           onClick={() => setExpandedPage(expandedPage === page.id ? null : page.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 transition-colors text-left"
                         >
-                          <div className={`text-sm font-bold tabular-nums w-16 shrink-0 ${getScoreColor(page.seo_score || 0)}`}>
-                            {page.seo_score}/200
+                          <div className={`text-sm font-bold w-12 text-center ${getScoreColor(page.seo_score || 0)}`}>
+                            {page.seo_score}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm text-foreground truncate font-medium">{page.path}</div>
-                            <div className="text-xs text-muted-foreground truncate">{page.title || t.noTitle}</div>
+                            <div className="text-sm font-medium text-foreground truncate">{page.title || t.noTitle}</div>
+                            <div className="text-[10px] text-muted-foreground font-mono truncate">{page.path}</div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {/* GSC Indexation badge */}
-                            {indexationMap[page.url] && (
-                              <Badge
-                                variant={indexationMap[page.url].verdict === 'PASS' ? 'secondary' : 'destructive'}
-                                className="text-[10px] gap-1"
-                                title={indexationMap[page.url].coverage_state || undefined}
-                              >
-                                <Globe className="w-3 h-3" />
-                                {indexationMap[page.url].verdict === 'PASS' ? 'Indexé' : 'Non indexé'}
-                              </Badge>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {page.http_status !== 200 && (
+                              <Badge variant="destructive" className="text-[10px]">{page.http_status}</Badge>
                             )}
-                            {page.crawl_depth !== undefined && page.crawl_depth > 0 && (
+                            {page.is_indexable === false && (
+                              <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">noindex</Badge>
+                            )}
+                            {page.crawl_depth !== undefined && page.crawl_depth! > 0 && (
                               <Badge variant="outline" className="text-[10px] gap-1"><Layers className="w-3 h-3" />{page.crawl_depth}</Badge>
                             )}
                             {(page.issues || []).length > 0 && (
@@ -2059,7 +890,6 @@ export default function SiteCrawl() {
                               {!page.has_canonical && <Badge variant="destructive" className="text-[10px]">Canonical ✗</Badge>}
                               {!page.has_og && <Badge variant="destructive" className="text-[10px]">OG ✗</Badge>}
                             </div>
-                            {/* Schema.org types & errors */}
                             {Array.isArray(page.schema_org_types) && page.schema_org_types.length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 {page.schema_org_types.map((type, i) => (
@@ -2088,9 +918,7 @@ export default function SiteCrawl() {
                                   toast.success(language === 'en' ? 'Classification updated' : language === 'es' ? 'Clasificación actualizada' : 'Classification mise à jour');
                                 }}
                               >
-                                <SelectTrigger className="h-6 w-36 text-[10px]">
-                                  <SelectValue />
-                                </SelectTrigger>
+                                <SelectTrigger className="h-6 w-36 text-[10px]"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="auto" className="text-xs">Auto</SelectItem>
                                   <SelectItem value="homepage" className="text-xs">{language === 'en' ? 'Home' : language === 'es' ? 'Inicio' : 'Accueil'}</SelectItem>
@@ -2107,7 +935,6 @@ export default function SiteCrawl() {
                                 </SelectContent>
                               </Select>
                             </div>
-                            {/* Custom extraction */}
                             {page.custom_extraction && Object.keys(page.custom_extraction).length > 0 && (
                               <div className="space-y-1">
                                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Extraction</div>
@@ -2216,7 +1043,6 @@ export default function SiteCrawl() {
                         </div>
                       </div>
 
-                      {/* Improved pages detail */}
                       {comparisonResult.improved.length > 0 && (
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-emerald-500 uppercase tracking-wide">↑ {t.improvedPages}</div>
@@ -2250,72 +1076,45 @@ export default function SiteCrawl() {
             </Card>
           )}
 
-              {/* Action buttons: Rapport + Cocoon for past crawl */}
-              {viewingCrawlId && crawlResult && (
-                <div className="flex items-center justify-center gap-3 pt-4 pb-2">
-                  {siteCrawlReportData && (
-                    <Button
-                      type="button"
-                      onClick={() => setIsReportOpen(true)}
-                      className="gap-2 px-4 py-2 text-sm font-semibold bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,30%)] text-white border border-[hsl(263,70%,25%)]"
-                    >
-                      <FileText className="h-4 w-4" />
-                      {t.viewReport}
-                    </Button>
-                  )}
-                  <Link
-                    to={`/app/cocoon?autolaunch=${encodeURIComponent(crawlResult.domain)}`}
-                  >
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="gap-2 px-4 py-2 text-sm font-semibold border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      Cocoon
-                    </Button>
-                  </Link>
-                  {/* Scan backlinks button */}
-                  {crawlBacklinks.length === 0 && crawlResult.status === 'completed' && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isScanningBacklinks}
-                      onClick={async () => {
-                        if (!user || !crawlResult) return;
-                        setIsScanningBacklinks(true);
-                        try {
-                          const { data, error } = await supabase.functions.invoke('backlink-scanner', {
-                            body: { crawl_id: crawlResult.id },
-                          });
-                          if (error) throw error;
-                          if (data?.results?.length) {
-                            setCrawlBacklinks(data.results);
-                            toast.success(`${data.scanned} pages scannées — backlinks trouvés`);
-                          } else {
-                            toast.info('Aucun backlink trouvé pour les pages principales');
-                          }
-                        } catch (err: any) {
-                          toast.error(err?.message || 'Erreur lors du scan');
-                        } finally {
-                          setIsScanningBacklinks(false);
-                        }
-                      }}
-                      className="gap-2 px-4 py-2 text-sm font-semibold border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
-                    >
-                      {isScanningBacklinks ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
-                      Scan Backlinks
-                    </Button>
-                  )}
-                  {crawlBacklinks.length > 0 && (
-                    <span className="text-xs text-amber-500/70 flex items-center gap-1">
-                      <Globe className="h-3 w-3" />
-                      {crawlBacklinks.length} pages avec backlinks
-                    </span>
-                  )}
-                </div>
+          {/* Action buttons for past crawl */}
+          {viewingCrawlId && crawlResult && (
+            <div className="flex items-center justify-center gap-3 pt-4 pb-2">
+              {siteCrawlReportData && (
+                <Button
+                  type="button"
+                  onClick={() => setIsReportOpen(true)}
+                  className="gap-2 px-4 py-2 text-sm font-semibold bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,30%)] text-white border border-[hsl(263,70%,25%)]"
+                >
+                  <FileText className="h-4 w-4" />
+                  {t.viewReport}
+                </Button>
               )}
-
+              <Link to={`/app/cocoon?autolaunch=${encodeURIComponent(crawlResult.domain)}`}>
+                <Button type="button" variant="outline" className="gap-2 px-4 py-2 text-sm font-semibold border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10">
+                  <Sparkles className="h-4 w-4" />
+                  Cocoon
+                </Button>
+              </Link>
+              {crawlBacklinks.length === 0 && crawlResult.status === 'completed' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isScanningBacklinks}
+                  onClick={handleScanBacklinks}
+                  className="gap-2 px-4 py-2 text-sm font-semibold border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                >
+                  {isScanningBacklinks ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+                  Scan Backlinks
+                </Button>
+              )}
+              {crawlBacklinks.length > 0 && (
+                <span className="text-xs text-amber-500/70 flex items-center gap-1">
+                  <Globe className="h-3 w-3" />
+                  {crawlBacklinks.length} pages avec backlinks
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Running crawls section */}
           {pastCrawls.filter(c => c.status === 'running' || c.status === 'pending').length > 0 && (
@@ -2329,10 +1128,7 @@ export default function SiteCrawl() {
               <CardContent>
                 <div className="space-y-2">
                   {pastCrawls.filter(c => c.status === 'running' || c.status === 'pending').map(c => (
-                    <div
-                      key={c.id}
-                      className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-primary/20 bg-primary/5 cursor-default"
-                    >
+                    <div key={c.id} className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-primary/20 bg-primary/5 cursor-default">
                       <div>
                         <div className="text-sm font-medium text-foreground">{c.domain}</div>
                         <div className="text-xs text-muted-foreground">
@@ -2349,9 +1145,7 @@ export default function SiteCrawl() {
                         >
                           <Square className="w-3 h-3 fill-destructive text-destructive" />
                         </Button>
-                        <Badge variant="secondary" className="animate-pulse">
-                          {c.status}
-                        </Badge>
+                        <Badge variant="secondary" className="animate-pulse">{c.status}</Badge>
                       </div>
                     </div>
                   ))}
@@ -2360,40 +1154,12 @@ export default function SiteCrawl() {
             </Card>
           )}
 
-          {/* Past crawls (completed/error only) */}
+          {/* Past crawls */}
           {pastCrawls.filter(c => c.status !== 'running' && c.status !== 'pending').length > 0 && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">{t.previousCrawls}</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-muted-foreground hover:text-destructive"
-                  onClick={async () => {
-                    if (!user) return;
-                    const finishedCrawls = pastCrawls.filter(c => c.status !== 'running' && c.status !== 'pending');
-                    const latestByDomain = new Map<string, string>();
-                    for (const c of finishedCrawls) {
-                      if (!latestByDomain.has(c.domain)) {
-                        latestByDomain.set(c.domain, c.id);
-                      }
-                    }
-                    const idsToDelete = finishedCrawls
-                      .filter(c => latestByDomain.get(c.domain) !== c.id)
-                      .map(c => c.id);
-
-                    if (idsToDelete.length > 0) {
-                      await supabase
-                        .from('site_crawls')
-                        .delete()
-                        .in('id', idsToDelete);
-                    }
-
-                    const kept = pastCrawls.filter(c => (c.status === 'running' || c.status === 'pending') || latestByDomain.get(c.domain) === c.id);
-                    setPastCrawls(kept);
-                    setViewingCrawlId(null);
-                  }}
-                >
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-destructive" onClick={handleCleanPastCrawls}>
                   <Trash2 className="h-3 w-3 mr-1" />
                   {language === 'fr' ? 'Nettoyer' : language === 'es' ? 'Limpiar' : 'Clear'}
                 </Button>
@@ -2402,7 +1168,6 @@ export default function SiteCrawl() {
                 <div className="space-y-2">
                   {pastCrawls.filter(c => c.status !== 'running' && c.status !== 'pending').map((c, _i, arr) => {
                     const isActive = viewingCrawlId === c.id;
-                    // Check if this is the latest crawl for its domain
                     const isLatestForDomain = arr.findIndex(x => x.domain === c.domain) === arr.indexOf(c);
                     return (
                       <div key={c.id} className="group relative">
@@ -2421,28 +1186,14 @@ export default function SiteCrawl() {
                             {c.avg_score && (
                               <span className={`text-sm font-bold ${getScoreColor(c.avg_score)}`}>{c.avg_score}/200</span>
                             )}
-                            {c.status === 'error' && (
-                              <Badge variant="destructive">
-                                {c.status}
-                              </Badge>
-                            )}
+                            {c.status === 'error' && <Badge variant="destructive">{c.status}</Badge>}
                             <ArrowRight className="w-4 h-4 text-muted-foreground" />
                           </div>
                         </button>
-                        {/* Delete button — hidden for latest crawl of each domain */}
                         {!isLatestForDomain && (
                           <button
                             type="button"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              await supabase.from('site_crawls').delete().eq('id', c.id);
-                              setPastCrawls(prev => prev.filter(x => x.id !== c.id));
-                              if (viewingCrawlId === c.id) {
-                                setViewingCrawlId(null);
-                                setPages([]);
-                              }
-                              toast.success(language === 'fr' ? 'Crawl supprimé' : 'Crawl deleted');
-                            }}
+                            onClick={async (e) => { e.stopPropagation(); handleDeleteCrawl(c.id); }}
                             className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive"
                             title={language === 'fr' ? 'Supprimer ce crawl' : 'Delete this crawl'}
                           >
@@ -2457,7 +1208,7 @@ export default function SiteCrawl() {
             </Card>
           )}
 
-          {/* CTA Cocoon + SEO content — hidden for subscribers */}
+          {/* CTA Cocoon + SEO content */}
           {!isAgencyPro && (
             <>
               <div className="flex justify-center mt-12 mb-8">
@@ -2470,7 +1221,6 @@ export default function SiteCrawl() {
                 </Link>
               </div>
 
-              {/* SEO content — H2s at bottom */}
               <div className="mt-16 mb-10 max-w-3xl mx-auto space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">{t.whyTitle}</h2>
@@ -2489,7 +1239,6 @@ export default function SiteCrawl() {
 
       <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} currentBalance={credits} />
 
-      {/* Fair-use 5000 pages limit modal with 4 credit cards */}
       {showLimitModal && (
         <FairUseLimitModal
           language={language}
