@@ -149,7 +149,52 @@ export async function scanCmsContent(
     }
   }
 
-  // 4) Scan WordPress connections
+  // 4) Scan internal CMS (blog_articles + seo_page_drafts) for crawlers.fr
+  const isCrawlers = site?.domain?.includes('crawlers');
+  if (isCrawlers) {
+    try {
+      // Scan blog_articles
+      const { data: blogPosts } = await supabase
+        .from('blog_articles')
+        .select('title, slug, status, updated_at, excerpt')
+        .in('status', ['published', 'draft']);
+      for (const post of (blogPosts || [])) {
+        inventory.items.push({
+          title: post.title || '',
+          slug: post.slug || '',
+          status: mapStatus(post.status),
+          content_type: 'post',
+          platform: 'internal',
+          url: `https://crawlers.fr/blog/${post.slug}`,
+          updated_at: post.updated_at,
+          excerpt: post.excerpt || '',
+        });
+      }
+
+      // Scan seo_page_drafts (landing pages)
+      const { data: landings } = await supabase
+        .from('seo_page_drafts')
+        .select('title, slug, status, updated_at, meta_description, page_type')
+        .eq('page_type', 'landing');
+      for (const page of (landings || [])) {
+        inventory.items.push({
+          title: page.title || '',
+          slug: page.slug || '',
+          status: mapStatus(page.status),
+          content_type: 'page',
+          platform: 'internal',
+          url: `https://crawlers.fr/landing/${page.slug}`,
+          updated_at: page.updated_at,
+          excerpt: page.meta_description || '',
+        });
+      }
+      inventory.scanned_platforms.push('internal');
+    } catch (e) {
+      inventory.errors.push(`internal: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  // 5) Scan WordPress connections
   if (connections) {
     for (const conn of connections) {
       try {
