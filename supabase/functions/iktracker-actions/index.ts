@@ -270,6 +270,12 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
     try {
       const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
       if (existing && existing.status === 200 && existing.data) {
+        // Editorial guard on upsert
+        const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+        if (!guard.allowed) {
+          console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED upsert "${slug}": ${guard.reason}`)
+          return { status: 403, data: null, error: guard.reason, _editorial_guard: true, _original_action: 'create-post' }
+        }
         console.log(`[iktracker-actions] Post with slug "${slug}" already exists, converting to UPDATE`)
         const updateResult = await callIktracker('PUT', `/posts/${slug}`, apiKey, body)
         return { ...updateResult, _upserted: true, _original_action: 'create-post' }
