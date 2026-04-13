@@ -1115,10 +1115,40 @@ Les "ITEMS À TRAITER" ci-dessous sont des DIAGNOSTICS SEO internes. Ils décriv
 Ces termes SEO NE DOIVENT JAMAIS apparaître dans le titre, le slug ou le corps des articles que tu produis.
 Tu dois TRADUIRE chaque diagnostic en un SUJET MÉTIER concret pour le secteur "${sectorName}".
 
-EXEMPLE DE TRANSFORMATION CORRECTE :
-- Diagnostic : "Gap de citabilité sur les frais professionnels" → Article : "Comment déduire ses frais professionnels en ${new Date().getFullYear()}"
-- Diagnostic : "Cannibalisation sur barème kilométrique" → Article : "Barème kilométrique ${new Date().getFullYear()} : le guide complet"
-- Diagnostic : "Gap sémantique cluster indemnités" → Article : "Indemnités kilométriques : calcul, barème et déclaration"
+⚠️⚠️⚠️ RÈGLE CRITIQUE — DIVERSIFICATION DES ANGLES ÉDITORIAUX ⚠️⚠️⚠️
+Tu NE DOIS PAS produire uniquement des "guides complets". Les titres type "X : Le Guide Complet" sont INTERDITS si d'autres articles similaires existent déjà.
+Tu DOIS varier les ANGLES d'attaque selon 5 stratégies :
+
+1. **ANGLE PERSONA** (ciblage par métier/profil) :
+   Écrire pour un segment précis de l'audience. Le métier ou le profil apparaît dans le titre.
+   Exemples : "Comment les infirmières libérales gèrent leurs indemnités kilométriques"
+             "Frais de déplacement des VRP : ce que votre employeur doit rembourser"
+             "Auto-entrepreneurs : 3 erreurs sur la déclaration des frais réels"
+
+2. **ANGLE ACTUALITÉ** (lié à un événement récent, une réforme, une annonce) :
+   Accrocher sur un fait d'actualité vérifiable. Mentionner des noms propres, des dates, des décisions.
+   Exemples : "Barème kilométrique 2026 : ce qui change avec la loi de finances"
+             "Électrification des flottes : les nouvelles aides annoncées par le gouvernement"
+             "PLF 2026 : impact sur les frais professionnels des indépendants"
+
+3. **ANGLE NICHE ÉTROIT** (une question ultra-spécifique) :
+   Répondre à UNE question précise que se pose un utilisateur. Format court et direct.
+   Exemples : "Peut-on déduire les péages de ses frais kilométriques ?"
+             "Vélo électrique : a-t-on droit à des indemnités kilométriques ?"
+             "Aller-retour domicile-travail : comment calculer la distance fiscale ?"
+
+4. **ANGLE COMPARATIF / DÉCRYPTAGE** :
+   Opposer deux options, décrypter une idée reçue, démystifier un sujet complexe.
+   Exemples : "Frais réels vs abattement forfaitaire : simulation pour 3 profils types"
+             "Idée reçue : un salarié ne peut pas déduire ses frais kilométriques"
+             "Diesel vs électrique : quel impact sur vos indemnités kilométriques en 2026 ?"
+
+5. **ANGLE TUTORIEL PRATIQUE** (pas un "guide complet" — une procédure concrète) :
+   Décrire étape par étape une action précise avec captures, chiffres, formulaires.
+   Exemples : "Remplir le formulaire 2042 : déclarer ses frais kilométriques en 5 minutes"
+             "Configurer ${siteName} pour suivre ses trajets professionnels"
+
+CHOISIS l'angle le MOINS représenté parmi les articles existants. Alterne systématiquement.
 
 INTERDIT ABSOLU : les mots "gap de citabilité", "gap sémantique", "cannibalisation", "maillage interne", "E-E-A-T", "cocon sémantique", "campagne de partenariats SEO", "stratégie SEO", "backlinks" ou tout jargon SEO dans le contenu destiné aux lecteurs du site.
 Le lecteur final est un UTILISATEUR du site (${parsedTargetsPrimary || 'grand public'}), PAS un expert SEO.
@@ -1143,6 +1173,7 @@ RÈGLES:
   - OBLIGATOIRE : chaque article DOIT inclure "article_type" (presentation|actualite|comparatif|tutoriel|opinion|guide) et "semantic_ring" (1|2|3)
   - Les GUIDES ne doivent JAMAIS représenter plus de 5% des articles. Si le quota est atteint, choisis un AUTRE type.
   - MAILLAGE MÈRE-FILLE : chaque article d'un ring supérieur DOIT contenir un lien vers une page du ring inférieur.
+  - ANGLE ÉDITORIAL : Applique l'un des 5 angles décrits ci-dessus (persona, actualité, niche, comparatif, tutoriel). Ne choisis JAMAIS "guide complet" par défaut.
 ${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appeler emit_editorial_content pour créer UN NOUVEAU CONTENU pertinent pour le secteur "${sectorName}". Cette directive est prioritaire et NON NÉGOCIABLE.\n` : ''}
 - status TOUJOURS "draft". author_name: "Équipe ${siteName}"
 - LONGUEUR OBLIGATOIRE: chaque article DOIT faire MINIMUM 800 mots (environ 5000 caractères Markdown). Un bon article fait 1000-1500 mots. Ne JAMAIS produire un contenu de moins de 600 mots.
