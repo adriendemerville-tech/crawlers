@@ -421,7 +421,25 @@ export default function MatricePrompt() {
         header: true,
         skipEmptyLines: true,
         complete: async (result) => {
-          await processImportedRows(result.data, fileName);
+          const csvRows = result.data as Record<string, any>[];
+          if (csvRows.length === 0) { toast.error('Fichier CSV vide'); return; }
+          // Run type detection + scoring detection on CSV data
+          const { detectMatriceType } = await import('@/utils/matrice/typeDetector');
+          const { cleanImportedData } = await import('@/utils/matrice/columnCleaner');
+          const { sanitizeAllPrompts } = await import('@/utils/matrice/promptSanitizer');
+          const { detectScoringMethod: detectScoring } = await import('@/utils/matrice/scoringDetector');
+          const csvHeaders = Object.keys(csvRows[0]);
+          const det = detectMatriceType(csvHeaders, csvRows.slice(0, 10));
+          setActiveMatriceType(det.type);
+          const scoringDet = detectScoring(csvHeaders, csvRows.slice(0, 10), det.type);
+          setActiveScoringMethod(scoringDet.method);
+          if (scoringDet.source !== 'default') {
+            toast.info(`Scoring détecté : ${getScoringConfig(scoringDet.method).label}`, { duration: 3000 });
+          }
+          // Clean + sanitize
+          const cleaned = cleanImportedData(csvHeaders, csvRows);
+          cleaned.cleanedRows = sanitizeAllPrompts(cleaned.cleanedRows);
+          await processImportedRows(cleaned.cleanedRows, fileName, det.type, scoringDet.method);
         },
         error: () => toast.error('Erreur de parsing CSV'),
       });
