@@ -88,8 +88,8 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
         .select('id, ga4_property_id, gsc_site_urls')
         .eq('user_id', user.id);
       if (conns?.length) {
-        if (conns.some(c => !!c.ga4_property_id)) connected.add('ga4');
-        if (conns.some(c => c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0)) connected.add('gsc');
+        if ((conns as any[]).some(c => !!c.ga4_property_id)) connected.add('ga4');
+        if ((conns as any[]).some(c => c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0)) connected.add('gsc');
       }
       if (gscOk) connected.add('gsc');
 
