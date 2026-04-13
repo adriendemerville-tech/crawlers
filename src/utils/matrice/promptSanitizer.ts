@@ -142,7 +142,7 @@ function autoDetectDomains(rows: Record<string, any>[]): string[] {
 /**
  * Inject real values back into a sanitized prompt at execution time.
  */
-export function hydatePrompt(
+export function hydratePrompt(
   sanitizedPrompt: string,
   url: string,
   brandName?: string,
