@@ -43,6 +43,8 @@ const crawlI18n = {
     scoreText: 'Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L\'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable.',
     placeholder: 'https://votre-site.fr',
     launchBtn: 'Lancer le crawl',
+    detectBtn: 'Détecter les pages',
+    detecting: 'Détection en cours…',
     crawling: 'Crawl en cours…',
     pagesToAnalyze: 'Pages à analyser',
     unlimited: 'Illimité',
@@ -116,6 +118,8 @@ const crawlI18n = {
     scoreText: 'Each crawled page receives a score out of 200 points covering technical, semantic and structural criteria. AI then consolidates these results into an actionable synthesis.',
     placeholder: 'https://your-site.com',
     launchBtn: 'Launch crawl',
+    detectBtn: 'Detect pages',
+    detecting: 'Detecting…',
     crawling: 'Crawling…',
     pagesToAnalyze: 'Pages to analyze',
     unlimited: 'Unlimited',
@@ -189,6 +193,8 @@ const crawlI18n = {
     scoreText: 'Cada página rastreada recibe una puntuación sobre 200 puntos que cubre criterios técnicos, semánticos y estructurales. La IA consolida estos resultados en una síntesis accionable.',
     placeholder: 'https://su-sitio.es',
     launchBtn: 'Lanzar crawl',
+    detectBtn: 'Detectar páginas',
+    detecting: 'Detectando…',
     crawling: 'Crawl en curso…',
     pagesToAnalyze: 'Páginas a analizar',
     unlimited: 'Ilimitado',
@@ -481,6 +487,8 @@ export default function SiteCrawl() {
   const [sitemapPagesCount, setSitemapPagesCount] = useState<number | null>(null);
   const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
   const [isDetectingPages, setIsDetectingPages] = useState(false);
+  const [detectionDone, setDetectionDone] = useState(false);
+  const [discoveredUrls, setDiscoveredUrls] = useState<string[]>([]);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Sitemap directory & page selectors
@@ -696,6 +704,8 @@ export default function SiteCrawl() {
     setIndexedPagesCount(null);
     setSitemapPagesCount(null);
     setTotalEstimatedPages(null);
+    setDetectionDone(false);
+    setDiscoveredUrls([]);
     setSitemapTree([]);
     setSitemapPages([]);
     setSelectedDirectory('');
@@ -998,6 +1008,53 @@ export default function SiteCrawl() {
     setCustomSelectors(prev => prev.filter((_, i) => i !== index));
   }
 
+  // ── Phase 1: Detect pages (mapping only, no credits) ──
+  async function handleDetect(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) { navigate('/auth'); return; }
+    try { localStorage.setItem('crawl_last_url', url); } catch {}
+
+    setIsDetectingPages(true);
+    setDetectionDone(false);
+    setDiscoveredUrls([]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('crawl-site', {
+        body: { url, userId: user.id, mode: 'detect' },
+      });
+
+      if (error) throw error;
+      if (!data.success) {
+        toast.error(data.error || 'Erreur de détection');
+        return;
+      }
+
+      const detectedUrls: string[] = data.urls || [];
+      setDiscoveredUrls(detectedUrls);
+      setTotalEstimatedPages(data.totalDiscovered || detectedUrls.length);
+      setSitemapPagesCount(data.sources?.sitemap || null);
+      setIndexedPagesCount(data.sources?.gscIndexed || null);
+
+      // Update directory tree from detection response
+      if (data.directories?.length > 0) {
+        setSitemapTree(data.directories.slice(0, 15));
+      }
+
+      // Auto-set slider to total discovered
+      const total = detectedUrls.length;
+      if (total > 0) {
+        setMaxPages(Math.min(total, isAdmin ? 500 : maxSliderCap));
+      }
+
+      setDetectionDone(true);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur de détection');
+    } finally {
+      setIsDetectingPages(false);
+    }
+  }
+
+  // ── Phase 2: Analyze (actual crawl with scraping) ──
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { navigate('/auth'); return; }
@@ -1351,7 +1408,7 @@ export default function SiteCrawl() {
           {/* Formulaire */}
           <Card className="mb-8 border-violet-500/30">
             <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={detectionDone ? handleSubmit : handleDetect} className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-400" />
@@ -1361,12 +1418,12 @@ export default function SiteCrawl() {
                       placeholder={t.placeholder}
                       className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500 caret-foreground"
                       required
-                      disabled={isLoading}
+                      disabled={isLoading || isDetectingPages}
                     />
                   </div>
                   <Button type="submit" disabled={isLoading || !url || isDetectingPages || (crawlResult?.status === 'completed' && !viewingCrawlId)} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-shake' : ''}`}>
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
-                    {isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : t.launchBtn}
+                    {isDetectingPages ? <Loader2 className="w-4 h-4 animate-spin" /> : isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+                    {isDetectingPages ? t.detecting : isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : detectionDone ? t.launchBtn : t.detectBtn}
                   </Button>
                   {isLoading && (
                     <Button

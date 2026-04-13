@@ -929,10 +929,13 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
           await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
         }
 
-        // ── RECURSIVE LINK DISCOVERY: extract internal links from scraped pages ──
-        const pageLimit = job.total_count || 50;
+        // ── PASS 2: RECURSIVE LINK DISCOVERY — extract internal links from scraped pages ──
+        // Allow up to 200 extra URLs beyond the initial plan (capped for safety)
+        const PASS2_MAX_EXTRA = 200;
+        const initialPageLimit = job.total_count || 50;
+        const extendedLimit = initialPageLimit + PASS2_MAX_EXTRA;
         let discoveredNew = 0;
-        if (alreadyProcessed + remaining.length < pageLimit) {
+        if (alreadyProcessed + remaining.length < extendedLimit) {
           for (const page of validResults) {
             if (!page.anchor_texts) continue;
             for (const link of page.anchor_texts) {
@@ -955,8 +958,8 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
             }
           }
           if (discoveredNew > 0) {
-            // Cap remaining to not exceed pageLimit
-            const maxRemaining = pageLimit - alreadyProcessed;
+            // Cap remaining to not exceed extended limit
+            const maxRemaining = extendedLimit - alreadyProcessed;
             if (remaining.length > maxRemaining) {
               remaining = remaining.slice(0, maxRemaining);
             }
