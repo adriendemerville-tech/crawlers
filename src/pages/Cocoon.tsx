@@ -249,7 +249,7 @@ function CocoonContent() {
     setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
     setHasCmsConnection(false);
     if (selectedSiteId) {
-      supabase.from('cms_connections').select('id').eq('tracked_site_id', selectedSiteId).eq('status', 'active').limit(1).then(({ data }) => {
+      supabase.from('cms_connections_public' as any).select('id').eq('tracked_site_id', selectedSiteId).eq('status', 'active').limit(1).then(({ data }) => {
         setHasCmsConnection(!!(data && data.length > 0));
       });
     }

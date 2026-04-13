@@ -364,7 +364,7 @@ export function SmartConfigurator({
             return data?.id;
           })();
           if (siteId) {
-            const { data } = await supabase.from('cms_connections').select('id').eq('tracked_site_id', siteId).limit(1);
+            const { data } = await supabase.from('cms_connections_public' as any).select('id').eq('tracked_site_id', siteId).limit(1);
             setHasCmsConnectionForContent((data?.length || 0) > 0);
           }
         };
