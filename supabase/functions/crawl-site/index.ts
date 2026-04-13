@@ -424,42 +424,43 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     // ── CMS content discovery: inject URLs from connected CMS (WordPress, Shopify, IKtracker…) ──
-    if (urls.length < pageLimit) {
-      try {
-        const domainBase = domain.replace(/^www\./, '');
-        const { data: trackedSite } = await supabase
-          .from('tracked_sites')
-          .select('id')
-          .or(`domain.eq.${domainBase},domain.eq.www.${domainBase}`)
-          .eq('user_id', userId)
-          .limit(1)
-          .maybeSingle();
+    // Always run CMS discovery regardless of pageLimit — CMS pages may not be in sitemap/map
+    try {
+      const domainBase = domain.replace(/^www\./, '');
+      const { data: trackedSite } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .or(`domain.eq.${domainBase},domain.eq.www.${domainBase}`)
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
 
-        if (trackedSite) {
-          const cmsInventory = await scanCmsContent(trackedSite.id, userId);
-          if (cmsInventory.items.length > 0) {
-            const existingSet = new Set(urls.map(u => u.replace(/\/$/, '').toLowerCase()));
-            let cmsAdded = 0;
-            for (const item of cmsInventory.items) {
-              if (!item.url || urls.length >= pageLimit) break;
-              const normalizedCmsUrl = item.url.replace(/\/$/, '').toLowerCase();
-              if (!existingSet.has(normalizedCmsUrl)) {
-                urls.push(item.url);
-                existingSet.add(normalizedCmsUrl);
-                cmsAdded++;
-              }
-            }
-            if (cmsAdded > 0) {
-              console.log(`[${crawlId}] ✅ CMS discovery added ${cmsAdded} URLs from ${cmsInventory.scanned_platforms.join(', ')} (total: ${urls.length})`);
+      if (trackedSite) {
+        const cmsInventory = await scanCmsContent(trackedSite.id, userId);
+        if (cmsInventory.items.length > 0) {
+          const existingSet = new Set(urls.map(u => u.replace(/\/$/, '').toLowerCase()));
+          let cmsAdded = 0;
+          for (const item of cmsInventory.items) {
+            if (!item.url) continue;
+            const normalizedCmsUrl = item.url.replace(/\/$/, '').toLowerCase();
+            if (!existingSet.has(normalizedCmsUrl)) {
+              urls.push(item.url);
+              existingSet.add(normalizedCmsUrl);
+              cmsAdded++;
             }
           }
-          if (cmsInventory.errors.length > 0) {
-            console.warn(`[${crawlId}] CMS scan warnings:`, cmsInventory.errors);
+          if (cmsAdded > 0) {
+            // Extend pageLimit to include CMS-discovered pages
+            pageLimit = Math.max(pageLimit, urls.length);
+            console.log(`[${crawlId}] ✅ CMS discovery added ${cmsAdded} URLs from ${cmsInventory.scanned_platforms.join(', ')} (pageLimit extended to ${pageLimit}, total: ${urls.length})`);
           }
         }
-      } catch (e) {
-        console.warn(`[${crawlId}] CMS content discovery failed (non-blocking):`, e);
+        if (cmsInventory.errors.length > 0) {
+          console.warn(`[${crawlId}] CMS scan warnings:`, cmsInventory.errors);
+        }
       }
+    } catch (e) {
+      console.warn(`[${crawlId}] CMS content discovery failed (non-blocking):`, e);
     }
 
     // If still no URLs at all, error out
