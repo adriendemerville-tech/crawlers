@@ -395,38 +395,39 @@ Deno.serve(handleRequest(async (req) => {
       return [];
     };
 
+    // ── Hybrid discovery: merge sitemap + map discovery, never rely on sitemap alone ──
+    const sitemapSet = new Set<string>();
     if (sitemapUrls.length > 0) {
       const cleanedUrls = filterNonPageUrls(sitemapUrls);
+      cleanedUrls.forEach(u => sitemapSet.add(u.replace(/\/$/, '')));
       urls = cleanedUrls.slice(0, pageLimit);
-      console.log(`[${crawlId}] Sitemap: ${urls.length} URLs (filtered from ${sitemapUrls.length})`);
+      console.log(`[${crawlId}] Sitemap seed: ${urls.length} URLs (filtered from ${sitemapUrls.length})`);
+    }
 
-      // Double-check: if sitemap gave significantly fewer URLs than pageLimit, complement with map discovery
-      if (urls.length < pageLimit && urls.length < 30) {
-        console.log(`[${crawlId}] Sitemap insufficient (${urls.length}/${pageLimit}), complementing with map discovery…`);
-        try {
-          const mapUrls = await discoverUrlsViaMap(pageLimit * 2);
-          const existingSet = new Set(urls.map(u => u.replace(/\/$/, '')));
-          const newUrls = mapUrls.filter(u => !existingSet.has(u.replace(/\/$/, '')));
-          if (newUrls.length > 0) {
-            const slotsLeft = pageLimit - urls.length;
-            urls = [...urls, ...newUrls.slice(0, slotsLeft)];
-            console.log(`[${crawlId}] ✅ Complemented with ${Math.min(newUrls.length, slotsLeft)} extra URLs from map (total: ${urls.length})`);
-          }
-        } catch (e) {
-          console.warn(`[${crawlId}] Map complement failed (non-blocking):`, e);
+    // Always complement with map discovery (Spider.cloud → Firecrawl cascade)
+    // This catches pages not in sitemap: orphans, dynamic routes, JS-rendered pages
+    if (urls.length < pageLimit) {
+      console.log(`[${crawlId}] Complementing with map discovery (have ${urls.length}/${pageLimit})…`);
+      try {
+        const mapUrls = await discoverUrlsViaMap(pageLimit * 2);
+        const existingSet = new Set(urls.map(u => u.replace(/\/$/, '')));
+        const newUrls = mapUrls.filter(u => !existingSet.has(u.replace(/\/$/, '')));
+        if (newUrls.length > 0) {
+          const slotsLeft = pageLimit - urls.length;
+          urls = [...urls, ...newUrls.slice(0, slotsLeft)];
+          console.log(`[${crawlId}] ✅ Map discovery added ${Math.min(newUrls.length, slotsLeft)} URLs (total: ${urls.length})`);
         }
+      } catch (e) {
+        console.warn(`[${crawlId}] Map complement failed (non-blocking):`, e);
       }
-    } else {
-      // No sitemap at all: Spider.cloud → Firecrawl cascade
-      console.log(`[${crawlId}] No sitemap URLs, trying map discovery...`);
-      const mapUrls = await discoverUrlsViaMap(pageLimit);
-      if (mapUrls.length === 0) {
-        await supabase.from('site_crawls').update({ status: 'error', error_message: 'Impossible de mapper le site' }).eq('id', crawlId);
-        return new Response(JSON.stringify({ success: false, error: 'Map échoué', crawlId }), {
-          status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      urls = mapUrls.slice(0, pageLimit);
+    }
+
+    // If still no URLs at all, error out
+    if (urls.length === 0) {
+      await supabase.from('site_crawls').update({ status: 'error', error_message: 'Aucune page découverte (sitemap + map)' }).eq('id', crawlId);
+      return new Response(JSON.stringify({ success: false, error: 'Aucune page découverte', crawlId }), {
+        status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Pre-filter URLs by regex if provided
