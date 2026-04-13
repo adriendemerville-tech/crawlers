@@ -10,8 +10,30 @@ import { scanCmsContent } from '../_shared/cmsContentScanner.ts';
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
 
+// Extensions non-HTML à exclure (sitemap XML, assets, documents…)
+const NON_PAGE_EXTENSIONS = /\.(xml|xsl|xslt|pdf|zip|gz|tar|rar|7z|exe|dmg|iso|bin|css|js|json|woff|woff2|ttf|eot|otf|svg|ico|png|jpg|jpeg|gif|webp|avif|mp3|mp4|avi|mov|wmv|flv|swf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|log|bak|sql|db)$/i;
+
+// Patterns d'URL non-page à exclure
+const NON_PAGE_PATTERNS = /\/(sitemap[^/]*\.xml|feed\/?|rss\/?|atom\/?|wp-json\/?|wp-admin|wp-includes|xmlrpc\.php|robots\.txt)/i;
+
+function filterNonPageUrls(rawUrls: string[]): string[] {
+  return rawUrls.filter(u => {
+    try {
+      const parsed = new URL(u);
+      const path = parsed.pathname;
+      if (NON_PAGE_EXTENSIONS.test(path)) return false;
+      if (NON_PAGE_PATTERNS.test(path)) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
 /**
- * crawl-site v3 — Lightweight launcher with advanced options
+ * crawl-site v4 — Two-phase crawl: detect (mapping) + analyze (scraping)
+ * mode: 'detect' → mapping only (free, returns URL list)
+ * mode: 'analyze' (default) → full crawl with scraping
  * Supports: maxDepth, urlFilter (regex), customSelectors (CSS extraction)
  */
 Deno.serve(handleRequest(async (req) => {
@@ -37,7 +59,8 @@ Deno.serve(handleRequest(async (req) => {
       userId: bodyUserId, 
       maxDepth = 0, 
       urlFilter = '', 
-      customSelectors = [] 
+      customSelectors = [],
+      mode = 'analyze',
     } = await req.json();
 
     // ── Extract real userId from JWT (ignore body userId for security) ──
@@ -59,9 +82,12 @@ Deno.serve(handleRequest(async (req) => {
     let normalizedUrl = url.trim();
     if (!normalizedUrl.startsWith('http')) normalizedUrl = `https://${normalizedUrl}`;
     const domain = new URL(normalizedUrl).hostname;
-    let pageLimit = Math.min(maxPages, 50);
 
-    // ── Step 1: Get pages from sitemap (used as primary URL source) ──
+    // ══════════════════════════════════════════════════════════════════
+    // SHARED: URL discovery (used by both detect and analyze modes)
+    // ══════════════════════════════════════════════════════════════════
+
+    // ── Step 1: Get pages from sitemap ──
     let sitemapPageCount: number | null = null;
     let sitemapUrls: string[] = [];
     try {
@@ -83,7 +109,6 @@ Deno.serve(handleRequest(async (req) => {
         if (sitemapData.totalUrls > 0) {
           sitemapPageCount = sitemapData.totalUrls;
           console.log(`[${domain}] Sitemap: ${sitemapPageCount} pages found`);
-          // Extract flat URL list from tree
           const extractUrls = (nodes: any[]): string[] => {
             const result: string[] = [];
             for (const node of nodes) {
@@ -102,7 +127,7 @@ Deno.serve(handleRequest(async (req) => {
       console.warn(`[${domain}] Sitemap pre-scan failed (non-blocking):`, e);
     }
 
-    // ── Step 2: Check GSC for indexed pages (if user connected) ──
+    // ── Step 2: Check GSC for indexed pages (info only, not used for page limit) ──
     let gscIndexedCount: number | null = null;
     try {
       const { data: googleConn } = await supabase
@@ -112,7 +137,6 @@ Deno.serve(handleRequest(async (req) => {
         .maybeSingle();
 
       if (googleConn?.access_token) {
-        // Try GSC site:domain query via search analytics
         const cleanDomain = domain.replace(/^www\./, '');
         const siteUrl = `sc-domain:${cleanDomain}`;
         const gscController = new AbortController();
@@ -138,8 +162,6 @@ Deno.serve(handleRequest(async (req) => {
         clearTimeout(gscTimeout);
         
         if (gscRes.ok) {
-          // The responseAggregationType gives us indexed page count indirectly
-          // Use a simpler approach: count distinct pages via sitemaps API
           const gscSitemapRes = await fetch(
             `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/sitemaps`,
             { headers: { 'Authorization': `Bearer ${googleConn.access_token}` } }
@@ -162,54 +184,150 @@ Deno.serve(handleRequest(async (req) => {
       console.warn(`[${domain}] GSC indexed pages check failed (non-blocking):`, e);
     }
 
-    // ── Step 3: Fall back to DataForSEO if no GSC data ──
-    let dataforseoIndexedCount: number | null = null;
-    if (gscIndexedCount === null) {
-      try {
-        const dataforseoUser = Deno.env.get('DATAFORSEO_LOGIN');
-        const dataforseoPass = Deno.env.get('DATAFORSEO_PASSWORD');
-        if (dataforseoUser && dataforseoPass) {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 10000);
-          const serpRes = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
+    // ── Step 3: Hybrid URL discovery (sitemap + Spider/Firecrawl + CMS) ──
+    // No pageLimit cap during discovery — discover ALL, let user filter
+    let urls: string[] = [];
+    const logId = mode === 'detect' ? domain : 'detect';
+
+    // Helper: discover URLs via Spider.cloud → Firecrawl map cascade
+    const discoverUrlsViaMap = async (limit: number): Promise<string[]> => {
+      const spiderKey = Deno.env.get('SPIDER_API_KEY');
+      if (spiderKey) {
+        try {
+          const spiderRes = await fetch(`${SPIDER_API}/crawl`, {
             method: 'POST',
-            headers: {
-              'Authorization': 'Basic ' + btoa(`${dataforseoUser}:${dataforseoPass}`),
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify([{
-              keyword: `site:${domain.replace(/^www\./, '')}`,
-              language_code: 'fr',
-              location_code: 2250,
-              device: 'desktop',
-              depth: 1,
-            }]),
-            signal: controller.signal,
+            headers: { 'Authorization': `Bearer ${spiderKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: normalizedUrl, limit, return_format: 'raw', depth: 0, request: 'http' }),
           });
-          clearTimeout(timeout);
-          const serpData = await serpRes.json();
-          const indexedPages = serpData?.tasks?.[0]?.result?.[0]?.se_results_count;
-          if (indexedPages && indexedPages > 0) {
-            dataforseoIndexedCount = indexedPages;
-            console.log(`[${domain}] DataForSEO indexed: ${dataforseoIndexedCount} pages`);
+          if (spiderRes.ok) {
+            const spiderData = await spiderRes.json();
+            const spiderUrls = Array.isArray(spiderData)
+              ? spiderData.map((p: any) => p.url).filter(Boolean)
+              : [];
+            if (spiderUrls.length > 0) {
+              await trackPaidApiCall('crawl-site', 'spider', '/crawl', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-spider-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
+              console.log(`[${logId}] Spider.cloud map: ${spiderUrls.length} URLs`);
+              return filterNonPageUrls(spiderUrls);
+            }
+          } else {
+            console.warn(`[${logId}] Spider.cloud map failed (${spiderRes.status})`);
+          }
+        } catch (e) {
+          console.warn(`[${logId}] Spider.cloud exception:`, e);
+        }
+      }
+
+      // Firecrawl fallback
+      console.log(`[${logId}] Falling back to Firecrawl map`);
+      const mapResponse = await fetch(`${FIRECRAWL_API}/map`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: normalizedUrl, limit, includeSubdomains: false }),
+      });
+      const mapData = await mapResponse.json();
+      await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-map-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
+      if (mapResponse.ok && mapData.links?.length) {
+        return filterNonPageUrls(mapData.links);
+      }
+      return [];
+    };
+
+    // Sitemap seed
+    if (sitemapUrls.length > 0) {
+      const cleanedUrls = filterNonPageUrls(sitemapUrls);
+      urls = [...cleanedUrls];
+      console.log(`[${logId}] Sitemap seed: ${urls.length} URLs (filtered from ${sitemapUrls.length})`);
+    }
+
+    // Spider/Firecrawl map complement
+    console.log(`[${logId}] Complementing with map discovery (have ${urls.length})…`);
+    try {
+      const mapUrls = await discoverUrlsViaMap(500);
+      const existingSet = new Set(urls.map(u => u.replace(/\/$/, '')));
+      const newUrls = mapUrls.filter(u => !existingSet.has(u.replace(/\/$/, '')));
+      if (newUrls.length > 0) {
+        urls = [...urls, ...newUrls];
+        console.log(`[${logId}] ✅ Map discovery added ${newUrls.length} URLs (total: ${urls.length})`);
+      }
+    } catch (e) {
+      console.warn(`[${logId}] Map complement failed (non-blocking):`, e);
+    }
+
+    // CMS content discovery
+    try {
+      const domainBase = domain.replace(/^www\./, '');
+      const { data: trackedSite } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .or(`domain.eq.${domainBase},domain.eq.www.${domainBase}`)
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+
+      if (trackedSite) {
+        const cmsInventory = await scanCmsContent(trackedSite.id, userId);
+        if (cmsInventory.items.length > 0) {
+          const existingSet = new Set(urls.map(u => u.replace(/\/$/, '').toLowerCase()));
+          let cmsAdded = 0;
+          for (const item of cmsInventory.items) {
+            if (!item.url) continue;
+            const normalizedCmsUrl = item.url.replace(/\/$/, '').toLowerCase();
+            if (!existingSet.has(normalizedCmsUrl)) {
+              urls.push(item.url);
+              existingSet.add(normalizedCmsUrl);
+              cmsAdded++;
+            }
+          }
+          if (cmsAdded > 0) {
+            console.log(`[${logId}] ✅ CMS discovery added ${cmsAdded} URLs from ${cmsInventory.scanned_platforms.join(', ')} (total: ${urls.length})`);
           }
         }
-      } catch (e) {
-        console.warn(`[${domain}] DataForSEO pre-scan failed (non-blocking):`, e);
+        if (cmsInventory.errors.length > 0) {
+          console.warn(`[${logId}] CMS scan warnings:`, cmsInventory.errors);
+        }
       }
+    } catch (e) {
+      console.warn(`[${logId}] CMS content discovery failed (non-blocking):`, e);
     }
 
-    // Use best available indexed count to cap page limit
-    const bestIndexedCount = gscIndexedCount || dataforseoIndexedCount;
-    if (bestIndexedCount && bestIndexedCount > 0) {
-      const cappedLimit = Math.min(pageLimit, bestIndexedCount);
-      if (cappedLimit < pageLimit) {
-        console.log(`[${domain}] Indexed pages cap: ${bestIndexedCount} → limiting from ${pageLimit} to ${cappedLimit}`);
-        pageLimit = cappedLimit;
+    // ══════════════════════════════════════════════════════════════════
+    // DETECT MODE: return discovered URLs without scraping
+    // ══════════════════════════════════════════════════════════════════
+    if (mode === 'detect') {
+      console.log(`[${domain}] DETECT mode: ${urls.length} URLs discovered`);
+      
+      // Categorize URLs by directory for the front-end filter UI
+      const directories: Record<string, number> = {};
+      for (const u of urls) {
+        try {
+          const parsed = new URL(u);
+          const segments = parsed.pathname.split('/').filter(Boolean);
+          const dir = segments.length > 0 ? `/${segments[0]}` : '/';
+          directories[dir] = (directories[dir] || 0) + 1;
+        } catch {}
       }
+
+      return new Response(JSON.stringify({
+        success: true,
+        mode: 'detect',
+        totalDiscovered: urls.length,
+        urls,
+        directories: Object.entries(directories)
+          .map(([path, count]) => ({ path, label: path.replace(/^\//, ''), count }))
+          .sort((a, b) => b.count - a.count),
+        sources: {
+          sitemap: sitemapPageCount || 0,
+          gscIndexed: gscIndexedCount,
+        },
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // ── Fetch profile + admin role in parallel (single round-trip) ──
+    // ══════════════════════════════════════════════════════════════════
+    // ANALYZE MODE: full crawl with scraping
+    // ══════════════════════════════════════════════════════════════════
+    let pageLimit = Math.min(maxPages, 50);
+
+    // ── Fetch profile + admin role in parallel ──
     const [{ data: profile }, { data: isAdmin }] = await Promise.all([
       supabase
         .from('profiles')
@@ -219,7 +337,7 @@ Deno.serve(handleRequest(async (req) => {
       supabase.rpc('has_role', { _user_id: userId, _role: 'admin' }),
     ]);
 
-    // ── Fair Use check (single call with real plan type) ──
+    // ── Fair Use check ──
     const isProAgencyPlan = ['agency_pro', 'agency_premium'].includes(profile?.plan_type || '') && profile?.subscription_status === 'active';
     if (!isAdmin) {
       const fairUse = await checkFairUse(userId, 'crawl_site', isProAgencyPlan ? 'agency_pro' : 'free');
@@ -239,13 +357,10 @@ Deno.serve(handleRequest(async (req) => {
       pageLimit = Math.min(maxPages, 500);
     }
 
-    // ── Fair Use Policy ──────────────────────────────────────
-    // Pro Agency: 5 000 pages/month included, then pay-as-you-go
-    // Free users: always pay credits
+    // ── Fair Use Policy ──
     const FAIR_USE_LIMIT = isAgencyPlus ? 50000 : 5000;
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    const currentMonth = new Date().toISOString().slice(0, 7);
 
-    // Reset monthly counter if new month
     let usedThisMonth = profile?.crawl_pages_this_month || 0;
     if (profile?.crawl_month_reset !== currentMonth) {
       usedThisMonth = 0;
@@ -259,7 +374,6 @@ Deno.serve(handleRequest(async (req) => {
     const freePages = isProAgency ? Math.min(pageLimit, pagesRemaining) : 0;
     const paidPages = pageLimit - freePages;
 
-    // Credit cost: only for pages beyond fair use (or all pages for free users)
     const creditCost = isUnlimited ? 0 : (
       paidPages <= 0 ? 0 : 1
     );
@@ -282,9 +396,6 @@ Deno.serve(handleRequest(async (req) => {
       }
     }
 
-    // Note: monthly page counter is updated AFTER mapping, using actual urls.length
-    // (moved below the map step for accuracy)
-
     if (isUnlimited) {
       console.log(`[${domain}] Crawl illimité (Admin)`);
     } else if (isProAgency && freePages > 0) {
@@ -301,6 +412,9 @@ Deno.serve(handleRequest(async (req) => {
         });
       }
     }
+
+    // Apply pageLimit to discovered URLs
+    urls = urls.slice(0, pageLimit);
 
     // Create site_crawls row
     const { data: crawl, error: crawlError } = await supabase
@@ -328,149 +442,6 @@ Deno.serve(handleRequest(async (req) => {
     const crawlId = crawl.id;
     console.log(`[${crawlId}] Mapping démarré: ${domain} (max ${pageLimit} pages, depth: ${maxDepth || '∞'}, filter: ${urlFilter || 'none'})`);
 
-    // ── Use sitemap URLs as primary source, Firecrawl map as fallback ──
-    let urls: string[] = [];
-
-    // Extensions non-HTML à exclure (sitemap XML, assets, documents…)
-    const NON_PAGE_EXTENSIONS = /\.(xml|xsl|xslt|pdf|zip|gz|tar|rar|7z|exe|dmg|iso|bin|css|js|json|woff|woff2|ttf|eot|otf|svg|ico|png|jpg|jpeg|gif|webp|avif|mp3|mp4|avi|mov|wmv|flv|swf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|log|bak|sql|db)$/i;
-    
-    // Patterns d'URL non-page à exclure
-    const NON_PAGE_PATTERNS = /\/(sitemap[^/]*\.xml|feed\/?|rss\/?|atom\/?|wp-json\/?|wp-admin|wp-includes|xmlrpc\.php|robots\.txt)/i;
-
-    const filterNonPageUrls = (rawUrls: string[]): string[] => {
-      return rawUrls.filter(u => {
-        try {
-          const parsed = new URL(u);
-          const path = parsed.pathname;
-          // Exclure les extensions non-HTML
-          if (NON_PAGE_EXTENSIONS.test(path)) return false;
-          // Exclure les patterns non-page
-          if (NON_PAGE_PATTERNS.test(path)) return false;
-          return true;
-        } catch {
-          return false;
-        }
-      });
-    };
-
-    // Helper: discover URLs via Spider.cloud → Firecrawl map cascade
-    const discoverUrlsViaMap = async (limit: number): Promise<string[]> => {
-      const spiderKey = Deno.env.get('SPIDER_API_KEY');
-      if (spiderKey) {
-        try {
-          const spiderRes = await fetch(`${SPIDER_API}/crawl`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${spiderKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: normalizedUrl, limit, return_format: 'raw', depth: 0, request: 'http' }),
-          });
-          if (spiderRes.ok) {
-            const spiderData = await spiderRes.json();
-            const spiderUrls = Array.isArray(spiderData)
-              ? spiderData.map((p: any) => p.url).filter(Boolean)
-              : [];
-            if (spiderUrls.length > 0) {
-              await trackPaidApiCall('crawl-site', 'spider', '/crawl', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-spider-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
-              console.log(`[${crawlId}] Spider.cloud map: ${spiderUrls.length} URLs`);
-              return filterNonPageUrls(spiderUrls);
-            }
-          } else {
-            console.warn(`[${crawlId}] Spider.cloud map failed (${spiderRes.status})`);
-          }
-        } catch (e) {
-          console.warn(`[${crawlId}] Spider.cloud exception:`, e);
-        }
-      }
-
-      // Firecrawl fallback
-      console.log(`[${crawlId}] Falling back to Firecrawl map`);
-      const mapResponse = await fetch(`${FIRECRAWL_API}/map`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: normalizedUrl, limit, includeSubdomains: false }),
-      });
-      const mapData = await mapResponse.json();
-      await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-map-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
-      if (mapResponse.ok && mapData.links?.length) {
-        return filterNonPageUrls(mapData.links);
-      }
-      return [];
-    };
-
-    // ── Hybrid discovery: merge sitemap + map discovery, never rely on sitemap alone ──
-    const sitemapSet = new Set<string>();
-    if (sitemapUrls.length > 0) {
-      const cleanedUrls = filterNonPageUrls(sitemapUrls);
-      cleanedUrls.forEach(u => sitemapSet.add(u.replace(/\/$/, '')));
-      urls = cleanedUrls.slice(0, pageLimit);
-      console.log(`[${crawlId}] Sitemap seed: ${urls.length} URLs (filtered from ${sitemapUrls.length})`);
-    }
-
-    // Always complement with map discovery (Spider.cloud → Firecrawl cascade)
-    // This catches pages not in sitemap: orphans, dynamic routes, JS-rendered pages
-    if (urls.length < pageLimit) {
-      console.log(`[${crawlId}] Complementing with map discovery (have ${urls.length}/${pageLimit})…`);
-      try {
-        const mapUrls = await discoverUrlsViaMap(pageLimit * 2);
-        const existingSet = new Set(urls.map(u => u.replace(/\/$/, '')));
-        const newUrls = mapUrls.filter(u => !existingSet.has(u.replace(/\/$/, '')));
-        if (newUrls.length > 0) {
-          const slotsLeft = pageLimit - urls.length;
-          urls = [...urls, ...newUrls.slice(0, slotsLeft)];
-          console.log(`[${crawlId}] ✅ Map discovery added ${Math.min(newUrls.length, slotsLeft)} URLs (total: ${urls.length})`);
-        }
-      } catch (e) {
-        console.warn(`[${crawlId}] Map complement failed (non-blocking):`, e);
-      }
-    }
-
-    // ── CMS content discovery: inject URLs from connected CMS (WordPress, Shopify, IKtracker…) ──
-    // Always run CMS discovery regardless of pageLimit — CMS pages may not be in sitemap/map
-    try {
-      const domainBase = domain.replace(/^www\./, '');
-      const { data: trackedSite } = await supabase
-        .from('tracked_sites')
-        .select('id')
-        .or(`domain.eq.${domainBase},domain.eq.www.${domainBase}`)
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (trackedSite) {
-        const cmsInventory = await scanCmsContent(trackedSite.id, userId);
-        if (cmsInventory.items.length > 0) {
-          const existingSet = new Set(urls.map(u => u.replace(/\/$/, '').toLowerCase()));
-          let cmsAdded = 0;
-          for (const item of cmsInventory.items) {
-            if (!item.url) continue;
-            const normalizedCmsUrl = item.url.replace(/\/$/, '').toLowerCase();
-            if (!existingSet.has(normalizedCmsUrl)) {
-              urls.push(item.url);
-              existingSet.add(normalizedCmsUrl);
-              cmsAdded++;
-            }
-          }
-          if (cmsAdded > 0) {
-            // Extend pageLimit to include CMS-discovered pages
-            pageLimit = Math.max(pageLimit, urls.length);
-            console.log(`[${crawlId}] ✅ CMS discovery added ${cmsAdded} URLs from ${cmsInventory.scanned_platforms.join(', ')} (pageLimit extended to ${pageLimit}, total: ${urls.length})`);
-          }
-        }
-        if (cmsInventory.errors.length > 0) {
-          console.warn(`[${crawlId}] CMS scan warnings:`, cmsInventory.errors);
-        }
-      }
-    } catch (e) {
-      console.warn(`[${crawlId}] CMS content discovery failed (non-blocking):`, e);
-    }
-
-    // If still no URLs at all, error out
-    if (urls.length === 0) {
-      await supabase.from('site_crawls').update({ status: 'error', error_message: 'Aucune page découverte (sitemap + map + CMS)' }).eq('id', crawlId);
-      return new Response(JSON.stringify({ success: false, error: 'Aucune page découverte', crawlId }), {
-        status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     // Pre-filter URLs by regex if provided
     if (urlFilter) {
       try {
@@ -479,7 +450,14 @@ Deno.serve(handleRequest(async (req) => {
       } catch {}
     }
 
-    // ── Incremental crawl: reuse pages from last 12h crawl of same domain (skip for admins) ──
+    if (urls.length === 0) {
+      await supabase.from('site_crawls').update({ status: 'error', error_message: 'Aucune page découverte (sitemap + map + CMS)' }).eq('id', crawlId);
+      return new Response(JSON.stringify({ success: false, error: 'Aucune page découverte', crawlId }), {
+        status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ── Incremental crawl: reuse pages from last 12h crawl of same domain ──
     let reusedCount = 0;
     if (!isUnlimited) try {
       const twelveHoursAgo = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
@@ -495,7 +473,6 @@ Deno.serve(handleRequest(async (req) => {
 
       if (recentCrawls?.length) {
         const prevCrawlId = recentCrawls[0].id;
-        // Fetch all pages from the previous crawl
         const { data: prevPages } = await supabase
           .from('crawl_pages')
           .select('url, title, seo_score, word_count, internal_links, external_links, h1, h2_count, h3_count, h4_h6_count, has_noindex, has_nofollow, has_canonical, has_og, has_schema_org, has_hreflang, is_indexable, crawl_depth, page_type_override, issues, body_text_truncated, meta_description, canonical_url, http_status, response_time_ms, images_total, images_without_alt, html_size_bytes, content_hash, path, broken_links, anchor_texts, schema_org_types, schema_org_errors, redirect_url, index_source, custom_extraction')
@@ -507,7 +484,6 @@ Deno.serve(handleRequest(async (req) => {
           const urlsToProcess = urls.filter(u => !prevUrlSet.has(u));
 
           if (urlsToSkip.length > 0) {
-            // Copy previous pages into new crawl (batch insert)
             const pagesToCopy = prevPages
               .filter((p: any) => urlsToSkip.includes(p.url))
               .map((p: any) => {
@@ -515,7 +491,6 @@ Deno.serve(handleRequest(async (req) => {
                 return { ...rest, crawl_id: crawlId };
               });
 
-            // Insert in batches of 50
             for (let i = 0; i < pagesToCopy.length; i += 50) {
               const batch = pagesToCopy.slice(i, i + 50);
               await supabase.from('crawl_pages').insert(batch);
@@ -533,14 +508,14 @@ Deno.serve(handleRequest(async (req) => {
 
     const totalPages = urls.length + reusedCount;
 
-    // Update site_crawls with actual URL count (including reused)
+    // Update site_crawls with actual URL count
     await supabase.from('site_crawls').update({
       total_pages: totalPages,
       crawled_pages: reusedCount,
       status: urls.length > 0 ? 'queued' : 'completed',
     }).eq('id', crawlId);
 
-    // Update monthly page counter with ACTUAL new urls only (reused pages are free)
+    // Update monthly page counter
     if (!isUnlimited && urls.length > 0) {
       await supabase
         .from('profiles')
@@ -548,11 +523,9 @@ Deno.serve(handleRequest(async (req) => {
         .eq('user_id', userId);
     }
 
-    // If all pages were reused, finalize immediately without creating a job
+    // If all pages were reused, finalize immediately
     if (urls.length === 0) {
-      console.log(`[${crawlId}] ♻️ 100% incrémental — toutes les ${reusedCount} pages réutilisées, pas de worker nécessaire`);
-
-      // Generate summary for the crawl
+      console.log(`[${crawlId}] ♻️ 100% incrémental — toutes les ${reusedCount} pages réutilisées`);
       await supabase.from('site_crawls').update({
         status: 'completed',
         completed_at: new Date().toISOString(),
@@ -570,7 +543,6 @@ Deno.serve(handleRequest(async (req) => {
         incremental: true,
         sitemapPageCount,
         gscIndexedCount,
-        dataforseoIndexedCount,
         message: `♻️ ${reusedCount} pages réutilisées du crawl précédent — aucun re-crawl nécessaire`,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -603,7 +575,7 @@ Deno.serve(handleRequest(async (req) => {
 
     console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} nouvelles URLs (${reusedCount} réutilisées) — en attente du worker`);
 
-    // Trigger the worker immediately (fire-and-forget with logging)
+    // Trigger the worker immediately (fire-and-forget)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     fireAndLog(
       fetch(`${supabaseUrl}/functions/v1/process-crawl-queue`, {
@@ -628,7 +600,6 @@ Deno.serve(handleRequest(async (req) => {
       incremental: reusedCount > 0,
       sitemapPageCount,
       gscIndexedCount,
-      dataforseoIndexedCount,
       message: reusedCount > 0
         ? `♻️ ${reusedCount} pages réutilisées + ${urls.length} nouvelles à crawler`
         : `${urls.length} pages découvertes — audit en file d'attente`,
