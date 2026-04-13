@@ -309,6 +309,7 @@ function buildPromptSnippet(
     escalationRate: number
     days: number
     patchResults: any[]
+    cocoonUserIssues: { id: string; created_at: string; domain: string; message_count: number; user_messages: string[] }[]
   },
 ): string {
   const lines: string[] = []
