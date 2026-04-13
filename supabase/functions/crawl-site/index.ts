@@ -423,9 +423,48 @@ Deno.serve(handleRequest(async (req) => {
       }
     }
 
+    // ── CMS content discovery: inject URLs from connected CMS (WordPress, Shopify, IKtracker…) ──
+    if (urls.length < pageLimit) {
+      try {
+        const domainBase = domain.replace(/^www\./, '');
+        const { data: trackedSite } = await supabase
+          .from('tracked_sites')
+          .select('id')
+          .or(`domain.eq.${domainBase},domain.eq.www.${domainBase}`)
+          .eq('user_id', userId)
+          .limit(1)
+          .maybeSingle();
+
+        if (trackedSite) {
+          const cmsInventory = await scanCmsContent(trackedSite.id, userId);
+          if (cmsInventory.items.length > 0) {
+            const existingSet = new Set(urls.map(u => u.replace(/\/$/, '').toLowerCase()));
+            let cmsAdded = 0;
+            for (const item of cmsInventory.items) {
+              if (!item.url || urls.length >= pageLimit) break;
+              const normalizedCmsUrl = item.url.replace(/\/$/, '').toLowerCase();
+              if (!existingSet.has(normalizedCmsUrl)) {
+                urls.push(item.url);
+                existingSet.add(normalizedCmsUrl);
+                cmsAdded++;
+              }
+            }
+            if (cmsAdded > 0) {
+              console.log(`[${crawlId}] ✅ CMS discovery added ${cmsAdded} URLs from ${cmsInventory.scanned_platforms.join(', ')} (total: ${urls.length})`);
+            }
+          }
+          if (cmsInventory.errors.length > 0) {
+            console.warn(`[${crawlId}] CMS scan warnings:`, cmsInventory.errors);
+          }
+        }
+      } catch (e) {
+        console.warn(`[${crawlId}] CMS content discovery failed (non-blocking):`, e);
+      }
+    }
+
     // If still no URLs at all, error out
     if (urls.length === 0) {
-      await supabase.from('site_crawls').update({ status: 'error', error_message: 'Aucune page découverte (sitemap + map)' }).eq('id', crawlId);
+      await supabase.from('site_crawls').update({ status: 'error', error_message: 'Aucune page découverte (sitemap + map + CMS)' }).eq('id', crawlId);
       return new Response(JSON.stringify({ success: false, error: 'Aucune page découverte', crawlId }), {
         status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
