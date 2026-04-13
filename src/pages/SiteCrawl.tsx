@@ -1008,6 +1008,53 @@ export default function SiteCrawl() {
     setCustomSelectors(prev => prev.filter((_, i) => i !== index));
   }
 
+  // ── Phase 1: Detect pages (mapping only, no credits) ──
+  async function handleDetect(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) { navigate('/auth'); return; }
+    try { localStorage.setItem('crawl_last_url', url); } catch {}
+
+    setIsDetectingPages(true);
+    setDetectionDone(false);
+    setDiscoveredUrls([]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('crawl-site', {
+        body: { url, userId: user.id, mode: 'detect' },
+      });
+
+      if (error) throw error;
+      if (!data.success) {
+        toast.error(data.error || 'Erreur de détection');
+        return;
+      }
+
+      const detectedUrls: string[] = data.urls || [];
+      setDiscoveredUrls(detectedUrls);
+      setTotalEstimatedPages(data.totalDiscovered || detectedUrls.length);
+      setSitemapPagesCount(data.sources?.sitemap || null);
+      setIndexedPagesCount(data.sources?.gscIndexed || null);
+
+      // Update directory tree from detection response
+      if (data.directories?.length > 0) {
+        setSitemapTree(data.directories.slice(0, 15));
+      }
+
+      // Auto-set slider to total discovered
+      const total = detectedUrls.length;
+      if (total > 0) {
+        setMaxPages(Math.min(total, isAdmin ? 500 : maxSliderCap));
+      }
+
+      setDetectionDone(true);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur de détection');
+    } finally {
+      setIsDetectingPages(false);
+    }
+  }
+
+  // ── Phase 2: Analyze (actual crawl with scraping) ──
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { navigate('/auth'); return; }
