@@ -1,4 +1,4 @@
-import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
