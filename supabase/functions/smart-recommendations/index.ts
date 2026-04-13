@@ -400,6 +400,16 @@ Deno.serve(handleRequest(async (req: Request) => {
 
     const site = siteRes.data as any;
     const domain = site.domain;
+    const domainNorm = domain.replace(/^www\./, '');
+
+    // Re-query site_crawls by domain (no tracked_site_id column)
+    const { data: crawlData } = await supabase.from('site_crawls')
+      .select('id, total_pages')
+      .or(`domain.eq.${domainNorm},domain.eq.www.${domainNorm}`)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    crawlRes = { data: crawlData };
 
     // Get audit data with actual domain
     const { data: auditData } = await supabase.from('audit_raw_data')
