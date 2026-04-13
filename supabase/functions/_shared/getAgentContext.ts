@@ -103,12 +103,14 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
     cocoonErrorsRes,
     silentErrorsRes,
     patchEffectivenessRes,
+    cocoonConvosRes,
   ] = await Promise.all([
-    // 1. SAV conversations (recent, with message preview)
+    // 1. SAV conversations (recent, with message preview) — Félix only
     supabase
       .from('sav_conversations')
       .select('id, messages, phone_callback, created_at')
       .gte('created_at', since)
+      .neq('assistant_type', 'cocoon')
       .order('created_at', { ascending: false })
       .limit(max),
 
@@ -169,6 +171,15 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
       .select('target_function, agent_source, errors_before, errors_after, error_reduction_pct, is_effective, deployment_date')
       .order('created_at', { ascending: false })
       .limit(20),
+
+    // 9. Stratège Cocoon conversations (user pain points from cocoon chat)
+    supabase
+      .from('sav_conversations')
+      .select('id, messages, source_domain, created_at')
+      .eq('assistant_type', 'cocoon')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(max),
   ])
 
   // Process SAV data
@@ -247,10 +258,24 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
     deployment_date: p.deployment_date,
   }))
 
+  // Process cocoon conversations (Stratège user exchanges)
+  const cocoonConvos = cocoonConvosRes.data || []
+  const cocoonUserIssues = cocoonConvos.map((c: any) => {
+    const msgs = Array.isArray(c.messages) ? c.messages : []
+    const userMsgs = msgs.filter((m: any) => m.role === 'user')
+    return {
+      id: c.id,
+      created_at: c.created_at,
+      domain: c.source_domain || 'unknown',
+      message_count: msgs.length,
+      user_messages: userMsgs.slice(-3).map((m: any) => (m.content || '').substring(0, 200)),
+    }
+  })
+
   // Build prompt snippet based on agent type
   const promptSnippet = buildPromptSnippet(opts.agent, {
     savIssues, technicalErrors, anomalies, cocoonErrors, silentErrors,
-    avgScore, escalationRate, days, patchResults,
+    avgScore, escalationRate, days, patchResults, cocoonUserIssues,
   })
 
   return {
@@ -264,6 +289,7 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
       anomalyCount: anomalies.length,
       cocoonErrorCount: cocoonErrors.length,
       silentErrorCount: silentErrors.length,
+      cocoonConversationCount: cocoonConvos.length,
       patchEffectivenessRate: patchResults.length > 0
         ? Math.round(patchResults.filter((p: any) => p.is_effective).length / patchResults.length * 100)
         : null,
@@ -283,6 +309,7 @@ function buildPromptSnippet(
     escalationRate: number
     days: number
     patchResults: any[]
+    cocoonUserIssues: { id: string; created_at: string; domain: string; message_count: number; user_messages: string[] }[]
   },
 ): string {
   const lines: string[] = []
@@ -345,7 +372,17 @@ function buildPromptSnippet(
     }
   }
 
-  // Patch effectiveness feedback — relevant for all agents
+  // Cocoon Stratège user conversations — relevant for CTO and Supervisor
+  if ((agent === 'cto' || agent === 'supervisor') && ctx.cocoonUserIssues.length > 0) {
+    lines.push(`\n## 🧠 Problèmes signalés via le Stratège Cocoon (${ctx.cocoonUserIssues.length} conversations)`)
+    for (const c of ctx.cocoonUserIssues.slice(0, 5)) {
+      lines.push(`  - [${c.created_at.substring(0, 10)}] ${c.domain} (${c.message_count} msgs):`)
+      for (const msg of c.user_messages) {
+        lines.push(`    → "${msg}"`)
+      }
+    }
+  }
+
   if (ctx.patchResults.length > 0) {
     const effective = ctx.patchResults.filter(p => p.is_effective).length
     const total = ctx.patchResults.length
