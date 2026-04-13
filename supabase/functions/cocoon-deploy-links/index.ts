@@ -105,7 +105,7 @@ async function deployViaIktracker(
   recommendations: LinkRecommendation[],
   mode: string
 ) {
-  const IKTRACKER_BASE_URL = 'https://yarjaudctshlxkatqgeb.supabase.co/functions/v1/blog-api'
+  // IKTRACKER_BASE_URL imported from _shared/domainUtils.ts
   const apiKey = Deno.env.get('IKTRACKER_API_KEY')
   if (!apiKey) throw new Error('IKTRACKER_API_KEY not configured')
 
