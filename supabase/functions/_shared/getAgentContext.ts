@@ -103,12 +103,14 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
     cocoonErrorsRes,
     silentErrorsRes,
     patchEffectivenessRes,
+    cocoonConvosRes,
   ] = await Promise.all([
-    // 1. SAV conversations (recent, with message preview)
+    // 1. SAV conversations (recent, with message preview) — Félix only
     supabase
       .from('sav_conversations')
       .select('id, messages, phone_callback, created_at')
       .gte('created_at', since)
+      .neq('assistant_type', 'cocoon')
       .order('created_at', { ascending: false })
       .limit(max),
 
@@ -169,6 +171,15 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
       .select('target_function, agent_source, errors_before, errors_after, error_reduction_pct, is_effective, deployment_date')
       .order('created_at', { ascending: false })
       .limit(20),
+
+    // 9. Stratège Cocoon conversations (user pain points from cocoon chat)
+    supabase
+      .from('sav_conversations')
+      .select('id, messages, source_domain, created_at')
+      .eq('assistant_type', 'cocoon')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(max),
   ])
 
   // Process SAV data
