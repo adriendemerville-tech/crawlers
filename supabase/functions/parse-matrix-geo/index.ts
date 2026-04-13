@@ -232,7 +232,7 @@ Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string c
       await resp.text()
       if ((status === 429 || status >= 500) && retryCount < MAX_RETRIES) {
         await new Promise(r => setTimeout(r, RETRY_DELAYS[retryCount] || 5000))
-        return evaluateGeo(prompt, url, llmName, retryCount + 1)
+        return evaluateGeo(prompt, url, _llmName, retryCount + 1)
       }
       return { score: 50, raw: { error: `API error ${status}` } }
     }
