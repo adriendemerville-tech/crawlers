@@ -8,9 +8,14 @@ initGlobalErrorListener();
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Load non-critical display fonts after first paint
+// Load non-critical display fonts after first paint (via <link> to avoid Vite render-blocking CSS chunk)
 requestIdleCallback(() => {
-  import('./fonts-deferred.css');
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = '/fonts-deferred.css';
+  link.media = 'print';
+  link.onload = () => { link.media = 'all'; };
+  document.head.appendChild(link);
 }, { timeout: 2000 });
 
 // Signal to the critical CSS that React has mounted — reveal body
