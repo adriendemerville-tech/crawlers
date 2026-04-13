@@ -1,2375 +1,55 @@
-import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
-import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
-import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
-import { corsHeaders } from '../_shared/cors.ts'
-import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
-import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
-import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
-import { getSiteContext } from '../_shared/getSiteContext.ts'
-import { writeIdentity } from '../_shared/identityGateway.ts'
-import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
-import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
-import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts'
-import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
-
-// Fonction pour générer un résumé promptable depuis le rapport stratégique
-function generateStrategicPromptSummary(title: string, description: string, priority: string): string {
-  const priorityLabel = priority === 'Prioritaire' ? '🔴 PRIORITAIRE' : priority === 'Important' ? '🟠 IMPORTANT' : '🟢 OPPORTUNITÉ';
-  return `[${priorityLabel}] ${title} - ${description.substring(0, 200)}`;
-}
-
-// Fonction pour sauvegarder les recommandations stratégiques dans le registre
-async function saveStrategicRecommendationsToRegistry(
-  supabaseUrl: string,
-  supabaseKey: string,
-  authHeader: string,
-  domain: string,
-  url: string,
-  parsedAnalysis: any
-): Promise<void> {
-  try {
-    const supabase = getUserClient(authHeader);
-    
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) return;
-    
-    await supabase
-      .from('audit_recommendations_registry')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('domain', domain)
-      .eq('audit_type', 'strategic');
-    
-    const registryEntries: any[] = [];
-    
-    if (parsedAnalysis.executive_roadmap && Array.isArray(parsedAnalysis.executive_roadmap)) {
-      parsedAnalysis.executive_roadmap.forEach((item: any, idx: number) => {
-        const priorityMap: Record<string, string> = { 'Prioritaire': 'critical', 'Important': 'important', 'Opportunité': 'optional' };
-        registryEntries.push({
-          user_id: user.id, domain, url,
-          audit_type: 'strategic',
-          recommendation_id: `roadmap_${idx}`,
-          title: item.title || `Recommandation ${idx + 1}`,
-          description: item.prescriptive_action || item.strategic_rationale || '',
-          category: item.category?.toLowerCase() || 'contenu',
-          priority: priorityMap[item.priority] || 'important',
-          fix_type: null,
-          fix_data: { expected_roi: item.expected_roi, category: item.category, full_action: item.prescriptive_action },
-          prompt_summary: generateStrategicPromptSummary(item.title || `Recommandation ${idx + 1}`, item.prescriptive_action || '', item.priority || 'Important'),
-          is_resolved: false,
-        });
-      });
-    }
-    
-    if (parsedAnalysis.keyword_positioning?.recommendations && Array.isArray(parsedAnalysis.keyword_positioning.recommendations)) {
-      parsedAnalysis.keyword_positioning.recommendations.forEach((rec: string, idx: number) => {
-        registryEntries.push({
-          user_id: user.id, domain, url,
-          audit_type: 'strategic',
-          recommendation_id: `kw_rec_${idx}`,
-          title: `SEO Keywords #${idx + 1}`,
-          description: rec,
-          category: 'seo',
-          priority: 'important',
-          fix_type: null,
-          fix_data: { type: 'keyword_recommendation' },
-          prompt_summary: `[🟠 SEO] ${rec.substring(0, 200)}`,
-          is_resolved: false,
-        });
-      });
-    }
-    
-    if (registryEntries.length > 0) {
-      const { error: insertError } = await supabase
-        .from('audit_recommendations_registry')
-        .insert(registryEntries);
-      if (insertError) console.error('❌ Registre stratégique:', insertError);
-      else console.log(`✅ ${registryEntries.length} recommandations sauvegardées`);
-    }
-  } catch (error) {
-    console.error('❌ Erreur registre:', error);
-  }
-}
-
-// ==================== SHARED TEXT UTILITIES ====================
-
-const STOP_WORDS = new Set([
-  'le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux',
-  'il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou',
-  'plus','vous','votre','vos','nous','notre','nos','leur','leurs','mon','ma','mes','ton','ta','tes',
-  'si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore',
-  'tout','tous','même','autre','autres','chaque','quelque','quel','quelle','quels','quelles',
-  'certains','plusieurs','aucun','tel','telle','tels','telles',
-  'gratuit','gratuite','meilleur','meilleure','site','web','page','accueil','www','http','https',
-  'bienvenue','welcome','home','officiel','official',
-  'the','and','for','with','your','our','from','that','this','are','was','will','can','has','have',
-  'calcul','calculer','outil','service','solution','application','app','logiciel','plateforme',
-]);
-
-/** Clean text and tokenize into meaningful words (filters stop words) */
-function cleanAndTokenize(text: string, extraExclusions?: Set<string>): string[] {
-  return text.toLowerCase()
-    .replace(/[|–—·:,\.!?]/g, ' ')
-    .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s'-]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(w => w.length > 1 && !STOP_WORDS.has(w) && !(extraExclusions?.has(w)));
-}
-
-/** Extract Title/H1/Desc from page content context string */
-function extractMetadataTexts(pageContentContext: string): string[] {
-  const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
-  const h1Match = pageContentContext.match(/H1="([^"?]+)/);
-  const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
-  return [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
-}
-
-/** Build a set of domain-derived slugs to filter out brand terms */
-function buildDomainSlugs(domain: string): Set<string> {
-  const slugs = new Set<string>();
-  if (!domain) return slugs;
-  const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
-  for (const part of cleanDomain.split('.')) {
-    if (part.length > 2) slugs.add(part);
-  }
-  slugs.add(cleanDomain.replace(/\./g, ''));
-  if (cleanDomain.split('.').length > 0) slugs.add(cleanDomain.split('.')[0]);
-  return slugs;
-}
-
-// ==================== INTERFACES ====================
-
-interface ToolsData {
-  crawlers: any;
-  geo: any;
-  llm: any;
-  pagespeed: any;
-}
-
-interface EEATSignals {
-  hasAuthorBio: boolean;
-  authorBioCount: number;
-  hasSocialLinks: boolean;
-  hasLinkedInLinks: boolean;
-  socialLinksCount: number;
-  linkedInLinksCount: number;
-  linkedInUrls: string[];
-  hasSameAs: boolean;
-  hasWikidataSameAs: boolean;
-  hasAuthorInJsonLd: boolean;
-  hasProfilePage: boolean;
-  hasPerson: boolean;
-  hasOrganization: boolean;
-  hasCaseStudies: boolean;
-  caseStudySignals: number;
-  hasExpertCitations: boolean;
-  detectedSocialUrls: string[];
-}
-
-interface KeywordData {
-  keyword: string;
-  volume: number;
-  difficulty: number;
-  is_ranked: boolean;
-  current_rank: number | string;
-  is_nugget?: boolean;
-}
-
-interface MarketData {
-  location_used: string;
-  total_market_volume: number;
-  top_keywords: KeywordData[];
-  data_source: 'dataforseo' | 'fallback';
-  fetch_timestamp: string;
-}
-
-// Ranking overview from DataForSEO ranked_keywords endpoint
-interface RankingOverview {
-  total_ranked_keywords: number;
-  average_position_global: number;
-  average_position_top10: number;
-  distribution: {
-    top3: number;
-    top10: number;
-    top20: number;
-    top50: number;
-    top100: number;
-    beyond100: number;
-  };
-  top_keywords: { keyword: string; position: number; volume: number; url: string }[];
-  etv: number; // estimated traffic volume
-}
-
-interface BusinessContext {
-  sector: string;
-  location: string;
-  brandName: string;
-  locationCode: number | null;
-  languageCode: string;
-  seDomain: string;
-}
-
-// ==================== PROBABILISTIC BRAND NAME DETECTION ====================
-
-interface BrandSignal {
-  source: string;
-  value: string;
-  weight: number;
-}
-
 /**
- * Probabilistic algorithm to detect the real brand/company name from 5 HTML signals + domain.
- * Returns { name, confidence }. If confidence >= 0.95, name is the detected brand (capitalized).
- * Otherwise, name falls back to the target URL.
+ * audit-strategique-ia — Orchestrator
+ * All domain logic lives in _shared/strategicAudit/*. This file handles
+ * HTTP routing, async jobs, parallelisation, LLM calls, and post-processing.
  */
-function resolveBrandName(signals: BrandSignal[], domain: string, url: string): { name: string; confidence: number } {
-  if (signals.length === 0) return { name: url, confidence: 0 };
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
+import { trackTokenUsage, trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
+import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
+import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
+import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { writeIdentity } from '../_shared/identityGateway.ts';
+import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts';
+import { computeFactualCitationScores } from '../_shared/citationScorer.ts';
+import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts';
+import { handleRequest } from '../_shared/serveHandler.ts';
 
-  // Normalize for comparison
-  const normalize = (s: string) => s.toLowerCase().replace(/[^a-zàâäéèêëïîôùûüÿçœæ0-9]/g, '').trim();
-  const domainSlug = normalize(domain.replace(/^www\./, '').split('.')[0]);
+// ── Shared strategic audit modules ──
+import type { ToolsData, EEATSignals, MarketData, RankingOverview, BrandSignal, FounderInfo, FacebookPageInfo, GMBData, CtaSeoSignals, PageType } from '../_shared/strategicAudit/types.ts';
+import { DEFAULT_EEAT_SIGNALS, DEFAULT_FOUNDER_INFO, DEFAULT_FACEBOOK_PAGE_INFO, DEFAULT_CTA_SEO_SIGNALS } from '../_shared/strategicAudit/types.ts';
+import { resolveBrandName, humanizeBrandName, sanitizeBrandNameInResponse } from '../_shared/strategicAudit/brandDetection.ts';
+import { detectBusinessContext, KNOWN_LOCATIONS } from '../_shared/strategicAudit/businessContext.ts';
+import { fetchMarketData, fetchRankedKeywords } from '../_shared/strategicAudit/dataForSeo.ts';
+import { detectGoogleMyBusiness, searchFounderProfile, searchFacebookPage, findLocalCompetitor } from '../_shared/strategicAudit/socialDiscovery.ts';
+import { extractPageMetadata } from '../_shared/strategicAudit/pageAnalyzer.ts';
+import { buildUserPrompt, getSystemPromptForPageType } from '../_shared/strategicAudit/prompts.ts';
+import { saveStrategicRecommendationsToRegistry, saveToCache, buildFallbackResult, feedKeywordUniverse, persistIdentityData } from '../_shared/strategicAudit/registrySaver.ts';
 
-  // Group signals by normalized value
-  const groups = new Map<string, { totalWeight: number; bestValue: string; sources: string[] }>();
-  for (const sig of signals) {
-    const rawVal = sig.value.trim();
-    // CRITICAL: Skip values that are clearly taglines/descriptions, not brand names
-    // A real brand name is almost never longer than 40 characters
-    if (rawVal.length > 40) {
-      console.log(`⏭️ Brand detection: skipping too-long signal "${rawVal.substring(0, 50)}..." from ${sig.source}`);
-      continue;
-    }
-    const norm = normalize(rawVal);
-    if (!norm || norm.length < 2) continue;
-    const existing = groups.get(norm);
-    if (existing) {
-      existing.totalWeight += sig.weight;
-      existing.sources.push(sig.source);
-      // Keep the version with best capitalization (longest original form)
-      if (sig.value.length >= existing.bestValue.length) existing.bestValue = sig.value;
-    } else {
-      groups.set(norm, { totalWeight: sig.weight, bestValue: sig.value, sources: [sig.source] });
-    }
-  }
+// ==================== HELPERS ====================
 
-  if (groups.size === 0) return { name: url, confidence: 0 };
-
-  // Also check for near-matches (one group contains the other)
-  const groupKeys = [...groups.keys()];
-  for (let i = 0; i < groupKeys.length; i++) {
-    for (let j = i + 1; j < groupKeys.length; j++) {
-      const a = groupKeys[i], b = groupKeys[j];
-      if (a.includes(b) || b.includes(a)) {
-        const ga = groups.get(a)!, gb = groups.get(b)!;
-        // Merge into the shorter one (more likely the brand name)
-        const shorter = a.length <= b.length ? a : b;
-        const longer = shorter === a ? b : a;
-        const merged = groups.get(shorter)!;
-        const other = groups.get(longer)!;
-        merged.totalWeight += other.totalWeight;
-        merged.sources.push(...other.sources);
-        if (other.bestValue.length < merged.bestValue.length || other.sources.length > merged.sources.length) {
-          // Keep shorter branded name if it looks cleaner
-        }
-        groups.delete(longer);
-      }
-    }
-  }
-
-  // Find the best group
-  const totalWeight = signals.reduce((sum, s) => sum + s.weight, 0);
-  let best = { norm: '', totalWeight: 0, bestValue: '', sources: [] as string[] };
-  for (const [norm, g] of groups) {
-    if (g.totalWeight > best.totalWeight) {
-      best = { norm, ...g };
-    }
-  }
-
-  // Calculate confidence
-  let confidence = best.totalWeight / totalWeight;
-
-  // Bonus: multiple independent sources agreeing boosts confidence
-  if (best.sources.length >= 3) confidence = Math.min(1, confidence + 0.15);
-  else if (best.sources.length >= 2) confidence = Math.min(1, confidence + 0.08);
-
-  // Bonus: if the detected name matches the domain slug, it's a strong confirmation
-  if (normalize(best.bestValue) === domainSlug) confidence = Math.min(1, confidence + 0.05);
-
-  // Ensure proper capitalization
-  let finalName = best.bestValue.trim();
-  // If all lowercase, capitalize first letter of each word
-  if (finalName === finalName.toLowerCase() && finalName.length > 1) {
-    finalName = finalName.replace(/\b\w/g, c => c.toUpperCase());
-  }
-
-  console.log(`🎯 Brand detection: "${finalName}" (confidence: ${(confidence * 100).toFixed(1)}%, sources: ${best.sources.join(',')})`);
-
-  if (confidence >= 0.95) {
-    return { name: finalName, confidence };
-  }
-  return { name: url, confidence };
+async function safe<T>(label: string, fn: () => Promise<T>): Promise<T | null> {
+  try { return await fn(); } catch (e) { console.warn(`⚠️ [${label}] failed:`, e instanceof Error ? e.message : e); return null; }
 }
 
-function humanizeBrandName(slug: string): string {
-  if (!slug || slug.length < 1) return slug;
-  return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
-
-function sanitizeBrandNameInResponse(obj: any, domainSlug: string, humanName: string): any {
-  if (!obj || !domainSlug || !humanName || domainSlug === humanName) return obj;
-  const slugLower = domainSlug.toLowerCase();
-  function replaceInString(str: string): string {
-    if (!str || typeof str !== 'string') return str;
-    const regex = new RegExp(slugLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    return str.replace(regex, humanName);
-  }
-  function walk(node: any): any {
-    if (typeof node === 'string') return replaceInString(node);
-    if (Array.isArray(node)) return node.map(walk);
-    if (node && typeof node === 'object') {
-      const out: any = {};
-      for (const [k, v] of Object.entries(node)) { out[k] = walk(v); }
-      return out;
-    }
-    return node;
-  }
-  return walk(obj);
-}
-
-// ==================== DATAFORSEO FUNCTIONS ====================
-
-const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
-const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
-
-function getAuthHeader(): string {
-  return `Basic ${btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`)}`;
-}
-
-// Well-known location codes to avoid downloading the full list
-const KNOWN_LOCATIONS: Record<string, { code: number; name: string; lang: string; seDomain: string }> = {
-  'france': { code: 2250, name: 'France', lang: 'fr', seDomain: 'google.fr' },
-  'belgium': { code: 2056, name: 'Belgium', lang: 'fr', seDomain: 'google.be' },
-  'switzerland': { code: 2756, name: 'Switzerland', lang: 'fr', seDomain: 'google.ch' },
-  'canada': { code: 2124, name: 'Canada', lang: 'fr', seDomain: 'google.ca' },
-  'luxembourg': { code: 2442, name: 'Luxembourg', lang: 'fr', seDomain: 'google.lu' },
-  'germany': { code: 2276, name: 'Germany', lang: 'de', seDomain: 'google.de' },
-  'spain': { code: 2724, name: 'Spain', lang: 'es', seDomain: 'google.es' },
-  'italy': { code: 2380, name: 'Italy', lang: 'it', seDomain: 'google.it' },
-  'united kingdom': { code: 2826, name: 'United Kingdom', lang: 'en', seDomain: 'google.co.uk' },
-  'united states': { code: 2840, name: 'United States', lang: 'en', seDomain: 'google.com' },
-};
-
-/**
- * Extracts the REAL core business description from page metadata.
- * This is THE most important variable: what does this company actually do?
- */
-function extractCoreBusiness(pageContentContext: string): string {
-  if (!pageContentContext) return '';
-  
-  const texts = extractMetadataTexts(pageContentContext);
-  if (texts.length === 0) return '';
-  
-  const bigrams: string[] = [];
-  const allWords: string[] = [];
-  for (const text of texts) {
-    const words = cleanAndTokenize(text);
-    allWords.push(...words);
-    for (let i = 0; i < words.length - 1; i++) {
-      bigrams.push(`${words[i]} ${words[i + 1]}`);
-    }
-  }
-  
-  const uniqueWords = [...new Set(allWords)];
-  const coreBusiness = uniqueWords.slice(0, 8).join(' ');
-  
-  console.log(`🎯 Core business: "${coreBusiness}"`);
-  console.log(`🎯 Key bigrams: ${bigrams.slice(0, 5).join(', ')}`);
-  
-  return coreBusiness;
-}
-
-/**
- * Détecte le contexte business ET le location code.
- * CRITICAL: Le secteur est dérivé du CONTENU de la page, pas du domaine.
- */
-function detectBusinessContext(domain: string, pageContentContext: string = ''): BusinessContext {
-  const domainParts = domain.toLowerCase().split('.');
-  const tld = domainParts[domainParts.length - 1];
-  
-  const tldToLocation: Record<string, string> = {
-    'fr': 'france', 'be': 'belgium', 'ch': 'switzerland', 'ca': 'canada',
-    'lu': 'luxembourg', 'de': 'germany', 'es': 'spain', 'it': 'italy',
-    'uk': 'united kingdom', 'co.uk': 'united kingdom', 'com': 'france',
-    'ai': 'france', 'io': 'france', 'dev': 'france', 'app': 'france',
-  };
-  
-  const locationKey = tldToLocation[tld] || 'france';
-  const locationInfo = KNOWN_LOCATIONS[locationKey] || KNOWN_LOCATIONS['france'];
-  
-  const prefixes = ['www', 'fr', 'en', 'de', 'es', 'it', 'us', 'uk', 'shop', 'store', 'm', 'mobile'];
-  const significantParts = domainParts.filter(part => 
-    !prefixes.includes(part) && part.length > 2 && 
-    !['com', 'fr', 'net', 'org', 'io', 'co', 'be', 'ch', 'de', 'es', 'it', 'uk', 'ai', 'dev', 'app'].includes(part)
-  );
-  
-  const rawSlug = significantParts.length > 0 ? significantParts[0] : domainParts[0];
-  const brandName = humanizeBrandName(rawSlug);
-  
-  // CRITICAL: Derive sector from PAGE CONTENT, not from domain slug
-  const coreBusiness = extractCoreBusiness(pageContentContext);
-  const sector = coreBusiness || rawSlug.replace(/-/g, ' ');
-  
-  console.log(`📋 Contexte: marque="${brandName}", secteur="${sector}", location="${locationInfo.name}" (code: ${locationInfo.code}, lang: ${locationInfo.lang})`);
-  
-  return { sector, location: locationInfo.name, brandName, locationCode: locationInfo.code, languageCode: locationInfo.lang, seDomain: locationInfo.seDomain };
-}
-
-function extractKeywordsFromMetadata(pageContentContext: string, domain: string = ''): string[] {
-  const extracted: string[] = [];
-  const texts = extractMetadataTexts(pageContentContext);
-  const domainSlugs = buildDomainSlugs(domain);
-  
-  for (const text of texts) {
-    const words = cleanAndTokenize(text, domainSlugs).filter(w => w.length > 2);
-    
-    // Prioritize bigrams and trigrams (market-intent phrases)
-    for (let i = 0; i < words.length - 2; i++) {
-      extracted.push(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
-    }
-    for (let i = 0; i < words.length - 1; i++) {
-      extracted.push(`${words[i]} ${words[i + 1]}`);
-    }
-    for (const word of words) {
-      if (word.length >= 5) extracted.push(word);
-    }
-  }
-  
-  return [...new Set(extracted)].slice(0, 12);
-}
-
-function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = '', domain: string = ''): string[] {
-  const keywords: string[] = [];
-  
-  if (pageContentContext) {
-    const coreBusiness = extractCoreBusiness(pageContentContext);
-    const texts = extractMetadataTexts(pageContentContext);
-    const domainSlugs = buildDomainSlugs(domain);
-    
-    const coreBigrams: string[] = [];
-    for (const text of texts) {
-      const words = cleanAndTokenize(text, domainSlugs);
-      for (let i = 0; i < words.length - 1; i++) {
-        coreBigrams.push(`${words[i]} ${words[i + 1]}`);
-      }
-    }
-    
-    for (const bg of coreBigrams.slice(0, 3)) {
-      if (bg.length > 4 && !keywords.includes(bg)) keywords.push(bg);
-    }
-    
-    const metaKeywords = extractKeywordsFromMetadata(pageContentContext, domain);
-    for (const mk of metaKeywords) {
-      if (mk.length > 4 && !keywords.includes(mk)) keywords.push(mk);
-    }
-  }
-  
-  // Add sector-based queries if different from brand
-  const cleanBrand = brandName.toLowerCase().trim();
-  if (sector.toLowerCase() !== cleanBrand && sector.length > 3) {
-    if (!keywords.some(k => k.includes(sector))) keywords.push(sector);
-  }
-  
-  // Brand terms at the end (low priority — useful for branded volume only)
-  if (!keywords.includes(cleanBrand)) keywords.push(cleanBrand);
-  
-  console.log(`🔑 Seed keywords (core business first): ${keywords.slice(0, 5).join(', ')}`);
-  
-  return keywords.filter(kw => kw.length > 3 && !kw.includes('undefined')).slice(0, 10);
-}
-
-// ==================== AI-DRIVEN SEED GENERATION ====================
-
-async function generateSeedsWithAI(
-  url: string,
-  pageContentContext: string,
-  brandName: string,
-  mode: 'initial' | 'vertical' | 'horizontal' = 'initial',
-  feedback?: string
-): Promise<string[]> {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    console.log('⚠️ No AI key for seed generation, falling back to metadata extraction');
-    return [];
-  }
-
-  const modeInstructions: Record<string, string> = {
-    initial: "Services principaux + intentions d'achat/conversion. Ex: 'devis rénovation salle de bain', 'plombier urgence Paris', 'logiciel facturation auto-entrepreneur'.",
-    vertical: "Sous-catégories techniques, longue traîne, conversion locale. Creuse en PROFONDEUR les niches métier spécifiques. Ex: 'isolation thermique par l'extérieur prix', 'raccordement cuivre multicouche'.",
-    horizontal: "Étapes AMONT du parcours client (financement, permis, diagnostic, comparatif) et besoins CONNEXES. Trouve des chemins de traverse. Ex: 'aide financement rénovation énergétique', 'permis de construire extension maison'.",
-  };
-
-  const prompt = `Tu es un Senior SEO Strategist spécialisé en recherche de mots-clés à forte intention.
-
-ANALYSE cette page web:
-URL: ${url}
-${pageContentContext}
-
-RÈGLE D'OR ABSOLUE: NE CITE JAMAIS le nom de la marque "${brandName}" ni aucune variante dans tes mots-clés. Les mots-clés doivent être 100% GÉNÉRIQUES.
-
-MODE: ${mode.toUpperCase()}
-${modeInstructions[mode]}
-${feedback ? `\n⚠️ FEEDBACK: Les seeds précédents ont donné de mauvais résultats (volume trop faible ou hors-sujet). ${feedback}. Reformule avec des expressions plus recherchées et plus spécifiques.` : ''}
-
-INSTRUCTIONS:
-1. Identifie le CORE BUSINESS exact de cette entreprise
-2. Génère exactement 15 mots-clés que des clients potentiels taperaient dans Google
-3. Chaque mot-clé = expression de 2-5 mots à forte intention commerciale ou informationnelle
-4. Privilégie les requêtes transactionnelles ("devis X", "prix X", "X pas cher") et décisionnelles ("meilleur X", "comparatif X", "avis X")
-5. Inclus au moins 3 requêtes longue traîne (4-5 mots)
-
-Réponds UNIQUEMENT avec un JSON: {"core_business": "description courte", "seeds": ["mot clé 1", "mot clé 2", ...]}`;
-
-  try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.5,
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-
-    if (!response.ok) {
-      console.log(`⚠️ AI seed generation failed: ${response.status}`);
-      await response.text();
-      return [];
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    trackTokenUsage('generate-seeds', 'google/gemini-2.5-flash-lite', data.usage, url);
-
-    let seeds: string[] = [];
-    try {
-      let jsonStr = content;
-      if (content.includes('```json')) jsonStr = content.split('```json')[1].split('```')[0].trim();
-      else if (content.includes('```')) jsonStr = content.split('```')[1].split('```')[0].trim();
-      jsonStr = jsonStr.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
-      const parsed = JSON.parse(jsonStr);
-      seeds = (parsed.seeds || parsed.keywords || []).filter((s: string) => typeof s === 'string' && s.length > 3);
-      if (parsed.core_business) console.log(`🎯 AI Core Business: "${parsed.core_business}"`);
-    } catch {
-      const match = content.match(/\[([^\]]+)\]/);
-      if (match) {
-        seeds = match[1].split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, '')).filter((s: string) => s.length > 3);
-      }
-    }
-
-    // Filter out brand name
-    const brandLower = brandName.toLowerCase();
-    const domainSlug = brandLower.replace(/\s+/g, '');
-    seeds = seeds.filter(s => {
-      const sLower = s.toLowerCase();
-      return !sLower.includes(brandLower) && !sLower.includes(domainSlug);
-    });
-
-    console.log(`🤖 AI seeds (${mode}): ${seeds.slice(0, 8).join(', ')}... (${seeds.length} total)`);
-    return seeds.slice(0, 15);
-  } catch (error) {
-    console.error('❌ AI seed generation error:', error);
-    return [];
-  }
-}
-
-function checkDataQuality(keywords: { keyword: string; volume: number; difficulty: number }[]): boolean {
-  if (keywords.length < 3) return false;
-  const avgVolume = keywords.reduce((sum, kw) => sum + kw.volume, 0) / keywords.length;
-  if (avgVolume < 100) return false;
-  return true;
-}
-
-async function fetchKeywordData(
-  seedKeywords: string[], locationCode: number, languageCode: string = 'fr'
-): Promise<{ keyword: string; volume: number; difficulty: number }[]> {
-  console.log(`📊 Récupération mots-clés pour location: ${locationCode}, lang: ${languageCode}`);
-  const allKeywords: { keyword: string; volume: number; difficulty: number }[] = [];
-  const seenLower = new Set<string>();
-  
-  const addUnique = (kw: { keyword: string; volume: number; difficulty: number }) => {
-    const lower = kw.keyword.toLowerCase();
-    if (!seenLower.has(lower) && kw.volume >= 0) {
-      seenLower.add(lower);
-      allKeywords.push(kw);
-    }
-  };
-  
-  try {
-    // Phase 1: keywords_for_keywords (broader expansion)
-    const response = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live', {
-      method: 'POST',
-      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify([{
-        keywords: seedKeywords.slice(0, 5),
-        location_code: locationCode, language_code: languageCode,
-        sort_by: 'search_volume', include_adult_keywords: false,
-      }]),
-    });
-
-    if (response.ok) {
-      trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'keywords_for_keywords');
-      const data = await response.json();
-      if (data.status_code === 20000 && data.tasks?.[0]?.result) {
-        for (const item of data.tasks[0].result) {
-          if (item.keyword && item.search_volume >= 0) {
-            addUnique({
-              keyword: item.keyword,
-              volume: item.search_volume || 0,
-              difficulty: item.competition_index || Math.round((item.competition || 0.3) * 100),
-            });
-          }
-        }
-        console.log(`✅ ${allKeywords.length} mots-clés via Google Ads API`);
-      }
-    } else {
-      await response.text();
-    }
-    
-    // Phase 2: search_volume fallback for seed keywords themselves
-    if (allKeywords.length < 10) {
-      console.log('🔄 Fallback: search_volume...');
-      const volumeResponse = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live', {
-        method: 'POST',
-        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify([{
-          keywords: seedKeywords, location_code: locationCode, language_code: languageCode,
-        }]),
-      });
-
-      if (volumeResponse.ok) {
-        const volumeData = await volumeResponse.json();
-        if (volumeData.status_code === 20000 && volumeData.tasks?.[0]?.result) {
-          for (const item of volumeData.tasks[0].result) {
-            if (item.keyword && item.search_volume >= 0) {
-              addUnique({
-                keyword: item.keyword,
-                volume: item.search_volume || 0,
-                difficulty: item.competition ? Math.round(item.competition * 100) : 30,
-              });
-            }
-          }
-        }
-      } else {
-        await volumeResponse.text();
-      }
-    }
-    
-    // Phase 3: If still under 5, try broader single-word seeds 
-    if (allKeywords.length < 5 && seedKeywords.length > 0) {
-      console.log('🔄 Phase 3: broader single-word expansion...');
-      const singleWords = seedKeywords
-        .flatMap(s => s.split(/\s+/))
-        .filter(w => w.length >= 4 && !STOP_WORDS.has(w.toLowerCase()))
-        .slice(0, 5);
-      
-      if (singleWords.length > 0) {
-        const broadResponse = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live', {
-          method: 'POST',
-          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify([{
-            keywords: singleWords,
-            location_code: locationCode, language_code: languageCode,
-            sort_by: 'search_volume', include_adult_keywords: false,
-          }]),
-        });
-        
-        if (broadResponse.ok) {
-          const broadData = await broadResponse.json();
-          if (broadData.status_code === 20000 && broadData.tasks?.[0]?.result) {
-            for (const item of broadData.tasks[0].result) {
-              if (item.keyword && item.search_volume >= 0) {
-                addUnique({
-                  keyword: item.keyword,
-                  volume: item.search_volume || 0,
-                  difficulty: item.competition_index || Math.round((item.competition || 0.3) * 100),
-                });
-              }
-            }
-            console.log(`✅ Phase 3: ${allKeywords.length} mots-clés total après expansion`);
-          }
-        } else {
-          await broadResponse.text();
-        }
-      }
-    }
-  } catch (error) {
-    console.error('❌ Erreur mots-clés:', error);
-  }
-  
-  return allKeywords.sort((a, b) => b.volume - a.volume).slice(0, 15);
-}
-
-async function checkRankings(
-  keywords: { keyword: string; volume: number; difficulty: number }[],
-  domain: string, locationCode: number, languageCode: string = 'fr', seDomain: string = 'google.fr'
-): Promise<KeywordData[]> {
-  console.log(`📈 Vérification positionnement pour ${domain}`);
-  const results: KeywordData[] = [];
-  const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
-  
-  // Only exclude paid ads — all other SERP types indicate real presence
-  const EXCLUDED_TYPES = new Set(['paid', 'ads']);
-  
-  // Check top 10 keywords by volume for reliable average position
-  const keywordsToCheck = keywords.slice(0, 10);
-  
-  try {
-    const tasks = keywordsToCheck.map(kw => ({
-      keyword: kw.keyword, location_code: locationCode, language_code: languageCode,
-      depth: 50, se_domain: seDomain,
-    }));
-    
-    const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
-      method: 'POST',
-      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify(tasks),
-    });
-
-    if (!response.ok) {
-      await response.text();
-      return keywords.map(kw => ({ ...kw, is_ranked: false, current_rank: 'Non classé' }));
-    }
-    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/organic');
-
-    const data = await response.json();
-    
-    for (let i = 0; i < keywordsToCheck.length; i++) {
-      const kw = keywordsToCheck[i];
-      const taskResult = data.tasks?.[i]?.result?.[0];
-      let position: number | string = 'Non classé';
-      let isRanked = false;
-      
-      if (taskResult?.items) {
-        for (const item of taskResult.items) {
-          if (EXCLUDED_TYPES.has(item.type)) continue;
-          
-          // Check domain from multiple fields for reliability
-          const itemDomain = (item.domain || '').toLowerCase().replace(/^www\./, '');
-          const itemUrl = (item.url || '').toLowerCase();
-          
-          // Match against domain field OR url field
-          const domainMatch = itemDomain && (
-            itemDomain === cleanDomain ||
-            itemDomain.endsWith('.' + cleanDomain) ||
-            cleanDomain.endsWith('.' + itemDomain)
-          );
-          const urlMatch = itemUrl.includes(cleanDomain);
-          
-          if (domainMatch || urlMatch) {
-            position = item.rank_absolute || item.rank_group || 1;
-            isRanked = true;
-            console.log(`🎯 ${kw.keyword}: ${cleanDomain} trouvé pos ${position} (type: ${item.type}, domain: ${itemDomain})`);
-            break;
-          }
-          
-          // Also check nested items (e.g., items inside carousels or packs)
-          if (item.items && Array.isArray(item.items)) {
-            for (const subItem of item.items) {
-              const subDomain = (subItem.domain || '').toLowerCase().replace(/^www\./, '');
-              const subUrl = (subItem.url || '').toLowerCase();
-              if (subDomain === cleanDomain || subUrl.includes(cleanDomain)) {
-                position = item.rank_absolute || item.rank_group || 1;
-                isRanked = true;
-                console.log(`🎯 ${kw.keyword}: ${cleanDomain} trouvé en sous-item pos ${position} (type: ${item.type})`);
-                break;
-              }
-            }
-            if (isRanked) break;
-          }
-        }
-        
-        if (!isRanked) {
-          // Log first 5 items for debugging
-          const itemTypes = taskResult.items.slice(0, 8).map((it: any) => `${it.type}:${(it.domain||'').replace(/^www\./,'')}`).join(', ');
-          console.log(`❌ ${kw.keyword}: ${cleanDomain} non trouvé dans ${taskResult.items.length} items [${itemTypes}]`);
-        }
-      }
-      results.push({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, is_ranked: isRanked, current_rank: position });
-    }
-    
-    // All keywords are now checked via SERP (no "Non vérifié")
-    // If more than 10 keywords exist, check remaining too
-    for (let i = 10; i < keywords.length; i++) {
-      results.push({ keyword: keywords[i].keyword, volume: keywords[i].volume, difficulty: keywords[i].difficulty, is_ranked: false, current_rank: 'Non classé' });
-    }
-    
-    // Release data reference
-    console.log(`✅ Positionnement: ${results.filter(r => r.is_ranked).length}/${results.length} classés`);
-  } catch (error) {
-    console.error('❌ Erreur SERP:', error);
-    return keywords.map(kw => ({ ...kw, is_ranked: false, current_rank: 'Non classé' }));
-  }
-  
-  return results;
-}
-
-// Domains that are NEVER real product competitors (media, directories, aggregators)
-const NON_COMPETITOR_DOMAINS = new Set([
-  'forbes.com', 'forbes.fr', 'lemonde.fr', 'lefigaro.fr', 'bfmtv.com', 'lesechos.fr',
-  'wikipedia.org', 'fr.wikipedia.org', 'en.wikipedia.org',
-  'youtube.com', 'facebook.com', 'instagram.com', 'twitter.com', 'x.com', 'linkedin.com', 'reddit.com', 'tiktok.com', 'pinterest.com',
-  'amazon.com', 'amazon.fr', 'ebay.fr', 'ebay.com', 'aliexpress.com', 'cdiscount.com',
-  'trustpilot.com', 'glassdoor.fr', 'glassdoor.com', 'indeed.fr', 'indeed.com',
-  'capterra.fr', 'capterra.com', 'g2.com', 'getapp.com', 'appvizer.fr', 'appvizer.com',
-  'societe.com', 'pappers.fr', 'pagesjaunes.fr', 'yelp.fr', 'yelp.com',
-  'journaldunet.com', 'journaldunet.fr', 'commentcamarche.net', 'linternaute.com',
-  'medium.com', 'substack.com', 'hubspot.com', 'hubspot.fr', 'salesforce.com',
-  'crunchbase.com', 'wellfound.com', 'producthunt.com',
-  'google.com', 'google.fr', 'apple.com', 'microsoft.com', 'github.com',
-]);
-
-function isNonCompetitorDomain(domain: string): boolean {
-  const clean = domain.replace(/^www\./, '').toLowerCase();
-  // Exact match
-  if (NON_COMPETITOR_DOMAINS.has(clean)) return true;
-  // Subdomain match (e.g. "fr.wikipedia.org" → "wikipedia.org")
-  const parts = clean.split('.');
-  if (parts.length > 2) {
-    const root = parts.slice(-2).join('.');
-    if (NON_COMPETITOR_DOMAINS.has(root)) return true;
-  }
-  return false;
-}
-
-async function findLocalCompetitor(
-  domain: string, sector: string, locationCode: number, pageContentContext: string, languageCode: string = 'fr', seDomain: string = 'google.fr',
-  siteContext?: Record<string, unknown> | null,
-): Promise<{ name: string; url: string; rank: number; score?: number }[] | null> {
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
-
-  // ── 1. IDENTITY CARD FIRST: return known competitors if available ──
-  if (siteContext?.competitors && Array.isArray(siteContext.competitors) && (siteContext.competitors as string[]).length > 0) {
-    console.log(`🎯 Concurrents connus (carte d'identité): ${(siteContext.competitors as string[]).join(', ')}`);
-    // Return identity card competitors as top-priority results
-    return (siteContext.competitors as string[]).slice(0, 3).map((c: string, i: number) => ({
-      name: c, url: '', rank: 0, score: 100 - i,
-    }));
-  }
-
-  // ── 2. BUILD SMART QUERIES based on business_type ──
-  const businessType = (siteContext?.business_type as string) || '';
-  const brandName = (siteContext?.brand_name as string) || '';
-  const commercialArea = (siteContext?.commercial_area as string) || '';
-  const gmb = siteContext?.gmb_presence === true;
-  const gmbCity = (siteContext?.gmb_city as string) || '';
-  const productsServices = (siteContext?.products_services as string) || '';
-
-  // Extract city from content (legacy fallback)
-  let city = gmbCity || commercialArea || '';
-  if (!city && pageContentContext) {
-    const cityPatterns = [
-      /(?:à|a|en|sur)\s+([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)/g,
-      /([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)\s*(?:\d{5})/g,
-    ];
-    for (const pattern of cityPatterns) {
-      const match = pattern.exec(pageContentContext);
-      if (match?.[1] && match[1].length > 2 && match[1].length < 30) {
-        city = match[1];
-        break;
-      }
-    }
-  }
-
-  const sectorWords = sector.split(' ').filter(w => w.length > 2).slice(0, 3).join(' ');
-  const productWords = productsServices ? productsServices.split(/[,;]/).map(s => s.trim()).filter(s => s.length > 2)[0] || '' : '';
-
-  // Build query list based on business type
-  const queries: string[] = [];
-  switch (businessType.toLowerCase()) {
-    case 'local':
-    case 'artisan':
-      queries.push(city ? `${productWords || sectorWords} ${city}` : sectorWords);
-      if (gmb && gmbCity) queries.push(`${sectorWords} ${gmbCity} avis`);
-      break;
-    case 'e-commerce':
-    case 'ecommerce':
-      queries.push(`${productWords || sectorWords} acheter en ligne`);
-      if (brandName) queries.push(`${brandName} alternative`);
-      break;
-    case 'saas':
-      queries.push(brandName ? `${brandName} alternative` : `${sectorWords} logiciel`);
-      queries.push(`meilleur ${sectorWords} outil`);
-      break;
-    case 'media':
-    case 'blog':
-      queries.push(`${sectorWords} blog référence`);
-      break;
-    default:
-      // Vitrine / unknown — geo if available, else generic
-      queries.push(city ? `${sectorWords} ${city}` : sectorWords);
-      if (brandName) queries.push(`${brandName} vs`);
-      break;
-  }
-
-  // Deduplicate and limit to 2 queries (API cost control)
-  const uniqueQueries = [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, 2);
-  console.log(`🏙️ Recherche concurrents (${businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
-
-  // ── 3. MULTI-QUERY SERP FETCH ──
-  const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
-  const isValidCompetitor = (item: any) => {
-    const d = item.domain.toLowerCase().replace(/^www\./, '');
-    if (d.includes(cleanDomain) || cleanDomain.includes(d)) return false;
-    if (isNonCompetitorDomain(d)) return false;
-    return true;
-  };
-
-  // Score map: domain → { name, url, rank, score }
-  const scoreMap = new Map<string, { name: string; url: string; rank: number; score: number }>();
-
-  try {
-    for (const query of uniqueQueries) {
-      const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
-        method: 'POST',
-        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify([{
-          keyword: query, location_code: locationCode, language_code: languageCode,
-          depth: 20, se_domain: seDomain,
-        }]),
-      });
-
-      if (!response.ok) { await response.text(); continue; }
-      trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/organic/competitor');
-
-      const data = await response.json();
-      const items = data.tasks?.[0]?.result?.[0]?.items;
-      if (!items || !Array.isArray(items)) continue;
-
-      const organicResults = items.filter((item: any) => item.type === 'organic' && item.domain && item.url);
-
-      for (const item of organicResults) {
-        if (!isValidCompetitor(item)) continue;
-        const d = item.domain.toLowerCase().replace(/^www\./, '');
-        const existing = scoreMap.get(d);
-        const rankScore = Math.max(0, 21 - (item.rank_absolute || item.rank_group || 20));
-
-        if (existing) {
-          // Appeared in multiple SERPs → bonus
-          existing.score += rankScore + 10;
-        } else {
-          scoreMap.set(d, {
-            name: item.title?.split(' - ')[0]?.split(' | ')[0]?.trim() || item.domain,
-            url: item.url,
-            rank: item.rank_absolute || item.rank_group || 0,
-            score: rankScore,
-          });
-        }
-      }
-    }
-
-    if (scoreMap.size === 0) {
-      console.log('⚠️ Aucun concurrent valide trouvé dans les SERPs');
-      return null;
-    }
-
-    // ── 4. SORT BY SCORE and return top 3 ──
-    const sorted = [...scoreMap.values()].sort((a, b) => b.score - a.score).slice(0, 3);
-    console.log(`✅ Top concurrents: ${sorted.map(c => `"${c.name}" (score:${c.score}, pos:${c.rank})`).join(', ')}`);
-    return sorted;
-  } catch (error) {
-    console.error('❌ Erreur recherche concurrents:', error);
-    return null;
-  }
-}
-
-/**
- * Strategic relevance sort: the first keyword should be the most relevant
- * "core business + target audience/segment" combination, not just highest volume.
- */
-function sortByStrategicRelevance(
-  keywords: KeywordData[],
-  seedKeywords: string[],
-  pageContentContext: string
-): KeywordData[] {
-  if (keywords.length === 0) return keywords;
-
-  const texts = extractMetadataTexts(pageContentContext);
-  const coreTerms: string[] = [];
-  for (const text of texts) {
-    coreTerms.push(...cleanAndTokenize(text).filter(w => w.length > 2));
-  }
-  const uniqueCoreTerms = [...new Set(coreTerms)];
-
-  const topSeeds = seedKeywords.slice(0, 3).map(s => s.toLowerCase());
-  const maxVolume = Math.max(...keywords.map(kw => kw.volume), 1);
-
-  const scored = keywords.map(kw => {
-    const kwLower = kw.keyword.toLowerCase();
-    const volumeScore = kw.volume / maxVolume;
-    
-    const matchingCoreTerms = uniqueCoreTerms.filter(t => kwLower.includes(t)).length;
-    const coreMatchScore = uniqueCoreTerms.length > 0
-      ? Math.min(matchingCoreTerms / Math.min(uniqueCoreTerms.length, 3), 1)
-      : 0;
-    
-    let seedScore = 0;
-    for (let i = 0; i < topSeeds.length; i++) {
-      if (kwLower.includes(topSeeds[i]) || topSeeds[i].includes(kwLower)) {
-        seedScore = Math.max(seedScore, 1 - (i * 0.3));
-      }
-    }
-    
-    const wordCount = kwLower.split(/\s+/).length;
-    const specificityBonus = wordCount >= 2 ? 0.15 : 0;
-
-    // Core business relevance dominates, volume is secondary
-    const finalScore = (coreMatchScore * 0.45) + (seedScore * 0.25) + (volumeScore * 0.2) + specificityBonus;
-    
-    return { kw, finalScore, coreMatchScore, seedScore };
-  });
-
-  scored.sort((a, b) => b.finalScore - a.finalScore);
-  
-  console.log(`🏆 Top 3 strategic keywords: ${scored.slice(0, 3).map(s => `"${s.kw.keyword}" (relevance: ${(s.finalScore * 100).toFixed(0)}%, core: ${(s.coreMatchScore * 100).toFixed(0)}%, seed: ${(s.seedScore * 100).toFixed(0)}%)`).join(' | ')}`);
-  
-  // Tag high-relevance + low-volume keywords as "nuggets" (Pépites)
-  // relevance >= 0.9 (9/10) AND volume < 10 → is_nugget = true
-  for (const s of scored) {
-    if (s.finalScore >= 0.9 && s.kw.volume < 10) {
-      s.kw.is_nugget = true;
-      console.log(`💎 Pépite détectée: "${s.kw.keyword}" (relevance: ${(s.finalScore * 100).toFixed(0)}%, volume: ${s.kw.volume})`);
-    }
-  }
-  
-  return scored.map(s => s.kw);
-}
-
-async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = '', url: string = '', existingKeywords: string[] = []): Promise<MarketData | null> {
-  console.log('🚀 Collecte DataForSEO pour:', domain);
-  
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !context.locationCode) {
-    console.log('⚠️ DataForSEO non disponible');
-    return null;
-  }
-  
-  try {
-    // ═══ PHASE 0: Use existing keyword cloud as pre-seeds if available ═══
-    let seedKeywords: string[] = [];
-    const effectiveUrl = url || `https://${domain}`;
-
-    if (existingKeywords.length >= 5) {
-      // Use keyword cloud from SERP snapshots — skip AI seed generation & save API calls
-      seedKeywords = existingKeywords.slice(0, 15);
-      console.log(`☁️ Using existing keyword cloud as seeds (${seedKeywords.length} terms) — skipping AI seed generation`);
-    } else {
-      // ═══ PHASE 1: AI-Driven Seed Generation (fallback) ═══
-      const aiSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial');
-      
-      if (aiSeeds.length >= 5) {
-        seedKeywords = aiSeeds;
-        console.log(`✅ AI-driven seeds: ${seedKeywords.length} keywords`);
-      } else {
-        // Fallback to metadata extraction
-        console.log('⚠️ AI seeds insufficient, falling back to metadata extraction');
-        seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
-      }
-    }
-    
-    console.log('🌱 Seeds finaux:', seedKeywords.slice(0, 8).join(', '));
-    
-    // ═══ PHASE 2: DataForSEO API Call ═══
-    let keywordData = await fetchKeywordData(seedKeywords, context.locationCode, context.languageCode);
-    
-    // ═══ PHASE 3: Validation Loop (retry once if poor quality) ═══
-    if (!checkDataQuality(keywordData) && aiSeeds.length > 0) {
-      console.log('🔄 Data quality check failed — retrying with refined seeds...');
-      const avgVol = keywordData.length > 0 
-        ? (keywordData.reduce((s, k) => s + k.volume, 0) / keywordData.length).toFixed(0)
-        : '0';
-      const feedback = `Volume moyen: ${avgVol}. Seulement ${keywordData.length} résultats. Utilise des expressions plus populaires et mainstream.`;
-      
-      const refinedSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial', feedback);
-      
-      if (refinedSeeds.length >= 5) {
-        const refinedData = await fetchKeywordData(refinedSeeds, context.locationCode, context.languageCode);
-        if (refinedData.length > keywordData.length || 
-            (refinedData.length > 0 && refinedData.reduce((s, k) => s + k.volume, 0) > keywordData.reduce((s, k) => s + k.volume, 0))) {
-          keywordData = refinedData;
-          seedKeywords = refinedSeeds;
-          console.log(`✅ Refined seeds produced better results: ${keywordData.length} keywords`);
-        }
-      }
-    }
-    
-    if (keywordData.length === 0) {
-      console.log('⚠️ Aucun mot-clé trouvé');
-      return null;
-    }
-    
-    // ═══ PHASE 4: Ranking Check ═══
-    const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode, context.languageCode, context.seDomain);
-    
-    // STRATEGIC SORT: first keyword = most relevant for core business + target
-    const strategicKeywords = sortByStrategicRelevance(rankedKeywords, seedKeywords, pageContentContext);
-    
-    // GUARANTEE MINIMUM 5 KEYWORDS
-    if (strategicKeywords.length < 5) {
-      console.log(`⚠️ Only ${strategicKeywords.length} keywords — supplementing with seeds`);
-      const existingLower = new Set(strategicKeywords.map(kw => kw.keyword.toLowerCase()));
-      for (const seed of seedKeywords) {
-        if (strategicKeywords.length >= 5) break;
-        if (seed.length > 3 && !existingLower.has(seed.toLowerCase())) {
-          existingLower.add(seed.toLowerCase());
-          strategicKeywords.push({
-            keyword: seed,
-            volume: 0,
-            difficulty: 0,
-            is_ranked: false,
-            current_rank: 'Non classé',
-          });
-          console.log(`➕ Added seed keyword: "${seed}" (volume unknown)`);
-        }
-      }
-    }
-    
-    const totalVolume = strategicKeywords.reduce((sum, kw) => sum + kw.volume, 0);
-    
-    console.log(`✅ Données: ${strategicKeywords.length} mots-clés, volume: ${totalVolume}`);
-    
-    return {
-      location_used: context.location,
-      total_market_volume: totalVolume,
-      top_keywords: strategicKeywords,
-      data_source: 'dataforseo',
-      fetch_timestamp: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.error('❌ Erreur DataForSEO:', error);
-    return null;
-  }
-}
-
-// ==================== RANKED KEYWORDS (existing domain analysis) ====================
-
-async function fetchRankedKeywords(domain: string, locationCode: number, languageCode: string = 'fr'): Promise<RankingOverview | null> {
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
-  
-  const cleanDomain = domain.replace(/^www\./, '');
-  console.log(`📊 Fetching ranked keywords for ${cleanDomain}...`);
-  
-  try {
-    const response = await fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live', {
-      method: 'POST',
-      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify([{
-        target: cleanDomain,
-        location_code: locationCode,
-        language_code: languageCode,
-        limit: 100,
-        order_by: ['keyword_data.keyword_info.search_volume,desc'],
-        filters: ['keyword_data.keyword_info.search_volume', '>', '0'],
-      }]),
-      signal: AbortSignal.timeout(15000),
-    });
-
-    if (!response.ok) {
-      console.log(`⚠️ Ranked keywords API error: ${response.status}`);
-      await response.text();
-      return null;
-    }
-    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'labs/ranked_keywords');
-
-    const data = await response.json();
-    const taskResult = data.tasks?.[0]?.result?.[0];
-    
-    if (!taskResult?.items || taskResult.items.length === 0) {
-      console.log('⚠️ No ranked keywords found for domain');
-      return null;
-    }
-    
-    const items = taskResult.items;
-    const totalCount = taskResult.total_count || items.length;
-    
-    // Calculate distribution and averages
-    const distribution = { top3: 0, top10: 0, top20: 0, top50: 0, top100: 0, beyond100: 0 };
-    let sumPositionAll = 0;
-    let sumPositionTop10 = 0;
-    let countTop10 = 0;
-    let totalEtv = 0;
-    
-    const topKeywords: { keyword: string; position: number; volume: number; url: string }[] = [];
-    
-    for (const item of items) {
-      const pos = item.ranked_serp_element?.serp_item?.rank_absolute || item.ranked_serp_element?.serp_item?.rank_group || 999;
-      const kw = item.keyword_data?.keyword || '';
-      const vol = item.keyword_data?.keyword_info?.search_volume || 0;
-      const url = item.ranked_serp_element?.serp_item?.url || '';
-      const etv = item.ranked_serp_element?.serp_item?.etv || 0;
-      
-      sumPositionAll += pos;
-      totalEtv += etv;
-      
-      if (pos <= 3) distribution.top3++;
-      if (pos <= 10) { distribution.top10++; sumPositionTop10 += pos; countTop10++; }
-      else if (pos <= 20) distribution.top20++;
-      else if (pos <= 50) distribution.top50++;
-      else if (pos <= 100) distribution.top100++;
-      else distribution.beyond100++;
-      
-      // Keep top 10 keywords by volume for context
-      if (topKeywords.length < 10) {
-        topKeywords.push({ keyword: kw, position: pos, volume: vol, url });
-      }
-    }
-    
-    const avgGlobal = items.length > 0 ? Math.round(sumPositionAll / items.length * 10) / 10 : 0;
-    const avgTop10 = countTop10 > 0 ? Math.round(sumPositionTop10 / countTop10 * 10) / 10 : 0;
-    
-    const overview: RankingOverview = {
-      total_ranked_keywords: totalCount,
-      average_position_global: avgGlobal,
-      average_position_top10: avgTop10,
-      distribution,
-      top_keywords: topKeywords,
-      etv: Math.round(totalEtv),
-    };
-    
-    console.log(`✅ Ranking overview: ${totalCount} keywords, avg pos global=${avgGlobal}, top10=${avgTop10}, ETV=${overview.etv}`);
-    console.log(`📊 Distribution: top3=${distribution.top3}, top10=${distribution.top10}, top20=${distribution.top20}, top50=${distribution.top50}, top100=${distribution.top100}`);
-    
-    return overview;
-  } catch (error) {
-    console.error('❌ Ranked keywords error:', error);
-    return null;
-  }
-}
-
-// ==================== GOOGLE MY BUSINESS DETECTION ====================
-
-interface GMBData {
-  title?: string;
-  rating?: number;
-  reviews_count?: number;
-  category?: string;
-  address?: string;
-  is_claimed?: boolean;
-  quick_wins?: string[];
-}
-
-async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr'): Promise<GMBData | null> {
-  const cleanDomain = domain.replace(/^www\./, '');
-  console.log(`📍 Searching GMB for "${brandName}" / ${cleanDomain}...`);
-
-  // ── Step 1: Check backend gmb_locations table first ──
-  try {
-    const sbUrl = Deno.env.get('SUPABASE_URL');
-    const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (sbUrl && sbKey) {
-      const sb = getServiceClient();
-      const { data: locations } = await sb
-        .from('gmb_locations')
-        .select('id, location_name, address, category, website')
-        .or(`website.ilike.%${cleanDomain}%`)
-        .limit(1);
-
-      if (locations && locations.length > 0) {
-        const loc = locations[0];
-        // Also fetch latest performance data
-        const { data: perf } = await sb
-          .from('gmb_performance')
-          .select('avg_rating, total_reviews')
-          .eq('gmb_location_id', loc.id || '')
-          .order('measured_at', { ascending: false })
-          .limit(1);
-
-        const rating = perf?.[0]?.avg_rating ?? undefined;
-        const reviewsCount = perf?.[0]?.total_reviews ?? undefined;
-
-        const quickWins: string[] = [];
-        if (rating != null && rating < 4.5 && reviewsCount != null) {
-          quickWins.push(`Améliorez votre note (${rating}/5) en sollicitant des avis clients satisfaits. Objectif : atteindre 4.5+.`);
-        }
-        if (reviewsCount != null && reviewsCount < 50) {
-          quickWins.push(`Avec ${reviewsCount} avis, mettez en place une stratégie de collecte d'avis pour renforcer votre visibilité Maps.`);
-        }
-        if (quickWins.length < 2) {
-          quickWins.push(`Publiez des Google Posts hebdomadaires pour maintenir votre fiche active.`);
-        }
-
-        console.log(`📍 ✅ GMB found in backend: "${loc.location_name}" (skipping DataForSEO)`);
-        return {
-          title: loc.location_name || brandName,
-          rating,
-          reviews_count: reviewsCount,
-          category: loc.category || undefined,
-          address: loc.address || undefined,
-          quick_wins: quickWins.slice(0, 2),
-        };
-      }
-    }
-  } catch (e) {
-    console.warn('📍 Backend GMB lookup failed, falling back to DataForSEO:', e);
-  }
-
-  // ── Step 2: Fallback to DataForSEO Google Maps API ──
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
-
-
-  try {
-    // Search Google Maps for the brand/domain
-    const response = await fetch('https://api.dataforseo.com/v3/serp/google/maps/live/regular', {
-      method: 'POST',
-      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify([{
-        keyword: brandName,
-        location_code: locationCode,
-        language_code: languageCode,
-        depth: 5,
-      }]),
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      console.log(`⚠️ GMB search failed: ${response.status}`);
-      await response.text();
-      return null;
-    }
-    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/google/maps');
-
-    const data = await response.json();
-    const items = data.tasks?.[0]?.result?.[0]?.items;
-    if (!items || !Array.isArray(items)) {
-      console.log('📍 No GMB results found');
-      return null;
-    }
-
-    // Find the listing that matches the domain
-    const match = items.find((item: any) => {
-      if (!item) return false;
-      const itemDomain = (item.domain || '').replace(/^www\./, '').toLowerCase();
-      const itemUrl = (item.url || '').toLowerCase();
-      return itemDomain === cleanDomain.toLowerCase() || 
-             itemUrl.includes(cleanDomain.toLowerCase()) ||
-             (item.website && item.website.toLowerCase().includes(cleanDomain.toLowerCase()));
-    });
-
-    if (!match) {
-      console.log('📍 No matching GMB listing for domain');
-      return null;
-    }
-
-    const rating = match.rating?.value ?? match.rating ?? null;
-    const reviewsCount = match.rating?.votes_count ?? match.reviews_count ?? null;
-
-    // Generate quick wins based on data
-    const quickWins: string[] = [];
-    if (rating != null && rating < 4.5 && reviewsCount != null) {
-      quickWins.push(`Améliorez votre note (${rating}/5) en sollicitant des avis clients satisfaits. Objectif : atteindre 4.5+ pour maximiser la confiance locale.`);
-    }
-    if (reviewsCount != null && reviewsCount < 50) {
-      quickWins.push(`Avec seulement ${reviewsCount} avis, mettez en place une stratégie de collecte d'avis post-achat (email, QR code, SMS) pour renforcer votre visibilité Maps.`);
-    }
-    if (quickWins.length === 0 && rating != null && rating >= 4.5) {
-      quickWins.push(`Exploitez votre excellente note (${rating}/5) en intégrant des rich snippets "AggregateRating" dans vos données structurées Schema.org.`);
-    }
-    if (quickWins.length < 2) {
-      quickWins.push(`Publiez des Google Posts hebdomadaires (offres, actualités, événements) pour maintenir votre fiche active et améliorer votre positionnement local.`);
-    }
-
-    const result: GMBData = {
-      title: match.title || brandName,
-      rating: typeof rating === 'number' ? rating : undefined,
-      reviews_count: typeof reviewsCount === 'number' ? reviewsCount : undefined,
-      category: match.category || match.snippet || undefined,
-      address: match.address || undefined,
-      is_claimed: match.is_claimed ?? undefined,
-      quick_wins: quickWins.slice(0, 2),
-    };
-
-    console.log(`📍 ✅ GMB found: "${result.title}" — ${result.rating}/5 (${result.reviews_count} avis)`);
-    return result;
-  } catch (error) {
-    console.error('📍 GMB detection error:', error);
-    return null;
-  }
-}
-
-// ==================== FOUNDER DISCOVERY VIA SERP ====================
-
-interface FounderInfo {
-  name: string | null;
-  profileUrl: string | null;
-  platform: string | null;
-  isInfluencer: boolean;
-  geoMismatch: boolean;
-  detectedCountry: string | null;
-}
-
-// Countries that should match the target site's TLD/location
-const COUNTRY_KEYWORDS: Record<string, string[]> = {
-  'france': ['france', 'paris', 'lyon', 'marseille', 'toulouse', 'bordeaux', 'lille', 'nantes', 'strasbourg', 'nice', 'rennes', 'montpellier', 'île-de-france', 'french'],
-  'belgium': ['belgium', 'belgique', 'bruxelles', 'brussels', 'anvers', 'antwerp', 'liège', 'gand', 'ghent', 'belgian'],
-  'switzerland': ['switzerland', 'suisse', 'schweiz', 'zürich', 'zurich', 'genève', 'geneva', 'bern', 'berne', 'lausanne', 'swiss'],
-  'canada': ['canada', 'montréal', 'montreal', 'toronto', 'vancouver', 'québec', 'quebec', 'ottawa', 'canadian'],
-  'germany': ['germany', 'deutschland', 'berlin', 'munich', 'münchen', 'hamburg', 'frankfurt', 'köln', 'german'],
-  'spain': ['spain', 'españa', 'madrid', 'barcelona', 'valencia', 'sevilla', 'spanish'],
-  'italy': ['italy', 'italia', 'roma', 'rome', 'milan', 'milano', 'italian'],
-  'united kingdom': ['united kingdom', 'uk', 'london', 'manchester', 'birmingham', 'edinburgh', 'british', 'england', 'scotland', 'wales'],
-};
-
-// Foreign countries to detect mismatch (not the target country)
-const FOREIGN_COUNTRY_MARKERS: Record<string, string> = {
-  'états-unis': 'usa', 'united states': 'usa', 'usa': 'usa', 'new york': 'usa', 'san francisco': 'usa', 'silicon valley': 'usa', 'los angeles': 'usa', 'seattle': 'usa', 'austin': 'usa', 'boston': 'usa', 'chicago': 'usa', 'miami': 'usa',
-  'india': 'india', 'inde': 'india', 'mumbai': 'india', 'bangalore': 'india', 'bengaluru': 'india', 'delhi': 'india', 'hyderabad': 'india',
-  'china': 'china', 'chine': 'china', 'beijing': 'china', 'shanghai': 'china', 'shenzhen': 'china',
-  'japan': 'japan', 'japon': 'japan', 'tokyo': 'japan',
-  'brazil': 'brazil', 'brésil': 'brazil', 'são paulo': 'brazil',
-  'australia': 'australia', 'australie': 'australia', 'sydney': 'australia', 'melbourne': 'australia',
-  'nigeria': 'nigeria', 'lagos': 'nigeria',
-  'south africa': 'south_africa', 'afrique du sud': 'south_africa', 'johannesburg': 'south_africa', 'cape town': 'south_africa',
-  'morocco': 'morocco', 'maroc': 'morocco', 'casablanca': 'morocco', 'rabat': 'morocco',
-  'tunisia': 'tunisia', 'tunisie': 'tunisia', 'tunis': 'tunisia',
-  'algeria': 'algeria', 'algérie': 'algeria', 'alger': 'algeria',
-  'dubai': 'uae', 'abu dhabi': 'uae', 'émirats': 'uae', 'uae': 'uae',
-  'singapore': 'singapore', 'singapour': 'singapore',
-  'israel': 'israel', 'israël': 'israel', 'tel aviv': 'israel',
-  'russia': 'russia', 'russie': 'russia', 'moscow': 'russia', 'moscou': 'russia',
-  'south korea': 'south_korea', 'corée du sud': 'south_korea', 'seoul': 'south_korea',
-  'mexico': 'mexico', 'mexique': 'mexico',
-  'argentina': 'argentina', 'argentine': 'argentina', 'buenos aires': 'argentina',
-  'colombia': 'colombia', 'colombie': 'colombia', 'bogota': 'colombia',
-};
-
-/**
- * Geo-verification: checks if a LinkedIn founder's detected location matches the target company's country.
- * Returns { mismatch: true, detectedCountry } if the founder appears to be in a different country.
- */
-function verifyFounderGeo(linkedinSnippet: string, targetLocation: string): { mismatch: boolean; detectedCountry: string | null } {
-  const snippetLower = linkedinSnippet.toLowerCase();
-  const targetLower = targetLocation.toLowerCase();
-  
-  // Check if the snippet mentions the TARGET country — if yes, no mismatch
-  const targetKeywords = COUNTRY_KEYWORDS[targetLower] || COUNTRY_KEYWORDS['france'] || [];
-  const matchesTarget = targetKeywords.some(kw => snippetLower.includes(kw));
-  if (matchesTarget) {
-    return { mismatch: false, detectedCountry: null };
-  }
-  
-  // Check if the snippet mentions a FOREIGN country
-  for (const [marker, country] of Object.entries(FOREIGN_COUNTRY_MARKERS)) {
-    if (snippetLower.includes(marker)) {
-      // Make sure the target country is not the same as the detected foreign country
-      const targetCountryId = Object.entries(COUNTRY_KEYWORDS).find(([k]) => k === targetLower)?.[0];
-      if (country !== targetCountryId) {
-        return { mismatch: true, detectedCountry: country };
-      }
-    }
-  }
-  
-  // No foreign country detected — assume OK (benefit of the doubt)
-  return { mismatch: false, detectedCountry: null };
-}
-
-async function searchFounderProfile(domain: string, targetLocation: string = 'france'): Promise<FounderInfo> {
-  const locInfo = KNOWN_LOCATIONS[targetLocation.toLowerCase()] || KNOWN_LOCATIONS['france'];
-  const result: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return result;
-  
-  const domainClean = domain.replace(/^www\./, '');
-  
-  try {
-    console.log(`👤 Searching founder for ${domainClean}...`);
-    
-    const queries = [
-      { q: `"${domainClean}" fondateur OR CEO OR founder site:linkedin.com/in`, platform: 'linkedin' },
-      { q: `"${domainClean}" fondateur OR CEO OR founder site:instagram.com`, platform: 'instagram' },
-      { q: `"${domainClean}" fondateur OR CEO OR founder site:youtube.com`, platform: 'youtube' },
-    ];
-    
-    const searchPromises = queries.map(async ({ q, platform }) => {
-      try {
-        const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
-          method: 'POST',
-          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify([{ keyword: q, location_code: locInfo.code, language_code: locInfo.lang, depth: 5 }]),
-          signal: AbortSignal.timeout(8000),
-        });
-        if (!resp.ok) { await resp.text(); return null; }
-        const data = await resp.json();
-        const items = data.tasks?.[0]?.result?.[0]?.items || [];
-        const organic = items.find((i: any) => i.type === 'organic' && i.url);
-        if (organic) {
-          let name = organic.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || null;
-          if (name) name = name.replace(/\s*\(.*\)/, '').replace(/\s*@.*/, '').trim();
-          // Capture the snippet for geo-verification
-          const snippet = organic.description || organic.title || '';
-          return { name, url: organic.url, platform, title: organic.title, snippet };
-        }
-        return null;
-      } catch { return null; }
-    });
-    
-    const results = (await Promise.all(searchPromises)).filter(Boolean);
-    
-    if (results.length === 0) {
-      console.log('👤 No founder profile found via SERP');
-      return result;
-    }
-    
-    const best = results.find(r => r!.platform === 'linkedin') || results[0]!;
-    result.name = best!.name;
-    result.profileUrl = best!.url;
-    result.platform = best!.platform;
-    result.isInfluencer = results.length >= 1;
-    
-    // ═══ GEO-VERIFICATION LOOP ═══
-    // If the best result is LinkedIn, verify the founder's country matches the target company
-    if (best!.platform === 'linkedin' && best!.snippet) {
-      const geoCheck = verifyFounderGeo(best!.snippet, targetLocation);
-      if (geoCheck.mismatch) {
-        console.log(`👤 ⚠️ GEO MISMATCH: Founder "${result.name}" appears to be in "${geoCheck.detectedCountry}" but target company is in "${targetLocation}"`);
-        console.log(`👤 → LinkedIn card will be HIDDEN to avoid confusion with a homonymous foreign entity`);
-        result.geoMismatch = true;
-        result.detectedCountry = geoCheck.detectedCountry;
-        // Do NOT clear name/profileUrl — keep them for logging, but the flag prevents display
-      } else {
-        console.log(`👤 ✅ Geo-verification OK: founder location consistent with target "${targetLocation}"`);
-      }
-    }
-    
-    console.log(`👤 Founder found: ${result.name} on ${result.platform} → ${result.profileUrl}${result.geoMismatch ? ' [GEO MISMATCH]' : ''}`);
-    if (results.length >= 2) {
-      console.log(`👤 Multi-platform: ${results.map(r => r!.platform).join(', ')}`);
-    }
-    
-    return result;
-  } catch (error) {
-    console.error('👤 Founder search error:', error);
-    return result;
-  }
-}
-
-// ==================== FACEBOOK PAGE DISCOVERY VIA SERP ====================
-
-interface FacebookPageInfo {
-  pageUrl: string | null;
-  pageName: string | null;
-  found: boolean;
-}
-
-async function searchFacebookPage(brandName: string, sector: string, locationCode: number, languageCode: string): Promise<FacebookPageInfo> {
-  const result: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !brandName) return result;
-
-  try {
-    const query = `"${brandName}" "page facebook" "${sector}"`;
-    console.log(`📘 Facebook search: ${query}`);
-
-    const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
-      method: 'POST',
-      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ keyword: query, location_code: locationCode, language_code: languageCode, depth: 10 }]),
-      signal: AbortSignal.timeout(8000),
-    });
-
-    if (!resp.ok) { await resp.text(); return result; }
-    const data = await resp.json();
-    const items = data.tasks?.[0]?.result?.[0]?.items || [];
-
-    // Find a facebook.com organic result
-    const fbResult = items.find((i: any) =>
-      i.type === 'organic' && i.url && /facebook\.com\/(?!.*(?:login|help|about|policies|groups\/|events\/|marketplace))/i.test(i.url)
-    );
-
-    if (fbResult) {
-      result.pageUrl = fbResult.url.replace(/\/$/, '');
-      result.pageName = fbResult.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || brandName;
-      result.found = true;
-      console.log(`📘 Facebook page found: ${result.pageName} → ${result.pageUrl}`);
-    } else {
-      console.log('📘 No Facebook page found via SERP');
-    }
-
-    return result;
-  } catch (error) {
-    console.error('📘 Facebook search error:', error);
-    return result;
-  }
-}
-
-
-const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Authority & GEO. Rapport premium niveau cabinet de conseil.
-
-POSTURE: Analytique, souverain, prescriptif. Jargon expert (Entité sémantique, Topical Authority, E-E-A-T, Gap de citabilité). Recommandations NARRATIVES: chaque action = paragraphe rédigé 4-5 phrases.
-
-RÈGLE ABSOLUE ANTI-AUTO-CITATION: Le site analysé ne doit JAMAIS apparaître comme son propre concurrent (leader, direct_competitor, challenger, inspiration_source). Ne cite JAMAIS le domaine analysé, son URL, ni son nom de marque dans competitive_landscape ni dans introduction.competitors[]. Tous les acteurs doivent être des entités DISTINCTES du site audité. Le direct_competitor ne peut PAS avoir la même URL ni le même nom que le site cible.
-
-RÈGLE CLASSIFICATION DES CONCURRENTS (scoring de similarité):
-- LEADER (Goliath): Premier dans la SERP. Score similarité entreprise = 1, Score similarité produit = 1. C'est l'acteur dominant incontesté du marché.
-- CONCURRENT DIRECT: Même score similarité entreprise (1) et produit (1) que le leader, MAIS position SERP égale ou supérieure à l'URL cible. C'est un vrai rival sur le même créneau, dans la même zone géographique. INTERDIT: médias, annuaires, marketplaces, réseaux sociaux, Wikipedia.
-- CHALLENGER: Même score similarité entreprise (1) et produit (1), MAIS position INFÉRIEURE dans la SERP par rapport à l'URL cible. C'est un acteur montant ou plus petit qui progresse.
-- SOURCE D'INSPIRATION: Score similarité entreprise minimum 0.5, score similarité produit minimum 0.5, ET présent en première page de sa SERP. C'est un acteur innovant reconnu dans un écosystème proche. INTERDIT: médias, annuaires, marketplaces, réseaux sociaux, Wikipedia, plateformes généralistes.
-
-Si le LLM n'est PAS sûr de son identification d'un concurrent, il DOIT indiquer dans le champ authority_factor les scores de similarité : "Sim. entreprise: X, Sim. produit: Y, SERP: #Z".
-
-RÈGLE MOTS-CLÉS STRATÉGIQUES: La liste de mots-clés DOIT OBLIGATOIREMENT contenir au moins une requête directement liée au core business du site. Ex: pour un agent IA → "agent IA", "agent IA entreprise", "automatisation IA TPE" ; pour un plombier → "plombier Paris", "dépannage plomberie". Si aucun mot-clé core business n'apparaît dans les données DataForSEO, AJOUTE-LE manuellement avec volume estimé et rank "non classé".
-
-DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (mots-clés pertinents où le site n'est PAS classé, volume>50). IMPORTANT: Tu DOIS TOUJOURS générer au moins 2-3 content_gaps en analysant les thématiques du secteur où le site n'a pas de contenu, même si les données DataForSEO ne montrent pas ces mots-clés explicitement. Déduis-les du secteur d'activité et des concurrents.
-
-13 MODULES D'ANALYSE:
-A. ÉCOSYSTÈME: 1.Market Leader 2.Concurrent Direct 3.Challenger 4.Source d'Inspiration
-B. AUTORITÉ SOCIALE: 5.Preuve Sociale (Reddit,X,LinkedIn) 6.Thought Leadership E-E-A-T 7.Sentiment & Polarité
-C. EXPERTISE: 8.Score GEO Citabilité 9.Matrice Gap Sémantique 10.Psychologie Conversion
-D. MOTS CLÉS: 11.5 Principaux avec volumes réels 12.Opportunités 13.Gaps Concurrentiels
-E. TECHNIQUE: 14.Accessibilité Bots IA 15.Performance 16.Cohérence Sémantique
-F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats IA-Ready 20.First-Party Data 21.Changelog Marque
-G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
-H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt
-I. CIBLES CLIENTS: 28.Cibles principales (B2B/B2C, segment, CSP, pouvoir d'achat, fréquence d'achat, mode paiement) 29.Cibles secondaires 30.Cibles potentielles non adressées
-
-RÈGLE CIBLES CLIENTS:
-- Analyser le contenu, le pricing, le ton, les CTA et les produits/services pour déduire les cibles.
-- Pour B2B: qualifier taille, secteur d'activité, segment métier (marketing, SEO, IT, etc.), rôle décisionnel, fréquence d'achat et mode de paiement.
-- Pour B2C: qualifier genre, tranche d'âge, CSP, pouvoir d'achat, fréquence d'achat et mode de paiement.
-- PRIMARY: 1-2 cibles les plus évidentes (confidence > 0.7). SECONDARY: 1-2 cibles secondaires (confidence 0.4-0.7). UNTAPPED: exactement 2 cibles potentielles non adressées avec rationale.
-- Remplir UNIQUEMENT b2b OU b2c selon le market, jamais les deux pour la même cible.
-- La zone géographique (geo_scope) et le pays sont transversaux B2B/B2C.`;
-
-const EDITORIAL_MODE_SYSTEM_PROMPT = `RÔLE: Senior Content SEO Strategist spécialisé en optimisation d'articles pour les moteurs de réponse IA (GEO). Rapport premium niveau cabinet de conseil.
-
-POSTURE: Analytique, prescriptif, centré sur la PAGE (pas l'entreprise). Tu analyses un CONTENU SPÉCIFIQUE (article de blog, page éditoriale), pas un site complet.
-
-MODE ÉDITORIAL: Cette URL est une page de contenu (/blog, /article). L'analyse porte sur la QUALITÉ et l'OPTIMISATION de cette page spécifique.
-
-RÈGLE INTRODUCTION: L'introduction doit être COURTE (2-3 phrases max) et décrire le CONTENU de la page, pas l'entreprise. Le lien renvoie vers la page analysée.
-
-RÈGLE CONCURRENCE SERP: Les 4 acteurs concurrents sont les PAGES (pas les entreprises) qui se positionnent dans les SERPs sur la même thématique. Chaque URL doit pointer vers la PAGE concurrente spécifique, pas vers la homepage.
-- Leader: La page #1 des SERPs pour la thématique de l'article
-- Concurrent Direct: Une page similaire qui se positionne juste autour
-- Challenger: Une page montante ou récente sur le même sujet
-- Source d'Inspiration: Une page exemplaire dans le traitement éditorial du sujet
-
-MODULES À ANALYSER (contenu uniquement):
-1. E-E-A-T de la page (auteur, citations, données)
-2. Cohérence sémantique (titre/H1/contenu)
-3. Score AEO (formats IA-friendly, tables, FAQ, listes)
-4. Visibilité LLM (citabilité par les IA)
-5. Risque Zéro-Clic
-6. Indice de Citabilité (phrases autonomes citables)
-7. Résilience au Résumé
-8. Empreinte Lexicale
-9. Sentiment d'Expertise
-10. Red Team (failles du contenu)
-
-NE PAS ANALYSER: Intelligence de marché, réseaux sociaux de l'entreprise, psychologie de conversion, positionnement de marque.`;
-
-const PRODUCT_MODE_SYSTEM_PROMPT = `RÔLE: Senior Product Page Strategist spécialisé en optimisation de pages produit/service pour les moteurs de recherche classiques ET les moteurs de réponse IA (GEO). Rapport premium niveau cabinet de conseil.
-
-POSTURE: Analytique, prescriptif, centré sur la PAGE PRODUIT (pas l'entreprise entière). Tu analyses une page de conversion spécifique.
-
-MODE PRODUIT: Cette URL est une page produit, service ou offre commerciale. L'analyse porte sur la QUALITÉ, la CONVERSION et l'OPTIMISATION GEO de cette page.
-
-RÈGLE INTRODUCTION: L'introduction doit être COURTE (2-3 phrases max) et décrire le PRODUIT/SERVICE présenté sur la page, pas l'entreprise dans son ensemble. Le lien renvoie vers la page analysée.
-
-RÈGLE CONCURRENCE SERP: Les 4 acteurs concurrents sont les PAGES PRODUIT/SERVICE concurrentes dans les SERPs pour la même requête d'achat. Chaque URL doit pointer vers la page produit concurrente.
-- Leader: La page produit #1 des SERPs pour cette catégorie
-- Concurrent Direct: Un produit/service similaire qui se positionne juste autour  
-- Challenger: Une page produit montante ou disruptive
-- Source d'Inspiration: Une page produit exemplaire en matière de conversion ET de SEO
-
-MODULES À ANALYSER:
-1. Schema Product/Service (données structurées e-commerce)
-2. Cohérence sémantique (titre/H1/contenu produit)
-3. Score AEO (formats IA-friendly: tableaux comparatifs, FAQ, specs)
-4. Visibilité LLM (le produit est-il recommandé par les IA?)
-5. Risque Zéro-Clic (les IA donnent-elles déjà la réponse?)
-6. Indice de Citabilité (le produit est-il citable de manière autonome?)
-7. Résilience au Résumé
-8. Empreinte Lexicale (vocabulaire commercial vs technique)
-9. Positionnement de mots-clés (termes d'achat, comparatifs)
-10. Red Team (failles de la page produit)
-
-ANALYSER AUSSI: Intelligence de marché LIMITÉE au segment produit, positionnement prix si détectable.
-NE PAS ANALYSER: Réseaux sociaux de l'entreprise, thought leadership du fondateur.`;
-
-const DEEP_PAGE_SYSTEM_PROMPT = `RÔLE: Senior SEO & GEO Strategist spécialisé en optimisation de pages internes profondes. Rapport premium niveau cabinet de conseil.
-
-POSTURE: Analytique, prescriptif, centré sur CETTE PAGE SPÉCIFIQUE (pas l'entreprise). Tu analyses une page interne profonde qui a un objectif précis.
-
-MODE PAGE PROFONDE: Cette URL est une page interne spécifique (sous-page, landing page, page catégorie). L'analyse porte sur la pertinence et l'optimisation de cette page dans son contexte.
-
-RÈGLE INTRODUCTION: L'introduction doit être COURTE (2-3 phrases max) et identifier le TYPE et l'OBJECTIF de cette page spécifique. Le lien renvoie vers la page analysée.
-
-RÈGLE CONCURRENCE SERP: Les 4 acteurs concurrents sont les PAGES similaires dans les SERPs qui ciblent la même intention de recherche. Chaque URL doit pointer vers la page concurrente spécifique.
-- Leader: La page #1 des SERPs pour l'intention de cette page
-- Concurrent Direct: Une page similaire avec le même objectif
-- Challenger: Une page innovante sur le même sujet
-- Source d'Inspiration: Une page exemplaire dans son approche
-
-MODULES À ANALYSER:
-1. E-E-A-T de la page
-2. Cohérence sémantique (titre/H1/contenu)
-3. Score AEO (formats IA-friendly)
-4. Visibilité LLM
-5. Risque Zéro-Clic
-6. Indice de Citabilité
-7. Résilience au Résumé
-8. Empreinte Lexicale
-9. Positionnement de mots-clés
-10. Red Team
-
-ANALYSER AUSSI: Intelligence de marché LIMITÉE au sujet de la page.
-NE PAS ANALYSER: Réseaux sociaux de l'entreprise, thought leadership du fondateur.`;
-
-
-// ==================== TOOLS DATA → MARKDOWN (token optimizer) ====================
-
-function formatToolsDataToMarkdown(toolsData: ToolsData): string {
-  const lines: string[] = [];
-
-  // --- CRAWLERS ---
-  if (toolsData.crawlers) {
-    const c = toolsData.crawlers;
-    lines.push('## CRAWLERS');
-    if (c.overallScore != null) lines.push(`Score: ${c.overallScore}/100`);
-    if (c.bots && Array.isArray(c.bots)) {
-      for (const b of c.bots) {
-        if (b.name) lines.push(`- ${b.name}: ${b.isAllowed ? '✅' : '❌'}${b.crawlDelay ? ` delay=${b.crawlDelay}` : ''}`);
-      }
-    }
-    if (c.recommendations && Array.isArray(c.recommendations)) {
-      lines.push(`Recs: ${c.recommendations.slice(0, 5).join('; ')}`);
-    }
-  }
-
-  // --- GEO ---
-  if (toolsData.geo) {
-    const g = toolsData.geo;
-    lines.push('## GEO');
-    if (g.overallScore != null) lines.push(`Score: ${g.overallScore}/100`);
-    if (g.factors && Array.isArray(g.factors)) {
-      for (const f of g.factors) {
-        if (f.name) lines.push(`- ${f.name}: ${f.score ?? f.status ?? '?'}${f.details ? ` (${String(f.details).substring(0, 80)})` : ''}`);
-      }
-    }
-    if (g.recommendations && Array.isArray(g.recommendations)) {
-      lines.push(`Recs: ${g.recommendations.slice(0, 5).join('; ')}`);
-    }
-  }
-
-  // --- LLM ---
-  if (toolsData.llm) {
-    const l = toolsData.llm;
-    lines.push('## LLM');
-    if (l.overallScore != null) lines.push(`Score: ${l.overallScore}/100`);
-    if (l.brandMentioned != null) lines.push(`Brand mentioned: ${l.brandMentioned}`);
-    if (l.citationScore != null) lines.push(`Citation: ${l.citationScore}`);
-    if (l.sentimentScore != null) lines.push(`Sentiment: ${l.sentimentScore}`);
-    if (l.hallucinationRisk != null) lines.push(`Hallucination risk: ${l.hallucinationRisk}`);
-    if (l.models && Array.isArray(l.models)) {
-      for (const m of l.models) {
-        if (m.name) lines.push(`- ${m.name}: mentioned=${m.brandMentioned ?? '?'}, sentiment=${m.sentiment ?? '?'}`);
-      }
-    }
-    if (l.recommendations && Array.isArray(l.recommendations)) {
-      lines.push(`Recs: ${l.recommendations.slice(0, 5).join('; ')}`);
-    }
-  }
-
-  // --- PAGESPEED ---
-  if (toolsData.pagespeed) {
-    const p = toolsData.pagespeed;
-    lines.push('## PAGESPEED');
-    if (p.overallScore != null) lines.push(`Score: ${p.overallScore}/100`);
-    if (p.lcp != null) lines.push(`LCP: ${p.lcp}ms`);
-    if (p.fcp != null) lines.push(`FCP: ${p.fcp}ms`);
-    if (p.cls != null) lines.push(`CLS: ${p.cls}`);
-    if (p.tbt != null) lines.push(`TBT: ${p.tbt}ms`);
-    if (p.si != null) lines.push(`SI: ${p.si}ms`);
-    if (p.ttfb != null) lines.push(`TTFB: ${p.ttfb}ms`);
-    if (p.performance != null) lines.push(`Performance: ${p.performance}`);
-    if (p.accessibility != null) lines.push(`Accessibility: ${p.accessibility}`);
-    if (p.seo != null) lines.push(`SEO: ${p.seo}`);
-    if (p.bestPractices != null) lines.push(`Best Practices: ${p.bestPractices}`);
-    if (p.recommendations && Array.isArray(p.recommendations)) {
-      lines.push(`Recs: ${p.recommendations.slice(0, 5).join('; ')}`);
-    }
-  }
-
-  return lines.join('\n');
-}
-
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null, contentMode: boolean = false, facebookPageInfo?: FacebookPageInfo): string {
-  let marketSection = '';
-  
-  if (marketData) {
-    const kwList = marketData.top_keywords.map(kw => 
-      `"${kw.keyword}":${kw.volume}vol,diff${kw.difficulty},pos:${kw.current_rank}`
-    ).join('; ');
-    
-    const quickWins = marketData.top_keywords.filter(kw => 
-      typeof kw.current_rank === 'number' && kw.current_rank >= 11 && kw.current_rank <= 20 && kw.volume > 100
-    );
-    const missing = marketData.top_keywords.filter(kw => !kw.is_ranked && kw.volume > 200);
-    
-    marketSection = `📊 DONNÉES MARCHÉ (DataForSEO) - Zone: ${marketData.location_used}, Volume total: ${marketData.total_market_volume}
-Mots-clés: ${kwList}
-Quick Wins: ${quickWins.length > 0 ? quickWins.map(kw => `"${kw.keyword}" pos${kw.current_rank}(${kw.volume}vol)`).join(', ') : 'Aucun'}
-Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume}vol)`).join(', ') : 'Aucun'}`;
-  } else {
-    marketSection = `⚠️ DataForSEO non disponible - base-toi sur ton analyse du secteur.`;
-  }
-
-  // Merge ranking overview into market section to avoid keyword duplication
-  if (rankingOverview) {
-    marketSection += `\n📈 ÉTAT DES LIEUX SEO: ${rankingOverview.total_ranked_keywords} mots-clés positionnés, pos moy=${rankingOverview.average_position_global}, Top10 moy=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}
-Distrib: Top3=${rankingOverview.distribution.top3} Top10=${rankingOverview.distribution.top10} Top20=${rankingOverview.distribution.top20} Top50=${rankingOverview.distribution.top50} Top100=${rankingOverview.distribution.top100}
-Top positionnés: ${rankingOverview.top_keywords.slice(0, 5).map(k => `"${k.keyword}" pos${k.position}(${k.volume}vol)`).join(', ')}`;
-  }
-
-  // Build compact E-E-A-T section
-  let eeatSection = '';
-  if (eeatSignals) {
-    const yn = (v: boolean) => v ? 'OUI' : 'NON';
-    const lines = [`🔍 E-E-A-T: AuthorBio=${yn(eeatSignals.hasAuthorBio)}(${eeatSignals.authorBioCount}), AuthorJsonLD=${yn(eeatSignals.hasAuthorInJsonLd)}, Person=${yn(eeatSignals.hasPerson)}, ProfilePage=${yn(eeatSignals.hasProfilePage)}, Organization=${yn(eeatSignals.hasOrganization)}, sameAs=${yn(eeatSignals.hasSameAs)}, Wikidata=${yn(eeatSignals.hasWikidataSameAs)}, SocialLinks=${eeatSignals.socialLinksCount}, ExpertCitations=${yn(eeatSignals.hasExpertCitations)}, CaseStudies=${yn(eeatSignals.hasCaseStudies)}(${eeatSignals.caseStudySignals})`];
-    if (eeatSignals.detectedSocialUrls.length > 0) {
-      lines.push(`URLs sociales: ${eeatSignals.detectedSocialUrls.slice(0, 10).join(', ')}`);
-      const personalLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/in\//i.test(u));
-      const companyLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/company\//i.test(u));
-      if (personalLI.length > 0) lines.push(`LinkedIn perso: ${personalLI.join(', ')}`);
-      if (companyLI.length > 0) lines.push(`LinkedIn entreprise: ${companyLI.join(', ')}`);
-    }
-    // Facebook page info from SERP
-    if (facebookPageInfo?.found && facebookPageInfo.pageUrl) {
-      lines.push(`📘 Facebook Page SERP: ${facebookPageInfo.pageName || 'trouvée'} → ${facebookPageInfo.pageUrl}`);
-    } else {
-      lines.push(`📘 Facebook Page SERP: NON TROUVÉE`);
-    }
-    eeatSection = lines.join('\n');
-  }
-
-  // Compact founder section (skip in content mode)
-  let founderSection = '';
-  if (!contentMode) {
-    if (founderInfo?.name && !founderInfo.geoMismatch) {
-      founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''} Social:${founderInfo.isInfluencer ? 'actif' : 'non'}. Cite ce nom dans thought_leadership.analysis.`;
-    } else if (founderInfo?.geoMismatch) {
-      founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner. founder_authority="unknown".`;
-    }
-  }
-
-  const toolsMarkdown = formatToolsDataToMarkdown(toolsData);
-
-  // ═══ CONTENT MODE: Simplified prompt for blog/article pages ═══
-  if (contentMode) {
-    return `Analyse cette PAGE DE CONTENU: "${url}" (${domain}).
-${pageContentContext}
-${eeatSection}
-${marketSection}
-${toolsMarkdown}
-
-⚠️ MODE CONTENU: Analyse la PAGE elle-même, pas l'entreprise. La présentation doit décrire le contenu de la page en 2-3 phrases courtes.
-
-CONCURRENCE SERP: Les concurrents sont les PAGES qui se positionnent dans les SERPs sur la même thématique que cet article. Chaque URL doit pointer vers la PAGE concurrente, pas la homepage.
-
-GÉNÈRE un JSON:
-{"introduction":{"presentation":"1-2ph courtes analysant LE CONTENU de la page","strengths":"1-2ph sur les forces du contenu","improvement":"1-2ph sur les axes d'amélioration du contenu","competitors":["Page Leader SERP","Page Concurrente","Page Challenger"]},
-"brand_authority":{"dna_analysis":"Analyse de l'expertise démontrée dans le contenu","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
-"competitive_landscape":{"leader":{"name":"Titre de la page #1 SERP","url":"URL de la page","authority_factor":"Pourquoi cette page domine","analysis":"2-3ph"},"direct_competitor":{"name":"Titre page concurrente","url":"URL de la page","authority_factor":"...","analysis":"2-3ph"},"challenger":{"name":"Titre page challenger","url":"URL","authority_factor":"...","analysis":"2-3ph"},"inspiration_source":{"name":"Titre page exemplaire","url":"URL","authority_factor":"...","analysis":"2-3ph"}},
-"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
-"llm_visibility":{"citation_probability":0-100,"citation_breakdown":{"serp_presence":0-100,"structured_data_quality":0-100,"content_quotability":0-100,"brand_authority":0-100,"content_freshness":0-100,"business_intent_match":0-100,"self_citation_signals":0-100,"knowledge_graph_signals":0-100},"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
-"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["3-5 questions naturelles liées au contenu"],"recommendations":[]},
-"zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
-"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"...","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[],"content_gaps":[],"opportunities":[],"competitive_gaps":[],"recommendations":[],"missing_terms":[{"term":"terme clé absent","importance":"critical|important|optional","competitor_usage":"Utilisé par 3/4 concurrents en H2 et corps de texte","suggested_placement":"Intégrer dans le H2 et le premier paragraphe"}],"semantic_density":{"score":0-100,"verdict":"optimal|acceptable|thin|critical","analysis":"...","vs_competitors":"Comparaison densité sémantique vs top 3 SERP","top_missing_clusters":["cluster thématique manquant 1","2"]},"serp_recommendations":[{"action":"Action concrète pour remonter","expected_impact":"high|medium|low","difficulty":"easy|medium|hard","timeframe":"2-4 semaines"}],"alternative_strategy":null},
-"market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
-"executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Contenu|Autorité|Technique","priority":"Prioritaire|Important|Opportunité"}],
-"client_targets":{"primary":[{"market":"B2B|B2C","b2b":{"segment":"...","sector":"...","job_segment":"...","role":"...","buying_frequency":"...","payment_mode":"..."},"b2c":{"gender":"...","age_range":"...","csp":"...","purchasing_power":"...","buying_frequency":"...","payment_mode":"..."},"geo_scope":"...","intent":"...","maturity":"...","confidence":0.0-1.0,"evidence":"..."}],"secondary":[...],"untapped":[{"market":"...","rationale":"...","confidence":0.3-0.6,...}]},
-"executive_summary":"2-3ph résumé du potentiel de cette page","overallScore":0-100,
-"quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
-"summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
-"lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
-"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
-"red_team":{"flaws":["faille contenu 1","preuve manquante 2","objection lecteur 3"]}}
-
-RÈGLES:
-- introduction.presentation: 1-2 phrases COURTES décrivant LE CONTENU de cette page, pas l'entreprise
-- competitive_landscape: 4 PAGES concurrentes dans les SERPs, pas des entreprises. URLs = pages spécifiques
-- NE génère PAS: social_signals, market_intelligence, priority_content
-- executive_roadmap: MIN 4 recs centrées sur l'optimisation du CONTENU
-- quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team: obligatoires
-- missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais que cette page n'utilise pas. Analyse le contenu réel.
-- semantic_density: compare la richesse sémantique de la page vs les 3 premiers concurrents SERP. Score objectif.
-- serp_recommendations: MIN 3 actions concrètes et actionnables pour améliorer le positionnement SERP.
-- alternative_strategy: UNIQUEMENT si le site est en position très défavorable (position >50, domaine faible autorité, peu de leviers SEO). Sinon null. Si présent: répondre à quoi/comment/combien. Rappeler qu'une action offsite a TOUJOURS des répercussions positives sur le ranking. Types: RP presse, partenariat avec entreprise complémentaire (nommer qui), stratégie vidéo réseaux sociaux, événement.
-- JSON pur, sans virgules traînantes`;
-  }
-
-  return `Analyse "${url}" (${domain}).
-${pageContentContext}
-${eeatSection}${founderSection}
-${marketSection}
-${toolsMarkdown}
-
-GÉNÈRE un JSON:
-{"introduction":{"presentation":"2ph max","strengths":"2ph max","improvement":"2ph max","competitors":["Leader","Concurrent","Challenger"]},
-"brand_authority":{"dna_analysis":"...","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
-"social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube|instagram|facebook","presence_level":"strong|moderate|weak|absent","analysis":"max 450 car","profile_url":"URL exacte des E-E-A-T ou null","profile_name":"ou null"}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"Distingue signaux vérifiés vs inférés"},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
-"market_intelligence":{"sophistication":{"level":1-5,"description":"...","emotional_levers":["1","2","3"]},"semantic_gap":{"current_position":0-100,"leader_position":0-100,"gap_analysis":"...","priority_themes":["t1","t2","t3","t4"],"closing_strategy":"..."}},
-"competitive_landscape":{"leader":{"name":"...","url":"...","authority_factor":"...","analysis":"3-4ph"},"direct_competitor":{"name":"...","url":"URL VALIDE","authority_factor":"...","analysis":"3-4ph"},"challenger":{...},"inspiration_source":{...}},
-"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
-"llm_visibility":{"citation_probability":0-100,"citation_breakdown":{"serp_presence":0-100,"structured_data_quality":0-100,"content_quotability":0-100,"brand_authority":0-100,"content_freshness":0-100,"business_intent_match":0-100,"self_citation_signals":0-100,"knowledge_graph_signals":0-100},"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
-"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["3-5 questions naturelles liées au business"],"recommendations":[]},
-"zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
-"priority_content":{"missing_pages":[{"title":"...","rationale":"...","target_keywords":[],"expected_impact":"high|medium|low"}],"content_upgrades":[{"page":"...","current_issue":"...","upgrade_strategy":"..."}]},
-"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"Transactionnel|Informatif|Décisionnel|Navigationnel","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[{"keyword":"...","volume":0,"current_rank":15,"action":"..."}],"content_gaps":[{"keyword":"mot-clé pertinent non classé","volume":100,"priority":"high|medium|low","action":"Créer une page dédiée..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."],"missing_terms":[{"term":"terme clé absent","importance":"critical|important|optional","competitor_usage":"Utilisé par X concurrents","suggested_placement":"Où et comment l'intégrer"}],"semantic_density":{"score":0-100,"verdict":"optimal|acceptable|thin|critical","analysis":"Analyse densité sémantique","vs_competitors":"Comparaison vs top SERP","top_missing_clusters":["cluster 1","cluster 2"]},"serp_recommendations":[{"action":"Action concrète","expected_impact":"high|medium|low","difficulty":"easy|medium|hard","timeframe":"délai estimé"}],"alternative_strategy":null},
-"market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
-"executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
-"client_targets":{"primary":[{"market":"B2B|B2C|B2B2C","b2b":{"segment":"TPE/Indépendants|PME|ETI/Grands comptes|Startups|Secteur public|Agences/Revendeurs","sector":"Tech/SaaS|E-commerce|Industrie|Santé|Finance|Immobilier|Éducation|Média|Juridique|Tourisme|Agriculture|Énergie|Autre","job_segment":"Marketing/Communication|SEO/SEA|Dev/IT|RH|Commercial|Direction générale|Achat|Logistique|R&D|Autre","role":"Dirigeant/CEO|CMO|CTO|Acheteur|Opérationnel","buying_frequency":"Ponctuel|Régulier|Récurrent|Saisonnier|Abonnement|Appel d'offres","payment_mode":"Abonnement mensuel|Abonnement annuel|Licence unique|Facturation projet|Crédit/Usage|Freemium→Payant"},"b2c":{"gender":"Homme|Femme|Enfant/Ado|Tous","age_range":"<18|18-25|26-35|36-50|51-65|65+","csp":"Étudiant|Employé|Cadre|Cadre supérieur|Profession libérale|Artisan/Commerçant|Fonctionnaire|Retraité|Sans emploi","purchasing_power":"Contraint|Classe moy. inf.|Classe moyenne|Classe moy. sup.|Aisé|Premium/Luxe|Ultra-premium","buying_frequency":"Ponctuel|Régulier|Récurrent|Saisonnier|Abonnement|Impulsif","payment_mode":"Abonnement mensuel|Abonnement annuel|Achat unique|Paiement fractionné|Crédit/Usage|Freemium→Payant"},"geo_scope":"Local|Régional|National|International","geo_country":"pays si détectable","intent":"Acheteur direct|Prescripteur|Utilisateur final|Chercheur d'info","maturity":"Awareness|Consideration|Decision|Loyalty","confidence":0.0-1.0,"evidence":"preuve issue du contenu crawlé"}],"secondary":[...],"untapped":[{"market":"...","rationale":"explication du potentiel non adressé","confidence":0.3-0.6,...}]},
-"executive_summary":"3-4ph CEO/CMO","overallScore":0-100,
-"quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
-"summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
-"lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
-"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
-"red_team":{"flaws":["faille 1","preuve manquante 2","objection 3"]}}
-
-RÈGLES:
-- main_keywords: MIN 5 obligatoires avec strategic_analysis (intent,business_value,pain_point,recommended_action). Complète si <5 résultats DataForSEO. JAMAIS le nom de marque. 100% génériques.
-- executive_roadmap: MIN 6 recs narratives dont ≥1 category "Social"
-- direct_competitor: JAMAIS "${domain}". AUTRE domaine, même core business.
-- profile_url: UNIQUEMENT URLs listées dans E-E-A-T ci-dessus. COPIE-COLLE. Max 2 profils avec URL. Sinon null.
-- Fondateur: cite si CERTAIN. Sinon "fondateur non identifié". founder_authority="unknown" par défaut.
-- eeat_score EVIDENCE-BASED: Crawlé: +1pt(AuthorJsonLD,Person/ProfilePage,Wikidata,Organization) +0.5pt(sameAs,AuthorBio,LI company,LI perso,Citations,CaseStudies). Max tech ~7pts. Inféré: +1-3pts marque connue. Sans signal tech: max 3. Avec tech sans incarnation: max 7. Avec incarnation: 7-9. 10: Wikidata ou marque certaine.
-- MALUS AUTORITÉ PROPORTIONNÉ (business digital = SaaS, e-commerce, marketplace, plateforme, agence, média, app) : 0 backlink éditorial + domaine ≥2 ans → -2pts. 0 backlink éditorial + domaine <2 ans → -1pt. 1-3 backlinks éditoriaux → -0.5pt. 4+ backlinks éditoriaux → pas de malus. Mentions presse détectées (brand-mentions) → +0.5pt bonus. Un artisan, médecin ou commerce local n'est PAS concerné.
-- PARADOXE VENDEUR: Si le site VEND un service X (audit EEAT, optimisation SEO, conseil en stratégie, etc.) mais N'EXHIBE PAS les signaux de X sur son propre site, c'est un paradoxe à signaler explicitement dans les failles. Exemple: un SaaS qui vend des audits E-E-A-T mais n'a aucun signal EEAT visible lui-même.
-- NE PRÉTENDS PAS connaître: nb abonnés, existence GMB, fraîcheur posts. analysis thought_leadership: sépare "Signaux vérifiés" vs "Signaux estimés".
-- proof_sources: pour chaque source sociale, qualifier le statut comme "verified" (URL crawlée trouvée), "inferred" (mentionné dans le contenu sans URL), ou "absent". NE JAMAIS qualifier comme "verified" sans preuve URL. NE JAMAIS inventer des profils.
-- quotability: phrases factuelles autonomes citables. +33pts/citation.
-- summary_resilience: résumé ≤10 mots. Score similarité H1/contenu.
-- lexical_footprint: jargonRatio+concreteRatio=100. ATTENTION: "jargon" = UNIQUEMENT les formules vides/corporate sans substance (ex: "solutions innovantes", "accompagnement sur-mesure", "leader de la transformation"). La terminologie métier précise (ex: "assurance vie", "prévoyance collective", "taux de rendement", "SCPI") est du vocabulaire CONCRET, PAS du jargon. Un site professionnel avec du vocabulaire technique spécifique à son secteur doit avoir un concreteRatio élevé (75-95). Seuls les buzzwords creux sans valeur informative comptent comme jargon.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain). COHÉRENCE TONALE: si le contenu utilise un ton générique/IA (formulations lisses, sans aspérité, sans opinion tranchée) tout en prétendant être expert → rating max 2. Un vrai expert a des opinions, utilise son vocabulaire métier, fait référence à son expérience.
-- red_team: 3 failles/objections client sceptique. INCLURE le paradoxe vendeur si détecté.
-- Base recommandations sur état des lieux SEO réel si fourni.
-- missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais absents du site. Indiquer importance, usage concurrent, et placement suggéré.
-- semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP. Score objectif.
-- serp_recommendations: MIN 3 actions concrètes et actionnables pour améliorer le positionnement SERP.
-- alternative_strategy: UNIQUEMENT si position très défavorable (>50, faible autorité, peu de leviers SEO). Sinon null. Si présent: répondre quoi/comment/combien. Rappeler qu'une action offsite a TOUJOURS des répercussions positives sur le ranking d'une URL. Types possibles: RP presse, partenariat (nommer l'entreprise idéale), stratégie vidéo réseaux sociaux, événement.
-- client_targets: OBLIGATOIRE. Analyse le contenu, le pricing, le positionnement pour déduire les cibles. primary: 1-2 cibles (confidence>0.7). secondary: 1-2 cibles (confidence 0.4-0.7). untapped: exactement 2 cibles non adressées avec rationale. Pour chaque cible, remplir SOIT b2b SOIT b2c selon le market.
-- JSON pur, sans virgules traînantes`;
-}
-
-// ==================== EXTRACT PAGE METADATA (lightweight) ====================
-
-interface CtaSeoSignals {
-  ctaCount: number;
-  ctaTypes: string[]; // 'devis', 'demo', 'achat', 'telecharger', 'contact', 'generic'
-  ctaAggressive: boolean;
-  seoTermsInBalises: string[];
-  jargonTermsInBalises: string[];
-  toneExplanatory: boolean; // detected "c'est-à-dire", parenthèses explicatives, etc.
-}
-
-async function extractPageMetadata(url: string): Promise<{ context: string; brandSignals: BrandSignal[]; eeatSignals: EEATSignals; ctaSeoSignals: CtaSeoSignals }> {
-  let pageContentContext = '';
-  const brandSignals: BrandSignal[] = [];
-  const eeatSignals: EEATSignals = {
-    hasAuthorBio: false, authorBioCount: 0,
-    hasSocialLinks: false, hasLinkedInLinks: false,
-    socialLinksCount: 0, linkedInLinksCount: 0, linkedInUrls: [],
-    hasSameAs: false, hasWikidataSameAs: false,
-    hasAuthorInJsonLd: false, hasProfilePage: false,
-    hasPerson: false, hasOrganization: false,
-    hasCaseStudies: false, caseStudySignals: 0,
-    hasExpertCitations: false, detectedSocialUrls: [],
-  };
-  
-  let ctaSeoSignals: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
-  try {
-    const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
-    console.log('📄 Fetching page metadata...');
-    const pageResp = await fetch(normalizedUrl, {
-      headers: { 
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html',
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(8000),
-    });
-    
-    if (!pageResp.ok) {
-      await pageResp.text();
-      return { context: '', brandSignals: [], eeatSignals };
-    }
-    
-    let html = await pageResp.text();
-    
-    // SPA detection
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-    const bodyContent = bodyMatch ? bodyMatch[1] : '';
-    const textOnly = bodyContent
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    if (textOnly.length < 200 && html.length > 1000) {
-      console.log(`📄 SPA detected (${textOnly.length} chars). Trying JS rendering...`);
-      const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
-      if (RENDERING_KEY) {
-        try {
-          const renderResponse = await fetch(`https://production-sfo.browserless.io/content?token=${RENDERING_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              url: normalizedUrl,
-              rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'],
-              waitFor: 2000,
-              gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 },
-              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            }),
-            signal: AbortSignal.timeout(20000),
-          });
-          
-          if (renderResponse.ok) {
-            const renderedHtml = await renderResponse.text();
-            if (renderedHtml.length > html.length) {
-              html = renderedHtml;
-              console.log(`📄 ✅ JS rendering success`);
-              await trackPaidApiCall('audit-strategique-ia', 'browserless', '/content', normalizedUrl).catch(() => {});
-            }
-          } else {
-            console.log(`📄 ⚠️ Rendering error: ${renderResponse.status}`);
-            await renderResponse.text();
-          }
-        } catch (renderErr) {
-          console.log('📄 ⚠️ Rendering failed:', renderErr instanceof Error ? renderErr.message : renderErr);
-        }
-      }
-    }
-    
-    // ═══ EXTRACT E-E-A-T SIGNALS BEFORE STRIPPING HTML ═══
-    console.log('🔍 Extracting E-E-A-T signals from HTML...');
-    
-    // 1. Author bios
-    const authorPatterns = [
-      /rel=["']author["']/gi,
-      /class=["'][^"']*\bauthor\b[^"']*["']/gi,
-      /itemprop=["']author["']/gi,
-    ];
-    let abCount = 0;
-    for (const p of authorPatterns) abCount += (html.match(p) || []).length;
-    eeatSignals.hasAuthorBio = abCount > 0;
-    eeatSignals.authorBioCount = abCount;
-    
-    // 2. Social links detection (extract actual URLs)
-    const socialUrlPatterns = [
-      /href=["'](https?:\/\/(?:www\.)?linkedin\.com\/(?:in|company)\/[^"'#?\s]*)/gi,
-      /href=["'](https?:\/\/(?:www\.)?x\.com\/[^"'#?\s]*)/gi,
-      /href=["'](https?:\/\/(?:www\.)?twitter\.com\/[^"'#?\s]*)/gi,
-      /href=["'](https?:\/\/(?:www\.)?instagram\.com\/[^"'#?\s]*)/gi,
-      /href=["'](https?:\/\/(?:www\.)?youtube\.com\/(?:@|channel\/|c\/)[^"'#?\s]*)/gi,
-      /href=["'](https?:\/\/(?:www\.)?facebook\.com\/[^"'#?\s]*)/gi,
-      /href=["'](https?:\/\/(?:www\.)?tiktok\.com\/@[^"'#?\s]*)/gi,
-    ];
-    const detectedUrls = new Set<string>();
-    const liUrls: string[] = [];
-    for (const p of socialUrlPatterns) {
-      let m;
-      while ((m = p.exec(html)) !== null) {
-        const u = m[1].replace(/\/$/, '');
-        detectedUrls.add(u);
-        if (/linkedin\.com/i.test(u)) liUrls.push(u);
-      }
-    }
-    eeatSignals.detectedSocialUrls = [...detectedUrls].slice(0, 20);
-    eeatSignals.socialLinksCount = detectedUrls.size;
-    eeatSignals.hasSocialLinks = detectedUrls.size > 0;
-    eeatSignals.linkedInUrls = liUrls.slice(0, 5);
-    eeatSignals.linkedInLinksCount = liUrls.length;
-    eeatSignals.hasLinkedInLinks = liUrls.length > 0;
-    
-    // 3. JSON-LD analysis + brand signal extraction
-    let jsonLdOrgName = '';
-    const schemaMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
-    for (const block of schemaMatches) {
-      try {
-        const jsonStr = block.replace(/<\/?script[^>]*>/gi, '');
-        const parsed = JSON.parse(jsonStr);
-        const checkNode = (node: any, depth = 0) => {
-          if (!node || typeof node !== 'object' || depth > 5) return;
-          if (Array.isArray(node)) { node.forEach(n => checkNode(n, depth + 1)); return; }
-          const nodeType = String(node['@type'] || '').toLowerCase();
-          if (nodeType.includes('organization')) {
-            eeatSignals.hasOrganization = true;
-            if (node.name && typeof node.name === 'string' && !jsonLdOrgName) {
-              jsonLdOrgName = node.name.trim();
-            }
-          }
-          if (nodeType.includes('person')) eeatSignals.hasPerson = true;
-          if (nodeType.includes('profilepage')) eeatSignals.hasProfilePage = true;
-          if (node.author || nodeType === 'author') eeatSignals.hasAuthorInJsonLd = true;
-          if (node.sameAs) {
-            eeatSignals.hasSameAs = true;
-            const sameAsArr = Array.isArray(node.sameAs) ? node.sameAs : [node.sameAs];
-            for (const s of sameAsArr) {
-              if (typeof s === 'string') {
-                if (/wikidata\.org/i.test(s)) eeatSignals.hasWikidataSameAs = true;
-                if (/linkedin|twitter|x\.com|instagram|youtube|facebook|tiktok/i.test(s)) {
-                  detectedUrls.add(s.replace(/\/$/, ''));
-                }
-              }
-            }
-          }
-          for (const key of Object.keys(node)) {
-            if (typeof node[key] === 'object') checkNode(node[key], depth + 1);
-          }
-        };
-        checkNode(parsed);
-      } catch { /* skip */ }
-    }
-    eeatSignals.detectedSocialUrls = [...detectedUrls].slice(0, 20);
-    eeatSignals.socialLinksCount = detectedUrls.size;
-    
-    // 4. Expert citations
-    const citPatterns = [
-      /selon\s+(?:le|la|les|un|une)\s+(?:expert|spécialiste|étude|rapport|dr\.|prof)/gi,
-      /according\s+to/gi,
-      /<blockquote/gi,
-    ];
-    let citCount = 0;
-    for (const p of citPatterns) citCount += (html.match(p) || []).length;
-    eeatSignals.hasExpertCitations = citCount > 0;
-    
-    // 5. Case studies
-    const csPatterns = [/(?:cas\s+client|étude\s+de\s+cas|case\s+stud|témoignage|success\s+stor)/gi];
-    let csCount = 0;
-    for (const p of csPatterns) csCount += (html.match(p) || []).length;
-    eeatSignals.hasCaseStudies = csCount > 0;
-    eeatSignals.caseStudySignals = csCount;
-    
-    console.log(`🔍 E-E-A-T: author=${eeatSignals.authorBioCount}, social=${eeatSignals.socialLinksCount}, sameAs=${eeatSignals.hasSameAs}, wikidata=${eeatSignals.hasWikidataSameAs}, person=${eeatSignals.hasPerson}, linkedIn=${eeatSignals.linkedInLinksCount}, org=${eeatSignals.hasOrganization}`);
-    
-    // ═══ CTA & SEO PATTERN EXTRACTION (before HTML strip) ═══
-    ctaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
-    {
-      // CTA detection
-      const ctaPatterns: Array<{ re: RegExp; type: string }> = [
-        { re: /(?:demander?\s+(?:un\s+)?devis|request\s+(?:a\s+)?quote|obtenir\s+un\s+devis)/gi, type: 'devis' },
-        { re: /(?:réserver?\s+(?:une?\s+)?(?:démo|demo)|book\s+(?:a\s+)?demo|essai\s+gratuit|free\s+trial|tester?\s+gratuitement)/gi, type: 'demo' },
-        { re: /(?:acheter|achetez|commander|ajouter\s+au\s+panier|buy\s+now|add\s+to\s+cart|order\s+now)/gi, type: 'achat' },
-        { re: /(?:télécharger|download|obtenir\s+le\s+guide)/gi, type: 'telecharger' },
-        { re: /(?:nous\s+contacter|contactez|contact\s+us|prendre\s+rendez-vous|appeler)/gi, type: 'contact' },
-        { re: /(?:s[''](?:inscrire|abonner)|sign\s+up|subscribe|créer\s+(?:un\s+)?compte|get\s+started|commencer)/gi, type: 'inscription' },
-      ];
-      const detectedTypes = new Set<string>();
-      for (const { re, type } of ctaPatterns) {
-        const matches = html.match(re) || [];
-        if (matches.length > 0) {
-          ctaSeoSignals.ctaCount += matches.length;
-          detectedTypes.add(type);
-        }
-      }
-      // Generic CTA buttons/links
-      const btnMatches = html.match(/<(?:a|button)[^>]*class="[^"]*(?:btn|cta|button)[^"]*"[^>]*>/gi) || [];
-      ctaSeoSignals.ctaCount += btnMatches.length;
-      if (btnMatches.length > 0 && detectedTypes.size === 0) detectedTypes.add('generic');
-      ctaSeoSignals.ctaTypes = [...detectedTypes];
-      ctaSeoSignals.ctaAggressive = detectedTypes.has('achat') || detectedTypes.has('devis') || (ctaSeoSignals.ctaCount >= 3 && detectedTypes.size >= 2);
-
-      // Explanatory tone detection
-      const explPatterns = /(?:c['']est[- ]à[- ]dire|autrement\s+dit|en\s+d['']autres\s+termes|i\.e\.|e\.g\.|that\s+is\s+to\s+say|\(.*?(?:signifie|désigne|définition).*?\))/gi;
-      ctaSeoSignals.toneExplanatory = explPatterns.test(html);
-
-      console.log(`🎯 CTA signals: count=${ctaSeoSignals.ctaCount}, types=[${ctaSeoSignals.ctaTypes}], aggressive=${ctaSeoSignals.ctaAggressive}, explanatory=${ctaSeoSignals.toneExplanatory}`);
-    }
-
-    // ═══ NOW strip HTML to metadata only ═══
-    const headMatch2 = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-    const h1Match2 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-    html = (headMatch2 ? `<head>${headMatch2[1]}</head>` : '') + 
-           (h1Match2 ? `<body><h1>${h1Match2[1]}</h1></body>` : '');
-    
-    // ═══ COLLECT ALL 5 BRAND SIGNALS ═══
-    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*?)["']/i)
-      || html.match(/<meta\s+content=["']([^"']*?)["']\s+name=["']description["']/i);
-    const ogSiteNameMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']*?)["']/i);
-    const appNameMatch = html.match(/<meta\s+name=["']application-name["']\s+content=["']([^"']*?)["']/i);
-    
-    // Signal 1: JSON-LD Organization.name (weight 35)
-    if (jsonLdOrgName) {
-      brandSignals.push({ source: 'jsonld', value: jsonLdOrgName, weight: 35 });
-    }
-    
-    // Signal 2: og:site_name (weight 30)
-    if (ogSiteNameMatch?.[1]?.trim()) {
-      brandSignals.push({ source: 'og:site_name', value: ogSiteNameMatch[1].trim(), weight: 30 });
-    }
-    
-    // Signal 3: application-name (weight 15)
-    if (appNameMatch?.[1]?.trim()) {
-      brandSignals.push({ source: 'application-name', value: appNameMatch[1].trim(), weight: 15 });
-    }
-    
-    // Signal 4: <title> extraction — brand part after separator (weight 10)
-    if (titleMatch?.[1]) {
-      const titleText = titleMatch[1].replace(/<[^>]+>/g, '').trim();
-      for (const sep of [' | ', ' - ', ' — ', ' – ', ' :: ', ' · ']) {
-        if (titleText.includes(sep)) {
-          const candidate = titleText.split(sep).pop()?.trim() || '';
-          if (candidate.length >= 2 && candidate.length <= 50) {
-            brandSignals.push({ source: 'title', value: candidate, weight: 10 });
-          }
-          break;
-        }
-      }
-    }
-    
-    // Signal 5: Web App Manifest name (weight 10) — fetch in parallel
-    try {
-      const baseUrl = new URL(normalizedUrl);
-      // Check common manifest paths
-      const manifestLink = html.match(/<link[^>]*rel=["']manifest["'][^>]*href=["']([^"']+)["']/i);
-      const manifestPath = manifestLink?.[1] || '/site.webmanifest';
-      const manifestUrl = new URL(manifestPath, baseUrl.origin).href;
-      
-      const manifestResp = await fetch(manifestUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(3000),
-      });
-      if (manifestResp.ok) {
-        const manifestData = await manifestResp.json();
-        const mName = (manifestData.name || manifestData.short_name || '').trim();
-        if (mName && mName.length >= 2 && mName.length <= 60) {
-          brandSignals.push({ source: 'manifest', value: mName, weight: 10 });
-        }
-      } else {
-        await manifestResp.text();
-      }
-    } catch { /* manifest not available — that's fine */ }
-    
-    console.log(`🏷️ Brand signals: ${brandSignals.map(s => `${s.source}="${s.value}"(w${s.weight})`).join(', ') || 'none'}`);
-    
-    const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
-    const metaDesc = metaDescMatch?.[1]?.trim() || '';
-    const h1 = h1Match2?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
-    
-    if (title || metaDesc || h1) {
-      pageContentContext = `
-CONTENU PAGE: Titre="${title||'?'}", Desc="${(metaDesc||'?').substring(0,200)}", H1="${h1||'?'}"
-Utilise ces informations pour identifier le core business.`;
-      console.log(`✅ Metadata: title="${title.substring(0,50)}", h1="${h1.substring(0,50)}"`);
-      // Extract SEO terms from balises for jargon intentionality
-      const balisesText = `${title} ${metaDesc} ${h1}`.toLowerCase();
-      ctaSeoSignals.seoTermsInBalises = balisesText.split(/\s+/).filter(w => w.length > 4);
-    }
-    
-    html = '';
-  } catch (e) {
-    console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
-  }
-  
-  return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals };
+function withDeadline<T>(promise: Promise<T>, deadlineMs: number, label: string): Promise<T | null> {
+  return Promise.race([promise, new Promise<null>((resolve) => setTimeout(() => { console.warn(`⏰ [${label}] hit deadline (${deadlineMs}ms)`); resolve(null); }, deadlineMs))]);
 }
 
 // ==================== MAIN HANDLER ====================
 
-/** Safely execute an async task, returning null on failure */
-async function safe<T>(label: string, fn: () => Promise<T>): Promise<T | null> {
-  try {
-    return await fn();
-  } catch (e) {
-    console.warn(`⚠️ [${label}] failed:`, e instanceof Error ? e.message : e);
-    return null;
-  }
-}
-
-/** Race a promise against a deadline. Returns null if deadline wins. */
-function withDeadline<T>(promise: Promise<T>, deadlineMs: number, label: string): Promise<T | null> {
-  return Promise.race([
-    promise,
-    new Promise<null>((resolve) => setTimeout(() => {
-      console.warn(`⏰ [${label}] hit deadline (${deadlineMs}ms)`);
-      resolve(null);
-    }, deadlineMs)),
-  ]);
-}
-
-/** Save result to audit_cache (fire-and-forget) */
-async function saveToCache(domain: string, url: string, result: any): Promise<void> {
-  try {
-    const adminClient = getServiceClient();
-    const normalizedCacheUrl = url.replace(/\/+$/, '');
-    const cacheDomain = domain.replace(/^www\./, '');
-    const cacheKey = `strategic_${cacheDomain}_${normalizedCacheUrl}`;
-    await adminClient.from('audit_cache').upsert({
-      cache_key: cacheKey,
-      function_name: 'audit-strategique-ia',
-      result_data: result,
-      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-    }, { onConflict: 'cache_key' });
-    console.log('✅ Result saved to audit_cache for timeout recovery');
-  } catch (cacheErr) {
-    console.warn('⚠️ Failed to cache result:', cacheErr);
-  }
-}
-
-/** Build a minimal fallback result when LLM fails */
-function buildFallbackResult(url: string, domain: string, marketData: MarketData | null, rankingOverview: RankingOverview | null, llmData: any, cachedContextOut: any): any {
-  return {
-    success: true,
-    data: {
-      url, domain,
-      scannedAt: new Date().toISOString(),
-      overallScore: 0,
-      introduction: { presentation: 'L\'analyse IA n\'a pas pu être complétée. Les données de marché sont disponibles.', strengths: '', improvement: '', competitors: [] },
-      brand_authority: { dna_analysis: 'Non disponible', thought_leadership_score: 0, entity_strength: 'unknown' },
-      social_signals: { proof_sources: [], thought_leadership: { founder_authority: 'unknown', entity_recognition: '', eeat_score: 0, analysis: '' }, sentiment: { overall_polarity: 'neutral', hallucination_risk: 'medium', reputation_vibration: '' } },
-      market_intelligence: { sophistication: { level: 1, description: '', emotional_levers: [] }, semantic_gap: { current_position: 0, leader_position: 0, gap_analysis: '', priority_themes: [], closing_strategy: '' } },
-      competitive_landscape: { leader: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, direct_competitor: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, challenger: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, inspiration_source: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' } },
-      geo_readiness: { citability_score: 0, readiness_level: 'basic', analysis: 'Non disponible', strengths: [], weaknesses: [], recommendations: [] },
-      executive_roadmap: [],
-      client_targets: { primary: [], secondary: [], untapped: [] },
-      keyword_positioning: marketData ? {
-        main_keywords: marketData.top_keywords.slice(0, 5).map(kw => ({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, current_rank: kw.current_rank })),
-        quick_wins: [], content_gaps: [], opportunities: [], competitive_gaps: [], recommendations: [],
-      } : null,
-      market_data_summary: marketData ? { total_market_volume: marketData.total_market_volume, keywords_ranked: marketData.top_keywords.filter(k => k.is_ranked).length, keywords_analyzed: marketData.top_keywords.length, average_position: 0, data_source: 'dataforseo' } : null,
-      executive_summary: 'L\'analyse stratégique n\'a pas pu être complétée par l\'IA. Les données de marché et de positionnement sont disponibles.',
-      quotability: { score: 0, quotes: [] },
-      summary_resilience: { score: 0, originalH1: '', llmSummary: '' },
-      lexical_footprint: { jargonRatio: 50, concreteRatio: 50 },
-      expertise_sentiment: { rating: 1, justification: 'Non évalué' },
-      red_team: { flaws: [] },
-      raw_market_data: marketData,
-      ranking_overview: rankingOverview,
-      toolsData: null,
-      llm_visibility_raw: llmData,
-      _cachedContext: cachedContextOut,
-    },
-  };
-}
-
 Deno.serve(handleRequest(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   const clientIp = getClientIp(req);
   const ipCheck = checkIpRate(clientIp, 'audit-strategique-ia', 10, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
-
   if (!acquireConcurrency('audit-strategique-ia', 25)) return concurrencyResponse(corsHeaders);
 
-  const json = (data: any, status = 200) =>
-    new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  const json = (data: any, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-  // ═══ ASYNC JOB POLLING: GET ?job_id=xxx ═══
+  // ═══ ASYNC JOB POLLING ═══
   const reqUrl = new URL(req.url);
   const pollJobId = reqUrl.searchParams.get('job_id');
   if (pollJobId && req.method === 'GET') {
@@ -2381,9 +61,7 @@ Deno.serve(handleRequest(async (req) => {
     return json({ status: job.status, progress: job.progress });
   }
 
-  // ═══ ASYNC MODE: POST with { async: true } returns 202 + job_id ═══
-  // ═══ GLOBAL DEADLINE: 8 min 30s — guarantees response before Edge Function timeout ═══
-  const GLOBAL_DEADLINE = 510_000; // 8min30s
+  const GLOBAL_DEADLINE = 510_000;
   const startTime = Date.now();
   const isOverDeadline = () => Date.now() - startTime > GLOBAL_DEADLINE;
 
@@ -2399,70 +77,37 @@ Deno.serve(handleRequest(async (req) => {
     const asyncMode = body.async === true;
     const outputLang = lang || 'fr';
     const langLabel = outputLang === 'fr' ? 'français' : outputLang === 'es' ? 'espagnol' : 'anglais';
-    const dfLangCode = outputLang === 'es' ? 'es' : outputLang === 'en' ? 'en' : 'fr';
-    const dfSeDomain = outputLang === 'es' ? 'google.es' : outputLang === 'en' ? 'google.com' : 'google.fr';
 
     if (!url) return json({ success: false, error: 'URL is required' }, 400);
-
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) return json({ success: false, error: 'AI service not configured' }, 500);
 
-    // ═══ ASYNC MODE: Create job, self-invoke, return 202 ═══
+    // ═══ ASYNC MODE ═══
     if (asyncMode) {
-      if (!supabaseUrl || !serviceKey) {
-        return json({ error: 'Backend service not configured' }, 500);
-      }
-
+      if (!supabaseUrl || !serviceKey) return json({ error: 'Backend service not configured' }, 500);
       const sb = getServiceClient();
       const authHeader = req.headers.get('Authorization') || '';
-      
-      // Extract user_id from auth
       const userSb = getUserClient(authHeader);
       const { data: { user } } = await userSb.auth.getUser();
-      const userId = user?.id;
-      if (!userId) return json({ error: 'Authentication required for async mode' }, 401);
+      if (!user?.id) return json({ error: 'Authentication required for async mode' }, 401);
 
-      const { data: job, error: jobError } = await sb
-        .from('async_jobs')
-        .insert({
-          user_id: userId,
-          function_name: 'audit-strategique-ia',
-          status: 'pending',
-          input_payload: { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang },
-        })
-        .select('id')
-        .single();
-
+      const { data: job, error: jobError } = await sb.from('async_jobs').insert({ user_id: user.id, function_name: 'audit-strategique-ia', status: 'pending', input_payload: { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } }).select('id').single();
       if (jobError || !job) return json({ error: 'Failed to create job' }, 500);
 
-      // Fire-and-forget: self-invoke synchronously with job_id
-      const syncBody = { ...body, async: false, _job_id: job.id };
       fetch(`${supabaseUrl}/functions/v1/audit-strategique-ia`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${serviceKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(syncBody),
+        method: 'POST', headers: { 'Authorization': `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...body, async: false, _job_id: job.id }),
       }).catch(err => console.error('[audit-strategique-ia] Async self-invoke failed:', err));
 
       return json({ job_id: job.id, status: 'pending' }, 202);
     }
 
-    // ═══ JOB TRACKING: if _job_id provided, update progress in DB ═══
+    // ═══ JOB TRACKING ═══
     jobId = body._job_id;
     jobSb = jobId ? getServiceClient() : null;
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', jobId);
 
-    if (jobSb && jobId) {
-      await jobSb.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', jobId);
-    }
-
-    const effectiveToolsData: ToolsData = toolsData || {
-      crawlers: { note: 'Non disponible' },
-      geo: { note: 'Non disponible' },
-      llm: { note: 'Non disponible' },
-      pagespeed: { note: 'Non disponible' },
-    };
+    const effectiveToolsData: ToolsData = toolsData || { crawlers: { note: 'Non disponible' }, geo: { note: 'Non disponible' }, llm: { note: 'Non disponible' }, pagespeed: { note: 'Non disponible' } };
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     const parsedUrl = new URL(normalizedUrl);
@@ -2470,39 +115,21 @@ Deno.serve(handleRequest(async (req) => {
     const domainWithoutWww = domain.replace(/^www\./, '');
     const domainSlug = domainWithoutWww.split('.')[0];
 
-    // ═══ PAGE TYPE DETECTION: editorial / product / deep / homepage ═══
+    // ═══ PAGE TYPE DETECTION ═══
     const urlPath = parsedUrl.pathname.toLowerCase();
     const pathSegments = urlPath.replace(/^\/|\/$/g, '').split('/').filter(Boolean);
-
-    type PageType = 'homepage' | 'editorial' | 'product' | 'deep';
     let pageType: PageType = 'homepage';
-
     const editorialPattern = /\/(blog|article|articles|post|posts|news|actualite|actualites|guide|guides|tutoriel|tutorial|ressources|resources|wiki|learn|knowledge|faq)\b/;
     const productPattern = /\/(product|produit|produits|products|shop|boutique|store|catalogue|catalog|item|pricing|tarif|tarifs|offre|offres|service|services|solution|solutions)\b/;
-
-    if (editorialPattern.test(urlPath) && pathSegments.length >= 2) {
-      pageType = 'editorial';
-    } else if (productPattern.test(urlPath) && pathSegments.length >= 1) {
-      pageType = 'product';
-    } else if (pathSegments.length >= 3) {
-      // Deep page: 3+ path segments = likely a specific inner page
-      pageType = 'deep';
-    } else if (pathSegments.length >= 1 && urlPath !== '/') {
-      // Single segment but not homepage — check slug length as a heuristic
-      const lastSegment = pathSegments[pathSegments.length - 1];
-      if (lastSegment.length > 60 || lastSegment.split('-').length > 6) {
-        pageType = 'deep';
-      }
-    }
-
+    if (editorialPattern.test(urlPath) && pathSegments.length >= 2) pageType = 'editorial';
+    else if (productPattern.test(urlPath) && pathSegments.length >= 1) pageType = 'product';
+    else if (pathSegments.length >= 3) pageType = 'deep';
+    else if (pathSegments.length >= 1 && urlPath !== '/') { const last = pathSegments[pathSegments.length - 1]; if (last.length > 60 || last.split('-').length > 6) pageType = 'deep'; }
     const isContentMode = pageType !== 'homepage';
-    if (isContentMode) {
-      console.log(`📝 PAGE TYPE: "${pageType}" detected for path: ${parsedUrl.pathname}`);
-    }
+    if (isContentMode) console.log(`📝 PAGE TYPE: "${pageType}" detected for path: ${parsedUrl.pathname}`);
 
-    // ==================== SMART CACHE: Skip expensive calls if cachedContext provided ====================
+    // ═══ DATA COLLECTION ═══
     const useCache = !!cachedContext;
-
     let pageContentContext: string;
     let brandSignals: BrandSignal[];
     let eeatSignals: EEATSignals;
@@ -2512,217 +139,101 @@ Deno.serve(handleRequest(async (req) => {
     let localCompetitorData: { name: string; url: string; rank: number; score?: number } | null = null;
     let localCompetitorsAll: { name: string; url: string; rank: number; score?: number }[] = [];
     let gmbData: GMBData | null = null;
-    let facebookPageInfo: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
-    let ctaSeoSignalsForJargon: CtaSeoSignals = { ctaCount: 0, ctaTypes: [], ctaAggressive: false, seoTermsInBalises: [], jargonTermsInBalises: [], toneExplanatory: false };
+    let facebookPageInfo: FacebookPageInfo = { ...DEFAULT_FACEBOOK_PAGE_INFO };
+    let ctaSeoSignalsForJargon: CtaSeoSignals = { ...DEFAULT_CTA_SEO_SIGNALS, ctaTypes: [], seoTermsInBalises: [], jargonTermsInBalises: [] };
     let preCrawlResult: PreCrawlResult | null = null;
+    let siteIdentityCtx: Record<string, unknown> | null = null;
+    let trackedSiteIdForCrawl: string | null = null;
 
     if (useCache) {
-      // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
       console.log('⚡ SMART CACHE: Using cached context — skipping all data collection');
       pageContentContext = cachedContext.pageContentContext || '';
       brandSignals = cachedContext.brandSignals || [];
-      eeatSignals = cachedContext.eeatSignals || {
-        hasAuthorBio: false, authorBioCount: 0, hasSocialLinks: false, hasLinkedInLinks: false,
-        socialLinksCount: 0, linkedInLinksCount: 0, linkedInUrls: [],
-        hasSameAs: false, hasWikidataSameAs: false, hasAuthorInJsonLd: false, hasProfilePage: false,
-        hasPerson: false, hasOrganization: false, hasCaseStudies: false, caseStudySignals: 0,
-        hasExpertCitations: false, detectedSocialUrls: [],
-      };
+      eeatSignals = cachedContext.eeatSignals || { ...DEFAULT_EEAT_SIGNALS, linkedInUrls: [], detectedSocialUrls: [] };
       marketData = cachedContext.marketData || null;
       rankingOverview = cachedContext.rankingOverview || null;
-      founderInfo = cachedContext.founderInfo || { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
-      localCompetitorData = null;
+      founderInfo = cachedContext.founderInfo || { ...DEFAULT_FOUNDER_INFO };
       gmbData = cachedContext.gmbData || null;
-      facebookPageInfo = cachedContext.facebookPageInfo || { pageUrl: null, pageName: null, found: false };
+      facebookPageInfo = cachedContext.facebookPageInfo || { ...DEFAULT_FACEBOOK_PAGE_INFO };
       if (cachedContext.llmData) effectiveToolsData.llm = cachedContext.llmData;
       preCrawlResult = cachedContext.preCrawlData || null;
     } else {
-      // ═══ FULL PATH: Collect all data with maximum parallelism ═══
-
-      // ── WAVE 1: Metadata + Ranked Keywords + Pre-Crawl (independent, parallel) ──
-      console.log('📊 WAVE 1: Metadata + Ranked Keywords + Pre-Crawl (parallel)...');
-
-      // Resolve tracked_site_id for pre-crawl (GA4 cross-reference)
-      let trackedSiteIdForCrawl: string | null = null;
+      // ── Resolve tracked_site_id for pre-crawl ──
       let userIdForCrawl: string | null = null;
       try {
-        const svcSb = getServiceClient();
         const authHeader = req.headers.get('Authorization') || '';
         if (authHeader) {
           const userSb = getUserClient(authHeader);
           const { data: { user: authUser } } = await userSb.auth.getUser();
           if (authUser?.id) {
             userIdForCrawl = authUser.id;
-            const { data: site } = await svcSb
-              .from('tracked_sites')
-              .select('id')
-              .ilike('domain', `%${domainWithoutWww}%`)
-              .eq('user_id', authUser.id)
-              .limit(1)
-              .maybeSingle();
+            const { data: site } = await getServiceClient().from('tracked_sites').select('id').ilike('domain', `%${domainWithoutWww}%`).eq('user_id', authUser.id).limit(1).maybeSingle();
             if (site) trackedSiteIdForCrawl = site.id;
           }
         }
-      } catch (e) {
-        console.warn('[audit-strategique-ia] Could not resolve tracked_site for pre-crawl:', e);
-      }
+      } catch (e) { console.warn('[audit-strategique-ia] Could not resolve tracked_site:', e); }
 
+      // ── WAVE 1: Metadata + Ranked Keywords + Pre-Crawl ──
+      console.log('📊 WAVE 1: Metadata + Ranked Keywords + Pre-Crawl (parallel)...');
       const [metadataResult, rkOverviewResult, preCrawlRes] = await Promise.all([
         safe('metadata', () => extractPageMetadata(url)),
         safe('ranked_keywords', () => {
-          // We need location code — default to France
           const tld = domain.split('.').pop() || 'com';
           const tldMap: Record<string, string> = { 'fr': 'france', 'be': 'belgium', 'ch': 'switzerland', 'ca': 'canada', 'de': 'germany', 'es': 'spain', 'it': 'italy', 'uk': 'united kingdom', 'com': 'france', 'ai': 'france', 'io': 'france', 'dev': 'france', 'app': 'france' };
-          const locKey = tldMap[tld] || 'france';
-          const locInfo = KNOWN_LOCATIONS[locKey] || KNOWN_LOCATIONS['france'];
+          const locInfo = KNOWN_LOCATIONS[tldMap[tld] || 'france'] || KNOWN_LOCATIONS['france'];
           return fetchRankedKeywords(domain, locInfo.code, locInfo.lang);
         }),
         safe('pre_crawl', () => preCrawlForAudit(getServiceClient(), domainWithoutWww, trackedSiteIdForCrawl, userIdForCrawl)),
       ]);
       preCrawlResult = preCrawlRes as PreCrawlResult | null;
-
-      // Format pre-crawl context for injection into prompt
-      const preCrawlContext = preCrawlResult ? formatPreCrawlForPrompt(preCrawlResult as PreCrawlResult) : '';
-      if (preCrawlContext) {
-        console.log(`🕷️ Pre-crawl context: ${(preCrawlResult as PreCrawlResult).pages.length} pages (${(preCrawlResult as PreCrawlResult).source})`);
-      }
+      const preCrawlContext = preCrawlResult ? formatPreCrawlForPrompt(preCrawlResult) : '';
+      if (preCrawlContext) console.log(`🕷️ Pre-crawl context: ${preCrawlResult!.pages.length} pages (${preCrawlResult!.source})`);
 
       pageContentContext = metadataResult?.context || '';
       brandSignals = metadataResult?.brandSignals || [];
-      eeatSignals = metadataResult?.eeatSignals || {
-        hasAuthorBio: false, authorBioCount: 0, hasSocialLinks: false, hasLinkedInLinks: false,
-        socialLinksCount: 0, linkedInLinksCount: 0, linkedInUrls: [],
-        hasSameAs: false, hasWikidataSameAs: false, hasAuthorInJsonLd: false, hasProfilePage: false,
-        hasPerson: false, hasOrganization: false, hasCaseStudies: false, caseStudySignals: 0,
-        hasExpertCitations: false, detectedSocialUrls: [],
-      };
+      eeatSignals = metadataResult?.eeatSignals || { ...DEFAULT_EEAT_SIGNALS, linkedInUrls: [], detectedSocialUrls: [] };
       ctaSeoSignalsForJargon = metadataResult?.ctaSeoSignals || ctaSeoSignalsForJargon;
       rankingOverview = rkOverviewResult;
-
-      // ── Append pre-crawl context to page content ──
-      if (preCrawlContext) {
-        pageContentContext += '\n' + preCrawlContext;
-      }
+      if (preCrawlContext) pageContentContext += '\n' + preCrawlContext;
 
       const context = detectBusinessContext(domain, pageContentContext);
 
-      // ── Fetch site identity card for enriched competitor search ──
-      let siteIdentityCtx: Record<string, unknown> | null = null;
+      // ── Site identity card ──
       try {
-        const sbService = getServiceClient();
-        siteIdentityCtx = await getSiteContext(sbService, { domain: domainWithoutWww });
+        siteIdentityCtx = await getSiteContext(getServiceClient(), { domain: domainWithoutWww });
         if (siteIdentityCtx) console.log(`📇 Carte d'identité chargée (confiance: ${siteIdentityCtx.identity_confidence || 0})`);
-      } catch (e) {
-        console.warn(`⚠️ Carte d'identité non disponible:`, e);
-      }
+      } catch (e) { console.warn(`⚠️ Carte d'identité non disponible:`, e); }
 
-      // ── Fetch keyword cloud from SERP snapshots as pre-seeds ──
+      // ── Keyword cloud from SERP snapshots ──
       let existingKeywords: string[] = [];
       try {
-        const sbService = getServiceClient();
         const domainClean = domainWithoutWww.replace(/^www\./, '').toLowerCase();
-        const { data: serpSnapshot } = await sbService
-          .from('serp_snapshots')
-          .select('sample_keywords')
-          .ilike('domain', `%${domainClean}%`)
-          .order('measured_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const { data: serpSnapshot } = await getServiceClient().from('serp_snapshots').select('sample_keywords').ilike('domain', `%${domainClean}%`).order('measured_at', { ascending: false }).limit(1).maybeSingle();
         if (serpSnapshot?.sample_keywords && Array.isArray(serpSnapshot.sample_keywords)) {
-          existingKeywords = serpSnapshot.sample_keywords
-            .filter((k: any) => k?.keyword)
-            .map((k: any) => k.keyword as string);
-          if (existingKeywords.length > 0) {
-            console.log(`☁️ Keyword cloud loaded: ${existingKeywords.length} keywords as pre-seeds`);
-          }
+          existingKeywords = serpSnapshot.sample_keywords.filter((k: any) => k?.keyword).map((k: any) => k.keyword as string);
+          if (existingKeywords.length > 0) console.log(`☁️ Keyword cloud loaded: ${existingKeywords.length} keywords`);
         }
-      } catch (e) {
-        console.warn('⚠️ Could not fetch keyword cloud:', e);
-      }
+      } catch (e) { console.warn('⚠️ Could not fetch keyword cloud:', e); }
 
-      // ── WAVE 2: DataForSEO Market + check-llm + Local Competitor + Founder (all parallel) ──
+      // ── WAVE 2: Market + LLM + Competitor + Founder + GMB + Facebook ──
       console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
-
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
-
       const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult] = await Promise.allSettled([
-        // Market data (DataForSEO keywords) — uses keyword cloud as pre-seeds when available
-        withDeadline(
-          fetchMarketData(domain, context, pageContentContext, url, existingKeywords),
-          120_000, 'market_data'
-        ),
-        // LLM visibility check (sub-function call) — always needed
+        withDeadline(fetchMarketData(domain, context, pageContentContext, url, existingKeywords), 120_000, 'market_data'),
         needsLlmCheck && supabaseUrl && supabaseAnonKey
-          ? withDeadline(
-              (async () => {
-                const llmResponse = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
-                  method: 'POST',
-                  headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ url, lang: 'fr' }),
-                  signal: AbortSignal.timeout(40000),
-                });
-                if (!llmResponse.ok) { await llmResponse.text(); return null; }
-                const llmResult = await llmResponse.json();
-                return llmResult.success && llmResult.data ? llmResult.data : null;
-              })(),
-              45_000, 'check_llm'
-            )
-          : Promise.resolve(null),
-        // Local competitor — skip in content mode (SERP competitors handled by LLM)
-        !isContentMode && context.locationCode
-          ? withDeadline(
-              findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain, siteIdentityCtx),
-              20_000, 'local_competitor'
-            )
-          : Promise.resolve(null),
-        // Founder discovery — skip in content mode
-        !isContentMode
-          ? withDeadline(
-              searchFounderProfile(domain, context.location),
-              15_000, 'founder'
-            )
-          : Promise.resolve(null),
-        // Google My Business detection — skip in content mode
-        !isContentMode && context.locationCode
-          ? withDeadline(
-              detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode),
-              12_000, 'gmb'
-            )
-          : Promise.resolve(null),
-        // Facebook page discovery — skip in content mode
-        !isContentMode && context.locationCode
-          ? withDeadline(
-              searchFacebookPage(context.brandName, context.sector, context.locationCode, context.languageCode),
-              10_000, 'facebook_page'
-            )
-          : Promise.resolve(null),
+          ? withDeadline((async () => { const r = await fetch(`${supabaseUrl}/functions/v1/check-llm`, { method: 'POST', headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ url, lang: 'fr' }), signal: AbortSignal.timeout(40000) }); if (!r.ok) { await r.text(); return null; } const d = await r.json(); return d.success && d.data ? d.data : null; })(), 45_000, 'check_llm') : Promise.resolve(null),
+        !isContentMode && context.locationCode ? withDeadline(findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain, siteIdentityCtx), 20_000, 'local_competitor') : Promise.resolve(null),
+        !isContentMode ? withDeadline(searchFounderProfile(domain, context.location), 15_000, 'founder') : Promise.resolve(null),
+        !isContentMode && context.locationCode ? withDeadline(detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode), 12_000, 'gmb') : Promise.resolve(null),
+        !isContentMode && context.locationCode ? withDeadline(searchFacebookPage(context.brandName, context.sector, context.locationCode, context.languageCode), 10_000, 'facebook_page') : Promise.resolve(null),
       ]);
 
       marketData = mktDataResult.status === 'fulfilled' ? mktDataResult.value : null;
-
-      if (llmCheckResult.status === 'fulfilled' && llmCheckResult.value) {
-        effectiveToolsData.llm = llmCheckResult.value;
-        console.log(`✅ LLM: score ${llmCheckResult.value.overallScore}/100`);
-      }
-
-      if (localCompResult.status === 'fulfilled' && localCompResult.value) {
-        const compResults = localCompResult.value;
-        localCompetitorsAll = Array.isArray(compResults) ? compResults : [compResults];
-        localCompetitorData = localCompetitorsAll[0] || null;
-      }
-
-      founderInfo = (founderResult.status === 'fulfilled' && founderResult.value)
-        ? founderResult.value
-        : { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
-
-      if (gmbResult.status === 'fulfilled' && gmbResult.value) {
-        gmbData = gmbResult.value;
-      }
-
-      if (fbResult.status === 'fulfilled' && fbResult.value) {
-        facebookPageInfo = fbResult.value;
-      }
-
+      if (llmCheckResult.status === 'fulfilled' && llmCheckResult.value) { effectiveToolsData.llm = llmCheckResult.value; console.log(`✅ LLM: score ${llmCheckResult.value.overallScore}/100`); }
+      if (localCompResult.status === 'fulfilled' && localCompResult.value) { const cr = localCompResult.value; localCompetitorsAll = Array.isArray(cr) ? cr : [cr]; localCompetitorData = localCompetitorsAll[0] || null; }
+      founderInfo = (founderResult.status === 'fulfilled' && founderResult.value) ? founderResult.value : { ...DEFAULT_FOUNDER_INFO };
+      if (gmbResult.status === 'fulfilled' && gmbResult.value) gmbData = gmbResult.value;
+      if (fbResult.status === 'fulfilled' && fbResult.value) facebookPageInfo = fbResult.value;
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
@@ -2732,69 +243,39 @@ Deno.serve(handleRequest(async (req) => {
     const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
     console.log(`🎯 Entité: "${resolvedEntityName}" (${(brandConfidence * 100).toFixed(0)}%)`);
 
-    // ═══ BUILD CACHED CONTEXT for client-side recovery & re-runs ═══
-    const cachedContextOut = {
-      pageContentContext, brandSignals, eeatSignals,
-      marketData, rankingOverview, founderInfo,
-      llmData: effectiveToolsData.llm,
-      gmbData,
-      facebookPageInfo,
-      preCrawlData: preCrawlResult || null,
-    };
+    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null };
 
-    // ═══ CHECK DEADLINE before expensive LLM call — need at least 90s ═══
-    const elapsedBeforeLLM = Date.now() - startTime;
-    const remainingBeforeLLM = GLOBAL_DEADLINE - elapsedBeforeLLM;
+    // ═══ CHECK DEADLINE ═══
+    const remainingBeforeLLM = GLOBAL_DEADLINE - (Date.now() - startTime);
     if (remainingBeforeLLM < 90_000) {
-      console.warn(`⏰ Only ${(remainingBeforeLLM / 1000).toFixed(0)}s remaining — not enough for LLM call, returning fallback`);
+      console.warn(`⏰ Only ${(remainingBeforeLLM / 1000).toFixed(0)}s remaining — returning fallback`);
       const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
       saveToCache(domain, url, fallback).catch(() => {});
       return json(fallback);
     }
 
-    // ═══ ÉTAPE 2: PARALLEL LLM ANALYSIS (3 focused calls) ═══
-    console.log(`\n🤖 ÉTAPE 2: Analyse LLM parallèle (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
+    // ═══ LLM ANALYSIS ═══
+    console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo);
+    userPrompt = `🌐 LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
 
-    // Inject language instruction
-    userPrompt = `🌐 LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes, analyses, recommandations et descriptions en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
-    const pageTypeLabels: Record<PageType, string> = {
-      editorial: '📝 MODE ÉDITORIAL',
-      product: '🛒 MODE PRODUIT',
-      deep: '📄 MODE PAGE PROFONDE',
-      homepage: '🏷️',
-    };
-    if (isContentMode) {
-      userPrompt = `${pageTypeLabels[pageType]}: Analyse de la page "${resolvedEntityName}" (type: ${pageType}) — Centre l'analyse sur le CONTENU de cette page, pas sur l'entreprise.\n` + userPrompt;
-    } else {
-      userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
-    }
+    const pageTypeLabels: Record<PageType, string> = { editorial: '📝 MODE ÉDITORIAL', product: '🛒 MODE PRODUIT', deep: '📄 MODE PAGE PROFONDE', homepage: '🏷️' };
+    if (isContentMode) userPrompt = `${pageTypeLabels[pageType]}: Analyse de la page "${resolvedEntityName}" (type: ${pageType})\n` + userPrompt;
+    else userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}"\n` + userPrompt;
 
-    // Inject site identity card context + GMB data into prompt for better strategic analysis
+    // Inject identity card
     if (siteIdentityCtx) {
       const idParts: string[] = [];
-      if (siteIdentityCtx.market_sector) idParts.push(`Secteur: ${siteIdentityCtx.market_sector}`);
-      if (siteIdentityCtx.entity_type) idParts.push(`Type: ${siteIdentityCtx.entity_type}`);
-      if (siteIdentityCtx.commercial_model) idParts.push(`Modèle: ${siteIdentityCtx.commercial_model}`);
-      if (siteIdentityCtx.products_services) idParts.push(`Produits/Services: ${siteIdentityCtx.products_services}`);
-      if (siteIdentityCtx.target_audience) idParts.push(`Cible: ${siteIdentityCtx.target_audience}`);
-      if (siteIdentityCtx.commercial_area) idParts.push(`Zone: ${siteIdentityCtx.commercial_area}`);
-      if (siteIdentityCtx.company_size) idParts.push(`Taille: ${siteIdentityCtx.company_size}`);
-      if (siteIdentityCtx.business_type) idParts.push(`Activité: ${siteIdentityCtx.business_type}`);
-      if (siteIdentityCtx.competitors) idParts.push(`Concurrents connus: ${siteIdentityCtx.competitors}`);
-      if ((siteIdentityCtx as any).brand_name) idParts.push(`Marque: ${(siteIdentityCtx as any).brand_name}`);
-      if ((siteIdentityCtx as any).gmb_presence) idParts.push(`GMB: ${(siteIdentityCtx as any).gmb_presence}`);
-      if ((siteIdentityCtx as any).gmb_city) idParts.push(`Ville GMB: ${(siteIdentityCtx as any).gmb_city}`);
-      if ((siteIdentityCtx as any).is_local_business) idParts.push(`Business local: oui`);
-      if (idParts.length > 0) {
-        userPrompt = `📇 CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\n⚠️ VÉRIFICATION: Compare ces données avec ce que tu observes dans le contenu de la page. Signale toute incohérence. Privilégie TOUJOURS les données observées sur le site.\nUtilise ces données pour contextualiser TOUTE l'analyse.\n` + userPrompt;
-      }
+      const fields: Record<string, string> = { market_sector: 'Secteur', entity_type: 'Type', commercial_model: 'Modèle', products_services: 'Produits/Services', target_audience: 'Cible', commercial_area: 'Zone', company_size: 'Taille', business_type: 'Activité', competitors: 'Concurrents connus', brand_name: 'Marque', gmb_presence: 'GMB', gmb_city: 'Ville GMB' };
+      for (const [k, label] of Object.entries(fields)) { if ((siteIdentityCtx as any)[k]) idParts.push(`${label}: ${(siteIdentityCtx as any)[k]}`); }
+      if ((siteIdentityCtx as any).is_local_business) idParts.push('Business local: oui');
+      if (idParts.length > 0) userPrompt = `📇 CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\n⚠️ VÉRIFICATION: Compare ces données avec le contenu de la page. Signale toute incohérence.\n` + userPrompt;
     }
 
     if (!isContentMode && localCompetitorsAll.length > 0) {
       const compLines = localCompetitorsAll.map((c, i) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Position:${c.rank || 'N/A'} Score:${c.score || 0}`).join('\n');
-      userPrompt = `🏙️ CONCURRENTS IDENTIFIÉS (SERP + Carte d'identité):\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
+      userPrompt = `🏙️ CONCURRENTS IDENTIFIÉS:\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
     }
 
     if (hallucinationCorrections) {
@@ -2811,75 +292,39 @@ Deno.serve(handleRequest(async (req) => {
       if (cc.challenger?.name) { parts.push(`Challenger:"${cc.challenger.name}"`); competitorNames.push(cc.challenger.name); }
       if (parts.length > 0) userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
 
-      // ═══ PERSIST corrected competitors to identity card (fire-and-forget) ═══
-      // This ensures ALL future audits on ANY URL of this domain will use the user's corrections
       if (competitorNames.length > 0 && trackedSiteIdForCrawl) {
-        writeIdentity({
-          siteId: trackedSiteIdForCrawl,
-          fields: { competitors: competitorNames },
-          source: 'user_manual', // user_manual = protected, never overwritten by LLM
-          forceOverwrite: true,
-        })
-          .then(r => console.log(`✅ Competitors persisted to identity card: [${competitorNames.join(', ')}] (applied: ${r.applied})`))
-          .catch(e => console.warn('⚠️ Failed to persist competitors (non-fatal):', e));
+        writeIdentity({ siteId: trackedSiteIdForCrawl, fields: { competitors: competitorNames }, source: 'user_manual', forceOverwrite: true })
+          .then(r => console.log(`✅ Competitors persisted: [${competitorNames.join(', ')}] (applied: ${r.applied})`))
+          .catch(e => console.warn('⚠️ Failed to persist competitors:', e));
       }
     }
 
-    // ── Parallel LLM calls (3 focused prompts) ──
+    // ── LLM Call ──
     const remainingMs = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 15_000);
     let parsedAnalysis: any = null;
-
-    // For content/product/deep modes, fall back to monolithic call (simpler JSON)
     const useParallelMode = !isContentMode;
 
     async function callLLMWithModel(model: string, timeoutMs: number, systemPrompt: string, userPromptText: string, label: string = ''): Promise<string | null> {
-      const logLabel = label ? `[${label}]` : '';
-      console.log(`🤖 ${logLabel} Calling ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)...`);
+      console.log(`🤖 [${label}] Calling ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)...`);
       try {
         const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPromptText },
-            ],
-            temperature: 0.3,
-          }),
+          method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPromptText }], temperature: 0.3 }),
           signal: AbortSignal.timeout(timeoutMs),
         });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`❌ ${logLabel} ${model} error:`, response.status, errorText.substring(0, 200));
-          return null;
-        }
-
+        if (!response.ok) { const et = await response.text(); console.error(`❌ [${label}] ${model} error:`, response.status, et.substring(0, 200)); return null; }
         const aiResponse = await response.json();
-        const content = aiResponse.choices?.[0]?.message?.content;
         trackTokenUsage(`audit-strategique-ia${label ? `-${label}` : ''}`, model, aiResponse.usage, url);
-        return content || null;
-      } catch (e) {
-        console.warn(`⚠️ ${logLabel} ${model} failed: ${e instanceof Error ? e.message : e}`);
-        return null;
-      }
+        return aiResponse.choices?.[0]?.message?.content || null;
+      } catch (e) { console.warn(`⚠️ [${label}] ${model} failed: ${e instanceof Error ? e.message : e}`); return null; }
     }
 
     async function callWithFallback(systemPrompt: string, userPromptText: string, label: string, timeoutMs: number): Promise<any | null> {
       const primaryModel = body._modelOverride || 'google/gemini-2.5-flash';
-      // Call A uses Pro for identity (more nuanced), B and C use Flash (data-driven)
       const model = label === 'A-identity' ? (body._modelOverride || 'google/gemini-2.5-pro') : primaryModel;
       const callTimeout = Math.min(timeoutMs, label === 'A-identity' ? 120_000 : 90_000);
-
       let raw = await callLLMWithModel(model, callTimeout, systemPrompt, userPromptText, label);
-      if (!raw && model !== 'google/gemini-2.5-flash') {
-        console.log(`🔄 ${label}: Retrying with Flash...`);
-        raw = await callLLMWithModel('google/gemini-2.5-flash', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label);
-      }
+      if (!raw && model !== 'google/gemini-2.5-flash') { console.log(`🔄 ${label}: Retrying with Flash...`); raw = await callLLMWithModel('google/gemini-2.5-flash', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label); }
       if (!raw) return null;
       const parsed = parseLLMJson(raw);
       if (!parsed) console.warn(`⚠️ ${label}: JSON parse failed`);
@@ -2887,111 +332,57 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     if (useParallelMode) {
-      // ═══ PARALLEL MODE: 3 focused calls ═══
-      console.log('🚀 Parallel mode: launching 3 focused LLM calls...');
-
-      // Build the shared context that all 3 calls need
-      const sharedContext = userPrompt; // Already contains all data (market, E-E-A-T, tools, etc.)
-
-      // Compute factual citation scores from real data
-      const factualCitation = computeFactualCitationScores({
-        rankingOverview,
-        crawlData: effectiveToolsData,
-        backlinkData: null, // Not fetched in this function yet
-        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
-      });
-
-      const userPromptA_full = buildUserPromptA(url, domain, sharedContext);
-      const userPromptB_full = buildUserPromptB(url, domain, sharedContext);
-      const userPromptC_full = buildUserPromptC(url, domain, sharedContext, factualCitation.factual_summary);
-
+      console.log('🚀 Parallel mode: 3 focused LLM calls...');
+      const factualCitation = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
       const parallelTimeout = Math.min(remainingMs, 150_000);
-
       const [resultA, resultB, resultC] = await Promise.all([
-        callWithFallback(SYSTEM_PROMPT_A, userPromptA_full, 'A-identity', parallelTimeout),
-        callWithFallback(SYSTEM_PROMPT_B, userPromptB_full, 'B-market', parallelTimeout),
-        callWithFallback(SYSTEM_PROMPT_C, userPromptC_full, 'C-geo', parallelTimeout),
+        callWithFallback(SYSTEM_PROMPT_A, buildUserPromptA(url, domain, userPrompt), 'A-identity', parallelTimeout),
+        callWithFallback(SYSTEM_PROMPT_B, buildUserPromptB(url, domain, userPrompt), 'B-market', parallelTimeout),
+        callWithFallback(SYSTEM_PROMPT_C, buildUserPromptC(url, domain, userPrompt, factualCitation.factual_summary), 'C-geo', parallelTimeout),
       ]);
-
       const successCount = [resultA, resultB, resultC].filter(Boolean).length;
-      console.log(`✅ Parallel results: ${successCount}/3 succeeded (A:${!!resultA} B:${!!resultB} C:${!!resultC})`);
-
+      console.log(`✅ Parallel results: ${successCount}/3 (A:${!!resultA} B:${!!resultB} C:${!!resultC})`);
       if (successCount === 0) {
-        console.warn('⚠️ All 3 parallel calls failed — returning fallback');
         const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
         saveToCache(domain, url, fallback).catch(() => {});
-        if (jobSb && jobId) {
-          await jobSb.from('async_jobs').update({ status: 'completed', result_data: fallback.data, progress: 100, completed_at: new Date().toISOString() }).eq('id', jobId);
-        }
+        if (jobSb && jobId) await jobSb.from('async_jobs').update({ status: 'completed', result_data: fallback.data, progress: 100, completed_at: new Date().toISOString() }).eq('id', jobId);
         return json(fallback);
       }
-
       parsedAnalysis = mergeParallelResults(resultA, resultB, resultC);
-      console.log(`✅ Merged parallel results in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
-
+      console.log(`✅ Merged in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     } else {
-      // ═══ MONOLITHIC MODE: Content/Product/Deep pages (simpler JSON) ═══
-      // Inject factual citation scores into monolithic prompt too
-      const factualCitationMono = computeFactualCitationScores({
-        rankingOverview,
-        crawlData: effectiveToolsData,
-        backlinkData: null,
-        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
-      });
+      const factualCitationMono = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
       userPrompt = userPrompt + '\n' + factualCitationMono.factual_summary;
-
-      const systemPromptForPage = pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT;
-
+      const systemPromptForPage = getSystemPromptForPageType(pageType);
       const primaryModel = body._modelOverride || 'google/gemini-2.5-pro';
-      const proTimeout = Math.min(remainingMs, 150_000);
-      let llmResult = await callLLMWithModel(primaryModel, proTimeout, systemPromptForPage, userPrompt, 'monolithic');
-
+      let llmResult = await callLLMWithModel(primaryModel, Math.min(remainingMs, 150_000), systemPromptForPage, userPrompt, 'monolithic');
       if (!llmResult && primaryModel !== 'google/gemini-2.5-flash') {
-        console.log('🔄 Pro failed — retrying with Flash...');
         const flashTimeout = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 10_000);
         llmResult = await callLLMWithModel('google/gemini-2.5-flash', Math.min(flashTimeout, 120_000), systemPromptForPage, userPrompt, 'monolithic-flash');
-        if (llmResult) console.log('✅ Flash fallback succeeded');
       }
-
-      if (!llmResult) {
-        console.warn('⚠️ All LLM calls failed — returning fallback');
-        const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
-        saveToCache(domain, url, fallback).catch(() => {});
-        return json(fallback);
-      }
-
+      if (!llmResult) { const fb = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut); saveToCache(domain, url, fb).catch(() => {}); return json(fb); }
       parsedAnalysis = parseLLMJson(llmResult);
     }
 
-    if (!parsedAnalysis) {
-      const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
-      saveToCache(domain, url, fallback).catch(() => {});
-      return json(fallback);
-    }
+    if (!parsedAnalysis) { const fb = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut); saveToCache(domain, url, fb).catch(() => {}); return json(fb); }
 
-    // ═══ POST-PROCESSING (all synchronous or fast parallel) ═══
-
-    // Sanitize brand name
+    // ═══ POST-PROCESSING ═══
     parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
 
-    // Validate competitive actors are not self-referencing
+    // Validate competitive actors
     const cleanTargetDomain = domain.replace(/^www\./, '').toLowerCase();
     const brandNameLower = resolvedEntityName.toLowerCase().replace(/\..*$/, '');
     const domainSlugLower = domainSlug.toLowerCase();
 
     function isSelfReference(actor: any): boolean {
       if (!actor) return false;
-      const actorDomain = (() => {
-        try { return new URL(actor.url || '').hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; }
-      })();
+      const actorDomain = (() => { try { return new URL(actor.url || '').hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } })();
       const actorNameLower = (actor.name || '').toLowerCase().replace(/\s+/g, '');
-      // Also compare full URL to catch exact same page
       const actorUrlNorm = (actor.url || '').toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
       const targetUrlNorm = normalizedUrl.toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
-      // Self if: same domain, name matches brand/slug, or exact same URL
       return (actorUrlNorm && actorUrlNorm === targetUrlNorm) ||
-             (actorDomain && (actorDomain === cleanTargetDomain || actorDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(actorDomain))) ||
-             (actorNameLower && (actorNameLower === brandNameLower || actorNameLower === domainSlugLower || actorNameLower.includes(domainSlugLower) || domainSlugLower.includes(actorNameLower)));
+        (actorDomain && (actorDomain === cleanTargetDomain || actorDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(actorDomain))) ||
+        (actorNameLower && (actorNameLower === brandNameLower || actorNameLower === domainSlugLower || actorNameLower.includes(domainSlugLower) || domainSlugLower.includes(actorNameLower)));
     }
 
     if (parsedAnalysis.competitive_landscape) {
@@ -3001,20 +392,11 @@ Deno.serve(handleRequest(async (req) => {
         if (isSelfReference(actor)) {
           console.log(`⚠️ Self-reference in ${role}: "${actor?.name}" — replacing`);
           if (role === 'direct_competitor' && localCompetitorData) {
-            parsedAnalysis.competitive_landscape[role] = {
-              name: localCompetitorData.name, url: localCompetitorData.url,
-              authority_factor: actor?.authority_factor || 'Concurrent SERP local',
-              analysis: `Concurrent identifié via les résultats de recherche locaux, positionné #${localCompetitorData.rank}.`,
-            };
-          } else {
-            parsedAnalysis.competitive_landscape[role].name = 'Non identifié';
-            parsedAnalysis.competitive_landscape[role].url = null;
-            parsedAnalysis.competitive_landscape[role].analysis = `Auto-référence détectée et supprimée.`;
-          }
+            parsedAnalysis.competitive_landscape[role] = { name: localCompetitorData.name, url: localCompetitorData.url, authority_factor: actor?.authority_factor || 'Concurrent SERP local', analysis: `Concurrent identifié via les résultats de recherche locaux, positionné #${localCompetitorData.rank}.` };
+          } else { parsedAnalysis.competitive_landscape[role].name = 'Non identifié'; parsedAnalysis.competitive_landscape[role].url = null; parsedAnalysis.competitive_landscape[role].analysis = 'Auto-référence détectée et supprimée.'; }
         }
       }
 
-      // Validate competitor URLs (parallel, with short timeout)
       if (!isOverDeadline()) {
         await Promise.all(roles.map(async (role) => {
           const actor = parsedAnalysis.competitive_landscape[role];
@@ -3023,31 +405,12 @@ Deno.serve(handleRequest(async (req) => {
           if (!href.startsWith('http')) href = `https://${href}`;
           try {
             new URL(href);
-            const res = await fetch(href, {
-              method: 'HEAD',
-              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-              redirect: 'follow',
-              signal: AbortSignal.timeout(4000),
-            });
-            // After redirect, re-check if resolved URL is self
-            const resolvedDomain = (() => {
-              try { return new URL(res.url || href).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; }
-            })();
+            const res = await fetch(href, { method: 'HEAD', headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, redirect: 'follow', signal: AbortSignal.timeout(4000) });
+            const resolvedDomain = (() => { try { return new URL(res.url || href).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } })();
             if (resolvedDomain && (resolvedDomain === cleanTargetDomain || resolvedDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(resolvedDomain))) {
-              console.log(`⚠️ ${role} URL resolved to self-domain (${resolvedDomain}) — removing`);
-              actor.name = 'Non identifié';
-              actor.url = null;
-              actor.analysis = 'Auto-référence détectée après redirection et supprimée.';
-            } else if (res.ok || res.status === 403) {
-              actor.url = res.url || href;
-              console.log(`✅ ${role} URL valid: ${actor.url}`);
-            } else {
-              console.log(`❌ ${role} URL ${res.status} — removing`);
-              actor.url = null;
-            }
-          } catch {
-            actor.url = null;
-          }
+              actor.name = 'Non identifié'; actor.url = null; actor.analysis = 'Auto-référence détectée après redirection et supprimée.';
+            } else if (res.ok || res.status === 403) { actor.url = res.url || href; } else { actor.url = null; }
+          } catch { actor.url = null; }
         }));
       }
     }
@@ -3056,31 +419,20 @@ Deno.serve(handleRequest(async (req) => {
     if (parsedAnalysis.introduction?.competitors && Array.isArray(parsedAnalysis.introduction.competitors)) {
       parsedAnalysis.introduction.competitors = parsedAnalysis.introduction.competitors.filter((c: string) => {
         const cLower = c.toLowerCase().replace(/\s+/g, '');
-        return !(cLower === cleanTargetDomain || cLower === brandNameLower || cLower === domainSlugLower ||
-                 cLower.includes(domainSlugLower) || domainSlugLower.includes(cLower));
+        return !(cLower === cleanTargetDomain || cLower === brandNameLower || cLower === domainSlugLower || cLower.includes(domainSlugLower) || domainSlugLower.includes(cLower));
       });
     }
 
     // Validate social URLs
     if (parsedAnalysis.social_signals?.proof_sources && Array.isArray(parsedAnalysis.social_signals.proof_sources)) {
-      const detectedUrlsSet = new Set(
-        (eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
-      );
+      const detectedUrlsSet = new Set((eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, '')));
       if (founderInfo?.profileUrl) detectedUrlsSet.add(founderInfo.profileUrl.toLowerCase().replace(/\/$/, ''));
       if (facebookPageInfo?.pageUrl) detectedUrlsSet.add(facebookPageInfo.pageUrl.toLowerCase().replace(/\/$/, ''));
-      console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
-
       for (const source of parsedAnalysis.social_signals.proof_sources) {
         if (source.profile_url) {
           const normalized = source.profile_url.toLowerCase().replace(/\/$/, '');
-          const isValid = [...detectedUrlsSet].some(detected =>
-            normalized.includes(detected) || detected.includes(normalized) ||
-            normalized.split('/').slice(-1)[0] === detected.split('/').slice(-1)[0]
-          );
-          if (!isValid) {
-            console.log(`⚠️ Removing hallucinated social URL: ${source.profile_url}`);
-            source.profile_url = null;
-          }
+          const isValid = [...detectedUrlsSet].some(d => normalized.includes(d) || d.includes(normalized) || normalized.split('/').slice(-1)[0] === d.split('/').slice(-1)[0]);
+          if (!isValid) { console.log(`⚠️ Removing hallucinated social URL: ${source.profile_url}`); source.profile_url = null; }
         }
       }
     }
@@ -3089,58 +441,33 @@ Deno.serve(handleRequest(async (req) => {
     if (founderInfo?.geoMismatch && parsedAnalysis.social_signals) {
       parsedAnalysis.social_signals.founder_geo_mismatch = true;
       parsedAnalysis.social_signals.founder_geo_country = founderInfo.detectedCountry;
-      if (parsedAnalysis.social_signals.proof_sources) {
-        parsedAnalysis.social_signals.proof_sources = parsedAnalysis.social_signals.proof_sources.filter(
-          (s: any) => s.platform !== 'linkedin' || s.presence_level === 'absent'
-        );
-      }
-      if (parsedAnalysis.social_signals.thought_leadership) {
-        parsedAnalysis.social_signals.thought_leadership.founder_authority = 'unknown';
-      }
+      if (parsedAnalysis.social_signals.proof_sources) parsedAnalysis.social_signals.proof_sources = parsedAnalysis.social_signals.proof_sources.filter((s: any) => s.platform !== 'linkedin' || s.presence_level === 'absent');
+      if (parsedAnalysis.social_signals.thought_leadership) parsedAnalysis.social_signals.thought_leadership.founder_authority = 'unknown';
     }
 
-    // Supplement main_keywords if < 5
+    // Supplement main_keywords
     if (parsedAnalysis.keyword_positioning?.main_keywords) {
       const mainKw = parsedAnalysis.keyword_positioning.main_keywords;
       if (mainKw.length < 5 && marketData?.top_keywords) {
         const existingLower = new Set(mainKw.map((kw: any) => (kw.keyword || '').toLowerCase()));
         for (const mkw of marketData.top_keywords) {
           if (mainKw.length >= 5) break;
-          if (!existingLower.has(mkw.keyword.toLowerCase())) {
-            existingLower.add(mkw.keyword.toLowerCase());
-            mainKw.push({ keyword: mkw.keyword, volume: mkw.volume, difficulty: mkw.difficulty, current_rank: mkw.current_rank || 'Non classé' });
-          }
+          if (!existingLower.has(mkw.keyword.toLowerCase())) { existingLower.add(mkw.keyword.toLowerCase()); mainKw.push({ keyword: mkw.keyword, volume: mkw.volume, difficulty: mkw.difficulty, current_rank: mkw.current_rank || 'Non classé' }); }
         }
       }
     }
 
-    // ═══ FORCE-COMPUTE quotability & summary_resilience ═══
+    // Force-compute quotability & summary_resilience
     {
       const rawText = (pageContentContext || '').replace(/Titre="[^"]*"/g, '').replace(/H1="[^"]*"/g, '').replace(/Desc="[^"]*"/g, '');
-
-      // Quotability
       const sentences = rawText.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 40 && s.length < 300);
-      const quotableMarkers = [
-        /\d+\s*%/i, /\d+\s*(fois|x|million|milliard)/i,
-        /permet|offre|garantit|assure|réduit|augmente|améliore/i,
-        /premier|unique|seul|leader|innovant|révolutionne/i,
-        /grâce à|en seulement|jusqu'à|plus de|moins de/i,
-        /enables|provides|reduces|increases|improves|delivers/i,
-      ];
-      const scoredSentences = sentences.map(s => {
-        let score = 0;
-        for (const m of quotableMarkers) if (m.test(s)) score++;
-        if (!/^(il|elle|ils|elles|ce|cette|ces|it|they|this|these)\b/i.test(s)) score++;
-        return { text: s, score };
-      }).sort((a, b) => b.score - a.score);
-
+      const quotableMarkers = [/\d+\s*%/i, /\d+\s*(fois|x|million|milliard)/i, /permet|offre|garantit|assure|réduit|augmente|améliore/i, /premier|unique|seul|leader|innovant|révolutionne/i, /grâce à|en seulement|jusqu'à|plus de|moins de/i, /enables|provides|reduces|increases|improves|delivers/i];
+      const scoredSentences = sentences.map(s => { let score = 0; for (const m of quotableMarkers) if (m.test(s)) score++; if (!/^(il|elle|ils|elles|ce|cette|ces|it|they|this|these)\b/i.test(s)) score++; return { text: s, score }; }).sort((a, b) => b.score - a.score);
       const topQuotes = scoredSentences.slice(0, 3).filter(q => q.score > 0).map(q => q.text);
       const llmQuotes = parsedAnalysis.quotability?.quotes || [];
       const allQuotes = [...new Set([...llmQuotes, ...topQuotes])].slice(0, 3);
       parsedAnalysis.quotability = { score: Math.min(100, allQuotes.length * 33), quotes: allQuotes };
-      console.log(`✅ quotability computed: score=${parsedAnalysis.quotability.score}, quotes=${allQuotes.length}`);
 
-      // Summary resilience
       const h1Match = (pageContentContext || '').match(/H1="([^"]+)"/);
       const titleMatch = (pageContentContext || '').match(/Titre="([^"]+)"/);
       const originalH1 = h1Match?.[1] || titleMatch?.[1] || 'Non détecté';
@@ -3152,347 +479,101 @@ Deno.serve(handleRequest(async (req) => {
       const resilienceScore = h1Terms.length > 0 ? Math.round((matchedTerms.length / h1Terms.length) * 100) : 0;
       const llmSummary = parsedAnalysis.summary_resilience?.llmSummary;
       const autoSummary = firstParagraph.slice(0, 80).replace(/[.!?,;:]+$/, '').trim() || 'Non disponible';
-      parsedAnalysis.summary_resilience = {
-        score: parsedAnalysis.summary_resilience?.score || resilienceScore,
-        originalH1,
-        llmSummary: llmSummary || autoSummary,
-      };
-      console.log(`✅ summary_resilience computed: score=${parsedAnalysis.summary_resilience.score}, H1="${originalH1}"`);
+      parsedAnalysis.summary_resilience = { score: parsedAnalysis.summary_resilience?.score || resilienceScore, originalH1, llmSummary: llmSummary || autoSummary };
     }
 
-    // Defaults for optional metrics
     if (!parsedAnalysis.lexical_footprint) parsedAnalysis.lexical_footprint = { jargonRatio: 50, concreteRatio: 50 };
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
 
-    // ═══ JARGON DISTANCE: Separate LLM call (anti-circularité) ═══
+    // ═══ JARGON DISTANCE ═══
     let jargonDistance: any = null;
     if (parsedAnalysis.client_targets && pageContentContext && !isOverDeadline()) {
       try {
-        console.log('🔤 Computing jargon distance (separate LLM call)...');
-        const clientTargets = parsedAnalysis.client_targets;
-        const primaryLabel = clientTargets.primary?.[0] ? JSON.stringify(clientTargets.primary[0]) : 'Non détecté';
-        const secondaryLabel = clientTargets.secondary?.[0] ? JSON.stringify(clientTargets.secondary[0]) : 'Non détecté';
-        const untappedLabel = clientTargets.untapped?.[0] ? JSON.stringify(clientTargets.untapped[0]) : 'Non détecté';
-
+        console.log('🔤 Computing jargon distance...');
+        const ct = parsedAnalysis.client_targets;
         const jargonPrompt = `Tu es un expert en linguistique appliquée au marketing. Analyse la DISTANCE SÉMANTIQUE entre le vocabulaire utilisé par ce contenu et le niveau de compréhension de chaque cible.
 
 CONTENU ANALYSÉ:
 ${pageContentContext}
 ${(parsedAnalysis.lexical_footprint?.jargonRatio != null) ? `Ratio jargon brut détecté: ${parsedAnalysis.lexical_footprint.jargonRatio}%` : ''}
 
-CIBLE PRIMAIRE: ${primaryLabel}
-CIBLE SECONDAIRE: ${secondaryLabel}
-CIBLE POTENTIELLE: ${untappedLabel}
+CIBLE PRIMAIRE: ${ct.primary?.[0] ? JSON.stringify(ct.primary[0]) : 'Non détecté'}
+CIBLE SECONDAIRE: ${ct.secondary?.[0] ? JSON.stringify(ct.secondary[0]) : 'Non détecté'}
+CIBLE POTENTIELLE: ${ct.untapped?.[0] ? JSON.stringify(ct.untapped[0]) : 'Non détecté'}
 
-RÈGLE CRITIQUE: Le "jargon" est RELATIF. Un terme technique n'est du jargon QUE s'il dépasse le niveau de compréhension de la cible. "Ostéosynthèse" n'est PAS du jargon pour un chirurgien, MAIS en est pour un patient lambda.
+RÈGLE CRITIQUE: Le "jargon" est RELATIF. Un terme technique n'est du jargon QUE s'il dépasse le niveau de compréhension de la cible.
 
 Pour chaque cible, évalue:
-- distance: score 0-100 (0=parfaitement adapté, 100=totalement opaque)
+- distance: score 0-100
 - qualifier: "Adapté" (<25) | "Accessible" (25-45) | "Spécialisé" (45-65) | "Très distant" (65-85) | "Opaque" (>85)
-- terms_causing_distance: les 3-5 termes du contenu qui créent la distance pour CETTE cible spécifiquement
-- confidence: 0-1 score de confiance de ton évaluation
+- terms_causing_distance: 3-5 termes
+- confidence: 0-1
 
-Évalue aussi la cohérence du ton:
-- tone_consistency: 0-1 (1=niveau de langue uniforme, 0=mélange incohérent)
-- tone_assertive_ratio: 0-1 (1=100% assertif expert, 0=100% pédagogique/vulgarisateur)
+Évalue aussi: tone_consistency (0-1) et tone_assertive_ratio (0-1).
 
 Réponds en JSON STRICT:
-{"primary":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"secondary":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"untapped":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"tone_consistency":0.0,"tone_assertive_ratio":0.0}`;
+{"primary":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"secondary":{...},"untapped":{...},"tone_consistency":0.0,"tone_assertive_ratio":0.0}`;
 
-        const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-        if (LOVABLE_API_KEY) {
-          const jargonResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [{ role: 'user', content: jargonPrompt }],
-              temperature: 0.3,
-            }),
-          });
+        const jargonResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages: [{ role: 'user', content: jargonPrompt }], temperature: 0.3 }),
+        });
 
-          if (jargonResp.ok) {
-            const jargonResult = await jargonResp.json();
-            const jargonText = jargonResult.choices?.[0]?.message?.content || '';
-            const jargonJson = jargonText.replace(/```json\s*/g, '').replace(/```/g, '').trim();
-            try {
-              const jargonParsed = JSON.parse(jargonJson);
+        if (jargonResp.ok) {
+          const jargonResult = await jargonResp.json();
+          const jargonText = jargonResult.choices?.[0]?.message?.content || '';
+          const jargonJson = jargonText.replace(/```json\s*/g, '').replace(/```/g, '').trim();
+          try {
+            const jp = JSON.parse(jargonJson);
+            const cta = ctaSeoSignalsForJargon;
+            const ctaScore = Math.min(1, (cta.ctaAggressive ? 0.6 : 0) + (cta.ctaCount >= 3 ? 0.2 : cta.ctaCount >= 1 ? 0.1 : 0) + (cta.ctaTypes.filter(t => t !== 'generic').length >= 2 ? 0.2 : 0));
+            const primaryTerms = jp.primary?.terms_causing_distance || [];
+            const balisesJoined = (cta.seoTermsInBalises || []).join(' ');
+            const termsInBalises = primaryTerms.filter((t: string) => balisesJoined.includes(t.toLowerCase())).length;
+            const seoAlignment = primaryTerms.length > 0 ? Math.min(1, termsInBalises / Math.max(1, primaryTerms.length)) : 0.5;
+            const toneAssertive = jp.tone_assertive_ratio ?? 0.5;
+            const toneConsistency = jp.tone_consistency ?? 0.5;
+            const intentionalityScore = (ctaScore * 0.30) + (seoAlignment * 0.30) + (toneAssertive * 0.20) + (toneConsistency * 0.20);
+            const intentionalityLabel = intentionalityScore > 0.65 ? 'Spécialisation assumée' : intentionalityScore > 0.35 ? 'Positionnement ambigu' : 'Distance non maîtrisée';
 
-              // ═══ INTENTIONALITY SCORE (hybrid: algorithmic + LLM tone) ═══
-              const cta = ctaSeoSignalsForJargon;
-              // CTA aggressiveness: 0-1
-              const ctaScore = Math.min(1, (cta.ctaAggressive ? 0.6 : 0) + (cta.ctaCount >= 3 ? 0.2 : cta.ctaCount >= 1 ? 0.1 : 0) + (cta.ctaTypes.filter(t => t !== 'generic').length >= 2 ? 0.2 : 0));
-              // SEO pattern alignment: check if jargon terms appear in SEO balises
-              const primaryTerms = jargonParsed.primary?.terms_causing_distance || [];
-              const balisesJoined = (cta.seoTermsInBalises || []).join(' ');
-              const termsInBalises = primaryTerms.filter((t: string) => balisesJoined.includes(t.toLowerCase())).length;
-              const seoAlignment = primaryTerms.length > 0 ? Math.min(1, termsInBalises / Math.max(1, primaryTerms.length)) : 0.5;
-              // Tone assertiveness from LLM
-              const toneAssertive = jargonParsed.tone_assertive_ratio ?? 0.5;
-              // Structural consistency from LLM
-              const toneConsistency = jargonParsed.tone_consistency ?? 0.5;
-
-              const intentionalityScore = (ctaScore * 0.30) + (seoAlignment * 0.30) + (toneAssertive * 0.20) + (toneConsistency * 0.20);
-              const intentionalityLabel = intentionalityScore > 0.65 ? 'Spécialisation assumée' : intentionalityScore > 0.35 ? 'Positionnement ambigu' : 'Distance non maîtrisée';
-
-              jargonDistance = {
-                primary: jargonParsed.primary,
-                secondary: jargonParsed.secondary,
-                untapped: jargonParsed.untapped,
-                intentionality: {
-                  score: Math.round(intentionalityScore * 100) / 100,
-                  label: intentionalityLabel,
-                  components: {
-                    cta_aggressiveness: Math.round(ctaScore * 100) / 100,
-                    seo_pattern_alignment: Math.round(seoAlignment * 100) / 100,
-                    tone_assertiveness: Math.round(toneAssertive * 100) / 100,
-                    structural_consistency: Math.round(toneConsistency * 100) / 100,
-                  },
-                },
-              };
-              // Replace old lexical_footprint with enriched version
-              parsedAnalysis.lexical_footprint = {
-                ...parsedAnalysis.lexical_footprint,
-                jargon_distance: jargonDistance,
-              };
-              console.log(`✅ Jargon distance computed: primary=${jargonParsed.primary?.distance}, secondary=${jargonParsed.secondary?.distance}, untapped=${jargonParsed.untapped?.distance}, intentionality=${intentionalityScore.toFixed(2)} (${intentionalityLabel})`);
-            } catch (parseErr) {
-              console.warn('⚠️ Jargon distance JSON parse failed:', parseErr);
-            }
-          } else {
-            console.warn(`⚠️ Jargon distance LLM failed: ${jargonResp.status}`);
-          }
+            jargonDistance = { primary: jp.primary, secondary: jp.secondary, untapped: jp.untapped, intentionality: { score: Math.round(intentionalityScore * 100) / 100, label: intentionalityLabel, components: { cta_aggressiveness: Math.round(ctaScore * 100) / 100, seo_pattern_alignment: Math.round(seoAlignment * 100) / 100, tone_assertiveness: Math.round(toneAssertive * 100) / 100, structural_consistency: Math.round(toneConsistency * 100) / 100 } } };
+            parsedAnalysis.lexical_footprint = { ...parsedAnalysis.lexical_footprint, jargon_distance: jargonDistance };
+            console.log(`✅ Jargon distance: primary=${jp.primary?.distance}, intentionality=${intentionalityScore.toFixed(2)} (${intentionalityLabel})`);
+          } catch (parseErr) { console.warn('⚠️ Jargon distance JSON parse failed:', parseErr); }
         }
-      } catch (e) {
-        console.warn('⚠️ Jargon distance computation failed:', e);
-      }
+      } catch (e) { console.warn('⚠️ Jargon distance computation failed:', e); }
     }
 
     // ═══ BUILD FINAL RESULT ═══
-    const result = {
-      success: true,
-      data: {
-        url, domain,
-        scannedAt: new Date().toISOString(),
-        isContentMode,
-        pageType,
-        ...parsedAnalysis,
-        raw_market_data: marketData,
-        ranking_overview: rankingOverview,
-        google_my_business: gmbData,
-        toolsData: null,
-        llm_visibility_raw: effectiveToolsData.llm,
-        _cachedContext: cachedContextOut,
-      },
-    };
-
+    const result = { success: true, data: { url, domain, scannedAt: new Date().toISOString(), isContentMode, pageType, ...parsedAnalysis, raw_market_data: marketData, ranking_overview: rankingOverview, google_my_business: gmbData, toolsData: null, llm_visibility_raw: effectiveToolsData.llm, _cachedContext: cachedContextOut } };
     console.log(`✅ AUDIT TERMINÉ (${((Date.now() - startTime) / 1000).toFixed(1)}s)`);
 
-    // ═══ SAVE & RETURN ═══
-    // Save to cache (fire-and-forget)
+    // ═══ SAVE & RETURN (fire-and-forget) ═══
     saveToCache(domain, url, result).catch(() => {});
 
-    // Save recommendations to registry (fire-and-forget)
     const authHeader = req.headers.get('Authorization') || '';
-    const supabaseUrl2 = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseKey2 = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    if (authHeader && supabaseUrl2 && supabaseKey2) {
-      saveStrategicRecommendationsToRegistry(supabaseUrl2, supabaseKey2, authHeader, domain, url, parsedAnalysis)
-        .catch(err => console.error('Registre:', err));
-    }
-
-    // URL tracking (fire-and-forget)
-    trackAnalyzedUrl(url).catch(() => {});
-
-    // Save raw audit data (fire-and-forget)
     if (authHeader) {
+      saveStrategicRecommendationsToRegistry(authHeader, domain, url, parsedAnalysis).catch(err => console.error('Registre:', err));
+      feedKeywordUniverse(authHeader, domain, parsedAnalysis).catch(() => {});
       try {
         const sb2 = getUserClient(authHeader);
         const { data: { user: rawUser } } = await sb2.auth.getUser();
-        if (rawUser) {
-          saveRawAuditData({
-            userId: rawUser.id, url, domain,
-            auditType: 'strategic',
-            rawPayload: result.data,
-            sourceFunctions: ['audit-strategique-ia'],
-          }).catch(() => {});
-        }
+        if (rawUser) saveRawAuditData({ userId: rawUser.id, url, domain, auditType: 'strategic', rawPayload: result.data, sourceFunctions: ['audit-strategique-ia'] }).catch(() => {});
       } catch {}
     }
+    trackAnalyzedUrl(url).catch(() => {});
+    persistIdentityData(domain, parsedAnalysis, jargonDistance).catch(() => {});
 
-    // ═══ FEED keyword_universe SSOT ═══
-    if (authHeader && parsedAnalysis?.keyword_positioning) {
-      try {
-        const svcKw = getServiceClient();
-        const sbKw = getUserClient(authHeader);
-        const { data: { user: kwUser } } = await sbKw.auth.getUser();
-        if (kwUser) {
-          const kp = parsedAnalysis.keyword_positioning;
-          const kwPayload: any[] = [];
-
-          // Main keywords
-          if (Array.isArray(kp.main_keywords)) {
-            for (const mk of kp.main_keywords) {
-              if (!mk?.keyword) continue;
-              kwPayload.push({
-                keyword: mk.keyword,
-                search_volume: mk.volume || 0,
-                difficulty: mk.difficulty || null,
-                position: mk.current_rank ? parseInt(String(mk.current_rank), 10) || null : null,
-                intent: mk.strategic_analysis?.intent || 'default',
-                target_url: mk.target_url || mk.page_url || null,
-                is_quick_win: false,
-              });
-            }
-          }
-
-          // Quick wins
-          if (Array.isArray(kp.quick_wins)) {
-            for (const qw of kp.quick_wins) {
-              kwPayload.push({
-                keyword: qw.keyword || qw.title || 'unknown',
-                search_volume: qw.volume || qw.search_volume || 0,
-                position: qw.position || qw.current_rank ? parseInt(String(qw.position || qw.current_rank), 10) : null,
-                intent: qw.intent || 'default',
-                target_url: qw.url || qw.page_url || qw.target_url || null,
-                is_quick_win: true,
-                quick_win_type: qw.type || qw.quick_win_type || 'general',
-                quick_win_action: qw.action || qw.recommended_action || '',
-              });
-            }
-          }
-
-          // Content gaps as keywords
-          if (Array.isArray(kp.content_gaps)) {
-            for (const cg of kp.content_gaps) {
-              if (!cg?.keyword && !cg?.title) continue;
-              kwPayload.push({
-                keyword: cg.keyword || cg.title,
-                search_volume: cg.volume || 0,
-                intent: 'informational',
-                target_url: cg.url || cg.suggested_url || null,
-                is_quick_win: false,
-              });
-            }
-          }
-
-          // Missing terms
-          if (Array.isArray(kp.missing_terms)) {
-            for (const mt of kp.missing_terms) {
-              if (!mt?.term) continue;
-              kwPayload.push({
-                keyword: mt.term,
-                search_volume: 0,
-                intent: 'default',
-                target_url: mt.url || mt.page_url || null,
-                is_quick_win: false,
-              });
-            }
-          }
-
-          if (kwPayload.length > 0) {
-            // Look up tracked_site_id
-            const { data: tsData } = await svcKw
-              .from('tracked_sites')
-              .select('id')
-              .eq('user_id', kwUser.id)
-              .ilike('domain', `%${domain}%`)
-              .limit(1)
-              .maybeSingle();
-
-            await svcKw.rpc('upsert_keyword_universe', {
-              p_domain: domain,
-              p_user_id: kwUser.id,
-              p_keywords: kwPayload,
-              p_source: 'audit_strategic',
-              p_tracked_site_id: tsData?.id || null,
-            });
-            console.log(`[audit-strategique-ia] keyword_universe: ${kwPayload.length} keywords upserted`);
-          }
-        }
-      } catch (kwErr) {
-        console.warn('[audit-strategique-ia] keyword_universe upsert failed:', kwErr);
-      }
-    }
-
-    // ═══ NORMALIZE + PERSIST CLIENT TARGETS + JARGON DISTANCE TO IDENTITY CARD ═══
-    if (domain && (parsedAnalysis?.client_targets || jargonDistance)) {
-      try {
-        const svcSb = getServiceClient();
-        const updatePayload: Record<string, any> = {};
-        if (parsedAnalysis?.client_targets) {
-          // Normalize client_targets to guarantee {primary:[], secondary:[], untapped:[]}
-          const raw = parsedAnalysis.client_targets;
-          const ensureArray = (v: any): any[] => {
-            if (Array.isArray(v)) return v;
-            if (v && typeof v === 'object' && !Array.isArray(v)) return [v]; // single object → wrap
-            return [];
-          };
-          const normalized = {
-            primary: ensureArray(raw?.primary),
-            secondary: ensureArray(raw?.secondary),
-            untapped: ensureArray(raw?.untapped),
-          };
-          // Validate each target has required fields
-          const validateTarget = (t: any) => t && typeof t === 'object' && typeof t.market === 'string' && typeof t.confidence === 'number';
-          normalized.primary = normalized.primary.filter(validateTarget);
-          normalized.secondary = normalized.secondary.filter(validateTarget);
-          normalized.untapped = normalized.untapped.filter(validateTarget);
-          updatePayload.client_targets = normalized;
-          parsedAnalysis.client_targets = normalized; // also fix the response
-          console.log(`[audit-strategique-ia] client_targets normalized: P=${normalized.primary.length} S=${normalized.secondary.length} U=${normalized.untapped.length}`);
-        }
-        if (jargonDistance) updatePayload.jargon_distance = jargonDistance;
-        await svcSb
-          .from('tracked_sites')
-          .update(updatePayload)
-          .ilike('domain', `%${domain}%`);
-        console.log(`[audit-strategique-ia] client_targets + jargon_distance persisted for ${domain}`);
-      } catch (e) {
-        console.warn('[audit-strategique-ia] Failed to persist identity data:', e);
-      }
-    }
-
-    // ═══ ASYNC JOB: Save result if running as background job ═══
-    if (jobSb && jobId) {
-      await jobSb.from('async_jobs').update({
-        status: 'completed',
-        result_data: result.data,
-        progress: 100,
-        completed_at: new Date().toISOString(),
-      }).eq('id', jobId);
-    }
-
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ status: 'completed', result_data: result.data, progress: 100, completed_at: new Date().toISOString() }).eq('id', jobId);
     return json(result);
 
   } catch (error) {
     console.error('❌ Fatal error:', error);
     await trackEdgeFunctionError('audit-strategique-ia', error instanceof Error ? error.message : 'Fatal error').catch(() => {});
-
-    // ═══ ASYNC JOB: Mark as failed ═══
-    if (jobSb && jobId) {
-      await jobSb.from('async_jobs').update({
-        status: 'failed',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-        completed_at: new Date().toISOString(),
-      }).eq('id', jobId).catch(() => {});
-    }
-
-    // Even fatal errors return success:true with an empty structure so client never crashes
-    return json({
-      success: true,
-      data: {
-        url: '', domain: '',
-        scannedAt: new Date().toISOString(),
-        overallScore: 0,
-        introduction: { presentation: 'Une erreur inattendue est survenue. Veuillez relancer l\'analyse.', strengths: '', improvement: '', competitors: [] },
-        executive_roadmap: [],
-        executive_summary: 'Analyse interrompue. Veuillez réessayer.',
-        _error: error instanceof Error ? error.message : 'Unknown error',
-      },
-    });
+    if (jobSb && jobId) await jobSb.from('async_jobs').update({ status: 'failed', error_message: error instanceof Error ? error.message : 'Unknown error', completed_at: new Date().toISOString() }).eq('id', jobId).catch(() => {});
+    return json({ success: true, data: { url: '', domain: '', scannedAt: new Date().toISOString(), overallScore: 0, introduction: { presentation: 'Une erreur inattendue est survenue. Veuillez relancer l\'analyse.', strengths: '', improvement: '', competitors: [] }, executive_roadmap: [], executive_summary: 'Analyse interrompue. Veuillez réessayer.', _error: error instanceof Error ? error.message : 'Unknown error' } });
   } finally {
     releaseConcurrency('audit-strategique-ia');
   }
-}, 'audit-strategique-ia'))
+}, 'audit-strategique-ia'));
