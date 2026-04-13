@@ -1241,10 +1241,13 @@ export default function MatricePrompt() {
                 <Badge variant="outline" className="text-[9px]">{activeScoring.label}</Badge>
                 {results && (() => {
                   const active = results.filter((r: any) => selectedRows.some(s => s.id === r.id || s.prompt === r.prompt));
-                  const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
+                  if (active.length === 0) return null;
+                  // Use weighted average only if file provided weights, otherwise simple average
+                  const useWeights = hasFileScoring.poids;
+                  const tw = useWeights ? active.reduce((s: number, r: any) => s + r.poids, 0) : active.length;
                   if (tw === 0) return null;
-                  const parsedScore = Math.round(active.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw);
-                  const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
+                  const parsedScore = Math.round(active.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * (useWeights ? r.poids : 1), 0) / tw);
+                  const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * (useWeights ? r.poids : 1), 0) / tw);
                   return (
                     <span className="ml-auto font-medium text-foreground flex gap-4">
                       <span>{activeScoring.display.scoreLabel} : {activeScoring.display.formatScore(parsedScore)}</span>
