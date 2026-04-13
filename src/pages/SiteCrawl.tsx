@@ -363,7 +363,7 @@ export default function SiteCrawl() {
                         <span className="font-bold text-foreground">{maxPages}</span>
                         {!isUnlimited && (
                           <span className="text-muted-foreground flex items-center gap-1">
-                            ({creditCost} <CreditCoin size="xs" />)
+                            ({creditCost} <CreditCoin size="sm" />)
                           </span>
                         )}
                         {isUnlimited && <Badge variant="secondary" className="text-[10px]">{t.unlimited}</Badge>}
@@ -645,7 +645,7 @@ export default function SiteCrawl() {
               </div>
 
               {/* HTTP Status Chart */}
-              {pages.length > 0 && <HttpStatusChart pages={pages} />}
+              {pages.length > 0 && <HttpStatusChart pages={pages} language={language} />}
 
               {/* Maillage IPR */}
               {pages.length > 0 && (() => {
