@@ -1,5 +1,5 @@
 # Memory: tech/strategic-audit/engine-v5-fr
-Updated: 2026-03-29
+Updated: 2026-04-13
 
 L'Audit Stratégique GEO (v5) intègre une analyse profonde de la SERP et de l'audience :
 
@@ -7,53 +7,45 @@ L'Audit Stratégique GEO (v5) intègre une analyse profonde de la SERP et de l'a
 2. **Recommandations** : Actions concrètes pour progresser dans les classements.
 3. **Stratégie alternative** : Suggestion optionnelle (RP, partenariats, vidéo, événement) pour les sites en position très défavorable (>50), précisant le 'quoi/comment/combien' et rappelant l'impact des actions offsite sur le ranking.
 4. **Classification concurrentielle** : Système à 4 niveaux (Goliath, Direct, Challenger, Inspiration) basé sur la similarité identitaire (entreprise/produit) et la position SERP.
-5. **Analyse des Cibles Clients** : Détection des segments prioritaires, secondaires et inexploités (B2B/B2C). La branche B2B inclut la taille, le secteur, le rôle, la périodicité d'achat et le mode de paiement ; le B2C détaille le genre, l'âge, la CSP, le pouvoir d'achat, la périodicité et le mode de paiement. Persisté dans `tracked_sites.client_targets`.
-6. **Empreinte Lexicale v2 — Distance sémantique relative** :
-   - Mesure la distance entre le vocabulaire du contenu et le niveau de compréhension de chaque cible (primaire, secondaire, potentielle). Un terme n'est "jargon" que s'il dépasse la compréhension de la cible visée.
-   - **Appel LLM séparé** (Gemini Flash, ~3k tokens, <0.001€) pour éviter la circularité avec la détection des cibles.
-   - **Score d'intentionnalité hybride** (4 composantes) : CTA agressivité (30%, algorithmique), alignement SEO balises (30%, algorithmique), assertivité du ton (20%, LLM), cohérence structurelle (20%, LLM).
-   - Labels : "Spécialisation assumée" (>0.65) | "Positionnement ambigu" (0.35-0.65) | "Distance non maîtrisée" (<0.35).
-   - Persisté dans `tracked_sites.jargon_distance` (jsonb).
-   - Front-end : 3 jauges (primaire/secondaire/potentielle) + badge d'intentionnalité + interprétation contextuelle croisée.
+5. **Analyse des Cibles Clients** : Détection des segments prioritaires, secondaires et inexploités (B2B/B2C). Persisté dans `tracked_sites.client_targets`.
+6. **Empreinte Lexicale v2 — Distance sémantique relative** : Score d'intentionnalité hybride (4 composantes), labels contextuels, persisté dans `tracked_sites.jargon_distance`.
 7. **Audio** : Le lecteur Spotify inclut des boutons de navigation 'Précédent' et 'Suivant'.
-8. **Pré-Crawl intelligent** (v5.2 — 2026-03-31) :
-   - Vérifie si un crawl complet récent (< 7 jours) existe dans `site_crawls` → réutilise les données.
-   - Sinon, crawl intermédiaire : scan sitemap XML, croisement avec GA4 (top pages par trafic), puis crawl des 10 pages les plus importantes.
-   - Sélection par priorité : pages GA4 (trafic réel) > pages sitemap courtes (profondeur URL faible).
-   - Crawl par batch de 3 avec extraction : Title, H1, Meta Desc, Schema.org, liens int/ext, word count, noindex.
-   - Contexte injecté dans le prompt LLM pour diagnostiquer les hallucinations (croisement assertions LLM vs données crawlées réelles).
-   - Données partagées entre audit technique et stratégique via `cachedContextOut.preCrawlData`.
-   - Helper : `_shared/preCrawlForAudit.ts` (fonctions `preCrawlForAudit`, `formatPreCrawlForPrompt`).
+8. **Pré-Crawl intelligent** (v5.2) : Vérifie crawl récent < 7 jours, sinon crawl intermédiaire des 10 pages top. Helper : `_shared/preCrawlForAudit.ts`.
 
-## Corrections rapport PDF (v5.1 — 2026-03-29)
-- **Fix `undefined`** : Tous les champs GAP, Empreinte Lexicale utilisent des fallbacks (`?? '—'`) pour éviter l'affichage de valeurs `undefined` dans l'export PDF.
-- **Ratios Jargon/Concret** : Les ratios absurdes (2000%/8000%) sont maintenant capés et formatés en pourcentages lisibles avec référentiel.
-- **Méthodologie du score** : Un encadré "Méthodologie du scoring" est ajouté au rapport expliquant les 5 piliers (Performance, Sécurité, SEO, Accessibilité, Bonnes Pratiques) et la pondération /200.
-- **AEO détaillé** : Chaque critère AEO affiche désormais une explication + conseil correctif (dans le PDF et dans l'UI `AEOScoreCard`), au lieu d'une simple checklist binaire ❌/✅.
+## Architecture modulaire (Phase 6 — 2026-04-13)
 
-## Diagnostic d'hallucinations (v5.2 — 2026-03-31)
-La fonction `diagnose-hallucination` charge TOUTES les données factuelles avant d'analyser :
-- **Crawl data** : `site_crawls` + `crawl_pages` (< 30 jours)
-- **Audit data** : `audit_raw_data` (brand_perception, scores)
-- **Ranking data** : keyword_positioning depuis audit stratégique
-- **Identity card** : `tracked_sites.identity_card` via `getSiteContext`
-- **Corrections précédentes** : `hallucination_corrections`
+Le monolithe `audit-strategique-ia/index.ts` (3 498 lignes) a été refactoré en **9 modules spécialisés** dans `_shared/strategicAudit/` + un orchestrateur de ~580 lignes.
 
-4 verdicts par incohérence :
-- 🔴 `misleading_data` — donnée trompeuse dans le site
-- 🟡 `absent_data` — donnée absente, LLM comble le vide
-- 🟠 `training_bias` — LLM ignore les données claires du site
-- 🔵 `reasoning_error` — bonne donnée, mauvaise conclusion
+| Module | Lignes | Responsabilité |
+|--------|--------|----------------|
+| `types.ts` | 136 | Interfaces partagées : `ToolsData`, `EEATSignals`, `MarketData`, `RankingOverview`, `BrandSignal`, `FounderInfo`, `GMBData`, `CtaSeoSignals`, `PageType` |
+| `textUtils.ts` | 49 | `STOP_WORDS`, `cleanAndTokenize`, extraction métadonnées |
+| `brandDetection.ts` | 109 | `resolveBrandName` (signaux pondérés), `humanizeBrandName`, `sanitizeBrandNameInResponse` |
+| `businessContext.ts` | 178 | `detectBusinessContext`, `KNOWN_LOCATIONS`, `generateSeedsWithAI` |
+| `dataForSeo.ts` | 337 | `fetchMarketData`, `fetchRankedKeywords`, tri stratégique, appels DataForSEO |
+| `socialDiscovery.ts` | 303 | `detectGoogleMyBusiness`, `searchFounderProfile`, `searchFacebookPage`, `findLocalCompetitor` |
+| `pageAnalyzer.ts` | 224 | Fetch HTML/SPA, extraction E-E-A-T, signaux CTA/SEO, brand signals |
+| `prompts.ts` | 330 | Prompts LLM par `PageType` (homepage/editorial/product/deep), `buildUserPrompt` |
+| `registrySaver.ts` | 166 | `saveStrategicRecommendationsToRegistry`, `saveToCache`, `feedKeywordUniverse`, `persistIdentityData` |
+| **Total modules** | **1 832** | |
+| `index.ts` (orchestrateur) | 579 | HTTP routing, async jobs, parallélisation Wave 1/Wave 2, appels LLM, post-processing |
 
-Le `verdictSummary` agrège le comptage par type. Le `factualContext` complet est retourné au front pour transparence.
+### Imports de l'orchestrateur
+L'`index.ts` importe depuis `_shared/strategicAudit/*` et orchestre :
+- **Wave 1** (parallèle) : `extractPageMetadata` + `fetchRankedKeywords`
+- **Wave 2** (parallèle) : `fetchMarketData` + LLM visibility + `detectGoogleMyBusiness` + `searchFounderProfile` + `searchFacebookPage`
+- **Post-processing** : `sanitizeBrandNameInResponse`, validation self-ref concurrents, `jargon_distance` via LLM séparé
+
+## Corrections rapport PDF (v5.1)
+- Fix `undefined`, ratios jargon capés, méthodologie du scoring, AEO détaillé.
+
+## Diagnostic d'hallucinations (v5.2)
+La fonction `diagnose-hallucination` charge toutes les données factuelles (crawl, audit, ranking, identity card, corrections précédentes). 4 verdicts : `misleading_data`, `absent_data`, `training_bias`, `reasoning_error`.
 
 ## Tables impactées
-- `tracked_sites.client_targets` (jsonb) — cibles B2B/B2C
-- `tracked_sites.jargon_distance` (jsonb) — scores de distance + intentionnalité
-- `tracked_sites.identity_card` (jsonb) — carte d'identité enrichie par micro/audio
+- `tracked_sites.client_targets` (jsonb)
+- `tracked_sites.jargon_distance` (jsonb)
+- `tracked_sites.identity_card` (jsonb)
 
 ## Types front-end
-- `JargonTargetScore` : { distance, qualifier, terms_causing_distance, confidence }
-- `JargonIntentionality` : { score, label, components: { cta_aggressiveness, seo_pattern_alignment, tone_assertiveness, structural_consistency } }
-- `JargonDistance` : { primary, secondary, untapped, intentionality }
-- `LexicalFootprint` : { score?, jargonRatio, concreteRatio, jargon_distance? }
+- `JargonTargetScore`, `JargonIntentionality`, `JargonDistance`, `LexicalFootprint`
