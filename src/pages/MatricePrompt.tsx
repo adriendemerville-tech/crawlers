@@ -533,7 +533,56 @@ export default function MatricePrompt() {
   const toggleAll = () => setRows(prev => prev.map(r => ({ ...r, selected: !allSelected })));
   const toggleRow = (id: string) => setRows(prev => prev.map(r => r.id === id ? { ...r, selected: !r.selected } : r));
 
-  const selectedRows = useMemo(() => rows.filter(r => r.selected), [rows]);
+  /* --- Inline editing --- */
+  const [editingCell, setEditingCell] = useState<{ rowId: string; field: string } | null>(null);
+  const [editValue, setEditValue] = useState('');
+
+  const startEdit = (rowId: string, field: string, currentValue: string | number) => {
+    setEditingCell({ rowId, field });
+    setEditValue(String(currentValue));
+  };
+
+  const commitEdit = async () => {
+    if (!editingCell) return;
+    const { rowId, field } = editingCell;
+    setRows(prev => prev.map(r => {
+      if (r.id !== rowId) return r;
+      const updated = { ...r, isDefault: { ...r.isDefault, [field]: false } };
+      if (['poids', 'seuil_bon', 'seuil_moyen', 'seuil_mauvais'].includes(field)) {
+        (updated as any)[field] = Number(editValue) || 0;
+      } else {
+        (updated as any)[field] = editValue;
+      }
+      return updated;
+    }));
+    // Persist to DB if logged in
+    const row = rows.find(r => r.id === rowId);
+    if (user && row?.dbId) {
+      const updateData: Record<string, any> = { [field]: ['poids', 'seuil_bon', 'seuil_moyen', 'seuil_mauvais'].includes(field) ? Number(editValue) || 0 : editValue };
+      await supabase.from('prompt_matrix_items').update(updateData).eq('id', row.dbId);
+    }
+    setEditingCell(null);
+  };
+
+  const cancelEdit = () => setEditingCell(null);
+
+  /* --- Export results as CSV --- */
+  const handleExportCsv = useCallback(() => {
+    if (!results || results.length === 0) return;
+    const header = ['KPI', 'Catégorie', hasFileScoring.poids ? 'Poids' : null, activeScoring.display.scoreLabel, 'Crawlers', hasFileScoring.seuils ? 'Seuil Bon' : null, hasFileScoring.seuils ? 'Seuil Moyen' : null, 'Verdict'].filter(Boolean).join(',');
+    const lines = results.map((r: any) => {
+      const row = rows.find(ro => ro.id === r.id || ro.prompt === r.prompt);
+      const verdict = r.crawlers_score >= (row?.seuil_bon ?? 70) ? 'Bon' : r.crawlers_score >= (row?.seuil_moyen ?? 40) ? 'Moyen' : 'Mauvais';
+      const parts = [`"${r.prompt}"`, `"${r.axe}"`, hasFileScoring.poids ? r.poids : null, r.parsed_score ?? r.crawlers_score, r.crawlers_score, hasFileScoring.seuils ? r.seuil_bon : null, hasFileScoring.seuils ? r.seuil_moyen : null, `"${verdict}"`].filter(v => v !== null);
+      return parts.join(',');
+    });
+    const blob = new Blob(['\uFEFF' + header + '\n' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `matrice-results-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    toast.success('Résultats exportés en CSV');
+  }, [results, rows, hasFileScoring, activeScoring]);
 
   /* --- Analyze + persist session & results --- */
   const handleAnalyze = async () => {
