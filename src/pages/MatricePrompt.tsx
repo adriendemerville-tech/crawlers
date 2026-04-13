@@ -466,14 +466,22 @@ export default function MatricePrompt() {
       formData.append('file', file);
       supabase.functions.invoke('parse-doc-matrix', {
         body: formData,
-      }).then(({ data, error }) => {
+      }).then(async ({ data, error }) => {
         setDocParsing(false);
         if (error || !data?.rows?.length) {
           toast.error(error?.message || 'Aucune donnée exploitable trouvée dans le document');
           return;
         }
         const fileName = file.name.replace(/\.(doc|docx)$/i, '');
-        processImportedRows(data.rows, fileName);
+        // Run type + scoring detection on DOCX extracted rows
+        const { detectMatriceType } = await import('@/utils/matrice/typeDetector');
+        const { detectScoringMethod: detectScoring } = await import('@/utils/matrice/scoringDetector');
+        const docHeaders = Object.keys(data.rows[0] || {});
+        const det = detectMatriceType(docHeaders, data.rows.slice(0, 10));
+        setActiveMatriceType(det.type);
+        const scoringDet = detectScoring(docHeaders, data.rows.slice(0, 10), det.type);
+        setActiveScoringMethod(scoringDet.method);
+        processImportedRows(data.rows, fileName, det.type, scoringDet.method);
       }).catch(() => {
         setDocParsing(false);
         toast.error('Erreur lors du parsing du document');
