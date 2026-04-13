@@ -98,11 +98,12 @@ Deno.serve(handleRequest(async (req) => {
       return jsonError('Site non trouvé', 404);
     }
 
-    // ─── Check crawl exists ───
+    // ─── Check crawl exists (lookup by domain, site_crawls has no tracked_site_id) ───
+    const siteDomain = site.domain.replace(/^www\./, '');
     const { data: crawls } = await supabase
       .from('site_crawls')
       .select('id')
-      .eq('tracked_site_id', tracked_site_id)
+      .or(`domain.eq.${siteDomain},domain.eq.www.${siteDomain}`)
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(1);
