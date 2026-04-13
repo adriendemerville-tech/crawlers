@@ -1,6 +1,7 @@
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { isIktrackerDomain, normalizePageKey } from '../_shared/domainUtils.ts';
 
 /**
  * Autopilot Engine — Moteur d'exécution autonome des cycles
@@ -60,31 +61,7 @@ type IktrackerPushInput = {
   details?: Record<string, unknown>;
 };
 
-function isIktrackerDomain(domain: string): boolean {
-  return domain.toLowerCase().includes('iktracker');
-}
-
-function normalizePageKey(targetUrl?: string | null): string | null {
-  if (!targetUrl) return null;
-
-  // Already a clean slug (no slashes, no protocol) → return as-is
-  const trimmed = targetUrl.trim();
-  if (/^[a-z0-9][a-z0-9-]*$/i.test(trimmed)) return trimmed.toLowerCase();
-
-  try {
-    const parsed = new URL(trimmed);
-    const segments = parsed.pathname.split('/').filter(Boolean);
-    // Homepage → return 'homepage' (IKtracker needs a real slug, not '/')
-    if (segments.length === 0) return 'homepage';
-    return segments[segments.length - 1].toLowerCase();
-  } catch {
-    // Not a valid URL — strip protocol/domain if present
-    const normalized = trimmed.replace(/^https?:\/\/[^/]+/i, '').replace(/^\/+|\/+$/g, '');
-    if (!normalized) return 'homepage';
-    const segments = normalized.split('/').filter(Boolean);
-    return (segments[segments.length - 1] || 'homepage').toLowerCase();
-  }
-}
+// isIktrackerDomain and normalizePageKey imported from _shared/domainUtils.ts
 
 async function trackAnalyticsEvent(
   supabase: ReturnType<typeof getServiceClient>,

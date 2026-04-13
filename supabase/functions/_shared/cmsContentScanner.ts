@@ -7,6 +7,7 @@
  * Supports: WordPress, Shopify, IKtracker, Drupal, Wix, Webflow, Odoo, PrestaShop
  */
 import { getServiceClient } from './supabaseClient.ts';
+import { isIktrackerDomain, isCrawlersDomain, getIktrackerApiKey, IKTRACKER_BASE_URL } from './domainUtils.ts';
 
 export interface CmsContentItem {
   title: string;
@@ -94,13 +95,13 @@ export async function scanCmsContent(
     .eq('user_id', userId)
     .maybeSingle();
 
-  const iktrackerApiKey = Deno.env.get('IKTRACKER_API_KEY');
-  const isIktracker = site?.domain?.includes('iktracker');
+  const iktrackerApiKey = getIktrackerApiKey();
+  const isIktracker = site?.domain ? isIktrackerDomain(site.domain) : false;
 
   // 3) Scan IKtracker if applicable
   if (isIktracker && iktrackerApiKey) {
     try {
-      const baseUrl = 'https://yarjaudctshlxkatqgeb.supabase.co/functions/v1/blog-api';
+      const baseUrl = IKTRACKER_BASE_URL;
       const resp = await fetch(`${baseUrl}/posts?all=true&limit=200`, {
         headers: { 'x-api-key': iktrackerApiKey },
         signal: AbortSignal.timeout(15000),
@@ -150,7 +151,7 @@ export async function scanCmsContent(
   }
 
   // 4) Scan internal CMS (blog_articles + seo_page_drafts) for crawlers.fr
-  const isCrawlers = site?.domain?.includes('crawlers');
+  const isCrawlers = site?.domain ? isCrawlersDomain(site.domain) : false;
   if (isCrawlers) {
     try {
       // Scan blog_articles

@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
 
 /**
  * iktracker-actions
@@ -18,8 +19,6 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
  *          push-event, autopilot-registry, autopilot-health, autopilot-events, autopilot-summary,
  *          test-connection
  */
-
-const IKTRACKER_BASE_URL = 'https://yarjaudctshlxkatqgeb.supabase.co/functions/v1/blog-api'
 
 async function getApiKey(): Promise<string> {
   const key = Deno.env.get('IKTRACKER_API_KEY')
