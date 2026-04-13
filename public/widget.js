@@ -16,9 +16,9 @@
 ;(function initCrawlersWidget() {
   'use strict';
 
-  // ── 1. Ne pas exécuter sur les domaines de preview/dev ──────
+  // ── 1. Ne pas exécuter sur les domaines de preview/dev/self ──────
   var host = window.location.hostname;
-  if (host.indexOf('lovableproject.com') !== -1 || host.indexOf('lovable.app') !== -1 || host === 'localhost') {
+  if (host.indexOf('lovableproject.com') !== -1 || host.indexOf('lovable.app') !== -1 || host === 'localhost' || host === 'crawlers.fr' || host === 'www.crawlers.fr') {
     return;
   }
 
