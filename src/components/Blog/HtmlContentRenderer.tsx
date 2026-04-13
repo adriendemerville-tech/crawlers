@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import DOMPurify from 'dompurify';
 
 interface HtmlContentRendererProps {
   html: string;
@@ -25,7 +26,6 @@ function optimizeImages(html: string): string {
       const isFirst = imageIndex === 0;
       imageIndex++;
       
-      // Extract existing alt
       const altMatch = attrs.match(/alt=["']([^"']*)["']/);
       const alt = altMatch ? altMatch[1] : '';
       
@@ -43,7 +43,6 @@ function optimizeImages(html: string): string {
         return `<img src="${optimizedSrc}" srcset="${srcset}" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px" alt="${alt}" width="1200" height="630" loading="${isFirst ? 'eager' : 'lazy'}"${isFirst ? ' fetchpriority="high"' : ''} decoding="async" class="w-full h-auto object-cover" style="aspect-ratio:1200/630">`;
       }
       
-      // Non-Unsplash images: add lazy loading + dimensions if missing
       const hasWidth = /width=/i.test(attrs);
       const hasHeight = /height=/i.test(attrs);
       const hasLoading = /loading=/i.test(attrs);
@@ -68,29 +67,23 @@ function optimizeImages(html: string): string {
 }
 
 /**
- * Composant pour afficher du contenu HTML stocké en base de données
- * Utilisé pour les articles de blog éditables depuis l'admin
- * 
- * Optimisations automatiques :
- * - Images Unsplash → srcset responsive WebP + width/height (anti-CLS)
- * - Première image eager + fetchpriority="high" (LCP)
- * - Autres images lazy-loaded
+ * Composant pour afficher du contenu HTML stocké en base de données.
+ * Sécurisé via DOMPurify (protection XSS complète).
  */
 function HtmlContentRendererComponent({ html, className = '' }: HtmlContentRendererProps) {
-  // Nettoyer le HTML pour la sécurité basique
-  const sanitizedHtml = html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/on\w+="[^"]*"/gi, '')
-    .replace(/on\w+='[^']*'/gi, '')
-    // Force all links to open in new tab
-    .replace(/<a\s+(?![^>]*target=)/gi, '<a target="_blank" rel="noopener noreferrer" ')
-    .replace(/<a\s+([^>]*?)(?<!target=["'][^"']*["'])>/gi, (match) => {
-      if (match.includes('target=')) return match;
-      return match.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
-    });
+  // Sanitize with DOMPurify — blocks all XSS vectors (scripts, iframes, javascript: URIs, event handlers, etc.)
+  const sanitizedHtml = DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+    ADD_ATTR: ['target', 'rel', 'loading', 'fetchpriority', 'decoding', 'srcset', 'sizes'],
+    FORBID_TAGS: ['style'],
+  });
 
-  // Optimiser les images automatiquement
-  const optimizedHtml = optimizeImages(sanitizedHtml);
+  // Force links to open in new tab
+  const linkedHtml = sanitizedHtml
+    .replace(/<a\s+(?![^>]*target=)/gi, '<a target="_blank" rel="noopener noreferrer" ');
+
+  // Optimize images
+  const optimizedHtml = optimizeImages(linkedHtml);
 
   return (
     <div 
