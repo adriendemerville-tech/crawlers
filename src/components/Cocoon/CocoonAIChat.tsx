@@ -400,7 +400,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   // Check CMS connection
   useEffect(() => {
     if (!user || !trackedSiteId) return;
-    supabase.from('cms_connections').select('id').eq('tracked_site_id', trackedSiteId).limit(1)
+    supabase.from('cms_connections_public' as any).select('id').eq('tracked_site_id', trackedSiteId).limit(1)
       .then(({ data }) => setHasCmsConnection((data?.length || 0) > 0));
   }, [user, trackedSiteId]);
 

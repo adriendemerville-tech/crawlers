@@ -55,7 +55,7 @@ export async function disconnectCanva(trackedSiteId?: string): Promise<void> {
 
 export async function fetchCanvaConnection(trackedSiteId?: string): Promise<CanvaConnection | null> {
   let query = supabase
-    .from('canva_connections' as any)
+    .from('canva_connections_public' as any)
     .select('id, user_id, tracked_site_id, canva_user_id, canva_team_id, display_name, scopes, status, created_at, updated_at')
     .eq('status', 'active');
 

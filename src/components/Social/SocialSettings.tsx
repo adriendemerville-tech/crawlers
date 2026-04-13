@@ -57,15 +57,15 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
     const loadConnections = async () => {
       try {
         const { data } = await supabase
-          .from('cms_connections')
+          .from('cms_connections_public' as any)
           .select('*')
           .eq('user_id', user.id)
           .eq('tracked_site_id', trackedSiteId)
           .in('platform', ['linkedin', 'facebook', 'instagram'] as any);
 
-        if (data && data.length > 0) {
+        if (data && (data as any[]).length > 0) {
           setConnections(prev => prev.map(conn => {
-            const match = data.find((d: any) => d.platform === conn.platform);
+            const match = (data as any[]).find((d: any) => d.platform === conn.platform);
             if (match) {
               return {
                 ...conn,
