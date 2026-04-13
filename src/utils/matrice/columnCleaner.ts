@@ -29,11 +29,10 @@ const REMOVE_PATTERNS: { pattern: RegExp; reason: string }[] = [
   { pattern: /_recommand/i, reason: 'Recommendation result' },
   { pattern: /prompt_prioritaire/i, reason: 'Priority flag' },
 
-  // Rank positions
+  // Rank positions — only remove compound rank columns, NOT standalone rank/position
+  // (standalone rank/position are essential for benchmark matrices)
   { pattern: /^rang_/i, reason: 'Rank result' },
   { pattern: /_rang_/i, reason: 'Rank result' },
-  { pattern: /^rank$/i, reason: 'Rank column' },
-  { pattern: /^position$/i, reason: 'Position column' },
 
   // Source type results
   { pattern: /type_de_source/i, reason: 'Source type result' },
@@ -79,12 +78,8 @@ const REMOVE_PATTERNS: { pattern: RegExp; reason: string }[] = [
   { pattern: /^http_status/i, reason: 'HTTP status' },
   { pattern: /^status_code/i, reason: 'Status code' },
 
-  // LLM verbose summaries (long per-engine text)
-  { pattern: /^chatgpt$/i, reason: 'LLM verbose response' },
-  { pattern: /^gemini$/i, reason: 'LLM verbose response' },
-  { pattern: /^perplexity$/i, reason: 'LLM verbose response' },
-  { pattern: /^copilot$/i, reason: 'LLM verbose response' },
-  { pattern: /^claude$/i, reason: 'LLM verbose response' },
+  // LLM verbose summaries — REMOVED: these are essential engine columns for benchmark matrices
+  // chatgpt, gemini, perplexity, copilot, claude are kept as data columns
 ];
 
 // ── Patterns for VALUE-level cleaning (individual cell content) ──────

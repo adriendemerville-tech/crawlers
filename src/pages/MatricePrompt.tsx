@@ -309,11 +309,11 @@ export default function MatricePrompt() {
   };
 
   /* --- Parse raw rows into MatrixRow[] using fuzzy column mapper and persist --- */
-  const processImportedRows = useCallback(async (rawRows: any[], fileName: string, matriceType?: MatriceType) => {
+  const processImportedRows = useCallback(async (rawRows: any[], fileName: string, matriceType?: MatriceType, scoringMethod?: ScoringMethodId) => {
     if (rawRows.length === 0) return;
 
-    // Use smart defaults based on detected matrice type
-    const smartDef = matriceType ? getSmartDefaults(matriceType, activeScoringMethod) : getSmartDefaults('seo');
+    // Use smart defaults based on detected matrice type and scoring method passed at call-site (avoids stale closure)
+    const smartDef = matriceType ? getSmartDefaults(matriceType, scoringMethod) : getSmartDefaults('seo');
 
     // Step 1: Fuzzy column mapping
     const headers = Object.keys(rawRows[0] || {});
@@ -1175,7 +1175,7 @@ export default function MatricePrompt() {
             if (metadata.scoringGuide.length > 0) parts.push(`${metadata.scoringGuide.length} critères de scoring`);
             if (parts.length > 0) toast.success(`Métadonnées intégrées : ${parts.join(', ')}`, { duration: 4000 });
           }
-          processImportedRows(importedRows, xlsxFileName, matriceType);
+          processImportedRows(importedRows, xlsxFileName, matriceType, detection.method);
           setXlsxWorkbookRef(null);
           if (identityCard?.brandUrl && !url.trim()) {
             setUrl(identityCard.brandUrl);
