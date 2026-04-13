@@ -258,10 +258,24 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
     deployment_date: p.deployment_date,
   }))
 
+  // Process cocoon conversations (Stratège user exchanges)
+  const cocoonConvos = cocoonConvosRes.data || []
+  const cocoonUserIssues = cocoonConvos.map((c: any) => {
+    const msgs = Array.isArray(c.messages) ? c.messages : []
+    const userMsgs = msgs.filter((m: any) => m.role === 'user')
+    return {
+      id: c.id,
+      created_at: c.created_at,
+      domain: c.source_domain || 'unknown',
+      message_count: msgs.length,
+      user_messages: userMsgs.slice(-3).map((m: any) => (m.content || '').substring(0, 200)),
+    }
+  })
+
   // Build prompt snippet based on agent type
   const promptSnippet = buildPromptSnippet(opts.agent, {
     savIssues, technicalErrors, anomalies, cocoonErrors, silentErrors,
-    avgScore, escalationRate, days, patchResults,
+    avgScore, escalationRate, days, patchResults, cocoonUserIssues,
   })
 
   return {
@@ -275,6 +289,7 @@ export async function getAgentContext(opts: AgentContextOptions): Promise<AgentC
       anomalyCount: anomalies.length,
       cocoonErrorCount: cocoonErrors.length,
       silentErrorCount: silentErrors.length,
+      cocoonConversationCount: cocoonConvos.length,
       patchEffectivenessRate: patchResults.length > 0
         ? Math.round(patchResults.filter((p: any) => p.is_effective).length / patchResults.length * 100)
         : null,
