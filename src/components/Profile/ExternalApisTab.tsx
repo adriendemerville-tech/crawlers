@@ -273,9 +273,9 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
           .from('google_connections_public' as any)
           .select('id, ga4_property_id, gsc_site_urls')
           .eq('user_id', user.id);
-        if (conns && conns.length > 0) {
-          gscOk = gscOk || conns.some(c => c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0);
-          ga4Ok = ga4Ok || conns.some(c => !!c.ga4_property_id);
+        if (conns && (conns as any[]).length > 0) {
+          gscOk = gscOk || (conns as any[]).some(c => c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0);
+          ga4Ok = ga4Ok || (conns as any[]).some(c => !!c.ga4_property_id);
         }
       }
 
@@ -298,8 +298,8 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         .select('platform')
         .eq('user_id', user.id)
         .eq('status', 'active');
-      if (cmsData && cmsData.length > 0) {
-        setCmsConnectedIds(new Set(cmsData.map(c => c.platform)));
+      if (cmsData && (cmsData as any[]).length > 0) {
+        setCmsConnectedIds(new Set((cmsData as any[]).map(c => c.platform)));
       }
     };
     checkApiConnections();
@@ -324,8 +324,9 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         .limit(1)
         .maybeSingle();
       if (data) {
-        setWpConnection({ id: data.id, site_url: data.site_url });
-        const caps = data.capabilities as Record<string, unknown> | null;
+        const d = data as any;
+        setWpConnection({ id: d.id, site_url: d.site_url });
+        const caps = d.capabilities as Record<string, unknown> | null;
         if (caps?.rankmath_authorized) setRankMathConnected(true);
       }
     };
@@ -609,7 +610,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         .eq('id', wpConnection.id)
         .maybeSingle();
 
-      const currentCaps = (conn?.capabilities as Record<string, unknown>) || {};
+      const currentCaps = ((conn as any)?.capabilities as Record<string, unknown>) || {};
       await supabase
         .from('cms_connections')
         .update({
