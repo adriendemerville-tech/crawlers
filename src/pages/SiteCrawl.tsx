@@ -1358,7 +1358,7 @@ export default function SiteCrawl() {
                       value={url}
                       onChange={e => setUrl(e.target.value)}
                       placeholder={t.placeholder}
-                      className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500"
+                      className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500 caret-foreground"
                       required
                       disabled={isLoading}
                     />
