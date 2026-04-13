@@ -704,6 +704,8 @@ export default function SiteCrawl() {
     setIndexedPagesCount(null);
     setSitemapPagesCount(null);
     setTotalEstimatedPages(null);
+    setDetectionDone(false);
+    setDiscoveredUrls([]);
     setSitemapTree([]);
     setSitemapPages([]);
     setSelectedDirectory('');
