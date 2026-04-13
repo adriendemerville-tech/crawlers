@@ -373,7 +373,7 @@ Deno.serve(handleRequest(async (req: Request) => {
     }
 
     // ─── 1. Gather maturity criteria from DB ───
-    const [
+    let [
       siteRes,
       crawlsRes,
       gscRes,
