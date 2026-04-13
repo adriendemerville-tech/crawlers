@@ -747,14 +747,15 @@ export default function MatricePrompt() {
   /* --- Report --- */
   const handleOpenReport = () => {
     if (!results || results.length === 0) { toast.error('Lancez une analyse d\'abord'); return; }
-    const tw = results.reduce((s: number, r: any) => s + r.poids, 0);
+    const useWeights = hasFileScoring.poids;
+    const tw = useWeights ? results.reduce((s: number, r: any) => s + r.poids, 0) : results.length;
     const reportData = {
       kind: 'matrice' as const,
       url,
       results: results.map((r: any) => ({ ...r, score: r.crawlers_score })),
       totalWeight: tw,
-      weightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0,
-      parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw) : 0,
+      weightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + r.crawlers_score * (useWeights ? r.poids : 1), 0) / tw) : 0,
+      parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * (useWeights ? r.poids : 1), 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
     window.open('/app/rapport/matrice', '_blank');
