@@ -4,6 +4,19 @@ import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPa
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
+import { isIktrackerDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+
+// ═══ Modular imports ═══
+import {
+  MAX_RISK_NORMAL, MAX_RISK_CONSERVATIVE,
+  PIPELINE_PHASES, PHASE_FUNCTIONS, TIER_NAMES,
+  getNextPhase,
+  type PipelinePhase, type ParmenionDecision, type ScoredWorkbenchItem, type SiteInfo as ParmenionSiteInfo, type ActionReliability,
+} from '../_shared/parmenion/types.ts';
+import { TECH_TOOLS, CONTENT_TOOLS, DECISION_TOOL } from '../_shared/parmenion/toolSchemas.ts';
+import { buildPhaseInstructions } from '../_shared/parmenion/prompts.ts';
+import { enrichKeywordsForPrescribe } from '../_shared/parmenion/keywordEnrichment.ts';
+import { callLLMWithTools } from '../_shared/parmenion/llmClient.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
