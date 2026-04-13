@@ -535,11 +535,20 @@ export function useCrawlEngine() {
       return;
     }
 
+    // Archive current crawl into past crawls before resetting
+    if (crawlResult && crawlResult.id && crawlResult.status === 'completed') {
+      setPastCrawls(prev => {
+        if (prev.some(c => c.id === crawlResult.id)) return prev;
+        return [crawlResult, ...prev].slice(0, 20);
+      });
+    }
+
     setIsLoading(true);
     setPhase(t.mapping);
     setProgress(0);
     setPages([]);
     setCrawlResult(null);
+    setViewingCrawlId(null);
 
     try {
       let effectiveFilter = urlFilter.trim();
