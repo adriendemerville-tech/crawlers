@@ -572,8 +572,7 @@ const TIER_NAMES: Record<number, string> = {
 };
 
 // ═══ PAGE TYPE DETECTION ═══
-// Use shared detectPageType from _shared/contentBrief.ts
-const detectPageType = sharedDetectPageType;
+// detectPageType is aliased at line 42 from sharedDetectPageType
 
 async function loadPromptTemplates(supabase: ReturnType<typeof getServiceClient>): Promise<Map<string, any>> {
   const { data, error } = await supabase
