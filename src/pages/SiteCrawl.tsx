@@ -43,6 +43,8 @@ const crawlI18n = {
     scoreText: 'Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L\'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable.',
     placeholder: 'https://votre-site.fr',
     launchBtn: 'Lancer le crawl',
+    detectBtn: 'Détecter les pages',
+    detecting: 'Détection en cours…',
     crawling: 'Crawl en cours…',
     pagesToAnalyze: 'Pages à analyser',
     unlimited: 'Illimité',
