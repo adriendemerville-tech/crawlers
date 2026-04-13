@@ -1,4 +1,4 @@
-import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
@@ -18,10 +18,27 @@ Deno.serve(handleRequest(async (req) => {
 const supabase = getServiceClient();
 
   try {
-    const { action, user_id, site_id, container_path, account_path } = await req.json();
+    const { action, user_id: body_user_id, site_id, container_path, account_path } = await req.json();
 
-    if (!action || !user_id) {
-      return jsonError('action and user_id required', 400);
+    if (!action) {
+      return jsonError('action required', 400);
+    }
+
+    // ─── SECURITY: Validate JWT and enforce real user_id ─────────
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.replace('Bearer ', '');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const isServiceRole = serviceRoleKey && token === serviceRoleKey;
+
+    let user_id: string;
+    if (isServiceRole) {
+      if (!body_user_id) return jsonError('user_id required for service calls', 400);
+      user_id = body_user_id;
+    } else {
+      const userClient = getUserClient(authHeader);
+      const { data: { user }, error: authError } = await userClient.auth.getUser();
+      if (authError || !user) return jsonError('Unauthorized', 401);
+      user_id = user.id;
     }
 
     // Resolve Google token for user
