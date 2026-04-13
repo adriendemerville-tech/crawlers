@@ -309,7 +309,7 @@ export function ParmenionCrawlersTab() {
       const { data: conn } = await supabase
         .from('cms_connections')
         .select('site_url')
-        .eq('platform', 'iktracker')
+        .eq('platform', 'iktracker' as any)
         .eq('status', 'active')
         .limit(1)
         .maybeSingle();
