@@ -9,7 +9,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { AuditPlan, AuditRoute } from './resolveAuditRoutes';
-import { hydatePrompt } from './promptSanitizer';
+import { hydratePrompt } from './promptSanitizer';
 
 export interface MatrixResult {
   criterionId: string;
@@ -140,7 +140,7 @@ export async function executeAuditPlan(
       for (const route of routes) {
         if (route.customPrompt && fn === 'check-llm') {
           // Hydrate placeholders with the actual URL/brand before sending
-          const hydratedPrompt = hydatePrompt(route.customPrompt, url);
+          const hydratedPrompt = hydratePrompt(route.customPrompt, url);
           const customData = await callFunction('check-llm', url, {
             customPrompt: hydratedPrompt,
             targetProvider: route.targetProvider,
