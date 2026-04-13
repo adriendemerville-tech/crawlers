@@ -83,8 +83,17 @@ export function generateSitemapXml(pages: CrawlPage[], domain: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
 }
 
-export const CREDIT_PACKAGES = [
+export const CREDIT_PACKAGES: Array<{
+  id: string;
+  name: string;
+  credits: number;
+  price: number;
+  color: string;
+  border: string;
+  popular?: boolean;
+  savings?: string;
+}> = [
   { id: 'essential', name: 'Essentiel', credits: 10, price: 5, color: 'from-blue-500 to-cyan-500', border: 'border-blue-500/30' },
   { id: 'pro', name: 'Lite', credits: 50, price: 19, color: 'from-emerald-500 to-green-500', border: 'border-emerald-500/50', popular: true, savings: '24%' },
   { id: 'premium', name: 'Premium', credits: 150, price: 45, color: 'from-amber-500 to-orange-500', border: 'border-amber-500/30', savings: '40%' },
-] as const;
+];
