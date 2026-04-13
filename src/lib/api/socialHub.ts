@@ -98,7 +98,7 @@ export async function deletePost(id: string) {
 }
 
 export async function fetchAccounts(trackedSiteId?: string) {
-  let query = supabase.from('social_accounts' as any).select('*').eq('status', 'active');
+  let query = supabase.from('social_accounts_public' as any).select('*').eq('status', 'active');
   if (trackedSiteId) query = query.eq('tracked_site_id', trackedSiteId);
   const { data, error } = await query;
   if (error) throw error;

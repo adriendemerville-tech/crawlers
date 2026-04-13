@@ -88,7 +88,7 @@ export function SeaSeoBridge({ domain, trackedSiteId }: SeaSeoBridgeProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: ads } = await (supabase as any)
-        .from('google_ads_connections')
+        .from('google_ads_connections_public')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();

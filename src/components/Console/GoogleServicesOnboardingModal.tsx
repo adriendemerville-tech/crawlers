@@ -84,7 +84,7 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
       const gscOk = !!profile?.gsc_access_token;
 
       const { data: conns } = await supabase
-        .from('google_connections')
+        .from('google_connections_public' as any)
         .select('id, ga4_property_id, gsc_site_urls')
         .eq('user_id', user.id);
       if (conns?.length) {
@@ -95,7 +95,7 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
 
       // Check Ads
       const { data: adsData } = await (supabase as any)
-        .from('google_ads_connections')
+        .from('google_ads_connections_public')
         .select('id')
         .eq('user_id', user.id)
         .eq('is_active', true)
@@ -105,7 +105,7 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
 
       // Check GBP via google_connections gmb fields
       const { data: gbpConns } = await supabase
-        .from('google_connections')
+        .from('google_connections_public' as any)
         .select('id, gmb_account_id')
         .eq('user_id', user.id);
       if (gbpConns?.some(c => !!(c as any).gmb_account_id)) connected.add('gbp');
