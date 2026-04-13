@@ -32,50 +32,14 @@ import { callLLMWithTools } from '../_shared/parmenion/llmClient.ts';
  * Les résultats de chaque phase alimentent la suivante.
  */
 
-const MAX_RISK_NORMAL = 3;
-const MAX_RISK_CONSERVATIVE = 2;
+// Constants, types, and helpers now imported from _shared/parmenion/ and _shared/domainUtils.ts
 
-// Pipeline phases in strict order
-const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'] as const;
-// Note: 'route' is handled inline by the engine, not as a separate orchestrator phase
-type PipelinePhase = typeof PIPELINE_PHASES[number];
-
-const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
-  audit: ['audit-expert-seo', 'check-eeat', 'audit-strategique-ia', 'multi-page-crawl'],
-  diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
-  prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code', 'content-architecture-advisor'],
-  execute: ['wpsync', 'iktracker-actions', 'cms-push-draft', 'cms-push-code', 'cms-patch-content', 'cms-push-redirect', 'generate-corrective-code'],
-  validate: ['audit-expert-seo', 'cocoon-diag-content', 'check-eeat'],
-};
-
-function isIktrackerDomain(domain: string): boolean {
-  return domain.toLowerCase().includes('iktracker');
-}
-
-/** Normalize a page_key from LLM output: strip URLs, lowercase, extract last slug segment */
+/** Normalize a page_key from LLM output — delegates to shared normalizePageKey */
 function sanitizePageKey(raw?: string | null): string {
-  if (!raw) return 'homepage';
-  const trimmed = raw.trim();
-  // Already a clean slug
-  if (/^[a-z0-9][a-z0-9-]*$/i.test(trimmed)) return trimmed.toLowerCase();
-  // Full URL → extract path
-  try {
-    const parsed = new URL(trimmed);
-    const segments = parsed.pathname.split('/').filter(Boolean);
-    return segments.length > 0 ? segments[segments.length - 1].toLowerCase() : 'homepage';
-  } catch {
-    const normalized = trimmed.replace(/^https?:\/\/[^/]+/i, '').replace(/^\/+|\/+$/g, '');
-    if (!normalized) return 'homepage';
-    return normalized.split('/').filter(Boolean).pop()?.toLowerCase() || 'homepage';
-  }
+  return normalizePageKey(raw) || 'homepage';
 }
 
-function getNextPhase(lastPhase: PipelinePhase | undefined): PipelinePhase {
-  if (!lastPhase) return 'audit';
-  const idx = PIPELINE_PHASES.indexOf(lastPhase);
-  if (idx === -1 || idx >= PIPELINE_PHASES.length - 1) return 'audit'; // cycle complete → restart
-  return PIPELINE_PHASES[idx + 1];
-}
+const detectPageType = sharedDetectPageType;
 
 Deno.serve(handleRequest(async (req: Request) => {
 try {
