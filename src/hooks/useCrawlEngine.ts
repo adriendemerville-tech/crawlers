@@ -202,7 +202,14 @@ export function useCrawlEngine() {
             ai_recommendations: Array.isArray(r.ai_recommendations) ? r.ai_recommendations : [],
           };
           setCrawlResult(sanitizedResult);
-          if (sanitizedResult.total_pages > 0) setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
+          if (sanitizedResult.total_pages > 0) {
+            setProgress(Math.round((sanitizedResult.crawled_pages / sanitizedResult.total_pages) * 100));
+            // Sync totalEstimatedPages with backend's actual total (Pass 2 may discover more)
+            setTotalEstimatedPages(prev => {
+              const backendTotal = sanitizedResult.total_pages;
+              return (!prev || backendTotal > prev) ? backendTotal : prev;
+            });
+          }
           if (sanitizedResult.status === 'queued') setPhase(t.queued);
           else if (sanitizedResult.status === 'mapping') setPhase(t.mapping);
           else if (sanitizedResult.status === 'crawling') setPhase(`${t.crawlingProgress} ${sanitizedResult.crawled_pages}/${sanitizedResult.total_pages} ${t.pages}…`);
