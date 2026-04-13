@@ -193,11 +193,23 @@ export function buildDiversityPromptBlock(
     }
   }
   lines.push('');
+  // ── ANGLE DIVERSITY ──
+  lines.push(`── ANGLES ÉDITORIAUX (DIVERSIFICATION OBLIGATOIRE) ──`);
+  lines.push(`Ne produis PAS que des "guides complets". Alterne entre ces 5 angles :`);
+  lines.push(`  🎯 PERSONA — Cibler un métier/profil précis dans le titre (ex: infirmières, VRP, artisans)`);
+  lines.push(`  📰 ACTUALITÉ — Accrocher sur un événement récent, une réforme, un nom propre`);
+  lines.push(`  🔍 NICHE — Répondre à UNE question ultra-spécifique (format court, direct)`);
+  lines.push(`  ⚖️ COMPARATIF — Opposer 2 options, démystifier une idée reçue`);
+  lines.push(`  🛠️ TUTORIEL — Procédure pas-à-pas concrète (PAS un "guide complet")`);
+  lines.push(`L'angle choisi DOIT apparaître clairement dans le titre et structurer tout l'article.`);
+  lines.push('');
+  
   lines.push(`Le contenu généré DOIT:`);
   lines.push(`1. Être de type "${distribution.recommended}" (sauf si l'opportunité impose un autre type non-surreprésenté)`);
   lines.push(`2. Appartenir au Ring ${ringInfo.ring} (${ringConfig.label})`);
   lines.push(`3. Contenir au moins 1 lien vers une page mère du ring inférieur`);
   lines.push(`4. Inclure "article_type" et "semantic_ring" dans les tags de l'article`);
+  lines.push(`5. Utiliser un ANGLE DIFFÉRENT des derniers articles publiés`);
   lines.push('');
   lines.push(`═══ FIN DIVERSITÉ ═══`);
   
