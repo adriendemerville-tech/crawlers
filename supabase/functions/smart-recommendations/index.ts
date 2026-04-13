@@ -373,7 +373,7 @@ Deno.serve(handleRequest(async (req: Request) => {
     }
 
     // ─── 1. Gather maturity criteria from DB ───
-    const [
+    let [
       siteRes,
       crawlsRes,
       gscRes,
@@ -384,7 +384,8 @@ Deno.serve(handleRequest(async (req: Request) => {
       backlinksRes,
     ] = await Promise.all([
       supabase.from('tracked_sites').select('id, domain, created_at, identity_card, last_audit_at').eq('id', tracked_site_id).eq('user_id', user.id).maybeSingle(),
-      supabase.from('site_crawls').select('id, total_pages').eq('tracked_site_id', tracked_site_id).order('created_at', { ascending: false }).limit(10),
+      // site_crawls has no tracked_site_id column – will re-query by domain below
+      Promise.resolve({ data: null }),
       supabase.from('gsc_connections').select('id').eq('tracked_site_id', tracked_site_id).eq('is_active', true).limit(1),
       supabase.from('cms_connections').select('id').eq('tracked_site_id', tracked_site_id).limit(1),
       supabase.from('ga4_connections').select('id').eq('tracked_site_id', tracked_site_id).eq('is_active', true).limit(1),
@@ -399,6 +400,16 @@ Deno.serve(handleRequest(async (req: Request) => {
 
     const site = siteRes.data as any;
     const domain = site.domain;
+    const domainNorm = domain.replace(/^www\./, '');
+
+    // Re-query site_crawls by domain (no tracked_site_id column)
+    const { data: crawlData } = await supabase.from('site_crawls')
+      .select('id, total_pages')
+      .or(`domain.eq.${domainNorm},domain.eq.www.${domainNorm}`)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    crawlsRes = { data: crawlData };
 
     // Get audit data with actual domain
     const { data: auditData } = await supabase.from('audit_raw_data')
