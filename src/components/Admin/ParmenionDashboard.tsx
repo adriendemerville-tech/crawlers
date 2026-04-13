@@ -4,13 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download, Bot } from 'lucide-react';
 import { generateParmenionReport } from '@/utils/parmenionPdfReport';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { ParmenionCrawlersTab } from './ParmenionCrawlersTab';
 
 interface DecisionLog {
   id: string;
@@ -230,6 +232,23 @@ export function ParmenionDashboard() {
   }, [logs]);
 
   return (
+    <Tabs defaultValue="stratege" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="stratege" className="gap-2">
+          <Shield className="h-4 w-4" />
+          Stratège
+        </TabsTrigger>
+        <TabsTrigger value="crawlers" className="gap-2">
+          <Bot className="h-4 w-4" />
+          Crawlers
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="crawlers">
+        <ParmenionCrawlersTab />
+      </TabsContent>
+
+      <TabsContent value="stratege">
     <div className="space-y-6">
       {/* Header with controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -664,5 +683,7 @@ export function ParmenionDashboard() {
         </CardContent>
       </Card>
     </div>
+      </TabsContent>
+    </Tabs>
   );
 }
