@@ -582,6 +582,8 @@ export default function MatricePrompt() {
     a.download = `matrice-results-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     toast.success('Résultats exportés en CSV');
+  }, [results, rows, hasFileScoring, activeScoring]);
+
   const selectedRows = useMemo(() => rows.filter(r => r.selected), [rows]);
 
   /* --- Analyze + persist session & results --- */
