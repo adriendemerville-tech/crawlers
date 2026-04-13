@@ -409,7 +409,7 @@ Deno.serve(handleRequest(async (req: Request) => {
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(10);
-    crawlRes = { data: crawlData };
+    crawlsRes = { data: crawlData };
 
     // Get audit data with actual domain
     const { data: auditData } = await supabase.from('audit_raw_data')
