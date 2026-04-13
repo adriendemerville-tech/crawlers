@@ -1122,28 +1122,58 @@ export default function MatricePrompt() {
                           />
                         </TableCell>
                         <TableCell className="font-medium text-sm" style={{ minWidth: '240px', maxWidth: '480px' }}>
-                          <span className="block whitespace-pre-wrap break-words leading-relaxed">{row.prompt}</span>
+                          {editingCell?.rowId === row.id && editingCell.field === 'prompt' ? (
+                            <form onSubmit={e => { e.preventDefault(); commitEdit(); }} className="flex gap-1">
+                              <Input value={editValue} onChange={e => setEditValue(e.target.value)} className="h-7 text-xs" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} />
+                              <button type="submit"><Check className="h-3.5 w-3.5 text-primary" /></button>
+                            </form>
+                          ) : (
+                            <span className="block whitespace-pre-wrap break-words leading-relaxed cursor-pointer hover:text-primary/80" onDoubleClick={() => startEdit(row.id, 'prompt', row.prompt)}>{row.prompt}</span>
+                          )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${getAxeBadgeClass(row.axe)}`}>
-                            {row.axe}
-                          </Badge>
+                          {editingCell?.rowId === row.id && editingCell.field === 'axe' ? (
+                            <form onSubmit={e => { e.preventDefault(); commitEdit(); }} className="flex gap-1">
+                              <Input value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-[10px] w-20" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} />
+                              <button type="submit"><Check className="h-3 w-3 text-primary" /></button>
+                            </form>
+                          ) : (
+                            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 cursor-pointer ${getAxeBadgeClass(row.axe)}`} onDoubleClick={() => startEdit(row.id, 'axe', row.axe)}>
+                              {row.axe}
+                            </Badge>
+                          )}
                         </TableCell>
                         {hasFileScoring.poids && (
-                          <TableCell>
-                            {row.poids}
+                          <TableCell className="cursor-pointer" onDoubleClick={() => startEdit(row.id, 'poids', row.poids)}>
+                            {editingCell?.rowId === row.id && editingCell.field === 'poids' ? (
+                              <form onSubmit={e => { e.preventDefault(); commitEdit(); }}>
+                                <Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-xs w-16" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} onBlur={commitEdit} />
+                              </form>
+                            ) : row.poids}
                           </TableCell>
                         )}
                         {hasFileScoring.seuils && (
                           <>
-                            <TableCell>
-                              {row.seuil_bon}
+                            <TableCell className="cursor-pointer" onDoubleClick={() => startEdit(row.id, 'seuil_bon', row.seuil_bon)}>
+                              {editingCell?.rowId === row.id && editingCell.field === 'seuil_bon' ? (
+                                <form onSubmit={e => { e.preventDefault(); commitEdit(); }}>
+                                  <Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-xs w-14" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} onBlur={commitEdit} />
+                                </form>
+                              ) : row.seuil_bon}
                             </TableCell>
-                            <TableCell>
-                              {row.seuil_moyen}
+                            <TableCell className="cursor-pointer" onDoubleClick={() => startEdit(row.id, 'seuil_moyen', row.seuil_moyen)}>
+                              {editingCell?.rowId === row.id && editingCell.field === 'seuil_moyen' ? (
+                                <form onSubmit={e => { e.preventDefault(); commitEdit(); }}>
+                                  <Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-xs w-14" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} onBlur={commitEdit} />
+                                </form>
+                              ) : row.seuil_moyen}
                             </TableCell>
-                            <TableCell>
-                              {row.seuil_mauvais}
+                            <TableCell className="cursor-pointer" onDoubleClick={() => startEdit(row.id, 'seuil_mauvais', row.seuil_mauvais)}>
+                              {editingCell?.rowId === row.id && editingCell.field === 'seuil_mauvais' ? (
+                                <form onSubmit={e => { e.preventDefault(); commitEdit(); }}>
+                                  <Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-xs w-14" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} onBlur={commitEdit} />
+                                </form>
+                              ) : row.seuil_mauvais}
                             </TableCell>
                           </>
                         )}
