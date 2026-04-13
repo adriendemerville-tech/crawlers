@@ -763,8 +763,9 @@ export default function SiteCrawl() {
           setSitemapPages(pagePatterns.slice(0, 20));
         }
 
-        // Total = max of sitemap and indexed (they overlap, so we take the greater)
-        const total = Math.max(indexed || 0, sitemapTotal || 0);
+        // Total estimated = sitemap is the reliable source; indexed_pages (from site: query) is inflated
+        // Use sitemap if available, fallback to indexed only if no sitemap
+        const total = sitemapTotal && sitemapTotal > 0 ? sitemapTotal : (indexed || 0);
         if (total > 0) {
           setTotalEstimatedPages(total);
           // Auto-cap slider — for pro agency users, cap is the sitemap total
