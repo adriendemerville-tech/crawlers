@@ -875,6 +875,9 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         console.log(`[Worker] Job ${job.id}: probe saved, ${alreadyProcessed}/${job.total_count}`);
       }
 
+      // ── Track all discovered URLs to avoid re-crawling ──
+      const processedUrls = new Set<string>(urlsToProcess.map(u => u.replace(/\/$/, '')));
+
       // ── INNER LOOP: keep processing pages while time allows ──
       while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < MAX_GLOBAL_CONCURRENT) {
         // ── Check if crawl was stopped by user ──
@@ -924,6 +927,46 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         if (validResults.length > 0) {
           const rows = validResults.map(p => ({ crawl_id: job.crawl_id, ...p }));
           await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
+        }
+
+        // ── RECURSIVE LINK DISCOVERY: extract internal links from scraped pages ──
+        const pageLimit = job.total_count || 50;
+        let discoveredNew = 0;
+        if (alreadyProcessed + remaining.length < pageLimit) {
+          for (const page of validResults) {
+            if (!page.anchor_texts) continue;
+            for (const link of page.anchor_texts) {
+              if (link.type !== 'internal') continue;
+              try {
+                const fullUrl = link.href.startsWith('http')
+                  ? link.href
+                  : `https://${job.domain}${link.href.startsWith('/') ? '' : '/'}${link.href}`;
+                const normalized = fullUrl.replace(/\/$/, '');
+                // Only add if same domain, not already known, and within page limit
+                const linkDomain = new URL(fullUrl).hostname;
+                if (!linkDomain.includes(job.domain.replace(/^www\./, '')) && !job.domain.includes(linkDomain.replace(/^www\./, ''))) continue;
+                if (processedUrls.has(normalized)) continue;
+                processedUrls.add(normalized);
+                remaining.push(fullUrl);
+                discoveredNew++;
+              } catch {
+                // malformed URL, skip
+              }
+            }
+          }
+          if (discoveredNew > 0) {
+            // Cap remaining to not exceed pageLimit
+            const maxRemaining = pageLimit - alreadyProcessed;
+            if (remaining.length > maxRemaining) {
+              remaining = remaining.slice(0, maxRemaining);
+            }
+            // Update total count in job and site_crawls
+            const newTotal = alreadyProcessed + remaining.length;
+            job.total_count = newTotal;
+            await supabase.from('crawl_jobs').update({ total_count: newTotal }).eq('id', job.id);
+            await supabase.from('site_crawls').update({ total_pages: newTotal }).eq('id', job.crawl_id);
+            console.log(`[Worker] Job ${job.id}: 🔗 Discovered ${discoveredNew} new URLs via internal links (total queue: ${remaining.length})`);
+          }
         }
 
         // Reconcile from DB for accuracy
