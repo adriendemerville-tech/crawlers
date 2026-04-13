@@ -493,6 +493,14 @@ export default function MatricePrompt() {
   /* --- Smart labels based on matrice type + scoring method --- */
   const smartLabels = useMemo(() => getSmartDefaults(activeMatriceType, activeScoringMethod).labels, [activeMatriceType, activeScoringMethod]);
 
+  /* --- Detect if file provided scoring columns (poids/seuils) --- */
+  const hasFileScoring = useMemo(() => {
+    if (rows.length === 0) return { poids: true, seuils: true }; // show by default before import
+    const hasPoids = rows.some(r => !r.isDefault.poids);
+    const hasSeuils = rows.some(r => !r.isDefault.seuil_bon || !r.isDefault.seuil_moyen || !r.isDefault.seuil_mauvais);
+    return { poids: hasPoids, seuils: hasSeuils };
+  }, [rows]);
+
   /* --- Selection --- */
   const allSelected = rows.length > 0 && rows.every(r => r.selected);
   const someSelected = rows.some(r => r.selected);
@@ -984,14 +992,16 @@ export default function MatricePrompt() {
                          {sortField === 'axe' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
-                      {activeMatriceType !== 'benchmark' && (
+                      {hasFileScoring.poids && (
+                        <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('poids')}>
+                          <span className="flex items-center gap-1 text-xs font-semibold">
+                            {columnLabels.poids || smartLabels.poids}
+                            {sortField === 'poids' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                          </span>
+                        </TableHead>
+                      )}
+                      {hasFileScoring.seuils && (
                         <>
-                          <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('poids')}>
-                            <span className="flex items-center gap-1 text-xs font-semibold">
-                              {columnLabels.poids || smartLabels.poids}
-                              {sortField === 'poids' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
-                            </span>
-                          </TableHead>
                           <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_bon')}>
                             <span className="flex items-center gap-1 text-xs font-semibold">
                               {columnLabels.seuil_bon || smartLabels.seuil_bon}
@@ -1037,23 +1047,21 @@ export default function MatricePrompt() {
                             {row.axe}
                           </Badge>
                         </TableCell>
-                        {activeMatriceType !== 'benchmark' && (
+                        {hasFileScoring.poids && (
+                          <TableCell>
+                            {row.poids}
+                          </TableCell>
+                        )}
+                        {hasFileScoring.seuils && (
                           <>
                             <TableCell>
-                              {row.poids}
-                              {row.isDefault.poids && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                            </TableCell>
-                            <TableCell>
                               {row.seuil_bon}
-                              {row.isDefault.seuil_bon && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                             </TableCell>
                             <TableCell>
                               {row.seuil_moyen}
-                              {row.isDefault.seuil_moyen && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                             </TableCell>
                             <TableCell>
                               {row.seuil_mauvais}
-                              {row.isDefault.seuil_mauvais && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
                             </TableCell>
                           </>
                         )}
