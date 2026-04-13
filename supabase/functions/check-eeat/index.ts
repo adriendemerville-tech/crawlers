@@ -652,10 +652,15 @@ Réponds UNIQUEMENT en JSON valide :
 
   if (jobId) await supabase.from('async_jobs').update({ progress: 95 }).eq('id', jobId);
 
-  // ── Weighted score calculation with Trustworthiness penalties ──
+  // ── Weighted score calculation with multi-pillar penalties ──
   let rawTrust = analysis.trustworthiness ?? 40;
+  let rawExperience = analysis.experience ?? 40;
+  let rawAuthority = analysis.authoritativeness ?? 40;
   const trustPenalties: string[] = [];
+  const experiencePenalties: string[] = [];
+  const authorityPenalties: string[] = [];
 
+  // ── TRUST PENALTIES ──
   // Penalty: no external citations / no outgoing links
   if (!analysis.sources_cited && aggregated.avgExternalLinks < 1) {
     rawTrust = Math.max(0, rawTrust - 15);
@@ -674,10 +679,62 @@ Réponds UNIQUEMENT en JSON valide :
     trustPenalties.push('Pas de HTTPS détecté (-20)');
   }
 
+  // ── EXPERIENCE PENALTIES ──
+  // Penalty: testimonials detected but not verifiable (generic, no names/companies/figures)
+  if (aggregated.hasTestimonials && !aggregated.testimonialsVerifiable) {
+    rawExperience = Math.max(0, rawExperience - 10);
+    experiencePenalties.push('Témoignages/cas clients détectés mais non vérifiables — pas de noms propres, entreprises ou chiffres concrets (-10)');
+  }
+
+  // Penalty: about page without incarnation (no named people)
+  if (aggregated.hasAboutPage && !aggregated.aboutPageHasIncarnation) {
+    rawExperience = Math.max(0, rawExperience - 8);
+    experiencePenalties.push('Page À propos sans incarnation humaine — aucun fondateur/équipe nommé (-8)');
+  } else if (!aggregated.hasAboutPage) {
+    rawExperience = Math.max(0, rawExperience - 12);
+    experiencePenalties.push('Aucune page À propos/Équipe détectée (-12)');
+  }
+
+  // ── AUTHORITY PENALTIES (proportional, for digital-first businesses) ──
+  const isDigitalBusiness = identityCard && /saas|media|agency|ecommerce|marketplace|platform|app|digital/i.test(
+    `${identityCard.entity_type || ''} ${identityCard.business_type || ''} ${identityCard.commercial_model || ''}`
+  );
+  
+  if (isDigitalBusiness && backlinkData.available) {
+    const editorialBacklinks = (backlinkData.referringPages || []).filter((b: any) => {
+      const url = (b.sourceUrl || '').toLowerCase();
+      // Heuristic: editorial backlinks come from content pages, not directories/aggregators
+      return !/annuaire|directory|listing|bookmark|aggregat|comparateur|avis-|trustpilot|capterra|g2\.com/i.test(url)
+        && !/(\.pdf$|\/feed\/|\/rss\/|\/sitemap)/i.test(url);
+    });
+    const editorialCount = editorialBacklinks.length;
+    const domainAge = domainAgeInfo.ageYears ?? 1;
+
+    if (editorialCount === 0) {
+      // Proportional: harsher for older domains
+      const malus = domainAge >= 2 ? 15 : (domainAge >= 1 ? 10 : 5);
+      rawAuthority = Math.max(0, rawAuthority - malus);
+      authorityPenalties.push(`Business digital sans backlink éditorial (0 sur ${backlinkData.referringPages?.length || 0} analysés, domaine ~${Math.floor(domainAge)} an(s)) (-${malus})`);
+    } else if (editorialCount <= 3) {
+      const malus = domainAge >= 2 ? 5 : 3;
+      rawAuthority = Math.max(0, rawAuthority - malus);
+      authorityPenalties.push(`Seulement ${editorialCount} backlink(s) éditorial(aux) pour un business digital (-${malus})`);
+    }
+    // Bonus: GA4 referrals confirm live editorial traffic
+    if (ga4Referrals.available && ga4Referrals.totalReferralSessions > 50) {
+      rawAuthority = Math.min(100, rawAuthority + 5);
+      authorityPenalties.push(`Bonus: ${ga4Referrals.totalReferralSessions} sessions referral GA4 confirment une autorité réelle (+5)`);
+    }
+  } else if (isDigitalBusiness && !backlinkData.available) {
+    // Can't assess, slight penalty for opacity
+    rawAuthority = Math.max(0, rawAuthority - 5);
+    authorityPenalties.push('Données backlinks non disponibles pour un business digital — autorité non vérifiable (-5)');
+  }
+
   const pillars = {
-    experience: analysis.experience ?? 40,
+    experience: rawExperience,
     expertise: analysis.expertise ?? 40,
-    authoritativeness: analysis.authoritativeness ?? 40,
+    authoritativeness: rawAuthority,
     trustworthiness: rawTrust,
   };
 
@@ -690,9 +747,15 @@ Réponds UNIQUEMENT en JSON valide :
   const totalWeight = WEIGHTS.experience + WEIGHTS.expertise + WEIGHTS.authoritativeness + WEIGHTS.trustworthiness;
   const calculatedOverall = Math.round(weightedSum / totalWeight);
 
+  const allPenalties = [
+    ...trustPenalties.map(p => `[Trustworthiness] ${p}`),
+    ...experiencePenalties.map(p => `[Experience] ${p}`),
+    ...authorityPenalties.map(p => `[Authoritativeness] ${p}`),
+  ];
+
   console.log(`[check-eeat] 📊 Weighted score: E=${pillars.experience}×1.5 Ex=${pillars.expertise}×2.5 A=${pillars.authoritativeness}×2.5 T=${pillars.trustworthiness}×4 → ${calculatedOverall}`);
-  if (trustPenalties.length > 0) {
-    console.log(`[check-eeat] ⚠️ Trust penalties applied: ${trustPenalties.join(', ')}`);
+  if (allPenalties.length > 0) {
+    console.log(`[check-eeat] ⚠️ Penalties applied: ${allPenalties.join(', ')}`);
   }
 
   return {
@@ -705,24 +768,29 @@ Réponds UNIQUEMENT en JSON valide :
     scoring: {
       weights: WEIGHTS,
       trustPenalties,
+      experiencePenalties,
+      authorityPenalties,
       domainAge: domainAgeInfo.available ? { years: domainAgeInfo.ageYears, foundingYear: domainAgeInfo.foundingYear } : null,
-      method: 'weighted_algorithmic_v2',
+      method: 'weighted_algorithmic_v3',
+      isDigitalBusiness: !!isDigitalBusiness,
     },
     signals: {
       authorIdentified: analysis.author_identified ?? aggregated.pagesWithAuthor > 0,
       sourcesCited: analysis.sources_cited ?? false,
       expertiseDemonstrated: analysis.expertise_demonstrated ?? false,
       aboutPage: aggregated.hasAboutPage,
+      aboutPageIncarnation: aggregated.aboutPageHasIncarnation,
       contactInfo: aggregated.hasContactPage,
       legalNotice: aggregated.hasLegalPage,
       schemaOrg: aggregated.pagesWithSchema > 0,
       schemaRichness: aggregated.schemaRichness,
       blogSection: aggregated.hasBlogSection,
       testimonials: aggregated.hasTestimonials,
+      testimonialsVerifiable: aggregated.testimonialsVerifiable,
     },
     trustSignals: analysis.trust_signals || [],
     missingSignals: analysis.missing_signals || [],
-    issues: [...(analysis.issues || []), ...trustPenalties.map(p => `[Trustworthiness] ${p}`)],
+    issues: [...(analysis.issues || []), ...allPenalties],
     strengths: analysis.strengths || [],
     recommendations: analysis.recommendations || [],
     backlinkData: backlinkData.available ? {
