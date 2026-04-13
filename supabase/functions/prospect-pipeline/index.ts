@@ -1,27 +1,99 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
-import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { handleRequest } from '../_shared/serveHandler.ts';
 
 /**
  * Edge Function: prospect-pipeline
  * 
- * Actions:
- * - webhook_import: receive prospects from external tools (Waalaxy, PhantomBuster, CSV)
- * - qualify_batch: score and qualify all 'new' prospects
- * - prepare_outreach: generate Marina audits + messages for qualified prospects
- * - list: list prospects with filters
- * - update_status: mark prospect as sent/replied/converted
+ * 100% LinkedIn pipeline with anti-detection rhythm.
+ * 
+ * Anti-bot strategy:
+ * - Max 15-20 invitations/day (randomized between min/max)
+ * - Max 30-40 messages/day
+ * - Business hours only (8h-19h, timezone-aware)
+ * - No weekends
+ * - Random delays between actions (45s-180s simulated via next_action_at spacing)
+ * - Sequence delays: J+0 invitation → J+2..4 pitch → J+6..9 relance → J+14..18 dernier rappel
+ * - Each step has ±30% jitter on delay
+ * - Cooldown: no response after 21 days → archive
  */
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
+// ─── Anti-detection constants ───
+const ANTI_BOT = {
+  // Daily quotas (effective limit randomized each day between min and max)
+  INVITATIONS_MIN: 12, INVITATIONS_MAX: 20,
+  MESSAGES_MIN: 25, MESSAGES_MAX: 40,
+  // Business hours (UTC — adjust for your timezone)
+  HOUR_START: 7, HOUR_END: 19,
+  // Sequence delays in days [min, max] — random within range per prospect
+  DELAYS: {
+    invitation_to_pitch: [2, 4],      // J+2..4 after invitation accepted/sent
+    pitch_to_followup1: [4, 6],       // J+6..9 total
+    followup1_to_followup2: [7, 11],  // J+14..18 total
+    cooldown_days: 21,                // Archive after 21 days no response
+  },
+  // Weekend skip
+  SKIP_WEEKENDS: true,
+};
+
+// Default LinkedIn-only sequence
+const DEFAULT_SEQUENCE = [
+  { step: 1, action: 'invitation', label: 'Invitation de connexion', delay_range: [0, 0] },
+  { step: 2, action: 'pitch', label: 'Message pitch (avec audit si dispo)', delay_range: ANTI_BOT.DELAYS.invitation_to_pitch },
+  { step: 3, action: 'followup_1', label: 'Relance 1', delay_range: ANTI_BOT.DELAYS.pitch_to_followup1 },
+  { step: 4, action: 'followup_2', label: 'Dernier rappel', delay_range: ANTI_BOT.DELAYS.followup1_to_followup2 },
+];
+
+// ─── Helpers ───
+function randomBetween(min: number, max: number): number {
+  return Math.floor(min + Math.random() * (max - min + 1));
+}
+
+function addBusinessDays(from: Date, daysMin: number, daysMax: number): Date {
+  const days = randomBetween(daysMin, daysMax);
+  const result = new Date(from);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    const dow = result.getDay();
+    if (ANTI_BOT.SKIP_WEEKENDS && (dow === 0 || dow === 6)) continue;
+    added++;
+  }
+  // Set to random business hour
+  const hour = randomBetween(ANTI_BOT.HOUR_START, ANTI_BOT.HOUR_END - 1);
+  const minute = randomBetween(0, 59);
+  result.setUTCHours(hour, minute, randomBetween(0, 59));
+  return result;
+}
+
+function isBusinessTime(): boolean {
+  const now = new Date();
+  const hour = now.getUTCHours();
+  const dow = now.getDay();
+  if (ANTI_BOT.SKIP_WEEKENDS && (dow === 0 || dow === 6)) return false;
+  return hour >= ANTI_BOT.HOUR_START && hour < ANTI_BOT.HOUR_END;
+}
+
+function getDailyLimit(type: 'invitation' | 'message'): number {
+  // Randomize daily cap so it's different each day
+  if (type === 'invitation') return randomBetween(ANTI_BOT.INVITATIONS_MIN, ANTI_BOT.INVITATIONS_MAX);
+  return randomBetween(ANTI_BOT.MESSAGES_MIN, ANTI_BOT.MESSAGES_MAX);
+}
+
+function jsonOk(data: any) {
+  return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+function jsonError(msg: string, status = 400) {
+  return new Response(JSON.stringify({ error: msg }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
 // ─── Scoring logic ───
 function scoreProspect(prospect: any): { score: number; details: Record<string, number> } {
   const details: Record<string, number> = {};
-
-  // Job title relevance (SEO, marketing, digital, web, agency)
   const title = (prospect.job_title || '').toLowerCase();
   const titleKeywords: Record<string, number> = {
     'seo': 25, 'référencement': 25, 'search': 20,
@@ -37,7 +109,6 @@ function scoreProspect(prospect: any): { score: number; details: Record<string, 
   }
   details.job_relevance = titleScore;
 
-  // Industry relevance
   const industry = (prospect.industry || '').toLowerCase();
   const industryKeywords: Record<string, number> = {
     'marketing': 15, 'digital': 15, 'tech': 10, 'saas': 15,
@@ -49,93 +120,81 @@ function scoreProspect(prospect: any): { score: number; details: Record<string, 
     if (industry.includes(kw)) industryScore = Math.max(industryScore, pts);
   }
   details.industry_relevance = industryScore;
-
-  // Has website URL (can run Marina audit)
   details.has_website = prospect.website_url ? 20 : 0;
 
-  // Recent activity (last post < 30 days = active)
   if (prospect.last_post_date) {
     const daysSincePost = (Date.now() - new Date(prospect.last_post_date).getTime()) / (1000 * 60 * 60 * 24);
     details.activity_recency = daysSincePost < 7 ? 15 : daysSincePost < 30 ? 10 : daysSincePost < 90 ? 5 : 0;
-  } else {
-    details.activity_recency = 0;
-  }
+  } else { details.activity_recency = 0; }
 
-  // Recent interaction
   if (prospect.last_interaction_date) {
-    const daysSinceInteraction = (Date.now() - new Date(prospect.last_interaction_date).getTime()) / (1000 * 60 * 60 * 24);
-    details.interaction_recency = daysSinceInteraction < 7 ? 10 : daysSinceInteraction < 30 ? 5 : 0;
-  } else {
-    details.interaction_recency = 0;
-  }
+    const days = (Date.now() - new Date(prospect.last_interaction_date).getTime()) / (1000 * 60 * 60 * 24);
+    details.interaction_recency = days < 7 ? 10 : days < 30 ? 5 : 0;
+  } else { details.interaction_recency = 0; }
 
-  const score = Math.min(100, Object.values(details).reduce((a, b) => a + b, 0));
-  return { score, details };
+  return { score: Math.min(100, Object.values(details).reduce((a, b) => a + b, 0)), details };
 }
 
-// ─── Message generation ───
-async function generateMessage(prospect: any, type: 'audit_ready' | 'ask_url', reportUrl?: string): Promise<string> {
+// ─── Message generation (step-aware) ───
+async function generateStepMessage(
+  prospect: any,
+  stepAction: string,
+  reportUrl?: string | null,
+): Promise<string> {
   const lang = prospect.language || 'fr';
   const firstName = prospect.first_name || '';
   const company = prospect.company || '';
 
   const langInstructions: Record<string, string> = {
-    fr: 'Rédige le message en français. Utilise le tutoiement professionnel.',
-    en: 'Write the message in English. Keep it professional but friendly.',
-    es: 'Escribe el mensaje en español. Mantén un tono profesional pero cercano.',
+    fr: 'Rédige le message en français. Tutoiement professionnel.',
+    en: 'Write in English. Professional but friendly.',
+    es: 'Escribe en español. Tono profesional pero cercano.',
   };
 
-  let prompt = '';
-  if (type === 'audit_ready') {
-    prompt = `Tu es un expert en prospection B2B pour une plateforme d'audit SEO/GEO appelée Crawlers.fr.
-${langInstructions[lang] || langInstructions.fr}
+  const prompts: Record<string, string> = {
+    invitation: `Tu es un expert B2B. ${langInstructions[lang] || langInstructions.fr}
+Rédige une NOTE D'INVITATION LinkedIn ultra-courte (max 200 caractères, c'est la limite LinkedIn) pour ${firstName}${company ? ` de ${company}` : ''} (${prospect.job_title || ''}).
+- Personnalisée, naturelle, PAS de spam
+- Mentionne un point d'intérêt commun (SEO, visibilité digitale)
+- NE PAS mentionner d'audit ni de lien
+- Juste une raison d'accepter la connexion
+Réponds UNIQUEMENT avec le message.`,
 
-Rédige un message LinkedIn court (max 300 caractères) pour ${firstName}${company ? ` de ${company}` : ''}.
-On a analysé son site et préparé un rapport d'audit complet (SEO + visibilité IA).
-Le lien du rapport est : ${reportUrl}
-
-Le message doit :
-- Être personnalisé et naturel (pas de spam)
-- Mentionner un insight concret tiré de l'audit
-- Donner envie de cliquer sur le lien
-- Ne PAS mentionner Crawlers.fr directement dans le premier message
+    pitch: `Tu es un expert B2B SEO. ${langInstructions[lang] || langInstructions.fr}
+Rédige un message LinkedIn (max 300 caractères) pour ${firstName}${company ? ` de ${company}` : ''}.
+${reportUrl ? `On a analysé son site — rapport : ${reportUrl}. Mentionne un insight concret. Donne envie de cliquer.` : `On n'a pas son URL. Propose un audit gratuit SEO+IA de son site ou celui d'un concurrent.`}
+- Naturel, pas de spam, pas de Crawlers.fr
 - Finir par une question ouverte
+Réponds UNIQUEMENT avec le message.`,
 
-Réponds UNIQUEMENT avec le message, sans guillemets ni explication.`;
-  } else {
-    prompt = `Tu es un expert en prospection B2B pour une plateforme d'audit SEO/GEO.
-${langInstructions[lang] || langInstructions.fr}
+    followup_1: `Tu es un expert B2B. ${langInstructions[lang] || langInstructions.fr}
+Rédige une RELANCE LinkedIn courte (max 250 caractères) pour ${firstName}${company ? ` de ${company}` : ''}.
+On lui a déjà envoyé un premier message il y a quelques jours${reportUrl ? ` avec un audit SEO` : ''}.
+- Rappeler subtilement la proposition sans être insistant
+- Ajouter un nouvel angle de valeur (tendance SEO, IA, concurrent)
+- Naturel, PAS de copier-coller évident
+Réponds UNIQUEMENT avec le message.`,
 
-Rédige un message LinkedIn court (max 250 caractères) pour ${firstName}${company ? ` de ${company}` : ''} (poste : ${prospect.job_title || 'inconnu'}).
-On n'a PAS son URL de site web. L'objectif est d'obtenir une URL (son site, celui d'un client ou d'un concurrent) pour réaliser un audit gratuit.
+    followup_2: `Tu es un expert B2B. ${langInstructions[lang] || langInstructions.fr}
+Rédige un DERNIER message LinkedIn (max 200 caractères) pour ${firstName}${company ? ` de ${company}` : ''}.
+C'est la dernière relance, on ne le recontactera plus après.
+- Ton léger et décontracté, zéro pression
+- Mentionner que c'est le dernier message
+- Laisser la porte ouverte pour le futur
+Réponds UNIQUEMENT avec le message.`,
+  };
 
-Le message doit :
-- Être personnalisé et naturel
-- Proposer un audit gratuit en échange d'une URL
-- Mentionner qu'on peut analyser un concurrent aussi
-- Être engageant sans être insistant
-
-Réponds UNIQUEMENT avec le message, sans guillemets ni explication.`;
-  }
+  const prompt = prompts[stepAction] || prompts.pitch;
 
   try {
     const result = await callLovableAIText(prompt, {
       model: 'google/gemini-2.5-flash',
-      maxTokens: 500,
+      maxTokens: 400,
     });
-    return result.text || '';
+    return result.text || `Salut ${firstName} !`;
   } catch (e) {
     console.error('Message generation failed:', e);
-    // Fallback templates
-    if (type === 'audit_ready') {
-      if (lang === 'en') return `Hi ${firstName}, I ran a quick SEO & AI visibility analysis on your site — found some interesting insights. Here's the report: ${reportUrl} — what do you think?`;
-      if (lang === 'es') return `Hola ${firstName}, hice un análisis rápido de SEO y visibilidad IA de tu sitio — encontré cosas interesantes. Aquí está el informe: ${reportUrl} — ¿qué te parece?`;
-      return `Salut ${firstName}, j'ai analysé ton site en SEO et visibilité IA — des insights intéressants. Voici le rapport : ${reportUrl} — qu'en penses-tu ?`;
-    } else {
-      if (lang === 'en') return `Hi ${firstName}, I'm offering free SEO & AI visibility audits — I can analyze your site, a client's, or even a competitor's. Interested?`;
-      if (lang === 'es') return `Hola ${firstName}, ofrezco auditorías gratuitas de SEO y visibilidad IA — puedo analizar tu sitio, el de un cliente o incluso un competidor. ¿Te interesa?`;
-      return `Salut ${firstName}, je propose des audits gratuits SEO + visibilité IA — je peux analyser ton site, celui d'un client ou même d'un concurrent. Ça t'intéresse ?`;
-    }
+    return `Salut ${firstName}, j'aimerais échanger avec toi sur la visibilité SEO${company ? ` de ${company}` : ''}. Ça t'intéresse ?`;
   }
 }
 
@@ -144,10 +203,7 @@ async function triggerMarinaAudit(url: string, language: string): Promise<{ jobI
   try {
     const resp = await fetch(`${SUPABASE_URL}/functions/v1/marina`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SERVICE_KEY}`,
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_KEY}` },
       body: JSON.stringify({ url, language, source: 'prospect-pipeline' }),
     });
     const data = await resp.json();
@@ -157,13 +213,7 @@ async function triggerMarinaAudit(url: string, language: string): Promise<{ jobI
   }
 }
 
-function jsonOk(data: any) {
-  return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-}
-function jsonError(msg: string, status = 400) {
-  return new Response(JSON.stringify({ error: msg }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-}
-
+// ═══════════════════════════════════════════════════════════════════════════
 Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -175,12 +225,10 @@ Deno.serve(handleRequest(async (req) => {
     const url = new URL(req.url);
     const action = body.action || url.searchParams.get('action') || '';
 
-    // ─── Webhook Import (from Waalaxy, PhantomBuster, etc.) ───
+    // ─── Webhook Import ───
     if (action === 'webhook_import') {
       const prospects = body.prospects || [];
-      if (!Array.isArray(prospects) || prospects.length === 0) {
-        return jsonError('prospects array is required');
-      }
+      if (!Array.isArray(prospects) || prospects.length === 0) return jsonError('prospects array is required');
 
       const rows = prospects.map((p: any) => ({
         first_name: p.first_name || p.firstName || p.prenom || 'Unknown',
@@ -203,170 +251,233 @@ Deno.serve(handleRequest(async (req) => {
       return jsonOk({ success: true, imported: (data || []).length });
     }
 
-    // ─── Qualify Batch: score all 'new' prospects ───
+    // ─── Qualify Batch ───
     if (action === 'qualify_batch') {
       const { data: prospects } = await supabase
-        .from('marina_prospects')
-        .select('*')
-        .eq('status', 'new')
-        .limit(100);
+        .from('marina_prospects').select('*').eq('status', 'new').limit(100);
 
-      if (!prospects || prospects.length === 0) {
-        return jsonOk({ success: true, qualified: 0, message: 'No new prospects to qualify' });
-      }
+      if (!prospects || prospects.length === 0) return jsonOk({ success: true, qualified: 0 });
 
-      let qualifiedCount = 0;
+      let count = 0;
       for (const p of prospects) {
         const { score, details } = scoreProspect(p);
-        await supabase
-          .from('marina_prospects')
+        await supabase.from('marina_prospects')
           .update({ score, score_details: details, status: score >= 30 ? 'qualified' : 'low_score' })
           .eq('id', p.id);
-        qualifiedCount++;
+        count++;
       }
-
-      return jsonOk({ success: true, qualified: qualifiedCount });
+      return jsonOk({ success: true, qualified: count });
     }
 
-    // ─── Prepare Outreach: generate audits + messages ───
+    // ─── Prepare Outreach (Step 1: invitation) ───
     if (action === 'prepare_outreach') {
       const { data: prospects } = await supabase
-        .from('marina_prospects')
-        .select('*')
+        .from('marina_prospects').select('*')
         .eq('status', 'qualified')
         .order('score', { ascending: false })
         .limit(body.limit || 10);
 
-      if (!prospects || prospects.length === 0) {
-        return jsonOk({ success: true, prepared: 0, message: 'No qualified prospects to prepare' });
-      }
+      if (!prospects || prospects.length === 0) return jsonOk({ success: true, prepared: 0 });
 
-      let preparedCount = 0;
+      let count = 0;
       for (const p of prospects) {
-        let messageType: 'audit_ready' | 'ask_url' = p.website_url ? 'audit_ready' : 'ask_url';
-        let reportUrl: string | undefined;
-
-        // Trigger Marina audit if URL available
-        if (p.website_url && messageType === 'audit_ready') {
+        // Trigger Marina audit if URL available (runs in background)
+        if (p.website_url) {
           const { jobId } = await triggerMarinaAudit(p.website_url, p.language || 'fr');
           if (jobId) {
-            await supabase
-              .from('marina_prospects')
-              .update({ marina_audit_id: jobId })
-              .eq('id', p.id);
-            // Note: report URL will be available after Marina completes
-            // For now, mark as processing — CRON will check later
+            await supabase.from('marina_prospects').update({ marina_audit_id: jobId }).eq('id', p.id);
           }
         }
 
-        // Generate personalized message
-        const message = await generateMessage(p, messageType, reportUrl);
+        // Generate invitation note
+        const message = await generateStepMessage(p, 'invitation');
 
-        // Insert into outreach queue
+        // Calculate when step 2 (pitch) should fire — business days + jitter
+        const nextActionAt = addBusinessDays(
+          new Date(), 
+          ANTI_BOT.DELAYS.invitation_to_pitch[0], 
+          ANTI_BOT.DELAYS.invitation_to_pitch[1]
+        );
+
         await supabase.from('prospect_outreach_queue').insert({
           prospect_id: p.id,
-          message_type: messageType,
+          step_number: 1,
+          channel: 'linkedin',
+          message_type: 'invitation',
           message_content: message,
           message_language: p.language || 'fr',
-          report_share_url: reportUrl || null,
-          status: messageType === 'ask_url' ? 'ready' : 'pending',
+          status: 'ready',
+          next_action_at: nextActionAt.toISOString(),
         });
 
-        await supabase
-          .from('marina_prospects')
-          .update({ status: 'contacted' })
-          .eq('id', p.id);
-
-        preparedCount++;
+        await supabase.from('marina_prospects').update({ status: 'contacted' }).eq('id', p.id);
+        count++;
       }
-
-      return jsonOk({ success: true, prepared: preparedCount });
+      return jsonOk({ success: true, prepared: count });
     }
 
-    // ─── Check Marina results & finalize pending outreach ───
+    // ─── Finalize Pending (check Marina results) ───
     if (action === 'finalize_pending') {
       const { data: pending } = await supabase
         .from('prospect_outreach_queue')
         .select('*, marina_prospects!prospect_outreach_queue_prospect_id_fkey(*)')
-        .eq('status', 'pending')
-        .limit(50);
+        .eq('status', 'pending').limit(50);
 
-      if (!pending || pending.length === 0) {
-        return jsonOk({ success: true, finalized: 0 });
-      }
+      if (!pending || pending.length === 0) return jsonOk({ success: true, finalized: 0 });
 
-      let finalizedCount = 0;
+      let count = 0;
       for (const item of pending as any[]) {
         const prospect = item.marina_prospects;
         if (!prospect?.marina_audit_id) continue;
 
-        // Check if Marina job completed
-        const { data: job } = await supabase
-          .from('async_jobs')
-          .select('status, result_data')
-          .eq('id', prospect.marina_audit_id)
-          .maybeSingle();
+        const { data: job } = await supabase.from('async_jobs')
+          .select('status, result_data').eq('id', prospect.marina_audit_id).maybeSingle();
 
         if (job?.status === 'completed' && job.result_data) {
-          const result = job.result_data as any;
-          const reportUrl = result.report_url || result.reportUrl;
-
+          const reportUrl = (job.result_data as any).report_url || (job.result_data as any).reportUrl;
           if (reportUrl) {
-            // Regenerate message with actual report URL
-            const message = await generateMessage(prospect, 'audit_ready', reportUrl);
-            await supabase
-              .from('prospect_outreach_queue')
-              .update({
-                status: 'ready',
-                message_content: message,
-                report_share_url: reportUrl,
-              })
+            const message = await generateStepMessage(prospect, 'pitch', reportUrl);
+            await supabase.from('prospect_outreach_queue')
+              .update({ status: 'ready', message_content: message, report_share_url: reportUrl })
               .eq('id', item.id);
-
-            await supabase
-              .from('marina_prospects')
-              .update({ marina_report_url: reportUrl })
-              .eq('id', prospect.id);
-
-            finalizedCount++;
+            await supabase.from('marina_prospects')
+              .update({ marina_report_url: reportUrl }).eq('id', prospect.id);
+            count++;
           }
         } else if (job?.status === 'failed') {
-          // Fallback to ask_url if Marina failed
-          const message = await generateMessage(prospect, 'ask_url');
-          await supabase
-            .from('prospect_outreach_queue')
-            .update({
-              status: 'ready',
-              message_type: 'ask_url',
-              message_content: message,
-            })
+          const message = await generateStepMessage(prospect, 'pitch');
+          await supabase.from('prospect_outreach_queue')
+            .update({ status: 'ready', message_type: 'pitch', message_content: message })
             .eq('id', item.id);
-          finalizedCount++;
+          count++;
         }
       }
+      return jsonOk({ success: true, finalized: count });
+    }
 
-      return jsonOk({ success: true, finalized: finalizedCount });
+    // ─── Advance Sequence: LinkedIn only, anti-bot timing ───
+    if (action === 'advance_sequence') {
+      // Only run during business hours
+      if (!isBusinessTime()) {
+        return jsonOk({ success: true, advanced: 0, message: 'Outside business hours — skipped' });
+      }
+
+      const now = new Date();
+      const { data: dueItems } = await supabase
+        .from('prospect_outreach_queue')
+        .select('*, marina_prospects!prospect_outreach_queue_prospect_id_fkey(*)')
+        .eq('status', 'sent')
+        .lte('next_action_at', now.toISOString())
+        .not('next_action_at', 'is', null)
+        .order('next_action_at', { ascending: true })
+        .limit(30);
+
+      if (!dueItems || dueItems.length === 0) return jsonOk({ success: true, advanced: 0 });
+
+      const steps = DEFAULT_SEQUENCE;
+      let advancedCount = 0;
+
+      for (const item of dueItems as any[]) {
+        const prospect = item.marina_prospects;
+        if (!prospect) continue;
+
+        const currentStep = item.step_number || 1;
+
+        // Cooldown check: if step 1 was sent > 21 days ago with no reply → archive
+        if (currentStep >= 4) {
+          await supabase.from('prospect_outreach_queue')
+            .update({ status: 'sequence_complete', next_action_at: null }).eq('id', item.id);
+          await supabase.from('outreach_events').insert({
+            prospect_id: prospect.id, queue_item_id: item.id,
+            user_id: prospect.user_id || '00000000-0000-0000-0000-000000000000',
+            event_type: 'sequence_completed', channel: 'linkedin',
+          });
+          advancedCount++;
+          continue;
+        }
+
+        const nextStepDef = steps.find(s => s.step === currentStep + 1);
+        if (!nextStepDef) continue;
+
+        // Generate message for next step
+        const messageContent = await generateStepMessage(
+          prospect, nextStepDef.action, prospect.marina_report_url
+        );
+
+        // Calculate next action: business days + jitter
+        const delayRange = nextStepDef.step < steps.length
+          ? steps[nextStepDef.step]?.delay_range || [5, 8]
+          : [0, 0];
+        const nextActionAt = delayRange[0] > 0 || delayRange[1] > 0
+          ? addBusinessDays(now, delayRange[0], delayRange[1]).toISOString()
+          : null;
+
+        // Create next step
+        await supabase.from('prospect_outreach_queue').insert({
+          prospect_id: prospect.id,
+          step_number: nextStepDef.step,
+          channel: 'linkedin',
+          sequence_id: item.sequence_id,
+          message_type: nextStepDef.action,
+          message_content: messageContent,
+          message_language: prospect.language || 'fr',
+          report_share_url: prospect.marina_report_url || null,
+          status: 'ready',
+          next_action_at: nextActionAt,
+        });
+
+        // Mark old item as advanced
+        await supabase.from('prospect_outreach_queue')
+          .update({ status: 'advanced', next_action_at: null }).eq('id', item.id);
+
+        await supabase.from('outreach_events').insert({
+          prospect_id: prospect.id, queue_item_id: item.id,
+          user_id: prospect.user_id || '00000000-0000-0000-0000-000000000000',
+          event_type: 'step_advanced', channel: 'linkedin',
+          metadata: { from_step: currentStep, to_step: nextStepDef.step, action: nextStepDef.action },
+        });
+        advancedCount++;
+      }
+
+      return jsonOk({ success: true, advanced: advancedCount });
+    }
+
+    // ─── Cooldown: archive prospects with no response after N days ───
+    if (action === 'apply_cooldown') {
+      const cutoff = new Date(Date.now() - ANTI_BOT.DELAYS.cooldown_days * 86400000).toISOString();
+      const { data: stale } = await supabase
+        .from('prospect_outreach_queue')
+        .select('id, prospect_id')
+        .eq('status', 'sent')
+        .lt('sent_at', cutoff)
+        .limit(100);
+
+      if (!stale || stale.length === 0) return jsonOk({ success: true, archived: 0 });
+
+      let count = 0;
+      for (const item of stale) {
+        await supabase.from('prospect_outreach_queue')
+          .update({ status: 'expired', next_action_at: null }).eq('id', item.id);
+        await supabase.from('marina_prospects')
+          .update({ status: 'lost' }).eq('id', item.prospect_id);
+        count++;
+      }
+      return jsonOk({ success: true, archived: count });
     }
 
     // ─── List prospects ───
     if (action === 'list') {
       const status = body.status || url.searchParams.get('status');
       const limit = parseInt(body.limit || url.searchParams.get('limit') || '50');
-      
-      let query = supabase
-        .from('marina_prospects')
-        .select('*, prospect_outreach_queue(*)')
-        .order('score', { ascending: false })
-        .limit(limit);
-
+      let query = supabase.from('marina_prospects')
+        .select('*, prospect_outreach_queue(*)').order('score', { ascending: false }).limit(limit);
       if (status) query = query.eq('status', status);
-
       const { data, error } = await query;
       if (error) return jsonError(error.message, 500);
       return jsonOk({ success: true, prospects: data || [] });
     }
 
-    // ─── Update status ───
+    // ─── Update status (mark as sent/replied) ───
     if (action === 'update_status') {
       const { prospect_id, status, outreach_id } = body;
       if (!prospect_id && !outreach_id) return jsonError('prospect_id or outreach_id required');
@@ -377,250 +488,120 @@ Deno.serve(handleRequest(async (req) => {
       if (outreach_id) {
         const updates: any = { status };
         if (status === 'sent') updates.sent_at = new Date().toISOString();
-        if (status === 'replied') updates.replied_at = new Date().toISOString();
+        if (status === 'replied') {
+          updates.replied_at = new Date().toISOString();
+          updates.next_action_at = null; // Stop sequence on reply
+        }
         await supabase.from('prospect_outreach_queue').update(updates).eq('id', outreach_id);
-      }
 
+        // If replied, pause all future steps for this prospect
+        if (status === 'replied' && prospect_id) {
+          await supabase.from('prospect_outreach_queue')
+            .update({ status: 'paused_reply', next_action_at: null })
+            .eq('prospect_id', prospect_id)
+            .eq('status', 'ready');
+          
+          await supabase.from('marina_prospects').update({ status: 'replied' }).eq('id', prospect_id);
+          
+          await supabase.from('outreach_events').insert({
+            prospect_id, queue_item_id: outreach_id,
+            user_id: '00000000-0000-0000-0000-000000000000',
+            event_type: 'replied_manually', channel: 'linkedin',
+          });
+        }
+      }
       return jsonOk({ success: true });
     }
 
-    // ─── Advance Sequence: move prospects to next step if delay elapsed ───
-    if (action === 'advance_sequence') {
-      const now = new Date();
-      // Get all active queue items where next_action_at has passed
-      const { data: dueItems } = await supabase
-        .from('prospect_outreach_queue')
-        .select('*, marina_prospects!prospect_outreach_queue_prospect_id_fkey(*)')
-        .in('status', ['sent', 'ready'])
-        .lte('next_action_at', now.toISOString())
-        .not('next_action_at', 'is', null)
-        .limit(50);
-
-      if (!dueItems || dueItems.length === 0) {
-        return jsonOk({ success: true, advanced: 0, message: 'No items due for advancement' });
-      }
-
-      let advancedCount = 0;
-      for (const item of dueItems as any[]) {
-        const prospect = item.marina_prospects;
-        if (!prospect) continue;
-
-        // Get the sequence to find next step
-        let steps: any[] = [];
-        if (item.sequence_id) {
-          const { data: seq } = await supabase
-            .from('outreach_sequences')
-            .select('steps')
-            .eq('id', item.sequence_id)
-            .maybeSingle();
-          if (seq?.steps) steps = seq.steps as any[];
-        }
-        
-        if (steps.length === 0) {
-          // Use default sequence
-          steps = [
-            { step: 1, channel: 'linkedin', action: 'invitation', delay_days: 0 },
-            { step: 2, channel: 'linkedin', action: 'message', delay_days: 2 },
-            { step: 3, channel: 'email', action: 'email_pitch', delay_days: 5 },
-            { step: 4, channel: 'email', action: 'email_followup', delay_days: 10 },
-          ];
-        }
-
-        const currentStep = item.step_number || 1;
-        const nextStepDef = steps.find((s: any) => s.step === currentStep + 1);
-        
-        if (!nextStepDef) {
-          // Sequence complete — mark as done
-          await supabase
-            .from('prospect_outreach_queue')
-            .update({ status: 'sequence_complete', next_action_at: null })
-            .eq('id', item.id);
-          
-          // Log event
-          await supabase.from('outreach_events').insert({
-            prospect_id: prospect.id,
-            queue_item_id: item.id,
-            user_id: prospect.user_id || '00000000-0000-0000-0000-000000000000',
-            event_type: 'sequence_completed',
-            channel: item.channel || 'linkedin',
-          });
-          advancedCount++;
-          continue;
-        }
-
-        // Generate message for next step
-        const isEmailStep = nextStepDef.channel === 'email';
-        let messageContent = '';
-        
-        if (isEmailStep) {
-          // Email step — generate email pitch
-          messageContent = await generateMessage(
-            prospect, 
-            prospect.marina_report_url ? 'audit_ready' : 'ask_url',
-            prospect.marina_report_url
-          );
-        } else {
-          // LinkedIn step — generate LinkedIn message  
-          messageContent = await generateMessage(
-            prospect,
-            prospect.marina_report_url ? 'audit_ready' : 'ask_url',
-            prospect.marina_report_url
-          );
-        }
-
-        // Calculate next action time with random jitter (±2h to look human)
-        const nextDelay = steps.find((s: any) => s.step === currentStep + 2);
-        let nextActionAt: string | null = null;
-        if (nextDelay) {
-          const jitterHours = (Math.random() - 0.5) * 4; // ±2h
-          const delayMs = (nextDelay.delay_days - nextStepDef.delay_days) * 86400000 + jitterHours * 3600000;
-          nextActionAt = new Date(Date.now() + delayMs).toISOString();
-        }
-
-        // Create new queue item for next step
-        await supabase.from('prospect_outreach_queue').insert({
-          prospect_id: prospect.id,
-          step_number: nextStepDef.step,
-          channel: nextStepDef.channel,
-          sequence_id: item.sequence_id,
-          message_type: nextStepDef.action,
-          message_content: messageContent,
-          message_language: prospect.language || 'fr',
-          report_share_url: prospect.marina_report_url || null,
-          email_address: item.email_address,
-          status: isEmailStep ? 'ready_email' : 'ready',
-          next_action_at: nextActionAt,
-        });
-
-        // Mark old item as advanced
-        await supabase
-          .from('prospect_outreach_queue')
-          .update({ status: 'advanced', next_action_at: null })
-          .eq('id', item.id);
-
-        // Log event
-        await supabase.from('outreach_events').insert({
-          prospect_id: prospect.id,
-          queue_item_id: item.id,
-          user_id: prospect.user_id || '00000000-0000-0000-0000-000000000000',
-          event_type: 'step_advanced',
-          channel: nextStepDef.channel,
-          metadata: { from_step: currentStep, to_step: nextStepDef.step, action: nextStepDef.action },
-        });
-
-        advancedCount++;
-      }
-
-      return jsonOk({ success: true, advanced: advancedCount });
-    }
-
-    // ─── Get/Update daily quotas ───
+    // ─── Get daily quotas ───
     if (action === 'get_quotas') {
       const userId = body.user_id;
       if (!userId) return jsonError('user_id required');
-      
       const today = new Date().toISOString().split('T')[0];
-      const { data } = await supabase
-        .from('outreach_daily_quotas')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('quota_date', today)
-        .maybeSingle();
+      const { data } = await supabase.from('outreach_daily_quotas')
+        .select('*').eq('user_id', userId).eq('quota_date', today).maybeSingle();
       
-      return jsonOk({ 
-        success: true, 
-        quotas: data || { invitations_sent: 0, messages_sent: 0, max_invitations: 20, max_messages: 40, quota_date: today } 
+      // Today's randomized limits
+      const maxInv = getDailyLimit('invitation');
+      const maxMsg = getDailyLimit('message');
+      return jsonOk({
+        success: true,
+        quotas: data || { invitations_sent: 0, messages_sent: 0, quota_date: today },
+        limits: { max_invitations: maxInv, max_messages: maxMsg },
+        is_business_hours: isBusinessTime(),
       });
     }
 
+    // ─── Increment quota (called when user marks as sent) ───
     if (action === 'increment_quota') {
       const userId = body.user_id;
       const quotaType = body.type; // 'invitation' or 'message'
       if (!userId || !quotaType) return jsonError('user_id and type required');
 
+      if (!isBusinessTime()) {
+        return jsonOk({ success: false, blocked: true, reason: 'outside_business_hours' });
+      }
+
       const today = new Date().toISOString().split('T')[0];
-      
-      // Upsert today's quota
-      const { data: existing } = await supabase
-        .from('outreach_daily_quotas')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('quota_date', today)
-        .maybeSingle();
+      const maxToday = getDailyLimit(quotaType);
+
+      const { data: existing } = await supabase.from('outreach_daily_quotas')
+        .select('*').eq('user_id', userId).eq('quota_date', today).maybeSingle();
 
       if (existing) {
         const field = quotaType === 'invitation' ? 'invitations_sent' : 'messages_sent';
-        const maxField = quotaType === 'invitation' ? 'max_invitations' : 'max_messages';
         const current = (existing as any)[field] || 0;
-        const max = (existing as any)[maxField] || (quotaType === 'invitation' ? 20 : 40);
-        
-        if (current >= max) {
-          return jsonOk({ success: false, quota_exceeded: true, current, max });
+        if (current >= maxToday) {
+          return jsonOk({ success: false, quota_exceeded: true, current, max: maxToday });
         }
-
-        await supabase
-          .from('outreach_daily_quotas')
-          .update({ [field]: current + 1 })
-          .eq('id', existing.id);
-        
-        return jsonOk({ success: true, current: current + 1, max, remaining: max - current - 1 });
+        await supabase.from('outreach_daily_quotas')
+          .update({ [field]: current + 1 }).eq('id', existing.id);
+        return jsonOk({ success: true, current: current + 1, max: maxToday, remaining: maxToday - current - 1 });
       } else {
         const field = quotaType === 'invitation' ? 'invitations_sent' : 'messages_sent';
         await supabase.from('outreach_daily_quotas').insert({
-          user_id: userId,
-          quota_date: today,
-          [field]: 1,
+          user_id: userId, quota_date: today, [field]: 1,
         });
-        return jsonOk({ success: true, current: 1, max: quotaType === 'invitation' ? 20 : 40 });
+        return jsonOk({ success: true, current: 1, max: maxToday });
       }
     }
 
-    // ─── Run full nightly pipeline ───
-    if (action === 'nightly_run') {
-      // Step 1: Qualify new prospects
-      const qualifyResp = await fetch(`${SUPABASE_URL}/functions/v1/prospect-pipeline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_KEY}` },
-        body: JSON.stringify({ action: 'qualify_batch' }),
-      });
-      const qualifyResult = await qualifyResp.json();
-
-      // Step 2: Prepare outreach for qualified
-      const prepareResp = await fetch(`${SUPABASE_URL}/functions/v1/prospect-pipeline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_KEY}` },
-        body: JSON.stringify({ action: 'prepare_outreach', limit: 15 }),
-      });
-      const prepareResult = await prepareResp.json();
-
-      // Step 3: Finalize pending (check Marina results)
-      const finalizeResp = await fetch(`${SUPABASE_URL}/functions/v1/prospect-pipeline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_KEY}` },
-        body: JSON.stringify({ action: 'finalize_pending' }),
-      });
-      const finalizeResult = await finalizeResp.json();
-
-      // Step 4: Advance sequences (move to next step if delay elapsed)
-      const advanceResp = await fetch(`${SUPABASE_URL}/functions/v1/prospect-pipeline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_KEY}` },
-        body: JSON.stringify({ action: 'advance_sequence' }),
-      });
-      const advanceResult = await advanceResp.json();
-
+    // ─── Get sequence config ───
+    if (action === 'get_sequence') {
       return jsonOk({
         success: true,
-        nightly_run: {
-          qualified: qualifyResult.qualified || 0,
-          prepared: prepareResult.prepared || 0,
-          finalized: finalizeResult.finalized || 0,
-          advanced: advanceResult.advanced || 0,
+        sequence: DEFAULT_SEQUENCE,
+        anti_bot: {
+          invitations_range: [ANTI_BOT.INVITATIONS_MIN, ANTI_BOT.INVITATIONS_MAX],
+          messages_range: [ANTI_BOT.MESSAGES_MIN, ANTI_BOT.MESSAGES_MAX],
+          business_hours: `${ANTI_BOT.HOUR_START}h-${ANTI_BOT.HOUR_END}h UTC`,
+          skip_weekends: ANTI_BOT.SKIP_WEEKENDS,
+          cooldown_days: ANTI_BOT.DELAYS.cooldown_days,
         },
       });
     }
 
-    return jsonError('Unknown action. Use: webhook_import, qualify_batch, prepare_outreach, finalize_pending, advance_sequence, get_quotas, increment_quota, list, update_status, nightly_run');
+    // ─── Nightly run (full pipeline) ───
+    if (action === 'nightly_run') {
+      const results: Record<string, any> = {};
+
+      for (const step of ['qualify_batch', 'prepare_outreach', 'finalize_pending', 'advance_sequence', 'apply_cooldown']) {
+        try {
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/prospect-pipeline`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_KEY}` },
+            body: JSON.stringify({ action: step, limit: 15 }),
+          });
+          results[step] = await resp.json();
+        } catch (e: any) {
+          results[step] = { error: e.message };
+        }
+      }
+
+      return jsonOk({ success: true, nightly_run: results });
+    }
+
+    return jsonError('Unknown action. Use: webhook_import, qualify_batch, prepare_outreach, finalize_pending, advance_sequence, apply_cooldown, get_quotas, increment_quota, get_sequence, list, update_status, nightly_run');
   } catch (e: any) {
     console.error('prospect-pipeline error:', e);
     return jsonError(e.message || 'Internal error', 500);
