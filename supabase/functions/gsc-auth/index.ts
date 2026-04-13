@@ -300,7 +300,30 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   // POST: API calls (login, fetch)
   // ═══════════════════════════════════════════════════════════════════
   try {
-    const { action, site_url, user_id, frontend_origin, start_date, end_date, connection_id, google_email } = await req.json();
+    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email } = await req.json();
+
+    // ─── SECURITY: Validate JWT and enforce real user_id ─────────
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.replace('Bearer ', '');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const isServiceRole = serviceRoleKey && token === serviceRoleKey;
+
+    let user_id: string;
+    if (isServiceRole) {
+      // Internal calls can specify user_id
+      if (!body_user_id) return jsonError('user_id required for service calls', 400);
+      user_id = body_user_id;
+    } else if (action === 'login') {
+      // Login doesn't require auth yet — user_id comes from frontend state
+      user_id = body_user_id || '';
+    } else {
+      // All other actions: extract from JWT, ignore body user_id
+      const { getUserClient } = await import('../_shared/supabaseClient.ts');
+      const userClient = getUserClient(authHeader);
+      const { data: { user }, error: authError } = await userClient.auth.getUser();
+      if (authError || !user) return jsonError('Unauthorized', 401);
+      user_id = user.id;
+    }
 
     // Check if full Google access is enabled via system_config
     const supabase = getServiceClient();

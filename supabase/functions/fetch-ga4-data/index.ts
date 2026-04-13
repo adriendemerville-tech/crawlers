@@ -1,4 +1,4 @@
-import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
@@ -22,12 +22,27 @@ Deno.serve(handleRequest(async (req) => {
 const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
   const supabase = getServiceClient()
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
   try {
-    const { action, user_id, property_id, start_date, end_date, domain } = await req.json()
+    const { action, user_id: body_user_id, property_id, start_date, end_date, domain } = await req.json()
 
-    if (!user_id) {
-      return jsonError('user_id required', 400)
+    // ─── SECURITY: Validate JWT and enforce real user_id ─────────
+    const authHeader = req.headers.get('Authorization') || ''
+    const token = authHeader.replace('Bearer ', '')
+    const isServiceRole = serviceRoleKey && token === serviceRoleKey
+
+    let user_id: string
+    if (isServiceRole) {
+      // Internal calls (cron, gsc-auth first pull) can specify user_id
+      if (!body_user_id) return jsonError('user_id required for service calls', 400)
+      user_id = body_user_id
+    } else {
+      // Regular user: extract from JWT, ignore body user_id
+      const userClient = getUserClient(authHeader)
+      const { data: { user }, error: authError } = await userClient.auth.getUser()
+      if (authError || !user) return jsonError('Unauthorized', 401)
+      user_id = user.id
     }
 
     // ─── Get & refresh access token ──────────────────────────────
