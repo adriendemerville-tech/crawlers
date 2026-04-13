@@ -195,7 +195,27 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
 
   // ═══════════ POST: API actions ═══════════
   try {
-    const { action, user_id, frontend_origin } = await req.json()
+    const { action, user_id: body_user_id, frontend_origin } = await req.json()
+
+    // ─── SECURITY: Validate JWT and enforce real user_id ─────────
+    const authHeader = req.headers.get('Authorization') || ''
+    const token = authHeader.replace('Bearer ', '')
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const isServiceRole = serviceRoleKey && token === serviceRoleKey
+
+    let user_id: string
+    if (action === 'login') {
+      // Login doesn't require auth yet
+      user_id = body_user_id || ''
+    } else if (isServiceRole) {
+      if (!body_user_id) return jsonError('user_id required for service calls', 400)
+      user_id = body_user_id
+    } else {
+      const userClient = getUserClient(authHeader)
+      const { data: { user }, error: authError } = await userClient.auth.getUser()
+      if (authError || !user) return jsonError('Unauthorized', 401)
+      user_id = user.id
+    }
 
     // === LOGIN: Generate GBP-only OAuth URL ===
     if (action === 'login') {
