@@ -6910,6 +6910,126 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_daily_quotas: {
+        Row: {
+          created_at: string
+          id: string
+          invitations_sent: number
+          max_invitations: number
+          max_messages: number
+          messages_sent: number
+          quota_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitations_sent?: number
+          max_invitations?: number
+          max_messages?: number
+          messages_sent?: number
+          quota_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitations_sent?: number
+          max_invitations?: number
+          max_messages?: number
+          messages_sent?: number
+          quota_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      outreach_events: {
+        Row: {
+          channel: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          prospect_id: string
+          queue_item_id: string | null
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          prospect_id: string
+          queue_item_id?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          prospect_id?: string
+          queue_item_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_events_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "marina_prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_events_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_outreach_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_sequences: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          steps: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          steps?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          steps?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       page_priority_scores: {
         Row: {
           breakdown: Json
@@ -7727,42 +7847,57 @@ export type Database = {
       }
       prospect_outreach_queue: {
         Row: {
+          channel: string
           created_at: string
+          email_address: string | null
           id: string
           message_content: string | null
           message_language: string
           message_type: string
+          next_action_at: string | null
           prospect_id: string
           replied_at: string | null
           report_share_url: string | null
           sent_at: string | null
+          sequence_id: string | null
           status: string
+          step_number: number
           updated_at: string
         }
         Insert: {
+          channel?: string
           created_at?: string
+          email_address?: string | null
           id?: string
           message_content?: string | null
           message_language?: string
           message_type?: string
+          next_action_at?: string | null
           prospect_id: string
           replied_at?: string | null
           report_share_url?: string | null
           sent_at?: string | null
+          sequence_id?: string | null
           status?: string
+          step_number?: number
           updated_at?: string
         }
         Update: {
+          channel?: string
           created_at?: string
+          email_address?: string | null
           id?: string
           message_content?: string | null
           message_language?: string
           message_type?: string
+          next_action_at?: string | null
           prospect_id?: string
           replied_at?: string | null
           report_share_url?: string | null
           sent_at?: string | null
+          sequence_id?: string | null
           status?: string
+          step_number?: number
           updated_at?: string
         }
         Relationships: [
@@ -7771,6 +7906,13 @@ export type Database = {
             columns: ["prospect_id"]
             isOneToOne: false
             referencedRelation: "marina_prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_outreach_queue_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_sequences"
             referencedColumns: ["id"]
           },
         ]

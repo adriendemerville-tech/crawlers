@@ -384,6 +384,197 @@ Deno.serve(handleRequest(async (req) => {
       return jsonOk({ success: true });
     }
 
+    // ─── Advance Sequence: move prospects to next step if delay elapsed ───
+    if (action === 'advance_sequence') {
+      const now = new Date();
+      // Get all active queue items where next_action_at has passed
+      const { data: dueItems } = await supabase
+        .from('prospect_outreach_queue')
+        .select('*, marina_prospects!prospect_outreach_queue_prospect_id_fkey(*)')
+        .in('status', ['sent', 'ready'])
+        .lte('next_action_at', now.toISOString())
+        .not('next_action_at', 'is', null)
+        .limit(50);
+
+      if (!dueItems || dueItems.length === 0) {
+        return jsonOk({ success: true, advanced: 0, message: 'No items due for advancement' });
+      }
+
+      let advancedCount = 0;
+      for (const item of dueItems as any[]) {
+        const prospect = item.marina_prospects;
+        if (!prospect) continue;
+
+        // Get the sequence to find next step
+        let steps: any[] = [];
+        if (item.sequence_id) {
+          const { data: seq } = await supabase
+            .from('outreach_sequences')
+            .select('steps')
+            .eq('id', item.sequence_id)
+            .maybeSingle();
+          if (seq?.steps) steps = seq.steps as any[];
+        }
+        
+        if (steps.length === 0) {
+          // Use default sequence
+          steps = [
+            { step: 1, channel: 'linkedin', action: 'invitation', delay_days: 0 },
+            { step: 2, channel: 'linkedin', action: 'message', delay_days: 2 },
+            { step: 3, channel: 'email', action: 'email_pitch', delay_days: 5 },
+            { step: 4, channel: 'email', action: 'email_followup', delay_days: 10 },
+          ];
+        }
+
+        const currentStep = item.step_number || 1;
+        const nextStepDef = steps.find((s: any) => s.step === currentStep + 1);
+        
+        if (!nextStepDef) {
+          // Sequence complete — mark as done
+          await supabase
+            .from('prospect_outreach_queue')
+            .update({ status: 'sequence_complete', next_action_at: null })
+            .eq('id', item.id);
+          
+          // Log event
+          await supabase.from('outreach_events').insert({
+            prospect_id: prospect.id,
+            queue_item_id: item.id,
+            user_id: prospect.user_id || '00000000-0000-0000-0000-000000000000',
+            event_type: 'sequence_completed',
+            channel: item.channel || 'linkedin',
+          });
+          advancedCount++;
+          continue;
+        }
+
+        // Generate message for next step
+        const isEmailStep = nextStepDef.channel === 'email';
+        let messageContent = '';
+        
+        if (isEmailStep) {
+          // Email step — generate email pitch
+          messageContent = await generateMessage(
+            prospect, 
+            prospect.marina_report_url ? 'audit_ready' : 'ask_url',
+            prospect.marina_report_url
+          );
+        } else {
+          // LinkedIn step — generate LinkedIn message  
+          messageContent = await generateMessage(
+            prospect,
+            prospect.marina_report_url ? 'audit_ready' : 'ask_url',
+            prospect.marina_report_url
+          );
+        }
+
+        // Calculate next action time with random jitter (±2h to look human)
+        const nextDelay = steps.find((s: any) => s.step === currentStep + 2);
+        let nextActionAt: string | null = null;
+        if (nextDelay) {
+          const jitterHours = (Math.random() - 0.5) * 4; // ±2h
+          const delayMs = (nextDelay.delay_days - nextStepDef.delay_days) * 86400000 + jitterHours * 3600000;
+          nextActionAt = new Date(Date.now() + delayMs).toISOString();
+        }
+
+        // Create new queue item for next step
+        await supabase.from('prospect_outreach_queue').insert({
+          prospect_id: prospect.id,
+          step_number: nextStepDef.step,
+          channel: nextStepDef.channel,
+          sequence_id: item.sequence_id,
+          message_type: nextStepDef.action,
+          message_content: messageContent,
+          message_language: prospect.language || 'fr',
+          report_share_url: prospect.marina_report_url || null,
+          email_address: item.email_address,
+          status: isEmailStep ? 'ready_email' : 'ready',
+          next_action_at: nextActionAt,
+        });
+
+        // Mark old item as advanced
+        await supabase
+          .from('prospect_outreach_queue')
+          .update({ status: 'advanced', next_action_at: null })
+          .eq('id', item.id);
+
+        // Log event
+        await supabase.from('outreach_events').insert({
+          prospect_id: prospect.id,
+          queue_item_id: item.id,
+          user_id: prospect.user_id || '00000000-0000-0000-0000-000000000000',
+          event_type: 'step_advanced',
+          channel: nextStepDef.channel,
+          metadata: { from_step: currentStep, to_step: nextStepDef.step, action: nextStepDef.action },
+        });
+
+        advancedCount++;
+      }
+
+      return jsonOk({ success: true, advanced: advancedCount });
+    }
+
+    // ─── Get/Update daily quotas ───
+    if (action === 'get_quotas') {
+      const userId = body.user_id;
+      if (!userId) return jsonError('user_id required');
+      
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('outreach_daily_quotas')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('quota_date', today)
+        .maybeSingle();
+      
+      return jsonOk({ 
+        success: true, 
+        quotas: data || { invitations_sent: 0, messages_sent: 0, max_invitations: 20, max_messages: 40, quota_date: today } 
+      });
+    }
+
+    if (action === 'increment_quota') {
+      const userId = body.user_id;
+      const quotaType = body.type; // 'invitation' or 'message'
+      if (!userId || !quotaType) return jsonError('user_id and type required');
+
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Upsert today's quota
+      const { data: existing } = await supabase
+        .from('outreach_daily_quotas')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('quota_date', today)
+        .maybeSingle();
+
+      if (existing) {
+        const field = quotaType === 'invitation' ? 'invitations_sent' : 'messages_sent';
+        const maxField = quotaType === 'invitation' ? 'max_invitations' : 'max_messages';
+        const current = (existing as any)[field] || 0;
+        const max = (existing as any)[maxField] || (quotaType === 'invitation' ? 20 : 40);
+        
+        if (current >= max) {
+          return jsonOk({ success: false, quota_exceeded: true, current, max });
+        }
+
+        await supabase
+          .from('outreach_daily_quotas')
+          .update({ [field]: current + 1 })
+          .eq('id', existing.id);
+        
+        return jsonOk({ success: true, current: current + 1, max, remaining: max - current - 1 });
+      } else {
+        const field = quotaType === 'invitation' ? 'invitations_sent' : 'messages_sent';
+        await supabase.from('outreach_daily_quotas').insert({
+          user_id: userId,
+          quota_date: today,
+          [field]: 1,
+        });
+        return jsonOk({ success: true, current: 1, max: quotaType === 'invitation' ? 20 : 40 });
+      }
+    }
+
     // ─── Run full nightly pipeline ───
     if (action === 'nightly_run') {
       // Step 1: Qualify new prospects
@@ -410,17 +601,26 @@ Deno.serve(handleRequest(async (req) => {
       });
       const finalizeResult = await finalizeResp.json();
 
+      // Step 4: Advance sequences (move to next step if delay elapsed)
+      const advanceResp = await fetch(`${SUPABASE_URL}/functions/v1/prospect-pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_KEY}` },
+        body: JSON.stringify({ action: 'advance_sequence' }),
+      });
+      const advanceResult = await advanceResp.json();
+
       return jsonOk({
         success: true,
         nightly_run: {
           qualified: qualifyResult.qualified || 0,
           prepared: prepareResult.prepared || 0,
           finalized: finalizeResult.finalized || 0,
+          advanced: advanceResult.advanced || 0,
         },
       });
     }
 
-    return jsonError('Unknown action. Use: webhook_import, qualify_batch, prepare_outreach, finalize_pending, list, update_status, nightly_run');
+    return jsonError('Unknown action. Use: webhook_import, qualify_batch, prepare_outreach, finalize_pending, advance_sequence, get_quotas, increment_quota, list, update_status, nightly_run');
   } catch (e: any) {
     console.error('prospect-pipeline error:', e);
     return jsonError(e.message || 'Internal error', 500);
