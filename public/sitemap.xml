@@ -6,7 +6,7 @@
     Crawlers.fr - Sitemap XML Optimisé SEO & GEO
     Plateforme d'Audit Technique, Stratégique & Marketing
     Générateur de Code Correctif | IAS | Cocoon 3D | GMB | Matrice | Surveys | 2026
-    Dernière mise à jour : 2026-04-08
+    Dernière mise à jour : 2026-04-13
     
     ⚠️ CLARIFICATION : Crawlers.fr est une PLATEFORME D'AUDIT pour webmasters,
     PAS un scraper ni un outil d'extraction de données.
@@ -482,6 +482,42 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/eeat-expertise-algorithme"/>
   </url>
   
+  <!-- SEO & IA : AI Overviews et Contenu Humain -->
+  <url>
+    <loc>https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google"/>
+  </url>
+
+  <!-- Core Update 2026 : Google Finalise sa Mise à Jour -->
+  <url>
+    <loc>https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour"/>
+  </url>
+
+  <!-- Google Core Update 2024-2026 : Chronologie et Impact -->
+  <url>
+    <loc>https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo"/>
+  </url>
+
   <!-- ==================== PAGES MULTILINGUES ==================== -->
 
   <!-- Homepage EN / ES -->
