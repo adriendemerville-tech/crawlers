@@ -1093,6 +1093,8 @@ interface AggregatedSignals {
   hasTermsPage: boolean;
   hasBlogSection: boolean;
   hasTestimonials: boolean;
+  testimonialsVerifiable: boolean; // contains proper nouns, company names, or specific figures
+  aboutPageHasIncarnation: boolean; // about page contains named people, photos, bios
   isHttps: boolean;
   schemaRichness: SchemaRichness;
 }
