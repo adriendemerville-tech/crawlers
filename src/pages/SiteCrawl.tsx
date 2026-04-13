@@ -1408,7 +1408,7 @@ export default function SiteCrawl() {
           {/* Formulaire */}
           <Card className="mb-8 border-violet-500/30">
             <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={detectionDone ? handleSubmit : handleDetect} className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-400" />
@@ -1418,12 +1418,12 @@ export default function SiteCrawl() {
                       placeholder={t.placeholder}
                       className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500 caret-foreground"
                       required
-                      disabled={isLoading}
+                      disabled={isLoading || isDetectingPages}
                     />
                   </div>
                   <Button type="submit" disabled={isLoading || !url || isDetectingPages || (crawlResult?.status === 'completed' && !viewingCrawlId)} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-shake' : ''}`}>
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
-                    {isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : t.launchBtn}
+                    {isDetectingPages ? <Loader2 className="w-4 h-4 animate-spin" /> : isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : crawlResult?.status === 'completed' && !viewingCrawlId ? <CheckCircle2 className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+                    {isDetectingPages ? t.detecting : isLoading ? phase || t.crawling : crawlResult?.status === 'completed' && !viewingCrawlId ? (language === 'fr' ? 'Terminé' : language === 'es' ? 'Terminado' : 'Done') : detectionDone ? t.launchBtn : t.detectBtn}
                   </Button>
                   {isLoading && (
                     <Button
