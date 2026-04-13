@@ -1115,8 +1115,9 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
       pagesWithAuthor: 0, pagesWithSchema: 0, schemaTypes: [], noindexCount: 0,
       totalWords: 0, avgWords: 0, avgInternalLinks: 0, avgExternalLinks: 0,
       hasAboutPage: false, hasContactPage: false, hasLegalPage: false,
-      hasTermsPage: false, hasBlogSection: false, hasTestimonials: false, isHttps: true,
-      schemaRichness,
+      hasTermsPage: false, hasBlogSection: false, hasTestimonials: false,
+      testimonialsVerifiable: false, aboutPageHasIncarnation: false,
+      isHttps: true, schemaRichness,
     };
   }
 
@@ -1133,12 +1134,28 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
   let hasTermsPage = false;
   let hasBlogSection = false;
   let hasTestimonials = false;
+  let testimonialsVerifiable = false;
+  let aboutPageHasIncarnation = false;
   let isHttps = true;
+
+  // Proper noun detection: capitalized words that aren't common French/English words
+  const COMMON_WORDS = new Set(['le','la','les','de','des','du','un','une','nos','notre','mon','ma','mes','son','sa','ses','leur','leurs','ce','ces','nous','vous','ils','elles','the','a','an','our','my','his','her','their','this','that','these','those','pour','avec','dans','sur','par','est','sont','ont','fait','très','plus','aussi','bien','tout','tous','client','clients','entreprise','société','résultat','résultats','service','services','solution','solutions','projet','projets','avis','témoignage','témoignages']);
+  const hasProperNouns = (text: string): boolean => {
+    const words = text.match(/[A-ZÀ-Ü][a-zà-ü]{2,}/g) || [];
+    return words.filter(w => !COMMON_WORDS.has(w.toLowerCase())).length >= 2;
+  };
+  const hasVerifiableDetails = (text: string): boolean => {
+    const hasCompanyName = /(?:SAS|SARL|SCI|SA|EURL|SASU|Inc\.|Ltd\.|GmbH|AG|S\.A\.|LLC)/i.test(text);
+    const hasSpecificFigures = /(?:\d{2,}[\s.,]?\d*\s*(?:%|€|\$|k€|M€|clients?|utilisateurs?|collaborateurs?|employés?|ans?))/i.test(text);
+    const hasQuotedPerson = /["«].*?["»].*?(?:—|–|-)\s*[A-ZÀ-Ü]/i.test(text);
+    return hasProperNouns(text) || hasCompanyName || hasSpecificFigures || hasQuotedPerson;
+  };
 
   // ── 1. Scan crawled pages (content + URL + schema richness) ──
   for (const page of pages) {
     const urlLower = (page.url || '').toLowerCase();
     const textLower = (page.bodyTextTruncated || '').toLowerCase();
+    const textOriginal = (page.bodyTextTruncated || '');
     const titleLower = (page.title || '').toLowerCase();
 
     if (page.hasSchemaOrg || (page.schemaTypes && page.schemaTypes.length > 0)) {
@@ -1180,7 +1197,13 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
     totalInternal += page.internalLinksCount || 0;
     totalExternal += page.externalLinksCount || 0;
 
-    if (/about|a-propos|qui-sommes|equipe|team|notre-histoire/i.test(urlLower)) hasAboutPage = true;
+    if (/about|a-propos|qui-sommes|equipe|team|notre-histoire/i.test(urlLower)) {
+      hasAboutPage = true;
+      // Check if about page has incarnation (named people, photos, bios)
+      if (hasProperNouns(textOriginal) && /fondateur|co-fondateur|ceo|cto|directeur|directrice|responsable|founder|photo|portrait|parcours|expérience/i.test(textLower)) {
+        aboutPageHasIncarnation = true;
+      }
+    }
     if (/contact/i.test(urlLower)) hasContactPage = true;
     if (/mentions-legales|legal|imprint|impressum/i.test(urlLower)) hasLegalPage = true;
     if (/cgv|cgu|conditions|terms|privacy|confidentialit/i.test(urlLower)) hasTermsPage = true;
@@ -1194,6 +1217,10 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
 
     if (/témoignage|avis client|testimonial|review|réalisation|portfolio|cas client/i.test(textLower + ' ' + titleLower)) {
       hasTestimonials = true;
+      // Check if testimonials are verifiable (proper nouns, company names, specific figures)
+      if (hasVerifiableDetails(textOriginal)) {
+        testimonialsVerifiable = true;
+      }
     }
 
     if (page.url && page.url.startsWith('http://')) isHttps = false;
@@ -1220,8 +1247,8 @@ function aggregateSignals(pages: any[], sitemapUrls: string[] = []): AggregatedS
     avgInternalLinks: Math.round(totalInternal / n),
     avgExternalLinks: Math.round(totalExternal / n),
     hasAboutPage, hasContactPage, hasLegalPage, hasTermsPage,
-    hasBlogSection, hasTestimonials, isHttps,
-    schemaRichness,
+    hasBlogSection, hasTestimonials, testimonialsVerifiable,
+    aboutPageHasIncarnation, isHttps, schemaRichness,
   };
 }
 
