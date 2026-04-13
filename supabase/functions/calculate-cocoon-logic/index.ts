@@ -382,9 +382,15 @@ const ip = getClientIp(req);
     }
 
     // ─── 1. Check prerequisites: crawl + strategic audit ───
+    // Normalize domain: match both with and without www prefix, and only completed crawls
+    const domainBase = site.domain.replace(/^www\./, "");
+    const domainWww = `www.${domainBase}`;
     const { data: crawls } = await supabase
-      .from("site_crawls" as any).select("id")
-      .eq("domain", site.domain).eq("user_id", userId)
+      .from("site_crawls" as any).select("id, crawled_pages")
+      .or(`domain.eq.${domainBase},domain.eq.${domainWww}`)
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .gt("crawled_pages", 1)
       .order("created_at", { ascending: false }).limit(1);
 
     const latestCrawlId = crawls?.[0]?.id;
@@ -394,6 +400,7 @@ const ip = getClientIp(req);
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    console.log(`[Cocoon] Using crawl ${latestCrawlId} (${crawls?.[0]?.crawled_pages} pages) for domain ${domainBase}`);
 
     // Cap at 100 pages for optimal TF-IDF precision (covers 100% of ~70% FR sites)
     const MAX_COCOON_PAGES = 100;
