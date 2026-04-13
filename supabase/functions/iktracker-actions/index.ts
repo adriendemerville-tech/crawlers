@@ -299,6 +299,11 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Title duplicate detected (jaccard=${sim.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
+            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            if (!dedupGuard.allowed) {
+              console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
+              return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
+            }
             const updateResult = await callIktracker('PUT', `/posts/${existingSlug}`, apiKey, body)
             return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: sim, _dedup_layer: 'jaccard' }
           }
@@ -310,6 +315,11 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Core topic duplicate detected (overlap=${coreOverlap.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
+            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            if (!dedupGuard.allowed) {
+              console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
+              return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
+            }
             const updateResult = await callIktracker('PUT', `/posts/${existingSlug}`, apiKey, body)
             return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: coreOverlap, _dedup_layer: 'core_topic' }
           }
@@ -320,6 +330,11 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const slugSim = slugSimilarity(slug, post.slug)
           if (slugSim >= 0.70) {
             console.log(`[iktracker-actions] Slug duplicate detected (slugSim=${slugSim.toFixed(2)}): "${slug}" ≈ "${post.slug}" → updating`)
+            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            if (!dedupGuard.allowed) {
+              console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${post.slug}": ${dedupGuard.reason}`)
+              return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: post.slug }
+            }
             const updateResult = await callIktracker('PUT', `/posts/${post.slug}`, apiKey, body)
             return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: post.slug, _similarity: slugSim, _dedup_layer: 'slug' }
           }
