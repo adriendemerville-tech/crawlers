@@ -958,8 +958,8 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
             }
           }
           if (discoveredNew > 0) {
-            // Cap remaining to not exceed pageLimit
-            const maxRemaining = pageLimit - alreadyProcessed;
+            // Cap remaining to not exceed extended limit
+            const maxRemaining = extendedLimit - alreadyProcessed;
             if (remaining.length > maxRemaining) {
               remaining = remaining.slice(0, maxRemaining);
             }
