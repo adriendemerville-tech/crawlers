@@ -11130,6 +11130,156 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles_safe: {
+        Row: {
+          affiliate_code_used: string | null
+          agency_brand_bold: boolean | null
+          agency_brand_font: string | null
+          agency_brand_font_size: number | null
+          agency_brand_italic: boolean | null
+          agency_brand_name: string | null
+          agency_brand_underline: boolean | null
+          agency_contact_email: string | null
+          agency_contact_first_name: string | null
+          agency_contact_last_name: string | null
+          agency_contact_phone: string | null
+          agency_logo_url: string | null
+          agency_primary_color: string | null
+          agency_report_font: string | null
+          agency_report_footer_text: string | null
+          agency_report_header_text: string | null
+          api_key: string | null
+          autonomy_level: string | null
+          autonomy_raw: Json | null
+          autonomy_score: number | null
+          avatar_url: string | null
+          crawl_month_reset: string | null
+          crawl_pages_this_month: number | null
+          created_at: string | null
+          credits_balance: number | null
+          email: string | null
+          first_name: string | null
+          ga4_property_id: string | null
+          gsc_site_url: string | null
+          id: string | null
+          last_name: string | null
+          marina_brand_enabled: boolean | null
+          marina_custom_cta_text: string | null
+          marina_custom_cta_url: string | null
+          marina_custom_intro: string | null
+          marina_full_whitelabel: boolean | null
+          marina_hide_crawlers_badge: boolean | null
+          persona_type: string | null
+          plan_type: string | null
+          referral_code: string | null
+          referred_by: string | null
+          social_posts_this_month: number | null
+          stripe_subscription_id: string | null
+          subscription_expires_at: string | null
+          subscription_status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          affiliate_code_used?: string | null
+          agency_brand_bold?: boolean | null
+          agency_brand_font?: string | null
+          agency_brand_font_size?: number | null
+          agency_brand_italic?: boolean | null
+          agency_brand_name?: string | null
+          agency_brand_underline?: boolean | null
+          agency_contact_email?: string | null
+          agency_contact_first_name?: string | null
+          agency_contact_last_name?: string | null
+          agency_contact_phone?: string | null
+          agency_logo_url?: string | null
+          agency_primary_color?: string | null
+          agency_report_font?: string | null
+          agency_report_footer_text?: string | null
+          agency_report_header_text?: string | null
+          api_key?: string | null
+          autonomy_level?: string | null
+          autonomy_raw?: Json | null
+          autonomy_score?: number | null
+          avatar_url?: string | null
+          crawl_month_reset?: string | null
+          crawl_pages_this_month?: number | null
+          created_at?: string | null
+          credits_balance?: number | null
+          email?: string | null
+          first_name?: string | null
+          ga4_property_id?: string | null
+          gsc_site_url?: string | null
+          id?: string | null
+          last_name?: string | null
+          marina_brand_enabled?: boolean | null
+          marina_custom_cta_text?: string | null
+          marina_custom_cta_url?: string | null
+          marina_custom_intro?: string | null
+          marina_full_whitelabel?: boolean | null
+          marina_hide_crawlers_badge?: boolean | null
+          persona_type?: string | null
+          plan_type?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          social_posts_this_month?: number | null
+          stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          affiliate_code_used?: string | null
+          agency_brand_bold?: boolean | null
+          agency_brand_font?: string | null
+          agency_brand_font_size?: number | null
+          agency_brand_italic?: boolean | null
+          agency_brand_name?: string | null
+          agency_brand_underline?: boolean | null
+          agency_contact_email?: string | null
+          agency_contact_first_name?: string | null
+          agency_contact_last_name?: string | null
+          agency_contact_phone?: string | null
+          agency_logo_url?: string | null
+          agency_primary_color?: string | null
+          agency_report_font?: string | null
+          agency_report_footer_text?: string | null
+          agency_report_header_text?: string | null
+          api_key?: string | null
+          autonomy_level?: string | null
+          autonomy_raw?: Json | null
+          autonomy_score?: number | null
+          avatar_url?: string | null
+          crawl_month_reset?: string | null
+          crawl_pages_this_month?: number | null
+          created_at?: string | null
+          credits_balance?: number | null
+          email?: string | null
+          first_name?: string | null
+          ga4_property_id?: string | null
+          gsc_site_url?: string | null
+          id?: string | null
+          last_name?: string | null
+          marina_brand_enabled?: boolean | null
+          marina_custom_cta_text?: string | null
+          marina_custom_cta_url?: string | null
+          marina_custom_intro?: string | null
+          marina_full_whitelabel?: boolean | null
+          marina_hide_crawlers_badge?: boolean | null
+          persona_type?: string | null
+          plan_type?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          social_posts_this_month?: number | null
+          stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       revenue_weekly_summary: {
         Row: {
           avg_order_value: number | null
