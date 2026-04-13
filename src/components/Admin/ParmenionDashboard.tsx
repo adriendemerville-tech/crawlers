@@ -683,5 +683,7 @@ export function ParmenionDashboard() {
         </CardContent>
       </Card>
     </div>
+      </TabsContent>
+    </Tabs>
   );
 }
