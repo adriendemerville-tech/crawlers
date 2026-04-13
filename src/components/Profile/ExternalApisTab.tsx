@@ -270,7 +270,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       // Also check google_connections (primary source of truth)
       if (!ga4Ok || !gscOk) {
         const { data: conns } = await supabase
-          .from('google_connections')
+          .from('google_connections_public' as any)
           .select('id, ga4_property_id, gsc_site_urls')
           .eq('user_id', user.id);
         if (conns && conns.length > 0) {
@@ -284,7 +284,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
 
       // Check Google Ads
       const { data: adsData } = await (supabase as any)
-        .from('google_ads_connections')
+        .from('google_ads_connections_public')
         .select('id')
         .eq('user_id', user.id)
         .eq('is_active', true)
@@ -294,7 +294,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
 
       // Check CMS connections
       const { data: cmsData } = await supabase
-        .from('cms_connections')
+        .from('cms_connections_public' as any)
         .select('platform')
         .eq('user_id', user.id)
         .eq('status', 'active');
@@ -316,7 +316,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data } = await supabase
-        .from('cms_connections')
+        .from('cms_connections_public' as any)
         .select('id, site_url, capabilities')
         .eq('user_id', user.id)
         .eq('platform', 'wordpress')
@@ -354,7 +354,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       if (!user) return;
       const [sitesRes, matomoRes] = await Promise.all([
         supabase.from('tracked_sites').select('id, domain').eq('user_id', user.id).order('domain'),
-        supabase.from('matomo_connections').select('id, tracked_site_id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle(),
+        supabase.from('matomo_connections_public' as any).select('id, tracked_site_id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle(),
       ]);
       setTrackedSites((sitesRes.data || []) as { id: string; domain: string }[]);
       if (matomoRes.data) setMatomoConnected(true);
@@ -604,7 +604,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
 
       // Step 2: Persist authorization in cms_connections.capabilities
       const { data: conn } = await supabase
-        .from('cms_connections')
+        .from('cms_connections_public' as any)
         .select('capabilities')
         .eq('id', wpConnection.id)
         .maybeSingle();

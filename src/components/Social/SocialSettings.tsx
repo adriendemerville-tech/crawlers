@@ -57,7 +57,7 @@ export function SocialSettings({ trackedSiteId, domain }: SocialSettingsProps) {
     const loadConnections = async () => {
       try {
         const { data } = await supabase
-          .from('cms_connections')
+          .from('cms_connections_public' as any)
           .select('*')
           .eq('user_id', user.id)
           .eq('tracked_site_id', trackedSiteId)
