@@ -279,18 +279,25 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
         insertData.basic_auth_pass = authMethod === 'basic_auth' ? password : null;
       }
 
-      const { data: saved, error } = await supabase
+      const { error } = await supabase
         .from('cms_connections')
-        .upsert(insertData as any, { onConflict: 'tracked_site_id,platform' })
-        .select('id')
-        .single();
+        .upsert(insertData as any, { onConflict: 'tracked_site_id,platform' });
 
       if (error) throw error;
+      
+      // After upsert, fetch the id from the view
+      const { data: saved } = await supabase
+        .from('cms_connections_public' as any)
+        .select('id')
+        .eq('tracked_site_id', insertData.tracked_site_id)
+        .eq('platform', insertData.platform)
+        .maybeSingle();
+
       toast.success(t.saved);
 
       // Auto-register webhook for e-commerce CMS
-      if (saved?.id && (cmsType === 'wordpress' || cmsType === 'shopify')) {
-        await tryRegisterWebhook(saved.id, user.id);
+      if ((saved as any)?.id && (cmsType === 'wordpress' || cmsType === 'shopify')) {
+        await tryRegisterWebhook((saved as any).id, user.id);
       }
     } catch (err: any) {
       toast.error(err.message);
