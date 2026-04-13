@@ -11230,6 +11230,15 @@ export type Database = {
           summary: string
         }[]
       }
+      get_short_link_by_code: {
+        Args: { p_code: string }
+        Returns: {
+          code: string
+          expires_at: string
+          id: string
+          target_url: string
+        }[]
+      }
       get_site_revenue: {
         Args: {
           p_end_date: string
