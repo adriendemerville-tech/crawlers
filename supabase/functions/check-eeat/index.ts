@@ -546,7 +546,8 @@ Nombre de pages crawlées: ${pagesCount} (source: ${preCrawlResult.source === 'c
 - Mentions légales détectées: ${aggregated.hasLegalPage ? 'Oui' : 'Non'}
 - Page CGV/CGU détectée: ${aggregated.hasTermsPage ? 'Oui' : 'Non'}
 - Blog/actualités détecté: ${aggregated.hasBlogSection ? 'Oui' : 'Non'}
-- Témoignages/avis détectés: ${aggregated.hasTestimonials ? 'Oui' : 'Non'}
+- Témoignages/avis détectés: ${aggregated.hasTestimonials ? 'Oui' : 'Non'}${aggregated.hasTestimonials ? ` (vérifiables: ${aggregated.testimonialsVerifiable ? 'Oui — noms propres, entreprises ou chiffres détectés' : 'Non — génériques, sans noms ni preuves concrètes'})` : ''}
+- Page À propos avec incarnation humaine: ${aggregated.aboutPageHasIncarnation ? 'Oui — fondateur/équipe nommés' : (aggregated.hasAboutPage ? 'Non — page exists mais sans personnes identifiées' : 'Page absente')}
 - HTTPS: ${aggregated.isHttps ? 'Oui' : 'Non'}
 - URLs totales dans le sitemap: ${preCrawlResult.totalSitemapUrls}
 
