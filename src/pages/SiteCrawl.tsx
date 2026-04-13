@@ -329,7 +329,7 @@ export default function SiteCrawl() {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className={`gap-2 ${isButtonShaking ? 'animate-shake' : ''}`}
+                      className={`gap-2 rounded-sm bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 shadow-md ${isButtonShaking ? 'animate-shake' : ''}`}
                     >
                       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
                       {isLoading ? t.crawling : t.launchBtn}
@@ -373,7 +373,7 @@ export default function SiteCrawl() {
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={5}
-                      max={isAdmin ? 500 : maxSliderCap}
+                      max={isAdmin ? 500 : (totalEstimatedPages && totalEstimatedPages > 0 ? Math.min(isAgencyPlus ? totalEstimatedPages : maxSliderCap, totalEstimatedPages) : maxSliderCap)}
                       step={5}
                       disabled={isLoading}
                     />
