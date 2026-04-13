@@ -232,6 +232,23 @@ export function ParmenionDashboard() {
   }, [logs]);
 
   return (
+    <Tabs defaultValue="stratege" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="stratege" className="gap-2">
+          <Shield className="h-4 w-4" />
+          Stratège
+        </TabsTrigger>
+        <TabsTrigger value="crawlers" className="gap-2">
+          <Bot className="h-4 w-4" />
+          Crawlers
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="crawlers">
+        <ParmenionCrawlersTab />
+      </TabsContent>
+
+      <TabsContent value="stratege">
     <div className="space-y-6">
       {/* Header with controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
