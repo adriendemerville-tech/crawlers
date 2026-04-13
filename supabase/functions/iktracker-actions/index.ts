@@ -62,6 +62,40 @@ async function testConnection(apiKey: string) {
   }
 }
 
+// ── Editorial Guard ──
+// Parménion cannot modify content it authored.
+// Parménion can modify content by other authors only if < 6 months old.
+const PARMENION_AUTHOR_PATTERNS = ['parménion', 'parmenion', 'crawlers autopilot']
+const EDITORIAL_AGE_LIMIT_MONTHS = 6
+
+interface EditorialGuardResult {
+  allowed: boolean
+  reason?: string
+}
+
+function checkEditorialGuard(postOrPage: Record<string, unknown>): EditorialGuardResult {
+  const author = ((postOrPage.author_name || postOrPage.author || '') as string).toLowerCase().trim()
+
+  // Rule 1: Parménion cannot modify its own content
+  const isParmenionAuthor = PARMENION_AUTHOR_PATTERNS.some(p => author.includes(p))
+  if (isParmenionAuthor) {
+    return { allowed: false, reason: `Parménion ne peut pas modifier un contenu dont il est l'auteur (author: "${author}")` }
+  }
+
+  // Rule 2: Cannot modify content older than 6 months
+  const dateStr = (postOrPage.published_at || postOrPage.created_at || '') as string
+  if (dateStr) {
+    const publishedDate = new Date(dateStr)
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - EDITORIAL_AGE_LIMIT_MONTHS)
+    if (publishedDate < sixMonthsAgo) {
+      return { allowed: false, reason: `Contenu trop ancien (${dateStr}) — limite de ${EDITORIAL_AGE_LIMIT_MONTHS} mois dépassée` }
+    }
+  }
+
+  return { allowed: true }
+}
+
 async function listPages(apiKey: string) {
   return callIktracker('GET', '/pages', apiKey)
 }
@@ -71,6 +105,15 @@ async function getPage(apiKey: string, pageKey: string) {
 }
 
 async function updatePage(apiKey: string, pageKey: string, updates: Record<string, unknown>) {
+  // Editorial guard: fetch existing page first
+  const existing = await callIktracker('GET', `/pages/${pageKey}`, apiKey)
+  if (existing.status === 200 && existing.data) {
+    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    if (!guard.allowed) {
+      console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED update-page "${pageKey}": ${guard.reason}`)
+      return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
+    }
+  }
   return callIktracker('PUT', `/pages/${pageKey}`, apiKey, updates)
 }
 
@@ -227,6 +270,12 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
     try {
       const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
       if (existing && existing.status === 200 && existing.data) {
+        // Editorial guard on upsert
+        const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+        if (!guard.allowed) {
+          console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED upsert "${slug}": ${guard.reason}`)
+          return { status: 403, data: null, error: guard.reason, _editorial_guard: true, _original_action: 'create-post' }
+        }
         console.log(`[iktracker-actions] Post with slug "${slug}" already exists, converting to UPDATE`)
         const updateResult = await callIktracker('PUT', `/posts/${slug}`, apiKey, body)
         return { ...updateResult, _upserted: true, _original_action: 'create-post' }
@@ -250,6 +299,11 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Title duplicate detected (jaccard=${sim.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
+            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            if (!dedupGuard.allowed) {
+              console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
+              return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
+            }
             const updateResult = await callIktracker('PUT', `/posts/${existingSlug}`, apiKey, body)
             return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: sim, _dedup_layer: 'jaccard' }
           }
@@ -261,6 +315,11 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Core topic duplicate detected (overlap=${coreOverlap.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
+            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            if (!dedupGuard.allowed) {
+              console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
+              return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
+            }
             const updateResult = await callIktracker('PUT', `/posts/${existingSlug}`, apiKey, body)
             return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: coreOverlap, _dedup_layer: 'core_topic' }
           }
@@ -271,6 +330,11 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const slugSim = slugSimilarity(slug, post.slug)
           if (slugSim >= 0.70) {
             console.log(`[iktracker-actions] Slug duplicate detected (slugSim=${slugSim.toFixed(2)}): "${slug}" ≈ "${post.slug}" → updating`)
+            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            if (!dedupGuard.allowed) {
+              console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${post.slug}": ${dedupGuard.reason}`)
+              return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: post.slug }
+            }
             const updateResult = await callIktracker('PUT', `/posts/${post.slug}`, apiKey, body)
             return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: post.slug, _similarity: slugSim, _dedup_layer: 'slug' }
           }
@@ -286,6 +350,15 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
 }
 
 async function updatePost(apiKey: string, slug: string, updates: Record<string, unknown>) {
+  // Editorial guard: fetch existing post first
+  const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
+  if (existing.status === 200 && existing.data) {
+    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    if (!guard.allowed) {
+      console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED update-post "${slug}": ${guard.reason}`)
+      return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
+    }
+  }
   return callIktracker('PUT', `/posts/${slug}`, apiKey, updates)
 }
 
