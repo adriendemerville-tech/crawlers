@@ -984,30 +984,34 @@ export default function MatricePrompt() {
                          {sortField === 'axe' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
                        </span>
                      </TableHead>
-                     <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('poids')}>
-                       <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.poids || smartLabels.poids}
-                         {sortField === 'poids' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
-                       </span>
-                     </TableHead>
-                     <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_bon')}>
-                       <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_bon || smartLabels.seuil_bon}
-                         {sortField === 'seuil_bon' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
-                       </span>
-                     </TableHead>
-                     <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_moyen')}>
-                       <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_moyen || smartLabels.seuil_moyen}
-                         {sortField === 'seuil_moyen' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
-                       </span>
-                     </TableHead>
-                     <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_mauvais')}>
-                       <span className="flex items-center gap-1 text-xs font-semibold">
-                         {columnLabels.seuil_mauvais || smartLabels.seuil_mauvais}
-                         {sortField === 'seuil_mauvais' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
-                       </span>
-                     </TableHead>
+                      {activeMatriceType !== 'benchmark' && (
+                        <>
+                          <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('poids')}>
+                            <span className="flex items-center gap-1 text-xs font-semibold">
+                              {columnLabels.poids || smartLabels.poids}
+                              {sortField === 'poids' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                            </span>
+                          </TableHead>
+                          <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_bon')}>
+                            <span className="flex items-center gap-1 text-xs font-semibold">
+                              {columnLabels.seuil_bon || smartLabels.seuil_bon}
+                              {sortField === 'seuil_bon' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                            </span>
+                          </TableHead>
+                          <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_moyen')}>
+                            <span className="flex items-center gap-1 text-xs font-semibold">
+                              {columnLabels.seuil_moyen || smartLabels.seuil_moyen}
+                              {sortField === 'seuil_moyen' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                            </span>
+                          </TableHead>
+                          <TableHead className="w-20 cursor-pointer select-none hover:bg-muted/50 transition-colors" onClick={() => handleSort('seuil_mauvais')}>
+                            <span className="flex items-center gap-1 text-xs font-semibold">
+                              {columnLabels.seuil_mauvais || smartLabels.seuil_mauvais}
+                              {sortField === 'seuil_mauvais' && <span className="text-[10px]">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                            </span>
+                          </TableHead>
+                        </>
+                      )}
                      {results && <TableHead className="w-20">Type</TableHead>}
                       {results && <TableHead className="w-24 text-center">{activeScoring.display.scoreLabel}</TableHead>}
                       {results && <TableHead className="w-24 text-center">{activeScoring.direction === 'lower_better' ? activeScoring.display.resultLabel : 'Crawlers'}</TableHead>}
@@ -1033,22 +1037,26 @@ export default function MatricePrompt() {
                             {row.axe}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          {row.poids}
-                          {row.isDefault.poids && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                        </TableCell>
-                        <TableCell>
-                          {row.seuil_bon}
-                          {row.isDefault.seuil_bon && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                        </TableCell>
-                        <TableCell>
-                          {row.seuil_moyen}
-                          {row.isDefault.seuil_moyen && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                        </TableCell>
-                        <TableCell>
-                          {row.seuil_mauvais}
-                          {row.isDefault.seuil_mauvais && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
-                        </TableCell>
+                        {activeMatriceType !== 'benchmark' && (
+                          <>
+                            <TableCell>
+                              {row.poids}
+                              {row.isDefault.poids && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
+                            </TableCell>
+                            <TableCell>
+                              {row.seuil_bon}
+                              {row.isDefault.seuil_bon && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
+                            </TableCell>
+                            <TableCell>
+                              {row.seuil_moyen}
+                              {row.isDefault.seuil_moyen && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
+                            </TableCell>
+                            <TableCell>
+                              {row.seuil_mauvais}
+                              {row.isDefault.seuil_mauvais && <Badge variant="outline" className="ml-1 text-[8px] px-1 py-0">Default</Badge>}
+                            </TableCell>
+                          </>
+                        )}
                         {results && (
                           <TableCell>
                             {resultRow ? (
