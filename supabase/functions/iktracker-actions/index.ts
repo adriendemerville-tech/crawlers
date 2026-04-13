@@ -329,6 +329,15 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
 }
 
 async function updatePost(apiKey: string, slug: string, updates: Record<string, unknown>) {
+  // Editorial guard: fetch existing post first
+  const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
+  if (existing.status === 200 && existing.data) {
+    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    if (!guard.allowed) {
+      console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED update-post "${slug}": ${guard.reason}`)
+      return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
+    }
+  }
   return callIktracker('PUT', `/posts/${slug}`, apiKey, updates)
 }
 
