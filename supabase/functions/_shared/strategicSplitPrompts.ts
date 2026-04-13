@@ -46,6 +46,9 @@ RÈGLES:
 - introduction: 1400 caractères MAX au total (3 champs combinés)
 - profile_url: UNIQUEMENT URLs listées dans E-E-A-T ci-dessus. COPIE-COLLE. Max 2 profils avec URL. Sinon null.
 - eeat_score EVIDENCE-BASED
+- MALUS AUTORITÉ PROPORTIONNÉ (business digital) : 0 backlink éditorial + domaine ≥2 ans → -2pts. 0 backlink éditorial + domaine <2 ans → -1pt. 1-3 backlinks éditoriaux → -0.5pt. 4+ → pas de malus.
+- PARADOXE VENDEUR: Si le site vend un service X mais n'exhibe pas les signaux de X → faille à signaler dans l'analysis.
+- proof_sources: qualifier comme "verified" (URL crawlée), "inferred" (sans URL), ou "absent". NE JAMAIS inventer.
 - client_targets: OBLIGATOIRE. primary 1-2, secondary 1-2, untapped exactement 2
 - NE PRÉTENDS PAS connaître: nb abonnés, existence GMB, fraîcheur posts
 - direct_competitor dans competitors[]: JAMAIS "${domain}"
