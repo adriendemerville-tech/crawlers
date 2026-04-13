@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect, lazy, Suspense } fro
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, FileSpreadsheet, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -421,7 +421,25 @@ export default function MatricePrompt() {
         header: true,
         skipEmptyLines: true,
         complete: async (result) => {
-          await processImportedRows(result.data, fileName);
+          const csvRows = result.data as Record<string, any>[];
+          if (csvRows.length === 0) { toast.error('Fichier CSV vide'); return; }
+          // Run type detection + scoring detection on CSV data
+          const { detectMatriceType } = await import('@/utils/matrice/typeDetector');
+          const { cleanImportedData } = await import('@/utils/matrice/columnCleaner');
+          const { sanitizeAllPrompts } = await import('@/utils/matrice/promptSanitizer');
+          const { detectScoringMethod: detectScoring } = await import('@/utils/matrice/scoringDetector');
+          const csvHeaders = Object.keys(csvRows[0]);
+          const det = detectMatriceType(csvHeaders, csvRows.slice(0, 10));
+          setActiveMatriceType(det.type);
+          const scoringDet = detectScoring(csvHeaders, csvRows.slice(0, 10), det.type);
+          setActiveScoringMethod(scoringDet.method);
+          if (scoringDet.source !== 'default') {
+            toast.info(`Scoring détecté : ${getScoringConfig(scoringDet.method).label}`, { duration: 3000 });
+          }
+          // Clean + sanitize
+          const cleaned = cleanImportedData(csvHeaders, csvRows);
+          cleaned.cleanedRows = sanitizeAllPrompts(cleaned.cleanedRows);
+          await processImportedRows(cleaned.cleanedRows, fileName, det.type, scoringDet.method);
         },
         error: () => toast.error('Erreur de parsing CSV'),
       });
@@ -448,14 +466,22 @@ export default function MatricePrompt() {
       formData.append('file', file);
       supabase.functions.invoke('parse-doc-matrix', {
         body: formData,
-      }).then(({ data, error }) => {
+      }).then(async ({ data, error }) => {
         setDocParsing(false);
         if (error || !data?.rows?.length) {
           toast.error(error?.message || 'Aucune donnée exploitable trouvée dans le document');
           return;
         }
         const fileName = file.name.replace(/\.(doc|docx)$/i, '');
-        processImportedRows(data.rows, fileName);
+        // Run type + scoring detection on DOCX extracted rows
+        const { detectMatriceType } = await import('@/utils/matrice/typeDetector');
+        const { detectScoringMethod: detectScoring } = await import('@/utils/matrice/scoringDetector');
+        const docHeaders = Object.keys(data.rows[0] || {});
+        const det = detectMatriceType(docHeaders, data.rows.slice(0, 10));
+        setActiveMatriceType(det.type);
+        const scoringDet = detectScoring(docHeaders, data.rows.slice(0, 10), det.type);
+        setActiveScoringMethod(scoringDet.method);
+        processImportedRows(data.rows, fileName, det.type, scoringDet.method);
       }).catch(() => {
         setDocParsing(false);
         toast.error('Erreur lors du parsing du document');
@@ -506,6 +532,57 @@ export default function MatricePrompt() {
   const someSelected = rows.some(r => r.selected);
   const toggleAll = () => setRows(prev => prev.map(r => ({ ...r, selected: !allSelected })));
   const toggleRow = (id: string) => setRows(prev => prev.map(r => r.id === id ? { ...r, selected: !r.selected } : r));
+
+  /* --- Inline editing --- */
+  const [editingCell, setEditingCell] = useState<{ rowId: string; field: string } | null>(null);
+  const [editValue, setEditValue] = useState('');
+
+  const startEdit = (rowId: string, field: string, currentValue: string | number) => {
+    setEditingCell({ rowId, field });
+    setEditValue(String(currentValue));
+  };
+
+  const commitEdit = async () => {
+    if (!editingCell) return;
+    const { rowId, field } = editingCell;
+    setRows(prev => prev.map(r => {
+      if (r.id !== rowId) return r;
+      const updated = { ...r, isDefault: { ...r.isDefault, [field]: false } };
+      if (['poids', 'seuil_bon', 'seuil_moyen', 'seuil_mauvais'].includes(field)) {
+        (updated as any)[field] = Number(editValue) || 0;
+      } else {
+        (updated as any)[field] = editValue;
+      }
+      return updated;
+    }));
+    // Persist to DB if logged in
+    const row = rows.find(r => r.id === rowId);
+    if (user && row?.dbId) {
+      const updateData: Record<string, any> = { [field]: ['poids', 'seuil_bon', 'seuil_moyen', 'seuil_mauvais'].includes(field) ? Number(editValue) || 0 : editValue };
+      await supabase.from('prompt_matrix_items').update(updateData).eq('id', row.dbId);
+    }
+    setEditingCell(null);
+  };
+
+  const cancelEdit = () => setEditingCell(null);
+
+  /* --- Export results as CSV --- */
+  const handleExportCsv = useCallback(() => {
+    if (!results || results.length === 0) return;
+    const header = ['KPI', 'Catégorie', hasFileScoring.poids ? 'Poids' : null, activeScoring.display.scoreLabel, 'Crawlers', hasFileScoring.seuils ? 'Seuil Bon' : null, hasFileScoring.seuils ? 'Seuil Moyen' : null, 'Verdict'].filter(Boolean).join(',');
+    const lines = results.map((r: any) => {
+      const row = rows.find(ro => ro.id === r.id || ro.prompt === r.prompt);
+      const verdict = r.crawlers_score >= (row?.seuil_bon ?? 70) ? 'Bon' : r.crawlers_score >= (row?.seuil_moyen ?? 40) ? 'Moyen' : 'Mauvais';
+      const parts = [`"${r.prompt}"`, `"${r.axe}"`, hasFileScoring.poids ? r.poids : null, r.parsed_score ?? r.crawlers_score, r.crawlers_score, hasFileScoring.seuils ? r.seuil_bon : null, hasFileScoring.seuils ? r.seuil_moyen : null, `"${verdict}"`].filter(v => v !== null);
+      return parts.join(',');
+    });
+    const blob = new Blob(['\uFEFF' + header + '\n' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `matrice-results-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    toast.success('Résultats exportés en CSV');
+  }, [results, rows, hasFileScoring, activeScoring]);
 
   const selectedRows = useMemo(() => rows.filter(r => r.selected), [rows]);
 
@@ -610,9 +687,10 @@ export default function MatricePrompt() {
       let domain = '';
       try { domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { domain = url; }
 
-      // Calculate global scores
-      const tw = auditResults.reduce((s: number, r: any) => s + r.poids, 0);
-      const crawlersGlobal = tw > 0 ? Math.round(auditResults.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0;
+      // Calculate global scores (simple average if no file weights)
+      const useWeights = hasFileScoring.poids;
+      const tw = useWeights ? auditResults.reduce((s: number, r: any) => s + r.poids, 0) : auditResults.length;
+      const crawlersGlobal = tw > 0 ? Math.round(auditResults.reduce((s: number, r: any) => s + r.crawlers_score * (useWeights ? r.poids : 1), 0) / tw) : 0;
 
       // Persist audit session (only if logged in)
       if (user) {
@@ -669,14 +747,15 @@ export default function MatricePrompt() {
   /* --- Report --- */
   const handleOpenReport = () => {
     if (!results || results.length === 0) { toast.error('Lancez une analyse d\'abord'); return; }
-    const tw = results.reduce((s: number, r: any) => s + r.poids, 0);
+    const useWeights = hasFileScoring.poids;
+    const tw = useWeights ? results.reduce((s: number, r: any) => s + r.poids, 0) : results.length;
     const reportData = {
       kind: 'matrice' as const,
       url,
       results: results.map((r: any) => ({ ...r, score: r.crawlers_score })),
       totalWeight: tw,
-      weightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw) : 0,
-      parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw) : 0,
+      weightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + r.crawlers_score * (useWeights ? r.poids : 1), 0) / tw) : 0,
+      parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * (useWeights ? r.poids : 1), 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
     window.open('/app/rapport/matrice', '_blank');
@@ -825,9 +904,14 @@ export default function MatricePrompt() {
               <AlertTriangle className="h-3.5 w-3.5" /> Signaler une erreur
             </Button>
             {results && results.length > 0 && (
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenReport}>
-                <FileText className="h-4 w-4" /> Rapport
-              </Button>
+              <>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExportCsv}>
+                  <FileSpreadsheet className="h-4 w-4" /> Export CSV
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenReport}>
+                  <FileText className="h-4 w-4" /> Rapport
+                </Button>
+              </>
             )}
           </div>
 
@@ -1040,28 +1124,58 @@ export default function MatricePrompt() {
                           />
                         </TableCell>
                         <TableCell className="font-medium text-sm" style={{ minWidth: '240px', maxWidth: '480px' }}>
-                          <span className="block whitespace-pre-wrap break-words leading-relaxed">{row.prompt}</span>
+                          {editingCell?.rowId === row.id && editingCell.field === 'prompt' ? (
+                            <form onSubmit={e => { e.preventDefault(); commitEdit(); }} className="flex gap-1">
+                              <Input value={editValue} onChange={e => setEditValue(e.target.value)} className="h-7 text-xs" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} />
+                              <button type="submit"><Check className="h-3.5 w-3.5 text-primary" /></button>
+                            </form>
+                          ) : (
+                            <span className="block whitespace-pre-wrap break-words leading-relaxed cursor-pointer hover:text-primary/80" onDoubleClick={() => startEdit(row.id, 'prompt', row.prompt)}>{row.prompt}</span>
+                          )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${getAxeBadgeClass(row.axe)}`}>
-                            {row.axe}
-                          </Badge>
+                          {editingCell?.rowId === row.id && editingCell.field === 'axe' ? (
+                            <form onSubmit={e => { e.preventDefault(); commitEdit(); }} className="flex gap-1">
+                              <Input value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-[10px] w-20" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} />
+                              <button type="submit"><Check className="h-3 w-3 text-primary" /></button>
+                            </form>
+                          ) : (
+                            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 cursor-pointer ${getAxeBadgeClass(row.axe)}`} onDoubleClick={() => startEdit(row.id, 'axe', row.axe)}>
+                              {row.axe}
+                            </Badge>
+                          )}
                         </TableCell>
                         {hasFileScoring.poids && (
-                          <TableCell>
-                            {row.poids}
+                          <TableCell className="cursor-pointer" onDoubleClick={() => startEdit(row.id, 'poids', row.poids)}>
+                            {editingCell?.rowId === row.id && editingCell.field === 'poids' ? (
+                              <form onSubmit={e => { e.preventDefault(); commitEdit(); }}>
+                                <Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-xs w-16" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} onBlur={commitEdit} />
+                              </form>
+                            ) : row.poids}
                           </TableCell>
                         )}
                         {hasFileScoring.seuils && (
                           <>
-                            <TableCell>
-                              {row.seuil_bon}
+                            <TableCell className="cursor-pointer" onDoubleClick={() => startEdit(row.id, 'seuil_bon', row.seuil_bon)}>
+                              {editingCell?.rowId === row.id && editingCell.field === 'seuil_bon' ? (
+                                <form onSubmit={e => { e.preventDefault(); commitEdit(); }}>
+                                  <Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-xs w-14" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} onBlur={commitEdit} />
+                                </form>
+                              ) : row.seuil_bon}
                             </TableCell>
-                            <TableCell>
-                              {row.seuil_moyen}
+                            <TableCell className="cursor-pointer" onDoubleClick={() => startEdit(row.id, 'seuil_moyen', row.seuil_moyen)}>
+                              {editingCell?.rowId === row.id && editingCell.field === 'seuil_moyen' ? (
+                                <form onSubmit={e => { e.preventDefault(); commitEdit(); }}>
+                                  <Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-xs w-14" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} onBlur={commitEdit} />
+                                </form>
+                              ) : row.seuil_moyen}
                             </TableCell>
-                            <TableCell>
-                              {row.seuil_mauvais}
+                            <TableCell className="cursor-pointer" onDoubleClick={() => startEdit(row.id, 'seuil_mauvais', row.seuil_mauvais)}>
+                              {editingCell?.rowId === row.id && editingCell.field === 'seuil_mauvais' ? (
+                                <form onSubmit={e => { e.preventDefault(); commitEdit(); }}>
+                                  <Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-6 text-xs w-14" autoFocus onKeyDown={e => e.key === 'Escape' && cancelEdit()} onBlur={commitEdit} />
+                                </form>
+                              ) : row.seuil_mauvais}
                             </TableCell>
                           </>
                         )}
@@ -1129,10 +1243,13 @@ export default function MatricePrompt() {
                 <Badge variant="outline" className="text-[9px]">{activeScoring.label}</Badge>
                 {results && (() => {
                   const active = results.filter((r: any) => selectedRows.some(s => s.id === r.id || s.prompt === r.prompt));
-                  const tw = active.reduce((s: number, r: any) => s + r.poids, 0);
+                  if (active.length === 0) return null;
+                  // Use weighted average only if file provided weights, otherwise simple average
+                  const useWeights = hasFileScoring.poids;
+                  const tw = useWeights ? active.reduce((s: number, r: any) => s + r.poids, 0) : active.length;
                   if (tw === 0) return null;
-                  const parsedScore = Math.round(active.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * r.poids, 0) / tw);
-                  const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * r.poids, 0) / tw);
+                  const parsedScore = Math.round(active.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * (useWeights ? r.poids : 1), 0) / tw);
+                  const crawlersScore = Math.round(active.reduce((s: number, r: any) => s + r.crawlers_score * (useWeights ? r.poids : 1), 0) / tw);
                   return (
                     <span className="ml-auto font-medium text-foreground flex gap-4">
                       <span>{activeScoring.display.scoreLabel} : {activeScoring.display.formatScore(parsedScore)}</span>
