@@ -2,6 +2,7 @@ import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { verifyInjectionOwnership } from '../_shared/ownershipCheck.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { isIktrackerDomain, IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
 
 /**
  * cocoon-deploy-links
@@ -65,7 +66,7 @@ try {
     }
 
     const domain = site.domain?.replace(/^www\./, '') || ''
-    const isIktracker = domain.includes('iktracker')
+    const isIktracker = isIktrackerDomain(domain)
     const isCrawlers = domain.includes('crawlers')
 
     let deployResult: unknown
