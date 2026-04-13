@@ -5,6 +5,7 @@ import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLi
 import { checkFairUse } from '../_shared/fairUse.ts';
 import { logSilentError, fireAndLog } from '../_shared/silentErrorLogger.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { scanCmsContent } from '../_shared/cmsContentScanner.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
