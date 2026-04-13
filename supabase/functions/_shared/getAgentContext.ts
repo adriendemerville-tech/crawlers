@@ -372,7 +372,17 @@ function buildPromptSnippet(
     }
   }
 
-  // Patch effectiveness feedback — relevant for all agents
+  // Cocoon Stratège user conversations — relevant for CTO and Supervisor
+  if ((agent === 'cto' || agent === 'supervisor') && ctx.cocoonUserIssues.length > 0) {
+    lines.push(`\n## 🧠 Problèmes signalés via le Stratège Cocoon (${ctx.cocoonUserIssues.length} conversations)`)
+    for (const c of ctx.cocoonUserIssues.slice(0, 5)) {
+      lines.push(`  - [${c.created_at.substring(0, 10)}] ${c.domain} (${c.message_count} msgs):`)
+      for (const msg of c.user_messages) {
+        lines.push(`    → "${msg}"`)
+      }
+    }
+  }
+
   if (ctx.patchResults.length > 0) {
     const effective = ctx.patchResults.filter(p => p.is_effective).length
     const total = ctx.patchResults.length
