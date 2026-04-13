@@ -384,7 +384,8 @@ Deno.serve(handleRequest(async (req: Request) => {
       backlinksRes,
     ] = await Promise.all([
       supabase.from('tracked_sites').select('id, domain, created_at, identity_card, last_audit_at').eq('id', tracked_site_id).eq('user_id', user.id).maybeSingle(),
-      supabase.from('site_crawls').select('id, total_pages').eq('tracked_site_id', tracked_site_id).order('created_at', { ascending: false }).limit(10),
+      // site_crawls has no tracked_site_id column – will re-query by domain below
+      Promise.resolve({ data: null }),
       supabase.from('gsc_connections').select('id').eq('tracked_site_id', tracked_site_id).eq('is_active', true).limit(1),
       supabase.from('cms_connections').select('id').eq('tracked_site_id', tracked_site_id).limit(1),
       supabase.from('ga4_connections').select('id').eq('tracked_site_id', tracked_site_id).eq('is_active', true).limit(1),
