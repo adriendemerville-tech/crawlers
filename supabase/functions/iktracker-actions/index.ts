@@ -62,6 +62,40 @@ async function testConnection(apiKey: string) {
   }
 }
 
+// ── Editorial Guard ──
+// Parménion cannot modify content it authored.
+// Parménion can modify content by other authors only if < 6 months old.
+const PARMENION_AUTHOR_PATTERNS = ['parménion', 'parmenion', 'crawlers autopilot']
+const EDITORIAL_AGE_LIMIT_MONTHS = 6
+
+interface EditorialGuardResult {
+  allowed: boolean
+  reason?: string
+}
+
+function checkEditorialGuard(postOrPage: Record<string, unknown>): EditorialGuardResult {
+  const author = ((postOrPage.author_name || postOrPage.author || '') as string).toLowerCase().trim()
+
+  // Rule 1: Parménion cannot modify its own content
+  const isParmenionAuthor = PARMENION_AUTHOR_PATTERNS.some(p => author.includes(p))
+  if (isParmenionAuthor) {
+    return { allowed: false, reason: `Parménion ne peut pas modifier un contenu dont il est l'auteur (author: "${author}")` }
+  }
+
+  // Rule 2: Cannot modify content older than 6 months
+  const dateStr = (postOrPage.published_at || postOrPage.created_at || '') as string
+  if (dateStr) {
+    const publishedDate = new Date(dateStr)
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - EDITORIAL_AGE_LIMIT_MONTHS)
+    if (publishedDate < sixMonthsAgo) {
+      return { allowed: false, reason: `Contenu trop ancien (${dateStr}) — limite de ${EDITORIAL_AGE_LIMIT_MONTHS} mois dépassée` }
+    }
+  }
+
+  return { allowed: true }
+}
+
 async function listPages(apiKey: string) {
   return callIktracker('GET', '/pages', apiKey)
 }
@@ -71,6 +105,15 @@ async function getPage(apiKey: string, pageKey: string) {
 }
 
 async function updatePage(apiKey: string, pageKey: string, updates: Record<string, unknown>) {
+  // Editorial guard: fetch existing page first
+  const existing = await callIktracker('GET', `/pages/${pageKey}`, apiKey)
+  if (existing.status === 200 && existing.data) {
+    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    if (!guard.allowed) {
+      console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED update-page "${pageKey}": ${guard.reason}`)
+      return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
+    }
+  }
   return callIktracker('PUT', `/pages/${pageKey}`, apiKey, updates)
 }
 
