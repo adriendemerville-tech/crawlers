@@ -4,13 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download, Bot } from 'lucide-react';
 import { generateParmenionReport } from '@/utils/parmenionPdfReport';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { ParmenionCrawlersTab } from './ParmenionCrawlersTab';
 
 interface DecisionLog {
   id: string;
