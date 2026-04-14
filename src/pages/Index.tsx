@@ -40,7 +40,7 @@ const TestimonialsCarousel = lazy(() => import('@/components/TestimonialsCarouse
 // Lazy load individual homepage sections
 const MomentumSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.MomentumSection })));
 const FeatureShowcase = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.FeatureShowcase })));
-const IdentityFirstSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.IdentityFirstSection })));
+
 const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
 const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
 const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
@@ -787,10 +787,6 @@ const Index = () => {
           <HybridSection />
         </Suspense>
 
-        {/* Identity First */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <IdentityFirstSection />
-        </Suspense>
 
         {/* Breathing Spiral — Innovation de rupture */}
         <Suspense fallback={<SectionSkeleton />}>
