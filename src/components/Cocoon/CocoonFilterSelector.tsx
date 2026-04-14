@@ -114,6 +114,24 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     return Array.from(types).sort();
   }, [nodes]);
 
+  // Detect present clusters from nodes
+  const presentClusters = useMemo(() => {
+    const clusterMap = new Map<string, { name: string; count: number }>();
+    nodes.forEach((n: any) => {
+      const cId = n.cluster_id || n.cluster || null;
+      if (cId) {
+        const existing = clusterMap.get(String(cId));
+        if (existing) {
+          existing.count++;
+        } else {
+          const name = n.cluster_name || n.cluster_label || `Cluster ${cId}`;
+          clusterMap.set(String(cId), { name, count: 1 });
+        }
+      }
+    });
+    return Array.from(clusterMap.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
+  }, [nodes]);
+
   const togglePageType = (type: string) => {
     const next = new Set(filters.visiblePageTypes);
     if (next.has(type)) next.delete(type);
@@ -137,6 +155,37 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
 
   const toggleClusters = () => {
     onFiltersChange({ ...filters, showAllClusters: !filters.showAllClusters });
+  };
+
+  const toggleClusterFilter = (clusterId: string) => {
+    const current = filters.visibleClusters;
+    if (current === null) {
+      // First time toggling: show only this cluster
+      onFiltersChange({ ...filters, visibleClusters: new Set([clusterId]) });
+    } else {
+      const next = new Set(current);
+      if (next.has(clusterId)) {
+        next.delete(clusterId);
+        // If all removed, reset to show all
+        if (next.size === 0) {
+          onFiltersChange({ ...filters, visibleClusters: null });
+        } else {
+          onFiltersChange({ ...filters, visibleClusters: next });
+        }
+      } else {
+        next.add(clusterId);
+        // If all selected, reset to null (show all)
+        if (next.size === presentClusters.length) {
+          onFiltersChange({ ...filters, visibleClusters: null });
+        } else {
+          onFiltersChange({ ...filters, visibleClusters: next });
+        }
+      }
+    }
+  };
+
+  const resetClusterFilter = () => {
+    onFiltersChange({ ...filters, visibleClusters: null });
   };
 
   const toggleParticles = () => {
