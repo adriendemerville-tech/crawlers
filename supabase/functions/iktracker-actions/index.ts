@@ -289,6 +289,30 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
     try {
       const posts = await listPostsForDedup(apiKey)
       
+      // Layer D (NEW): Topic saturation guard — block if ≥3 articles (incl. drafts) share same core topic
+      const incomingCore = extractCoreKeywords(title)
+      let sameTopicCount = 0
+      const sameTopicTitles: string[] = []
+      for (const post of posts) {
+        if (!post.title) continue
+        const overlap = coreTopicOverlap(title, post.title)
+        if (overlap >= 0.60) {
+          sameTopicCount++
+          sameTopicTitles.push(post.title)
+        }
+      }
+      if (sameTopicCount >= 3) {
+        console.warn(`[iktracker-actions] TOPIC SATURATION BLOCKED: "${title}" — ${sameTopicCount} existing articles on same topic: ${sameTopicTitles.slice(0, 5).join(', ')}`)
+        return {
+          status: 409,
+          data: null,
+          error: `Topic saturation: ${sameTopicCount} articles already cover this topic (${sameTopicTitles.slice(0, 3).join(', ')}). Choose a different subject or use update-post.`,
+          _topic_saturated: true,
+          _same_topic_count: sameTopicCount,
+          _existing_titles: sameTopicTitles.slice(0, 5),
+        }
+      }
+
       for (const post of posts) {
         if (!post.title) continue
 
