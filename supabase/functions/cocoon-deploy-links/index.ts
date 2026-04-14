@@ -311,3 +311,70 @@ function extractSlug(url: string): string | null {
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
+
+/**
+ * Insert HTML before the last </p> in content, or append at end.
+ * This places the bridge sentence in the conclusion area rather than after it.
+ */
+function insertBeforeLastParagraph(content: string, html: string): string {
+  const lastPIdx = content.lastIndexOf('</p>')
+  if (lastPIdx > 0) {
+    // Insert before the last paragraph's closing tag (i.e., before the conclusion)
+    const insertPoint = content.lastIndexOf('<p', lastPIdx)
+    if (insertPoint > 0) {
+      return content.slice(0, insertPoint) + html + '\n' + content.slice(insertPoint)
+    }
+  }
+  return content + '\n' + html
+}
+
+/**
+ * Generate a natural bridge sentence using AI that integrates the anchor text
+ * contextually within the article's topic.
+ */
+async function generateBridgeSentence(
+  content: string,
+  rec: LinkRecommendation
+): Promise<string | null> {
+  if (!isLovableAIConfigured()) return null
+
+  // Extract a short excerpt for context (first 500 chars of text)
+  const textOnly = content
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 500)
+
+  const linkHtml = `<a href="${rec.target_url}" title="${rec.anchor_text}">${rec.anchor_text}</a>`
+
+  try {
+    const result = await callLovableAI({
+      model: 'google/gemini-2.5-flash-lite',
+      messages: [
+        {
+          role: 'system',
+          content: `Tu es un rédacteur SEO expert. Génère UNE SEULE phrase de transition naturelle (max 30 mots) qui s'intègre dans un article existant et contient exactement le texte d'ancre fourni. La phrase doit être informative, pas promotionnelle. Réponds UNIQUEMENT avec la phrase, sans guillemets ni ponctuation de début.`
+        },
+        {
+          role: 'user',
+          content: `Article (extrait) : "${textOnly}"\n\nTexte d'ancre à intégrer : "${rec.anchor_text}"\nURL cible : ${rec.target_url}\n\nGénère une phrase de transition naturelle contenant ce texte d'ancre.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 100,
+    })
+
+    const sentence = result.choices?.[0]?.message?.content?.trim()
+    if (!sentence || sentence.length < 10 || sentence.length > 200) return null
+
+    // Replace anchor text with the actual link HTML
+    const anchorRegex = new RegExp(`(${escapeRegex(rec.anchor_text)})`, 'i')
+    if (anchorRegex.test(sentence)) {
+      return sentence.replace(anchorRegex, linkHtml)
+    }
+    return `${sentence} ${linkHtml}`
+  } catch (e) {
+    console.warn('[cocoon-deploy-links] AI bridge sentence failed:', e)
+    return null
+  }
+}
