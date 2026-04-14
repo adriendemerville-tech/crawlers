@@ -336,6 +336,21 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
             <Radius className="w-3 h-3 text-white/40" />
             <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.fanBeams}</span>
           </label>
+          {noIndexCount > 0 && (
+            <label
+              className="flex items-center gap-2 cursor-pointer group"
+              onClick={toggleHideNoIndex}
+            >
+              <Checkbox
+                checked={filters.hideNoIndex}
+                className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+                tabIndex={-1}
+              />
+              <EyeOff className="w-3 h-3 text-amber-500/60" />
+              <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.hideNoIndex}</span>
+              <span className="text-[10px] text-amber-500/50">{noIndexCount}</span>
+            </label>
+          )}
         </div>
       </PopoverContent>
     </Popover>
