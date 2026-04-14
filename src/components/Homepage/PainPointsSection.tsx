@@ -21,7 +21,7 @@ export const PainPointsSection = () => {
   if (language !== 'fr') return null;
 
   return (
-    <section className="relative py-14 sm:py-20 font-medium shadow-none opacity-100 text-secondary">
+    <section className="relative pt-20 pb-14 sm:py-20 font-medium shadow-none opacity-100 text-secondary">
       <div className="mx-auto max-w-5xl px-4">
         {/* Title */}
         <div className="mb-10 text-center">
