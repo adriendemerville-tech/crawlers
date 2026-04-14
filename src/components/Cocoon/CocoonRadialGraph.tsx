@@ -65,6 +65,7 @@ interface CocoonRadialGraphProps {
   bgColorSlider?: number;
   particlesEnabled?: boolean;
   showFanBeams?: boolean;
+  onFanBeamLegend?: (legend: { id: string; name: string; color: string; nodeCount: number }[]) => void;
 }
 
 // ─── Page-type colors (SAME as Force & 3D views) ───
