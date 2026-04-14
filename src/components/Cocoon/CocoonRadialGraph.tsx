@@ -64,6 +64,7 @@ interface CocoonRadialGraphProps {
   nodeColors?: Record<string, string>;
   bgColorSlider?: number;
   particlesEnabled?: boolean;
+  showFanBeams?: boolean;
 }
 
 // ─── Page-type colors (SAME as Force & 3D views) ───
@@ -342,6 +343,7 @@ export function CocoonRadialGraph({
   nodeColors,
   bgColorSlider = 0,
   particlesEnabled = true,
+  showFanBeams = false,
 }: CocoonRadialGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -616,6 +618,75 @@ export function CocoonRadialGraph({
           ctx.stroke();
         }
       }
+    }
+
+    // ─── Draw cluster fan beams (blurred colored wedges) ───
+    if (showFanBeams && tree.children.length > 0) {
+      // Group all nodes by cluster
+      const clusterGroups = new Map<string, RadialNode[]>();
+      for (const n of allRadialNodes) {
+        if (n.isHome) continue;
+        const cid = n.cluster;
+        if (!clusterGroups.has(cid)) clusterGroups.set(cid, []);
+        clusterGroups.get(cid)!.push(n);
+      }
+
+      // Generate distinct hue per cluster
+      const clusterIds = Array.from(clusterGroups.keys());
+      const clusterHues = new Map<string, number>();
+      clusterIds.forEach((cid, i) => {
+        clusterHues.set(cid, (i * 360 / Math.max(clusterIds.length, 1) + 200) % 360);
+      });
+
+      ctx.save();
+      for (const [cid, clusterNodes] of clusterGroups) {
+        if (clusterNodes.length < 2) continue;
+
+        // Compute angular range of this cluster
+        const angles = clusterNodes.map(n => Math.atan2(n.y - cy, n.x - cx));
+        angles.sort((a, b) => a - b);
+
+        // Find the widest gap to determine the "true" start/end
+        let maxGap = 0;
+        let gapEnd = 0;
+        for (let i = 0; i < angles.length; i++) {
+          const next = i < angles.length - 1 ? angles[i + 1] : angles[0] + Math.PI * 2;
+          const gap = next - angles[i];
+          if (gap > maxGap) {
+            maxGap = gap;
+            gapEnd = i;
+          }
+        }
+        const startAngle = angles[(gapEnd + 1) % angles.length] - 0.08;
+        const endIdx = gapEnd;
+        let endAngle = angles[endIdx] + 0.08;
+        if (endAngle <= startAngle) endAngle += Math.PI * 2;
+
+        // Max radius for this cluster
+        const maxNodeDist = Math.max(...clusterNodes.map(n => Math.sqrt((n.x - cx) ** 2 + (n.y - cy) ** 2)));
+        const fanR = maxNodeDist + 20;
+
+        const hue = clusterHues.get(cid) || 0;
+
+        // Draw blurred wedge
+        ctx.save();
+        ctx.filter = 'blur(18px)';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, fanR, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = `hsla(${hue}, 70%, 55%, 0.08)`;
+        ctx.fill();
+        ctx.restore();
+
+        // Draw a sharper but subtle edge arc
+        ctx.beginPath();
+        ctx.arc(cx, cy, fanR - 5, startAngle, endAngle);
+        ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.15)`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
     // Draw nodes

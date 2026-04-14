@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Radius } from 'lucide-react';
 import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -34,6 +35,7 @@ export interface CocoonFilters {
   visibleLinkDirections: Set<string>;
   showAllClusters: boolean;
   showParticles: boolean;
+  showFanBeams: boolean;
 }
 
 interface CocoonFilterSelectorProps {
@@ -57,9 +59,9 @@ const LINK_DIRECTION_COLORS: Record<string, string> = {
 };
 
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules', fanBeams: 'Faisceaux de famille' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles', fanBeams: 'Family beams' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas', fanBeams: 'Haces de familia' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
@@ -135,7 +137,21 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
   };
 
   const toggleParticles = () => {
-    onFiltersChange({ ...filters, showParticles: !filters.showParticles });
+    if (!filters.showParticles) {
+      // Turning particles ON → turn fan beams OFF
+      onFiltersChange({ ...filters, showParticles: true, showFanBeams: false });
+    } else {
+      onFiltersChange({ ...filters, showParticles: false });
+    }
+  };
+
+  const toggleFanBeams = () => {
+    if (!filters.showFanBeams) {
+      // Turning fan beams ON → turn particles OFF
+      onFiltersChange({ ...filters, showFanBeams: true, showParticles: false });
+    } else {
+      onFiltersChange({ ...filters, showFanBeams: false });
+    }
   };
 
   // Count active filters vs total
@@ -297,6 +313,18 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
             />
             <Sparkles className="w-3 h-3 text-white/40" />
             <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.hideParticles}</span>
+          </label>
+          <label
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={toggleFanBeams}
+          >
+            <Checkbox
+              checked={filters.showFanBeams}
+              className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+              tabIndex={-1}
+            />
+            <Radius className="w-3 h-3 text-white/40" />
+            <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.fanBeams}</span>
           </label>
         </div>
       </PopoverContent>

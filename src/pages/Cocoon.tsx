@@ -221,7 +221,7 @@ function CocoonContent() {
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
-  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
+  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
@@ -246,7 +246,7 @@ function CocoonContent() {
   // Reset filters & check CMS when site changes
   useEffect(() => {
     setFiltersInitialized(false);
-    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
+    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
     setHasCmsConnection(false);
     if (selectedSiteId) {
       supabase.from('cms_connections_public' as any).select('id').eq('tracked_site_id', selectedSiteId).eq('status', 'active').limit(1).then(({ data }) => {
@@ -281,7 +281,7 @@ function CocoonContent() {
           juiceTypes.add(jt);
         }
       }
-      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true });
+      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
       setFiltersInitialized(true);
     } else {
       setFiltersInitialized(false);
@@ -938,6 +938,7 @@ function CocoonContent() {
                 nodeColors={cocoonTheme.nodeColors}
                 bgColorSlider={bgColor}
                 particlesEnabled={particlesEnabled && cocoonFilters.showParticles}
+                showFanBeams={cocoonFilters.showFanBeams}
               />
             ) : (
               <CocoonForceGraph
