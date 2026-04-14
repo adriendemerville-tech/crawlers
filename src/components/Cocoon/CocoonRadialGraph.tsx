@@ -65,6 +65,7 @@ interface CocoonRadialGraphProps {
   bgColorSlider?: number;
   particlesEnabled?: boolean;
   showFanBeams?: boolean;
+  onFanBeamLegend?: (legend: { id: string; name: string; color: string; nodeCount: number }[]) => void;
 }
 
 // ─── Page-type colors (SAME as Force & 3D views) ───
@@ -344,6 +345,7 @@ export function CocoonRadialGraph({
   bgColorSlider = 0,
   particlesEnabled = true,
   showFanBeams = false,
+  onFanBeamLegend,
 }: CocoonRadialGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -638,11 +640,15 @@ export function CocoonRadialGraph({
         clusterHues.set(cid, (i * 360 / Math.max(clusterIds.length, 1) + 200) % 360);
       });
 
-      ctx.save();
+      // Pre-compute each cluster's angular range (tight to its nodes)
+      const BEAM_GAP = 0.04; // ~2.3° gap between adjacent beams
+      interface BeamRange { cid: string; start: number; end: number; fanR: number; nodeCount: number }
+      const beamRanges: BeamRange[] = [];
+
       for (const [cid, clusterNodes] of clusterGroups) {
         if (clusterNodes.length < 2) continue;
 
-        // Compute angular range of this cluster
+        // Compute angular positions of all nodes in this cluster
         const angles = clusterNodes.map(n => Math.atan2(n.y - cy, n.x - cx));
         angles.sort((a, b) => a - b);
 
@@ -657,23 +663,48 @@ export function CocoonRadialGraph({
             gapEnd = i;
           }
         }
-        const startAngle = angles[(gapEnd + 1) % angles.length] - 0.08;
-        const endIdx = gapEnd;
-        let endAngle = angles[endIdx] + 0.08;
+        // Tight start/end: exactly at the first/last node angle (no extra padding)
+        const startAngle = angles[(gapEnd + 1) % angles.length];
+        let endAngle = angles[gapEnd];
         if (endAngle <= startAngle) endAngle += Math.PI * 2;
 
         // Max radius for this cluster
         const maxNodeDist = Math.max(...clusterNodes.map(n => Math.sqrt((n.x - cx) ** 2 + (n.y - cy) ** 2)));
         const fanR = maxNodeDist + 20;
 
-        const hue = clusterHues.get(cid) || 0;
+        beamRanges.push({ cid, start: startAngle, end: endAngle, fanR, nodeCount: clusterNodes.length });
+      }
+
+      // Sort beams by start angle to enforce gaps between non-overlapping beams
+      beamRanges.sort((a, b) => a.start - b.start);
+
+      // Shrink beams to enforce gaps: only if beams are too close but not truly overlapping
+      for (let i = 0; i < beamRanges.length; i++) {
+        const curr = beamRanges[i];
+        const next = beamRanges[(i + 1) % beamRanges.length];
+        const nextStart = i < beamRanges.length - 1 ? next.start : next.start + Math.PI * 2;
+        const gapAvailable = nextStart - curr.end;
+
+        if (gapAvailable > 0 && gapAvailable < BEAM_GAP * 2) {
+          // Beams are close but not overlapping — enforce gap by shrinking both
+          const midpoint = curr.end + gapAvailable / 2;
+          curr.end = midpoint - BEAM_GAP;
+          if (i < beamRanges.length - 1) {
+            next.start = midpoint + BEAM_GAP;
+          }
+        }
+      }
+
+      ctx.save();
+      for (const beam of beamRanges) {
+        const hue = clusterHues.get(beam.cid) || 0;
 
         // Draw blurred wedge
         ctx.save();
         ctx.filter = 'blur(18px)';
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, fanR, startAngle, endAngle);
+        ctx.arc(cx, cy, beam.fanR, beam.start, beam.end);
         ctx.closePath();
         ctx.fillStyle = `hsla(${hue}, 70%, 55%, 0.14)`;
         ctx.fill();
@@ -681,12 +712,40 @@ export function CocoonRadialGraph({
 
         // Draw a sharper but subtle edge arc
         ctx.beginPath();
-        ctx.arc(cx, cy, fanR - 5, startAngle, endAngle);
+        ctx.arc(cx, cy, beam.fanR - 5, beam.start, beam.end);
         ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.25)`;
         ctx.lineWidth = 2;
         ctx.stroke();
       }
       ctx.restore();
+
+      // Emit legend data for the parent component
+      if (onFanBeamLegend) {
+        const legendItems = beamRanges.map(b => {
+          const hue = clusterHues.get(b.cid) || 0;
+          // Derive a readable name from the cluster ID or first node titles
+          const cNodes = clusterGroups.get(b.cid) || [];
+          const sampleTitles = cNodes.slice(0, 3).map(n => {
+            // Extract meaningful path segment from URL
+            try {
+              const path = new URL(n.url).pathname.replace(/\/$/, '').split('/').pop() || '';
+              return path.replace(/-/g, ' ').replace(/\.html?$/, '');
+            } catch { return n.title.slice(0, 20); }
+          });
+          const familyName = b.cid !== 'unknown' 
+            ? (sampleTitles[0] || b.cid).slice(0, 25)
+            : 'Non classé';
+          return {
+            id: b.cid,
+            name: familyName,
+            color: `hsl(${hue}, 70%, 55%)`,
+            nodeCount: b.nodeCount,
+          };
+        });
+        onFanBeamLegend(legendItems);
+      }
+    } else if (onFanBeamLegend) {
+      onFanBeamLegend([]);
     }
 
     // Draw nodes
@@ -769,8 +828,8 @@ export function CocoonRadialGraph({
 
     ctx.restore();
 
-    // Legend removed — only "Liens" shown below preview
-  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes, bgColor, particlesEnabled, visibleLinkDirections]);
+    // Legend removed — only "Liens" shown below preview; fan beam legend emitted via onFanBeamLegend callback
+  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes, bgColor, particlesEnabled, visibleLinkDirections, showFanBeams, onFanBeamLegend]);
 
   function drawLegend(ctx: CanvasRenderingContext2D, w: number, _h: number) {
     const x = w - 140;
