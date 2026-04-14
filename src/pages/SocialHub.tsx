@@ -133,6 +133,7 @@ function BlurredDemoOverlay({ monthlyUsage, onUpgrade, onBack }: { monthlyUsage:
 
 const SocialHub = memo(function SocialHub() {
   const { user } = useAuth();
+  useCanonicalHreflang('/app/social');
   const { isAgencyPro, planType } = useCredits();
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();

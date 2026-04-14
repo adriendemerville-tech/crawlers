@@ -139,6 +139,7 @@ const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 
 export default function ConversionOptimizer() {
   const [searchParams] = useSearchParams();
+  useCanonicalHreflang('/app/conversion-optimizer');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useAuth();

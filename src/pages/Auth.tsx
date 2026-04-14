@@ -131,6 +131,7 @@ export default function Auth() {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = translations[language];
+  useCanonicalHreflang('/auth');
   const inviteToken = searchParams.get('invite');
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
   const { isLocked, remainingSeconds, recordFailure, recordSuccess } = useLoginRateLimiter();

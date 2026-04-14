@@ -61,6 +61,7 @@ const DEFAULTS = {
 
 export default function MatricePrompt() {
   const navigate = useNavigate();
+  useCanonicalHreflang('/app/matrice-prompt');
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { user, loading: authLoading } = useAuth();
   const { isDemoMode } = useDemoMode();

@@ -51,6 +51,7 @@ interface TrackedSite {
 
 export default function BotActivityPage() {
   const { user } = useAuth();
+  useCanonicalHreflang('/app/bot-activity');
   const navigate = useNavigate();
   const [entries, setEntries] = useState<BotEntry[]>([]);
   const [sites, setSites] = useState<TrackedSite[]>([]);
