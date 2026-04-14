@@ -309,8 +309,15 @@ const ROUTES_WITH_PRICING = ["/tarifs", "/pro-agency", "/comparatif-crawlers-sem
 
 // ── HTML generators ──
 
+// Canonical overrides: routes that should point to a different canonical URL
+const CANONICAL_OVERRIDES: Record<string, string> = {
+  "/features/cocoon": "/cocoon",
+  "/app/cocoon": "/cocoon",
+};
+
 function generateStaticHTML(route: string, meta: { title: string; description: string }): string {
-  const fullUrl = `${baseUrl}${route}`;
+  const canonicalRoute = CANONICAL_OVERRIDES[route] || route;
+  const fullUrl = `${baseUrl}${canonicalRoute}`;
   const label = ROUTE_LABELS[route] || meta.title;
 
   const breadcrumb = breadcrumbJsonLd([
