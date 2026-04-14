@@ -457,18 +457,146 @@ try {
       isCreator = isAdmin === true;
     }
 
+    // ── Fantomas God Mode ──
+    const isFantomasMode = body.fantomas_mode === true && isCreator;
+
     // ── /createur, /creator, /admin : prefix gate — admin commands require explicit prefix ──
     const lastUserMsgRaw = messages.filter((m: any) => m.role === "user").pop()?.content || "";
     const createurPrefixMatch = lastUserMsgRaw.match(/^\/(?:createur|creator|admin)\s*:\s*/i);
-    const isCreatorMode = isCreator && !!createurPrefixMatch;
+    const isCreatorMode = isCreator && (!!createurPrefixMatch || isFantomasMode);
 
     // Strip the prefix from the message for downstream processing
-    if (isCreatorMode && createurPrefixMatch) {
+    if (createurPrefixMatch) {
       const strippedMsg = lastUserMsgRaw.slice(createurPrefixMatch[0].length).trim();
-      // Update the last user message in the messages array
       const lastUserMsgIndex = messages.map((m: any) => m.role).lastIndexOf("user");
       if (lastUserMsgIndex >= 0) {
         messages[lastUserMsgIndex] = { ...messages[lastUserMsgIndex], content: strippedMsg };
+      }
+    }
+
+    // ── Fantomas: auto-route to agents via LLM ──
+    if (isFantomasMode) {
+      const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+      
+      try {
+        // Use LLM to determine which agents should handle this directive
+        const routingPrompt = `Tu es un routeur de directives pour une plateforme SEO/GEO.
+L'administrateur créateur envoie une instruction. Tu dois déterminer quel(s) agent(s) doivent la traiter.
+
+Agents disponibles :
+- seo : Agent SEO — tout ce qui concerne le contenu SEO, les pages, les balises, le maillage interne, les sitemaps, les canonicals, les redirections, le robots.txt, les pages blog/guides
+- cto : Agent CTO — tout ce qui concerne le code, les bugs, les edge functions, les erreurs techniques, la base de données, les performances backend, les scripts
+- ux : Agent UX — tout ce qui concerne le design, l'interface utilisateur, les composants React, le CSS, l'accessibilité, le responsive
+- supervisor : Supervisor — audits de qualité, vérification des actions des autres agents, monitoring global
+
+Instruction : "${lastUserMsg}"
+
+Réponds UNIQUEMENT en JSON strict :
+{
+  "agents": ["seo", "cto"],
+  "directive_text": "texte nettoyé de la directive",
+  "target_url": "/chemin si mentionné ou null",
+  "target_function": "nom-function si mentionné ou null",
+  "target_component": "composant si mentionné ou null",
+  "priority": "critical"
+}`;
+
+        const routingResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-lite",
+            messages: [{ role: "user", content: routingPrompt }],
+            stream: false,
+            max_tokens: 300,
+          }),
+        });
+
+        if (routingResp.ok) {
+          const routingData = await routingResp.json();
+          logAIUsageFromResponse(sb, "google/gemini-2.5-flash-lite", "sav-agent", routingData.usage);
+          const routingText = routingData.choices?.[0]?.message?.content || "";
+          const jsonMatch = routingText.match(/\{[\s\S]*\}/);
+          
+          if (jsonMatch) {
+            const routing = JSON.parse(jsonMatch[0]);
+            const agents: string[] = routing.agents || ["cto"];
+            const directiveText = routing.directive_text || lastUserMsg;
+            const targetUrl = routing.target_url || null;
+            const targetFunction = routing.target_function || null;
+            const targetComponent = routing.target_component || null;
+
+            const dispatched: string[] = [];
+
+            // Insert directives in parallel for all targeted agents
+            const insertPromises = agents.map(async (agent: string) => {
+              try {
+                switch (agent) {
+                  case 'seo': {
+                    const targetSlug = targetUrl ? targetUrl.replace(/^\/blog\//, '').replace(/^\//, '').replace(/\/$/, '') : null;
+                    await sb.from("agent_seo_directives").insert({
+                      user_id, directive_text: directiveText, target_url: targetUrl, target_slug: targetSlug, status: 'pending',
+                    });
+                    dispatched.push('🔍 Agent SEO');
+                    break;
+                  }
+                  case 'cto': {
+                    await sb.from("agent_cto_directives").insert({
+                      user_id, directive_text: directiveText, target_function: targetFunction, target_url: targetUrl, status: 'pending',
+                    });
+                    dispatched.push('🔧 Agent CTO');
+                    break;
+                  }
+                  case 'ux': {
+                    await sb.from("agent_ux_directives").insert({
+                      user_id, directive_text: directiveText, target_component: targetComponent, target_url: targetUrl, status: 'pending',
+                    });
+                    dispatched.push('🎨 Agent UX');
+                    break;
+                  }
+                  case 'supervisor': {
+                    await sb.from("agent_supervisor_directives").insert({
+                      user_id, directive_text: directiveText, target_function: targetFunction, target_url: targetUrl, status: 'pending',
+                    });
+                    dispatched.push('🛡️ Supervisor');
+                    break;
+                  }
+                }
+              } catch (e) {
+                console.error(`[fantomas] Error inserting ${agent} directive:`, e);
+              }
+            });
+
+            await Promise.all(insertPromises);
+
+            // Fire dispatch immediately
+            fireDispatchAgentDirectives();
+
+            const confirmReply = `⚡ **Fantomas — Dispatch critique**\n\n> ${directiveText}\n\n**Agents ciblés :**\n${dispatched.join('\n')}\n\n${targetUrl ? `📍 Cible : \`${targetUrl}\`\n` : ''}${targetFunction ? `⚙️ Fonction : \`${targetFunction}\`\n` : ''}${targetComponent ? `🧩 Composant : \`${targetComponent}\`\n` : ''}\n✅ Directives créées avec priorité **critique**. Dispatch immédiat lancé.`;
+
+            // Save conversation
+            let savedConvId = conversation_id;
+            try {
+              const allMessages = [...messages, { role: "assistant", content: confirmReply }];
+              if (conversation_id) {
+                await sb.from("sav_conversations").update({ messages: allMessages, message_count: allMessages.length }).eq("id", conversation_id);
+              } else {
+                const { data: prof } = await sb.from("profiles").select("email").eq("user_id", user_id).single();
+                const { data: newConv } = await sb.from("sav_conversations").insert({
+                  user_id, user_email: prof?.email || null, messages: allMessages, message_count: allMessages.length,
+                }).select("id").single();
+                savedConvId = newConv?.id;
+              }
+            } catch (e) {
+              console.error("Save fantomas conv error:", e);
+            }
+
+            return jsonOk({ reply: confirmReply, conversation_id: savedConvId || conversation_id });
+          }
+        }
+      } catch (e) {
+        console.error("[fantomas] Routing error:", e);
+        // Fall through to normal creator mode flow
       }
     }
 

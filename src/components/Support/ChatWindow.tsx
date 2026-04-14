@@ -398,6 +398,27 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const [showContentArchitectModal, setShowContentArchitectModal] = useState(false);
   const [contentArchitectDiag, setContentArchitectDiag] = useState<any>(null);
 
+  // ═══ Fantomas God Mode ═══
+  const [fantomasMode, setFantomasMode] = useState(false);
+  const fantomasTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetFantomasTimeout = useCallback(() => {
+    if (fantomasTimeoutRef.current) clearTimeout(fantomasTimeoutRef.current);
+    fantomasTimeoutRef.current = setTimeout(() => {
+      setFantomasMode(false);
+      setMessages(prev => [...prev, { role: 'assistant', content: '🔒 Mode Creator désactivé (inactivité 10 min).', timestamp: new Date().toISOString() }]);
+    }, 10 * 60 * 1000);
+  }, []);
+
+  const deactivateFantomas = useCallback(() => {
+    setFantomasMode(false);
+    if (fantomasTimeoutRef.current) clearTimeout(fantomasTimeoutRef.current);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (fantomasTimeoutRef.current) clearTimeout(fantomasTimeoutRef.current); };
+  }, []);
+
   // Felix onboarding: inject guided tour messages on first login
   useEffect(() => {
     if (!triggerOnboarding || !user || isOnboardingDone()) return;
@@ -605,6 +626,28 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     if (!newMessage.trim() || sending) return;
 
     const messageText = newMessage.trim();
+
+    // ═══ Fantomas activation detection ═══
+    const fantomasMatch = messageText.match(/^["«"]?fantomas["»"]?$/i);
+    if (fantomasMatch && isAdmin) {
+      if (!fantomasMode) {
+        setFantomasMode(true);
+        resetFantomasTimeout();
+        setNewMessage('');
+        setMessages(prev => [...prev, 
+          { role: 'user', content: messageText, timestamp: new Date().toISOString() },
+          { role: 'assistant', content: '🔓 **Mode Creator activé.** Tous les messages seront dispatchés comme directives critiques aux agents. Timeout : 10 min.\n\nDésactivation : tape "fantomas" à nouveau.', timestamp: new Date().toISOString() },
+        ]);
+      } else {
+        deactivateFantomas();
+        setNewMessage('');
+        setMessages(prev => [...prev, 
+          { role: 'user', content: messageText, timestamp: new Date().toISOString() },
+          { role: 'assistant', content: '🔒 Mode Creator désactivé.', timestamp: new Date().toISOString() },
+        ]);
+      }
+      return;
+    }
 
     // ═══ Post-audit guided workflow intercept ═══
     if (auditGuideStep !== 'idle') {
@@ -944,6 +987,9 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     setNewMessage('');
     setSending(true);
 
+    // Reset Fantomas timeout on activity
+    if (fantomasMode) resetFantomasTimeout();
+
     // Track how-to questions about Crawlers tools
     if (detectCrawlersHowTo(messageText)) {
       setHowToCount(prev => prev + 1);
@@ -961,6 +1007,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
           guest_mode: !user,
           screen_context: screenContext,
           language,
+          ...(fantomasMode ? { fantomas_mode: true } : {}),
         },
       });
 
@@ -2009,13 +2056,26 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
             />
           )}
           <div className="flex-1 relative">
+            {fantomasMode && (
+              <div className="absolute -top-5 left-0 right-0 flex items-center justify-center z-10">
+                <button
+                  onClick={deactivateFantomas}
+                  className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors cursor-pointer"
+                >
+                  ⚡ CREATOR MODE — clic pour désactiver
+                </button>
+              </div>
+            )}
             <textarea
               value={newMessage}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
+              placeholder={fantomasMode ? '⚡ Directive Creator...' : bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
               disabled={sending}
-              className="w-full min-h-[2rem] max-h-[10rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
+              className={cn(
+                "w-full min-h-[2rem] max-h-[10rem] resize-none overflow-y-auto rounded-xl border bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 caret-primary transition-colors",
+                fantomasMode ? "border-destructive/40 focus-visible:ring-destructive/30" : "border-border/40 focus-visible:ring-ring/30"
+              )}
               maxLength={isAdmin ? 2000 : 500}
               rows={1}
               style={{ height: 'auto' }}
