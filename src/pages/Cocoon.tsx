@@ -658,7 +658,20 @@ function CocoonContent() {
           .eq("tracked_site_id", selectedSiteId)
           .order("traffic_estimate", { ascending: false })
           .limit(500);
-        if (data) setNodes(data);
+        if (data && data.length > 0) {
+          // Enrich with noindex info
+          const cpIds = data.map((n: any) => n.crawl_page_id).filter(Boolean);
+          let niSet = new Set<string>();
+          if (cpIds.length > 0) {
+            const { data: cps } = await supabase.from("crawl_pages" as any).select("id, is_indexable, has_noindex").in("id", cpIds);
+            if (cps) {
+              for (const cp of cps as any[]) {
+                if (cp.is_indexable === false || cp.has_noindex === true) niSet.add(cp.id);
+              }
+            }
+          }
+          setNodes(data.map((n: any) => ({ ...n, _is_noindex: n.crawl_page_id ? niSet.has(n.crawl_page_id) : false })));
+        }
       }
     } catch (e) {
       toast({
