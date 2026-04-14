@@ -70,6 +70,7 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
   const t = i18n[language] || i18n.fr;
   const nodeColors = theme?.nodeColors ?? DEFAULT_THEME.nodeColors;
   const particleColors = theme?.particleColors ?? DEFAULT_THEME.particleColors;
+  const [clusterExpanded, setClusterExpanded] = useState(false);
 
   // Detect present page types from nodes
   const presentPageTypes = useMemo(() => {
