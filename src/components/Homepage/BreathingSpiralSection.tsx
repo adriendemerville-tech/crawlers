@@ -232,7 +232,7 @@ export const BreathingSpiralSection = memo(() => {
               initial={{ opacity: 0, y: 10 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-violet-400"
+              className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400"
             >
               <Activity className="h-3.5 w-3.5" />
               {t3(language, 'Innovation de rupture', 'Breakthrough Innovation', 'Innovación disruptiva')}

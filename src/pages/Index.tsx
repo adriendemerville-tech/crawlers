@@ -735,7 +735,7 @@ const Index = () => {
             <div className="flex flex-col lg:flex-row items-center gap-12">
               {/* Left — text */}
               <div className="flex-1 space-y-5">
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   {language === 'fr' ? 'E-E-A-T · Confiance Google' : language === 'es' ? 'E-E-A-T · Confianza Google' : 'E-E-A-T · Google Trust'}
                 </div>
@@ -1056,11 +1056,11 @@ const Index = () => {
                     <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                       <Globe className="h-3.5 w-3.5 text-blue-500" /> Search Console · GA4 · GMB
                     </div>
-                    <div className="text-center text-blue-400">↓</div>
+                    <div className="text-center text-blue-600 dark:text-blue-400">↓</div>
                     <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                       <Database className="h-3.5 w-3.5 text-blue-500" /> PostgreSQL (RLS)
                     </div>
-                    <div className="text-center text-blue-400">↓</div>
+                    <div className="text-center text-blue-600 dark:text-blue-400">↓</div>
                     <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                       <Brain className="h-3.5 w-3.5 text-blue-500" /> Gemini Pro
                     </div>
