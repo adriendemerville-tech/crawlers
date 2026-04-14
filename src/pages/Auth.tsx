@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import { useTurnstile } from '@/hooks/useTurnstile';
+import { useLoginRateLimiter } from '@/hooks/useLoginRateLimiter';
 
 const translations = {
   fr: {
