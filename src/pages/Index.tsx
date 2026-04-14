@@ -20,7 +20,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck, Database, BarChart3 } from 'lucide-react';
+import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 
@@ -845,98 +845,6 @@ const Index = () => {
 
 
 
-        {/* GA4 & GSC — Data Segregation */}
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-              {/* Text */}
-              <div className="flex-1 space-y-5">
-                <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-semibold">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  {language === 'fr' ? 'Google Search Console & GA4' : language === 'es' ? 'Google Search Console & GA4' : 'Google Search Console & GA4'}
-                </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-                  {language === 'fr' ? (
-                    <>Vos données Google,<br /><span className="text-primary">strictement protégées</span></>
-                  ) : language === 'es' ? (
-                    <>Sus datos de Google,<br /><span className="text-primary">estrictamente protegidos</span></>
-                  ) : (
-                    <>Your Google data,<br /><span className="text-primary">strictly protected</span></>
-                  )}
-                </h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  {language === 'fr'
-                    ? 'Chez Crawlers.fr, les données issues de Google Search Console et Google Analytics 4 restent confinées dans notre écosystème interne. Un pare-feu de données garantit qu\'aucune information utilisateur Google n\'est jamais transmise aux LLMs tiers.'
-                    : language === 'es'
-                    ? 'En Crawlers.fr, los datos de Google Search Console y Google Analytics 4 permanecen confinados en nuestro ecosistema interno. Un firewall de datos garantiza que ninguna información de usuario de Google se transmita a LLMs de terceros.'
-                    : 'At Crawlers.fr, data from Google Search Console and Google Analytics 4 remains confined within our internal ecosystem. A data firewall ensures no Google user information is ever transmitted to third-party LLMs.'}
-                </p>
-                <ul className="space-y-2.5 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2.5">
-                    <Database className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-                    {language === 'fr' ? 'Base PostgreSQL avec RLS — isolation par utilisateur' : language === 'es' ? 'Base PostgreSQL con RLS — aislamiento por usuario' : 'PostgreSQL with RLS — per-user isolation'}
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <ShieldCheck className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                    {language === 'fr' ? 'Traitement IA interne via Gemini Pro uniquement (Google-to-Google)' : language === 'es' ? 'Procesamiento IA interno solo vía Gemini Pro (Google-to-Google)' : 'Internal AI processing via Gemini Pro only (Google-to-Google)'}
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <BarChart3 className="h-4 w-4 text-violet-500 mt-0.5 shrink-0" />
-                    {language === 'fr' ? 'Corrélation GSC × GA4 pour prédictions, impact SEO et détection d\'anomalies' : language === 'es' ? 'Correlación GSC × GA4 para predicciones, impacto SEO y detección de anomalías' : 'GSC × GA4 correlation for predictions, SEO impact and anomaly detection'}
-                  </li>
-                </ul>
-                <Link to="/data-flow-diagram">
-                  <Button size="lg" className="gap-2 mt-2 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white border-0 shadow-lg">
-                    <ShieldCheck className="h-4 w-4" />
-                    {language === 'fr' ? 'Voir l\'architecture complète' : language === 'es' ? 'Ver la arquitectura completa' : 'View full architecture'}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Mini diagram illustration */}
-              <div className="flex-shrink-0 w-full lg:w-[440px]">
-                <div className="rounded-2xl border border-blue-200 dark:border-blue-800 bg-card shadow-xl overflow-hidden p-5 space-y-3">
-                  {/* Left side mini */}
-                  <div className="rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/20 p-3 space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                      <ShieldCheck className="h-3 w-3" /> {language === 'fr' ? 'Écosystème Google (Interne)' : 'Google Ecosystem (Internal)'}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
-                      <Globe className="h-3.5 w-3.5 text-blue-500" /> Search Console · GA4 · GMB
-                    </div>
-                    <div className="text-center text-blue-600 dark:text-blue-400">↓</div>
-                    <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
-                      <Database className="h-3.5 w-3.5 text-blue-500" /> PostgreSQL (RLS)
-                    </div>
-                    <div className="text-center text-blue-600 dark:text-blue-400">↓</div>
-                    <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
-                      <Brain className="h-3.5 w-3.5 text-blue-500" /> Gemini Pro
-                    </div>
-                  </div>
-                  {/* Firewall */}
-                  <div className="flex items-center gap-2">
-                    <div className="h-0.5 flex-1 bg-red-500 rounded-full" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-red-500 px-2">DATA FIREWALL</span>
-                    <div className="h-0.5 flex-1 bg-red-500 rounded-full" />
-                  </div>
-                  {/* Right side mini */}
-                  <div className="rounded-lg border border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20 p-3 space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
-                      <Globe className="h-3 w-3" /> {language === 'fr' ? 'LLMs Externes (Découplés)' : 'External LLMs (Decoupled)'}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-orange-800 dark:text-orange-200">
-                      OpenRouter → Grok · GPT
-                    </div>
-                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold text-center">
-                      🔒 {language === 'fr' ? 'Aucune donnée Google transmise' : 'No Google data transmitted'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
         <Suspense fallback={<SectionSkeleton />}>
           <TestimonialsCarousel />
         </Suspense>
