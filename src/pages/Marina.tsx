@@ -689,7 +689,7 @@ export default function Marina() {
           Authorization: `Bearer ${session?.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: url.trim(), lang: language || 'fr' }),
       });
       const data = await res.json();
       if (data.error) { throw new Error(data.error); }
