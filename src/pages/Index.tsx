@@ -151,7 +151,7 @@ const Index = () => {
     }
   }, []);
 const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
-
+const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
