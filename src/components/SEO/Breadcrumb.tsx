@@ -105,6 +105,7 @@ export function Breadcrumb({ customItems, currentLabel, visuallyHidden = false }
 
   const items = useMemo(() => {
     if (pathname === '/' || pathname === '') return null;
+    if (pathname.startsWith('/app/console')) return null;
     if (customItems) return customItems;
 
     const segments = pathname.split('/').filter(Boolean);
