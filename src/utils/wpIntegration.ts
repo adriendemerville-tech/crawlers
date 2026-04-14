@@ -1,8 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { edgeFunctionUrl } from '@/utils/supabaseUrl';
 
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'tutlimtasnjabdfhpewu';
-const PLUGIN_URL = `https://${projectId}.supabase.co/functions/v1/download-plugin`;
+const PLUGIN_URL = edgeFunctionUrl('download-plugin');
 
 export type WPAction = 'download' | 'magic_link' | 'sync';
 

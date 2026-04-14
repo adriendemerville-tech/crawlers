@@ -19,7 +19,9 @@
  * ═══════════════════════════════════════════════════════════
  */
 
-const ENDPOINT = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/ingest-cloudflare";
+// IMPORTANT: Replace CRAWLERS_INGEST_URL with your project's edge function URL
+// Configure via Worker environment variable in Cloudflare dashboard
+const ENDPOINT = globalThis.CRAWLERS_INGEST_URL || "https://api.crawlers.fr/functions/v1/ingest-cloudflare";
 const BATCH_SIZE = 20;
 const FLUSH_INTERVAL_MS = 5000; // 5 secondes
 

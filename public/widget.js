@@ -30,8 +30,7 @@
     return;
   }
 
-  var PROJECT_ID = 'tutlimtasnjabdfhpewu';
-  var BASE_URL = 'https://' + PROJECT_ID + '.supabase.co/functions/v1';
+  var BASE_URL = (window.CRAWLERS_API_BASE || 'https://api.crawlers.fr/functions/v1');
   var SCRIPT_URL = BASE_URL + '/serve-client-script?key=' + encodeURIComponent(cleClient);
   var TRACK_URL = BASE_URL + '/track-payment';
 

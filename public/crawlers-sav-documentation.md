@@ -573,7 +573,7 @@ Oui. Crawlers.fr propose trois niveaux d'intégration WordPress : API CMS via Li
 ### Qu'est-ce que le serveur MCP Crawlers ?
 Crawlers.fr expose ses outils d'audit SEO/GEO comme un serveur MCP (Model Context Protocol) compatible avec Claude et tout client MCP. Cela permet à Claude d'appeler directement les outils Crawlers pour auditer un site, vérifier sa visibilité IA, générer du code correctif et mesurer l'impact — le tout en langage naturel.
 
-Endpoint : `POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server`
+Endpoint : `POST https://api.crawlers.fr/functions/v1/mcp-server`
 
 ### Outils MCP gratuits (sans authentification)
 - **check_geo_score** : Score GEO (0-100) pour l'optimisation moteurs IA
