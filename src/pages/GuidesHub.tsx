@@ -12,7 +12,7 @@ interface GuideEntry {
   slug: string;
   title: string;
   meta_description: string | null;
-  generation_context: any;
+  guide_category: string | null;
 }
 
 const collectionJsonLd = {
@@ -37,7 +37,7 @@ function GuidesHubComponent() {
     const fetchGuides = async () => {
       const { data } = await supabase
         .from('seo_page_drafts' as any)
-        .select('slug, title, meta_description, generation_context')
+        .select('slug, title, meta_description, guide_category')
         .eq('page_type', 'guide')
         .eq('status', 'published')
         .order('created_at', { ascending: true });
@@ -48,8 +48,8 @@ function GuidesHubComponent() {
     fetchGuides();
   }, []);
 
-  const blocA = guides.filter(g => g.generation_context?.guide_category === 'bloc_a');
-  const blocB = guides.filter(g => g.generation_context?.guide_category === 'bloc_b');
+  const blocA = guides.filter(g => g.guide_category === 'bloc_a');
+  const blocB = guides.filter(g => g.guide_category === 'bloc_b');
 
   return (
     <>
