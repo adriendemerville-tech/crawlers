@@ -627,6 +627,28 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
     const messageText = newMessage.trim();
 
+    // ═══ Fantomas activation detection ═══
+    const fantomasMatch = messageText.match(/^["«"]?fantomas["»"]?$/i);
+    if (fantomasMatch && isAdmin) {
+      if (!fantomasMode) {
+        setFantomasMode(true);
+        resetFantomasTimeout();
+        setNewMessage('');
+        setMessages(prev => [...prev, 
+          { role: 'user', content: messageText, timestamp: new Date().toISOString() },
+          { role: 'assistant', content: '🔓 **Mode Creator activé.** Tous les messages seront dispatchés comme directives critiques aux agents. Timeout : 10 min.\n\nDésactivation : tape "fantomas" à nouveau.', timestamp: new Date().toISOString() },
+        ]);
+      } else {
+        deactivateFantomas();
+        setNewMessage('');
+        setMessages(prev => [...prev, 
+          { role: 'user', content: messageText, timestamp: new Date().toISOString() },
+          { role: 'assistant', content: '🔒 Mode Creator désactivé.', timestamp: new Date().toISOString() },
+        ]);
+      }
+      return;
+    }
+
     // ═══ Post-audit guided workflow intercept ═══
     if (auditGuideStep !== 'idle') {
       const lower = messageText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
