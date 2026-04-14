@@ -6,6 +6,7 @@ import { checkFairUse } from '../_shared/fairUse.ts';
 import { logSilentError, fireAndLog } from '../_shared/silentErrorLogger.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent } from '../_shared/cmsContentScanner.ts';
+import { isIktrackerDomain, getIktrackerApiKey, IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
