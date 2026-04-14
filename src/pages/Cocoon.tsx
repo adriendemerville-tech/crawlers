@@ -568,7 +568,7 @@ function CocoonContent() {
             .select("id, is_indexable, has_noindex")
             .in("id", crawlPageIds);
           if (crawlPages) {
-            for (const cp of crawlPages) {
+            for (const cp of crawlPages as any[]) {
               if (cp.is_indexable === false || cp.has_noindex === true) {
                 noIndexSet.add(cp.id);
               }
