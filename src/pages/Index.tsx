@@ -20,7 +20,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Crown, ArrowRight, FileSearch, Grid3X3, Anchor, Search, Globe, Brain, ShieldCheck, Database, BarChart3 } from 'lucide-react';
+import { Crown, ArrowRight, FileSearch, Grid3X3, Search, Globe, Brain, ShieldCheck, Database, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 
@@ -48,8 +48,6 @@ const ContentArchitectSection = lazy(() => import('@/components/Homepage/Content
 const SocialHubSection = lazy(() => import('@/components/Homepage/SocialHubSection').then(m => ({ default: m.SocialHubSection })));
 const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductShowcaseSection').then(m => ({ default: m.ProductShowcaseSection })));
 const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
-const ClaudeVsCrawlersSection = lazy(() => import('@/components/Homepage/ClaudeVsCrawlersSection').then(m => ({ default: m.ClaudeVsCrawlersSection })));
-const LogAnalysisSection = lazy(() => import('@/components/Homepage/LogAnalysisSection').then(m => ({ default: m.LogAnalysisSection })));
 const BreathingSpiralSection = lazy(() => import('@/components/Homepage/BreathingSpiralSection').then(m => ({ default: m.BreathingSpiralSection })));
 const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
 
