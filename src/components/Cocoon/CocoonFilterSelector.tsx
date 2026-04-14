@@ -347,6 +347,58 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
           </div>
         </div>
 
+        {/* Cluster Filter */}
+        {presentClusters.length > 1 && (
+          <>
+            <Separator className="bg-white/5 my-1" />
+            <div className="px-3 py-1">
+              <button
+                onClick={() => setClusterExpanded(prev => !prev)}
+                className="w-full flex items-center gap-1.5 mb-2 group"
+              >
+                <Network className="w-3 h-3 text-white/40" />
+                <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider flex-1 text-left">
+                  {t.clusterFilter}
+                </span>
+                {filters.visibleClusters !== null && (
+                  <span className="text-[9px] text-[#fbbf24] font-medium">{filters.visibleClusters.size}/{presentClusters.length}</span>
+                )}
+                <ChevronDown className={`w-3 h-3 text-white/30 transition-transform ${clusterExpanded ? 'rotate-180' : ''}`} />
+              </button>
+              {clusterExpanded && (
+                <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
+                  {filters.visibleClusters !== null && (
+                    <button
+                      onClick={resetClusterFilter}
+                      className="text-[10px] text-[#fbbf24]/70 hover:text-[#fbbf24] mb-1 transition-colors"
+                    >
+                      ↺ {t.allClusters}
+                    </button>
+                  )}
+                  {presentClusters.map(([id, { name, count }]) => {
+                    const checked = filters.visibleClusters === null || filters.visibleClusters.has(id);
+                    return (
+                      <label
+                        key={id}
+                        className="flex items-center gap-2 cursor-pointer group"
+                        onClick={() => toggleClusterFilter(id)}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+                          tabIndex={-1}
+                        />
+                        <span className="text-xs text-white/70 group-hover:text-white transition-colors flex-1 truncate">{name}</span>
+                        <span className="text-[10px] text-white/30">{count}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         <Separator className="bg-white/5 my-1" />
 
         {/* Show All Clusters */}
