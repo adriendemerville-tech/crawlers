@@ -162,7 +162,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
         const r = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: normalizedUrl, lang: 'fr' }),
+          body: JSON.stringify({ url: normalizedUrl, lang: lang || 'fr' }),
           signal: AbortSignal.timeout(45_000),
         });
         if (!r.ok) { await r.text(); return null; }
