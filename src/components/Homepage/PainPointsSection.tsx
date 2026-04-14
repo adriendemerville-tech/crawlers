@@ -21,15 +21,15 @@ export const PainPointsSection = () => {
   if (language !== 'fr') return null;
 
   return (
-    <section className="relative border-b border-border bg-gradient-to-b from-destructive/5 via-background to-background py-14 sm:py-20">
+    <section className="relative border-b border-border bg-gradient-to-b from-destructive/5 via-background to-background py-14 sm:py-20 bg-popover">
       <div className="mx-auto max-w-5xl px-4">
         {/* Title */}
         <div className="mb-10 text-center">
-          <span className="mb-3 inline-block rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary-foreground">
+          <span className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary-foreground bg-secondary border-secondary-foreground">
             Freelances / Agences
           </span>
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-            Les outils SEO classiques vous mentent
+            Les outils SEO classiques galèrent
           </h2>
         </div>
 
@@ -38,7 +38,7 @@ export const PainPointsSection = () => {
           {painPoints.map((p, i) => (
             <div
               key={i}
-              className="group rounded-xl border border-destructive/15 bg-card/60 p-6 transition-colors hover:border-destructive/30"
+              className="group rounded-xl border-none border-destructive/15 bg-card/60 p-6 transition-colors hover:border-destructive/30"
             >
               <h3 className="mb-2 text-base font-bold text-foreground">{p.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
@@ -47,8 +47,8 @@ export const PainPointsSection = () => {
         </div>
 
         {/* Conclusion */}
-        <div className="mx-auto max-w-3xl rounded-xl border border-primary/20 bg-primary/5 px-6 py-5 text-center">
-          <span className="mb-2 text-sm font-bold text-primary">L'approche Crawlers</span>
+        <div className="mx-auto max-w-3xl rounded-xl border px-6 py-5 text-center bg-warning-foreground border-violet-600 border-solid">
+          <span className="mb-2 text-sm font-bold text-violet-600">L'approche Crawlers</span>
           <p className="text-sm leading-relaxed text-foreground/90">
             L'analyse de la SERP est de moins en moins fiable — les contre-mesures de Google piègent les outils de crawl classiques.{' '}
             <strong className="text-foreground">
