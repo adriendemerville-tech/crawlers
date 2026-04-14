@@ -1,19 +1,15 @@
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 const painPoints = [
   {
-    icon: AlertTriangle,
     title: 'Données SERP faussées',
     desc: 'L\'analyse de la SERP est de moins en moins fiable : Google personnalise, filtre et brouille les résultats. Les outils qui s\'y fient vous donnent une vision déformée de votre visibilité réelle.',
   },
   {
-    icon: Clock,
     title: 'Temps perdu en vérifications',
     desc: 'Export CSV, recroisement manuel, vérification des positions une par une… Vous passez plus de temps à valider les données qu\'à agir dessus.',
   },
   {
-    icon: Copy,
     title: 'Recommandations génériques',
     desc: 'Les mêmes checklists pour un e-commerce à 50 000 pages et un site vitrine de 12 pages. Aucune contextualisation, aucune priorisation business.',
   },
@@ -44,9 +40,6 @@ export const PainPointsSection = () => {
               key={i}
               className="group rounded-xl border border-destructive/15 bg-card/60 p-6 transition-colors hover:border-destructive/30"
             >
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10">
-                <p.icon className="h-5 w-5 text-secondary" />
-              </div>
               <h3 className="mb-2 text-base font-bold text-foreground">{p.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
             </div>
@@ -55,10 +48,7 @@ export const PainPointsSection = () => {
 
         {/* Conclusion */}
         <div className="mx-auto max-w-3xl rounded-xl border border-primary/20 bg-primary/5 px-6 py-5 text-center">
-          <div className="mb-2 flex items-center justify-center gap-2 text-violet-700">
-            <Database className="h-5 w-5 text-primary" />
-            <span className="text-sm font-bold text-violet-600">L'approche Crawlers</span>
-          </div>
+          <span className="mb-2 text-sm font-bold text-primary">L'approche Crawlers</span>
           <p className="text-sm leading-relaxed text-foreground/90">
             L'analyse de la SERP est de moins en moins fiable — les contre-mesures de Google piègent les outils de crawl classiques.{' '}
             <strong className="text-foreground">
