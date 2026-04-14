@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { Radius, EyeOff } from 'lucide-react';
-import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Radius, EyeOff, ChevronDown } from 'lucide-react';
+import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight, Network } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
