@@ -109,6 +109,26 @@ function FooterComponent() {
       description: t3(language, 'Guides SEO & GEO adaptés à votre activité', 'SEO & GEO guides for your business', 'Guías SEO & GEO para su negocio')
     },
     {
+      label: t3(language, 'SEO Artisan & BTP', 'SEO for Craftsmen', 'SEO Artesano'),
+      href: '/guide/artisan-seo',
+      description: t3(language, 'Référencement local pour artisans', 'Local SEO for craftsmen', 'SEO local para artesanos')
+    },
+    {
+      label: t3(language, 'SEO E-commerce', 'E-commerce SEO', 'SEO E-commerce'),
+      href: '/guide/ecommerce-seo',
+      description: t3(language, 'Optimisation boutique en ligne', 'Online store optimization', 'Optimización tienda online')
+    },
+    {
+      label: t3(language, 'SEO Agence & Consultant', 'Agency & Consultant SEO', 'SEO Agencia y Consultor'),
+      href: '/guide/agence-seo',
+      description: t3(language, 'Guide pour professionnels du SEO', 'Guide for SEO professionals', 'Guía para profesionales SEO')
+    },
+    {
+      label: t3(language, 'SEO SaaS & Startup', 'SaaS & Startup SEO', 'SEO SaaS y Startup'),
+      href: '/guide/saas-seo',
+      description: t3(language, 'Croissance organique pour SaaS', 'Organic growth for SaaS', 'Crecimiento orgánico para SaaS')
+    },
+    {
       label: t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio'),
       href: '/integration-gtm',
       description: t3(language, 'API, WordPress, GTM — toutes les méthodes', 'API, WordPress, GTM — all methods', 'API, WordPress, GTM — todos los métodos')
