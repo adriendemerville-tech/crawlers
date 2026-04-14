@@ -187,8 +187,8 @@ export function Header() {
 
   return (
     <>
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-card/80 backdrop-blur-md" role="banner">
-      <nav className="mx-auto flex h-14 sm:h-20 max-w-6xl items-center justify-between px-3 sm:px-4" aria-label="Navigation principale">
+    <header className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-6xl rounded-2xl border border-border/50 bg-card/70 backdrop-blur-xl shadow-lg shadow-black/5" role="banner">
+      <nav className="mx-auto flex h-12 sm:h-14 items-center justify-between px-4 sm:px-6" aria-label="Navigation principale">
         {/* Left side: Back button OR Logo + Language selector */}
         <div className="flex items-center gap-4">
           {isAuditExpertPage ? (
