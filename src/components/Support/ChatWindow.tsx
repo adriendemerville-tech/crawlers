@@ -987,6 +987,9 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
     setNewMessage('');
     setSending(true);
 
+    // Reset Fantomas timeout on activity
+    if (fantomasMode) resetFantomasTimeout();
+
     // Track how-to questions about Crawlers tools
     if (detectCrawlersHowTo(messageText)) {
       setHowToCount(prev => prev + 1);
@@ -1004,6 +1007,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
           guest_mode: !user,
           screen_context: screenContext,
           language,
+          ...(fantomasMode ? { fantomas_mode: true } : {}),
         },
       });
 
