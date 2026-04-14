@@ -60,9 +60,9 @@ const LINK_DIRECTION_COLORS: Record<string, string> = {
 };
 
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules', fanBeams: 'Faisceaux de famille' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles', fanBeams: 'Family beams' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas', fanBeams: 'Haces de familia' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules', fanBeams: 'Faisceaux de famille', hideNoIndex: 'Masquer non-indexables' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles', fanBeams: 'Family beams', hideNoIndex: 'Hide non-indexable' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas', fanBeams: 'Haces de familia', hideNoIndex: 'Ocultar no indexables' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
