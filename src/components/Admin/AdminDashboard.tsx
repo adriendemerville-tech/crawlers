@@ -224,10 +224,10 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     {
       label: t.monitoring,
       items: [
+        ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring', notifKey: 'intelligence' as const }] : []),
         { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
         ...(canSeeFinances ? [{ id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' }] : []),
         ...(canSeeFinances ? [{ id: 'bundle', label: t.bundle, icon: Package, group: 'monitoring' }] : []),
-        ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring', notifKey: 'intelligence' as const }] : []),
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring', notifKey: 'silentErrors' as const },
         { id: 'injection-errors', label: t.injectionErrors, icon: Syringe, group: 'monitoring', notifKey: 'injectionErrors' as const },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
