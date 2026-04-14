@@ -90,6 +90,25 @@ export interface ArticleDistribution {
   percentages: Record<ArticleType, number>;
   recommended: ArticleType;
   overRepresented: ArticleType[];
+  saturatedTopics: string[]; // core keyword groups appearing ≥3 times
+}
+
+/** Extract core keywords from a title (stop words removed) */
+const BRIEF_STOP_WORDS = new Set([
+  'le', 'la', 'les', 'de', 'des', 'du', 'un', 'une', 'et', 'en', 'pour', 'par',
+  'sur', 'avec', 'dans', 'que', 'qui', 'est', 'au', 'aux', 'son', 'ses', 'ce',
+  'cette', 'ces', 'ou', 'ne', 'pas', 'plus', 'tout', 'tous', 'votre', 'vos',
+  'notre', 'nos', 'comment', 'pourquoi', 'quand', 'guide', 'complet', 'complete',
+  'article', 'savoir', 'connaitre', 'comprendre', 'the', 'and', 'for',
+]);
+
+function extractBriefCoreTokens(title: string): string[] {
+  return title
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !BRIEF_STOP_WORDS.has(w));
 }
 
 export function computeArticleDistribution(
@@ -100,6 +119,9 @@ export function computeArticleDistribution(
     tutoriel: 0, opinion: 0, guide: 0,
   };
   
+  // Track keyword frequency across all titles for topic saturation
+  const keywordFreq = new Map<string, number>();
+
   for (const article of existingArticles) {
     const cat = (article.category || '').toLowerCase();
     const title = (article.title || '').toLowerCase();
@@ -108,6 +130,15 @@ export function computeArticleDistribution(
     
     const type = detectArticleType(combined, title, '');
     counts[type]++;
+
+    // Count 2-gram and 3-gram keyword groups for saturation detection
+    const tokens = extractBriefCoreTokens(title);
+    for (let n = 2; n <= 3 && n <= tokens.length; n++) {
+      for (let i = 0; i <= tokens.length - n; i++) {
+        const ngram = tokens.slice(i, i + n).sort().join(' ');
+        keywordFreq.set(ngram, (keywordFreq.get(ngram) || 0) + 1);
+      }
+    }
   }
   
   const total = existingArticles.length || 1;
@@ -132,8 +163,21 @@ export function computeArticleDistribution(
       recommended = type as ArticleType;
     }
   }
+
+  // Detect saturated topics: n-grams appearing ≥3 times
+  const saturatedTopics: string[] = [];
+  const seen = new Set<string>();
+  for (const [ngram, freq] of [...keywordFreq.entries()].sort((a, b) => b[1] - a[1])) {
+    if (freq < 3) break;
+    // Deduplicate: skip if a longer ngram already covers these tokens
+    const tokens = ngram.split(' ');
+    if (tokens.some(t => seen.has(t) && saturatedTopics.length > 0)) continue;
+    saturatedTopics.push(ngram);
+    tokens.forEach(t => seen.add(t));
+    if (saturatedTopics.length >= 10) break;
+  }
   
-  return { total, counts, percentages, recommended, overRepresented };
+  return { total, counts, percentages, recommended, overRepresented, saturatedTopics };
 }
 
 /** Determine which semantic ring to target based on existing coverage */
@@ -156,75 +200,55 @@ export function buildDiversityPromptBlock(
   distribution: ArticleDistribution,
   ringInfo: { ring: SemanticRing; reason: string },
   parentPages: string[],
-  existingDraftTitles: string[] = [],
 ): string {
   const ringConfig = SEMANTIC_RINGS[ringInfo.ring];
   const lines: string[] = [];
   
   lines.push(`═══ DIVERSITÉ ÉDITORIALE & EXPANSION SÉMANTIQUE ═══`);
   lines.push('');
-  
-  // ── EXISTING DRAFTS WARNING (anti-redundancy) ──
-  if (existingDraftTitles.length > 0) {
-    lines.push(`── ⛔ BROUILLONS EXISTANTS (${existingDraftTitles.length}) — NE PAS RECRÉER ──`);
-    lines.push(`Les articles suivants existent DÉJÀ en brouillon. NE CRÉE PAS d'article sur le même sujet :`);
-    for (const title of existingDraftTitles.slice(0, 20)) {
-      lines.push(`  ❌ "${title}"`);
+
+  // ── EXCLUSION LISTS (compact, token-efficient) ──
+  if (distribution.overRepresented.length > 0 || distribution.saturatedTopics.length > 0) {
+    lines.push(`── ⛔ EXCLUSIONS TEMPORAIRES ──`);
+    if (distribution.overRepresented.length > 0) {
+      lines.push(`TYPES EXCLUS (quota dépassé): ${distribution.overRepresented.join(', ')}`);
     }
-    lines.push(`→ Choisis un SUJET DIFFÉRENT de tous les brouillons ci-dessus.`);
-    lines.push(`→ Si le workbench demande un sujet déjà couvert, préfère "update-post" sur le brouillon existant.`);
+    if (distribution.saturatedTopics.length > 0) {
+      lines.push(`SUJETS SATURÉS (≥3 articles existants): ${distribution.saturatedTopics.join(', ')}`);
+    }
+    lines.push(`→ NE PAS créer d'article correspondant à ces types ou sujets.`);
+    lines.push(`→ Si le workbench cible un sujet saturé, préfère "update-post" sur un brouillon existant.`);
     lines.push('');
   }
 
   // Article type distribution
-  lines.push(`── TYPES D'ARTICLES (QUOTAS OBLIGATOIRES) ──`);
-  lines.push(`Distribution actuelle (${distribution.total} articles existants, publiés + brouillons):`);
+  lines.push(`── TYPES D'ARTICLES (QUOTAS) ──`);
+  lines.push(`Distribution actuelle (${distribution.total} articles, publiés + brouillons):`);
   for (const [type, quota] of Object.entries(ARTICLE_TYPE_QUOTAS)) {
     const pct = distribution.percentages[type as ArticleType] || 0;
-    const status = pct > quota.maxPct ? '⛔ SURREPRÉSENTÉ' : pct === 0 ? '🟢 À CRÉER' : '✅';
-    lines.push(`  ${status} ${type}: ${pct}% (quota max: ${quota.maxPct}%) — ${quota.description}`);
+    const status = pct > quota.maxPct ? '⛔' : pct === 0 ? '🟢' : '✅';
+    lines.push(`  ${status} ${type}: ${pct}% (max ${quota.maxPct}%)`);
   }
-  lines.push('');
-  if (distribution.overRepresented.length > 0) {
-    lines.push(`⚠️ TYPES INTERDITS pour ce cycle (quota dépassé): ${distribution.overRepresented.join(', ')}`);
-    lines.push(`→ NE PAS créer de ${distribution.overRepresented.join(' ni de ')}.`);
-  }
-  lines.push(`✅ TYPE RECOMMANDÉ: ${distribution.recommended} (${ARTICLE_TYPE_QUOTAS[distribution.recommended].description})`);
+  lines.push(`✅ TYPE RECOMMANDÉ: ${distribution.recommended}`);
   lines.push('');
   
   // Semantic ring
-  lines.push(`── ANNEAU SÉMANTIQUE: RING ${ringInfo.ring} — ${ringConfig.label.toUpperCase()} ──`);
+  lines.push(`── RING ${ringInfo.ring} — ${ringConfig.label.toUpperCase()} ──`);
   lines.push(`${ringInfo.reason}`);
-  lines.push(`Description: ${ringConfig.description}`);
-  lines.push('');
-  lines.push(`⚠️ RÈGLE DE MAILLAGE MÈRE-FILLE (OBLIGATOIRE):`);
-  lines.push(`${ringConfig.parentLinkingRule}`);
+  lines.push(`Maillage: ${ringConfig.parentLinkingRule}`);
   if (parentPages.length > 0) {
-    lines.push(`Pages mères disponibles pour le maillage:`);
-    for (const p of parentPages.slice(0, 8)) {
+    for (const p of parentPages.slice(0, 5)) {
       lines.push(`  → ${p}`);
     }
   }
   lines.push('');
-  // ── ANGLE DIVERSITY ──
-  lines.push(`── ANGLES ÉDITORIAUX (DIVERSIFICATION OBLIGATOIRE) ──`);
-  lines.push(`Ne produis PAS que des "guides complets". Alterne entre ces 5 angles :`);
-  lines.push(`  🎯 PERSONA — Cibler un métier/profil précis dans le titre (ex: infirmières, VRP, artisans)`);
-  lines.push(`  📰 ACTUALITÉ — Accrocher sur un événement récent, une réforme, un nom propre`);
-  lines.push(`  🔍 NICHE — Répondre à UNE question ultra-spécifique (format court, direct)`);
-  lines.push(`  ⚖️ COMPARATIF — Opposer 2 options, démystifier une idée reçue`);
-  lines.push(`  🛠️ TUTORIEL — Procédure pas-à-pas concrète (PAS un "guide complet")`);
-  lines.push(`L'angle choisi DOIT apparaître clairement dans le titre et structurer tout l'article.`);
+
+  // Angle diversity
+  lines.push(`── ANGLES (alterner obligatoirement) ──`);
+  lines.push(`🎯 PERSONA | 📰 ACTUALITÉ | 🔍 NICHE | ⚖️ COMPARATIF | 🛠️ TUTORIEL`);
   lines.push('');
   
-  lines.push(`Le contenu généré DOIT:`);
-  lines.push(`1. Être de type "${distribution.recommended}" (sauf si l'opportunité impose un autre type non-surreprésenté)`);
-  lines.push(`2. Appartenir au Ring ${ringInfo.ring} (${ringConfig.label})`);
-  lines.push(`3. Contenir au moins 1 lien vers une page mère du ring inférieur`);
-  lines.push(`4. Inclure "article_type" et "semantic_ring" dans les tags de l'article`);
-  lines.push(`5. Utiliser un ANGLE DIFFÉRENT des derniers articles publiés`);
-  lines.push(`6. Couvrir un SUJET DISTINCT de tous les brouillons et articles existants`);
-  lines.push('');
+  lines.push(`OBLIGATIONS: type="${distribution.recommended}", Ring ${ringInfo.ring}, maillage mère-fille, angle varié, sujet non-saturé.`);
   lines.push(`═══ FIN DIVERSITÉ ═══`);
   
   return lines.join('\n');
