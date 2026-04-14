@@ -1185,7 +1185,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
     e.target.style.height = 'auto';
-    e.target.style.height = Math.min(e.target.scrollHeight, 96) + 'px';
+    e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
   };
 
   if (!user) {
@@ -2015,14 +2015,14 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
               onKeyDown={handleKeyDown}
               placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
               disabled={sending}
-              className="w-full min-h-[2rem] max-h-[6rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
+              className="w-full min-h-[2rem] max-h-[10rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
               maxLength={isAdmin ? 2000 : 500}
               rows={1}
               style={{ height: 'auto' }}
               ref={(el) => {
                 if (el) {
                   el.style.height = 'auto';
-                  el.style.height = Math.min(el.scrollHeight, 96) + 'px';
+                  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
                 }
               }}
             />
