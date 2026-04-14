@@ -268,7 +268,7 @@ export type CTAType =
 
 export type SchemaType = 
   | 'Article' | 'Product' | 'FAQPage' | 'HowTo' | 'WebPage' 
-  | 'LocalBusiness' | 'Service' | 'BreadcrumbList';
+  | 'LocalBusiness' | 'Service' | 'BreadcrumbList' | 'SpeakableSpecification';
 
 export interface InternalLink {
   url: string;
@@ -316,6 +316,8 @@ export interface ContentBrief {
   citable_passages_count: number;
   direct_answer_first_words: number; // e.g. 150 = first 150 words answer the query
   eeat_signals: string[]; // e.g. ["author_bio", "sources", "data_points"]
+  authority_outbound_links: number; // recommended count of high-authority external links
+  speakable_enabled: boolean; // whether to include SpeakableSpecification schema
   freshness_markers: boolean; // mention year/date
 
   // ── Metadata ──
