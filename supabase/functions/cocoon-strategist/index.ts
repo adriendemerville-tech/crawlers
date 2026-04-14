@@ -453,6 +453,27 @@ try {
         .limit(50),
     ]);
 
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 0c: Extract Breathing Spiral context
+    // ═══════════════════════════════════════════════════════════
+    const spiralItems = (spiralDataResult as any)?.data || [];
+    const spiralUrlScoreMap = new Map<string, number>();
+    let avgSpiralScore = 0;
+    let spiralPhase: 'contraction' | 'expansion' | 'neutral' = 'neutral';
+
+    if (spiralItems.length > 0) {
+      for (const item of spiralItems) {
+        if (item.target_url && item.spiral_score != null) {
+          spiralUrlScoreMap.set(item.target_url, item.spiral_score);
+        }
+      }
+      avgSpiralScore = Math.round(spiralItems.reduce((s: number, it: any) => s + (it.spiral_score || 0), 0) / spiralItems.length);
+      // High avg spiral_score = many declining signals → contraction phase (consolidate core)
+      // Low avg spiral_score = stable → expansion phase (grow to new topics)
+      spiralPhase = avgSpiralScore >= 50 ? 'contraction' : avgSpiralScore >= 25 ? 'neutral' : 'expansion';
+      console.log(`[strategist] 🌀 Breathing Spiral: ${spiralItems.length} items, avg score ${avgSpiralScore}, phase: ${spiralPhase}`);
+    }
+
     // Extract keyword cloud as reference universe
     const keywordCloud: string[] = [];
     const serpKwData = (serpKeywordsResult as any)?.data?.sample_keywords;
