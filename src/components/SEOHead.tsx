@@ -82,6 +82,9 @@ export function SEOHead({ title, description, path, ogType = 'website', noIndex 
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={OG_IMAGE} />
 
+      {/* Organization JSON-LD (global) */}
+      <script type="application/ld+json">{JSON.stringify(ORGANIZATION_JSON_LD)}</script>
+
       {children}
     </Helmet>
   );
