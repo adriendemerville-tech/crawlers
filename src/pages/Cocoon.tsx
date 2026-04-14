@@ -221,7 +221,7 @@ function CocoonContent() {
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
-  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
+  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false, hideNoIndex: false });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
@@ -246,7 +246,7 @@ function CocoonContent() {
   // Reset filters & check CMS when site changes
   useEffect(() => {
     setFiltersInitialized(false);
-    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
+    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false, hideNoIndex: false });
     setHasCmsConnection(false);
     if (selectedSiteId) {
       supabase.from('cms_connections_public' as any).select('id').eq('tracked_site_id', selectedSiteId).eq('status', 'active').limit(1).then(({ data }) => {
@@ -281,18 +281,24 @@ function CocoonContent() {
           juiceTypes.add(jt);
         }
       }
-      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
+      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false, hideNoIndex: false });
       setFiltersInitialized(true);
     } else {
       setFiltersInitialized(false);
     }
   }, [nodesFingerprint]);
 
-  // Filtered nodes based on selected page types
+  // Filtered nodes based on selected page types + noindex filter
   const filteredNodes = useMemo(() => {
-    if (!filtersInitialized || cocoonFilters.visiblePageTypes.size === 0) return nodes;
-    return nodes.filter((n: any) => cocoonFilters.visiblePageTypes.has(n.page_type || 'unknown'));
-  }, [nodes, cocoonFilters.visiblePageTypes, filtersInitialized]);
+    let result = nodes;
+    if (filtersInitialized && cocoonFilters.visiblePageTypes.size > 0) {
+      result = result.filter((n: any) => cocoonFilters.visiblePageTypes.has(n.page_type || 'unknown'));
+    }
+    if (cocoonFilters.hideNoIndex) {
+      result = result.filter((n: any) => n._is_noindex !== true);
+    }
+    return result;
+  }, [nodes, cocoonFilters.visiblePageTypes, cocoonFilters.hideNoIndex, filtersInitialized]);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
