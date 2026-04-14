@@ -376,17 +376,17 @@ export function CocoonRadialGraph({
     }
   }, [bgColorSlider]);
 
-  // Build tree — layout adapts to zoom: when zoomed out, spread nodes further
+  // Build tree — layout adapts to zoom and spreadScale
   const tree = useMemo(() => {
     const root = buildSpanningTree(nodes);
     if (root) {
       // Base radius from canvas size; when zoom < 1, expand layout proportionally
-      const baseR = Math.min(dimensions.w, dimensions.h) * 0.42;
+      const baseR = Math.min(dimensions.w, dimensions.h) * 0.42 * spreadScale;
       const effectiveR = zoom < 1 ? baseR / zoom : baseR;
       layoutRadialTree(root, dimensions.w / 2, dimensions.h / 2, effectiveR);
     }
     return root;
-  }, [nodes, dimensions, zoom]);
+  }, [nodes, dimensions, zoom, spreadScale]);
 
   // Collect all nodes flat
   const allRadialNodes = useMemo(() => {
