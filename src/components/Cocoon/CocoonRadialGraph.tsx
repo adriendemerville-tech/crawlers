@@ -682,7 +682,7 @@ export function CocoonRadialGraph({
         // Draw a sharper but subtle edge arc
         ctx.beginPath();
         ctx.arc(cx, cy, fanR - 5, startAngle, endAngle);
-        ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.15)`;
+        ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.25)`;
         ctx.lineWidth = 2;
         ctx.stroke();
       }
