@@ -3,6 +3,7 @@ import { verifyInjectionOwnership } from '../_shared/ownershipCheck.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { isIktrackerDomain, IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
+import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts';
 
 /**
  * cocoon-deploy-links
@@ -22,6 +23,7 @@ interface LinkRecommendation {
   source_url: string
   target_url: string
   anchor_text: string
+  context_sentence?: string
   action: 'add_link' | 'update_anchor' | 'remove_link'
 }
 
