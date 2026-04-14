@@ -280,6 +280,7 @@ function generatePricingTableHtml(): string {
 // ── Route-specific breadcrumb labels ──
 const ROUTE_LABELS: Record<string, string> = {
   "/": "Accueil",
+  "/guides": "Guides SEO & GEO",
   "/faq": "FAQ",
   "/tarifs": "Tarifs",
   "/pro-agency": "Pro Agency",
@@ -852,7 +853,7 @@ Deno.serve(handleRequest(async (req) => {
     const meta = PUBLIC_ROUTES[route];
     if (!meta) {
       return new Response(
-        JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>", "/landing/<slug>"] }),
+        JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>", "/landing/<slug>", "/guide/<slug>"] }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
