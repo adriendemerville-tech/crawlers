@@ -138,13 +138,15 @@ function computeStats(articles: Article[]): EditorialStats {
 
 // ─── Internal CMS (crawlers.fr) ──────────────────────────────
 async function fetchInternalArticles(supabase: ReturnType<typeof getServiceClient>): Promise<Article[]> {
-  const { data, error } = await supabase
+  // Fetch blog articles
+  const { data: blogData, error: blogErr } = await supabase
     .from('blog_articles')
     .select('title, content, author_id, slug, status, published_at, created_at, image_url, excerpt')
     .limit(500);
 
-  if (error) throw new Error(`DB error: ${error.message}`);
-  return (data || []).map((a: any) => ({
+  if (blogErr) throw new Error(`DB error: ${blogErr.message}`);
+
+  const articles: Article[] = (blogData || []).map((a: any) => ({
     title: a.title,
     body: a.content,
     author_id: a.author_id,
@@ -155,6 +157,27 @@ async function fetchInternalArticles(supabase: ReturnType<typeof getServiceClien
     image_url: a.image_url,
     excerpt: a.excerpt,
   }));
+
+  // Also fetch SEO page drafts (landing pages)
+  const { data: draftData } = await supabase
+    .from('seo_page_drafts')
+    .select('title, content, slug, status, created_at, updated_at, meta_description, page_type')
+    .eq('page_type', 'landing')
+    .limit(200);
+
+  for (const d of (draftData || [])) {
+    articles.push({
+      title: d.title,
+      body: d.content,
+      slug: d.slug,
+      status: d.status === 'published' ? 'published' : 'draft',
+      created_at: d.created_at,
+      meta_description: d.meta_description,
+      categories: ['Landing Page'],
+    });
+  }
+
+  return articles;
 }
 
 // ─── IKTracker CMS ──────────────────────────────────────────
