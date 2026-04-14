@@ -5,6 +5,7 @@ Updated: 2026-04-14
 
 ### Architecture
 1. **Graphe** : Orienté et pondéré. Calculé par `calculate-cocoon-logic` à partir du dernier crawl `completed` (≥ 2 pages, domaine normalisé www vs root).
+2. **Depth** : `semantic_nodes.depth` = `crawl_depth` (BFS, calculé par le crawler). Avant fix: depth était 0/1 (seed/member de cluster). Maintenant: reflète la vraie profondeur BFS pour un placement radial correct.
 2. **Cannibalisation** : Priorité critique (x9 dans le scoring).
 3. **Auto-maillage IA** : Identifie des ancres sémantiques et injecte des liens contextuels via `cocoon_auto_links`.
 
