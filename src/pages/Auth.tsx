@@ -132,6 +132,7 @@ export default function Auth() {
   const t = translations[language];
   const inviteToken = searchParams.get('invite');
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
+  const { isLocked, remainingSeconds, recordFailure, recordSuccess } = useLoginRateLimiter();
 
   const verifyTurnstile = async (): Promise<boolean> => {
     if (!token) {
