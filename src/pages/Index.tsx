@@ -45,7 +45,7 @@ const HybridSection = lazy(() => import('@/components/HomepageSections').then(m 
 const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
 const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
 const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
-const SocialHubSection = lazy(() => import('@/components/Homepage/SocialHubSection').then(m => ({ default: m.SocialHubSection })));
+
 const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductShowcaseSection').then(m => ({ default: m.ProductShowcaseSection })));
 const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
 const BreathingSpiralSection = lazy(() => import('@/components/Homepage/BreathingSpiralSection').then(m => ({ default: m.BreathingSpiralSection })));
@@ -842,10 +842,6 @@ const Index = () => {
         
 
 
-        {/* Social Hub — SEO × Social × GEO */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <SocialHubSection />
-        </Suspense>
 
         {/* CTA Matrice — Freelance SEO */}
         <section className="relative overflow-hidden py-14 md:py-20">
