@@ -178,7 +178,7 @@ function ProfileContent() {
     }
   }, [user, isAgencyPro]);
 
-  const initialTab = searchParams.get('tab') || 'tracking';
+  const initialTab = searchParams.get('tab') || (hasAdminAccess ? 'admin' : 'tracking');
   const isProUser = isAgencyPro || isAdmin;
 
   useEffect(() => {
