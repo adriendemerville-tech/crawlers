@@ -12,7 +12,7 @@ interface GuideEntry {
   slug: string;
   title: string;
   meta_description: string | null;
-  generation_context: any;
+  guide_category: string | null;
 }
 
 const collectionJsonLd = {
