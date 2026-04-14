@@ -148,7 +148,7 @@ interface AdminDashboardProps {
 export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false, onSimulatedDataChange, onShowGoogleOnboarding }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState(canSeeIntelligence ? 'intelligence' : 'analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
   const [showContentArchitect, setShowContentArchitect] = useState(false);
@@ -224,10 +224,10 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     {
       label: t.monitoring,
       items: [
+        ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring', notifKey: 'intelligence' as const }] : []),
         { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
         ...(canSeeFinances ? [{ id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' }] : []),
         ...(canSeeFinances ? [{ id: 'bundle', label: t.bundle, icon: Package, group: 'monitoring' }] : []),
-        ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring', notifKey: 'intelligence' as const }] : []),
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring', notifKey: 'silentErrors' as const },
         { id: 'injection-errors', label: t.injectionErrors, icon: Syringe, group: 'monitoring', notifKey: 'injectionErrors' as const },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
