@@ -1238,7 +1238,7 @@ async function generateReport(url) {
                 <CardContent className="p-5">
                   <h4 className="text-sm font-semibold text-foreground mb-2">{t.api.refEndpoint}</h4>
                   <code className="block px-3 py-2 bg-muted rounded-md text-xs font-mono text-primary break-all">
-                    POST ${MARINA_API_URL}
+                    POST {MARINA_API_URL}
                   </code>
                 </CardContent>
               </Card>
