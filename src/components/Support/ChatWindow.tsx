@@ -398,6 +398,27 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const [showContentArchitectModal, setShowContentArchitectModal] = useState(false);
   const [contentArchitectDiag, setContentArchitectDiag] = useState<any>(null);
 
+  // ═══ Fantomas God Mode ═══
+  const [fantomasMode, setFantomasMode] = useState(false);
+  const fantomasTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetFantomasTimeout = useCallback(() => {
+    if (fantomasTimeoutRef.current) clearTimeout(fantomasTimeoutRef.current);
+    fantomasTimeoutRef.current = setTimeout(() => {
+      setFantomasMode(false);
+      setMessages(prev => [...prev, { role: 'assistant', content: '🔒 Mode Creator désactivé (inactivité 10 min).', timestamp: new Date().toISOString() }]);
+    }, 10 * 60 * 1000);
+  }, []);
+
+  const deactivateFantomas = useCallback(() => {
+    setFantomasMode(false);
+    if (fantomasTimeoutRef.current) clearTimeout(fantomasTimeoutRef.current);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (fantomasTimeoutRef.current) clearTimeout(fantomasTimeoutRef.current); };
+  }, []);
+
   // Felix onboarding: inject guided tour messages on first login
   useEffect(() => {
     if (!triggerOnboarding || !user || isOnboardingDone()) return;
