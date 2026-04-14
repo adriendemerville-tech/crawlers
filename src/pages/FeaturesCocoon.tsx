@@ -188,7 +188,7 @@ const techIcons = [GitBranch, Shield, Workflow, CheckCircle2];
 
 export default function FeaturesCocoon() {
   const { language } = useLanguage();
-  useCanonicalHreflang('/features/cocoon');
+  useCanonicalHreflang('/cocoon');
   const t = i18n[language] || i18n.fr;
 
   return (
