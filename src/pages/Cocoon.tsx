@@ -186,7 +186,7 @@ function CocoonContent() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { language } = useLanguage();
-  useCanonicalHreflang('/app/cocoon');
+  useCanonicalHreflang('/cocoon');
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();

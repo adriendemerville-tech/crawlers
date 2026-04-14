@@ -6,6 +6,7 @@
  * Admins and Pro users have unlimited access.
  */
 import { memo, useState, useEffect, lazy, Suspense, useCallback } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
