@@ -402,8 +402,8 @@ try {
     const diagTypes = ['content', 'semantic', 'structure', 'authority'];
     const cutoff = new Date(Date.now() - MAX_DIAG_AGE_HOURS * 3600 * 1000).toISOString();
 
-    // Fetch recent diagnostics + strategic audit data + keyword cloud + EEAT data in parallel
-    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult, eeatAuditResult] = await Promise.all([
+    // Fetch recent diagnostics + strategic audit data + keyword cloud + EEAT data + spiral scores in parallel
+    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult, eeatAuditResult, spiralDataResult] = await Promise.all([
       supabase
         .from('cocoon_diagnostic_results')
         .select('*')
@@ -442,6 +442,15 @@ try {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      // Load spiral_score data from workbench (Breathing Spiral context)
+      supabase
+        .from('architect_workbench')
+        .select('target_url, spiral_score, velocity_decay_score, cluster_maturity_pct, conversion_weight, finding_category')
+        .eq('tracked_site_id', tracked_site_id)
+        .in('status', ['pending', 'in_progress'])
+        .not('spiral_score', 'is', null)
+        .order('spiral_score', { ascending: false })
+        .limit(50),
     ]);
 
     // Extract keyword cloud as reference universe
