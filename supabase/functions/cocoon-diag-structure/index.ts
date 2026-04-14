@@ -122,17 +122,41 @@ try {
     const findings: Finding[] = [];
     const okPages = pages.filter(p => p.http_status === 200);
 
-    // 1. Deep pages (crawl_depth > 3)
+    // 1. Deep pages (crawl_depth > 3) — enriched with per-page depth + shallow link sources
     const deepPages = okPages.filter(p => (p.crawl_depth || 0) > 3);
     if (deepPages.length > 0) {
+      // Identify shallow pages (depth 0-1) that could serve as link sources to reduce depth
+      const shallowPages = okPages
+        .filter(p => (p.crawl_depth || 0) <= 1 && (p.internal_links || 0) < 50)
+        .map(p => ({ url: p.url, depth: p.crawl_depth || 0, outgoing_links: p.internal_links || 0 }))
+        .sort((a, b) => a.outgoing_links - b.outgoing_links)
+        .slice(0, 10);
+
+      const avgDepth = okPages.reduce((s, p) => s + (p.crawl_depth || 0), 0) / okPages.length;
+      const depthDistribution: Record<number, number> = {};
+      for (const p of okPages) {
+        const d = p.crawl_depth || 0;
+        depthDistribution[d] = (depthDistribution[d] || 0) + 1;
+      }
+
       findings.push({
         id: 'deep_pages',
         severity: deepPages.length > okPages.length * 0.3 ? 'critical' : 'warning',
-        category: 'structure',
+        category: 'deep_pages',
         title: t('deep_pages', lang),
-        description: `${deepPages.length} pages à profondeur > 3`,
+        description: `${deepPages.length} pages à profondeur > 3 (max: ${Math.max(...deepPages.map(p => p.crawl_depth || 0))}, moyenne site: ${avgDepth.toFixed(1)})`,
         affected_urls: deepPages.map(p => p.url),
-        data: { max_depth: Math.max(...deepPages.map(p => p.crawl_depth || 0)) },
+        data: {
+          max_depth: Math.max(...deepPages.map(p => p.crawl_depth || 0)),
+          avg_site_depth: Math.round(avgDepth * 10) / 10,
+          depth_distribution: depthDistribution,
+          deep_pages_detail: deepPages
+            .sort((a, b) => (b.crawl_depth || 0) - (a.crawl_depth || 0))
+            .slice(0, 15)
+            .map(p => ({ url: p.url, depth: p.crawl_depth || 0, path: p.path })),
+          suggested_link_sources: shallowPages,
+          pct_deep: Math.round(deepPages.length / okPages.length * 100),
+        },
       });
     }
 
