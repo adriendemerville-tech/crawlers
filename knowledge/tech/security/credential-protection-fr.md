@@ -11,3 +11,6 @@ La table `audit_cache` est restreinte à `service_role` uniquement (plus aucune 
 
 ## Écriture analyzed_urls
 Les opérations INSERT et UPDATE sur `analyzed_urls` sont réservées au `service_role`. La lecture reste publique pour l'affichage des compteurs SEO.
+
+## Protection anti brute-force (Authentification)
+Un hook client `useLoginRateLimiter` implémente un verrouillage progressif après tentatives de connexion échouées (5→30s, 8→60s, 12→5min). Persisté en localStorage, il complète le rate-limiting serveur GoTrue (par IP). Le bouton de connexion est désactivé avec un compte à rebours visible pendant le verrouillage. Voir `knowledge/tech/security/login-rate-limiting-fr.md` pour les détails complets.

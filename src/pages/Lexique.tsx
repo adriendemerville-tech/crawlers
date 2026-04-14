@@ -130,6 +130,8 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Open Graph", definition: "Protocole de métadonnées définissant comment une page apparaît lorsqu'elle est partagée sur les réseaux sociaux.", category: "technical" },
     { term: "Twitter Cards", definition: "Balises meta permettant de personnaliser l'aperçu d'un lien partagé sur Twitter/X.", category: "technical" },
     { term: "API", acronym: "Application Programming Interface", definition: "Interface permettant à des applications de communiquer entre elles. PageSpeed Insights expose une API pour les audits.", category: "technical" },
+    { term: "Rate Limiting", definition: "Mécanisme de sécurité limitant le nombre de requêtes ou tentatives autorisées dans un intervalle de temps donné. Protège contre les attaques par force brute (brute-force) et les abus. Sur Crawlers.fr, un verrouillage progressif bloque temporairement les connexions après 5, 8 puis 12 tentatives échouées (30s, 60s, 5min).", category: "technical" },
+    { term: "Brute Force", definition: "Attaque informatique consistant à tester systématiquement toutes les combinaisons possibles de mots de passe pour accéder à un compte. Les protections incluent le rate limiting, le CAPTCHA et le verrouillage progressif des tentatives.", category: "technical" },
     
     // AI Terms
     { term: "Intelligence Artificielle", acronym: "IA", definition: "Technologie permettant aux machines d'effectuer des tâches nécessitant normalement l'intelligence humaine.", category: "ai" },
@@ -313,6 +315,8 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Mobile-First", definition: "Design approach prioritizing mobile experience before desktop. Google uses mobile-first indexing.", category: "technical" },
     { term: "SSR", acronym: "Server-Side Rendering", definition: "Server-side rendering generating complete HTML before sending to browser. Better for SEO than client rendering.", category: "technical" },
     { term: "Hreflang", definition: "HTML attribute indicating the target language and region of a page, essential for international SEO.", category: "technical" },
+    { term: "Rate Limiting", definition: "Security mechanism limiting the number of requests or attempts allowed within a given time window. Protects against brute-force attacks and abuse. On Crawlers.fr, a progressive lockout temporarily blocks login after 5, 8, then 12 failed attempts (30s, 60s, 5min).", category: "technical" },
+    { term: "Brute Force", definition: "Cyberattack systematically testing all possible password combinations to gain access to an account. Protections include rate limiting, CAPTCHA, and progressive attempt lockout.", category: "technical" },
     
     // AI Terms
     { term: "Artificial Intelligence", acronym: "AI", definition: "Technology enabling machines to perform tasks normally requiring human intelligence.", category: "ai" },
@@ -411,6 +415,8 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Diseño Responsivo", definition: "Diseño web que adapta automáticamente la visualización al tamaño de pantalla.", category: "technical" },
     { term: "Mobile-First", definition: "Enfoque de diseño priorizando la experiencia móvil. Google usa indexación mobile-first.", category: "technical" },
     { term: "SSR", acronym: "Server-Side Rendering", definition: "Renderizado del lado del servidor generando HTML completo antes de enviarlo al navegador.", category: "technical" },
+    { term: "Rate Limiting", definition: "Mecanismo de seguridad que limita el número de solicitudes o intentos permitidos en un intervalo de tiempo. Protege contra ataques de fuerza bruta y abusos. En Crawlers.fr, un bloqueo progresivo bloquea temporalmente el inicio de sesión tras 5, 8 y 12 intentos fallidos (30s, 60s, 5min).", category: "technical" },
+    { term: "Fuerza Bruta", definition: "Ciberataque que prueba sistemáticamente todas las combinaciones posibles de contraseñas para acceder a una cuenta. Las protecciones incluyen rate limiting, CAPTCHA y bloqueo progresivo.", category: "technical" },
     
     // AI Terms
     { term: "Inteligencia Artificial", acronym: "IA", definition: "Tecnología que permite a las máquinas realizar tareas que normalmente requieren inteligencia humana.", category: "ai" },
