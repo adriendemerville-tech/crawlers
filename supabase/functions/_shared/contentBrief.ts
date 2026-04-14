@@ -788,9 +788,16 @@ export function briefToPromptBlock(brief: ContentBrief): string {
 
   // GEO
   lines.push(`── GEO (CITABILITÉ IA) ──`);
-  lines.push(`Passages citables: ${brief.citable_passages_count} (1 par H2, 40-80 mots, autonome)`);
+  lines.push(`Passages citables: ${brief.citable_passages_count} (1 par H2, 40-80 mots, autonome, encadrés dans <blockquote class="citable-passage">)`);
   lines.push(`Réponse directe: les ${brief.direct_answer_first_words} premiers mots RÉPONDENT à l'intention`);
   lines.push(`Signaux E-E-A-T obligatoires: ${brief.eeat_signals.join(', ')}`);
+  if (brief.speakable_enabled) {
+    lines.push(`SpeakableSpecification: OUI — Ajouter le schema JSON-LD SpeakableSpecification ciblant h1, .citable-passage et le 1er paragraphe`);
+  }
+  if (brief.authority_outbound_links > 0) {
+    lines.push(`Liens d'autorité externes: ${brief.authority_outbound_links} liens vers des sources autoritaires (Google, Schema.org, études officielles, documentation W3C)`);
+    lines.push(`  → Chaque lien externe doit pointer vers une page spécifique (pas un domaine racine) et être contextuellement pertinent`);
+  }
   if (brief.freshness_markers) lines.push(`Fraîcheur: mentionner l'année en cours, dater les informations`);
   lines.push('');
 
