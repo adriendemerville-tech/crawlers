@@ -150,6 +150,7 @@ const Index = () => {
       return () => { clearTimeout(timer); ctrl.abort(); };
     }
   }, []);
+const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
 
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
