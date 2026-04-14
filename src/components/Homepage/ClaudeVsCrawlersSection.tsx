@@ -25,7 +25,7 @@ function ClaudeVsCrawlersSectionComponent() {
   ];
 
   return (
-    <section className="py-16 md:py-24 border-y border-border bg-muted/20">
+    <section className="py-16 md:py-24">
       <div className="container mx-auto max-w-5xl px-4">
         {/* Header */}
         <div className="text-center mb-12 space-y-3">

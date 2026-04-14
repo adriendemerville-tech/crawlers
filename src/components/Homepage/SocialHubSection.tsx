@@ -143,7 +143,7 @@ export const SocialHubSection = memo(() => {
   const t = translations[language] || translations.fr;
 
   return (
-    <section className="border-y border-border bg-gradient-to-br from-emerald-50/40 via-background to-teal-50/30 dark:from-emerald-950/15 dark:via-background dark:to-teal-950/10 py-20 md:py-28 overflow-hidden">
+    <section className="py-20 md:py-28 overflow-hidden">
       <div className="container mx-auto max-w-6xl px-4">
         {/* Header */}
         <motion.div

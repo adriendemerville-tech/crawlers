@@ -215,7 +215,7 @@ const MomentumSection = memo(() => {
   ];
 
   return (
-    <section className="border-y border-border bg-card/50 py-12 md:py-16">
+    <section className="py-12 md:py-16">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-4">{t.momentumTitle}</h2>
         <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-8 leading-relaxed">{t.momentumText}</p>
@@ -314,7 +314,7 @@ const IdentityFirstSection = memo(() => {
   ];
 
   return (
-    <section className="py-10 md:py-14 bg-gradient-to-b from-brand-violet-muted/30 via-background to-background">
+    <section className="py-10 md:py-14">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 rounded-full bg-brand-violet/10 border border-brand-violet/20 px-4 py-1.5 text-sm font-semibold text-brand-violet mb-5">
@@ -380,7 +380,7 @@ const HybridSection = memo(() => {
   const lang = language as 'fr' | 'en' | 'es';
 
   return (
-    <section className="py-16 md:py-24 bg-card/50 border-y border-border">
+    <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-foreground sm:text-3xl mb-3">{t.hybridTitle}</h2>
@@ -443,7 +443,7 @@ const TrustBanner = memo(() => {
   const t = i18n[language as keyof typeof i18n] || i18n.fr;
 
   return (
-    <section className="py-14 md:py-20 bg-gradient-to-r from-primary/5 via-brand-violet/5 to-primary/5">
+    <section className="py-14 md:py-20">
       <div className="container mx-auto px-4 max-w-4xl">
         <p className="text-sm font-bold uppercase tracking-widest text-brand-violet mb-5 text-center">{t.trustTitle}</p>
         <div className="text-foreground text-base sm:text-lg leading-relaxed max-w-3xl mx-auto text-center mb-10 space-y-4">

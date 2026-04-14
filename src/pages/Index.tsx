@@ -634,7 +634,9 @@ const Index = () => {
         })}</script>
       </Helmet>
       <Header />
-      <main className="flex-1" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
+      <main className="flex-1 relative" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
+        {/* Global premium gradient overlay */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--brand-violet)/0.06),transparent_60%)]" />
         <HeroSection />
 
         {/* ─── Homepage marketing sections ─── */}
@@ -645,8 +647,8 @@ const Index = () => {
         </Suspense>
 
         {/* Pro Agency hero */}
-        <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-14 sm:py-20">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
+        <section className="relative overflow-hidden py-14 sm:py-20">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--brand-violet)/0.06),transparent_60%)]" />
             <div className="relative mx-auto max-w-4xl px-4 text-center">
               <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
                 {language === 'fr' ? 'Gérez 30 clients. Audits illimités.' : language === 'es' ? 'Gestiona 30 clientes. Auditorías ilimitadas.' : 'Manage 30 clients. Unlimited audits.'}
@@ -728,7 +730,7 @@ const Index = () => {
 
         {/* E-E-A-T Section */}
         <section className="py-20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-emerald-500/5" />
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/3 via-transparent to-emerald-500/3" />
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex flex-col lg:flex-row items-center gap-12">
               {/* Left — text */}
@@ -854,8 +856,8 @@ const Index = () => {
         
 
         {/* CTA Marina — Rapport SEO & GEO complet */}
-        <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-cyan-950/10 via-background to-blue-950/10 py-14 md:py-20">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.06),transparent_60%)]" />
+        <section className="relative overflow-hidden py-14 md:py-20">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.04),transparent_60%)]" />
           <div className="relative container mx-auto max-w-4xl px-4">
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
               <div className="flex-1 space-y-4">
@@ -932,8 +934,8 @@ const Index = () => {
         </Suspense>
 
         {/* CTA Matrice — Freelance SEO */}
-        <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-indigo-950/10 via-background to-violet-950/10 py-14 md:py-20">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.06),transparent_60%)]" />
+        <section className="relative overflow-hidden py-14 md:py-20">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.04),transparent_60%)]" />
           <div className="relative container mx-auto max-w-4xl px-4">
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
               <div className="flex-1 text-center md:text-left">
@@ -995,7 +997,7 @@ const Index = () => {
 
 
         {/* GA4 & GSC — Data Segregation */}
-        <section className="border-y border-border bg-gradient-to-r from-blue-50/50 via-muted/30 to-emerald-50/50 dark:from-blue-950/10 dark:via-muted/10 dark:to-emerald-950/10 py-16 md:py-24">
+        <section className="py-16 md:py-24">
           <div className="container mx-auto max-w-6xl px-4">
             <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
               {/* Text */}

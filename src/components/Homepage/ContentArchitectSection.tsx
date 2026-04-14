@@ -70,7 +70,7 @@ export const ContentArchitectSection = memo(() => {
   const t = translations[language];
 
   return (
-    <section className="relative overflow-hidden border-b border-border py-20 sm:py-28">
+    <section className="relative overflow-hidden py-20 sm:py-28">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-emerald-950/5 to-background" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(160_60%_40%/0.06),transparent_60%)]" />

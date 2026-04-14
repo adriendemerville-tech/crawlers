@@ -43,7 +43,7 @@ const innovations = [
 ];
 
 export const GoogleCrossDataSection = memo(() => (
-  <section className="relative border-y border-border/40 bg-gradient-to-b from-background via-muted/30 to-background py-16 lg:py-24">
+  <section className="relative py-16 lg:py-24">
     <div className="mx-auto max-w-6xl px-4">
       <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={stagger} className="text-center mb-12">
         <motion.div variants={fadeUp}>

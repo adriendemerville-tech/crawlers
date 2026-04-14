@@ -108,7 +108,7 @@ export const HowItWorksSection = memo(() => {
   const t = translations[language as keyof typeof translations] || translations.fr;
 
   return (
-    <section className="py-16 md:py-24 border-b border-border bg-gradient-to-b from-background to-muted/20">
+    <section className="py-16 md:py-24">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
