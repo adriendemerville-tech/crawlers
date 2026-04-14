@@ -345,6 +345,7 @@ export function CocoonRadialGraph({
   bgColorSlider = 0,
   particlesEnabled = true,
   showFanBeams = false,
+  onFanBeamLegend,
 }: CocoonRadialGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
