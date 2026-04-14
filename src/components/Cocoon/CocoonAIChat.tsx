@@ -1243,6 +1243,12 @@ En te basant sur cette topologie complète du graphe, propose un PLAN D'ACTION C
 - Identifie les fuites inter-silos (liens entre clusters non pertinents)
 - Propose des corrections
 
+**🎯 Faisceaux de famille (Fan Beams)**
+- Analyse la taille angulaire de chaque faisceau sur la vue radiale : un faisceau ne devrait pas dépasser ~30% de l'espace angulaire total
+- Si un faisceau est disproportionné, c'est que le cluster contient trop de pages → proposer un découpage en sous-clusters plus cohérents
+- Les faisceaux qui se chevauchent indiquent des pages partagées entre clusters → vérifier s'il s'agit de pages pivot (liaisons inter-silos légitimes) ou de mauvaise classification
+- Un gap vide entre faisceaux = espace sémantique non couvert → opportunité de contenu
+
 **✨ Pages à créer / fusionner / supprimer**
 - Pages manquantes dans le cocon (gaps sémantiques à combler)
 - Pages à risque de cannibalisation à fusionner
@@ -1271,6 +1277,12 @@ Based on this complete graph topology, propose a FULL ACTION PLAN to optimize in
 - Identify inter-silo leaks (irrelevant cross-cluster links)
 - Suggest corrections
 
+**🎯 Family Beams (Fan Beams)**
+- Analyze the angular size of each beam on the radial view: no beam should exceed ~30% of total angular space
+- If a beam is disproportionate, the cluster has too many pages → suggest splitting into more coherent sub-clusters
+- Overlapping beams indicate shared pages between clusters → check if these are legitimate pivot pages or misclassification
+- Empty gaps between beams = uncovered semantic space → content opportunity
+
 **✨ Pages to create / merge / remove**
 - Missing pages in the cocoon (semantic gaps to fill)
 - Cannibalization-risk pages to merge
@@ -1298,6 +1310,12 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
 - Analiza la coherencia de cada cluster: ¿las páginas del mismo silo se enlazan bien entre sí?
 - Identifica fugas inter-silo (enlaces entre clusters no pertinentes)
 - Sugiere correcciones
+
+**🎯 Haces de familia (Fan Beams)**
+- Analiza el tamaño angular de cada haz en la vista radial: ningún haz debería superar ~30% del espacio angular total
+- Si un haz es desproporcionado, el cluster tiene demasiadas páginas → sugiere dividirlo en sub-clusters más coherentes
+- Los haces superpuestos indican páginas compartidas entre clusters → verificar si son páginas pivot legítimas o mala clasificación
+- Un vacío entre haces = espacio semántico no cubierto → oportunidad de contenido
 
 **✨ Páginas a crear / fusionar / eliminar**
 - Páginas faltantes en el cocoon (gaps semánticos a llenar)
