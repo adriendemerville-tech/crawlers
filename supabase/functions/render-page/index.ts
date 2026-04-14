@@ -9,6 +9,7 @@ const corsHeaders = {
 // Routes publiques indexables
 const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   "/": { title: "Crawlers.fr — Audit SEO & GEO Expert | Visibilité IA", description: "Première plateforme française d'audit hybride SEO et GEO. Analysez, corrigez et optimisez votre site pour Google et les moteurs IA." },
+  "/guides": { title: "Guides SEO & GEO par métier | Crawlers.fr", description: "Guides pratiques SEO et GEO adaptés à votre métier : artisan, commerçant, PME, startup, agence SEO, consultant. Améliorez votre visibilité sur Google et les IA." },
   "/faq": { title: "FAQ Crawlers.fr — Questions fréquentes SEO & GEO", description: "Toutes les réponses sur l'audit SEO, le GEO Score, la visibilité LLM, les crédits et le plan Pro Agency." },
   "/tarifs": { title: "Tarifs Crawlers.fr — Plans & Crédits SEO/GEO", description: "Découvrez les tarifs de Crawlers.fr : plan gratuit, crédits à l'unité et abonnement Pro Agency." },
   "/pro-agency": { title: "Pro Agency — Plan Premium SEO & GEO | Crawlers.fr", description: "Le plan Pro Agency de Crawlers.fr : audit illimité, Cocoon 3D, Content Architect, CMS Direct et maintenance prédictive." },
@@ -279,6 +280,7 @@ function generatePricingTableHtml(): string {
 // ── Route-specific breadcrumb labels ──
 const ROUTE_LABELS: Record<string, string> = {
   "/": "Accueil",
+  "/guides": "Guides SEO & GEO",
   "/faq": "FAQ",
   "/tarifs": "Tarifs",
   "/pro-agency": "Pro Agency",
@@ -699,11 +701,159 @@ Deno.serve(handleRequest(async (req) => {
       });
     }
 
+    // ── Guide route: /guide/<slug> ──
+    const guideMatch = route.match(/^\/guide\/([a-z0-9_-]+)$/);
+    if (guideMatch) {
+      const slug = guideMatch[1];
+
+      if (!noCache) {
+        const { data: cached } = await supabase
+          .from("prerender_cache")
+          .select("html_content, meta_title, meta_description, rendered_at")
+          .eq("route", route)
+          .gt("expires_at", new Date().toISOString())
+          .single();
+
+        if (cached) {
+          if (format === "json") {
+            return new Response(JSON.stringify({ route, title: cached.meta_title, description: cached.meta_description, rendered_at: cached.rendered_at, cached: true }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          return new Response(cached.html_content, {
+            headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "X-Prerender": "cache-hit", "X-Rendered-At": cached.rendered_at },
+          });
+        }
+      }
+
+      const { data: guide, error: guideError } = await supabase
+        .from("seo_page_drafts")
+        .select("title, slug, meta_title, meta_description, content, target_keyword, published_at, guide_category, guide_target")
+        .eq("slug", slug)
+        .eq("status", "published")
+        .eq("page_type", "guide")
+        .single();
+
+      if (guideError || !guide) {
+        return new Response(JSON.stringify({ error: "Guide not found", slug }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const guideFullUrl = `${baseUrl}/guide/${guide.slug}`;
+      const guideContentHtml = markdownToHtml(guide.content || '');
+      const guideWordCount = countWords(guide.content || '');
+      const guideFaqs = extractFaqFromContent(guide.content || "");
+
+      const guideBreadcrumb = breadcrumbJsonLd([
+        { name: "Accueil", url: baseUrl },
+        { name: "Guides", url: `${baseUrl}/guides` },
+        { name: guide.title, url: guideFullUrl },
+      ]);
+
+      const guideArticleSchema: Record<string, unknown> = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": guide.title,
+        "description": guide.meta_description || "",
+        "url": guideFullUrl,
+        "wordCount": guideWordCount,
+        "inLanguage": "fr",
+        "author": AUTHOR_PERSON,
+        "publisher": PUBLISHER_ORG,
+        "mainEntityOfPage": { "@type": "WebPage", "@id": guideFullUrl },
+        ...(guide.published_at ? { "datePublished": guide.published_at } : {}),
+      };
+
+      let guideJsonLd = `<script type="application/ld+json">${JSON.stringify(guideArticleSchema)}</script>
+  <script type="application/ld+json">${JSON.stringify(guideBreadcrumb)}</script>`;
+
+      if (guideFaqs.length >= 2) {
+        guideJsonLd += `\n  <script type="application/ld+json">${JSON.stringify(faqJsonLd(guideFaqs))}</script>`;
+      }
+
+      const guideInfoSection = `<section aria-label="Ressources complémentaires">
+        <h2>Ressources et références</h2>
+        <ul>
+          <li><a href="https://developers.google.com/search/docs" rel="noopener">Google Search Central</a></li>
+          <li><a href="https://schema.org/" rel="noopener">Schema.org — Données structurées</a></li>
+          <li><a href="${baseUrl}/guides">Tous les guides SEO & GEO</a></li>
+          <li><a href="${baseUrl}/lexique">Lexique SEO & GEO</a></li>
+          <li><a href="${baseUrl}/blog">Blog Crawlers.fr</a></li>
+        </ul>
+      </section>`;
+
+      const guideHtml = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(guide.meta_title || guide.title)}</title>
+  <meta name="description" content="${escapeHtml(guide.meta_description || '')}">
+  <link rel="canonical" href="${guideFullUrl}">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="${escapeHtml(guide.meta_title || guide.title)}">
+  <meta property="og:description" content="${escapeHtml(guide.meta_description || '')}">
+  <meta property="og:url" content="${guideFullUrl}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Crawlers.fr">
+  <meta property="og:image" content="${baseUrl}/og-image.png">
+  <meta property="og:locale" content="fr_FR">
+  <link rel="alternate" hreflang="fr" href="${guideFullUrl}">
+  <link rel="alternate" hreflang="x-default" href="${guideFullUrl}">
+  ${guideJsonLd}
+</head>
+<body>
+  <header><nav>
+    <a href="${baseUrl}">Crawlers.fr</a>
+    <a href="${baseUrl}/guides">Guides</a>
+    <a href="${baseUrl}/audit-expert">Audit Expert</a>
+    <a href="${baseUrl}/tarifs">Tarifs</a>
+  </nav></header>
+  <main>
+    <nav aria-label="Fil d'Ariane">
+      <ol>
+        <li><a href="${baseUrl}">Accueil</a></li>
+        <li><a href="${baseUrl}/guides">Guides</a></li>
+        <li>${escapeHtml(guide.title)}</li>
+      </ol>
+    </nav>
+    <article>
+      <h1>${escapeHtml(guide.title)}</h1>
+      ${guideContentHtml}
+    </article>
+    ${guideInfoSection}
+  </main>
+  <footer><p>© 2026 Crawlers.fr — Plateforme d'audit SEO & GEO</p></footer>
+</body>
+</html>`;
+
+      await supabase.from("prerender_cache").upsert({
+        route,
+        html_content: guideHtml,
+        content_hash: "",
+        meta_title: guide.meta_title || guide.title,
+        meta_description: guide.meta_description || "",
+        rendered_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }, { onConflict: "route" });
+
+      if (format === "json") {
+        return new Response(JSON.stringify({ route, title: guide.title, description: guide.meta_description }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(guideHtml, {
+        headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "X-Prerender": "fresh" },
+      });
+    }
+
     // ── Static routes ──
     const meta = PUBLIC_ROUTES[route];
     if (!meta) {
       return new Response(
-        JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>", "/landing/<slug>"] }),
+        JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>", "/landing/<slug>", "/guide/<slug>"] }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
