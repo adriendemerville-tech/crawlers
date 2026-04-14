@@ -11,7 +11,7 @@ export function FAQSection() {
   const { t } = useLanguage();
 
   return (
-    <section className="py-16 px-4 bg-muted/30" aria-labelledby="faq-heading">
+    <section className="py-16 px-4" aria-labelledby="faq-heading">
       <div className="mx-auto max-w-3xl">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground mb-4">

@@ -47,7 +47,7 @@ export function TestimonialsCarousel() {
   const lang = (language || 'fr') as 'fr' | 'en' | 'es';
 
   return (
-    <section className="py-16 md:py-20 bg-muted/20 border-y border-border/40">
+    <section className="py-16 md:py-20">
       <div className="container mx-auto max-w-2xl px-4">
         <div className="relative flex items-center gap-3">
           <button
