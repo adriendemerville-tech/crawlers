@@ -702,6 +702,8 @@ export async function buildContentBrief(input: BuildContentBriefInput): Promise<
     citable_passages_count: config.citable_passages,
     direct_answer_first_words: config.direct_answer_words,
     eeat_signals: eeatSignals,
+    authority_outbound_links: config.external_links ? Math.min(config.max_external_links, 3) : 0,
+    speakable_enabled: config.schemas.includes('SpeakableSpecification' as any),
     freshness_markers: true,
 
     meta_title_max_chars: 60,
