@@ -24,8 +24,16 @@ Updated: 2026-04-14
 
 ### UI/UX
 - Vue 3D, Radiale et X-Ray avec filtres de direction (descending, ascending, lateral).
+- **Filtre par cluster** : sélection multiple avec compteur actif/total, reset rapide.
 - Sélecteur de crawl avec filtre strict `completed` + ≥ 2 pages.
 - Badge crawl_depth affiché sur chaque nœud dans le panneau de détail.
+- Les boutons quick-reply du Stratège envoient directement sans polluer le champ de saisie.
+
+### Stabilité & Isolation
+- Les `useEffect` de chargement dépendent de `user?.id` (pas de la ref objet) pour éviter les re-renders en cascade.
+- Un garde-fou `sitesLoadedForUser` ref empêche les rechargements multiples des sites.
+- `findReadySite` filtre par `user_id` sur les deux tables (site_crawls ET audits).
+- RLS actif sur `semantic_nodes`, `audits`, `tracked_sites` : isolation totale par `auth.uid() = user_id`.
 
 ### Stratège Cocoon
 - Recommandations on-site uniquement (pas d'actions off-site).
