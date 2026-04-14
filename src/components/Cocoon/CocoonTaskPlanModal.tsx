@@ -214,7 +214,7 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
           // Step 3: Read pending (undeployed) links from cocoon_auto_links
           const { data: pendingLinks } = await supabase
             .from('cocoon_auto_links')
-            .select('source_url, target_url, anchor_text')
+            .select('source_url, target_url, anchor_text, context_sentence')
             .eq('tracked_site_id', trackedSiteId)
             .eq('is_deployed', false)
             .eq('is_active', true)
@@ -224,6 +224,7 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
             source_url: l.source_url,
             target_url: l.target_url,
             anchor_text: l.anchor_text,
+            context_sentence: l.context_sentence || undefined,
             action: payload.action || 'add_link',
           })).filter((r: any) => r.source_url && r.target_url && r.anchor_text);
 

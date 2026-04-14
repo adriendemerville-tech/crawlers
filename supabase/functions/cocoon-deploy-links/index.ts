@@ -3,6 +3,7 @@ import { verifyInjectionOwnership } from '../_shared/ownershipCheck.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { isIktrackerDomain, IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
+import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts';
 
 /**
  * cocoon-deploy-links
@@ -22,6 +23,7 @@ interface LinkRecommendation {
   source_url: string
   target_url: string
   anchor_text: string
+  context_sentence?: string
   action: 'add_link' | 'update_anchor' | 'remove_link'
 }
 
@@ -149,15 +151,36 @@ async function deployViaIktracker(
       // Apply link modifications to content
       for (const rec of recs) {
         if (rec.action === 'add_link') {
-          // Add internal link at first mention of a relevant keyword or at end of content
           const linkHtml = `<a href="${rec.target_url}" title="${rec.anchor_text}">${rec.anchor_text}</a>`
-          // Try to find anchor text in content and wrap it
           const anchorRegex = new RegExp(`(?<!<a[^>]*>)\\b(${escapeRegex(rec.anchor_text)})\\b(?![^<]*<\\/a>)`, 'i')
+
           if (anchorRegex.test(content)) {
+            // ── Best case: anchor text exists in content → wrap it
             content = content.replace(anchorRegex, linkHtml)
+          } else if (rec.context_sentence) {
+            // ── Good case: use the AI-generated context_sentence from bulk-auto-linking
+            // Insert the context sentence (with link) before the last </p> or at end
+            const sentenceWithLink = rec.context_sentence.replace(
+              new RegExp(`(${escapeRegex(rec.anchor_text)})`, 'i'),
+              linkHtml
+            )
+            // If the context sentence doesn't contain the anchor, embed the link directly
+            const finalSentence = sentenceWithLink.includes('<a href=')
+              ? sentenceWithLink
+              : `${rec.context_sentence} ${linkHtml}`
+            content = insertBeforeLastParagraph(content, `<p>${finalSentence}</p>`)
           } else {
-            // Append as a related link at end
-            content += `\n<p>→ ${linkHtml}</p>`
+            // ── Fallback: generate a natural bridge sentence via AI
+            const bridgeSentence = await generateBridgeSentence(content, rec)
+            if (bridgeSentence) {
+              content = insertBeforeLastParagraph(content, `<p>${bridgeSentence}</p>`)
+            } else {
+              // Last resort: simple contextual sentence (no AI available)
+              content = insertBeforeLastParagraph(
+                content,
+                `<p>Pour aller plus loin, consultez notre ressource sur ${linkHtml}.</p>`
+              )
+            }
           }
         } else if (rec.action === 'update_anchor') {
           // Find existing link to target and update anchor text
@@ -287,4 +310,71 @@ function extractSlug(url: string): string | null {
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Insert HTML before the last </p> in content, or append at end.
+ * This places the bridge sentence in the conclusion area rather than after it.
+ */
+function insertBeforeLastParagraph(content: string, html: string): string {
+  const lastPIdx = content.lastIndexOf('</p>')
+  if (lastPIdx > 0) {
+    // Insert before the last paragraph's closing tag (i.e., before the conclusion)
+    const insertPoint = content.lastIndexOf('<p', lastPIdx)
+    if (insertPoint > 0) {
+      return content.slice(0, insertPoint) + html + '\n' + content.slice(insertPoint)
+    }
+  }
+  return content + '\n' + html
+}
+
+/**
+ * Generate a natural bridge sentence using AI that integrates the anchor text
+ * contextually within the article's topic.
+ */
+async function generateBridgeSentence(
+  content: string,
+  rec: LinkRecommendation
+): Promise<string | null> {
+  if (!isLovableAIConfigured()) return null
+
+  // Extract a short excerpt for context (first 500 chars of text)
+  const textOnly = content
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 500)
+
+  const linkHtml = `<a href="${rec.target_url}" title="${rec.anchor_text}">${rec.anchor_text}</a>`
+
+  try {
+    const result = await callLovableAI({
+      model: 'google/gemini-2.5-flash-lite',
+      messages: [
+        {
+          role: 'system',
+          content: `Tu es un rédacteur SEO expert. Génère UNE SEULE phrase de transition naturelle (max 30 mots) qui s'intègre dans un article existant et contient exactement le texte d'ancre fourni. La phrase doit être informative, pas promotionnelle. Réponds UNIQUEMENT avec la phrase, sans guillemets ni ponctuation de début.`
+        },
+        {
+          role: 'user',
+          content: `Article (extrait) : "${textOnly}"\n\nTexte d'ancre à intégrer : "${rec.anchor_text}"\nURL cible : ${rec.target_url}\n\nGénère une phrase de transition naturelle contenant ce texte d'ancre.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 100,
+    })
+
+    const sentence = result.choices?.[0]?.message?.content?.trim()
+    if (!sentence || sentence.length < 10 || sentence.length > 200) return null
+
+    // Replace anchor text with the actual link HTML
+    const anchorRegex = new RegExp(`(${escapeRegex(rec.anchor_text)})`, 'i')
+    if (anchorRegex.test(sentence)) {
+      return sentence.replace(anchorRegex, linkHtml)
+    }
+    return `${sentence} ${linkHtml}`
+  } catch (e) {
+    console.warn('[cocoon-deploy-links] AI bridge sentence failed:', e)
+    return null
+  }
 }
