@@ -173,6 +173,7 @@ async function findReadySite(sites: any[], userId: string) {
         .from("audits")
         .select("id")
         .eq("domain", site.domain)
+        .eq("user_id", userId)
         .limit(1),
     ]);
     if ((crawlRes.data?.length || 0) > 0 && (auditRes.data?.length || 0) > 0) {
@@ -386,12 +387,16 @@ function CocoonContent() {
     };
   }, [isSettingsOpen]);
 
-  // Load tracked sites
+  // Load tracked sites — only on first mount or when user id changes (not on object ref change)
   const autoReadyTriggered = useRef(false);
+  const sitesLoadedForUser = useRef<string | null>(null);
   useEffect(() => {
     if (!user || !hasAccess) return;
+    // Prevent re-running if we already loaded sites for this user
+    if (sitesLoadedForUser.current === user.id && trackedSites.length > 0) return;
 
     const loadSites = async () => {
+      sitesLoadedForUser.current = user.id;
       const { data } = await supabase
         .from("tracked_sites")
         .select("id, domain, site_name")
@@ -434,7 +439,7 @@ function CocoonContent() {
       }
     };
     loadSites();
-  }, [user, hasAccess, autoLaunchDomain]);
+  }, [user?.id, hasAccess, autoLaunchDomain]);
 
   // Auto-launch cocoon 2s after site is selected (from autolaunch flow)
   useEffect(() => {
