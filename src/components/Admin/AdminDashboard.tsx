@@ -31,6 +31,7 @@ import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { MarinaDashboard } from './MarinaDashboard';
 import { ProspectPipelineDashboard } from './ProspectPipelineDashboard';
 import { SocialContentDashboard } from './SocialContentDashboard';
+import { SitemapMonitorWidget } from './SitemapMonitorWidget';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 const CocoonContentArchitectModal = lazy(() =>
   import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
@@ -232,6 +233,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
         { id: 'matrix-errors', label: 'Matrice d\'audit', icon: ClipboardList, group: 'monitoring' },
         { id: 'scanned-urls', label: t.scannedUrls, icon: ScanSearch, group: 'monitoring' },
+        { id: 'sitemap', label: 'Sitemap', icon: Globe, group: 'monitoring' },
       ],
     },
     {
@@ -303,6 +305,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'marina': return <MarinaDashboard />;
       case 'prospects': return <ProspectPipelineDashboard />;
       case 'social-hub': return <SocialContentDashboard simulatedDataEnabled={simulatedDataEnabled} />;
+      case 'sitemap': return <SitemapMonitorWidget />;
       default: return <AnalyticsDashboard />;
     }
   };

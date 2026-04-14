@@ -16,6 +16,8 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const DEFAULT_DOMAIN = 'crawlers.fr';
+// Storage-based sitemap URL (CDN-cached, no edge function latency)
+const DEFAULT_SITEMAP_URL = `${SUPABASE_URL}/storage/v1/object/public/public-assets/sitemap.xml`;
 
 Deno.serve(handleRequest(async (req) => {
   try {
@@ -29,8 +31,8 @@ Deno.serve(handleRequest(async (req) => {
     const targetDomain = domain || DEFAULT_DOMAIN;
     const siteUrl = `https://${targetDomain}`;
 
-    // URL du sitemap : par défaut l'edge function sitemap du projet
-    const feedpath = sitemap_url || `${SUPABASE_URL}/functions/v1/sitemap`;
+    // URL du sitemap : Storage CDN (plus rapide, pas de latence edge function)
+    const feedpath = sitemap_url || DEFAULT_SITEMAP_URL;
 
     // Résolution du token Google via le système existant
     const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID') || '';
