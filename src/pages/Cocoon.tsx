@@ -289,7 +289,7 @@ function CocoonContent() {
     }
   }, [nodesFingerprint]);
 
-  // Filtered nodes based on selected page types + noindex filter
+  // Filtered nodes based on selected page types + noindex filter + cluster filter
   const filteredNodes = useMemo(() => {
     let result = nodes;
     if (filtersInitialized && cocoonFilters.visiblePageTypes.size > 0) {
@@ -298,8 +298,14 @@ function CocoonContent() {
     if (cocoonFilters.hideNoIndex) {
       result = result.filter((n: any) => n._is_noindex !== true);
     }
+    if (cocoonFilters.visibleClusters !== null) {
+      result = result.filter((n: any) => {
+        const cId = String(n.cluster_id || n.cluster || '');
+        return cId && cocoonFilters.visibleClusters!.has(cId);
+      });
+    }
     return result;
-  }, [nodes, cocoonFilters.visiblePageTypes, cocoonFilters.hideNoIndex, filtersInitialized]);
+  }, [nodes, cocoonFilters.visiblePageTypes, cocoonFilters.hideNoIndex, cocoonFilters.visibleClusters, filtersInitialized]);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
