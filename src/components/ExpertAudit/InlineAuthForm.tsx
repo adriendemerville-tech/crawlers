@@ -148,6 +148,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
   }
 
 
+  const { isLocked, remainingSeconds, recordFailure, recordSuccess } = useLoginRateLimiter();
 
   const verifyTurnstile = async (): Promise<boolean> => {
     if (!token) {
