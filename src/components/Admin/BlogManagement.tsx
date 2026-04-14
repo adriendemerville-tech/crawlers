@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { GuidesManagement } from './GuidesManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -338,7 +339,8 @@ export function BlogManagement() {
       <Tabs defaultValue="articles" className="w-full">
         <TabsList>
           <TabsTrigger value="articles" className="gap-2"><FileText className="h-4 w-4" />Articles</TabsTrigger>
-          <TabsTrigger value="landings" className="gap-2"><Layout className="h-4 w-4" />Landing Pages</TabsTrigger>
+          <TabsTrigger value="landings" className="gap-2"><Layout className="h-4 w-4" />Landings</TabsTrigger>
+          <TabsTrigger value="guides" className="gap-2"><FileText className="h-4 w-4" />Guides</TabsTrigger>
         </TabsList>
         <TabsContent value="articles" className="space-y-6">
       {staticArticlesNotImported.length > 0 && (
@@ -901,6 +903,9 @@ Exemple de structure :
         </TabsContent>
         <TabsContent value="landings" className="space-y-6">
           <LandingPagesManagement />
+        </TabsContent>
+        <TabsContent value="guides" className="space-y-6">
+          <GuidesManagement />
         </TabsContent>
       </Tabs>
     </div>
