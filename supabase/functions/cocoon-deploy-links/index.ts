@@ -151,15 +151,36 @@ async function deployViaIktracker(
       // Apply link modifications to content
       for (const rec of recs) {
         if (rec.action === 'add_link') {
-          // Add internal link at first mention of a relevant keyword or at end of content
           const linkHtml = `<a href="${rec.target_url}" title="${rec.anchor_text}">${rec.anchor_text}</a>`
-          // Try to find anchor text in content and wrap it
           const anchorRegex = new RegExp(`(?<!<a[^>]*>)\\b(${escapeRegex(rec.anchor_text)})\\b(?![^<]*<\\/a>)`, 'i')
+
           if (anchorRegex.test(content)) {
+            // ── Best case: anchor text exists in content → wrap it
             content = content.replace(anchorRegex, linkHtml)
+          } else if (rec.context_sentence) {
+            // ── Good case: use the AI-generated context_sentence from bulk-auto-linking
+            // Insert the context sentence (with link) before the last </p> or at end
+            const sentenceWithLink = rec.context_sentence.replace(
+              new RegExp(`(${escapeRegex(rec.anchor_text)})`, 'i'),
+              linkHtml
+            )
+            // If the context sentence doesn't contain the anchor, embed the link directly
+            const finalSentence = sentenceWithLink.includes('<a href=')
+              ? sentenceWithLink
+              : `${rec.context_sentence} ${linkHtml}`
+            content = insertBeforeLastParagraph(content, `<p>${finalSentence}</p>`)
           } else {
-            // Append as a related link at end
-            content += `\n<p>→ ${linkHtml}</p>`
+            // ── Fallback: generate a natural bridge sentence via AI
+            const bridgeSentence = await generateBridgeSentence(content, rec)
+            if (bridgeSentence) {
+              content = insertBeforeLastParagraph(content, `<p>${bridgeSentence}</p>`)
+            } else {
+              // Last resort: simple contextual sentence (no AI available)
+              content = insertBeforeLastParagraph(
+                content,
+                `<p>Pour aller plus loin, consultez notre ressource sur ${linkHtml}.</p>`
+              )
+            }
           }
         } else if (rec.action === 'update_anchor') {
           // Find existing link to target and update anchor text
