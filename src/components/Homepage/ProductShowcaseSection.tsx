@@ -113,7 +113,7 @@ const ProductShowcaseSection = memo(() => {
             <ChevronLeft className="h-5 w-5" />
           </button>
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden rounded-2xl bg-card/50 border border-border/30 p-4 sm:p-6">
             <div
               className="transition-all duration-300 ease-out"
               style={{
