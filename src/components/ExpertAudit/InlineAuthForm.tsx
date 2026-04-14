@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { useTurnstile } from '@/hooks/useTurnstile';
+import { useLoginRateLimiter } from '@/hooks/useLoginRateLimiter';
 import { supabase } from '@/integrations/supabase/client';
 
 const translations = {
@@ -42,6 +43,7 @@ const translations = {
     signupError: 'Erreur lors de l\'inscription',
     userExists: 'Un compte existe déjà avec cet email',
     existingUserDetected: 'Compte existant détecté',
+    rateLimited: 'Trop de tentatives. Réessayez dans {seconds}s.',
   },
   en: {
     login: 'Login',
@@ -67,6 +69,7 @@ const translations = {
     signupError: 'Error during signup',
     userExists: 'An account already exists with this email',
     existingUserDetected: 'Existing account detected',
+    rateLimited: 'Too many attempts. Try again in {seconds}s.',
   },
   es: {
     login: 'Iniciar sesión',
@@ -92,6 +95,7 @@ const translations = {
     signupError: 'Error durante el registro',
     userExists: 'Ya existe una cuenta con este correo',
     existingUserDetected: 'Cuenta existente detectada',
+    rateLimited: 'Demasiados intentos. Inténtalo en {seconds}s.',
   },
 };
 
@@ -144,6 +148,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
   }
 
 
+  const { isLocked, remainingSeconds, recordFailure, recordSuccess } = useLoginRateLimiter();
 
   const verifyTurnstile = async (): Promise<boolean> => {
     if (!token) {
@@ -195,6 +200,10 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
   });
 
   const handleLogin = async (data: { email: string; password: string }) => {
+    if (isLocked) {
+      toast.error(t.rateLimited.replace('{seconds}', String(remainingSeconds)));
+      return;
+    }
     setIsLoading(true);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
@@ -202,9 +211,11 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
     setIsLoading(false);
 
     if (error) {
+      recordFailure();
       toast.error(t.loginError);
       resetTurnstile();
     } else {
+      recordSuccess();
       toast.success(t.loginSuccess);
       onSuccess?.();
     }

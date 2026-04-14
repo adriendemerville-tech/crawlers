@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import { useTurnstile } from '@/hooks/useTurnstile';
+import { useLoginRateLimiter } from '@/hooks/useLoginRateLimiter';
 
 const translations = {
   fr: {
@@ -50,6 +51,7 @@ const translations = {
     signupError: 'Erreur lors de l\'inscription',
     userExists: 'Un compte existe déjà avec cet email',
     or: 'ou',
+    rateLimited: 'Trop de tentatives. Réessayez dans {seconds}s.',
   },
   en: {
     login: 'Login',
@@ -80,6 +82,7 @@ const translations = {
     signupError: 'Error during signup',
     userExists: 'An account already exists with this email',
     or: 'or',
+    rateLimited: 'Too many attempts. Try again in {seconds}s.',
   },
   es: {
     login: 'Iniciar sesión',
@@ -110,6 +113,7 @@ const translations = {
     signupError: 'Error durante el registro',
     userExists: 'Ya existe una cuenta con este correo',
     or: 'o',
+    rateLimited: 'Demasiados intentos. Inténtalo en {seconds}s.',
   },
 };
 
@@ -128,6 +132,7 @@ export default function Auth() {
   const t = translations[language];
   const inviteToken = searchParams.get('invite');
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
+  const { isLocked, remainingSeconds, recordFailure, recordSuccess } = useLoginRateLimiter();
 
   const verifyTurnstile = async (): Promise<boolean> => {
     if (!token) {
@@ -208,6 +213,10 @@ export default function Auth() {
   });
 
   const handleLogin = async (data: { email: string; password: string }) => {
+    if (isLocked) {
+      toast.error(t.rateLimited.replace('{seconds}', String(remainingSeconds)));
+      return;
+    }
     setIsLoading(true);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
@@ -215,9 +224,11 @@ export default function Auth() {
     setIsLoading(false);
 
     if (error) {
+      recordFailure();
       toast.error(t.loginError);
       resetTurnstile();
     } else {
+      recordSuccess();
       toast.success(t.loginSuccess);
     }
   };
@@ -411,8 +422,10 @@ export default function Auth() {
                     )}
                   />
                   <div className="flex justify-center">
-                    <Button type="submit" className="w-2/3 h-11 bg-[hsl(215,20%,28%)] hover:bg-[hsl(215,25%,35%)] text-white border-0 shadow-lg" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
+                    <Button type="submit" className="w-2/3 h-11 bg-[hsl(215,20%,28%)] hover:bg-[hsl(215,25%,35%)] text-white border-0 shadow-lg" disabled={isLoading || isLocked}>
+                      {isLocked
+                        ? t.rateLimited.replace('{seconds}', String(remainingSeconds))
+                        : isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                     </Button>
                   </div>
                   <div className="text-right">
