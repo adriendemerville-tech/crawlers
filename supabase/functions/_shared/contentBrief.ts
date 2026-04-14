@@ -268,7 +268,7 @@ export type CTAType =
 
 export type SchemaType = 
   | 'Article' | 'Product' | 'FAQPage' | 'HowTo' | 'WebPage' 
-  | 'LocalBusiness' | 'Service' | 'BreadcrumbList';
+  | 'LocalBusiness' | 'Service' | 'BreadcrumbList' | 'SpeakableSpecification';
 
 export interface InternalLink {
   url: string;
@@ -316,6 +316,8 @@ export interface ContentBrief {
   citable_passages_count: number;
   direct_answer_first_words: number; // e.g. 150 = first 150 words answer the query
   eeat_signals: string[]; // e.g. ["author_bio", "sources", "data_points"]
+  authority_outbound_links: number; // recommended count of high-authority external links
+  speakable_enabled: boolean; // whether to include SpeakableSpecification schema
   freshness_markers: boolean; // mention year/date
 
   // ── Metadata ──
@@ -379,7 +381,7 @@ const PAGE_TYPE_CONFIGS: Record<PageType, PageTypeConfig> = {
     direct_answer_words: 150,
     default_angle: 'guide-pratique',
     default_cta: 'read-more', cta_count: 2, cta_positions: ['mid', 'conclusion'],
-    schemas: ['Article', 'FAQPage', 'BreadcrumbList'],
+    schemas: ['Article', 'FAQPage', 'BreadcrumbList', 'SpeakableSpecification'],
     min_internal_links: 5, max_internal_links: 12,
     external_links: true, max_external_links: 3,
     kw_density: 1.2,
@@ -394,7 +396,7 @@ const PAGE_TYPE_CONFIGS: Record<PageType, PageTypeConfig> = {
     direct_answer_words: 100,
     default_angle: 'proposition-de-valeur',
     default_cta: 'demo-request', cta_count: 3, cta_positions: ['intro', 'mid', 'conclusion'],
-    schemas: ['WebPage', 'Service', 'FAQPage', 'BreadcrumbList'],
+    schemas: ['WebPage', 'Service', 'FAQPage', 'BreadcrumbList', 'SpeakableSpecification'],
     min_internal_links: 3, max_internal_links: 8,
     external_links: false, max_external_links: 1,
     kw_density: 1.5,
@@ -700,6 +702,8 @@ export async function buildContentBrief(input: BuildContentBriefInput): Promise<
     citable_passages_count: config.citable_passages,
     direct_answer_first_words: config.direct_answer_words,
     eeat_signals: eeatSignals,
+    authority_outbound_links: config.external_links ? Math.min(config.max_external_links, 3) : 0,
+    speakable_enabled: config.schemas.includes('SpeakableSpecification' as any),
     freshness_markers: true,
 
     meta_title_max_chars: 60,
@@ -784,9 +788,16 @@ export function briefToPromptBlock(brief: ContentBrief): string {
 
   // GEO
   lines.push(`── GEO (CITABILITÉ IA) ──`);
-  lines.push(`Passages citables: ${brief.citable_passages_count} (1 par H2, 40-80 mots, autonome)`);
+  lines.push(`Passages citables: ${brief.citable_passages_count} (1 par H2, 40-80 mots, autonome, encadrés dans <blockquote class="citable-passage">)`);
   lines.push(`Réponse directe: les ${brief.direct_answer_first_words} premiers mots RÉPONDENT à l'intention`);
   lines.push(`Signaux E-E-A-T obligatoires: ${brief.eeat_signals.join(', ')}`);
+  if (brief.speakable_enabled) {
+    lines.push(`SpeakableSpecification: OUI — Ajouter le schema JSON-LD SpeakableSpecification ciblant h1, .citable-passage et le 1er paragraphe`);
+  }
+  if (brief.authority_outbound_links > 0) {
+    lines.push(`Liens d'autorité externes: ${brief.authority_outbound_links} liens vers des sources autoritaires (Google, Schema.org, études officielles, documentation W3C)`);
+    lines.push(`  → Chaque lien externe doit pointer vers une page spécifique (pas un domaine racine) et être contextuellement pertinent`);
+  }
   if (brief.freshness_markers) lines.push(`Fraîcheur: mentionner l'année en cours, dater les informations`);
   lines.push('');
 
