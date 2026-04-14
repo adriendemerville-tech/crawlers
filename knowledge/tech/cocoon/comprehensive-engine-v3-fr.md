@@ -11,10 +11,13 @@ Updated: 2026-04-14
 
 ### Crawl Depth — Signal Stratégique (v3.1)
 - **Source** : `crawl_depth` calculé par BFS dans `duplicateDetector.ts` → finalisé dans `finalizer.ts` → persisté dans `crawl_pages`.
-- **Diagnostic** (`cocoon-diag-structure`) : Détecte les pages à profondeur > 3 avec métadonnées enrichies :
+- **Diagnostic** (`cocoon-diag-structure`) : Détecte les pages à profondeur > 3, les fils d'Ariane manquants et les incohérences breadcrumb/depth :
   - `deep_pages_detail` : liste triée par profondeur (url, depth, path) — top 15
   - `suggested_link_sources` : pages à depth 0-1 avec peu de liens sortants — candidates idéales pour réduire la profondeur
   - `depth_distribution` : histogramme { depth → count }
+  - `avg_site_depth` et `pct_deep` : indicateurs globaux
+  - `missing_breadcrumbs` : pages indexables (depth > 0) sans schema BreadcrumbList — severity critical si > 70%
+  - `breadcrumb_depth_mismatch` : pages dont la profondeur URL et crawl diffèrent de 3+ niveaux
   - `avg_site_depth` et `pct_deep` : indicateurs globaux
 - **Stratège** (`cocoon-strategist`) :
   - Convertit le finding `deep_pages` en tâche `add_internal_link` actionnable (pas juste `restructure_tree`)
