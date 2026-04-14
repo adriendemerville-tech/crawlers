@@ -21,7 +21,7 @@ export const PainPointsSection = () => {
   if (language !== 'fr') return null;
 
   return (
-    <section className="relative border-b border-border bg-gradient-to-b from-destructive/5 via-background to-background py-14 sm:py-20 bg-popover">
+    <section className="relative border-b border-border bg-gradient-to-b from-destructive/5 via-background to-background py-14 sm:py-20 bg-accent font-medium shadow-none opacity-100 text-secondary">
       <div className="mx-auto max-w-5xl px-4">
         {/* Title */}
         <div className="mb-10 text-center">
@@ -47,9 +47,9 @@ export const PainPointsSection = () => {
         </div>
 
         {/* Conclusion */}
-        <div className="mx-auto max-w-3xl rounded-xl border px-6 py-5 text-center bg-warning-foreground border-violet-600 border-solid">
+        <div className="mx-auto max-w-3xl rounded-xl border px-6 py-5 text-center border-violet-600 border-solid font-medium shadow-none opacity-100 bg-[#11041f]">
           <span className="mb-2 text-sm font-bold text-violet-600">L'approche Crawlers</span>
-          <p className="text-sm leading-relaxed text-foreground/90">
+          <p className="text-sm leading-relaxed text-foreground/90 opacity-100">
             L'analyse de la SERP est de moins en moins fiable — les contre-mesures de Google piègent les outils de crawl classiques.{' '}
             <strong className="text-foreground">
               Crawlers base ses recommandations sur les données concrètes de vos sites et de leurs audiences
