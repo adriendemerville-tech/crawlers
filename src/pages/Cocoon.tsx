@@ -558,8 +558,30 @@ function CocoonContent() {
         .order("traffic_estimate", { ascending: false })
         .limit(500);
 
-      if (!error && data) {
-        setNodes(data);
+      if (!error && data && data.length > 0) {
+        // Enrich nodes with is_indexable from crawl_pages
+        const crawlPageIds = data.map((n: any) => n.crawl_page_id).filter(Boolean);
+        let noIndexSet = new Set<string>();
+        if (crawlPageIds.length > 0) {
+          const { data: crawlPages } = await supabase
+            .from("crawl_pages" as any)
+            .select("id, is_indexable, has_noindex")
+            .in("id", crawlPageIds);
+          if (crawlPages) {
+            for (const cp of crawlPages) {
+              if (cp.is_indexable === false || cp.has_noindex === true) {
+                noIndexSet.add(cp.id);
+              }
+            }
+          }
+        }
+        const enriched = data.map((n: any) => ({
+          ...n,
+          _is_noindex: n.crawl_page_id ? noIndexSet.has(n.crawl_page_id) : false,
+        }));
+        setNodes(enriched);
+      } else if (!error) {
+        setNodes([]);
       }
       setIsLoading(false);
     };
