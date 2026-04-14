@@ -23,6 +23,7 @@ const sections = [
   { id: 'donnees', title: '10. Données de Crawl & Analyse' },
   { id: 'rgpd', title: '11. RGPD & Données Personnelles' },
   { id: 'disponibilite', title: '12. Disponibilité du Service' },
+  { id: 'securite-auth', title: '12 ter. Sécurité de l\'Authentification' },
   { id: 'responsabilite', title: '12 bis. Limitation de Responsabilité' },
   { id: 'modification', title: '13. Modification des CGVU' },
   { id: 'social', title: '14. Social Content Hub — Publication & OAuth' },
@@ -439,6 +440,25 @@ const CGVU = () => {
                 <li>Des défaillances des fournisseurs tiers (hébergement, APIs, services de paiement) ;</li>
                 <li>Des cas de force majeure au sens de l'article 1218 du Code civil.</li>
               </ul>
+            </section>
+
+            {/* Article 12 ter */}
+            <section id="securite-auth">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">12 ter. Sécurité de l'Authentification</h2>
+              <p>
+                Afin de protéger les comptes utilisateurs contre les tentatives d'accès non autorisées, la Plateforme met en œuvre un <strong>mécanisme de verrouillage progressif</strong> des tentatives de connexion échouées :
+              </p>
+              <ul>
+                <li>Après <strong>5 échecs</strong> consécutifs : verrouillage temporaire de <strong>30 secondes</strong> ;</li>
+                <li>Après <strong>8 échecs</strong> : verrouillage de <strong>60 secondes</strong> ;</li>
+                <li>Après <strong>12 échecs</strong> : verrouillage de <strong>5 minutes</strong>.</li>
+              </ul>
+              <p>
+                Ce dispositif complète la protection côté serveur (limitation par adresse IP). L'utilisateur est informé du verrouillage en cours via un compte à rebours affiché sur le bouton de connexion.
+              </p>
+              <p>
+                L'Éditeur se réserve le droit de suspendre ou de bloquer tout compte faisant l'objet de tentatives d'accès suspectes, conformément à ses obligations de sécurité.
+              </p>
             </section>
 
             {/* Article 12 bis */}
