@@ -130,6 +130,8 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Open Graph", definition: "Protocole de métadonnées définissant comment une page apparaît lorsqu'elle est partagée sur les réseaux sociaux.", category: "technical" },
     { term: "Twitter Cards", definition: "Balises meta permettant de personnaliser l'aperçu d'un lien partagé sur Twitter/X.", category: "technical" },
     { term: "API", acronym: "Application Programming Interface", definition: "Interface permettant à des applications de communiquer entre elles. PageSpeed Insights expose une API pour les audits.", category: "technical" },
+    { term: "Rate Limiting", definition: "Mécanisme de sécurité limitant le nombre de requêtes ou tentatives autorisées dans un intervalle de temps donné. Protège contre les attaques par force brute (brute-force) et les abus. Sur Crawlers.fr, un verrouillage progressif bloque temporairement les connexions après 5, 8 puis 12 tentatives échouées (30s, 60s, 5min).", category: "technical" },
+    { term: "Brute Force", definition: "Attaque informatique consistant à tester systématiquement toutes les combinaisons possibles de mots de passe pour accéder à un compte. Les protections incluent le rate limiting, le CAPTCHA et le verrouillage progressif des tentatives.", category: "technical" },
     
     // AI Terms
     { term: "Intelligence Artificielle", acronym: "IA", definition: "Technologie permettant aux machines d'effectuer des tâches nécessitant normalement l'intelligence humaine.", category: "ai" },

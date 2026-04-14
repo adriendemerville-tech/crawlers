@@ -85,6 +85,15 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 - Notification user : le premier assistant disponible (Crawler ou Stratège Cocoon) avertit via badge
 - Rate-limit : 3 signalements/jour/user, anti-doublon hash message+route (<24h)
 
+## Protection Anti Brute-Force (Authentification)
+- Hook `useLoginRateLimiter` : verrouillage progressif côté client après tentatives échouées
+- Seuils : 5 échecs → 30s, 8 échecs → 60s, 12 échecs → 5min
+- Persisté en `localStorage` (clé `login_rate_limit`) pour résister aux rechargements
+- Bouton de connexion désactivé + compte à rebours pendant le verrouillage
+- Connexion réussie → compteur remis à zéro
+- Intégré dans : `Auth.tsx` (page principale) et `InlineAuthForm.tsx` (formulaire inline)
+- Complète le rate-limiting serveur (GoTrue) déjà actif par IP
+
 ## Détection de Chute (Drop Detector)
 - Edge Function : `drop-detector` (exécution automatique quotidienne + manuelle admin)
 - Détection réactive (baseline 4 semaines) + prédictive (régression 8 semaines, seuil ≥80%)
