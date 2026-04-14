@@ -1759,7 +1759,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
   try {
     if (currentPhase === 'phase1') {
-      // ═══ PHASE 1: Audit + Strategic ═══
+      // ═══ PHASE 1a: Expert Audit + Launch Strategic (no waiting) ═══
       await updateProgress(5, 'crawling');
       
       // ─── Step 1: Technical SEO Audit (includes crawl) ───
@@ -1777,8 +1777,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       console.log(`[Marina] Expert SEO done. Score: ${expertResult.data.totalScore}. Lang: ${detectedLang}`);
       await updateProgress(30, 'strategic_audit');
 
-      // ─── Step 2: Strategic GEO Audit ───
-      console.log(`[Marina] Phase 1 Step 2: strategic-orchestrator for ${url}`);
+      // ─── Step 2: Launch Strategic GEO Audit (don't wait — self-invoke phase1b) ───
+      console.log(`[Marina] Phase 1 Step 2: launching strategic-orchestrator for ${url}`);
       const toolsData = {
         crawlers: { note: 'Non disponible dans Marina' },
         geo: { note: 'Calcul stratégique en cours' },
@@ -1801,6 +1801,38 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         },
       );
 
+      // Save expert data + strategic job ID for phase1b to pick up
+      await sb.from('audit_cache').upsert({
+        cache_key: `marina_phase1a_${jobId}`,
+        function_name: 'marina',
+        result_data: {
+          expertData: expertResult.data,
+          domain,
+          detectedLang,
+          strategicJobId,
+        },
+        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      }, { onConflict: 'cache_key' });
+
+      console.log(`[Marina] ✅ Phase 1a complete — strategic launched (${strategicJobId}), self-invoking phase1b`);
+      await selfInvokePhase(jobId, url, detectedLang, 'phase1b', { domain });
+
+    } else if (currentPhase === 'phase1b') {
+      // ═══ PHASE 1b: Poll Strategic + Save Intermediate + Launch Phase 2 ═══
+      console.log(`[Marina] Phase 1b starting for job ${jobId} — waiting for strategic-orchestrator`);
+
+      const { data: cached1a } = await sb
+        .from('audit_cache')
+        .select('result_data')
+        .eq('cache_key', `marina_phase1a_${jobId}`)
+        .single();
+
+      if (!cached1a?.result_data) {
+        throw new Error('Phase 1b: phase 1a data not found');
+      }
+
+      const { expertData, domain, detectedLang, strategicJobId } = cached1a.result_data as any;
+
       let lastMirroredProgress = 30;
       const strategicData = await waitForTrackedJob(sb, strategicJobId, {
         timeoutMs: 420_000,
@@ -1819,9 +1851,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       await updateProgress(65, 'phase1_complete');
 
       // ─── Save intermediate data and self-invoke phase 2 ───
-      // Store intermediate results in audit_cache for phase 2 to pick up
       const intermediatePayload = {
-        expertData: expertResult.data,
+        expertData,
         strategicData,
         domain,
         detectedLang,
@@ -1831,12 +1862,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         cache_key: `marina_intermediate_${jobId}`,
         function_name: 'marina',
         result_data: intermediatePayload,
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 min TTL
+        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
       }, { onConflict: 'cache_key' });
 
-      console.log(`[Marina] ✅ Phase 1 complete — intermediate data saved, launching Phase 2`);
-
-      // Self-invoke phase 2 with a fresh wall-clock budget
+      console.log(`[Marina] ✅ Phase 1b complete — intermediate data saved, launching Phase 2`);
       await selfInvokePhase(jobId, url, detectedLang, 'phase2', { domain });
 
     } else if (currentPhase === 'phase2') {
