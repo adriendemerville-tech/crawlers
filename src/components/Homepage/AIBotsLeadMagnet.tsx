@@ -333,7 +333,7 @@ export function AIBotsLeadMagnet() {
           <div className={cn(
             "text-center text-xs font-medium mb-3 py-1.5 px-3 rounded-full inline-flex items-center gap-1.5 mx-auto",
             blockedCount === 0
-              ? "bg-emerald-500/10 text-emerald-400"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
               : "bg-destructive/10 text-destructive"
           )}>
             {blockedCount === 0 ? (
