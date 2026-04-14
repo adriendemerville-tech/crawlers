@@ -183,6 +183,8 @@ async function fetchInternalArticles(supabase: ReturnType<typeof getServiceClien
 // ─── IKTracker CMS ──────────────────────────────────────────
 async function fetchIktrackerArticles(): Promise<Article[]> {
   const articles: Article[] = [];
+
+  // Fetch posts
   let offset = 0;
   const limit = 100;
 
@@ -193,22 +195,24 @@ async function fetchIktrackerArticles(): Promise<Article[]> {
       body: JSON.stringify({ action: 'list-posts', limit, offset }),
     });
     if (!res.ok) break;
-    const data = await res.json();
-    const posts = data?.data?.posts || data?.posts || [];
+    const json = await res.json();
+    // iktracker-actions wraps in { data: { status, data } } or { data: [...] }
+    const rawData = json?.data?.data || json?.data;
+    const posts = Array.isArray(rawData) ? rawData : (rawData?.posts || []);
     if (posts.length === 0) break;
 
     for (const p of posts) {
       articles.push({
         title: p.title,
-        body: p.content || p.body,
-        author: p.author,
+        body: p.content || p.body || p.html_content,
+        author: p.author || p.author_name,
         category: p.category,
-        categories: p.categories,
-        image_url: p.featured_image || p.image_url,
-        meta_description: p.meta_description || p.excerpt,
+        categories: p.categories ? (Array.isArray(p.categories) ? p.categories : [p.categories]) : (p.category ? [p.category] : []),
+        image_url: p.featured_image || p.image_url || p.image,
+        meta_description: p.meta_description || p.seo_description || p.excerpt,
         excerpt: p.excerpt,
         status: p.status || 'published',
-        published_at: p.published_at || p.date,
+        published_at: p.published_at || p.date || p.created_at,
         created_at: p.created_at,
         slug: p.slug,
       });
@@ -216,8 +220,35 @@ async function fetchIktrackerArticles(): Promise<Article[]> {
 
     if (posts.length < limit) break;
     offset += limit;
-    if (offset > 1000) break; // safety cap
+    if (offset > 1000) break;
   }
+
+  // Also fetch pages
+  try {
+    const pagesRes = await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list-pages' }),
+    });
+    if (pagesRes.ok) {
+      const pagesJson = await pagesRes.json();
+      const rawPages = pagesJson?.data?.data || pagesJson?.data;
+      const pages = Array.isArray(rawPages) ? rawPages : (rawPages?.pages || []);
+      for (const pg of pages) {
+        articles.push({
+          title: pg.title,
+          body: pg.content || pg.body || pg.html_content,
+          status: pg.status || 'published',
+          published_at: pg.published_at || pg.created_at,
+          created_at: pg.created_at,
+          slug: pg.page_key || pg.slug,
+          categories: ['Page'],
+          image_url: pg.featured_image || pg.image_url,
+          meta_description: pg.meta_description || pg.seo_description,
+        });
+      }
+    }
+  } catch { /* pages are optional */ }
 
   return articles;
 }
