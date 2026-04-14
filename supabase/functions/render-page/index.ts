@@ -24,6 +24,7 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   "/marina": { title: "Marina API — Rapport SEO & GEO en marque blanche | Crawlers.fr", description: "Générez des rapports SEO/GEO professionnels de 15+ pages via l'API Marina. Idéal comme lead magnet." },
   "/matrice": { title: "Matrice d'audit SEO — Grille personnalisée | Crawlers.fr", description: "Importez votre propre grille d'audit SEO et laissez Crawlers analyser chaque critère automatiquement." },
   "/content-architect": { title: "Content Architect — Création de contenu IA | Crawlers.fr", description: "Créez du contenu SEO et GEO optimisé avec l'IA. Données structurées et maillage interne automatique." },
+  "/cocoon": { title: "Cocoon 3D — Cocon sémantique intelligent | Crawlers.fr", description: "Construisez votre architecture de contenu avec le Cocoon 3D : graphe sémantique, clusters et maillage IA." },
   "/features/cocoon": { title: "Cocoon 3D — Cocon sémantique intelligent | Crawlers.fr", description: "Construisez votre architecture de contenu avec le Cocoon 3D : graphe sémantique, clusters et maillage IA." },
   "/comparatif-crawlers-semrush": { title: "Crawlers.fr vs Semrush — Comparatif SEO & GEO 2026", description: "Comparaison détaillée entre Crawlers.fr et Semrush : fonctionnalités, tarifs, GEO et avantages." },
   "/a-propos": { title: "À propos de Crawlers.fr — L'équipe et la mission", description: "Découvrez l'histoire, la mission et l'équipe derrière Crawlers.fr, la première plateforme SEO + GEO française." },
@@ -308,8 +309,15 @@ const ROUTES_WITH_PRICING = ["/tarifs", "/pro-agency", "/comparatif-crawlers-sem
 
 // ── HTML generators ──
 
+// Canonical overrides: routes that should point to a different canonical URL
+const CANONICAL_OVERRIDES: Record<string, string> = {
+  "/features/cocoon": "/cocoon",
+  "/app/cocoon": "/cocoon",
+};
+
 function generateStaticHTML(route: string, meta: { title: string; description: string }): string {
-  const fullUrl = `${baseUrl}${route}`;
+  const canonicalRoute = CANONICAL_OVERRIDES[route] || route;
+  const fullUrl = `${baseUrl}${canonicalRoute}`;
   const label = ROUTE_LABELS[route] || meta.title;
 
   const breadcrumb = breadcrumbJsonLd([

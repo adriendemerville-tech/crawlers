@@ -6,6 +6,7 @@
  * Admins and Pro users have unlimited access.
  */
 import { memo, useState, useEffect, lazy, Suspense, useCallback } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -132,6 +133,7 @@ function BlurredDemoOverlay({ monthlyUsage, onUpgrade, onBack }: { monthlyUsage:
 
 const SocialHub = memo(function SocialHub() {
   const { user } = useAuth();
+  useCanonicalHreflang('/app/social');
   const { isAgencyPro, planType } = useCredits();
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();

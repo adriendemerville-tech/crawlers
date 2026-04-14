@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -138,6 +139,7 @@ const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 
 export default function ConversionOptimizer() {
   const [searchParams] = useSearchParams();
+  useCanonicalHreflang('/app/conversion-optimizer');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useAuth();

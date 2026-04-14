@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -60,6 +61,7 @@ const DEFAULTS = {
 
 export default function MatricePrompt() {
   const navigate = useNavigate();
+  useCanonicalHreflang('/app/matrice-prompt');
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { user, loading: authLoading } = useAuth();
   const { isDemoMode } = useDemoMode();

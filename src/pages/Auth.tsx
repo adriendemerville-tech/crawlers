@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -130,6 +131,7 @@ export default function Auth() {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = translations[language];
+  useCanonicalHreflang('/auth');
   const inviteToken = searchParams.get('invite');
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
   const { isLocked, remainingSeconds, recordFailure, recordSuccess } = useLoginRateLimiter();

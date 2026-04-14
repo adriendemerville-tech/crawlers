@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -50,6 +51,7 @@ interface TrackedSite {
 
 export default function BotActivityPage() {
   const { user } = useAuth();
+  useCanonicalHreflang('/app/bot-activity');
   const navigate = useNavigate();
   const [entries, setEntries] = useState<BotEntry[]>([]);
   const [sites, setSites] = useState<TrackedSite[]>([]);
