@@ -144,8 +144,8 @@ const ProductShowcaseSection = memo(() => {
                       <img
                         src={slide.image}
                         alt={slide.title}
-                        width={480}
-                        height={300}
+                        width={960}
+                        height={600}
                         className="w-full h-auto block min-h-[200px] object-cover"
                         loading="eager"
                         decoding="async"
