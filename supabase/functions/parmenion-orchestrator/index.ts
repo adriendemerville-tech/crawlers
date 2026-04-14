@@ -980,7 +980,6 @@ RÈGLES:
 
     // ── ARTICLE TYPE DIVERSITY & SEMANTIC RING ──
     let diversityBlock = '';
-    let existingDraftTitles: string[] = [];
     try {
       // Query ALL existing articles (published + drafts) via CMS scanner or direct DB
       const { data: existingPosts } = await supabase
@@ -989,16 +988,9 @@ RÈGLES:
         .eq('tracked_site_id', context.tracked_site_id)
         .eq('content_type', 'post');
       
-      // Fallback: also check blog_articles for internal sites
       let allArticles = (existingPosts || []).map((p: any) => ({
         title: p.title, category: p.category, tags: p.tags,
       }));
-
-      // Collect draft titles for injection into prompt (anti-redundancy)
-      existingDraftTitles = (existingPosts || [])
-        .filter((p: any) => p.status === 'draft')
-        .map((p: any) => p.title)
-        .filter(Boolean);
 
       if (context.domain === 'crawlers.fr') {
         const { data: blogPosts } = await supabase
@@ -1007,11 +999,10 @@ RÈGLES:
           .in('status', ['published', 'draft']);
         if (blogPosts) {
           allArticles = [...allArticles, ...blogPosts.map((b: any) => ({ title: b.title, category: '', tags: [] }))];
-          existingDraftTitles.push(...blogPosts.filter((b: any) => b.status === 'draft').map((b: any) => b.title));
         }
       }
 
-      // Also fetch drafts from IKtracker API if CMS cache is empty/stale
+      // Fallback: fetch from IKtracker API if CMS cache is empty
       if (allArticles.length === 0 && context.cms_api_key) {
         try {
           const iktRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/iktracker-actions`, {
@@ -1026,13 +1017,13 @@ RÈGLES:
             const iktData = await iktRes.json();
             const posts = Array.isArray(iktData?.data?.posts) ? iktData.data.posts : Array.isArray(iktData?.data) ? iktData.data : [];
             allArticles = posts.map((p: any) => ({ title: p.title, category: p.category || '', tags: p.tags || [] }));
-            existingDraftTitles.push(...posts.filter((p: any) => p.status === 'draft').map((p: any) => p.title).filter(Boolean));
           }
         } catch (e) {
-          console.warn('[Parménion] IKtracker API fallback for drafts failed:', e);
+          console.warn('[Parménion] IKtracker API fallback failed:', e);
         }
       }
 
+      // computeArticleDistribution now also extracts saturatedTopics from titles
       const distribution = computeArticleDistribution(allArticles);
       
       // Compute semantic ring coverage
@@ -1041,12 +1032,12 @@ RÈGLES:
         const tags = (article.tags || []).map((t: string) => t.toLowerCase());
         if (tags.includes('ring_3') || tags.includes('semantic_ring:3')) ringCounts.ring3++;
         else if (tags.includes('ring_2') || tags.includes('semantic_ring:2')) ringCounts.ring2++;
-        else ringCounts.ring1++; // Default: untagged articles count as ring 1
+        else ringCounts.ring1++;
       }
       
       const ringInfo = determineSemanticRing(ringCounts);
       
-      // Find parent pages for linking (pages from the ring below)
+      // Find parent pages for linking
       const parentRing = Math.max(1, ringInfo.ring - 1) as SemanticRing;
       const { data: parentNodes } = await supabase
         .from('cocoon_sessions')
@@ -1066,8 +1057,8 @@ RÈGLES:
         }
       }
       
-      diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages, existingDraftTitles);
-      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}], drafts=${existingDraftTitles.length}`);
+      diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages);
+      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}], saturated=[${distribution.saturatedTopics.join(',')}]`);
     } catch (e) {
       console.warn('[Parménion] Diversity computation failed:', e);
     }
