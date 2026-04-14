@@ -828,8 +828,8 @@ export function CocoonRadialGraph({
 
     ctx.restore();
 
-    // Legend removed — only "Liens" shown below preview
-  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes, bgColor, particlesEnabled, visibleLinkDirections]);
+    // Legend removed — only "Liens" shown below preview; fan beam legend emitted via onFanBeamLegend callback
+  }, [tree, allRadialNodes, dimensions, zoom, pan, hoveredNodeId, selectedNodeId, showClusters, shouldShowEdge, colorIntensity, haloAlpha, nodeColors, nodes, bgColor, particlesEnabled, visibleLinkDirections, showFanBeams, onFanBeamLegend]);
 
   function drawLegend(ctx: CanvasRenderingContext2D, w: number, _h: number) {
     const x = w - 140;
