@@ -373,7 +373,7 @@ export default function SiteCrawl() {
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={5}
-                      max={isAdmin ? 500 : (totalEstimatedPages && totalEstimatedPages > 0 ? Math.min(isAgencyPlus ? totalEstimatedPages : maxSliderCap, totalEstimatedPages) : maxSliderCap)}
+                      max={totalEstimatedPages && totalEstimatedPages > 0 ? totalEstimatedPages : maxSliderCap}
                       step={5}
                       disabled={isLoading}
                     />
