@@ -1870,8 +1870,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                     <button
                       key={idx}
                       onClick={() => {
-                        setInput(label);
-                        setTimeout(() => sendMessage(label), 50);
+                        sendMessage(label);
                       }}
                       className="px-3 py-1.5 rounded-none border border-white/15 text-white/60 text-[11px] font-medium bg-transparent hover:bg-white/5 hover:text-white/90 hover:border-white/30 transition-all"
                     >

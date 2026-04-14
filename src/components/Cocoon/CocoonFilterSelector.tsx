@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { Radius, EyeOff } from 'lucide-react';
-import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Radius, EyeOff, ChevronDown } from 'lucide-react';
+import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight, Network } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +33,7 @@ export interface CocoonFilters {
   visiblePageTypes: Set<string>;
   visibleJuiceTypes: Set<string>;
   visibleLinkDirections: Set<string>;
+  visibleClusters: Set<string> | null; // null = show all
   showAllClusters: boolean;
   showParticles: boolean;
   showFanBeams: boolean;
@@ -60,15 +61,16 @@ const LINK_DIRECTION_COLORS: Record<string, string> = {
 };
 
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules', fanBeams: 'Faisceaux de famille', hideNoIndex: 'Masquer non-indexables' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles', fanBeams: 'Family beams', hideNoIndex: 'Hide non-indexable' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas', fanBeams: 'Haces de familia', hideNoIndex: 'Ocultar no indexables' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', clusterFilter: 'Clusters', hideParticles: 'Masquer les particules', fanBeams: 'Faisceaux de famille', hideNoIndex: 'Masquer non-indexables', allClusters: 'Tous les clusters' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', clusterFilter: 'Clusters', hideParticles: 'Hide particles', fanBeams: 'Family beams', hideNoIndex: 'Hide non-indexable', allClusters: 'All clusters' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', clusterFilter: 'Clústeres', hideParticles: 'Ocultar partículas', fanBeams: 'Haces de familia', hideNoIndex: 'Ocultar no indexables', allClusters: 'Todos los clústeres' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
   const t = i18n[language] || i18n.fr;
   const nodeColors = theme?.nodeColors ?? DEFAULT_THEME.nodeColors;
   const particleColors = theme?.particleColors ?? DEFAULT_THEME.particleColors;
+  const [clusterExpanded, setClusterExpanded] = useState(false);
 
   // Detect present page types from nodes
   const presentPageTypes = useMemo(() => {
@@ -112,6 +114,24 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     return Array.from(types).sort();
   }, [nodes]);
 
+  // Detect present clusters from nodes
+  const presentClusters = useMemo(() => {
+    const clusterMap = new Map<string, { name: string; count: number }>();
+    nodes.forEach((n: any) => {
+      const cId = n.cluster_id || n.cluster || null;
+      if (cId) {
+        const existing = clusterMap.get(String(cId));
+        if (existing) {
+          existing.count++;
+        } else {
+          const name = n.cluster_name || n.cluster_label || `Cluster ${cId}`;
+          clusterMap.set(String(cId), { name, count: 1 });
+        }
+      }
+    });
+    return Array.from(clusterMap.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
+  }, [nodes]);
+
   const togglePageType = (type: string) => {
     const next = new Set(filters.visiblePageTypes);
     if (next.has(type)) next.delete(type);
@@ -135,6 +155,37 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
 
   const toggleClusters = () => {
     onFiltersChange({ ...filters, showAllClusters: !filters.showAllClusters });
+  };
+
+  const toggleClusterFilter = (clusterId: string) => {
+    const current = filters.visibleClusters;
+    if (current === null) {
+      // First time toggling: show only this cluster
+      onFiltersChange({ ...filters, visibleClusters: new Set([clusterId]) });
+    } else {
+      const next = new Set(current);
+      if (next.has(clusterId)) {
+        next.delete(clusterId);
+        // If all removed, reset to show all
+        if (next.size === 0) {
+          onFiltersChange({ ...filters, visibleClusters: null });
+        } else {
+          onFiltersChange({ ...filters, visibleClusters: next });
+        }
+      } else {
+        next.add(clusterId);
+        // If all selected, reset to null (show all)
+        if (next.size === presentClusters.length) {
+          onFiltersChange({ ...filters, visibleClusters: null });
+        } else {
+          onFiltersChange({ ...filters, visibleClusters: next });
+        }
+      }
+    }
+  };
+
+  const resetClusterFilter = () => {
+    onFiltersChange({ ...filters, visibleClusters: null });
   };
 
   const toggleParticles = () => {
@@ -295,6 +346,58 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
             })}
           </div>
         </div>
+
+        {/* Cluster Filter */}
+        {presentClusters.length > 1 && (
+          <>
+            <Separator className="bg-white/5 my-1" />
+            <div className="px-3 py-1">
+              <button
+                onClick={() => setClusterExpanded(prev => !prev)}
+                className="w-full flex items-center gap-1.5 mb-2 group"
+              >
+                <Network className="w-3 h-3 text-white/40" />
+                <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider flex-1 text-left">
+                  {t.clusterFilter}
+                </span>
+                {filters.visibleClusters !== null && (
+                  <span className="text-[9px] text-[#fbbf24] font-medium">{filters.visibleClusters.size}/{presentClusters.length}</span>
+                )}
+                <ChevronDown className={`w-3 h-3 text-white/30 transition-transform ${clusterExpanded ? 'rotate-180' : ''}`} />
+              </button>
+              {clusterExpanded && (
+                <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
+                  {filters.visibleClusters !== null && (
+                    <button
+                      onClick={resetClusterFilter}
+                      className="text-[10px] text-[#fbbf24]/70 hover:text-[#fbbf24] mb-1 transition-colors"
+                    >
+                      ↺ {t.allClusters}
+                    </button>
+                  )}
+                  {presentClusters.map(([id, { name, count }]) => {
+                    const checked = filters.visibleClusters === null || filters.visibleClusters.has(id);
+                    return (
+                      <label
+                        key={id}
+                        className="flex items-center gap-2 cursor-pointer group"
+                        onClick={() => toggleClusterFilter(id)}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+                          tabIndex={-1}
+                        />
+                        <span className="text-xs text-white/70 group-hover:text-white transition-colors flex-1 truncate">{name}</span>
+                        <span className="text-[10px] text-white/30">{count}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         <Separator className="bg-white/5 my-1" />
 
