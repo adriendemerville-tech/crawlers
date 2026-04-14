@@ -221,7 +221,7 @@ function CocoonContent() {
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
-  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
+  const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false, hideNoIndex: false });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
@@ -246,7 +246,7 @@ function CocoonContent() {
   // Reset filters & check CMS when site changes
   useEffect(() => {
     setFiltersInitialized(false);
-    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
+    setCocoonFilters({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false, hideNoIndex: false });
     setHasCmsConnection(false);
     if (selectedSiteId) {
       supabase.from('cms_connections_public' as any).select('id').eq('tracked_site_id', selectedSiteId).eq('status', 'active').limit(1).then(({ data }) => {
@@ -281,18 +281,24 @@ function CocoonContent() {
           juiceTypes.add(jt);
         }
       }
-      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false });
+      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false, hideNoIndex: false });
       setFiltersInitialized(true);
     } else {
       setFiltersInitialized(false);
     }
   }, [nodesFingerprint]);
 
-  // Filtered nodes based on selected page types
+  // Filtered nodes based on selected page types + noindex filter
   const filteredNodes = useMemo(() => {
-    if (!filtersInitialized || cocoonFilters.visiblePageTypes.size === 0) return nodes;
-    return nodes.filter((n: any) => cocoonFilters.visiblePageTypes.has(n.page_type || 'unknown'));
-  }, [nodes, cocoonFilters.visiblePageTypes, filtersInitialized]);
+    let result = nodes;
+    if (filtersInitialized && cocoonFilters.visiblePageTypes.size > 0) {
+      result = result.filter((n: any) => cocoonFilters.visiblePageTypes.has(n.page_type || 'unknown'));
+    }
+    if (cocoonFilters.hideNoIndex) {
+      result = result.filter((n: any) => n._is_noindex !== true);
+    }
+    return result;
+  }, [nodes, cocoonFilters.visiblePageTypes, cocoonFilters.hideNoIndex, filtersInitialized]);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
@@ -552,8 +558,30 @@ function CocoonContent() {
         .order("traffic_estimate", { ascending: false })
         .limit(500);
 
-      if (!error && data) {
-        setNodes(data);
+      if (!error && data && data.length > 0) {
+        // Enrich nodes with is_indexable from crawl_pages
+        const crawlPageIds = data.map((n: any) => n.crawl_page_id).filter(Boolean);
+        let noIndexSet = new Set<string>();
+        if (crawlPageIds.length > 0) {
+          const { data: crawlPages } = await supabase
+            .from("crawl_pages" as any)
+            .select("id, is_indexable, has_noindex")
+            .in("id", crawlPageIds);
+          if (crawlPages) {
+            for (const cp of crawlPages as any[]) {
+              if (cp.is_indexable === false || cp.has_noindex === true) {
+                noIndexSet.add(cp.id);
+              }
+            }
+          }
+        }
+        const enriched = data.map((n: any) => ({
+          ...n,
+          _is_noindex: n.crawl_page_id ? noIndexSet.has(n.crawl_page_id) : false,
+        }));
+        setNodes(enriched);
+      } else if (!error) {
+        setNodes([]);
       }
       setIsLoading(false);
     };
@@ -630,7 +658,20 @@ function CocoonContent() {
           .eq("tracked_site_id", selectedSiteId)
           .order("traffic_estimate", { ascending: false })
           .limit(500);
-        if (data) setNodes(data);
+        if (data && data.length > 0) {
+          // Enrich with noindex info
+          const cpIds = data.map((n: any) => n.crawl_page_id).filter(Boolean);
+          let niSet = new Set<string>();
+          if (cpIds.length > 0) {
+            const { data: cps } = await supabase.from("crawl_pages" as any).select("id, is_indexable, has_noindex").in("id", cpIds);
+            if (cps) {
+              for (const cp of cps as any[]) {
+                if (cp.is_indexable === false || cp.has_noindex === true) niSet.add(cp.id);
+              }
+            }
+          }
+          setNodes(data.map((n: any) => ({ ...n, _is_noindex: n.crawl_page_id ? niSet.has(n.crawl_page_id) : false })));
+        }
       }
     } catch (e) {
       toast({

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Radius } from 'lucide-react';
+import { Radius, EyeOff } from 'lucide-react';
 import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,6 +36,7 @@ export interface CocoonFilters {
   showAllClusters: boolean;
   showParticles: boolean;
   showFanBeams: boolean;
+  hideNoIndex: boolean;
 }
 
 interface CocoonFilterSelectorProps {
@@ -59,9 +60,9 @@ const LINK_DIRECTION_COLORS: Record<string, string> = {
 };
 
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules', fanBeams: 'Faisceaux de famille' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles', fanBeams: 'Family beams' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas', fanBeams: 'Haces de familia' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules', fanBeams: 'Faisceaux de famille', hideNoIndex: 'Masquer non-indexables' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles', fanBeams: 'Family beams', hideNoIndex: 'Hide non-indexable' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas', fanBeams: 'Haces de familia', hideNoIndex: 'Ocultar no indexables' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
@@ -154,9 +155,18 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     }
   };
 
+  const toggleHideNoIndex = () => {
+    onFiltersChange({ ...filters, hideNoIndex: !filters.hideNoIndex });
+  };
+
+  // Count noindex nodes
+  const noIndexCount = useMemo(() => {
+    return nodes.filter((n: any) => n._is_noindex === true).length;
+  }, [nodes]);
+
   // Count active filters vs total
-  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 3 + 2; // 3 link directions + clusters + particles
-  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + filters.visibleLinkDirections.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0);
+  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 3 + 3; // 3 link directions + clusters + particles + noindex
+  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + filters.visibleLinkDirections.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0) + (filters.hideNoIndex ? 0 : 1);
   const hasInactiveFilters = activeFilters < totalOptions;
 
   if (nodes.length === 0) return null;
@@ -326,6 +336,21 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
             <Radius className="w-3 h-3 text-white/40" />
             <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.fanBeams}</span>
           </label>
+          {noIndexCount > 0 && (
+            <label
+              className="flex items-center gap-2 cursor-pointer group"
+              onClick={toggleHideNoIndex}
+            >
+              <Checkbox
+                checked={filters.hideNoIndex}
+                className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+                tabIndex={-1}
+              />
+              <EyeOff className="w-3 h-3 text-amber-500/60" />
+              <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.hideNoIndex}</span>
+              <span className="text-[10px] text-amber-500/50">{noIndexCount}</span>
+            </label>
+          )}
         </div>
       </PopoverContent>
     </Popover>
