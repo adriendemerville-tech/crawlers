@@ -213,6 +213,10 @@ export default function Auth() {
   });
 
   const handleLogin = async (data: { email: string; password: string }) => {
+    if (isLocked) {
+      toast.error(t.rateLimited.replace('{seconds}', String(remainingSeconds)));
+      return;
+    }
     setIsLoading(true);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
@@ -220,9 +224,11 @@ export default function Auth() {
     setIsLoading(false);
 
     if (error) {
+      recordFailure();
       toast.error(t.loginError);
       resetTurnstile();
     } else {
+      recordSuccess();
       toast.success(t.loginSuccess);
     }
   };
