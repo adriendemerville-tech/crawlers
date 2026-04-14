@@ -675,7 +675,7 @@ export function CocoonRadialGraph({
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, fanR, startAngle, endAngle);
         ctx.closePath();
-        ctx.fillStyle = `hsla(${hue}, 70%, 55%, 0.08)`;
+        ctx.fillStyle = `hsla(${hue}, 70%, 55%, 0.14)`;
         ctx.fill();
         ctx.restore();
 
