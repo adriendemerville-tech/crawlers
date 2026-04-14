@@ -208,39 +208,36 @@ export function Header() {
           ) : (
             // Logo + Language selector on other pages
             <>
-              <a href="/" className="flex flex-col items-start justify-center" aria-label="Crawlers.fr - Accueil">
-                <div className="flex items-center gap-2">
-                  {!isProfilePage && (
-                    <svg className="h-9 w-9" viewBox="0 0 48 48" aria-hidden="true">
-                      <defs>
-                        <linearGradient id="headerBgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#d4a853"/>
-                          <stop offset="30%" stopColor="#8b5cf6"/>
-                          <stop offset="70%" stopColor="#7c3aed"/>
-                          <stop offset="100%" stopColor="#3b5998"/>
-                        </linearGradient>
-                      </defs>
-                      <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#headerBgGradient)"/>
-                      <g transform="translate(9, 7.5) scale(1.25)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
-                        <path d="M12 8V4H8"/>
-                        <rect x="4" y="8" width="16" height="12" rx="2"/>
-                        <path d="M2 14h2"/>
-                        <path d="M20 14h2"/>
-                        <path d="M9 13v2"/>
-                        <path d="M15 13v2"/>
-                      </g>
-                    </svg>
-                  )}
-                  <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>
-                    {isProfilePage ? (
-                      <span className="text-foreground">Console</span>
-                    ) : 'Crawlers'}
-                  </span>
-                </div>
-
-                {/* Language selector below Crawlers */}
+              <a href="/" className="flex items-center gap-2" aria-label="Crawlers.fr - Accueil">
                 {!isProfilePage && (
-                  <div className="hidden sm:flex items-center gap-0.5 ml-11" role="group" aria-label="Sélection de la langue">
+                  <svg className="h-8 w-8" viewBox="0 0 48 48" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="headerBgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#d4a853"/>
+                        <stop offset="30%" stopColor="#8b5cf6"/>
+                        <stop offset="70%" stopColor="#7c3aed"/>
+                        <stop offset="100%" stopColor="#3b5998"/>
+                      </linearGradient>
+                    </defs>
+                    <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#headerBgGradient)"/>
+                    <g transform="translate(9, 7.5) scale(1.25)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+                      <path d="M12 8V4H8"/>
+                      <rect x="4" y="8" width="16" height="12" rx="2"/>
+                      <path d="M2 14h2"/>
+                      <path d="M20 14h2"/>
+                      <path d="M9 13v2"/>
+                      <path d="M15 13v2"/>
+                    </g>
+                  </svg>
+                )}
+                <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>
+                  {isProfilePage ? (
+                    <span className="text-foreground">Console</span>
+                  ) : 'Crawlers'}
+                </span>
+                {/* Language selector inline */}
+                {!isProfilePage && (
+                  <div className="hidden sm:flex items-center gap-0.5 ml-1" role="group" aria-label="Sélection de la langue">
                     <button
                       onClick={(e) => { e.preventDefault(); setLanguage('fr'); }}
                       className={`h-5 w-5 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
