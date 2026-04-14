@@ -1,5 +1,5 @@
 # Memory: tech/autopilot/breathing-spiral-strategy-fr
-Updated: 2026-04-12
+Updated: 2026-04-14
 
 ## Breathing Spiral — Architecture complète
 
@@ -21,14 +21,17 @@ Le helper `_shared/spiralClassifier.ts` classifie automatiquement les keywords e
 | 2 | Adjacent | Thématiques connexes (audience cible, cas d'usage) | Accessible après Ring 1 mature |
 | 3 | Autorité | Thought leadership, tendances sectorielles | Expansion de prestige |
 
-### Formule spiral_score
+### Formule spiral_score (implémentation réelle dans compute-spiral-signals)
 ```
-spiral_score = 
-  (ring_proximity × 0.18) + (cluster_maturity_gap × 0.18) + (severity × 0.12)
-+ (anomaly_urgency × 0.12) + (seasonal_boost × 0.10) + (velocity_decay × 0.08)
-+ (keyword_coverage × 0.08) + (competitor_momentum × 0.07) + (gmb_urgency × 0.07)
-× conversion_weight - cooldown_malus + gmb_urgency_bonus
+spiral_score = min(100, round(
+  velocity_decay × 1.6      // max 40 pts — pages en déclin = urgence max
++ competitor_momentum × 0.8  // max 20 pts — pression externe
++ (100 - cluster_maturity) / 100 × 15  // max 15 pts — clusters immatures
++ gmb_urgency × 0.6         // max 15 pts — déclin local
++ conversion_weight × 10    // max 10 pts — pages à fort taux de conversion
+))
 ```
+Note : la formule théorique à 9 poids (ring_proximity, anomaly_urgency, seasonal_boost, keyword_coverage) est la cible à terme. L'implémentation actuelle utilise 5 signaux mesurables.
 
 ### Signaux dynamiques (compute-spiral-signals, cron 6h)
 1. **Velocity Decay** : perte ≥3 positions sur 3 semaines (gsc_daily_positions)
@@ -56,6 +59,14 @@ spiral_score =
 - **Seuil Ring 1** : maturité > 70% requise avant expansion vers Ring 2
 - **Trigger cluster_maturity** : recalcul automatique de la maturité du cluster quand un item passe `deployed`/`done`, cascade sur `spiral_score` des items frères
 - **Backfill** : fonction `backfill_workbench_spiral_data()` pour rattacher les items existants aux clusters et recalculer leurs scores
+
+### Consommation par le Stratège Cocoon (v2)
+Le Stratège Cocoon lit désormais les `spiral_score` du workbench pour déterminer la phase de respiration du site :
+- **avg spiral_score ≥ 50** → phase **contraction** : boost ×1.3 pour consolidation (rewrite, fix, enrich, linking, EEAT), malus ×0.7 pour create_content
+- **avg spiral_score < 25** → phase **expansion** : boost ×1.3 pour create_content/publish_draft, malus ×0.9 pour fix/enrich
+- **25-49** → phase **neutral** : pas de modification
+- Boost supplémentaire ×1.2 si une URL spécifique a un spiral_score ≥ 60
+- La phase et le score moyen sont injectés dans les metadata de chaque tâche pour que Parménion connaisse le contexte
 
 ### Consommation par agent (score_spiral_priority)
 Tous les agents consomment désormais `score_spiral_priority` au lieu de `score_workbench_priority` :

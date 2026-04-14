@@ -107,13 +107,28 @@ async function computeSignalsForSite(
     computeNewsContext(supabase, site.id, site.domain),
   ])
 
-  // Update each item
+  // Update each item with individual signals + aggregated spiral_score
   let updated = 0
   for (const item of items) {
     const velocityScore = getVelocityForItem(velocityMap, item.target_url)
     const competitorScore = 0 // Will be computed when competitor data is available in keyword_universe
     const maturity = item.cluster_id ? (clusterMaturityMap.get(item.cluster_id) ?? 0) : 0
     const convWeight = getConversionForItem(conversionMap, item.target_url)
+
+    // ═══ Spiral Score Aggregation ═══
+    // Composite score (0-100) from 5 weighted signals:
+    //   Velocity Decay    (0-25)  × 1.6  → max 40 pts  — declining pages need urgent attention
+    //   Competitor Momentum (0-25) × 0.8 → max 20 pts  — external pressure
+    //   Cluster Maturity  (0-100) → inverted: (100-maturity)/100 × 15 → max 15 pts — immature clusters need work
+    //   GMB Urgency       (0-25)  × 0.6  → max 15 pts  — local SEO decline
+    //   Conversion Weight (0-1)   × 10   → max 10 pts  — high-converting pages get priority
+    const spiralScore = Math.min(100, Math.round(
+      (velocityScore * 1.6) +
+      (competitorScore * 0.8) +
+      ((100 - maturity) / 100 * 15) +
+      (gmbScore * 0.6) +
+      (convWeight * 10)
+    ))
 
     const { error } = await supabase
       .from('architect_workbench')
@@ -123,6 +138,7 @@ async function computeSignalsForSite(
         cluster_maturity_pct: maturity,
         gmb_urgency_score: gmbScore,
         conversion_weight: convWeight,
+        spiral_score: spiralScore,
         updated_at: new Date().toISOString(),
       })
       .eq('id', item.id)

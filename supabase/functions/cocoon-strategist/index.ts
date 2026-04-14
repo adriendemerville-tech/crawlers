@@ -402,8 +402,8 @@ try {
     const diagTypes = ['content', 'semantic', 'structure', 'authority'];
     const cutoff = new Date(Date.now() - MAX_DIAG_AGE_HOURS * 3600 * 1000).toISOString();
 
-    // Fetch recent diagnostics + strategic audit data + keyword cloud + EEAT data in parallel
-    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult, eeatAuditResult] = await Promise.all([
+    // Fetch recent diagnostics + strategic audit data + keyword cloud + EEAT data + spiral scores in parallel
+    const [diagsResult, strategicAuditResult, siteContextResult, serpKeywordsResult, eeatAuditResult, spiralDataResult] = await Promise.all([
       supabase
         .from('cocoon_diagnostic_results')
         .select('*')
@@ -442,7 +442,37 @@ try {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      // Load spiral_score data from workbench (Breathing Spiral context)
+      supabase
+        .from('architect_workbench')
+        .select('target_url, spiral_score, velocity_decay_score, cluster_maturity_pct, conversion_weight, finding_category')
+        .eq('tracked_site_id', tracked_site_id)
+        .in('status', ['pending', 'in_progress'])
+        .not('spiral_score', 'is', null)
+        .order('spiral_score', { ascending: false })
+        .limit(50),
     ]);
+
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 0c: Extract Breathing Spiral context
+    // ═══════════════════════════════════════════════════════════
+    const spiralItems = (spiralDataResult as any)?.data || [];
+    const spiralUrlScoreMap = new Map<string, number>();
+    let avgSpiralScore = 0;
+    let spiralPhase: 'contraction' | 'expansion' | 'neutral' = 'neutral';
+
+    if (spiralItems.length > 0) {
+      for (const item of spiralItems) {
+        if (item.target_url && item.spiral_score != null) {
+          spiralUrlScoreMap.set(item.target_url, item.spiral_score);
+        }
+      }
+      avgSpiralScore = Math.round(spiralItems.reduce((s: number, it: any) => s + (it.spiral_score || 0), 0) / spiralItems.length);
+      // High avg spiral_score = many declining signals → contraction phase (consolidate core)
+      // Low avg spiral_score = stable → expansion phase (grow to new topics)
+      spiralPhase = avgSpiralScore >= 50 ? 'contraction' : avgSpiralScore >= 25 ? 'neutral' : 'expansion';
+      console.log(`[strategist] 🌀 Breathing Spiral: ${spiralItems.length} items, avg score ${avgSpiralScore}, phase: ${spiralPhase}`);
+    }
 
     // Extract keyword cloud as reference universe
     const keywordCloud: string[] = [];
@@ -760,18 +790,46 @@ try {
       }
     }
 
-    // Score and sort tasks — with depth-aware priority boost
+    // Score and sort tasks — with depth-aware + spiral-aware priority boost
     for (const task of rawTasks) {
       const sevWeight = SEVERITY_WEIGHTS[task.estimated_impact === 'high' ? 'critical' : task.estimated_impact === 'medium' ? 'warning' : 'info'] || 1;
       const catWeight = Math.max(...task.source_diagnostics.map(d => CATEGORY_WEIGHTS[d] || 1));
+
+      // Depth boost
       let depthBoost = 1.0;
-      // Boost priority for tasks targeting deep pages (depth data in metadata)
       const deepDetail = task.metadata?.deep_pages_detail;
       if (deepDetail && Array.isArray(deepDetail) && deepDetail.length > 0) {
         const maxDepth = Math.max(...deepDetail.map((p: any) => p.depth || 0));
         depthBoost = maxDepth >= 5 ? 1.5 : maxDepth >= 4 ? 1.3 : 1.1;
       }
-      task.priority = Math.round(sevWeight * catWeight * depthBoost * 10);
+
+      // Breathing Spiral boost: prioritize based on phase
+      let spiralBoost = 1.0;
+      if (spiralPhase === 'contraction') {
+        // In contraction: boost consolidation tasks (rewrite, fix, enrich), dampen expansion (create_content)
+        if (['rewrite_content', 'fix_technical', 'fix_cannibalization', 'enrich_metadata', 'add_internal_link', 'improve_eeat'].includes(task.action_type)) {
+          spiralBoost = 1.3;
+        } else if (task.action_type === 'create_content') {
+          spiralBoost = 0.7;
+        }
+      } else if (spiralPhase === 'expansion') {
+        // In expansion: boost content creation and new clusters
+        if (['create_content', 'publish_draft'].includes(task.action_type)) {
+          spiralBoost = 1.3;
+        } else if (['fix_technical', 'enrich_metadata'].includes(task.action_type)) {
+          spiralBoost = 0.9;
+        }
+      }
+
+      // Per-URL spiral boost: if a specific URL has high spiral_score, boost its tasks
+      const urlSpiralMax = Math.max(0, ...task.affected_urls.map((u: string) => spiralUrlScoreMap.get(u) || 0));
+      if (urlSpiralMax >= 60) spiralBoost *= 1.2;
+
+      task.priority = Math.round(sevWeight * catWeight * depthBoost * spiralBoost * 10);
+      // Inject spiral context into task metadata for Parménion consumption
+      if (!task.metadata) task.metadata = {};
+      task.metadata.spiral_phase = spiralPhase;
+      task.metadata.spiral_score_avg = avgSpiralScore;
     }
 
     rawTasks.sort((a, b) => b.priority - a.priority);
