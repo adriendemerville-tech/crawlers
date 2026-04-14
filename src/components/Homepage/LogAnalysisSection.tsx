@@ -21,7 +21,7 @@ export const LogAnalysisSection = memo(function LogAnalysisSection() {
         <div className="flex flex-col lg:flex-row items-center gap-12">
           {/* Left — text */}
           <div className="flex-1 space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
               <Terminal className="h-3.5 w-3.5" />
               {language === 'fr' ? 'Analyse de Logs' : language === 'es' ? 'Análisis de Logs' : 'Log Analysis'}
             </div>

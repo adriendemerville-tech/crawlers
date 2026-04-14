@@ -100,7 +100,7 @@ const AIAgentsSection = memo(() => {
                   {language === 'fr' ? 'Assistant personnel' : language === 'es' ? 'Asistente personal' : 'Personal assistant'}
                 </p>
               </div>
-              <Badge className="ml-auto text-[#e0b44d] border-[#d6aa51] bg-[#1d283a]/[0.32] text-[11px]">
+              <Badge className="ml-auto text-amber-700 dark:text-[#e0b44d] border-amber-300 dark:border-[#d6aa51] bg-amber-50 dark:bg-[#1d283a]/[0.32] text-[11px]">
                 {language === 'fr' ? 'Gratuit' : language === 'es' ? 'Gratis' : 'Free'}
               </Badge>
             </div>

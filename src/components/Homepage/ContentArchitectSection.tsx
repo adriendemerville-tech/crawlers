@@ -84,12 +84,12 @@ export const ContentArchitectSection = memo(() => {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-400 mb-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-4">
             <Rocket className="h-3 w-3" />
             {t.badge}
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
               {t.title}
             </span>
           </h2>
@@ -111,7 +111,7 @@ export const ContentArchitectSection = memo(() => {
         >
           {t.stats.map((stat, i) => (
             <div key={i} className="text-center">
-              <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
                 {stat.value}
               </p>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">{stat.label}</p>
@@ -134,7 +134,7 @@ export const ContentArchitectSection = memo(() => {
               >
                 <div className="flex gap-4">
                   <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/15 transition-colors">
-                    <Icon className="h-5 w-5 text-emerald-400" />
+                    <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm text-foreground mb-1">{feature.label}</h3>
@@ -170,7 +170,7 @@ export const ContentArchitectSection = memo(() => {
             <p className="text-xs text-muted-foreground">
               {language === 'fr' ? 'Besoin d\'analyser le ton, les CTAs et la conversion de vos pages existantes ?' : language === 'es' ? '¿Necesita analizar el tono, los CTAs y la conversión de sus páginas?' : 'Need to analyze tone, CTAs and conversion on existing pages?'}
             </p>
-            <Link to="/conversion-optimizer" className="inline-flex items-center gap-1.5 text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors">
+            <Link to="/conversion-optimizer" className="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-500 dark:hover:text-violet-300 transition-colors">
               Conversion Optimizer — {language === 'fr' ? 'Audit UX/CRO contextuel' : language === 'es' ? 'Auditoría UX/CRO contextual' : 'Contextual UX/CRO audit'}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>

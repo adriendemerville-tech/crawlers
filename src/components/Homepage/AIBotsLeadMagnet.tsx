@@ -114,8 +114,8 @@ const i18n = {
 };
 
 function getScoreColor(score: number) {
-  if (score >= 70) return 'text-emerald-400';
-  if (score >= 40) return 'text-amber-400';
+  if (score >= 70) return 'text-emerald-600 dark:text-emerald-400';
+  if (score >= 40) return 'text-amber-600 dark:text-amber-400';
   return 'text-destructive';
 }
 
@@ -333,7 +333,7 @@ export function AIBotsLeadMagnet() {
           <div className={cn(
             "text-center text-xs font-medium mb-3 py-1.5 px-3 rounded-full inline-flex items-center gap-1.5 mx-auto",
             blockedCount === 0
-              ? "bg-emerald-500/10 text-emerald-400"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
               : "bg-destructive/10 text-destructive"
           )}>
             {blockedCount === 0 ? (
@@ -399,7 +399,7 @@ export function AIBotsLeadMagnet() {
           <div className={cn(
             "text-center text-xs font-medium mb-3 py-1.5 px-3 rounded-full inline-flex items-center gap-1.5 mx-auto",
             citedCount > 0
-              ? "bg-emerald-500/10 text-emerald-400"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
               : "bg-destructive/10 text-destructive"
           )}>
             {citedCount > 0 ? (
@@ -437,7 +437,7 @@ export function AIBotsLeadMagnet() {
                 {r.cited && (
                   <div className={cn(
                     "text-[10px] px-2 py-0.5 rounded-full inline-block",
-                    r.sentiment === 'positive' ? "bg-emerald-500/15 text-emerald-400"
+                    r.sentiment === 'positive' ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                       : r.sentiment === 'negative' ? "bg-destructive/15 text-destructive"
                       : "bg-muted text-muted-foreground"
                   )}>
