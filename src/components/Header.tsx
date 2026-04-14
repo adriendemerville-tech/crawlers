@@ -553,11 +553,6 @@ export function Header() {
               </div>
             ) : (
               <div className="flex items-center gap-1.5">
-                <Link to="/signup">
-                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                    {t.signup}
-                  </Button>
-                </Link>
                 <Link to="/auth" aria-label={t.login}>
                   <Button variant="outline" size="sm" className="gap-2" aria-label={t.login}>
                     <LogIn className="h-4 w-4" aria-hidden="true" />
