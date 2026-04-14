@@ -9449,6 +9449,45 @@ export type Database = {
           },
         ]
       }
+      sitemap_entries: {
+        Row: {
+          changefreq: string | null
+          created_at: string
+          domain: string
+          id: string
+          is_active: boolean | null
+          lastmod: string
+          loc: string
+          page_type: string | null
+          priority: number | null
+          updated_at: string
+        }
+        Insert: {
+          changefreq?: string | null
+          created_at?: string
+          domain?: string
+          id?: string
+          is_active?: boolean | null
+          lastmod?: string
+          loc: string
+          page_type?: string | null
+          priority?: number | null
+          updated_at?: string
+        }
+        Update: {
+          changefreq?: string | null
+          created_at?: string
+          domain?: string
+          id?: string
+          is_active?: boolean | null
+          lastmod?: string
+          loc?: string
+          page_type?: string | null
+          priority?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       smart_recommendations: {
         Row: {
           category: string
