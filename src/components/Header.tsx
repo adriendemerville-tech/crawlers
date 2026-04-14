@@ -221,7 +221,7 @@ export function Header() {
                         </linearGradient>
                       </defs>
                       <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#headerBgGradient)"/>
-                      <g transform="translate(8.4, 8.4) scale(1.3)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+                      <g transform="translate(9, 7.5) scale(1.25)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
                         <path d="M12 8V4H8"/>
                         <rect x="4" y="8" width="16" height="12" rx="2"/>
                         <path d="M2 14h2"/>
