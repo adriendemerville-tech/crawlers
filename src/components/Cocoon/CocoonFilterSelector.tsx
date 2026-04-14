@@ -34,6 +34,7 @@ export interface CocoonFilters {
   visibleLinkDirections: Set<string>;
   showAllClusters: boolean;
   showParticles: boolean;
+  showFanBeams: boolean;
 }
 
 interface CocoonFilterSelectorProps {
@@ -57,9 +58,9 @@ const LINK_DIRECTION_COLORS: Record<string, string> = {
 };
 
 const i18n: Record<string, Record<string, string>> = {
-  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules' },
-  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles' },
-  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas' },
+  fr: { title: 'Filtres', pageTypes: 'Types de pages', particles: 'Flux de particules', linkDirections: 'Direction des liens', clusters: 'Afficher tous les clusters', hideParticles: 'Masquer les particules', fanBeams: 'Faisceaux de famille' },
+  en: { title: 'Filters', pageTypes: 'Page types', particles: 'Particle flows', linkDirections: 'Link directions', clusters: 'Show all clusters', hideParticles: 'Hide particles', fanBeams: 'Family beams' },
+  es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', linkDirections: 'Dirección de enlaces', clusters: 'Mostrar todos los clústeres', hideParticles: 'Ocultar partículas', fanBeams: 'Haces de familia' },
 };
 
 export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
@@ -135,7 +136,21 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
   };
 
   const toggleParticles = () => {
-    onFiltersChange({ ...filters, showParticles: !filters.showParticles });
+    if (!filters.showParticles) {
+      // Turning particles ON → turn fan beams OFF
+      onFiltersChange({ ...filters, showParticles: true, showFanBeams: false });
+    } else {
+      onFiltersChange({ ...filters, showParticles: false });
+    }
+  };
+
+  const toggleFanBeams = () => {
+    if (!filters.showFanBeams) {
+      // Turning fan beams ON → turn particles OFF
+      onFiltersChange({ ...filters, showFanBeams: true, showParticles: false });
+    } else {
+      onFiltersChange({ ...filters, showFanBeams: false });
+    }
   };
 
   // Count active filters vs total
