@@ -208,7 +208,7 @@ export function Header() {
           ) : (
             // Logo + Language selector on other pages
             <>
-              <a href="/" className="flex flex-col items-start gap-0.5" aria-label="Crawlers.fr - Accueil">
+              <a href="/" className="flex flex-col items-start justify-center" aria-label="Crawlers.fr - Accueil">
                 <div className="flex items-center gap-2">
                   {!isProfilePage && (
                     <svg className="h-9 w-9" viewBox="0 0 48 48" aria-hidden="true">
