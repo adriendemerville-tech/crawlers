@@ -25,6 +25,22 @@ Updated: 2026-04-14
   - **Priority boost** basé sur la profondeur max : depth ≥ 5 → x1.5, depth ≥ 4 → x1.3, sinon x1.1
   - Les métadonnées incluent `suggested_link_sources` pour que l'auto-maillage sache d'où créer les liens
 
+### Déploiement de liens — Injection intelligente 3 tiers (v3.2)
+Le déploiement des liens via `cocoon-deploy-links` utilise une stratégie d'injection contextuelle en 3 niveaux :
+
+1. **Tier 1 — Wrap direct** : Si le texte d'ancre existe déjà dans le contenu HTML de la page source, il est wrappé in-situ dans un `<a href>` (regex avec lookbehind/ahead pour éviter les double-liens).
+2. **Tier 2 — Context sentence** : Si l'ancre n'est pas trouvée mais qu'un `context_sentence` a été généré par `cocoon-bulk-auto-linking`, cette phrase (contenant déjà l'ancre) est insérée avant la conclusion de l'article via `insertBeforeLastParagraph()`.
+3. **Tier 3 — Phrase-pont IA** : En dernier recours, `generateBridgeSentence()` appelle Gemini Flash Lite (`google/gemini-2.5-flash-lite`) pour produire une phrase de transition naturelle (max 30 mots) intégrant l'ancre. Le modèle reçoit un extrait de 500 caractères du contenu pour le contexte.
+4. **Fallback ultime** : Si l'IA n'est pas disponible, une phrase générique « Pour aller plus loin, consultez notre ressource sur [ancre] » est insérée.
+
+**Placement** : Toutes les insertions (tiers 2-4) sont placées via `insertBeforeLastParagraph()` qui trouve le dernier `<p>` du contenu et insère avant, pour un placement naturel dans la zone de conclusion.
+
+**Pipeline données** : Le champ `context_sentence` est propagé depuis `cocoon_auto_links` → `CocoonTaskPlanModal` → `cocoon-deploy-links` pour alimenter le tier 2.
+
+### Deux chemins de déploiement
+- **IKtracker** : GET contenu via API → injection 3 tiers dans le HTML → PUT contenu modifié. Nécessite `IKTRACKER_API_KEY`.
+- **Widget/WordPress** : Génération d'un script JS vanilla stocké dans `site_script_rules` (payload_type `COCOON_LINKS`). Le script parcourt le DOM côté client avec `TreeWalker` pour wrapper les ancres trouvées.
+
 ### UI/UX
 - Vue 3D, Radiale et X-Ray avec filtres de direction (descending, ascending, lateral).
 - **Filtre par cluster** : sélection multiple avec compteur actif/total, reset rapide.
