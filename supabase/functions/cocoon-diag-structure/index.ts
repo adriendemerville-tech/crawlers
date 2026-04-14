@@ -71,6 +71,16 @@ const LABELS: Record<string, Record<string, string>> = {
     en: 'Pages with very few outgoing internal links',
     es: 'Páginas con muy pocos enlaces internos salientes',
   },
+  missing_breadcrumbs: {
+    fr: 'Pages sans fil d\'Ariane (BreadcrumbList)',
+    en: 'Pages without breadcrumbs (BreadcrumbList)',
+    es: 'Páginas sin migas de pan (BreadcrumbList)',
+  },
+  breadcrumb_depth_mismatch: {
+    fr: 'Incohérence fil d\'Ariane / profondeur réelle',
+    en: 'Breadcrumb depth mismatch with crawl depth',
+    es: 'Incoherencia entre breadcrumb y profundidad real',
+  },
 };
 
 function t(key: string, lang: string): string {
