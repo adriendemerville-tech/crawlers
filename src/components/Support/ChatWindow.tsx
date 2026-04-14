@@ -2056,13 +2056,26 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
             />
           )}
           <div className="flex-1 relative">
+            {fantomasMode && (
+              <div className="absolute -top-5 left-0 right-0 flex items-center justify-center z-10">
+                <button
+                  onClick={deactivateFantomas}
+                  className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors cursor-pointer"
+                >
+                  ⚡ CREATOR MODE — clic pour désactiver
+                </button>
+              </div>
+            )}
             <textarea
               value={newMessage}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder={bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
+              placeholder={fantomasMode ? '⚡ Directive Creator...' : bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
               disabled={sending}
-              className="w-full min-h-[2rem] max-h-[10rem] resize-none overflow-y-auto rounded-xl border border-border/40 bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 caret-primary transition-colors"
+              className={cn(
+                "w-full min-h-[2rem] max-h-[10rem] resize-none overflow-y-auto rounded-xl border bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 caret-primary transition-colors",
+                fantomasMode ? "border-destructive/40 focus-visible:ring-destructive/30" : "border-border/40 focus-visible:ring-ring/30"
+              )}
               maxLength={isAdmin ? 2000 : 500}
               rows={1}
               style={{ height: 'auto' }}
