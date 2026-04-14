@@ -324,7 +324,7 @@ function CocoonContent() {
       setHasAccess(isAdmin || allowed.includes(profile?.plan_type || ""));
     };
     checkAccess();
-  }, [user]);
+  }, [user?.id]);
 
   // Delayed upsell reveal for non-pro users
   useEffect(() => {
