@@ -299,7 +299,7 @@ Deno.serve(handleRequest(async (req) => {
             });
             if (postsResp.ok) {
               const postsData = await postsResp.json();
-              const posts: any[] = Array.isArray(postsData) ? postsData : (postsData?.posts || postsData?.data || []);
+              const posts: any[] = Array.isArray(postsData) ? postsData : (postsData?.data?.posts || postsData?.data?.data?.posts || postsData?.posts || []);
               for (const post of posts) {
                 if (!post.slug) continue;
                 const postUrl = `https://iktracker.fr/blog/${post.slug}`;
