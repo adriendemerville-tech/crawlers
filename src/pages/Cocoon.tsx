@@ -224,6 +224,7 @@ function CocoonContent() {
   const [cocoonFilters, setCocoonFilters] = useState<CocoonFilters>({ visiblePageTypes: new Set<string>(), visibleJuiceTypes: new Set<string>(), visibleLinkDirections: new Set(['descending', 'ascending', 'lateral']), showAllClusters: true, showParticles: true, showFanBeams: false, hideNoIndex: false });
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [fanBeamLegend, setFanBeamLegend] = useState<{ id: string; name: string; color: string; nodeCount: number }[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
   const autoLaunchTriggered = useRef(false);
   const externalClickTimestamp = useRef<number | null>(null);
@@ -980,6 +981,7 @@ function CocoonContent() {
                 bgColorSlider={bgColor}
                 particlesEnabled={particlesEnabled && cocoonFilters.showParticles}
                 showFanBeams={cocoonFilters.showFanBeams}
+                onFanBeamLegend={setFanBeamLegend}
               />
             ) : (
               <CocoonForceGraph
@@ -1037,7 +1039,7 @@ function CocoonContent() {
 
           {/* Links legend — centered below preview */}
           {nodes.length > 0 && (
-            <div className="shrink-0 flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 opacity-0 animate-fade-in"
+            <div className="shrink-0 flex flex-col items-center px-3 sm:px-6 py-2 sm:py-3 opacity-0 animate-fade-in gap-1.5"
               style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
             >
               <div className="flex items-center gap-2 sm:gap-3">
@@ -1051,6 +1053,19 @@ function CocoonContent() {
                   <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
               </div>
+
+              {/* Fan beam family legend */}
+              {cocoonFilters.showFanBeams && fanBeamLegend.length > 0 && (
+                <div className="flex items-center gap-3 flex-wrap justify-center">
+                  <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Families:' : 'Familles :'}</span>
+                  {fanBeamLegend.map(item => (
+                    <div key={item.id} className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color, opacity: 0.6 }} />
+                      <span className="text-[10px] text-white/50">{item.name} ({item.nodeCount})</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </main>
