@@ -16,7 +16,7 @@ export const LogAnalysisSection = memo(function LogAnalysisSection() {
 
   return (
     <section className="py-20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-primary/5" />
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/3 via-transparent to-primary/3" />
       <div className="container mx-auto px-4 relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           {/* Left — text */}
