@@ -49,6 +49,8 @@ const ShortLinkRedirect = lazy(() => import("./pages/ShortLinkRedirect"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const GuideLandingPage = lazy(() => import("./pages/GuideLandingPage"));
+const GuidesHub = lazy(() => import("./pages/GuidesHub"));
 
 const EEATPage = lazy(() => import("./pages/EEATPage"));
 const AppEeat = lazy(() => import("./pages/AppEeat"));
