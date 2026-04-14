@@ -71,6 +71,16 @@ const LABELS: Record<string, Record<string, string>> = {
     en: 'Pages with very few outgoing internal links',
     es: 'Páginas con muy pocos enlaces internos salientes',
   },
+  missing_breadcrumbs: {
+    fr: 'Pages sans fil d\'Ariane (BreadcrumbList)',
+    en: 'Pages without breadcrumbs (BreadcrumbList)',
+    es: 'Páginas sin migas de pan (BreadcrumbList)',
+  },
+  breadcrumb_depth_mismatch: {
+    fr: 'Incohérence fil d\'Ariane / profondeur réelle',
+    en: 'Breadcrumb depth mismatch with crawl depth',
+    es: 'Incoherencia entre breadcrumb y profundidad real',
+  },
 };
 
 function t(key: string, lang: string): string {
@@ -109,7 +119,7 @@ try {
 
     const { data: pages } = await supabase
       .from('crawl_pages')
-      .select('url, path, http_status, crawl_depth, internal_links, external_links, has_canonical, canonical_url, has_noindex, is_indexable, redirect_url, broken_links')
+      .select('url, path, http_status, crawl_depth, internal_links, external_links, has_canonical, canonical_url, has_noindex, is_indexable, redirect_url, broken_links, schema_org_types')
       .eq('crawl_id', crawl.id)
       .limit(500);
 
@@ -278,6 +288,67 @@ try {
       });
     }
 
+    // 9. Missing breadcrumbs (BreadcrumbList schema) on indexable pages with depth > 0
+    const indexableNonHome = okPages.filter(p => p.is_indexable && (p.crawl_depth || 0) > 0);
+    const noBreadcrumb = indexableNonHome.filter(p => {
+      const types = Array.isArray(p.schema_org_types) ? p.schema_org_types : [];
+      return !types.some((t: string) => /breadcrumb/i.test(t));
+    });
+    if (noBreadcrumb.length > 0 && noBreadcrumb.length > indexableNonHome.length * 0.3) {
+      const pct = Math.round(noBreadcrumb.length / Math.max(indexableNonHome.length, 1) * 100);
+      findings.push({
+        id: 'missing_breadcrumbs',
+        severity: pct > 70 ? 'critical' : 'warning',
+        category: 'structure',
+        title: t('missing_breadcrumbs', lang),
+        description: lang === 'en'
+          ? `${noBreadcrumb.length}/${indexableNonHome.length} indexable pages (${pct}%) have no BreadcrumbList schema`
+          : lang === 'es'
+          ? `${noBreadcrumb.length}/${indexableNonHome.length} páginas indexables (${pct}%) sin schema BreadcrumbList`
+          : `${noBreadcrumb.length}/${indexableNonHome.length} pages indexables (${pct}%) sans schema BreadcrumbList`,
+        affected_urls: noBreadcrumb.slice(0, 50).map(p => p.url),
+        data: {
+          total_indexable: indexableNonHome.length,
+          missing_count: noBreadcrumb.length,
+          pct_missing: pct,
+        },
+      });
+    }
+
+    // 10. Breadcrumb depth mismatch: pages with BreadcrumbList whose item count differs significantly from crawl_depth
+    const withBreadcrumb = indexableNonHome.filter(p => {
+      const types = Array.isArray(p.schema_org_types) ? p.schema_org_types : [];
+      return types.some((t: string) => /breadcrumb/i.test(t));
+    });
+    // We can only check path-based heuristic: breadcrumb depth ≈ URL path segments
+    const depthMismatches = withBreadcrumb.filter(p => {
+      const pathSegments = (p.path || '').split('/').filter(Boolean).length;
+      const crawlDepth = p.crawl_depth || 0;
+      // Flag if path suggests depth ≥ 4 but crawl found it at depth ≤ 1 (or vice versa)
+      return Math.abs(pathSegments - crawlDepth) >= 3;
+    });
+    if (depthMismatches.length > 3) {
+      findings.push({
+        id: 'breadcrumb_depth_mismatch',
+        severity: 'warning',
+        category: 'structure',
+        title: t('breadcrumb_depth_mismatch', lang),
+        description: lang === 'en'
+          ? `${depthMismatches.length} pages where URL depth and crawl depth differ by 3+ levels`
+          : lang === 'es'
+          ? `${depthMismatches.length} páginas con diferencia de 3+ niveles entre URL y profundidad real`
+          : `${depthMismatches.length} pages dont la profondeur URL et la profondeur de crawl diffèrent de 3+ niveaux`,
+        affected_urls: depthMismatches.slice(0, 20).map(p => p.url),
+        data: {
+          details: depthMismatches.slice(0, 15).map(p => ({
+            url: p.url,
+            path_depth: (p.path || '').split('/').filter(Boolean).length,
+            crawl_depth: p.crawl_depth || 0,
+          })),
+        },
+      });
+    }
+
     // Enrich findings with target coordinates for workbench
     const structureTargetMap: Record<string, { selector: string; operation: string }> = {
       deep_pages: { selector: 'internal_links', operation: 'append' },
@@ -288,6 +359,8 @@ try {
       long_urls: { selector: 'url_structure', operation: 'replace' },
       noindex_in_sitemap: { selector: 'robots', operation: 'replace' },
       low_internal_links: { selector: 'internal_links', operation: 'append' },
+      missing_breadcrumbs: { selector: 'head', operation: 'append' },
+      breadcrumb_depth_mismatch: { selector: 'breadcrumb', operation: 'replace' },
     };
     for (const f of findings) {
       const target = structureTargetMap[f.id];
