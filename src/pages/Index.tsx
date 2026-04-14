@@ -20,7 +20,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck, Database, BarChart3 } from 'lucide-react';
+import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 
