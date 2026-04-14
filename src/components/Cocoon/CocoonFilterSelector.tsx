@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Radius } from 'lucide-react';
 import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -312,6 +313,18 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
             />
             <Sparkles className="w-3 h-3 text-white/40" />
             <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.hideParticles}</span>
+          </label>
+          <label
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={toggleFanBeams}
+          >
+            <Checkbox
+              checked={filters.showFanBeams}
+              className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
+              tabIndex={-1}
+            />
+            <Radius className="w-3 h-3 text-white/40" />
+            <span className="text-xs text-white/70 group-hover:text-white transition-colors">{t.fanBeams}</span>
           </label>
         </div>
       </PopoverContent>
