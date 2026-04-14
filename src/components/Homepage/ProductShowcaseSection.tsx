@@ -146,8 +146,8 @@ const ProductShowcaseSection = memo(() => {
                         alt={slide.title}
                         width={480}
                         height={300}
-                        className="w-full h-auto"
-                        loading="lazy"
+                        className="w-full h-auto block"
+                        loading="eager"
                         decoding="async"
                       />
                     </div>
