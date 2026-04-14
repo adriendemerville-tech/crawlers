@@ -104,6 +104,11 @@ function FooterComponent() {
       description: t3(language, 'Guide complet de l\'audit SEO en 2026', 'Complete SEO audit guide for 2026', 'Guía completa de auditoría SEO en 2026')
     },
     {
+      label: t3(language, 'Guides par métier', 'Guides by profession', 'Guías por profesión'),
+      href: '/guides',
+      description: t3(language, 'Guides SEO & GEO adaptés à votre activité', 'SEO & GEO guides for your business', 'Guías SEO & GEO para su negocio')
+    },
+    {
       label: t3(language, 'Brancher votre site', 'Connect your site', 'Conectar su sitio'),
       href: '/integration-gtm',
       description: t3(language, 'API, WordPress, GTM — toutes les méthodes', 'API, WordPress, GTM — all methods', 'API, WordPress, GTM — todos los métodos')
@@ -160,7 +165,7 @@ function FooterComponent() {
   const allArticles = blogArticles;
 
   const { pathname } = useLocation();
-  const isPublicPage = pathname === '/' || pathname.startsWith('/blog') || pathname.startsWith('/landing') || pathname.startsWith('/pro-agency') || pathname.startsWith('/audit-expert') || pathname === '/pricing' || pathname === '/about';
+  const isPublicPage = pathname === '/' || pathname.startsWith('/blog') || pathname.startsWith('/landing') || pathname.startsWith('/guide') || pathname.startsWith('/pro-agency') || pathname.startsWith('/audit-expert') || pathname === '/pricing' || pathname === '/about';
   const [resourcesOpen, setResourcesOpen] = useState(false);
 
   return (

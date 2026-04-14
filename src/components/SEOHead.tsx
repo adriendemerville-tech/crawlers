@@ -4,6 +4,24 @@ import { useLanguage } from '@/contexts/LanguageContext';
 const SITE_URL = 'https://crawlers.fr';
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
+const ORGANIZATION_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Crawlers',
+  url: SITE_URL,
+  logo: `${SITE_URL}/og-image.png`,
+  description: 'Plateforme SEO & GEO tout-en-un : audits, maillage intelligent, autopilote, visibilité IA.',
+  sameAs: [
+    'https://twitter.com/crawlersfr',
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer support',
+    url: `${SITE_URL}/aide`,
+    availableLanguage: ['French', 'English', 'Spanish'],
+  },
+};
+
 interface SEOHeadProps {
   title: string;
   description: string;
@@ -63,6 +81,9 @@ export function SEOHead({ title, description, path, ogType = 'website', noIndex 
       <meta name="twitter:title" content={ogTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={OG_IMAGE} />
+
+      {/* Organization JSON-LD (global) */}
+      <script type="application/ld+json">{JSON.stringify(ORGANIZATION_JSON_LD)}</script>
 
       {children}
     </Helmet>
