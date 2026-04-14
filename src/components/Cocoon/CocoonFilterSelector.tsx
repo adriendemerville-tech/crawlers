@@ -155,9 +155,18 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
     }
   };
 
+  const toggleHideNoIndex = () => {
+    onFiltersChange({ ...filters, hideNoIndex: !filters.hideNoIndex });
+  };
+
+  // Count noindex nodes
+  const noIndexCount = useMemo(() => {
+    return nodes.filter((n: any) => n._is_noindex === true).length;
+  }, [nodes]);
+
   // Count active filters vs total
-  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 3 + 2; // 3 link directions + clusters + particles
-  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + filters.visibleLinkDirections.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0);
+  const totalOptions = presentPageTypes.length + presentJuiceTypes.length + 3 + 3; // 3 link directions + clusters + particles + noindex
+  const activeFilters = filters.visiblePageTypes.size + filters.visibleJuiceTypes.size + filters.visibleLinkDirections.size + (filters.showAllClusters ? 1 : 0) + (filters.showParticles ? 1 : 0) + (filters.hideNoIndex ? 0 : 1);
   const hasInactiveFilters = activeFilters < totalOptions;
 
   if (nodes.length === 0) return null;
