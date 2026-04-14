@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Radius } from 'lucide-react';
+import { Radius, EyeOff } from 'lucide-react';
 import { Filter, Sparkles, FileText, Layers, ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,6 +36,7 @@ export interface CocoonFilters {
   showAllClusters: boolean;
   showParticles: boolean;
   showFanBeams: boolean;
+  hideNoIndex: boolean;
 }
 
 interface CocoonFilterSelectorProps {
