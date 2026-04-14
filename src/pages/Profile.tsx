@@ -152,7 +152,6 @@ function ProfileContent() {
     supabase
       .from('admin_dashboard_config')
       .select('card_order')
-      .eq('user_id', user.id)
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
