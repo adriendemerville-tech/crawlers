@@ -119,7 +119,7 @@ try {
 
     const { data: pages } = await supabase
       .from('crawl_pages')
-      .select('url, path, http_status, crawl_depth, internal_links, external_links, has_canonical, canonical_url, has_noindex, is_indexable, redirect_url, broken_links')
+      .select('url, path, http_status, crawl_depth, internal_links, external_links, has_canonical, canonical_url, has_noindex, is_indexable, redirect_url, broken_links, schema_org_types')
       .eq('crawl_id', crawl.id)
       .limit(500);
 
