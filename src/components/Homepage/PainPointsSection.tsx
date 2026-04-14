@@ -29,7 +29,7 @@ export const PainPointsSection = () => {
             Freelances / Agences
           </span>
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-            Les outils SEO classiques galèrent
+            On le sait : les outils SEO classiques galèrent
           </h2>
         </div>
 
@@ -47,7 +47,7 @@ export const PainPointsSection = () => {
         </div>
 
         {/* Conclusion */}
-        <div className="mx-auto max-w-3xl rounded-xl border px-6 py-5 text-center border-violet-600 border-solid font-medium shadow-none opacity-100 bg-[#11041f]">
+        <div className="mx-auto max-w-3xl rounded-xl px-6 py-5 text-center border-violet-600 font-medium shadow-none opacity-100 bg-[#11041f] border border-dashed">
           <span className="mb-2 text-sm font-bold text-violet-600">L'approche Crawlers</span>
           <p className="text-sm leading-relaxed text-foreground/90 opacity-100">
             L'analyse de la SERP est de moins en moins fiable — les contre-mesures de Google piègent les outils de crawl classiques.{' '}
