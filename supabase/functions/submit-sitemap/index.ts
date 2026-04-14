@@ -16,6 +16,8 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const DEFAULT_DOMAIN = 'crawlers.fr';
+// Storage-based sitemap URL (CDN-cached, no edge function latency)
+const DEFAULT_SITEMAP_URL = `${SUPABASE_URL}/storage/v1/object/public/public-assets/sitemap.xml`;
 
 Deno.serve(handleRequest(async (req) => {
   try {
