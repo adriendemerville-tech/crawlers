@@ -51,6 +51,7 @@ const translations = {
     signupError: 'Erreur lors de l\'inscription',
     userExists: 'Un compte existe déjà avec cet email',
     or: 'ou',
+    rateLimited: 'Trop de tentatives. Réessayez dans {seconds}s.',
   },
   en: {
     login: 'Login',
@@ -81,6 +82,7 @@ const translations = {
     signupError: 'Error during signup',
     userExists: 'An account already exists with this email',
     or: 'or',
+    rateLimited: 'Too many attempts. Try again in {seconds}s.',
   },
   es: {
     login: 'Iniciar sesión',
@@ -111,6 +113,7 @@ const translations = {
     signupError: 'Error durante el registro',
     userExists: 'Ya existe una cuenta con este correo',
     or: 'o',
+    rateLimited: 'Demasiados intentos. Inténtalo en {seconds}s.',
   },
 };
 
