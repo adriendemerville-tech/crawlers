@@ -217,7 +217,7 @@ export function EditorialDashboard() {
       </Card>
 
       {/* CMS Connection Dialog */}
-      <CmsConnectionDialog open={cmsDialogOpen} onOpenChange={setCmsDialogOpen} />
+      <CmsConnectionDialog open={cmsDialogOpen} onOpenChange={setCmsDialogOpen} cmsType="wordpress" />
     </div>
   );
 }
