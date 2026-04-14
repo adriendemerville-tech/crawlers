@@ -145,7 +145,7 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
       url: sn.url,
       title: sn.title || sn.url,
       cluster: sn.cluster_id || 'unknown',
-      depth: sn.depth,
+      depth: sn.crawl_depth ?? sn.depth,
       pageAuthority: sn.page_authority ?? 0,
       isHome: sn.depth === 0,
       pageType: sn.page_type || 'page',

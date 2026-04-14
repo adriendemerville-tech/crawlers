@@ -614,9 +614,8 @@ const ip = getClientIp(req);
 
     for (let i = 0; i < nodeData.length; i++) {
       nodeData[i].cluster_id = clusterMap.get(i) || `cluster_singleton_${i}`;
-      // Depth: 0 = cluster seed (first found), 1 = member
-      const clusterNodes = [...clusterMap.entries()].filter(([, c]) => c === nodeData[i].cluster_id);
-      nodeData[i].depth = clusterNodes[0]?.[0] === i ? 0 : 1;
+      // Depth: use crawl_depth from crawler (BFS-based), not cluster position
+      nodeData[i].depth = nodeData[i].crawl_depth || 0;
     }
 
     // ─── 6. Compute Iab, ROI, traffic ───
