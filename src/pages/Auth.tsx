@@ -422,8 +422,10 @@ export default function Auth() {
                     )}
                   />
                   <div className="flex justify-center">
-                    <Button type="submit" className="w-2/3 h-11 bg-[hsl(215,20%,28%)] hover:bg-[hsl(215,25%,35%)] text-white border-0 shadow-lg" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
+                    <Button type="submit" className="w-2/3 h-11 bg-[hsl(215,20%,28%)] hover:bg-[hsl(215,25%,35%)] text-white border-0 shadow-lg" disabled={isLoading || isLocked}>
+                      {isLocked
+                        ? t.rateLimited.replace('{seconds}', String(remainingSeconds))
+                        : isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                     </Button>
                   </div>
                   <div className="text-right">
