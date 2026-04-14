@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Plus, Minus, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 
 // ─── Types ───
 interface SemanticNode {
@@ -352,6 +353,7 @@ export function CocoonRadialGraph({
   const [dimensions, setDimensions] = useState({ w: 800, h: 600 });
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [spreadScale, setSpreadScale] = useState(1);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const isPanning = useRef(false);
   const dragDistance = useRef(0);
@@ -375,17 +377,17 @@ export function CocoonRadialGraph({
     }
   }, [bgColorSlider]);
 
-  // Build tree — layout adapts to zoom: when zoomed out, spread nodes further
+  // Build tree — layout adapts to zoom and spreadScale
   const tree = useMemo(() => {
     const root = buildSpanningTree(nodes);
     if (root) {
       // Base radius from canvas size; when zoom < 1, expand layout proportionally
-      const baseR = Math.min(dimensions.w, dimensions.h) * 0.42;
+      const baseR = Math.min(dimensions.w, dimensions.h) * 0.42 * spreadScale;
       const effectiveR = zoom < 1 ? baseR / zoom : baseR;
       layoutRadialTree(root, dimensions.w / 2, dimensions.h / 2, effectiveR);
     }
     return root;
-  }, [nodes, dimensions, zoom]);
+  }, [nodes, dimensions, zoom, spreadScale]);
 
   // Collect all nodes flat
   const allRadialNodes = useMemo(() => {
@@ -505,7 +507,7 @@ export function CocoonRadialGraph({
     const cx = dimensions.w / 2;
     const cy = dimensions.h / 2;
     const maxDepth = Math.max(...allRadialNodes.map(n => n.depth), 1);
-    const baseR = Math.min(dimensions.w, dimensions.h) * 0.42;
+    const baseR = Math.min(dimensions.w, dimensions.h) * 0.42 * spreadScale;
     const maxR = zoom < 1 ? baseR / zoom : baseR;
 
     // Recompute dynamic ring radii for drawing (same logic as layout)
@@ -1062,6 +1064,19 @@ export function CocoonRadialGraph({
         >
           <Maximize2 className="w-3.5 h-3.5" />
         </Button>
+      </div>
+
+      {/* Spread scale slider — centered bottom */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[5] flex items-center gap-2.5 opacity-50 hover:opacity-80 transition-opacity duration-500">
+        <Slider
+          min={0.3}
+          max={3}
+          step={0.05}
+          value={[spreadScale]}
+          onValueChange={([v]) => setSpreadScale(v)}
+          className="w-40 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=horizontal]]:h-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/20"
+        />
+        <span className="text-[9px] text-white/30 font-mono select-none">{spreadScale.toFixed(1)}×</span>
       </div>
     </div>
   );
