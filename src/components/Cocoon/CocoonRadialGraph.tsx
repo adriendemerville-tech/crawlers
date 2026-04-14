@@ -675,14 +675,14 @@ export function CocoonRadialGraph({
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, fanR, startAngle, endAngle);
         ctx.closePath();
-        ctx.fillStyle = `hsla(${hue}, 70%, 55%, 0.08)`;
+        ctx.fillStyle = `hsla(${hue}, 70%, 55%, 0.14)`;
         ctx.fill();
         ctx.restore();
 
         // Draw a sharper but subtle edge arc
         ctx.beginPath();
         ctx.arc(cx, cy, fanR - 5, startAngle, endAngle);
-        ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.15)`;
+        ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.25)`;
         ctx.lineWidth = 2;
         ctx.stroke();
       }
