@@ -33,6 +33,7 @@ export interface CocoonFilters {
   visiblePageTypes: Set<string>;
   visibleJuiceTypes: Set<string>;
   visibleLinkDirections: Set<string>;
+  visibleClusters: Set<string> | null; // null = show all
   showAllClusters: boolean;
   showParticles: boolean;
   showFanBeams: boolean;
