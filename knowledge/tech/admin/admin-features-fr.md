@@ -1,7 +1,11 @@
 # Memory: tech/admin/admin-features-fr
-Updated: 2026-04-08
+Updated: 2026-04-14
 
 ## Dashboard Admin — Fonctionnalités
+
+### Navigation
+- **Onglet par défaut** : Intelligence Hub (si `canSeeIntelligence`, sinon Statistiques/Analytics)
+- **Ordre menu latéral** : Intelligence → Statistiques → Finances → Bundle → ... (Intelligence en premier)
 
 ### Onglets principaux
 - **Utilisateurs** : KPIs par utilisateur, archivage, rôles (`user_roles` avec enum `app_role`)
@@ -164,6 +168,25 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - **Audit** : validate-url, robots.txt parser, cache déterministe, LLM fallback endpoints
 - **Tracking** : Résilience token tracker, headers CORS
 
+## Fil d'Ariane — Système centralisé (v2)
+
+### Composant `src/components/SEO/Breadcrumb.tsx`
+- Breadcrumb visible (`<nav>`) + JSON-LD `BreadcrumbList` automatique
+- Mapping 60+ routes dans `PATH_LABELS`
+- Intégré globalement dans `App.tsx`
+- Support `customItems` pour routes dynamiques
+
+### Audit Breadcrumb (Diagnostic Structure Cocoon)
+- Finding `missing_breadcrumbs` : pages indexables sans `BreadcrumbList` schema
+- Finding `breadcrumb_depth_mismatch` : incohérence profondeur URL vs BFS
+- Intégré au workbench → actions correctives Code Architect
+
+### Code Correctif
+- Fix `inject_breadcrumbs` : injection JSON-LD `BreadcrumbList` dans `<head>`
+- Catégorie SEO, points [2, 5], priorité optionnelle
+
+### SSR
+- `render-page` : 47 route labels pour cohérence JSON-LD bots
 
 ## Audit Expert (/audit-expert)
 
@@ -184,7 +207,6 @@ Chaque critère s'active selon le contexte (entité, taille, business, cible, SE
 - La carte `MaillageIPRCard` s'affiche après la synthèse IA dans les résultats de crawl
 - Données calculées à partir de `crawl_pages` (internal_links, crawl_depth, seo_score) via `computeMaillageFromCrawlPages()`
 - Minimum 3 pages avec HTTP 200 pour afficher la carte
-
 
 ## Homepage — Améliorations SEO/GEO (v5.1 — 2026-03-29)
 
