@@ -152,9 +152,9 @@ export function ScriptDebugTool() {
         // Check 5: Endpoint test
         if (apiKey) {
           try {
-            const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'tutlimtasnjabdfhpewu';
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
             const res = await fetch(
-              `https://${projectId}.supabase.co/functions/v1/serve-client-script?key=${encodeURIComponent(apiKey)}`,
+              `${supabaseUrl}/functions/v1/serve-client-script?key=${encodeURIComponent(apiKey)}`,
               {
                 method: 'GET',
                 headers: { 'Referer': `https://${site.domain}/` },

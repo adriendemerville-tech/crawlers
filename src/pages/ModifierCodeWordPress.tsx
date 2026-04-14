@@ -20,7 +20,8 @@ const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.
 
 
 const SITE_URL = 'https://crawlers.fr';
-const PLUGIN_URL = `https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/download-plugin`;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const PLUGIN_URL = `${SUPABASE_URL}/functions/v1/download-plugin`;
 
 const SEO_META = {
   title: 'Comment modifier le code de son site WordPress facilement ? | Crawlers.fr',

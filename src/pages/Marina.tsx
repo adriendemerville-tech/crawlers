@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
+const MARINA_API_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`;
 const CREDIT_COST = 5;
 
 /* ─── Translations ─── */
@@ -1081,7 +1082,7 @@ export default function Marina() {
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.postLabel}</span>
                     <button
                       onClick={() => copyCode(`curl -X POST \\
-  ${window.location.origin.replace('localhost:8080', 'tutlimtasnjabdfhpewu.supabase.co')}/functions/v1/marina \\
+  ${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina \\
   -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com", "lang": "fr"}'`)}
@@ -1092,7 +1093,7 @@ export default function Marina() {
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
 {`curl -X POST \\
-  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
+  ${MARINA_API_URL} \\
    -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com", "lang": "fr"}'
@@ -1108,7 +1109,7 @@ ${t.code.commentResponse}
                   <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.getLabel}</span>
                     <button
-                      onClick={() => copyCode(`curl "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina?job_id=abc-123" \\
+                      onClick={() => copyCode(`curl "${MARINA_API_URL}?job_id=abc-123" \\
   -H "x-marina-key: ${t.code.yourKey}"`)}
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -1116,7 +1117,7 @@ ${t.code.commentResponse}
                     </button>
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
-{`curl "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina?job_id=abc-123" \\
+{`curl "${MARINA_API_URL}?job_id=abc-123" \\
   -H "x-marina-key: ${t.code.yourKey}"
 
 ${t.code.commentInProgress}
@@ -1133,7 +1134,7 @@ ${t.code.commentDone}
                   <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border border-border rounded-t-lg">
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.jsLabel}</span>
                     <button
-                      onClick={() => copyCode(`const API = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina";
+                      onClick={() => copyCode(`const API = "${MARINA_API_URL}";
 const KEY = "${t.code.yourKey}";
 async function generateReport(url) {
   const { job_id } = await fetch(API, { method: "POST", headers: { "x-marina-key": KEY, "Content-Type": "application/json" }, body: JSON.stringify({ url, lang: "fr" }) }).then(r => r.json());
@@ -1150,7 +1151,7 @@ async function generateReport(url) {
                     </button>
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
-{`const API = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina";
+{`const API = "${MARINA_API_URL}";
 const KEY = "${t.code.yourKey}";
 
 async function generateReport(url) {
@@ -1188,7 +1189,7 @@ async function generateReport(url) {
                     <span className="text-[10px] text-muted-foreground font-mono">{t.api.webhookLabel}</span>
                     <button
                       onClick={() => copyCode(`curl -X POST \\
-  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
+  ${MARINA_API_URL} \\
   -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com", "lang": "fr", "callback_url": "https://yoursite.com/api/marina-webhook"}'`)}
@@ -1199,7 +1200,7 @@ async function generateReport(url) {
                   </div>
                   <pre className="p-3 bg-card border border-t-0 border-border rounded-b-lg overflow-x-auto text-[11px] text-muted-foreground font-mono leading-relaxed">
 {`curl -X POST \\
-  https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina \\
+  ${MARINA_API_URL} \\
   -H "x-marina-key: ${t.code.yourKey}" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1237,7 +1238,7 @@ async function generateReport(url) {
                 <CardContent className="p-5">
                   <h4 className="text-sm font-semibold text-foreground mb-2">{t.api.refEndpoint}</h4>
                   <code className="block px-3 py-2 bg-muted rounded-md text-xs font-mono text-primary break-all">
-                    POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/marina
+                    POST {MARINA_API_URL}
                   </code>
                 </CardContent>
               </Card>

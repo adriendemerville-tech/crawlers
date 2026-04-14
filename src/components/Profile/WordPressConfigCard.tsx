@@ -33,7 +33,7 @@ function generatePluginPhp(apiKey: string, domain: string): string {
 if (!defined('ABSPATH')) exit;
 
 define('CRAWLERS_API_KEY', '${apiKey}');
-define('CRAWLERS_API_URL', 'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/wpsync');
+define('CRAWLERS_API_URL', '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/wpsync');
 
 function crawlers_fetch_config() {
     $response = wp_remote_get(
@@ -165,8 +165,8 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
   };
 
   const handleDownloadPlugin = () => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'tutlimtasnjabdfhpewu';
-    window.open(`https://${projectId}.supabase.co/functions/v1/download-plugin`, '_blank');
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    window.open(`${supabaseUrl}/functions/v1/download-plugin`, '_blank');
     toast.success(t3(language, 'Téléchargement du plugin .zip lancé !', 'Plugin .zip download started!', '¡Descarga del plugin .zip iniciada!'));
   };
 

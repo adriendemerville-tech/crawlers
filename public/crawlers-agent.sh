@@ -18,7 +18,8 @@ set -euo pipefail
 
 API_KEY=""
 LOG_FILE="/var/log/nginx/access.log"
-ENDPOINT="https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/ingest-agent"
+# Configure your Crawlers API endpoint (or use default)
+ENDPOINT="${CRAWLERS_ENDPOINT:-https://api.crawlers.fr/functions/v1/ingest-agent}"
 BATCH_SIZE=50
 FLUSH_INTERVAL=10
 

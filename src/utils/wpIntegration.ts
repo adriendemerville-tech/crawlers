@@ -1,8 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { edgeFunctionUrl } from '@/utils/supabaseUrl';
 
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'tutlimtasnjabdfhpewu';
-const PLUGIN_URL = `https://${projectId}.supabase.co/functions/v1/download-plugin`;
+const PLUGIN_URL = edgeFunctionUrl('download-plugin');
 
 export type WPAction = 'download' | 'magic_link' | 'sync';
 
@@ -54,9 +54,9 @@ export async function handleWPIntegration(
         return { success: false, error: 'No session' };
       }
 
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'tutlimtasnjabdfhpewu';
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/wpsync`,
+        `${supabaseUrl}/functions/v1/wpsync`,
         {
           method: 'POST',
           headers: {
