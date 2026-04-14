@@ -8756,7 +8756,11 @@ export type Database = {
           created_at: string
           domain: string | null
           generation_context: Json | null
+          guide_category: string | null
+          guide_target: string | null
+          guide_tools: Json | null
           id: string
+          lateral_links: Json | null
           meta_description: string | null
           meta_title: string | null
           page_type: string
@@ -8777,7 +8781,11 @@ export type Database = {
           created_at?: string
           domain?: string | null
           generation_context?: Json | null
+          guide_category?: string | null
+          guide_target?: string | null
+          guide_tools?: Json | null
           id?: string
+          lateral_links?: Json | null
           meta_description?: string | null
           meta_title?: string | null
           page_type?: string
@@ -8798,7 +8806,11 @@ export type Database = {
           created_at?: string
           domain?: string | null
           generation_context?: Json | null
+          guide_category?: string | null
+          guide_target?: string | null
+          guide_tools?: Json | null
           id?: string
+          lateral_links?: Json | null
           meta_description?: string | null
           meta_title?: string | null
           page_type?: string
