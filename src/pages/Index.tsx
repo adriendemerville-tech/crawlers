@@ -51,6 +51,7 @@ const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCr
 const ClaudeVsCrawlersSection = lazy(() => import('@/components/Homepage/ClaudeVsCrawlersSection').then(m => ({ default: m.ClaudeVsCrawlersSection })));
 const LogAnalysisSection = lazy(() => import('@/components/Homepage/LogAnalysisSection').then(m => ({ default: m.LogAnalysisSection })));
 const BreathingSpiralSection = lazy(() => import('@/components/Homepage/BreathingSpiralSection').then(m => ({ default: m.BreathingSpiralSection })));
+const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -637,6 +638,11 @@ const Index = () => {
         <HeroSection />
 
         {/* ─── Homepage marketing sections ─── */}
+
+        {/* Pain Points — before Pro Agency */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <PainPointsSection />
+        </Suspense>
 
         {/* Pro Agency hero */}
         <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-14 sm:py-20">
