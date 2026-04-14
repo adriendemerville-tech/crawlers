@@ -54,9 +54,9 @@ export async function handleWPIntegration(
         return { success: false, error: 'No session' };
       }
 
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'tutlimtasnjabdfhpewu';
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/wpsync`,
+        `${supabaseUrl}/functions/v1/wpsync`,
         {
           method: 'POST',
           headers: {
