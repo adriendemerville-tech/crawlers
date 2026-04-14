@@ -129,7 +129,7 @@ function HeroSectionComponent() {
                 <span className="font-bold text-amber-400 text-lg">
                   {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
                 </span>
-                <span className="text-xs font-normal text-muted-foreground">SEO-GEO. 5 min</span>
+                <span className="text-xs font-normal text-muted-foreground">SEO-GEO. OFFERT</span>
               </div>
             </Button>
           </Link>
@@ -138,7 +138,7 @@ function HeroSectionComponent() {
         {/* Secondary CTAs */}
         <div className="mt-6 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-primary-foreground">
-            {language === 'fr' ? '20 crédits offerts à l\'inscription →' : language === 'es' ? '20 créditos gratis al registrarse →' : '20 free credits on signup →'}
+            {language === 'fr' ? 'Créer un compte gratuit →' : language === 'es' ? 'Crear una cuenta gratis →' : 'Create a free account →'}
           </Link>
         </div>
       </div>
