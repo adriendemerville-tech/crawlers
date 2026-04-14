@@ -29,8 +29,8 @@ export const PainPointsSection = () => {
       <div className="mx-auto max-w-5xl px-4">
         {/* Title */}
         <div className="mb-10 text-center">
-          <span className="mb-3 inline-block rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-destructive">
-            Le problème
+          <span className="mb-3 inline-block rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary-foreground">
+            Freelances / Agences
           </span>
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
             Les outils SEO classiques vous mentent
@@ -45,7 +45,7 @@ export const PainPointsSection = () => {
               className="group rounded-xl border border-destructive/15 bg-card/60 p-6 transition-colors hover:border-destructive/30"
             >
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10">
-                <p.icon className="h-5 w-5 text-destructive" />
+                <p.icon className="h-5 w-5 text-secondary" />
               </div>
               <h3 className="mb-2 text-base font-bold text-foreground">{p.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
@@ -55,9 +55,9 @@ export const PainPointsSection = () => {
 
         {/* Conclusion */}
         <div className="mx-auto max-w-3xl rounded-xl border border-primary/20 bg-primary/5 px-6 py-5 text-center">
-          <div className="mb-2 flex items-center justify-center gap-2">
+          <div className="mb-2 flex items-center justify-center gap-2 text-violet-700">
             <Database className="h-5 w-5 text-primary" />
-            <span className="text-sm font-bold text-primary">L'approche Crawlers</span>
+            <span className="text-sm font-bold text-violet-600">L'approche Crawlers</span>
           </div>
           <p className="text-sm leading-relaxed text-foreground/90">
             L'analyse de la SERP est de moins en moins fiable — les contre-mesures de Google piègent les outils de crawl classiques.{' '}
