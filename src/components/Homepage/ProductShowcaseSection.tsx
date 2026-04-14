@@ -128,7 +128,7 @@ const ProductShowcaseSection = memo(() => {
                   {/* Screenshot */}
                   <div className="relative transition-transform duration-500 ease-out group-hover:scale-[1.02]" style={{ perspective: '1200px' }}>
                     <div className={`absolute -inset-4 rounded-3xl bg-gradient-to-br ${slide.badgeColor} opacity-[0.07] blur-2xl group-hover:opacity-[0.12] transition-opacity duration-500`} />
-                    <div className="relative rounded-2xl overflow-hidden border-2 border-border/50 shadow-2xl shadow-black/10 dark:shadow-black/30 group-hover:border-primary/30 transition-colors duration-300 bg-card">
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-border shadow-2xl shadow-black/10 dark:shadow-black/30 group-hover:border-primary/30 transition-colors duration-300 bg-muted/30">
                       <div className="bg-muted/80 dark:bg-muted/40 border-b border-border/50 px-4 py-2.5 flex items-center gap-2">
                         <div className="flex gap-1.5">
                           <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
