@@ -110,33 +110,7 @@ export function useStructuredData() {
           ]
         }
       },
-      {
-        id: 'breadcrumb',
-        data: {
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            {
-              "@type": "ListItem",
-              "position": 1,
-              "name": "Accueil - Audit SEO & GEO Expert",
-              "item": "https://crawlers.fr/"
-            },
-            {
-              "@type": "ListItem",
-              "position": 2,
-              "name": "Score SEO 200 - Audit Technique",
-              "item": "https://crawlers.fr/audit-expert"
-            },
-            {
-              "@type": "ListItem",
-              "position": 3,
-              "name": "Lexique SEO, GEO & IA",
-              "item": "https://crawlers.fr/lexique"
-            }
-          ]
-        }
-      },
+      // Breadcrumb removed — now handled by centralized <Breadcrumb /> component
       {
         id: 'cocoon-webpage',
         data: {

@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { SessionHeartbeatManager } from "@/components/SessionHeartbeatManager";
+import { Breadcrumb as BreadcrumbGlobal } from "@/components/SEO/Breadcrumb";
 
 // Lazy load providers not needed for first paint
 const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ default: m.AuthProvider })));
@@ -144,6 +145,7 @@ const App = () => (
                         <PageViewTracker />
                       </Suspense>
                       <AISidebarPageWrapper>
+                      <BreadcrumbGlobal />
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
                           <Route path="/" element={<Index />} />
