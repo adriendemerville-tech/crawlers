@@ -179,7 +179,7 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
 
       switch (task.action_type) {
         case 'linking': {
-          // Call auto-linking
+          // Step 1: Generate link suggestions via auto-linking
           const payload = task.action_payload || {};
           const resp = await supabase.functions.invoke('cocoon-bulk-auto-linking', {
             body: {
@@ -191,6 +191,28 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
           });
           if (resp.error) throw new Error(resp.error.message);
           result = resp.data;
+
+          // Step 2: Deploy generated links to CMS/IKtracker
+          const suggestions = result?.suggestions || result?.results || [];
+          if (suggestions.length > 0) {
+            const recommendations = suggestions.map((s: any) => ({
+              source_url: s.source_url,
+              target_url: s.target_url,
+              anchor_text: s.anchor_text,
+              action: payload.action || 'add_link',
+            })).filter((r: any) => r.source_url && r.target_url && r.anchor_text);
+
+            if (recommendations.length > 0) {
+              const deployResp = await supabase.functions.invoke('cocoon-deploy-links', {
+                body: {
+                  tracked_site_id: trackedSiteId,
+                  recommendations,
+                  mode: 'deploy',
+                },
+              });
+              result.deploy = deployResp.data || { error: deployResp.error?.message };
+            }
+          }
           break;
         }
         case 'content': {
