@@ -760,11 +760,18 @@ try {
       }
     }
 
-    // Score and sort tasks
+    // Score and sort tasks — with depth-aware priority boost
     for (const task of rawTasks) {
       const sevWeight = SEVERITY_WEIGHTS[task.estimated_impact === 'high' ? 'critical' : task.estimated_impact === 'medium' ? 'warning' : 'info'] || 1;
       const catWeight = Math.max(...task.source_diagnostics.map(d => CATEGORY_WEIGHTS[d] || 1));
-      task.priority = Math.round(sevWeight * catWeight * 10);
+      let depthBoost = 1.0;
+      // Boost priority for tasks targeting deep pages (depth data in metadata)
+      const deepDetail = task.metadata?.deep_pages_detail;
+      if (deepDetail && Array.isArray(deepDetail) && deepDetail.length > 0) {
+        const maxDepth = Math.max(...deepDetail.map((p: any) => p.depth || 0));
+        depthBoost = maxDepth >= 5 ? 1.5 : maxDepth >= 4 ? 1.3 : 1.1;
+      }
+      task.priority = Math.round(sevWeight * catWeight * depthBoost * 10);
     }
 
     rawTasks.sort((a, b) => b.priority - a.priority);
