@@ -616,6 +616,22 @@ const Index = () => {
             }
           }))
         })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Crawlers",
+          "url": "https://crawlers.fr",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR",
+            "description": "Audit SEO gratuit"
+          },
+          "description": "Plateforme SEO & GEO : audits 168 critères, maillage intelligent Cocoon, autopilote, visibilité IA.",
+          "featureList": "Audit SEO, Audit GEO, Maillage Cocoon, Content Architect, Autopilot, Observatory"
+        })}</script>
       </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
