@@ -3,9 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, BarChart3, Users, Tag, FileText, Clock, FileWarning, ImageOff, AlertTriangle, Type, RefreshCw } from 'lucide-react';
+import { Loader2, BarChart3, Users, Tag, FileText, Clock, FileWarning, ImageOff, AlertTriangle, Type, RefreshCw, Plug, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import { CmsConnectionDialog } from './CmsConnectionDialog';
 
 interface EditorialStats {
   total_articles: number;
@@ -46,8 +46,8 @@ export function EditorialDashboard() {
   const [stats, setStats] = useState<EditorialStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
 
-  // Fetch tracked sites
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -64,7 +64,6 @@ export function EditorialDashboard() {
     })();
   }, []);
 
-  // Fetch stats when site changes
   useEffect(() => {
     if (!selectedSiteId) return;
     fetchStats(selectedSiteId);
@@ -101,26 +100,45 @@ export function EditorialDashboard() {
   const selectedDomain = sites.find(s => s.id === selectedSiteId)?.domain;
 
   return (
-    <Card className="border-border/50 bg-card/50">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Tableau de bord éditorial</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {sites.length > 1 && (
-              <Select value={selectedSiteId || ''} onValueChange={setSelectedSiteId}>
-                <SelectTrigger className="w-[200px] h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {sites.map(s => (
-                    <SelectItem key={s.id} value={s.id} className="text-xs">{s.domain}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+    <div className="flex gap-4">
+      {/* Left sidebar: site buttons + API button */}
+      <div className="shrink-0 w-[160px] space-y-1.5">
+        {sites.map(s => (
+          <Button
+            key={s.id}
+            variant={s.id === selectedSiteId ? 'secondary' : 'ghost'}
+            size="sm"
+            className="w-full justify-start text-xs h-8 gap-1.5 truncate"
+            onClick={() => setSelectedSiteId(s.id)}
+          >
+            <Globe className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{s.domain}</span>
+          </Button>
+        ))}
+
+        {/* API button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start text-xs h-8 gap-1.5 border-dashed border-primary/30 text-primary hover:bg-primary/10"
+          onClick={() => setCmsDialogOpen(true)}
+        >
+          <Plug className="h-3.5 w-3.5 shrink-0" />
+          API CMS
+        </Button>
+      </div>
+
+      {/* Right: dashboard */}
+      <Card className="flex-1 border-border/50 bg-card/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Tableau de bord éditorial</CardTitle>
+              {selectedDomain && (
+                <Badge variant="outline" className="text-[10px]">{selectedDomain}</Badge>
+              )}
+            </div>
             {selectedSiteId && (
               <Button
                 variant="outline"
@@ -133,72 +151,73 @@ export function EditorialDashboard() {
               </Button>
             )}
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent>
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-sm text-muted-foreground">Analyse du CMS de {selectedDomain}…</span>
-          </div>
-        )}
-
-        {error && !loading && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-yellow-500/60" />
-            {error}
-          </div>
-        )}
-
-        {stats && !loading && (
-          <div className="space-y-4">
-            {/* Stat cards grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-              {statCards(stats).map((card, i) => {
-                const Icon = card.icon;
-                return (
-                  <div
-                    key={i}
-                    className="rounded-lg border border-border/40 bg-background/60 p-3 flex items-start gap-2"
-                  >
-                    <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${card.color}`} />
-                    <div className="min-w-0">
-                      <div className="text-lg font-bold leading-tight">{card.value}</div>
-                      <div className="text-[11px] text-muted-foreground leading-tight">{card.label}</div>
-                    </div>
-                  </div>
-                );
-              })}
+        <CardContent>
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Analyse du CMS de {selectedDomain}…</span>
             </div>
+          )}
 
-            {/* Bottom row: top topics + SEO alerts */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-muted-foreground">Top sujets :</span>
-                {stats.top_topics.length > 0 ? stats.top_topics.map((t, i) => (
-                  <Badge key={i} variant="secondary" className="text-[10px] px-2 py-0.5">
-                    {t.name} ({t.count})
+          {error && !loading && (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-yellow-500/60" />
+              {error}
+            </div>
+          )}
+
+          {stats && !loading && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                {statCards(stats).map((card, i) => {
+                  const Icon = card.icon;
+                  return (
+                    <div
+                      key={i}
+                      className="rounded-lg border border-border/40 bg-background/60 p-3 flex items-start gap-2"
+                    >
+                      <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${card.color}`} />
+                      <div className="min-w-0">
+                        <div className="text-lg font-bold leading-tight">{card.value}</div>
+                        <div className="text-[11px] text-muted-foreground leading-tight">{card.label}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-muted-foreground">Top sujets :</span>
+                  {stats.top_topics.length > 0 ? stats.top_topics.map((t, i) => (
+                    <Badge key={i} variant="secondary" className="text-[10px] px-2 py-0.5">
+                      {t.name} ({t.count})
+                    </Badge>
+                  )) : (
+                    <span className="text-xs text-muted-foreground/60">Aucun sujet détecté</span>
+                  )}
+                </div>
+                {stats.seo_alerts > 0 && (
+                  <Badge variant="destructive" className="text-xs">
+                    {stats.seo_alerts} alertes SEO
                   </Badge>
-                )) : (
-                  <span className="text-xs text-muted-foreground/60">Aucun sujet détecté</span>
                 )}
               </div>
-              {stats.seo_alerts > 0 && (
-                <Badge variant="destructive" className="text-xs">
-                  {stats.seo_alerts} alertes SEO
-                </Badge>
-              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {!loading && !error && !stats && sites.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            Ajoutez un site tracké pour voir les statistiques éditoriales.
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          {!loading && !error && !stats && sites.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              Ajoutez un site tracké pour voir les statistiques éditoriales.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* CMS Connection Dialog */}
+      <CmsConnectionDialog open={cmsDialogOpen} onOpenChange={setCmsDialogOpen} />
+    </div>
   );
 }
