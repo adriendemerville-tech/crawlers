@@ -273,7 +273,7 @@ export function MarinaDashboard() {
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('marina', {
-        body: { url: newUrl.trim() },
+        body: { url: newUrl.trim(), lang: 'fr' },
       });
       if (error) throw error;
       if (data?.job_id) {
