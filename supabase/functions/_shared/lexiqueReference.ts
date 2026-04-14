@@ -84,4 +84,5 @@ Quand l'utilisateur mentionne un terme technique, utilise ces définitions. Tu p
 - **Pro Agency+** : Abonnement premium étendu 79€/mois (2 collabs, limites étendues).
 - **Keyword Universe** : Table centralisée (SSOT) de tous les mots-clés et opportunités SEO/GEO avec score d'opportunité pondéré.
 - **TIM** : Tracked Intelligence Memory — mémoire contextuelle persistante par site.
+- **Crawl Depth** : Profondeur de crawl — nombre minimum de clics depuis la page d'accueil pour atteindre une page. Une profondeur > 3 nuit au référencement car Google explore moins les pages profondes.
 `;
