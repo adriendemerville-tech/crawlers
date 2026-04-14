@@ -2065,11 +2065,19 @@ Termina con un resumen ejecutivo y próximos pasos.`,
                     setAutoPicking(false);
                     cancelPicking();
                   }
+                  e.target.style.height = 'auto';
+                  e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
                 }}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                 placeholder={t.placeholder}
                 rows={1}
-                className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] focus-visible:ring-[#fbbf24]/30 rounded-xl"
+                className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] max-h-[10rem] overflow-y-auto focus-visible:ring-[#fbbf24]/30 rounded-xl"
+                ref={(el) => {
+                  if (el) {
+                    el.style.height = 'auto';
+                    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+                  }
+                }}
               />
               <ChatMicButton
                 onTranscript={(text) => {
