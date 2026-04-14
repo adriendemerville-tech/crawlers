@@ -108,7 +108,7 @@ export async function scanCmsContent(
       });
       if (resp.ok) {
         const data = await resp.json();
-        const posts: any[] = Array.isArray(data) ? data : (data?.posts || data?.data || []);
+        const posts: any[] = Array.isArray(data) ? data : (data?.data?.posts || data?.data?.data?.posts || data?.posts || data?.data || []);
         for (const post of posts) {
           const item: CmsContentItem = {
             title: post.title || '',
@@ -130,7 +130,7 @@ export async function scanCmsContent(
         });
         if (pagesResp.ok) {
           const pagesData = await pagesResp.json();
-          const pages: any[] = Array.isArray(pagesData) ? pagesData : (pagesData?.pages || pagesData?.data || []);
+          const pages: any[] = Array.isArray(pagesData) ? pagesData : (pagesData?.data?.pages || pagesData?.data?.data?.pages || pagesData?.pages || pagesData?.data || []);
           for (const page of pages) {
             inventory.items.push({
               title: page.title || '',

@@ -93,6 +93,7 @@ Deno.serve(handleRequest(async (req) => {
     pages.push({ loc: `${SITE_URL}/marina`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/sea-seo-bridge`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/a-propos`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/contact`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/audit-semantique`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/google-business`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/api-integrations`, lastmod: today });

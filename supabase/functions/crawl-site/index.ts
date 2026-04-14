@@ -6,6 +6,7 @@ import { checkFairUse } from '../_shared/fairUse.ts';
 import { logSilentError, fireAndLog } from '../_shared/silentErrorLogger.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent } from '../_shared/cmsContentScanner.ts';
+import { isIktrackerDomain, getIktrackerApiKey, IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
@@ -253,9 +254,12 @@ Deno.serve(handleRequest(async (req) => {
       console.warn(`[${logId}] Map complement failed (non-blocking):`, e);
     }
 
-    // CMS content discovery
+    // CMS content discovery (tracked site match OR known domain fallback)
     try {
       const domainBase = domain.replace(/^www\./, '');
+      const existingSet = new Set(urls.map(u => u.replace(/\/$/, '').toLowerCase()));
+      let cmsAdded = 0;
+
       const { data: trackedSite } = await supabase
         .from('tracked_sites')
         .select('id')
@@ -266,24 +270,73 @@ Deno.serve(handleRequest(async (req) => {
 
       if (trackedSite) {
         const cmsInventory = await scanCmsContent(trackedSite.id, userId);
-        if (cmsInventory.items.length > 0) {
-          const existingSet = new Set(urls.map(u => u.replace(/\/$/, '').toLowerCase()));
-          let cmsAdded = 0;
-          for (const item of cmsInventory.items) {
-            if (!item.url) continue;
-            const normalizedCmsUrl = item.url.replace(/\/$/, '').toLowerCase();
-            if (!existingSet.has(normalizedCmsUrl)) {
-              urls.push(item.url);
-              existingSet.add(normalizedCmsUrl);
-              cmsAdded++;
-            }
+        for (const item of cmsInventory.items) {
+          if (!item.url) continue;
+          const normalizedCmsUrl = item.url.replace(/\/$/, '').toLowerCase();
+          if (!existingSet.has(normalizedCmsUrl)) {
+            urls.push(item.url);
+            existingSet.add(normalizedCmsUrl);
+            cmsAdded++;
           }
-          if (cmsAdded > 0) {
-            console.log(`[${logId}] ✅ CMS discovery added ${cmsAdded} URLs from ${cmsInventory.scanned_platforms.join(', ')} (total: ${urls.length})`);
-          }
+        }
+        if (cmsAdded > 0) {
+          console.log(`[${logId}] ✅ CMS discovery added ${cmsAdded} URLs from ${cmsInventory.scanned_platforms.join(', ')} (total: ${urls.length})`);
         }
         if (cmsInventory.errors.length > 0) {
           console.warn(`[${logId}] CMS scan warnings:`, cmsInventory.errors);
+        }
+      }
+
+      // Fallback: for known domains (iktracker), directly query API even without tracked_site
+      if (isIktrackerDomain(domainBase) && cmsAdded === 0) {
+        const iktApiKey = getIktrackerApiKey();
+        if (iktApiKey) {
+          console.log(`[${logId}] IKtracker fallback: querying blog API directly`);
+          try {
+            const postsResp = await fetch(`${IKTRACKER_BASE_URL}/posts?all=true&limit=200`, {
+              headers: { 'x-api-key': iktApiKey },
+              signal: AbortSignal.timeout(15000),
+            });
+            if (postsResp.ok) {
+              const postsData = await postsResp.json();
+              const posts: any[] = Array.isArray(postsData) ? postsData : (postsData?.data?.posts || postsData?.data?.data?.posts || postsData?.posts || []);
+              for (const post of posts) {
+                if (!post.slug) continue;
+                const postUrl = `https://iktracker.fr/blog/${post.slug}`;
+                const norm = postUrl.toLowerCase();
+                if (!existingSet.has(norm)) {
+                  urls.push(postUrl);
+                  existingSet.add(norm);
+                  cmsAdded++;
+                }
+              }
+              // Also add author pages
+              const authors = new Set(posts.map((p: any) => p.author_slug).filter(Boolean));
+              for (const authorSlug of authors) {
+                const authorUrl = `https://iktracker.fr/blog/auteur/${authorSlug}`;
+                const norm = authorUrl.toLowerCase();
+                if (!existingSet.has(norm)) {
+                  urls.push(authorUrl);
+                  existingSet.add(norm);
+                  cmsAdded++;
+                }
+              }
+              console.log(`[${logId}] ✅ IKtracker fallback added ${cmsAdded} blog URLs (total: ${urls.length})`);
+            }
+          } catch (e) {
+            console.warn(`[${logId}] IKtracker fallback failed:`, e);
+          }
+
+          // Add known static routes not in sitemap
+          const iktStaticRoutes = ['/marina', '/offline'];
+          for (const route of iktStaticRoutes) {
+            const routeUrl = `https://iktracker.fr${route}`;
+            const norm = routeUrl.toLowerCase();
+            if (!existingSet.has(norm)) {
+              urls.push(routeUrl);
+              existingSet.add(norm);
+            }
+          }
         }
       }
     } catch (e) {
