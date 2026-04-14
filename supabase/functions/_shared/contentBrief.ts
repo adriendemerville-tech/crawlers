@@ -156,6 +156,7 @@ export function buildDiversityPromptBlock(
   distribution: ArticleDistribution,
   ringInfo: { ring: SemanticRing; reason: string },
   parentPages: string[],
+  existingDraftTitles: string[] = [],
 ): string {
   const ringConfig = SEMANTIC_RINGS[ringInfo.ring];
   const lines: string[] = [];
@@ -163,9 +164,21 @@ export function buildDiversityPromptBlock(
   lines.push(`═══ DIVERSITÉ ÉDITORIALE & EXPANSION SÉMANTIQUE ═══`);
   lines.push('');
   
+  // ── EXISTING DRAFTS WARNING (anti-redundancy) ──
+  if (existingDraftTitles.length > 0) {
+    lines.push(`── ⛔ BROUILLONS EXISTANTS (${existingDraftTitles.length}) — NE PAS RECRÉER ──`);
+    lines.push(`Les articles suivants existent DÉJÀ en brouillon. NE CRÉE PAS d'article sur le même sujet :`);
+    for (const title of existingDraftTitles.slice(0, 20)) {
+      lines.push(`  ❌ "${title}"`);
+    }
+    lines.push(`→ Choisis un SUJET DIFFÉRENT de tous les brouillons ci-dessus.`);
+    lines.push(`→ Si le workbench demande un sujet déjà couvert, préfère "update-post" sur le brouillon existant.`);
+    lines.push('');
+  }
+
   // Article type distribution
   lines.push(`── TYPES D'ARTICLES (QUOTAS OBLIGATOIRES) ──`);
-  lines.push(`Distribution actuelle (${distribution.total} articles existants):`);
+  lines.push(`Distribution actuelle (${distribution.total} articles existants, publiés + brouillons):`);
   for (const [type, quota] of Object.entries(ARTICLE_TYPE_QUOTAS)) {
     const pct = distribution.percentages[type as ArticleType] || 0;
     const status = pct > quota.maxPct ? '⛔ SURREPRÉSENTÉ' : pct === 0 ? '🟢 À CRÉER' : '✅';
@@ -210,6 +223,7 @@ export function buildDiversityPromptBlock(
   lines.push(`3. Contenir au moins 1 lien vers une page mère du ring inférieur`);
   lines.push(`4. Inclure "article_type" et "semantic_ring" dans les tags de l'article`);
   lines.push(`5. Utiliser un ANGLE DIFFÉRENT des derniers articles publiés`);
+  lines.push(`6. Couvrir un SUJET DISTINCT de tous les brouillons et articles existants`);
   lines.push('');
   lines.push(`═══ FIN DIVERSITÉ ═══`);
   

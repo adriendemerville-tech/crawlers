@@ -980,11 +980,12 @@ RÈGLES:
 
     // ── ARTICLE TYPE DIVERSITY & SEMANTIC RING ──
     let diversityBlock = '';
+    let existingDraftTitles: string[] = [];
     try {
-      // Query existing articles via CMS scanner or direct DB
+      // Query ALL existing articles (published + drafts) via CMS scanner or direct DB
       const { data: existingPosts } = await supabase
         .from('iktracker_content_cache')
-        .select('title, category, tags')
+        .select('title, category, tags, status')
         .eq('tracked_site_id', context.tracked_site_id)
         .eq('content_type', 'post');
       
@@ -992,13 +993,43 @@ RÈGLES:
       let allArticles = (existingPosts || []).map((p: any) => ({
         title: p.title, category: p.category, tags: p.tags,
       }));
+
+      // Collect draft titles for injection into prompt (anti-redundancy)
+      existingDraftTitles = (existingPosts || [])
+        .filter((p: any) => p.status === 'draft')
+        .map((p: any) => p.title)
+        .filter(Boolean);
+
       if (context.domain === 'crawlers.fr') {
         const { data: blogPosts } = await supabase
           .from('blog_articles')
-          .select('title, slug')
+          .select('title, slug, status')
           .in('status', ['published', 'draft']);
         if (blogPosts) {
           allArticles = [...allArticles, ...blogPosts.map((b: any) => ({ title: b.title, category: '', tags: [] }))];
+          existingDraftTitles.push(...blogPosts.filter((b: any) => b.status === 'draft').map((b: any) => b.title));
+        }
+      }
+
+      // Also fetch drafts from IKtracker API if CMS cache is empty/stale
+      if (allArticles.length === 0 && context.cms_api_key) {
+        try {
+          const iktRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/iktracker-actions`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: 'list-posts', limit: 300, all: true }),
+          });
+          if (iktRes.ok) {
+            const iktData = await iktRes.json();
+            const posts = Array.isArray(iktData?.data?.posts) ? iktData.data.posts : Array.isArray(iktData?.data) ? iktData.data : [];
+            allArticles = posts.map((p: any) => ({ title: p.title, category: p.category || '', tags: p.tags || [] }));
+            existingDraftTitles.push(...posts.filter((p: any) => p.status === 'draft').map((p: any) => p.title).filter(Boolean));
+          }
+        } catch (e) {
+          console.warn('[Parménion] IKtracker API fallback for drafts failed:', e);
         }
       }
 
@@ -1035,8 +1066,8 @@ RÈGLES:
         }
       }
       
-      diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages);
-      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}]`);
+      diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages, existingDraftTitles);
+      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}], drafts=${existingDraftTitles.length}`);
     } catch (e) {
       console.warn('[Parménion] Diversity computation failed:', e);
     }
