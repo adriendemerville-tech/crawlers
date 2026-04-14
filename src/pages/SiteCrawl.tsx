@@ -316,12 +316,12 @@ export default function SiteCrawl() {
                       value={url}
                       onChange={e => setUrl(e.target.value)}
                       placeholder={t.placeholder}
-                      className="pl-10"
+                      className="pl-10 caret-primary"
                       disabled={isLoading}
                     />
                   </div>
                   {!detectionDone ? (
-                    <Button type="submit" disabled={isLoading || !url || isDetectingPages} className="gap-2">
+                    <Button type="submit" disabled={isLoading || !url || isDetectingPages} className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold px-6 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 hover:-translate-y-0.5">
                       {isDetectingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                       {isDetectingPages ? t.detecting : t.detectBtn}
                     </Button>
@@ -1190,16 +1190,14 @@ export default function SiteCrawl() {
                             <ArrowRight className="w-4 h-4 text-muted-foreground" />
                           </div>
                         </button>
-                        {!isLatestForDomain && (
-                          <button
-                            type="button"
-                            onClick={async (e) => { e.stopPropagation(); handleDeleteCrawl(c.id); }}
-                            className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive"
-                            title={language === 'fr' ? 'Supprimer ce crawl' : 'Delete this crawl'}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={async (e) => { e.stopPropagation(); handleDeleteCrawl(c.id); }}
+                          className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive"
+                          title={language === 'fr' ? 'Supprimer ce crawl' : 'Delete this crawl'}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     );
                   })}
