@@ -7,9 +7,45 @@ import { Header } from '@/components/Header';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
+// Hero image imports
+import heroArtisan from '@/assets/guides/guide-artisan-seo.jpg';
+import heroBtp from '@/assets/guides/guide-btp-seo.jpg';
+import heroRestaurant from '@/assets/guides/guide-restaurant-seo.jpg';
+import heroAvocat from '@/assets/guides/guide-avocat-seo.jpg';
+import heroMedecin from '@/assets/guides/guide-medecin-seo.jpg';
+import heroImmobilier from '@/assets/guides/guide-immobilier-seo.jpg';
+import heroEcommerce from '@/assets/guides/guide-ecommerce-seo.jpg';
+import heroCoach from '@/assets/guides/guide-coach-seo.jpg';
+import heroPhotographe from '@/assets/guides/guide-photographe-seo.jpg';
+import heroPme from '@/assets/guides/guide-pme-seo.jpg';
+import heroAgence from '@/assets/guides/guide-agence-seo.jpg';
+import heroConsultant from '@/assets/guides/guide-consultant-seo.jpg';
+import heroSaas from '@/assets/guides/guide-saas-seo.jpg';
+import heroStartup from '@/assets/guides/guide-startup-seo.jpg';
+import heroFreelance from '@/assets/guides/guide-freelance-seo.jpg';
+import heroMarketplace from '@/assets/guides/guide-marketplace-seo.jpg';
+
+const HERO_IMAGES: Record<string, string> = {
+  'artisan-seo': heroArtisan,
+  'btp-seo': heroBtp,
+  'restaurant-seo': heroRestaurant,
+  'avocat-seo': heroAvocat,
+  'medecin-seo': heroMedecin,
+  'immobilier-seo': heroImmobilier,
+  'ecommerce-seo': heroEcommerce,
+  'coach-seo': heroCoach,
+  'photographe-seo': heroPhotographe,
+  'pme-seo': heroPme,
+  'agence-seo': heroAgence,
+  'consultant-seo': heroConsultant,
+  'saas-seo': heroSaas,
+  'startup-seo': heroStartup,
+  'freelance-seo': heroFreelance,
+  'marketplace-seo': heroMarketplace,
+};
+
 /**
  * Parses the guide content stored in seo_page_drafts into GuideData structure.
- * Content format in DB uses markdown with YAML-like frontmatter in generation_context.
  */
 function parseGuideFromDb(row: any): GuideData {
   const ctx = row.generation_context || {};
@@ -22,15 +58,11 @@ function parseGuideFromDb(row: any): GuideData {
   for (const part of h2Parts) {
     const lines = part.trim().split('\n');
     const h2Match = lines[0]?.match(/^## (.+)/);
-    if (!h2Match) {
-      // Intro text before first H2 — skip or handle
-      continue;
-    }
+    if (!h2Match) continue;
 
     const h2 = h2Match[1];
     const bodyLines = lines.slice(1);
     
-    // Extract H3 subsections
     const h3s: { title: string; content: string }[] = [];
     let currentContent = '';
     let citablePassage: string | undefined;
@@ -38,14 +70,11 @@ function parseGuideFromDb(row: any): GuideData {
     for (const line of bodyLines) {
       const h3Match = line.match(/^### (.+)/);
       if (h3Match) {
-        if (currentContent.trim()) {
-          // Save accumulated content
-        }
         h3s.push({ title: h3Match[1], content: '' });
         continue;
       }
       
-      // Detect citable passage (blockquote in markdown)
+      // Detect citable passage (blockquote in markdown) — only first one
       const quoteMatch = line.match(/^> (.+)/);
       if (quoteMatch && !citablePassage) {
         citablePassage = quoteMatch[1];
@@ -69,7 +98,6 @@ function parseGuideFromDb(row: any): GuideData {
     });
   }
 
-  // Parse FAQs from context or from a FAQ section in content
   const faqs: GuideFaq[] = ctx.faqs || [];
 
   return {
@@ -81,6 +109,7 @@ function parseGuideFromDb(row: any): GuideData {
     targetKeyword: row.target_keyword || '',
     heroCtaLabel: ctx.hero_cta_label || 'Lancer mon audit gratuit',
     heroCtaHref: ctx.hero_cta_href || '/audit-expert',
+    heroImage: HERO_IMAGES[row.slug] || undefined,
     publishedAt: row.published_at || row.created_at,
     updatedAt: row.updated_at,
     sections,
@@ -101,7 +130,7 @@ function GuideLandingPageComponent() {
   useEffect(() => {
     if (!slug) return;
 
-    const fetch = async () => {
+    const fetchGuide = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('seo_page_drafts' as any)
@@ -119,7 +148,7 @@ function GuideLandingPageComponent() {
       setLoading(false);
     };
 
-    fetch();
+    fetchGuide();
   }, [slug]);
 
   if (loading) {
