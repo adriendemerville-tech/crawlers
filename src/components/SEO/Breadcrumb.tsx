@@ -103,10 +103,8 @@ export function Breadcrumb({ customItems, currentLabel, visuallyHidden = false }
   const location = useLocation();
   const pathname = location.pathname;
 
-  // Don't render on home page
-  if (pathname === '/' || pathname === '') return null;
-
   const items = useMemo(() => {
+    if (pathname === '/' || pathname === '') return null;
     if (customItems) return customItems;
 
     const segments = pathname.split('/').filter(Boolean);
@@ -126,17 +124,21 @@ export function Breadcrumb({ customItems, currentLabel, visuallyHidden = false }
     return trail;
   }, [pathname, customItems, currentLabel]);
 
-  // JSON-LD structured data
-  const jsonLd = useMemo(() => ({
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": items.map((item, index) => ({
-      "@type": "ListItem",
-      "position": index + 1,
-      "name": item.name,
-      "item": item.url,
-    })),
-  }), [items]);
+  const jsonLd = useMemo(() => {
+    if (!items) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": items.map((item, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "name": item.name,
+        "item": item.url,
+      })),
+    };
+  }, [items]);
+
+  if (!items) return null;
 
   return (
     <>
