@@ -947,6 +947,7 @@ function CocoonContent() {
               </div>
             ) : viewMode === '3d' ? (
               <CocoonForceGraph3D
+                key={`3d-${selectedSiteId}`}
                 nodes={filteredNodes}
                 selectedNodeId={selectedNode?.id || null}
                 onNodeSelect={(node) => {
@@ -974,6 +975,7 @@ function CocoonContent() {
               />
             ) : viewMode === 'radial' ? (
               <CocoonRadialGraph
+                key={`radial-${selectedSiteId}`}
                 nodes={filteredNodes}
                 selectedNodeId={selectedNode?.id || null}
                 onNodeSelect={(node) => {
@@ -996,6 +998,7 @@ function CocoonContent() {
               />
             ) : (
               <CocoonForceGraph
+                key={`force-${selectedSiteId}`}
                 nodes={filteredNodes}
                 selectedNodeId={selectedNode?.id || null}
                 onNodeSelect={(node) => {
