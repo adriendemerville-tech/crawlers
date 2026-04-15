@@ -6,6 +6,7 @@ import { stealthFetch } from '../_shared/stealthFetch.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { computeSeoScoreV2, extractTextContent, TOXIC_ANCHORS, type SeoScoreV2, type HeadingHierarchy, type ContentDensity, type LinkProfile, type JsonLdAnalysis, type EEATSignals } from '../_shared/seoScoringV2.ts';
 
 /**
  * Agent SEO Autonome v2
