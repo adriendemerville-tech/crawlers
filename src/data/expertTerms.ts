@@ -2744,6 +2744,308 @@ document.head.appendChild(script);`,
       relatedTerms: ['ethical-scraping', 'data-enrichment'],
       updatedAt: '2026-03-10'
     },
+    // === GEO METRICS ===
+    {
+      slug: 'quotability-index',
+      term: 'Quotability Index',
+      category: 'data-ai',
+      microDefinition: 'Score mesurant la probabilité qu\'un contenu soit cité par une IA.',
+      fullDefinition: 'Le Quotability Index (indice de citabilité) est un score de 0 à 100 évaluant la capacité d\'un contenu web à être repris verbatim par les moteurs de recherche IA (ChatGPT, Perplexity, Gemini). Il analyse la présence de phrases concises, factuelles et auto-suffisantes — des "snippets naturels" que les LLM privilégient comme sources de citations directes dans leurs réponses.',
+      deepDive: `## Quotability Index : la métrique clé du GEO en 2026
+
+### Pourquoi les IA citent certains contenus et pas d'autres
+
+Les modèles de langage (LLM) sélectionnent les passages à citer selon trois critères principaux :
+1. **Auto-suffisance** : la phrase est compréhensible hors contexte
+2. **Factualité** : elle contient une donnée vérifiable (chiffre, date, définition)
+3. **Concision** : elle tient en 1-2 phrases maximum
+
+### Comment le score est calculé
+
+Le Quotability Index est évalué par un LLM qui analyse le contenu de la page et identifie jusqu'à 3 phrases "quotables". Le score reflète :
+- La densité de phrases citables dans le contenu
+- La qualité factuelle de ces phrases
+- Leur positionnement dans la structure (titres, introductions, listes)
+
+### Impact sur la visibilité GEO
+
+Un score élevé (>70) corrèle fortement avec un taux de citation plus élevé dans les réponses des IA. Les pages avec un Quotability Index faible (<30) sont rarement citées, même si elles apparaissent dans les résultats de recherche traditionnels.
+
+### Optimisation
+
+- Placer des définitions claires en début de paragraphe
+- Inclure des statistiques sourcées et datées
+- Utiliser la structure "pyramide inversée" (conclusion d'abord)
+- Rédiger des phrases de 15-25 mots maximum pour les passages clés`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Exemple de structure quotable optimisée
+const quotableContent = {
+  // ✅ Bon : phrase auto-suffisante, factuelle, concise
+  good: "Le TLS Fingerprinting détecte 70% des bots en analysant le handshake SSL.",
+  
+  // ❌ Mauvais : dépend du contexte, vague
+  bad: "Cette technique est très efficace pour détecter les bots.",
+  
+  // ✅ Bon : définition claire en ouverture
+  definition: "Le GEO (Generative Engine Optimization) optimise le contenu " +
+    "pour les moteurs de recherche IA comme ChatGPT et Perplexity."
+};
+
+// Structure HTML optimisée pour la citabilité
+const optimizedHTML = \`
+<p><strong>Le Quotability Index</strong> mesure la probabilité 
+qu'un contenu soit cité par une IA générative, sur une échelle de 0 à 100.</p>
+\`;`,
+        description: 'Exemples de contenu optimisé pour maximiser la citabilité par les IA'
+      },
+      expertOpinion: 'En 2026, le Quotability Index devient un KPI incontournable du GEO. Les marques qui structurent leurs contenus avec des "citation-ready snippets" captent jusqu\'à 3x plus de mentions dans les réponses IA. C\'est le nouveau "featured snippet" de l\'ère générative.',
+      relatedTerms: ['aeo-answer-engine-optimization', 'rag', 'llm-based-parsing'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'position-zero',
+      term: 'Position Zéro',
+      category: 'data-ai',
+      microDefinition: 'Résultat affiché au-dessus du premier lien organique dans Google.',
+      fullDefinition: 'La Position Zéro (Featured Snippet) désigne le bloc de réponse directe que Google affiche au-dessus des résultats organiques traditionnels. En 2026, ce concept s\'étend aux réponses générées par les AI Overviews de Google et aux citations des moteurs génératifs (Perplexity, ChatGPT Search). Obtenir la position zéro signifie que votre contenu est sélectionné comme LA réponse de référence.',
+      deepDive: `## Position Zéro : du Featured Snippet aux AI Overviews
+
+### Évolution du concept
+
+La Position Zéro a connu trois ères :
+1. **2014-2020** : Featured Snippets classiques (paragraphe, liste, tableau)
+2. **2021-2024** : People Also Ask + Featured Snippets enrichis
+3. **2025-2026** : AI Overviews (SGE) + citations dans les moteurs génératifs
+
+### Types de Position Zéro en 2026
+
+| Type | Source | Format |
+|------|--------|--------|
+| Featured Snippet | Google Search | Paragraphe, liste, tableau |
+| AI Overview | Google SGE | Synthèse multi-sources |
+| Citation directe | Perplexity, ChatGPT | Lien + extrait |
+| Knowledge Panel | Google KG | Fiche structurée |
+
+### Comment l'obtenir
+
+1. **Répondre directement** à une question dans les 40-60 premiers mots
+2. **Structurer en pyramide inversée** : réponse → détails → contexte
+3. **Baliser avec Schema.org** : FAQPage, HowTo, Article
+4. **Viser les requêtes informationnelles** avec un volume de recherche >500/mois
+
+### Lien avec le GEO
+
+En GEO, la "position zéro" n'est plus seulement Google : c'est être la source citée en premier par n'importe quel moteur IA. Le score AEO (Answer Engine Optimization) mesure directement cette capacité.`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Balisage Schema.org optimisé pour la Position Zéro
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Qu'est-ce que la Position Zéro ?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "La Position Zéro est le résultat affiché au-dessus " +
+        "du premier lien organique dans Google, sous forme de " +
+        "Featured Snippet ou d'AI Overview."
+    }
+  }]
+};
+
+// Vérification de l'éligibilité Position Zéro
+function checkP0Eligibility(content: string): boolean {
+  const hasDirectAnswer = /^[A-Z].{20,80}\\.$/.test(content.split('\\n')[0]);
+  const hasStructuredData = content.includes('schema.org');
+  const wordCount = content.split(' ').length;
+  return hasDirectAnswer && wordCount > 300 && wordCount < 2000;
+}`,
+        description: 'Balisage et vérification d\'éligibilité pour la Position Zéro'
+      },
+      expertOpinion: 'La Position Zéro évolue : en 2026, il ne s\'agit plus seulement d\'apparaître en haut de Google, mais d\'être LA source que tous les moteurs IA choisissent de citer. L\'optimisation croisée SEO + GEO (balisage Schema.org + contenu quotable + E-E-A-T) est la stratégie gagnante.',
+      relatedTerms: ['aeo-answer-engine-optimization', 'quotability-index', 'schema-org-extraction'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'query-fan-out',
+      term: 'Query Fan-Out',
+      category: 'data-ai',
+      microDefinition: 'Décomposition d\'une requête complexe en sous-requêtes par les moteurs RAG.',
+      fullDefinition: 'Le Query Fan-Out est le mécanisme par lequel un moteur de recherche IA (Perplexity, ChatGPT, Google SGE) décompose une requête utilisateur complexe en plusieurs sous-requêtes thématiques avant de synthétiser une réponse. Comprendre ce phénomène permet d\'optimiser son contenu pour couvrir tous les axes sémantiques que l\'IA va explorer, maximisant ainsi les chances d\'être cité dans la réponse finale.',
+      deepDive: `## Query Fan-Out : comment les IA décomposent vos requêtes
+
+### Le mécanisme RAG en détail
+
+Quand un utilisateur pose une question complexe à Perplexity ou ChatGPT Search, le moteur ne cherche pas une seule page. Il :
+1. **Décompose** la requête en 3-8 sous-requêtes thématiques
+2. **Recherche** des sources pour chaque sous-requête
+3. **Synthétise** une réponse en citant les meilleures sources par axe
+
+### Exemple concret
+
+Requête : "Comment optimiser mon site e-commerce pour le SEO en 2026 ?"
+
+Fan-out probable :
+- "optimisation technique SEO e-commerce" (architecture, Core Web Vitals)
+- "stratégie de contenu SEO e-commerce" (fiches produits, blog)
+- "maillage interne e-commerce" (catégories, liens contextuels)
+- "SEO local e-commerce" (Google Business, avis)
+- "tendances SEO 2026" (IA, GEO, AEO)
+
+### Mesure du Fan-Out Score
+
+Crawlers.fr calcule un **Fan-Out Score** (0-100) en croisant :
+- Les mots-clés à fort volume (DataForSEO) liés au domaine
+- La couverture effective de ces mots-clés dans le contenu de la page
+- Les requêtes manquantes qui représentent des opportunités de contenu
+
+### Impact sur la stratégie de contenu
+
+Un Fan-Out Score faible signifie que votre page ne couvre qu'une fraction des axes que l'IA va explorer. Les recommandations incluent :
+- Ajouter des sections H2 dédiées aux requêtes manquantes
+- Créer des pages satellites pour les axes non couverts
+- Renforcer le maillage interne entre les axes thématiques`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Calcul du Fan-Out Score sans appel LLM
+// Utilise les keywords DataForSEO existants
+
+interface FanOutResult {
+  score: number;        // 0-100
+  coveredAxes: number;
+  totalAxes: number;
+  missingKeywords: { keyword: string; volume: number }[];
+}
+
+function computeFanOutScore(
+  pageContent: string,
+  marketKeywords: { keyword: string; volume: number }[]
+): FanOutResult {
+  const contentLower = pageContent.toLowerCase();
+  const axes = marketKeywords
+    .sort((a, b) => b.volume - a.volume)
+    .slice(0, 15);
+
+  let covered = 0;
+  const missing: { keyword: string; volume: number }[] = [];
+
+  for (const kw of axes) {
+    const terms = kw.keyword.toLowerCase()
+      .split(/\\s+/).filter(w => w.length > 2);
+    const matchRatio = terms.filter(t => contentLower.includes(t)).length / terms.length;
+    
+    if (matchRatio >= 0.6) {
+      covered++;
+    } else {
+      missing.push(kw);
+    }
+  }
+
+  return {
+    score: Math.round((covered / axes.length) * 100),
+    coveredAxes: covered,
+    totalAxes: axes.length,
+    missingKeywords: missing.slice(0, 5)
+  };
+}`,
+        description: 'Calcul déterministe du Fan-Out Score basé sur les données DataForSEO'
+      },
+      expertOpinion: 'Le Query Fan-Out est le concept le plus sous-estimé du GEO en 2026. Les pages qui couvrent 80%+ des axes de fan-out d\'une requête cible ont 4x plus de chances d\'être citées. C\'est la différence entre être une source parmi d\'autres et devenir LA référence que l\'IA synthétise.',
+      relatedTerms: ['rag', 'aeo-answer-engine-optimization', 'quotability-index'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'chunkability-score',
+      term: 'Chunkability Score',
+      category: 'data-ai',
+      microDefinition: 'Score évaluant la capacité d\'une page à être découpée par un moteur RAG.',
+      fullDefinition: 'Le Chunkability Score (score de découpabilité) mesure de 0 à 100 la facilité avec laquelle un contenu web peut être segmenté en "chunks" (fragments) exploitables par les moteurs RAG (Retrieval-Augmented Generation). Un score élevé indique une structure claire avec des titres hiérarchiques, des paragraphes distincts et une table des matières — des signaux qui permettent aux IA de découper, indexer et restituer le contenu avec précision.',
+      deepDive: `## Chunkability Score : structurer pour les IA
+
+### Pourquoi la "découpabilité" compte
+
+Les moteurs RAG (Perplexity, Bing Chat, Google SGE) ne lisent pas une page entière. Ils :
+1. **Découpent** le contenu en fragments de 200-500 tokens
+2. **Indexent** chaque chunk avec un embedding vectoriel
+3. **Récupèrent** les chunks les plus pertinents pour une requête donnée
+4. **Synthétisent** une réponse à partir des chunks sélectionnés
+
+### Comment le score est calculé
+
+Le Chunkability Score analyse 4 signaux structurels (sans appel LLM) :
+
+| Signal | Poids | Mesure |
+|--------|-------|--------|
+| Titres H2/H3 | 30% | Nombre et hiérarchie des sous-titres |
+| Paragraphes distincts | 25% | Ratio paragraphes / longueur totale |
+| Table des matières | 25% | Présence d'un sommaire ou TOC |
+| Longueur moyenne | 20% | Paragraphes de 100-300 mots (optimal) |
+
+### Score et interprétation
+
+- **80-100** : Excellent — contenu parfaitement structuré pour le RAG
+- **50-79** : Correct — quelques améliorations structurelles possibles
+- **0-49** : Faible — contenu monolithique, difficile à exploiter par les IA
+
+### Optimisation
+
+- Ajouter des H2 tous les 200-400 mots
+- Inclure une table des matières (TOC) en début de page
+- Découper les longs paragraphes (>150 mots) en sections distinctes
+- Utiliser des listes à puces pour les énumérations
+- Placer un résumé (TL;DR) en introduction`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Calcul déterministe du Chunkability Score
+interface ChunkabilityResult {
+  score: number;
+  paragraphCount: number;
+  headingCount: number;
+  hasToc: boolean;
+  avgParagraphLength: number;
+}
+
+function computeChunkabilityScore(html: string): ChunkabilityResult {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  
+  // Compter les titres H2/H3
+  const headings = doc.querySelectorAll('h2, h3');
+  const headingCount = headings.length;
+  
+  // Compter les paragraphes
+  const paragraphs = doc.querySelectorAll('p');
+  const paraTexts = Array.from(paragraphs).map(p => p.textContent || '');
+  const paragraphCount = paraTexts.filter(t => t.length > 50).length;
+  
+  // Longueur moyenne des paragraphes
+  const avgLen = paraTexts.reduce((s, t) => s + t.split(' ').length, 0) 
+    / Math.max(paragraphCount, 1);
+  
+  // Détection TOC
+  const hasToc = !!doc.querySelector('nav, [class*="toc"], [id*="toc"]')
+    || doc.querySelectorAll('a[href^="#"]').length >= 3;
+  
+  // Scoring
+  let score = 0;
+  score += Math.min(30, headingCount * 5);           // max 30
+  score += Math.min(25, paragraphCount * 2.5);        // max 25
+  score += hasToc ? 25 : 0;                           // max 25
+  score += avgLen >= 30 && avgLen <= 100 ? 20 : 10;   // max 20
+  
+  return {
+    score: Math.min(100, Math.round(score)),
+    paragraphCount, headingCount, hasToc,
+    avgParagraphLength: Math.round(avgLen)
+  };
+}`,
+        description: 'Calcul du Chunkability Score basé sur l\'analyse DOM de la page'
+      },
+      expertOpinion: 'Le Chunkability Score est le pont entre le SEO technique et le GEO. En 2026, une page parfaitement optimisée pour Google mais monolithique (un seul bloc de texte) sera invisible pour les moteurs RAG. La structuration du contenu en chunks est devenue aussi importante que les balises title et meta description.',
+      relatedTerms: ['rag', 'query-fan-out', 'dom-parsing'],
+      updatedAt: '2026-04-15'
+    },
   ],
   en: [], // English translations would go here
   es: [], // Spanish translations would go here
