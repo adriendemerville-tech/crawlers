@@ -78,28 +78,65 @@ export interface SeoScoreV2 {
   opportunities: string[];
 }
 
+/** Business profile — adjusts scoring thresholds per business type */
+export type BusinessProfile = 'saas' | 'ecommerce' | 'local_business' | 'media' | 'agency' | 'generic';
+
 export interface SeoScoringOptions {
   pageType: 'blog' | 'landing';
+  /** Business profile — adjusts ideal word count, weights, and E-E-A-T expectations */
+  businessProfile?: BusinessProfile;
   /** Optional custom keyword list to replace default SEO terms */
   customKeywords?: string[];
   /** Optional key paths for internal link scoring (defaults to crawlers.fr paths) */
   keyPaths?: string[];
 }
 
-// ─── Default keyword list ───────────────────────────────────────────
-const DEFAULT_SEO_TERMS = [
-  'seo', 'geo', 'audit', 'crawler', 'llm', 'ia', 'intelligence artificielle',
-  'google', 'optimisation', 'référencement', 'visibilité', 'contenu', 'stratégie',
-  'maillage', 'backlink', 'indexation', 'serp', 'e-e-a-t', 'eeat',
-  'chatgpt', 'perplexity', 'gemini', 'claude', 'json-ld', 'schema.org',
-  'core web vitals', 'pagespeed', 'structured data', 'données structurées',
-  'trafic organique', 'organic traffic', 'position', 'mot-clé', 'keyword',
-];
+// ─── Business-specific scoring profiles ─────────────────────────────
+interface ScoringProfile {
+  idealWords: { blog: number; landing: number };
+  weights: { content_depth: number; heading: number; keyword: number; linking: number; meta: number; eeat: number; density: number };
+  minKeywordHits: number;
+  localSignals: boolean;  // Look for NAP, address, phone, Google Maps
+}
 
-const DEFAULT_KEY_PATHS = [
-  '/audit-expert', '/blog', '/lexique', '/tarifs', '/generative-engine-optimization',
-  '/app/cocoon', '/app/console', '/aide', '/methodologie', '/faq',
-];
+const PROFILES: Record<BusinessProfile, ScoringProfile> = {
+  saas: {
+    idealWords: { blog: 1800, landing: 1000 },
+    weights: { content_depth: 0.20, heading: 0.15, keyword: 0.15, linking: 0.15, meta: 0.15, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 5,
+    localSignals: false,
+  },
+  ecommerce: {
+    idealWords: { blog: 1200, landing: 400 },
+    weights: { content_depth: 0.10, heading: 0.15, keyword: 0.15, linking: 0.20, meta: 0.20, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 3,
+    localSignals: false,
+  },
+  local_business: {
+    idealWords: { blog: 800, landing: 400 },
+    weights: { content_depth: 0.10, heading: 0.10, keyword: 0.10, linking: 0.10, meta: 0.20, eeat: 0.25, density: 0.15 },
+    minKeywordHits: 2,
+    localSignals: true,
+  },
+  media: {
+    idealWords: { blog: 2000, landing: 800 },
+    weights: { content_depth: 0.25, heading: 0.15, keyword: 0.15, linking: 0.15, meta: 0.10, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 5,
+    localSignals: false,
+  },
+  agency: {
+    idealWords: { blog: 1500, landing: 800 },
+    weights: { content_depth: 0.20, heading: 0.15, keyword: 0.15, linking: 0.15, meta: 0.15, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 5,
+    localSignals: false,
+  },
+  generic: {
+    idealWords: { blog: 1500, landing: 800 },
+    weights: { content_depth: 0.20, heading: 0.15, keyword: 0.15, linking: 0.15, meta: 0.15, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 5,
+    localSignals: false,
+  },
+};
 
 // ─── Main scoring function ──────────────────────────────────────────
 export function computeSeoScoreV2(
