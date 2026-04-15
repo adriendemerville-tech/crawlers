@@ -270,20 +270,47 @@ export function Header() {
         </div>
 
         {/* Center: Navigation links - desktop */}
-        {!isProfilePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          {/* 1. Matrice (gris) — masqué sur la home */}
-          {!isHomePage && (
-            <>
-              <Link to="/matrice">
-                <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
-                  <Grid3X3 className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Matrice</span>
-                </Button>
-              </Link>
+        {!isProfilePage && isHomePage && (
+          <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            <a href="#features" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}>
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span className="text-sm font-semibold">Features</span>
+              </Button>
+            </a>
+            <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+            <Link to="/tarifs">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
+                <CreditCard className="h-3.5 w-3.5" />
+                <span className="text-sm font-semibold">{language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}</span>
+              </Button>
+            </Link>
+            <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+            <Link to="/audit-expert">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:text-[#1e3a5f] dark:hover:text-[#93c5fd] hover:bg-[#1e3a5f]/10">
+                <Search className="h-3.5 w-3.5" />
+                <span className="text-sm font-semibold">Audit</span>
+              </Button>
+            </Link>
+            <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+            <Link to="/eeat">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span className="text-sm font-semibold">E-E-A-T</span>
+              </Button>
+            </Link>
+          </div>
+        )}
+        {!isProfilePage && !isHomePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+          {/* 1. Matrice (gris) */}
+          <Link to="/matrice">
+            <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
+              <Grid3X3 className="h-3.5 w-3.5" />
+              <span className="text-sm font-semibold">Matrice</span>
+            </Button>
+          </Link>
 
-              <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-            </>
-          )}
+          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
           {/* 2. Crawl (violet) */}
           {isAuditExpertPage ? (
@@ -360,8 +387,7 @@ export function Header() {
             </Button>
           </Link>
 
-
-          {/* Console — for paid users, hidden on console page and audit-expert page */}
+          {/* Console — for paid users */}
           {!isProfilePage && !isAuditExpertPage && (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free'))) && (
             <Link to="/app/console">
               <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground ${isProfilePage ? 'border border-muted-foreground' : ''}`}>
