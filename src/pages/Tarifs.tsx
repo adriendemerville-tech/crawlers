@@ -654,6 +654,19 @@ export default function Tarifs() {
               <p className="text-xl text-muted-foreground">{t.subtitle}</p>
             </div>
 
+            {/* Pro Agency Plans */}
+            <PricingPlansSection />
+
+            {/* CTA */}
+            <div className="text-center">
+              <Link to="/audit-expert">
+                <Button size="lg" className="gap-2 bg-violet-600 hover:bg-violet-700 px-[20px] rounded shadow-md">
+                  {t.getStarted}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+
             {/* Free Tools Section */}
             <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent">
               <CardHeader>
