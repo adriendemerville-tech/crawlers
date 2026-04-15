@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -44,12 +44,16 @@ function positionCell(pos: number | null) {
   return <span className={colorClass}>{pos}</span>;
 }
 
+export interface SerpBenchmarkHandle {
+  triggerBenchmark: (keyword: string) => void;
+}
+
 interface Props {
   trackedSites: { id: string; domain: string }[];
   selectedSiteId: string;
 }
 
-export function SerpBenchmark({ trackedSites, selectedSiteId }: Props) {
+export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function SerpBenchmark({ trackedSites, selectedSiteId }, ref) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const [query, setQuery] = useState('');
