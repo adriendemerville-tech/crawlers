@@ -517,6 +517,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
                               : (language === 'en' ? 'Inject code' : language === 'es' ? 'Inyectar código' : 'Injecter le code')}
                         </span>
                       </Button>
+                      )}
                     </div>
                   </div>
                   <pre
