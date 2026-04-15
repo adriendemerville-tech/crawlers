@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Globe, FileText } from 'lucide-react';
+import { Globe, FileText, ListTodo } from 'lucide-react';
 import { ParmenionTargetPanel } from './ParmenionTargetPanel';
+import { ParmenionTaskPlan } from './ParmenionTaskPlan';
 
 export function ParmenionDashboard() {
   return (
@@ -13,6 +14,10 @@ export function ParmenionDashboard() {
         <TabsTrigger value="crawlers-cms" className="gap-2">
           <FileText className="h-4 w-4" />
           CMS Crawlers
+        </TabsTrigger>
+        <TabsTrigger value="task-plan" className="gap-2">
+          <ListTodo className="h-4 w-4" />
+          Plan de tâches
         </TabsTrigger>
       </TabsList>
 
@@ -36,6 +41,13 @@ export function ParmenionDashboard() {
           historyDescription="Actions CMS effectuées sur crawlers.fr"
           showForceArticle
         />
+      </TabsContent>
+
+      <TabsContent value="task-plan" forceMount className="data-[state=inactive]:hidden">
+        <div className="space-y-4">
+          <ParmenionTaskPlan domain="iktracker.fr" />
+          <ParmenionTaskPlan domain="crawlers.fr" />
+        </div>
       </TabsContent>
     </Tabs>
   );
