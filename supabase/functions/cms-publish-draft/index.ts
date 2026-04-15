@@ -579,6 +579,9 @@ try {
       case "prestashop":
         publishResult = await publishViaConnector("prestashop-connector", req, tracked_site_id, title, htmlContent, metaDescription, resolvedContentType);
         break;
+      case "crawlers_internal":
+        publishResult = await publishCrawlersInternal(title, htmlContent, metaDescription, resolvedContentType, featuredImageUrl);
+        break;
       default:
         return new Response(JSON.stringify({ error: `Unsupported CMS platform: ${conn.platform}` }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
