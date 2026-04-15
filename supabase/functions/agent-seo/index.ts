@@ -867,7 +867,7 @@ Deno.serve(handleRequest(async (req) => {
         summary: eeatData.data.summary,
       };
     }
-    console.log(`[AGENT-SEO] Score avant: ${scoreBefore.overall}/100 | Axes: content=${scoreBefore.axes.content_depth} heading=${scoreBefore.axes.heading_structure} kw=${scoreBefore.axes.keyword_relevance} links=${scoreBefore.axes.internal_linking} meta=${scoreBefore.axes.meta_quality} eeat=${scoreBefore.axes.eeat_signals}${auditExpertData ? ' +audit' : ''}${eeatData ? ' +eeat' : ''}`);
+    console.log(`[AGENT-SEO] Score avant: ${scoreBefore.overall}/100 | Axes: content=${scoreBefore.axes.content_depth} heading=${scoreBefore.axes.heading_structure} kw=${scoreBefore.axes.keyword_relevance} links=${scoreBefore.axes.internal_linking} meta=${scoreBefore.axes.meta_quality} eeat=${scoreBefore.axes.eeat_signals}${auditExpertData ? ' +audit' : ''}${eeatData ? ' +eeat' : ''}${strategicData ? ' +strategic' : ''}`);
 
     // Build admin directives context
     const pendingDirectives = directivesResp?.data || [];
@@ -890,6 +890,21 @@ Deno.serve(handleRequest(async (req) => {
     if (eeatData?.data) {
       const e = eeatData.data;
       auditEnrichment += `\n\nAUDIT E-E-A-T :\n- Score global: ${e.scores?.overall || 'N/A'}/100\n- Expérience: ${e.scores?.experience || 'N/A'} | Expertise: ${e.scores?.expertise || 'N/A'} | Autorité: ${e.scores?.authoritativeness || 'N/A'} | Fiabilité: ${e.scores?.trustworthiness || 'N/A'}\n- Résumé: ${(e.summary || '').substring(0, 200)}`;
+    }
+    if (strategicData?.data) {
+      const s = strategicData.data;
+      const quickWins = s.quick_wins?.slice(0, 5) || [];
+      const gaps = s.content_gaps?.slice(0, 5) || [];
+      auditEnrichment += `\n\nAUDIT STRATÉGIQUE GEO :`;
+      if (quickWins.length > 0) {
+        auditEnrichment += `\n- Quick wins: ${quickWins.map((q: any) => `"${q.keyword}" (vol: ${q.search_volume || '?'}, pos: ${q.position || '?'})`).join(', ')}`;
+      }
+      if (gaps.length > 0) {
+        auditEnrichment += `\n- Gaps de contenu: ${gaps.map((g: any) => `"${g.keyword || g.topic}" (${g.reason || 'manquant'})`).join(', ')}`;
+      }
+      if (s.competitors?.length > 0) {
+        auditEnrichment += `\n- Concurrents SERP: ${s.competitors.slice(0, 3).map((c: any) => c.domain || c).join(', ')}`;
+      }
     }
 
     // Generate improvements via Lovable AI (context-enriched with SAV + anomalies + admin directives + audits)
