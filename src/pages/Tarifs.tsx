@@ -892,7 +892,7 @@ export default function Tarifs() {
             {/* CTA */}
             <div className="text-center">
               <Link to="/audit-expert">
-                <Button size="lg" className="gap-2">
+                <Button size="lg" className="gap-2 bg-violet-600 hover:bg-violet-700 px-[20px] rounded shadow-md">
                   {t.getStarted}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
