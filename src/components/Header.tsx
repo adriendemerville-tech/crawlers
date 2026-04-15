@@ -374,16 +374,19 @@ export function Header() {
             <span className="text-sm font-semibold">Content</span>
           </Button>
 
-          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-
-          {/* 6. Social Hub (vert glow) */}
-          <Link to="/app/social">
-            <Button variant="ghost" size="sm" className="gap-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)]">
-              <Share2 className="h-3.5 w-3.5" />
-              <span className="text-sm font-semibold">Social Hub</span>
-              <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
-            </Button>
-          </Link>
+          {/* 6. Social Hub (vert glow) — hidden for non-subscribed users */}
+          {user && profile?.plan_type && profile.plan_type !== 'free' && (
+            <>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+              <Link to="/app/social">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)]">
+                  <Share2 className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Social Hub</span>
+                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
+                </Button>
+              </Link>
+            </>
+          )}
 
           {/* Console — for paid users */}
           {!isProfilePage && !isAuditExpertPage && (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free'))) && (
