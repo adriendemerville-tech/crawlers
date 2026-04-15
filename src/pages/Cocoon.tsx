@@ -1094,18 +1094,9 @@ function CocoonContent() {
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
         {!isFullscreen && (
         <div className="shrink-0 px-3 sm:px-4 md:px-6 py-9 flex items-end gap-2 sm:gap-4 flex-wrap">
-          {/* Console button — bottom left */}
-          <button
-            onClick={() => navigate('/app/console')}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md shrink-0 ml-2 sm:ml-4"
-          >
-            <ArrowLeft className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-            <span className="hidden xs:inline">{t.console}</span>
-          </button>
-
-          {/* AI Chat — always visible for greeting */}
+          {/* AI Chat — bottom left, shifted left */}
           {hasAccess && (
-            <div className="relative">
+            <div className="relative ml-2 sm:ml-4">
               <CocoonAIChat
                 nodes={nodes}
                 selectedNodeId={selectedNode?.id}
