@@ -13,7 +13,7 @@ const labels = {
   es: { drafts: 'Borradores', prompts: 'Prompts', dashboard: 'Dashboard' },
 };
 
-export function MyContent() {
+export function MyContent({ externalDomain }: { externalDomain?: string | null }) {
   const { language } = useLanguage();
   const t = labels[language as keyof typeof labels] || labels.fr;
 
@@ -36,7 +36,7 @@ export function MyContent() {
 
       <TabsContent value="dashboard">
         <Suspense fallback={null}>
-          <EditorialDashboard />
+          <EditorialDashboard externalDomain={externalDomain} />
         </Suspense>
       </TabsContent>
 
