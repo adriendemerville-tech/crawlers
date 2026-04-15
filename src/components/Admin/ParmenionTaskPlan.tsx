@@ -131,17 +131,19 @@ export function ParmenionTaskPlan({ domain }: ParmenionTaskPlanProps) {
     try {
       const { data, error } = await supabase
         .from('architect_workbench')
-        .select('id, title, description, action_type, finding_category, severity, target_url, spiral_score, status, created_at, manual_priority, tier')
+        .select('id, title, description, action_type, finding_category, severity, target_url, spiral_score, status, created_at, manual_priority')
         .eq('domain', domain)
-        .in('status', ['pending', 'in_progress', 'planned'])
-        .order('manual_priority', { ascending: true, nullsFirst: false })
+        .in('status', ['pending', 'in_progress'])
         .order('spiral_score', { ascending: false })
         .limit(100);
 
       if (error) throw error;
 
       // Sort: manual_priority first (if set), then spiral_score desc
-      const sorted = (data || []).sort((a: any, b: any) => {
+      const sorted = ((data as any[]) || []).map((d: any) => ({
+        ...d,
+        tier: d.tier ?? 5, // fallback
+      })).sort((a: any, b: any) => {
         if (a.manual_priority != null && b.manual_priority != null) return a.manual_priority - b.manual_priority;
         if (a.manual_priority != null) return -1;
         if (b.manual_priority != null) return 1;
