@@ -47,7 +47,7 @@ const translations = {
     paidSection: 'Fonctionnalités Premium',
     paidDescription: 'crédits ou abonnement',
     auditStrategique: {
-      title: 'Audit Stratégique IA',
+      title: 'Audit Stratégique GEO',
       description: '2 crédits par consultation (après les 2 premiers gratuits)',
       features: [
         'Analyse de l\'écosystème concurrentiel',
@@ -209,7 +209,7 @@ const translations = {
     paidSection: 'Premium Features',
     paidDescription: 'Paid in credits',
     auditStrategique: {
-      title: 'Strategic AI Audit',
+      title: 'Strategic GEO Audit',
       description: '2 credits per consultation (after the first 2 free)',
       features: [
         'Competitive ecosystem analysis',
@@ -370,7 +370,7 @@ const translations = {
     paidSection: 'Funcionalidades Premium',
     paidDescription: 'De pago en créditos',
     auditStrategique: {
-      title: 'Auditoría Estratégica IA',
+      title: 'Auditoría Estratégica GEO',
       description: '2 créditos por consulta (después de los 2 primeros gratis)',
       features: [
         'Análisis del ecosistema competitivo',
