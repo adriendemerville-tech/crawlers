@@ -272,7 +272,7 @@ const sentimentColor = (s: string | null) => {
 };
 
 // ─── Main Component ───
-export function MyTracking() {
+export function MyTracking({ externalSiteId }: { externalSiteId?: string | null }) {
   const h = useMyTracking();
   const t = translations[h.language] || translations.fr;
   const navigate = useNavigate();

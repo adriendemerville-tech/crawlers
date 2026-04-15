@@ -133,7 +133,7 @@ function ProfileContent() {
   const renderContent = () => {
     switch (activeTab) {
       case 'wallet': return <MyWallet />;
-      case 'tracking': return <MyTracking />;
+      case 'tracking': return <MyTracking externalSiteId={selectedSiteId} />;
       case 'settings': return <ProfileSettings />;
       case 'reports': return <MyReports />;
       case 'action-plans': return <MyActionPlans externalDomain={selectedDomain} />;
