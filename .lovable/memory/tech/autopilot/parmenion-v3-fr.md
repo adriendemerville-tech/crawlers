@@ -8,6 +8,25 @@ type: feature
 ### Vue d'ensemble
 Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise le `spiral_score` pour prioriser les actions et un dual-lane scoring (tech + contenu) avec budget partagé configurable.
 
+### Skip-Audit intelligent (v3.4 — 2026-04-15)
+
+**Problème racine** : Parménion et Agent SEO utilisaient les mêmes fonctions d'audit (`audit-expert-seo`, `check-eeat`), doublant les appels LLM sans valeur ajoutée.
+
+**Correction Option A** : Parménion détecte les items workbench `source_function='agent-seo'` de moins de 24h en phase audit. S'il en trouve, il **saute directement en prescribe** sans ré-auditer.
+
+**Logique** :
+- Phase `audit` → Query `architect_workbench` WHERE `source_function='agent-seo'` AND `status IN ('pending','in_progress')` AND `created_at > now() - 24h`
+- Si ≥1 résultat → `currentPhase = 'prescribe'`
+- Sinon → audit normal (3 fonctions en parallèle)
+
+### Agent SEO enrichi (v3.4)
+Agent SEO lance désormais **3 fonctions en parallèle** (comme Parménion) :
+1. `audit-expert-seo` — Audit technique
+2. `check-eeat` — Évaluation E-E-A-T
+3. `strategic-orchestrator` — Audit stratégique GEO (mots-clés, quick wins, concurrents, SERP)
+
+Les résultats stratégiques (quick wins, gaps, concurrents) sont injectés dans le contexte LLM de l'Agent SEO.
+
 ### Phase AUDIT enrichie (v3.3 — 2026-04-15)
 
 **Problème racine** : Parmenion n'appelait que `audit-expert-seo` en phase audit, produisant un diagnostic mono-dimensionnel. Résultat : contenus répétitifs, pas de vision marché, pas de mots-clés quick-win.
@@ -19,8 +38,17 @@ Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, cap
 
 **Fichiers modifiés** :
 - `_shared/parmenion/types.ts` — `PHASE_FUNCTIONS.audit` inclut `strategic-orchestrator`
-- `parmenion-orchestrator/index.ts` — Prompt audit demande les 3 fonctions, fallback les 3
+- `parmenion-orchestrator/index.ts` — Prompt audit demande les 3 fonctions, fallback les 3 + skip-audit logic
 - `autopilot-engine/index.ts` — Mapping payload spécifique pour `strategic-orchestrator` (sync) et `check-eeat`
+- `agent-seo/index.ts` — Appelle `strategic-orchestrator` en parallèle avec les 2 autres audits
+
+### Droits CMS interne crawlers.fr
+
+| Agent | blog_articles | seo_page_drafts |
+|---|---|---|
+| **Parménion** | CRUD (via cms-publish-draft + cms-patch-content) | CRUD (via cms-publish-draft) |
+| **Agent SEO** | SELECT only | INSERT (landings) |
+| **generate-blog-from-news** | INSERT (articles auto) | — |
 
 ### FIX critique v3.2 (2026-04-12) — 6 corrections
 (inchangé — voir historique)
