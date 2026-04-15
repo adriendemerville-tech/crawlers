@@ -28,6 +28,7 @@ import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { BundleManagement } from './BundleManagement';
 import { SurveyManagement } from './SurveyManagement';
 import { ParmenionDashboard } from './ParmenionDashboard';
+import { WorkbenchAdmin } from './WorkbenchAdmin';
 import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { MarinaDashboard } from './MarinaDashboard';
 import { ProspectPipelineDashboard } from './ProspectPipelineDashboard';
@@ -268,6 +269,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       label: 'Automatisation',
       items: [
         { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'automation' },
+        { id: 'workbench', label: 'Workbench', icon: ClipboardList, group: 'automation' },
         { id: 'eeat', label: 'E-E-A-T', icon: Award, group: 'automation' },
         { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
         { id: 'prospects', label: 'Prospection', icon: Users, group: 'automation' },
@@ -303,6 +305,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
       case 'parmenion': return <ParmenionDashboard />;
+      case 'workbench': return <WorkbenchAdmin />;
       case 'eeat': return <EeatScoringAdmin />;
       case 'marina': return <MarinaDashboard />;
       case 'prospects': return <ProspectPipelineDashboard />;
