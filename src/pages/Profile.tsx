@@ -159,7 +159,7 @@ function ProfileContent() {
           onShowGoogleOnboarding={() => setShowGoogleOnboarding(true)}
         />
       ) : null;
-      default: return <MyTracking />;
+      default: return <MyTracking externalSiteId={selectedSiteId} />;
     }
   };
 
