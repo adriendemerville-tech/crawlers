@@ -225,7 +225,7 @@ export function computeSeoScoreV2(
   const lowerText = textContent.toLowerCase();
   const termHits = seoTerms.filter(t => lowerText.includes(t)).length;
   const keywordScore = Math.min(100, Math.round((termHits / Math.max(12, seoTerms.length * 0.4)) * 100));
-  if (termHits < 5) opportunities.push('Enrichir le vocabulaire SEO/GEO (termes techniques variés)');
+  if (termHits < profile.minKeywordHits) opportunities.push('Enrichir le vocabulaire SEO/GEO (termes techniques variés)');
 
   // 4. LINK PROFILE
   const internalLinkMatches = html.match(/<a[^>]*href=["']\/[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi) || [];
