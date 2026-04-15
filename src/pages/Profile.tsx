@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/Header';
