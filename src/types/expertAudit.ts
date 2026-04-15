@@ -564,6 +564,27 @@ export interface StrategicAnalysis {
 
   // Client Targets Analysis
   client_targets?: ClientTargetsAnalysis | null;
+
+  // Content page metrics (non-homepage only)
+  chunkability_score?: ChunkabilityScore | null;
+  fan_out_score?: FanOutScore | null;
+}
+
+export interface ChunkabilityScore {
+  score: number; // 0-100
+  paragraphs: number;
+  avg_paragraph_length: number;
+  has_toc: boolean;
+  has_clear_sections: boolean;
+  explanation: string;
+}
+
+export interface FanOutScore {
+  score: number; // 0-100
+  detected_axes: number;
+  covered_axes: number;
+  total_potential_axes: number;
+  explanation: string;
 }
 
  // Raw LLM visibility data from check-llm edge function

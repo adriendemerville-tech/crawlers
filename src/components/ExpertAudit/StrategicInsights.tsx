@@ -38,6 +38,8 @@ import { GoogleMyBusinessCard } from './GoogleMyBusinessCard';
 import { SimulatedLLMDepthCard } from './SimulatedLLMDepthCard';
 import { FanOutCard } from './FanOutCard';
 import { BotLogChartCard } from './BotLogChartCard';
+import { ChunkabilityScoreCard } from './ChunkabilityScoreCard';
+import { FanOutScoreCard } from './FanOutScoreCard';
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
   hideExecutiveSummary?: boolean;
@@ -379,6 +381,20 @@ export function StrategicInsights({
                   )}
                 </CardContent>
               </Card>
+            </RevealWrapper>
+          )}
+
+          {/* 14b. Chunkability IA — content pages only */}
+          {isContentMode && analysis.chunkability_score && (
+            <RevealWrapper delay={17000} isDataCard enabled={progressiveReveal}>
+              <ChunkabilityScoreCard data={analysis.chunkability_score} />
+            </RevealWrapper>
+          )}
+
+          {/* 14c. Score Fan-Out — content pages only */}
+          {isContentMode && analysis.fan_out_score && (
+            <RevealWrapper delay={17500} isDataCard enabled={progressiveReveal}>
+              <FanOutScoreCard data={analysis.fan_out_score} />
             </RevealWrapper>
           )}
 
