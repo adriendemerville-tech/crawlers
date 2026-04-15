@@ -491,7 +491,7 @@ Réponds en JSON :
         costAcc,
       )
 
-      trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', {
+      trackTokenUsage('agent-cto', CTO_LLM_MODEL, {
         prompt_tokens: tokens.input,
         completion_tokens: tokens.output,
         total_tokens: tokens.input + tokens.output,
@@ -606,7 +606,7 @@ Réponds UNIQUEMENT en JSON :
           diagnosisPrompt, costAcc,
         )
 
-        trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', {
+        trackTokenUsage('agent-cto', CTO_LLM_MODEL, {
           prompt_tokens: tokens.input,
           completion_tokens: tokens.output,
           total_tokens: tokens.input + tokens.output,
@@ -913,7 +913,7 @@ Tiens compte du contexte opérationnel (retours SAV, erreurs techniques) pour pr
 
     const { content, tokens } = await callLLM(systemPrompt, userPrompt, costAcc)
 
-    trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {})
+    trackTokenUsage('agent-cto', CTO_LLM_MODEL, { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {})
 
     const analysis = parseAgentResponse(content, evidenceBasis)
 
