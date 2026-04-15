@@ -47,7 +47,7 @@ const translations = {
     title: 'Mes sites',
     description: 'Suivez l\'évolution SEO & IA de vos sites au fil du temps.',
     noSites: 'Aucun site suivi pour le moment.',
-    addSite: 'Ajouter un site',
+    addSite: 'Ajouter une URL',
     addSiteDesc: 'Entrez l\'URL du site à suivre. Un audit de référence sera lancé automatiquement.',
     urlPlaceholder: 'https://exemple.com',
     add: 'Ajouter',
