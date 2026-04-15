@@ -191,7 +191,7 @@ export function IndexationMonitor() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={handleAutoScan} disabled={scanning || !selectedSiteId} className="gap-2">
+            <Button variant="ghost" onClick={handleAutoScan} disabled={scanning || !selectedSiteId} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
               {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               {t3(language, 'Scanner les pages clés', 'Scan key pages', 'Escanear páginas clave')}
             </Button>
