@@ -663,6 +663,10 @@ export function MyTracking() {
                       <TabsList>
                         <TabsTrigger value="kpis">{t.kpis}</TabsTrigger>
                         <TabsTrigger value="evolution">{t.evolution}</TabsTrigger>
+                        <TabsTrigger value="competitors" className="gap-1.5">
+                          <Search className="h-3 w-3" />
+                          {h.language === 'fr' ? 'Concurrence' : h.language === 'es' ? 'Competencia' : 'Competitors'}
+                        </TabsTrigger>
                       </TabsList>
                       <TabsContent value="kpis" className="space-y-4">
                         {/* LLM Visibility Dashboard */}
