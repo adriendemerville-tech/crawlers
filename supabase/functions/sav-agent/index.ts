@@ -55,7 +55,8 @@ En dessous : graphique "Évolution" avec courbes Score SEO, Score GEO, Taux de c
 
 ## Onglets API/CMS dans /console > API
 - APIs Connectées → Rank Math, Link Whisper, GTMetrix, SerpAPI
-- CMS Connectées → WordPress, Drupal, IKTracker, Shopify, WooCommerce
+- CMS Connectées → WordPress, Drupal, IKTracker, Shopify, WooCommerce, crawlers.fr (interne)
+- Bouton Parménion (Glaive) : au survol des articles CMS, ajoute l'URL au plan de tâches Parménion
 
 ## Pages d'audit
 - /audit-expert → audit SEO gratuit 200 points (1/jour freemium, illimité Pro)
@@ -326,7 +327,8 @@ Accessible via Code Architect > onglet "Contenu" OU depuis la Console. Le Conten
 
 **Images IA** : génération dans plusieurs styles (photo, cinematic, flat illustration, infographic, watercolor, artistic) et plusieurs formats, adapté au secteur du site.
 
-- **Publication CMS** : Les contenus générés peuvent être publiés directement en brouillon sur le CMS du client (WordPress, Shopify, Drupal, Odoo, PrestaShop, IKtracker). Supporte la création d'**articles** ET de **pages statiques** selon le CMS.
+- **Publication CMS** : Les contenus générés peuvent être publiés directement en brouillon sur le CMS du client (WordPress, Shopify, Drupal, Odoo, PrestaShop, IKtracker, **crawlers.fr en interne**). Supporte la création d'**articles** ET de **pages statiques** selon le CMS.
+- **CMS Interne crawlers.fr** : Parménion peut modifier directement les articles et pages de crawlers.fr via la plateforme \`crawlers_internal\` (écriture dans \`blog_articles\` et \`seo_page_drafts\`). Bouton "Parménion (Glaive)" disponible au survol des articles dans le CMS admin pour ajouter une URL au plan de tâches.
 - **Limites mensuelles** : 5 contenus/mois (Free), 80 contenus/mois (Pro Agency), 150 contenus/mois (Pro Agency+). Renouvellement automatique le 1er du mois.
 
 **Félix peut aider** : en dehors de /cocoon, Félix peut guider l'utilisateur dans Content Architect (expliquer les panneaux, le workflow, les options). Il peut aussi prendre la main en lançant la génération ou en suggérant des instructions spécifiques à injecter.
