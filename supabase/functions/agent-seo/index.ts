@@ -799,9 +799,62 @@ Deno.serve(handleRequest(async (req) => {
       console.log(`[AGENT-SEO] 📇 Carte d'identité chargée (confiance: ${siteContext.identity_confidence || 0})`);
     }
 
+    // ── Run audit-expert-seo + check-eeat in parallel for deep signals ──
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+    const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const targetFullUrl = `${siteBaseUrl}${target.url}`;
+
+    let auditExpertData: any = null;
+    let eeatData: any = null;
+
+    try {
+      const [auditResp, eeatResp] = await Promise.allSettled([
+        fetch(`${SUPABASE_URL}/functions/v1/audit-expert-seo`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetFullUrl, domain: 'crawlers.fr' }),
+          signal: AbortSignal.timeout(30_000),
+        }).then(r => r.ok ? r.json() : null),
+        fetch(`${SUPABASE_URL}/functions/v1/check-eeat`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetFullUrl, domain: 'crawlers.fr' }),
+          signal: AbortSignal.timeout(30_000),
+        }).then(r => r.ok ? r.json() : null),
+      ]);
+
+      if (auditResp.status === 'fulfilled' && auditResp.value) {
+        auditExpertData = auditResp.value;
+        console.log(`[AGENT-SEO] ✅ audit-expert-seo done for ${target.slug}`);
+      } else {
+        console.warn(`[AGENT-SEO] ⚠️ audit-expert-seo failed for ${target.slug}`);
+      }
+      if (eeatResp.status === 'fulfilled' && eeatResp.value) {
+        eeatData = eeatResp.value;
+        console.log(`[AGENT-SEO] ✅ check-eeat done for ${target.slug}`);
+      } else {
+        console.warn(`[AGENT-SEO] ⚠️ check-eeat failed for ${target.slug}`);
+      }
+    } catch (e) {
+      console.warn('[AGENT-SEO] Audit enrichment failed (non-blocking):', e);
+    }
+
     // Compute multi-axes SEO score
     const scoreBefore = computeSeoScoreV2(pageData.html, pageData.textContent, target.type);
-    console.log(`[AGENT-SEO] Score avant: ${scoreBefore.overall}/100 | Axes: content=${scoreBefore.axes.content_depth} heading=${scoreBefore.axes.heading_structure} kw=${scoreBefore.axes.keyword_relevance} links=${scoreBefore.axes.internal_linking} meta=${scoreBefore.axes.meta_quality} eeat=${scoreBefore.axes.eeat_signals}`);
+    // Enrich score with audit data
+    if (auditExpertData?.data) {
+      (scoreBefore as any).auditExpert = {
+        recommendations: auditExpertData.data.recommendations?.slice(0, 10),
+        overallScore: auditExpertData.data.overallScore,
+      };
+    }
+    if (eeatData?.data) {
+      (scoreBefore as any).eeatAudit = {
+        scores: eeatData.data.scores,
+        summary: eeatData.data.summary,
+      };
+    }
+    console.log(`[AGENT-SEO] Score avant: ${scoreBefore.overall}/100 | Axes: content=${scoreBefore.axes.content_depth} heading=${scoreBefore.axes.heading_structure} kw=${scoreBefore.axes.keyword_relevance} links=${scoreBefore.axes.internal_linking} meta=${scoreBefore.axes.meta_quality} eeat=${scoreBefore.axes.eeat_signals}${auditExpertData ? ' +audit' : ''}${eeatData ? ' +eeat' : ''}`);
 
     // Build admin directives context
     const pendingDirectives = directivesResp?.data || [];
@@ -815,8 +868,19 @@ Deno.serve(handleRequest(async (req) => {
       console.log(`[AGENT-SEO] 📋 ${relevantDirectives.length} directive(s) admin chargées`);
     }
 
-    // Generate improvements via Lovable AI (context-enriched with SAV + anomalies + admin directives)
-    const operationalCtx = [agentContext?.promptSnippet, directivesContext].filter(Boolean).join('\n');
+    // Build audit enrichment context for LLM
+    let auditEnrichment = '';
+    if (auditExpertData?.data?.recommendations?.length > 0) {
+      const topRecos = auditExpertData.data.recommendations.slice(0, 8);
+      auditEnrichment += `\n\nAUDIT EXPERT SEO (${topRecos.length} recommandations prioritaires) :\n${topRecos.map((r: any, i: number) => `${i + 1}. [${r.priority || 'medium'}] ${r.title}: ${(r.description || '').substring(0, 120)}`).join('\n')}`;
+    }
+    if (eeatData?.data) {
+      const e = eeatData.data;
+      auditEnrichment += `\n\nAUDIT E-E-A-T :\n- Score global: ${e.scores?.overall || 'N/A'}/100\n- Expérience: ${e.scores?.experience || 'N/A'} | Expertise: ${e.scores?.expertise || 'N/A'} | Autorité: ${e.scores?.authoritativeness || 'N/A'} | Fiabilité: ${e.scores?.trustworthiness || 'N/A'}\n- Résumé: ${(e.summary || '').substring(0, 200)}`;
+    }
+
+    // Generate improvements via Lovable AI (context-enriched with SAV + anomalies + admin directives + audits)
+    const operationalCtx = [agentContext?.promptSnippet, directivesContext, auditEnrichment].filter(Boolean).join('\n');
     const { improvements, confidence, tokens } = await generateImprovements(
       pageData.html, pageData.textContent, target, scoreBefore, siteContext,
       operationalCtx || undefined,
