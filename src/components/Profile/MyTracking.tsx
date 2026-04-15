@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot, Activity } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, RefreshCw, Info, Cable, IdCard, Bot, Activity, Lock } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -666,6 +666,9 @@ export function MyTracking() {
                         <TabsTrigger value="competitors" className="gap-1.5">
                           <Search className="h-3 w-3" />
                           {h.language === 'fr' ? 'Concurrence' : h.language === 'es' ? 'Competencia' : 'Competitors'}
+                          {!(h.isAdmin || h.planType === 'agency_premium') && (
+                            <Lock className="h-3 w-3 text-yellow-500" />
+                          )}
                         </TabsTrigger>
                       </TabsList>
                       <TabsContent value="kpis" className="space-y-4">

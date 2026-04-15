@@ -318,6 +318,7 @@ const CGVU = () => {
                 <li>Tout Pro Agency inclus ;</li>
                 <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 50 000 pages/mois ;</li>
                 <li><strong>Content Architect</strong> : 150 contenus/mois (Fair Use) ;</li>
+                <li><strong>Stratégie concurrentielle</strong> : priorisation dynamique par pression concurrentielle ;</li>
                 <li>5 comptes inclus (owner + 4 invités) ;</li>
                 <li>Support prioritaire renforcé.</li>
               </ul>
