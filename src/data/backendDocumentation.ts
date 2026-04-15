@@ -395,8 +395,8 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`cocoon-diag-content\` | ✅ | 0 | Diagnostic contenu (thin, duplicate, gaps) |
 | \`cocoon-diag-semantic\` | ✅ | 0 | Diagnostic sémantique (clusters, cannibalization) |
 | \`cocoon-diag-structure\` | ✅ | 0 | Diagnostic structure (Hn, profondeur, orphans) |
-| \`cocoon-strategist\` | ✅ | 0 | Stratège : recommandations URL, mémoire, axes dev |
-| \`cocoon-auto-linking\` | ✅ | 0 | Auto-Maillage IA : pré-scan + sélection d'ancres contextuelles par IA (Gemini Flash) |
+| \`cocoon-strategist\` | ✅ | 0 | Stratège : recommandations URL, mémoire, axes dev, quality scoring déterministe |
+| \`cocoon-auto-linking\` | ✅ | 0 | Auto-Maillage IA : pré-scan + scoring qualité page + sélection d'ancres contextuelles par IA (Gemini Flash) |
 | \`cocoon-deploy-links\` | ✅ | 0 | Déploiement maillage interne vers CMS |
 | \`calculate-internal-pagerank\` | ✅ | 0 | PageRank interne par page |
 | \`persist-cocoon-session\` | ✅ | 0 | Sauvegarde session Cocoon |
