@@ -229,7 +229,7 @@ export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIRe
 
   const fallbackResp = await callGateway(
     OPENROUTER_URL, openRouterKey, fallbackModel, opts,
-    { 'HTTP-Referer': 'https://crawlers.lovable.app', 'X-Title': 'Crawlers.fr' },
+    { 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers.fr' },
   );
 
   if (!fallbackResp.ok) {

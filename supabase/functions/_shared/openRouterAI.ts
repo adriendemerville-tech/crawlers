@@ -47,7 +47,7 @@ export async function callOpenRouter(opts: OpenRouterOptions): Promise<OpenRoute
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': opts.referer ?? 'https://crawlers.lovable.app',
+      'HTTP-Referer': opts.referer ?? 'https://crawlers.fr',
       'X-Title': opts.title ?? 'Crawlers.fr',
     },
     body: JSON.stringify({

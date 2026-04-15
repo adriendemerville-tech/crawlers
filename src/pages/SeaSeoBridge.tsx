@@ -38,7 +38,7 @@ const SeaSeoBridgePage = memo(() => {
     name: 'Crawlers SEA → SEO Bridge',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
-    url: 'https://crawlers.lovable.app/sea-seo-bridge',
+    url: 'https://crawlers.fr/sea-seo-bridge',
     description: 'Module d\'analyse croisée SEA/SEO propulsé par l\'IA. Identifiez les mots-clés payants convertibles en trafic organique et optimisez votre budget publicitaire grâce à l\'intelligence artificielle.',
     offers: {
       '@type': 'Offer',
@@ -55,7 +55,7 @@ const SeaSeoBridgePage = memo(() => {
       'Analyse GA4 des pages qui convertissent',
       'Scoring d\'opportunités par potentiel ROI',
     ],
-    creator: { '@type': 'Organization', name: 'Crawlers.fr', url: 'https://crawlers.lovable.app' },
+    creator: { '@type': 'Organization', name: 'Crawlers.fr', url: 'https://crawlers.fr' },
   };
 
   const faqJsonLd = {
@@ -154,11 +154,11 @@ const SeaSeoBridgePage = memo(() => {
       <Helmet>
         <title>SEA → SEO Bridge — Croisement Google Ads & SEO par l'IA | Crawlers.fr</title>
         <meta name="description" content="Identifiez les mots-clés payants convertibles en trafic organique. L'IA croise Google Ads, Search Console, GA4 et Cocoon pour révéler les opportunités SEO cachées dans vos campagnes SEA." />
-        <link rel="canonical" href="https://crawlers.lovable.app/sea-seo-bridge" />
+        <link rel="canonical" href="https://crawlers.fr/sea-seo-bridge" />
         <meta property="og:title" content="SEA → SEO Bridge — Croisement Google Ads & SEO par l'IA" />
         <meta property="og:description" content="Module d'analyse croisée qui identifie les mots-clés payants convertibles en trafic organique grâce à l'intelligence artificielle." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://crawlers.lovable.app/sea-seo-bridge" />
+        <meta property="og:url" content="https://crawlers.fr/sea-seo-bridge" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>

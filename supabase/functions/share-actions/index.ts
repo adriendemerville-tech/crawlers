@@ -34,7 +34,7 @@ const translations: any = {
     performance: 'Performance', accessibility: 'Accessibilité',
     bestPractices: 'Bonnes Pratiques', seo: 'SEO',
     citationRate: 'Taux de Citation', sentiment: 'Sentiment', recommends: 'Recommande',
-    poweredBy: 'Propulsé par Crawlers.lovable.app',
+    poweredBy: 'Propulsé par Crawlers.fr',
   },
   en: {
     title: 'Analysis Report', crawlers: 'AI Bots Analysis', geo: 'GEO Analysis',
@@ -46,7 +46,7 @@ const translations: any = {
     performance: 'Performance', accessibility: 'Accessibility',
     bestPractices: 'Best Practices', seo: 'SEO',
     citationRate: 'Citation Rate', sentiment: 'Sentiment', recommends: 'Recommends',
-    poweredBy: 'Powered by Crawlers.lovable.app',
+    poweredBy: 'Powered by Crawlers.fr',
   },
   es: {
     title: 'Informe de Análisis', crawlers: 'Análisis de Bots IA', geo: 'Análisis GEO',
@@ -58,7 +58,7 @@ const translations: any = {
     performance: 'Rendimiento', accessibility: 'Accesibilidad',
     bestPractices: 'Mejores Prácticas', seo: 'SEO',
     citationRate: 'Tasa de Citación', sentiment: 'Sentimiento', recommends: 'Recomienda',
-    poweredBy: 'Impulsado por Crawlers.lovable.app',
+    poweredBy: 'Impulsado por Crawlers.fr',
   },
 };
 
@@ -157,7 +157,7 @@ function generateReportHTML(type: string, data: any, url: string, language: stri
     case 'pagespeed':    content = generatePageSpeedHTML(data, t, url); break;
     case 'expert-audit': content = generateExpertAuditHTML(data, t, url); break;
   }
-  return `<!DOCTYPE html><html lang="${language}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${t.title} - ${t[type]||type}</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:#f3f4f6;min-height:100vh;padding:40px 20px}.container{max-width:800px;margin:0 auto}.header{text-align:center;margin-bottom:40px}.logo{font-size:24px;font-weight:700;color:#3b82f6;margin-bottom:8px}.date{color:#6b7280;font-size:14px}.content{background:white;padding:40px;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}.footer{text-align:center;margin-top:40px;color:#9ca3af;font-size:12px}.footer a{color:#3b82f6;text-decoration:none}@media(max-width:600px){.content{padding:20px}div[style*="grid-template-columns: repeat(4"]{grid-template-columns:repeat(2,1fr)!important}}</style></head><body><div class="container"><div class="header"><div class="logo">🤖 Crawlers</div><div class="date">${t.generatedAt} ${now}</div></div><div class="content">${content}</div><div class="footer">${t.poweredBy} • <a href="https://crawlers.lovable.app">crawlers.lovable.app</a></div></div></body></html>`;
+  return `<!DOCTYPE html><html lang="${language}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${t.title} - ${t[type]||type}</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:#f3f4f6;min-height:100vh;padding:40px 20px}.container{max-width:800px;margin:0 auto}.header{text-align:center;margin-bottom:40px}.logo{font-size:24px;font-weight:700;color:#3b82f6;margin-bottom:8px}.date{color:#6b7280;font-size:14px}.content{background:white;padding:40px;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}.footer{text-align:center;margin-top:40px;color:#9ca3af;font-size:12px}.footer a{color:#3b82f6;text-decoration:none}@media(max-width:600px){.content{padding:20px}div[style*="grid-template-columns: repeat(4"]{grid-template-columns:repeat(2,1fr)!important}}</style></head><body><div class="container"><div class="header"><div class="logo">🤖 Crawlers</div><div class="date">${t.generatedAt} ${now}</div></div><div class="content">${content}</div><div class="footer">${t.poweredBy} • <a href="https://crawlers.fr">crawlers.fr</a></div></div></body></html>`;
 }
 
 // ─── Action: create (share-report) ───
@@ -210,7 +210,7 @@ async function handleCreate(body: any, req: Request) {
     });
   }
 
-  const shareUrl = `https://crawlers.lovable.app/s/${shortCode}`;
+  const shareUrl = `https://crawlers.fr/s/${shortCode}`;
 
   return json({
     success: true,

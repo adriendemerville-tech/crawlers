@@ -80,7 +80,7 @@ Deno.serve(handleRequest(async (req) => {
     console.log(`🏷️ Using price: ${priceId}`);
 
     // Determine origin for redirect
-    const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+    const origin = req.headers.get("origin") || "https://crawlers.fr";
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({

@@ -61,7 +61,7 @@ Deno.serve(handleRequest(async (req) => {
       return new Response(JSON.stringify({ error: 'Failed to create short link' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const shortUrl = `https://crawlers.lovable.app/s/${data.code}`;
+    const shortUrl = `https://crawlers.fr/s/${data.code}`;
 
     return new Response(JSON.stringify({ success: true, short_url: shortUrl, code: data.code, full_url: fullUrl }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

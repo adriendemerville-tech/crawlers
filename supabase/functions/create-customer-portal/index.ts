@@ -21,7 +21,7 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     const user = userData.user;
-    const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+    const origin = req.headers.get("origin") || "https://crawlers.fr";
 
     // Find Stripe customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });

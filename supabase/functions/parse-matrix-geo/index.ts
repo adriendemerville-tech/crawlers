@@ -286,7 +286,7 @@ async function evaluateBenchmark(
     const apiKey = useOpenRouter ? OPENROUTER_API_KEY! : LOVABLE_API_KEY!
     const model = useOpenRouter ? realModel : (llmName || 'google/gemini-2.5-flash')
     const extraHeaders: Record<string, string> = useOpenRouter
-      ? { 'HTTP-Referer': 'https://crawlers.lovable.app', 'X-Title': 'Crawlers.fr' }
+      ? { 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers.fr' }
       : {}
 
     console.log(`[parse-matrix-geo] Benchmark → ${engine} via ${useOpenRouter ? 'OpenRouter' : 'Lovable AI'} (${model})`)

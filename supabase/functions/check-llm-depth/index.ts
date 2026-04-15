@@ -257,7 +257,7 @@ function buildFetchArgs(
     headers: {
       'Authorization': `Bearer ${keys.openrouter}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://crawlers.lovable.app',
+      'HTTP-Referer': 'https://crawlers.fr',
       'X-Title': 'Crawlers.fr - LLM Depth',
     },
     body: JSON.stringify({ model, messages, ...opts }),

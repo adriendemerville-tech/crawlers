@@ -18,7 +18,7 @@ Deno.serve(handleRequest(async (req) => {
   const error = url.searchParams.get('error');
 
   // Determine app redirect base
-  const appUrl = Deno.env.get('APP_URL') || 'https://crawlers.lovable.app';
+  const appUrl = Deno.env.get('APP_URL') || 'https://crawlers.fr';
 
   if (error) {
     return Response.redirect(`${appUrl}/app/social?canva_error=${encodeURIComponent(error)}`, 302);

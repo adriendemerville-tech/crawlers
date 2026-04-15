@@ -62,7 +62,7 @@ Réponds UNIQUEMENT en JSON valide : { "news": [...] }`
         headers: {
           'Authorization': `Bearer ${orKey}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.lovable.app',
+          'HTTP-Referer': 'https://crawlers.fr',
           'X-Title': 'Crawlers.fr',
         },
         body: JSON.stringify({

@@ -24,7 +24,7 @@ Deno.serve(handleRequest(async (req) => {
     const user = userData.user;
     console.log(`📝 Subscription checkout for user: ${user.id}`);
 
-    const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+    const origin = req.headers.get("origin") || "https://crawlers.fr";
 
     // Check if user already has an active subscription
     const { data: profile } = await supabase

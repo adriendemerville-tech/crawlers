@@ -37,7 +37,7 @@ const translations = {
     citationRate: 'Taux de Citation',
     sentiment: 'Sentiment',
     recommends: 'Recommande',
-    poweredBy: 'Propulsé par Crawlers.lovable.app',
+    poweredBy: 'Propulsé par Crawlers.fr',
   },
   en: {
     title: 'Analysis Report',
@@ -65,7 +65,7 @@ const translations = {
     citationRate: 'Citation Rate',
     sentiment: 'Sentiment',
     recommends: 'Recommends',
-    poweredBy: 'Powered by Crawlers.lovable.app',
+    poweredBy: 'Powered by Crawlers.fr',
   },
   es: {
     title: 'Informe de Análisis',
@@ -93,7 +93,7 @@ const translations = {
     citationRate: 'Tasa de Citación',
     sentiment: 'Sentimiento',
     recommends: 'Recomienda',
-    poweredBy: 'Impulsado por Crawlers.lovable.app',
+    poweredBy: 'Impulsado por Crawlers.fr',
   },
 };
 
@@ -394,7 +394,7 @@ function generateReportHTML(type: string, data: any, url: string, language: stri
       ${content}
     </div>
     <div class="footer">
-      ${t.poweredBy} • <a href="https://crawlers.lovable.app">crawlers.lovable.app</a>
+      ${t.poweredBy} • <a href="https://crawlers.fr">crawlers.fr</a>
     </div>
   </div>
 </body>

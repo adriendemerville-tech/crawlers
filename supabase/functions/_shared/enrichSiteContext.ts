@@ -174,7 +174,7 @@ Si tu ne connais pas un champ, mets une valeur générique raisonnable. Ne laiss
       headers: {
         'Authorization': `Bearer ${openrouterKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://crawlers.lovable.app',
+        'HTTP-Referer': 'https://crawlers.fr',
         'X-Title': 'Crawlers.fr - Site Enrichment',
       },
       model: 'google/gemini-2.5-flash',
