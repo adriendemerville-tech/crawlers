@@ -502,7 +502,7 @@ export function BlogManagement() {
                     const StatusIcon = statusConfig.icon;
                     
                     return (
-                      <TableRow key={article.id}>
+                      <TableRow key={article.id} className="group">
                         <TableCell>
                           <div className="space-y-1">
                             <p className="font-medium line-clamp-1">{article.title}</p>
