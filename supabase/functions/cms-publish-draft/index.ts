@@ -533,6 +533,28 @@ try {
       }
     }
 
+    // ── publishCrawlersInternal — same as internal flow above but via CMS connection route ──
+    async function publishCrawlersInternal(title: string, htmlContent: string, metaDescription: string, contentType: string, featuredImageUrl: string | null) {
+      const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+      if (contentType === 'page') {
+        const { data, error } = await service.from("seo_page_drafts").insert({
+          user_id: user.id, page_type: 'landing', domain: 'crawlers.fr',
+          target_keyword: keyword || null, title, slug,
+          meta_title: title, meta_description: metaDescription,
+          content: htmlContent, status: 'draft',
+        } as any).select().single();
+        if (error) throw new Error(`Internal landing error: ${error.message}`);
+        return data;
+      } else {
+        const { data, error } = await service.from("blog_articles").insert({
+          title, slug, excerpt: metaDescription, content: htmlContent,
+          image_url: featuredImageUrl, status: 'draft',
+        } as any).select().single();
+        if (error) throw new Error(`Internal blog error: ${error.message}`);
+        return data;
+      }
+    }
+
     // ── External CMS flow ──
     const { data: conn, error: connErr } = await service
       .from("cms_connections")
@@ -578,6 +600,9 @@ try {
         break;
       case "prestashop":
         publishResult = await publishViaConnector("prestashop-connector", req, tracked_site_id, title, htmlContent, metaDescription, resolvedContentType);
+        break;
+      case "crawlers_internal":
+        publishResult = await publishCrawlersInternal(title, htmlContent, metaDescription, resolvedContentType, featuredImageUrl);
         break;
       default:
         return new Response(JSON.stringify({ error: `Unsupported CMS platform: ${conn.platform}` }), {
