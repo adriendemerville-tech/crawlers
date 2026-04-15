@@ -8,6 +8,14 @@ type: feature
 ### Vue d'ensemble
 Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise le `spiral_score` pour prioriser les actions et un dual-lane scoring (tech + contenu) avec budget partagé configurable.
 
+### Pré-score déterministe (v3.5 — 2026-04-15)
+
+Parménion appelle `computeSeoScoreV2` (import `_shared/seoScoringV2.ts`) en phases **audit** et **prescribe** pour obtenir un score baseline de la homepage du domaine **avant** les audits LLM coûteux. Ce score (0-100, 7 axes) est :
+- Injecté dans le prompt LLM comme contexte `## SCORE SEO BASELINE`
+- Retourné dans la réponse JSON (`baseline_seo_score`)
+- Calculé en ~5ms, 0 token LLM, avec les `customKeywords` du `keyword_universe` du site
+- Non-bloquant : si le fetch échoue (timeout 8s), le pipeline continue sans score
+
 ### Skip-Audit intelligent (v3.4 — 2026-04-15)
 
 **Problème racine** : Parménion et Agent SEO utilisaient les mêmes fonctions d'audit (`audit-expert-seo`, `check-eeat`), doublant les appels LLM sans valeur ajoutée.
