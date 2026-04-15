@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { ClipboardList, Trash2, Loader2, Check, ExternalLink, ChevronDown, ChevronUp, Wand2, Archive, RotateCcw, Globe, GripVertical, PenLine } from 'lucide-react';
+import { ClipboardList, Trash2, Loader2, Check, ExternalLink, ChevronDown, ChevronUp, Wand2, Archive, RotateCcw, Globe, GripVertical, PenLine, Swords } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -45,6 +46,7 @@ interface WorkbenchItem {
   status: string;
   manual_priority: number | null;
   spiral_score: number | null;
+  competitor_momentum_score: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -307,6 +309,7 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
   const [loading, setLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(externalDomain ?? null);
+  const [competitorPressureOn, setCompetitorPressureOn] = useState(false);
 
   // Sync with external domain changes
   useEffect(() => {
@@ -331,7 +334,7 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
     setLoading(true);
     const { data, error } = await supabase
       .from('architect_workbench')
-      .select('id, title, description, severity, finding_category, source_type, source_function, target_url, domain, status, manual_priority, spiral_score, created_at, updated_at')
+      .select('id, title, description, severity, finding_category, source_type, source_function, target_url, domain, status, manual_priority, spiral_score, competitor_momentum_score, created_at, updated_at')
       .eq('user_id', user.id)
       .order('spiral_score', { ascending: false })
       .limit(500);
@@ -370,7 +373,7 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
     return activeItems.filter(i => i.domain === selectedDomain);
   }, [activeItems, selectedDomain]);
 
-  // Sort: manual_priority first if set, then spiral_score desc
+  // Sort: manual_priority first, then severity, then spiral_score (with optional competitor boost)
   const sortedActive = useMemo(() => {
     return [...filteredActive].sort((a, b) => {
       if (a.manual_priority != null && b.manual_priority != null) return a.manual_priority - b.manual_priority;
@@ -380,9 +383,19 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
       const sa = severityOrder[a.severity] ?? 2;
       const sb = severityOrder[b.severity] ?? 2;
       if (sa !== sb) return sa - sb;
-      return (b.spiral_score || 0) - (a.spiral_score || 0);
+
+      if (competitorPressureOn) {
+        // When pressure is ON: spiral_score + competitor_momentum_score as tiebreaker
+        const aTotal = (a.spiral_score || 0) + (a.competitor_momentum_score || 0);
+        const bTotal = (b.spiral_score || 0) + (b.competitor_momentum_score || 0);
+        return bTotal - aTotal;
+      }
+      // When pressure is OFF: spiral_score without competitor momentum
+      const aBase = (a.spiral_score || 0) - (a.competitor_momentum_score || 0) * 0.8;
+      const bBase = (b.spiral_score || 0) - (b.competitor_momentum_score || 0) * 0.8;
+      return bBase - aBase;
     });
-  }, [filteredActive]);
+  }, [filteredActive, competitorPressureOn]);
 
   const filteredArchived = useMemo(() => {
     if (!selectedDomain) return archivedItems;
@@ -532,22 +545,35 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
             <div>
               {/* Main content */}
               <div className="flex-1 min-w-0 space-y-4">
-                {/* Progress bar */}
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">
-                      {totalActive === 0 ? (
-                        <span className="flex items-center gap-1 text-success">
-                          <Check className="h-4 w-4" />
-                          {t.completed}
-                        </span>
-                      ) : (
-                        `${totalActive} ${t.tasksRemaining}`
-                      )}
-                    </span>
-                    <span className="text-muted-foreground">{progress}%</span>
+                {/* Header with progress + competitor switch */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">
+                        {totalActive === 0 ? (
+                          <span className="flex items-center gap-1 text-success">
+                            <Check className="h-4 w-4" />
+                            {t.completed}
+                          </span>
+                        ) : (
+                          `${totalActive} ${t.tasksRemaining}`
+                        )}
+                      </span>
+                      <span className="text-muted-foreground">{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
                   </div>
-                  <Progress value={progress} className="h-2" />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Swords className={cn("h-4 w-4 transition-colors", competitorPressureOn ? "text-primary" : "text-muted-foreground/50")} />
+                    <Switch
+                      checked={competitorPressureOn}
+                      onCheckedChange={setCompetitorPressureOn}
+                      aria-label={language === 'fr' ? 'Pression concurrentielle' : 'Competitor pressure'}
+                    />
+                    <span className={cn("text-xs whitespace-nowrap transition-colors", competitorPressureOn ? "text-primary font-medium" : "text-muted-foreground")}>
+                      {language === 'fr' ? 'Pression concurrentielle' : language === 'es' ? 'Presión competitiva' : 'Competitor pressure'}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Active tasks grouped by priority */}
