@@ -234,7 +234,7 @@ function FooterComponent() {
 
       <footer className="border-t border-border bg-card" role="contentinfo">
         <div className="mx-auto max-w-7xl px-4 py-12">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-6">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
             
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -318,32 +318,6 @@ function FooterComponent() {
               </nav>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                {t3(language, 'Découvrir aussi', 'Also Discover', 'Descubrir también')}
-              </h3>
-              <ul className="space-y-3">
-                {partnerLinks.map((link) => (
-                  <li key={link.href}>
-                    <a 
-                      href={link.href}
-                      target="_blank"
-                      rel={link.dofollow ? 'noopener' : 'noopener noreferrer nofollow'}
-                      className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                      title={link.description}
-                    >
-                      <ExternalLink className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium">{link.label}</span>
-                        <p className="text-xs text-muted-foreground/80 group-hover:text-muted-foreground">
-                          {link.description}
-                        </p>
-                      </div>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
         </div>
 
