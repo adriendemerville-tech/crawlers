@@ -1503,7 +1503,7 @@ En phase EXECUTE, si tu rencontres ces items, route-les vers content-architectur
 - Impact: faible | modéré | neutre | avancé | très_avancé
 - Risque: 1 à ${context.maxRisk} MAXIMUM${context.conservativeMode ? ' (MODE CONSERVATEUR — erreurs > 20%)' : ''}
 - Si risque ≥ 4 → réduis le scope
-${errorHistory}${previousResults}${pendingRecos}${rawData}
+${errorHistory}${previousResults}${pendingRecos}${rawData}${context.baselineSeoScore ? `\n\n## SCORE SEO BASELINE (déterministe, 0 token LLM)\nScore global: ${context.baselineSeoScore.overall}/100\nAxes: content_depth=${context.baselineSeoScore.axes.content_depth}, heading=${context.baselineSeoScore.axes.heading_structure}, keywords=${context.baselineSeoScore.axes.keyword_relevance}, linking=${context.baselineSeoScore.axes.internal_linking}, meta=${context.baselineSeoScore.axes.meta_quality}, eeat=${context.baselineSeoScore.axes.eeat_signals}\nIssues: ${context.baselineSeoScore.issues.slice(0, 5).join(' | ')}\nOpportunités: ${context.baselineSeoScore.opportunities.slice(0, 3).join(' | ')}` : ''}
 
 ## FORMAT DE RÉPONSE (JSON strict, sans texte autour)
 {
