@@ -341,6 +341,21 @@ export default function AppEeat() {
                   </div>
                 ))}
               </div>
+
+              {/* CTA Audit Expert */}
+              <div className="mt-16 text-center p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20">
+                <h2 className="text-2xl font-bold text-foreground mb-3">
+                  {language === 'fr' ? 'Allez plus loin avec l\'Audit Expert' : language === 'es' ? 'Vaya más lejos con la Auditoría Experta' : 'Go further with the Expert Audit'}
+                </h2>
+                <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+                  {language === 'fr' ? 'Obtenez un audit SEO technique complet de 200+ points, avec correctifs actionnables et plan de priorités.' : language === 'es' ? 'Obtenga una auditoría SEO técnica completa de 200+ puntos, con correcciones accionables.' : 'Get a comprehensive 200+ point technical SEO audit with actionable fixes and priority plan.'}
+                </p>
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Link to="/audit-expert">
+                    {language === 'fr' ? 'Lancer un Audit Expert gratuit' : language === 'es' ? 'Iniciar Auditoría Experta gratis' : 'Start a free Expert Audit'}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </section>
         )}
