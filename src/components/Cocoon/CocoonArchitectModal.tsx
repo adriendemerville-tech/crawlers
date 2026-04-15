@@ -223,6 +223,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId, recommendationText, trackedSiteDomainId }: CocoonArchitectModalProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { can: canDo } = useTeamPermissions();
   const [expandedFix, setExpandedFix] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
