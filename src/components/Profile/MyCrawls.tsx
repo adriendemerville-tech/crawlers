@@ -122,7 +122,7 @@ function getStatusBadge(status: string, t: typeof translations['fr']) {
   }
 }
 
-export function MyCrawls() {
+export function MyCrawls({ externalDomain }: { externalDomain?: string | null }) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -132,8 +132,14 @@ export function MyCrawls() {
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<SiteCrawl | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(externalDomain ?? null);
   const [indexHistory, setIndexHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (externalDomain !== undefined && externalDomain !== null) {
+      setSelectedDomain(externalDomain);
+    }
+  }, [externalDomain]);
 
   const fetchCrawls = async () => {
     if (!user) return;

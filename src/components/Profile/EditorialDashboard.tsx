@@ -40,7 +40,7 @@ const statCards = (stats: EditorialStats) => [
   { label: 'Sans sous-titre', value: stats.missing_subtitle, icon: AlertTriangle, color: 'text-orange-400' },
 ];
 
-export function EditorialDashboard() {
+export function EditorialDashboard({ externalDomain }: { externalDomain?: string | null }) {
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [stats, setStats] = useState<EditorialStats | null>(null);
@@ -59,10 +59,20 @@ export function EditorialDashboard() {
         .order('domain');
       if (data && data.length > 0) {
         setSites(data);
-        setSelectedSiteId(data[0].id);
+        // If external domain matches a site, select it; otherwise first
+        const match = externalDomain ? data.find(s => s.domain === externalDomain) : null;
+        setSelectedSiteId(match ? match.id : data[0].id);
       }
     })();
   }, []);
+
+  // Sync with external domain changes
+  useEffect(() => {
+    if (externalDomain && sites.length > 0) {
+      const match = sites.find(s => s.domain === externalDomain);
+      if (match) setSelectedSiteId(match.id);
+    }
+  }, [externalDomain, sites]);
 
   useEffect(() => {
     if (!selectedSiteId) return;
