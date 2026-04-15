@@ -139,10 +139,27 @@ export function ParmenionTaskPlan({ domain }: ParmenionTaskPlanProps) {
 
       if (error) throw error;
 
+      // Deduplicate by title (keep highest spiral_score or first manual_priority)
+      const seen = new Map<string, any>();
+      for (const d of (data as any[]) || []) {
+        const key = (d.title || '').trim().toLowerCase();
+        if (seen.has(key)) {
+          const existing = seen.get(key);
+          // Keep the one with manual_priority set, or highest spiral_score
+          if (d.manual_priority != null && existing.manual_priority == null) {
+            seen.set(key, d);
+          } else if ((d.spiral_score || 0) > (existing.spiral_score || 0) && existing.manual_priority == null) {
+            seen.set(key, d);
+          }
+        } else {
+          seen.set(key, d);
+        }
+      }
+
       // Sort: manual_priority first (if set), then spiral_score desc
-      const sorted = ((data as any[]) || []).map((d: any) => ({
+      const sorted = Array.from(seen.values()).map((d: any) => ({
         ...d,
-        tier: d.tier ?? 5, // fallback
+        tier: d.tier ?? 5,
       })).sort((a: any, b: any) => {
         if (a.manual_priority != null && b.manual_priority != null) return a.manual_priority - b.manual_priority;
         if (a.manual_priority != null) return -1;
