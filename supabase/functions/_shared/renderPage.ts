@@ -4,6 +4,7 @@
  */
 import { trackPaidApiCall } from './tokenTracker.ts';
 import { stealthFetch } from './stealthFetch.ts';
+import { withBrowserlessSlot } from './browserlessSemaphore.ts';
 
 export interface RenderResult {
   html: string;
@@ -122,40 +123,40 @@ async function logBrowserlessError(statusCode: number, errorMessage: string, url
 }
 
 async function renderWithBrowserless(url: string, renderingKey: string): Promise<string | null> {
-  try {
-    const renderUrl = `https://production-sfo.browserless.io/content?token=${renderingKey}`;
-    const response = await fetch(renderUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url,
-        gotoOptions: { waitUntil: 'networkidle2', timeout: 135000 },
-        waitForSelector: { selector: 'h1, main, [role="main"], #content, .content, article', timeout: 45000 },
-        waitForTimeout: 9000,
-      }),
-      signal: AbortSignal.timeout(180000),
-    });
+  return await withBrowserlessSlot(async () => {
+    try {
+      const renderUrl = `https://production-sfo.browserless.io/content?token=${renderingKey}`;
+      const response = await fetch(renderUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          gotoOptions: { waitUntil: 'networkidle2', timeout: 30000 },
+          waitForSelector: { selector: 'h1, main, [role="main"], #content, .content, article', timeout: 10000 },
+          waitForTimeout: 3000,
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
 
-    if (response.ok) {
-      const renderedHtml = await response.text();
-      await trackPaidApiCall('renderPage', 'browserless', '/content', url).catch(() => {});
-      return renderedHtml;
-    } else {
-      console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
-      await logBrowserlessError(response.status, `HTTP ${response.status}`, url);
-      // Fallback to Fly.io on quota exhaustion (429) or server errors
-      if (response.status === 429 || response.status >= 500) {
-        return await renderWithFlyPlaywright(url);
+      if (response.ok) {
+        const renderedHtml = await response.text();
+        await trackPaidApiCall('renderPage', 'browserless', '/content', url).catch(() => {});
+        return renderedHtml;
+      } else {
+        console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
+        await logBrowserlessError(response.status, `HTTP ${response.status}`, url);
+        if (response.status === 429 || response.status >= 500) {
+          return await renderWithFlyPlaywright(url);
+        }
+        return null;
       }
-      return null;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.log('[renderPage] ⚠️ Browserless failed:', msg);
+      await logBrowserlessError(0, msg, url);
+      return await renderWithFlyPlaywright(url);
     }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.log('[renderPage] ⚠️ Browserless failed:', msg);
-    await logBrowserlessError(0, msg, url);
-    // Fallback to Fly.io on any Browserless failure
-    return await renderWithFlyPlaywright(url);
-  }
+  }, `renderPage:${url}`) ?? await renderWithFlyPlaywright(url);
 }
 
 /**
@@ -177,8 +178,8 @@ async function renderWithFlyPlaywright(url: string): Promise<string | null> {
         'Content-Type': 'application/json',
         ...(flySecret ? { 'x-secret': flySecret } : {}),
       },
-      body: JSON.stringify({ url, timeout: 135000, waitFor: 9000 }),
-      signal: AbortSignal.timeout(180000),
+      body: JSON.stringify({ url, timeout: 30000, waitFor: 3000 }),
+      signal: AbortSignal.timeout(45000),
     });
 
     if (response.ok) {

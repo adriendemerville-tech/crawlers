@@ -265,7 +265,7 @@ function syntaxOnlyCheck(code: string, startTime: number): DryRunResult {
   try {
     new Function(code);
   } catch (e) {
-    jsErrors.push(e instanceof Error ? e.message : 'Syntax error', 'dry-run-script'))
+    jsErrors.push(e instanceof Error ? e.message : 'Syntax error');
   }
 
   return {

@@ -5,6 +5,7 @@
 import type { PageAnalysis, CustomSelector } from './types.ts';
 import { analyzeHtml, computePageScore } from './htmlAnalyzer.ts';
 import { trackPaidApiCall } from '../tokenTracker.ts';
+import { withBrowserlessSlot } from '../browserlessSemaphore.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
@@ -12,30 +13,34 @@ const SPIDER_API = 'https://api.spider.cloud';
 // ── Browserless rendering ──────────────────────────────────
 export async function renderWithBrowserless(url: string, renderingKey: string): Promise<{ html: string | null; responseTime: number }> {
   const start = Date.now();
-  try {
-    const response = await fetch(`https://production-sfo.browserless.io/content?token=${renderingKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url,
-        gotoOptions: { waitUntil: 'networkidle2', timeout: 20000 },
-        waitForSelector: { selector: 'body', timeout: 5000 },
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
-    const responseTime = Date.now() - start;
+  const result = await withBrowserlessSlot(async () => {
+    try {
+      const response = await fetch(`https://production-sfo.browserless.io/content?token=${renderingKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          gotoOptions: { waitUntil: 'networkidle2', timeout: 20000 },
+          waitForSelector: { selector: 'body', timeout: 5000 },
+        }),
+        signal: AbortSignal.timeout(25000),
+      });
+      const responseTime = Date.now() - start;
 
-    if (response.ok) {
-      const html = await response.text();
-      await trackPaidApiCall('process-crawl-queue', 'browserless', '/content', url).catch(() => {});
-      return { html, responseTime };
+      if (response.ok) {
+        const html = await response.text();
+        await trackPaidApiCall('process-crawl-queue', 'browserless', '/content', url).catch(() => {});
+        return { html, responseTime };
+      }
+      console.warn(`[Worker] Browserless error ${response.status} for ${url}`);
+      return { html: null, responseTime };
+    } catch (e) {
+      console.warn(`[Worker] Browserless failed for ${url}:`, e instanceof Error ? e.message : e);
+      return { html: null, responseTime: Date.now() - start };
     }
-    console.warn(`[Worker] Browserless error ${response.status} for ${url}`);
-    return { html: null, responseTime };
-  } catch (e) {
-    console.warn(`[Worker] Browserless failed for ${url}:`, e instanceof Error ? e.message : e);
-    return { html: null, responseTime: Date.now() - start };
-  }
+  }, `crawl:${url}`);
+
+  return result ?? { html: null, responseTime: Date.now() - start };
 }
 
 // ── Scrape a single page ───────────────────────────────────
