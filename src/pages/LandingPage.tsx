@@ -1,9 +1,12 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, lazy, Suspense } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { Header } from '@/components/Header';
+
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 interface LandingDraft {
   title: string;
