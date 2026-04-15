@@ -82,3 +82,18 @@ Updated: 2026-04-08
 - Champs : `model`, `prompt_tokens`, `completion_tokens`, `total_tokens`, `estimated_cost_usd`, `gateway`, `edge_function`, `is_fallback`
 - Edge functions trackées : `sav-agent`, `cocoon-chat`, `strategic-synthesis`, `audit-strategique-ia`, `content-architecture-advisor`, `generate-corrective-code`, `autopilot-engine`, etc.
 - Dashboard Finances (admin) : agrège les coûts par edge function et par modèle
+
+## Système de Queue & Batch Processing (`job_queue`)
+- Table : `job_queue` — file d'attente centralisée avec priorité, verrouillage optimiste, retry automatique (3 max)
+- Table : `rate_limit_tokens` — token bucket global pour les appels LLM (30 tokens, recharge 20/sec)
+- Edge function : `queue-worker` — déclenché par cron (30s), claim atomique via `claim_jobs()` (FOR UPDATE SKIP LOCKED), concurrence 10 jobs/batch 15
+- Helper : `_shared/jobQueue.ts` — `enqueueJob()`, `enqueueBatch()`, `completeJob()`, `failJob()`
+- **Priorité par plan** :
+  - `agency_premium` = 10 (la plus haute, traité en premier)
+  - `agency_pro` = 20
+  - Nouvel utilisateur (<24h) = 30 (prioritaire sur les inscrits standards)
+  - Inscrit standard = 40
+- Fonction SQL `resolve_job_priority(p_user_id)` : calcule automatiquement la priorité depuis `profiles.plan_type` + `profiles.created_at`
+- Fonction SQL `claim_jobs(batch_size, worker_id)` : récupère et verrouille atomiquement un batch de jobs
+- RLS : chaque utilisateur ne voit/crée que ses propres jobs ; le worker utilise le service-role
+- Recovery automatique : les jobs bloqués (locked_until expiré) sont requeueés
