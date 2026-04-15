@@ -23,7 +23,7 @@ interface FeatureCard {
 const i18n = {
   fr: {
     title: 'Toutes les fonctionnalités',
-    subtitle: 'Un écosystème complet pour piloter votre SEO, votre GEO et votre visibilité IA.',
+    subtitle: 'Un écosystème complet pour piloter et automatiser\nvotre SEO, votre GEO et votre visibilité IA.',
     metaTitle: 'Fonctionnalités — Crawlers.fr | SEO & GEO tout-en-un',
     metaDesc: 'Découvrez toutes les fonctionnalités de Crawlers.fr : audit SEO 168 critères, maillage Cocoon, Content Architect, Score GEO, E-E-A-T, Autopilot et plus.',
     cta: 'Découvrir',
@@ -35,7 +35,7 @@ const i18n = {
   },
   en: {
     title: 'All Features',
-    subtitle: 'A comprehensive ecosystem to manage your SEO, GEO and AI visibility.',
+    subtitle: 'A comprehensive ecosystem to manage and automate\nyour SEO, GEO and AI visibility.',
     metaTitle: 'Features — Crawlers.fr | All-in-one SEO & GEO',
     metaDesc: 'Discover all Crawlers.fr features: 168-criteria SEO audit, Cocoon internal linking, Content Architect, GEO Score, E-E-A-T, Autopilot and more.',
     cta: 'Explore',
@@ -47,7 +47,7 @@ const i18n = {
   },
   es: {
     title: 'Todas las funcionalidades',
-    subtitle: 'Un ecosistema completo para gestionar su SEO, GEO y visibilidad IA.',
+    subtitle: 'Un ecosistema completo para gestionar y automatizar\nsu SEO, GEO y visibilidad IA.',
     metaTitle: 'Funcionalidades — Crawlers.fr | SEO & GEO todo-en-uno',
     metaDesc: 'Descubra todas las funcionalidades de Crawlers.fr: auditoría SEO 168 criterios, enlazado Cocoon, Content Architect, Score GEO, E-E-A-T, Autopilot y más.',
     cta: 'Explorar',
@@ -220,7 +220,7 @@ export default function Features() {
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-display">
             {t.title}
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto whitespace-pre-line">
             {t.subtitle}
           </p>
         </div>
