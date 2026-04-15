@@ -769,6 +769,41 @@ try {
       }
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 2d: Crawl Page Quality scoring (deterministic, 0 LLM)
+    // ═══════════════════════════════════════════════════════════
+    const allAffectedUrls = [...new Set(allFindings.flatMap(f => f.affected_urls || []))];
+    const urlQualityMap = new Map<string, number>();
+    const bizProfile = resolveBusinessProfile(siteIdentityData?.business_type || siteIdentityData?.entity_type);
+
+    if (allAffectedUrls.length > 0) {
+      // Find the latest completed crawl for this site
+      const siteDomain = domain.replace(/^www\./, '');
+      const { data: latestCrawl } = await supabase
+        .from('site_crawls')
+        .select('id')
+        .or(`domain.eq.${siteDomain},domain.eq.www.${siteDomain}`)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (latestCrawl?.[0]?.id) {
+        const { data: crawlPages } = await supabase
+          .from('crawl_pages')
+          .select('url, title, h1, meta_description, word_count, seo_score, has_schema_org, has_canonical, has_og, has_noindex, has_nofollow, is_indexable, images_total, images_without_alt, internal_links, external_links, h2_count, h3_count, crawl_depth, http_status')
+          .eq('crawl_id', latestCrawl[0].id)
+          .in('url', allAffectedUrls.slice(0, 100));
+
+        if (crawlPages && crawlPages.length > 0) {
+          for (const cp of crawlPages) {
+            const quality = computeCrawlPageQuality(cp as CrawlPageInput, bizProfile);
+            urlQualityMap.set(cp.url, quality.overall);
+          }
+          console.log(`[strategist] 📊 Quality scored ${urlQualityMap.size} pages (profile: ${bizProfile}, avg: ${Math.round([...urlQualityMap.values()].reduce((a, b) => a + b, 0) / urlQualityMap.size)})`);
+        }
+      }
+    }
+
     // PHASE 3: Transformer findings en tâches stratégiques
     // ═══════════════════════════════════════════════════════════
     const rawTasks: StrategicTask[] = [];
@@ -791,7 +826,7 @@ try {
       }
     }
 
-    // Score and sort tasks — with depth-aware + spiral-aware priority boost
+    // Score and sort tasks — with depth-aware + spiral-aware + quality-aware priority boost
     for (const task of rawTasks) {
       const sevWeight = SEVERITY_WEIGHTS[task.estimated_impact === 'high' ? 'critical' : task.estimated_impact === 'medium' ? 'warning' : 'info'] || 1;
       const catWeight = Math.max(...task.source_diagnostics.map(d => CATEGORY_WEIGHTS[d] || 1));
@@ -804,34 +839,52 @@ try {
         depthBoost = maxDepth >= 5 ? 1.5 : maxDepth >= 4 ? 1.3 : 1.1;
       }
 
-      // Breathing Spiral boost: contraction = recentrage du centre de gravité, pas blocage
-      // En contraction, on boost R1 (code+contenu) et on laisse R2 à 1.0, R3 légèrement freiné
-      // En expansion, on boost les rings supérieurs et la création
+      // Quality boost: low-quality pages get higher priority for improvement tasks
+      // High-quality pages get higher priority as link sources
+      let qualityBoost = 1.0;
+      if (urlQualityMap.size > 0 && task.affected_urls.length > 0) {
+        const avgQuality = task.affected_urls
+          .map((u: string) => urlQualityMap.get(u))
+          .filter((q): q is number => q !== undefined)
+          .reduce((sum, q, _, arr) => sum + q / arr.length, 0);
+        
+        if (avgQuality > 0) {
+          if (['rewrite_content', 'enrich_metadata', 'fix_technical', 'improve_eeat', 'fix_cannibalization'].includes(task.action_type)) {
+            // Improvement tasks: boost when page quality is low (inverse relationship)
+            qualityBoost = avgQuality <= 30 ? 1.4 : avgQuality <= 50 ? 1.2 : avgQuality <= 70 ? 1.0 : 0.9;
+          } else if (['add_internal_link'].includes(task.action_type)) {
+            // Linking tasks: boost when target is weak (needs authority transfer)
+            qualityBoost = avgQuality <= 40 ? 1.3 : 1.0;
+          }
+          // Inject quality score into metadata for downstream consumers
+          if (!task.metadata) task.metadata = {};
+          task.metadata.page_quality_avg = Math.round(avgQuality);
+          task.metadata.business_profile = bizProfile;
+        }
+      }
+
+      // Breathing Spiral boost
       let spiralBoost = 1.0;
       const taskRing = task.metadata?.semantic_ring || task.metadata?.ring || 1;
       if (spiralPhase === 'contraction') {
-        // Consolidation tasks always boosted in contraction
         if (['rewrite_content', 'fix_technical', 'fix_cannibalization', 'enrich_metadata', 'add_internal_link', 'improve_eeat'].includes(task.action_type)) {
           spiralBoost = 1.3;
         } else if (task.action_type === 'create_content') {
-          // Gravity-based: R1 creation boosted, R2 neutral, R3 slightly dampened
           spiralBoost = taskRing === 1 ? 1.15 : taskRing === 2 ? 1.0 : 0.85;
         }
       } else if (spiralPhase === 'expansion') {
         if (['create_content', 'publish_draft'].includes(task.action_type)) {
-          // Expansion: boost R2/R3 creation more than R1
           spiralBoost = taskRing >= 2 ? 1.3 : 1.1;
         } else if (['fix_technical', 'enrich_metadata'].includes(task.action_type)) {
           spiralBoost = 0.9;
         }
       }
 
-      // Per-URL spiral boost: if a specific URL has high spiral_score, boost its tasks
+      // Per-URL spiral boost
       const urlSpiralMax = Math.max(0, ...task.affected_urls.map((u: string) => spiralUrlScoreMap.get(u) || 0));
       if (urlSpiralMax >= 60) spiralBoost *= 1.2;
 
-      task.priority = Math.round(sevWeight * catWeight * depthBoost * spiralBoost * 10);
-      // Inject spiral context into task metadata for Parménion consumption
+      task.priority = Math.round(sevWeight * catWeight * depthBoost * qualityBoost * spiralBoost * 10);
       if (!task.metadata) task.metadata = {};
       task.metadata.spiral_phase = spiralPhase;
       task.metadata.spiral_score_avg = avgSpiralScore;
