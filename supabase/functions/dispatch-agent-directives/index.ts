@@ -63,10 +63,26 @@ const DELAY_BETWEEN_AGENTS_MS = 2000;
 
 Deno.serve(handleRequest(async (_req) => {
   const supabase = getServiceClient();
-  const report: Record<string, { found: number; triggered: number; errors: string[] }> = {};
+  const report: Record<string, { found: number; triggered: number; errors: string[]; recovered: number }> = {};
+
+  // ── STALE RECOVERY: Reset in_progress directives older than 30 minutes back to pending ──
+  for (const agent of AGENT_CONFIG) {
+    try {
+      const thirtyMinAgo = new Date(Date.now() - 30 * 60_000).toISOString();
+      const { data: stale } = await supabase
+        .from(agent.table as any)
+        .update({ status: 'pending' } as any)
+        .eq('status', 'in_progress')
+        .lt('updated_at', thirtyMinAgo)
+        .select('id');
+      if (stale?.length) {
+        console.log(`[dispatch] ♻️ Recovered ${stale.length} stale ${agent.name} directive(s)`);
+      }
+    } catch { /* ignore */ }
+  }
 
   for (const agent of AGENT_CONFIG) {
-    const agentReport = { found: 0, triggered: 0, errors: [] as string[] };
+    const agentReport = { found: 0, triggered: 0, errors: [] as string[], recovered: 0 };
     report[agent.name] = agentReport;
 
     try {
