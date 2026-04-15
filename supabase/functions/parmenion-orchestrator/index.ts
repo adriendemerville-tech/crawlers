@@ -5,6 +5,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 import { isIktrackerDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+import { computeSeoScoreV2, extractTextContent, type SeoScoreV2 } from '../_shared/seoScoringV2.ts';
 
 // ═══ Modular imports ═══
 import {
@@ -94,6 +95,7 @@ try {
       }
     }
 
+    let baselineSeoScore: SeoScoreV2 | null = null;
     console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
 
     // ═══ PHASE 1: Segmented feedback — Check error rate by action type ═══
@@ -230,6 +232,29 @@ try {
         functions: d.functions_called,
         results: d.execution_results,
       }));
+
+    // ═══ PRE-SCORE: Fast deterministic page scoring (0 LLM tokens) ═══
+    if (currentPhase === 'audit' || currentPhase === 'prescribe') {
+      try {
+        const targetUrl = `https://${domain}`;
+        const fetchRes = await fetch(targetUrl, {
+          headers: { 'User-Agent': 'CrawlersBot/1.0 (SEO Audit)' },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (fetchRes.ok) {
+          const html = await fetchRes.text();
+          const textContent = extractTextContent(html);
+          baselineSeoScore = computeSeoScoreV2(html, textContent, {
+            pageType: 'landing',
+            customKeywords: siteKeywords.length > 0 ? siteKeywords.slice(0, 15) : undefined,
+          });
+          console.log(`[Parménion] 📐 Baseline SEO score: ${baselineSeoScore.overall}/100 — Issues: ${baselineSeoScore.issues.length}, Opps: ${baselineSeoScore.opportunities.length}`);
+          console.log(`[Parménion] 📐 Axes: content_depth=${baselineSeoScore.axes.content_depth} heading=${baselineSeoScore.axes.heading_structure} keywords=${baselineSeoScore.axes.keyword_relevance} linking=${baselineSeoScore.axes.internal_linking} meta=${baselineSeoScore.axes.meta_quality} eeat=${baselineSeoScore.axes.eeat_signals}`);
+        }
+      } catch (e) {
+        console.warn('[Parménion] Pre-score fetch failed (non-blocking):', e instanceof Error ? e.message : e);
+      }
+    }
 
     // ═══ PHASE 2b: DUAL-LANE ALGORITHMIC SCORING (prescribe phase) ═══
     let scoredWorkbenchItems: any[] = [];
@@ -391,6 +416,7 @@ try {
         siteInfo,
         scoredWorkbenchItems,
         cmsInventory,
+        baselineSeoScore,
       });
     }
 
@@ -467,6 +493,13 @@ try {
       pipeline_phase: currentPhase,
       conservative_mode: conservativeMode,
       error_rate: errorRateData,
+      baseline_seo_score: baselineSeoScore ? {
+        overall: baselineSeoScore.overall,
+        axes: baselineSeoScore.axes,
+        issues_count: baselineSeoScore.issues.length,
+        top_issues: baselineSeoScore.issues.slice(0, 5),
+        opportunities: baselineSeoScore.opportunities.slice(0, 3),
+      } : null,
     });
 
   } catch (e) {
@@ -1415,6 +1448,7 @@ async function askParmenionLLM(context: {
   siteInfo: any;
   scoredWorkbenchItems: any[];
   cmsInventory?: CmsContentInventory | null;
+  baselineSeoScore?: SeoScoreV2 | null;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -1468,7 +1502,7 @@ En phase EXECUTE, si tu rencontres ces items, route-les vers content-architectur
 - Impact: faible | modéré | neutre | avancé | très_avancé
 - Risque: 1 à ${context.maxRisk} MAXIMUM${context.conservativeMode ? ' (MODE CONSERVATEUR — erreurs > 20%)' : ''}
 - Si risque ≥ 4 → réduis le scope
-${errorHistory}${previousResults}${pendingRecos}${rawData}
+${errorHistory}${previousResults}${pendingRecos}${rawData}${context.baselineSeoScore ? `\n\n## SCORE SEO BASELINE (déterministe, 0 token LLM)\nScore global: ${context.baselineSeoScore.overall}/100\nAxes: content_depth=${context.baselineSeoScore.axes.content_depth}, heading=${context.baselineSeoScore.axes.heading_structure}, keywords=${context.baselineSeoScore.axes.keyword_relevance}, linking=${context.baselineSeoScore.axes.internal_linking}, meta=${context.baselineSeoScore.axes.meta_quality}, eeat=${context.baselineSeoScore.axes.eeat_signals}\nIssues: ${context.baselineSeoScore.issues.slice(0, 5).join(' | ')}\nOpportunités: ${context.baselineSeoScore.opportunities.slice(0, 3).join(' | ')}` : ''}
 
 ## FORMAT DE RÉPONSE (JSON strict, sans texte autour)
 {
