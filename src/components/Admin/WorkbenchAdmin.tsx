@@ -94,14 +94,14 @@ export function WorkbenchAdmin() {
 
   const loadItems = useCallback(async () => {
     setLoading(true);
-    let query = supabase
+      let query = supabase
       .from('architect_workbench')
       .select('id, title, domain, status, severity, finding_category, spiral_score, target_url, source_type, created_at, manual_priority')
       .order('created_at', { ascending: false })
       .limit(200);
 
     if (filterDomain !== 'all') query = query.eq('domain', filterDomain);
-    if (filterStatus !== 'all') query = query.eq('status', filterStatus);
+    if (filterStatus !== 'all') query = query.eq('status', filterStatus as any);
 
     const { data, error } = await query;
     if (error) {
