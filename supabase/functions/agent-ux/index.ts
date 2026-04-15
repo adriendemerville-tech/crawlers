@@ -194,7 +194,7 @@ Deno.serve(handleRequest(async (req) => {
     const proposalsToCreate = findings.filter(f => f.proposed_fix && f.confidence >= 70);
     for (const finding of proposalsToCreate) {
       await supabase.from('cto_code_proposals').insert({
-        user_id: user.id,
+        user_id: userId || 'system',
         title: `[UX] ${finding.title}`,
         description: finding.description,
         file_path: finding.file_path,
@@ -267,7 +267,7 @@ Retourne en JSON :
     // Create proposal
     if (parsed.code) {
       await supabase.from('cto_code_proposals').insert({
-        user_id: user.id,
+        user_id: userId || 'system',
         title: `[UX] Nouveau composant: ${parsed.component_name || 'Component'}`,
         description: parsed.integration_instructions || directive,
         file_path: parsed.file_path || 'src/components/NewComponent.tsx',
