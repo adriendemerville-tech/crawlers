@@ -34,7 +34,7 @@ const translations = {
       { icon: Brain, label: 'Visibilité LLM', description: 'Analysez votre présence sur ChatGPT, Claude, Gemini' },
       { icon: Gauge, label: 'PageSpeed', description: 'Testez les performances et Core Web Vitals' },
     ],
-    registrationSection: 'Audit Technique',
+    registrationSection: 'Audit Technique SEO',
     registrationDescription: 'Gratuit avec inscription',
     registrationFeatures: [
       'Rapport SEO technique complet',
