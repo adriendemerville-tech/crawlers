@@ -265,7 +265,7 @@ function SortableTaskItem({
               variant="ghost"
               size="sm"
               onClick={onOpenContentArchitect}
-              className="text-xs gap-1 text-[#fbbf24] hover:text-[#fbbf24] hover:bg-[#fbbf24]/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="text-xs gap-1 text-emerald-500 hover:text-emerald-500 hover:bg-emerald-500/10 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
               title="Ouvrir dans Content Architect"
             >
               <PenLine className="h-3 w-3" />
