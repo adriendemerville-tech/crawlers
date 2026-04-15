@@ -114,7 +114,7 @@ async function computeSignalsForSite(
   let updated = 0
   for (const item of items) {
     const velocityScore = getVelocityForItem(velocityMap, item.target_url)
-    const competitorScore = 0 // Will be computed when competitor data is available in keyword_universe
+    const competitorScore = getCompetitorMomentumForItem(competitorMomentumMap, item.target_url, item.finding_category)
     const maturity = item.cluster_id ? (clusterMaturityMap.get(item.cluster_id) ?? 0) : 0
     const convWeight = getConversionForItem(conversionMap, item.target_url)
     const topicSat = item.cluster_id ? (topicSaturationMap.get(item.cluster_id) ?? 0) : 0
