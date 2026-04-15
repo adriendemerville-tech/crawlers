@@ -232,6 +232,18 @@ function SortableTaskItem({
         {item.description && (
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
         )}
+        {item.target_url && (
+          <a
+            href={item.target_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-primary/70 hover:text-primary hover:underline mt-0.5 flex items-center gap-1 truncate"
+            onClick={e => e.stopPropagation()}
+          >
+            <ExternalLink className="h-3 w-3 shrink-0" />
+            <span className="truncate">{item.target_url}</span>
+          </a>
+        )}
         <div className="flex items-center gap-2 mt-1">
           <span className={cn(
             "text-xs px-1.5 py-0.5 rounded",
@@ -243,9 +255,6 @@ function SortableTaskItem({
           </span>
           {item.finding_category && (
             <span className="text-xs text-muted-foreground">{item.finding_category}</span>
-          )}
-          {item.source_function && (
-            <span className="text-[10px] text-muted-foreground/60">{item.source_function}</span>
           )}
         </div>
       </div>
