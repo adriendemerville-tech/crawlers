@@ -75,6 +75,7 @@ function LandingPageComponent() {
         <meta property="og:type" content="website" />
       </Helmet>
 
+      <Header />
       <main className="min-h-screen bg-background">
         <article className="max-w-4xl mx-auto px-4 py-12 sm:py-16">
           <header className="mb-8">
@@ -93,6 +94,9 @@ function LandingPageComponent() {
           </div>
         </article>
       </main>
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </>
   );
 }
