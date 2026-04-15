@@ -99,15 +99,16 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true },
     { value: 'drafts', label: 'Content', icon: FileEdit, hideOnMobile: true, beta: true },
     ...(isProUser ? [
-      { value: 'reports-tab', label: t.reports, icon: FileBox, hideOnMobile: true },
       { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true },
     ] : []),
     { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true },
     { value: 'gmb', label: 'GMB', icon: Store },
     { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true },
-    ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true }] : []),
     ...(!isProUser ? [
       { value: 'reports', label: t.reports, icon: FileText, hideOnMobile: true },
+    ] : []),
+    ...(isProUser ? [
+      { value: 'reports-tab', label: t.reports, icon: FileBox, hideOnMobile: true },
     ] : []),
   ];
 
