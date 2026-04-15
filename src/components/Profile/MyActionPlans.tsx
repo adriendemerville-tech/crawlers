@@ -545,22 +545,35 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
             <div>
               {/* Main content */}
               <div className="flex-1 min-w-0 space-y-4">
-                {/* Progress bar */}
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">
-                      {totalActive === 0 ? (
-                        <span className="flex items-center gap-1 text-success">
-                          <Check className="h-4 w-4" />
-                          {t.completed}
-                        </span>
-                      ) : (
-                        `${totalActive} ${t.tasksRemaining}`
-                      )}
-                    </span>
-                    <span className="text-muted-foreground">{progress}%</span>
+                {/* Header with progress + competitor switch */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">
+                        {totalActive === 0 ? (
+                          <span className="flex items-center gap-1 text-success">
+                            <Check className="h-4 w-4" />
+                            {t.completed}
+                          </span>
+                        ) : (
+                          `${totalActive} ${t.tasksRemaining}`
+                        )}
+                      </span>
+                      <span className="text-muted-foreground">{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
                   </div>
-                  <Progress value={progress} className="h-2" />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Swords className={cn("h-4 w-4 transition-colors", competitorPressureOn ? "text-primary" : "text-muted-foreground/50")} />
+                    <Switch
+                      checked={competitorPressureOn}
+                      onCheckedChange={setCompetitorPressureOn}
+                      aria-label={language === 'fr' ? 'Pression concurrentielle' : 'Competitor pressure'}
+                    />
+                    <span className={cn("text-xs whitespace-nowrap transition-colors", competitorPressureOn ? "text-primary font-medium" : "text-muted-foreground")}>
+                      {language === 'fr' ? 'Pression concurrentielle' : language === 'es' ? 'Presión competitiva' : 'Competitor pressure'}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Active tasks grouped by priority */}
