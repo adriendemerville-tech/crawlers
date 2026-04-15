@@ -141,7 +141,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           className="w-full bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white font-semibold"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
-          {t3(language, 'S\'abonner maintenant', 'Subscribe now', 'Suscribirse ahora')}
+          {t3(language, 'S\'abonner', 'Subscribe', 'Suscribirse')}
         </Button>
       </div>
 
@@ -182,7 +182,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-bold shadow-lg shadow-amber-500/20"
         >
           {loadingPlus ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
-          {t3(language, 'S\'abonner maintenant', 'Subscribe now', 'Suscribirse ahora')}
+          {t3(language, 'S\'abonner', 'Subscribe', 'Suscribirse')}
         </Button>
       </div>
 
