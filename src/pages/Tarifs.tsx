@@ -856,15 +856,15 @@ export default function Tarifs() {
                   {t.freeTools.map((tool, index) => {
                     const Icon = tool.icon;
                     return (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+                      <Link key={index} to={tool.href} className="flex items-start gap-3 p-3 rounded-lg bg-card border hover:border-emerald-500/50 hover:shadow-md transition-all group">
                         <div className="p-2 rounded-lg bg-emerald-500/10">
                           <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{tool.label}</p>
+                          <p className="font-medium text-sm group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{tool.label}</p>
                           <p className="text-xs text-muted-foreground">{tool.description}</p>
                         </div>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>
