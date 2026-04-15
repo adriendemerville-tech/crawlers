@@ -895,6 +895,7 @@ export default function Tarifs() {
                 </ul>
               </CardContent>
             </Card>
+            </Link>
 
             {/* Paid Section */}
             <div className="space-y-6">
