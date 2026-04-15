@@ -1022,10 +1022,11 @@ Le module Cocoon transforme les données de crawl d'un site en une **visualisati
 
 1. **Vérification des exclusions** : vérifie si la page source est exclue du maillage sortant
 2. **Récupération du contenu** : charge le \`body_text_truncated\` de la page source depuis le dernier crawl
-3. **Sélection des cibles** : top 20 pages indexables triées par \`seo_score\`, filtrage des exclusions
-4. **Pré-scan intelligent** : recherche les titres/H1 des pages cibles dans le texte source (économie 20-40% d'appels IA)
-5. **Sélection d'ancres IA** (Gemini Flash via tool calling) : pour les pages non matchées, l'IA identifie le meilleur texte d'ancrage existant dans le contenu source (2-6 mots, contextuel)
-6. **Persistance** : les suggestions sont stockées dans \`cocoon_auto_links\` avec \`is_deployed = false\` pour reversibilité
+3. **Sélection des cibles** : top 30 pages indexables triées par \`seo_score\`, filtrage des exclusions
+4. **Scoring qualité déterministe** : chaque page candidate est scorée par \`computeCrawlPageQuality()\` (module partagé \`_shared/crawlPageQuality.ts\`) — score composite 0-100 sur 6 axes (word_count, meta, headings, links_in, links_out, seo_score) avec pondération adaptée au \`BusinessProfile\` du site. Les pages sont re-classées par ce score (top 20 retenus)
+5. **Pré-scan intelligent** : recherche les titres/H1 des pages cibles dans le texte source (économie 20-40% d'appels IA)
+6. **Sélection d'ancres IA** (Gemini Flash via tool calling) : pour les pages non matchées, l'IA identifie le meilleur texte d'ancrage existant dans le contenu source (2-6 mots, contextuel)
+7. **Persistance** : les suggestions sont stockées dans \`cocoon_auto_links\` avec \`is_deployed = false\` pour reversibilité
 
 ### Tables
 
@@ -1332,6 +1333,7 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 - **Signalement de bugs** : Détection NLP → bouton signaler → message pré-traduit pour le CTO → \\\`user_bug_reports\\\`
 - **Notification résolution** : Badge sur le bouton assistant quand un signalement est résolu par le CTO
 - **Mémoire de site** : Injecte les faits saillants des 3 sites les plus actifs via \\\`siteMemory.ts\\\`
+- **Modules partagés** : Accès en lecture aux résultats de \\\`computeCrawlPageQuality()\\\` et \\\`computeSeoScoreV2()\\\` pour contextualiser les explications (scores déterministes des pages et du site)
 - **Animation d'invitation** : Ping-pong 20s après l'arrivée sur la home
 
 ### Mode Créateur (admin uniquement)
@@ -1381,6 +1383,7 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **Rôle** : Recommandations stratégiques par URL, avec mémoire persistante
 - **Table mémoire** : \\\`strategist_recommendations\\\` (user_id, url, tracked_site_id, recommandations, résultats)
 - **Croisement** : GSC (CTR, positions) + GA4 (conversions, pages vues) pour évaluer l'impact
+- **Scoring qualité déterministe** (v3.3) : Appelle \\\`computeCrawlPageQuality()\\\` sur les URLs affectées pour booster la priorité des tâches. Pages faibles (score ≤ 30) → boost x1.4, pages fortes (score > 70) → réduction x0.9. Adapté au \\\`BusinessProfile\\\` du site (local, ecommerce, SaaS, editorial)
 - **3 axes de développement** : Proposés à l'utilisateur, sélection unique → définit l'objectif
 - **Placement mot-clé** : Arbitrage intelligent dans le title et la première phrase selon les bonnes pratiques SEO
 - **Monitoré par** : Agent CTO

@@ -1,5 +1,5 @@
 # Memory: tech/cocoon/comprehensive-engine-v3-fr
-Updated: 2026-04-14
+Updated: 2026-04-15
 
 ## Moteur Cocoon v3 — Graphe Sémantique & Stratège
 
@@ -8,6 +8,14 @@ Updated: 2026-04-14
 2. **Depth** : `semantic_nodes.depth` = `crawl_depth` (BFS, calculé par le crawler). Avant fix: depth était 0/1 (seed/member de cluster). Maintenant: reflète la vraie profondeur BFS pour un placement radial correct.
 2. **Cannibalisation** : Priorité critique (x9 dans le scoring).
 3. **Auto-maillage IA** : Identifie des ancres sémantiques et injecte des liens contextuels via `cocoon_auto_links`.
+
+### Scoring Qualité Déterministe (v3.3)
+- **Module partagé** : `_shared/crawlPageQuality.ts` — `computeCrawlPageQuality(page, profile?)`
+- **Score** : 0-100, composite sur 6 axes (word_count, meta_tags, headings, links_in, links_out, seo_score)
+- **Adaptation** : Pondérations ajustées par `BusinessProfile` (local_business, ecommerce, saas, editorial, agency)
+- **Stratège** : Boost priorité des tâches — pages faibles (≤ 30) → x1.4, pages fortes (> 70) → x0.9
+- **Auto-linking** : Re-rank des cibles par score qualité (top 30 → top 20 après scoring)
+- **Coût** : 0 token LLM, ~2ms par page
 
 ### Crawl Depth — Signal Stratégique (v3.1)
 - **Source** : `crawl_depth` calculé par BFS dans `duplicateDetector.ts` → finalisé dans `finalizer.ts` → persisté dans `crawl_pages`.
