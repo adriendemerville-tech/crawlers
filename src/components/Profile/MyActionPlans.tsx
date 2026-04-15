@@ -232,6 +232,18 @@ function SortableTaskItem({
         {item.description && (
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
         )}
+        {item.target_url && (
+          <a
+            href={item.target_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-primary/70 hover:text-primary hover:underline mt-0.5 flex items-center gap-1 truncate"
+            onClick={e => e.stopPropagation()}
+          >
+            <ExternalLink className="h-3 w-3 shrink-0" />
+            <span className="truncate">{item.target_url}</span>
+          </a>
+        )}
         <div className="flex items-center gap-2 mt-1">
           <span className={cn(
             "text-xs px-1.5 py-0.5 rounded",
@@ -243,9 +255,6 @@ function SortableTaskItem({
           </span>
           {item.finding_category && (
             <span className="text-xs text-muted-foreground">{item.finding_category}</span>
-          )}
-          {item.source_function && (
-            <span className="text-[10px] text-muted-foreground/60">{item.source_function}</span>
           )}
         </div>
       </div>
@@ -534,45 +543,81 @@ export function MyActionPlans() {
                   <Progress value={progress} className="h-2" />
                 </div>
 
-                {/* Active tasks with drag & drop */}
+                {/* Active tasks grouped by priority */}
                 {sortedActive.length === 0 && filteredArchived.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-sm text-muted-foreground">{t.noPlans}</p>
                   </div>
                 )}
 
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext items={sortedActive.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-1">
-                      <AnimatePresence>
-                        {sortedActive.map((item) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                          >
-                            <SortableTaskItem
-                              item={item}
-                              onToggle={toggleTask}
-                              onDelete={deleteTask}
-                              onOpenArchitect={() => handleOpenArchitect(item)}
-                              onOpenContentArchitect={() => handleOpenContentArchitect(item)}
-                              getPriorityColor={getPriorityColor}
-                              getPriorityLabel={getPriorityLabel}
-                              architectLabel={t.architect}
-                              contentArchitectLabel={t.contentArchitect}
-                            />
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
+                {(() => {
+                  const criticalTasks = sortedActive.filter(i => severityToPriority(i.severity) === 'critical');
+                  const importantTasks = sortedActive.filter(i => severityToPriority(i.severity) === 'important');
+                  const optionalTasks = sortedActive.filter(i => severityToPriority(i.severity) === 'optional');
+
+                  const priorityGroups = [
+                    { key: 'critical', label: t.critical, tasks: criticalTasks, color: 'text-destructive', bgColor: 'bg-destructive/10', borderColor: 'border-destructive/30' },
+                    { key: 'important', label: t.important, tasks: importantTasks, color: 'text-warning-foreground', bgColor: 'bg-warning/10', borderColor: 'border-warning/30' },
+                    { key: 'optional', label: t.optional, tasks: optionalTasks, color: 'text-muted-foreground', bgColor: 'bg-muted/30', borderColor: 'border-border' },
+                  ].filter(g => g.tasks.length > 0);
+
+                  return (
+                    <div className="space-y-3">
+                      {priorityGroups.map(group => (
+                        <Collapsible key={group.key} defaultOpen={group.key === 'critical'}>
+                          <CollapsibleTrigger asChild>
+                            <button className={cn(
+                              "w-full flex items-center justify-between px-4 py-2.5 rounded-lg border transition-colors hover:bg-accent/30",
+                              group.borderColor, group.bgColor,
+                            )}>
+                              <span className={cn("flex items-center gap-2 font-medium text-sm", group.color)}>
+                                {group.label}
+                                <span className="text-xs font-normal bg-background/60 px-2 py-0.5 rounded-full">
+                                  {group.tasks.length}
+                                </span>
+                              </span>
+                              <ChevronDown className={cn("h-4 w-4 transition-transform", group.color)} />
+                            </button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <DndContext
+                              sensors={sensors}
+                              collisionDetection={closestCenter}
+                              onDragEnd={handleDragEnd}
+                            >
+                              <SortableContext items={group.tasks.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                <div className="space-y-1 mt-2">
+                                  <AnimatePresence>
+                                    {group.tasks.map((item) => (
+                                      <motion.div
+                                        key={item.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                      >
+                                        <SortableTaskItem
+                                          item={item}
+                                          onToggle={toggleTask}
+                                          onDelete={deleteTask}
+                                          onOpenArchitect={() => handleOpenArchitect(item)}
+                                          onOpenContentArchitect={() => handleOpenContentArchitect(item)}
+                                          getPriorityColor={getPriorityColor}
+                                          getPriorityLabel={getPriorityLabel}
+                                          architectLabel={t.architect}
+                                          contentArchitectLabel={t.contentArchitect}
+                                        />
+                                      </motion.div>
+                                    ))}
+                                  </AnimatePresence>
+                                </div>
+                              </SortableContext>
+                            </DndContext>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      ))}
                     </div>
-                  </SortableContext>
-                </DndContext>
+                  );
+                })()}
 
                 {/* Archived tasks */}
                 {filteredArchived.length > 0 && (

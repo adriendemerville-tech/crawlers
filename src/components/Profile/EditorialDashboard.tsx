@@ -100,36 +100,9 @@ export function EditorialDashboard() {
   const selectedDomain = sites.find(s => s.id === selectedSiteId)?.domain;
 
   return (
-    <div className="flex gap-4">
-      {/* Left sidebar: site buttons + API button */}
-      <div className="shrink-0 w-[160px] space-y-1.5">
-        {sites.map(s => (
-          <Button
-            key={s.id}
-            variant={s.id === selectedSiteId ? 'secondary' : 'ghost'}
-            size="sm"
-            className="w-full justify-start text-xs h-8 gap-1.5 truncate"
-            onClick={() => setSelectedSiteId(s.id)}
-          >
-            <Globe className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{s.domain}</span>
-          </Button>
-        ))}
+    <div className="space-y-4">
 
-        {/* API button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-start text-xs h-8 gap-1.5 border-dashed border-primary/30 text-primary hover:bg-primary/10"
-          onClick={() => setCmsDialogOpen(true)}
-        >
-          <Plug className="h-3.5 w-3.5 shrink-0" />
-          API CMS
-        </Button>
-      </div>
-
-      {/* Right: dashboard */}
-      <Card className="flex-1 border-border/50 bg-card/50">
+      <Card className="border-border/50 bg-card/50">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-2">
