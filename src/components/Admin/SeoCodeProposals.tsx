@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Trash2, Loader2, Search, ChevronDown, ChevronRight, Eye, RefreshCw, AlertTriangle, Rocket } from 'lucide-react';
+import { Check, Trash2, Loader2, Search, ChevronDown, ChevronRight, Eye, RefreshCw, AlertTriangle, Rocket, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -205,6 +205,40 @@ export function SeoCodeProposals() {
                           <span>·</span>
                           <span>{format(new Date(proposal.created_at), 'dd MMM HH:mm', { locale: fr })}</span>
                         </div>
+                      </div>
+                      {/* Quick action buttons visible without expanding */}
+                      {proposal.status === 'pending' && (
+                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-xs gap-1 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+                            onClick={(e) => { e.stopPropagation(); handleAction(proposal.id, 'approve'); }}
+                            disabled={actionLoading === proposal.id}
+                          >
+                            {actionLoading === proposal.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                            Valider
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-xs gap-1 border-red-500/30 text-red-500 hover:bg-red-500/10"
+                            onClick={(e) => { e.stopPropagation(); handleAction(proposal.id, 'reject'); }}
+                            disabled={actionLoading === proposal.id}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-xs text-destructive hover:text-destructive"
+                            onClick={(e) => { e.stopPropagation(); handleAction(proposal.id, 'delete'); }}
+                            disabled={actionLoading === proposal.id}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                       </div>
                     </CollapsibleTrigger>
 
