@@ -868,8 +868,19 @@ Deno.serve(handleRequest(async (req) => {
       console.log(`[AGENT-SEO] 📋 ${relevantDirectives.length} directive(s) admin chargées`);
     }
 
-    // Generate improvements via Lovable AI (context-enriched with SAV + anomalies + admin directives)
-    const operationalCtx = [agentContext?.promptSnippet, directivesContext].filter(Boolean).join('\n');
+    // Build audit enrichment context for LLM
+    let auditEnrichment = '';
+    if (auditExpertData?.data?.recommendations?.length > 0) {
+      const topRecos = auditExpertData.data.recommendations.slice(0, 8);
+      auditEnrichment += `\n\nAUDIT EXPERT SEO (${topRecos.length} recommandations prioritaires) :\n${topRecos.map((r: any, i: number) => `${i + 1}. [${r.priority || 'medium'}] ${r.title}: ${(r.description || '').substring(0, 120)}`).join('\n')}`;
+    }
+    if (eeatData?.data) {
+      const e = eeatData.data;
+      auditEnrichment += `\n\nAUDIT E-E-A-T :\n- Score global: ${e.scores?.overall || 'N/A'}/100\n- Expérience: ${e.scores?.experience || 'N/A'} | Expertise: ${e.scores?.expertise || 'N/A'} | Autorité: ${e.scores?.authoritativeness || 'N/A'} | Fiabilité: ${e.scores?.trustworthiness || 'N/A'}\n- Résumé: ${(e.summary || '').substring(0, 200)}`;
+    }
+
+    // Generate improvements via Lovable AI (context-enriched with SAV + anomalies + admin directives + audits)
+    const operationalCtx = [agentContext?.promptSnippet, directivesContext, auditEnrichment].filter(Boolean).join('\n');
     const { improvements, confidence, tokens } = await generateImprovements(
       pageData.html, pageData.textContent, target, scoreBefore, siteContext,
       operationalCtx || undefined,
