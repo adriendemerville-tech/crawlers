@@ -20,26 +20,20 @@ function FooterComponent() {
   const { t, language } = useLanguage();
 
   const toolsLinks = [
-    { icon: Bot, label: t3(language, 'Analyse Bots IA', 'AI Bots Analysis', 'Análisis Bots IA'), href: '/analyse-bots-ia', description: t3(language, 'Vérifiez l\'accès des robots IA à votre site', 'Check AI bot access to your site', 'Verifique el acceso de los bots IA a su sitio'), isRoute: true },
-    { icon: Globe, label: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'), href: '/score-geo', description: t3(language, 'Optimisation pour moteurs génératifs', 'Generative engine optimization', 'Optimización para motores generativos'), isRoute: true },
-    { icon: Brain, label: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'), href: '/visibilite-llm', description: t3(language, 'Analyse de citabilité par les IA', 'AI citation analysis', 'Análisis de citabilidad por IA'), isRoute: true },
-    { icon: Gauge, label: 'PageSpeed', href: '/pagespeed', description: t3(language, 'Performance et Core Web Vitals', 'Performance & Core Web Vitals', 'Rendimiento y Core Web Vitals'), isRoute: true },
-    { icon: Terminal, label: t3(language, 'Analyse de Logs', 'Log Analysis', 'Análisis de Logs'), href: '/analyse-logs', description: t3(language, 'Comprenez le crawl de Google et des IA', 'Understand Google and AI crawl behavior', 'Comprenda el crawl de Google y las IA'), isRoute: true },
-    { icon: GitCompareArrows, label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'), href: '/app/audit-compare', description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'), isRoute: true },
-    { icon: Radar, label: t3(language, '<code correctif>', '<corrective code>', '<código correctivo>'), href: '/audit-expert', description: t3(language, 'Code correctif SEO/GEO automatique', 'Automatic SEO/GEO corrective code', 'Código correctivo SEO/GEO automático'), isRoute: true },
-    { icon: Radar, label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'), href: '/audit-expert', description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'), isRoute: true },
-    { icon: ScanSearch, label: t3(language, 'Crawl Multi-Pages', 'Multi-Page Crawl', 'Crawl Multi-Página'), href: '/app/site-crawl', description: t3(language, 'Crawl complet jusqu\'à 500 pages', 'Full crawl up to 500 pages', 'Crawl completo hasta 500 páginas'), isRoute: true },
-    { icon: Gauge, label: t3(language, 'Indice d\'Alignement Stratégique', 'Strategic Alignment Index', 'Índice de Alineamiento Estratégico'), href: '/indice-alignement-strategique', description: t3(language, 'Alignement stratégique Brand / Non-Brand', 'Strategic Brand / Non-Brand alignment', 'Alineamiento estratégico Marca / Genérico'), isRoute: true },
-    { icon: Network, label: 'Cocoon', href: '/app/cocoon', description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'), isRoute: true },
-    { icon: Brain, label: 'Code Architect', href: '/architecte-generatif', description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'), isRoute: true },
-    { icon: Eye, label: 'Conversion Optimizer', href: '/conversion-optimizer', description: t3(language, 'Audit UX/CRO contextuel par IA', 'Contextual AI UX/CRO audit', 'Auditoría UX/CRO contextual con IA'), isRoute: true },
-    { icon: Brain, label: 'Content Architect', href: '/content-architect', description: t3(language, 'Génération et optimisation de contenus IA', 'AI content generation and optimization', 'Generación y optimización de contenidos IA'), isRoute: true },
-    { icon: Share2, label: 'Social Content Hub', href: '/social-content-creator', description: t3(language, 'Publication sociale SEO/GEO multi-plateformes', 'SEO/GEO social publishing multi-platform', 'Publicación social SEO/GEO multiplataforma'), isRoute: true },
-    { icon: Globe, label: 'Google Business', href: '/google-business', description: t3(language, 'Optimisation de votre fiche Google Business', 'Google Business profile optimization', 'Optimización de su ficha Google Business'), isRoute: true },
-    { icon: FileText, label: t3(language, 'Matrice d\'audit', 'Audit Matrix', 'Matriz de auditoría'), href: '/matrice', description: t3(language, 'Audit matriciel personnalisé XLSX/CSV/DOCX', 'Custom matrix audit XLSX/CSV/DOCX', 'Auditoría matricial personalizada XLSX/CSV/DOCX'), isRoute: true },
-    { icon: Terminal, label: 'Marina API', href: '/marina#api', description: t3(language, 'API asynchrone de rapports SEO & GEO en marque blanche', 'Async white-label SEO & GEO reporting API', 'API asíncrona de informes SEO & GEO de marca blanca'), isRoute: true },
-    { icon: Shield, label: 'Audit E-E-A-T', href: '/eeat', description: t3(language, 'Score de crédibilité Google E-E-A-T', 'Google E-E-A-T credibility score', 'Puntuación de credibilidad Google E-E-A-T'), isRoute: true },
-    { icon: Activity, label: 'Breathing Spiral', href: '/breathing-spiral', description: t3(language, 'Priorisation dynamique SEO/GEO en temps réel', 'Dynamic real-time SEO/GEO prioritization', 'Priorización dinámica SEO/GEO en tiempo real'), isRoute: true },
+    { label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'), href: '/audit-expert', description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'), isRoute: true },
+    { label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'), href: '/app/audit-compare', description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'), isRoute: true },
+    { label: t3(language, 'Crawl Multi-Pages', 'Multi-Page Crawl', 'Crawl Multi-Página'), href: '/app/site-crawl', description: t3(language, 'Crawl complet jusqu\'à 500 pages', 'Full crawl up to 500 pages', 'Crawl completo hasta 500 páginas'), isRoute: true },
+    { label: 'Cocoon', href: '/app/cocoon', description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'), isRoute: true },
+    { label: 'Code Architect', href: '/architecte-generatif', description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'), isRoute: true },
+    { label: 'Content Architect', href: '/content-architect', description: t3(language, 'Génération et optimisation de contenus IA', 'AI content generation and optimization', 'Generación y optimización de contenidos IA'), isRoute: true },
+    { label: 'Conversion Optimizer', href: '/conversion-optimizer', description: t3(language, 'Audit UX/CRO contextuel par IA', 'Contextual AI UX/CRO audit', 'Auditoría UX/CRO contextual con IA'), isRoute: true },
+    { label: 'Social Content Hub', href: '/social-content-creator', description: t3(language, 'Publication sociale SEO/GEO multi-plateformes', 'SEO/GEO social publishing multi-platform', 'Publicación social SEO/GEO multiplataforma'), isRoute: true },
+    { label: 'Google Business', href: '/google-business', description: t3(language, 'Optimisation de votre fiche Google Business', 'Google Business profile optimization', 'Optimización de su ficha Google Business'), isRoute: true },
+    { label: 'Audit E-E-A-T', href: '/eeat', description: t3(language, 'Score de crédibilité Google E-E-A-T', 'Google E-E-A-T credibility score', 'Puntuación de credibilidad Google E-E-A-T'), isRoute: true },
+    { label: t3(language, 'Matrice d\'audit', 'Audit Matrix', 'Matriz de auditoría'), href: '/matrice', description: t3(language, 'Audit matriciel personnalisé XLSX/CSV/DOCX', 'Custom matrix audit XLSX/CSV/DOCX', 'Auditoría matricial personalizada XLSX/CSV/DOCX'), isRoute: true },
+    { label: 'Marina API', href: '/marina#api', description: t3(language, 'API asynchrone de rapports SEO & GEO en marque blanche', 'Async white-label SEO & GEO reporting API', 'API asíncrona de informes SEO & GEO de marca blanca'), isRoute: true },
+    { label: 'Breathing Spiral', href: '/breathing-spiral', description: t3(language, 'Priorisation dynamique SEO/GEO en temps réel', 'Dynamic real-time SEO/GEO prioritization', 'Priorización dinámica SEO/GEO en tiempo real'), isRoute: true },
+    { label: t3(language, 'Analyse de Logs', 'Log Analysis', 'Análisis de Logs'), href: '/analyse-logs', description: t3(language, 'Comprenez le crawl de Google et des IA', 'Understand Google and AI crawl behavior', 'Comprenda el crawl de Google y las IA'), isRoute: true },
   ];
 
   const resourcesLinks = [
@@ -266,28 +260,16 @@ function FooterComponent() {
                 {t3(language, 'Nos Outils', 'Our Tools', 'Herramientas')}
               </h3>
               <nav aria-label="Outils d'analyse">
-                <ul className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
                   {toolsLinks.map((link) => (
                     <li key={link.href + link.label}>
-                      {link.isRoute ? (
-                        <SmartLink
-                          to={link.href}
-                          className="group flex items-start gap-2 text-sm transition-colors text-muted-foreground hover:text-primary"
-                          title={link.description}
-                        >
-                          <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{link.label}</span>
-                        </SmartLink>
-                      ) : (
-                        <a 
-                          href={link.href}
-                          className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                          title={link.description}
-                        >
-                          <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{link.label}</span>
-                        </a>
-                      )}
+                      <SmartLink
+                        to={link.href}
+                        className="text-sm transition-colors text-muted-foreground hover:text-primary"
+                        title={link.description}
+                      >
+                        {link.label}
+                      </SmartLink>
                     </li>
                   ))}
                 </ul>
@@ -304,17 +286,10 @@ function FooterComponent() {
                     <li key={link.href}>
                       <SmartLink
                         to={link.href}
-                        className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        className={`text-sm transition-colors ${(link as any).gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
-                        {(link as any).gold ? (
-                          <Crown className="h-4 w-4 flex-shrink-0 text-amber-500" />
-                        ) : link.href === '/tarifs' ? (
-                          <CreditCard className="h-4 w-4 flex-shrink-0" />
-                        ) : (
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                        )}
-                        <span>{link.label}</span>
+                        {link.label}
                       </SmartLink>
                     </li>
                   ))}
@@ -330,25 +305,13 @@ function FooterComponent() {
                 <ul className="space-y-3">
                   {technicalLinks.map((link) => (
                     <li key={link.href}>
-                      {link.href.startsWith('/') ? (
-                        <SmartLink
-                          to={link.href}
-                          className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-400 hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
-                          title={link.description}
-                        >
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                          <span>{link.label}</span>
-                        </SmartLink>
-                      ) : (
-                        <a 
-                          href={link.href}
-                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                          title={link.description}
-                        >
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                          <span>{link.label}</span>
-                        </a>
-                      )}
+                      <SmartLink
+                        to={link.href}
+                        className={`text-sm transition-colors ${(link as any).gold ? 'text-amber-400 hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        title={link.description}
+                      >
+                        {link.label}
+                      </SmartLink>
                     </li>
                   ))}
                 </ul>
