@@ -163,9 +163,9 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
           .from('saved_corrective_codes')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', userId),
-        // Action plans
+        // Workbench items (replaces action_plans)
         supabase
-          .from('action_plans')
+          .from('architect_workbench')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', userId),
         // Total events

@@ -147,7 +147,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | \`audit_cache\` | Cache des résultats d'audit | \`cache_key\`, \`function_name\`, \`result_data\`, \`expires_at\` |
 | \`audit_raw_data\` | Données brutes d'audit (pour Architecte) | \`user_id\`, \`url\`, \`domain\`, \`audit_type\`, \`raw_payload\`, \`source_functions\` |
 | \`audit_recommendations_registry\` | Registre des recommandations | \`recommendation_id\`, \`title\`, \`priority\`, \`category\`, \`fix_type\`, \`is_resolved\` |
-| \`action_plans\` | Plans d'action générés | \`user_id\`, \`url\`, \`audit_type\`, \`tasks\` (JSON), \`is_archived\` |
+| \`architect_workbench\` | Tâches prescrites (remplace action_plans) | \`user_id\`, \`domain\`, \`title\`, \`severity\`, \`finding_category\`, \`source_type\`, \`status\`, \`spiral_score\` |
 | \`audit_impact_snapshots\` | Snapshots d'impact T+30/60/90 | \`url\`, \`domain\`, \`audit_scores\`, \`gsc_baseline\`, \`gsc_t30\`...\`gsc_t90\` |
 
 ### Crawl Engine
@@ -941,7 +941,7 @@ Badges interactifs en nuage. **Taille** proportionnelle à l'importance stratég
 Liste déroulante des 20 mots-clés sur lesquels l'URL rank le mieux. Affiche les 5 premiers avec bouton "voir les suivants". Badge couleur par position.
 
 ### 4. \`QuickWinsCard\` — Recommandations Quick Wins
-Génère des recommandations automatiques basées sur les mots-clés proches de la page 1 (positions 8-25). Types : optimisation title, meta description, contenu, liens internes, structure Hn. Chaque recommendation peut être ajoutée au plan d'action (\`action_plans\`) en un clic, avec animation de paillettes.
+Génère des recommandations automatiques basées sur les mots-clés proches de la page 1 (positions 8-25). Types : optimisation title, meta description, contenu, liens internes, structure Hn. Chaque recommendation peut être ajoutée au workbench (\`architect_workbench\`) en un clic, avec animation de paillettes.
 
 ## Stockage des données
 

@@ -266,7 +266,7 @@ async function fullCleanup(supabase: any, userId: string) {
   // ── Phase 3: All remaining direct user_id tables ──
 
   const directDeletes = [
-    { table: 'action_plans', col: 'user_id' },
+    // action_plans is deprecated — data lives in architect_workbench now
     { table: 'admin_dashboard_config', col: 'user_id' },
     { table: 'agency_invitations', col: 'owner_user_id' },
     { table: 'agency_team_members', col: 'owner_user_id' },

@@ -20,7 +20,7 @@ const SCHEMA_REFERENCE = `
 - "audits" ou "audits lancés" → audits (chaque ligne = 1 audit déclenché par un user). audit_raw_data contient les payloads bruts
 - "rapports" ou "rapports PDF" → pdf_audits (chaque ligne = 1 rapport PDF généré). status = 'processed' = terminé
 - "crawls" → site_crawls (chaque ligne = 1 crawl multi-pages)
-- "plans d'action" → action_plans
+- "plans d'action" ou "tâches prescrites" → architect_workbench (chaque ligne = 1 tâche prescrite avec priorité, severity, domain)
 - "utilisateurs" ou "inscrits" → profiles
 - "conversations support" → sav_conversations
 - "bugs signalés" → user_bug_reports
@@ -104,7 +104,7 @@ const SCHEMA_REFERENCE = `
 
 ## Content
 - blog_articles: id, title, slug, content, status, published_at
-- action_plans: id, user_id, url, audit_type, title, tasks, is_archived
+- architect_workbench: id, user_id, domain, title, description, severity, finding_category, source_type, status, spiral_score
 
 ## Monitoring
 - anomaly_alerts: id, user_id, tracked_site_id, domain, metric_name, severity, direction, z_score, is_read

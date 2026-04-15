@@ -104,42 +104,23 @@ export function QuickWinsCard({ domain, trackedSiteId, userId }: QuickWinsCardPr
   const handleComplete = useCallback(async (win: QuickWinRow) => {
     setSparklingId(win.id);
     try {
-      const { data: existing } = await supabase
-        .from('action_plans')
-        .select('id, tasks')
-        .eq('url', `https://${domain}`)
-        .eq('user_id', userId)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
       const newTask = {
-        id: crypto.randomUUID(),
+        user_id: userId,
+        domain,
         title: getQuickWinTitle(win),
         description: getQuickWinDescription(win),
-        priority: (win.current_position ?? 100) <= 15 ? 'important' : 'optional',
-        category: win.quick_win_type === 'content_gap' ? 'contenu' : 'technique',
-        completed: false,
+        severity: (win.current_position ?? 100) <= 15 ? 'high' : 'medium',
+        finding_category: win.quick_win_type === 'content_gap' ? 'contenu' : 'technique',
+        source_type: 'audit_tech' as const,
+        source_function: 'quick-wins',
+        target_url: `https://${domain}`,
+        status: 'pending' as const,
       };
 
-      if (existing) {
-        const tasks = Array.isArray(existing.tasks) ? existing.tasks : [];
-        await supabase
-          .from('action_plans')
-          .update({ tasks: [...tasks, newTask], updated_at: new Date().toISOString() })
-          .eq('id', existing.id);
-      } else {
-        await supabase.from('action_plans').insert({
-          url: `https://${domain}`,
-          user_id: userId,
-          title: `Quick Wins — ${domain}`,
-          audit_type: 'quick_wins',
-          tasks: [newTask],
-        });
-      }
+      await supabase.from('architect_workbench').insert(newTask);
       toast.success('Ajouté au plan d\'action', { duration: 2000 });
     } catch (err) {
-      console.error('Failed to add quick win to action plan:', err);
+      console.error('Failed to add quick win to workbench:', err);
     }
   }, [domain, userId]);
 

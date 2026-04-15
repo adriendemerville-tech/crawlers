@@ -6,16 +6,17 @@ export interface ActionPlanTask {
   priority: 'critical' | 'important' | 'optional';
   category: string;
   isCompleted: boolean;
+  description?: string;
 }
 
 /**
- * Auto-save (upsert) an action plan for a given user/url/auditType.
- * If a plan already exists for the same url + audit_type, merges new tasks (avoiding duplicates by title).
+ * Auto-save audit recommendations directly into architect_workbench.
+ * Skips tasks whose title already exists for the same domain + user.
  */
 export async function autoSaveActionPlan({
   userId,
   url,
-  title,
+  title: _planTitle,
   auditType,
   tasks,
 }: {
@@ -28,36 +29,48 @@ export async function autoSaveActionPlan({
   if (!userId || tasks.length === 0) return false;
 
   try {
-    // Check if a plan already exists for this url + audit_type
+    let domain = url;
+    try { domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch {}
+
+    // Fetch existing titles to avoid duplicates
     const { data: existing } = await supabase
-      .from('action_plans')
-      .select('id, tasks')
+      .from('architect_workbench')
+      .select('title')
       .eq('user_id', userId)
-      .eq('url', url)
-      .eq('audit_type', auditType)
-      .maybeSingle();
+      .eq('domain', domain)
+      .in('source_type', ['audit_tech', 'audit_strategic'])
+      .limit(500);
 
-    if (existing) {
-      // Merge: add only tasks with new titles
-      const existingTasks = (existing.tasks as unknown as ActionPlanTask[]) || [];
-      const existingTitles = new Set(existingTasks.map(t => t.title));
-      const newTasks = tasks.filter(t => !existingTitles.has(t.title));
-      
-      if (newTasks.length === 0) return true; // Nothing new to add
+    const existingTitles = new Set((existing || []).map((e: any) => e.title));
+    const newTasks = tasks.filter(t => !existingTitles.has(t.title));
+    if (newTasks.length === 0) return true;
 
-      const merged = [...existingTasks, ...newTasks];
-      await supabase
-        .from('action_plans')
-        .update({ tasks: JSON.parse(JSON.stringify(merged)), updated_at: new Date().toISOString() })
-        .eq('id', existing.id);
-    } else {
-      await supabase.from('action_plans').insert({
-        user_id: userId,
-        url,
-        title,
-        audit_type: auditType,
-        tasks: JSON.parse(JSON.stringify(tasks)),
-      });
+    const severityMap: Record<string, string> = {
+      critical: 'critical',
+      important: 'high',
+      optional: 'medium',
+    };
+
+    const sourceType = auditType === 'technical' ? 'audit_tech' : 'audit_strategic';
+    const sourceFunction = auditType === 'technical' ? 'expert-audit' : 'strategic-audit';
+
+    const rows = newTasks.map(t => ({
+      user_id: userId,
+      domain,
+      title: t.title,
+      description: t.description || null,
+      severity: severityMap[t.priority] || 'medium',
+      finding_category: t.category || 'seo',
+      source_type: sourceType as 'audit_tech' | 'audit_strategic',
+      source_function: sourceFunction,
+      target_url: url.startsWith('http') ? url : `https://${url}`,
+      status: t.isCompleted ? ('done' as const) : ('pending' as const),
+    }));
+
+    const { error } = await supabase.from('architect_workbench').insert(rows);
+    if (error) {
+      console.error('[autoSaveActionPlan] Insert error:', error);
+      return false;
     }
 
     return true;

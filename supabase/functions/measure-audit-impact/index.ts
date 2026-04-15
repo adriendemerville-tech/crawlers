@@ -333,17 +333,18 @@ try {
           }
         }
 
-        // Check current reco application status
-        const [actionPlansRes, correctiveCodesRes] = await Promise.all([
-          supabase.from('action_plans').select('tasks').eq('user_id', snapshot.user_id).eq('url', snapshot.url),
+        // Check current reco application status from workbench
+        const domain = new URL(snapshot.url.startsWith('http') ? snapshot.url : `https://${snapshot.url}`).hostname
+        const [workbenchRes, correctiveCodesRes] = await Promise.all([
+          supabase.from('architect_workbench').select('id, status').eq('user_id', snapshot.user_id).eq('domain', domain),
           supabase.from('saved_corrective_codes').select('validated_at').eq('user_id', snapshot.user_id).eq('url', snapshot.url),
         ])
 
         let actionPlanProgress = 0
-        if (actionPlansRes.data?.length) {
-          const allTasks = actionPlansRes.data.flatMap((ap: any) => Array.isArray(ap.tasks) ? ap.tasks : [])
-          const completed = allTasks.filter((t: any) => t.completed || t.done).length
-          actionPlanProgress = allTasks.length > 0 ? (completed / allTasks.length) * 100 : 0
+        if (workbenchRes.data?.length) {
+          const total = workbenchRes.data.length
+          const completed = workbenchRes.data.filter((t: any) => t.status === 'done').length
+          actionPlanProgress = total > 0 ? (completed / total) * 100 : 0
         }
         const codeDeployed = correctiveCodesRes.data?.some((c: any) => c.validated_at != null) || false
 
