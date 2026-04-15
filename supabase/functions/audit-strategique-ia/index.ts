@@ -505,20 +505,37 @@ Deno.serve(handleRequest(async (req) => {
         : 'Ce contenu manque de structure pour les moteurs RAG. Ajoutez des H2/H3, un sommaire, et découpez les longs blocs de texte en paragraphes de 50-100 mots.';
       parsedAnalysis.chunkability_score = { score: chunkScore, paragraphs: paragraphs.length, avg_paragraph_length: avgLen, has_toc: hasToc, has_clear_sections: hasClearSections, explanation: chunkExplanation };
 
-      // Fan-out score: estimate how well the page covers potential RAG sub-queries
-      const h1Match2 = (pageContentContext || '').match(/H1="([^"]+)"/);
-      const mainTopic = h1Match2?.[1] || '';
-      const topicTerms = mainTopic.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-      const contentWords = new Set(rawText.toLowerCase().split(/\s+/).filter(w => w.length > 3));
-      const potentialAxes = Math.max(3, Math.min(8, h2Count + 1));
-      const coveredAxes = Math.min(potentialAxes, h2Count);
-      const fanOutScore = potentialAxes > 0 ? Math.round((coveredAxes / potentialAxes) * 80 + (topicTerms.length > 0 && topicTerms.every(t => contentWords.has(t)) ? 20 : 10)) : 50;
+      // Fan-out score: cross-reference DataForSEO keywords with page content
+      const contentLower = rawText.toLowerCase();
+      const allKeywords: { keyword: string; volume: number; covered: boolean }[] = [];
+      const seen = new Set<string>();
+      const addKw = (kw: string, vol: number) => {
+        const norm = kw.toLowerCase().trim();
+        if (norm.length < 3 || seen.has(norm)) return;
+        seen.add(norm);
+        const terms = norm.split(/\s+/).filter(w => w.length > 2);
+        const covered = terms.length > 0 && terms.filter(t => contentLower.includes(t)).length >= Math.ceil(terms.length * 0.6);
+        allKeywords.push({ keyword: kw, volume: vol, covered });
+      };
+      // Pull from marketData (top_keywords from DataForSEO)
+      if (marketData?.top_keywords) for (const k of marketData.top_keywords) addKw(k.keyword, k.volume);
+      // Pull from rankingOverview (already ranked keywords)
+      if (rankingOverview?.top_keywords) for (const k of rankingOverview.top_keywords) addKw(k.keyword, k.volume);
+      // Sort by volume descending, keep top 15 as "potential axes"
+      allKeywords.sort((a, b) => b.volume - a.volume);
+      const axes = allKeywords.slice(0, 15);
+      const coveredAxes = axes.filter(a => a.covered).length;
+      const totalAxes = axes.length;
+      const missingAxes = axes.filter(a => !a.covered).slice(0, 5);
+      const fanOutPct = totalAxes > 0 ? (coveredAxes / totalAxes) * 100 : 50;
+      const fanOutScore = Math.min(100, Math.round(fanOutPct));
+      const recommendations = missingAxes.map(a => ({ keyword: a.keyword, volume: a.volume }));
       const fanOutExplanation = fanOutScore >= 70
-        ? 'Cette page couvre bien les sous-questions que les moteurs RAG génèrent à partir de la requête principale. Chaque section répond à un angle spécifique.'
+        ? `Cette page couvre ${coveredAxes}/${totalAxes} requêtes associées identifiées par DataForSEO. Les moteurs RAG trouveront suffisamment de matière pour citer cette page sur plusieurs angles.`
         : fanOutScore >= 40
-        ? 'La couverture des axes de décomposition RAG est partielle. Ajoutez des sections répondant aux questions adjacentes que les utilisateurs pourraient poser.'
-        : 'Cette page répond à un seul angle de la requête. Les moteurs IA décomposent les requêtes en sous-questions : ajoutez des H2 couvrant les aspects complémentaires (comparaison, prix, alternatives, avis, guide).';
-      parsedAnalysis.fan_out_score = { score: Math.min(100, fanOutScore), detected_axes: h2Count, covered_axes: coveredAxes, total_potential_axes: potentialAxes, explanation: fanOutExplanation };
+        ? `Couverture partielle : ${coveredAxes}/${totalAxes} axes couverts. ${missingAxes.length} requêtes à fort volume ne sont pas traitées dans le contenu. Ajoutez des sections dédiées pour capter ces sous-requêtes RAG.`
+        : `Couverture faible : seulement ${coveredAxes}/${totalAxes} axes couverts. Cette page ne répond qu'à un angle limité. Les moteurs IA décomposeront la requête en sous-questions et iront chercher les réponses chez vos concurrents.`;
+      parsedAnalysis.fan_out_score = { score: fanOutScore, detected_axes: totalAxes, covered_axes: coveredAxes, total_potential_axes: totalAxes, explanation: fanOutExplanation, recommendations, missing_keywords: missingAxes.map(a => a.keyword) };
     }
 
     if (!parsedAnalysis.lexical_footprint) parsedAnalysis.lexical_footprint = { jargonRatio: 50, concreteRatio: 50 };
