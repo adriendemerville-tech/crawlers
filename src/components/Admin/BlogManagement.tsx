@@ -237,6 +237,46 @@ export function BlogManagement() {
     }
   };
 
+  const handleAddToParmenion = async (article: BlogArticle) => {
+    try {
+      const targetUrl = `https://crawlers.fr/blog/${article.slug}`;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Non authentifié'); return; }
+
+      const { data: existing } = await supabase
+        .from('architect_workbench')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('target_url', targetUrl)
+        .in('status', ['pending', 'in_progress'])
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        toast.info('Déjà dans le plan Parménion');
+        return;
+      }
+
+      const { error } = await supabase.from('architect_workbench').insert({
+        user_id: user.id,
+        domain: 'crawlers.fr',
+        title: `Optimiser : ${article.title}`,
+        description: `Article CMS ajouté manuellement au plan Parménion (Glaive)`,
+        target_url: targetUrl,
+        finding_category: 'content',
+        severity: 'medium',
+        source_type: 'audit_strategic' as const,
+        source_function: 'cms-glaive',
+        status: 'pending' as const,
+      });
+
+      if (error) throw error;
+      toast.success('Ajouté au plan Parménion');
+    } catch (e: any) {
+      console.error('Parmenion add error:', e);
+      toast.error('Erreur ajout Parménion');
+    }
+  };
+
   const handleImportStaticArticle = async (staticArticle: typeof blogArticles[0]) => {
     try {
       setImporting(true);
