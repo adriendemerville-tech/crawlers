@@ -45,18 +45,20 @@ interface UxAnalysisResult {
 }
 
 // ─── LLM call ────────────────────────────────────────────────────────
+const LLM_MODEL = 'google/gemini-2.5-flash';
+
 async function callLLM(system: string, user: string, costAcc?: CostAccumulator): Promise<string> {
   const resp = await callOpenRouter({
-    model: 'anthropic/claude-3.5-sonnet',
+    model: LLM_MODEL,
     system,
     user,
     temperature: 0.2,
     maxTokens: 6000,
     title: 'Crawlers UX Agent',
   });
-  trackPaidApiCall('agent-ux', 'openrouter', 'anthropic/claude-3.5-sonnet');
+  trackPaidApiCall('agent-ux', 'openrouter', LLM_MODEL);
   if (costAcc) {
-    costAcc.add('anthropic/claude-3.5-sonnet', resp.usage?.prompt_tokens || 0, resp.usage?.completion_tokens || 0);
+    costAcc.add(LLM_MODEL, resp.usage?.prompt_tokens || 0, resp.usage?.completion_tokens || 0);
   }
   return resp.content;
 }
@@ -105,22 +107,28 @@ ${directiveBlock}`;
 Deno.serve(handleRequest(async (req) => {
   const supabase = getServiceClient();
 
-  // Auth check — admin only
+  // Auth check — admin or service role (dispatcher uses service role key)
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return jsonError('Unauthorized', 401);
 
-  const { createClient } = await import('npm:@supabase/supabase-js@2');
-  const userClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-  const { data: { user }, error: authErr } = await userClient.auth.getUser();
-  if (authErr || !user) return jsonError('Unauthorized', 401);
+  const token = authHeader.replace('Bearer ', '');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const isServiceRole = token === serviceKey;
 
-  const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
-  const isAdmin = (roles || []).some((r: any) => r.role === 'admin');
-  if (!isAdmin) return jsonError('Forbidden', 403);
+  if (!isServiceRole) {
+    const { createClient } = await import('npm:@supabase/supabase-js@2');
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !user) return jsonError('Unauthorized', 401);
+
+    const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
+    const isAdmin = (roles || []).some((r: any) => r.role === 'admin');
+    if (!isAdmin) return jsonError('Forbidden', 403);
+  }
 
   // Cost guard
   const costCheck = await checkDailyCostCap(supabase, 'agent-ux');
