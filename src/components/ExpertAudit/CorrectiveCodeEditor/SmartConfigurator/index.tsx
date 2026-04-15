@@ -291,22 +291,22 @@ export function SmartConfigurator({
       // Extract strategic roadmap from strategicResult prop OR from saved reports
       let roadmap = strategicResult?.strategicAnalysis?.executive_roadmap || [];
 
-      // Extract action plan tasks (always, whether live audit or not)
+      // Extract workbench tasks (always, whether live audit or not)
       let extractedAuditData: Record<string, any> = {};
       
       if (actionPlansResult.data && actionPlansResult.data.length > 0) {
-        const allTasks: any[] = [];
-        for (const plan of actionPlansResult.data) {
-          const tasks = (plan.tasks as unknown as any[]) || [];
-          const uncompletedTasks = tasks.filter((t: any) => !t.isCompleted);
-          allTasks.push(...uncompletedTasks.map((t: any) => ({
-            ...t,
-            auditType: plan.audit_type,
-            source: 'action_plan',
-          })));
-        }
+        const allTasks = actionPlansResult.data.map((item: any) => ({
+          id: item.id || crypto.randomUUID(),
+          title: item.title,
+          description: item.description,
+          priority: item.severity === 'critical' ? 'critical' : item.severity === 'high' ? 'important' : 'optional',
+          category: item.finding_category,
+          auditType: item.source_type,
+          source: 'workbench',
+          isCompleted: false,
+        }));
         extractedAuditData.activeActionPlanTasks = allTasks;
-        console.log(`[Architect] Found ${allTasks.length} uncompleted action plan tasks`);
+        console.log(`[Architect] Found ${allTasks.length} workbench tasks`);
       }
 
       // If no live audit data, also reconstruct from saved reports
