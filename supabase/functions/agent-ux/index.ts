@@ -114,6 +114,7 @@ Deno.serve(handleRequest(async (req) => {
   const token = authHeader.replace('Bearer ', '');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
   const isServiceRole = token === serviceKey;
+  let userId: string | null = null;
 
   if (!isServiceRole) {
     const { createClient } = await import('npm:@supabase/supabase-js@2');
@@ -124,6 +125,7 @@ Deno.serve(handleRequest(async (req) => {
     );
     const { data: { user }, error: authErr } = await userClient.auth.getUser();
     if (authErr || !user) return jsonError('Unauthorized', 401);
+    userId = user.id;
 
     const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
     const isAdmin = (roles || []).some((r: any) => r.role === 'admin');
@@ -139,14 +141,15 @@ Deno.serve(handleRequest(async (req) => {
 
   const costAcc = new CostAccumulator();
 
-  // Fetch pending directives
-  const { data: pendingDirectives } = await supabase
+  // Fetch pending directives — when dispatched by service role, get all pending (any user)
+  const directiveQuery = supabase
     .from('agent_ux_directives')
     .select('id, directive_text')
-    .eq('user_id', user.id)
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
     .limit(5);
+  if (userId) directiveQuery.eq('user_id', userId);
+  const { data: pendingDirectives } = await directiveQuery;
 
   const directiveTexts = (pendingDirectives || []).map((d: any) => d.directive_text);
 
