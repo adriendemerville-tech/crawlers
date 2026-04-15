@@ -667,6 +667,57 @@ export default function Tarifs() {
               </Link>
             </div>
 
+            {/* Credits + Pro Agency Section */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold flex items-center justify-center gap-2">
+                  <CreditCard className="h-6 w-6 text-primary" />
+                  {t.creditsSection}
+                </h2>
+                <p className="text-muted-foreground mt-1">{t.creditsDescription}</p>
+              </div>
+
+              {/* Credit Packs grouped */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                    {t.packs.map((pack, index) => (
+                      <div 
+                        key={index} 
+                        className={`relative p-4 rounded-xl border-2 text-center ${
+                          pack.popular ? 'border-violet-500 ring-2 ring-violet-500/30' : 'border-border'
+                        }`}
+                      >
+                        {pack.popular && (
+                          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-violet-500 text-white border-0">
+                            Populaire
+                          </Badge>
+                        )}
+                        <p className="font-semibold text-lg">{pack.name}</p>
+                        <p className="text-3xl font-bold mt-2">{pack.credits}</p>
+                        <p className="text-xs text-muted-foreground">crédits</p>
+                        <p className="text-xl font-bold mt-3">{pack.price}€</p>
+                        <p className="text-xs text-muted-foreground">
+                          {pack.pricePerCredit.toFixed(2).replace('.', ',')}€ {t.perCredit}
+                        </p>
+                        {pack.savings && (
+                          <Badge variant="secondary" className="mt-2 text-emerald-600 dark:text-emerald-400">
+                            -{pack.savings}
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* LinkedIn Offer */}
+                  <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-[#0A66C2]/10 border border-[#0A66C2]/30">
+                    <Gift className="h-5 w-5 text-[#0A66C2]" />
+                    <span className="font-medium text-sm">{t.linkedinOffer}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Free Tools Section */}
             <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent">
               <CardHeader>
