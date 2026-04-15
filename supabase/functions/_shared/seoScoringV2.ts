@@ -144,7 +144,8 @@ export function computeSeoScoreV2(
   textContent: string,
   options: SeoScoringOptions,
 ): SeoScoreV2 {
-  const { pageType, customKeywords, keyPaths } = options;
+  const { pageType, customKeywords, keyPaths, businessProfile = 'generic' } = options;
+  const profile = PROFILES[businessProfile];
   const issues: string[] = [];
   const opportunities: string[] = [];
 
