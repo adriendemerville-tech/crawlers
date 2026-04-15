@@ -124,7 +124,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <span className="text-lg text-muted-foreground">/mois</span>
         </div>
         <p className="text-xs font-medium text-violet-500 mb-4">
-          {t3(language, 'Sans engagement — résiliable à tout moment', 'No commitment — cancel anytime', 'Sin compromiso — cancelable en cualquier momento')}
+          {t3(language, 'Sans engagement', 'No commitment', 'Sin compromiso')}
         </p>
         <p className="text-sm text-muted-foreground mb-6">
           {t3(language, 'Freelances, consultants, petites agences (1-5 clients)', 'Freelancers, consultants, small agencies (1-5 clients)', 'Freelancers, consultores, pequeñas agencias (1-5 clientes)')}
@@ -165,7 +165,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <span className="text-lg text-muted-foreground">/mois</span>
         </div>
         <p className="text-xs font-medium text-amber-500 mb-4">
-          {t3(language, 'Sans engagement — résiliable à tout moment', 'No commitment — cancel anytime', 'Sin compromiso — cancelable en cualquier momento')}
+          {t3(language, 'Sans engagement', 'No commitment', 'Sin compromiso')}
         </p>
         <p className="text-sm text-muted-foreground mb-6">
           {t3(language, 'Agences structurées, équipes internes SEO (10+ clients)', 'Structured agencies, in-house SEO teams (10+ clients)', 'Agencias estructuradas, equipos internos SEO (10+ clientes)')}
