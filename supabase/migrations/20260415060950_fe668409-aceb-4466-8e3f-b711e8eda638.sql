@@ -1,0 +1,1 @@
+ALTER TABLE public.architect_workbench ADD COLUMN IF NOT EXISTS manual_priority integer DEFAULT NULL;

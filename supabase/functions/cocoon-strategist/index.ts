@@ -803,21 +803,23 @@ try {
         depthBoost = maxDepth >= 5 ? 1.5 : maxDepth >= 4 ? 1.3 : 1.1;
       }
 
-      // Breathing Spiral boost: prioritize based on phase
+      // Breathing Spiral boost: contraction = recentrage du centre de gravité, pas blocage
+      // En contraction, on boost R1 (code+contenu) et on laisse R2 à 1.0, R3 légèrement freiné
+      // En expansion, on boost les rings supérieurs et la création
       let spiralBoost = 1.0;
+      const taskRing = task.metadata?.semantic_ring || task.metadata?.ring || 1;
       if (spiralPhase === 'contraction') {
-        // In contraction: boost consolidation tasks, but allow R2+ content creation to avoid repetition
+        // Consolidation tasks always boosted in contraction
         if (['rewrite_content', 'fix_technical', 'fix_cannibalization', 'enrich_metadata', 'add_internal_link', 'improve_eeat'].includes(task.action_type)) {
           spiralBoost = 1.3;
         } else if (task.action_type === 'create_content') {
-          // Only dampen R1 creation during contraction; R2+ content provides diversity
-          const taskRing = task.metadata?.semantic_ring || task.metadata?.ring;
-          spiralBoost = (taskRing && taskRing >= 2) ? 1.0 : 0.7;
+          // Gravity-based: R1 creation boosted, R2 neutral, R3 slightly dampened
+          spiralBoost = taskRing === 1 ? 1.15 : taskRing === 2 ? 1.0 : 0.85;
         }
       } else if (spiralPhase === 'expansion') {
-        // In expansion: boost content creation and new clusters
         if (['create_content', 'publish_draft'].includes(task.action_type)) {
-          spiralBoost = 1.3;
+          // Expansion: boost R2/R3 creation more than R1
+          spiralBoost = taskRing >= 2 ? 1.3 : 1.1;
         } else if (['fix_technical', 'enrich_metadata'].includes(task.action_type)) {
           spiralBoost = 0.9;
         }

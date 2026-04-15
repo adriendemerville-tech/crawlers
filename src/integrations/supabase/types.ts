@@ -660,6 +660,7 @@ export type Database = {
           finding_category: string
           gmb_urgency_score: number | null
           id: string
+          manual_priority: number | null
           payload: Json | null
           priority_tag: string | null
           severity: string
@@ -699,6 +700,7 @@ export type Database = {
           finding_category: string
           gmb_urgency_score?: number | null
           id?: string
+          manual_priority?: number | null
           payload?: Json | null
           priority_tag?: string | null
           severity?: string
@@ -738,6 +740,7 @@ export type Database = {
           finding_category?: string
           gmb_urgency_score?: number | null
           id?: string
+          manual_priority?: number | null
           payload?: Json | null
           priority_tag?: string | null
           severity?: string
