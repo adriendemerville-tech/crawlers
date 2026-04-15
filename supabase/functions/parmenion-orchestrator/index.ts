@@ -5,6 +5,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 import { isIktrackerDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+import { computeSeoScoreV2, extractTextContent, type SeoScoreV2 } from '../_shared/seoScoringV2.ts';
 
 // ═══ Modular imports ═══
 import {
