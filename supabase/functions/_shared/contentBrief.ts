@@ -182,8 +182,9 @@ export function computeArticleDistribution(
 
 /** Determine which semantic ring to target based on existing coverage.
  * 
- * spiralPhase allows R2 even during contraction to avoid repetitive R1 content.
- * Without this, the system loops on the same core topics during contraction.
+ * Contraction = recentrage du centre de gravité vers R1, PAS suppression de R2/R3.
+ * Le système calcule un centre de gravité moyen pondéré et tend vers R1 en contraction,
+ * mais peut toujours produire du R2 pour diversifier et éviter les boucles.
  */
 export function determineSemanticRing(
   ringCounts: { ring1: number; ring2: number; ring3: number },
@@ -191,18 +192,50 @@ export function determineSemanticRing(
   ring2Threshold: number = 15,
   spiralPhase?: 'contraction' | 'expansion' | 'neutral',
 ): { ring: SemanticRing; reason: string } {
-  // During contraction: if R1 has a reasonable base (≥ 5), allow R2 to diversify content
-  // This prevents the system from generating identical R1 articles in a loop
-  if (spiralPhase === 'contraction' && ringCounts.ring1 >= 5) {
-    return { ring: 2, reason: `Phase contraction mais R1 a une base solide (${ringCounts.ring1} articles). Diversification R2 pour éviter la répétition.` };
+  const total = ringCounts.ring1 + ringCounts.ring2 + ringCounts.ring3;
+  
+  // Compute center of gravity (weighted average ring): 1.0 = pure R1, 3.0 = pure R3
+  const gravityCenter = total > 0
+    ? (ringCounts.ring1 * 1 + ringCounts.ring2 * 2 + ringCounts.ring3 * 3) / total
+    : 1.0;
+
+  if (spiralPhase === 'contraction') {
+    // Contraction = recentrage vers R1. On ne bloque jamais R2/R3, on ramène le centre de gravité.
+    // Si le centre de gravité est déjà bas (< 1.5), on peut se permettre du R2
+    if (ringCounts.ring1 < ring1Threshold) {
+      return { ring: 1, reason: `Contraction: cœur de cible incomplet (${ringCounts.ring1}/${ring1Threshold}). Centre de gravité: ${gravityCenter.toFixed(2)}. Priorité R1.` };
+    }
+    // Centre de gravité trop éloigné du cœur → ramener vers R1
+    if (gravityCenter > 1.8) {
+      return { ring: 1, reason: `Contraction: centre de gravité élevé (${gravityCenter.toFixed(2)}). Recentrage vers R1 pour consolider.` };
+    }
+    // Centre de gravité acceptable → autoriser R2 pour diversification
+    if (ringCounts.ring2 < ring2Threshold) {
+      return { ring: 2, reason: `Contraction avec centre de gravité stable (${gravityCenter.toFixed(2)}). R1 solide (${ringCounts.ring1}), diversification R2.` };
+    }
+    // R1 et R2 bien remplis en contraction → consolider R1
+    return { ring: 1, reason: `Contraction: R1 (${ringCounts.ring1}) et R2 (${ringCounts.ring2}) matures. Recentrage R1.` };
   }
+
+  if (spiralPhase === 'expansion') {
+    // Expansion: on pousse vers les rings supérieurs
+    if (ringCounts.ring1 < ring1Threshold) {
+      return { ring: 1, reason: `Expansion mais cœur incomplet (${ringCounts.ring1}/${ring1Threshold}). Fondation R1 d'abord.` };
+    }
+    if (ringCounts.ring2 < ring2Threshold) {
+      return { ring: 2, reason: `Expansion: second cercle en construction (${ringCounts.ring2}/${ring2Threshold}). Enrichir R2.` };
+    }
+    return { ring: 3, reason: `Expansion sémantique large (R1: ${ringCounts.ring1}, R2: ${ringCounts.ring2}). Centre: ${gravityCenter.toFixed(2)}. Cap R3.` };
+  }
+
+  // Neutral phase: standard progression
   if (ringCounts.ring1 < ring1Threshold) {
-    return { ring: 1, reason: `Cœur de cible incomplet (${ringCounts.ring1}/${ring1Threshold} articles). Priorité: couvrir les thématiques principales.` };
+    return { ring: 1, reason: `Cœur de cible incomplet (${ringCounts.ring1}/${ring1Threshold}). Priorité R1.` };
   }
   if (ringCounts.ring2 < ring2Threshold) {
-    return { ring: 2, reason: `Second cercle en construction (${ringCounts.ring2}/${ring2Threshold} articles). Enrichir les silos avec des thématiques adjacentes.` };
+    return { ring: 2, reason: `Second cercle en construction (${ringCounts.ring2}/${ring2Threshold}). Enrichir R2.` };
   }
-  return { ring: 3, reason: `Expansion sémantique large (Ring 1: ${ringCounts.ring1}, Ring 2: ${ringCounts.ring2}). Élargir l'autorité topicale.` };
+  return { ring: 3, reason: `Expansion sémantique large (R1: ${ringCounts.ring1}, R2: ${ringCounts.ring2}). Élargir l'autorité topicale.` };
 }
 
 /** Build a prompt block describing article type + ring constraints */
