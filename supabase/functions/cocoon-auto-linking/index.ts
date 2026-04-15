@@ -93,20 +93,32 @@ try {
       return jsonError('Contenu de la page source non disponible', 400);
     }
 
-    // 4. Get candidate target pages (semantically related, exclude self)
+    // 4. Get candidate target pages with full crawl data for quality scoring
+    const bizProfile = resolveBusinessProfile((site as any).business_type || (site as any).entity_type);
     let targetUrls = body.target_urls;
+    let candidatePages: any[] = [];
+
     if (!targetUrls || targetUrls.length === 0) {
-      // Auto-select: get top pages by SEO score, excluding source
+      // Auto-select: get top pages with full fields for quality re-ranking
       const { data: candidates } = await supabase
         .from('crawl_pages')
-        .select('url, title, h1, meta_description, seo_score, is_indexable')
+        .select('url, title, h1, meta_description, seo_score, is_indexable, word_count, has_schema_org, has_canonical, has_og, has_noindex, has_nofollow, images_total, images_without_alt, internal_links, external_links, h2_count, h3_count, crawl_depth, http_status')
         .eq('crawl_id', crawlId)
         .eq('is_indexable', true)
         .neq('url', source_url)
         .order('seo_score', { ascending: false })
-        .limit(20);
+        .limit(30);
 
-      targetUrls = (candidates || []).map(c => c.url);
+      candidatePages = candidates || [];
+
+      // Re-rank by composite quality score (deterministic, business-aware)
+      const scored = candidatePages.map(cp => ({
+        ...cp,
+        quality: computeCrawlPageQuality(cp as CrawlPageInput, bizProfile).overall,
+      }));
+      scored.sort((a, b) => b.quality - a.quality);
+      targetUrls = scored.slice(0, 20).map(c => c.url);
+      console.log(`[auto-linking] 📊 Re-ranked ${scored.length} candidates by quality (profile: ${bizProfile}, top: ${scored[0]?.quality || 0})`);
     }
 
     // 5. Filter out excluded targets
