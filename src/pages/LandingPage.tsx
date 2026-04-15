@@ -1,9 +1,12 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, lazy, Suspense } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { Header } from '@/components/Header';
+
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 interface LandingDraft {
   title: string;
@@ -72,6 +75,7 @@ function LandingPageComponent() {
         <meta property="og:type" content="website" />
       </Helmet>
 
+      <Header />
       <main className="min-h-screen bg-background">
         <article className="max-w-4xl mx-auto px-4 py-12 sm:py-16">
           <header className="mb-8">
@@ -90,6 +94,9 @@ function LandingPageComponent() {
           </div>
         </article>
       </main>
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </>
   );
 }
