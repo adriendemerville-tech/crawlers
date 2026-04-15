@@ -416,11 +416,11 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
 | \`content-architecture-advisor\` | ✅ | 5* | Recommandations architecture de contenu (5 critères GEO) — *5 crédits pour non-abonnés, inclus pour Pro Agency/Pro Agency+ |
 | \`extract-architect-fields\` | ✅ | 0 | Extraction champs pour Content Architect |
-| \`cms-publish-draft\` | ✅ | 0 | Publication brouillon vers CMS (WP pages+posts, Drupal pages+articles, Shopify pages+articles, Odoo, PrestaShop, IKtracker) |
+| \`cms-publish-draft\` | ✅ | 0 | Publication brouillon vers CMS (WP pages+posts, Drupal pages+articles, Shopify pages+articles, Odoo, PrestaShop, IKtracker, **crawlers_internal**) |
 | \`cms-push-draft\` | ✅ | 0 | Push brouillon CMS (v2, multi-format) |
 | \`cms-push-code\` | ✅ | 0 | Push code correctif vers CMS |
 | \`cms-push-redirect\` | ✅ | 0 | Push redirections vers CMS |
-| \`cms-patch-content\` | ✅ | 0 | Patch contenu existant sur CMS |
+| \`cms-patch-content\` | ✅ | 0 | Patch contenu existant sur CMS (inclut handler **crawlers_internal** : écriture directe dans \\\`blog_articles\\\` et \\\`seo_page_drafts\\\`) |
 | \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 | \`parse-doc-matrix\` | ✅ | 0 | Parsing document matrice |
 | \`parse-matrix-geo\` | ✅ | 0 | Parsing matrice GEO |
@@ -1398,7 +1398,9 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 - **5 critères GEO conditionnels** : Questions clés, Structure, Passages citables, E-E-A-T, Enrichissement sémantique
 - **Garde-fous** : pénalités innovation, cap jargon 25%, filtrage CTAs, continuité tonale
 - **Indexabilité** : Les contenus générés incluent systématiquement \\\`<meta name="robots" content="index, follow">\\\` et \\\`isAccessibleForFree: true\\\` dans le schema.org
-- **Publication CMS** : Via \\\`cms-publish-draft\\\` — supporte **articles ET pages statiques** pour WordPress (\\\`/wp/v2/pages\\\`), Drupal (\\\`node--page\\\`), Shopify (\\\`/pages.json\\\`), Odoo, PrestaShop, IKtracker. Paramètre \\\`content_type: "page" | "post"\\\`
+- **Publication CMS** : Via \\\`cms-publish-draft\\\` — supporte **articles ET pages statiques** pour WordPress (\\\`/wp/v2/pages\\\`), Drupal (\\\`node--page\\\`), Shopify (\\\`/pages.json\\\`), Odoo, PrestaShop, IKtracker, **crawlers_internal** (écriture directe dans \\\`blog_articles\\\` / \\\`seo_page_drafts\\\`). Paramètre \\\`content_type: "page" | "post"\\\`
+- **CMS Interne crawlers.fr** : Plateforme \\\`crawlers_internal\\\` dans l'enum \\\`cms_platform\\\`. Connexion \\\`cms_connections\\\` avec \\\`auth_method = 'internal'\\\`. Handler dédié dans \\\`cms-patch-content\\\` et \\\`cms-publish-draft\\\` pour écriture directe en base (résolution slug depuis l'URL cible : \\\`/blog/{slug}\\\` → \\\`blog_articles\\\`, sinon → \\\`seo_page_drafts\\\`)
+- **Bouton Parménion (Glaive)** : Dans le CMS admin, au survol de chaque ligne d'article, un bouton épée (violet) insère une tâche \\\`pending\\\` dans \\\`architect_workbench\\\` avec \\\`source_function = 'cms-glaive'\\\`. Vérification anti-doublon avant insertion
 - **Tarification** : Abonnés Pro Agency / Pro Agency+ : inclus dans le quota mensuel (100/150 pages). Non-abonnés : **5 crédits** par page (couvre LLM + 2 images). Le bouton Publier affiche le coût \\\`Publier (5 crédits)\\\` pour les non-abonnés
 - **Fair use mensuel** : Limite par plan via \\\`check_monthly_fair_use\\\` (SQL RPC) — Free: 5/mois, Pro Agency: 100/mois, Pro Agency+: 150/mois. Renouvellement le 1er du mois calendaire. Admins: bypass
 - **Routeur CMS** : Parménion utilise le routeur intelligent \\\`assign_workbench_action_type\\\` pour router les prescriptions vers Content Architect (contenu visible) ou Code Architect (métadonnées/structured data)
