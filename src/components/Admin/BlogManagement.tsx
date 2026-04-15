@@ -526,6 +526,15 @@ export function BlogManagement() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              onClick={() => handleAddToParmenion(article)}
+                              title="Parménion (Glaive) — Ajouter au plan de tâches"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-500 hover:text-purple-600"
+                            >
+                              <Swords className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => openEditor(article)}
                               title="Modifier"
                             >
