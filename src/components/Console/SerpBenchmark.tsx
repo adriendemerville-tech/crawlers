@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -44,12 +44,16 @@ function positionCell(pos: number | null) {
   return <span className={colorClass}>{pos}</span>;
 }
 
+export interface SerpBenchmarkHandle {
+  triggerBenchmark: (keyword: string) => void;
+}
+
 interface Props {
   trackedSites: { id: string; domain: string }[];
   selectedSiteId: string;
 }
 
-export function SerpBenchmark({ trackedSites, selectedSiteId }: Props) {
+export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function SerpBenchmark({ trackedSites, selectedSiteId }, ref) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const [query, setQuery] = useState('');
@@ -72,16 +76,18 @@ export function SerpBenchmark({ trackedSites, selectedSiteId }: Props) {
     );
   };
 
-  const runBenchmark = useCallback(async () => {
-    if (!query.trim()) { toast.error('Entrez un mot-clé'); return; }
+  const runBenchmark = useCallback(async (overrideQuery?: string) => {
+    const q = overrideQuery || query.trim();
+    if (!q) { toast.error('Entrez un mot-clé'); return; }
     if (selectedProviders.length < 2) { toast.error('Sélectionnez au moins 2 providers'); return; }
+    if (overrideQuery) setQuery(overrideQuery);
     setLoading(true);
     setResults(null);
     try {
       const { data, error } = await supabase.functions.invoke('serp-benchmark', {
         body: {
           action: 'benchmark',
-          query: query.trim(),
+          query: q,
           tracked_site_id: selectedSiteId || undefined,
           target_domain: targetDomain.trim() || selectedSite?.domain || undefined,
           location,
@@ -102,6 +108,10 @@ export function SerpBenchmark({ trackedSites, selectedSiteId }: Props) {
       setLoading(false);
     }
   }, [query, selectedProviders, selectedSiteId, targetDomain, selectedSite, location, penaltyEnabled, singleHitPenalty]);
+
+  useImperativeHandle(ref, () => ({
+    triggerBenchmark: (keyword: string) => runBenchmark(keyword),
+  }), [runBenchmark]);
 
   const copyResults = () => {
     if (!results) return;
@@ -229,7 +239,7 @@ export function SerpBenchmark({ trackedSites, selectedSiteId }: Props) {
           </div>
         </div>
 
-        <Button onClick={runBenchmark} disabled={loading || selectedProviders.length < 2} className="gap-2">
+        <Button variant="ghost" onClick={() => runBenchmark()} disabled={loading || selectedProviders.length < 2} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           {loading
             ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
@@ -335,4 +345,4 @@ export function SerpBenchmark({ trackedSites, selectedSiteId }: Props) {
       </CardContent>
     </Card>
   );
-}
+});

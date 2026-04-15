@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Search, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Plus, Trash2, Globe, Clock } from 'lucide-react';
-import { SerpBenchmark } from './SerpBenchmark';
+import { SerpBenchmark, type SerpBenchmarkHandle } from './SerpBenchmark';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -53,6 +53,7 @@ export function IndexationMonitor() {
   const [scanning, setScanning] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const [inspectingManual, setInspectingManual] = useState(false);
+  const serpBenchmarkRef = useRef<SerpBenchmarkHandle>(null);
 
   // Load tracked sites
   useEffect(() => {
@@ -106,6 +107,11 @@ export function IndexationMonitor() {
         )
       );
       loadChecks();
+      // Auto-trigger SERP benchmark with the domain as keyword
+      const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
+      if (domain && serpBenchmarkRef.current) {
+        serpBenchmarkRef.current.triggerBenchmark(domain);
+      }
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -185,7 +191,7 @@ export function IndexationMonitor() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={handleAutoScan} disabled={scanning || !selectedSiteId} className="gap-2">
+            <Button variant="ghost" onClick={handleAutoScan} disabled={scanning || !selectedSiteId} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
               {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               {t3(language, 'Scanner les pages clés', 'Scan key pages', 'Escanear páginas clave')}
             </Button>
@@ -318,6 +324,7 @@ export function IndexationMonitor() {
       ) : null}
       {/* SERP Benchmark Multi-Providers */}
       <SerpBenchmark
+        ref={serpBenchmarkRef}
         trackedSites={trackedSites.map(s => ({ id: s.id, domain: s.domain }))}
         selectedSiteId={selectedSiteId}
       />
