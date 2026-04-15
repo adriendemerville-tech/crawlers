@@ -90,11 +90,10 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, '50 pages par scan', '50 pages per scan', '50 páginas por escaneo'),
     t3(language, 'Audits & codes correctifs illimités', 'Unlimited audits & corrective code', 'Auditorías y código ilimitados'),
     t3(language, 'Benchmark LLM & Profondeur LLM illimités', 'Unlimited LLM Benchmark & Depth', 'Benchmark LLM y Profundidad LLM ilimitados'),
-    t3(language, '150 créations de pages (Content Architect)', '150 page creations (Content Architect)', '150 creaciones de páginas (Content Architect)'),
-    t3(language, '100 posts sociaux/mois (Social Hub)', '100 social posts/month (Social Hub)', '100 posts sociales/mes (Social Hub)'),
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
-    t3(language, 'API Marina en marque blanche complète', 'Marina API with full white label', 'API Marina con marca blanca completa'),
+    t3(language, 'API Marina', 'Marina API', 'API Marina'),
     t3(language, 'Analyse des logs', 'Log analysis', 'Análisis de logs'),
+    t3(language, 'Stratégie concurrentielle', 'Competitive strategy', 'Estrategia competitiva'),
     t3(language, 'Marque blanche + 3 comptes', 'White label + 3 accounts', 'Marca blanca + 3 cuentas'),
   ];
 
