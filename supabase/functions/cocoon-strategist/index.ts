@@ -806,11 +806,13 @@ try {
       // Breathing Spiral boost: prioritize based on phase
       let spiralBoost = 1.0;
       if (spiralPhase === 'contraction') {
-        // In contraction: boost consolidation tasks (rewrite, fix, enrich), dampen expansion (create_content)
+        // In contraction: boost consolidation tasks, but allow R2+ content creation to avoid repetition
         if (['rewrite_content', 'fix_technical', 'fix_cannibalization', 'enrich_metadata', 'add_internal_link', 'improve_eeat'].includes(task.action_type)) {
           spiralBoost = 1.3;
         } else if (task.action_type === 'create_content') {
-          spiralBoost = 0.7;
+          // Only dampen R1 creation during contraction; R2+ content provides diversity
+          const taskRing = task.metadata?.semantic_ring || task.metadata?.ring;
+          spiralBoost = (taskRing && taskRing >= 2) ? 1.0 : 0.7;
         }
       } else if (spiralPhase === 'expansion') {
         // In expansion: boost content creation and new clusters

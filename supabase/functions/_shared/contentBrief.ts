@@ -180,12 +180,22 @@ export function computeArticleDistribution(
   return { total, counts, percentages, recommended, overRepresented, saturatedTopics };
 }
 
-/** Determine which semantic ring to target based on existing coverage */
+/** Determine which semantic ring to target based on existing coverage.
+ * 
+ * spiralPhase allows R2 even during contraction to avoid repetitive R1 content.
+ * Without this, the system loops on the same core topics during contraction.
+ */
 export function determineSemanticRing(
   ringCounts: { ring1: number; ring2: number; ring3: number },
   ring1Threshold: number = 8,
   ring2Threshold: number = 15,
+  spiralPhase?: 'contraction' | 'expansion' | 'neutral',
 ): { ring: SemanticRing; reason: string } {
+  // During contraction: if R1 has a reasonable base (≥ 5), allow R2 to diversify content
+  // This prevents the system from generating identical R1 articles in a loop
+  if (spiralPhase === 'contraction' && ringCounts.ring1 >= 5) {
+    return { ring: 2, reason: `Phase contraction mais R1 a une base solide (${ringCounts.ring1} articles). Diversification R2 pour éviter la répétition.` };
+  }
   if (ringCounts.ring1 < ring1Threshold) {
     return { ring: 1, reason: `Cœur de cible incomplet (${ringCounts.ring1}/${ring1Threshold} articles). Priorité: couvrir les thématiques principales.` };
   }
