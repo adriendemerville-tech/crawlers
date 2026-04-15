@@ -872,7 +872,8 @@ export default function Tarifs() {
             </Card>
 
             {/* Registration Section */}
-            <Card className="border-blue-500/30 bg-gradient-to-br from-blue-500/5 to-transparent">
+            <Link to="/audit-expert">
+            <Card className="border-blue-500/30 bg-gradient-to-br from-blue-500/5 to-transparent hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-blue-500 text-white border-0">
