@@ -1085,9 +1085,130 @@ async function patchContent(conn: CmsConnection, input: PatchInput): Promise<Pat
     case 'webflow': return patchWebflow(conn, input);
     case 'prestashop': return patchPrestaShop(conn, input);
     case 'odoo': return patchOdoo(conn, input);
+    case 'crawlers_internal': return patchCrawlersInternal(conn, input);
     default:
       return buildManualBrief(input);
   }
+}
+
+// ── Crawlers Internal Handler ──
+
+async function patchCrawlersInternal(_conn: CmsConnection, input: PatchInput): Promise<PatchResult> {
+  const serviceClient = getServiceClient();
+  const details: PatchResult['details'] = [];
+  let applied = 0;
+  let failed = 0;
+
+  // Determine if target is a blog article or a landing/guide page
+  const url = input.target_url;
+  const slugMatch = url.match(/\/blog\/([^/?#]+)/);
+  const pageSlugMatch = url.match(/\/(?:guide|landing)\/([^/?#]+)/) || url.match(/crawlers\.fr\/([^/?#]+)$/);
+
+  for (const patch of input.patches) {
+    try {
+      if (slugMatch) {
+        // Blog article — update blog_articles
+        const slug = slugMatch[1];
+        const updateData: Record<string, unknown> = {};
+
+        switch (patch.zone) {
+          case 'h1':
+          case 'meta_title':
+            updateData.title = String(patch.value);
+            break;
+          case 'meta_description':
+          case 'excerpt':
+            updateData.excerpt = String(patch.value);
+            break;
+          case 'body_section':
+          case 'faq':
+            // Append/prepend to existing content
+            if (patch.action === 'append') {
+              const { data: existing } = await serviceClient
+                .from('blog_articles').select('content').eq('slug', slug).maybeSingle();
+              updateData.content = (existing?.content || '') + '\n' + String(patch.value);
+            } else if (patch.action === 'replace') {
+              updateData.content = String(patch.value);
+            }
+            break;
+          case 'image':
+          case 'og_image':
+            updateData.image_url = String(patch.value);
+            break;
+          case 'slug':
+            updateData.slug = String(patch.value);
+            break;
+          default:
+            details.push({ zone: patch.zone, success: false, detail: `Zone '${patch.zone}' not supported for blog_articles` });
+            failed++;
+            continue;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          const { error } = await serviceClient
+            .from('blog_articles').update(updateData).eq('slug', slug);
+          if (error) throw error;
+          details.push({ zone: patch.zone, success: true, detail: `blog_articles.${slug} updated` });
+          applied++;
+        }
+      } else if (pageSlugMatch) {
+        // Landing / guide page — update seo_page_drafts
+        const pageSlug = pageSlugMatch[1];
+        const updateData: Record<string, unknown> = {};
+
+        switch (patch.zone) {
+          case 'h1':
+          case 'meta_title':
+            updateData.meta_title = String(patch.value);
+            break;
+          case 'meta_description':
+            updateData.meta_description = String(patch.value);
+            break;
+          case 'body_section':
+          case 'faq':
+            if (patch.action === 'append') {
+              const { data: existing } = await serviceClient
+                .from('seo_page_drafts').select('content').eq('slug', pageSlug).maybeSingle();
+              updateData.content = (existing?.content || '') + '\n' + String(patch.value);
+            } else if (patch.action === 'replace') {
+              updateData.content = String(patch.value);
+            }
+            break;
+          case 'slug':
+            updateData.slug = String(patch.value);
+            break;
+          default:
+            details.push({ zone: patch.zone, success: false, detail: `Zone '${patch.zone}' not supported for seo_page_drafts` });
+            failed++;
+            continue;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          const { error } = await serviceClient
+            .from('seo_page_drafts').update(updateData).eq('slug', pageSlug);
+          if (error) throw error;
+          details.push({ zone: patch.zone, success: true, detail: `seo_page_drafts.${pageSlug} updated` });
+          applied++;
+        }
+      } else {
+        details.push({ zone: patch.zone, success: false, detail: 'Could not resolve slug from target_url' });
+        failed++;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      details.push({ zone: patch.zone, success: false, detail: msg });
+      failed++;
+    }
+  }
+
+  return {
+    success: failed === 0,
+    platform: 'crawlers_internal',
+    method: 'api_native',
+    patches_applied: applied,
+    patches_failed: failed,
+    details,
+  };
 }
 
 // ── Auto-enrich patches with injection point selectors ──
