@@ -11639,6 +11639,7 @@ export type Database = {
         | "drupal"
         | "odoo"
         | "prestashop"
+        | "crawlers_internal"
       content_page_type: "landing" | "product" | "article"
       diagnostic_source_type:
         | "crawl"
@@ -11844,6 +11845,7 @@ export const Constants = {
         "drupal",
         "odoo",
         "prestashop",
+        "crawlers_internal",
       ],
       content_page_type: ["landing", "product", "article"],
       diagnostic_source_type: [

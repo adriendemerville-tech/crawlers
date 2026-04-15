@@ -1,0 +1,1 @@
+ALTER TYPE public.cms_platform ADD VALUE IF NOT EXISTS 'crawlers_internal';
