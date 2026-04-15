@@ -732,8 +732,15 @@ function CocoonContent() {
         {!isFullscreen && (
         <header className="shrink-0 overflow-visible backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2 bg-[#0f0a1e]/80 relative z-30">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2">
-            {/* Title */}
+            {/* Back + Title */}
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => navigate('/app/console')}
+                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors shrink-0"
+                aria-label="Retour Console"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+              </button>
               <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse hidden sm:block" />
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="text-xs sm:text-sm font-bold font-display tracking-tight leading-none text-white">
