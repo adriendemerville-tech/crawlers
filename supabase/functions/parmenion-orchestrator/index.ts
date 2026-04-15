@@ -387,7 +387,9 @@ try {
     if (validatedFunctions.length === 0) {
       console.warn(`[Parménion] LLM chose invalid functions for phase ${currentPhase}:`, decision.action.functions);
       // Fallback to appropriate function for the phase
-      if (currentPhase === 'audit') validatedFunctions.push('audit-expert-seo');
+      if (currentPhase === 'audit') {
+        validatedFunctions.push('audit-expert-seo', 'strategic-orchestrator', 'check-eeat');
+      }
       else if (currentPhase === 'diagnose') validatedFunctions.push('cocoon-diag-content');
       else if (currentPhase === 'prescribe') {
         // Force content if force_content_cycle or force_iktracker_article
@@ -1618,11 +1620,20 @@ function buildPhaseInstructions(context: {
 }): string {
   switch (context.currentPhase) {
     case 'audit':
-      return `## PHASE ACTUELLE: AUDIT (AUDIT TECHNIQUE)
-Tu dois lancer un audit technique complet du site pour identifier les problèmes SEO techniques (performance, indexabilité, erreurs HTTP, structure).
-Fonction autorisée: audit-expert-seo
-Cet audit fournira les données brutes nécessaires aux diagnostics stratégiques de la phase suivante.
-IMPORTANT: C'est un scan technique pur. Ne fais PAS de recommandations stratégiques ici.`;
+      return `## PHASE ACTUELLE: AUDIT (AUDIT MULTI-DIMENSIONNEL)
+Tu dois lancer un audit complet du site en combinant PLUSIEURS fonctions pour obtenir une vision 360°.
+
+Fonctions autorisées (lance-les TOUTES les 3):
+1. audit-expert-seo — Audit technique pur (performance, indexabilité, erreurs HTTP, structure)
+2. strategic-orchestrator — Audit stratégique GEO complet (mots-clés, quick wins, concurrents, positionnement marché, SERP)
+3. check-eeat — Évaluation E-E-A-T (expertise, expérience, autorité, fiabilité)
+
+IMPORTANT: Tu DOIS appeler les 3 fonctions dans ta décision pour alimenter le workbench avec des données riches.
+Le strategic-orchestrator remonte les mots-clés manquants, les quick wins et la vision marché.
+Le check-eeat évalue la crédibilité et l'autorité du site.
+Ces données sont ESSENTIELLES pour que les phases suivantes (diagnose, prescribe) produisent des contenus variés et pertinents.
+
+Dans action.functions, liste: ["audit-expert-seo", "strategic-orchestrator", "check-eeat"]`;
 
     case 'diagnose':
       return `## PHASE ACTUELLE: DIAGNOSE (DIAGNOSTIC STRATÉGIQUE)
