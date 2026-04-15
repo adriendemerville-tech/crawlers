@@ -140,7 +140,7 @@ export function Header() {
   // Check if we're on specific pages
   const isAuditExpertPage = location.pathname === '/audit-expert';
   const isProfilePage = location.pathname === '/app/console' || location.pathname === '/app/profil';
-  const isHomePage = location.pathname === '/' || location.pathname.startsWith('/landing/') || location.pathname.startsWith('/blog') || location.pathname.startsWith('/guide') || location.pathname.startsWith('/lexique');
+  const isHomePage = location.pathname === '/' || location.pathname === '/tarifs' || location.pathname === '/features' || location.pathname.startsWith('/landing/') || location.pathname.startsWith('/blog') || location.pathname.startsWith('/guide') || location.pathname.startsWith('/lexique');
   const isCrawlPage = location.pathname === '/app/site-crawl' || location.pathname === '/crawl';
   const isMatricePage = location.pathname === '/matrice';
   const isCocoonPage = location.pathname === '/app/cocoon';
