@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -302,9 +302,12 @@ export function useMyTracking() {
     }
   }, [searchParams]);
 
-  // ─── GSC data fetch ───
+  // ─── GSC data fetch (race-condition safe) ───
+  const gscFetchIdRef = useRef(0);
+
   const fetchGscData = useCallback(async () => {
     if (!user || !currentSiteDomain) return;
+    const fetchId = ++gscFetchIdRef.current;
     setGscLoading(true);
     setGscSiteVerified(false);
     try {
@@ -317,13 +320,14 @@ export function useMyTracking() {
           end_date: gscEndDate.toISOString().split('T')[0],
         },
       });
+      // Stale response guard: domain changed while fetching
+      if (fetchId !== gscFetchIdRef.current) return;
       if (error) throw error;
       if (data?.error) {
         if (data.error === 'GSC not connected') {
           setGscSiteVerified(false);
           return;
         }
-        // Site not found in GSC properties → not verified for this site
         if (data.error?.includes?.('not found') || data.error?.includes?.('not verified') || data.error?.includes?.('Forbidden')) {
           setGscSiteVerified(false);
           setGscData(null);
@@ -331,24 +335,27 @@ export function useMyTracking() {
         }
         throw new Error(data.error);
       }
-      // Data returned successfully → this site is verified in GSC
       const hasRows = data?.rows?.length > 0 || data?.total_clicks > 0 || data?.total_impressions > 0;
       setGscSiteVerified(true);
       setGscData(hasRows ? data : null);
     } catch (err: unknown) {
+      if (fetchId !== gscFetchIdRef.current) return;
       console.error('GSC fetch error:', err);
       setGscSiteVerified(false);
     } finally {
-      setGscLoading(false);
+      if (fetchId === gscFetchIdRef.current) {
+        setGscLoading(false);
+      }
     }
   }, [user, currentSiteDomain, gscStartDate, gscEndDate]);
 
+  // Clear GSC data immediately on domain switch, then re-fetch
   useEffect(() => {
+    setGscData(null);
+    setGscSiteVerified(false);
     if (gscHasToken && currentSiteDomain) {
       fetchGscData();
     } else {
-      setGscData(null);
-      setGscSiteVerified(false);
       setGscLoading(false);
     }
   }, [gscHasToken, currentSiteDomain, fetchGscData]);
