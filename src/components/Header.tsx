@@ -297,15 +297,18 @@ export function Header() {
           </div>
         )}
         {!isProfilePage && !isHomePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          {/* 1. Matrice (gris) */}
-          <Link to="/matrice">
-            <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
-              <Grid3X3 className="h-3.5 w-3.5" />
-              <span className="text-sm font-semibold">Matrice</span>
-            </Button>
-          </Link>
-
-          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+          {/* 1. Matrice (gris) — hidden for non-subscribed users */}
+          {user && profile?.plan_type && profile.plan_type !== 'free' && (
+            <>
+              <Link to="/matrice">
+                <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
+                  <Grid3X3 className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Matrice</span>
+                </Button>
+              </Link>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+            </>
+          )}
 
           {/* 2. Crawl (violet) */}
           {isAuditExpertPage ? (
@@ -371,16 +374,19 @@ export function Header() {
             <span className="text-sm font-semibold">Content</span>
           </Button>
 
-          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-
-          {/* 6. Social Hub (vert glow) */}
-          <Link to="/app/social">
-            <Button variant="ghost" size="sm" className="gap-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)]">
-              <Share2 className="h-3.5 w-3.5" />
-              <span className="text-sm font-semibold">Social Hub</span>
-              <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
-            </Button>
-          </Link>
+          {/* 6. Social Hub (vert glow) — hidden for non-subscribed users */}
+          {user && profile?.plan_type && profile.plan_type !== 'free' && (
+            <>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+              <Link to="/app/social">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)]">
+                  <Share2 className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Social Hub</span>
+                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-500 ml-0.5">beta</Badge>
+                </Button>
+              </Link>
+            </>
+          )}
 
           {/* Console — for paid users */}
           {!isProfilePage && !isAuditExpertPage && (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free'))) && (
