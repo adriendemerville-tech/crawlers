@@ -5814,6 +5814,66 @@ export type Database = {
           },
         ]
       }
+      job_queue: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          function_name: string
+          id: string
+          input_payload: Json
+          locked_by: string | null
+          locked_until: string | null
+          max_attempts: number
+          plan_type: string | null
+          priority: number
+          result_data: Json | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["job_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          function_name: string
+          id?: string
+          input_payload?: Json
+          locked_by?: string | null
+          locked_until?: string | null
+          max_attempts?: number
+          plan_type?: string | null
+          priority?: number
+          result_data?: Json | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          input_payload?: Json
+          locked_by?: string | null
+          locked_until?: string | null
+          max_attempts?: number
+          plan_type?: string | null
+          priority?: number
+          result_data?: Json | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       keyword_universe: {
         Row: {
           best_position: number | null
@@ -7983,6 +8043,30 @@ export type Database = {
           question_es?: string | null
           quiz_type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_limit_tokens: {
+        Row: {
+          id: string
+          last_refill_at: string
+          max_tokens: number
+          refill_rate_per_sec: number
+          tokens: number
+        }
+        Insert: {
+          id?: string
+          last_refill_at?: string
+          max_tokens?: number
+          refill_rate_per_sec?: number
+          tokens?: number
+        }
+        Update: {
+          id?: string
+          last_refill_at?: string
+          max_tokens?: number
+          refill_rate_per_sec?: number
+          tokens?: number
         }
         Relationships: []
       }
@@ -11387,6 +11471,34 @@ export type Database = {
         }
         Returns: Json
       }
+      claim_jobs: {
+        Args: { batch_size?: number; worker_id?: string }
+        Returns: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          function_name: string
+          id: string
+          input_payload: Json
+          locked_by: string | null
+          locked_until: string | null
+          max_attempts: number
+          plan_type: string | null
+          priority: number
+          result_data: Json | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["job_status"]
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "job_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       cleanup_audit_cache_ttl: { Args: never; Returns: number }
       cleanup_expired_depth_conversations: { Args: never; Returns: undefined }
       cleanup_expired_phone_callbacks: { Args: never; Returns: undefined }
@@ -11521,6 +11633,7 @@ export type Database = {
         Args: { p_tracked_site_id: string }
         Returns: Json
       }
+      resolve_job_priority: { Args: { p_user_id: string }; Returns: number }
       score_spiral_priority: {
         Args: {
           p_domain: string
@@ -11655,6 +11768,7 @@ export type Database = {
         | "root_files"
         | "html_css_inline"
         | "technical_attributes"
+      job_status: "queued" | "processing" | "done" | "failed" | "cancelled"
       log_connector_type:
         | "cloudflare"
         | "agent"
@@ -11864,6 +11978,7 @@ export const Constants = {
         "html_css_inline",
         "technical_attributes",
       ],
+      job_status: ["queued", "processing", "done", "failed", "cancelled"],
       log_connector_type: [
         "cloudflare",
         "agent",
