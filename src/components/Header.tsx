@@ -276,25 +276,25 @@ export function Header() {
           <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             <Link to="/features">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-semibold">Features</span>
+                <span className="text-sm font-thin text-primary-foreground">Features</span>
               </Button>
             </Link>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
             <Link to="/tarifs">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-semibold">{language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}</span>
+                <span className="text-sm font-thin text-primary-foreground">{language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}</span>
               </Button>
             </Link>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
             <Link to="/audit-expert">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-semibold">Audit</span>
+                <span className="text-sm font-thin text-primary-foreground">Audit</span>
               </Button>
             </Link>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
             <Link to="/eeat">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-semibold">E-E-A-T</span>
+                <span className="text-sm font-thin text-primary-foreground">E-E-A-T</span>
               </Button>
             </Link>
           </div>
