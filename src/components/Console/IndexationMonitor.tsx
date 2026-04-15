@@ -53,6 +53,7 @@ export function IndexationMonitor() {
   const [scanning, setScanning] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const [inspectingManual, setInspectingManual] = useState(false);
+  const serpBenchmarkRef = useRef<SerpBenchmarkHandle>(null);
 
   // Load tracked sites
   useEffect(() => {
