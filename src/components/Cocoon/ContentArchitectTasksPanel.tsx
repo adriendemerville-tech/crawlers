@@ -29,30 +29,23 @@ export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask 
     setLoading(true);
 
     supabase
-      .from('action_plans')
-      .select('tasks')
+      .from('architect_workbench')
+      .select('id, title, description, severity, finding_category, status')
       .eq('user_id', user.id)
-      .eq('url', `https://${domain}`)
-      .order('updated_at', { ascending: false })
-      .limit(5)
+      .eq('domain', domain)
+      .in('status', ['pending', 'in_progress', 'assigned'])
+      .order('spiral_score', { ascending: false })
+      .limit(20)
       .then(({ data }) => {
-        const allTasks: QuickWinTask[] = [];
-        data?.forEach(plan => {
-          const planTasks = Array.isArray(plan.tasks) ? plan.tasks : [];
-          planTasks.forEach((t: any) => {
-            if (t?.title && !t.completed) {
-              allTasks.push({
-                id: t.id || crypto.randomUUID(),
-                title: t.title,
-                description: t.description || '',
-                priority: t.priority || 'optional',
-                category: t.category || 'contenu',
-                completed: !!t.completed,
-              });
-            }
-          });
-        });
-        setTasks(allTasks.slice(0, 20));
+        const allTasks: QuickWinTask[] = (data || []).map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description || '',
+          priority: item.severity === 'critical' ? 'high' : item.severity === 'high' ? 'important' : 'optional',
+          category: item.finding_category || 'seo',
+          completed: false,
+        }));
+        setTasks(allTasks);
         setLoading(false);
       });
   }, [user, domain]);
