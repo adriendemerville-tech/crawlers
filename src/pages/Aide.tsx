@@ -359,6 +359,7 @@ const DOC_SECTIONS: DocSection[] = [
 <tr class="border-t border-border"><td class="p-2">Analyse de Logs Serveur</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Diagnostic de Chute</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Content Architect + Calendrier éditorial</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td><td class="p-2 text-center">✅</td></tr>
+<tr class="border-t border-border"><td class="p-2">Stratégie concurrentielle</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">❌</td><td class="p-2 text-center">✅</td></tr>
 <tr class="border-t border-border"><td class="p-2">Sites simultanés</td><td class="p-2 text-center">1</td><td class="p-2 text-center">30</td><td class="p-2 text-center">30</td></tr>
 <tr class="border-t border-border"><td class="p-2">Prix</td><td class="p-2 text-center">Gratuit</td><td class="p-2 text-center font-semibold">à partir de 29€/mois*</td><td class="p-2 text-center font-semibold">79€/mois</td></tr>
 </tbody>
