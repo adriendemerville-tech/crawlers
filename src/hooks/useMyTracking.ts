@@ -836,7 +836,7 @@ export function useMyTracking() {
 
   return {
     // Auth/context
-    user, profile, language, isAgencyPro, isAdmin, isDemoMode,
+    user, profile, language, isAgencyPro, planType, isAdmin, isDemoMode,
     // Core state
     sites, setSites, loading, selectedSite, setSelectedSite,
     isCollaborator, showApiPanel, setShowApiPanel,
