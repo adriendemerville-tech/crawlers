@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   Settings, FileText, CheckSquare, Wallet, Lock, Radar, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
-  ChevronDown, ChevronUp, Shield, Code2,
+  Shield, Code2, ChevronDown,
 } from 'lucide-react';
 
 interface TrackedSite {
@@ -26,28 +26,30 @@ interface SidebarItem {
   adminOnly?: boolean;
   hideOnMobile?: boolean;
   beta?: boolean;
-  hasSites?: boolean;
 }
 
 const translations = {
   fr: {
     tracking: 'Mes sites', actionPlans: 'Plans d\'Action', correctiveCodes: '<Scripts>',
     wallet: 'Portefeuille', reports: 'Rapports', settings: 'Paramètres', creator: 'Créateur',
+    allSites: 'Tous les sites',
   },
   en: {
     tracking: 'My Sites', actionPlans: 'Action Plans', correctiveCodes: '<Scripts>',
     wallet: 'Wallet', reports: 'Reports', settings: 'Settings', creator: 'Creator',
+    allSites: 'All sites',
   },
   es: {
     tracking: 'Mis sitios', actionPlans: 'Planes de Acción', correctiveCodes: '<Scripts>',
     wallet: 'Billetera', reports: 'Informes', settings: 'Configuración', creator: 'Creador',
+    allSites: 'Todos los sitios',
   },
 };
 
 interface ConsoleSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  onSiteSelect?: (siteId: string, domain: string) => void;
+  onSiteSelect?: (siteId: string | null, domain: string | null) => void;
 }
 
 export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: ConsoleSidebarProps) {
@@ -60,8 +62,8 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
   const isProUser = isAgencyPro || isAdmin;
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
-  const [expandedTab, setExpandedTab] = useState<string | null>(null);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+  const [selectorOpen, setSelectorOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -71,65 +73,67 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       .eq('user_id', user.id)
       .order('domain')
       .then(({ data }) => {
-        setSites((data as TrackedSite[]) || []);
+        const s = (data as TrackedSite[]) || [];
+        setSites(s);
+        // Auto-select first site
+        if (s.length > 0 && !selectedSiteId) {
+          setSelectedSiteId(s[0].id);
+          onSiteSelect?.(s[0].id, s[0].domain);
+        }
       });
   }, [user]);
 
+  const handleSiteChange = (siteId: string | null, domain: string | null) => {
+    setSelectedSiteId(siteId);
+    onSiteSelect?.(siteId, domain);
+    setSelectorOpen(false);
+  };
+
+  const selectedSite = sites.find(s => s.id === selectedSiteId);
+
+  // Main navigation items
   const items: SidebarItem[] = [
+    { value: 'tracking', label: t.tracking, icon: Radar },
+    { value: 'action-plans', label: t.actionPlans, icon: CheckSquare, hideOnMobile: true },
+    { value: 'corrective-codes', label: t.correctiveCodes, icon: Code2, hideOnMobile: true },
+    { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true },
+    { value: 'drafts', label: 'Content', icon: FileEdit, hideOnMobile: true, beta: true },
+    ...(isProUser ? [
+      { value: 'reports-tab', label: t.reports, icon: FileBox, hideOnMobile: true },
+      { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true },
+    ] : []),
+    { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true },
+    { value: 'gmb', label: 'GMB', icon: Store },
+    { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true },
+    ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true }] : []),
+    ...(!isProUser ? [
+      { value: 'reports', label: t.reports, icon: FileText, hideOnMobile: true },
+    ] : []),
+  ];
+
+  // Bottom items: Pro Agency, Wallet, Settings, Creator, API
+  const bottomItems: SidebarItem[] = [
     ...(isProUser ? [{
       value: 'wallet', label: planType === 'agency_premium' ? 'Pro Agency +' : 'Pro Agency',
-      icon: Crown, hideOnMobile: true, hasSites: false,
-    }] : []),
-    { value: 'tracking', label: t.tracking, icon: Radar, hasSites: false },
-    { value: 'action-plans', label: t.actionPlans, icon: CheckSquare, hideOnMobile: true, hasSites: true },
-    { value: 'corrective-codes', label: t.correctiveCodes, icon: Code2, hideOnMobile: true, hasSites: true },
-    { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true, hasSites: true },
-    { value: 'drafts', label: 'Content', icon: FileEdit, hideOnMobile: true, beta: true, hasSites: true },
-    ...(isProUser ? [
-      { value: 'reports-tab', label: t.reports, icon: FileBox, hideOnMobile: true, hasSites: true },
-      { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true, hasSites: true },
-    ] : []),
-    { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true, hasSites: true },
-    { value: 'gmb', label: 'GMB', icon: Store, proOnly: !isProUser ? false : undefined as unknown as boolean, hasSites: true },
-    { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, hasSites: true },
-    ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true, hasSites: false }] : []),
-    ...(!isProUser ? [
-      { value: 'reports', label: t.reports, icon: FileText, hideOnMobile: true, hasSites: false },
-      { value: 'wallet', label: t.wallet, icon: Wallet, hideOnMobile: true, hasSites: false },
-    ] : []),
+      icon: Crown, hideOnMobile: true,
+    }] : [
+      { value: 'wallet', label: t.wallet, icon: Wallet, hideOnMobile: true },
+    ]),
+    { value: 'settings', label: t.settings, icon: Settings, hideOnMobile: true },
+    ...(hasAdminAccess ? [{ value: 'admin', label: t.creator, icon: Shield }] : []),
   ];
-
-  const bottomItems: SidebarItem[] = [
-    { value: 'settings', label: t.settings, icon: Settings, hideOnMobile: true, hasSites: false },
-    ...(hasAdminAccess ? [{ value: 'admin', label: t.creator, icon: Shield, hasSites: false }] : []),
-  ];
-
-  const handleTabClick = (item: SidebarItem) => {
-    onTabChange(item.value);
-    if (item.hasSites && sites.length > 1) {
-      setExpandedTab(expandedTab === item.value ? null : item.value);
-    } else {
-      setExpandedTab(null);
-    }
-  };
-
-  const handleSiteClick = (site: TrackedSite) => {
-    setSelectedSiteId(site.id);
-    onSiteSelect?.(site.id, site.domain);
-  };
 
   const renderItem = (item: SidebarItem) => {
     if (item.hideOnMobile && isMobile) return null;
 
     const isActive = activeTab === item.value;
     const isLocked = item.proOnly && !isProUser;
-    const isExpanded = expandedTab === item.value;
     const Icon = item.icon;
 
     return (
       <div key={item.value}>
         <button
-          onClick={() => !isLocked && handleTabClick(item)}
+          onClick={() => !isLocked && onTabChange(item.value)}
           disabled={isLocked}
           className={cn(
             'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin transition-colors text-left',
@@ -149,31 +153,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
             ) : item.label}
           </span>
           {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
-          {item.hasSites && sites.length > 1 && !isLocked && (
-            isExpanded
-              ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
-              : <ChevronDown className="h-3 w-3 text-muted-foreground" />
-          )}
         </button>
-
-        {isExpanded && sites.length > 1 && (
-          <div className="ml-4 mt-0.5 border-l border-border/40 pl-2 space-y-0.5">
-            {sites.map(site => (
-              <button
-                key={site.id}
-                onClick={() => handleSiteClick(site)}
-                className={cn(
-                  'w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs font-thin transition-colors text-left',
-                  selectedSiteId === site.id
-                    ? 'text-foreground bg-accent/40'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/20',
-                )}
-              >
-                <span className="flex-1 truncate">{site.domain}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
     );
   };
@@ -183,6 +163,51 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       'shrink-0 border-r border-border/50 bg-background/50 flex flex-col',
       isMobile ? 'w-full border-r-0 border-b pb-2' : 'w-[200px] min-h-0 sticky top-0 self-start',
     )}>
+      {/* Domain selector */}
+      {!isMobile && sites.length > 0 && (
+        <div className="px-2 pt-3 pb-1">
+          <div className="relative">
+            <button
+              onClick={() => setSelectorOpen(!selectorOpen)}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-accent/20 hover:bg-accent/40 transition-colors text-left"
+            >
+              <Globe className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <span className="flex-1 truncate text-xs font-medium">
+                {selectedSite ? selectedSite.domain.replace(/^www\./, '') : t.allSites}
+              </span>
+              <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', selectorOpen && 'rotate-180')} />
+            </button>
+
+            {selectorOpen && (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-y-auto">
+                <button
+                  onClick={() => handleSiteChange(null, null)}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
+                    !selectedSiteId ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
+                  )}
+                >
+                  <Globe className="h-3 w-3 shrink-0" />
+                  {t.allSites}
+                </button>
+                {sites.map(site => (
+                  <button
+                    key={site.id}
+                    onClick={() => handleSiteChange(site.id, site.domain)}
+                    className={cn(
+                      'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
+                      selectedSiteId === site.id ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
+                    )}
+                  >
+                    <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <nav className={cn(
         'flex-1 py-2 space-y-0.5 overflow-y-auto',
         isMobile ? 'flex gap-1 overflow-x-auto px-2 space-y-0' : 'px-2',

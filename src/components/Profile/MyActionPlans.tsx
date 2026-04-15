@@ -513,61 +513,7 @@ export function MyActionPlans() {
               <p className="text-sm text-muted-foreground">{t.noPlansDesc}</p>
             </div>
           ) : (
-            <div className="flex gap-4">
-              {/* Left sidebar: domains */}
-              {domainStats.length >= 1 && (
-                <div className="w-52 shrink-0 border-r pr-3 max-h-[70vh] overflow-y-auto">
-                  <Button
-                    variant={selectedDomain === null ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-start text-xs mb-2"
-                    onClick={() => setSelectedDomain(null)}
-                  >
-                    <Globe className="h-3.5 w-3.5 mr-2 shrink-0" />
-                    {t.allSites}
-                    <span className="ml-auto text-[10px] text-muted-foreground">
-                      {activeItems.length}
-                    </span>
-                  </Button>
-
-                  {domainStats.map(([domain, stats]) => (
-                    <Button
-                      key={domain}
-                      variant={selectedDomain === domain ? 'secondary' : 'ghost'}
-                      size="sm"
-                      className="w-full justify-start text-xs mb-0.5"
-                      onClick={() => setSelectedDomain(domain)}
-                    >
-                      <Globe className="h-3 w-3 mr-1.5 shrink-0 text-primary" />
-                      <span className="truncate">{domain}</span>
-                      <span className="ml-auto flex items-center gap-1">
-                        {stats.critical > 0 && (
-                          <span className="text-[9px] bg-destructive/15 text-destructive px-1 rounded">{stats.critical}</span>
-                        )}
-                        {stats.important > 0 && (
-                          <span className="text-[9px] bg-warning/15 text-warning-foreground px-1 rounded">{stats.important}</span>
-                        )}
-                        <span className="text-[10px] text-muted-foreground">{stats.total}</span>
-                      </span>
-                    </Button>
-                  ))}
-
-                  {isAdmin && (
-                    <div className="pt-3 mt-3 border-t">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-xs text-primary"
-                        onClick={() => toast.info(t.editorialCalendar)}
-                      >
-                        <ClipboardList className="h-3.5 w-3.5 mr-2" />
-                        {t.editorialCalendar}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-
+            <div>
               {/* Main content */}
               <div className="flex-1 min-w-0 space-y-4">
                 {/* Progress bar */}
