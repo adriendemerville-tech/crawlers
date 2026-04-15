@@ -107,6 +107,11 @@ export function IndexationMonitor() {
         )
       );
       loadChecks();
+      // Auto-trigger SERP benchmark with the domain as keyword
+      const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
+      if (domain && serpBenchmarkRef.current) {
+        serpBenchmarkRef.current.triggerBenchmark(domain);
+      }
     } catch (e: any) {
       toast.error(e.message);
     } finally {
