@@ -157,18 +157,6 @@ export function IndexationMonitor() {
                 )}
               </CardDescription>
             </div>
-            {trackedSites.length > 1 && (
-              <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {trackedSites.map(s => (
-                    <SelectItem key={s.id} value={s.id}>{s.domain}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

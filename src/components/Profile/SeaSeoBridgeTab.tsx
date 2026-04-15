@@ -115,20 +115,6 @@ export function SeaSeoBridgeTab() {
 
   return (
     <div className="space-y-4">
-      {sites.length > 1 && (
-        <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-          <SelectTrigger className="w-64">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {sites.map(s => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.site_name || s.domain}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
 
       {!hasAnyReadySite ? (
         <div className="flex items-start gap-3 py-10 px-6 max-w-lg mx-auto text-center">
