@@ -266,6 +266,7 @@ export type Database = {
           member_user_id: string
           owner_user_id: string
           role: string
+          team_role: Database["public"]["Enums"]["team_role"]
           updated_at: string
         }
         Insert: {
@@ -274,6 +275,7 @@ export type Database = {
           member_user_id: string
           owner_user_id: string
           role?: string
+          team_role?: Database["public"]["Enums"]["team_role"]
           updated_at?: string
         }
         Update: {
@@ -282,6 +284,7 @@ export type Database = {
           member_user_id?: string
           owner_user_id?: string
           role?: string
+          team_role?: Database["public"]["Enums"]["team_role"]
           updated_at?: string
         }
         Relationships: []
@@ -8185,6 +8188,30 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          permission_key: string
+          role: Database["public"]["Enums"]["team_role"]
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          permission_key: string
+          role: Database["public"]["Enums"]["team_role"]
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          permission_key?: string
+          role?: Database["public"]["Enums"]["team_role"]
+        }
+        Relationships: []
+      }
       sav_conversations: {
         Row: {
           assistant_type: string
@@ -11572,11 +11599,19 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: string[]
       }
+      get_team_role: {
+        Args: { _member_id: string; _owner_id: string }
+        Returns: Database["public"]["Enums"]["team_role"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_team_permission: {
+        Args: { _member_id: string; _owner_id: string; _permission: string }
         Returns: boolean
       }
       increment_short_link_clicks: {
@@ -11794,6 +11829,7 @@ export type Database = {
         | "webflow"
         | "wix"
         | "drupal"
+      team_role: "owner" | "editor" | "auditor"
       workbench_item_status:
         | "pending"
         | "assigned"
@@ -12007,6 +12043,7 @@ export const Constants = {
         "wix",
         "drupal",
       ],
+      team_role: ["owner", "editor", "auditor"],
       workbench_item_status: [
         "pending",
         "assigned",

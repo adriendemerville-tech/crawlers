@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast as sonnerToast } from 'sonner';
+import { useTeamPermissions } from '@/hooks/useTeamPermissions';
 
 // ─── Pedagogical fix descriptions ───
 interface FixPedagogy {
@@ -222,6 +223,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId, recommendationText, trackedSiteDomainId }: CocoonArchitectModalProps) {
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { can: canDo } = useTeamPermissions();
   const [expandedFix, setExpandedFix] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -493,6 +495,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
                         {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                         <span className="text-[10px]">{copied ? t.copied : t.copy}</span>
                       </Button>
+                      {canDo('content.inject') && (
                       <Button
                         size="sm"
                         onClick={handleInject}
@@ -514,6 +517,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
                               : (language === 'en' ? 'Inject code' : language === 'es' ? 'Inyectar código' : 'Injecter le code')}
                         </span>
                       </Button>
+                      )}
                     </div>
                   </div>
                   <pre

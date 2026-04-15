@@ -23,6 +23,7 @@ import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
 import { TeamSharingSettings } from '@/components/Profile/TeamSharingSettings';
+import { TeamRoleManager } from '@/components/Profile/TeamRoleManager';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 import { CrawlQuotaCard } from '@/components/Profile/CrawlQuotaCard';
@@ -460,6 +461,9 @@ export function MyWallet() {
               {/* Accounts Tab */}
               <TabsContent value="profile" className="mt-0">
                 <AccountManager />
+                <div className="mt-6">
+                  <TeamRoleManager />
+                </div>
                 <div className="mt-6">
                   <TeamSharingSettings />
                 </div>
