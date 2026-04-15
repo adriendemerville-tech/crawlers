@@ -260,28 +260,16 @@ function FooterComponent() {
                 {t3(language, 'Nos Outils', 'Our Tools', 'Herramientas')}
               </h3>
               <nav aria-label="Outils d'analyse">
-                <ul className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
                   {toolsLinks.map((link) => (
                     <li key={link.href + link.label}>
-                      {link.isRoute ? (
-                        <SmartLink
-                          to={link.href}
-                          className="group flex items-start gap-2 text-sm transition-colors text-muted-foreground hover:text-primary"
-                          title={link.description}
-                        >
-                          <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{link.label}</span>
-                        </SmartLink>
-                      ) : (
-                        <a 
-                          href={link.href}
-                          className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                          title={link.description}
-                        >
-                          <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{link.label}</span>
-                        </a>
-                      )}
+                      <SmartLink
+                        to={link.href}
+                        className="text-sm transition-colors text-muted-foreground hover:text-primary"
+                        title={link.description}
+                      >
+                        {link.label}
+                      </SmartLink>
                     </li>
                   ))}
                 </ul>
