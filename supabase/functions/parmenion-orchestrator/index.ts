@@ -233,6 +233,29 @@ try {
         results: d.execution_results,
       }));
 
+    // ═══ PRE-SCORE: Fast deterministic page scoring (0 LLM tokens) ═══
+    if (currentPhase === 'audit' || currentPhase === 'prescribe') {
+      try {
+        const targetUrl = `https://${domain}`;
+        const fetchRes = await fetch(targetUrl, {
+          headers: { 'User-Agent': 'CrawlersBot/1.0 (SEO Audit)' },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (fetchRes.ok) {
+          const html = await fetchRes.text();
+          const textContent = extractTextContent(html);
+          baselineSeoScore = computeSeoScoreV2(html, textContent, {
+            pageType: 'landing',
+            customKeywords: siteKeywords.length > 0 ? siteKeywords.slice(0, 15) : undefined,
+          });
+          console.log(`[Parménion] 📐 Baseline SEO score: ${baselineSeoScore.overall}/100 — Issues: ${baselineSeoScore.issues.length}, Opps: ${baselineSeoScore.opportunities.length}`);
+          console.log(`[Parménion] 📐 Axes: content_depth=${baselineSeoScore.axes.content_depth} heading=${baselineSeoScore.axes.heading_structure} keywords=${baselineSeoScore.axes.keyword_relevance} linking=${baselineSeoScore.axes.internal_linking} meta=${baselineSeoScore.axes.meta_quality} eeat=${baselineSeoScore.axes.eeat_signals}`);
+        }
+      } catch (e) {
+        console.warn('[Parménion] Pre-score fetch failed (non-blocking):', e instanceof Error ? e.message : e);
+      }
+    }
+
     // ═══ PHASE 2b: DUAL-LANE ALGORITHMIC SCORING (prescribe phase) ═══
     let scoredWorkbenchItems: any[] = [];
     // PROACTIVE MODE: Always force content if not explicitly disabled — Parménion must always find something to do
