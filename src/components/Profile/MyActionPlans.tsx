@@ -543,45 +543,81 @@ export function MyActionPlans() {
                   <Progress value={progress} className="h-2" />
                 </div>
 
-                {/* Active tasks with drag & drop */}
+                {/* Active tasks grouped by priority */}
                 {sortedActive.length === 0 && filteredArchived.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-sm text-muted-foreground">{t.noPlans}</p>
                   </div>
                 )}
 
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext items={sortedActive.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-1">
-                      <AnimatePresence>
-                        {sortedActive.map((item) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                          >
-                            <SortableTaskItem
-                              item={item}
-                              onToggle={toggleTask}
-                              onDelete={deleteTask}
-                              onOpenArchitect={() => handleOpenArchitect(item)}
-                              onOpenContentArchitect={() => handleOpenContentArchitect(item)}
-                              getPriorityColor={getPriorityColor}
-                              getPriorityLabel={getPriorityLabel}
-                              architectLabel={t.architect}
-                              contentArchitectLabel={t.contentArchitect}
-                            />
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
+                {(() => {
+                  const criticalTasks = sortedActive.filter(i => severityToPriority(i.severity) === 'critical');
+                  const importantTasks = sortedActive.filter(i => severityToPriority(i.severity) === 'important');
+                  const optionalTasks = sortedActive.filter(i => severityToPriority(i.severity) === 'optional');
+
+                  const priorityGroups = [
+                    { key: 'critical', label: t.critical, tasks: criticalTasks, color: 'text-destructive', bgColor: 'bg-destructive/10', borderColor: 'border-destructive/30' },
+                    { key: 'important', label: t.important, tasks: importantTasks, color: 'text-warning-foreground', bgColor: 'bg-warning/10', borderColor: 'border-warning/30' },
+                    { key: 'optional', label: t.optional, tasks: optionalTasks, color: 'text-muted-foreground', bgColor: 'bg-muted/30', borderColor: 'border-border' },
+                  ].filter(g => g.tasks.length > 0);
+
+                  return (
+                    <div className="space-y-3">
+                      {priorityGroups.map(group => (
+                        <Collapsible key={group.key} defaultOpen={group.key === 'critical'}>
+                          <CollapsibleTrigger asChild>
+                            <button className={cn(
+                              "w-full flex items-center justify-between px-4 py-2.5 rounded-lg border transition-colors hover:bg-accent/30",
+                              group.borderColor, group.bgColor,
+                            )}>
+                              <span className={cn("flex items-center gap-2 font-medium text-sm", group.color)}>
+                                {group.label}
+                                <span className="text-xs font-normal bg-background/60 px-2 py-0.5 rounded-full">
+                                  {group.tasks.length}
+                                </span>
+                              </span>
+                              <ChevronDown className={cn("h-4 w-4 transition-transform", group.color)} />
+                            </button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <DndContext
+                              sensors={sensors}
+                              collisionDetection={closestCenter}
+                              onDragEnd={handleDragEnd}
+                            >
+                              <SortableContext items={group.tasks.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                <div className="space-y-1 mt-2">
+                                  <AnimatePresence>
+                                    {group.tasks.map((item) => (
+                                      <motion.div
+                                        key={item.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                      >
+                                        <SortableTaskItem
+                                          item={item}
+                                          onToggle={toggleTask}
+                                          onDelete={deleteTask}
+                                          onOpenArchitect={() => handleOpenArchitect(item)}
+                                          onOpenContentArchitect={() => handleOpenContentArchitect(item)}
+                                          getPriorityColor={getPriorityColor}
+                                          getPriorityLabel={getPriorityLabel}
+                                          architectLabel={t.architect}
+                                          contentArchitectLabel={t.contentArchitect}
+                                        />
+                                      </motion.div>
+                                    ))}
+                                  </AnimatePresence>
+                                </div>
+                              </SortableContext>
+                            </DndContext>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      ))}
                     </div>
-                  </SortableContext>
-                </DndContext>
+                  );
+                })()}
 
                 {/* Archived tasks */}
                 {filteredArchived.length > 0 && (
