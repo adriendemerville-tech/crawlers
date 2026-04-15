@@ -373,7 +373,7 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
     return activeItems.filter(i => i.domain === selectedDomain);
   }, [activeItems, selectedDomain]);
 
-  // Sort: manual_priority first if set, then spiral_score desc
+  // Sort: manual_priority first, then severity, then spiral_score (with optional competitor boost)
   const sortedActive = useMemo(() => {
     return [...filteredActive].sort((a, b) => {
       if (a.manual_priority != null && b.manual_priority != null) return a.manual_priority - b.manual_priority;
@@ -383,9 +383,19 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
       const sa = severityOrder[a.severity] ?? 2;
       const sb = severityOrder[b.severity] ?? 2;
       if (sa !== sb) return sa - sb;
-      return (b.spiral_score || 0) - (a.spiral_score || 0);
+
+      if (competitorPressureOn) {
+        // When pressure is ON: spiral_score + competitor_momentum_score as tiebreaker
+        const aTotal = (a.spiral_score || 0) + (a.competitor_momentum_score || 0);
+        const bTotal = (b.spiral_score || 0) + (b.competitor_momentum_score || 0);
+        return bTotal - aTotal;
+      }
+      // When pressure is OFF: spiral_score without competitor momentum
+      const aBase = (a.spiral_score || 0) - (a.competitor_momentum_score || 0) * 0.8;
+      const bBase = (b.spiral_score || 0) - (b.competitor_momentum_score || 0) * 0.8;
+      return bBase - aBase;
     });
-  }, [filteredActive]);
+  }, [filteredActive, competitorPressureOn]);
 
   const filteredArchived = useMemo(() => {
     if (!selectedDomain) return archivedItems;
