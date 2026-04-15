@@ -441,21 +441,53 @@ export function Header() {
         {/* Right side: Mobile nav + Audit CTA, Credits, Theme, User */}
         <div className="flex items-center gap-1.5 sm:gap-3">
 
-          {/* Mobile-only: Audit & Crawl buttons */}
+          {/* Mobile-only: contextual nav buttons */}
           {!isProfilePage && (
-            <div className="flex sm:hidden items-center gap-1">
-              <Link to="/audit-expert">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs font-semibold ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-[#1e3a5f] dark:text-[#60a5fa]'}`}>
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Audit
-                </Button>
-              </Link>
-              <Link to="/app/site-crawl">
-                <Button variant="ghost" size="sm" className={`gap-1 px-2 text-xs font-semibold ${isCrawlPage ? 'text-purple-500 bg-purple-500/10' : 'text-purple-500'}`}>
-                  <Bug className="h-3.5 w-3.5" />
-                  Crawl
-                </Button>
-              </Link>
+            <div className="flex sm:hidden items-center gap-0.5">
+              {isHomePage ? (
+                <>
+                  <Link to="/features">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                      Features
+                    </Button>
+                  </Link>
+                  <Link to="/tarifs">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                      {language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}
+                    </Button>
+                  </Link>
+                  <Link to="/audit-expert">
+                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-semibold ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-[#1e3a5f] dark:text-[#60a5fa]'}`}>
+                      Audit
+                    </Button>
+                  </Link>
+                  <Link to="/eeat">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                      E-E-A-T
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/audit-expert">
+                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-[#1e3a5f] dark:text-[#60a5fa]'}`}>
+                      <Sparkles className="h-3 w-3" />
+                      Audit
+                    </Button>
+                  </Link>
+                  <Link to="/app/site-crawl">
+                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isCrawlPage ? 'text-purple-500 bg-purple-500/10' : 'text-purple-500'}`}>
+                      <Bug className="h-3 w-3" />
+                      Crawl
+                    </Button>
+                  </Link>
+                  <Link to="/app/cocoon">
+                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-semibold text-amber-500 ${isCocoonPage ? 'bg-amber-500/10' : ''}`}>
+                      Cocoon
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           )}
 
