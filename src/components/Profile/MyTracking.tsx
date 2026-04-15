@@ -35,6 +35,7 @@ import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
 import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
+import { CompetitorTrackingTab } from '@/components/Profile/CompetitorTrackingTab';
 
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
@@ -662,6 +663,10 @@ export function MyTracking() {
                       <TabsList>
                         <TabsTrigger value="kpis">{t.kpis}</TabsTrigger>
                         <TabsTrigger value="evolution">{t.evolution}</TabsTrigger>
+                        <TabsTrigger value="competitors" className="gap-1.5">
+                          <Search className="h-3 w-3" />
+                          {h.language === 'fr' ? 'Concurrence' : h.language === 'es' ? 'Competencia' : 'Competitors'}
+                        </TabsTrigger>
                       </TabsList>
                       <TabsContent value="kpis" className="space-y-4">
                         {/* LLM Visibility Dashboard */}
@@ -719,6 +724,14 @@ export function MyTracking() {
                             <p>{h.language === 'fr' ? 'Pas encore assez de données pour afficher une évolution.' : 'Not enough data yet to show evolution.'}</p>
                           </div>
                         )}
+                      </TabsContent>
+                      <TabsContent value="competitors" className="space-y-4">
+                        <CompetitorTrackingTab
+                          trackedSiteId={h.currentSite.id}
+                          domain={h.currentSite.domain}
+                          userId={h.user?.id || ''}
+                          language={h.language}
+                        />
                       </TabsContent>
                     </Tabs>
 
