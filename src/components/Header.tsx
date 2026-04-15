@@ -208,7 +208,8 @@ export function Header() {
           ) : (
             // Logo + Language selector on other pages
             <>
-              <a href="/" className="flex items-center gap-2" aria-label="Crawlers.fr - Accueil">
+               <a href="/" className="flex flex-col items-start" aria-label="Crawlers.fr - Accueil">
+                <div className="flex items-center gap-2">
                 {!isProfilePage && (
                   <svg className="h-8 w-8" viewBox="0 0 48 48" aria-hidden="true">
                     <defs>
@@ -235,32 +236,33 @@ export function Header() {
                     <span className="text-foreground">Console</span>
                   ) : 'Crawlers'}
                 </span>
-                {/* Language selector inline */}
+                </div>
+                {/* Language selector below logo */}
                 {!isProfilePage && (
-                  <div className="hidden sm:flex items-center gap-0.5 ml-1" role="group" aria-label="Sélection de la langue">
+                  <div className="hidden sm:flex items-center gap-0.5 ml-10" role="group" aria-label="Sélection de la langue">
                     <button
                       onClick={(e) => { e.preventDefault(); setLanguage('fr'); }}
-                      className={`h-5 w-5 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                      className={`h-4 w-4 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-40 hover:opacity-75'}`}
                       aria-pressed={language === 'fr'}
                       aria-label="Français"
                     >
-                      <span className="text-xs">🇫🇷</span>
+                      <span className="text-[10px]">🇫🇷</span>
                     </button>
                     <button
                       onClick={(e) => { e.preventDefault(); setLanguage('en'); }}
-                      className={`h-5 w-5 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                      className={`h-4 w-4 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-40 hover:opacity-75'}`}
                       aria-pressed={language === 'en'}
                       aria-label="English"
                     >
-                      <span className="text-xs">🇬🇧</span>
+                      <span className="text-[10px]">🇬🇧</span>
                     </button>
                     <button
                       onClick={(e) => { e.preventDefault(); setLanguage('es'); }}
-                      className={`h-5 w-5 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                      className={`h-4 w-4 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-40 hover:opacity-75'}`}
                       aria-pressed={language === 'es'}
                       aria-label="Español"
                     >
-                      <span className="text-xs">🇪🇸</span>
+                      <span className="text-[10px]">🇪🇸</span>
                     </button>
                   </div>
                 )}
@@ -272,30 +274,26 @@ export function Header() {
         {/* Center: Navigation links - desktop */}
         {!isProfilePage && isHomePage && (
           <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-            <a href="#features" onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}>
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <Sparkles className="h-3.5 w-3.5" />
+            <Link to="/features">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-semibold">Features</span>
               </Button>
-            </a>
+            </Link>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
             <Link to="/tarifs">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <CreditCard className="h-3.5 w-3.5" />
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-semibold">{language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}</span>
               </Button>
             </Link>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
             <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:text-[#1e3a5f] dark:hover:text-[#93c5fd] hover:bg-[#1e3a5f]/10">
-                <Search className="h-3.5 w-3.5" />
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-semibold">Audit</span>
               </Button>
             </Link>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
             <Link to="/eeat">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
-                <ShieldCheck className="h-3.5 w-3.5" />
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-semibold">E-E-A-T</span>
               </Button>
             </Link>

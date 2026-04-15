@@ -53,6 +53,7 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const GuideLandingPage = lazy(() => import("./pages/GuideLandingPage"));
 const GuidesHub = lazy(() => import("./pages/GuidesHub"));
 
+const Features = lazy(() => import("./pages/Features"));
 const EEATPage = lazy(() => import("./pages/EEATPage"));
 const AppEeat = lazy(() => import("./pages/AppEeat"));
 const AnalyseBotsIA = lazy(() => import("./pages/AnalyseBotsIA"));
@@ -149,6 +150,7 @@ const App = () => (
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
                           <Route path="/" element={<Index />} />
+                          <Route path="/features" element={<Features />} />
                           <Route path="/audit-expert" element={<ExpertAudit />} />
                           <Route path="/lexique" element={<Lexique />} />
                           <Route path="/lexique/:slug" element={<ExpertTermPage />} />
