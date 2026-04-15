@@ -76,16 +76,18 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
     );
   };
 
-  const runBenchmark = useCallback(async () => {
-    if (!query.trim()) { toast.error('Entrez un mot-clé'); return; }
+  const runBenchmark = useCallback(async (overrideQuery?: string) => {
+    const q = overrideQuery || query.trim();
+    if (!q) { toast.error('Entrez un mot-clé'); return; }
     if (selectedProviders.length < 2) { toast.error('Sélectionnez au moins 2 providers'); return; }
+    if (overrideQuery) setQuery(overrideQuery);
     setLoading(true);
     setResults(null);
     try {
       const { data, error } = await supabase.functions.invoke('serp-benchmark', {
         body: {
           action: 'benchmark',
-          query: query.trim(),
+          query: q,
           tracked_site_id: selectedSiteId || undefined,
           target_domain: targetDomain.trim() || selectedSite?.domain || undefined,
           location,
@@ -106,6 +108,10 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
       setLoading(false);
     }
   }, [query, selectedProviders, selectedSiteId, targetDomain, selectedSite, location, penaltyEnabled, singleHitPenalty]);
+
+  useImperativeHandle(ref, () => ({
+    triggerBenchmark: (keyword: string) => runBenchmark(keyword),
+  }), [runBenchmark]);
 
   const copyResults = () => {
     if (!results) return;
