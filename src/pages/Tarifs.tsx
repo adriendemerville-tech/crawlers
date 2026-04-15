@@ -14,7 +14,8 @@ import {
   CheckCircle2, Zap, CreditCard, FileText, Code2, PenTool,
   Bot, Globe, Gauge, Brain, ArrowRight, Gift,
   Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
-  ScanSearch, GitCompareArrows, Layers, Building2, MessageCircle, Server, Database
+  ScanSearch, GitCompareArrows, Layers, Building2, MessageCircle, Server, Database,
+  Share2, Megaphone, Briefcase, Award
 } from 'lucide-react';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
 import proAgencyPlusLogo from '@/assets/pro-agency-plus-logo.webp';
@@ -33,6 +34,7 @@ const translations = {
       { icon: Globe, label: 'Score GEO', description: 'Évaluez votre optimisation pour les moteurs génératifs' },
       { icon: Brain, label: 'Visibilité LLM', description: 'Analysez votre présence sur ChatGPT, Claude, Gemini' },
       { icon: Gauge, label: 'PageSpeed', description: 'Testez les performances et Core Web Vitals' },
+      { icon: Award, label: 'Audit E-E-A-T', description: 'Évaluez Expertise, Expérience, Autorité et Confiance' },
     ],
     registrationSection: 'Audit Technique SEO',
     registrationDescription: 'Gratuit avec inscription',
@@ -82,6 +84,46 @@ const translations = {
         'Analyse Brand DNA & backlinks',
         'SERP Battlefield & mots-clés',
         'Radar différentiel multi-axes',
+      ],
+    },
+    contentArchitect: {
+      title: 'Content Architect',
+      description: '1 crédit par page générée (80-150/mois en Pro Agency)',
+      features: [
+        'Création de pages SEO optimisées',
+        'Voice DNA — ton de marque personnalisé',
+        'Maillage interne automatique',
+        'Export vers CMS (WordPress, Shopify…)',
+      ],
+    },
+    socialHub: {
+      title: 'Social Hub',
+      description: '1 crédit par post (30-100/mois en Pro Agency)',
+      features: [
+        'Génération de posts LinkedIn, Facebook, Instagram',
+        'Adaptation au ton de marque',
+        'Planification et calendrier éditorial',
+        'Bibliothèque d\'images IA intégrée',
+      ],
+    },
+    cocoon: {
+      title: 'Cocoon Sémantique',
+      description: '2 crédits par analyse de maillage',
+      features: [
+        'Graphe 3D du maillage interne',
+        'Détection de cannibalisation',
+        'Suggestions de liens automatiques',
+        'Analyse de profondeur de crawl',
+      ],
+    },
+    marina: {
+      title: 'Marina — Prospection B2B',
+      description: '3 crédits par audit de prospection',
+      features: [
+        'Audit SEO en marque blanche',
+        'Rapport PDF personnalisable',
+        'Pipeline de prospection intégré',
+        'Envoi automatisé via LinkedIn',
       ],
     },
     creditsSection: 'Packs de Crédits',
@@ -154,6 +196,7 @@ const translations = {
       { icon: Globe, label: 'GEO Score', description: 'Evaluate your optimization for generative engines' },
       { icon: Brain, label: 'LLM Visibility', description: 'Analyze your presence on ChatGPT, Claude, Gemini' },
       { icon: Gauge, label: 'PageSpeed', description: 'Test performance and Core Web Vitals' },
+      { icon: Award, label: 'E-E-A-T Audit', description: 'Evaluate Expertise, Experience, Authority and Trust' },
     ],
     registrationSection: 'Technical Audit',
     registrationDescription: 'Free with registration',
@@ -203,6 +246,46 @@ const translations = {
         'Brand DNA & backlinks analysis',
         'SERP Battlefield & keywords',
         'Multi-axis differential radar',
+      ],
+    },
+    contentArchitect: {
+      title: 'Content Architect',
+      description: '1 credit per page (80-150/month with Pro Agency)',
+      features: [
+        'SEO-optimized page creation',
+        'Voice DNA — custom brand tone',
+        'Automatic internal linking',
+        'CMS export (WordPress, Shopify…)',
+      ],
+    },
+    socialHub: {
+      title: 'Social Hub',
+      description: '1 credit per post (30-100/month with Pro Agency)',
+      features: [
+        'LinkedIn, Facebook, Instagram post generation',
+        'Brand tone adaptation',
+        'Planning & editorial calendar',
+        'Integrated AI image library',
+      ],
+    },
+    cocoon: {
+      title: 'Semantic Cocoon',
+      description: '2 credits per linking analysis',
+      features: [
+        '3D internal linking graph',
+        'Cannibalization detection',
+        'Automatic link suggestions',
+        'Crawl depth analysis',
+      ],
+    },
+    marina: {
+      title: 'Marina — B2B Prospecting',
+      description: '3 credits per prospecting audit',
+      features: [
+        'White-label SEO audit',
+        'Customizable PDF report',
+        'Integrated prospecting pipeline',
+        'Automated LinkedIn outreach',
       ],
     },
     creditsSection: 'Credit Packs',
@@ -274,6 +357,7 @@ const translations = {
       { icon: Globe, label: 'Puntuación GEO', description: 'Evalúa tu optimización para motores generativos' },
       { icon: Brain, label: 'Visibilidad LLM', description: 'Analiza tu presencia en ChatGPT, Claude, Gemini' },
       { icon: Gauge, label: 'PageSpeed', description: 'Prueba el rendimiento y Core Web Vitals' },
+      { icon: Award, label: 'Auditoría E-E-A-T', description: 'Evalúa Experiencia, Pericia, Autoridad y Confianza' },
     ],
     registrationSection: 'Auditoría Técnica',
     registrationDescription: 'Gratis con registro',
@@ -323,6 +407,46 @@ const translations = {
         'Análisis Brand DNA y backlinks',
         'SERP Battlefield y palabras clave',
         'Radar diferencial multi-ejes',
+      ],
+    },
+    contentArchitect: {
+      title: 'Content Architect',
+      description: '1 crédito por página (80-150/mes con Pro Agency)',
+      features: [
+        'Creación de páginas SEO optimizadas',
+        'Voice DNA — tono de marca personalizado',
+        'Enlazado interno automático',
+        'Exportación a CMS (WordPress, Shopify…)',
+      ],
+    },
+    socialHub: {
+      title: 'Social Hub',
+      description: '1 crédito por post (30-100/mes con Pro Agency)',
+      features: [
+        'Generación de posts LinkedIn, Facebook, Instagram',
+        'Adaptación al tono de marca',
+        'Planificación y calendario editorial',
+        'Biblioteca de imágenes IA integrada',
+      ],
+    },
+    cocoon: {
+      title: 'Cocoon Semántico',
+      description: '2 créditos por análisis de enlazado',
+      features: [
+        'Grafo 3D de enlazado interno',
+        'Detección de canibalización',
+        'Sugerencias de enlaces automáticas',
+        'Análisis de profundidad de rastreo',
+      ],
+    },
+    marina: {
+      title: 'Marina — Prospección B2B',
+      description: '3 créditos por auditoría de prospección',
+      features: [
+        'Auditoría SEO en marca blanca',
+        'Informe PDF personalizable',
+        'Pipeline de prospección integrado',
+        'Envío automatizado vía LinkedIn',
       ],
     },
     creditsSection: 'Packs de Créditos',
