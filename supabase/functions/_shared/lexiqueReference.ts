@@ -85,4 +85,23 @@ Quand l'utilisateur mentionne un terme technique, utilise ces définitions. Tu p
 - **Keyword Universe** : Table centralisée (SSOT) de tous les mots-clés et opportunités SEO/GEO avec score d'opportunité pondéré.
 - **TIM** : Tracked Intelligence Memory — mémoire contextuelle persistante par site.
 - **Crawl Depth** : Profondeur de crawl — nombre minimum de clics depuis la page d'accueil pour atteindre une page. Une profondeur > 3 nuit au référencement car Google explore moins les pages profondes.
+- **SPO** : Score de Priorité d'Optimisation — 8 signaux pondérés, 0-100. Priorise les actions SEO par ROI.
+- **ETV** : Estimated Traffic Value — valeur monétaire du trafic organique (volume × CPC).
+- **CTR Gap** : Écart entre CTR réel (GSC) et CTR attendu pour la position SERP. Quick Win si négatif.
+- **Voice DNA** : ADN de Marque — profil tonal persistant pour la cohérence des contenus IA.
+- **Marina** : Module de prospection B2B : audit externe + pipeline LinkedIn assisté.
+- **Drop Detector** : Diagnostic de Chute — détection auto des baisses de trafic avec diagnostic causal.
+- **Observatoire** : Veille sectorielle autonome quotidienne (updates Google, tendances, concurrence).
+- **Identity Card** : Carte d'identité site — enrichissement automatique du profil via APIs externes.
+- **Fair Use** : Quotas d'utilisation équitables par plan (crawls, contenus, audits par mois).
+- **Smart Recommendations** : Moteur de gating progressif débloquant les fonctionnalités par maturité SEO.
+- **CRO** : Conversion Rate Optimization — optimisation du taux de conversion d'un site.
+- **SEA** : Search Engine Advertising — publicité payante sur Google Ads, Bing Ads.
+- **KPI** : Key Performance Indicator — indicateur clé mesurant l'atteinte d'un objectif.
+- **ROI** : Return On Investment — ratio rentabilité d'un investissement SEO/GEO.
+- **CTA** : Call To Action — bouton ou texte incitant l'utilisateur à agir.
+- **B2B** : Business to Business — échanges commerciaux entre entreprises.
+- **B2C** : Business to Consumer — vente directe aux consommateurs finaux.
+- **SaaS** : Software as a Service — logiciel accessible en ligne par abonnement.
+- **RGPD** : Règlement Général sur la Protection des Données — cadre juridique européen.
 `;

@@ -102,6 +102,29 @@ export const LEXIQUE_REFERENCE: LexiqueEntry[] = [
   { term: 'Hit de Crawl', def: "Requête HTTP d'un bot sur une page. Le ratio hits/pages révèle l'efficacité du budget crawl." },
   { term: 'Gaspillage de Crawl', def: "Pages crawlées inutilement (404, redirections, paramètres) consommant le budget crawl." },
 
+  // ── Crawlers.fr — Métriques avancées ──
+  { term: 'SPO', def: "Score de Priorité d'Optimisation — 8 signaux, 0-100. Priorise les actions SEO par ROI." },
+  { term: 'ETV', def: "Estimated Traffic Value — valeur monétaire du trafic organique (volume × CPC)." },
+  { term: 'CTR Gap', def: "Écart entre CTR réel (GSC) et CTR attendu pour la position SERP." },
+  { term: 'Voice DNA', def: "ADN de Marque — profil tonal persistant pour la génération de contenu IA." },
+  { term: 'Marina', def: "Module de prospection B2B : audit externe + pipeline LinkedIn assisté." },
+  { term: 'Drop Detector', def: "Diagnostic de Chute — détection automatique des baisses de trafic avec cause probable." },
+  { term: 'Observatoire', def: "Veille sectorielle autonome quotidienne (updates Google, tendances, concurrence)." },
+  { term: 'Identity Card', def: "Carte d'identité site — enrichissement automatique du profil via APIs externes." },
+  { term: 'Fair Use', def: "Quotas d'utilisation équitables par plan (crawls, contenus, audits par mois)." },
+  { term: 'Smart Recommendations', def: "Moteur de gating progressif débloquant les fonctionnalités par maturité SEO." },
+
+  // ── Marketing & Business ──
+  { term: 'CRO', def: "Conversion Rate Optimization — optimisation du taux de conversion d'un site." },
+  { term: 'SEA', def: "Search Engine Advertising — publicité payante sur Google Ads, Bing Ads." },
+  { term: 'KPI', def: "Key Performance Indicator — indicateur clé de performance mesurable." },
+  { term: 'ROI', def: "Return On Investment — ratio rentabilité d'un investissement SEO/GEO." },
+  { term: 'CTA', def: "Call To Action — bouton ou texte incitant l'utilisateur à agir." },
+  { term: 'B2B', def: "Business to Business — échanges commerciaux entre entreprises." },
+  { term: 'B2C', def: "Business to Consumer — vente directe aux consommateurs finaux." },
+  { term: 'SaaS', def: "Software as a Service — logiciel accessible en ligne par abonnement." },
+  { term: 'RGPD', def: "Règlement Général sur la Protection des Données — cadre juridique européen." },
+
   // ── APIs ──
   { term: 'DataForSEO', def: "API de données SERP et mots-clés." },
   { term: 'PageSpeed Insights API', def: "API Google pour Core Web Vitals et Lighthouse." },

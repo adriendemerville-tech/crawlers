@@ -3046,6 +3046,767 @@ function computeChunkabilityScore(html: string): ChunkabilityResult {
       relatedTerms: ['rag', 'query-fan-out', 'dom-parsing'],
       updatedAt: '2026-04-15'
     },
+
+    // === CRAWLERS.FR — OUTILS & MÉTRIQUES ===
+    {
+      slug: 'spo-score',
+      term: 'SPO (Score de Priorité d\'Optimisation)',
+      category: 'data-ai',
+      microDefinition: 'Score composite 0-100 priorisant les optimisations par impact et effort.',
+      fullDefinition: 'Le SPO (Score de Priorité d\'Optimisation) est une note composite (0-100) calculée à partir de 8 signaux : CTR Gap, potentiel de conversion, difficulté technique, impact trafic estimé, maturité du cluster, pression concurrentielle, fraîcheur du contenu et gravité technique. Il permet de trier les recommandations d\'audit par retour sur investissement.',
+      deepDive: `## SPO : Prioriser comme un stratège
+
+### Les 8 signaux du SPO
+
+1. **CTR Gap** : Écart entre le CTR réel (GSC) et le CTR attendu pour la position
+2. **Potentiel de conversion** : Pages proches de la conversion (panier, contact)
+3. **Difficulté technique** : Effort estimé pour implémenter le correctif
+4. **Impact trafic** : Volume de recherche × amélioration de position attendue
+5. **Maturité cluster** : Avancement du cluster thématique associé
+6. **Pression concurrentielle** : Score momentum des concurrents sur le même keyword
+7. **Fraîcheur** : Âge du contenu et dernière mise à jour
+8. **Gravité technique** : Sévérité du problème (erreur 5xx > meta manquante)
+
+### Interprétation
+
+| SPO | Action |
+|-----|--------|
+| > 80 | Action immédiate — ROI maximal |
+| 50-80 | Planifier dans le sprint courant |
+| 30-50 | Backlog — traiter quand les quick wins sont faits |
+| < 30 | Différer ou ignorer |`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Calcul simplifié du SPO
+function computeSPO(signals: {
+  ctrGap: number;       // 0-100
+  conversionWeight: number; // 0-1
+  technicalDifficulty: number; // 0-1 (0 = facile)
+  trafficImpact: number; // 0-100
+  clusterMaturity: number; // 0-1
+  competitorPressure: number; // 0-100
+  freshness: number;    // 0-1 (1 = récent)
+  severity: number;     // 0-100
+}): number {
+  const weights = {
+    ctrGap: 0.15, conversionWeight: 0.15,
+    technicalDifficulty: 0.10, trafficImpact: 0.20,
+    clusterMaturity: 0.05, competitorPressure: 0.10,
+    freshness: 0.05, severity: 0.20
+  };
+  
+  let score = 0;
+  score += signals.ctrGap * weights.ctrGap;
+  score += signals.conversionWeight * 100 * weights.conversionWeight;
+  score += (1 - signals.technicalDifficulty) * 100 * weights.technicalDifficulty;
+  score += signals.trafficImpact * weights.trafficImpact;
+  score += signals.clusterMaturity * 100 * weights.clusterMaturity;
+  score += signals.competitorPressure * weights.competitorPressure;
+  score += signals.freshness * 100 * weights.freshness;
+  score += signals.severity * weights.severity;
+  
+  return Math.min(100, Math.round(score));
+}`,
+        description: 'Calcul du Score de Priorité d\'Optimisation à partir des 8 signaux pondérés'
+      },
+      expertOpinion: 'Le SPO transforme un audit SEO passif en feuille de route actionnable. En 2026, les équipes SEO performantes ne corrigent plus "tout" — elles priorisent par SPO et mesurent le ROI de chaque action. C\'est la métrique qui différencie un audit expert d\'une simple checklist.',
+      relatedTerms: ['quotability-index', 'query-fan-out', 'chunkability-score'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'etv-estimated-traffic-value',
+      term: 'ETV (Estimated Traffic Value)',
+      category: 'data-ai',
+      microDefinition: 'Valeur monétaire estimée du trafic organique d\'un site.',
+      fullDefinition: 'L\'ETV (Estimated Traffic Value) est une estimation de la valeur financière du trafic organique d\'un site, calculée en multipliant le trafic estimé par mot-clé par le CPC moyen correspondant en Google Ads. C\'est un indicateur proxy du ROI SEO : si un site génère 10 000 visites organiques sur des mots-clés à 2€/clic, son ETV est de 20 000€/mois.',
+      deepDive: `## ETV : Traduire le SEO en euros
+
+### Formule de calcul
+
+\`\`\`
+ETV = Σ (Trafic estimé par keyword × CPC moyen du keyword)
+\`\`\`
+
+### Sources de données
+
+- **DataForSEO** : Volume de recherche + CPC par mot-clé
+- **GSC** : Positions réelles et CTR
+- **Crawlers.fr** : Croisement des deux pour un ETV affiné
+
+### Utilisation dans la Part de Voix
+
+L'ETV représente 25% du calcul de Part de Voix Crawlers.fr :
+- 40% Visibilité LLM
+- 35% Positions SERP
+- **25% ETV**
+
+### Limites
+
+- Le CPC ne reflète pas toujours la valeur business réelle
+- Certains mots-clés informationnels ont un CPC faible mais une forte valeur de branding
+- L'ETV ne prend pas en compte la conversion réelle`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Calcul de l'ETV à partir des données DataForSEO
+interface KeywordData {
+  keyword: string;
+  position: number;
+  searchVolume: number;
+  cpc: number;
+}
+
+function computeETV(keywords: KeywordData[]): number {
+  const ctrByPosition: Record<number, number> = {
+    1: 0.316, 2: 0.241, 3: 0.189,
+    4: 0.110, 5: 0.088, 6: 0.067,
+    7: 0.052, 8: 0.041, 9: 0.033, 10: 0.028
+  };
+  
+  return keywords.reduce((total, kw) => {
+    const ctr = ctrByPosition[kw.position] || 0.01;
+    const estimatedTraffic = kw.searchVolume * ctr;
+    return total + (estimatedTraffic * kw.cpc);
+  }, 0);
+}`,
+        description: 'Estimation de la valeur du trafic organique par croisement volume × CPC × CTR'
+      },
+      expertOpinion: 'L\'ETV est l\'argument le plus parlant pour justifier un budget SEO auprès d\'un décideur. En 2026, avec la montée du GEO, il est recommandé de compléter l\'ETV par un "Citation Value" estimant la valeur des mentions IA.',
+      relatedTerms: ['spo-score', 'quotability-index'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'voice-dna',
+      term: 'Voice DNA (ADN de Marque)',
+      category: 'data-ai',
+      microDefinition: 'Profil tonal persistant d\'une marque pour la génération de contenu IA.',
+      fullDefinition: 'Le Voice DNA (ADN de Marque) est un profil tonal structuré décrivant le style d\'écriture d\'un site : ton (professionnel, conversationnel, technique), vocabulaire signature, structures de phrases récurrentes, et niveau de formalité. Stocké dans tracked_sites.voice_dna, il est injecté dans les prompts du Content Architect et de Parménion pour garantir la cohérence éditoriale.',
+      deepDive: `## Voice DNA : L'empreinte éditoriale
+
+### Composantes analysées
+
+1. **Ton** : Formel, semi-formel, conversationnel, humoristique
+2. **Vocabulaire** : Termes récurrents, néologismes de marque
+3. **Structure** : Longueur des phrases, usage des listes, paragraphes courts/longs
+4. **Persona** : Tutoiement/vouvoiement, "nous"/"on", expertise affichée
+5. **CTA patterns** : Style des appels à l'action
+
+### Extraction automatique
+
+L'ADN est extrait par analyse LLM de 3-5 pages représentatives du site, puis validé par l'utilisateur. Il évolue dans le temps via le feedback sur les contenus générés.
+
+### Impact sur la qualité
+
+Sans Voice DNA, les contenus générés par IA sont génériques et détectables. Avec, le taux de réécriture manuelle chute de 70% à 15%.`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Structure du Voice DNA stocké en base
+interface VoiceDNA {
+  tone: 'formal' | 'semi-formal' | 'conversational' | 'technical';
+  formality: number; // 0-100
+  sentenceLength: 'short' | 'medium' | 'long';
+  vocabulary: string[]; // Termes signature
+  avoidWords: string[]; // Termes à éviter
+  ctaStyle: string; // Ex: "impératif direct"
+  persona: {
+    pronoun: 'tu' | 'vous' | 'nous' | 'on';
+    expertise: 'beginner' | 'intermediate' | 'expert';
+  };
+  examples: string[]; // 3 phrases représentatives
+}`,
+        description: 'Structure du profil Voice DNA pour injection dans les prompts de génération'
+      },
+      expertOpinion: 'Le Voice DNA est ce qui distingue un contenu IA générique d\'un contenu de marque. En 2026, les moteurs GEO favorisent les sources avec une voix cohérente et reconnaissable — c\'est un signal indirect de E-E-A-T.',
+      relatedTerms: ['quotability-index', 'chunkability-score'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'marina-prospection',
+      term: 'Marina (Module Prospection B2B)',
+      category: 'architecture',
+      microDefinition: 'Audit externe automatisé pour identifier des prospects qualifiés.',
+      fullDefinition: 'Marina est le module de prospection B2B de Crawlers.fr. Il effectue un audit SEO/GEO externe sur un site prospect (sans accès à ses données internes), génère un rapport de performance avec des recommandations, et alimente un pipeline de prospection LinkedIn. L\'architecture est fragmentée en phases (1a/1b/2) avec auto-invocation pour éviter les timeouts.',
+      deepDive: `## Marina : La prospection data-driven
+
+### Pipeline de prospection
+
+1. **Phase 1a** : Crawl externe du site prospect (structure, meta, Schema.org)
+2. **Phase 1b** : Analyse DataForSEO (positions, keywords, ETV)
+3. **Phase 2** : Génération du rapport + scoring de qualification
+
+### Scoring de qualification
+
+Le prospect est qualifié selon :
+- Trafic organique actuel vs potentiel
+- Lacunes techniques identifiables
+- Secteur d\'activité et budget estimé
+- Présence de problèmes à fort impact (Quick Wins)
+
+### Intégration LinkedIn
+
+Le pipeline génère des messages personnalisés basés sur les findings de l\'audit, sans jamais automatiser l\'envoi (100% assisté pour rester dans les CGU LinkedIn).`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Déclenchement d'un audit Marina
+const { data } = await supabase.functions.invoke('marina-audit', {
+  body: {
+    url: 'https://prospect-site.com',
+    phase: '1a',
+    options: {
+      includeKeywords: true,
+      includeBacklinks: false,
+      prospectName: 'Acme Corp'
+    }
+  }
+});`,
+        description: 'Invocation de l\'audit Marina en phase 1a pour un site prospect'
+      },
+      expertOpinion: 'Marina transforme chaque consultant SEO en machine à prospects qualifiés. L\'approche data-first (auditer avant de contacter) augmente le taux de conversion des démos de 3x par rapport au cold outreach classique.',
+      relatedTerms: ['spo-score', 'etv-estimated-traffic-value'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'drop-detector',
+      term: 'Drop Detector (Diagnostic de Chute)',
+      category: 'data-ai',
+      microDefinition: 'Détection automatique des baisses de trafic avec diagnostic causal.',
+      fullDefinition: 'Le Drop Detector est un moteur d\'analyse de trafic à deux niveaux. Le niveau réactif compare les données GSC/GA4 semaine par semaine et déclenche une alerte si une baisse > 15% est détectée. Le niveau proactif utilise le Triangle Prédictif pour anticiper les chutes avant qu\'elles ne se produisent. Chaque alerte inclut un diagnostic causal (update Google, cannibalisation, perte de backlinks, etc.).',
+      deepDive: `## Drop Detector : Anticiper et diagnostiquer
+
+### Niveau 1 — Réactif
+
+Comparaison hebdomadaire des métriques GSC :
+- Impressions, clics, CTR moyen, position moyenne
+- Détection par z-score (seuil configurable)
+- Alerte avec severity (info, warning, danger)
+
+### Niveau 2 — Proactif
+
+Utilisation du Triangle Prédictif (corrélation GSC/GA4) pour :
+- Prédire le trafic à J+30, J+60, J+90
+- Identifier les tendances baissières avant impact réel
+- Déclencher un pré-audit sur les pages à risque
+
+### Diagnostics causaux
+
+Le Drop Detector identifie la cause probable parmi :
+- Update algorithmique Google (corrélation avec dates connues)
+- Cannibalisation émergente (nouveaux keywords en conflit)
+- Perte de backlinks (via DataForSEO)
+- Problème technique (erreurs 5xx, temps de chargement)
+- Saisonnalité (via seasonal_context)`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Détection d'anomalie par z-score
+function detectDrop(current: number, baseline: number[], threshold = 2): {
+  isDrop: boolean; zScore: number; changePct: number;
+} {
+  const mean = baseline.reduce((a, b) => a + b, 0) / baseline.length;
+  const stddev = Math.sqrt(
+    baseline.reduce((sum, v) => sum + (v - mean) ** 2, 0) / baseline.length
+  );
+  const zScore = stddev > 0 ? (current - mean) / stddev : 0;
+  const changePct = mean > 0 ? ((current - mean) / mean) * 100 : 0;
+  
+  return { isDrop: zScore < -threshold, zScore, changePct };
+}`,
+        description: 'Détection de baisse de trafic par z-score sur les métriques GSC'
+      },
+      expertOpinion: 'Le Drop Detector passe du "constat post-mortem" à la "médecine préventive SEO". En 2026, les sites qui détectent une chute en 48h au lieu de 2 semaines récupèrent en moyenne 40% plus vite.',
+      relatedTerms: ['spo-score', 'etv-estimated-traffic-value'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'observatoire-sectoriel',
+      term: 'Observatoire (Veille Sectorielle)',
+      category: 'architecture',
+      microDefinition: 'Veille sectorielle autonome quotidienne agrégée par domaine.',
+      fullDefinition: 'L\'Observatoire est un module de veille sectorielle autonome qui agrège quotidiennement les signaux du marché : updates Google, tendances de recherche, mouvements concurrents, nouvelles régulations. Un cron job (aggregate-observatory-daily, 3h00 UTC) collecte les données et génère des alertes personnalisées par secteur.',
+      deepDive: `## Observatoire : L'intelligence sectorielle
+
+### Sources de données
+
+- **Google Algorithm Updates** : Détection automatique via SERP volatility
+- **Tendances de recherche** : Nouvelles requêtes émergentes par secteur
+- **Concurrence** : Mouvements de positions des concurrents suivis
+- **Régulation** : Nouvelles directives (RGPD, Digital Markets Act)
+
+### Automatisation
+
+Le cron job quotidien :
+1. Agrège les données de toutes les sources
+2. Filtre par secteur d'activité du site
+3. Calcule un score d'urgence par signal
+4. Génère des notifications si score > seuil`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Structure d'une alerte Observatoire
+interface ObservatoryAlert {
+  type: 'algorithm_update' | 'trend' | 'competitor' | 'regulation';
+  severity: 'info' | 'warning' | 'danger';
+  sector: string;
+  title: string;
+  description: string;
+  affectedKeywords?: string[];
+  actionRequired: boolean;
+  detectedAt: string;
+}`,
+        description: 'Structure des alertes générées par l\'Observatoire sectoriel'
+      },
+      expertOpinion: 'L\'Observatoire transforme le SEO d\'un travail réactif en stratégie proactive. Les équipes qui intègrent la veille sectorielle dans leur workflow détectent les opportunités 3x plus vite que celles qui se fient uniquement aux rapports mensuels.',
+      relatedTerms: ['drop-detector', 'spo-score'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'identity-card',
+      term: 'Identity Card (Carte d\'Identité Site)',
+      category: 'architecture',
+      microDefinition: 'Enrichissement automatique du profil d\'un site via APIs externes.',
+      fullDefinition: 'L\'Identity Card est un système d\'enrichissement automatique qui construit le profil complet d\'un site suivi : secteur d\'activité, taille d\'entreprise, stack technique, présence sociale, budget estimé. Les données sont collectées via les APIs Meta et LinkedIn, puis stockées dans tracked_sites pour personnaliser les audits et recommandations.',
+      deepDive: `## Identity Card : Connaître son client
+
+### Données enrichies
+
+- **Secteur** : Classification automatique (SaaS, e-commerce, local, média)
+- **Taille** : Estimation via nombre d\'employés LinkedIn
+- **Stack technique** : CMS, framework, CDN, analytics détectés par crawl
+- **Social** : Pages Facebook, LinkedIn, Instagram avec métriques
+- **SEO baseline** : Domain Authority, backlinks, trafic estimé`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Enrichissement automatique du profil site
+const identity = await supabase.functions.invoke('enrich-identity', {
+  body: { domain: 'example.com' }
+});
+// Retourne: { sector, companySize, techStack, socialPresence, seoBaseline }`,
+        description: 'Invocation de l\'enrichissement Identity Card pour un domaine'
+      },
+      expertOpinion: 'L\'Identity Card permet de passer d\'audits génériques à des recommandations contextualisées. Un site e-commerce ne reçoit pas les mêmes priorités qu\'un blog ou un SaaS.',
+      relatedTerms: ['marina-prospection', 'voice-dna'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'fair-use-quotas',
+      term: 'Fair Use (Quotas d\'utilisation)',
+      category: 'ethics',
+      microDefinition: 'Limites d\'utilisation équitables par plan pour préserver la qualité.',
+      fullDefinition: 'Le système Fair Use définit les quotas de consommation par plan d\'abonnement : nombre de crawls, contenus générés, audits IA par période. Pro Agency : 5 000 crawls/mois et 80 contenus. Pro Agency+ : 15 000 crawls et 250 contenus. Ces limites protègent la qualité de service et répartissent équitablement les ressources serveur.',
+      deepDive: `## Fair Use : L'équilibre qualité/accès
+
+### Quotas par plan
+
+| Ressource | Free | Pro Agency | Pro Agency+ |
+|-----------|------|------------|-------------|
+| Crawl pages/mois | 100 | 5 000 | 15 000 |
+| Contenus IA/mois | 5 | 80 | 250 |
+| Audits stratégiques/jour | 1 | 10 | 30 |
+| Crédits/mois | 3 | 30 | 100 |
+
+### Monitoring en temps réel
+
+Le composant QuotaMonitor affiche la consommation en temps réel avec alertes à 80% et 95% du quota.`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Vérification du quota avant action
+async function checkQuota(userId: string, resource: string): Promise<boolean> {
+  const { data } = await supabase.rpc('check_fair_use_quota', {
+    p_user_id: userId,
+    p_resource: resource
+  });
+  return data?.allowed ?? false;
+}`,
+        description: 'Vérification du quota Fair Use avant exécution d\'une action coûteuse'
+      },
+      expertOpinion: 'Le Fair Use est un contrat de confiance avec les utilisateurs. Des quotas transparents et un monitoring en temps réel réduisent les abus de 95% tout en maintenant la satisfaction utilisateur.',
+      relatedTerms: ['identity-card', 'spo-score'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'smart-recommendations',
+      term: 'Smart Recommendations',
+      category: 'architecture',
+      microDefinition: 'Moteur de gating progressif débloquant les fonctionnalités par maturité.',
+      fullDefinition: 'Smart Recommendations est un système de recommandations contextuelles qui débloque progressivement les fonctionnalités avancées en fonction de la maturité SEO du site : un site sans Google Search Console connecté ne se voit pas proposer le Triangle Prédictif. Ce gating évite la surcharge cognitive et guide l\'utilisateur vers les actions pertinentes à son stade.',
+      deepDive: `## Smart Recommendations : Le bon outil au bon moment
+
+### Niveaux de maturité
+
+1. **Débutant** : Audit Expert, Score GEO, Lexique
+2. **Intermédiaire** : Audit Stratégique, Content Architect, Cocon
+3. **Avancé** : Triangle Prédictif, Autopilote, Marina
+4. **Expert** : Matrice d'Audit, MCP Server, Bundle API
+
+### Signaux de maturité
+
+- Nombre d'audits réalisés
+- Connexions API actives (GSC, GA4)
+- Ancienneté du compte
+- Nombre de sites suivis`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Calcul du niveau de maturité
+function getMaturityLevel(profile: UserProfile): 'beginner' | 'intermediate' | 'advanced' | 'expert' {
+  const signals = {
+    auditsCount: profile.totalAudits,
+    hasGSC: !!profile.gscConnected,
+    hasGA4: !!profile.ga4Connected,
+    sitesCount: profile.trackedSites,
+    accountAge: daysSince(profile.createdAt)
+  };
+  
+  if (signals.auditsCount > 50 && signals.sitesCount > 5) return 'expert';
+  if (signals.hasGSC && signals.auditsCount > 10) return 'advanced';
+  if (signals.auditsCount > 3) return 'intermediate';
+  return 'beginner';
+}`,
+        description: 'Calcul du niveau de maturité utilisateur pour le gating progressif'
+      },
+      expertOpinion: 'Le gating progressif réduit le taux d\'abandon de 60% par rapport à une interface qui expose toutes les fonctionnalités d\'emblée. C\'est du product-led growth appliqué au SEO.',
+      relatedTerms: ['identity-card', 'fair-use-quotas'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'ctr-gap',
+      term: 'CTR Gap',
+      category: 'data-ai',
+      microDefinition: 'Écart entre le CTR réel et le CTR attendu pour une position SERP.',
+      fullDefinition: 'Le CTR Gap mesure la différence entre le taux de clic réel d\'une page (données GSC) et le CTR moyen attendu pour sa position dans les résultats Google. Un CTR Gap négatif signifie que la page sous-performe (title/meta description peu attractifs). Un CTR Gap positif indique un snippet optimisé ou une forte notoriété de marque.',
+      deepDive: `## CTR Gap : Le potentiel caché de vos positions
+
+### Courbe de CTR de référence
+
+| Position | CTR attendu |
+|----------|-------------|
+| 1 | 31.6% |
+| 2 | 24.1% |
+| 3 | 18.9% |
+| 4 | 11.0% |
+| 5 | 8.8% |
+| 6-10 | 2.8-6.7% |
+
+### Diagnostic
+
+- **CTR Gap < -5%** : Le title/meta ne donne pas envie de cliquer
+- **CTR Gap ≈ 0** : Performance normale
+- **CTR Gap > +5%** : Snippet optimisé ou marque forte
+
+### Actions correctives
+
+Un CTR Gap négatif est un Quick Win SEO : modifier le title et la meta description peut augmenter le trafic sans changer de position.`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Calcul du CTR Gap
+function computeCTRGap(position: number, actualCTR: number): number {
+  const expectedCTR: Record<number, number> = {
+    1: 0.316, 2: 0.241, 3: 0.189, 4: 0.110, 5: 0.088,
+    6: 0.067, 7: 0.052, 8: 0.041, 9: 0.033, 10: 0.028
+  };
+  const expected = expectedCTR[Math.round(position)] || 0.01;
+  return (actualCTR - expected) * 100; // en points de %
+}`,
+        description: 'Calcul de l\'écart entre CTR réel et CTR attendu par position'
+      },
+      expertOpinion: 'Le CTR Gap est le Quick Win le plus sous-estimé en SEO. Modifier un title pour combler un gap de -10% sur une position 3 peut doubler le trafic de la page sans aucune autre action.',
+      relatedTerms: ['spo-score', 'etv-estimated-traffic-value'],
+      updatedAt: '2026-04-15'
+    },
+
+    // === MARKETING & BUSINESS ===
+    {
+      slug: 'cro-conversion-rate-optimization',
+      term: 'CRO (Conversion Rate Optimization)',
+      category: 'ethics',
+      microDefinition: 'Optimisation du taux de conversion d\'un site web.',
+      fullDefinition: 'Le CRO (Conversion Rate Optimization) est la discipline d\'amélioration systématique du pourcentage de visiteurs qui réalisent une action souhaitée (achat, inscription, contact). Il combine l\'analyse UX, les tests A/B, l\'optimisation des CTAs et l\'analyse comportementale (heatmaps, scroll depth) pour maximiser la valeur de chaque visite.',
+      deepDive: `## CRO : Convertir le trafic en résultats
+
+### Méthodologie
+
+1. **Mesurer** : Taux de conversion actuel par page et par canal
+2. **Analyser** : Identifier les frictions (GA4, heatmaps, session replay)
+3. **Hypothéser** : Formuler des améliorations testables
+4. **Tester** : A/B testing avec significativité statistique
+5. **Itérer** : Déployer les gagnants, tester de nouvelles hypothèses
+
+### Métriques clés
+
+- Taux de conversion global et par étape du funnel
+- Taux de rebond par page d'entrée
+- Temps moyen avant conversion
+- Valeur moyenne par conversion`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Calcul du taux de conversion
+function conversionRate(conversions: number, visitors: number): number {
+  return visitors > 0 ? (conversions / visitors) * 100 : 0;
+}
+
+// Significativité statistique A/B test (z-test simplifié)
+function isSignificant(
+  controlRate: number, controlN: number,
+  variantRate: number, variantN: number
+): boolean {
+  const p = (controlRate * controlN + variantRate * variantN) / (controlN + variantN);
+  const se = Math.sqrt(p * (1 - p) * (1/controlN + 1/variantN));
+  const z = Math.abs(controlRate - variantRate) / se;
+  return z > 1.96; // 95% confidence
+}`,
+        description: 'Calcul du taux de conversion et test de significativité A/B'
+      },
+      expertOpinion: 'En 2026, le CRO et le SEO ne sont plus des disciplines séparées. Le Conversion Optimizer de Crawlers.fr les fusionne en analysant simultanément la visibilité (SEO) et la capacité à convertir (CRO) de chaque page.',
+      relatedTerms: ['spo-score', 'etv-estimated-traffic-value'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'sea-search-engine-advertising',
+      term: 'SEA (Search Engine Advertising)',
+      category: 'data-ai',
+      microDefinition: 'Publicité payante sur les moteurs de recherche (Google Ads, Bing Ads).',
+      fullDefinition: 'Le SEA (Search Engine Advertising) désigne l\'achat de liens sponsorisés dans les résultats de recherche. Contrairement au SEO (organique), le SEA offre une visibilité immédiate mais payante, facturée au CPC (coût par clic). Le bridge SEA→SEO de Crawlers.fr identifie les keywords rentables en SEA qui méritent un investissement organique.',
+      deepDive: `## SEA : Le complément payant du SEO
+
+### Synergie SEA → SEO
+
+Le module "SEA → SEO Bridge" de Crawlers.fr identifie :
+- Keywords avec CPC élevé et bon taux de conversion → priorité SEO
+- Keywords où le SEA cannibalise le SEO (branded terms)
+- Opportunités de réduction du budget SEA via le SEO
+
+### Métriques clés
+
+- **CPC** : Coût par clic moyen
+- **ROAS** : Return on Ad Spend
+- **Quality Score** : Note Google sur la pertinence annonce/landing page
+- **Impression Share** : Part de voix publicitaire`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Identification des keywords SEA à convertir en SEO
+interface SEAtoSEOCandidate {
+  keyword: string;
+  monthlyCPC: number;      // Dépense mensuelle
+  conversionRate: number;  // % de conversion
+  currentSEOPosition: number | null;
+  seoSavingPotential: number; // € économisés si position 1 organique
+}`,
+        description: 'Structure d\'analyse du bridge SEA → SEO'
+      },
+      expertOpinion: 'Le SEA est le meilleur laboratoire de test pour le SEO. Les keywords qui convertissent en payant méritent un investissement organique. Le bridge SEA→SEO est un outil de réallocation budgétaire stratégique.',
+      relatedTerms: ['etv-estimated-traffic-value', 'ctr-gap'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'kpi-indicateur-cle',
+      term: 'KPI (Key Performance Indicator)',
+      category: 'data-ai',
+      microDefinition: 'Indicateur clé de performance mesurant l\'atteinte d\'un objectif.',
+      fullDefinition: 'Un KPI (Key Performance Indicator) est une métrique quantifiable directement liée à un objectif stratégique. En SEO/GEO, les KPIs incluent le trafic organique, les positions moyennes, le Score IAS, la Part de Voix, l\'ETV et le Quotability Index. La distinction entre KPI (stratégique) et métrique (opérationnelle) est cruciale pour les rapports.',
+      deepDive: `## KPIs SEO/GEO essentiels
+
+### KPIs stratégiques (reporting direction)
+
+- **Part de Voix** : Position globale vs concurrence
+- **ETV** : Valeur du trafic organique en euros
+- **Score IAS** : Alignement stratégique global
+
+### KPIs opérationnels (équipe SEO)
+
+- **Positions moyennes** par cluster
+- **CTR Gap** moyen
+- **Chunkability Score** moyen
+- **Taux de couverture Fan-Out**`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Dashboard KPI avec tendances
+interface KPIDashboard {
+  period: { start: string; end: string };
+  kpis: Array<{
+    name: string;
+    current: number;
+    previous: number;
+    trend: 'up' | 'down' | 'stable';
+    target: number;
+    unit: string; // '%', '€', 'score'
+  }>;
+}`,
+        description: 'Structure de dashboard KPI avec suivi des tendances'
+      },
+      expertOpinion: 'En 2026, les KPIs SEO doivent intégrer la dimension GEO. Un tableau de bord qui ne mesure que les positions Google est aveugle à 40% de la visibilité réelle (LLMs, AI Overviews).',
+      relatedTerms: ['spo-score', 'etv-estimated-traffic-value', 'quotability-index'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'roi-retour-investissement',
+      term: 'ROI (Return On Investment)',
+      category: 'ethics',
+      microDefinition: 'Ratio mesurant la rentabilité d\'un investissement SEO/GEO.',
+      fullDefinition: 'Le ROI (Return On Investment) mesure le rapport entre les gains générés et les coûts investis. En SEO, le ROI se calcule via l\'ETV gagné rapporté au coût de l\'optimisation. Crawlers.fr mesure le ROI de chaque action via les Audit Impact Snapshots (baseline → T+30 → T+60 → T+90).',
+      deepDive: `## ROI SEO : Prouver la valeur
+
+### Formule
+
+\`\`\`
+ROI SEO = ((ETV après - ETV avant) × 12 - Coût des actions) / Coût des actions × 100
+\`\`\`
+
+### Mesure dans Crawlers.fr
+
+Les Audit Impact Snapshots enregistrent automatiquement :
+- Baseline : métriques au moment de l'audit
+- T+30 : première mesure d'impact
+- T+60 : confirmation de tendance
+- T+90 : mesure finale avec calcul de ROI`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Calcul du ROI SEO
+function computeSEOROI(etvBefore: number, etvAfter: number, cost: number): number {
+  const annualGain = (etvAfter - etvBefore) * 12;
+  return cost > 0 ? ((annualGain - cost) / cost) * 100 : 0;
+}`,
+        description: 'Calcul du ROI SEO basé sur la variation d\'ETV'
+      },
+      expertOpinion: 'Le ROI est l\'argument ultime pour justifier un budget SEO. Les Audit Impact Snapshots de Crawlers.fr automatisent ce calcul, transformant chaque audit en business case mesurable.',
+      relatedTerms: ['etv-estimated-traffic-value', 'spo-score'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'cta-call-to-action',
+      term: 'CTA (Call To Action)',
+      category: 'ethics',
+      microDefinition: 'Élément visuel incitant l\'utilisateur à réaliser une action.',
+      fullDefinition: 'Un CTA (Call To Action) est un bouton, lien ou texte invitant l\'utilisateur à agir : "Essayer gratuitement", "Demander un devis", "Lancer l\'audit". Le Conversion Optimizer de Crawlers.fr analyse les CTAs sur 4 critères : visibilité, clarté du bénéfice, urgence perçue et positionnement dans le flux de lecture.',
+      deepDive: `## CTA : L'art de l'incitation
+
+### Les 4 critères d'un CTA efficace
+
+1. **Visibilité** : Contraste, taille, position above the fold
+2. **Clarté** : Le bénéfice est explicite ("Auditer mon site" > "Commencer")
+3. **Urgence** : Rareté ou temporalité ("Gratuit aujourd'hui")
+4. **Alignement** : Cohérent avec l'intention de la page`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Analyse CTA par le Conversion Optimizer
+interface CTAAnalysis {
+  text: string;
+  position: 'above_fold' | 'mid_page' | 'footer';
+  contrast_ratio: number; // WCAG recommande > 4.5:1
+  action_clarity: 'vague' | 'clear' | 'benefit_driven';
+  score: number; // 0-100
+}`,
+        description: 'Structure d\'analyse CTA par le Conversion Optimizer'
+      },
+      expertOpinion: 'En GEO, les CTAs doivent aussi être optimisés pour la citabilité : un LLM qui résume votre page inclura rarement un CTA — il faut que le contenu autour soit suffisamment riche pour être cité indépendamment.',
+      relatedTerms: ['cro-conversion-rate-optimization', 'quotability-index'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'b2b-business-to-business',
+      term: 'B2B (Business to Business)',
+      category: 'ethics',
+      microDefinition: 'Modèle commercial entre entreprises, opposé au B2C.',
+      fullDefinition: 'Le B2B (Business to Business) désigne les échanges commerciaux entre entreprises. En SEO B2B, les cycles de décision sont longs, les volumes de recherche faibles mais à forte valeur, et l\'E-E-A-T est critique. Le module Marina de Crawlers.fr est spécifiquement conçu pour la prospection B2B.',
+      deepDive: `## SEO B2B vs B2C
+
+### Différences clés
+
+| Aspect | B2B | B2C |
+|--------|-----|-----|
+| Volume de recherche | Faible | Élevé |
+| Valeur par conversion | Élevée (1K-100K€) | Faible (10-200€) |
+| Cycle de décision | Semaines/mois | Minutes/jours |
+| Contenu prioritaire | Whitepapers, études de cas | Fiches produit, avis |
+| KPI principal | Leads qualifiés | Ventes |`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Scoring de profil business pour adapter l'audit
+type BusinessProfile = 'b2b_saas' | 'b2b_services' | 'b2c_ecommerce' | 'b2c_media' | 'local_business';
+
+function getAuditWeights(profile: BusinessProfile) {
+  if (profile.startsWith('b2b')) {
+    return { eeat: 0.30, content: 0.25, technical: 0.20, geo: 0.25 };
+  }
+  return { eeat: 0.15, content: 0.20, technical: 0.30, geo: 0.35 };
+}`,
+        description: 'Adaptation des poids d\'audit selon le profil B2B ou B2C'
+      },
+      expertOpinion: 'Le GEO est encore plus critique en B2B qu\'en B2C : les décideurs utilisent de plus en plus les LLMs pour shortlister des prestataires. Être cité par ChatGPT dans une requête "meilleur outil CRM B2B" vaut des dizaines de leads qualifiés.',
+      relatedTerms: ['marina-prospection', 'etv-estimated-traffic-value'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'saas-software-as-a-service',
+      term: 'SaaS (Software as a Service)',
+      category: 'architecture',
+      microDefinition: 'Logiciel accessible en ligne par abonnement.',
+      fullDefinition: 'Le SaaS (Software as a Service) est un modèle de distribution logicielle où l\'application est hébergée dans le cloud et accessible via navigateur. Crawlers.fr est un SaaS SEO/GEO avec abonnements Pro Agency (29€/mois) et Pro Agency+ (79€/mois). Les métriques clés SaaS (MRR, churn, ARPU) sont suivies dans le dashboard admin.',
+      deepDive: `## SaaS SEO : Stratégie spécifique
+
+### Funnel SEO SaaS typique
+
+1. **TOFU** (Top of Funnel) : Contenus éducatifs, guides, lexique
+2. **MOFU** (Middle of Funnel) : Comparatifs, études de cas, webinars
+3. **BOFU** (Bottom of Funnel) : Pages pricing, démos, essai gratuit
+
+### KPIs SaaS
+
+- **MRR** : Monthly Recurring Revenue
+- **Churn** : Taux d'attrition mensuel
+- **ARPU** : Average Revenue Per User
+- **CAC** : Customer Acquisition Cost`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Métriques SaaS calculées dans le dashboard admin
+interface SaaSMetrics {
+  mrr: number;           // Revenu mensuel récurrent
+  churnRate: number;     // % d'utilisateurs perdus/mois
+  arpu: number;          // Revenu moyen par utilisateur
+  cac: number;           // Coût d'acquisition client
+  ltv: number;           // Lifetime Value = ARPU / churnRate
+  ltvCacRatio: number;   // > 3 = sain
+}`,
+        description: 'Métriques SaaS clés suivies dans le dashboard administrateur'
+      },
+      expertOpinion: 'Pour un SaaS comme Crawlers.fr, le SEO/GEO est le canal d\'acquisition le plus rentable à long terme. Le contenu éducatif (lexique, guides) génère du trafic TOFU qui convertit via Smart Recommendations.',
+      relatedTerms: ['b2b-business-to-business', 'fair-use-quotas'],
+      updatedAt: '2026-04-15'
+    },
+    {
+      slug: 'rgpd-protection-donnees',
+      term: 'RGPD (Règlement Général sur la Protection des Données)',
+      category: 'ethics',
+      microDefinition: 'Réglementation européenne protégeant les données personnelles.',
+      fullDefinition: 'Le RGPD (Règlement Général sur la Protection des Données) est le cadre juridique européen encadrant la collecte, le traitement et le stockage des données personnelles. En SEO, il impacte le tracking analytics (consentement cookies), les formulaires de contact, et le stockage des données de crawl. Crawlers.fr applique le RGPD via le chiffrement des tokens OAuth et la suppression automatique des données après archivage.',
+      deepDive: `## RGPD et SEO/GEO
+
+### Impact sur le tracking
+
+- Consentement obligatoire avant tout cookie analytics
+- GA4 en mode consent dégrade la précision des données
+- Server-side tracking comme alternative conforme
+
+### Impact sur Crawlers.fr
+
+- Tokens OAuth chiffrés en base (credential_protection)
+- Données utilisateur archivables et supprimables
+- Isolation multi-tenant stricte (RLS + JWT)
+- Logs de crawl anonymisés après 90 jours`,
+      codeExample: {
+        language: 'typescript',
+        code: `// Vérification du consentement RGPD avant tracking
+function trackEvent(event: string, data: Record<string, unknown>) {
+  const consent = localStorage.getItem('cookie_consent');
+  if (consent !== 'accepted') return; // Pas de tracking sans consentement
+  
+  analytics.track(event, {
+    ...data,
+    anonymized: true,
+    retention_days: 90
+  });
+}`,
+        description: 'Tracking conditionnel respectant le consentement RGPD'
+      },
+      expertOpinion: 'Le RGPD n\'est pas un obstacle au SEO — c\'est un signal de confiance. Les sites conformes sont perçus comme plus fiables par les utilisateurs ET par les LLMs qui évaluent la trustworthiness (le T de E-E-A-T).',
+      relatedTerms: ['fair-use-quotas', 'b2b-business-to-business'],
+      updatedAt: '2026-04-15'
+    },
   ],
   en: [], // English translations would go here
   es: [], // Spanish translations would go here
