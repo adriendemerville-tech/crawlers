@@ -959,7 +959,25 @@ async function executeGenericFunction(
     console.log(`[AutopilotEngine] Mapped ${normalizedFixes.length} fixes for generate-corrective-code on ${site.domain}`);
   }
 
-  console.log(`[AutopilotEngine] Executing ${funcName} for ${site.domain} (phase: ${pipelinePhase})`);
+  // Strategic orchestrator needs specific payload format (sync mode, no async)
+  if (funcName === 'strategic-orchestrator') {
+    funcBody = {
+      url: `https://${site.domain}`,
+      async: false, // Force sync so Parmenion waits for result
+      lang: 'fr',
+    };
+    console.log(`[AutopilotEngine] Strategic orchestrator (sync) for ${site.domain}`);
+  }
+
+  // check-eeat needs url format
+  if (funcName === 'check-eeat') {
+    funcBody = {
+      url: `https://${site.domain}`,
+      domain: site.domain,
+      tracked_site_id: config.tracked_site_id,
+      user_id: config.user_id,
+    };
+  }
   const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/${funcName}`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },

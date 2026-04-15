@@ -10,7 +10,7 @@ export const PIPELINE_PHASES = ['audit', 'diagnose', 'prescribe', 'execute', 'va
 export type PipelinePhase = typeof PIPELINE_PHASES[number];
 
 export const PHASE_FUNCTIONS: Record<PipelinePhase, string[]> = {
-  audit: ['audit-expert-seo', 'check-eeat', 'audit-strategique-ia', 'multi-page-crawl'],
+  audit: ['audit-expert-seo', 'check-eeat', 'strategic-orchestrator', 'audit-strategique-ia', 'multi-page-crawl'],
   diagnose: ['cocoon-diag-content', 'cocoon-diag-semantic', 'cocoon-diag-structure', 'cocoon-diag-authority'],
   prescribe: ['cocoon-strategist', 'calculate-cocoon-logic', 'generate-corrective-code', 'content-architecture-advisor'],
   execute: ['wpsync', 'iktracker-actions', 'cms-push-draft', 'cms-push-code', 'cms-patch-content', 'cms-push-redirect', 'generate-corrective-code'],
