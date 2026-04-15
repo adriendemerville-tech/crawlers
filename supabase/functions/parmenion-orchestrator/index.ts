@@ -73,9 +73,26 @@ try {
 
     const lastPhase = (lastCompletedDecisions || [])[0]?.pipeline_phase as PipelinePhase | undefined;
     // Use forced_phase from engine if provided, otherwise auto-detect
-    const currentPhase = (forced_phase && PIPELINE_PHASES.includes(forced_phase)) 
+    let currentPhase = (forced_phase && PIPELINE_PHASES.includes(forced_phase)) 
       ? (forced_phase as PipelinePhase) 
       : getNextPhase(lastPhase);
+
+    // ═══ SKIP AUDIT: If workbench already has fresh agent-seo findings, skip audit → prescribe ═══
+    if (currentPhase === 'audit') {
+      const { data: agentSeoItems, error: skipErr } = await supabase
+        .from('architect_workbench')
+        .select('id, source_function, created_at')
+        .eq('domain', domain)
+        .eq('source_function', 'agent-seo')
+        .in('status', ['pending', 'in_progress'])
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .limit(1);
+      
+      if (!skipErr && agentSeoItems && agentSeoItems.length > 0) {
+        console.log(`[Parménion] ⏭️ Skipping audit — ${agentSeoItems.length}+ fresh workbench items from agent-seo found, jumping to prescribe`);
+        currentPhase = 'prescribe';
+      }
+    }
 
     console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
 
