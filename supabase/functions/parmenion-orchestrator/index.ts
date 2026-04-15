@@ -1035,7 +1035,14 @@ RÈGLES:
         else ringCounts.ring1++;
       }
       
-      const ringInfo = determineSemanticRing(ringCounts);
+      // Compute spiral phase from workbench items to allow R2 during contraction
+      const avgSpiralScore = scoredWorkbenchItems.length > 0
+        ? Math.round(scoredWorkbenchItems.reduce((s: number, it: any) => s + (it.spiral_score || 0), 0) / scoredWorkbenchItems.length)
+        : 0;
+      const currentSpiralPhase: 'contraction' | 'expansion' | 'neutral' = 
+        avgSpiralScore >= 50 ? 'contraction' : avgSpiralScore >= 25 ? 'neutral' : 'expansion';
+      
+      const ringInfo = determineSemanticRing(ringCounts, 8, 15, currentSpiralPhase);
       
       // Find parent pages for linking
       const parentRing = Math.max(1, ringInfo.ring - 1) as SemanticRing;
