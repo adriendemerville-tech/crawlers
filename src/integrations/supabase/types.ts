@@ -2560,6 +2560,71 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_tracked_urls: {
+        Row: {
+          audit_data: Json | null
+          competitor_domain: string
+          competitor_url: string
+          crawl_data: Json | null
+          crawl_status: string
+          created_at: string
+          geo_score: number | null
+          id: string
+          label: string | null
+          last_crawl_at: string | null
+          semantic_relevance: Json | null
+          seo_score: number | null
+          serp_positions: Json | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audit_data?: Json | null
+          competitor_domain: string
+          competitor_url: string
+          crawl_data?: Json | null
+          crawl_status?: string
+          created_at?: string
+          geo_score?: number | null
+          id?: string
+          label?: string | null
+          last_crawl_at?: string | null
+          semantic_relevance?: Json | null
+          seo_score?: number | null
+          serp_positions?: Json | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audit_data?: Json | null
+          competitor_domain?: string
+          competitor_url?: string
+          crawl_data?: Json | null
+          crawl_status?: string
+          created_at?: string
+          geo_score?: number | null
+          id?: string
+          label?: string | null
+          last_crawl_at?: string | null
+          semantic_relevance?: Json | null
+          seo_score?: number | null
+          serp_positions?: Json | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_tracked_urls_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_deploy_snapshots: {
         Row: {
           consecutive_failures: number | null
