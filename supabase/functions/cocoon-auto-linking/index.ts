@@ -55,10 +55,10 @@ try {
       });
     }
 
-    // 2. Get the latest crawl for this site
+    // 2. Get the latest crawl for this site + site identity for business profile
     const { data: site } = await supabase
       .from('tracked_sites')
-      .select('id, domain')
+      .select('id, domain, business_type, entity_type')
       .eq('id', tracked_site_id)
       .single();
 
