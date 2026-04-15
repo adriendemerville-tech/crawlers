@@ -323,62 +323,7 @@ export function MyReportsTab() {
     <Card>
       <CardHeader className="pb-2 pt-3 px-4" />
       <CardContent>
-        <div className="flex gap-4">
-            {/* Site sidebar */}
-            <div className="flex flex-col gap-1 shrink-0 w-36">
-              {/* All reports */}
-              <button
-                onClick={() => { setSelectedSite('__all__'); setCurrentFolderId(null); }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors ${
-                  selectedSite === '__all__'
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
-                }`}
-              >
-                {language === 'fr' ? 'Tous' : language === 'es' ? 'Todos' : 'All'}
-              </button>
-
-              {/* Tracked sites — drag to reorder */}
-              {orderedSites.map((site, idx) => (
-                <button
-                  key={site.id}
-                  draggable
-                  onDragStart={() => setDraggedSiteIdx(idx)}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    if (draggedSiteIdx === null || draggedSiteIdx === idx) return;
-                    const next = [...orderedSites];
-                    const [dragged] = next.splice(draggedSiteIdx, 1);
-                    next.splice(idx, 0, dragged);
-                    setOrderedSites(next);
-                    setDraggedSiteIdx(idx);
-                  }}
-                  onDragEnd={() => setDraggedSiteIdx(null)}
-                  onClick={() => { setSelectedSite(site.id); setCurrentFolderId(null); }}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors truncate group ${
-                    selectedSite === site.id
-                      ? 'bg-primary/10 text-primary border border-primary/20'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
-                  }`}
-                >
-                  <GripVertical className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity shrink-0 cursor-grab" />
-                  <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
-                </button>
-              ))}
-
-              {/* Other reports (unmatched domains) */}
-              <button
-                onClick={() => { setSelectedSite('__other__'); setCurrentFolderId(null); }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs font-medium transition-colors ${
-                  selectedSite === '__other__'
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
-                }`}
-              >
-                {language === 'fr' ? 'Autres' : language === 'es' ? 'Otros' : 'Others'}
-              </button>
-            </div>
-
+        <div>
             {/* Main content */}
             <div className="flex-1 min-w-0">
               {/* Header: breadcrumb + create folder */}
