@@ -725,6 +725,14 @@ export function MyTracking() {
                           </div>
                         )}
                       </TabsContent>
+                      <TabsContent value="competitors" className="space-y-4">
+                        <CompetitorTrackingTab
+                          trackedSiteId={h.currentSite.id}
+                          domain={h.currentSite.domain}
+                          userId={h.user?.id || ''}
+                          language={h.language}
+                        />
+                      </TabsContent>
                     </Tabs>
 
                     {/* GSC Section */}
