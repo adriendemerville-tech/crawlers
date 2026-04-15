@@ -799,16 +799,17 @@ Deno.serve(handleRequest(async (req) => {
       console.log(`[AGENT-SEO] 📇 Carte d'identité chargée (confiance: ${siteContext.identity_confidence || 0})`);
     }
 
-    // ── Run audit-expert-seo + check-eeat in parallel for deep signals ──
+    // ── Run audit-expert-seo + check-eeat + strategic-orchestrator in parallel for deep signals ──
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const targetFullUrl = `${siteBaseUrl}${target.url}`;
 
     let auditExpertData: any = null;
     let eeatData: any = null;
+    let strategicData: any = null;
 
     try {
-      const [auditResp, eeatResp] = await Promise.allSettled([
+      const [auditResp, eeatResp, strategicResp] = await Promise.allSettled([
         fetch(`${SUPABASE_URL}/functions/v1/audit-expert-seo`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
@@ -820,6 +821,12 @@ Deno.serve(handleRequest(async (req) => {
           headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: targetFullUrl, domain: 'crawlers.fr' }),
           signal: AbortSignal.timeout(30_000),
+        }).then(r => r.ok ? r.json() : null),
+        fetch(`${SUPABASE_URL}/functions/v1/strategic-orchestrator`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetFullUrl, domain: 'crawlers.fr', mode: 'sync' }),
+          signal: AbortSignal.timeout(45_000),
         }).then(r => r.ok ? r.json() : null),
       ]);
 
@@ -834,6 +841,12 @@ Deno.serve(handleRequest(async (req) => {
         console.log(`[AGENT-SEO] ✅ check-eeat done for ${target.slug}`);
       } else {
         console.warn(`[AGENT-SEO] ⚠️ check-eeat failed for ${target.slug}`);
+      }
+      if (strategicResp.status === 'fulfilled' && strategicResp.value) {
+        strategicData = strategicResp.value;
+        console.log(`[AGENT-SEO] ✅ strategic-orchestrator done for ${target.slug}`);
+      } else {
+        console.warn(`[AGENT-SEO] ⚠️ strategic-orchestrator failed for ${target.slug}`);
       }
     } catch (e) {
       console.warn('[AGENT-SEO] Audit enrichment failed (non-blocking):', e);
