@@ -886,7 +886,7 @@ Deno.serve(handleRequest(async (req) => {
       operationalCtx || undefined,
     );
 
-    // Mark consumed directives
+    // Mark consumed directives (relevant ones + any in_progress to prevent stale state)
     if (relevantDirectives.length > 0) {
       const directiveIds = relevantDirectives.map((d: any) => d.id);
       await supabase.from('agent_seo_directives')
@@ -895,6 +895,12 @@ Deno.serve(handleRequest(async (req) => {
         .then(() => console.log(`[AGENT-SEO] ✅ ${directiveIds.length} directive(s) marquées comme consommées`))
         .catch((e: any) => console.error('[AGENT-SEO] Erreur mise à jour directives:', e));
     }
+    // Also mark any in_progress directives as consumed (prevent stale state from dispatcher)
+    await supabase.from('agent_seo_directives')
+      .update({ status: 'consumed', consumed_at: new Date().toISOString() })
+      .eq('status', 'in_progress')
+      .then(() => {})
+      .catch(() => {});
 
     // Parse improvements
     let parsedImprovements: any = null;
