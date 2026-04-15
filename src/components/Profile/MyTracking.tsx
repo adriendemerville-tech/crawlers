@@ -1,4 +1,4 @@
-import { useState, useCallback, ElementType } from 'react';
+import { useState, useCallback, useEffect, ElementType } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
 
@@ -279,7 +279,14 @@ export function MyTracking({ externalSiteId }: { externalSiteId?: string | null 
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
   const isMobile = useIsMobile();
 
-  // DnD sensors for sidebar reordering
+  // Sync with sidebar domain selector
+  useEffect(() => {
+    if (externalSiteId && externalSiteId !== h.selectedSite && h.sites.some(s => s.id === externalSiteId)) {
+      h.setSelectedSite(externalSiteId);
+    }
+  }, [externalSiteId, h.sites]);
+
+
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const handleSiteDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
