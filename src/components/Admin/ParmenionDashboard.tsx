@@ -1,7 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Globe, FileText, ListTodo } from 'lucide-react';
+import { Globe, FileText, ListTodo, BarChart3 } from 'lucide-react';
 import { ParmenionTargetPanel } from './ParmenionTargetPanel';
 import { ParmenionTaskPlan } from './ParmenionTaskPlan';
+import { ParmenionFuncStats } from './ParmenionFuncStats';
 
 export function ParmenionDashboard() {
   return (
@@ -18,6 +19,10 @@ export function ParmenionDashboard() {
         <TabsTrigger value="task-plan" className="gap-2">
           <ListTodo className="h-4 w-4" />
           Plan de tâches
+        </TabsTrigger>
+        <TabsTrigger value="stats" className="gap-2">
+          <BarChart3 className="h-4 w-4" />
+          Stats
         </TabsTrigger>
       </TabsList>
 
@@ -48,6 +53,10 @@ export function ParmenionDashboard() {
           <ParmenionTaskPlan domain="iktracker.fr" />
           <ParmenionTaskPlan domain="crawlers.fr" />
         </div>
+      </TabsContent>
+
+      <TabsContent value="stats" forceMount className="data-[state=inactive]:hidden">
+        <ParmenionFuncStats />
       </TabsContent>
     </Tabs>
   );
