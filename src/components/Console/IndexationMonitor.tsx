@@ -324,6 +324,7 @@ export function IndexationMonitor() {
       ) : null}
       {/* SERP Benchmark Multi-Providers */}
       <SerpBenchmark
+        ref={serpBenchmarkRef}
         trackedSites={trackedSites.map(s => ({ id: s.id, domain: s.domain }))}
         selectedSiteId={selectedSiteId}
       />
