@@ -384,6 +384,20 @@ export function StrategicInsights({
             </RevealWrapper>
           )}
 
+          {/* 14b. Chunkability IA — content pages only */}
+          {isContentMode && analysis.chunkability_score && (
+            <RevealWrapper delay={17000} isDataCard enabled={progressiveReveal}>
+              <ChunkabilityScoreCard data={analysis.chunkability_score} />
+            </RevealWrapper>
+          )}
+
+          {/* 14c. Score Fan-Out — content pages only */}
+          {isContentMode && analysis.fan_out_score && (
+            <RevealWrapper delay={17500} isDataCard enabled={progressiveReveal}>
+              <FanOutScoreCard data={analysis.fan_out_score} />
+            </RevealWrapper>
+          )}
+
           {/* 15. Indice de Citabilité & Résilience au Résumé */}
           {(analysis.quotability || analysis.summary_resilience) && (
             <RevealWrapper delay={18000} isDataCard enabled={progressiveReveal}>
