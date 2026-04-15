@@ -305,25 +305,13 @@ function FooterComponent() {
                 <ul className="space-y-3">
                   {technicalLinks.map((link) => (
                     <li key={link.href}>
-                      {link.href.startsWith('/') ? (
-                        <SmartLink
-                          to={link.href}
-                          className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-400 hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
-                          title={link.description}
-                        >
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                          <span>{link.label}</span>
-                        </SmartLink>
-                      ) : (
-                        <a 
-                          href={link.href}
-                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                          title={link.description}
-                        >
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                          <span>{link.label}</span>
-                        </a>
-                      )}
+                      <SmartLink
+                        to={link.href}
+                        className={`text-sm transition-colors ${(link as any).gold ? 'text-amber-400 hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        title={link.description}
+                      >
+                        {link.label}
+                      </SmartLink>
                     </li>
                   ))}
                 </ul>
