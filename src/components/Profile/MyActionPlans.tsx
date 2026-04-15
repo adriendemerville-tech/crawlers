@@ -45,6 +45,7 @@ interface WorkbenchItem {
   status: string;
   manual_priority: number | null;
   spiral_score: number | null;
+  competitor_momentum_score: number | null;
   created_at: string;
   updated_at: string;
 }
