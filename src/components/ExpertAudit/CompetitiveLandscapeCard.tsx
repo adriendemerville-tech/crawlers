@@ -45,17 +45,20 @@ function CompetitorCard({
               {role}
             </Badge>
           </div>
-          <h4 className="font-semibold text-foreground">
-            {actor.name}
-          </h4>
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="font-semibold text-foreground">
+              {actor.name}
+            </h4>
+            <Badge variant="outline" className="text-[10px] shrink-0 gap-1 border-primary/30 text-primary">
+              <Shield className="h-2.5 w-2.5" />
+              Autorité : {actor.authority_factor}
+            </Badge>
+          </div>
           {(() => {
             // Build URL: use actor.url if provided, otherwise try to construct from name
+            const domainMatch = actor.name.match(/([a-zA-Z0-9-]+\.[a-z]{2,})/);
             let href = (actor.url || '').trim();
-            if (!href) {
-              // Try to extract a domain-like string from the name
-              const domainMatch = actor.name.match(/([a-zA-Z0-9-]+\.[a-z]{2,})/);
-              if (domainMatch) href = domainMatch[0];
-            }
+            if (!href && domainMatch) href = domainMatch[0];
             if (!href) return null;
             href = href.replace(/^\/+/, '');
             if (!href.startsWith('http://') && !href.startsWith('https://')) {
@@ -79,12 +82,8 @@ function CompetitorCard({
               return null;
             }
           })()}
-          <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1">
-            <Shield className="h-3 w-3" />
-            {actor.authority_factor}
-          </p>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            {actor.analysis && actor.analysis.length > 400 ? `${actor.analysis.slice(0, 397)}…` : actor.analysis}
+            {actor.analysis}
           </p>
         </div>
       </div>
