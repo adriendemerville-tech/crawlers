@@ -239,7 +239,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           </div>
         </div>
 
-        <Button onClick={() => runBenchmark()} disabled={loading || selectedProviders.length < 2} className="gap-2">
+        <Button variant="ghost" onClick={() => runBenchmark()} disabled={loading || selectedProviders.length < 2} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           {loading
             ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
