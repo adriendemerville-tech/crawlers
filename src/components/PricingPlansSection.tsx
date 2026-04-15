@@ -142,7 +142,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           size="lg"
           onClick={handleSubscribe}
           disabled={loading}
-          className="w-full bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white font-semibold"
+          className="w-full bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white font-semibold px-[20px]"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Crown className="h-5 w-5 mr-2" />}
           {t3(language, 'S\'abonner', 'Subscribe', 'Suscribirse')}
