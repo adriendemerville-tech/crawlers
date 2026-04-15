@@ -309,7 +309,7 @@ Deno.serve(handleRequest(async (req) => {
       try {
         const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPromptText }], temperature: 0.3 }),
+          body: JSON.stringify({ model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 8192 }),
           signal: AbortSignal.timeout(timeoutMs),
         });
         if (!response.ok) { const et = await response.text(); console.error(`❌ [${label}] ${model} error:`, response.status, et.substring(0, 200)); return null; }

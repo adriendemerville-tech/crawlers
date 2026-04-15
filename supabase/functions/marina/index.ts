@@ -735,7 +735,7 @@ function buildCompetitiveLandscapeSection(data: any): string {
       <div style="font-weight:600;font-size:15px;color:#1e293b;margin-bottom:4px;">${name}</div>
       ${url ? `<div style="font-size:12px;color:${color};margin-bottom:6px;">${url}</div>` : ''}
       ${authority ? `<div style="font-size:12px;color:#6b7280;margin-bottom:8px;">🛡️ ${authority}</div>` : ''}
-      ${analysis ? `<div style="font-size:13px;color:#374151;line-height:1.6;">${analysis.length > 400 ? analysis.slice(0, 397) + '…' : analysis}</div>` : ''}
+      ${analysis ? `<div style="font-size:13px;color:#374151;line-height:1.6;">${analysis}</div>` : ''}
     </div>`;
   }).join('');
 
