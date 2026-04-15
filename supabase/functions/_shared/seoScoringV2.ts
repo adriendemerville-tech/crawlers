@@ -184,7 +184,7 @@ export function computeSeoScoreV2(
   const textSize = textContent.length;
   const ratio = htmlSize > 0 ? textSize / htmlSize : 0;
   const wordCount = textContent.split(/\s+/).filter(w => w.length > 1).length;
-  const idealLength = pageType === 'blog' ? 1500 : 800;
+  const idealLength = profile.idealWords[pageType];
 
   const contentDensity: ContentDensity = {
     ratio,
