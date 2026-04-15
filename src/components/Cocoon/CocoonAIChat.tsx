@@ -1542,45 +1542,21 @@ Termina con un resumen ejecutivo y próximos pasos.`,
         .from('cocoon_tasks' as any)
         .insert(cocoonTasks as any);
 
-      // Also maintain legacy action_plans for backward compat
-      const siteUrl = `https://${domain}`;
-      const planTitle = language === 'en' ? `Cocoon — ${domain}` :
-                        language === 'es' ? `Cocoon — ${domain}` :
-                        `Cocoon — ${domain}`;
-      const legacyTasks = cocoonTasks.map((ct, i) => ({
-        id: `cocoon-${Date.now()}-${i}`,
+      // Also insert into architect_workbench for unified action plan
+      const workbenchItems = cocoonTasks.map((ct: any) => ({
+        user_id: user.id,
+        domain,
         title: ct.title,
-        priority: ct.priority === 'high' ? 'critical' : ct.priority === 'low' ? 'optional' : 'important',
-        category: ct.action_type === 'linking' ? 'Maillage interne' : ct.action_type === 'content' ? 'Contenu' : ct.action_type === 'code' ? 'Technique' : 'Autre',
-        isCompleted: false,
+        description: ct.description || null,
+        severity: ct.priority === 'high' ? 'critical' : ct.priority === 'low' ? 'medium' : 'high',
+        finding_category: ct.action_type === 'linking' ? 'Maillage interne' : ct.action_type === 'content' ? 'Contenu' : ct.action_type === 'code' ? 'Technique' : 'Autre',
+        source_type: 'cocoon' as const,
+        source_function: 'cocoon-ai',
+        target_url: `https://${domain}`,
+        status: 'pending' as const,
       }));
 
-      const { data: existingPlan } = await supabase
-        .from('action_plans')
-        .select('id, tasks')
-        .eq('user_id', user.id)
-        .eq('url', siteUrl)
-        .eq('audit_type', 'technical')
-        .ilike('title', '%cocoon%')
-        .maybeSingle();
-
-      if (existingPlan) {
-        const existingTasks = (existingPlan.tasks as unknown as typeof legacyTasks) || [];
-        await supabase
-          .from('action_plans')
-          .update({ tasks: JSON.parse(JSON.stringify([...existingTasks, ...legacyTasks])) })
-          .eq('id', existingPlan.id);
-      } else {
-        await supabase
-          .from('action_plans')
-          .insert({
-            user_id: user.id,
-            url: siteUrl,
-            title: planTitle,
-            audit_type: 'technical',
-            tasks: JSON.parse(JSON.stringify(legacyTasks)),
-          });
-      }
+      await supabase.from('architect_workbench').insert(workbenchItems);
 
       setDeploySuccess(true);
       sonnerToast.success(

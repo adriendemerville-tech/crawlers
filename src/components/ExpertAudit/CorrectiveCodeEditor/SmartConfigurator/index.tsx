@@ -275,12 +275,13 @@ export function SmartConfigurator({
           .order('created_at', { ascending: false })
           .limit(10),
         supabase
-          .from('action_plans')
-          .select('audit_type, tasks, url, title')
+          .from('architect_workbench')
+          .select('title, description, severity, finding_category, source_type, status, target_url')
           .eq('user_id', user.id)
-          .ilike('url', `%${siteDomain}%`)
-          .order('updated_at', { ascending: false })
-          .limit(5),
+          .eq('domain', siteDomain)
+          .in('status', ['pending', 'in_progress', 'assigned'])
+          .order('spiral_score', { ascending: false })
+          .limit(30),
       ]);
 
       if (registryResult.data) {
