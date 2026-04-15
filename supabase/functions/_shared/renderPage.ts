@@ -129,11 +129,11 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
-        gotoOptions: { waitUntil: 'networkidle2', timeout: 135000 },
-        waitForSelector: { selector: 'h1, main, [role="main"], #content, .content, article', timeout: 45000 },
-        waitForTimeout: 9000,
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 30000 },
+        waitForSelector: { selector: 'h1, main, [role="main"], #content, .content, article', timeout: 10000 },
+        waitForTimeout: 3000,
       }),
-      signal: AbortSignal.timeout(180000),
+      signal: AbortSignal.timeout(45000),
     });
 
     if (response.ok) {
@@ -177,8 +177,8 @@ async function renderWithFlyPlaywright(url: string): Promise<string | null> {
         'Content-Type': 'application/json',
         ...(flySecret ? { 'x-secret': flySecret } : {}),
       },
-      body: JSON.stringify({ url, timeout: 135000, waitFor: 9000 }),
-      signal: AbortSignal.timeout(180000),
+      body: JSON.stringify({ url, timeout: 30000, waitFor: 3000 }),
+      signal: AbortSignal.timeout(45000),
     });
 
     if (response.ok) {
