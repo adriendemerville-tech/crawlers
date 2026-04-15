@@ -417,6 +417,7 @@ try {
         siteInfo,
         scoredWorkbenchItems,
         cmsInventory,
+        baselineSeoScore,
       });
     }
 
