@@ -305,7 +305,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li>• <strong className="text-foreground">Crédits</strong> : Pack Essentiel 10 crédits (5€), Lite 50 crédits (19€), Premium 150 crédits (45€), Ultime 500 crédits (99€)</li>
                     <li>• <strong className="text-foreground">Pro Agency</strong> : 29€/mois — 5 000 pages crawlées, 80 pages Content Architect, marque blanche + 2 comptes</li>
                     <li>• <strong className="text-foreground">Pro Agency+</strong> : 79€/mois — 50 000 pages crawlées, 150 pages Content Architect, API Marina, logs serveur, SEA→SEO Bridge, 3 comptes</li>
-                    <li>• <strong className="text-foreground">Enterprise</strong> : Sur demande — serveur dédié, utilisateurs illimités, SLA garanti</li>
+                    <li>• <strong className="text-foreground">Enterprise</strong> : Sur demande — serveur dédié, utilisateurs illimités, SLA garanti, SSO SAML</li>
                   </ul>
                   <p className="text-xs text-muted-foreground mt-3">* Sans engagement, résiliable à tout moment. <p className="text-xs text-muted-foreground mt-3">* Sans engagement, résiliable à tout moment. 20 crédits offerts à l'inscription.</p>.</p>
                 </div>
