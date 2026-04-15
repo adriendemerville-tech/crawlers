@@ -585,6 +585,8 @@ export interface FanOutScore {
   covered_axes: number;
   total_potential_axes: number;
   explanation: string;
+  recommendations?: { keyword: string; volume: number }[];
+  missing_keywords?: string[];
 }
 
  // Raw LLM visibility data from check-llm edge function
