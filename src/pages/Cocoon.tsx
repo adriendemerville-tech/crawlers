@@ -192,6 +192,7 @@ function CocoonContent() {
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();
+  const { cocoonExpanded } = useAISidebar();
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
@@ -727,7 +728,7 @@ function CocoonContent() {
         </div>
       )}
 
-      <div className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e]">
+      <div className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e] transition-all duration-300 ease-in-out" style={{ marginLeft: cocoonExpanded ? '28rem' : undefined }}>
 
         {/* Top Bar */}
         {!isFullscreen && (
