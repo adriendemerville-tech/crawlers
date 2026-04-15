@@ -5,7 +5,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 import { isIktrackerDomain, normalizePageKey } from '../_shared/domainUtils.ts';
-import { computeSeoScoreV2, extractTextContent, type SeoScoreV2 } from '../_shared/seoScoringV2.ts';
+import { computeSeoScoreV2, extractTextContent, type SeoScoreV2, type BusinessProfile } from '../_shared/seoScoringV2.ts';
 
 // ═══ Modular imports ═══
 import {
@@ -244,11 +244,21 @@ try {
         if (fetchRes.ok) {
           const html = await fetchRes.text();
           const textContent = extractTextContent(html);
+          // Map tracked_sites.business_type to BusinessProfile
+          const bizType = (siteInfo?.business_type || siteInfo?.entity_type || '').toLowerCase();
+          const businessProfile: BusinessProfile = 
+            bizType.includes('ecommerce') || bizType.includes('boutique') || bizType.includes('shop') ? 'ecommerce' :
+            bizType.includes('local') || bizType.includes('artisan') || bizType.includes('restaurant') || bizType.includes('commerce') || bizType.includes('cabinet') || bizType.includes('médecin') || bizType.includes('avocat') || bizType.includes('plombier') || bizType.includes('boulang') ? 'local_business' :
+            bizType.includes('saas') || bizType.includes('logiciel') || bizType.includes('software') || bizType.includes('app') ? 'saas' :
+            bizType.includes('media') || bizType.includes('presse') || bizType.includes('blog') || bizType.includes('journal') ? 'media' :
+            bizType.includes('agence') || bizType.includes('agency') || bizType.includes('consultant') ? 'agency' :
+            'generic';
           baselineSeoScore = computeSeoScoreV2(html, textContent, {
             pageType: 'landing',
+            businessProfile,
             customKeywords: siteKeywords.length > 0 ? siteKeywords.slice(0, 15) : undefined,
           });
-          console.log(`[Parménion] 📐 Baseline SEO score: ${baselineSeoScore.overall}/100 — Issues: ${baselineSeoScore.issues.length}, Opps: ${baselineSeoScore.opportunities.length}`);
+          console.log(`[Parménion] 📐 Profile: ${businessProfile} | Baseline SEO: ${baselineSeoScore.overall}/100`);
           console.log(`[Parménion] 📐 Axes: content_depth=${baselineSeoScore.axes.content_depth} heading=${baselineSeoScore.axes.heading_structure} keywords=${baselineSeoScore.axes.keyword_relevance} linking=${baselineSeoScore.axes.internal_linking} meta=${baselineSeoScore.axes.meta_quality} eeat=${baselineSeoScore.axes.eeat_signals}`);
         }
       } catch (e) {

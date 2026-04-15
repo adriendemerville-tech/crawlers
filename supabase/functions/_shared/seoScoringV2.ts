@@ -78,13 +78,65 @@ export interface SeoScoreV2 {
   opportunities: string[];
 }
 
+/** Business profile — adjusts scoring thresholds per business type */
+export type BusinessProfile = 'saas' | 'ecommerce' | 'local_business' | 'media' | 'agency' | 'generic';
+
 export interface SeoScoringOptions {
   pageType: 'blog' | 'landing';
+  /** Business profile — adjusts ideal word count, weights, and E-E-A-T expectations */
+  businessProfile?: BusinessProfile;
   /** Optional custom keyword list to replace default SEO terms */
   customKeywords?: string[];
   /** Optional key paths for internal link scoring (defaults to crawlers.fr paths) */
   keyPaths?: string[];
 }
+
+// ─── Business-specific scoring profiles ─────────────────────────────
+interface ScoringProfile {
+  idealWords: { blog: number; landing: number };
+  weights: { content_depth: number; heading: number; keyword: number; linking: number; meta: number; eeat: number; density: number };
+  minKeywordHits: number;
+  localSignals: boolean;  // Look for NAP, address, phone, Google Maps
+}
+
+const PROFILES: Record<BusinessProfile, ScoringProfile> = {
+  saas: {
+    idealWords: { blog: 1800, landing: 1000 },
+    weights: { content_depth: 0.20, heading: 0.15, keyword: 0.15, linking: 0.15, meta: 0.15, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 5,
+    localSignals: false,
+  },
+  ecommerce: {
+    idealWords: { blog: 1200, landing: 400 },
+    weights: { content_depth: 0.10, heading: 0.15, keyword: 0.15, linking: 0.20, meta: 0.20, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 3,
+    localSignals: false,
+  },
+  local_business: {
+    idealWords: { blog: 800, landing: 400 },
+    weights: { content_depth: 0.10, heading: 0.10, keyword: 0.10, linking: 0.10, meta: 0.20, eeat: 0.25, density: 0.15 },
+    minKeywordHits: 2,
+    localSignals: true,
+  },
+  media: {
+    idealWords: { blog: 2000, landing: 800 },
+    weights: { content_depth: 0.25, heading: 0.15, keyword: 0.15, linking: 0.15, meta: 0.10, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 5,
+    localSignals: false,
+  },
+  agency: {
+    idealWords: { blog: 1500, landing: 800 },
+    weights: { content_depth: 0.20, heading: 0.15, keyword: 0.15, linking: 0.15, meta: 0.15, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 5,
+    localSignals: false,
+  },
+  generic: {
+    idealWords: { blog: 1500, landing: 800 },
+    weights: { content_depth: 0.20, heading: 0.15, keyword: 0.15, linking: 0.15, meta: 0.15, eeat: 0.10, density: 0.10 },
+    minKeywordHits: 5,
+    localSignals: false,
+  },
+};
 
 // ─── Default keyword list ───────────────────────────────────────────
 const DEFAULT_SEO_TERMS = [
@@ -107,7 +159,8 @@ export function computeSeoScoreV2(
   textContent: string,
   options: SeoScoringOptions,
 ): SeoScoreV2 {
-  const { pageType, customKeywords, keyPaths } = options;
+  const { pageType, customKeywords, keyPaths, businessProfile = 'generic' } = options;
+  const profile = PROFILES[businessProfile];
   const issues: string[] = [];
   const opportunities: string[] = [];
 
@@ -146,7 +199,7 @@ export function computeSeoScoreV2(
   const textSize = textContent.length;
   const ratio = htmlSize > 0 ? textSize / htmlSize : 0;
   const wordCount = textContent.split(/\s+/).filter(w => w.length > 1).length;
-  const idealLength = pageType === 'blog' ? 1500 : 800;
+  const idealLength = profile.idealWords[pageType];
 
   const contentDensity: ContentDensity = {
     ratio,
@@ -172,7 +225,7 @@ export function computeSeoScoreV2(
   const lowerText = textContent.toLowerCase();
   const termHits = seoTerms.filter(t => lowerText.includes(t)).length;
   const keywordScore = Math.min(100, Math.round((termHits / Math.max(12, seoTerms.length * 0.4)) * 100));
-  if (termHits < 5) opportunities.push('Enrichir le vocabulaire SEO/GEO (termes techniques variés)');
+  if (termHits < profile.minKeywordHits) opportunities.push('Enrichir le vocabulaire SEO/GEO (termes techniques variés)');
 
   // 4. LINK PROFILE
   const internalLinkMatches = html.match(/<a[^>]*href=["']\/[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi) || [];
@@ -279,6 +332,22 @@ export function computeSeoScoreV2(
   if (eeat.hasCTA) eeatScore += 10;
   if (eeat.hasExternalAuthority) eeatScore += 15;
 
+  // 6b. LOCAL SIGNALS (bonus for local_business profile)
+  if (profile.localSignals) {
+    const hasNAP = /(\+?\d[\d\s\-.]{8,})|(\d{5}\s+\w)/.test(textContent); // phone or postal code
+    const hasGoogleMaps = /google\.com\/maps|maps\.google/i.test(html);
+    const hasLocalSchema = jsonLdTypes.some(t => ['LocalBusiness', 'Store', 'Restaurant', 'ProfessionalService', 'MedicalBusiness', 'LegalService', 'FinancialService', 'HomeAndConstructionBusiness'].includes(t));
+    const hasAddress = /<address/i.test(html) || /itemprop=["']address/i.test(html);
+    
+    if (hasNAP) eeatScore = Math.min(100, eeatScore + 15);
+    else issues.push('Pas de coordonnées (téléphone, adresse) détectées — critique pour le SEO local');
+    if (hasGoogleMaps) eeatScore = Math.min(100, eeatScore + 10);
+    else opportunities.push('Intégrer Google Maps pour renforcer le SEO local');
+    if (hasLocalSchema) eeatScore = Math.min(100, eeatScore + 10);
+    else opportunities.push('Ajouter un schema LocalBusiness en JSON-LD');
+    if (hasAddress) eeatScore = Math.min(100, eeatScore + 5);
+  }
+
   // Penalty: generic CTA anchors
   const genericCtaAnchors = anchors.filter(a => /^(découvrir|en savoir plus|cliquez ici|lire la suite|voir plus|click here|learn more|read more|voir|lire)$/i.test(a.trim()));
   if (internalLinkMatches.length > 3 && genericCtaAnchors.length / internalLinkMatches.length > 0.6) {
@@ -301,15 +370,16 @@ export function computeSeoScoreV2(
 
   if (eeatScore < 40) opportunities.push('Renforcer les signaux E-E-A-T (auteur, preuves sociales, données)');
 
-  // OVERALL SCORE (weighted)
+  // OVERALL SCORE (weighted by business profile)
+  const w = profile.weights;
   const overall = Math.round(
-    contentDepthScore * 0.20 +
-    headingScore * 0.15 +
-    keywordScore * 0.15 +
-    linkScore * 0.15 +
-    metaScore * 0.15 +
-    eeatScore * 0.10 +
-    contentDensityScore * 0.10
+    contentDepthScore * w.content_depth +
+    headingScore * w.heading +
+    keywordScore * w.keyword +
+    linkScore * w.linking +
+    metaScore * w.meta +
+    eeatScore * w.eeat +
+    contentDensityScore * w.density
   );
 
   return {
