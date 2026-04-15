@@ -309,6 +309,7 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
   const [loading, setLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(externalDomain ?? null);
+  const [competitorPressureOn, setCompetitorPressureOn] = useState(false);
 
   // Sync with external domain changes
   useEffect(() => {
