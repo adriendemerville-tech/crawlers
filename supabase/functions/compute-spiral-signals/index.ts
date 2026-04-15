@@ -236,6 +236,104 @@ function getVelocityForItem(velocityMap: Map<string, number>, targetUrl?: string
   return Math.round(maxScore * 0.5)
 }
 
+// ─── Signal 2: Competitor Momentum (per-item) ─────────────────────────
+// Crosses competitor_tracked_urls.serp_positions with keyword_universe
+// to find which of user's target keywords are contested by competitors.
+// Returns a map: keyword → score (0-25)
+
+async function computeCompetitorMomentum(
+  supabase: any,
+  trackedSiteId: string,
+): Promise<Map<string, number>> {
+  const momentumMap = new Map<string, number>() // keyword → pressure score
+
+  // 1. Get all competitor SERP positions for this site
+  const { data: competitors } = await supabase
+    .from('competitor_tracked_urls')
+    .select('competitor_domain, serp_positions')
+    .eq('tracked_site_id', trackedSiteId)
+    .eq('crawl_status', 'done')
+
+  if (!competitors?.length) return momentumMap
+
+  // 2. Get user's keyword universe for matching
+  const { data: kwData } = await supabase
+    .from('keyword_universe')
+    .select('keyword, current_position, search_volume')
+    .eq('tracked_site_id', trackedSiteId)
+    .limit(200)
+
+  if (!kwData?.length) return momentumMap
+
+  const kwSet = new Set(kwData.map((k: any) => k.keyword.toLowerCase()))
+  const userPositions = new Map<string, number>()
+  for (const k of kwData) {
+    userPositions.set(k.keyword.toLowerCase(), k.current_position || 100)
+  }
+
+  // 3. For each keyword, count how many competitors rank on it and how well
+  const keywordPressure = new Map<string, { competitorCount: number; bestCompRank: number }>()
+
+  for (const comp of competitors) {
+    const positions = comp.serp_positions as any[] || []
+    for (const pos of positions) {
+      const kw = (pos.keyword || '').toLowerCase()
+      if (!kwSet.has(kw)) continue
+      const existing = keywordPressure.get(kw) || { competitorCount: 0, bestCompRank: 100 }
+      existing.competitorCount++
+      existing.bestCompRank = Math.min(existing.bestCompRank, pos.position || 100)
+      keywordPressure.set(kw, existing)
+    }
+  }
+
+  // 4. Compute score per keyword: more competitors + better positions = higher pressure
+  for (const [kw, pressure] of keywordPressure) {
+    const userPos = userPositions.get(kw) || 100
+    let score = 0
+
+    // Multi-competitor pressure: 1 comp = 5pts, 2 = 12pts, 3 = 18pts
+    score += Math.min(18, pressure.competitorCount * 6)
+
+    // Competitor rank bonus: top 3 = +7, top 10 = +4, top 20 = +2
+    if (pressure.bestCompRank <= 3) score += 7
+    else if (pressure.bestCompRank <= 10) score += 4
+    else if (pressure.bestCompRank <= 20) score += 2
+
+    // User is behind competitor → extra urgency
+    if (userPos > pressure.bestCompRank) score = Math.min(25, score + 3)
+
+    momentumMap.set(kw, Math.min(25, score))
+  }
+
+  if (momentumMap.size > 0) {
+    console.log(`[compute-spiral] 🎯 Competitor momentum: ${momentumMap.size} keywords under pressure`)
+  }
+
+  return momentumMap
+}
+
+function getCompetitorMomentumForItem(
+  momentumMap: Map<string, number>,
+  targetUrl?: string | null,
+  findingCategory?: string,
+): number {
+  if (momentumMap.size === 0) return 0
+
+  // If item has a target URL, find best matching keyword pressure
+  // For now, return the max pressure score across all keywords
+  // (items are often related to the site's most important keywords)
+  let maxScore = 0
+  for (const score of momentumMap.values()) {
+    if (score > maxScore) maxScore = score
+  }
+
+  // Scale: items with SEO-related categories get full pressure, others get partial
+  const seoCategories = ['seo_fix', 'gap_create', 'content_upgrade', 'keyword_optimization', 'technical_seo']
+  const isSeoRelated = findingCategory && seoCategories.some(c => findingCategory.includes(c))
+
+  return isSeoRelated ? maxScore : Math.round(maxScore * 0.5)
+}
+
 // ─── Signal 3: Cluster Maturity ───────────────────────────────────────
 
 async function computeClusterMaturity(
