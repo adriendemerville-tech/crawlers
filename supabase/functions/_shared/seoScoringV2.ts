@@ -332,6 +332,22 @@ export function computeSeoScoreV2(
   if (eeat.hasCTA) eeatScore += 10;
   if (eeat.hasExternalAuthority) eeatScore += 15;
 
+  // 6b. LOCAL SIGNALS (bonus for local_business profile)
+  if (profile.localSignals) {
+    const hasNAP = /(\+?\d[\d\s\-.]{8,})|(\d{5}\s+\w)/.test(textContent); // phone or postal code
+    const hasGoogleMaps = /google\.com\/maps|maps\.google/i.test(html);
+    const hasLocalSchema = jsonLdTypes.some(t => ['LocalBusiness', 'Store', 'Restaurant', 'ProfessionalService', 'MedicalBusiness', 'LegalService', 'FinancialService', 'HomeAndConstructionBusiness'].includes(t));
+    const hasAddress = /<address/i.test(html) || /itemprop=["']address/i.test(html);
+    
+    if (hasNAP) eeatScore = Math.min(100, eeatScore + 15);
+    else issues.push('Pas de coordonnées (téléphone, adresse) détectées — critique pour le SEO local');
+    if (hasGoogleMaps) eeatScore = Math.min(100, eeatScore + 10);
+    else opportunities.push('Intégrer Google Maps pour renforcer le SEO local');
+    if (hasLocalSchema) eeatScore = Math.min(100, eeatScore + 10);
+    else opportunities.push('Ajouter un schema LocalBusiness en JSON-LD');
+    if (hasAddress) eeatScore = Math.min(100, eeatScore + 5);
+  }
+
   // Penalty: generic CTA anchors
   const genericCtaAnchors = anchors.filter(a => /^(découvrir|en savoir plus|cliquez ici|lire la suite|voir plus|click here|learn more|read more|voir|lire)$/i.test(a.trim()));
   if (internalLinkMatches.length > 3 && genericCtaAnchors.length / internalLinkMatches.length > 0.6) {
@@ -354,15 +370,16 @@ export function computeSeoScoreV2(
 
   if (eeatScore < 40) opportunities.push('Renforcer les signaux E-E-A-T (auteur, preuves sociales, données)');
 
-  // OVERALL SCORE (weighted)
+  // OVERALL SCORE (weighted by business profile)
+  const w = profile.weights;
   const overall = Math.round(
-    contentDepthScore * 0.20 +
-    headingScore * 0.15 +
-    keywordScore * 0.15 +
-    linkScore * 0.15 +
-    metaScore * 0.15 +
-    eeatScore * 0.10 +
-    contentDensityScore * 0.10
+    contentDepthScore * w.content_depth +
+    headingScore * w.heading +
+    keywordScore * w.keyword +
+    linkScore * w.linking +
+    metaScore * w.meta +
+    eeatScore * w.eeat +
+    contentDensityScore * w.density
   );
 
   return {
