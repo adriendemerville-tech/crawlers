@@ -31,3 +31,30 @@ L'audit stratégique GEO (`audit-strategique-ia`) calcule 5 KPIs spécifiques po
 
 ### Persistance Workbench
 Les scores Chunkability et Fan-Out génèrent automatiquement des findings dans `architect_workbench` avec `source_function='audit-strategique-ia'`, consommables par Parménion et le Code Architect.
+
+## Métriques complémentaires (ajoutées au lexique 2026-04-15)
+
+### SPO (Score de Priorité d'Optimisation)
+- **Score** : 0-100, 8 signaux pondérés (CTR Gap, conversion, difficulté, trafic, cluster, concurrence, fraîcheur, gravité)
+- **Usage** : Trie les recommandations d'audit par ROI potentiel
+- **Lexique** : `/lexique/spo-score`
+
+### ETV (Estimated Traffic Value)
+- **Formule** : Σ(trafic estimé par keyword × CPC moyen)
+- **Usage** : 25% du calcul de Part de Voix ; justification budgétaire SEO
+- **Lexique** : `/lexique/etv-estimated-traffic-value`
+
+### CTR Gap
+- **Formule** : CTR réel (GSC) - CTR attendu pour la position
+- **Usage** : Quick Win si négatif → réécrire title/meta
+- **Lexique** : `/lexique/ctr-gap`
+
+### Voice DNA (ADN de Marque)
+- **Stockage** : `tracked_sites.voice_dna`
+- **Usage** : Injecté dans Content Architect et Parménion pour cohérence éditoriale
+- **Lexique** : `/lexique/voice-dna`
+
+### Drop Detector
+- **Niveau réactif** : Comparaison hebdo GSC par z-score (seuil configurable)
+- **Niveau proactif** : Triangle Prédictif pour anticiper les chutes
+- **Lexique** : `/lexique/drop-detector`
