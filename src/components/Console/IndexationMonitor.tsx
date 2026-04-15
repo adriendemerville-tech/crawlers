@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Search, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Plus, Trash2, Globe, Clock } from 'lucide-react';
+import { SerpBenchmark } from './SerpBenchmark';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -315,6 +316,11 @@ export function IndexationMonitor() {
           </CardContent>
         </Card>
       ) : null}
+      {/* SERP Benchmark Multi-Providers */}
+      <SerpBenchmark
+        trackedSites={trackedSites.map(s => ({ id: s.id, domain: s.domain }))}
+        selectedSiteId={selectedSiteId}
+      />
     </div>
   );
 }

@@ -9015,6 +9015,65 @@ export type Database = {
           },
         ]
       }
+      serp_benchmark_results: {
+        Row: {
+          averaged_results: Json
+          country: string | null
+          created_at: string
+          id: string
+          language: string | null
+          location: string | null
+          providers_data: Json
+          providers_used: string[]
+          query_text: string
+          single_hit_penalty: number
+          target_domain: string | null
+          total_sites_found: number | null
+          tracked_site_id: string | null
+          user_id: string
+        }
+        Insert: {
+          averaged_results?: Json
+          country?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          location?: string | null
+          providers_data?: Json
+          providers_used?: string[]
+          query_text: string
+          single_hit_penalty?: number
+          target_domain?: string | null
+          total_sites_found?: number | null
+          tracked_site_id?: string | null
+          user_id: string
+        }
+        Update: {
+          averaged_results?: Json
+          country?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          location?: string | null
+          providers_data?: Json
+          providers_used?: string[]
+          query_text?: string
+          single_hit_penalty?: number
+          target_domain?: string | null
+          total_sites_found?: number | null
+          tracked_site_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serp_benchmark_results_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       serp_geo_correlations: {
         Row: {
           best_lag_engagement: number | null
