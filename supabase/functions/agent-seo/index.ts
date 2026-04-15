@@ -520,7 +520,7 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     // Compute multi-axes SEO score
-    const scoreBefore = computeSeoScoreV2(pageData.html, pageData.textContent, target.type);
+    const scoreBefore = computeSeoScoreV2(pageData.html, pageData.textContent, { pageType: target.type });
     // Enrich score with audit data
     if (auditExpertData?.data) {
       (scoreBefore as any).auditExpert = {
