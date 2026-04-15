@@ -365,27 +365,7 @@ export function MyCorrectiveCodes() {
 
   return (
     <>
-    <div className="flex gap-3">
-      {/* Vertical domain sidebar with drag-and-drop */}
-      {domains.length > 0 && (
-        <DndContext sensors={domainDndSensors} collisionDetection={closestCenter} onDragEnd={handleDomainDragEnd}>
-          <SortableContext items={domains} strategy={verticalListSortingStrategy}>
-            <div className="hidden sm:flex flex-col gap-1 min-w-[140px] max-w-[180px] shrink-0">
-              {domains.map(domain => (
-                <SortableDomainButton
-                  key={domain}
-                  id={domain}
-                  label={domain}
-                  isActive={activeDomain === domain}
-                  onClick={() => setSelectedDomain(domain)}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
-      )}
-
-      {/* Main content */}
+    <div>
       <Card className="flex-1 min-w-0">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           {/* Mobile domain selector */}
