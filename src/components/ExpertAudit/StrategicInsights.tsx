@@ -38,6 +38,8 @@ import { GoogleMyBusinessCard } from './GoogleMyBusinessCard';
 import { SimulatedLLMDepthCard } from './SimulatedLLMDepthCard';
 import { FanOutCard } from './FanOutCard';
 import { BotLogChartCard } from './BotLogChartCard';
+import { ChunkabilityScoreCard } from './ChunkabilityScoreCard';
+import { FanOutScoreCard } from './FanOutScoreCard';
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
   hideExecutiveSummary?: boolean;
