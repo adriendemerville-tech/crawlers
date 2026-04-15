@@ -87,7 +87,7 @@ export function ShareReportButton({
         subject: `📊 Rapport d'analyse ${reportType} pour ${new URL(url).hostname}`,
         body: `Bonjour,
 
-Je voulais partager avec vous ce rapport d'analyse ${reportType} que j'ai généré avec Crawlers.lovable.app.
+Je voulais partager avec vous ce rapport d'analyse ${reportType} que j'ai généré avec Crawlers.fr.
 
 🔗 URL analysée : ${url}
 📈 Score obtenu : ${score}
@@ -101,7 +101,7 @@ Ce rapport vous donne une vue détaillée de ${
           "la performance et les Core Web Vitals de votre site"
         }.
 
-L'outil est gratuit et sans inscription : https://crawlers.lovable.app
+L'outil est gratuit et sans inscription : https://crawlers.fr
 
 Cordialement`,
       },
@@ -109,7 +109,7 @@ Cordialement`,
         subject: `📊 ${reportType} Analysis Report for ${new URL(url).hostname}`,
         body: `Hi,
 
-I wanted to share this ${reportType} analysis report I generated with Crawlers.lovable.app.
+I wanted to share this ${reportType} analysis report I generated with Crawlers.fr.
 
 🔗 Analyzed URL: ${url}
 📈 Score: ${score}
@@ -123,7 +123,7 @@ This report provides detailed insights into ${
           "your site's performance and Core Web Vitals"
         }.
 
-The tool is free and requires no signup: https://crawlers.lovable.app
+The tool is free and requires no signup: https://crawlers.fr
 
 Best regards`,
       },
@@ -131,7 +131,7 @@ Best regards`,
         subject: `📊 Informe de análisis ${reportType} para ${new URL(url).hostname}`,
         body: `Hola,
 
-Quería compartir este informe de análisis ${reportType} que generé con Crawlers.lovable.app.
+Quería compartir este informe de análisis ${reportType} que generé con Crawlers.fr.
 
 🔗 URL analizada: ${url}
 📈 Puntuación: ${score}
@@ -145,7 +145,7 @@ Este informe proporciona información detallada sobre ${
           "el rendimiento y los Core Web Vitals de tu sitio"
         }.
 
-La herramienta es gratuita y sin registro: https://crawlers.lovable.app
+La herramienta es gratuita y sin registro: https://crawlers.fr
 
 Saludos`,
       },

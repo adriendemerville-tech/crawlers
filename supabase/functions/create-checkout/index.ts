@@ -75,7 +75,7 @@ Deno.serve(handleRequest(async (req) => {
     console.log(`💸 Pricing from DB: ${audit.dynamic_price}€ (${priceInCents} cents) for ${audit.url}`);
 
     // Determine origin for redirect URLs
-    const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+    const origin = req.headers.get("origin") || "https://crawlers.fr";
 
     // 3️⃣ CRÉATION SESSION STRIPE avec métadonnées pour le webhook
     const session = await stripe.checkout.sessions.create({

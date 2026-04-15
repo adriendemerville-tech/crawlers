@@ -37,7 +37,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
 
     // state format: "user_id|frontend_origin"
     const [userId, frontendOrigin] = state.split('|');
-    const redirectBase = frontendOrigin || 'https://crawlers.lovable.app';
+    const redirectBase = frontendOrigin || 'https://crawlers.fr';
 
     if (error) {
       return new Response(null, {

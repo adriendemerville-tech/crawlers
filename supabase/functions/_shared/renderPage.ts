@@ -203,7 +203,7 @@ async function renderWithFlyPlaywright(url: string): Promise<string | null> {
  * Uses fetch-external-site edge function which has Spider/Browserless/Fly cascade.
  */
 async function renderSelfFallback(url: string): Promise<string | null> {
-  // Only activate for crawlers.fr / crawlers.lovable.app
+  // Only activate for crawlers.fr / crawlers.fr
   const hostname = (() => { try { return new URL(url).hostname; } catch { return ''; } })();
   const isSelf = hostname === 'crawlers.fr' || hostname === 'www.crawlers.fr' || hostname.endsWith('.lovable.app');
   if (!isSelf) return null;

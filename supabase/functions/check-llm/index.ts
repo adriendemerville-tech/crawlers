@@ -85,7 +85,7 @@ async function queryLLMNatural(
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.lovable.app',
+          'HTTP-Referer': 'https://crawlers.fr',
           'X-Title': 'Crawlers.fr - LLM Visibility',
         },
         body: JSON.stringify({
@@ -153,7 +153,7 @@ async function queryLLMWithCustomPrompt(apiKey: string, model: string, prompt: s
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       signal: controller.signal,
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://crawlers.lovable.app', 'X-Title': 'Crawlers.fr' },
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers.fr' },
       body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 500 }),
     });
     clearTimeout(timeout);

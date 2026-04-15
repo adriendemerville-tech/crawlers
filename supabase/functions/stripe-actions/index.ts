@@ -58,7 +58,7 @@ async function handleCheckout(req: Request, body: any) {
   if (!audit) return json({ error: "Audit not found" }, 404);
 
   const priceInCents = Math.round(audit.dynamic_price * 100);
-  const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+  const origin = req.headers.get("origin") || "https://crawlers.fr";
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
@@ -102,7 +102,7 @@ async function handleCreditCheckout(req: Request, body: any) {
   const prices = await stripe.prices.list({ product: pkg.stripe_product_id, active: true, type: "one_time", limit: 1 });
   if (!prices.data.length) return json({ error: "No active price found for this package" }, 500);
 
-  const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+  const origin = req.headers.get("origin") || "https://crawlers.fr";
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: [{ price: prices.data[0].id, quantity: 1 }],
@@ -126,7 +126,7 @@ async function handleSubscription(req: Request) {
   const auth = await getAuthUser(req);
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
-  const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+  const origin = req.headers.get("origin") || "https://crawlers.fr";
   const { data: profile } = await auth.supabase
     .from("profiles")
     .select("plan_type, subscription_status, stripe_subscription_id")
@@ -167,7 +167,7 @@ async function handleSubscriptionPremium(req: Request) {
   const auth = await getAuthUser(req);
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
-  const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+  const origin = req.headers.get("origin") || "https://crawlers.fr";
   const { data: profile } = await auth.supabase
     .from("profiles")
     .select("plan_type, subscription_status, stripe_subscription_id")
@@ -208,7 +208,7 @@ async function handlePortal(req: Request) {
   const auth = await getAuthUser(req);
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
-  const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+  const origin = req.headers.get("origin") || "https://crawlers.fr";
   const customers = await stripe.customers.list({ email: auth.user.email, limit: 1 });
   if (!customers.data.length) return json({ error: "Aucun compte Stripe trouvé." }, 404);
 

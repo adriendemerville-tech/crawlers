@@ -150,7 +150,7 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
         // Fallback to legacy format
         const shareId = responseData?.shareId;
         if (!shareId) throw new Error('No share ID returned');
-        const fallbackUrl = `https://crawlers.lovable.app/temporarylink/${shareId}`;
+        const fallbackUrl = `https://crawlers.fr/temporarylink/${shareId}`;
         setShareUrl(fallbackUrl);
         await navigator.clipboard.writeText(fallbackUrl);
         setCopied(true);

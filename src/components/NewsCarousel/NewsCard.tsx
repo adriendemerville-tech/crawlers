@@ -51,7 +51,7 @@ ${article.summary}
 📅 Publié le : ${formatDate(article.publishedAt)}
 
 ---
-Découvert via Crawlers.lovable.app - L'outil gratuit pour analyser votre visibilité IA.
+Découvert via Crawlers.fr - L'outil gratuit pour analyser votre visibilité IA.
 
 Cordialement`,
       },
@@ -69,7 +69,7 @@ ${article.summary}
 📅 Published: ${formatDate(article.publishedAt)}
 
 ---
-Discovered via Crawlers.lovable.app - The free tool to analyze your AI visibility.
+Discovered via Crawlers.fr - The free tool to analyze your AI visibility.
 
 Best regards`,
       },
@@ -87,7 +87,7 @@ ${article.summary}
 📅 Publicado el: ${formatDate(article.publishedAt)}
 
 ---
-Descubierto a través de Crawlers.lovable.app - La herramienta gratuita para analizar tu visibilidad IA.
+Descubierto a través de Crawlers.fr - La herramienta gratuita para analizar tu visibilidad IA.
 
 Saludos`,
       },

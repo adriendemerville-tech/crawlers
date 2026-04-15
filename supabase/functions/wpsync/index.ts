@@ -16,7 +16,7 @@ try {
     // ─── POST: Generate magic link (called from SaaS frontend) ───
     if (req.method === 'POST') {
       const origin = req.headers.get('origin') || '';
-      if (!origin.includes('crawlers.fr') && !origin.includes('crawlers.lovable.app')) {
+      if (!origin.includes('crawlers.fr') && !origin.includes('crawlers.fr')) {
         return jsonError('Forbidden origin', 403);
       }
 

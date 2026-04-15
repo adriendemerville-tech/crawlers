@@ -275,7 +275,7 @@ async function queryWithIterations(
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.lovable.app',
+          'HTTP-Referer': 'https://crawlers.fr',
           'X-Title': 'Crawlers.fr - LLM Visibility Tracker',
         },
         body: JSON.stringify({
