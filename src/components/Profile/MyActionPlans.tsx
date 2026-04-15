@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useCredits } from '@/hooks/useCredits';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -303,6 +304,8 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
+  const { planType } = useCredits();
+  const isAgencyPlus = isAdmin || planType === 'agency_premium';
   const t = translations[language];
 
   const [items, setItems] = useState<WorkbenchItem[]>([]);
@@ -564,15 +567,25 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
                     <Progress value={progress} className="h-2" />
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Swords className={cn("h-4 w-4 transition-colors", competitorPressureOn ? "text-primary" : "text-muted-foreground/50")} />
+                    <Swords className={cn("h-4 w-4 transition-colors", competitorPressureOn && isAgencyPlus ? "text-primary" : "text-muted-foreground/50")} />
                     <Switch
                       checked={competitorPressureOn}
-                      onCheckedChange={setCompetitorPressureOn}
+                      onCheckedChange={(v) => {
+                        if (!isAgencyPlus) {
+                          toast.info(language === 'fr' ? 'Fonctionnalité réservée au plan Pro Agency+' : 'Feature reserved for Pro Agency+ plan');
+                          return;
+                        }
+                        setCompetitorPressureOn(v);
+                      }}
+                      disabled={!isAgencyPlus}
                       aria-label={language === 'fr' ? 'Pression concurrentielle' : 'Competitor pressure'}
                     />
-                    <span className={cn("text-xs whitespace-nowrap transition-colors", competitorPressureOn ? "text-primary font-medium" : "text-muted-foreground")}>
+                    <span className={cn("text-xs whitespace-nowrap transition-colors", competitorPressureOn && isAgencyPlus ? "text-primary font-medium" : "text-muted-foreground")}>
                       {language === 'fr' ? 'Pression concurrentielle' : language === 'es' ? 'Presión competitiva' : 'Competitor pressure'}
                     </span>
+                    {!isAgencyPlus && (
+                      <Lock className="h-3.5 w-3.5 text-yellow-500" />
+                    )}
                   </div>
                 </div>
 
