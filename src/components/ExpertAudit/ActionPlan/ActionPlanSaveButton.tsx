@@ -13,6 +13,7 @@ export interface ActionPlanTask {
   priority: 'critical' | 'important' | 'optional';
   category: string;
   isCompleted: boolean;
+  description?: string;
 }
 
 interface ActionPlanSaveButtonProps {
@@ -62,23 +63,31 @@ export function ActionPlanSaveButton({ tasks, url, auditType = 'technical', onSa
     setIsSaving(true);
     
     try {
-      // Extract domain from URL for title
       let domain = url;
       try {
         domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
-      } catch {
-        // Keep original if parsing fails
-      }
+      } catch {}
 
-      const title = `${auditType === 'technical' ? 'Audit Technique SEO' : 'Audit Stratégique GEO'} - ${domain}`;
+      const severityMap: Record<string, string> = {
+        critical: 'critical',
+        important: 'high',
+        optional: 'medium',
+      };
 
-      const { error } = await supabase.from('action_plans').insert({
+      const rows = tasks.map(task => ({
         user_id: user.id,
-        url,
-        title,
-        audit_type: auditType,
-        tasks: JSON.parse(JSON.stringify(tasks)),
-      });
+        domain,
+        title: task.title,
+        description: task.description || null,
+        severity: severityMap[task.priority] || 'medium',
+        finding_category: task.category || 'seo',
+        source_type: 'audit' as const,
+        source_function: auditType === 'technical' ? 'expert-audit' : 'strategic-audit',
+        target_url: url.startsWith('http') ? url : `https://${url}`,
+        status: task.isCompleted ? ('done' as const) : ('pending' as const),
+      }));
+
+      const { error } = await supabase.from('architect_workbench').insert(rows);
 
       if (error) {
         console.error('Error saving action plan:', error);
@@ -86,6 +95,7 @@ export function ActionPlanSaveButton({ tasks, url, auditType = 'technical', onSa
         return;
       }
       
+      toast.success(t.success);
       setIsSaved(true);
       onSaved?.();
     } catch (error) {
