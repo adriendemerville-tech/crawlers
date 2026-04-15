@@ -482,6 +482,45 @@ Deno.serve(handleRequest(async (req) => {
       parsedAnalysis.summary_resilience = { score: parsedAnalysis.summary_resilience?.score || resilienceScore, originalH1, llmSummary: llmSummary || autoSummary };
     }
 
+    // ═══ CHUNKABILITY & FAN-OUT (content pages only) ═══
+    if (isContentMode && pageContentContext) {
+      const rawText = (pageContentContext || '').replace(/Titre="[^"]*"/g, '').replace(/H1="[^"]*"/g, '').replace(/Desc="[^"]*"/g, '');
+      const paragraphs = rawText.split(/\n+/).filter(p => p.trim().length > 30);
+      const avgLen = paragraphs.length > 0 ? Math.round(paragraphs.reduce((s, p) => s + p.split(/\s+/).length, 0) / paragraphs.length) : 0;
+      const hasToc = /sommaire|table.?des.?mati[eè]res|table.?of.?contents|<nav[^>]*id="?toc/i.test(pageContentContext);
+      const h2Count = (pageContentContext.match(/H2="/g) || []).length;
+      const h3Count = (pageContentContext.match(/H3="/g) || []).length;
+      const hasClearSections = h2Count >= 2 || (h2Count >= 1 && h3Count >= 2);
+      let chunkScore = 0;
+      if (paragraphs.length >= 5) chunkScore += 25; else if (paragraphs.length >= 3) chunkScore += 15;
+      if (avgLen >= 30 && avgLen <= 150) chunkScore += 25; else if (avgLen >= 15) chunkScore += 15;
+      if (hasToc) chunkScore += 20;
+      if (hasClearSections) chunkScore += 20;
+      if (h2Count >= 3) chunkScore += 10; else if (h2Count >= 2) chunkScore += 5;
+      chunkScore = Math.min(100, chunkScore);
+      const chunkExplanation = chunkScore >= 70
+        ? 'Ce contenu est bien structuré pour être découpé et cité par les moteurs IA (RAG). Les sections sont claires et les paragraphes de taille adaptée.'
+        : chunkScore >= 40
+        ? 'La structure du contenu est partiellement adaptée au découpage IA. Ajoutez un sommaire et des sous-titres plus réguliers pour améliorer la chunkabilité.'
+        : 'Ce contenu manque de structure pour les moteurs RAG. Ajoutez des H2/H3, un sommaire, et découpez les longs blocs de texte en paragraphes de 50-100 mots.';
+      parsedAnalysis.chunkability_score = { score: chunkScore, paragraphs: paragraphs.length, avg_paragraph_length: avgLen, has_toc: hasToc, has_clear_sections: hasClearSections, explanation: chunkExplanation };
+
+      // Fan-out score: estimate how well the page covers potential RAG sub-queries
+      const h1Match2 = (pageContentContext || '').match(/H1="([^"]+)"/);
+      const mainTopic = h1Match2?.[1] || '';
+      const topicTerms = mainTopic.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+      const contentWords = new Set(rawText.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+      const potentialAxes = Math.max(3, Math.min(8, h2Count + 1));
+      const coveredAxes = Math.min(potentialAxes, h2Count);
+      const fanOutScore = potentialAxes > 0 ? Math.round((coveredAxes / potentialAxes) * 80 + (topicTerms.length > 0 && topicTerms.every(t => contentWords.has(t)) ? 20 : 10)) : 50;
+      const fanOutExplanation = fanOutScore >= 70
+        ? 'Cette page couvre bien les sous-questions que les moteurs RAG génèrent à partir de la requête principale. Chaque section répond à un angle spécifique.'
+        : fanOutScore >= 40
+        ? 'La couverture des axes de décomposition RAG est partielle. Ajoutez des sections répondant aux questions adjacentes que les utilisateurs pourraient poser.'
+        : 'Cette page répond à un seul angle de la requête. Les moteurs IA décomposent les requêtes en sous-questions : ajoutez des H2 couvrant les aspects complémentaires (comparaison, prix, alternatives, avis, guide).';
+      parsedAnalysis.fan_out_score = { score: Math.min(100, fanOutScore), detected_axes: h2Count, covered_axes: coveredAxes, total_potential_axes: potentialAxes, explanation: fanOutExplanation };
+    }
+
     if (!parsedAnalysis.lexical_footprint) parsedAnalysis.lexical_footprint = { jargonRatio: 50, concreteRatio: 50 };
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
