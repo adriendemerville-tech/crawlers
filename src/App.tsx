@@ -146,7 +146,7 @@ const App = () => (
                         <PageViewTracker />
                       </Suspense>
                       <AISidebarPageWrapper>
-                      <BreadcrumbGlobal />
+                      <BreadcrumbGlobal visuallyHidden />
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
                           <Route path="/" element={<Index />} />
