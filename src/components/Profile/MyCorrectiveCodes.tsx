@@ -121,14 +121,20 @@ const translations = {
   },
 };
 
-export function MyCorrectiveCodes() {
+export function MyCorrectiveCodes({ externalDomain }: { externalDomain?: string | null }) {
   const { user, profile } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = translations[language];
   const [codes, setCodes] = useState<CorrectiveCode[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(externalDomain ?? null);
+
+  useEffect(() => {
+    if (externalDomain !== undefined && externalDomain !== null) {
+      setSelectedDomain(externalDomain);
+    }
+  }, [externalDomain]);
   const [domainOrder, setDomainOrder] = useState<string[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());

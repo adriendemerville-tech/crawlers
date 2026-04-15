@@ -297,7 +297,7 @@ function SortableTaskItem({
 }
 
 
-export function MyActionPlans() {
+export function MyActionPlans({ externalDomain }: { externalDomain?: string | null }) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAdmin } = useAdmin();
@@ -306,7 +306,14 @@ export function MyActionPlans() {
   const [items, setItems] = useState<WorkbenchItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
-  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(externalDomain ?? null);
+
+  // Sync with external domain changes
+  useEffect(() => {
+    if (externalDomain !== undefined && externalDomain !== null) {
+      setSelectedDomain(externalDomain);
+    }
+  }, [externalDomain]);
 
   // Architect modal state
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
