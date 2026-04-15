@@ -154,13 +154,14 @@ Deno.serve(handleRequest(async (req) => {
   const directiveTexts = (pendingDirectives || []).map((d: any) => d.directive_text);
 
   if (action === 'analyze') {
-    // Analyze a specific page/component
-    if (!component_code || !target_page) {
-      return jsonError('Missing component_code or target_page', 400);
-    }
+    // When dispatched with directives but no component code, analyze based on directive text
+    const effectiveTargetPage = target_page || '/';
+    const hasComponentCode = !!component_code;
 
     const systemPrompt = getSystemPrompt(directiveTexts);
-    const userPrompt = `Analyse ce composant React de la page "${target_page}" :\n\n\`\`\`tsx\n${component_code.slice(0, 15000)}\n\`\`\`\n\nType d'analyse demandé : ${analysis_type || 'full'}`;
+    const userPrompt = hasComponentCode
+      ? `Analyse ce composant React de la page "${effectiveTargetPage}" :\n\n\`\`\`tsx\n${component_code.slice(0, 15000)}\n\`\`\`\n\nType d'analyse demandé : ${analysis_type || 'full'}`
+      : `Analyse UX de la page "${effectiveTargetPage}" basée sur les directives suivantes :\n${directiveTexts.map((d: string, i: number) => `${i + 1}. ${d}`).join('\n')}\n\nProduis des recommandations UX concrètes et actionnables. Type d'analyse : ${analysis_type || 'directive'}`;
 
     const rawResponse = await callLLM(systemPrompt, userPrompt, costAcc);
 
