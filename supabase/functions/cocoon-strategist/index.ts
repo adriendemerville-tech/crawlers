@@ -5,6 +5,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, findMatchingContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 import { getSavPatternsForStrategist } from '../_shared/crossAgentContext.ts';
+import { computeCrawlPageQuality, resolveBusinessProfile, type CrawlPageInput } from '../_shared/crawlPageQuality.ts';
 
 /**
  * cocoon-strategist: Orchestrateur Stratège 360°
