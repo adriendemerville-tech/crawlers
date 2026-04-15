@@ -905,7 +905,7 @@ export default function Tarifs() {
                 <h2 className="text-2xl font-bold">{t.paidDescription}</h2>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {/* Audit Stratégique */}
                 <Card className="border-violet-500/30">
                   <CardHeader>
@@ -983,6 +983,90 @@ export default function Tarifs() {
                       {t.auditCompare.features.map((feature, index) => (
                         <li key={index} className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-violet-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Content Architect */}
+                <Card className="border-emerald-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PenTool className="h-5 w-5 text-emerald-500" />
+                      {t.contentArchitect.title}
+                    </CardTitle>
+                    <CardDescription>{t.contentArchitect.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {t.contentArchitect.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Social Hub */}
+                <Card className="border-pink-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Megaphone className="h-5 w-5 text-pink-500" />
+                      {t.socialHub.title}
+                    </CardTitle>
+                    <CardDescription>{t.socialHub.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {t.socialHub.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-pink-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Cocoon Sémantique */}
+                <Card className="border-cyan-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Share2 className="h-5 w-5 text-cyan-500" />
+                      {t.cocoon.title}
+                    </CardTitle>
+                    <CardDescription>{t.cocoon.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {t.cocoon.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-cyan-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Marina */}
+                <Card className="border-amber-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-amber-500" />
+                      {t.marina.title}
+                    </CardTitle>
+                    <CardDescription>{t.marina.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {t.marina.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-amber-500" />
                           <span className="text-sm">{feature}</span>
                         </li>
                       ))}
