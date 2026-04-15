@@ -217,11 +217,6 @@ function ProfileContent() {
   );
 }
 
-// cn helper used inline
-function cn(...args: (string | boolean | undefined | null)[]) {
-  return args.filter(Boolean).join(' ');
-}
-
 class ProfileErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: ReactNode }) {
     super(props);
