@@ -38,7 +38,7 @@ export async function autoSaveActionPlan({
       .select('title')
       .eq('user_id', userId)
       .eq('domain', domain)
-      .eq('source_type', 'audit')
+      .in('source_type', ['audit_tech', 'audit_strategic'])
       .limit(500);
 
     const existingTitles = new Set((existing || []).map((e: any) => e.title));
@@ -58,7 +58,7 @@ export async function autoSaveActionPlan({
       description: t.description || null,
       severity: severityMap[t.priority] || 'medium',
       finding_category: t.category || 'seo',
-      source_type: 'audit' as const,
+      source_type: (auditType === 'technical' ? 'audit_tech' : 'audit_strategic') as const,
       source_function: auditType === 'technical' ? 'expert-audit' : 'strategic-audit',
       target_url: url.startsWith('http') ? url : `https://${url}`,
       status: t.isCompleted ? ('done' as const) : ('pending' as const),

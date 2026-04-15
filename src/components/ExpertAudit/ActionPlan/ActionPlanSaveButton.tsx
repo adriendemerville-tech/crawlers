@@ -81,7 +81,7 @@ export function ActionPlanSaveButton({ tasks, url, auditType = 'technical', onSa
         description: task.description || null,
         severity: severityMap[task.priority] || 'medium',
         finding_category: task.category || 'seo',
-        source_type: 'audit' as const,
+        source_type: (auditType === 'technical' ? 'audit_tech' : 'audit_strategic') as const,
         source_function: auditType === 'technical' ? 'expert-audit' : 'strategic-audit',
         target_url: url.startsWith('http') ? url : `https://${url}`,
         status: task.isCompleted ? ('done' as const) : ('pending' as const),
