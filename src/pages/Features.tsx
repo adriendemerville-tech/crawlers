@@ -237,14 +237,14 @@ export default function Features() {
                   <Link
                     key={feature.title}
                     to={feature.href}
-                    className="group relative rounded-2xl border border-border/60 bg-card/80 backdrop-blur p-6 hover:shadow-xl hover:border-border transition-all duration-300 hover:-translate-y-1"
+                    className="group relative rounded-2xl border border-border/60 bg-card/80 backdrop-blur p-6 hover:shadow-xl hover:border-border transition-all duration-300 hover:-translate-y-1 px-[20px] py-[10px]"
                   >
                     {feature.badge && (
                       <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 rounded-full px-2 py-0.5">
                         {feature.badge}
                       </span>
                     )}
-                    <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${feature.color} mb-4`}>
+                    <div className={`inline-flex items-center justify-center w-11 h-11 bg-gradient-to-br ${feature.color} mb-4 rounded-md`}>
                       <feature.icon className="h-5 w-5 text-white" />
                     </div>
                     <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
