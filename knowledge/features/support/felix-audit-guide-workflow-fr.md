@@ -29,3 +29,8 @@ Updated: 2026-04-08
 - `cocoon` → Stratège Cocoon
 - `felix` → Félix
 - `parse-matrix-hybrid` → Matrice
+
+### Couverture Stratégie Concurrentielle (Stratège Cocoon + Félix)
+- Le Stratège Cocoon intègre les données concurrentielles (`competitor_momentum_score`) dans ses recommandations de maillage et priorisation
+- Félix peut expliquer le fonctionnement du switch "Pression concurrentielle" et l'onglet Concurrence
+- Fonctionnalité réservée Pro Agency+ — Félix oriente vers /tarifs si l'utilisateur n'est pas éligible
