@@ -339,4 +339,4 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
       </CardContent>
     </Card>
   );
-}
+});
