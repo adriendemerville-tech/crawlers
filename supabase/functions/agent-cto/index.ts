@@ -154,9 +154,11 @@ async function getChampionPrompt(supabase: any, functionName: string, promptKey 
 }
 
 // ─── LLM call ────────────────────────────────────────────────────────
+const CTO_LLM_MODEL = 'google/gemini-2.5-flash';
+
 async function callLLM(systemPrompt: string, userPrompt: string, costAcc?: CostAccumulator): Promise<{ content: string; tokens: { input: number; output: number } }> {
   const resp = await callOpenRouter({
-    model: 'anthropic/claude-3.5-sonnet',
+    model: CTO_LLM_MODEL,
     system: systemPrompt,
     user: userPrompt,
     temperature: 0.2,
@@ -164,10 +166,10 @@ async function callLLM(systemPrompt: string, userPrompt: string, costAcc?: CostA
     title: 'Crawlers CTO Agent v2',
   });
 
-  trackPaidApiCall('agent-cto', 'openrouter', 'anthropic/claude-3.5-sonnet')
+  trackPaidApiCall('agent-cto', 'openrouter', CTO_LLM_MODEL)
   const input = resp.usage?.prompt_tokens || 0
   const output = resp.usage?.completion_tokens || 0
-  if (costAcc) costAcc.add('anthropic/claude-3.5-sonnet', input, output)
+  if (costAcc) costAcc.add(CTO_LLM_MODEL, input, output)
   return {
     content: resp.content,
     tokens: { input, output },

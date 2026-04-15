@@ -184,7 +184,7 @@ Deno.serve(handleRequest(async (req) => {
       findings: findings as any,
       proposals_generated: findings.filter(f => f.proposed_fix).length,
       confidence_score: findings.length > 0 ? findings.reduce((sum, f) => sum + f.confidence, 0) / findings.length : 0,
-      model_used: 'anthropic/claude-3.5-sonnet',
+      model_used: LLM_MODEL,
     });
 
     // Create proposals for high-confidence findings
@@ -284,7 +284,7 @@ Retourne en JSON :
       findings: parsed.findings || [],
       proposals_generated: parsed.code ? 1 : 0,
       confidence_score: 85,
-      model_used: 'anthropic/claude-3.5-sonnet',
+      model_used: LLM_MODEL,
     });
 
     return jsonOk({
