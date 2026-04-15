@@ -495,6 +495,7 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
                         {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                         <span className="text-[10px]">{copied ? t.copied : t.copy}</span>
                       </Button>
+                      {canDo('content.inject') && (
                       <Button
                         size="sm"
                         onClick={handleInject}
