@@ -324,21 +324,20 @@ try {
     const nextMeasurement = new Date()
     nextMeasurement.setDate(nextMeasurement.getDate() + 30)
 
-    // Check if there are applied recos already
-    const [actionPlansRes, correctiveCodesRes] = await Promise.all([
-      supabase.from('action_plans').select('tasks').eq('user_id', user_id).eq('url', url),
+    // Check if there are applied recos already (from workbench)
+    let domain_name = url
+    try { domain_name = new URL(url.startsWith('http') ? url : `https://${url}`).hostname } catch {}
+    const [workbenchRes, correctiveCodesRes] = await Promise.all([
+      supabase.from('architect_workbench').select('id, status').eq('user_id', user_id).eq('domain', domain_name),
       supabase.from('saved_corrective_codes').select('validated_at').eq('user_id', user_id).eq('url', url),
     ])
 
     // Calculate action plan progress
     let actionPlanProgress = 0
-    if (actionPlansRes.data?.length) {
-      const allTasks = actionPlansRes.data.flatMap((ap: any) => {
-        const tasks = Array.isArray(ap.tasks) ? ap.tasks : []
-        return tasks
-      })
-      const completed = allTasks.filter((t: any) => t.completed || t.done).length
-      actionPlanProgress = allTasks.length > 0 ? (completed / allTasks.length) * 100 : 0
+    if (workbenchRes.data?.length) {
+      const total = workbenchRes.data.length
+      const completed = workbenchRes.data.filter((t: any) => t.status === 'done').length
+      actionPlanProgress = total > 0 ? (completed / total) * 100 : 0
     }
 
     const hasDeployedCode = correctiveCodesRes.data?.some((c: any) => c.validated_at != null) || false
