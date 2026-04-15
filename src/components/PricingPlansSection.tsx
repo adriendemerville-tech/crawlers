@@ -104,6 +104,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, 'Serveur dédié & isolé', 'Dedicated & isolated server', 'Servidor dedicado y aislado'),
     t3(language, 'Données dupliquées & isolées', 'Duplicated & isolated data', 'Datos duplicados y aislados'),
     t3(language, 'SLA garanti', 'Guaranteed SLA', 'SLA garantizado'),
+    t3(language, 'Protocole auth SSO SAML', 'SSO SAML authentication', 'Autenticación SSO SAML'),
     t3(language, 'Onboarding personnalisé', 'Personalized onboarding', 'Onboarding personalizado'),
     t3(language, 'Rôle admin / auditeur / éditeur', 'Admin / auditor / editor roles', 'Rol admin / auditor / editor'),
     t3(language, 'Fonctionnalités sur mesure', 'Custom features', 'Funcionalidades a medida'),
