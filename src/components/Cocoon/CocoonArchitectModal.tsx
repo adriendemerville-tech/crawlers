@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast as sonnerToast } from 'sonner';
+import { useTeamPermissions } from '@/hooks/useTeamPermissions';
 
 // ─── Pedagogical fix descriptions ───
 interface FixPedagogy {
