@@ -1449,6 +1449,7 @@ async function askParmenionLLM(context: {
   siteInfo: any;
   scoredWorkbenchItems: any[];
   cmsInventory?: CmsContentInventory | null;
+  baselineSeoScore?: SeoScoreV2 | null;
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
