@@ -51,6 +51,9 @@ export async function autoSaveActionPlan({
       optional: 'medium',
     };
 
+    const sourceType = auditType === 'technical' ? 'audit_tech' : 'audit_strategic';
+    const sourceFunction = auditType === 'technical' ? 'expert-audit' : 'strategic-audit';
+
     const rows = newTasks.map(t => ({
       user_id: userId,
       domain,
@@ -58,8 +61,8 @@ export async function autoSaveActionPlan({
       description: t.description || null,
       severity: severityMap[t.priority] || 'medium',
       finding_category: t.category || 'seo',
-      source_type: (auditType === 'technical' ? 'audit_tech' : 'audit_strategic') as const,
-      source_function: auditType === 'technical' ? 'expert-audit' : 'strategic-audit',
+      source_type: sourceType as 'audit_tech' | 'audit_strategic',
+      source_function: sourceFunction,
       target_url: url.startsWith('http') ? url : `https://${url}`,
       status: t.isCompleted ? ('done' as const) : ('pending' as const),
     }));
