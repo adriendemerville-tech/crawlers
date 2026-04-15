@@ -334,7 +334,7 @@ export function MyActionPlans({ externalDomain }: { externalDomain?: string | nu
     setLoading(true);
     const { data, error } = await supabase
       .from('architect_workbench')
-      .select('id, title, description, severity, finding_category, source_type, source_function, target_url, domain, status, manual_priority, spiral_score, created_at, updated_at')
+      .select('id, title, description, severity, finding_category, source_type, source_function, target_url, domain, status, manual_priority, spiral_score, competitor_momentum_score, created_at, updated_at')
       .eq('user_id', user.id)
       .order('spiral_score', { ascending: false })
       .limit(500);
