@@ -43,7 +43,7 @@ const translations = {
       'Historique des analyses',
     ],
     paidSection: 'Fonctionnalités Premium',
-    paidDescription: 'Payantes en crédits',
+    paidDescription: 'crédits ou abonnement',
     auditStrategique: {
       title: 'Audit Stratégique IA',
       description: '2 crédits par consultation (après les 2 premiers gratuits)',
