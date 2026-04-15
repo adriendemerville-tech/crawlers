@@ -228,7 +228,7 @@ Deno.serve(handleRequest(async (req) => {
       success: true,
       result,
       summary,
-      cost: costAcc.getSummary(),
+      cost: costAcc.summary,
     });
   }
 
@@ -299,7 +299,7 @@ Retourne en JSON :
         code_preview: (parsed.code || '').slice(0, 500),
         integration: parsed.integration_instructions,
       },
-      cost: costAcc.getSummary(),
+      cost: costAcc.summary,
     });
   }
 
