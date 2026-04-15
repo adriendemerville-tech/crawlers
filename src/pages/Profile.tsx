@@ -1,16 +1,14 @@
 import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network, Store, Grid3X3, FileBox, Blocks, FileEdit, Anchor, Target, Globe } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Header } from '@/components/Header';
+import { ConsoleSidebar } from '@/components/Console/ConsoleSidebar';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 const MyActionPlans = lazy(() => import('@/components/Profile/MyActionPlans').then(m => ({ default: m.MyActionPlans })));
@@ -34,104 +32,11 @@ import { WelcomeBackModal } from '@/components/WelcomeBackModal';
 import { GoogleServicesOnboardingModal } from '@/components/Console/GoogleServicesOnboardingModal';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 
-
 const translations = {
-  fr: {
-    pageTitle: 'Console - Crawlers AI',
-    title: 'Console',
-    identity: 'Mes infos',
-    settings: 'Paramètres',
-    myReports: 'Rapports',
-    actionPlans: 'Plans d\'Action',
-    correctiveCodes: '<Scripts>',
-    creator: 'Créateur',
-    wallet: 'Portefeuille',
-    tracking: 'Mes sites',
-    firstName: 'Prénom',
-    lastName: 'Nom',
-    email: 'Email',
-    saveChanges: 'Enregistrer',
-    saving: 'Enregistrement...',
-    saved: 'Modifications enregistrées',
-    loginSettings: 'Paramètres de connexion',
-    connectedWith: 'Connecté avec',
-    googleAccount: 'Compte Google',
-    emailAccount: 'Email et mot de passe',
-    changePassword: 'Changer le mot de passe',
-    logout: 'Déconnexion',
-    backToHome: 'Retour à l\'accueil',
-    memberSince: 'Membre depuis',
-    languageSettings: 'Langue de l\'interface',
-    languageDescription: 'Choisissez la langue d\'affichage de l\'application',
-    french: 'Français',
-    english: 'English',
-    spanish: 'Español',
-  },
-  en: {
-    pageTitle: 'Console - Crawlers AI',
-    title: 'Console',
-    identity: 'My Info',
-    settings: 'Settings',
-    myReports: 'Reports',
-    actionPlans: 'Action Plans',
-    correctiveCodes: '<Scripts>',
-    creator: 'Creator',
-    wallet: 'Wallet',
-    tracking: 'My Sites',
-    firstName: 'First Name',
-    lastName: 'Last Name',
-    email: 'Email',
-    saveChanges: 'Save',
-    saving: 'Saving...',
-    saved: 'Changes saved',
-    loginSettings: 'Login Settings',
-    connectedWith: 'Connected with',
-    googleAccount: 'Google Account',
-    emailAccount: 'Email and password',
-    changePassword: 'Change password',
-    logout: 'Log out',
-    backToHome: 'Back to home',
-    memberSince: 'Member since',
-    languageSettings: 'Interface Language',
-    languageDescription: 'Choose the display language for the application',
-    french: 'Français',
-    english: 'English',
-    spanish: 'Español',
-  },
-  es: {
-    pageTitle: 'Consola - Crawlers AI',
-    title: 'Consola',
-    identity: 'Mis datos',
-    settings: 'Configuración',
-    myReports: 'Informes',
-    actionPlans: 'Planes de Acción',
-    correctiveCodes: '<Scripts>',
-    creator: 'Creador',
-    wallet: 'Billetera',
-    tracking: 'Mis sitios',
-    firstName: 'Nombre',
-    lastName: 'Apellido',
-    email: 'Correo electrónico',
-    saveChanges: 'Guardar',
-    saving: 'Guardando...',
-    saved: 'Cambios guardados',
-    loginSettings: 'Configuración de inicio de sesión',
-    connectedWith: 'Conectado con',
-    googleAccount: 'Cuenta de Google',
-    emailAccount: 'Email y contraseña',
-    changePassword: 'Cambiar contraseña',
-    logout: 'Cerrar sesión',
-    backToHome: 'Volver al inicio',
-    memberSince: 'Miembro desde',
-    languageSettings: 'Idioma de la interfaz',
-    languageDescription: 'Elige el idioma de visualización de la aplicación',
-    french: 'Français',
-    english: 'English',
-    spanish: 'Español',
-  },
+  fr: { pageTitle: 'Console - Crawlers AI' },
+  en: { pageTitle: 'Console - Crawlers AI' },
+  es: { pageTitle: 'Consola - Crawlers AI' },
 };
-
-const MOBILE_ALLOWED_TABS = ['tracking', 'gmb', 'admin'];
 
 function ProfileContent() {
   const { user, profile, signOut, loading } = useAuth();
@@ -139,16 +44,34 @@ function ProfileContent() {
   const { isAdmin, isViewer, isViewerLevel2, hasAdminAccess, isReadOnly, isAuditor, auditorExpired, canSeeDocs, canSeeAlgos, canSeeFinances, canSeeUsers, canSeeIntelligence, loading: adminLoading } = useAdmin();
   const { isAgencyPro, balance, planType } = useCredits();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const t = translations[language];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const t = translations[language as keyof typeof translations] || translations.fr;
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
   const [showGoogleOnboarding, setShowGoogleOnboarding] = useState(false);
   const isMobile = useIsMobile();
+  const isProUser = isAgencyPro || isAdmin;
+
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || (hasAdminAccess ? 'admin' : 'tracking'));
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+
+  // Sync tab with URL params
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   useEffect(() => {
     if (!user) return;
-
     supabase
       .from('admin_dashboard_config')
       .select('card_order')
@@ -160,12 +83,10 @@ function ProfileContent() {
           setSimulatedDataEnabled(config.simulated_data_enabled !== false);
           return;
         }
-
         setSimulatedDataEnabled(true);
       });
   }, [user]);
 
-  // Show Google onboarding once for new Pro users
   useEffect(() => {
     if (!user || !isAgencyPro) return;
     const key = `google_onboarding_shown_${user.id}`;
@@ -178,19 +99,14 @@ function ProfileContent() {
     }
   }, [user, isAgencyPro]);
 
-  const initialTab = searchParams.get('tab') || (hasAdminAccess ? 'admin' : 'tracking');
-  const isProUser = isAgencyPro || isAdmin;
-
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
 
-  // When auditor session expires, force-redirect away from admin tab
   useEffect(() => {
     if (auditorExpired && !isAdmin && !isViewer && !isViewerLevel2) {
-      // Pure auditor whose session expired — kick out of admin
       const params = new URLSearchParams(window.location.search);
       if (params.get('tab') === 'admin') {
         navigate('/app/console?tab=tracking', { replace: true });
@@ -213,6 +129,39 @@ function ProfileContent() {
 
   if (!user) return null;
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'wallet': return <MyWallet />;
+      case 'tracking': return <MyTracking />;
+      case 'settings': return <ProfileSettings />;
+      case 'reports': return <MyReports />;
+      case 'action-plans': return <MyActionPlans />;
+      case 'corrective-codes': return <MyCorrectiveCodes />;
+      case 'crawls': return isProUser ? <MyCrawls /> : null;
+      case 'drafts': return <MyContent />;
+      case 'marina': return <MarinaConsoleTab />;
+      case 'sea-seo': return isProUser ? <SeaSeoBridgeTab /> : null;
+      case 'indexation': return <IndexationMonitor />;
+      case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />;
+      case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
+      case 'bundle': return isAdmin ? <BundleOptionTab /> : null;
+      case 'admin': return hasAdminAccess ? (
+        <AdminDashboard
+          readOnly={isReadOnly}
+          canSeeDocs={canSeeDocs}
+          canSeeAlgos={canSeeAlgos}
+          canSeeFinances={canSeeFinances}
+          canSeeUsers={canSeeUsers}
+          canSeeIntelligence={canSeeIntelligence}
+          isAuditor={isAuditor}
+          onSimulatedDataChange={setSimulatedDataEnabled}
+          onShowGoogleOnboarding={() => setShowGoogleOnboarding(true)}
+        />
+      ) : null;
+      default: return <MyTracking />;
+    }
+  };
+
   return (
     <>
       <WelcomeBackModal />
@@ -223,201 +172,34 @@ function ProfileContent() {
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-2 max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-
-            <FreeTrialBanner />
-            <Tabs defaultValue={initialTab} className="space-y-2">
-              <TabsList className="w-full flex my-0 py-0">
-                {isProUser && !isMobile && (
-                  <TabsTrigger value="wallet" className="flex-1 gap-2">
-                    <Crown className="h-4 w-4 text-yellow-500" />
-                    <span className="hidden sm:inline font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
-                      {planType === 'agency_premium' ? 'Pro Agency +' : 'Pro Agency'}
-                    </span>
-                  </TabsTrigger>
-                )}
-                <TabsTrigger value="tracking" className="flex-1 gap-2">
-                  <Radar className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">{t.tracking}</span>
-                </TabsTrigger>
-                {!isMobile && (
-                  <TabsTrigger value="action-plans" className="flex-1 gap-2">
-                    <CheckSquare className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t.actionPlans}</span>
-                  </TabsTrigger>
-                )}
-                {!isMobile && (
-                  <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
-                    <span className="hidden sm:inline">{t.correctiveCodes}</span>
-                  </TabsTrigger>
-                )}
-                {!isMobile && (
-                  <TabsTrigger
-                    value="crawls"
-                    className="flex-1 gap-2"
-                    disabled={!isProUser}
-                  >
-                    <Bug className="h-4 w-4 text-muted-foreground" />
-                    <span className="hidden sm:inline">Crawls</span>
-                    {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
-                  </TabsTrigger>
-                )}
-                {!isMobile && (
-                  <TabsTrigger value="drafts" className="flex-1 gap-2">
-                    <FileEdit className="h-4 w-4" />
-                    <span className="hidden sm:inline"><span className="text-muted-foreground text-[10px] font-normal mr-1">beta</span>Content</span>
-                  </TabsTrigger>
-                )}
-                {isProUser && !isMobile && (
-                  <TabsTrigger
-                    value="reports-tab"
-                    className="flex-1 gap-2"
-                  >
-                    <FileBox className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t.myReports}</span>
-                  </TabsTrigger>
-                )}
-                {isProUser && !isMobile && (
-                  <TabsTrigger value="sea-seo" className="flex-1 gap-2">
-                    <Target className="h-4 w-4" />
-                    <span className="hidden sm:inline">SEA→SEO</span>
-                  </TabsTrigger>
-                )}
-                {!isMobile && (
-                  <TabsTrigger value="indexation" className="flex-1 gap-2">
-                    <Globe className="h-4 w-4" />
-                    <span className="hidden sm:inline">Indexation</span>
-                  </TabsTrigger>
-                )}
-                <TabsTrigger
-                  value="gmb"
-                  className={`flex-1 gap-2 ${!isProUser ? 'opacity-50' : ''}`}
-                >
-                  <Store className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs sm:text-sm">GMB</span>
-                  {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
-                </TabsTrigger>
-                {!isMobile && (
-                  <TabsTrigger value="marina" className="flex-1 gap-2">
-                    <Anchor className="h-4 w-4" />
-                    <span className="hidden sm:inline">Marina</span>
-                  </TabsTrigger>
-                )}
-                {isAdmin && !isMobile && (
-                  <TabsTrigger
-                    value="bundle"
-                    className="flex-1 gap-2"
-                  >
-                    <Blocks className="h-4 w-4 text-orange-500" />
-                    <span className="hidden sm:inline">Bundle</span>
-                  </TabsTrigger>
-                )}
-                {!isProUser && !isMobile && (
-                  <TabsTrigger value="reports" className="flex-1 gap-2">
-                    <FileText className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t.myReports}</span>
-                  </TabsTrigger>
-                )}
-                {!isProUser && !isMobile && (
-                  <TabsTrigger value="wallet" className="flex-1 gap-2">
-                    <Wallet className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t.wallet}</span>
-                  </TabsTrigger>
-                )}
-                {!isMobile && <div className="ml-auto" />}
-                {!isMobile && (
-                  <TabsTrigger value="settings" className="gap-2">
-                    <Settings className="h-4 w-4" />
-                  </TabsTrigger>
-                )}
-                {hasAdminAccess && (
-                  <TabsTrigger value="admin" className="gap-2 text-primary">
-                    <Shield className="h-4 w-4" />
-                    <span className="text-xs sm:text-sm">{t.creator}</span>
-                  </TabsTrigger>
-                )}
-              </TabsList>
-
-              <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
-                <TabsContent value="wallet">
-                  <MyWallet />
-                </TabsContent>
-
-                <TabsContent value="tracking">
-                  <MyTracking />
-                </TabsContent>
-
-                <TabsContent value="settings">
-                  <ProfileSettings />
-                </TabsContent>
-
-                <TabsContent value="reports">
-                  <MyReports />
-                </TabsContent>
-
-                <TabsContent value="action-plans">
-                  <MyActionPlans />
-                </TabsContent>
-
-                <TabsContent value="corrective-codes">
-                  <MyCorrectiveCodes />
-                </TabsContent>
-
-                {isProUser && (
-                  <TabsContent value="crawls">
-                    <MyCrawls />
-                  </TabsContent>
-                )}
-
-                <TabsContent value="drafts">
-                  <MyContent />
-                </TabsContent>
-
-                <TabsContent value="marina">
-                  <MarinaConsoleTab />
-                </TabsContent>
-
-                {isProUser && (
-                  <TabsContent value="sea-seo">
-                    <SeaSeoBridgeTab />
-                  </TabsContent>
-                )}
-
-                <TabsContent value="indexation">
-                  <IndexationMonitor />
-                </TabsContent>
-
-                <TabsContent value="gmb">
-                  <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />
-                </TabsContent>
-
-                {isProUser && (
-                  <TabsContent value="reports-tab">
-                    <MyReportsTab />
-                  </TabsContent>
-                )}
-
-                {isAdmin && (
-                  <TabsContent value="bundle">
-                    <BundleOptionTab />
-                  </TabsContent>
-                )}
-
-                {hasAdminAccess && (
-                  <TabsContent value="admin">
-                    <AdminDashboard readOnly={isReadOnly} canSeeDocs={canSeeDocs} canSeeAlgos={canSeeAlgos} canSeeFinances={canSeeFinances} canSeeUsers={canSeeUsers} canSeeIntelligence={canSeeIntelligence} isAuditor={isAuditor} onSimulatedDataChange={setSimulatedDataEnabled} onShowGoogleOnboarding={() => setShowGoogleOnboarding(true)} />
-                  </TabsContent>
-                )}
+        <FreeTrialBanner />
+        <div className={cn('flex-1 flex', isMobile ? 'flex-col' : 'flex-row')}>
+          <ConsoleSidebar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            onSiteSelect={(siteId, domain) => {
+              setSelectedSiteId(siteId);
+              setSelectedDomain(domain);
+            }}
+            onPageSelect={(slug) => setSelectedSlug(slug)}
+          />
+          <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-2 max-w-7xl">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Suspense fallback={
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              }>
+                {renderContent()}
               </Suspense>
-            </Tabs>
-
-          </motion.div>
-        </main>
+            </motion.div>
+          </main>
+        </div>
         <Suspense fallback={null}>
           <Footer />
         </Suspense>
@@ -428,10 +210,15 @@ function ProfileContent() {
             currentBalance={balance}
           />
         )}
-       </div>
+      </div>
       <GoogleServicesOnboardingModal open={showGoogleOnboarding} onOpenChange={setShowGoogleOnboarding} />
     </>
   );
+}
+
+// cn helper used inline
+function cn(...args: (string | boolean | undefined | null)[]) {
+  return args.filter(Boolean).join(' ');
 }
 
 class ProfileErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
