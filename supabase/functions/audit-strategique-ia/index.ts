@@ -617,6 +617,56 @@ Réponds en JSON STRICT:
         const { data: { user: rawUser } } = await sb2.auth.getUser();
         if (rawUser) saveRawAuditData({ userId: rawUser.id, url, domain, auditType: 'strategic', rawPayload: result.data, sourceFunctions: ['audit-strategique-ia'] }).catch(() => {});
       } catch {}
+
+      // ═══ WORKBENCH: Chunkability & Fan-Out findings ═══
+      try {
+        const sb3 = getUserClient(authHeader);
+        const { data: { user: wbUser } } = await sb3.auth.getUser();
+        if (wbUser && isContentMode) {
+          const { data: siteRow } = await getServiceClient().from('tracked_sites').select('id').eq('user_id', wbUser.id).ilike('domain', `%${domain.replace(/^www\./, '')}%`).limit(1).maybeSingle();
+          const trackedId = siteRow?.id || null;
+          const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+          const wbItems: any[] = [];
+
+          // Chunkability finding
+          if (parsedAnalysis.chunkability_score && parsedAnalysis.chunkability_score.score < 50) {
+            const cs = parsedAnalysis.chunkability_score;
+            wbItems.push({
+              tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
+              title: `Chunkability faible (${cs.score}/100) — contenu mal découpé pour les IA`,
+              description: cs.explanation,
+              finding_category: 'structure_rag', source_type: 'audit' as const,
+              source_function: 'audit-strategique-ia', source_record_id: `chunk_${cleanDomain}_${url.replace(/[^a-z0-9]/gi, '_').slice(0, 60)}`,
+              severity: cs.score < 30 ? 'danger' : 'warning', status: 'pending' as const,
+              target_url: url,
+              payload: { auto_generated: true, chunkability_score: cs.score, paragraphs: cs.paragraphs, avg_length: cs.avg_paragraph_length, has_toc: cs.has_toc, has_sections: cs.has_clear_sections },
+            });
+          }
+
+          // Fan-out missing keywords → one finding per keyword
+          if (parsedAnalysis.fan_out_score?.recommendations?.length > 0) {
+            for (const rec of parsedAnalysis.fan_out_score.recommendations.slice(0, 5)) {
+              const kwSlug = rec.keyword.replace(/[^a-z0-9]/gi, '_').slice(0, 40);
+              wbItems.push({
+                tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
+                title: `Fan-out manquant : "${rec.keyword}" (${rec.volume.toLocaleString()} vol/mois)`,
+                description: `Cette requête à fort volume n'est pas couverte dans le contenu de la page. Ajoutez une section H2 dédiée pour capter ce sous-angle RAG.`,
+                finding_category: 'content_gap_fanout', source_type: 'audit' as const,
+                source_function: 'audit-strategique-ia', source_record_id: `fanout_${kwSlug}_${cleanDomain}`,
+                severity: rec.volume >= 1000 ? 'danger' : 'warning', status: 'pending' as const,
+                target_url: url,
+                payload: { auto_generated: true, keyword: rec.keyword, volume: rec.volume, fan_out_score: parsedAnalysis.fan_out_score.score },
+              });
+            }
+          }
+
+          if (wbItems.length > 0) {
+            const { error: wbErr } = await getServiceClient().from('architect_workbench').upsert(wbItems, { onConflict: 'source_type,source_record_id', ignoreDuplicates: true });
+            if (wbErr) console.warn('⚠️ Workbench upsert error:', wbErr.message);
+            else console.log(`✅ Workbench: ${wbItems.length} findings (chunkability + fan-out)`);
+          }
+        }
+      } catch (wbErr) { console.warn('⚠️ Workbench persistence failed:', wbErr); }
     }
     trackAnalyzedUrl(url).catch(() => {});
     persistIdentityData(domain, parsedAnalysis, jargonDistance).catch(() => {});
