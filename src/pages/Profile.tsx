@@ -139,7 +139,7 @@ function ProfileContent() {
       case 'action-plans': return <MyActionPlans externalDomain={selectedDomain} />;
       case 'corrective-codes': return <MyCorrectiveCodes externalDomain={selectedDomain} />;
       case 'crawls': return isProUser ? <MyCrawls externalDomain={selectedDomain} /> : null;
-      case 'drafts': return <MyContent />;
+      case 'drafts': return <MyContent externalDomain={selectedDomain} />;
       case 'marina': return <MarinaConsoleTab />;
       case 'sea-seo': return isProUser ? <SeaSeoBridgeTab /> : null;
       case 'indexation': return <IndexationMonitor />;
