@@ -105,9 +105,13 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, 'Données dupliquées & isolées', 'Duplicated & isolated data', 'Datos duplicados y aislados'),
     t3(language, 'SLA garanti', 'Guaranteed SLA', 'SLA garantizado'),
     t3(language, 'Onboarding personnalisé', 'Personalized onboarding', 'Onboarding personalizado'),
+    t3(language, 'Rôle admin / auditeur / éditeur', 'Admin / auditor / editor roles', 'Rol admin / auditor / editor'),
+    t3(language, 'Fonctionnalités sur mesure', 'Custom features', 'Funcionalidades a medida'),
+    t3(language, 'Accompagnement et formation', 'Support & training', 'Acompañamiento y formación'),
+    t3(language, 'Paramètres DSI', 'IT department settings', 'Parámetros DSI'),
   ];
 
-  const enterpriseIcons = [Infinity, Users, Server, Database, Shield, Headphones];
+  const enterpriseIcons = [Infinity, Users, Server, Database, Shield, Headphones, Users, Shield, Headphones, Server];
 
   const cards = (
     <>
