@@ -32,126 +32,118 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface ActionPlanTask {
+interface WorkbenchItem {
   id: string;
   title: string;
-  priority: 'critical' | 'important' | 'optional';
-  category: string;
-  isCompleted: boolean;
-}
-
-interface ActionPlan {
-  id: string;
-  url: string;
-  title: string;
-  audit_type: 'technical' | 'strategic';
-  tasks: ActionPlanTask[];
+  description: string | null;
+  severity: string;
+  finding_category: string;
+  source_type: string;
+  source_function: string | null;
+  target_url: string | null;
+  domain: string;
+  status: string;
+  manual_priority: number | null;
+  spiral_score: number | null;
   created_at: string;
   updated_at: string;
-  is_archived: boolean;
+}
+
+// Map severity to legacy priority for UI
+function severityToPriority(severity: string): 'critical' | 'important' | 'optional' {
+  if (severity === 'critical') return 'critical';
+  if (severity === 'high') return 'important';
+  return 'optional';
 }
 
 const translations = {
   fr: {
     title: 'Plans d\'Action',
-    description: 'Suivez la progression de vos audits',
-    noPlans: 'Aucun plan d\'action',
-    noPlansDesc: 'Sauvegardez un plan d\'action depuis un audit pour le retrouver ici',
+    description: 'Suivez la progression de vos tâches prescrites',
+    noPlans: 'Aucune tâche prescrite',
+    noPlansDesc: 'Lancez un audit pour alimenter votre plan d\'action',
     delete: 'Supprimer',
-    technical: 'Audit Technique SEO',
-    strategic: 'Audit Stratégique IA',
     tasksRemaining: 'tâches restantes',
     completed: 'Terminé !',
     critical: 'Critique',
     important: 'Important',
     optional: 'Optionnel',
     viewSite: 'Voir le site',
-    expand: 'Afficher les tâches',
-    collapse: 'Masquer les tâches',
     saved: 'Progression sauvegardée',
-    deleted: 'Plan d\'action supprimé',
+    deleted: 'Tâche supprimée',
     architect: 'Code Architect',
     contentArchitect: 'Content Architect',
     archive: 'Archiver',
     unarchive: 'Restaurer',
-    archived: 'Plan archivé',
-    unarchived: 'Plan restauré',
+    archived: 'Tâche archivée',
+    unarchived: 'Tâche restaurée',
     archives: 'Archives',
-    archivesCount: 'plan(s) archivé(s)',
-    noArchives: 'Aucun plan archivé',
+    archivesCount: 'tâche(s) archivée(s)',
+    noArchives: 'Aucune tâche archivée',
     editorialCalendar: 'Calendrier éditorial',
     allSites: 'Tous les sites',
   },
   en: {
     title: 'Action Plans',
-    description: 'Track your audit progress',
-    noPlans: 'No action plans',
-    noPlansDesc: 'Save an action plan from an audit to find it here',
+    description: 'Track your prescribed tasks',
+    noPlans: 'No prescribed tasks',
+    noPlansDesc: 'Run an audit to populate your action plan',
     delete: 'Delete',
-    technical: 'Technical SEO Audit',
-    strategic: 'Strategic AI Audit',
     tasksRemaining: 'tasks remaining',
     completed: 'Completed!',
     critical: 'Critical',
     important: 'Important',
     optional: 'Optional',
     viewSite: 'View site',
-    expand: 'Show tasks',
-    collapse: 'Hide tasks',
     saved: 'Progress saved',
-    deleted: 'Action plan deleted',
+    deleted: 'Task deleted',
     architect: 'Code Architect',
     contentArchitect: 'Content Architect',
     archive: 'Archive',
     unarchive: 'Restore',
-    archived: 'Plan archived',
-    unarchived: 'Plan restored',
+    archived: 'Task archived',
+    unarchived: 'Task restored',
     archives: 'Archives',
-    archivesCount: 'archived plan(s)',
-    noArchives: 'No archived plans',
+    archivesCount: 'archived task(s)',
+    noArchives: 'No archived tasks',
     editorialCalendar: 'Editorial Calendar',
     allSites: 'All sites',
   },
   es: {
     title: 'Planes de Acción',
-    description: 'Sigue el progreso de tus auditorías',
-    noPlans: 'Sin planes de acción',
-    noPlansDesc: 'Guarda un plan de acción desde una auditoría para encontrarlo aquí',
+    description: 'Siga sus tareas prescritas',
+    noPlans: 'Sin tareas prescritas',
+    noPlansDesc: 'Lance una auditoría para alimentar su plan de acción',
     delete: 'Eliminar',
-    technical: 'Auditoría Técnica SEO',
-    strategic: 'Auditoría Estratégica IA',
     tasksRemaining: 'tareas restantes',
     completed: '¡Completado!',
     critical: 'Crítico',
     important: 'Importante',
     optional: 'Opcional',
     viewSite: 'Ver sitio',
-    expand: 'Mostrar tareas',
-    collapse: 'Ocultar tareas',
     saved: 'Progreso guardado',
-    deleted: 'Plan de acción eliminado',
+    deleted: 'Tarea eliminada',
     architect: 'Code Architect',
     contentArchitect: 'Content Architect',
     archive: 'Archivar',
     unarchive: 'Restaurar',
-    archived: 'Plan archivado',
-    unarchived: 'Plan restaurado',
+    archived: 'Tarea archivada',
+    unarchived: 'Tarea restaurada',
     archives: 'Archivos',
-    archivesCount: 'plan(es) archivado(s)',
-    noArchives: 'Sin planes archivados',
+    archivesCount: 'tarea(s) archivada(s)',
+    noArchives: 'Sin tareas archivadas',
     editorialCalendar: 'Calendario editorial',
     allSites: 'Todos los sitios',
   },
 };
 
-// Content-related categories that can be opened in Content Architect
 const CONTENT_CATEGORIES = new Set([
   'contenu', 'content_gap', 'title_optimization', 'meta_description',
   'heading_structure', 'internal_link', 'content', 'sémantique',
 ]);
 
-function isContentTask(task: ActionPlanTask): boolean {
-  const cat = (task.category || '').toLowerCase();
+function isContentTask(item: WorkbenchItem): boolean {
+  const cat = (item.finding_category || '').toLowerCase();
   return CONTENT_CATEGORIES.has(cat) || cat.includes('contenu') || cat.includes('content');
 }
 
@@ -162,10 +154,9 @@ function extractKeywordFromTitle(title: string): string {
 
 // Sortable task item component
 function SortableTaskItem({
-  task,
-  planId,
-  isArchived,
+  item,
   onToggle,
+  onDelete,
   onOpenArchitect,
   onOpenContentArchitect,
   getPriorityColor,
@@ -173,10 +164,9 @@ function SortableTaskItem({
   architectLabel,
   contentArchitectLabel,
 }: {
-  task: ActionPlanTask;
-  planId: string;
-  isArchived: boolean;
-  onToggle: (planId: string, taskId: string) => void;
+  item: WorkbenchItem;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
   onOpenArchitect: () => void;
   onOpenContentArchitect: () => void;
   getPriorityColor: (p: string) => string;
@@ -184,6 +174,8 @@ function SortableTaskItem({
   architectLabel: string;
   contentArchitectLabel: string;
 }) {
+  const isDone = item.status === 'done';
+  const priority = severityToPriority(item.severity);
   const {
     attributes,
     listeners,
@@ -191,7 +183,7 @@ function SortableTaskItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ id: item.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -200,7 +192,7 @@ function SortableTaskItem({
     opacity: isDragging ? 0.8 : undefined,
   };
 
-  const showContentArchitect = !task.isCompleted && !isArchived && isContentTask(task);
+  const showContentArchitect = !isDone && isContentTask(item);
 
   return (
     <div
@@ -208,8 +200,8 @@ function SortableTaskItem({
       style={style}
       className={cn(
         "group flex items-start gap-2 p-3 rounded-lg border-l-4 transition-all",
-        getPriorityColor(task.priority),
-        task.isCompleted && "opacity-50",
+        getPriorityColor(priority),
+        isDone && "opacity-50",
         isDragging && "shadow-lg ring-2 ring-primary/20"
       )}
     >
@@ -222,39 +214,43 @@ function SortableTaskItem({
         <GripVertical className="h-4 w-4" />
       </button>
       <Checkbox
-        id={`${planId}-${task.id}`}
-        checked={task.isCompleted}
-        onCheckedChange={() => onToggle(planId, task.id)}
+        id={`task-${item.id}`}
+        checked={isDone}
+        onCheckedChange={() => onToggle(item.id)}
         className="mt-0.5"
       />
       <div className="flex-1 min-w-0">
         <label
-          htmlFor={`${planId}-${task.id}`}
+          htmlFor={`task-${item.id}`}
           className={cn(
             "text-sm font-medium cursor-pointer",
-            task.isCompleted && "line-through text-muted-foreground"
+            isDone && "line-through text-muted-foreground"
           )}
         >
-          {task.title}
+          {item.title}
         </label>
+        {item.description && (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
+        )}
         <div className="flex items-center gap-2 mt-1">
           <span className={cn(
             "text-xs px-1.5 py-0.5 rounded",
-            task.priority === 'critical' && "bg-destructive/10 text-destructive",
-            task.priority === 'important' && "bg-warning/10 text-warning-foreground",
-            task.priority === 'optional' && "bg-muted text-muted-foreground"
+            priority === 'critical' && "bg-destructive/10 text-destructive",
+            priority === 'important' && "bg-warning/10 text-warning-foreground",
+            priority === 'optional' && "bg-muted text-muted-foreground"
           )}>
-            {getPriorityLabel(task.priority)}
+            {getPriorityLabel(priority)}
           </span>
-          {task.category && (
-            <span className="text-xs text-muted-foreground">
-              {task.category}
-            </span>
+          {item.finding_category && (
+            <span className="text-xs text-muted-foreground">{item.finding_category}</span>
+          )}
+          {item.source_function && (
+            <span className="text-[10px] text-muted-foreground/60">{item.source_function}</span>
           )}
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        {!task.isCompleted && !isArchived && (
+        {!isDone && (
           showContentArchitect ? (
             <Button
               variant="ghost"
@@ -278,6 +274,14 @@ function SortableTaskItem({
             </Button>
           )
         )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(item.id)}
+          className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
       </div>
     </div>
   );
@@ -290,484 +294,208 @@ export function MyActionPlans() {
   const { isAdmin } = useAdmin();
   const t = translations[language];
 
-  const [actionPlans, setActionPlans] = useState<ActionPlan[]>([]);
+  const [items, setItems] = useState<WorkbenchItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
-  const [archivesOpen, setArchivesOpen] = useState(false);
-  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
-  
-  // Code Architect modal state
+  const [showArchived, setShowArchived] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+
+  // Architect modal state
   const [isArchitectOpen, setIsArchitectOpen] = useState(false);
-  const [architectPlan, setArchitectPlan] = useState<ActionPlan | null>(null);
+  const [architectItem, setArchitectItem] = useState<WorkbenchItem | null>(null);
   const [architectAuditResult, setArchitectAuditResult] = useState<any>(null);
 
   // Content Architect modal state
   const [isContentArchitectOpen, setIsContentArchitectOpen] = useState(false);
-  const [contentArchitectPlan, setContentArchitectPlan] = useState<ActionPlan | null>(null);
+  const [contentArchitectItem, setContentArchitectItem] = useState<WorkbenchItem | null>(null);
   const [contentArchitectDraft, setContentArchitectDraft] = useState<Record<string, any> | null>(null);
   const [contentArchitectTrackedSiteId, setContentArchitectTrackedSiteId] = useState('');
 
-  useEffect(() => {
-    if (user) {
-      fetchActionPlans();
-    }
-  }, [user]);
-
-  const fetchActionPlans = async () => {
+  const fetchItems = useCallback(async () => {
     if (!user) return;
-
     setLoading(true);
     const { data, error } = await supabase
-      .from('action_plans')
-      .select('*')
+      .from('architect_workbench')
+      .select('id, title, description, severity, finding_category, source_type, source_function, target_url, domain, status, manual_priority, spiral_score, created_at, updated_at')
       .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
+      .order('spiral_score', { ascending: false })
+      .limit(500);
 
     if (error) {
-      console.error('Error fetching action plans:', error);
-    } else if (data) {
-      const parsedPlans: ActionPlan[] = data.map(plan => ({
-        ...plan,
-        audit_type: plan.audit_type as 'technical' | 'strategic',
-        tasks: (plan.tasks as unknown as ActionPlanTask[]) || [],
-        is_archived: (plan as any).is_archived ?? false,
-      }));
-      setActionPlans(parsedPlans);
+      console.error('Error fetching workbench items:', error);
+    } else {
+      setItems((data || []) as WorkbenchItem[]);
     }
     setLoading(false);
-  };
+  }, [user]);
 
-  const activePlans = useMemo(() => actionPlans.filter(p => !p.is_archived), [actionPlans]);
-  const archivedPlans = useMemo(() => actionPlans.filter(p => p.is_archived), [actionPlans]);
+  useEffect(() => {
+    if (user) fetchItems();
+  }, [user, fetchItems]);
 
-  // Unique tracked URLs for sidebar — group by full URL path, not just hostname
-  const uniqueUrls = useMemo(() => {
-    const urlMap = new Map<string, { originalUrl: string; hostname: string; path: string; totalTasks: number; criticalCount: number; importantCount: number }>();
-    activePlans.forEach(p => {
-      try {
-        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
-        const hostname = parsed.hostname.replace('www.', '');
-        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
-        const key = hostname + path;
-        const existing = urlMap.get(key);
-        const tasks = p.tasks.filter(t => !t.isCompleted);
-        const critical = tasks.filter(t => t.priority === 'critical').length;
-        const important = tasks.filter(t => t.priority === 'important').length;
-        if (existing) {
-          existing.totalTasks += tasks.length;
-          existing.criticalCount += critical;
-          existing.importantCount += important;
-        } else {
-          urlMap.set(key, { originalUrl: p.url, hostname, path, totalTasks: tasks.length, criticalCount: critical, importantCount: important });
-        }
-      } catch {
-        urlMap.set(p.url, { originalUrl: p.url, hostname: p.url, path: '/', totalTasks: p.tasks.filter(t => !t.isCompleted).length, criticalCount: 0, importantCount: 0 });
-      }
+  const activeItems = useMemo(() => items.filter(i => i.status !== 'done'), [items]);
+  const archivedItems = useMemo(() => items.filter(i => i.status === 'done'), [items]);
+
+  // Unique domains for sidebar
+  const domainStats = useMemo(() => {
+    const stats = new Map<string, { total: number; critical: number; important: number }>();
+    activeItems.forEach(item => {
+      const existing = stats.get(item.domain) || { total: 0, critical: 0, important: 0 };
+      existing.total++;
+      if (item.severity === 'critical') existing.critical++;
+      if (item.severity === 'high') existing.important++;
+      stats.set(item.domain, existing);
     });
-    // Sort: critical count desc, then total tasks desc
-    return Array.from(urlMap.entries()).sort((a, b) => b[1].criticalCount - a[1].criticalCount || b[1].totalTasks - a[1].totalTasks);
-  }, [activePlans]);
+    return Array.from(stats.entries()).sort((a, b) => b[1].critical - a[1].critical || b[1].total - a[1].total);
+  }, [activeItems]);
 
-  // Unique hostnames for sidebar grouping
-  const uniqueHostnames = useMemo(() => {
-    const hosts = new Map<string, number>();
-    uniqueUrls.forEach(([, info]) => {
-      hosts.set(info.hostname, (hosts.get(info.hostname) || 0) + info.totalTasks);
+  // Filter by domain
+  const filteredActive = useMemo(() => {
+    if (!selectedDomain) return activeItems;
+    return activeItems.filter(i => i.domain === selectedDomain);
+  }, [activeItems, selectedDomain]);
+
+  // Sort: manual_priority first if set, then spiral_score desc
+  const sortedActive = useMemo(() => {
+    return [...filteredActive].sort((a, b) => {
+      if (a.manual_priority != null && b.manual_priority != null) return a.manual_priority - b.manual_priority;
+      if (a.manual_priority != null) return -1;
+      if (b.manual_priority != null) return 1;
+      const severityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+      const sa = severityOrder[a.severity] ?? 2;
+      const sb = severityOrder[b.severity] ?? 2;
+      if (sa !== sb) return sa - sb;
+      return (b.spiral_score || 0) - (a.spiral_score || 0);
     });
-    return Array.from(hosts.entries());
-  }, [uniqueUrls]);
+  }, [filteredActive]);
 
-  // Filter plans by selected URL
-  const filteredActivePlans = useMemo(() => {
-    if (!selectedUrl) return activePlans;
-    return activePlans.filter(p => {
-      try {
-        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
-        const hostname = parsed.hostname.replace('www.', '');
-        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
-        return (hostname + path) === selectedUrl || hostname === selectedUrl;
-      } catch { return p.url === selectedUrl; }
-    });
-  }, [activePlans, selectedUrl]);
+  const filteredArchived = useMemo(() => {
+    if (!selectedDomain) return archivedItems;
+    return archivedItems.filter(i => i.domain === selectedDomain);
+  }, [archivedItems, selectedDomain]);
 
-  // Sort filtered plans: critical tasks first
-  const sortedFilteredActivePlans = useMemo(() => {
-    const priorityOrder = { critical: 0, important: 1, optional: 2 };
-    return [...filteredActivePlans].sort((a, b) => {
-      const aMax = Math.min(...a.tasks.filter(t => !t.isCompleted).map(t => priorityOrder[t.priority] ?? 2));
-      const bMax = Math.min(...b.tasks.filter(t => !t.isCompleted).map(t => priorityOrder[t.priority] ?? 2));
-      return aMax - bMax;
-    });
-  }, [filteredActivePlans]);
+  const totalActive = filteredActive.length;
+  const totalAll = filteredActive.length + filteredArchived.length;
+  const progress = totalAll > 0 ? Math.round((filteredArchived.length / totalAll) * 100) : 0;
 
-  const filteredArchivedPlans = useMemo(() => {
-    if (!selectedUrl) return archivedPlans;
-    return archivedPlans.filter(p => {
-      try {
-        const parsed = new URL(p.url.startsWith('http') ? p.url : `https://${p.url}`);
-        const hostname = parsed.hostname.replace('www.', '');
-        const path = parsed.pathname === '/' ? '/' : parsed.pathname;
-        return (hostname + path) === selectedUrl || hostname === selectedUrl;
-      } catch { return p.url === selectedUrl; }
-    });
-  }, [archivedPlans, selectedUrl]);
+  const toggleTask = async (id: string) => {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    const newStatus = item.status === 'done' ? 'pending' : 'done';
 
-  const toggleTask = async (planId: string, taskId: string) => {
-    const plan = actionPlans.find(p => p.id === planId);
-    if (!plan) return;
-
-    const updatedTasks = plan.tasks.map(task =>
-      task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
-    );
-
-    const allCompleted = updatedTasks.every(t => t.isCompleted);
-
-    setActionPlans(prev =>
-      prev.map(p => (p.id === planId ? { ...p, tasks: updatedTasks, is_archived: allCompleted ? true : p.is_archived } : p))
-    );
-
-    // Update tasks + auto-archive if 100%
-    const updatePayload: Record<string, unknown> = {
-      tasks: JSON.parse(JSON.stringify(updatedTasks)),
-    };
-    if (allCompleted) {
-      updatePayload.is_archived = true;
-    }
+    setItems(prev => prev.map(i => i.id === id ? { ...i, status: newStatus } : i));
 
     const { error } = await supabase
-      .from('action_plans')
-      .update(updatePayload)
-      .eq('id', planId);
+      .from('architect_workbench')
+      .update({ status: newStatus } as any)
+      .eq('id', id);
 
     if (error) {
-      console.error('Error updating task:', error);
-      fetchActionPlans();
-    } else if (allCompleted) {
-      toast.success(t.archived);
+      console.error('Error toggling task:', error);
+      fetchItems();
     }
   };
 
-  const toggleArchive = async (planId: string, archive: boolean) => {
-    setActionPlans(prev =>
-      prev.map(p => (p.id === planId ? { ...p, is_archived: archive } : p))
-    );
+  const deleteTask = async (id: string) => {
+    if (!window.confirm(language === 'fr' ? 'Supprimer cette tâche ?' : 'Delete this task?')) return;
 
     const { error } = await supabase
-      .from('action_plans')
-      .update({ is_archived: archive } as any)
-      .eq('id', planId);
-
-    if (error) {
-      console.error('Error archiving plan:', error);
-      fetchActionPlans();
-    } else {
-      toast.success(archive ? t.archived : t.unarchived);
-    }
-  };
-
-  const deletePlan = async (planId: string) => {
-    const plan = actionPlans.find(p => p.id === planId);
-    const domain = plan?.url ? (() => { try { return new URL(plan.url.startsWith('http') ? plan.url : `https://${plan.url}`).hostname.replace('www.', ''); } catch { return plan.url; } })() : '';
-    
-    const confirmMsg = language === 'fr'
-      ? `Supprimer ce plan d'action ? Ce plan alimente aussi Code Architect pour générer du code adapté au site "${domain}".`
-      : language === 'es'
-      ? `¿Eliminar este plan de acción? Este plan también alimenta Code Architect para generar código adaptado al sitio "${domain}".`
-      : `Delete this action plan? This plan also feeds the Generative Architect to generate code tailored to site "${domain}".`;
-
-    if (!window.confirm(confirmMsg)) return;
-
-    const { error } = await supabase
-      .from('action_plans')
+      .from('architect_workbench')
       .delete()
-      .eq('id', planId);
+      .eq('id', id);
 
     if (error) {
-      toast.error('Erreur lors de la suppression');
+      toast.error('Erreur');
     } else {
       toast.success(t.deleted);
-      setActionPlans(prev => prev.filter(p => p.id !== planId));
+      setItems(prev => prev.filter(i => i.id !== id));
     }
   };
-
-  const toggleExpanded = (planId: string) => {
-    setExpandedPlans(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(planId)) {
-        newSet.delete(planId);
-      } else {
-        newSet.add(planId);
-      }
-      return newSet;
-    });
-  };
-
-  const getProgress = (tasks: ActionPlanTask[]) => {
-    if (tasks.length === 0) return 0;
-    const completed = tasks.filter(t => t.isCompleted).length;
-    return Math.round((completed / tasks.length) * 100);
-  };
-
-  const getRemainingCount = (tasks: ActionPlanTask[]) => {
-    return tasks.filter(t => !t.isCompleted).length;
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical':
-        return 'border-l-destructive bg-destructive/5';
-      case 'important':
-        return 'border-l-warning bg-warning/5';
-      default:
-        return 'border-l-muted-foreground bg-muted/30';
-    }
-  };
-
-  const getPriorityLabel = (priority: string) => {
-    switch (priority) {
-      case 'critical':
-        return t.critical;
-      case 'important':
-        return t.important;
-      default:
-        return t.optional;
-    }
-  };
-
-  // No longer auto-sort — user controls order via drag & drop
-  const getSortedTasks = (tasks: ActionPlanTask[]) => tasks;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent, planId: string) => {
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const plan = actionPlans.find(p => p.id === planId);
-    if (!plan) return;
-
-    const oldIndex = plan.tasks.findIndex(t => t.id === active.id);
-    const newIndex = plan.tasks.findIndex(t => t.id === over.id);
+    const oldIndex = sortedActive.findIndex(i => i.id === active.id);
+    const newIndex = sortedActive.findIndex(i => i.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(plan.tasks, oldIndex, newIndex);
+    const reordered = arrayMove(sortedActive, oldIndex, newIndex);
 
-    // Optimistic update
-    setActionPlans(prev =>
-      prev.map(p => (p.id === planId ? { ...p, tasks: reordered } : p))
-    );
+    // Update manual_priority for all reordered items
+    const updates = reordered.map((item, idx) => ({ id: item.id, manual_priority: idx + 1 }));
 
-    // Persist
-    const { error } = await supabase
-      .from('action_plans')
-      .update({ tasks: JSON.parse(JSON.stringify(reordered)) })
-      .eq('id', planId);
+    setItems(prev => {
+      const map = new Map(updates.map(u => [u.id, u.manual_priority]));
+      return prev.map(i => map.has(i.id) ? { ...i, manual_priority: map.get(i.id)! } : i);
+    });
 
-    if (error) {
-      console.error('Error reordering tasks:', error);
-      fetchActionPlans();
+    // Persist in batches
+    for (const u of updates) {
+      await supabase
+        .from('architect_workbench')
+        .update({ manual_priority: u.manual_priority } as any)
+        .eq('id', u.id);
     }
-  }, [actionPlans, fetchActionPlans]);
+  }, [sortedActive]);
 
-  const handleOpenArchitect = async (plan: ActionPlan, task: ActionPlanTask) => {
-    setArchitectPlan(plan);
-    
-    const domain = (() => { try { return new URL(plan.url.startsWith('http') ? plan.url : `https://${plan.url}`).hostname.replace('www.', ''); } catch { return plan.url; } })();
-    
+  const handleOpenArchitect = async (item: WorkbenchItem) => {
+    setArchitectItem(item);
+
     const { data: auditData } = await supabase
       .from('audit_raw_data')
       .select('raw_payload, audit_type')
-      .eq('domain', domain)
+      .eq('domain', item.domain)
       .order('created_at', { ascending: false })
       .limit(1);
 
-    if (auditData && auditData.length > 0) {
-      setArchitectAuditResult(auditData[0].raw_payload as any);
-    } else {
-      setArchitectAuditResult(null);
-    }
-
+    setArchitectAuditResult(auditData?.[0]?.raw_payload || null);
     setIsArchitectOpen(true);
   };
 
-  const handleOpenContentArchitect = async (plan: ActionPlan, task: ActionPlanTask) => {
-    const domain = (() => { try { return new URL(plan.url.startsWith('http') ? plan.url : `https://${plan.url}`).hostname.replace('www.', ''); } catch { return plan.url; } })();
-
-    // Look up trackedSiteId
+  const handleOpenContentArchitect = async (item: WorkbenchItem) => {
     const { data: siteData } = await supabase
       .from('tracked_sites')
       .select('id')
-      .eq('domain', domain)
+      .eq('domain', item.domain)
       .eq('user_id', user!.id)
       .limit(1)
       .maybeSingle();
 
     setContentArchitectTrackedSiteId(siteData?.id || '');
 
-    // Build draftData from task
-    const keyword = extractKeywordFromTitle(task.title);
-    const isExisting = ['title_optimization', 'meta_description', 'heading_structure'].some(t => task.category?.toLowerCase().includes(t));
+    const keyword = extractKeywordFromTitle(item.title);
     const draft: Record<string, any> = {
-      url: plan.url.startsWith('http') ? plan.url : `https://${plan.url}`,
+      url: item.target_url || `https://${item.domain}`,
       keyword: keyword || '',
-      custom_prompt: `${task.title}\n${(task as any).description || ''}`.trim(),
-      page_type: isExisting ? 'article' : 'article',
-      priority_actions: [task.title],
+      custom_prompt: `${item.title}\n${item.description || ''}`.trim(),
+      page_type: 'article',
+      priority_actions: [item.title],
     };
 
     setContentArchitectDraft(draft);
-    setContentArchitectPlan(plan);
+    setContentArchitectItem(item);
     setIsContentArchitectOpen(true);
   };
 
-  const renderPlanCard = (plan: ActionPlan, isArchived = false) => {
-    const progress = getProgress(plan.tasks);
-    const remaining = getRemainingCount(plan.tasks);
-    const isExpanded = expandedPlans.has(plan.id);
-    const isComplete = remaining === 0;
-    const sortedTasks = getSortedTasks(plan.tasks);
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return 'border-l-destructive bg-destructive/5';
+      case 'important': return 'border-l-warning bg-warning/5';
+      default: return 'border-l-muted-foreground bg-muted/30';
+    }
+  };
 
-    return (
-      <motion.div
-        key={plan.id}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        className={cn("border rounded-lg overflow-hidden", isArchived && "opacity-70")}
-      >
-        {/* Header */}
-        <div className="p-4 bg-card">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className={cn(
-                  "text-xs font-medium px-2 py-0.5 rounded",
-                  plan.audit_type === 'technical' 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-muted text-muted-foreground"
-                )}>
-                  {plan.audit_type === 'technical' ? t.technical : t.strategic}
-                </span>
-              </div>
-              <h3 className="font-semibold truncate">{plan.title}</h3>
-              <a 
-                href={plan.url.startsWith('http') ? plan.url : `https://${plan.url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 mt-1"
-              >
-                {plan.url}
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-            <div className="flex items-center gap-1">
-              {/* Archive / Unarchive button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleArchive(plan.id, !isArchived)}
-                className="text-muted-foreground hover:text-foreground"
-                title={isArchived ? t.unarchive : t.archive}
-              >
-                {isArchived ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => deletePlan(plan.id)}
-                className="text-muted-foreground hover:text-destructive"
-                aria-label="Supprimer le plan d'action"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Progress */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className={cn(
-                "font-medium",
-                isComplete ? "text-success" : "text-muted-foreground"
-              )}>
-                {isComplete ? (
-                  <span className="flex items-center gap-1">
-                    <Check className="h-4 w-4" />
-                    {t.completed}
-                  </span>
-                ) : (
-                  `${remaining} ${t.tasksRemaining}`
-                )}
-              </span>
-              <span className="text-muted-foreground">{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-
-          {/* Expand/Collapse */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => toggleExpanded(plan.id)}
-            className="w-full mt-3 text-muted-foreground"
-          >
-            {isExpanded ? (
-              <>
-                <ChevronUp className="h-4 w-4 mr-2" />
-                {t.collapse}
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4 mr-2" />
-                {t.expand}
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* Tasks List */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="border-t"
-            >
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={(event) => handleDragEnd(event, plan.id)}
-              >
-                <SortableContext items={sortedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                  <div className="p-2 space-y-1 max-h-80 overflow-y-auto">
-                    {sortedTasks.map((task) => (
-                      <SortableTaskItem
-                        key={task.id}
-                        task={task}
-                        planId={plan.id}
-                        isArchived={isArchived}
-                        onToggle={toggleTask}
-                        onOpenArchitect={() => handleOpenArchitect(plan, task)}
-                        onOpenContentArchitect={() => handleOpenContentArchitect(plan, task)}
-                        getPriorityColor={getPriorityColor}
-                        getPriorityLabel={getPriorityLabel}
-                        architectLabel={t.architect}
-                        contentArchitectLabel={t.contentArchitect}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    );
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'critical': return t.critical;
+      case 'important': return t.important;
+      default: return t.optional;
+    }
   };
 
   return (
@@ -778,7 +506,7 @@ export function MyActionPlans() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : activePlans.length === 0 && archivedPlans.length === 0 ? (
+          ) : items.length === 0 ? (
             <div className="text-center py-12">
               <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
               <p className="font-medium">{t.noPlans}</p>
@@ -786,79 +514,51 @@ export function MyActionPlans() {
             </div>
           ) : (
             <div className="flex gap-4">
-              {/* Left sidebar: tracked URLs grouped by hostname */}
-              {uniqueHostnames.length >= 1 && (
+              {/* Left sidebar: domains */}
+              {domainStats.length >= 1 && (
                 <div className="w-52 shrink-0 border-r pr-3 max-h-[70vh] overflow-y-auto">
                   <Button
-                    variant={selectedUrl === null ? 'secondary' : 'ghost'}
+                    variant={selectedDomain === null ? 'secondary' : 'ghost'}
                     size="sm"
                     className="w-full justify-start text-xs mb-2"
-                    onClick={() => setSelectedUrl(null)}
+                    onClick={() => setSelectedDomain(null)}
                   >
                     <Globe className="h-3.5 w-3.5 mr-2 shrink-0" />
                     {t.allSites}
                     <span className="ml-auto text-[10px] text-muted-foreground">
-                      {activePlans.reduce((s, p) => s + p.tasks.filter(t => !t.isCompleted).length, 0)}
+                      {activeItems.length}
                     </span>
                   </Button>
 
-                  {uniqueHostnames.map(([hostname, totalTasks]) => {
-                    const hostUrls = uniqueUrls.filter(([, info]) => info.hostname === hostname);
-                    const isHostSelected = selectedUrl === hostname;
-                    const hasMultipleUrls = hostUrls.length > 1;
-
-                    return (
-                      <div key={hostname} className="mb-1">
-                        {/* Hostname header */}
-                        <Button
-                          variant={isHostSelected ? 'secondary' : 'ghost'}
-                          size="sm"
-                          className="w-full justify-start text-xs font-semibold"
-                          onClick={() => setSelectedUrl(hostname)}
-                        >
-                          <Globe className="h-3 w-3 mr-1.5 shrink-0 text-primary" />
-                          <span className="truncate">{hostname}</span>
-                          <span className="ml-auto text-[10px] text-muted-foreground">{totalTasks}</span>
-                        </Button>
-
-                        {/* Individual URL paths under this hostname */}
-                        {hasMultipleUrls && (
-                          <div className="ml-4 space-y-0.5 mt-0.5">
-                            {hostUrls.map(([key, info]) => (
-                              <Button
-                                key={key}
-                                variant={selectedUrl === key ? 'secondary' : 'ghost'}
-                                size="sm"
-                                className="w-full justify-start text-[11px] h-7 px-2"
-                                onClick={() => setSelectedUrl(key)}
-                              >
-                                <span className="truncate text-muted-foreground">{info.path === '/' ? '/' : info.path}</span>
-                                <span className="ml-auto flex items-center gap-1">
-                                  {info.criticalCount > 0 && (
-                                    <span className="text-[9px] bg-destructive/15 text-destructive px-1 rounded">{info.criticalCount}</span>
-                                  )}
-                                  {info.importantCount > 0 && (
-                                    <span className="text-[9px] bg-warning/15 text-warning-foreground px-1 rounded">{info.importantCount}</span>
-                                  )}
-                                </span>
-                              </Button>
-                            ))}
-                          </div>
+                  {domainStats.map(([domain, stats]) => (
+                    <Button
+                      key={domain}
+                      variant={selectedDomain === domain ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-xs mb-0.5"
+                      onClick={() => setSelectedDomain(domain)}
+                    >
+                      <Globe className="h-3 w-3 mr-1.5 shrink-0 text-primary" />
+                      <span className="truncate">{domain}</span>
+                      <span className="ml-auto flex items-center gap-1">
+                        {stats.critical > 0 && (
+                          <span className="text-[9px] bg-destructive/15 text-destructive px-1 rounded">{stats.critical}</span>
                         )}
-                      </div>
-                    );
-                  })}
+                        {stats.important > 0 && (
+                          <span className="text-[9px] bg-warning/15 text-warning-foreground px-1 rounded">{stats.important}</span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground">{stats.total}</span>
+                      </span>
+                    </Button>
+                  ))}
 
-                  {/* Editorial calendar — admin only */}
                   {isAdmin && (
                     <div className="pt-3 mt-3 border-t">
                       <Button
                         variant="ghost"
                         size="sm"
                         className="w-full justify-start text-xs text-primary"
-                        onClick={() => {
-                          toast.info(t.editorialCalendar);
-                        }}
+                        onClick={() => toast.info(t.editorialCalendar)}
                       >
                         <ClipboardList className="h-3.5 w-3.5 mr-2" />
                         {t.editorialCalendar}
@@ -868,47 +568,109 @@ export function MyActionPlans() {
                 </div>
               )}
 
-              {/* Main content — sorted by priority */}
-              <div className="flex-1 space-y-4 min-w-0">
-                {sortedFilteredActivePlans.length === 0 && filteredArchivedPlans.length > 0 && (
-                  <div className="text-center py-8">
-                    <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-                    <p className="text-sm text-muted-foreground">{t.noPlans}</p>
+              {/* Main content */}
+              <div className="flex-1 min-w-0 space-y-4">
+                {/* Progress bar */}
+                <div>
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="text-muted-foreground">
+                      {totalActive === 0 ? (
+                        <span className="flex items-center gap-1 text-success">
+                          <Check className="h-4 w-4" />
+                          {t.completed}
+                        </span>
+                      ) : (
+                        `${totalActive} ${t.tasksRemaining}`
+                      )}
+                    </span>
+                    <span className="text-muted-foreground">{progress}%</span>
                   </div>
-                )}
-                {sortedFilteredActivePlans.length === 0 && filteredArchivedPlans.length === 0 && selectedUrl && (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-muted-foreground">{t.noPlans}</p>
-                  </div>
-                )}
-                <AnimatePresence>
-                  {sortedFilteredActivePlans.map((plan) => renderPlanCard(plan, false))}
-                </AnimatePresence>
+                  <Progress value={progress} className="h-2" />
+                </div>
 
-                {/* Archived plans collapsible */}
-                {filteredArchivedPlans.length > 0 && (
-                  <Collapsible open={archivesOpen} onOpenChange={setArchivesOpen} className="mt-6">
+                {/* Active tasks with drag & drop */}
+                {sortedActive.length === 0 && filteredArchived.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground">{t.noPlans}</p>
+                  </div>
+                )}
+
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext items={sortedActive.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-1">
+                      <AnimatePresence>
+                        {sortedActive.map((item) => (
+                          <motion.div
+                            key={item.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                          >
+                            <SortableTaskItem
+                              item={item}
+                              onToggle={toggleTask}
+                              onDelete={deleteTask}
+                              onOpenArchitect={() => handleOpenArchitect(item)}
+                              onOpenContentArchitect={() => handleOpenContentArchitect(item)}
+                              getPriorityColor={getPriorityColor}
+                              getPriorityLabel={getPriorityLabel}
+                              architectLabel={t.architect}
+                              contentArchitectLabel={t.contentArchitect}
+                            />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </SortableContext>
+                </DndContext>
+
+                {/* Archived tasks */}
+                {filteredArchived.length > 0 && (
+                  <Collapsible open={showArchived} onOpenChange={setShowArchived} className="mt-6">
                     <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between text-muted-foreground hover:text-foreground"
-                      >
+                      <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground">
                         <span className="flex items-center gap-2">
                           <Archive className="h-4 w-4" />
                           {t.archives}
                           <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
-                            {filteredArchivedPlans.length} {t.archivesCount}
+                            {filteredArchived.length} {t.archivesCount}
                           </span>
                         </span>
-                        <ChevronDown className={cn(
-                          "h-4 w-4 transition-transform",
-                          archivesOpen && "rotate-180"
-                        )} />
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", showArchived && "rotate-180")} />
                       </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="space-y-4 mt-3">
-                        {filteredArchivedPlans.map((plan) => renderPlanCard(plan, true))}
+                      <div className="space-y-1 mt-2">
+                        {filteredArchived.map(item => (
+                          <div
+                            key={item.id}
+                            className="flex items-start gap-2 p-3 rounded-lg border-l-4 border-l-muted-foreground bg-muted/30 opacity-50 group"
+                          >
+                            <Checkbox
+                              checked={true}
+                              onCheckedChange={() => toggleTask(item.id)}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm line-through text-muted-foreground">{item.title}</span>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-muted-foreground">{item.finding_category}</span>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteTask(item.id)}
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
@@ -920,36 +682,36 @@ export function MyActionPlans() {
       </Card>
 
       {/* Architect Modal */}
-      {architectPlan && (
+      {architectItem && (
         <SmartConfigurator
           isOpen={isArchitectOpen}
           onClose={() => {
             setIsArchitectOpen(false);
-            setArchitectPlan(null);
+            setArchitectItem(null);
             setArchitectAuditResult(null);
           }}
           technicalResult={architectAuditResult}
           strategicResult={architectAuditResult?.strategicAnalysis ? architectAuditResult : null}
-          siteUrl={architectPlan.url.startsWith('http') ? architectPlan.url : `https://${architectPlan.url}`}
-          siteName={architectPlan.title}
+          siteUrl={architectItem.target_url || `https://${architectItem.domain}`}
+          siteName={architectItem.domain}
         />
       )}
 
       {/* Content Architect Modal */}
-      {contentArchitectPlan && (
+      {contentArchitectItem && (
         <Suspense fallback={null}>
           <CocoonContentArchitectModal
             isOpen={isContentArchitectOpen}
             onClose={() => {
               setIsContentArchitectOpen(false);
-              setContentArchitectPlan(null);
+              setContentArchitectItem(null);
               setContentArchitectDraft(null);
             }}
             nodes={[]}
-            domain={(() => { try { return new URL(contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`).hostname.replace('www.', ''); } catch { return contentArchitectPlan.url; } })()}
+            domain={contentArchitectItem.domain}
             trackedSiteId={contentArchitectTrackedSiteId}
             draftData={contentArchitectDraft}
-            prefillUrl={contentArchitectPlan.url.startsWith('http') ? contentArchitectPlan.url : `https://${contentArchitectPlan.url}`}
+            prefillUrl={contentArchitectItem.target_url || `https://${contentArchitectItem.domain}`}
             isExistingPage={!!contentArchitectDraft?.keyword}
             colorTheme="green"
           />
