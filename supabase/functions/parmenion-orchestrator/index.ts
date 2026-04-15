@@ -494,6 +494,13 @@ try {
       pipeline_phase: currentPhase,
       conservative_mode: conservativeMode,
       error_rate: errorRateData,
+      baseline_seo_score: baselineSeoScore ? {
+        overall: baselineSeoScore.overall,
+        axes: baselineSeoScore.axes,
+        issues_count: baselineSeoScore.issues.length,
+        top_issues: baselineSeoScore.issues.slice(0, 5),
+        opportunities: baselineSeoScore.opportunities.slice(0, 3),
+      } : null,
     });
 
   } catch (e) {
