@@ -175,45 +175,46 @@ export function SeoCodeProposals() {
                   open={expandedId === proposal.id}
                   onOpenChange={(open) => setExpandedId(open ? proposal.id : null)}
                 >
-                  <div className="border rounded-lg overflow-hidden">
-                    <CollapsibleTrigger className="w-full p-3 flex items-start gap-3 hover:bg-muted/30 transition-colors text-left">
-                      <div className="pt-0.5">
-                        {expandedId === proposal.id ? (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm truncate">{proposal.title}</span>
-                          <Badge variant="outline" className={`text-[10px] px-1.5 ${STATUS_COLORS[proposal.status] || ''}`}>
-                            {proposal.status}
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px] px-1.5">
-                            {TYPE_LABELS[proposal.proposal_type] || proposal.proposal_type}
-                          </Badge>
+                    <div className="border rounded-lg overflow-hidden">
+                    <div className="w-full p-3 flex items-start gap-3 hover:bg-muted/30 transition-colors text-left">
+                      <CollapsibleTrigger className="flex items-start gap-3 flex-1 min-w-0 text-left cursor-pointer">
+                        <div className="pt-0.5">
+                          {expandedId === proposal.id ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="font-mono">{proposal.target_function}</span>
-                          <span>·</span>
-                          <span>{proposal.target_url || proposal.domain}</span>
-                          <span>·</span>
-                          <span className={proposal.confidence_score >= 85 ? 'text-emerald-500' : proposal.confidence_score >= 60 ? 'text-amber-500' : 'text-red-500'}>
-                            {proposal.confidence_score}% confiance
-                          </span>
-                          <span>·</span>
-                          <span>{format(new Date(proposal.created_at), 'dd MMM HH:mm', { locale: fr })}</span>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm truncate">{proposal.title}</span>
+                            <Badge variant="outline" className={`text-[10px] px-1.5 ${STATUS_COLORS[proposal.status] || ''}`}>
+                              {proposal.status}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] px-1.5">
+                              {TYPE_LABELS[proposal.proposal_type] || proposal.proposal_type}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="font-mono">{proposal.target_function}</span>
+                            <span>·</span>
+                            <span>{proposal.target_url || proposal.domain}</span>
+                            <span>·</span>
+                            <span className={proposal.confidence_score >= 85 ? 'text-emerald-500' : proposal.confidence_score >= 60 ? 'text-amber-500' : 'text-red-500'}>
+                              {proposal.confidence_score}% confiance
+                            </span>
+                            <span>·</span>
+                            <span>{format(new Date(proposal.created_at), 'dd MMM HH:mm', { locale: fr })}</span>
+                          </div>
                         </div>
-                      </div>
-                      {/* Quick action buttons visible without expanding */}
+                      </CollapsibleTrigger>
                       {proposal.status === 'pending' && (
-                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-7 px-2 text-xs gap-1 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
-                            onClick={(e) => { e.stopPropagation(); handleAction(proposal.id, 'approve'); }}
+                            onClick={() => handleAction(proposal.id, 'approve')}
                             disabled={actionLoading === proposal.id}
                           >
                             {actionLoading === proposal.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
@@ -223,7 +224,7 @@ export function SeoCodeProposals() {
                             size="sm"
                             variant="outline"
                             className="h-7 px-2 text-xs gap-1 border-red-500/30 text-red-500 hover:bg-red-500/10"
-                            onClick={(e) => { e.stopPropagation(); handleAction(proposal.id, 'reject'); }}
+                            onClick={() => handleAction(proposal.id, 'reject')}
                             disabled={actionLoading === proposal.id}
                           >
                             <X className="h-3 w-3" />
@@ -232,15 +233,14 @@ export function SeoCodeProposals() {
                             size="sm"
                             variant="ghost"
                             className="h-7 w-7 p-0 text-xs text-destructive hover:text-destructive"
-                            onClick={(e) => { e.stopPropagation(); handleAction(proposal.id, 'delete'); }}
+                            onClick={() => handleAction(proposal.id, 'delete')}
                             disabled={actionLoading === proposal.id}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       )}
-                      </div>
-                    </CollapsibleTrigger>
+                    </div>
 
                     <CollapsibleContent>
                       <div className="px-3 pb-3 space-y-3 border-t pt-3">
