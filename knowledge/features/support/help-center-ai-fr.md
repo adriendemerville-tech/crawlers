@@ -57,6 +57,14 @@ Updated: 2026-04-08
 - Troubleshooting : fiche non visible → vérifier rôle propriétaire/gestionnaire dans Google Business Profile
 - Ne mentionne JAMAIS les noms de fonctions (`gmb-actions`, `gsc-auth`, etc.)
 
+## Couverture Stratégie Concurrentielle
+- Félix connaît la fonctionnalité "Stratégie concurrentielle" (Pro Agency+ uniquement)
+- Sait expliquer : le switch "Pression concurrentielle" dans les plans d'action, l'onglet Concurrence dans Mes Sites
+- Peut orienter vers /console > Plans d'action pour activer le tri par pression concurrentielle
+- Explique le principe : les tâches sont re-priorisées dynamiquement selon la pression concurrentielle détectée (concurrents mieux positionnés)
+- Si l'utilisateur n'est pas Pro Agency+ : explique que la fonctionnalité est réservée à l'offre Pro Agency+, propose la page /tarifs
+- Ne mentionne JAMAIS les détails techniques (spiral_score, competitor_momentum_score, compute-spiral-signals)
+
 ## Fonctionnalités avancées
 - **Voice input** : Bouton micro — Web Speech API (FR/EN/ES), transcription en temps réel
 - **Pièces jointes** : Bouton + — charge un rapport (`pdf_audits`) ou script (`site_script_rules`) du compte de l'utilisateur, avec bouton "Explique-moi"
