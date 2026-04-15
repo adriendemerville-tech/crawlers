@@ -30,11 +30,11 @@ const translations = {
     freeSection: 'Outils Gratuits',
     freeDescription: 'Accessibles à tous, sans inscription',
     freeTools: [
-      { icon: Bot, label: 'Analyse des Bots IA', description: 'Vérifiez l\'accès des crawlers IA à votre site' },
-      { icon: Globe, label: 'Score GEO', description: 'Évaluez votre optimisation pour les moteurs génératifs' },
-      { icon: Brain, label: 'Visibilité LLM', description: 'Analysez votre présence sur ChatGPT, Claude, Gemini' },
-      { icon: Gauge, label: 'PageSpeed', description: 'Testez les performances et Core Web Vitals' },
-      { icon: Award, label: 'Audit E-E-A-T', description: 'Évaluez Expertise, Expérience, Autorité et Confiance' },
+      { icon: Bot, label: 'Analyse des Bots IA', description: 'Vérifiez l\'accès des crawlers IA à votre site', href: '/analyse-bots-ia' },
+      { icon: Globe, label: 'Score GEO', description: 'Évaluez votre optimisation pour les moteurs génératifs', href: '/score-geo' },
+      { icon: Brain, label: 'Visibilité LLM', description: 'Analysez votre présence sur ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
+      { icon: Gauge, label: 'PageSpeed', description: 'Testez les performances et Core Web Vitals', href: '/pagespeed' },
+      { icon: Award, label: 'Audit E-E-A-T', description: 'Évaluez Expertise, Expérience, Autorité et Confiance', href: '/eeat' },
     ],
     registrationSection: 'Audit Technique SEO',
     registrationDescription: 'Gratuit avec inscription',
@@ -192,11 +192,11 @@ const translations = {
     freeSection: 'Free Tools',
     freeDescription: 'Accessible to everyone, no signup required',
     freeTools: [
-      { icon: Bot, label: 'AI Bot Analysis', description: 'Check AI crawler access to your site' },
-      { icon: Globe, label: 'GEO Score', description: 'Evaluate your optimization for generative engines' },
-      { icon: Brain, label: 'LLM Visibility', description: 'Analyze your presence on ChatGPT, Claude, Gemini' },
-      { icon: Gauge, label: 'PageSpeed', description: 'Test performance and Core Web Vitals' },
-      { icon: Award, label: 'E-E-A-T Audit', description: 'Evaluate Expertise, Experience, Authority and Trust' },
+      { icon: Bot, label: 'AI Bot Analysis', description: 'Check AI crawler access to your site', href: '/analyse-bots-ia' },
+      { icon: Globe, label: 'GEO Score', description: 'Evaluate your optimization for generative engines', href: '/score-geo' },
+      { icon: Brain, label: 'LLM Visibility', description: 'Analyze your presence on ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
+      { icon: Gauge, label: 'PageSpeed', description: 'Test performance and Core Web Vitals', href: '/pagespeed' },
+      { icon: Award, label: 'E-E-A-T Audit', description: 'Evaluate Expertise, Experience, Authority and Trust', href: '/eeat' },
     ],
     registrationSection: 'Technical Audit',
     registrationDescription: 'Free with registration',
@@ -353,11 +353,11 @@ const translations = {
     freeSection: 'Herramientas Gratuitas',
     freeDescription: 'Accesibles para todos, sin registro',
     freeTools: [
-      { icon: Bot, label: 'Análisis de Bots IA', description: 'Verifica el acceso de crawlers IA a tu sitio' },
-      { icon: Globe, label: 'Puntuación GEO', description: 'Evalúa tu optimización para motores generativos' },
-      { icon: Brain, label: 'Visibilidad LLM', description: 'Analiza tu presencia en ChatGPT, Claude, Gemini' },
-      { icon: Gauge, label: 'PageSpeed', description: 'Prueba el rendimiento y Core Web Vitals' },
-      { icon: Award, label: 'Auditoría E-E-A-T', description: 'Evalúa Experiencia, Pericia, Autoridad y Confianza' },
+      { icon: Bot, label: 'Análisis de Bots IA', description: 'Verifica el acceso de crawlers IA a tu sitio', href: '/analyse-bots-ia' },
+      { icon: Globe, label: 'Puntuación GEO', description: 'Evalúa tu optimización para motores generativos', href: '/score-geo' },
+      { icon: Brain, label: 'Visibilidad LLM', description: 'Analiza tu presencia en ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
+      { icon: Gauge, label: 'PageSpeed', description: 'Prueba el rendimiento y Core Web Vitals', href: '/pagespeed' },
+      { icon: Award, label: 'Auditoría E-E-A-T', description: 'Evalúa Experiencia, Pericia, Autoridad y Confianza', href: '/eeat' },
     ],
     registrationSection: 'Auditoría Técnica',
     registrationDescription: 'Gratis con registro',
@@ -856,15 +856,15 @@ export default function Tarifs() {
                   {t.freeTools.map((tool, index) => {
                     const Icon = tool.icon;
                     return (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+                      <Link key={index} to={tool.href} className="flex items-start gap-3 p-3 rounded-lg bg-card border hover:border-emerald-500/50 hover:shadow-md transition-all group">
                         <div className="p-2 rounded-lg bg-emerald-500/10">
                           <Icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{tool.label}</p>
+                          <p className="font-medium text-sm group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{tool.label}</p>
                           <p className="text-xs text-muted-foreground">{tool.description}</p>
                         </div>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>
@@ -872,7 +872,8 @@ export default function Tarifs() {
             </Card>
 
             {/* Registration Section */}
-            <Card className="border-blue-500/30 bg-gradient-to-br from-blue-500/5 to-transparent">
+            <Link to="/audit-expert">
+            <Card className="border-blue-500/30 bg-gradient-to-br from-blue-500/5 to-transparent hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-blue-500 text-white border-0">
@@ -894,6 +895,7 @@ export default function Tarifs() {
                 </ul>
               </CardContent>
             </Card>
+            </Link>
 
             {/* Paid Section */}
             <div className="space-y-6">
@@ -907,7 +909,8 @@ export default function Tarifs() {
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {/* Audit Stratégique */}
-                <Card className="border-violet-500/30">
+                <Link to="/generative-engine-optimization">
+                <Card className="border-violet-500/30 hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Brain className="h-5 w-5 text-violet-500" />
@@ -926,9 +929,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Code Correctif */}
-                <Card className="border-orange-500/30">
+                <Link to="/audit-expert">
+                <Card className="border-orange-500/30 hover:border-orange-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Code2 className="h-5 w-5 text-orange-500" />
@@ -947,9 +952,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Crawl Multi-Pages */}
-                <Card className="border-violet-500/30">
+                <Link to="/app/site-crawl">
+                <Card className="border-violet-500/30 hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <ScanSearch className="h-5 w-5 text-violet-500" />
@@ -968,9 +975,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Audit Comparé */}
-                <Card className="border-violet-500/30">
+                <Link to="/app/audit-compare">
+                <Card className="border-violet-500/30 hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <GitCompareArrows className="h-5 w-5 text-violet-500" />
@@ -989,9 +998,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Content Architect */}
-                <Card className="border-emerald-500/30">
+                <Link to="/content-architect">
+                <Card className="border-emerald-500/30 hover:border-emerald-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <PenTool className="h-5 w-5 text-emerald-500" />
@@ -1010,9 +1021,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Social Hub */}
-                <Card className="border-pink-500/30">
+                <Link to="/app/social">
+                <Card className="border-pink-500/30 hover:border-pink-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Megaphone className="h-5 w-5 text-pink-500" />
@@ -1031,9 +1044,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Cocoon Sémantique */}
-                <Card className="border-cyan-500/30">
+                <Link to="/features/cocoon">
+                <Card className="border-cyan-500/30 hover:border-cyan-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Share2 className="h-5 w-5 text-cyan-500" />
@@ -1052,9 +1067,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Marina */}
-                <Card className="border-amber-500/30">
+                <Link to="/marina">
+                <Card className="border-amber-500/30 hover:border-amber-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Briefcase className="h-5 w-5 text-amber-500" />
@@ -1073,6 +1090,7 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
               </div>
             </div>
 
