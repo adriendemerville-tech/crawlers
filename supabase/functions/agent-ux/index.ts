@@ -45,18 +45,20 @@ interface UxAnalysisResult {
 }
 
 // ─── LLM call ────────────────────────────────────────────────────────
+const LLM_MODEL = 'google/gemini-2.5-flash';
+
 async function callLLM(system: string, user: string, costAcc?: CostAccumulator): Promise<string> {
   const resp = await callOpenRouter({
-    model: 'anthropic/claude-3.5-sonnet',
+    model: LLM_MODEL,
     system,
     user,
     temperature: 0.2,
     maxTokens: 6000,
     title: 'Crawlers UX Agent',
   });
-  trackPaidApiCall('agent-ux', 'openrouter', 'anthropic/claude-3.5-sonnet');
+  trackPaidApiCall('agent-ux', 'openrouter', LLM_MODEL);
   if (costAcc) {
-    costAcc.add('anthropic/claude-3.5-sonnet', resp.usage?.prompt_tokens || 0, resp.usage?.completion_tokens || 0);
+    costAcc.add(LLM_MODEL, resp.usage?.prompt_tokens || 0, resp.usage?.completion_tokens || 0);
   }
   return resp.content;
 }
@@ -105,22 +107,30 @@ ${directiveBlock}`;
 Deno.serve(handleRequest(async (req) => {
   const supabase = getServiceClient();
 
-  // Auth check — admin only
+  // Auth check — admin or service role (dispatcher uses service role key)
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return jsonError('Unauthorized', 401);
 
-  const { createClient } = await import('npm:@supabase/supabase-js@2');
-  const userClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-  const { data: { user }, error: authErr } = await userClient.auth.getUser();
-  if (authErr || !user) return jsonError('Unauthorized', 401);
+  const token = authHeader.replace('Bearer ', '');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const isServiceRole = token === serviceKey;
+  let userId: string | null = null;
 
-  const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
-  const isAdmin = (roles || []).some((r: any) => r.role === 'admin');
-  if (!isAdmin) return jsonError('Forbidden', 403);
+  if (!isServiceRole) {
+    const { createClient } = await import('npm:@supabase/supabase-js@2');
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !user) return jsonError('Unauthorized', 401);
+    userId = user.id;
+
+    const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
+    const isAdmin = (roles || []).some((r: any) => r.role === 'admin');
+    if (!isAdmin) return jsonError('Forbidden', 403);
+  }
 
   // Cost guard
   const costCheck = await checkDailyCostCap(supabase, 'agent-ux');
@@ -131,25 +141,27 @@ Deno.serve(handleRequest(async (req) => {
 
   const costAcc = new CostAccumulator();
 
-  // Fetch pending directives
-  const { data: pendingDirectives } = await supabase
+  // Fetch pending directives — when dispatched by service role, get all pending (any user)
+  const directiveQuery = supabase
     .from('agent_ux_directives')
     .select('id, directive_text')
-    .eq('user_id', user.id)
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
     .limit(5);
+  if (userId) directiveQuery.eq('user_id', userId);
+  const { data: pendingDirectives } = await directiveQuery;
 
   const directiveTexts = (pendingDirectives || []).map((d: any) => d.directive_text);
 
   if (action === 'analyze') {
-    // Analyze a specific page/component
-    if (!component_code || !target_page) {
-      return jsonError('Missing component_code or target_page', 400);
-    }
+    // When dispatched with directives but no component code, analyze based on directive text
+    const effectiveTargetPage = target_page || '/';
+    const hasComponentCode = !!component_code;
 
     const systemPrompt = getSystemPrompt(directiveTexts);
-    const userPrompt = `Analyse ce composant React de la page "${target_page}" :\n\n\`\`\`tsx\n${component_code.slice(0, 15000)}\n\`\`\`\n\nType d'analyse demandé : ${analysis_type || 'full'}`;
+    const userPrompt = hasComponentCode
+      ? `Analyse ce composant React de la page "${effectiveTargetPage}" :\n\n\`\`\`tsx\n${component_code.slice(0, 15000)}\n\`\`\`\n\nType d'analyse demandé : ${analysis_type || 'full'}`
+      : `Analyse UX de la page "${effectiveTargetPage}" basée sur les directives suivantes :\n${directiveTexts.map((d: string, i: number) => `${i + 1}. ${d}`).join('\n')}\n\nProduis des recommandations UX concrètes et actionnables. Type d'analyse : ${analysis_type || 'directive'}`;
 
     const rawResponse = await callLLM(systemPrompt, userPrompt, costAcc);
 
@@ -176,14 +188,14 @@ Deno.serve(handleRequest(async (req) => {
       findings: findings as any,
       proposals_generated: findings.filter(f => f.proposed_fix).length,
       confidence_score: findings.length > 0 ? findings.reduce((sum, f) => sum + f.confidence, 0) / findings.length : 0,
-      model_used: 'anthropic/claude-3.5-sonnet',
+      model_used: LLM_MODEL,
     });
 
     // Create proposals for high-confidence findings
     const proposalsToCreate = findings.filter(f => f.proposed_fix && f.confidence >= 70);
     for (const finding of proposalsToCreate) {
       await supabase.from('cto_code_proposals').insert({
-        user_id: user.id,
+        user_id: userId || 'system',
         title: `[UX] ${finding.title}`,
         description: finding.description,
         file_path: finding.file_path,
@@ -216,7 +228,7 @@ Deno.serve(handleRequest(async (req) => {
       success: true,
       result,
       summary,
-      cost: costAcc.getSummary(),
+      cost: costAcc.summary,
     });
   }
 
@@ -256,7 +268,7 @@ Retourne en JSON :
     // Create proposal
     if (parsed.code) {
       await supabase.from('cto_code_proposals').insert({
-        user_id: user.id,
+        user_id: userId || 'system',
         title: `[UX] Nouveau composant: ${parsed.component_name || 'Component'}`,
         description: parsed.integration_instructions || directive,
         file_path: parsed.file_path || 'src/components/NewComponent.tsx',
@@ -276,7 +288,7 @@ Retourne en JSON :
       findings: parsed.findings || [],
       proposals_generated: parsed.code ? 1 : 0,
       confidence_score: 85,
-      model_used: 'anthropic/claude-3.5-sonnet',
+      model_used: LLM_MODEL,
     });
 
     return jsonOk({
@@ -287,7 +299,7 @@ Retourne en JSON :
         code_preview: (parsed.code || '').slice(0, 500),
         integration: parsed.integration_instructions,
       },
-      cost: costAcc.getSummary(),
+      cost: costAcc.summary,
     });
   }
 
