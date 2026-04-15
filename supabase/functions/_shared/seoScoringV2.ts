@@ -138,6 +138,21 @@ const PROFILES: Record<BusinessProfile, ScoringProfile> = {
   },
 };
 
+// ─── Default keyword list ───────────────────────────────────────────
+const DEFAULT_SEO_TERMS = [
+  'seo', 'geo', 'audit', 'crawler', 'llm', 'ia', 'intelligence artificielle',
+  'google', 'optimisation', 'référencement', 'visibilité', 'contenu', 'stratégie',
+  'maillage', 'backlink', 'indexation', 'serp', 'e-e-a-t', 'eeat',
+  'chatgpt', 'perplexity', 'gemini', 'claude', 'json-ld', 'schema.org',
+  'core web vitals', 'pagespeed', 'structured data', 'données structurées',
+  'trafic organique', 'organic traffic', 'position', 'mot-clé', 'keyword',
+];
+
+const DEFAULT_KEY_PATHS = [
+  '/audit-expert', '/blog', '/lexique', '/tarifs', '/generative-engine-optimization',
+  '/app/cocoon', '/app/console', '/aide', '/methodologie', '/faq',
+];
+
 // ─── Main scoring function ──────────────────────────────────────────
 export function computeSeoScoreV2(
   html: string,
