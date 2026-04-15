@@ -909,7 +909,8 @@ export default function Tarifs() {
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {/* Audit Stratégique */}
-                <Card className="border-violet-500/30">
+                <Link to="/generative-engine-optimization">
+                <Card className="border-violet-500/30 hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Brain className="h-5 w-5 text-violet-500" />
@@ -928,9 +929,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Code Correctif */}
-                <Card className="border-orange-500/30">
+                <Link to="/audit-expert">
+                <Card className="border-orange-500/30 hover:border-orange-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Code2 className="h-5 w-5 text-orange-500" />
@@ -949,9 +952,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Crawl Multi-Pages */}
-                <Card className="border-violet-500/30">
+                <Link to="/app/site-crawl">
+                <Card className="border-violet-500/30 hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <ScanSearch className="h-5 w-5 text-violet-500" />
@@ -970,9 +975,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Audit Comparé */}
-                <Card className="border-violet-500/30">
+                <Link to="/app/audit-compare">
+                <Card className="border-violet-500/30 hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <GitCompareArrows className="h-5 w-5 text-violet-500" />
@@ -991,9 +998,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Content Architect */}
-                <Card className="border-emerald-500/30">
+                <Link to="/content-architect">
+                <Card className="border-emerald-500/30 hover:border-emerald-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <PenTool className="h-5 w-5 text-emerald-500" />
@@ -1012,9 +1021,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Social Hub */}
-                <Card className="border-pink-500/30">
+                <Link to="/app/social">
+                <Card className="border-pink-500/30 hover:border-pink-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Megaphone className="h-5 w-5 text-pink-500" />
@@ -1033,9 +1044,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Cocoon Sémantique */}
-                <Card className="border-cyan-500/30">
+                <Link to="/features/cocoon">
+                <Card className="border-cyan-500/30 hover:border-cyan-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Share2 className="h-5 w-5 text-cyan-500" />
@@ -1054,9 +1067,11 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
 
                 {/* Marina */}
-                <Card className="border-amber-500/30">
+                <Link to="/marina">
+                <Card className="border-amber-500/30 hover:border-amber-500/50 hover:shadow-md transition-all cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Briefcase className="h-5 w-5 text-amber-500" />
@@ -1075,6 +1090,7 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+                </Link>
               </div>
             </div>
 
