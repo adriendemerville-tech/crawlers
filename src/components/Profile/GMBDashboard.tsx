@@ -926,7 +926,7 @@ function SortableLocationItem({ loc, isSelected, onSelect }: {
 export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: { isGated?: boolean; simulatedDataEnabled?: boolean }) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
-  const [activeTab, setActiveTab] = useState('stats');
+  const [activeTab, setActiveTab] = useState('audit');
   // Show simulated data when: gated users always, OR simulatedDataEnabled is on and not connected
   const showSimulated = isGated || simulatedDataEnabled;
   const [orderedLocations, setOrderedLocations] = useState(showSimulated ? SIMULATED_LOCATIONS : []);
@@ -1310,7 +1310,11 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-7 h-9">
+            <TabsList className="w-full grid grid-cols-8 h-9">
+              <TabsTrigger value="audit" className="text-xs gap-1">
+                <ClipboardCheck className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Audit</span>
+              </TabsTrigger>
               <TabsTrigger value="stats" className="text-xs gap-1">
                 <span className="hidden sm:inline">Stats</span>
               </TabsTrigger>
@@ -1337,6 +1341,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
               </TabsTrigger>
             </TabsList>
 
+            <TabsContent value="audit"><AuditTab language={language} /></TabsContent>
             <TabsContent value="stats">
               <div className="space-y-4">
                 <GmbPowerScoreCard trackedSiteId={null} />
