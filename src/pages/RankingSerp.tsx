@@ -193,7 +193,7 @@ function SerpBenchmarkMini() {
             </label>
             <Select value={locScale} onValueChange={(v: any) => { setLocScale(v); setLocValue(''); }}>
               <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent side="bottom" align="start" position="popper">
                 <SelectItem value="pays">Pays</SelectItem>
                 <SelectItem value="region">Région</SelectItem>
                 <SelectItem value="departement">Département</SelectItem>
