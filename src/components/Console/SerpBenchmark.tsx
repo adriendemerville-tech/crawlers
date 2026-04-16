@@ -74,7 +74,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
       case 'ville': return `${v},France`;
       default: return v;
     }
-  };
+  const [singleHitPenalty, setSingleHitPenalty] = useState(20);
   const [penaltyEnabled, setPenaltyEnabled] = useState(true);
   const [selectedProviders, setSelectedProviders] = useState<string[]>(['DataForSEO', 'SerpApi', 'Serper']);
   const [loading, setLoading] = useState(false);
