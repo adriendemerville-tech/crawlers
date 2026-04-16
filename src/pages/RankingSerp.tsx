@@ -105,7 +105,7 @@ function SerpBenchmarkMini() {
       <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Input
-            placeholder={t3(language, 'Entrez un mot-clé...', 'Enter a keyword...', 'Ingresa una palabra clave...')}
+            placeholder="Keywords"
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && runBenchmark()}
@@ -120,9 +120,9 @@ function SerpBenchmarkMini() {
         {!user && (
           <p className="text-xs text-muted-foreground">
             {t3(language,
-              '💡 Connectez-vous pour sauvegarder vos benchmarks et accéder à l\'historique.',
-              '💡 Log in to save your benchmarks and access history.',
-              '💡 Inicia sesión para guardar tus benchmarks y acceder al historial.'
+              'Connectez-vous pour sauvegarder vos benchmarks et accéder à l\'historique.',
+              'Log in to save your benchmarks and access history.',
+              'Inicia sesión para guardar tus benchmarks y acceder al historial.'
             )}
           </p>
         )}

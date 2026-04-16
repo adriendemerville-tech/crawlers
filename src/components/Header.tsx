@@ -338,13 +338,13 @@ export function Header() {
           {isAuditExpertPage ? (
             <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:bg-[#1e3a5f]/10 border border-[#1e3a5f] dark:border-[#60a5fa]">
               <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-semibold">Audit</span>
+               <span className="text-sm font-normal">Audit</span>
             </Button>
           ) : (
             <Link to="/audit-expert">
               <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:text-[#1e3a5f] dark:hover:text-[#93c5fd] hover:bg-[#1e3a5f]/10">
                 <Sparkles className="h-4 w-4" />
-                <span className="text-sm font-semibold">Audit</span>
+                <span className="text-sm font-normal">Audit</span>
               </Button>
             </Link>
           )}
@@ -468,7 +468,7 @@ export function Header() {
                     </Button>
                   </Link>
                   <Link to="/audit-expert">
-                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-semibold ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-[#1e3a5f] dark:text-[#60a5fa]'}`}>
+                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-normal ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-[#1e3a5f] dark:text-[#60a5fa]'}`}>
                       Audit
                     </Button>
                   </Link>
