@@ -350,4 +350,4 @@ try {
     console.error('[gmb-optimization] error:', msg)
     return json({ error: msg }, 500)
   }
-})
+}))
