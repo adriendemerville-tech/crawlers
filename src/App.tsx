@@ -201,6 +201,7 @@ const App = () => (
                           <Route path="/app/eeat" element={<AppEeat />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
                           <Route path="/app/site-crawl" element={<SiteCrawl />} />
+                          <Route path="/app/ranking-serp" element={<RankingSerp />} />
                           <Route path="/app/audit-compare" element={<AuditCompare />} />
                           <Route path="/integration-gtm" element={<IntegrationGTM />} />
                           <Route path="/indice-alignement-strategique" element={<IndiceAlignementStrategique />} />
