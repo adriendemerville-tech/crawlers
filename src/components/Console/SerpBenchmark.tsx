@@ -289,12 +289,12 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
             <Select value={location} onValueChange={setLocation}>
               <SelectTrigger className="w-full max-w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="France">🇫🇷 France</SelectItem>
-                <SelectItem value="Belgium">🇧🇪 Belgique</SelectItem>
-                <SelectItem value="Switzerland">🇨🇭 Suisse</SelectItem>
-                <SelectItem value="Canada">🇨🇦 Canada</SelectItem>
-                <SelectItem value="United States">🇺🇸 USA</SelectItem>
-                <SelectItem value="United Kingdom">🇬🇧 UK</SelectItem>
+                <SelectItem value="France">France</SelectItem>
+                <SelectItem value="Belgium">Belgique</SelectItem>
+                <SelectItem value="Switzerland">Suisse</SelectItem>
+                <SelectItem value="Canada">Canada</SelectItem>
+                <SelectItem value="United States">USA</SelectItem>
+                <SelectItem value="United Kingdom">UK</SelectItem>
               </SelectContent>
             </Select>
           </div>
