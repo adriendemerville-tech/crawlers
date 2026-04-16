@@ -3,15 +3,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 const painPoints = [
   {
     title: 'Données SERP faussées',
-    desc: 'L\'analyse de la SERP est de moins en moins fiable : Google personnalise, filtre et brouille les résultats. Les outils qui s\'y fient vous donnent une vision déformée de votre visibilité réelle.',
+    desc: 'L\'analyse de la SERP est de moins en moins fiable : Google personnalise, filtre et brouille les résultats. ',
   },
   {
     title: 'Temps perdu en vérifications',
-    desc: 'Export CSV, recroisement manuel, vérification des positions une par une… Vous passez plus de temps à valider les données qu\'à agir dessus.',
+    desc: 'Export CSV, recroisement manuel, vérification des positions une par une… ',
   },
   {
     title: 'Recommandations génériques',
-    desc: 'Les mêmes checklists pour un e-commerce à 50 000 pages et un site vitrine de 12 pages. Aucune contextualisation, aucune priorisation business.',
+    desc: 'Les mêmes checklists pour un e-commerce à 50 000 pages et un site vitrine de 12 pages. ',
   },
 ];
 
@@ -25,7 +25,7 @@ export const PainPointsSection = () => {
       <div className="mx-auto max-w-5xl px-4">
         {/* Title */}
         <div className="mb-10 text-center">
-          <span className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider border-primary/20 text-destructive bg-destructive-muted">
+          <span className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider border-primary/20 text-destructive bg-secondary-foreground">
             Freelances / Agences
           </span>
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
@@ -38,7 +38,7 @@ export const PainPointsSection = () => {
           {painPoints.map((p, i) => (
             <div
               key={i}
-              className="group rounded-xl border-none border-destructive/15 bg-card/60 p-6 transition-colors hover:border-destructive/30"
+              className="group rounded-xl border-none border-destructive/15 bg-card/60 p-6 transition-colors hover:border-destructive/30 px-[18px] py-[10px]"
             >
               <h3 className="mb-2 text-base font-bold text-foreground">{p.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
@@ -48,7 +48,7 @@ export const PainPointsSection = () => {
 
         {/* Conclusion */}
         <div className="mx-auto max-w-3xl rounded-xl px-6 py-6 text-center font-medium border-primary/20 dark:border-violet-600 dark:border-dashed bg-popover border-0">
-          <span className="block mb-3 text-sm font-bold text-[#ffdd00]">L'approche Crawlers</span>
+          <span className="block mb-3 text-sm font-bold text-primary-foreground">L'approche Crawlers</span>
           <p className="text-sm leading-relaxed text-muted-foreground">
             L'analyse de la SERP est de moins en moins fiable — les contre-mesures de Google piègent les outils de crawl classiques.{' '}
             <strong className="text-foreground">
