@@ -108,11 +108,11 @@ interface CardRect { x: number; y: number; w: number; h: number; }
 function computePositions() {
   const positions: Record<string, CardRect> = {};
 
-  // Core cards (grouped as one logical unit)
+  // Core cards: 3 cols × 2 rows
   positions.CORE = {
-    x: CX - CORE_W - CORE_GAP / 2,
+    x: CX - (3 * CORE_W + 2 * CORE_GAP) / 2,
     y: CY - CORE_H - CORE_GAP / 2,
-    w: 2 * CORE_W + CORE_GAP,
+    w: 3 * CORE_W + 2 * CORE_GAP,
     h: 2 * CORE_H + CORE_GAP,
   };
 
