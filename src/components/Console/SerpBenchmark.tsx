@@ -184,6 +184,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   }, [user, selectedSiteId, trackedSites, selectedProviders, location, penaltyEnabled, singleHitPenalty, language, runBenchmark]);
 
 
+  const copyResults = () => {
     if (!results) return;
     const activeProviders = providerSummaries.filter(p => !p.error).map(p => p.provider);
     const header = ['#', 'Site', ...activeProviders, 'Moyenne'].join('\t');
