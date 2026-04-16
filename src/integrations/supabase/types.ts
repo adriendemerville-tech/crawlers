@@ -1328,6 +1328,7 @@ export type Database = {
           total_cycles_run: number | null
           tracked_site_id: string
           updated_at: string | null
+          use_editorial_pipeline: boolean
           user_id: string
         }
         Insert: {
@@ -1356,6 +1357,7 @@ export type Database = {
           total_cycles_run?: number | null
           tracked_site_id: string
           updated_at?: string | null
+          use_editorial_pipeline?: boolean
           user_id: string
         }
         Update: {
@@ -1384,6 +1386,7 @@ export type Database = {
           total_cycles_run?: number | null
           tracked_site_id?: string
           updated_at?: string | null
+          use_editorial_pipeline?: boolean
           user_id?: string
         }
         Relationships: [
