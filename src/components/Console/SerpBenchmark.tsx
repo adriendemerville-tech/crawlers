@@ -268,6 +268,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && runBenchmark()}
+              className="caret-foreground"
             />
           </div>
           <div className="space-y-1">

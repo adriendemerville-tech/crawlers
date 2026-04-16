@@ -131,9 +131,32 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
     }
   };
 
-  // Manual URL inspection
+  // Manual URL inspection — restrict to selected domain
   const handleManualInspect = async () => {
-    if (!manualUrl.trim()) return;
+    let url = manualUrl.trim();
+    if (!url) return;
+    // Auto-prefix with domain if user typed a path
+    if (selectedDomain && !url.startsWith('http')) {
+      url = `${domainBase}${url.startsWith('/') ? '' : '/'}${url}`;
+    }
+    // Validate URL belongs to the selected domain
+    if (selectedDomain) {
+      const normalizedDomain = selectedDomain.replace(/^www\./, '').toLowerCase();
+      try {
+        const urlDomain = new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+        if (urlDomain !== normalizedDomain) {
+          toast.error(t3(language,
+            `Seules les URLs du domaine ${normalizedDomain} sont autorisées`,
+            `Only URLs from ${normalizedDomain} are allowed`,
+            `Solo se permiten URLs del dominio ${normalizedDomain}`
+          ));
+          return;
+        }
+      } catch {
+        toast.error(t3(language, 'URL invalide', 'Invalid URL', 'URL inválida'));
+        return;
+      }
+    }
     setInspectingManual(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-indexation', {
