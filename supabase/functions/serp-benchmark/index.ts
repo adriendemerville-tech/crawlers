@@ -254,14 +254,22 @@ function computeAveragedResults(
 Deno.serve(handleRequest(async (req) => {
   const supabase = getServiceClient();
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonError('Unauthorized', 401);
 
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !user) return jsonError('Invalid token', 401);
+  // Try to authenticate — allow anonymous for 'benchmark' action (lead magnet)
+  let user: { id: string } | null = null;
+  if (authHeader) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: u }, error: authErr } = await supabase.auth.getUser(token);
+    if (!authErr && u) user = u;
+  }
 
   const body = await req.json();
   const { action } = body;
+
+  // Actions that require auth
+  if ((action === 'list' || action === 'get') && !user) {
+    return jsonError('Unauthorized', 401);
+  }
 
   if (action === 'benchmark') {
     const {
@@ -291,32 +299,36 @@ Deno.serve(handleRequest(async (req) => {
     const providerResults = await Promise.all(fetchers);
     const averaged = computeAveragedResults(providerResults, single_hit_penalty);
 
-    // Store results
-    const { data: inserted, error: insertErr } = await supabase
-      .from('serp_benchmark_results')
-      .insert({
-        user_id: user.id,
-        tracked_site_id: tracked_site_id || null,
-        query_text: query,
-        target_domain: target_domain || null,
-        location,
-        language,
-        country,
-        providers_used: providerResults.filter(p => !p.error).map(p => p.provider),
-        providers_data: Object.fromEntries(providerResults.map(p => [p.provider, { results: p.results, error: p.error }])),
-        averaged_results: averaged,
-        single_hit_penalty,
-        total_sites_found: averaged.length,
-      })
-      .select('id')
-      .single();
+    // Store results only for authenticated users
+    let insertedId: string | undefined;
+    if (user) {
+      const { data: inserted, error: insertErr } = await supabase
+        .from('serp_benchmark_results')
+        .insert({
+          user_id: user.id,
+          tracked_site_id: tracked_site_id || null,
+          query_text: query,
+          target_domain: target_domain || null,
+          location,
+          language,
+          country,
+          providers_used: providerResults.filter(p => !p.error).map(p => p.provider),
+          providers_data: Object.fromEntries(providerResults.map(p => [p.provider, { results: p.results, error: p.error }])),
+          averaged_results: averaged,
+          single_hit_penalty,
+          total_sites_found: averaged.length,
+        })
+        .select('id')
+        .single();
 
-    if (insertErr) {
-      console.error('[serp-benchmark] insert error:', insertErr.message);
+      if (insertErr) {
+        console.error('[serp-benchmark] insert error:', insertErr.message);
+      }
+      insertedId = inserted?.id;
     }
 
     return jsonOk({
-      id: inserted?.id,
+      id: insertedId,
       providers: providerResults.map(p => ({ provider: p.provider, count: p.results.length, error: p.error })),
       averaged_results: averaged.slice(0, 50),
       total_sites: averaged.length,
