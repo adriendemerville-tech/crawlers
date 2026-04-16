@@ -34,6 +34,7 @@ function FooterComponent() {
     { label: 'Marina API', href: '/marina#api', description: t3(language, 'API asynchrone de rapports SEO & GEO en marque blanche', 'Async white-label SEO & GEO reporting API', 'API asíncrona de informes SEO & GEO de marca blanca'), isRoute: true },
     { label: 'Breathing Spiral', href: '/breathing-spiral', description: t3(language, 'Priorisation dynamique SEO/GEO en temps réel', 'Dynamic real-time SEO/GEO prioritization', 'Priorización dinámica SEO/GEO en tiempo real'), isRoute: true },
     { label: t3(language, 'Analyse de Logs', 'Log Analysis', 'Análisis de Logs'), href: '/analyse-logs', description: t3(language, 'Comprenez le crawl de Google et des IA', 'Understand Google and AI crawl behavior', 'Comprenda el crawl de Google y las IA'), isRoute: true },
+    { label: 'Ranking SERPs', href: '/app/serp-benchmark', description: t3(language, 'Benchmark de positions SERP multi-providers', 'Multi-provider SERP rank benchmark', 'Benchmark de posiciones SERP multi-proveedores'), isRoute: true },
   ];
 
   const resourcesLinks = [
