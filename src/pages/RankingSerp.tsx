@@ -61,8 +61,10 @@ function SerpBenchmarkMini() {
   };
 
   const buildLocation = () => {
-    const v = locValue.trim();
+    let v = locValue.trim();
     if (!v) return 'France';
+    // Strip leading "NN - " prefix from département entries (e.g. "13 - Bouches-du-Rhône" → "Bouches-du-Rhône")
+    v = v.replace(/^[0-9AB]{1,3}\s*-\s*/i, '').trim();
     switch (locScale) {
       case 'pays': return v;
       case 'region': return `${v},France`;
