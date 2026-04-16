@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useImperativeHandle, forwardRef } fro
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +57,7 @@ interface Props {
 export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function SerpBenchmark({ trackedSites, selectedSiteId }, ref) {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const { isAgencyPro, isAgencyPremium } = useCredits();
   const [query, setQuery] = useState('');
   const [targetDomain, setTargetDomain] = useState('');
   const [location, setLocation] = useState('France');
@@ -115,9 +117,14 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
     triggerBenchmark: (keyword: string) => runBenchmark(keyword),
   }), [runBenchmark]);
 
-  // Batch benchmark top keywords from keyword_universe
+  const maxBatchKeywords = isAgencyPremium ? 5 : isAgencyPro ? 1 : 0;
+
   const runTopKeywordsBenchmark = useCallback(async () => {
     if (!user || !selectedSiteId) return;
+    if (!isAgencyPro) {
+      toast.error(t3(language, 'Réservé aux abonnés Pro Agency', 'Pro Agency subscribers only', 'Solo suscriptores Pro Agency'));
+      return;
+    }
     const site = trackedSites.find(s => s.id === selectedSiteId);
     if (!site) return;
 
@@ -129,7 +136,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
         .eq('tracked_site_id', selectedSiteId)
         .eq('user_id', user.id)
         .order('opportunity_score', { ascending: false })
-        .limit(10);
+        .limit(maxBatchKeywords);
 
       if (error) throw error;
       if (!keywords?.length) {
@@ -181,7 +188,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
       setBatchLoading(false);
       setBatchProgress(null);
     }
-  }, [user, selectedSiteId, trackedSites, selectedProviders, location, penaltyEnabled, singleHitPenalty, language, runBenchmark]);
+  }, [user, selectedSiteId, trackedSites, selectedProviders, location, penaltyEnabled, singleHitPenalty, language, runBenchmark, isAgencyPro, maxBatchKeywords]);
 
 
   const copyResults = () => {
@@ -321,13 +328,18 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           <Button
             variant="outline"
             onClick={runTopKeywordsBenchmark}
-            disabled={loading || batchLoading || selectedProviders.length < 2 || !selectedSiteId}
+            disabled={loading || batchLoading || selectedProviders.length < 2 || !selectedSiteId || !isAgencyPro}
             className="gap-2"
+            title={!isAgencyPro ? t3(language, 'Réservé Pro Agency', 'Pro Agency only', 'Solo Pro Agency') : ''}
           >
             {batchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
             {batchLoading && batchProgress
               ? `${batchProgress.current}/${batchProgress.total} — ${batchProgress.keyword}`
-              : t3(language, 'Benchmarker mes top keywords', 'Benchmark my top keywords', 'Benchmark mis top keywords')
+              : t3(language,
+                  `Top keywords (max ${maxBatchKeywords})`,
+                  `Top keywords (max ${maxBatchKeywords})`,
+                  `Top keywords (máx ${maxBatchKeywords})`
+                )
             }
           </Button>
         </div>
