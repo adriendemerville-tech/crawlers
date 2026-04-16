@@ -36,8 +36,9 @@ function GmbConsolePreview() {
         {/* Score header */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Score de complétude GBP</p>
+         <p className="text-sm text-muted-foreground">Score de complétude GBP</p>
             <p className="text-3xl font-bold text-foreground">78<span className="text-lg text-muted-foreground">/100</span></p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Audit sur 100 points — 5 catégories</p>
           </div>
           <div className="h-16 w-16 rounded-full border-4 border-primary flex items-center justify-center">
             <MapPin className="h-6 w-6 text-primary" />
@@ -96,6 +97,16 @@ function GmbConsolePreview() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Auto-reply badge */}
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-primary shrink-0" />
+          <div>
+            <p className="text-xs font-semibold text-foreground">Réponses IA aux avis</p>
+            <p className="text-[10px] text-muted-foreground">4 avis sans réponse — générer en 1 clic</p>
+          </div>
+          <Sparkles className="h-3.5 w-3.5 text-primary ml-auto shrink-0" />
         </div>
       </div>
     </div>
