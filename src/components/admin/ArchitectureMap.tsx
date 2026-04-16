@@ -9,7 +9,7 @@ interface Domain {
 }
 
 const domains: Record<string, Domain> = {
-  CORE: { color: "#1D3557", tables: ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory"], functions: [] },
+  CORE: { color: "#1D3557", tables: ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory", "concurrence"], functions: [] },
   COCOON: { color: "#2A9D8F", tables: ["cocoon_sessions", "cocoon_diagnostic_results", "cocoon_recommendations", "cocoon_tasks", "cocoon_auto_links", "cocoon_batch_operations", "cocoon_chat_histories", "cocoon_errors", "cocoon_strategy_plans", "cocoon_architect_drafts", "cocoon_linking_exclusions", "cocoon_nodes", "semantic_nodes"], functions: ["cocoon-chat", "cocoon-strategist", "cocoon-auto-linking", "cocoon-bulk-auto-linking", "cocoon-deploy-links", "cocoon-batch-deploy", "cocoon-diag-authority", "cocoon-diag-content", "cocoon-diag-semantic", "cocoon-diag-structure", "cocoon-diag-subdomains", "calculate-cocoon-logic", "persist-cocoon-session"] },
   AUDIT: { color: "#E63946", tables: ["audits", "audit_raw_data", "audit_cache", "audit_recommendations_registry", "audit_impact_snapshots", "pdf_audits"], functions: ["audit-expert-seo", "audit-local-seo", "audit-matrice", "audit-strategique-ia", "audit-compare", "audit-code-quality-backend", "audit-code-quality-frontend", "expert-audit", "save-audit", "measure-audit-impact", "snapshot-audit-impact"] },
   CRAWL: { color: "#457B9D", tables: ["site_crawls", "crawl_pages", "crawl_jobs", "crawl_page_backlinks", "crawl_index_history"], functions: ["crawl-site", "process-crawl-queue", "strategic-crawl", "check-crawlers"] },
@@ -27,7 +27,6 @@ const domains: Record<string, Domain> = {
   BLOG: { color: "#118AB2", tables: ["blog_articles", "quiz_questions"], functions: ["generate-blog-from-news", "fetch-news", "felix-seo-quiz"] },
   PAIEMENT: { color: "#06D6A0", tables: ["stripe_payments", "paid_api_calls", "billing_info"], functions: ["stripe-webhook", "stripe-actions"] },
   AGENCE: { color: "#FFD166", tables: ["agency_clients", "agency_client_sites", "agency_team_members", "agency_invitations"], functions: ["manage-team", "share-actions", "share-report"] },
-  CONCURRENCE: { color: "#D62828", tables: ["competitor_tracked_urls", "content_gap_results", "backlink_snapshots"], functions: ["audit-competitor-url", "strategic-competitors", "link-intersection", "serp-benchmark"] },
 };
 
 // Directed connections: [data_source, data_consumer] — particle flows in direction of data
@@ -87,10 +86,6 @@ const dashedLinks: [string, string][] = [
   ["CORE", "AGENCE"], ["ABONNEMENT", "AGENCE"],
   // PAIEMENT data flows
   ["CORE", "PAIEMENT"], ["AUDIT", "PAIEMENT"], ["PAIEMENT", "ABONNEMENT"],
-  // CONCURRENCE reads/writes
-  ["CORE", "CONCURRENCE"], ["SERP & VISIBILITY", "CONCURRENCE"],
-  ["CRAWL", "CONCURRENCE"], ["CONCURRENCE", "AUDIT"], ["CONCURRENCE", "CONTENT"],
-  ["CONCURRENCE", "AGENTS IA"],
 ];
 
 // ── Layout ───────────────────────────────────────────────────
@@ -99,25 +94,25 @@ const SVG_H = 1000;
 const CX = SVG_W / 2;
 const CY = SVG_H / 2 - 20;
 
-const minorNames = ["PROFIL", "ABONNEMENT", "BLOG", "PAIEMENT", "AGENCE", "CONCURRENCE"];
+const minorNames = ["PROFIL", "ABONNEMENT", "BLOG", "PAIEMENT", "AGENCE"];
 const majorNames = Object.keys(domains).filter(d => d !== "CORE" && !minorNames.includes(d));
 
-// Core 2x2 grid → now 5 tables (2+2+1)
+// Core 3x2 grid → 6 tables
 const CORE_W = 140;
 const CORE_H = 65;
 const CORE_GAP = 10;
-const coreNames = ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory"];
+const coreNames = ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory", "concurrence"];
 
 interface CardRect { x: number; y: number; w: number; h: number; }
 
 function computePositions() {
   const positions: Record<string, CardRect> = {};
 
-  // Core cards (grouped as one logical unit)
+  // Core cards: 3 cols × 2 rows
   positions.CORE = {
-    x: CX - CORE_W - CORE_GAP / 2,
+    x: CX - (3 * CORE_W + 2 * CORE_GAP) / 2,
     y: CY - CORE_H - CORE_GAP / 2,
-    w: 2 * CORE_W + CORE_GAP,
+    w: 3 * CORE_W + 2 * CORE_GAP,
     h: 2 * CORE_H + CORE_GAP,
   };
 
@@ -350,25 +345,25 @@ const ArchitectureMap: React.FC = () => {
                 style={{ cursor: "pointer" }}
               >
             {coreNames.map((tableName, idx) => {
-                  const cols = idx < 4 ? 2 : 1;
-                  const cx = idx < 4
-                    ? pos.x + (idx % 2) * (CORE_W + CORE_GAP)
-                    : pos.x + (pos.w - CORE_W) / 2;
-                  const cy = idx < 4
-                    ? pos.y + Math.floor(idx / 2) * (CORE_H + CORE_GAP)
-                    : pos.y + 2 * (CORE_H + CORE_GAP);
+                  const col = idx % 3;
+                  const row = Math.floor(idx / 3);
+                  const cx = pos.x + col * (CORE_W + CORE_GAP);
+                  const cy = pos.y + row * (CORE_H + CORE_GAP);
                   const coreDescriptions: Record<string, string> = {
                     profiles: "Identité et préférences utilisateurs",
                     tracked_sites: "Sites suivis et leur configuration",
                     architect_workbench: "Diagnostics et tâches centralisées",
                     seasonal_context: "Contexte temporel et saisonnier",
                     site_memory: "Mémoire persistante par site",
+                    concurrence: "Tracking concurrents et gaps SEO",
                   };
+                  const isConcurrence = tableName === "concurrence";
+                  const subColor = isConcurrence ? "#D62828" : d.color;
                   return (
                     <g key={idx}>
                       <rect x={cx} y={cy} width={CORE_W} height={CORE_H} rx={6}
-                        fill={active || isHov ? d.color : "#1e2433"}
-                        stroke={isHov ? "#fff" : active ? d.color : "#2a3040"}
+                        fill={active || isHov ? subColor : "#1e2433"}
+                        stroke={isHov ? "#fff" : active ? subColor : "#2a3040"}
                         strokeWidth={isHov ? 2 : 1}
                         opacity={hovered && !active ? 0.3 : 1}
                         style={{ transition: "fill 0.3s, opacity 0.3s, stroke 0.3s" }}
