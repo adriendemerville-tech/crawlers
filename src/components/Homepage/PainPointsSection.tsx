@@ -50,7 +50,6 @@ export const PainPointsSection = () => {
         <div className="mx-auto max-w-3xl rounded-xl px-6 py-6 text-center font-medium border-primary/20 dark:border-violet-600 dark:border-dashed bg-popover border-0">
           <span className="block mb-3 text-sm font-bold text-primary-foreground">L'approche Crawlers</span>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            L'analyse de la SERP est de moins en moins fiable — les contre-mesures de Google piègent les outils de crawl classiques.{' '}
             <strong className="text-foreground">
               Crawlers base ses recommandations sur les données concrètes de vos sites et de leurs audiences
             </strong>{' '}
