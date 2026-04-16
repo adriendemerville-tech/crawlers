@@ -43,7 +43,12 @@ function verdictBadge(verdict: string) {
   return <Badge variant="secondary" className="gap-1">Inconnu</Badge>;
 }
 
-export function IndexationMonitor() {
+interface IndexationMonitorProps {
+  externalSiteId?: string | null;
+  externalDomain?: string | null;
+}
+
+export function IndexationMonitor({ externalSiteId, externalDomain }: IndexationMonitorProps = {}) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
@@ -65,10 +70,17 @@ export function IndexationMonitor() {
       .then(({ data }) => {
         if (data?.length) {
           setTrackedSites(data);
-          setSelectedSiteId(data[0].id);
+          if (!externalSiteId) setSelectedSiteId(data[0].id);
         }
       });
-  }, [user]);
+  }, [user, externalSiteId]);
+
+  // Sync with external site selection from console sidebar
+  useEffect(() => {
+    if (externalSiteId) {
+      setSelectedSiteId(externalSiteId);
+    }
+  }, [externalSiteId]);
 
   // Load existing checks
   const loadChecks = useCallback(async () => {
@@ -119,13 +131,36 @@ export function IndexationMonitor() {
     }
   };
 
-  // Manual URL inspection
+  // Manual URL inspection — restrict to selected domain
   const handleManualInspect = async () => {
-    if (!manualUrl.trim()) return;
+    let url = manualUrl.trim();
+    if (!url) return;
+    // Auto-prefix with domain if user typed a path
+    if (selectedDomain && !url.startsWith('http')) {
+      url = `${domainBase}${url.startsWith('/') ? '' : '/'}${url}`;
+    }
+    // Validate URL belongs to the selected domain
+    if (selectedDomain) {
+      const normalizedDomain = selectedDomain.replace(/^www\./, '').toLowerCase();
+      try {
+        const urlDomain = new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+        if (urlDomain !== normalizedDomain) {
+          toast.error(t3(language,
+            `Seules les URLs du domaine ${normalizedDomain} sont autorisées`,
+            `Only URLs from ${normalizedDomain} are allowed`,
+            `Solo se permiten URLs del dominio ${normalizedDomain}`
+          ));
+          return;
+        }
+      } catch {
+        toast.error(t3(language, 'URL invalide', 'Invalid URL', 'URL inválida'));
+        return;
+      }
+    }
     setInspectingManual(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-indexation', {
-        body: { action: 'inspect', tracked_site_id: selectedSiteId, urls: [manualUrl.trim()] },
+        body: { action: 'inspect', tracked_site_id: selectedSiteId, urls: [url] },
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Inspection failed');
@@ -140,7 +175,8 @@ export function IndexationMonitor() {
     }
   };
 
-  const selectedDomain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
+  const selectedDomain = externalDomain || trackedSites.find(s => s.id === selectedSiteId)?.domain;
+  const domainBase = selectedDomain ? `https://${selectedDomain.replace(/^www\./, '')}` : '';
 
   const indexed = checks.filter(c => c.verdict === 'PASS').length;
   const notIndexed = checks.filter(c => c.verdict !== 'PASS' && c.verdict !== 'unknown').length;
@@ -198,10 +234,11 @@ export function IndexationMonitor() {
 
             <div className="flex gap-2 flex-1">
               <Input
-                placeholder={t3(language, 'https://example.com/page', 'https://example.com/page', 'https://example.com/pagina')}
+                placeholder={selectedDomain ? `${domainBase}/page` : t3(language, 'https://example.com/page', 'https://example.com/page', 'https://example.com/pagina')}
                 value={manualUrl}
                 onChange={e => setManualUrl(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleManualInspect()}
+                className="caret-foreground"
               />
               <Button
                 variant="outline"

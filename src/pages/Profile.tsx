@@ -142,7 +142,7 @@ function ProfileContent() {
       case 'drafts': return <MyContent externalDomain={selectedDomain} />;
       case 'marina': return <MarinaConsoleTab />;
       case 'sea-seo': return isProUser ? <SeaSeoBridgeTab /> : null;
-      case 'indexation': return <IndexationMonitor />;
+      case 'indexation': return <IndexationMonitor externalSiteId={selectedSiteId} externalDomain={selectedDomain} />;
       case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />;
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;

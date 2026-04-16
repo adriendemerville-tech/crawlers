@@ -173,7 +173,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
               onClick={() => setSelectorOpen(!selectorOpen)}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-accent/20 hover:bg-accent/40 transition-colors text-left"
             >
-              <Globe className="h-3.5 w-3.5 shrink-0 text-primary" />
+              
               <span className="flex-1 truncate text-xs font-medium">
                 {selectedSite ? selectedSite.domain.replace(/^www\./, '') : t.allSites}
               </span>
