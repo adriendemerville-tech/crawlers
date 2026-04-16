@@ -115,7 +115,75 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
     triggerBenchmark: (keyword: string) => runBenchmark(keyword),
   }), [runBenchmark]);
 
-  const copyResults = () => {
+  // Batch benchmark top keywords from keyword_universe
+  const runTopKeywordsBenchmark = useCallback(async () => {
+    if (!user || !selectedSiteId) return;
+    const site = trackedSites.find(s => s.id === selectedSiteId);
+    if (!site) return;
+
+    setBatchLoading(true);
+    try {
+      const { data: keywords, error } = await supabase
+        .from('keyword_universe')
+        .select('keyword, opportunity_score')
+        .eq('tracked_site_id', selectedSiteId)
+        .eq('user_id', user.id)
+        .order('opportunity_score', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      if (!keywords?.length) {
+        toast.error(t3(language,
+          'Aucun mot-clé trouvé dans l\'univers de mots-clés pour ce site. Lancez d\'abord un audit stratégique.',
+          'No keywords found in keyword universe for this site. Run a strategic audit first.',
+          'No se encontraron palabras clave para este sitio.'
+        ));
+        setBatchLoading(false);
+        return;
+      }
+
+      toast.info(`${keywords.length} top keywords à benchmarker`);
+
+      for (let i = 0; i < keywords.length; i++) {
+        const kw = keywords[i];
+        setBatchProgress({ current: i + 1, total: keywords.length, keyword: kw.keyword });
+
+        await supabase.functions.invoke('serp-benchmark', {
+          body: {
+            action: 'benchmark',
+            query: kw.keyword,
+            tracked_site_id: selectedSiteId,
+            target_domain: site.domain,
+            location,
+            language: 'fr',
+            country: 'fr',
+            single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
+            providers: selectedProviders,
+          },
+        });
+
+        if (i < keywords.length - 1) {
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      }
+
+      toast.success(t3(language,
+        `${keywords.length} benchmarks terminés !`,
+        `${keywords.length} benchmarks completed!`,
+        `${keywords.length} benchmarks completados!`
+      ));
+
+      // Display the top keyword result
+      runBenchmark(keywords[0].keyword);
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur batch benchmark');
+    } finally {
+      setBatchLoading(false);
+      setBatchProgress(null);
+    }
+  }, [user, selectedSiteId, trackedSites, selectedProviders, location, penaltyEnabled, singleHitPenalty, language, runBenchmark]);
+
+
     if (!results) return;
     const activeProviders = providerSummaries.filter(p => !p.error).map(p => p.provider);
     const header = ['#', 'Site', ...activeProviders, 'Moyenne'].join('\t');
