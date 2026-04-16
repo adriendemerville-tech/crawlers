@@ -62,7 +62,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   const [targetDomain, setTargetDomain] = useState('');
   const [locScale, setLocScale] = useState<'pays' | 'region' | 'departement' | 'ville'>('pays');
   const [locValue, setLocValue] = useState('France');
-  const [singleHitPenalty, setSingleHitPenalty] = useState(20);
+  const singleHitPenalty = 20;
   const [penaltyEnabled, setPenaltyEnabled] = useState(true);
   const [selectedProviders, setSelectedProviders] = useState<string[]>(['DataForSEO', 'SerpApi', 'Serper']);
   const [loading, setLoading] = useState(false);
@@ -358,24 +358,15 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
               </datalist>
             )}
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-              <Checkbox
-                checked={penaltyEnabled}
-                onCheckedChange={(v) => setPenaltyEnabled(!!v)}
-                className="h-3.5 w-3.5"
-              />
-              Single-hit penalty
-            </label>
-            <Input
-              type="number"
-              value={singleHitPenalty}
-              onChange={e => setSingleHitPenalty(parseInt(e.target.value) || 0)}
-              disabled={!penaltyEnabled}
-              className="w-full"
-              min={0}
-              max={100}
+          <div className="flex items-center gap-2 pt-5">
+            <Checkbox
+              checked={penaltyEnabled}
+              onCheckedChange={(v) => setPenaltyEnabled(!!v)}
+              className="h-3.5 w-3.5"
             />
+            <label className="text-xs font-medium text-muted-foreground">
+              Single-hit penalty (+{singleHitPenalty})
+            </label>
           </div>
         </div>
 
