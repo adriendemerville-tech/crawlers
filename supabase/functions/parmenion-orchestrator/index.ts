@@ -18,6 +18,7 @@ import { TECH_TOOLS, CONTENT_TOOLS, DECISION_TOOL } from '../_shared/parmenion/t
 import { buildPhaseInstructions } from '../_shared/parmenion/prompts.ts';
 import { enrichKeywordsForPrescribe } from '../_shared/parmenion/keywordEnrichment.ts';
 import { callLLMWithTools } from '../_shared/parmenion/llmClient.ts';
+import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
@@ -1324,7 +1325,54 @@ ${templateBlock}`;
     }
   }
 
-  const functions: string[] = [];
+  // ── EDITORIAL PIPELINE ENRICHMENT (opt-in via autopilot_configs.use_editorial_pipeline) ──
+  // For each create-post / create-page action, optionally regenerate the body via the
+  // shared 4-stage pipeline (Briefing → Strategist → Writer → Tonalizer).
+  try {
+    const { data: cfg } = await supabase
+      .from('autopilot_configs')
+      .select('use_editorial_pipeline')
+      .eq('tracked_site_id', context.tracked_site_id)
+      .maybeSingle();
+    const usePipeline = (cfg as { use_editorial_pipeline?: boolean } | null)?.use_editorial_pipeline === true;
+    if (usePipeline && context.user_id) {
+      const editorialActions = cmsActions.filter(
+        (a) => a._channel === 'content_editorial' && (a.action === 'create-post' || a.action === 'create-page'),
+      );
+      for (const action of editorialActions) {
+        try {
+          const ct: ContentType = action.action === 'create-page' ? 'seo_page' : 'blog_article';
+          const brief = action.body?.title || action.body?.meta_title || 'Nouveau contenu';
+          const result = await runEditorialPipeline(supabase, {
+            user_id: context.user_id,
+            domain: context.domain,
+            tracked_site_id: context.tracked_site_id,
+            content_type: ct,
+            user_brief: brief,
+          });
+          // Replace body content with pipeline output, keep CMS-specific fields
+          action.body = {
+            ...action.body,
+            title: result.final.title || action.body?.title,
+            content: result.final.content || action.body?.content,
+            excerpt: result.final.excerpt || action.body?.excerpt,
+            _pipeline_run_id: result.pipeline_run_id,
+            _pipeline_models: {
+              strategist: result.strategy.model_used,
+              writer: result.draft.model_used,
+              tonalizer: result.final.model_used,
+            },
+          };
+          console.log(`[Parménion] Pipeline enriched action "${action.body.title}" in ${result.total_latency_ms}ms`);
+        } catch (e) {
+          console.error('[Parménion] Pipeline enrichment failed for one action, keeping legacy content:', e);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[Parménion] Pipeline opt-in check failed:', e);
+  }
+
   if (fixes.length > 0) functions.push('generate-corrective-code');
   if (cmsActions.length > 0) functions.push('iktracker-actions');
 
