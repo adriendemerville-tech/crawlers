@@ -3924,6 +3924,150 @@ export type Database = {
           },
         ]
       }
+      editorial_briefing_packets: {
+        Row: {
+          briefing_data: Json
+          consumed_at: string | null
+          consumed_by_pipeline_id: string | null
+          content_type: string
+          created_at: string
+          domain: string
+          id: string
+          source_signals: Json
+          spiral_phase: string | null
+          target_url: string | null
+          tracked_site_id: string | null
+          user_id: string
+          workbench_item_ids: string[] | null
+        }
+        Insert: {
+          briefing_data?: Json
+          consumed_at?: string | null
+          consumed_by_pipeline_id?: string | null
+          content_type: string
+          created_at?: string
+          domain: string
+          id?: string
+          source_signals?: Json
+          spiral_phase?: string | null
+          target_url?: string | null
+          tracked_site_id?: string | null
+          user_id: string
+          workbench_item_ids?: string[] | null
+        }
+        Update: {
+          briefing_data?: Json
+          consumed_at?: string | null
+          consumed_by_pipeline_id?: string | null
+          content_type?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          source_signals?: Json
+          spiral_phase?: string | null
+          target_url?: string | null
+          tracked_site_id?: string | null
+          user_id?: string
+          workbench_item_ids?: string[] | null
+        }
+        Relationships: []
+      }
+      editorial_llm_routing: {
+        Row: {
+          content_type: string
+          created_at: string
+          domain: string
+          id: string
+          is_default: boolean
+          notes: string | null
+          strategist_model: string | null
+          tonalizer_model: string | null
+          updated_at: string
+          user_id: string
+          writer_model: string | null
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          domain: string
+          id?: string
+          is_default?: boolean
+          notes?: string | null
+          strategist_model?: string | null
+          tonalizer_model?: string | null
+          updated_at?: string
+          user_id: string
+          writer_model?: string | null
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          is_default?: boolean
+          notes?: string | null
+          strategist_model?: string | null
+          tonalizer_model?: string | null
+          updated_at?: string
+          user_id?: string
+          writer_model?: string | null
+        }
+        Relationships: []
+      }
+      editorial_pipeline_logs: {
+        Row: {
+          content_type: string
+          cost_usd: number | null
+          created_at: string
+          domain: string
+          error_message: string | null
+          id: string
+          latency_ms: number | null
+          metadata: Json | null
+          model_used: string | null
+          pipeline_run_id: string
+          stage: string
+          status: string
+          tokens_in: number | null
+          tokens_out: number | null
+          user_id: string
+        }
+        Insert: {
+          content_type: string
+          cost_usd?: number | null
+          created_at?: string
+          domain: string
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          model_used?: string | null
+          pipeline_run_id: string
+          stage: string
+          status?: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          cost_usd?: number | null
+          created_at?: string
+          domain?: string
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          model_used?: string | null
+          pipeline_run_id?: string
+          stage?: string
+          status?: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       eeat_scoring_criteria: {
         Row: {
           category: string
