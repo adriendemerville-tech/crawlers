@@ -1361,79 +1361,7 @@ ${templateBlock}`;
   };
 }
 
-async function callLLMWithTools(apiKey: string, prompt: string, tools: any[], model = 'google/gemini-2.5-flash'): Promise<any[]> {
-  // Retry strategy: 
-  // 1. Primary model with tool_choice=required
-  // 2. Same model with tool_choice=auto (some models respond better)
-  // 3. Fallback model with tool_choice=required
-  const attempts: Array<{ model: string; toolChoice: string; temp: number }> = [
-    { model, toolChoice: 'required', temp: 0.2 },
-    { model, toolChoice: 'auto', temp: 0.3 },
-  ];
-  if (model !== 'google/gemini-2.5-flash') {
-    attempts.push({ model: 'google/gemini-2.5-flash', toolChoice: 'required', temp: 0.3 });
-  }
-  
-  for (let i = 0; i < attempts.length; i++) {
-    const { model: currentModel, toolChoice, temp } = attempts[i];
-    const timeout = currentModel.includes('pro') ? 120_000 : 90_000;
-    
-    try {
-      if (i > 0) {
-        console.log(`[Parménion] 🔄 Retry ${i}/${attempts.length - 1}: model=${currentModel}, tool_choice=${toolChoice}`);
-      }
-      
-      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: currentModel,
-          messages: [{ role: 'user', content: prompt }],
-          temperature: temp,
-          tools,
-          tool_choice: toolChoice,
-        }),
-        signal: AbortSignal.timeout(timeout),
-      });
-
-      if (!response.ok) {
-        const err = await response.text();
-        console.error(`[Parménion] LLM error (${currentModel}, ${toolChoice}):`, response.status, err.slice(0, 300));
-        continue;
-      }
-
-      const result = await response.json();
-      const message = result.choices?.[0]?.message;
-      const toolCalls = message?.tool_calls || [];
-      
-      if (toolCalls.length === 0) {
-        const textContent = message?.content || '';
-        console.warn(`[Parménion] ⚠️ 0 tool calls (model: ${currentModel}, choice: ${toolChoice}, attempt: ${i + 1}). finish_reason: ${result.choices?.[0]?.finish_reason}. Text: ${textContent.slice(0, 200)}${textContent.length > 200 ? '…' : ''}`);
-        continue;
-      }
-      
-      if (i > 0) {
-        console.log(`[Parménion] ✅ Retry ${i} succeeded (${currentModel}, ${toolChoice}): ${toolCalls.length} tool calls`);
-      }
-      
-      return toolCalls.map((tc: any) => ({
-        name: tc.function.name,
-        arguments: typeof tc.function.arguments === 'string' 
-          ? JSON.parse(tc.function.arguments) 
-          : tc.function.arguments,
-      }));
-    } catch (e) {
-      console.error(`[Parménion] LLM failed (${currentModel}, attempt ${i + 1}):`, e);
-      continue;
-    }
-  }
-  
-  console.error(`[Parménion] ❌ All ${attempts.length} LLM attempts failed for tool calls`);
-  return [];
-}
+// Local callLLMWithTools removed — uses shared import from _shared/parmenion/llmClient.ts
 
 // ═══════════════════════════════════════════════════════════════
 // LLM REASONING ENGINE (for non-prescribe phases)
@@ -1577,99 +1505,114 @@ ${context.cocoon ? JSON.stringify({
 Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUpperCase()} ?`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.3,
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'parmenion_decide',
-            description: 'Submit Parménion autonomous action for this autopilot cycle',
-            parameters: {
-              type: 'object',
-              properties: {
-                goal: {
-                  type: 'object',
-                  properties: {
-                    type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'content_creation', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
-                    cluster_id: { type: 'string' },
-                    description: { type: 'string' },
-                  },
-                  required: ['type', 'description'],
-                },
-                tactic: {
-                  type: 'object',
-                  properties: {
-                    initial_scope: { type: 'object' },
-                    final_scope: { type: 'object' },
-                    scope_reductions: { type: 'integer' },
-                    estimated_tokens: { type: 'integer' },
-                    target_url: { type: 'string' },
-                  },
-                  required: ['initial_scope', 'final_scope', 'scope_reductions', 'estimated_tokens'],
-                },
-                prudence: {
-                  type: 'object',
-                  properties: {
-                    impact_level: { type: 'string', enum: ['faible', 'modéré', 'neutre', 'avancé', 'très_avancé'] },
-                    risk_score: { type: 'integer', minimum: 1, maximum: 3 },
-                    iterations: { type: 'integer' },
-                    goal_changed: { type: 'boolean' },
-                    reasoning: { type: 'string' },
-                  },
-                  required: ['impact_level', 'risk_score', 'iterations', 'goal_changed', 'reasoning'],
-                },
-                action: {
-                  type: 'object',
-                  properties: {
-                    type: { type: 'string' },
-                    payload: { type: 'object' },
-                    functions: { type: 'array', items: { type: 'string' } },
-                  },
-                  required: ['type', 'payload', 'functions'],
-                },
-                summary: { type: 'string' },
-              },
-              required: ['goal', 'tactic', 'prudence', 'action', 'summary'],
-              additionalProperties: false,
-            },
+    // Try OpenRouter first, then Lovable AI
+    const gateways: Array<{ url: string; key: string; label: string }> = [];
+    const orKey = Deno.env.get('OPENROUTER_API_KEY');
+    if (orKey) gateways.push({ url: 'https://openrouter.ai/api/v1/chat/completions', key: orKey, label: 'OpenRouter' });
+    if (LOVABLE_API_KEY) gateways.push({ url: 'https://ai.gateway.lovable.dev/v1/chat/completions', key: LOVABLE_API_KEY, label: 'Lovable' });
+
+    for (const gw of gateways) {
+      try {
+        const response = await fetch(gw.url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${gw.key}`,
+            'Content-Type': 'application/json',
+            ...(gw.label === 'OpenRouter' ? { 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers Parmenion' } : {}),
           },
-        }],
-        tool_choice: { type: 'function', function: { name: 'parmenion_decide' } },
-      }),
-    });
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.3,
+            tools: [{
+              type: 'function',
+              function: {
+                name: 'parmenion_decide',
+                description: 'Submit Parménion autonomous action for this autopilot cycle',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    goal: {
+                      type: 'object',
+                      properties: {
+                        type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'content_creation', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
+                        cluster_id: { type: 'string' },
+                        description: { type: 'string' },
+                      },
+                      required: ['type', 'description'],
+                    },
+                    tactic: {
+                      type: 'object',
+                      properties: {
+                        initial_scope: { type: 'object' },
+                        final_scope: { type: 'object' },
+                        scope_reductions: { type: 'integer' },
+                        estimated_tokens: { type: 'integer' },
+                        target_url: { type: 'string' },
+                      },
+                      required: ['initial_scope', 'final_scope', 'scope_reductions', 'estimated_tokens'],
+                    },
+                    prudence: {
+                      type: 'object',
+                      properties: {
+                        impact_level: { type: 'string', enum: ['faible', 'modéré', 'neutre', 'avancé', 'très_avancé'] },
+                        risk_score: { type: 'integer', minimum: 1, maximum: 3 },
+                        iterations: { type: 'integer' },
+                        goal_changed: { type: 'boolean' },
+                        reasoning: { type: 'string' },
+                      },
+                      required: ['impact_level', 'risk_score', 'iterations', 'goal_changed', 'reasoning'],
+                    },
+                    action: {
+                      type: 'object',
+                      properties: {
+                        type: { type: 'string' },
+                        payload: { type: 'object' },
+                        functions: { type: 'array', items: { type: 'string' } },
+                      },
+                      required: ['type', 'functions'],
+                    },
+                  },
+                  required: ['goal', 'tactic', 'prudence', 'action'],
+                },
+              },
+            }],
+            tool_choice: { type: 'function', function: { name: 'parmenion_decide' } },
+          }),
+          signal: AbortSignal.timeout(90_000),
+        });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error(`[Parménion] LLM error ${response.status}:`, errText);
-      return null;
+        if (!response.ok) {
+          const errText = await response.text();
+          console.error(`[Parménion] ${gw.label} LLM error ${response.status}:`, errText.slice(0, 300));
+          if (response.status === 402 || response.status === 429) continue; // try next gateway
+          return null;
+        }
+
+        const result = await response.json();
+        const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
+        if (!toolCall) {
+          console.error(`[Parménion] ${gw.label}: No tool call in LLM response`);
+          continue;
+        }
+
+        console.log(`[Parménion] ✅ Decision via ${gw.label}`);
+        const decision = JSON.parse(toolCall.function.arguments) as ParmenionDecision;
+        if (decision.prudence.risk_score > context.maxRisk) {
+          decision.prudence.risk_score = context.maxRisk;
+        }
+        return decision;
+      } catch (e) {
+        console.error(`[Parménion] ${gw.label} reasoning failed:`, e);
+        continue;
+      }
     }
 
-    const result = await response.json();
-    const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
-      console.error('[Parménion] No tool call in LLM response');
-      return null;
-    }
-
-    const decision = JSON.parse(toolCall.function.arguments) as ParmenionDecision;
-
-    // Enforce risk ceiling
-    if (decision.prudence.risk_score > context.maxRisk) {
-      decision.prudence.risk_score = context.maxRisk;
-    }
-
-    return decision;
+    console.error('[Parménion] ❌ All gateways exhausted for reasoning');
+    return null;
   } catch (e) {
     console.error('[Parménion] LLM call failed:', e);
     return null;
