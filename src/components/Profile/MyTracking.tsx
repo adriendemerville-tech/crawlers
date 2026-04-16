@@ -670,7 +670,7 @@ export function MyTracking({ externalSiteId }: { externalSiteId?: string | null 
                       <TabsList>
                         <TabsTrigger value="kpis">{t.kpis}</TabsTrigger>
                         <TabsTrigger value="evolution">{t.evolution}</TabsTrigger>
-                        <TabsTrigger value="competitors" className="gap-1.5">
+                        <TabsTrigger value="competitors" className="gap-1.5" disabled={!(h.isAdmin || h.planType === 'agency_premium')}>
                           <Search className="h-3 w-3" />
                           {h.language === 'fr' ? 'Concurrence' : h.language === 'es' ? 'Competencia' : 'Competitors'}
                           {!(h.isAdmin || h.planType === 'agency_premium') && (
