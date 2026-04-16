@@ -328,13 +328,18 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           <Button
             variant="outline"
             onClick={runTopKeywordsBenchmark}
-            disabled={loading || batchLoading || selectedProviders.length < 2 || !selectedSiteId}
+            disabled={loading || batchLoading || selectedProviders.length < 2 || !selectedSiteId || !isAgencyPro}
             className="gap-2"
+            title={!isAgencyPro ? t3(language, 'Réservé Pro Agency', 'Pro Agency only', 'Solo Pro Agency') : ''}
           >
             {batchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
             {batchLoading && batchProgress
               ? `${batchProgress.current}/${batchProgress.total} — ${batchProgress.keyword}`
-              : t3(language, 'Benchmarker mes top keywords', 'Benchmark my top keywords', 'Benchmark mis top keywords')
+              : t3(language,
+                  `Top keywords (max ${maxBatchKeywords})`,
+                  `Top keywords (max ${maxBatchKeywords})`,
+                  `Top keywords (máx ${maxBatchKeywords})`
+                )
             }
           </Button>
         </div>
