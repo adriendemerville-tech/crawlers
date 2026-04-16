@@ -1,13 +1,14 @@
 # SAV — Benchmark SERP Multi-Providers
 
 ## Qu'est-ce que c'est ?
-Le **Benchmark SERP** compare les résultats de recherche Google entre plusieurs fournisseurs de données (DataForSEO, SerpApi, Serper.dev, Bright Data). Il permet de détecter les écarts de positions et les résultats "anti-scraping" renvoyés par Google.
+Le **Benchmark SERP** compare les résultats de recherche Google entre 4 fournisseurs de données (DataForSEO, SerpApi, Serper.dev, Bright Data). Il permet de détecter les écarts de positions et les résultats "anti-scraping" renvoyés par Google.
 
 ## Où le trouver ?
-**Console > Indexation** → Section "Benchmark SERP Multi-Providers" en bas de page.
+- **Page gratuite** : `/app/ranking-serp` (accessible sans compte, benchmark avec les 4 providers)
+- **Console complète** : Console > Indexation → Section "Benchmark SERP Multi-Providers" en bas de page
 
 ## Comment l'utiliser ?
-1. **Sélectionner les providers** : Cliquer sur les chips pour activer/désactiver (minimum 2)
+1. **Sélectionner les providers** : Cliquer sur les chips pour activer/désactiver (minimum 2, 4 disponibles)
 2. **Entrer un mot-clé** : Ex: "agence seo"
 3. **Domaine cible** (optionnel) : Pour le mettre en surbrillance dans les résultats
 4. **Localisation** : France par défaut, autres pays disponibles
@@ -15,7 +16,7 @@ Le **Benchmark SERP** compare les résultats de recherche Google entre plusieurs
 6. Cliquer **Lancer le benchmark**
 
 ## Comment lire les résultats ?
-- Chaque colonne = un provider SERP
+- Chaque colonne = un provider SERP (DataForSEO, SerpApi, Serper, Bright Data)
 - Les chiffres = position dans les résultats Google selon ce provider
 - **—** = le provider n'a pas trouvé ce site
 - **SERP Réelle Moyenne** = position moyenne pondérée (la colonne la plus importante)
@@ -33,8 +34,8 @@ Si un site n'apparaît que chez 1 seul provider sur 4, c'est peut-être un faux 
 Le provider n'a pas de clé API configurée. Contactez l'administrateur pour l'ajouter.
 
 **Q: Combien ça coûte en crédits API ?**
-Chaque benchmark consomme 1 requête par provider activé. Avec 3 providers, 1 benchmark = 3 appels API.
+Chaque benchmark consomme 1 requête par provider activé. Avec 4 providers, 1 benchmark = 4 appels API.
 
 ## Accès
-- Réservé aux utilisateurs **Pro Agency** et supérieurs
-- Nécessite un site tracké sélectionné dans Console
+- Page gratuite : accessible à tous (lead magnet)
+- Console complète : réservé aux utilisateurs **Pro Agency** et supérieurs avec un site tracké sélectionné
