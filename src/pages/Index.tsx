@@ -659,11 +659,13 @@ const Index = () => {
                   : 'White-label reports, auto-deployed fixes, 5,000 pages/month crawl & AI agents — all included.'}
               </p>
               {/* Mini stats */}
-              <div className="mx-auto mb-6 grid max-w-md grid-cols-3 gap-3">
+              <div className="mx-auto mb-6 grid max-w-lg grid-cols-5 gap-2">
                 {[
                   { v: '∞', l: language === 'fr' ? 'Audits' : 'Audits' },
                   { v: '30', l: language === 'fr' ? 'Sites' : 'Sites' },
                   { v: '5K', l: language === 'fr' ? 'Pages/mois' : 'Pages/mo' },
+                  { v: '24', l: language === 'fr' ? 'Algorithmes' : 'Algorithms' },
+                  { v: '16', l: language === 'fr' ? 'Agents autonomes' : language === 'es' ? 'Agentes autónomos' : 'Autonomous agents' },
                 ].map((s, i) => (
                   <div key={i} className="rounded-lg border border-border/50 bg-card/30 px-3 py-2 text-center">
                     <div className="text-xl font-extrabold text-foreground">{s.v}</div>
