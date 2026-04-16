@@ -9,7 +9,7 @@ interface Domain {
 }
 
 const domains: Record<string, Domain> = {
-  CORE: { color: "#1D3557", tables: ["profiles", "tracked_sites", "architect_workbench", "seasonal_context"], functions: [] },
+  CORE: { color: "#1D3557", tables: ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory"], functions: [] },
   COCOON: { color: "#2A9D8F", tables: ["cocoon_sessions", "cocoon_diagnostic_results", "cocoon_recommendations", "cocoon_tasks", "cocoon_auto_links", "cocoon_batch_operations", "cocoon_chat_histories", "cocoon_errors", "cocoon_strategy_plans", "cocoon_architect_drafts", "cocoon_linking_exclusions", "cocoon_nodes", "semantic_nodes"], functions: ["cocoon-chat", "cocoon-strategist", "cocoon-auto-linking", "cocoon-bulk-auto-linking", "cocoon-deploy-links", "cocoon-batch-deploy", "cocoon-diag-authority", "cocoon-diag-content", "cocoon-diag-semantic", "cocoon-diag-structure", "cocoon-diag-subdomains", "calculate-cocoon-logic", "persist-cocoon-session"] },
   AUDIT: { color: "#E63946", tables: ["audits", "audit_raw_data", "audit_cache", "audit_recommendations_registry", "audit_impact_snapshots", "pdf_audits"], functions: ["audit-expert-seo", "audit-local-seo", "audit-matrice", "audit-strategique-ia", "audit-compare", "audit-code-quality-backend", "audit-code-quality-frontend", "expert-audit", "save-audit", "measure-audit-impact", "snapshot-audit-impact"] },
   CRAWL: { color: "#457B9D", tables: ["site_crawls", "crawl_pages", "crawl_jobs", "crawl_page_backlinks", "crawl_index_history"], functions: ["crawl-site", "process-crawl-queue", "strategic-crawl", "check-crawlers"] },
@@ -27,6 +27,7 @@ const domains: Record<string, Domain> = {
   BLOG: { color: "#118AB2", tables: ["blog_articles", "quiz_questions"], functions: ["generate-blog-from-news", "fetch-news", "felix-seo-quiz"] },
   PAIEMENT: { color: "#06D6A0", tables: ["stripe_payments", "paid_api_calls", "billing_info"], functions: ["stripe-webhook", "stripe-actions"] },
   AGENCE: { color: "#FFD166", tables: ["agency_clients", "agency_client_sites", "agency_team_members", "agency_invitations"], functions: ["manage-team", "share-actions", "share-report"] },
+  CONCURRENCE: { color: "#D62828", tables: ["competitor_tracked_urls", "content_gap_results", "backlink_snapshots"], functions: ["audit-competitor-url", "strategic-competitors", "link-intersection", "serp-benchmark"] },
 };
 
 // Directed connections: [data_source, data_consumer] — particle flows in direction of data
@@ -86,6 +87,10 @@ const dashedLinks: [string, string][] = [
   ["CORE", "AGENCE"], ["ABONNEMENT", "AGENCE"],
   // PAIEMENT data flows
   ["CORE", "PAIEMENT"], ["AUDIT", "PAIEMENT"], ["PAIEMENT", "ABONNEMENT"],
+  // CONCURRENCE reads/writes
+  ["CORE", "CONCURRENCE"], ["SERP & VISIBILITY", "CONCURRENCE"],
+  ["CRAWL", "CONCURRENCE"], ["CONCURRENCE", "AUDIT"], ["CONCURRENCE", "CONTENT"],
+  ["CONCURRENCE", "AGENTS IA"],
 ];
 
 // ── Layout ───────────────────────────────────────────────────
@@ -94,14 +99,14 @@ const SVG_H = 1000;
 const CX = SVG_W / 2;
 const CY = SVG_H / 2 - 20;
 
-const minorNames = ["PROFIL", "ABONNEMENT", "BLOG", "PAIEMENT", "AGENCE"];
+const minorNames = ["PROFIL", "ABONNEMENT", "BLOG", "PAIEMENT", "AGENCE", "CONCURRENCE"];
 const majorNames = Object.keys(domains).filter(d => d !== "CORE" && !minorNames.includes(d));
 
-// Core 2x2 grid
+// Core 2x2 grid → now 5 tables (2+2+1)
 const CORE_W = 140;
 const CORE_H = 65;
 const CORE_GAP = 10;
-const coreNames = ["profiles", "tracked_sites", "architect_workbench", "seasonal_context"];
+const coreNames = ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory"];
 
 interface CardRect { x: number; y: number; w: number; h: number; }
 
