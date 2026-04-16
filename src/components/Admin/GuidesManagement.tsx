@@ -173,7 +173,7 @@ export function GuidesManagement() {
         .select('id')
         .eq('target_url', targetUrl)
         .eq('domain', 'crawlers.fr')
-        .neq('status', 'cancelled')
+        .neq('status', 'done' as any)
         .limit(1);
       if (existing && existing.length > 0) {
         toast.info('Déjà dans le plan Parménion');
