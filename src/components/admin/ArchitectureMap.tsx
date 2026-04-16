@@ -27,7 +27,6 @@ const domains: Record<string, Domain> = {
   BLOG: { color: "#118AB2", tables: ["blog_articles", "quiz_questions"], functions: ["generate-blog-from-news", "fetch-news", "felix-seo-quiz"] },
   PAIEMENT: { color: "#06D6A0", tables: ["stripe_payments", "paid_api_calls", "billing_info"], functions: ["stripe-webhook", "stripe-actions"] },
   AGENCE: { color: "#FFD166", tables: ["agency_clients", "agency_client_sites", "agency_team_members", "agency_invitations"], functions: ["manage-team", "share-actions", "share-report"] },
-  CONCURRENCE: { color: "#D62828", tables: ["competitor_tracked_urls", "content_gap_results", "backlink_snapshots"], functions: ["audit-competitor-url", "strategic-competitors", "link-intersection", "serp-benchmark"] },
 };
 
 // Directed connections: [data_source, data_consumer] — particle flows in direction of data
