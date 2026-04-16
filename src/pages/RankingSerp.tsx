@@ -111,7 +111,7 @@ function SerpBenchmarkMini() {
             onKeyDown={e => e.key === 'Enter' && runBenchmark()}
             className="flex-1"
           />
-          <Button onClick={runBenchmark} disabled={loading || !query.trim()} className="gap-2">
+          <Button variant="outline" onClick={runBenchmark} disabled={loading || !query.trim()} className="gap-2">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             {t3(language, 'Analyser', 'Analyze', 'Analizar')}
           </Button>
