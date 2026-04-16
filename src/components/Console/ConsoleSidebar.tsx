@@ -215,7 +215,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
         isMobile ? 'flex gap-1 overflow-x-auto px-2 space-y-0' : 'px-2',
       )}>
         {isMobile ? (
-          items.filter(i => !i.hideOnMobile).map(item => {
+          [...items.filter(i => !i.hideOnMobile), ...bottomItems.filter(i => !i.hideOnMobile)].map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.value;
             return (
