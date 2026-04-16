@@ -1505,82 +1505,110 @@ ${context.cocoon ? JSON.stringify({
 Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUpperCase()} ?`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.3,
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'parmenion_decide',
-            description: 'Submit Parménion autonomous action for this autopilot cycle',
-            parameters: {
-              type: 'object',
-              properties: {
-                goal: {
-                  type: 'object',
-                  properties: {
-                    type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'content_creation', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
-                    cluster_id: { type: 'string' },
-                    description: { type: 'string' },
-                  },
-                  required: ['type', 'description'],
-                },
-                tactic: {
-                  type: 'object',
-                  properties: {
-                    initial_scope: { type: 'object' },
-                    final_scope: { type: 'object' },
-                    scope_reductions: { type: 'integer' },
-                    estimated_tokens: { type: 'integer' },
-                    target_url: { type: 'string' },
-                  },
-                  required: ['initial_scope', 'final_scope', 'scope_reductions', 'estimated_tokens'],
-                },
-                prudence: {
-                  type: 'object',
-                  properties: {
-                    impact_level: { type: 'string', enum: ['faible', 'modéré', 'neutre', 'avancé', 'très_avancé'] },
-                    risk_score: { type: 'integer', minimum: 1, maximum: 3 },
-                    iterations: { type: 'integer' },
-                    goal_changed: { type: 'boolean' },
-                    reasoning: { type: 'string' },
-                  },
-                  required: ['impact_level', 'risk_score', 'iterations', 'goal_changed', 'reasoning'],
-                },
-                action: {
-                  type: 'object',
-                  properties: {
-                    type: { type: 'string' },
-                    payload: { type: 'object' },
-                    functions: { type: 'array', items: { type: 'string' } },
-                  },
-                  required: ['type', 'payload', 'functions'],
-                },
-                summary: { type: 'string' },
-              },
-              required: ['goal', 'tactic', 'prudence', 'action', 'summary'],
-              additionalProperties: false,
-            },
-          },
-        }],
-        tool_choice: { type: 'function', function: { name: 'parmenion_decide' } },
-      }),
-    });
+    // Try OpenRouter first, then Lovable AI
+    const gateways: Array<{ url: string; key: string; label: string }> = [];
+    const orKey = Deno.env.get('OPENROUTER_API_KEY');
+    if (orKey) gateways.push({ url: 'https://openrouter.ai/api/v1/chat/completions', key: orKey, label: 'OpenRouter' });
+    if (LOVABLE_API_KEY) gateways.push({ url: 'https://ai.gateway.lovable.dev/v1/chat/completions', key: LOVABLE_API_KEY, label: 'Lovable' });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error(`[Parménion] LLM error ${response.status}:`, errText);
-      return null;
+    for (const gw of gateways) {
+      try {
+        const response = await fetch(gw.url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${gw.key}`,
+            'Content-Type': 'application/json',
+            ...(gw.label === 'OpenRouter' ? { 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers Parmenion' } : {}),
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.3,
+            tools: [{
+              type: 'function',
+              function: {
+                name: 'parmenion_decide',
+                description: 'Submit Parménion autonomous action for this autopilot cycle',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    goal: {
+                      type: 'object',
+                      properties: {
+                        type: { type: 'string', enum: ['audit_technical', 'diagnostic_semantic', 'cluster_optimization', 'content_gap', 'content_creation', 'linking', 'technical_fix', 'deployment', 'meta_optimization', 'validation_post_deploy'] },
+                        cluster_id: { type: 'string' },
+                        description: { type: 'string' },
+                      },
+                      required: ['type', 'description'],
+                    },
+                    tactic: {
+                      type: 'object',
+                      properties: {
+                        initial_scope: { type: 'object' },
+                        final_scope: { type: 'object' },
+                        scope_reductions: { type: 'integer' },
+                        estimated_tokens: { type: 'integer' },
+                        target_url: { type: 'string' },
+                      },
+                      required: ['initial_scope', 'final_scope', 'scope_reductions', 'estimated_tokens'],
+                    },
+                    prudence: {
+                      type: 'object',
+                      properties: {
+                        impact_level: { type: 'string', enum: ['faible', 'modéré', 'neutre', 'avancé', 'très_avancé'] },
+                        risk_score: { type: 'integer', minimum: 1, maximum: 3 },
+                        iterations: { type: 'integer' },
+                        goal_changed: { type: 'boolean' },
+                        reasoning: { type: 'string' },
+                      },
+                      required: ['impact_level', 'risk_score', 'iterations', 'goal_changed', 'reasoning'],
+                    },
+                    action: {
+                      type: 'object',
+                      properties: {
+                        type: { type: 'string' },
+                        payload: { type: 'object' },
+                        functions: { type: 'array', items: { type: 'string' } },
+                      },
+                      required: ['type', 'functions'],
+                    },
+                  },
+                  required: ['goal', 'tactic', 'prudence', 'action'],
+                },
+              },
+            }],
+            tool_choice: { type: 'function', function: { name: 'parmenion_decide' } },
+          }),
+          signal: AbortSignal.timeout(90_000),
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          console.error(`[Parménion] ${gw.label} LLM error ${response.status}:`, errText.slice(0, 300));
+          if (response.status === 402 || response.status === 429) continue; // try next gateway
+          return null;
+        }
+
+        const result = await response.json();
+        const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
+        if (!toolCall) {
+          console.error(`[Parménion] ${gw.label}: No tool call in LLM response`);
+          continue;
+        }
+
+        console.log(`[Parménion] ✅ Decision via ${gw.label}`);
+        const decision = JSON.parse(toolCall.function.arguments) as ParmenionDecision;
+        if (decision.prudence.risk_score > context.maxRisk) {
+          decision.prudence.risk_score = context.maxRisk;
+        }
+        return decision;
+      } catch (e) {
+        console.error(`[Parménion] ${gw.label} reasoning failed:`, e);
+        continue;
+      }
     }
 
     const result = await response.json();
