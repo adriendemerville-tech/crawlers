@@ -61,6 +61,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   const [query, setQuery] = useState('');
   const [targetDomain, setTargetDomain] = useState('');
   const [location, setLocation] = useState('France');
+  const [region, setRegion] = useState('');
   const [singleHitPenalty, setSingleHitPenalty] = useState(20);
   const [penaltyEnabled, setPenaltyEnabled] = useState(true);
   const [selectedProviders, setSelectedProviders] = useState<string[]>(['DataForSEO', 'SerpApi', 'Serper']);
@@ -94,7 +95,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           query: q,
           tracked_site_id: selectedSiteId || undefined,
           target_domain: targetDomain.trim() || selectedSite?.domain || undefined,
-          location,
+          location: region ? `${region},${location}` : location,
           language: 'fr',
           country: 'fr',
           single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
@@ -161,7 +162,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
             query: kw.keyword,
             tracked_site_id: selectedSiteId,
             target_domain: site.domain,
-            location,
+            location: region ? `${region},${location}` : location,
             language: 'fr',
             country: 'fr',
             single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
@@ -286,7 +287,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
             <label className="text-xs font-medium text-muted-foreground">
               {t3(language, 'Localisation', 'Location', 'Ubicación')}
             </label>
-            <Select value={location} onValueChange={setLocation}>
+            <Select value={location} onValueChange={(v) => { setLocation(v); setRegion(''); }}>
               <SelectTrigger className="w-full max-w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="France">France</SelectItem>
@@ -298,6 +299,31 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
               </SelectContent>
             </Select>
           </div>
+          {location === 'France' && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                {t3(language, 'Région', 'Region', 'Región')}
+              </label>
+              <Select value={region || '__all__'} onValueChange={(v) => setRegion(v === '__all__' ? '' : v)}>
+                <SelectTrigger className="w-full max-w-[180px]"><SelectValue placeholder={t3(language, 'Toute la France', 'All France', 'Toda Francia')} /></SelectTrigger>
+                <SelectContent>
+                <SelectItem value="__all__">Toute la France</SelectItem>
+                  <SelectItem value="Paris,Ile-de-France">Île-de-France</SelectItem>
+                  <SelectItem value="Lyon,Auvergne-Rhone-Alpes">Auvergne-Rhône-Alpes</SelectItem>
+                  <SelectItem value="Marseille,Provence-Alpes-Cote d'Azur">PACA</SelectItem>
+                  <SelectItem value="Toulouse,Occitanie">Occitanie</SelectItem>
+                  <SelectItem value="Nantes,Pays de la Loire">Pays de la Loire</SelectItem>
+                  <SelectItem value="Bordeaux,Nouvelle-Aquitaine">Nouvelle-Aquitaine</SelectItem>
+                  <SelectItem value="Rennes,Bretagne">Bretagne</SelectItem>
+                  <SelectItem value="Lille,Hauts-de-France">Hauts-de-France</SelectItem>
+                  <SelectItem value="Strasbourg,Grand Est">Grand Est</SelectItem>
+                  <SelectItem value="Dijon,Bourgogne-Franche-Comte">Bourgogne-Franche-Comté</SelectItem>
+                  <SelectItem value="Rouen,Normandie">Normandie</SelectItem>
+                  <SelectItem value="Ajaccio,Corse">Corse</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
               <Checkbox
