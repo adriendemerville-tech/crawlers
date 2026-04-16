@@ -25,7 +25,7 @@ export const PainPointsSection = () => {
       <div className="mx-auto max-w-5xl px-4">
         {/* Title */}
         <div className="mb-10 text-center">
-          <span className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider border-primary/20 text-destructive bg-secondary-foreground">
+          <span className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider border-primary/20 text-destructive bg-inherit">
             Freelances / Agences
           </span>
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
