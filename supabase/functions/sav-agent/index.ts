@@ -283,6 +283,8 @@ Accessible via [Console](https://crawlers.fr/console) > onglet GMB (Pro Agency e
 - **Connexion** : le bouton "Connecter Google My Business" dans l'onglet GMB ou dans les onglets API déclenche l'autorisation OAuth Google unifiée incluant l'accès GMB.
 - **Gestion multi-fiches** : si l'utilisateur possède plusieurs établissements, il peut les gérer depuis la même interface avec glisser-déposer.
 - **Fonctionnalités** :
+  - **Audit fiche sur 100 points** : onglet "Audit" (premier onglet, affiché par défaut dès la connexion GMB). Score global /100 réparti en 5 catégories (Identité, Contact & accès, Médias, Enrichissement, Engagement). Chaque critère manquant affiche un correctif actionnable avec le gain estimé en points. Top 5 des corrections prioritaires affiché en bas.
+  - **Réponses automatisées aux avis** : dans l'onglet "Avis", bouton "Réponse IA" par avis individuel + bouton "Générer toutes les réponses IA" pour le lot. L'IA analyse le sentiment (positif/neutre/négatif), la priorité (haute pour 1-2 étoiles), et génère une réponse contextuelle adaptée au ton choisi (professionnel, amical, chaleureux, formel). L'utilisateur peut modifier avant d'envoyer.
   - Consultation et réponse aux avis Google (note moyenne, tendance)
   - Publication de Google Posts (actualités, offres, événements)
   - Tableau de bord performances locales (vues, clics, appels, itinéraires)

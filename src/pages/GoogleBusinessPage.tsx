@@ -36,8 +36,9 @@ function GmbConsolePreview() {
         {/* Score header */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Score de complétude GBP</p>
+         <p className="text-sm text-muted-foreground">Score de complétude GBP</p>
             <p className="text-3xl font-bold text-foreground">78<span className="text-lg text-muted-foreground">/100</span></p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Audit sur 100 points — 5 catégories</p>
           </div>
           <div className="h-16 w-16 rounded-full border-4 border-primary flex items-center justify-center">
             <MapPin className="h-6 w-6 text-primary" />
@@ -97,6 +98,16 @@ function GmbConsolePreview() {
             ))}
           </div>
         </div>
+
+        {/* Auto-reply badge */}
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-primary shrink-0" />
+          <div>
+            <p className="text-xs font-semibold text-foreground">Réponses IA aux avis</p>
+            <p className="text-[10px] text-muted-foreground">4 avis sans réponse — générer en 1 clic</p>
+          </div>
+          <Sparkles className="h-3.5 w-3.5 text-primary ml-auto shrink-0" />
+        </div>
       </div>
     </div>
   );
@@ -109,11 +120,20 @@ export default function GoogleBusinessPage() {
   const features = [
     {
       icon: BarChart3,
-      title: t3(language, 'Score de complétude GBP', 'GBP Completeness Score', 'Score de completitud GBP'),
+      title: t3(language, 'Audit fiche sur 100 points', 'Listing Audit on 100 Points', 'Auditoría de ficha sobre 100 puntos'),
       desc: t3(language,
-        'Crawlers analyse 42 critères de votre fiche Google Business Profile et calcule un score de complétude sur 100. Chaque point manquant est détaillé avec une recommandation actionnable.',
-        'Crawlers analyzes 42 criteria of your Google Business Profile and calculates a completeness score out of 100. Each missing point comes with an actionable recommendation.',
-        'Crawlers analiza 42 criterios de su Google Business Profile y calcula un score de completitud sobre 100. Cada punto faltante incluye una recomendación accionable.'
+        'Votre fiche Google est notée sur 100 points répartis en 5 catégories : Identité, Contact, Médias, Enrichissement, Engagement. Chaque point manquant est détaillé avec un correctif actionnable et le gain estimé. L\'audit est proposé automatiquement dès la connexion de votre fiche.',
+        'Your Google listing is scored on 100 points across 5 categories: Identity, Contact, Media, Enrichment, Engagement. Each missing point comes with an actionable fix and estimated gain. The audit is automatically offered upon listing connection.',
+        'Su ficha Google se puntúa sobre 100 puntos en 5 categorías: Identidad, Contacto, Medios, Enriquecimiento, Engagement. Cada punto faltante incluye un correctivo accionable y la ganancia estimada.'
+      ),
+    },
+    {
+      icon: MessageSquare,
+      title: t3(language, 'Réponses automatisées aux avis', 'Automated Review Replies', 'Respuestas automatizadas a reseñas'),
+      desc: t3(language,
+        'Générez des réponses contextuelles à vos avis Google en 1 clic grâce à l\'IA. Analyse du sentiment, priorisation des avis négatifs, ton adaptable (professionnel, amical, formel). Répondez à tous vos avis en lot ou individuellement, puis validez avant publication.',
+        'Generate contextual replies to your Google reviews in 1 click with AI. Sentiment analysis, negative review prioritization, adaptable tone (professional, friendly, formal). Reply to all reviews in batch or individually, then validate before publishing.',
+        'Genere respuestas contextuales a sus reseñas Google en 1 clic con IA. Análisis de sentimiento, priorización de reseñas negativas, tono adaptable. Responda a todas sus reseñas en lote o individualmente.'
       ),
     },
     {

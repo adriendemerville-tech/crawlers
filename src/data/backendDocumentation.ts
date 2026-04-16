@@ -482,7 +482,8 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`gbp-auth\` | ✅ | OAuth2 dédié Google Business Profile (scope \`business.manage\`). Séparé de \`gsc-auth\` pour éviter les conflits de scopes. Actions : \`login\`, callback, \`disconnect\`, \`status\`. |
 | \`gmb-places-autocomplete\` | ✅ | Recherche de concurrents GMB via Google Places API (autocomplete + détails) |
 | \`gmb-local-competitors\` | ✅ | Analyse concurrents locaux Google Maps |
-| \`gmb-optimization\` | ✅ | Optimisation automatique fiche GMB |
+| \`gmb-optimization\` | ✅ | Optimisation automatique fiche GMB. Actions : \`score-profile\` (score rapide), \`audit-full\` (audit 100 pts détaillé avec 5 catégories : Identité, Contact, Médias, Enrichissement, Engagement — top 5 correctifs priorisés avec gain estimé) |
+| \`gmb-review-reply\` | ✅ | Génération automatique de réponses aux avis Google via LLM (Gemini Flash Lite). Actions : \`generate-reply\` (réponse unitaire), \`generate-batch\` (lot jusqu'à 20 avis). Analyse du sentiment, priorité (high/medium/low), ton configurable (professionnel/amical/chaleureux/formel), trilingue FR/EN/ES. |
 | \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
 | \`serp-benchmark\` | ❌/✅ | Benchmark SERP multi-providers (DataForSEO + SerpApi + Serper.dev + Bright Data optionnel). Croisement des positions, pénalité single-hit (+20), classement moyen. Accessible sans auth (lead magnet /app/ranking-serp) |
 | \`dataforseo-balance\` | ✅ | Solde du compte DataForSEO |
