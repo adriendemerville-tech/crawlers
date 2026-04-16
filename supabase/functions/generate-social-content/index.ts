@@ -28,13 +28,54 @@ Deno.serve(handleRequest(async (req) => {
       return new Response(JSON.stringify({ error: 'Pro Agency required' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { topic, keyword, workbench_item_id, tracked_site_id, platforms, tone, language, custom_instructions } = await req.json();
+    const { topic, keyword, workbench_item_id, tracked_site_id, platforms, tone, language, custom_instructions, use_editorial_pipeline, domain: bodyDomain } = await req.json();
 
     if (!topic && !keyword && !workbench_item_id) {
       return new Response(JSON.stringify({ error: 'topic, keyword, or workbench_item_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const supabase = getServiceClient();
+
+    // ─── EDITORIAL PIPELINE BRANCH (opt-in) ───
+    // When use_editorial_pipeline=true, route through the 4-stage pipeline
+    // (briefing → strategist → writer → tonalizer) instead of the legacy single-LLM path.
+    if (use_editorial_pipeline && tracked_site_id) {
+      try {
+        const { data: site } = await supabase
+          .from('tracked_sites')
+          .select('domain')
+          .eq('id', tracked_site_id)
+          .single();
+        const domain = bodyDomain || site?.domain;
+        if (!domain) throw new Error('domain unresolved');
+
+        const pipelineResult = await runEditorialPipeline(supabase, {
+          user_id: auth.userId,
+          domain,
+          tracked_site_id,
+          content_type: 'social_post',
+          user_brief: topic || keyword || custom_instructions,
+        });
+
+        // Adapt pipeline result to legacy social response shape
+        const finalContent = pipelineResult.final.content;
+        return new Response(JSON.stringify({
+          success: true,
+          content_linkedin: finalContent,
+          content_facebook: finalContent,
+          content_instagram: finalContent,
+          hashtags: [],
+          suggested_title: pipelineResult.final.title,
+          suggested_cta: '',
+          suggested_emoji: '',
+          pipeline_run_id: pipelineResult.pipeline_run_id,
+          via_editorial_pipeline: true,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (pipelineErr) {
+        console.warn('[generate-social-content] Pipeline failed, falling back to legacy:', pipelineErr);
+        // Fall through to legacy path
+      }
+    }
 
     // Gather context
     let context = '';
