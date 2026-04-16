@@ -61,6 +61,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   const [query, setQuery] = useState('');
   const [targetDomain, setTargetDomain] = useState('');
   const [location, setLocation] = useState('France');
+  const [region, setRegion] = useState('');
   const [singleHitPenalty, setSingleHitPenalty] = useState(20);
   const [penaltyEnabled, setPenaltyEnabled] = useState(true);
   const [selectedProviders, setSelectedProviders] = useState<string[]>(['DataForSEO', 'SerpApi', 'Serper']);
