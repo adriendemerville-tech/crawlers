@@ -25,7 +25,7 @@ export const PainPointsSection = () => {
       <div className="mx-auto max-w-5xl px-4">
         {/* Title */}
         <div className="mb-10 text-center">
-          <span className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 border-primary/20">
+          <span className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider border-primary/20 text-destructive bg-destructive-muted">
             Freelances / Agences
           </span>
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
@@ -47,8 +47,8 @@ export const PainPointsSection = () => {
         </div>
 
         {/* Conclusion */}
-        <div className="mx-auto max-w-3xl rounded-xl px-6 py-6 text-center font-medium border border-primary/20 bg-primary/5 dark:bg-[#11041f] dark:border-violet-600 dark:border-dashed">
-          <span className="block mb-3 text-sm font-bold text-primary">L'approche Crawlers</span>
+        <div className="mx-auto max-w-3xl rounded-xl px-6 py-6 text-center font-medium border-primary/20 dark:border-violet-600 dark:border-dashed bg-popover border-0">
+          <span className="block mb-3 text-sm font-bold text-[#ffdd00]">L'approche Crawlers</span>
           <p className="text-sm leading-relaxed text-muted-foreground">
             L'analyse de la SERP est de moins en moins fiable — les contre-mesures de Google piègent les outils de crawl classiques.{' '}
             <strong className="text-foreground">
