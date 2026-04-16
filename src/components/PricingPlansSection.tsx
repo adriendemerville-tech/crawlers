@@ -86,17 +86,19 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
   ];
 
   const plusFeatures = [
+    // Common with Pro Agency (upgraded)
     t3(language, '50 000 pages crawlées/mois', '50,000 pages/month', '50 000 páginas/mes'),
     t3(language, '50 pages par scan', '50 pages per scan', '50 páginas por escaneo'),
     t3(language, 'Audits & codes correctifs illimités', 'Unlimited audits & corrective code', 'Auditorías y código ilimitados'),
     t3(language, 'Benchmark LLM & Profondeur LLM illimités', 'Unlimited LLM Benchmark & Depth', 'Benchmark LLM y Profundidad LLM ilimitados'),
-    'Conversion Optimizer',
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
+    t3(language, 'Marque blanche + 3 comptes', 'White label + 3 accounts', 'Marca blanca + 3 cuentas'),
+    t3(language, 'Benchmark rank SERP', 'SERP Rank Benchmark', 'Benchmark rank SERP'),
+    // Extras Pro Agency+
+    'Conversion Optimizer',
     t3(language, 'API Marina', 'Marina API', 'API Marina'),
     t3(language, 'Analyse des logs', 'Log analysis', 'Análisis de logs'),
     t3(language, 'Stratégie concurrentielle', 'Competitive strategy', 'Estrategia competitiva'),
-    t3(language, 'Marque blanche + 3 comptes', 'White label + 3 accounts', 'Marca blanca + 3 cuentas'),
-    t3(language, 'Benchmark rank SERP', 'SERP Rank Benchmark', 'Benchmark rank SERP'),
   ];
 
   const enterpriseFeatures = [
