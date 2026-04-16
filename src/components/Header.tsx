@@ -294,6 +294,11 @@ export function Header() {
                 <span className="text-sm font-thin text-primary-foreground">E-E-A-T</span>
               </Button>
             </Link>
+            <Link to="/app/ranking-serp">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
+                <span className="text-sm font-thin text-primary-foreground">SERPs</span>
+              </Button>
+            </Link>
           </div>
         )}
         {!isProfilePage && !isHomePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
