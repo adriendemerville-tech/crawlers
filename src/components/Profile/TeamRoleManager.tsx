@@ -33,6 +33,8 @@ const ROLE_DESCRIPTIONS: Record<TeamRole, { fr: string; en: string }> = {
 export function TeamRoleManager() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const { planType } = useCredits();
+  const isEnterprise = planType === 'enterprise';
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
