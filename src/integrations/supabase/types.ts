@@ -4017,6 +4017,51 @@ export type Database = {
         }
         Relationships: []
       }
+      editorial_pipeline_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          alert_type: string
+          created_at: string
+          domain: string
+          id: string
+          is_acknowledged: boolean
+          message: string
+          observed_value: number | null
+          pipeline_run_id: string | null
+          severity: string
+          threshold_value: number | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          alert_type: string
+          created_at?: string
+          domain: string
+          id?: string
+          is_acknowledged?: boolean
+          message: string
+          observed_value?: number | null
+          pipeline_run_id?: string | null
+          severity?: string
+          threshold_value?: number | null
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          alert_type?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          is_acknowledged?: boolean
+          message?: string
+          observed_value?: number | null
+          pipeline_run_id?: string | null
+          severity?: string
+          threshold_value?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       editorial_pipeline_logs: {
         Row: {
           content_type: string
@@ -11520,6 +11565,26 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "cms_connections_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      editorial_pipeline_status: {
+        Row: {
+          avg_latency_ms_7d: number | null
+          domain: string | null
+          runs_last_7d: number | null
+          total_cost_usd_7d: number | null
+          tracked_site_id: string | null
+          use_editorial_pipeline: boolean | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_configs_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
