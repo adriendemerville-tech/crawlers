@@ -131,19 +131,17 @@ async function fetchBrightData(query: string, country: string, language: string)
   if (!key) return { provider: 'Bright Data', results: [], error: 'Not configured' };
 
   try {
-    const resp = await fetch('https://api.brightdata.com/serp/req', {
+    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&gl=${country}&hl=${language}&num=30`;
+    const resp = await fetch('https://api.brightdata.com/request', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        query: { term: query },
-        country: country.toUpperCase(),
-        language,
-        search_engine: 'google',
-        pages: 1,
-        num: 30,
+        zone: 'serp_api1crawlers',
+        url: searchUrl,
+        format: 'raw',
       }),
     });
 
@@ -154,9 +152,9 @@ async function fetchBrightData(query: string, country: string, language: string)
       provider: 'Bright Data',
       results: organic.map((r: any, idx: number) => ({
         url: r.link || r.url || '',
-        position: r.rank || idx + 1,
+        position: r.rank || r.position || idx + 1,
         title: r.title || '',
-        domain: r.display_link || '',
+        domain: r.display_link || r.domain || '',
       })),
     };
   } catch (e: any) {
