@@ -66,6 +66,8 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   const [results, setResults] = useState<AveragedSite[] | null>(null);
   const [providerSummaries, setProviderSummaries] = useState<ProviderSummary[]>([]);
   const [totalSites, setTotalSites] = useState(0);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; keyword: string } | null>(null);
 
   // Auto-fill target domain from selected site
   const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
