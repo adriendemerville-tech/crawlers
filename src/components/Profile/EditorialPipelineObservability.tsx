@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, Clock, DollarSign, Cpu } from 'lucide-react';
+import { EditorialPipelineAlerts } from './EditorialPipelineAlerts';
 
 interface PipelineLog {
   id: string;
@@ -95,6 +96,7 @@ export function EditorialPipelineObservability({ externalDomain }: { externalDom
 
   return (
     <div className="space-y-4">
+      <EditorialPipelineAlerts externalDomain={externalDomain} />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card>
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
