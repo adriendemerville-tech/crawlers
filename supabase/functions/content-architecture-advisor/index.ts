@@ -124,7 +124,44 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
       })
     }
 
-    // ── ASYNC MODE: Enqueue and respond 202, then process via waitUntil ──
+    // ── EDITORIAL PIPELINE SHORT-CIRCUIT ──
+    // Opt-in via use_editorial_pipeline=true: route through the shared 4-stage pipeline
+    // (Briefing → Strategist → Writer → Tonalizer) instead of the legacy single-LLM path.
+    const usePipeline = (body as { use_editorial_pipeline?: boolean }).use_editorial_pipeline === true;
+    if (usePipeline) {
+      try {
+        const sb = getServiceClient();
+        const domain = extractDomain(url);
+        const ct = PAGE_TYPE_TO_CONTENT_TYPE[page_type] ?? 'seo_page';
+        const pipelineResult = await runEditorialPipeline(sb, {
+          user_id: user.id,
+          domain,
+          tracked_site_id,
+          content_type: ct,
+          target_url: url,
+          user_brief: keyword,
+          override_models: (body as { override_models?: Record<string, string> }).override_models,
+        });
+        console.log(`[content-advisor] Editorial pipeline OK in ${pipelineResult.total_latency_ms}ms`);
+        return jsonOk({
+          success: true,
+          source: 'editorial_pipeline',
+          pipeline_run_id: pipelineResult.pipeline_run_id,
+          briefing: pipelineResult.briefing,
+          strategy: pipelineResult.strategy,
+          draft: pipelineResult.draft,
+          final: pipelineResult.final,
+          metrics: {
+            total_latency_ms: pipelineResult.total_latency_ms,
+            total_cost_usd: pipelineResult.total_cost_usd,
+          },
+        });
+      } catch (pipelineErr) {
+        console.error('[content-advisor] Editorial pipeline failed, falling back to legacy:', pipelineErr);
+      }
+    }
+
+
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
     const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const jobId = body._job_id
