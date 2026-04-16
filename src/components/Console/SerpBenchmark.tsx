@@ -276,7 +276,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
               {t3(language, 'Domaine cible', 'Target domain', 'Dominio objetivo')}
             </label>
             <Input
-              placeholder={selectedSite?.domain || 'example.com'}
+              placeholder={selectedSite?.domain || 'url.com'}
               value={targetDomain}
               onChange={e => setTargetDomain(e.target.value)}
               className="caret-foreground"
