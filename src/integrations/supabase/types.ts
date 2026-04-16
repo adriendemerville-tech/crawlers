@@ -11921,6 +11921,7 @@ export type Database = {
         | "proactive_scan"
         | "felix"
         | "ux_context"
+        | "serp_benchmark"
       injection_category:
         | "schema_jsonld"
         | "meta_html"
@@ -12130,6 +12131,7 @@ export const Constants = {
         "proactive_scan",
         "felix",
         "ux_context",
+        "serp_benchmark",
       ],
       injection_category: [
         "schema_jsonld",
