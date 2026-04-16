@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Search, Copy, BarChart3, Globe, Trophy } from 'lucide-react';
+import { Loader2, Search, Copy, BarChart3, Globe, Trophy, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -66,6 +66,8 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   const [results, setResults] = useState<AveragedSite[] | null>(null);
   const [providerSummaries, setProviderSummaries] = useState<ProviderSummary[]>([]);
   const [totalSites, setTotalSites] = useState(0);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; keyword: string } | null>(null);
 
   // Auto-fill target domain from selected site
   const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
@@ -112,6 +114,75 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   useImperativeHandle(ref, () => ({
     triggerBenchmark: (keyword: string) => runBenchmark(keyword),
   }), [runBenchmark]);
+
+  // Batch benchmark top keywords from keyword_universe
+  const runTopKeywordsBenchmark = useCallback(async () => {
+    if (!user || !selectedSiteId) return;
+    const site = trackedSites.find(s => s.id === selectedSiteId);
+    if (!site) return;
+
+    setBatchLoading(true);
+    try {
+      const { data: keywords, error } = await supabase
+        .from('keyword_universe')
+        .select('keyword, opportunity_score')
+        .eq('tracked_site_id', selectedSiteId)
+        .eq('user_id', user.id)
+        .order('opportunity_score', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      if (!keywords?.length) {
+        toast.error(t3(language,
+          'Aucun mot-clé trouvé dans l\'univers de mots-clés pour ce site. Lancez d\'abord un audit stratégique.',
+          'No keywords found in keyword universe for this site. Run a strategic audit first.',
+          'No se encontraron palabras clave para este sitio.'
+        ));
+        setBatchLoading(false);
+        return;
+      }
+
+      toast.info(`${keywords.length} top keywords à benchmarker`);
+
+      for (let i = 0; i < keywords.length; i++) {
+        const kw = keywords[i];
+        setBatchProgress({ current: i + 1, total: keywords.length, keyword: kw.keyword });
+
+        await supabase.functions.invoke('serp-benchmark', {
+          body: {
+            action: 'benchmark',
+            query: kw.keyword,
+            tracked_site_id: selectedSiteId,
+            target_domain: site.domain,
+            location,
+            language: 'fr',
+            country: 'fr',
+            single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
+            providers: selectedProviders,
+          },
+        });
+
+        if (i < keywords.length - 1) {
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      }
+
+      toast.success(t3(language,
+        `${keywords.length} benchmarks terminés !`,
+        `${keywords.length} benchmarks completed!`,
+        `${keywords.length} benchmarks completados!`
+      ));
+
+      // Display the top keyword result
+      runBenchmark(keywords[0].keyword);
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur batch benchmark');
+    } finally {
+      setBatchLoading(false);
+      setBatchProgress(null);
+    }
+  }, [user, selectedSiteId, trackedSites, selectedProviders, location, penaltyEnabled, singleHitPenalty, language, runBenchmark]);
+
 
   const copyResults = () => {
     if (!results) return;
@@ -239,13 +310,27 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           </div>
         </div>
 
-        <Button variant="ghost" onClick={() => runBenchmark()} disabled={loading || selectedProviders.length < 2} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-          {loading
-            ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
-            : t3(language, 'Lancer le benchmark', 'Run benchmark', 'Ejecutar benchmark')
-          }
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="ghost" onClick={() => runBenchmark()} disabled={loading || batchLoading || selectedProviders.length < 2} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            {loading
+              ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
+              : t3(language, 'Lancer le benchmark', 'Run benchmark', 'Ejecutar benchmark')
+            }
+          </Button>
+          <Button
+            variant="outline"
+            onClick={runTopKeywordsBenchmark}
+            disabled={loading || batchLoading || selectedProviders.length < 2 || !selectedSiteId}
+            className="gap-2"
+          >
+            {batchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            {batchLoading && batchProgress
+              ? `${batchProgress.current}/${batchProgress.total} — ${batchProgress.keyword}`
+              : t3(language, 'Benchmarker mes top keywords', 'Benchmark my top keywords', 'Benchmark mis top keywords')
+            }
+          </Button>
+        </div>
 
         {/* Provider status */}
         {providerSummaries.length > 0 && (
