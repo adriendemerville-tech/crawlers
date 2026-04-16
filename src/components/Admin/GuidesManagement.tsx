@@ -302,7 +302,7 @@ export function GuidesManagement() {
                     const toolCount = (g.guide_tools || []).length;
 
                     return (
-                      <TableRow key={g.id}>
+                      <TableRow key={g.id} className="group">
                         <TableCell>
                           <div className="space-y-1">
                             <p className="font-medium line-clamp-1">{g.title}</p>
@@ -323,6 +323,15 @@ export function GuidesManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleAddToParmenion(g)}
+                              title="Parménion — Ajouter au plan de tâches"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-500 hover:text-purple-600"
+                            >
+                              <Swords className="h-4 w-4" />
+                            </Button>
                             <Button size="sm" variant="ghost" onClick={() => openEditor(g)}><Edit className="h-4 w-4" /></Button>
                             {g.status === 'published' && (
                               <Button size="sm" variant="ghost" title="Voir" asChild>
