@@ -11,7 +11,7 @@ import {
   ListChecks, TrendingUp, BookOpen, ArrowRight, CheckCircle2,
   Layers, Database, Lock, RefreshCw, Activity, Cpu,
   Server, GitBranch, Workflow, Crosshair, AlertTriangle,
-  Network, Fingerprint
+  Network, Fingerprint, Award, Swords
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
