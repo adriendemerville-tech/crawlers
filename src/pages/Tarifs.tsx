@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
   CheckCircle2, Zap, CreditCard, FileText, Code2, PenTool,
-  Bot, Globe, Gauge, Brain, ArrowRight, Gift,
+  Bot, Globe, Gauge, Brain, ArrowRight, Gift, TrendingUp,
   Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
   ScanSearch, GitCompareArrows, Layers, Building2, MessageCircle, Server, Database,
   Share2, Megaphone, Briefcase, Award
@@ -35,6 +35,7 @@ const translations = {
       { icon: Brain, label: 'Visibilité LLM', description: 'Analysez votre présence sur ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
       { icon: Gauge, label: 'PageSpeed', description: 'Testez les performances et Core Web Vitals', href: '/pagespeed' },
       { icon: Award, label: 'Audit E-E-A-T', description: 'Évaluez Expertise, Expérience, Autorité et Confiance', href: '/eeat' },
+      { icon: TrendingUp, label: 'Ranking SERPs', description: 'Positions Top 3/10/50 et trafic estimé (ETV)', href: '/app/console?tab=indexation' },
     ],
     registrationSection: 'Audit Technique SEO',
     registrationDescription: 'Gratuit avec inscription',
@@ -201,6 +202,7 @@ const translations = {
       { icon: Brain, label: 'LLM Visibility', description: 'Analyze your presence on ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
       { icon: Gauge, label: 'PageSpeed', description: 'Test performance and Core Web Vitals', href: '/pagespeed' },
       { icon: Award, label: 'E-E-A-T Audit', description: 'Evaluate Expertise, Experience, Authority and Trust', href: '/eeat' },
+      { icon: TrendingUp, label: 'SERP Rankings', description: 'Top 3/10/50 positions and estimated traffic (ETV)', href: '/app/console?tab=indexation' },
     ],
     registrationSection: 'Technical Audit',
     registrationDescription: 'Free with registration',
@@ -366,6 +368,7 @@ const translations = {
       { icon: Brain, label: 'Visibilidad LLM', description: 'Analiza tu presencia en ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
       { icon: Gauge, label: 'PageSpeed', description: 'Prueba el rendimiento y Core Web Vitals', href: '/pagespeed' },
       { icon: Award, label: 'Auditoría E-E-A-T', description: 'Evalúa Experiencia, Pericia, Autoridad y Confianza', href: '/eeat' },
+      { icon: TrendingUp, label: 'Ranking SERPs', description: 'Posiciones Top 3/10/50 y tráfico estimado (ETV)', href: '/app/console?tab=indexation' },
     ],
     registrationSection: 'Auditoría Técnica',
     registrationDescription: 'Gratis con registro',
@@ -864,7 +867,7 @@ export default function Tarifs() {
                 <CardDescription>{t.freeDescription}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {t.freeTools.map((tool, index) => {
                     const Icon = tool.icon;
                     return (
