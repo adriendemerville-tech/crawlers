@@ -307,7 +307,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
               <Select value={region} onValueChange={setRegion}>
                 <SelectTrigger className="w-full max-w-[180px]"><SelectValue placeholder={t3(language, 'Toute la France', 'All France', 'Toda Francia')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toute la France</SelectItem>
+                <SelectItem value="__all__">Toute la France</SelectItem>
                   <SelectItem value="Paris,Ile-de-France">Île-de-France</SelectItem>
                   <SelectItem value="Lyon,Auvergne-Rhone-Alpes">Auvergne-Rhône-Alpes</SelectItem>
                   <SelectItem value="Marseille,Provence-Alpes-Cote d'Azur">PACA</SelectItem>
