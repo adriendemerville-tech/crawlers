@@ -9,7 +9,7 @@ interface Domain {
 }
 
 const domains: Record<string, Domain> = {
-  CORE: { color: "#1D3557", tables: ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory"], functions: [] },
+  CORE: { color: "#1D3557", tables: ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory", "concurrence"], functions: [] },
   COCOON: { color: "#2A9D8F", tables: ["cocoon_sessions", "cocoon_diagnostic_results", "cocoon_recommendations", "cocoon_tasks", "cocoon_auto_links", "cocoon_batch_operations", "cocoon_chat_histories", "cocoon_errors", "cocoon_strategy_plans", "cocoon_architect_drafts", "cocoon_linking_exclusions", "cocoon_nodes", "semantic_nodes"], functions: ["cocoon-chat", "cocoon-strategist", "cocoon-auto-linking", "cocoon-bulk-auto-linking", "cocoon-deploy-links", "cocoon-batch-deploy", "cocoon-diag-authority", "cocoon-diag-content", "cocoon-diag-semantic", "cocoon-diag-structure", "cocoon-diag-subdomains", "calculate-cocoon-logic", "persist-cocoon-session"] },
   AUDIT: { color: "#E63946", tables: ["audits", "audit_raw_data", "audit_cache", "audit_recommendations_registry", "audit_impact_snapshots", "pdf_audits"], functions: ["audit-expert-seo", "audit-local-seo", "audit-matrice", "audit-strategique-ia", "audit-compare", "audit-code-quality-backend", "audit-code-quality-frontend", "expert-audit", "save-audit", "measure-audit-impact", "snapshot-audit-impact"] },
   CRAWL: { color: "#457B9D", tables: ["site_crawls", "crawl_pages", "crawl_jobs", "crawl_page_backlinks", "crawl_index_history"], functions: ["crawl-site", "process-crawl-queue", "strategic-crawl", "check-crawlers"] },
