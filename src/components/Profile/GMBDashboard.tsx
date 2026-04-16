@@ -11,7 +11,7 @@ import {
   Construction, Star, MapPin, Phone, Globe, Clock, Search, Map, MousePointerClick,
   Navigation, PhoneCall, Image, MessageSquare, Send, Flag, TrendingUp, Eye,
   ChevronRight, Calendar, Megaphone, Plus, BarChart3, Store, CheckCircle2, AlertTriangle, GripVertical, Swords,
-  Plug, Unplug, Loader2
+  Plug, Unplug, Loader2, Sparkles, Zap, ClipboardCheck
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { GmbLocalCompetitorsTab } from './GmbLocalCompetitorsTab';
@@ -244,6 +244,59 @@ const SIMULATED_REVIEWS = [
   { id: '8', reviewer_name: 'Emma Laurent', star_rating: 3, comment: 'Correct sans plus, des améliorations possibles.', review_created_at: '2026-02-15T10:30:00Z', reply_comment: null, is_flagged: false, reviewer_photo: null },
 ];
 
+// ─── Simulated Audit Data ──────────────────────────────────────
+const SIMULATED_AUDIT = {
+  total_score: 72,
+  max_score: 100,
+  categories: [
+    { id: 'identity', label: 'Identité', score: 18, max: 20, items: [
+      { field: 'Nom de l\'établissement', filled: true, points: 5, max: 5 },
+      { field: 'Catégorie principale', filled: true, points: 5, max: 5 },
+      { field: 'Description optimisée SEO', filled: false, points: 0, max: 5, fix: 'Ajoutez une description de 750 caractères avec vos mots-clés locaux principaux.' },
+      { field: 'Catégories secondaires', filled: true, points: 3, max: 5 },
+    ]},
+    { id: 'contact', label: 'Contact & accès', score: 20, max: 25, items: [
+      { field: 'Adresse complète', filled: true, points: 5, max: 5 },
+      { field: 'Téléphone', filled: true, points: 5, max: 5 },
+      { field: 'Site web', filled: true, points: 5, max: 5 },
+      { field: 'Horaires complets', filled: true, points: 5, max: 5 },
+      { field: 'Horaires spéciaux / jours fériés', filled: false, points: 0, max: 5, fix: 'Renseignez vos horaires pour les jours fériés et périodes spéciales.' },
+    ]},
+    { id: 'media', label: 'Médias', score: 12, max: 20, items: [
+      { field: 'Photo de couverture', filled: true, points: 5, max: 5 },
+      { field: 'Logo', filled: true, points: 5, max: 5 },
+      { field: '10+ photos récentes (< 90j)', filled: false, points: 0, max: 5, fix: 'Publiez au moins 10 photos datant de moins de 90 jours.' },
+      { field: 'Vidéo de présentation', filled: false, points: 2, max: 5, fix: 'Ajoutez une courte vidéo de présentation de votre établissement.' },
+    ]},
+    { id: 'enrichment', label: 'Enrichissement', score: 10, max: 20, items: [
+      { field: 'Attributs de services', filled: true, points: 5, max: 5 },
+      { field: 'Menu / Catalogue produits', filled: false, points: 0, max: 5, fix: 'Ajoutez votre catalogue produits ou menu pour enrichir votre fiche.' },
+      { field: 'FAQ / Questions fréquentes', filled: true, points: 5, max: 5 },
+      { field: 'Lien de prise de RDV', filled: false, points: 0, max: 5, fix: 'Ajoutez un lien de réservation ou de prise de rendez-vous.' },
+    ]},
+    { id: 'engagement', label: 'Engagement', score: 12, max: 15, items: [
+      { field: 'Taux de réponse aux avis > 80%', filled: true, points: 5, max: 5 },
+      { field: 'Post GBP récent (< 7 jours)', filled: false, points: 2, max: 5, fix: 'Publiez un Google Post cette semaine pour maintenir votre activité.' },
+      { field: 'Note moyenne ≥ 4.0', filled: true, points: 5, max: 5 },
+    ]},
+  ],
+  top_fixes: [
+    { field: 'Description optimisée SEO', gain: 5, instruction: 'Ajoutez une description de 750 caractères avec vos mots-clés locaux principaux.' },
+    { field: 'Horaires spéciaux / jours fériés', gain: 5, instruction: 'Renseignez vos horaires pour les jours fériés et périodes spéciales.' },
+    { field: '10+ photos récentes (< 90j)', gain: 5, instruction: 'Publiez au moins 10 photos datant de moins de 90 jours.' },
+    { field: 'Menu / Catalogue produits', gain: 5, instruction: 'Ajoutez votre catalogue produits ou menu pour enrichir votre fiche.' },
+    { field: 'Lien de prise de RDV', gain: 5, instruction: 'Ajoutez un lien de réservation ou de prise de rendez-vous.' },
+  ],
+};
+
+// ─── Simulated Auto-Reply Data ─────────────────────────────────
+const SIMULATED_AUTO_REPLIES: Record<string, { reply: string; sentiment: string; priority: string }> = {
+  '2': { reply: 'Merci Jean pour votre retour ! Nous sommes désolés pour le temps d\'attente. Nous travaillons activement à améliorer notre accueil. Au plaisir de vous revoir dans de meilleures conditions !', sentiment: 'positive', priority: 'low' },
+  '4': { reply: 'Bonjour Pierre, nous sommes sincèrement désolés pour cette expérience décevante. Nous comprenons votre frustration concernant la disponibilité du produit. N\'hésitez pas à nous contacter directement pour que nous puissions vous aider à trouver une solution rapidement.', sentiment: 'negative', priority: 'high' },
+  '7': { reply: 'Merci Luc pour cette évaluation positive ! Nous nous efforçons de maintenir ce bon rapport qualité-prix. À bientôt !', sentiment: 'positive', priority: 'low' },
+  '8': { reply: 'Merci Emma pour votre honnêteté. Pourriez-vous nous préciser les points à améliorer ? Votre retour nous est précieux pour progresser. Contactez-nous en privé si vous le souhaitez.', sentiment: 'neutral', priority: 'medium' },
+};
+
 const SIMULATED_POSTS = [
   { id: '1', post_type: 'STANDARD', summary: '🎉 Nouvelle collection printemps disponible ! Venez découvrir nos nouveautés en magasin.', status: 'published', published_at: '2026-03-15T09:00:00Z' },
   { id: '2', post_type: 'EVENT', summary: '📅 Journée portes ouvertes le 22 mars. Réductions exclusives de -20% sur tout le magasin.', status: 'published', published_at: '2026-03-10T10:00:00Z' },
@@ -374,11 +427,100 @@ function StatsTab({ t }: { t: typeof translations.fr }) {
   );
 }
 
+// ─── Audit Tab ─────────────────────────────────────────────────
+
+function AuditTab({ language }: { language: string }) {
+  const audit = SIMULATED_AUDIT;
+  const pct = Math.round((audit.total_score / audit.max_score) * 100);
+  const scoreColor = pct >= 80 ? 'text-green-500' : pct >= 60 ? 'text-amber-500' : 'text-red-500';
+  const ringColor = pct >= 80 ? 'border-green-500' : pct >= 60 ? 'border-amber-500' : 'border-red-500';
+
+  return (
+    <div className="space-y-4">
+      {/* Score header */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-6">
+            <div className={`h-20 w-20 rounded-full border-4 ${ringColor} flex items-center justify-center shrink-0`}>
+              <span className={`text-2xl font-bold ${scoreColor}`}>{audit.total_score}</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg">
+                {language === 'fr' ? 'Score de votre fiche' : language === 'es' ? 'Score de su ficha' : 'Your listing score'}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {audit.total_score}/{audit.max_score} — {language === 'fr' ? `${audit.max_score - audit.total_score} points à gagner` : `${audit.max_score - audit.total_score} points to gain`}
+              </p>
+              <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
+                <div className={`h-full rounded-full ${pct >= 80 ? 'bg-green-500' : pct >= 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Categories */}
+      <div className="space-y-3">
+        {audit.categories.map(cat => (
+          <Card key={cat.id}>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold">{cat.label}</h4>
+                <Badge variant={cat.score === cat.max ? 'default' : 'outline'} className="text-xs">
+                  {cat.score}/{cat.max}
+                </Badge>
+              </div>
+              <div className="space-y-1.5">
+                {cat.items.map(item => (
+                  <div key={item.field} className="flex items-start gap-2 text-xs">
+                    <CheckCircle2 className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${item.filled ? 'text-green-500' : 'text-muted-foreground/30'}`} />
+                    <div className="flex-1">
+                      <span className={item.filled ? 'text-foreground' : 'text-muted-foreground'}>{item.field}</span>
+                      {item.fix && (
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">💡 {item.fix}</p>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground">{item.points}/{item.max}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Top fixes */}
+      <Card className="border-primary/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Zap className="h-4 w-4 text-primary" />
+            {language === 'fr' ? 'Top 5 corrections prioritaires' : 'Top 5 priority fixes'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {audit.top_fixes.map((fix, i) => (
+            <div key={fix.field} className="flex items-start gap-3 text-xs p-2 rounded-lg bg-muted/30">
+              <span className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-[10px] font-bold">{i + 1}</span>
+              <div className="flex-1">
+                <p className="font-medium text-foreground">{fix.field}</p>
+                <p className="text-muted-foreground mt-0.5">{fix.instruction}</p>
+              </div>
+              <Badge variant="secondary" className="text-[10px] shrink-0">+{fix.gain} pts</Badge>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Reviews Tab ───────────────────────────────────────────────
 
 function ReviewsTab({ t, language }: { t: typeof translations.fr; language: string }) {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [generatingReply, setGeneratingReply] = useState<string | null>(null);
+  const [autoReplies, setAutoReplies] = useState<Record<string, string>>({});
   const avgRating = SIMULATED_REVIEWS.reduce((s, r) => s + r.star_rating, 0) / SIMULATED_REVIEWS.length;
   const ratingDist = [5, 4, 3, 2, 1].map(r => ({
     stars: r,
@@ -387,9 +529,40 @@ function ReviewsTab({ t, language }: { t: typeof translations.fr; language: stri
 
   const locale = language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR';
 
+  const handleGenerateReply = (reviewId: string) => {
+    setGeneratingReply(reviewId);
+    // Simulate AI generation with delay
+    setTimeout(() => {
+      const simReply = SIMULATED_AUTO_REPLIES[reviewId];
+      if (simReply) {
+        setAutoReplies(prev => ({ ...prev, [reviewId]: simReply.reply }));
+        setReplyText(simReply.reply);
+        setReplyingTo(reviewId);
+      }
+      setGeneratingReply(null);
+      toast.success(language === 'fr' ? 'Réponse générée par l\'IA' : 'AI-generated reply ready');
+    }, 1500);
+  };
+
+  const handleGenerateAll = () => {
+    const unreplied = SIMULATED_REVIEWS.filter(r => !r.reply_comment);
+    toast.success(
+      language === 'fr' 
+        ? `${unreplied.length} réponses générées — vérifiez et envoyez` 
+        : `${unreplied.length} replies generated — review and send`
+    );
+    const newReplies: Record<string, string> = {};
+    unreplied.forEach(r => {
+      if (SIMULATED_AUTO_REPLIES[r.id]) {
+        newReplies[r.id] = SIMULATED_AUTO_REPLIES[r.id].reply;
+      }
+    });
+    setAutoReplies(prev => ({ ...prev, ...newReplies }));
+  };
+
   return (
     <div className="space-y-4">
-      {/* Rating summary */}
+      {/* Rating summary + auto-reply CTA */}
       <div className="flex gap-6 items-center">
         <div className="text-center">
           <p className="text-4xl font-bold">{avgRating.toFixed(1)}</p>
@@ -411,6 +584,22 @@ function ReviewsTab({ t, language }: { t: typeof translations.fr; language: stri
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Auto-reply all button */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          {SIMULATED_REVIEWS.filter(r => !r.reply_comment).length} {language === 'fr' ? 'avis sans réponse' : 'unanswered reviews'}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-xs"
+          onClick={handleGenerateAll}
+        >
+          <Sparkles className="h-3 w-3" />
+          {language === 'fr' ? 'Générer toutes les réponses IA' : 'Generate all AI replies'}
+        </Button>
       </div>
 
       {/* Reviews list */}
@@ -437,6 +626,12 @@ function ReviewsTab({ t, language }: { t: typeof translations.fr; language: stri
                       <Flag className="h-2.5 w-2.5 mr-1" />{t.reported}
                     </Badge>
                   )}
+                  {SIMULATED_AUTO_REPLIES[review.id] && !review.reply_comment && (
+                    <Badge variant="outline" className="text-[10px] gap-0.5 border-primary/30 text-primary">
+                      {SIMULATED_AUTO_REPLIES[review.id].priority === 'high' ? '🔴' : SIMULATED_AUTO_REPLIES[review.id].priority === 'medium' ? '🟡' : '🟢'}
+                      {SIMULATED_AUTO_REPLIES[review.id].sentiment}
+                    </Badge>
+                  )}
                 </div>
               </div>
 
@@ -450,17 +645,48 @@ function ReviewsTab({ t, language }: { t: typeof translations.fr; language: stri
                 </div>
               )}
 
+              {/* Auto-generated reply preview */}
+              {autoReplies[review.id] && !review.reply_comment && replyingTo !== review.id && (
+                <div className="ml-6 pl-3 border-l-2 border-primary/30 bg-primary/5 rounded-r-lg p-2">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Sparkles className="h-3 w-3 text-primary" />
+                    <span className="text-[10px] font-medium text-primary">{language === 'fr' ? 'Suggestion IA' : 'AI suggestion'}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{autoReplies[review.id]}</p>
+                  <div className="flex gap-1.5 mt-2">
+                    <Button variant="default" size="sm" className="h-6 text-[10px] gap-1" onClick={() => { setReplyText(autoReplies[review.id]); setReplyingTo(review.id); }}>
+                      <Send className="h-2.5 w-2.5" /> {language === 'fr' ? 'Utiliser' : 'Use'}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={() => setAutoReplies(prev => { const n = { ...prev }; delete n[review.id]; return n; })}>
+                      {t.cancel}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-1">
                 {!review.reply_comment && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs gap-1"
-                    onClick={() => { setReplyingTo(review.id); setReplyText(''); }}
-                  >
-                    <MessageSquare className="h-3 w-3" />
-                    {t.reply}
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => { setReplyingTo(review.id); setReplyText(''); }}
+                    >
+                      <MessageSquare className="h-3 w-3" />
+                      {t.reply}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/5"
+                      onClick={() => handleGenerateReply(review.id)}
+                      disabled={generatingReply === review.id}
+                    >
+                      {generatingReply === review.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                      {language === 'fr' ? 'Réponse IA' : 'AI reply'}
+                    </Button>
+                  </>
                 )}
                 {!review.is_flagged && review.star_rating <= 2 && (
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-destructive">
