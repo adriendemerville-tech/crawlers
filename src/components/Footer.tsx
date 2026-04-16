@@ -282,7 +282,7 @@ function FooterComponent() {
                 {t3(language, 'Ressources', 'Resources', 'Recursos')}
               </h3>
               <nav aria-label="Ressources">
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {resourcesLinks.map((link) => (
                     <li key={link.href}>
                       <SmartLink
