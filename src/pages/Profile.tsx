@@ -141,7 +141,7 @@ function ProfileContent() {
   const renderContent = () => {
     switch (activeTab) {
       case 'wallet': return <MyWallet />;
-      case 'tracking': return <MyTracking externalSiteId={selectedSiteId} />;
+      case 'tracking': return <MyTracking externalSiteId={selectedSiteId} forceApiPanel={openApiPanel} onApiPanelOpened={() => setOpenApiPanel(false)} />;
       case 'settings': return <ProfileSettings />;
       case 'reports': return <MyReports />;
       case 'action-plans': return <MyActionPlans externalDomain={selectedDomain} />;
