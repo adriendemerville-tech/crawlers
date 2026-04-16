@@ -178,6 +178,25 @@ export function ParmenionTaskPlan({ domain }: ParmenionTaskPlanProps) {
 
   useEffect(() => { loadTasks(); }, [loadTasks]);
 
+  // Auto-refresh when new tasks are inserted/updated for this domain
+  useEffect(() => {
+    const channel = supabase
+      .channel(`task-plan-${domain}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'architect_workbench',
+          filter: `domain=eq.${domain}`,
+        },
+        () => { loadTasks(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [domain, loadTasks]);
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
