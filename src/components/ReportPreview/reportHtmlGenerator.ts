@@ -29,7 +29,7 @@ export type { SiteCrawlReportData };
 
 function generateHeader(t: TranslationKeys, title: string, date: string): string {
   return `
-    <div class="header">
+    <div class="header" data-pdf-section="header">
       <div class="logo-wrapper">
         <div class="logo-icon">
           ${icons.bot}
@@ -44,7 +44,7 @@ function generateHeader(t: TranslationKeys, title: string, date: string): string
 
 function generateFooter(t: TranslationKeys): string {
   return `
-    <div class="footer">
+    <div class="footer" data-pdf-section="footer">
       <div class="footer-brand">${t.poweredBy}</div>
       <div class="footer-cta">${t.ctaAudit}</div>
       <a href="https://crawlers.fr/audit-expert" class="footer-link">${t.ctaLink}</a>
@@ -126,7 +126,7 @@ export function generateReportHTML(
 
   // Override header/footer for white-label
   const headerHtml = isWhiteLabel
-    ? `<div class="header" style="background: linear-gradient(135deg, ${branding?.primaryColor || '#3b82f6'}, ${branding?.primaryColor || '#3b82f6'}cc);">
+    ? `<div class="header" data-pdf-section="header" style="background: linear-gradient(135deg, ${branding?.primaryColor || '#3b82f6'}, ${branding?.primaryColor || '#3b82f6'}cc);">
         <div class="logo-wrapper">
           ${branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height: 32px;" />` : ''}
         </div>
@@ -136,7 +136,7 @@ export function generateReportHTML(
     : generateHeader(t, title, now);
 
   const footerHtml = isWhiteLabel
-    ? `<div class="footer" style="background: linear-gradient(135deg, ${branding?.primaryColor || '#3b82f6'}, ${branding?.primaryColor || '#3b82f6'}cc);">
+    ? `<div class="footer" data-pdf-section="footer" style="background: linear-gradient(135deg, ${branding?.primaryColor || '#3b82f6'}, ${branding?.primaryColor || '#3b82f6'}cc);">
         ${branding?.logoUrl ? `<div class="footer-brand"><img src="${branding.logoUrl}" alt="Logo" style="max-height: 20px;" /></div>` : ''}
       </div>`
     : generateFooter(t);
