@@ -349,9 +349,21 @@ const ArchitectureMap: React.FC = () => {
                 onClick={() => handleCardClick(name)}
                 style={{ cursor: "pointer" }}
               >
-                {[0, 1, 2, 3].map(idx => {
-                  const cx = pos.x + (idx % 2) * (CORE_W + CORE_GAP);
-                  const cy = pos.y + Math.floor(idx / 2) * (CORE_H + CORE_GAP);
+            {coreNames.map((tableName, idx) => {
+                  const cols = idx < 4 ? 2 : 1;
+                  const cx = idx < 4
+                    ? pos.x + (idx % 2) * (CORE_W + CORE_GAP)
+                    : pos.x + (pos.w - CORE_W) / 2;
+                  const cy = idx < 4
+                    ? pos.y + Math.floor(idx / 2) * (CORE_H + CORE_GAP)
+                    : pos.y + 2 * (CORE_H + CORE_GAP);
+                  const coreDescriptions: Record<string, string> = {
+                    profiles: "Identité et préférences utilisateurs",
+                    tracked_sites: "Sites suivis et leur configuration",
+                    architect_workbench: "Diagnostics et tâches centralisées",
+                    seasonal_context: "Contexte temporel et saisonnier",
+                    site_memory: "Mémoire persistante par site",
+                  };
                   return (
                     <g key={idx}>
                       <rect x={cx} y={cy} width={CORE_W} height={CORE_H} rx={6}
@@ -361,14 +373,14 @@ const ArchitectureMap: React.FC = () => {
                         opacity={hovered && !active ? 0.3 : 1}
                         style={{ transition: "fill 0.3s, opacity 0.3s, stroke 0.3s" }}
                       />
-                      <text x={cx + 8} y={cy + 18} fill="#fff" fontSize={12} fontWeight="bold"
+                      <text x={cx + 8} y={cy + 18} fill="#fff" fontSize={10} fontWeight="bold"
                         opacity={hovered && !active ? 0.3 : 1}
                         style={{ transition: "opacity 0.3s" }}
-                      >CORE</text>
-                      <text x={cx + 8} y={cy + 36} fill="#ffffffcc" fontSize={9}
+                      >{tableName}</text>
+                      <text x={cx + 8} y={cy + 34} fill="#ffffffaa" fontSize={7.5}
                         opacity={hovered && !active ? 0.3 : 1}
                         style={{ transition: "opacity 0.3s" }}
-                      >{coreNames[idx]}</text>
+                      >{coreDescriptions[tableName] || ""}</text>
                     </g>
                   );
                 })}
