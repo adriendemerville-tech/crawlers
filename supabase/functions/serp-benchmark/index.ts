@@ -254,14 +254,22 @@ function computeAveragedResults(
 Deno.serve(handleRequest(async (req) => {
   const supabase = getServiceClient();
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonError('Unauthorized', 401);
 
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !user) return jsonError('Invalid token', 401);
+  // Try to authenticate — allow anonymous for 'benchmark' action (lead magnet)
+  let user: { id: string } | null = null;
+  if (authHeader) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: u }, error: authErr } = await supabase.auth.getUser(token);
+    if (!authErr && u) user = u;
+  }
 
   const body = await req.json();
   const { action } = body;
+
+  // Actions that require auth
+  if ((action === 'list' || action === 'get') && !user) {
+    return jsonError('Unauthorized', 401);
+  }
 
   if (action === 'benchmark') {
     const {
