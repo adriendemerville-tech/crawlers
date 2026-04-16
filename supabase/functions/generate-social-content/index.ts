@@ -8,6 +8,7 @@ import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { callOpenRouter } from '../_shared/openRouterAI.ts';
 import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { runEditorialPipeline } from '../_shared/editorialPipeline.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
