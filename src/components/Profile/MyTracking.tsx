@@ -279,6 +279,15 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
   const isMobile = useIsMobile();
 
+  // Open API panel when triggered from sidebar
+  useEffect(() => {
+    if (forceApiPanel && !h.showApiPanel) {
+      h.setShowApiPanel(true);
+      h.setSelectedSite(null);
+      onApiPanelOpened?.();
+    }
+  }, [forceApiPanel]);
+
   // Sync with sidebar domain selector
   useEffect(() => {
     if (externalSiteId && externalSiteId !== h.selectedSite && h.sites.some(s => s.id === externalSiteId)) {
