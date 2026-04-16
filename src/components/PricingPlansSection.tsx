@@ -82,6 +82,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, 'Benchmark visibilité LLM', 'LLM Visibility Benchmark', 'Benchmark visibilidad LLM'),
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
     t3(language, 'Marque blanche + 2 comptes', 'White label + 2 accounts', 'Marca blanca + 2 cuentas'),
+    t3(language, 'Benchmark rank SERP', 'SERP Rank Benchmark', 'Benchmark rank SERP'),
   ];
 
   const plusFeatures = [
@@ -95,6 +96,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, 'Analyse des logs', 'Log analysis', 'Análisis de logs'),
     t3(language, 'Stratégie concurrentielle', 'Competitive strategy', 'Estrategia competitiva'),
     t3(language, 'Marque blanche + 3 comptes', 'White label + 3 accounts', 'Marca blanca + 3 cuentas'),
+    t3(language, 'Benchmark rank SERP', 'SERP Rank Benchmark', 'Benchmark rank SERP'),
   ];
 
   const enterpriseFeatures = [
