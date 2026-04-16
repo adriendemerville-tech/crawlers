@@ -174,7 +174,7 @@ function SerpBenchmarkMini() {
         </div>
 
         {/* Query + Location */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr_auto_auto] gap-2 items-end">
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">
               {t3(language, 'Mot-clé cible', 'Target keyword', 'Palabra clave')}
@@ -192,7 +192,7 @@ function SerpBenchmarkMini() {
               {t3(language, 'Échelle', 'Scale', 'Escala')}
             </label>
             <Select value={locScale} onValueChange={(v: any) => { setLocScale(v); setLocValue(''); }}>
-              <SelectTrigger className="w-full max-w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="pays">Pays</SelectItem>
                 <SelectItem value="region">Région</SelectItem>
@@ -208,22 +208,13 @@ function SerpBenchmarkMini() {
                 : locScale === 'departement' ? t3(language, 'Département', 'Department', 'Departamento')
                 : t3(language, 'Ville', 'City', 'Ciudad')}
             </label>
-            {locScale === 'ville' ? (
-              <Input
-                placeholder="ex: Lyon, Rhône-Alpes"
-                value={locValue}
-                onChange={e => setLocValue(e.target.value)}
-                className="w-full max-w-[220px] caret-foreground"
-              />
-            ) : (
-              <Input
-                placeholder={locScale === 'pays' ? 'France' : locScale === 'region' ? 'Île-de-France' : 'Rhône'}
-                value={locValue}
-                onChange={e => setLocValue(e.target.value)}
-                className="w-full max-w-[220px] caret-foreground"
-                list={`loc-suggestions-mini-${locScale}`}
-              />
-            )}
+            <Input
+              placeholder={locScale === 'ville' ? 'ex: Lyon' : locScale === 'pays' ? 'France' : locScale === 'region' ? 'Île-de-France' : 'Rhône'}
+              value={locValue}
+              onChange={e => setLocValue(e.target.value)}
+              className="w-full max-w-[180px] caret-foreground"
+              list={`loc-suggestions-mini-${locScale}`}
+            />
             {locScale === 'pays' && (
               <datalist id="loc-suggestions-mini-pays">
                 <option value="France" /><option value="Belgium" /><option value="Switzerland" />
@@ -245,25 +236,30 @@ function SerpBenchmarkMini() {
               </datalist>
             )}
           </div>
-          <div className="flex items-center gap-2 pt-5">
+          <div className="flex items-center gap-1.5 pb-0.5">
             <Checkbox
               checked={penaltyEnabled}
               onCheckedChange={(v) => setPenaltyEnabled(!!v)}
               className="h-3.5 w-3.5"
             />
-            <label className="text-xs font-medium text-muted-foreground">
-              Single-hit penalty (+{singleHitPenalty})
+            <label className="text-xs text-muted-foreground whitespace-nowrap">
+              Penalty (+{singleHitPenalty})
             </label>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={runBenchmark}
+            disabled={loading || !query.trim() || selectedProviders.length < 2}
+            className="gap-1.5 h-9 px-3 text-sm font-medium"
+          >
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+            {loading
+              ? t3(language, 'Analyse…', 'Analyzing…', 'Analizando…')
+              : t3(language, 'Analyser', 'Analyze', 'Analizar')
+            }
+          </Button>
         </div>
-
-        <Button onClick={runBenchmark} disabled={loading || !query.trim() || selectedProviders.length < 2} className="gap-2">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-          {loading
-            ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
-            : t3(language, 'Analyser', 'Analyze', 'Analizar')
-          }
-        </Button>
 
         {!user && (
           <p className="text-xs text-muted-foreground">
