@@ -272,12 +272,21 @@ const sentimentColor = (s: string | null) => {
 };
 
 // ─── Main Component ───
-export function MyTracking({ externalSiteId }: { externalSiteId?: string | null }) {
+export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: { externalSiteId?: string | null; forceApiPanel?: boolean; onApiPanelOpened?: () => void }) {
   const h = useMyTracking();
   const t = translations[h.language] || translations.fr;
   const navigate = useNavigate();
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
   const isMobile = useIsMobile();
+
+  // Open API panel when triggered from sidebar
+  useEffect(() => {
+    if (forceApiPanel && !h.showApiPanel) {
+      h.setShowApiPanel(true);
+      h.setSelectedSite(null);
+      onApiPanelOpened?.();
+    }
+  }, [forceApiPanel]);
 
   // Sync with sidebar domain selector
   useEffect(() => {
