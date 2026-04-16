@@ -261,6 +261,7 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
               </Select>
             </div>
             <Button
+              variant="outline"
               onClick={handleAnalyze}
               disabled={(inspectMode === 'cible' ? inspectingManual : scanning) || (inspectMode === 'cible' && !manualUrl.trim()) || !selectedSiteId}
               className="gap-2 shrink-0"
