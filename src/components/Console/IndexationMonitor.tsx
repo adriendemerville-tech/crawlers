@@ -152,7 +152,8 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
     }
   };
 
-  const selectedDomain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
+  const selectedDomain = externalDomain || trackedSites.find(s => s.id === selectedSiteId)?.domain;
+  const domainBase = selectedDomain ? `https://${selectedDomain.replace(/^www\./, '')}` : '';
 
   const indexed = checks.filter(c => c.verdict === 'PASS').length;
   const notIndexed = checks.filter(c => c.verdict !== 'PASS' && c.verdict !== 'unknown').length;
@@ -210,10 +211,11 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
 
             <div className="flex gap-2 flex-1">
               <Input
-                placeholder={t3(language, 'https://example.com/page', 'https://example.com/page', 'https://example.com/pagina')}
+                placeholder={selectedDomain ? `${domainBase}/page` : t3(language, 'https://example.com/page', 'https://example.com/page', 'https://example.com/pagina')}
                 value={manualUrl}
                 onChange={e => setManualUrl(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleManualInspect()}
+                className="caret-foreground"
               />
               <Button
                 variant="outline"
