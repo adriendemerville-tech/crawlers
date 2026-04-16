@@ -57,6 +57,7 @@ function ProfileContent() {
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [openApiPanel, setOpenApiPanel] = useState(false);
 
   // Sync tab with URL params
   useEffect(() => {
@@ -67,6 +68,13 @@ function ProfileContent() {
   }, [searchParams]);
 
   const handleTabChange = (tab: string) => {
+    if (tab === 'tracking-api') {
+      setActiveTab('tracking');
+      setSearchParams({ tab: 'tracking' });
+      setOpenApiPanel(true);
+      return;
+    }
+    setOpenApiPanel(false);
     setActiveTab(tab);
     setSearchParams({ tab });
   };
