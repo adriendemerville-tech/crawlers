@@ -1373,6 +1373,7 @@ ${templateBlock}`;
     console.error('[Parménion] Pipeline opt-in check failed:', e);
   }
 
+  const functions: string[] = [];
   if (fixes.length > 0) functions.push('generate-corrective-code');
   if (cmsActions.length > 0) functions.push('iktracker-actions');
 
