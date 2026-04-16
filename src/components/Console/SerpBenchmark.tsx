@@ -279,6 +279,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
               placeholder={selectedSite?.domain || 'example.com'}
               value={targetDomain}
               onChange={e => setTargetDomain(e.target.value)}
+              className="caret-foreground"
             />
           </div>
           <div className="space-y-1">

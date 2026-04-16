@@ -160,7 +160,7 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
     setInspectingManual(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-indexation', {
-        body: { action: 'inspect', tracked_site_id: selectedSiteId, urls: [manualUrl.trim()] },
+        body: { action: 'inspect', tracked_site_id: selectedSiteId, urls: [url] },
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Inspection failed');
