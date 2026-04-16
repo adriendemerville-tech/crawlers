@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -32,40 +34,66 @@ interface MiniResult {
   positions: Record<string, number | null>;
 }
 
+const PROVIDERS = [
+  { id: 'DataForSEO', label: 'DataForSEO', color: 'bg-blue-500', textColor: 'text-white' },
+  { id: 'SerpApi', label: 'SerpApi', color: 'bg-violet-600', textColor: 'text-white' },
+  { id: 'Serper', label: 'serper.dev', color: 'bg-emerald-600', textColor: 'text-white' },
+  { id: 'Bright Data', label: 'Bright Data', color: 'bg-orange-500', textColor: 'text-white' },
+] as const;
+
 function SerpBenchmarkMini() {
   const { language } = useLanguage();
   const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<MiniResult[]>([]);
-  const [providers, setProviders] = useState<{ provider: string; count: number; error?: string }[]>([]);
+  const [providerSummaries, setProviderSummaries] = useState<{ provider: string; count: number; error?: string }[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<string[]>(['DataForSEO', 'SerpApi', 'Serper']);
+  const [locScale, setLocScale] = useState<'pays' | 'region' | 'departement' | 'ville'>('pays');
+  const [locValue, setLocValue] = useState('France');
+  const singleHitPenalty = 20;
+  const [penaltyEnabled, setPenaltyEnabled] = useState(true);
+
+  const toggleProvider = (id: string) => {
+    setSelectedProviders(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
+  const buildLocation = () => {
+    const v = locValue.trim();
+    if (!v) return 'France';
+    switch (locScale) {
+      case 'pays': return v;
+      case 'region': return `${v},France`;
+      case 'departement': return `${v},France`;
+      case 'ville': return `${v},France`;
+      default: return v;
+    }
+  };
 
   const runBenchmark = async () => {
     if (!query.trim()) return;
+    if (selectedProviders.length < 2) { toast.error('Sélectionnez au moins 2 providers'); return; }
     setLoading(true);
     setResults([]);
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      const session = (await supabase.auth.getSession()).data.session;
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
-
       const { data, error } = await supabase.functions.invoke('serp-benchmark', {
         body: {
           action: 'benchmark',
           query: query.trim(),
-          providers: ['DataForSEO', 'SerpApi', 'Serper', 'Bright Data'],
-          location: 'France',
+          providers: selectedProviders,
+          location: buildLocation(),
           language: 'fr',
           country: 'fr',
-          single_hit_penalty: 20,
+          single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
         },
       });
 
       if (error) throw error;
       setResults(data?.averaged_results?.slice(0, 20) || []);
-      setProviders(data?.providers || []);
+      setProviderSummaries(data?.providers || []);
+      toast.success(`${data.total_sites} sites analysés via ${data.providers?.filter((p: any) => !p.error).length || 0} providers`);
     } catch (e: any) {
       toast.error(e.message || 'Erreur');
     } finally {
@@ -74,48 +102,168 @@ function SerpBenchmarkMini() {
   };
 
   const copyResults = () => {
-    const text = results.map(r => `${r.rank}. ${r.domain} — avg: ${r.average}`).join('\n');
-    navigator.clipboard.writeText(text);
+    const activeProviders = providerSummaries.filter(p => !p.error).map(p => p.provider);
+    const header = ['#', 'Site', ...activeProviders, 'Moyenne'].join('\t');
+    const rows = results.map(r =>
+      [r.rank, r.domain, ...activeProviders.map(p => r.positions[p] ?? '—'), r.average].join('\t')
+    );
+    navigator.clipboard.writeText([header, ...rows].join('\n'));
     toast.success(t3(language, 'Copié !', 'Copied!', '¡Copiado!'));
   };
 
   const posColor = (pos: number | null) => {
     if (pos === null) return 'text-muted-foreground';
-    if (pos <= 3) return 'text-green-500';
+    if (pos <= 3) return 'text-emerald-600';
     if (pos <= 10) return 'text-blue-500';
     if (pos <= 20) return 'text-orange-500';
     return 'text-red-500';
   };
 
+  const activeProviders = providerSummaries.filter(p => !p.error);
+
   return (
     <Card className="border-primary/30 bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <Search className="h-5 w-5 text-gray-700" />
-          {t3(language, 'Benchmark SERP', 'SERP Benchmark', 'Benchmark SERP')}
-        </CardTitle>
-        <CardDescription>
-          {t3(language,
-            'Comparez les positions Google renvoyées par 4 providers SERP simultanément.',
-            'Compare Google positions returned by 4 SERP providers simultaneously.',
-            'Compara las posiciones de Google devueltas por 4 proveedores SERP simultáneamente.'
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Search className="h-5 w-5 text-primary" />
+              {t3(language, 'Benchmark SERP', 'SERP Benchmark', 'Benchmark SERP')}
+            </CardTitle>
+            <CardDescription>
+              {t3(language,
+                'Comparez les positions Google renvoyées par plusieurs providers SERP simultanément.',
+                'Compare Google positions returned by multiple SERP providers simultaneously.',
+                'Compara las posiciones de Google devueltas por múltiples proveedores SERP simultáneamente.'
+              )}
+            </CardDescription>
+          </div>
+          {results.length > 0 && (
+            <Button size="sm" variant="outline" onClick={copyResults} className="gap-1">
+              <Copy className="h-3.5 w-3.5" /> Copy {results.length}
+            </Button>
           )}
-        </CardDescription>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Keywords"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && runBenchmark()}
-            className="flex-1"
-          />
-          <Button variant="outline" onClick={runBenchmark} disabled={loading || !query.trim()} className="gap-2">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            {t3(language, 'Analyser', 'Analyze', 'Analizar')}
-          </Button>
+        {/* Providers */}
+        <div>
+          <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
+            <Globe className="h-3.5 w-3.5" />
+            {t3(language, 'Providers', 'Providers', 'Proveedores')}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {PROVIDERS.map(p => (
+              <label
+                key={p.id}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer border transition-all text-sm ${
+                  selectedProviders.includes(p.id)
+                    ? `${p.color} ${p.textColor} border-transparent shadow-sm`
+                    : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+                }`}
+              >
+                <Checkbox
+                  checked={selectedProviders.includes(p.id)}
+                  onCheckedChange={() => toggleProvider(p.id)}
+                  className="hidden"
+                />
+                {p.label}
+              </label>
+            ))}
+          </div>
         </div>
+
+        {/* Query + Location */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              {t3(language, 'Mot-clé cible', 'Target keyword', 'Palabra clave')}
+            </label>
+            <Input
+              placeholder='"agence seo"'
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && runBenchmark()}
+              className="caret-foreground"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              {t3(language, 'Échelle', 'Scale', 'Escala')}
+            </label>
+            <Select value={locScale} onValueChange={(v: any) => { setLocScale(v); setLocValue(''); }}>
+              <SelectTrigger className="w-full max-w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pays">Pays</SelectItem>
+                <SelectItem value="region">Région</SelectItem>
+                <SelectItem value="departement">Département</SelectItem>
+                <SelectItem value="ville">Ville</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              {locScale === 'pays' ? t3(language, 'Pays', 'Country', 'País')
+                : locScale === 'region' ? t3(language, 'Région', 'Region', 'Región')
+                : locScale === 'departement' ? t3(language, 'Département', 'Department', 'Departamento')
+                : t3(language, 'Ville', 'City', 'Ciudad')}
+            </label>
+            {locScale === 'ville' ? (
+              <Input
+                placeholder="ex: Lyon, Rhône-Alpes"
+                value={locValue}
+                onChange={e => setLocValue(e.target.value)}
+                className="w-full max-w-[220px] caret-foreground"
+              />
+            ) : (
+              <Input
+                placeholder={locScale === 'pays' ? 'France' : locScale === 'region' ? 'Île-de-France' : 'Rhône'}
+                value={locValue}
+                onChange={e => setLocValue(e.target.value)}
+                className="w-full max-w-[220px] caret-foreground"
+                list={`loc-suggestions-mini-${locScale}`}
+              />
+            )}
+            {locScale === 'pays' && (
+              <datalist id="loc-suggestions-mini-pays">
+                <option value="France" /><option value="Belgium" /><option value="Switzerland" />
+                <option value="Canada" /><option value="United States" /><option value="United Kingdom" />
+                <option value="Germany" /><option value="Spain" /><option value="Italy" /><option value="Portugal" />
+              </datalist>
+            )}
+            {locScale === 'region' && (
+              <datalist id="loc-suggestions-mini-region">
+                <option value="Île-de-France" /><option value="Auvergne-Rhône-Alpes" /><option value="Provence-Alpes-Côte d'Azur" />
+                <option value="Occitanie" /><option value="Pays de la Loire" /><option value="Nouvelle-Aquitaine" />
+                <option value="Bretagne" /><option value="Hauts-de-France" /><option value="Grand Est" />
+              </datalist>
+            )}
+            {locScale === 'departement' && (
+              <datalist id="loc-suggestions-mini-departement">
+                <option value="Paris" /><option value="Rhône" /><option value="Bouches-du-Rhône" /><option value="Haute-Garonne" />
+                <option value="Nord" /><option value="Gironde" /><option value="Loire-Atlantique" /><option value="Bas-Rhin" />
+              </datalist>
+            )}
+          </div>
+          <div className="flex items-center gap-2 pt-5">
+            <Checkbox
+              checked={penaltyEnabled}
+              onCheckedChange={(v) => setPenaltyEnabled(!!v)}
+              className="h-3.5 w-3.5"
+            />
+            <label className="text-xs font-medium text-muted-foreground">
+              Single-hit penalty (+{singleHitPenalty})
+            </label>
+          </div>
+        </div>
+
+        <Button onClick={runBenchmark} disabled={loading || !query.trim() || selectedProviders.length < 2} className="gap-2">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          {loading
+            ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
+            : t3(language, 'Analyser', 'Analyze', 'Analizar')
+          }
+        </Button>
 
         {!user && (
           <p className="text-xs text-muted-foreground">
@@ -127,9 +275,9 @@ function SerpBenchmarkMini() {
           </p>
         )}
 
-        {providers.length > 0 && (
+        {providerSummaries.length > 0 && (
           <div className="flex gap-2 flex-wrap">
-            {providers.map(p => (
+            {providerSummaries.map(p => (
               <Badge key={p.provider} variant={p.error ? 'destructive' : 'secondary'} className="text-xs">
                 {p.provider}: {p.error || `${p.count} résultats`}
               </Badge>
@@ -139,21 +287,16 @@ function SerpBenchmarkMini() {
 
         {results.length > 0 && (
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <p className="text-sm font-medium text-muted-foreground">
-                {t3(language, `Top ${results.length} résultats croisés`, `Top ${results.length} cross-referenced results`, `Top ${results.length} resultados cruzados`)}
-              </p>
-              <Button variant="ghost" size="sm" onClick={copyResults} className="gap-1">
-                <Copy className="h-3 w-3" /> Copy
-              </Button>
-            </div>
+            <p className="text-sm font-medium text-muted-foreground">
+              {t3(language, `Top ${results.length} résultats croisés`, `Top ${results.length} cross-referenced results`, `Top ${results.length} resultados cruzados`)}
+            </p>
             <div className="rounded-lg border border-border overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">#</th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Domain</th>
-                    {providers.filter(p => !p.error).map(p => (
+                    {activeProviders.map(p => (
                       <th key={p.provider} className="px-3 py-2 text-center text-xs font-medium text-muted-foreground">{p.provider}</th>
                     ))}
                     <th className="px-3 py-2 text-center text-xs font-medium text-primary">Avg</th>
@@ -174,7 +317,7 @@ function SerpBenchmarkMini() {
                           <span className="text-xs font-medium truncate max-w-[200px]">{r.domain}</span>
                         </div>
                       </td>
-                      {providers.filter(p => !p.error).map(p => (
+                      {activeProviders.map(p => (
                         <td key={p.provider} className={`px-3 py-1.5 text-center text-xs font-mono ${posColor(r.positions[p.provider])}`}>
                           {r.positions[p.provider] ?? '—'}
                         </td>
