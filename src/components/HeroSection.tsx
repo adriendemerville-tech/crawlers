@@ -137,7 +137,7 @@ function HeroSectionComponent() {
 
         {/* Secondary CTAs */}
         <div className="mt-6 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-          <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-primary-foreground">
+          <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-foreground dark:text-primary-foreground">
             {language === 'fr' ? 'Créer un compte gratuit →' : language === 'es' ? 'Crear una cuenta gratis →' : 'Create a free account →'}
           </Link>
         </div>
