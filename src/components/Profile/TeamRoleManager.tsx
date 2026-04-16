@@ -172,22 +172,32 @@ export function TeamRoleManager() {
             );
           })}
         </div>
-        {/* Legend */}
-        <div className="mt-4 pt-3 border-t border-border/30 grid grid-cols-3 gap-2">
-          {(['auditor', 'editor', 'owner'] as TeamRole[]).map(r => {
-            const cfg = ROLE_CONFIG[r];
-            const Icon = cfg.icon;
-            return (
-              <div key={r} className="text-center">
-                <Icon className={`h-3.5 w-3.5 mx-auto mb-0.5 ${cfg.color}`} />
-                <span className="text-[10px] font-medium block">{cfg[language === 'fr' ? 'label_fr' : 'label_en']}</span>
-                <span className="text-[9px] text-muted-foreground">
-                  {ROLE_DESCRIPTIONS[r][language === 'fr' ? 'fr' : 'en']}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+        {isEnterprise ? (
+          <div className="mt-4 pt-3 border-t border-border/30 grid grid-cols-3 gap-2">
+            {(['auditor', 'editor', 'owner'] as TeamRole[]).map(r => {
+              const cfg = ROLE_CONFIG[r];
+              const Icon = cfg.icon;
+              return (
+                <div key={r} className="text-center">
+                  <Icon className={`h-3.5 w-3.5 mx-auto mb-0.5 ${cfg.color}`} />
+                  <span className="text-[10px] font-medium block">{cfg[language === 'fr' ? 'label_fr' : 'label_en']}</span>
+                  <span className="text-[9px] text-muted-foreground">
+                    {ROLE_DESCRIPTIONS[r][language === 'fr' ? 'fr' : 'en']}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-4 pt-3 border-t border-border/30 flex items-center gap-2 text-xs text-muted-foreground">
+            <Lock className="h-3.5 w-3.5 shrink-0" />
+            <span>
+              {language === 'fr'
+                ? 'Les rôles Auditeur et Éditeur sont disponibles avec le plan Enterprise.'
+                : 'Auditor and Editor roles are available with the Enterprise plan.'}
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
