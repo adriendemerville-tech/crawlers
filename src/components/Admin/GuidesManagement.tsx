@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Eye, EyeOff, Search, Clock, CheckCircle, Archive, Loader2, BookOpen, ExternalLink } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Search, Clock, CheckCircle, Archive, Loader2, BookOpen, ExternalLink, Swords } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const GUIDE_TARGETS = [
@@ -165,6 +165,39 @@ export function GuidesManagement() {
     else { toast.success('Guide supprimé'); fetchGuides(); }
   };
 
+  const handleAddToParmenion = async (guide: any) => {
+    try {
+      const targetUrl = `https://crawlers.fr/guide/${guide.slug}`;
+      const { data: existing } = await supabase
+        .from('architect_workbench')
+        .select('id')
+        .eq('target_url', targetUrl)
+        .eq('domain', 'crawlers.fr')
+        .neq('status', 'done' as any)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        toast.info('Déjà dans le plan Parménion');
+        return;
+      }
+      const { error } = await supabase.from('architect_workbench').insert({
+        user_id: user?.id,
+        domain: 'crawlers.fr',
+        title: `Optimiser : ${guide.title}`,
+        description: `Guide SEO ajouté manuellement au plan Parménion (Glaive)`,
+        target_url: targetUrl,
+        finding_category: 'content',
+        source_type: 'manual',
+        severity: 'medium',
+        status: 'open',
+      } as any);
+      if (error) throw error;
+      toast.success('Ajouté au plan Parménion');
+    } catch (e: any) {
+      console.error('Parmenion add error:', e);
+      toast.error('Erreur ajout Parménion');
+    }
+  };
+
   const handleStatusChange = async (id: string, newStatus: string) => {
     const updateData: any = { status: newStatus };
     if (newStatus === 'published') updateData.published_at = new Date().toISOString();
@@ -269,7 +302,7 @@ export function GuidesManagement() {
                     const toolCount = (g.guide_tools || []).length;
 
                     return (
-                      <TableRow key={g.id}>
+                      <TableRow key={g.id} className="group">
                         <TableCell>
                           <div className="space-y-1">
                             <p className="font-medium line-clamp-1">{g.title}</p>
@@ -290,6 +323,15 @@ export function GuidesManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleAddToParmenion(g)}
+                              title="Parménion — Ajouter au plan de tâches"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-500 hover:text-purple-600"
+                            >
+                              <Swords className="h-4 w-4" />
+                            </Button>
                             <Button size="sm" variant="ghost" onClick={() => openEditor(g)}><Edit className="h-4 w-4" /></Button>
                             {g.status === 'published' && (
                               <Button size="sm" variant="ghost" title="Voir" asChild>

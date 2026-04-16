@@ -44,7 +44,11 @@ export async function callLLMWithTools(
 
       if (!response.ok) {
         const err = await response.text();
-        console.error(`[Parménion] LLM error (${currentModel}, ${toolChoice}):`, response.status, err.slice(0, 300));
+        console.error(`[Parménion] LLM error ${response.status}:`, err.slice(0, 300));
+        // 402 = credits exhausted — abort immediately, no retry will fix it
+        if (response.status === 402) {
+          throw new Error('LLM_CREDITS_EXHAUSTED');
+        }
         continue;
       }
 

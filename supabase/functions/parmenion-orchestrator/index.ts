@@ -431,7 +431,7 @@ try {
     }
 
     if (!decision) {
-      return jsonError('Parménion could not produce a decision', 500);
+      return jsonOk({ ok: false, error: 'no_decision', message: 'Parménion n\'a pas pu produire de décision. Vérifiez les crédits LLM.' });
     }
 
     // ═══ PHASE 4: Validate functions against phase ═══
@@ -494,7 +494,7 @@ try {
 
     if (logError) {
       console.error('[Parménion] Failed to persist decision:', logError);
-      return jsonError('Failed to persist decision', 500);
+      return jsonOk({ ok: false, error: 'persist_failed', message: 'Échec de la persistance de la décision.' });
     }
 
     return jsonOk({
@@ -514,7 +514,13 @@ try {
 
   } catch (e) {
     console.error('[Parménion] Error:', e);
-    return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    const isCredits = msg === 'LLM_CREDITS_EXHAUSTED';
+    return jsonOk({
+      ok: false,
+      error: isCredits ? 'credits_exhausted' : 'internal_error',
+      message: isCredits ? 'Crédits LLM épuisés. Rechargez votre solde Lovable AI.' : msg,
+    });
   }
 }));
 
