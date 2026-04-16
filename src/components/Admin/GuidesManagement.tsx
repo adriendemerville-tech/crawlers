@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Eye, EyeOff, Search, Clock, CheckCircle, Archive, Loader2, BookOpen, ExternalLink } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Search, Clock, CheckCircle, Archive, Loader2, BookOpen, ExternalLink, Swords } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const GUIDE_TARGETS = [
@@ -163,6 +163,39 @@ export function GuidesManagement() {
     const { error } = await supabase.from('seo_page_drafts' as any).delete().eq('id', id);
     if (error) toast.error('Erreur suppression');
     else { toast.success('Guide supprimé'); fetchGuides(); }
+  };
+
+  const handleAddToParmenion = async (guide: any) => {
+    try {
+      const targetUrl = `https://crawlers.fr/guide/${guide.slug}`;
+      const { data: existing } = await supabase
+        .from('architect_workbench')
+        .select('id')
+        .eq('target_url', targetUrl)
+        .eq('domain', 'crawlers.fr')
+        .neq('status', 'cancelled')
+        .limit(1);
+      if (existing && existing.length > 0) {
+        toast.info('Déjà dans le plan Parménion');
+        return;
+      }
+      const { error } = await supabase.from('architect_workbench').insert({
+        user_id: user?.id,
+        domain: 'crawlers.fr',
+        title: `Optimiser : ${guide.title}`,
+        description: `Guide SEO ajouté manuellement au plan Parménion (Glaive)`,
+        target_url: targetUrl,
+        finding_category: 'content',
+        source_type: 'manual',
+        severity: 'medium',
+        status: 'open',
+      } as any);
+      if (error) throw error;
+      toast.success('Ajouté au plan Parménion');
+    } catch (e: any) {
+      console.error('Parmenion add error:', e);
+      toast.error('Erreur ajout Parménion');
+    }
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
