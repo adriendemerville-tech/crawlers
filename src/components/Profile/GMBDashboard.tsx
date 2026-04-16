@@ -1054,8 +1054,39 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
           </div>
         </div>
 
-        {/* Main content */}
+      {/* Main content */}
         <div className="flex-1 min-w-0 space-y-4">
+          {/* Hero pitch */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/3">
+            <CardContent className="p-4 space-y-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                {language === 'fr'
+                  ? 'Auditez et optimisez votre fiche Google sur 100 points'
+                  : language === 'es'
+                    ? 'Audite y optimice su ficha de Google en 100 puntos'
+                    : 'Audit & optimise your Google listing on 100 points'}
+              </h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {language === 'fr'
+                  ? 'Votre fiche Google est notée sur 100 points. Voyez ce qui manque, appliquez les corrections en 1 clic, et mesurez votre visibilité sur une carte autour de votre établissement.'
+                  : language === 'es'
+                    ? 'Su ficha de Google se califica en 100 puntos. Vea lo que falta, aplique las correcciones en 1 clic y mida su visibilidad en un mapa alrededor de su establecimiento.'
+                    : 'Your Google listing is scored out of 100 points. See what\'s missing, apply fixes in 1 click, and measure your visibility on a map around your business.'}
+              </p>
+              <div className="flex items-center gap-3 pt-1">
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-primary font-medium">
+                  <MessageSquare className="h-3 w-3" />
+                  {language === 'fr'
+                    ? 'Réponses automatisées aux avis Google'
+                    : language === 'es'
+                      ? 'Respuestas automatizadas a reseñas de Google'
+                      : 'Automated responses to Google reviews'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Business summary card */}
           <Card>
             <CardContent className="p-4">
