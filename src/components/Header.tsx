@@ -477,6 +477,11 @@ export function Header() {
                       E-E-A-T
                     </Button>
                   </Link>
+                  <Link to="/app/ranking-serp">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                      SERPs
+                    </Button>
+                  </Link>
                 </>
               ) : (
                 <>
