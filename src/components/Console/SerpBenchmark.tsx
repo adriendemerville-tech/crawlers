@@ -273,7 +273,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">
-              {t3(language, 'Domaine cible', 'Target domain', 'Dominio objetivo')}
+              {t3(language, 'URL cible', 'Target URL', 'URL objetivo')}
             </label>
             <Input
               placeholder={selectedSite?.domain || 'url.com'}
@@ -287,7 +287,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
               {t3(language, 'Localisation', 'Location', 'Ubicación')}
             </label>
             <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full max-w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="France">🇫🇷 France</SelectItem>
                 <SelectItem value="Belgium">🇧🇪 Belgique</SelectItem>
@@ -320,11 +320,11 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button variant="ghost" onClick={() => runBenchmark()} disabled={loading || batchLoading || selectedProviders.length < 2} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
+          <Button onClick={() => runBenchmark()} disabled={loading || batchLoading || selectedProviders.length < 2} className="gap-2">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             {loading
               ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
-              : t3(language, 'Lancer le benchmark', 'Run benchmark', 'Ejecutar benchmark')
+              : t3(language, 'Analyse', 'Analyze', 'Analizar')
             }
           </Button>
           <Button
