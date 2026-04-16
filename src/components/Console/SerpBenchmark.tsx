@@ -107,7 +107,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           query: q,
           tracked_site_id: selectedSiteId || undefined,
           target_domain: targetDomain.trim() || selectedSite?.domain || undefined,
-          location: region ? `${region},${location}` : location,
+          location: buildLocation(),
           language: 'fr',
           country: 'fr',
           single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
@@ -124,7 +124,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
     } finally {
       setLoading(false);
     }
-  }, [query, selectedProviders, selectedSiteId, targetDomain, selectedSite, location, penaltyEnabled, singleHitPenalty]);
+  }, [query, selectedProviders, selectedSiteId, targetDomain, selectedSite, locScale, locValue, penaltyEnabled, singleHitPenalty]);
 
   useImperativeHandle(ref, () => ({
     triggerBenchmark: (keyword: string) => runBenchmark(keyword),
@@ -174,7 +174,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
             query: kw.keyword,
             tracked_site_id: selectedSiteId,
             target_domain: site.domain,
-            location: region ? `${region},${location}` : location,
+            location: buildLocation(),
             language: 'fr',
             country: 'fr',
             single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
@@ -201,7 +201,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
       setBatchLoading(false);
       setBatchProgress(null);
     }
-  }, [user, selectedSiteId, trackedSites, selectedProviders, location, penaltyEnabled, singleHitPenalty, language, runBenchmark, isAgencyPro, maxBatchKeywords]);
+  }, [user, selectedSiteId, trackedSites, selectedProviders, locScale, locValue, penaltyEnabled, singleHitPenalty, language, runBenchmark, isAgencyPro, maxBatchKeywords]);
 
 
   const copyResults = () => {
@@ -297,45 +297,66 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">
-              {t3(language, 'Localisation', 'Location', 'Ubicación')}
+              {t3(language, 'Échelle', 'Scale', 'Escala')}
             </label>
-            <Select value={location} onValueChange={(v) => { setLocation(v); setRegion(''); }}>
-              <SelectTrigger className="w-full max-w-[160px]"><SelectValue /></SelectTrigger>
+            <Select value={locScale} onValueChange={(v: any) => { setLocScale(v); setLocValue(''); }}>
+              <SelectTrigger className="w-full max-w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="France">France</SelectItem>
-                <SelectItem value="Belgium">Belgique</SelectItem>
-                <SelectItem value="Switzerland">Suisse</SelectItem>
-                <SelectItem value="Canada">Canada</SelectItem>
-                <SelectItem value="United States">USA</SelectItem>
-                <SelectItem value="United Kingdom">UK</SelectItem>
+                <SelectItem value="pays">Pays</SelectItem>
+                <SelectItem value="region">Région</SelectItem>
+                <SelectItem value="departement">Département</SelectItem>
+                <SelectItem value="ville">Ville</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {location === 'France' && (
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">
-                {t3(language, 'Région', 'Region', 'Región')}
-              </label>
-              <Select value={region || '__all__'} onValueChange={(v) => setRegion(v === '__all__' ? '' : v)}>
-                <SelectTrigger className="w-full max-w-[180px]"><SelectValue placeholder={t3(language, 'Toute la France', 'All France', 'Toda Francia')} /></SelectTrigger>
-                <SelectContent>
-                <SelectItem value="__all__">Toute la France</SelectItem>
-                  <SelectItem value="Paris,Ile-de-France">Île-de-France</SelectItem>
-                  <SelectItem value="Lyon,Auvergne-Rhone-Alpes">Auvergne-Rhône-Alpes</SelectItem>
-                  <SelectItem value="Marseille,Provence-Alpes-Cote d'Azur">PACA</SelectItem>
-                  <SelectItem value="Toulouse,Occitanie">Occitanie</SelectItem>
-                  <SelectItem value="Nantes,Pays de la Loire">Pays de la Loire</SelectItem>
-                  <SelectItem value="Bordeaux,Nouvelle-Aquitaine">Nouvelle-Aquitaine</SelectItem>
-                  <SelectItem value="Rennes,Bretagne">Bretagne</SelectItem>
-                  <SelectItem value="Lille,Hauts-de-France">Hauts-de-France</SelectItem>
-                  <SelectItem value="Strasbourg,Grand Est">Grand Est</SelectItem>
-                  <SelectItem value="Dijon,Bourgogne-Franche-Comte">Bourgogne-Franche-Comté</SelectItem>
-                  <SelectItem value="Rouen,Normandie">Normandie</SelectItem>
-                  <SelectItem value="Ajaccio,Corse">Corse</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              {locScale === 'pays' ? t3(language, 'Pays', 'Country', 'País')
+                : locScale === 'region' ? t3(language, 'Région', 'Region', 'Región')
+                : locScale === 'departement' ? t3(language, 'Département', 'Department', 'Departamento')
+                : t3(language, 'Ville', 'City', 'Ciudad')}
+            </label>
+            {locScale === 'ville' ? (
+              <Input
+                placeholder="ex: Lyon, Rhône-Alpes"
+                value={locValue}
+                onChange={e => setLocValue(e.target.value)}
+                className="w-full max-w-[220px] caret-foreground"
+              />
+            ) : (
+              <Input
+                placeholder={locScale === 'pays' ? 'France' : locScale === 'region' ? 'Île-de-France' : 'Rhône'}
+                value={locValue}
+                onChange={e => setLocValue(e.target.value)}
+                className="w-full max-w-[220px] caret-foreground"
+                list={`loc-suggestions-${locScale}`}
+              />
+            )}
+            {locScale === 'pays' && (
+              <datalist id="loc-suggestions-pays">
+                <option value="France" /><option value="Belgium" /><option value="Switzerland" />
+                <option value="Canada" /><option value="United States" /><option value="United Kingdom" />
+                <option value="Germany" /><option value="Spain" /><option value="Italy" /><option value="Portugal" />
+              </datalist>
+            )}
+            {locScale === 'region' && (
+              <datalist id="loc-suggestions-region">
+                <option value="Île-de-France" /><option value="Auvergne-Rhône-Alpes" /><option value="Provence-Alpes-Côte d'Azur" />
+                <option value="Occitanie" /><option value="Pays de la Loire" /><option value="Nouvelle-Aquitaine" />
+                <option value="Bretagne" /><option value="Hauts-de-France" /><option value="Grand Est" />
+                <option value="Bourgogne-Franche-Comté" /><option value="Normandie" /><option value="Centre-Val de Loire" /><option value="Corse" />
+              </datalist>
+            )}
+            {locScale === 'departement' && (
+              <datalist id="loc-suggestions-departement">
+                <option value="Paris" /><option value="Rhône" /><option value="Bouches-du-Rhône" /><option value="Haute-Garonne" />
+                <option value="Nord" /><option value="Gironde" /><option value="Loire-Atlantique" /><option value="Bas-Rhin" />
+                <option value="Hauts-de-Seine" /><option value="Seine-Saint-Denis" /><option value="Val-de-Marne" /><option value="Yvelines" />
+                <option value="Hérault" /><option value="Alpes-Maritimes" /><option value="Var" /><option value="Isère" />
+                <option value="Seine-et-Marne" /><option value="Essonne" /><option value="Val-d'Oise" /><option value="Finistère" />
+              </datalist>
+            )}
+          </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
               <Checkbox
