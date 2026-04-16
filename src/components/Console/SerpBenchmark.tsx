@@ -125,7 +125,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
     } finally {
       setLoading(false);
     }
-  }, [query, selectedProviders, selectedSiteId, targetDomain, selectedSite, locScale, locValue, penaltyEnabled, singleHitPenalty]);
+  }, [query, selectedProviders, selectedSiteId, targetDomain, selectedSite, locScale, locValue, penaltyEnabled]);
 
   useImperativeHandle(ref, () => ({
     triggerBenchmark: (keyword: string) => runBenchmark(keyword),
