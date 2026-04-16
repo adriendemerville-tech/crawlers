@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Sparkles, Bug, Network, Brain, ShieldCheck, Gauge, PenLine,
   Share2, BarChart3, Radar, Globe, Target, ArrowRight, Layers,
-  Search, Building2, FileSearch, Zap
+  Search, Building2, FileSearch, Zap, Award, Swords
 } from 'lucide-react';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
