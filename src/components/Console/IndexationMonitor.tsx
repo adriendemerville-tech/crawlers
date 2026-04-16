@@ -176,6 +176,14 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
     }
   };
 
+  const handleAnalyze = () => {
+    if (inspectMode === 'batch') {
+      handleAutoScan();
+    } else {
+      handleManualInspect();
+    }
+  };
+
   const selectedDomain = externalDomain || trackedSites.find(s => s.id === selectedSiteId)?.domain;
   const domainBase = selectedDomain ? `https://${selectedDomain.replace(/^www\./, '')}` : '';
 
