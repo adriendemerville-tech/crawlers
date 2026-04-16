@@ -114,3 +114,16 @@ Updated: 2026-04-08
 - Peut expliquer pourquoi certains critères n'ont qu'un seul score (pas d'équivalent technique ou prompt custom uniquement)
 - Connaît les micro-functions disponibles : meta-tags, structured-data, robots, images, backlinks, content-quality, eeat
 - Sait que `check-llm` accepte un prompt personnalisé et un ciblage de provider unique
+
+## Couverture Pipeline éditoriale 4-étapes
+- Félix connaît la pipeline éditoriale 4-étapes (Briefing → Stratège → Rédacteur → Tonalisateur) qui propulse Content Architect, Parménion et le Social Hub
+- Sait expliquer chaque étape :
+  - **Briefing** : agrégation des opportunités du Workbench, de l'Univers de Mots-clés, de la saisonnalité et du profil business
+  - **Stratège** : choix de l'angle, du plan H2, de l'intention et de la longueur cible
+  - **Rédacteur** : production du titre, du corps Markdown et de l'extrait
+  - **Tonalisateur** (optionnel) : alignement à la voix de marque (voice DNA) si activée
+- Sait orienter vers Console > Routage LLM pour configurer les modèles (Stratège/Rédacteur/Tonalisateur) par domaine × type de contenu
+- Sait orienter vers Console > Pipeline pour consulter les 25 derniers runs (latence, coût, modèle par étape) et les alertes
+- Explique que la pipeline est en opt-in (désactivée par défaut) — activation via `Mes Sites > paramètres autopilot` ou flag explicite dans Content Architect
+- Sait que `iktracker.fr` est le site pilote où la pipeline est activée par défaut
+- Ne mentionne JAMAIS les noms de tables (`editorial_llm_routing`, `editorial_pipeline_logs`) ni d'edge functions (`editorial-pipeline-run`, `editorial-pipeline-health`)
