@@ -58,6 +58,7 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
   const [scanning, setScanning] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const [inspectingManual, setInspectingManual] = useState(false);
+  const [inspectMode, setInspectMode] = useState<'batch' | 'cible'>('batch');
   const serpBenchmarkRef = useRef<SerpBenchmarkHandle>(null);
 
   // Load tracked sites
@@ -175,6 +176,14 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
     }
   };
 
+  const handleAnalyze = () => {
+    if (inspectMode === 'batch') {
+      handleAutoScan();
+    } else {
+      handleManualInspect();
+    }
+  };
+
   const selectedDomain = externalDomain || trackedSites.find(s => s.id === selectedSiteId)?.domain;
   const domainBase = selectedDomain ? `https://${selectedDomain.replace(/^www\./, '')}` : '';
 
@@ -225,31 +234,40 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="ghost" onClick={handleAutoScan} disabled={scanning || !selectedSiteId} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
-              {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-              {t3(language, 'Scanner les pages clés', 'Scan key pages', 'Escanear páginas clave')}
-            </Button>
-
-            <div className="flex gap-2 flex-1">
+          {/* Actions — URL + Type + Analyser */}
+          <div className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="flex-1 space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">URL</label>
               <Input
-                placeholder={selectedDomain ? `${domainBase}/page` : t3(language, 'https://example.com/page', 'https://example.com/page', 'https://example.com/pagina')}
-                value={manualUrl}
+                placeholder={inspectMode === 'cible'
+                  ? (selectedDomain ? `${domainBase}/page` : t3(language, 'https://example.com/page', 'https://example.com/page', 'https://example.com/pagina'))
+                  : (selectedDomain || t3(language, 'Domaine sélectionné', 'Selected domain', 'Dominio seleccionado'))
+                }
+                value={inspectMode === 'batch' ? '' : manualUrl}
                 onChange={e => setManualUrl(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleManualInspect()}
+                onKeyDown={e => e.key === 'Enter' && handleAnalyze()}
+                disabled={inspectMode === 'batch'}
                 className="caret-foreground"
               />
-              <Button
-                variant="outline"
-                onClick={handleManualInspect}
-                disabled={inspectingManual || !manualUrl.trim()}
-                className="gap-2 shrink-0"
-              >
-                {inspectingManual ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                {t3(language, 'Inspecter', 'Inspect', 'Inspeccionar')}
-              </Button>
             </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">{t3(language, 'Type', 'Type', 'Tipo')}</label>
+              <Select value={inspectMode} onValueChange={(v: 'batch' | 'cible') => setInspectMode(v)}>
+                <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="batch">Batch</SelectItem>
+                  <SelectItem value="cible">{t3(language, 'Cible', 'Target', 'Objetivo')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={handleAnalyze}
+              disabled={(inspectMode === 'cible' ? inspectingManual : scanning) || (inspectMode === 'cible' && !manualUrl.trim()) || !selectedSiteId}
+              className="gap-2 shrink-0"
+            >
+              {(inspectMode === 'cible' ? inspectingManual : scanning) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              {t3(language, 'Analyser', 'Analyze', 'Analizar')}
+            </Button>
           </div>
         </CardContent>
       </Card>
