@@ -236,11 +236,11 @@ function SerpBenchmarkMini() {
               </datalist>
             )}
           </div>
-          <div className="flex items-center gap-1.5 pb-0.5">
+          <div className="flex items-center gap-1.5 pb-0.5 -ml-1">
             <Checkbox
               checked={penaltyEnabled}
               onCheckedChange={(v) => setPenaltyEnabled(!!v)}
-              className="h-3.5 w-3.5"
+              className="h-3.5 w-3.5 border-muted-foreground data-[state=checked]:bg-muted-foreground data-[state=checked]:border-muted-foreground"
             />
             <label className="text-xs text-muted-foreground whitespace-nowrap">
               Penalty (+{singleHitPenalty})
@@ -251,7 +251,7 @@ function SerpBenchmarkMini() {
             variant="outline"
             onClick={runBenchmark}
             disabled={loading || !query.trim() || selectedProviders.length < 2}
-            className="gap-1.5 h-9 px-3 text-sm font-medium"
+            className="gap-1.5 h-9 px-3 text-sm font-medium border-foreground/30 text-foreground hover:bg-foreground/10"
           >
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
             {loading
