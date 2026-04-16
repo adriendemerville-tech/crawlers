@@ -104,6 +104,7 @@ const CGVU = () => {
                 <li>Le <strong>serveur MCP</strong> (Model Context Protocol) : exposition de 12 outils Crawlers aux clients IA tiers (Claude Desktop, etc.) via des API keys persistantes. 3 outils gratuits pour l'acquisition, 9 réservés aux abonnés Pro Agency ;</li>
                 <li>L'<strong>analyse de logs serveur</strong> : ingestion et analyse des fichiers de logs HTTP pour comprendre le comportement de Googlebot, Bingbot et des bots IA (GPTBot, ClaudeBot, PerplexityBot). Détection du budget crawl gaspillé, des pages orphelines et monitoring continu via connecteur Cloudflare ;</li>
                 <li>Le <strong>diagnostic de chute</strong> : détection réactive et prédictive des baisses de trafic via régression linéaire sur 8 semaines, croisée avec les données GSC, les audits techniques et E-E-A-T ;</li>
+                <li>Le <strong>Benchmark Rank SERP</strong> : outil gratuit de comparaison des positions Google via 3 providers SERP simultanés (DataForSEO, SerpApi, Serper.dev). Le classement croisé avec pénalité single-hit (+20 positions) élimine les faux positifs et produit un ranking fiable. Accessible à tous les utilisateurs, inscrits ou non (<a href="/app/ranking-serp" className="text-primary underline">/app/ranking-serp</a>) ;</li>
               </ul>
             </section>
 

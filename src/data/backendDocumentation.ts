@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor (+ génération d'images IA multi-moteurs), générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), Quiz SEO Félix, serveur MCP et API N8N :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor (+ génération d'images IA multi-moteurs), générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), Quiz SEO Félix, Benchmark SERP multi-providers (lead magnet), serveur MCP et API N8N :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -484,6 +484,7 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`gmb-local-competitors\` | ✅ | Analyse concurrents locaux Google Maps |
 | \`gmb-optimization\` | ✅ | Optimisation automatique fiche GMB |
 | \`fetch-serp-kpis\` | ✅ | KPIs SERP via DataForSEO |
+| \`serp-benchmark\` | ❌/✅ | Benchmark SERP multi-providers (DataForSEO + SerpApi + Serper.dev + Bright Data optionnel). Croisement des positions, pénalité single-hit (+20), classement moyen. Accessible sans auth (lead magnet /app/ranking-serp) |
 | \`dataforseo-balance\` | ✅ | Solde du compte DataForSEO |
 | \`refresh-serp-all\` | ✅ | CRON hebdo — rafraîchissement SERP |
 | \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
