@@ -310,13 +310,27 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           </div>
         </div>
 
-        <Button variant="ghost" onClick={() => runBenchmark()} disabled={loading || selectedProviders.length < 2} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-          {loading
-            ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
-            : t3(language, 'Lancer le benchmark', 'Run benchmark', 'Ejecutar benchmark')
-          }
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="ghost" onClick={() => runBenchmark()} disabled={loading || batchLoading || selectedProviders.length < 2} className="gap-2 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-transparent">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            {loading
+              ? t3(language, 'Analyse en cours...', 'Analyzing...', 'Analizando...')
+              : t3(language, 'Lancer le benchmark', 'Run benchmark', 'Ejecutar benchmark')
+            }
+          </Button>
+          <Button
+            variant="outline"
+            onClick={runTopKeywordsBenchmark}
+            disabled={loading || batchLoading || selectedProviders.length < 2 || !selectedSiteId}
+            className="gap-2"
+          >
+            {batchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            {batchLoading && batchProgress
+              ? `${batchProgress.current}/${batchProgress.total} — ${batchProgress.keyword}`
+              : t3(language, 'Benchmarker mes top keywords', 'Benchmark my top keywords', 'Benchmark mis top keywords')
+            }
+          </Button>
+        </div>
 
         {/* Provider status */}
         {providerSummaries.length > 0 && (
