@@ -167,6 +167,76 @@ try {
         break
       }
 
+      case 'audit-full': {
+        const { score, fields, grade } = scoreProfile(locationData)
+        const missing = fields.filter(f => !f.present)
+        const completed = fields.filter(f => f.present)
+
+        // Group by category
+        const categories = [
+          { id: 'identity', label: 'Identité', fields: ['name', 'category', 'description'] },
+          { id: 'contact', label: 'Contact & accès', fields: ['address', 'phone', 'website', 'hours'] },
+          { id: 'media', label: 'Médias', fields: ['photos', 'logo', 'cover'] },
+          { id: 'enrichment', label: 'Enrichissement', fields: ['attributes', 'services'] },
+          { id: 'engagement', label: 'Engagement', fields: ['posts_recent', 'reviews_replied'] },
+        ]
+
+        const auditCategories = categories.map(cat => {
+          const catFields = fields.filter(f => cat.fields.includes(f.field))
+          const catMax = catFields.reduce((s, f) => s + f.weight, 0)
+          const catCurrent = catFields.filter(f => f.present).reduce((s, f) => s + f.weight, 0)
+          return {
+            id: cat.id,
+            label: cat.label,
+            score: catMax > 0 ? Math.round((catCurrent / catMax) * 100) : 100,
+            total_points: catMax,
+            earned_points: catCurrent,
+            fields: catFields.map(f => ({
+              field: f.field,
+              label: f.label,
+              present: f.present,
+              weight: f.weight,
+              fix_tip: f.tip,
+              fix_difficulty: f.weight >= 8 ? 'easy' : f.weight >= 5 ? 'medium' : 'hard',
+              fix_impact: f.weight >= 8 ? 'high' : f.weight >= 5 ? 'medium' : 'low',
+              fix_action: f.present ? null : {
+                type: 'update_field',
+                field: f.field,
+                instruction: f.tip,
+                estimated_time_minutes: f.weight >= 8 ? 2 : f.weight >= 5 ? 5 : 10,
+              },
+            })),
+          }
+        })
+
+        const priorityFixes = missing
+          .sort((a, b) => b.weight - a.weight)
+          .slice(0, 5)
+          .map((f, i) => ({
+            rank: i + 1,
+            field: f.field,
+            label: f.label,
+            points_gain: f.weight,
+            new_score_estimate: Math.round(((fields.filter(ff => ff.present).reduce((s, ff) => s + ff.weight, 0) + f.weight) / fields.reduce((s, ff) => s + ff.weight, 0)) * 100),
+            action: f.tip,
+          }))
+
+        result = {
+          score,
+          grade,
+          total_points: fields.reduce((s, f) => s + f.weight, 0),
+          earned_points: completed.reduce((s, f) => s + f.weight, 0),
+          completed_count: completed.length,
+          missing_count: missing.length,
+          total_criteria: fields.length,
+          categories: auditCategories,
+          priority_fixes: priorityFixes,
+          location_name: locationData.name || null,
+          simulated: locationData.simulated ?? true,
+        }
+        break
+      }
+
       case 'suggest-optimizations': {
         const { fields } = scoreProfile(locationData)
         const optimizations = generateOptimizations(fields, locationData)
@@ -280,4 +350,4 @@ try {
     console.error('[gmb-optimization] error:', msg)
     return json({ error: msg }, 500)
   }
-})
+}))
