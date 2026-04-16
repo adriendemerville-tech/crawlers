@@ -142,18 +142,22 @@ export function TeamRoleManager() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="auditor">
-                          <div className="flex items-center gap-1.5">
-                            <Eye className="h-3 w-3 text-emerald-500" />
-                            {language === 'fr' ? 'Auditeur' : 'Auditor'}
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="editor">
-                          <div className="flex items-center gap-1.5">
-                            <Pencil className="h-3 w-3 text-blue-500" />
-                            {language === 'fr' ? 'Éditeur' : 'Editor'}
-                          </div>
-                        </SelectItem>
+                        {isEnterprise && (
+                          <>
+                            <SelectItem value="auditor">
+                              <div className="flex items-center gap-1.5">
+                                <Eye className="h-3 w-3 text-emerald-500" />
+                                {language === 'fr' ? 'Auditeur' : 'Auditor'}
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="editor">
+                              <div className="flex items-center gap-1.5">
+                                <Pencil className="h-3 w-3 text-blue-500" />
+                                {language === 'fr' ? 'Éditeur' : 'Editor'}
+                              </div>
+                            </SelectItem>
+                          </>
+                        )}
                         <SelectItem value="owner">
                           <div className="flex items-center gap-1.5">
                             <Shield className="h-3 w-3 text-amber-500" />
