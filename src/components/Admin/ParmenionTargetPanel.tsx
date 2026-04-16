@@ -233,8 +233,13 @@ export function ParmenionTargetPanel({
 
     let lastError: Error | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
-      const { error } = await supabase.functions.invoke('parmenion-orchestrator', { body });
+      const { data, error } = await supabase.functions.invoke('parmenion-orchestrator', { body });
       if (!error) {
+        // Check structured error response (always 200)
+        if (data?.ok === false) {
+          toast({ title: 'Parménion — Erreur', description: data.message || 'Erreur inconnue', variant: 'destructive' });
+          return;
+        }
         fetchLogs();
         return;
       }
