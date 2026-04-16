@@ -161,7 +161,7 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
       }
     }
 
-
+    // ── ASYNC MODE: Enqueue and respond 202, then process via waitUntil ──
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
     const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const jobId = body._job_id
