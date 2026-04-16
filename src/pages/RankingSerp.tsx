@@ -92,7 +92,7 @@ function SerpBenchmarkMini() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
           <Search className="h-5 w-5 text-primary" />
-          {t3(language, 'Benchmark SERP — Testez gratuitement', 'SERP Benchmark — Try it free', 'Benchmark SERP — Prueba gratis')}
+          {t3(language, 'Benchmark SERP', 'SERP Benchmark', 'Benchmark SERP')}
         </CardTitle>
         <CardDescription>
           {t3(language,
