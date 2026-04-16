@@ -8,6 +8,17 @@ import { buildContentBrief, briefToPromptBlock, type PageType as BriefPageType }
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts';
 import { extractInjectionPoints, injectionPointsToPrompt, type InjectionPoints } from '../_shared/injectionPoints.ts';
+import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
+
+// Map content-architect page_type → editorial pipeline content_type
+const PAGE_TYPE_TO_CONTENT_TYPE: Record<string, ContentType> = {
+  homepage: 'landing_page',
+  product: 'landing_page',
+  article: 'blog_article',
+  faq: 'faq',
+  landing: 'landing_page',
+  category: 'seo_page',
+};
 
 /**
  * content-architecture-advisor
