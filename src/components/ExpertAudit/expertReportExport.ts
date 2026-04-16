@@ -1054,13 +1054,13 @@ export function generateExpertReportHTML(
 </head>
 <body>
   <div class="container">
-    <div class="header">
+    <div class="header" data-pdf-section="header">
       <div class="header-site">${result.domain || result.url}</div>
       <div class="header-audit-type">${auditMode === 'technical' ? t.technicalAudit : t.strategic}</div>
       <div class="header-brand">${isWhiteLabel && branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height: 18px;" />` : `${crawlersLogoSvg} Crawlers.fr`}</div>
       <div class="date">${t.generatedAt} ${now}</div>
     </div>
-    <div class="content">
+    <div class="content" data-pdf-section="content">
       ${content}
     </div>
     ${footerHtml}
