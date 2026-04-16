@@ -1072,7 +1072,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
                   ? 'Votre fiche Google est notée sur 100 points. Voyez ce qui manque, appliquez les corrections en 1 clic, et mesurez votre visibilité sur une carte autour de votre établissement.'
                   : language === 'es'
                     ? 'Su ficha de Google se califica en 100 puntos. Vea lo que falta, aplique las correcciones en 1 clic y mida su visibilidad en un mapa alrededor de su establecimiento.'
-                    : 'Your Google listing is scored out of 100 points. See what's missing, apply fixes in 1 click, and measure your visibility on a map around your business.'}
+                    : 'Your Google listing is scored out of 100 points. See what\'s missing, apply fixes in 1 click, and measure your visibility on a map around your business.'}
               </p>
               <div className="flex items-center gap-3 pt-1">
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-primary font-medium">
