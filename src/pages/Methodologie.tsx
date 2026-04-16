@@ -11,7 +11,7 @@ import {
   ListChecks, TrendingUp, BookOpen, ArrowRight, CheckCircle2,
   Layers, Database, Lock, RefreshCw, Activity, Cpu,
   Server, GitBranch, Workflow, Crosshair, AlertTriangle,
-  Network, Fingerprint
+  Network, Fingerprint, Award, Swords
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -125,6 +125,8 @@ export default function Methodologie() {
     { icon: Code, title: t3(language, 'Code Correctif', 'Corrective Code', 'Código correctivo'), points: ['JSON-LD injection', 'Balises méta & OG', 'Alt images', 'SDK + kill switch'], count: 6 },
     { icon: Eye, title: t3(language, 'Résilience Contenu', 'Content Resilience', 'Resiliencia'), points: ['Dark Social Readiness', 'Quotability Index', 'Summary Resilience', 'Red Teaming'], count: 8 },
     { icon: TrendingUp, title: t3(language, 'Suivi & KPI', 'Tracking & KPI', 'Seguimiento'), points: ['Google Search Console', 'Historique & tendances', 'Export PDF', "Plan d'action"], count: 6 },
+    { icon: Award, title: t3(language, 'Ranking SERP', 'SERP Ranking', 'Ranking SERP'), points: [t3(language, 'Top 3 / 10 / 50', 'Top 3 / 10 / 50', 'Top 3 / 10 / 50'), t3(language, 'ETV (Estimated Traffic Value)', 'ETV (Estimated Traffic Value)', 'ETV'), t3(language, 'Pages indexées & tendance', 'Indexed pages & trend', 'Páginas indexadas'), t3(language, 'Distribution des positions', 'Position distribution', 'Distribución de posiciones')], count: 5 },
+    { icon: Swords, title: t3(language, 'Concurrence', 'Competition', 'Competencia'), points: [t3(language, 'Benchmark 3 concurrents', '3-competitor benchmark', 'Benchmark 3 competidores'), t3(language, 'Scores SEO, GEO & SERP croisés', 'Cross SEO, GEO & SERP scores', 'Scores SEO, GEO y SERP cruzados'), t3(language, 'Pression concurrentielle', 'Competitive pressure', 'Presión competitiva'), t3(language, 'Opportunités de dépassement', 'Overtaking opportunities', 'Oportunidades de superación')], count: 5 },
   ];
 
   const algorithms = [
@@ -214,9 +216,9 @@ export default function Methodologie() {
               className={`text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-10 ${A.body}`}
             >
               {t3(language,
-                '7 algorithmes propriétaires, 9 catégories d\'analyse, architecture multi-fallback résiliente. Chaque score est calculé, jamais estimé.',
-                '7 proprietary algorithms, 9 analysis categories, resilient multi-fallback architecture. Every score is computed, never estimated.',
-                '7 algoritmos propietarios, 9 categorías de análisis, arquitectura multi-fallback resiliente. Cada puntuación es calculada, nunca estimada.'
+                '7 algorithmes propriétaires, 11 catégories d\'analyse, architecture multi-fallback résiliente. Chaque score est calculé, jamais estimé.',
+                '7 proprietary algorithms, 11 analysis categories, resilient multi-fallback architecture. Every score is computed, never estimated.',
+                '7 algoritmos propietarios, 11 categorías de análisis, arquitectura multi-fallback resiliente. Cada puntuación es calculada, nunca estimada.'
               )}
             </motion.p>
 
@@ -359,7 +361,7 @@ export default function Methodologie() {
               className="text-center mb-12"
             >
               <h2 className={`text-2xl sm:text-3xl font-bold mb-3 ${A.heading}`}>
-                {t3(language, "9 catégories, +60 points d'audit", '9 Categories, 60+ Audit Points', '9 categorías, +60 puntos de auditoría')}
+                {t3(language, "11 catégories, +70 points d'audit", '11 Categories, 70+ Audit Points', '11 categorías, +70 puntos de auditoría')}
               </h2>
               <p className={`max-w-2xl mx-auto ${A.muted}`}>
                 {t3(language,
@@ -520,7 +522,7 @@ export default function Methodologie() {
                     t3(language, 'Google Search Console & GA4', 'Google Search Console & GA4', 'Google Search Console y GA4'),
                     t3(language, 'Google My Business & PageSpeed', 'Google My Business & PageSpeed', 'Google My Business y PageSpeed'),
                     t3(language, '4 moteurs LLM en parallèle', '4 parallel LLM engines', '4 motores LLM en paralelo'),
-                    t3(language, 'Stripe (abonnements + crédits)', 'Stripe (subscriptions + credits)', 'Stripe (suscripciones + créditos)'),
+                    t3(language, 'DataForSEO (SERP & Backlinks)', 'DataForSEO (SERP & Backlinks)', 'DataForSEO (SERP y Backlinks)'),
                   ]
                 },
               ].map((block, i) => (
@@ -633,6 +635,8 @@ export default function Methodologie() {
                   { to: '/audit-expert', label: 'Audit Expert SEO/GEO' },
                   { to: '/score-geo', label: 'Score GEO' },
                   { to: '/comparatif-claude-vs-crawlers', label: 'Claude vs Crawlers' },
+                  { to: '/app/ranking-serp', label: 'Ranking SERP' },
+                  { to: '/features', label: 'Features' },
                   { to: '/tarifs', label: 'Tarifs' },
                   { to: '/analyse-bots-ia', label: 'Analyse Bots IA' },
                   { to: '/blog', label: 'Blog' },
