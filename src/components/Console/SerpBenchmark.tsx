@@ -202,7 +202,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
       setBatchLoading(false);
       setBatchProgress(null);
     }
-  }, [user, selectedSiteId, trackedSites, selectedProviders, locScale, locValue, penaltyEnabled, singleHitPenalty, language, runBenchmark, isAgencyPro, maxBatchKeywords]);
+  }, [user, selectedSiteId, trackedSites, selectedProviders, locScale, locValue, penaltyEnabled, language, runBenchmark, isAgencyPro, maxBatchKeywords]);
 
 
   const copyResults = () => {
