@@ -85,7 +85,7 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: s
 
   return `
     <!-- Summary Header with Score -->
-    <div class="card summary-header card-shadow-lg">
+    <div class="card summary-header card-shadow-lg" data-pdf-section="geo-summary">
       <div class="summary-header-content" style="flex-direction: column; align-items: center; gap: 24px;">
         <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
           <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; justify-content: space-between; width: 100%;">
@@ -110,7 +110,7 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: s
     </div>
 
     <!-- Factor Cards Grid -->
-    <div class="grid-2">
+    <div class="grid-2" data-pdf-section="geo-factors">
       ${factorCards}
     </div>
   `;

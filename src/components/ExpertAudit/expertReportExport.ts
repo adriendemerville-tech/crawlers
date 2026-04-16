@@ -1054,13 +1054,13 @@ export function generateExpertReportHTML(
 </head>
 <body>
   <div class="container">
-    <div class="header">
+    <div class="header" data-pdf-section="header">
       <div class="header-site">${result.domain || result.url}</div>
       <div class="header-audit-type">${auditMode === 'technical' ? t.technicalAudit : t.strategic}</div>
       <div class="header-brand">${isWhiteLabel && branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height: 18px;" />` : `${crawlersLogoSvg} Crawlers.fr`}</div>
       <div class="date">${t.generatedAt} ${now}</div>
     </div>
-    <div class="content">
+    <div class="content" data-pdf-section="content">
       ${content}
     </div>
     ${footerHtml}
@@ -1071,105 +1071,16 @@ export function generateExpertReportHTML(
 
 export async function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | 'strategic', t: ExpertReportI18n, branding?: WhiteLabelBranding, language: string = 'fr') {
   const htmlContent = generateExpertReportHTML(result, auditMode, t, language, branding);
-
-  const { default: html2canvas } = await import('html2canvas');
-  const { default: jsPDF } = await import('jspdf');
-
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;border:none;';
-  document.body.appendChild(iframe);
-  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-  if (!iframeDoc) {
-    document.body.removeChild(iframe);
-    throw new Error('Cannot access iframe');
-  }
-  iframeDoc.open();
-  iframeDoc.write(htmlContent);
-  iframeDoc.close();
-
-  await new Promise((r) => setTimeout(r, 1500));
-
-  const container = iframeDoc.querySelector('.container') || iframeDoc.body;
-  const sections = Array.from(container.children) as HTMLElement[];
-
-  const pdfWidthMm = 210;
-  const pdfHeightMm = 297;
-  const marginTopMm = 15;
-  const marginBottomMm = 15;
-  const marginSideMm = 10;
-  const usableHeightMm = pdfHeightMm - marginTopMm - marginBottomMm;
-  const usableWidthMm = pdfWidthMm - marginSideMm * 2;
-  const scale = 2;
-
-  const doc = new jsPDF('p', 'mm', 'a4');
-  let cursorYMm = marginTopMm;
-  let isFirstPage = true;
-
-  for (const section of sections) {
-    const canvas = await html2canvas(section, {
-      scale,
-      useCORS: true,
-      allowTaint: true,
-      width: 794 - 32,
-      windowWidth: 794,
-      logging: false,
-      backgroundColor: '#f8fafc',
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const sectionWidthMm = usableWidthMm;
-    const sectionHeightMm = (canvas.height * sectionWidthMm) / canvas.width;
-
-    if (cursorYMm + sectionHeightMm <= pdfHeightMm - marginBottomMm) {
-      doc.addImage(imgData, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sectionHeightMm);
-      cursorYMm += sectionHeightMm + 2;
-    } else if (sectionHeightMm <= usableHeightMm) {
-      if (!isFirstPage || cursorYMm > marginTopMm + 5) {
-        doc.addPage();
-        cursorYMm = marginTopMm;
-      }
-      doc.addImage(imgData, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sectionHeightMm);
-      cursorYMm += sectionHeightMm + 2;
-    } else {
-      const pixelsPerMm = canvas.height / sectionHeightMm;
-      let srcYPx = 0;
-      let remaining = sectionHeightMm;
-
-      while (remaining > 0) {
-        const spaceOnPage = (pdfHeightMm - marginBottomMm) - cursorYMm;
-        const sliceHeightMm = Math.min(remaining, spaceOnPage);
-        const sliceHeightPx = Math.round(sliceHeightMm * pixelsPerMm);
-
-        const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = canvas.width;
-        sliceCanvas.height = sliceHeightPx;
-        const ctx = sliceCanvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
-          const sliceImg = sliceCanvas.toDataURL('image/png');
-          doc.addImage(sliceImg, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sliceHeightMm);
-        }
-
-        srcYPx += sliceHeightPx;
-        remaining -= sliceHeightMm;
-        cursorYMm += sliceHeightMm;
-
-        if (remaining > 0) {
-          doc.addPage();
-          cursorYMm = marginTopMm;
-        }
-      }
-      cursorYMm += 2;
-    }
-    isFirstPage = false;
-  }
-
-  document.body.removeChild(iframe);
+  const { generateSectionBasedPDF } = await import('@/utils/sectionBasedPdfExport');
 
   const urlForFilename = result.url || result.domain || '';
   const domain = (() => { try { const u = urlForFilename.includes('.') ? urlForFilename : 'report'; return new URL(u.startsWith('http') ? u : `https://${u}`).hostname.replace(/^www\./, ''); } catch { return urlForFilename.replace(/^www\./, '').replace(/[^a-zA-Z0-9.-]/g, '_') || 'report'; } })();
   const auditType = auditMode === 'technical' ? 'audittechnique' : 'auditstrategique';
-  doc.save(`${domain}-${auditType}.pdf`);
+
+  await generateSectionBasedPDF({
+    htmlContent,
+    filename: `${domain}-${auditType}.pdf`,
+  });
 }
 
 /**

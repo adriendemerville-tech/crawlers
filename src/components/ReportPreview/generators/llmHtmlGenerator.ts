@@ -53,7 +53,7 @@ export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys, lan
 
   return `
     <!-- Summary Header with Score -->
-    <div class="card summary-header card-shadow-lg">
+    <div class="card summary-header card-shadow-lg" data-pdf-section="llm-summary">
       <div class="summary-header-content" style="flex-direction: column; align-items: center; gap: 24px;">
         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; justify-content: space-between; width: 100%;">
           <div style="flex: 1; min-width: 200px;">
@@ -79,7 +79,7 @@ export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys, lan
     </div>
 
     <!-- Citation Rate Card -->
-    <div class="card" style="padding: 20px; margin-bottom: 24px;">
+    <div class="card" data-pdf-section="llm-citation-rate" style="padding: 20px; margin-bottom: 24px;">
       <h3 class="section-title">
         ${t.citationRate}
       </h3>
@@ -99,7 +99,7 @@ export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys, lan
     </div>
 
     <!-- LLM Cards Grid - Compact style -->
-    <div class="llm-grid">
+    <div class="llm-grid" data-pdf-section="llm-cards">
       ${citationCards}
     </div>
   `;

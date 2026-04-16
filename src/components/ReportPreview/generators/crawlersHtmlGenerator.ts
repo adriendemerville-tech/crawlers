@@ -45,7 +45,7 @@ export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys, lang
 
   return `
     <!-- Summary Header -->
-    <div class="card summary-header card-shadow-lg">
+    <div class="card summary-header card-shadow-lg" data-pdf-section="crawlers-summary">
       <div class="summary-header-content">
         <div class="url-info">
           <div>
@@ -83,7 +83,7 @@ export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys, lang
     </div>
 
     <!-- Bot Cards Grid -->
-    <div class="grid-3">
+    <div class="grid-3" data-pdf-section="crawlers-bots">
       ${botsCards}
     </div>
   `;

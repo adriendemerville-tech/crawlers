@@ -23,83 +23,10 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      const { default: html2canvas } = await import('html2canvas');
-      const { default: jsPDF } = await import('jspdf');
-
-      // Render HTML in a hidden iframe
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:auto;border:none;';
-      document.body.appendChild(iframe);
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc) throw new Error('Cannot access iframe');
-      iframeDoc.open();
-      iframeDoc.write(htmlContent);
-      iframeDoc.close();
-
-      // Wait for content + images to render
-      await new Promise((r) => setTimeout(r, 2000));
-
-      // Let the iframe auto-size to its content
-      const body = iframeDoc.body;
-      const scrollHeight = body.scrollHeight;
-      iframe.style.height = `${scrollHeight}px`;
-      await new Promise((r) => setTimeout(r, 500));
-
-      // Full-body capture
-      const canvas = await html2canvas(body, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        width: 794,
-        height: scrollHeight,
-        windowWidth: 794,
-        windowHeight: scrollHeight,
-        logging: false,
-        backgroundColor: '#f8fafc',
-      });
-
-      const pdfWidthMm = 210;
-      const pdfHeightMm = 297;
-      const marginTopMm = 10;
-      const marginBottomMm = 10;
-      const marginSideMm = 10;
-      const usableWidthMm = pdfWidthMm - marginSideMm * 2;
-      const usableHeightMm = pdfHeightMm - marginTopMm - marginBottomMm;
-
-      const doc = new jsPDF('p', 'mm', 'a4');
-      const imgWidthMm = usableWidthMm;
-      const totalImgHeightMm = (canvas.height * imgWidthMm) / canvas.width;
-
-      // Slice into pages
-      const pixelsPerMm = canvas.height / totalImgHeightMm;
-      let srcYPx = 0;
-      let remaining = totalImgHeightMm;
-      let isFirstPage = true;
-
-      while (remaining > 0) {
-        if (!isFirstPage) doc.addPage();
-        const sliceHeightMm = Math.min(remaining, usableHeightMm);
-        const sliceHeightPx = Math.round(sliceHeightMm * pixelsPerMm);
-
-        const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = canvas.width;
-        sliceCanvas.height = sliceHeightPx;
-        const ctx = sliceCanvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
-          const sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
-          doc.addImage(sliceImg, 'JPEG', marginSideMm, marginTopMm, imgWidthMm, sliceHeightMm);
-        }
-
-        srcYPx += sliceHeightPx;
-        remaining -= sliceHeightMm;
-        isFirstPage = false;
-      }
-
-      document.body.removeChild(iframe);
-
+      const { generateSectionBasedPDF } = await import('@/utils/sectionBasedPdfExport');
       const { getReportFilename } = await import('@/utils/reportFilename');
-      doc.save(getReportFilename(domain, 'marina' as any, 'pdf'));
+      const filename = getReportFilename(domain, 'marina' as any, 'pdf');
+      await generateSectionBasedPDF({ htmlContent, filename });
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error('Erreur de génération PDF');

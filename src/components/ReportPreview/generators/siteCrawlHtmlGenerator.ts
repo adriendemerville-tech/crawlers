@@ -457,18 +457,18 @@ export function generateSiteCrawlHTML(data: SiteCrawlReportData, _t: Translation
   `;
 
   return `
-    <div class="section-title">${t.title} — ${data.domain}</div>
-    ${metrics}
-    ${aiSummary}
-    ${recos}
-    ${indexabilitySection}
-    ${topErrors}
-    ${httpStatusChart}
-    ${duplicateTitlesSection}
-    ${thinContentSection}
-    ${deepPagesSection}
-    ${brokenLinksSection}
-    ${externalBacklinksSection}
-    ${pagesTable}
+    <div data-pdf-section="crawl-title" class="section-title">${t.title} — ${data.domain}</div>
+    <div data-pdf-section="crawl-metrics">${metrics}</div>
+    ${aiSummary ? `<div data-pdf-section="crawl-ai-summary">${aiSummary}</div>` : ''}
+    ${recos ? `<div data-pdf-section="crawl-recos">${recos}</div>` : ''}
+    ${indexabilitySection ? `<div data-pdf-section="crawl-indexability">${indexabilitySection}</div>` : ''}
+    ${topErrors ? `<div data-pdf-section="crawl-errors">${topErrors}</div>` : ''}
+    ${httpStatusChart ? `<div data-pdf-section="crawl-http">${httpStatusChart}</div>` : ''}
+    ${duplicateTitlesSection ? `<div data-pdf-section="crawl-dupes">${duplicateTitlesSection}</div>` : ''}
+    ${thinContentSection ? `<div data-pdf-section="crawl-thin">${thinContentSection}</div>` : ''}
+    ${deepPagesSection ? `<div data-pdf-section="crawl-deep">${deepPagesSection}</div>` : ''}
+    ${brokenLinksSection ? `<div data-pdf-section="crawl-broken">${brokenLinksSection}</div>` : ''}
+    ${externalBacklinksSection ? `<div data-pdf-section="crawl-backlinks">${externalBacklinksSection}</div>` : ''}
+    <div data-pdf-section="crawl-pages">${pagesTable}</div>
   `;
 }
