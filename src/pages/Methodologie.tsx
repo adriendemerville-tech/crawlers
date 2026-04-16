@@ -216,9 +216,9 @@ export default function Methodologie() {
               className={`text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-10 ${A.body}`}
             >
               {t3(language,
-                '7 algorithmes propriétaires, 9 catégories d\'analyse, architecture multi-fallback résiliente. Chaque score est calculé, jamais estimé.',
-                '7 proprietary algorithms, 9 analysis categories, resilient multi-fallback architecture. Every score is computed, never estimated.',
-                '7 algoritmos propietarios, 9 categorías de análisis, arquitectura multi-fallback resiliente. Cada puntuación es calculada, nunca estimada.'
+                '7 algorithmes propriétaires, 11 catégories d\'analyse, architecture multi-fallback résiliente. Chaque score est calculé, jamais estimé.',
+                '7 proprietary algorithms, 11 analysis categories, resilient multi-fallback architecture. Every score is computed, never estimated.',
+                '7 algoritmos propietarios, 11 categorías de análisis, arquitectura multi-fallback resiliente. Cada puntuación es calculada, nunca estimada.'
               )}
             </motion.p>
 
