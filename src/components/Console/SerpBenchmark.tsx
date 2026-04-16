@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Search, Copy, BarChart3, Globe, Trophy, Zap } from 'lucide-react';
 import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const t3 = (lang: string, fr: string, en: string, es: string) =>
   lang === 'fr' ? fr : lang === 'es' ? es : en;
@@ -60,8 +60,8 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   const { isAgencyPro, isAgencyPremium } = useCredits();
   const [query, setQuery] = useState('');
   const [targetDomain, setTargetDomain] = useState('');
-  const [location, setLocation] = useState('France');
-  const [region, setRegion] = useState('');
+  const [locScale, setLocScale] = useState<'pays' | 'region' | 'departement' | 'ville'>('pays');
+  const [locValue, setLocValue] = useState('France');
   const [singleHitPenalty, setSingleHitPenalty] = useState(20);
   const [penaltyEnabled, setPenaltyEnabled] = useState(true);
   const [selectedProviders, setSelectedProviders] = useState<string[]>(['DataForSEO', 'SerpApi', 'Serper']);
@@ -71,6 +71,19 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   const [totalSites, setTotalSites] = useState(0);
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; keyword: string } | null>(null);
+
+  // Build the location string for SERP providers
+  const buildLocation = () => {
+    const v = locValue.trim();
+    if (!v) return 'France';
+    switch (locScale) {
+      case 'pays': return v;
+      case 'region': return `${v},France`;
+      case 'departement': return `${v},France`;
+      case 'ville': return `${v},France`;
+      default: return v;
+    }
+  };
 
   // Auto-fill target domain from selected site
   const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
@@ -95,7 +108,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           query: q,
           tracked_site_id: selectedSiteId || undefined,
           target_domain: targetDomain.trim() || selectedSite?.domain || undefined,
-          location: region ? `${region},${location}` : location,
+          location: buildLocation(),
           language: 'fr',
           country: 'fr',
           single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
@@ -112,7 +125,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
     } finally {
       setLoading(false);
     }
-  }, [query, selectedProviders, selectedSiteId, targetDomain, selectedSite, location, penaltyEnabled, singleHitPenalty]);
+  }, [query, selectedProviders, selectedSiteId, targetDomain, selectedSite, locScale, locValue, penaltyEnabled, singleHitPenalty]);
 
   useImperativeHandle(ref, () => ({
     triggerBenchmark: (keyword: string) => runBenchmark(keyword),
@@ -162,7 +175,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
             query: kw.keyword,
             tracked_site_id: selectedSiteId,
             target_domain: site.domain,
-            location: region ? `${region},${location}` : location,
+            location: buildLocation(),
             language: 'fr',
             country: 'fr',
             single_hit_penalty: penaltyEnabled ? singleHitPenalty : 0,
@@ -189,7 +202,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
       setBatchLoading(false);
       setBatchProgress(null);
     }
-  }, [user, selectedSiteId, trackedSites, selectedProviders, location, penaltyEnabled, singleHitPenalty, language, runBenchmark, isAgencyPro, maxBatchKeywords]);
+  }, [user, selectedSiteId, trackedSites, selectedProviders, locScale, locValue, penaltyEnabled, singleHitPenalty, language, runBenchmark, isAgencyPro, maxBatchKeywords]);
 
 
   const copyResults = () => {
@@ -285,168 +298,66 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">
-              {t3(language, 'Localisation', 'Location', 'Ubicación')}
+              {t3(language, 'Échelle', 'Scale', 'Escala')}
             </label>
-            <Select value={location} onValueChange={(v) => { setLocation(v); setRegion(''); }}>
-              <SelectTrigger className="w-full max-w-[160px]"><SelectValue /></SelectTrigger>
+            <Select value={locScale} onValueChange={(v: any) => { setLocScale(v); setLocValue(''); }}>
+              <SelectTrigger className="w-full max-w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="France">France</SelectItem>
-                <SelectItem value="Belgium">Belgique</SelectItem>
-                <SelectItem value="Switzerland">Suisse</SelectItem>
-                <SelectItem value="Canada">Canada</SelectItem>
-                <SelectItem value="United States">USA</SelectItem>
-                <SelectItem value="United Kingdom">UK</SelectItem>
+                <SelectItem value="pays">Pays</SelectItem>
+                <SelectItem value="region">Région</SelectItem>
+                <SelectItem value="departement">Département</SelectItem>
+                <SelectItem value="ville">Ville</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {location === 'France' && (
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">
-                {t3(language, 'Département', 'Department', 'Departamento')}
-              </label>
-              <Select value={region || '__all__'} onValueChange={(v) => setRegion(v === '__all__' ? '' : v)}>
-                <SelectTrigger className="w-full max-w-[220px]"><SelectValue placeholder={t3(language, 'Toute la France', 'All France', 'Toda Francia')} /></SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  <SelectItem value="__all__">Toute la France</SelectItem>
-                  <SelectGroup>
-                    <SelectLabel>Île-de-France</SelectLabel>
-                    <SelectItem value="Paris,Ile-de-France">75 - Paris</SelectItem>
-                    <SelectItem value="Nanterre,Ile-de-France">92 - Hauts-de-Seine</SelectItem>
-                    <SelectItem value="Bobigny,Ile-de-France">93 - Seine-Saint-Denis</SelectItem>
-                    <SelectItem value="Creteil,Ile-de-France">94 - Val-de-Marne</SelectItem>
-                    <SelectItem value="Versailles,Ile-de-France">78 - Yvelines</SelectItem>
-                    <SelectItem value="Evry,Ile-de-France">91 - Essonne</SelectItem>
-                    <SelectItem value="Pontoise,Ile-de-France">95 - Val-d'Oise</SelectItem>
-                    <SelectItem value="Melun,Ile-de-France">77 - Seine-et-Marne</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Auvergne-Rhône-Alpes</SelectLabel>
-                    <SelectItem value="Lyon,Auvergne-Rhone-Alpes">69 - Rhône</SelectItem>
-                    <SelectItem value="Grenoble,Auvergne-Rhone-Alpes">38 - Isère</SelectItem>
-                    <SelectItem value="Saint-Etienne,Auvergne-Rhone-Alpes">42 - Loire</SelectItem>
-                    <SelectItem value="Clermont-Ferrand,Auvergne-Rhone-Alpes">63 - Puy-de-Dôme</SelectItem>
-                    <SelectItem value="Annecy,Auvergne-Rhone-Alpes">74 - Haute-Savoie</SelectItem>
-                    <SelectItem value="Chambery,Auvergne-Rhone-Alpes">73 - Savoie</SelectItem>
-                    <SelectItem value="Valence,Auvergne-Rhone-Alpes">26 - Drôme</SelectItem>
-                    <SelectItem value="Bourg-en-Bresse,Auvergne-Rhone-Alpes">01 - Ain</SelectItem>
-                    <SelectItem value="Privas,Auvergne-Rhone-Alpes">07 - Ardèche</SelectItem>
-                    <SelectItem value="Le Puy-en-Velay,Auvergne-Rhone-Alpes">43 - Haute-Loire</SelectItem>
-                    <SelectItem value="Aurillac,Auvergne-Rhone-Alpes">15 - Cantal</SelectItem>
-                    <SelectItem value="Moulins,Auvergne-Rhone-Alpes">03 - Allier</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>PACA</SelectLabel>
-                    <SelectItem value="Marseille,Provence-Alpes-Cote d'Azur">13 - Bouches-du-Rhône</SelectItem>
-                    <SelectItem value="Nice,Provence-Alpes-Cote d'Azur">06 - Alpes-Maritimes</SelectItem>
-                    <SelectItem value="Toulon,Provence-Alpes-Cote d'Azur">83 - Var</SelectItem>
-                    <SelectItem value="Avignon,Provence-Alpes-Cote d'Azur">84 - Vaucluse</SelectItem>
-                    <SelectItem value="Gap,Provence-Alpes-Cote d'Azur">05 - Hautes-Alpes</SelectItem>
-                    <SelectItem value="Digne-les-Bains,Provence-Alpes-Cote d'Azur">04 - Alpes-de-Hte-Provence</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Occitanie</SelectLabel>
-                    <SelectItem value="Toulouse,Occitanie">31 - Haute-Garonne</SelectItem>
-                    <SelectItem value="Montpellier,Occitanie">34 - Hérault</SelectItem>
-                    <SelectItem value="Nimes,Occitanie">30 - Gard</SelectItem>
-                    <SelectItem value="Perpignan,Occitanie">66 - Pyrénées-Orientales</SelectItem>
-                    <SelectItem value="Tarbes,Occitanie">65 - Hautes-Pyrénées</SelectItem>
-                    <SelectItem value="Carcassonne,Occitanie">11 - Aude</SelectItem>
-                    <SelectItem value="Rodez,Occitanie">12 - Aveyron</SelectItem>
-                    <SelectItem value="Cahors,Occitanie">46 - Lot</SelectItem>
-                    <SelectItem value="Montauban,Occitanie">82 - Tarn-et-Garonne</SelectItem>
-                    <SelectItem value="Albi,Occitanie">81 - Tarn</SelectItem>
-                    <SelectItem value="Auch,Occitanie">32 - Gers</SelectItem>
-                    <SelectItem value="Foix,Occitanie">09 - Ariège</SelectItem>
-                    <SelectItem value="Mende,Occitanie">48 - Lozère</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Nouvelle-Aquitaine</SelectLabel>
-                    <SelectItem value="Bordeaux,Nouvelle-Aquitaine">33 - Gironde</SelectItem>
-                    <SelectItem value="Limoges,Nouvelle-Aquitaine">87 - Haute-Vienne</SelectItem>
-                    <SelectItem value="Poitiers,Nouvelle-Aquitaine">86 - Vienne</SelectItem>
-                    <SelectItem value="La Rochelle,Nouvelle-Aquitaine">17 - Charente-Maritime</SelectItem>
-                    <SelectItem value="Angouleme,Nouvelle-Aquitaine">16 - Charente</SelectItem>
-                    <SelectItem value="Pau,Nouvelle-Aquitaine">64 - Pyrénées-Atlantiques</SelectItem>
-                    <SelectItem value="Niort,Nouvelle-Aquitaine">79 - Deux-Sèvres</SelectItem>
-                    <SelectItem value="Perigueux,Nouvelle-Aquitaine">24 - Dordogne</SelectItem>
-                    <SelectItem value="Agen,Nouvelle-Aquitaine">47 - Lot-et-Garonne</SelectItem>
-                    <SelectItem value="Mont-de-Marsan,Nouvelle-Aquitaine">40 - Landes</SelectItem>
-                    <SelectItem value="Tulle,Nouvelle-Aquitaine">19 - Corrèze</SelectItem>
-                    <SelectItem value="Gueret,Nouvelle-Aquitaine">23 - Creuse</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Hauts-de-France</SelectLabel>
-                    <SelectItem value="Lille,Hauts-de-France">59 - Nord</SelectItem>
-                    <SelectItem value="Arras,Hauts-de-France">62 - Pas-de-Calais</SelectItem>
-                    <SelectItem value="Amiens,Hauts-de-France">80 - Somme</SelectItem>
-                    <SelectItem value="Beauvais,Hauts-de-France">60 - Oise</SelectItem>
-                    <SelectItem value="Laon,Hauts-de-France">02 - Aisne</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Grand Est</SelectLabel>
-                    <SelectItem value="Strasbourg,Grand Est">67 - Bas-Rhin</SelectItem>
-                    <SelectItem value="Colmar,Grand Est">68 - Haut-Rhin</SelectItem>
-                    <SelectItem value="Metz,Grand Est">57 - Moselle</SelectItem>
-                    <SelectItem value="Nancy,Grand Est">54 - Meurthe-et-Moselle</SelectItem>
-                    <SelectItem value="Reims,Grand Est">51 - Marne</SelectItem>
-                    <SelectItem value="Troyes,Grand Est">10 - Aube</SelectItem>
-                    <SelectItem value="Charleville-Mezieres,Grand Est">08 - Ardennes</SelectItem>
-                    <SelectItem value="Chaumont,Grand Est">52 - Haute-Marne</SelectItem>
-                    <SelectItem value="Epinal,Grand Est">88 - Vosges</SelectItem>
-                    <SelectItem value="Bar-le-Duc,Grand Est">55 - Meuse</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Bretagne</SelectLabel>
-                    <SelectItem value="Rennes,Bretagne">35 - Ille-et-Vilaine</SelectItem>
-                    <SelectItem value="Brest,Bretagne">29 - Finistère</SelectItem>
-                    <SelectItem value="Vannes,Bretagne">56 - Morbihan</SelectItem>
-                    <SelectItem value="Saint-Brieuc,Bretagne">22 - Côtes-d'Armor</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Pays de la Loire</SelectLabel>
-                    <SelectItem value="Nantes,Pays de la Loire">44 - Loire-Atlantique</SelectItem>
-                    <SelectItem value="Angers,Pays de la Loire">49 - Maine-et-Loire</SelectItem>
-                    <SelectItem value="Le Mans,Pays de la Loire">72 - Sarthe</SelectItem>
-                    <SelectItem value="La Roche-sur-Yon,Pays de la Loire">85 - Vendée</SelectItem>
-                    <SelectItem value="Laval,Pays de la Loire">53 - Mayenne</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Normandie</SelectLabel>
-                    <SelectItem value="Rouen,Normandie">76 - Seine-Maritime</SelectItem>
-                    <SelectItem value="Caen,Normandie">14 - Calvados</SelectItem>
-                    <SelectItem value="Evreux,Normandie">27 - Eure</SelectItem>
-                    <SelectItem value="Alencon,Normandie">61 - Orne</SelectItem>
-                    <SelectItem value="Saint-Lo,Normandie">50 - Manche</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Bourgogne-Franche-Comté</SelectLabel>
-                    <SelectItem value="Dijon,Bourgogne-Franche-Comte">21 - Côte-d'Or</SelectItem>
-                    <SelectItem value="Besancon,Bourgogne-Franche-Comte">25 - Doubs</SelectItem>
-                    <SelectItem value="Auxerre,Bourgogne-Franche-Comte">89 - Yonne</SelectItem>
-                    <SelectItem value="Nevers,Bourgogne-Franche-Comte">58 - Nièvre</SelectItem>
-                    <SelectItem value="Macon,Bourgogne-Franche-Comte">71 - Saône-et-Loire</SelectItem>
-                    <SelectItem value="Vesoul,Bourgogne-Franche-Comte">70 - Haute-Saône</SelectItem>
-                    <SelectItem value="Lons-le-Saunier,Bourgogne-Franche-Comte">39 - Jura</SelectItem>
-                    <SelectItem value="Belfort,Bourgogne-Franche-Comte">90 - Territoire de Belfort</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Centre-Val de Loire</SelectLabel>
-                    <SelectItem value="Orleans,Centre-Val de Loire">45 - Loiret</SelectItem>
-                    <SelectItem value="Tours,Centre-Val de Loire">37 - Indre-et-Loire</SelectItem>
-                    <SelectItem value="Chartres,Centre-Val de Loire">28 - Eure-et-Loir</SelectItem>
-                    <SelectItem value="Bourges,Centre-Val de Loire">18 - Cher</SelectItem>
-                    <SelectItem value="Blois,Centre-Val de Loire">41 - Loir-et-Cher</SelectItem>
-                    <SelectItem value="Chateauroux,Centre-Val de Loire">36 - Indre</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Corse</SelectLabel>
-                    <SelectItem value="Ajaccio,Corse">2A - Corse-du-Sud</SelectItem>
-                    <SelectItem value="Bastia,Corse">2B - Haute-Corse</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              {locScale === 'pays' ? t3(language, 'Pays', 'Country', 'País')
+                : locScale === 'region' ? t3(language, 'Région', 'Region', 'Región')
+                : locScale === 'departement' ? t3(language, 'Département', 'Department', 'Departamento')
+                : t3(language, 'Ville', 'City', 'Ciudad')}
+            </label>
+            {locScale === 'ville' ? (
+              <Input
+                placeholder="ex: Lyon, Rhône-Alpes"
+                value={locValue}
+                onChange={e => setLocValue(e.target.value)}
+                className="w-full max-w-[220px] caret-foreground"
+              />
+            ) : (
+              <Input
+                placeholder={locScale === 'pays' ? 'France' : locScale === 'region' ? 'Île-de-France' : 'Rhône'}
+                value={locValue}
+                onChange={e => setLocValue(e.target.value)}
+                className="w-full max-w-[220px] caret-foreground"
+                list={`loc-suggestions-${locScale}`}
+              />
+            )}
+            {locScale === 'pays' && (
+              <datalist id="loc-suggestions-pays">
+                <option value="France" /><option value="Belgium" /><option value="Switzerland" />
+                <option value="Canada" /><option value="United States" /><option value="United Kingdom" />
+                <option value="Germany" /><option value="Spain" /><option value="Italy" /><option value="Portugal" />
+              </datalist>
+            )}
+            {locScale === 'region' && (
+              <datalist id="loc-suggestions-region">
+                <option value="Île-de-France" /><option value="Auvergne-Rhône-Alpes" /><option value="Provence-Alpes-Côte d'Azur" />
+                <option value="Occitanie" /><option value="Pays de la Loire" /><option value="Nouvelle-Aquitaine" />
+                <option value="Bretagne" /><option value="Hauts-de-France" /><option value="Grand Est" />
+                <option value="Bourgogne-Franche-Comté" /><option value="Normandie" /><option value="Centre-Val de Loire" /><option value="Corse" />
+              </datalist>
+            )}
+            {locScale === 'departement' && (
+              <datalist id="loc-suggestions-departement">
+                <option value="Paris" /><option value="Rhône" /><option value="Bouches-du-Rhône" /><option value="Haute-Garonne" />
+                <option value="Nord" /><option value="Gironde" /><option value="Loire-Atlantique" /><option value="Bas-Rhin" />
+                <option value="Hauts-de-Seine" /><option value="Seine-Saint-Denis" /><option value="Val-de-Marne" /><option value="Yvelines" />
+                <option value="Hérault" /><option value="Alpes-Maritimes" /><option value="Var" /><option value="Isère" />
+                <option value="Seine-et-Marne" /><option value="Essonne" /><option value="Val-d'Oise" /><option value="Finistère" />
+              </datalist>
+            )}
+          </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
               <Checkbox
