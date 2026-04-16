@@ -827,40 +827,35 @@ export function MyTracking({ externalSiteId }: { externalSiteId?: string | null 
 
                             {/* GSC Chart */}
                             {(() => {
-                              const chartRows = h.gscAggregatedRows.map(row => ({
+                               const chartRows = h.gscAggregatedRows.map(row => ({
                                 date: h.gscGranularity === 'monthly' ? row.date : row.date.slice(5),
                                 rawDate: row.date,
                                 clicks: row.clicks,
                                 impressions: row.impressions,
-                                position: typeof row.position === 'number' ? parseFloat(row.position.toFixed(1)) : 0,
                               }));
                               return (
                                 <div className="h-[18.5rem] w-[108%] -ml-[2%]">
                                   <ResponsiveContainer width="100%" height="100%">
-                                    <ComposedChart data={chartRows} margin={{ left: 0, right: 40, top: 5, bottom: 5 }}>
+                                    <ComposedChart data={chartRows} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
                                       <defs>
                                         <linearGradient id="gscClicksStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="hsl(var(--primary))" /><stop offset="100%" stopColor="hsl(var(--primary))" /></linearGradient>
                                         <linearGradient id="gscClicksFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} /><stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} /></linearGradient>
                                         <linearGradient id="gscImpStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="hsl(262, 83%, 58%)" /><stop offset="100%" stopColor="hsl(262, 83%, 58%)" /></linearGradient>
                                         <linearGradient id="gscImpFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0.2} /><stop offset="100%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0} /></linearGradient>
-                                        <linearGradient id="gscPosStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="hsl(25, 95%, 53%)" /><stop offset="100%" stopColor="hsl(25, 95%, 53%)" /></linearGradient>
                                       </defs>
                                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                                       <XAxis dataKey="date" className="text-xs" interval="preserveStartEnd" tick={false} />
-                                      <YAxis yAxisId="left" className="text-xs" tick={{ fontSize: 10 }} />
-                                      <YAxis yAxisId="right" orientation="right" className="text-xs" tick={{ fontSize: 10 }} reversed domain={[0, 'auto']} />
+                                      <YAxis className="text-xs" tick={{ fontSize: 10 }} />
                                       <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px', backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
                                       <Legend
                                         formatter={(value: string) => (<span style={{ color: 'hsl(var(--foreground))', fontSize: 18 }}>{value}</span>)}
                                         payload={[
                                           { value: h.language === 'fr' ? 'Clics' : 'Clicks', type: 'line', color: 'hsl(var(--primary))' },
                                           { value: 'Impressions', type: 'line', color: 'hsl(262, 83%, 58%)' },
-                                          { value: h.language === 'fr' ? 'Position moy.' : 'Avg. Position', type: 'line', color: 'hsl(25, 95%, 53%)' },
                                         ]}
                                       />
-                                      <Area yAxisId="left" type="monotone" dataKey="clicks" name={h.language === 'fr' ? 'Clics' : 'Clicks'} stroke="url(#gscClicksStroke)" fill="url(#gscClicksFill)" strokeWidth={2} />
-                                      <Area yAxisId="left" type="monotone" dataKey="impressions" name="Impressions" stroke="url(#gscImpStroke)" fill="url(#gscImpFill)" strokeWidth={2} />
-                                      <Line yAxisId="right" type="monotone" dataKey="position" name={h.language === 'fr' ? 'Position moy.' : 'Avg. Position'} stroke="url(#gscPosStroke)" strokeWidth={2} dot={false} strokeDasharray="4 2" />
+                                      <Area type="monotone" dataKey="clicks" name={h.language === 'fr' ? 'Clics' : 'Clicks'} stroke="url(#gscClicksStroke)" fill="url(#gscClicksFill)" strokeWidth={2} />
+                                      <Area type="monotone" dataKey="impressions" name="Impressions" stroke="url(#gscImpStroke)" fill="url(#gscImpFill)" strokeWidth={2} />
                                     </ComposedChart>
                                   </ResponsiveContainer>
                                 </div>
