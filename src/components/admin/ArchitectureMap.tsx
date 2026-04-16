@@ -345,25 +345,25 @@ const ArchitectureMap: React.FC = () => {
                 style={{ cursor: "pointer" }}
               >
             {coreNames.map((tableName, idx) => {
-                  const cols = idx < 4 ? 2 : 1;
-                  const cx = idx < 4
-                    ? pos.x + (idx % 2) * (CORE_W + CORE_GAP)
-                    : pos.x + (pos.w - CORE_W) / 2;
-                  const cy = idx < 4
-                    ? pos.y + Math.floor(idx / 2) * (CORE_H + CORE_GAP)
-                    : pos.y + 2 * (CORE_H + CORE_GAP);
+                  const col = idx % 3;
+                  const row = Math.floor(idx / 3);
+                  const cx = pos.x + col * (CORE_W + CORE_GAP);
+                  const cy = pos.y + row * (CORE_H + CORE_GAP);
                   const coreDescriptions: Record<string, string> = {
                     profiles: "Identité et préférences utilisateurs",
                     tracked_sites: "Sites suivis et leur configuration",
                     architect_workbench: "Diagnostics et tâches centralisées",
                     seasonal_context: "Contexte temporel et saisonnier",
                     site_memory: "Mémoire persistante par site",
+                    concurrence: "Tracking concurrents et gaps SEO",
                   };
+                  const isConcurrence = tableName === "concurrence";
+                  const subColor = isConcurrence ? "#D62828" : d.color;
                   return (
                     <g key={idx}>
                       <rect x={cx} y={cy} width={CORE_W} height={CORE_H} rx={6}
-                        fill={active || isHov ? d.color : "#1e2433"}
-                        stroke={isHov ? "#fff" : active ? d.color : "#2a3040"}
+                        fill={active || isHov ? subColor : "#1e2433"}
+                        stroke={isHov ? "#fff" : active ? subColor : "#2a3040"}
                         strokeWidth={isHov ? 2 : 1}
                         opacity={hovered && !active ? 0.3 : 1}
                         style={{ transition: "fill 0.3s, opacity 0.3s, stroke 0.3s" }}
