@@ -86,10 +86,6 @@ const dashedLinks: [string, string][] = [
   ["CORE", "AGENCE"], ["ABONNEMENT", "AGENCE"],
   // PAIEMENT data flows
   ["CORE", "PAIEMENT"], ["AUDIT", "PAIEMENT"], ["PAIEMENT", "ABONNEMENT"],
-  // CONCURRENCE reads/writes
-  ["CORE", "CONCURRENCE"], ["SERP & VISIBILITY", "CONCURRENCE"],
-  ["CRAWL", "CONCURRENCE"], ["CONCURRENCE", "AUDIT"], ["CONCURRENCE", "CONTENT"],
-  ["CONCURRENCE", "AGENTS IA"],
 ];
 
 // ── Layout ───────────────────────────────────────────────────
