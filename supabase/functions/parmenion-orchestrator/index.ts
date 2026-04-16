@@ -1611,21 +1611,8 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
       }
     }
 
-    const result = await response.json();
-    const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
-      console.error('[Parménion] No tool call in LLM response');
-      return null;
-    }
-
-    const decision = JSON.parse(toolCall.function.arguments) as ParmenionDecision;
-
-    // Enforce risk ceiling
-    if (decision.prudence.risk_score > context.maxRisk) {
-      decision.prudence.risk_score = context.maxRisk;
-    }
-
-    return decision;
+    console.error('[Parménion] ❌ All gateways exhausted for reasoning');
+    return null;
   } catch (e) {
     console.error('[Parménion] LLM call failed:', e);
     return null;
