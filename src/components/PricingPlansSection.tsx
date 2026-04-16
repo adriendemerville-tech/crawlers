@@ -88,6 +88,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, '50 pages par scan', '50 pages per scan', '50 páginas por escaneo'),
     t3(language, 'Audits & codes correctifs illimités', 'Unlimited audits & corrective code', 'Auditorías y código ilimitados'),
     t3(language, 'Benchmark LLM & Profondeur LLM illimités', 'Unlimited LLM Benchmark & Depth', 'Benchmark LLM y Profundidad LLM ilimitados'),
+    'Conversion Optimizer',
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
     t3(language, 'API Marina', 'Marina API', 'API Marina'),
     t3(language, 'Analyse des logs', 'Log analysis', 'Análisis de logs'),
