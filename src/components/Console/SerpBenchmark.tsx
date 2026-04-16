@@ -57,6 +57,7 @@ interface Props {
 export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function SerpBenchmark({ trackedSites, selectedSiteId }, ref) {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const { isAgencyPro, isAgencyPremium } = useCredits();
   const [query, setQuery] = useState('');
   const [targetDomain, setTargetDomain] = useState('');
   const [location, setLocation] = useState('France');
