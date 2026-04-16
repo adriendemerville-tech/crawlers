@@ -43,7 +43,12 @@ function verdictBadge(verdict: string) {
   return <Badge variant="secondary" className="gap-1">Inconnu</Badge>;
 }
 
-export function IndexationMonitor() {
+interface IndexationMonitorProps {
+  externalSiteId?: string | null;
+  externalDomain?: string | null;
+}
+
+export function IndexationMonitor({ externalSiteId, externalDomain }: IndexationMonitorProps = {}) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
@@ -65,10 +70,17 @@ export function IndexationMonitor() {
       .then(({ data }) => {
         if (data?.length) {
           setTrackedSites(data);
-          setSelectedSiteId(data[0].id);
+          if (!externalSiteId) setSelectedSiteId(data[0].id);
         }
       });
-  }, [user]);
+  }, [user, externalSiteId]);
+
+  // Sync with external site selection from console sidebar
+  useEffect(() => {
+    if (externalSiteId) {
+      setSelectedSiteId(externalSiteId);
+    }
+  }, [externalSiteId]);
 
   // Load existing checks
   const loadChecks = useCallback(async () => {
