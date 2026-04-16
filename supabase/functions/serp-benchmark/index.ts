@@ -325,6 +325,83 @@ Deno.serve(handleRequest(async (req) => {
         console.error('[serp-benchmark] insert error:', insertErr.message);
       }
       insertedId = inserted?.id;
+
+      // ── Option 3: Enrich keyword_universe + workbench drift detection ──
+      if (tracked_site_id && target_domain) {
+        const domainNorm = target_domain.replace(/^www\./, '').toLowerCase();
+        // Find target domain position in averaged results
+        const targetEntry = averaged.find(a => {
+          const d = (a.domain || '').replace(/^www\./, '').toLowerCase();
+          return d === domainNorm || d.startsWith(domainNorm);
+        });
+        const realPosition = targetEntry ? targetEntry.average : null;
+
+        // 1. Enrich keyword_universe with real position
+        const { error: kwErr } = await supabase
+          .from('keyword_universe')
+          .update({
+            current_position: realPosition ? Math.round(realPosition) : null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('keyword', query)
+          .eq('tracked_site_id', tracked_site_id)
+          .eq('user_id', user.id);
+
+        if (kwErr) {
+          console.error('[serp-benchmark] keyword_universe update error:', kwErr.message);
+        }
+
+        // 2. Check for SERP drift → create workbench finding if anomaly
+        const { data: kwData } = await supabase
+          .from('keyword_universe')
+          .select('best_position, opportunity_score, is_quick_win')
+          .eq('keyword', query)
+          .eq('tracked_site_id', tracked_site_id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (kwData && realPosition !== null) {
+          const expectedPos = kwData.best_position || 30;
+          const drift = realPosition - expectedPos;
+
+          // Alert if real position is 10+ positions worse than expected
+          if (drift >= 10) {
+            const { error: wbErr } = await supabase
+              .from('architect_workbench')
+              .insert({
+                domain: target_domain,
+                tracked_site_id,
+                user_id: user.id,
+                source_type: 'serp_benchmark',
+                source_function: 'serp-benchmark',
+                source_record_id: `serp_drift_${target_domain}_${query.replace(/\s+/g, '_')}`,
+                finding_category: 'serp_analysis',
+                severity: drift >= 20 ? 'critical' : 'high',
+                title: `Dérive SERP: "${query}" — position réelle ${Math.round(realPosition)} vs attendue ${expectedPos}`,
+                description: `Le mot-clé "${query}" a perdu ${Math.round(drift)} positions par rapport à sa meilleure position connue. Position moyenne multi-providers: ${realPosition.toFixed(1)}.${kwData.is_quick_win ? ' Ce mot-clé est identifié comme Quick Win.' : ''}`,
+                target_url: `https://${target_domain}`,
+                action_type: 'both',
+                target_operation: 'replace',
+                payload: {
+                  keyword: query,
+                  real_position: realPosition,
+                  expected_position: expectedPos,
+                  drift,
+                  opportunity_score: kwData.opportunity_score,
+                  is_quick_win: kwData.is_quick_win,
+                  providers_used: providerResults.filter(p => !p.error).map(p => p.provider),
+                  benchmark_id: insertedId,
+                },
+              });
+
+            if (wbErr) {
+              console.error('[serp-benchmark] workbench insert error:', wbErr.message);
+            } else {
+              console.log(`[serp-benchmark] SERP drift alert created for "${query}" (drift: +${Math.round(drift)})`);
+            }
+          }
+        }
+      }
     }
 
     return jsonOk({
