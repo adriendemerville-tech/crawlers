@@ -58,6 +58,7 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
   const [scanning, setScanning] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const [inspectingManual, setInspectingManual] = useState(false);
+  const [inspectMode, setInspectMode] = useState<'batch' | 'cible'>('batch');
   const serpBenchmarkRef = useRef<SerpBenchmarkHandle>(null);
 
   // Load tracked sites
