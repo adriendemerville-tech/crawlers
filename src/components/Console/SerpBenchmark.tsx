@@ -62,7 +62,19 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
   const [targetDomain, setTargetDomain] = useState('');
   const [locScale, setLocScale] = useState<'pays' | 'region' | 'departement' | 'ville'>('pays');
   const [locValue, setLocValue] = useState('France');
-  const [singleHitPenalty, setSingleHitPenalty] = useState(20);
+
+  // Build the location string with 2 levels of context above
+  const buildLocation = () => {
+    const v = locValue.trim();
+    if (!v) return 'France';
+    switch (locScale) {
+      case 'pays': return v;
+      case 'region': return `${v},France`;
+      case 'departement': return `${v},France`;
+      case 'ville': return `${v},France`;
+      default: return v;
+    }
+  };
   const [penaltyEnabled, setPenaltyEnabled] = useState(true);
   const [selectedProviders, setSelectedProviders] = useState<string[]>(['DataForSEO', 'SerpApi', 'Serper']);
   const [loading, setLoading] = useState(false);
