@@ -91,7 +91,7 @@ function SerpBenchmarkMini() {
     <Card className="border-primary/30 bg-card/80 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
-          <Search className="h-5 w-5 text-primary" />
+          <Search className="h-5 w-5 text-gray-700" />
           {t3(language, 'Benchmark SERP', 'SERP Benchmark', 'Benchmark SERP')}
         </CardTitle>
         <CardDescription>
@@ -341,7 +341,7 @@ const RankingSerp = memo(() => {
             ].map((step, i) => (
               <Card key={i} className="border-border/50">
                 <CardContent className="pt-6 space-y-3">
-                  <step.icon className="h-8 w-8 text-primary" />
+                  <step.icon className="h-8 w-8 text-gray-700" />
                   <h3 className="font-semibold text-foreground">{step.title}</h3>
                   <p className="text-sm text-muted-foreground">{step.desc}</p>
                 </CardContent>
@@ -521,7 +521,7 @@ const RankingSerp = memo(() => {
         <section className="container mx-auto max-w-3xl px-4 text-center">
           <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
             <CardContent className="py-10 space-y-4">
-              <Crown className="h-8 w-8 text-primary mx-auto" />
+              <Crown className="h-8 w-8 mx-auto text-violet-600" />
               <h2 className="text-xl font-bold text-foreground">
                 {t3(language,
                   'Passez au niveau supérieur avec Pro Agency',
@@ -538,7 +538,7 @@ const RankingSerp = memo(() => {
               </p>
               <div className="flex justify-center gap-3 flex-wrap">
                 <Link to="/pro-agency">
-                  <Button className="gap-2">
+                  <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
                     <Crown className="h-4 w-4" />
                     {t3(language, 'Découvrir Pro Agency', 'Discover Pro Agency', 'Descubrir Pro Agency')}
                   </Button>
