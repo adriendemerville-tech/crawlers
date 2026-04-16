@@ -117,9 +117,14 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
     triggerBenchmark: (keyword: string) => runBenchmark(keyword),
   }), [runBenchmark]);
 
-  // Batch benchmark top keywords from keyword_universe
+  const maxBatchKeywords = isAgencyPremium ? 5 : isAgencyPro ? 1 : 0;
+
   const runTopKeywordsBenchmark = useCallback(async () => {
     if (!user || !selectedSiteId) return;
+    if (!isAgencyPro) {
+      toast.error(t3(language, 'Réservé aux abonnés Pro Agency', 'Pro Agency subscribers only', 'Solo suscriptores Pro Agency'));
+      return;
+    }
     const site = trackedSites.find(s => s.id === selectedSiteId);
     if (!site) return;
 
@@ -131,7 +136,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
         .eq('tracked_site_id', selectedSiteId)
         .eq('user_id', user.id)
         .order('opportunity_score', { ascending: false })
-        .limit(10);
+        .limit(maxBatchKeywords);
 
       if (error) throw error;
       if (!keywords?.length) {
