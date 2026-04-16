@@ -303,7 +303,7 @@ function FooterComponent() {
                 {t3(language, 'Technique', 'Technical', 'Técnico')}
               </h3>
               <nav aria-label="Technique">
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {technicalLinks.map((link) => (
                     <li key={link.href}>
                       <SmartLink
