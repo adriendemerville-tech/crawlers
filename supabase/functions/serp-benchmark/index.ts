@@ -328,7 +328,7 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     return jsonOk({
-      id: inserted?.id,
+      id: insertedId,
       providers: providerResults.map(p => ({ provider: p.provider, count: p.results.length, error: p.error })),
       averaged_results: averaged.slice(0, 50),
       total_sites: averaged.length,
