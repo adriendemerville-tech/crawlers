@@ -9,7 +9,7 @@ interface Domain {
 }
 
 const domains: Record<string, Domain> = {
-  CORE: { color: "#1D3557", tables: ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory"], functions: [] },
+  CORE: { color: "#1D3557", tables: ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory", "competitor_tracked_urls", "content_gap_results", "backlink_snapshots"], functions: ["audit-competitor-url", "strategic-competitors", "link-intersection", "serp-benchmark"] },
   COCOON: { color: "#2A9D8F", tables: ["cocoon_sessions", "cocoon_diagnostic_results", "cocoon_recommendations", "cocoon_tasks", "cocoon_auto_links", "cocoon_batch_operations", "cocoon_chat_histories", "cocoon_errors", "cocoon_strategy_plans", "cocoon_architect_drafts", "cocoon_linking_exclusions", "cocoon_nodes", "semantic_nodes"], functions: ["cocoon-chat", "cocoon-strategist", "cocoon-auto-linking", "cocoon-bulk-auto-linking", "cocoon-deploy-links", "cocoon-batch-deploy", "cocoon-diag-authority", "cocoon-diag-content", "cocoon-diag-semantic", "cocoon-diag-structure", "cocoon-diag-subdomains", "calculate-cocoon-logic", "persist-cocoon-session"] },
   AUDIT: { color: "#E63946", tables: ["audits", "audit_raw_data", "audit_cache", "audit_recommendations_registry", "audit_impact_snapshots", "pdf_audits"], functions: ["audit-expert-seo", "audit-local-seo", "audit-matrice", "audit-strategique-ia", "audit-compare", "audit-code-quality-backend", "audit-code-quality-frontend", "expert-audit", "save-audit", "measure-audit-impact", "snapshot-audit-impact"] },
   CRAWL: { color: "#457B9D", tables: ["site_crawls", "crawl_pages", "crawl_jobs", "crawl_page_backlinks", "crawl_index_history"], functions: ["crawl-site", "process-crawl-queue", "strategic-crawl", "check-crawlers"] },
@@ -27,7 +27,6 @@ const domains: Record<string, Domain> = {
   BLOG: { color: "#118AB2", tables: ["blog_articles", "quiz_questions"], functions: ["generate-blog-from-news", "fetch-news", "felix-seo-quiz"] },
   PAIEMENT: { color: "#06D6A0", tables: ["stripe_payments", "paid_api_calls", "billing_info"], functions: ["stripe-webhook", "stripe-actions"] },
   AGENCE: { color: "#FFD166", tables: ["agency_clients", "agency_client_sites", "agency_team_members", "agency_invitations"], functions: ["manage-team", "share-actions", "share-report"] },
-  CONCURRENCE: { color: "#D62828", tables: ["competitor_tracked_urls", "content_gap_results", "backlink_snapshots"], functions: ["audit-competitor-url", "strategic-competitors", "link-intersection", "serp-benchmark"] },
 };
 
 // Directed connections: [data_source, data_consumer] — particle flows in direction of data
@@ -87,10 +86,9 @@ const dashedLinks: [string, string][] = [
   ["CORE", "AGENCE"], ["ABONNEMENT", "AGENCE"],
   // PAIEMENT data flows
   ["CORE", "PAIEMENT"], ["AUDIT", "PAIEMENT"], ["PAIEMENT", "ABONNEMENT"],
-  // CONCURRENCE reads/writes
-  ["CORE", "CONCURRENCE"], ["SERP & VISIBILITY", "CONCURRENCE"],
-  ["CRAWL", "CONCURRENCE"], ["CONCURRENCE", "AUDIT"], ["CONCURRENCE", "CONTENT"],
-  ["CONCURRENCE", "AGENTS IA"],
+  // Concurrence (now in CORE) — CORE already has links to most domains
+  // SERP & CRAWL feed competitor data into CORE
+  ["SERP & VISIBILITY", "CORE"], ["CRAWL", "CORE"],
 ];
 
 // ── Layout ───────────────────────────────────────────────────
@@ -99,14 +97,14 @@ const SVG_H = 1000;
 const CX = SVG_W / 2;
 const CY = SVG_H / 2 - 20;
 
-const minorNames = ["PROFIL", "ABONNEMENT", "BLOG", "PAIEMENT", "AGENCE", "CONCURRENCE"];
+const minorNames = ["PROFIL", "ABONNEMENT", "BLOG", "PAIEMENT", "AGENCE"];
 const majorNames = Object.keys(domains).filter(d => d !== "CORE" && !minorNames.includes(d));
 
-// Core 2x2 grid → now 5 tables (2+2+1)
+// Core cards: 5 sub-cards (profiles, tracked_sites, architect_workbench, seasonal_context, concurrence)
 const CORE_W = 140;
 const CORE_H = 65;
 const CORE_GAP = 10;
-const coreNames = ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory"];
+const coreNames = ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "concurrence"];
 
 interface CardRect { x: number; y: number; w: number; h: number; }
 
@@ -114,10 +112,11 @@ function computePositions() {
   const positions: Record<string, CardRect> = {};
 
   // Core cards (grouped as one logical unit)
+  // 5 cards: 3 top row + 2 bottom row
   positions.CORE = {
-    x: CX - CORE_W - CORE_GAP / 2,
+    x: CX - 1.5 * CORE_W - CORE_GAP,
     y: CY - CORE_H - CORE_GAP / 2,
-    w: 2 * CORE_W + CORE_GAP,
+    w: 3 * CORE_W + 2 * CORE_GAP,
     h: 2 * CORE_H + CORE_GAP,
   };
 
@@ -298,7 +297,7 @@ const ArchitectureMap: React.FC = () => {
           const rampartStroke = coreHov ? "#fff" : coreActive ? "#4a90d9" : "#2a3a5a";
           const orchestrationFns = [
             "parmenion-orchestrator", "supervisor-actions", "dispatch-agent-directives",
-            "autopilot-engine", "ensure-profile", "session-heartbeat"
+            "autopilot-engine", "audit-competitor-url", "serp-benchmark"
           ];
           return (
             <g style={{ transition: "opacity 0.3s" }} opacity={rampartOpacity}>
@@ -341,7 +340,7 @@ const ArchitectureMap: React.FC = () => {
           const isCore = name === "CORE";
 
           if (isCore) {
-            // Render 4 sub-cards inside rampart
+            // Render 5 sub-cards inside rampart: 3 top row, 2 bottom row centered
             return (
               <g key={name}
                 onMouseEnter={() => setHovered(name)}
@@ -349,14 +348,25 @@ const ArchitectureMap: React.FC = () => {
                 onClick={() => handleCardClick(name)}
                 style={{ cursor: "pointer" }}
               >
-                {[0, 1, 2, 3].map(idx => {
-                  const cx = pos.x + (idx % 2) * (CORE_W + CORE_GAP);
-                  const cy = pos.y + Math.floor(idx / 2) * (CORE_H + CORE_GAP);
+                {coreNames.map((coreName, idx) => {
+                  let cx: number, cy: number;
+                  if (idx < 3) {
+                    // Top row: 3 cards
+                    cx = pos.x + idx * (CORE_W + CORE_GAP);
+                    cy = pos.y;
+                  } else {
+                    // Bottom row: 2 cards centered
+                    const bottomOffset = (pos.w - 2 * CORE_W - CORE_GAP) / 2;
+                    cx = pos.x + bottomOffset + (idx - 3) * (CORE_W + CORE_GAP);
+                    cy = pos.y + CORE_H + CORE_GAP;
+                  }
+                  const isConcurrence = coreName === "concurrence";
+                  const cardColor = isConcurrence ? "#D62828" : d.color;
                   return (
                     <g key={idx}>
                       <rect x={cx} y={cy} width={CORE_W} height={CORE_H} rx={6}
-                        fill={active || isHov ? d.color : "#1e2433"}
-                        stroke={isHov ? "#fff" : active ? d.color : "#2a3040"}
+                        fill={active || isHov ? cardColor : "#1e2433"}
+                        stroke={isHov ? "#fff" : active ? cardColor : "#2a3040"}
                         strokeWidth={isHov ? 2 : 1}
                         opacity={hovered && !active ? 0.3 : 1}
                         style={{ transition: "fill 0.3s, opacity 0.3s, stroke 0.3s" }}
@@ -364,11 +374,16 @@ const ArchitectureMap: React.FC = () => {
                       <text x={cx + 8} y={cy + 18} fill="#fff" fontSize={12} fontWeight="bold"
                         opacity={hovered && !active ? 0.3 : 1}
                         style={{ transition: "opacity 0.3s" }}
-                      >CORE</text>
+                      >{isConcurrence ? "CONCURRENCE" : "CORE"}</text>
                       <text x={cx + 8} y={cy + 36} fill="#ffffffcc" fontSize={9}
                         opacity={hovered && !active ? 0.3 : 1}
                         style={{ transition: "opacity 0.3s" }}
-                      >{coreNames[idx]}</text>
+                      >{isConcurrence ? "competitor_tracked_urls" : coreName}</text>
+                      {isConcurrence && (
+                        <text x={cx + 8} y={cy + 48} fill="#ffffffaa" fontSize={8}
+                          opacity={hovered && !active ? 0.3 : 1}
+                        >backlink_snapshots</text>
+                      )}
                     </g>
                   );
                 })}
