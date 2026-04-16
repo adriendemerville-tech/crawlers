@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Sparkles, Bug, Network, Brain, ShieldCheck, Gauge, PenLine,
   Share2, BarChart3, Radar, Globe, Target, ArrowRight, Layers,
-  Search, Building2, FileSearch, Zap
+  Search, Building2, FileSearch, Zap, Award, Swords
 } from 'lucide-react';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -180,6 +180,20 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
           description: lang === 'fr' ? 'Veille sectorielle automatique : tendances, concurrents, évolutions algorithmiques.' : lang === 'es' ? 'Vigilancia sectorial automática: tendencias, competidores, evoluciones algorítmicas.' : 'Automated sector intelligence: trends, competitors, algorithm changes.',
           href: '/observatoire',
           color: 'from-orange-500 to-red-500',
+        },
+        {
+          icon: Award,
+          title: lang === 'fr' ? 'Ranking SERP' : lang === 'es' ? 'Ranking SERP' : 'SERP Ranking',
+          description: lang === 'fr' ? 'Suivez vos positions Google en temps réel : Top 3/10/50, ETV, pages indexées et distribution par tranche.' : lang === 'es' ? 'Siga sus posiciones en Google en tiempo real: Top 3/10/50, ETV, páginas indexadas y distribución.' : 'Track your Google rankings in real-time: Top 3/10/50, ETV, indexed pages and position distribution.',
+          href: '/app/ranking-serp',
+          color: 'from-yellow-500 to-amber-600',
+        },
+        {
+          icon: Swords,
+          title: lang === 'fr' ? 'Concurrence' : lang === 'es' ? 'Competencia' : 'Competition',
+          description: lang === 'fr' ? 'Comparez vos scores SEO, GEO et SERP face à 3 concurrents et identifiez les opportunités.' : lang === 'es' ? 'Compare sus scores SEO, GEO y SERP frente a 3 competidores e identifique oportunidades.' : 'Compare your SEO, GEO & SERP scores against 3 competitors and spot opportunities.',
+          href: '/app/console?tab=tracking',
+          color: 'from-red-500 to-rose-600',
         },
         {
           icon: Building2,
