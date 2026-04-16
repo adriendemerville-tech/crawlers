@@ -55,7 +55,7 @@ function SerpBenchmarkMini() {
         body: {
           action: 'benchmark',
           query: query.trim(),
-          providers: ['DataForSEO', 'SerpApi', 'Serper'],
+          providers: ['DataForSEO', 'SerpApi', 'Serper', 'Bright Data'],
           location: 'France',
           language: 'fr',
           country: 'fr',
@@ -96,9 +96,9 @@ function SerpBenchmarkMini() {
         </CardTitle>
         <CardDescription>
           {t3(language,
-            'Comparez les positions Google renvoyées par 3 providers SERP simultanément.',
-            'Compare Google positions returned by 3 SERP providers simultaneously.',
-            'Compara las posiciones de Google devueltas por 3 proveedores SERP simultáneamente.'
+            'Comparez les positions Google renvoyées par 4 providers SERP simultanément.',
+            'Compare Google positions returned by 4 SERP providers simultaneously.',
+            'Compara las posiciones de Google devueltas por 4 proveedores SERP simultáneamente.'
           )}
         </CardDescription>
       </CardHeader>
@@ -208,7 +208,7 @@ const RankingSerp = memo(() => {
         "name": "Benchmark Rank SERP — Crawlers.fr",
         "applicationCategory": "SEO Tool",
         "operatingSystem": "Web",
-        "description": "Outil gratuit de benchmark SERP multi-providers. Comparez les positions Google renvoyées par DataForSEO, SerpApi et Serper pour fiabiliser votre suivi SEO.",
+        "description": "Outil gratuit de benchmark SERP multi-providers. Comparez les positions Google renvoyées par DataForSEO, SerpApi, Serper et Bright Data pour fiabiliser votre suivi SEO.",
         "url": "https://crawlers.fr/app/ranking-serp",
         "author": { "@type": "Organization", "name": "Crawlers.fr", "url": "https://crawlers.fr" },
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
@@ -221,7 +221,7 @@ const RankingSerp = memo(() => {
             "name": "Pourquoi croiser plusieurs sources SERP ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Chaque API SERP (DataForSEO, SerpApi, Serper) interroge Google depuis des datacenter différents. Les positions varient selon la localisation, le user-agent et les mesures anti-scraping. Le croisement multi-providers neutralise ces biais et donne un classement statistiquement fiable."
+              "text": "Chaque API SERP (DataForSEO, SerpApi, Serper, Bright Data) interroge Google depuis des datacenter différents. Les positions varient selon la localisation, le user-agent et les mesures anti-scraping. Le croisement multi-providers neutralise ces biais et donne un classement statistiquement fiable."
             }
           },
           {
@@ -261,9 +261,9 @@ const RankingSerp = memo(() => {
           'Benchmark Rank SERP — Ranking Google multi-proveedor gratis | Crawlers.fr'
         )}</title>
         <meta name="description" content={t3(language,
-          'Comparez les positions Google de n\'importe quel mot-clé via 3 providers SERP simultanément (DataForSEO, SerpApi, Serper). Outil gratuit, classement croisé fiable.',
-          'Compare Google positions for any keyword via 3 SERP providers simultaneously (DataForSEO, SerpApi, Serper). Free tool, reliable cross-referenced ranking.',
-          'Compara las posiciones de Google para cualquier palabra clave mediante 3 proveedores SERP simultáneamente (DataForSEO, SerpApi, Serper). Herramienta gratuita.'
+           'Comparez les positions Google de n\'importe quel mot-clé via 4 providers SERP simultanément (DataForSEO, SerpApi, Serper, Bright Data). Outil gratuit, classement croisé fiable.',
+           'Compare Google positions for any keyword via 4 SERP providers simultaneously (DataForSEO, SerpApi, Serper, Bright Data). Free tool, reliable cross-referenced ranking.',
+           'Compara las posiciones de Google para cualquier palabra clave mediante 4 proveedores SERP simultáneamente (DataForSEO, SerpApi, Serper, Bright Data). Herramienta gratuita.'
         )} />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
         <link rel="canonical" href="https://crawlers.fr/app/ranking-serp" />
@@ -290,9 +290,9 @@ const RankingSerp = memo(() => {
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
                 {t3(language,
-                  'Comparez les positions Google renvoyées par 3 providers SERP en une seule requête. Classement croisé, pénalité anti-faux-positif, résultats fiables.',
-                  'Compare Google positions returned by 3 SERP providers in a single query. Cross-referenced ranking, anti-false-positive penalty, reliable results.',
-                  'Compara las posiciones de Google devueltas por 3 proveedores SERP en una sola consulta. Ranking cruzado, penalización anti-falso-positivo, resultados fiables.'
+                  'Comparez les positions Google renvoyées par 4 providers SERP en une seule requête. Classement croisé, pénalité anti-faux-positif, résultats fiables.',
+                  'Compare Google positions returned by 4 SERP providers in a single query. Cross-referenced ranking, anti-false-positive penalty, reliable results.',
+                  'Compara las posiciones de Google devueltas por 4 proveedores SERP en una sola consulta. Ranking cruzado, penalización anti-falso-positivo, resultados fiables.'
                 )}
               </p>
             </div>
