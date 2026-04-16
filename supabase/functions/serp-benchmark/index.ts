@@ -127,7 +127,9 @@ async function fetchSerper(query: string, country: string, language: string): Pr
 }
 
 async function fetchBrightData(query: string, country: string, language: string): Promise<ProviderResult> {
-  const key = Deno.env.get('BRIGHTDATA_API_KEY')?.trim();
+  const rawKey = Deno.env.get('BRIGHTDATA_API_KEY');
+  // Strip any non-ASCII / whitespace characters that break ByteString validation
+  const key = rawKey ? rawKey.replace(/[^\x20-\x7E]/g, '').trim() : '';
   if (!key) return { provider: 'Bright Data', results: [], error: 'Not configured' };
 
   try {
