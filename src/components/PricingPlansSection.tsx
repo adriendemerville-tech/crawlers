@@ -79,6 +79,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, '5 000 pages crawlées/mois', '5,000 pages/month', '5 000 páginas/mes'),
     t3(language, '10 pages par scan', '10 pages per scan', '10 páginas por escaneo'),
     t3(language, 'Audits & codes correctifs illimités', 'Unlimited audits & corrective code', 'Auditorías y código ilimitados'),
+    t3(language, 'Benchmark visibilité LLM', 'LLM Visibility Benchmark', 'Benchmark visibilidad LLM'),
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
     t3(language, 'Marque blanche + 2 comptes', 'White label + 2 accounts', 'Marca blanca + 2 cuentas'),
   ];
