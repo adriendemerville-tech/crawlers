@@ -195,6 +195,7 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
           href: '/app/console?tab=tracking',
           color: 'from-red-500 to-rose-600',
         },
+        {
           icon: Building2,
           title: 'Pro Agency',
           description: lang === 'fr' ? 'Dashboard multi-clients, marque blanche, rapports personnalisés, gestion d\'équipe.' : lang === 'es' ? 'Dashboard multi-clientes, marca blanca, informes personalizados, gestión de equipo.' : 'Multi-client dashboard, white label, custom reports, team management.',
