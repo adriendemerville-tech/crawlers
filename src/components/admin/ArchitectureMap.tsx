@@ -94,14 +94,14 @@ const SVG_H = 1000;
 const CX = SVG_W / 2;
 const CY = SVG_H / 2 - 20;
 
-const minorNames = ["PROFIL", "ABONNEMENT", "BLOG", "PAIEMENT", "AGENCE", "CONCURRENCE"];
+const minorNames = ["PROFIL", "ABONNEMENT", "BLOG", "PAIEMENT", "AGENCE"];
 const majorNames = Object.keys(domains).filter(d => d !== "CORE" && !minorNames.includes(d));
 
-// Core 2x2 grid → now 5 tables (2+2+1)
+// Core 3x2 grid → 6 tables
 const CORE_W = 140;
 const CORE_H = 65;
 const CORE_GAP = 10;
-const coreNames = ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory"];
+const coreNames = ["profiles", "tracked_sites", "architect_workbench", "seasonal_context", "site_memory", "concurrence"];
 
 interface CardRect { x: number; y: number; w: number; h: number; }
 
