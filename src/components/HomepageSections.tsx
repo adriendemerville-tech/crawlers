@@ -481,7 +481,7 @@ const TrustBanner = memo(() => {
         {/* Stats under table */}
         <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mt-10">
           <div className="text-center">
-            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">12</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">16</p>
             <p className="text-sm text-muted-foreground mt-1">
               {language === 'fr' ? 'Algorithmes propriétaires' : language === 'es' ? 'Algoritmos propietarios' : 'Proprietary algorithms'}
             </p>
@@ -493,7 +493,7 @@ const TrustBanner = memo(() => {
             </p>
           </div>
           <div className="text-center">
-            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">12</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">+25</p>
             <p className="text-sm text-muted-foreground mt-1">
               {language === 'fr' ? 'Outils' : language === 'es' ? 'Herramientas' : 'Tools'}
             </p>
