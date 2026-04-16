@@ -487,7 +487,7 @@ const TrustBanner = memo(() => {
             </p>
           </div>
           <div className="text-center">
-            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">113</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">78</p>
             <p className="text-sm text-muted-foreground mt-1">
               {language === 'fr' ? "Fonctions d'audit" : language === 'es' ? 'Funciones de auditoría' : 'Audit functions'}
             </p>
