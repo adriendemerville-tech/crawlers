@@ -125,6 +125,8 @@ export default function Methodologie() {
     { icon: Code, title: t3(language, 'Code Correctif', 'Corrective Code', 'Código correctivo'), points: ['JSON-LD injection', 'Balises méta & OG', 'Alt images', 'SDK + kill switch'], count: 6 },
     { icon: Eye, title: t3(language, 'Résilience Contenu', 'Content Resilience', 'Resiliencia'), points: ['Dark Social Readiness', 'Quotability Index', 'Summary Resilience', 'Red Teaming'], count: 8 },
     { icon: TrendingUp, title: t3(language, 'Suivi & KPI', 'Tracking & KPI', 'Seguimiento'), points: ['Google Search Console', 'Historique & tendances', 'Export PDF', "Plan d'action"], count: 6 },
+    { icon: Award, title: t3(language, 'Ranking SERP', 'SERP Ranking', 'Ranking SERP'), points: [t3(language, 'Top 3 / 10 / 50', 'Top 3 / 10 / 50', 'Top 3 / 10 / 50'), t3(language, 'ETV (Estimated Traffic Value)', 'ETV (Estimated Traffic Value)', 'ETV'), t3(language, 'Pages indexées & tendance', 'Indexed pages & trend', 'Páginas indexadas'), t3(language, 'Distribution des positions', 'Position distribution', 'Distribución de posiciones')], count: 5 },
+    { icon: Swords, title: t3(language, 'Concurrence', 'Competition', 'Competencia'), points: [t3(language, 'Benchmark 3 concurrents', '3-competitor benchmark', 'Benchmark 3 competidores'), t3(language, 'Scores SEO, GEO & SERP croisés', 'Cross SEO, GEO & SERP scores', 'Scores SEO, GEO y SERP cruzados'), t3(language, 'Pression concurrentielle', 'Competitive pressure', 'Presión competitiva'), t3(language, 'Opportunités de dépassement', 'Overtaking opportunities', 'Oportunidades de superación')], count: 5 },
   ];
 
   const algorithms = [
