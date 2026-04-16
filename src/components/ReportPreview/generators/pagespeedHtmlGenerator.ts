@@ -68,24 +68,24 @@ export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys)
 
   return `
     <!-- Section title -->
-    <h2 class="section-title" style="margin-bottom: 24px;">
+    <h2 class="section-title" data-pdf-section="pagespeed-title" style="margin-bottom: 24px;">
       ${t.pagespeed}
     </h2>
 
     <!-- Main Scores -->
-    <div class="grid-4 pagespeed-scores">
+    <div class="grid-4 pagespeed-scores" data-pdf-section="pagespeed-scores">
       ${scoreCards}
     </div>
 
     <!-- Mobile-First notice -->
-    <div class="card" style="padding: 12px 16px; background: hsla(221, 83%, 53%, 0.05); border-left: 3px solid var(--primary); margin-bottom: 16px;">
+    <div class="card" data-pdf-section="pagespeed-mobile" style="padding: 12px 16px; background: hsla(221, 83%, 53%, 0.05); border-left: 3px solid var(--primary); margin-bottom: 16px;">
       <p style="font-size: 13px; color: var(--muted-foreground); margin: 0; line-height: 1.5;">
         📱 ${t.mobileFirstNotice}
       </p>
     </div>
 
     <!-- Core Web Vitals -->
-    <div class="card" style="padding: 24px;">
+    <div class="card" data-pdf-section="pagespeed-vitals" style="padding: 24px;">
       <h3 class="section-title">
         ${t.coreWebVitals}
       </h3>
