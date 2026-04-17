@@ -8469,6 +8469,74 @@ export type Database = {
         }
         Relationships: []
       }
+      saturation_snapshots: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          estimated_cost_usd: number | null
+          id: string
+          llm_models_used: Json
+          priority_clusters: Json
+          ring_distribution: Json
+          semantic_analysis: Json
+          snapshot_date: string
+          status: string
+          topic_n_grams: Json
+          total_articles_analyzed: number | null
+          total_clusters_analyzed: number | null
+          tracked_site_id: string
+          type_distribution: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          estimated_cost_usd?: number | null
+          id?: string
+          llm_models_used?: Json
+          priority_clusters?: Json
+          ring_distribution?: Json
+          semantic_analysis?: Json
+          snapshot_date?: string
+          status?: string
+          topic_n_grams?: Json
+          total_articles_analyzed?: number | null
+          total_clusters_analyzed?: number | null
+          tracked_site_id: string
+          type_distribution?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          estimated_cost_usd?: number | null
+          id?: string
+          llm_models_used?: Json
+          priority_clusters?: Json
+          ring_distribution?: Json
+          semantic_analysis?: Json
+          snapshot_date?: string
+          status?: string
+          topic_n_grams?: Json
+          total_articles_analyzed?: number | null
+          total_clusters_analyzed?: number | null
+          tracked_site_id?: string
+          type_distribution?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saturation_snapshots_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sav_conversations: {
         Row: {
           assistant_type: string
@@ -10977,6 +11045,9 @@ export type Database = {
           is_seasonal: boolean | null
           jargon_distance: Json | null
           last_audit_at: string | null
+          last_cms_refresh_at: string | null
+          last_cocoon_refresh_at: string | null
+          last_saturation_at: string | null
           last_sov_update: string | null
           last_widget_ping: string | null
           legal_structure: string | null
@@ -11003,6 +11074,7 @@ export type Database = {
           target_segment: string | null
           user_id: string
           voice_dna: Json | null
+          weekly_refresh_enabled: boolean
         }
         Insert: {
           address?: string | null
@@ -11036,6 +11108,9 @@ export type Database = {
           is_seasonal?: boolean | null
           jargon_distance?: Json | null
           last_audit_at?: string | null
+          last_cms_refresh_at?: string | null
+          last_cocoon_refresh_at?: string | null
+          last_saturation_at?: string | null
           last_sov_update?: string | null
           last_widget_ping?: string | null
           legal_structure?: string | null
@@ -11062,6 +11137,7 @@ export type Database = {
           target_segment?: string | null
           user_id: string
           voice_dna?: Json | null
+          weekly_refresh_enabled?: boolean
         }
         Update: {
           address?: string | null
@@ -11095,6 +11171,9 @@ export type Database = {
           is_seasonal?: boolean | null
           jargon_distance?: Json | null
           last_audit_at?: string | null
+          last_cms_refresh_at?: string | null
+          last_cocoon_refresh_at?: string | null
+          last_saturation_at?: string | null
           last_sov_update?: string | null
           last_widget_ping?: string | null
           legal_structure?: string | null
@@ -11121,6 +11200,7 @@ export type Database = {
           target_segment?: string | null
           user_id?: string
           voice_dna?: Json | null
+          weekly_refresh_enabled?: boolean
         }
         Relationships: [
           {
