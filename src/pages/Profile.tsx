@@ -16,6 +16,7 @@ const MyActionPlans = lazy(() => import('@/components/Profile/MyActionPlans').th
 const MyCorrectiveCodes = lazy(() => import('@/components/Profile/MyCorrectiveCodes').then(m => ({ default: m.MyCorrectiveCodes })));
 const MyWallet = lazy(() => import('@/components/Profile/MyWallet').then(m => ({ default: m.MyWallet })));
 const MyTracking = lazy(() => import('@/components/Profile/MyTracking').then(m => ({ default: m.MyTracking })));
+const GEOTab = lazy(() => import('@/components/Profile/GEOTab').then(m => ({ default: m.GEOTab })));
 const MyCrawls = lazy(() => import('@/components/Profile/MyCrawls').then(m => ({ default: m.MyCrawls })));
 const GMBDashboard = lazy(() => import('@/components/Profile/GMBDashboard').then(m => ({ default: m.GMBDashboard })));
 const MyReportsTab = lazy(() => import('@/components/Profile/MyReportsTab').then(m => ({ default: m.MyReportsTab })));
@@ -142,6 +143,7 @@ function ProfileContent() {
     switch (activeTab) {
       case 'wallet': return <MyWallet />;
       case 'tracking': return <MyTracking externalSiteId={selectedSiteId} forceApiPanel={openApiPanel} onApiPanelOpened={() => setOpenApiPanel(false)} />;
+      case 'geo': return <GEOTab externalSiteId={selectedSiteId} externalDomain={selectedDomain} />;
       case 'settings': return <ProfileSettings />;
       case 'reports': return <MyReports />;
       case 'action-plans': return <MyActionPlans externalDomain={selectedDomain} />;

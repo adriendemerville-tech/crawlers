@@ -948,11 +948,6 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                       }}
                       isRefreshing={h.refreshingSerp}
                     />
-
-                    {/* Bot Log Analysis (Pro Agency+ or Admin) */}
-                    {(h.isAgencyPro || h.isAdmin) && (
-                      <BotLogAnalysisCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} simulatedDataEnabled={h.simulatedDataEnabled} />
-                    )}
                   </div>
                 )}
               </div>
