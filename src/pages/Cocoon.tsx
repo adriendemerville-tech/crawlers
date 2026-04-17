@@ -728,7 +728,7 @@ function CocoonContent() {
         </div>
       )}
 
-      <div className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e] transition-all duration-300 ease-in-out" style={{ marginLeft: cocoonExpanded ? '28rem' : undefined }}>
+      <div className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e] transition-all duration-300 ease-in-out">
 
         {/* Top Bar */}
         {!isFullscreen && (
