@@ -66,6 +66,13 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
       category: t.categories.analysis,
       items: [
         {
+          icon: LayoutDashboard,
+          title: lang === 'fr' ? 'Ma Console' : lang === 'es' ? 'Mi Consola' : 'My Console',
+          description: lang === 'fr' ? 'Cockpit unifié SEO, GEO, contenu, plans d\'action et reporting dans un seul écran.' : lang === 'es' ? 'Cockpit unificado SEO, GEO, contenido, planes de acción y reporting en una sola pantalla.' : 'Unified cockpit: SEO, GEO, content, action plans and reporting in a single screen.',
+          href: '/features/console',
+          color: 'from-violet-500 to-fuchsia-600',
+        },
+        {
           icon: FileSearch,
           title: lang === 'fr' ? 'Audit Expert (168 critères)' : lang === 'es' ? 'Auditoría Experta (168 criterios)' : 'Expert Audit (168 criteria)',
           description: lang === 'fr' ? 'Diagnostic SEO & GEO approfondi avec plan d\'action et code correctif prêt à déployer.' : lang === 'es' ? 'Diagnóstico SEO & GEO completo con plan de acción y código correctivo.' : 'In-depth SEO & GEO diagnosis with action plan and corrective code ready to deploy.',
@@ -153,13 +160,6 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
     {
       category: t.categories.monitoring,
       items: [
-        {
-          icon: LayoutDashboard,
-          title: lang === 'fr' ? 'Ma Console' : lang === 'es' ? 'Mi Consola' : 'My Console',
-          description: lang === 'fr' ? 'Cockpit unifié SEO, GEO, contenu, plans d\'action et reporting dans un seul écran.' : lang === 'es' ? 'Cockpit unificado SEO, GEO, contenido, planes de acción y reporting en una sola pantalla.' : 'Unified cockpit: SEO, GEO, content, action plans and reporting in a single screen.',
-          href: '/features/console',
-          color: 'from-violet-500 to-fuchsia-600',
-        },
         {
           icon: Globe,
           title: 'Score GEO',
