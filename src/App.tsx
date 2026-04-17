@@ -84,6 +84,7 @@ const IndiceAlignementStrategique = lazy(() => import("./pages/IndiceAlignementS
 const ArchitecteGeneratif = lazy(() => import("./pages/ArchitecteGeneratif"));
 const Cocoon = lazy(() => import("./pages/Cocoon"));
 const FeaturesCocoon = lazy(() => import("./pages/FeaturesCocoon"));
+const FeaturesConsole = lazy(() => import("./pages/FeaturesConsole"));
 const MatricePrompt = lazy(() => import("./pages/MatricePrompt"));
 const RapportMatrice = lazy(() => import("./pages/RapportMatrice"));
 const Aide = lazy(() => import("./pages/Aide"));
@@ -208,6 +209,7 @@ const App = () => (
                           <Route path="/architecte-generatif" element={<ArchitecteGeneratif />} />
                           <Route path="/app/cocoon" element={<Cocoon />} />
                           <Route path="/features/cocoon" element={<FeaturesCocoon />} />
+                          <Route path="/features/console" element={<FeaturesConsole />} />
                           <Route path="/matrice" element={<MatricePrompt />} />
                           <Route path="/app/rapport/matrice" element={<RapportMatrice />} />
                           <Route path="/aide" element={<Aide />} />

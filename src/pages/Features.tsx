@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Sparkles, Bug, Network, Brain, ShieldCheck, Gauge, PenLine,
   Share2, BarChart3, Radar, Globe, Target, ArrowRight, Layers,
-  Search, Building2, FileSearch, Zap, Award, Swords
+  Search, Building2, FileSearch, Zap, Award, Swords, LayoutDashboard
 } from 'lucide-react';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -153,6 +153,13 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
     {
       category: t.categories.monitoring,
       items: [
+        {
+          icon: LayoutDashboard,
+          title: lang === 'fr' ? 'Ma Console' : lang === 'es' ? 'Mi Consola' : 'My Console',
+          description: lang === 'fr' ? 'Cockpit unifié SEO, GEO, contenu, plans d\'action et reporting dans un seul écran.' : lang === 'es' ? 'Cockpit unificado SEO, GEO, contenido, planes de acción y reporting en una sola pantalla.' : 'Unified cockpit: SEO, GEO, content, action plans and reporting in a single screen.',
+          href: '/features/console',
+          color: 'from-violet-500 to-fuchsia-600',
+        },
         {
           icon: Globe,
           title: 'Score GEO',
