@@ -26,15 +26,12 @@ import { SerpKpiBanner } from '@/components/Profile/SerpKpiBanner';
 import { KeywordCloud } from '@/components/Profile/KeywordCloud';
 import { TopKeywordsList } from '@/components/Profile/TopKeywordsList';
 import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
-import { TopKeywordsList } from '@/components/Profile/TopKeywordsList';
-import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
 import { SmartRecommendationsPanel } from '@/components/Profile/SmartRecommendationsPanel';
 import { FanOutRadarWidget } from '@/components/Profile/FanOutRadarWidget';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
-import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
 import { CompetitorTrackingTab } from '@/components/Profile/CompetitorTrackingTab';
 
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
