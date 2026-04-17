@@ -1753,6 +1753,8 @@ export type Database = {
           cluster_name: string
           created_at: string | null
           deployed_items: number | null
+          fanout_computed_at: string | null
+          fanout_coverage_pct: number | null
           id: string
           keywords: string[] | null
           maturity_pct: number | null
@@ -1766,6 +1768,8 @@ export type Database = {
           cluster_name: string
           created_at?: string | null
           deployed_items?: number | null
+          fanout_computed_at?: string | null
+          fanout_coverage_pct?: number | null
           id?: string
           keywords?: string[] | null
           maturity_pct?: number | null
@@ -1779,6 +1783,8 @@ export type Database = {
           cluster_name?: string
           created_at?: string | null
           deployed_items?: number | null
+          fanout_computed_at?: string | null
+          fanout_coverage_pct?: number | null
           id?: string
           keywords?: string[] | null
           maturity_pct?: number | null
@@ -4742,6 +4748,101 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ga4_top_pages_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geo_kpi_snapshots: {
+        Row: {
+          aeo_avg: number | null
+          ai_referral_ctr: number | null
+          ai_requests_per_100_visits: number | null
+          avg_sentiment: number | null
+          bot_traffic_mix: Json | null
+          chunkability_avg: number | null
+          citation_rate: number | null
+          citation_rate_delta: number | null
+          cluster_coverage: Json | null
+          computed_at: string
+          created_at: string
+          domain: string
+          fanout_coverage_avg: number | null
+          geo_overall_delta: number | null
+          geo_overall_score: number | null
+          id: string
+          position_zero_eligible_pages: number | null
+          quotability_avg: number | null
+          raw_data: Json | null
+          recommendation_rate: number | null
+          sampled_pages: Json | null
+          share_of_voice: number | null
+          tracked_site_id: string
+          url_hallucination_rate: number | null
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          aeo_avg?: number | null
+          ai_referral_ctr?: number | null
+          ai_requests_per_100_visits?: number | null
+          avg_sentiment?: number | null
+          bot_traffic_mix?: Json | null
+          chunkability_avg?: number | null
+          citation_rate?: number | null
+          citation_rate_delta?: number | null
+          cluster_coverage?: Json | null
+          computed_at?: string
+          created_at?: string
+          domain: string
+          fanout_coverage_avg?: number | null
+          geo_overall_delta?: number | null
+          geo_overall_score?: number | null
+          id?: string
+          position_zero_eligible_pages?: number | null
+          quotability_avg?: number | null
+          raw_data?: Json | null
+          recommendation_rate?: number | null
+          sampled_pages?: Json | null
+          share_of_voice?: number | null
+          tracked_site_id: string
+          url_hallucination_rate?: number | null
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          aeo_avg?: number | null
+          ai_referral_ctr?: number | null
+          ai_requests_per_100_visits?: number | null
+          avg_sentiment?: number | null
+          bot_traffic_mix?: Json | null
+          chunkability_avg?: number | null
+          citation_rate?: number | null
+          citation_rate_delta?: number | null
+          cluster_coverage?: Json | null
+          computed_at?: string
+          created_at?: string
+          domain?: string
+          fanout_coverage_avg?: number | null
+          geo_overall_delta?: number | null
+          geo_overall_score?: number | null
+          id?: string
+          position_zero_eligible_pages?: number | null
+          quotability_avg?: number | null
+          raw_data?: Json | null
+          recommendation_rate?: number | null
+          sampled_pages?: Json | null
+          share_of_voice?: number | null
+          tracked_site_id?: string
+          url_hallucination_rate?: number | null
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_kpi_snapshots_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
