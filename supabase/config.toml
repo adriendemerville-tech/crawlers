@@ -183,3 +183,9 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.translate-social-post]
     verify_jwt = false
+  [functions.ingest-bot-hits]
+    verify_jwt = false
+  [functions.cf-deploy-shield]
+    verify_jwt = false
+  [functions.compute-ai-referral-ctr]
+    verify_jwt = false
