@@ -189,3 +189,7 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.compute-ai-referral-ctr]
     verify_jwt = false
+  [functions.correlate-bot-to-human]
+    verify_jwt = false
+  [functions.geo-attribution-summary]
+    verify_jwt = false
