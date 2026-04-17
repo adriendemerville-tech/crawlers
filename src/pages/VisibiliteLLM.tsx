@@ -155,6 +155,50 @@ const VisibiliteLLM = () => {
           </div>
         </section>
 
+        {/* 7 KPIs GEO (Sprint 1) */}
+        <section className="py-16 md:py-24 border-t border-border">
+          <div className="mx-auto max-w-5xl px-4">
+            <div className="text-center mb-12">
+              <Badge variant="outline" className="mb-4 text-primary border-primary/30">
+                <Sparkles className="h-3 w-3 mr-1" /> Nouveau — Tracking GEO Sprint 1
+              </Badge>
+              <h2 className="text-3xl font-bold mb-4">Les 7 KPIs GEO qui pilotent votre citabilité</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Au-delà du « est-ce que je suis cité ? », nous mesurons les signaux structurels qui déterminent 
+                <strong> pourquoi</strong> les LLM choisissent vos contenus comme source.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { icon: Award, title: 'Quality Score GEO', desc: 'Note composite de citabilité : clarté factuelle, structure, autorité, fraîcheur.' },
+                { icon: Network, title: 'Fan-Out Clusters', desc: 'Détection des décompositions RAG par les LLM — sur quelles sous-questions vous êtes (ou non) couvert.' },
+                { icon: AlertTriangle, title: 'Drop Detector', desc: 'Alertes en temps réel si votre citabilité chute sur un cluster ou un moteur IA.' },
+                { icon: Layers, title: 'Bot Mix', desc: 'Répartition des crawls par moteur (GPTBot vs ClaudeBot vs PerplexityBot) pour anticiper où vous serez cité.' },
+                { icon: Gauge, title: 'Velocity Score', desc: 'Vitesse à laquelle un nouveau contenu est crawlé puis cité par les LLM.' },
+                { icon: TrendingUp, title: 'Cluster Maturity', desc: 'Maturité de vos cocons sémantiques (% d\'URLs déployées vs prévues) qui conditionne la couverture LLM.' },
+              ].map(k => (
+                <Card key={k.title} className="border-border/50">
+                  <CardContent className="p-6">
+                    <k.icon className="h-8 w-8 text-primary mb-3" />
+                    <h3 className="font-semibold text-foreground mb-2">{k.title}</h3>
+                    <p className="text-sm text-muted-foreground">{k.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="mt-8 text-center text-sm text-muted-foreground">
+              <p>
+                Vous voulez savoir <em>comment</em> les humains arrivent depuis ces citations IA ?{' '}
+                <Link to="/analyse-bots-ia" className="text-primary hover:underline font-medium">
+                  Voir le tracking Bot ↔ Humain →
+                </Link>
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* FAQ */}
         <section className="py-16 md:py-24">
           <div className="mx-auto max-w-3xl px-4">
