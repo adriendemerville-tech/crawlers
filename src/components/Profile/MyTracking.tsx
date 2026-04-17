@@ -26,15 +26,12 @@ import { SerpKpiBanner } from '@/components/Profile/SerpKpiBanner';
 import { KeywordCloud } from '@/components/Profile/KeywordCloud';
 import { TopKeywordsList } from '@/components/Profile/TopKeywordsList';
 import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
-import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
 import { SmartRecommendationsPanel } from '@/components/Profile/SmartRecommendationsPanel';
-import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { FanOutRadarWidget } from '@/components/Profile/FanOutRadarWidget';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
-import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
 import { CompetitorTrackingTab } from '@/components/Profile/CompetitorTrackingTab';
 
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
@@ -688,12 +685,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                         </TabsTrigger>
                       </TabsList>
                       <TabsContent value="kpis" className="space-y-4">
-                        {/* LLM Visibility Dashboard */}
-                        <LLMVisibilityDashboard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} />
-
-                        {/* LLM Depth */}
-                        <LLMDepthCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} key={`llm-depth-${h.currentSite.id}-${h.llmBenchmarkRefreshKey}`} />
-
+                        {/* LLM Visibility & Depth moved to GEO tab */}
                         {/* Fan-Out Radar */}
                         <FanOutRadarWidget trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
 
@@ -948,11 +940,6 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                       }}
                       isRefreshing={h.refreshingSerp}
                     />
-
-                    {/* Bot Log Analysis (Pro Agency+ or Admin) */}
-                    {(h.isAgencyPro || h.isAdmin) && (
-                      <BotLogAnalysisCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} simulatedDataEnabled={h.simulatedDataEnabled} />
-                    )}
                   </div>
                 )}
               </div>
