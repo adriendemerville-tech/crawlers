@@ -50,6 +50,14 @@ export const LEXIQUE_REFERENCE: LexiqueEntry[] = [
   { term: 'Google-Extended', def: "User-agent contrôlant l'accès de Gemini/Bard au contenu." },
   { term: 'SGE', def: "Search Generative Experience — réponses IA dans les résultats Google." },
 
+  // ── Attribution IA (Sprint 2) ──
+  { term: 'Attribution IA', def: "Lien causal entre un crawl bot IA et la visite humaine qu'il a générée." },
+  { term: 'Fenêtre d\'attribution', def: "Période (30 jours stricts chez Crawlers) durant laquelle un crawl bot peut être crédité." },
+  { term: 'Multi-touch pondéré', def: "Modèle attribuant un poids exponentiel décroissant à chaque crawl bot dans la fenêtre." },
+  { term: 'Session fingerprint', def: "Identifiant anonyme SHA-256(UA+IP) déduplicant les visiteurs sans stocker l'IP." },
+  { term: 'Top attributed bot', def: "Crawler IA avec le poids le plus élevé pour une visite humaine donnée." },
+  { term: 'Bouclier Cloudflare', def: "Worker placé devant le site qui journalise et qualifie chaque requête bot IA." },
+
   // ── Performance ──
   { term: 'Core Web Vitals', def: "Métriques perf Google : LCP, INP, CLS." },
   { term: 'LCP', def: "Largest Contentful Paint — temps de chargement du plus grand élément (< 2.5s)." },
