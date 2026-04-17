@@ -10,7 +10,8 @@ import { LeadMagnetAudit } from '@/components/LeadMagnetAudit';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight, Bot, Shield, CheckCircle2, Search, AlertTriangle,
-  Eye, FileText, Zap, Globe, Brain, Target, BarChart3
+  Eye, FileText, Zap, Globe, Brain, Target, BarChart3,
+  Users, GitBranch, Fingerprint, Activity, Clock, TrendingUp
 } from 'lucide-react';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -184,6 +185,75 @@ const AnalyseBotsIA = () => {
                 </Card>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* AI Attribution → Human (Sprint 2) */}
+        <section className="py-16 md:py-24 border-t border-border">
+          <div className="mx-auto max-w-5xl px-4">
+            <div className="text-center mb-12">
+              <Badge variant="outline" className="mb-4 text-primary border-primary/30">
+                <GitBranch className="h-3 w-3 mr-1" /> Nouveau — Tracking GEO Sprint 2
+              </Badge>
+              <h2 className="text-3xl font-bold mb-4">Attribution Bot IA → Visite humaine</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Quand un bot IA crawle votre page puis qu'un humain arrive depuis ChatGPT, Claude ou Perplexity, 
+                nous corrélons les deux événements pour mesurer le <strong>vrai ROI</strong> de votre visibilité IA.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <Card className="border-border/50">
+                <CardContent className="p-6">
+                  <Clock className="h-8 w-8 text-primary mb-3" />
+                  <h3 className="font-semibold text-foreground mb-2">Fenêtre 30 jours stricte</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Corrélation entre un crawl bot et une visite humaine sur la même URL, dans une fenêtre temporelle de 30 jours maximum.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50">
+                <CardContent className="p-6">
+                  <Activity className="h-8 w-8 text-primary mb-3" />
+                  <h3 className="font-semibold text-foreground mb-2">Pondération exponentielle</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Modèle multi-touch <code className="text-xs">w(d) = e^(-d/15)</code> — un crawl récent pèse plus qu'un crawl ancien dans l'attribution.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50">
+                <CardContent className="p-6">
+                  <Fingerprint className="h-8 w-8 text-primary mb-3" />
+                  <h3 className="font-semibold text-foreground mb-2">Empreinte SHA-256</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Fingerprinting (UA + IP tronquée + Accept-Language) pour rapprocher les sessions sans cookie tiers.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-6 md:p-8">
+                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Ce que vous obtenez dans la Console
+                </h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <span><strong>Top URL attribuées</strong> — les pages que les humains visitent après un crawl IA</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <span><strong>Source IA dominante</strong> par URL (ChatGPT vs Perplexity vs Claude…)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <span><strong>Délai crawl → visite</strong> — combien de jours entre l'indexation IA et l'arrivée humaine</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
