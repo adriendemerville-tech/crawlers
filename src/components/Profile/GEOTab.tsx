@@ -17,6 +17,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
 import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
+import { GeoKpiBanner } from '@/components/Profile/geo/GeoKpiBanner';
+import { GeoQualityCard } from '@/components/Profile/geo/GeoQualityCard';
+import { GeoFanOutClustersCard } from '@/components/Profile/geo/GeoFanOutClustersCard';
+import { GeoDropDetectorCard } from '@/components/Profile/geo/GeoDropDetectorCard';
+import { GeoBotMixCard } from '@/components/Profile/geo/GeoBotMixCard';
 import { Loader2, Sparkles } from 'lucide-react';
 
 interface GEOTabProps {
@@ -142,6 +147,21 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
         </h1>
         <p className="text-sm text-muted-foreground mt-1">{t.description}</p>
         <p className="text-xs text-muted-foreground mt-1">{currentSite.domain}</p>
+      </div>
+
+      {/* Bandeau 7 KPIs GEO */}
+      <GeoKpiBanner trackedSiteId={currentSite.id} />
+
+      {/* Cartes : qualité contenu + fan-out */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <GeoQualityCard trackedSiteId={currentSite.id} />
+        <GeoFanOutClustersCard trackedSiteId={currentSite.id} />
+      </div>
+
+      {/* Drop Detector + Mix LLM */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <GeoDropDetectorCard trackedSiteId={currentSite.id} />
+        <GeoBotMixCard trackedSiteId={currentSite.id} />
       </div>
 
       {/* Profondeur LLM */}

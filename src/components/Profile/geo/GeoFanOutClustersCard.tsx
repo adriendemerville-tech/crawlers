@@ -36,7 +36,7 @@ export function GeoFanOutClustersCard({ trackedSiteId }: Props) {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        const list = Array.isArray(data?.cluster_coverage) ? (data!.cluster_coverage as ClusterCoverage[]) : [];
+        const list = Array.isArray(data?.cluster_coverage) ? (data!.cluster_coverage as unknown as ClusterCoverage[]) : [];
         setClusters(list.sort((a, b) => a.coverage - b.coverage).slice(0, 8));
         setLoading(false);
       });
