@@ -22,6 +22,9 @@ import { GeoQualityCard } from '@/components/Profile/geo/GeoQualityCard';
 import { GeoFanOutClustersCard } from '@/components/Profile/geo/GeoFanOutClustersCard';
 import { GeoDropDetectorCard } from '@/components/Profile/geo/GeoDropDetectorCard';
 import { GeoBotMixCard } from '@/components/Profile/geo/GeoBotMixCard';
+import { ShieldStatusCard } from '@/components/Profile/geo/ShieldStatusCard';
+import { AICrawlActivityCard } from '@/components/Profile/geo/AICrawlActivityCard';
+import { AIAttributionCard } from '@/components/Profile/geo/AIAttributionCard';
 import { Loader2, Sparkles } from 'lucide-react';
 
 interface GEOTabProps {
@@ -151,6 +154,13 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
 
       {/* Bandeau 7 KPIs GEO */}
       <GeoKpiBanner trackedSiteId={currentSite.id} />
+
+      {/* Sprint 2 — Shield / Crawl bots IA / Attribution humaine */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ShieldStatusCard trackedSiteId={currentSite.id} />
+        <AICrawlActivityCard trackedSiteId={currentSite.id} />
+        <AIAttributionCard trackedSiteId={currentSite.id} />
+      </div>
 
       {/* Cartes : qualité contenu + fan-out */}
       <div className="grid gap-4 lg:grid-cols-2">
