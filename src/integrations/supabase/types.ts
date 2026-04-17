@@ -466,6 +466,87 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_attribution_events: {
+        Row: {
+          ai_source: string
+          attributed_bot_hits: Json
+          attributed_count: number | null
+          attribution_model: string
+          attribution_window_days: number
+          country: string | null
+          created_at: string
+          domain: string
+          id: number
+          path: string
+          referer_full: string | null
+          session_fingerprint: string | null
+          source_bot_hit_id: number | null
+          top_attributed_bot: string | null
+          total_weight: number | null
+          tracked_site_id: string
+          url: string
+          user_id: string
+          visited_at: string
+        }
+        Insert: {
+          ai_source: string
+          attributed_bot_hits?: Json
+          attributed_count?: number | null
+          attribution_model?: string
+          attribution_window_days?: number
+          country?: string | null
+          created_at?: string
+          domain: string
+          id?: number
+          path: string
+          referer_full?: string | null
+          session_fingerprint?: string | null
+          source_bot_hit_id?: number | null
+          top_attributed_bot?: string | null
+          total_weight?: number | null
+          tracked_site_id: string
+          url: string
+          user_id: string
+          visited_at: string
+        }
+        Update: {
+          ai_source?: string
+          attributed_bot_hits?: Json
+          attributed_count?: number | null
+          attribution_model?: string
+          attribution_window_days?: number
+          country?: string | null
+          created_at?: string
+          domain?: string
+          id?: number
+          path?: string
+          referer_full?: string | null
+          session_fingerprint?: string | null
+          source_bot_hit_id?: number | null
+          top_attributed_bot?: string | null
+          total_weight?: number | null
+          tracked_site_id?: string
+          url?: string
+          user_id?: string
+          visited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_attribution_events_source_bot_hit_id_fkey"
+            columns: ["source_bot_hit_id"]
+            isOneToOne: false
+            referencedRelation: "bot_hits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_attribution_events_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_gateway_usage: {
         Row: {
           completion_tokens: number | null
@@ -12204,6 +12285,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "revenue_events_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_ai_attribution_by_source: {
+        Row: {
+          ai_source: string | null
+          attributed_crawls: number | null
+          avg_attribution_weight: number | null
+          distinct_pages: number | null
+          domain: string | null
+          last_visit_at: string | null
+          tracked_site_id: string | null
+          user_id: string | null
+          visits_30d: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_attribution_events_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_ai_attribution_by_url: {
+        Row: {
+          attributed_crawls: number | null
+          distinct_sources: number | null
+          domain: string | null
+          last_visit_at: string | null
+          path: string | null
+          top_bot: string | null
+          top_source: string | null
+          tracked_site_id: string | null
+          user_id: string | null
+          visits_30d: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_attribution_events_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
             referencedRelation: "tracked_sites"
