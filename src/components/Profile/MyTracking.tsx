@@ -688,12 +688,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                         </TabsTrigger>
                       </TabsList>
                       <TabsContent value="kpis" className="space-y-4">
-                        {/* LLM Visibility Dashboard */}
-                        <LLMVisibilityDashboard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} />
-
-                        {/* LLM Depth */}
-                        <LLMDepthCard trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} userId={h.user?.id || ''} key={`llm-depth-${h.currentSite.id}-${h.llmBenchmarkRefreshKey}`} />
-
+                        {/* LLM Visibility & Depth moved to GEO tab */}
                         {/* Fan-Out Radar */}
                         <FanOutRadarWidget trackedSiteId={h.currentSite.id} domain={h.currentSite.domain} />
 
