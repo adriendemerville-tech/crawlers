@@ -255,69 +255,13 @@ export function CROReportPreviewModal({ isOpen, onClose, data, domain }: CRORepo
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      const { default: html2canvas } = await import('html2canvas');
-      const { default: jsPDF } = await import('jspdf');
-
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;border:none;';
-      document.body.appendChild(iframe);
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc) throw new Error('Cannot access iframe');
-      iframeDoc.open();
-      iframeDoc.write(htmlContent);
-      iframeDoc.close();
-
-      await new Promise((r) => setTimeout(r, 2000));
-
-      const container = iframeDoc.querySelector('.container') || iframeDoc.body;
-      const sections = Array.from(container.children) as HTMLElement[];
-
-      const doc = new jsPDF('p', 'mm', 'a4');
-      const pdfW = 210, pdfH = 297, mT = 15, mB = 15, mS = 10;
-      const uW = pdfW - mS * 2, uH = pdfH - mT - mB;
-      let curY = mT;
-      let first = true;
-
-      for (const section of sections) {
-        const canvas = await html2canvas(section, {
-          scale: 2, useCORS: true, allowTaint: true, width: 900 - 48, windowWidth: 900, logging: false, backgroundColor: '#f8fafc',
-        });
-        const imgData = canvas.toDataURL('image/png');
-        const sH = (canvas.height * uW) / canvas.width;
-
-        if (curY + sH <= pdfH - mB) {
-          doc.addImage(imgData, 'PNG', mS, curY, uW, sH);
-          curY += sH + 2;
-        } else if (sH <= uH) {
-          if (!first || curY > mT + 5) { doc.addPage(); curY = mT; }
-          doc.addImage(imgData, 'PNG', mS, curY, uW, sH);
-          curY += sH + 2;
-        } else {
-          const pxPerMm = canvas.height / sH;
-          let srcY = 0, rem = sH;
-          while (rem > 0) {
-            const space = (pdfH - mB) - curY;
-            const sliceH = Math.min(rem, space);
-            const slicePx = Math.round(sliceH * pxPerMm);
-            const sc = document.createElement('canvas');
-            sc.width = canvas.width; sc.height = slicePx;
-            const ctx = sc.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(canvas, 0, srcY, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
-              doc.addImage(sc.toDataURL('image/png'), 'PNG', mS, curY, uW, sliceH);
-            }
-            srcY += slicePx; rem -= sliceH; curY += sliceH;
-            if (rem > 0) { doc.addPage(); curY = mT; }
-          }
-          curY += 2;
-        }
-        first = false;
-      }
-
-      document.body.removeChild(iframe);
-
+      const { generateSectionBasedPDF } = await import('@/utils/sectionBasedPdfExport');
       const { getReportFilename } = await import('@/utils/reportFilename');
-      doc.save(getReportFilename(domain, 'cro' as any, 'pdf'));
+      await generateSectionBasedPDF({
+        htmlContent,
+        filename: getReportFilename(domain, 'cro' as any, 'pdf'),
+        iframeWidth: 900,
+      });
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error('Erreur lors de la génération du PDF');
