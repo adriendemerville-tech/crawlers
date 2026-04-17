@@ -220,6 +220,25 @@ async function estimateSiteComplexity(supabase: SupabaseClient, tracked_site_id?
   return 0;
 }
 
+// Extract `angle_gaps` from saturation snapshot clusters (Saturation Intelligence v1).
+// Returns up to 8 distinct gap labels, ordered by appearance in priority clusters.
+function extractAngleGaps(
+  intel: Record<string, unknown> | null,
+): string[] {
+  if (!intel) return [];
+  const clusters = (intel.clusters as Array<Record<string, unknown>>) || [];
+  const gaps: string[] = [];
+  for (const c of clusters) {
+    const list = (c.angle_gaps as string[]) || [];
+    for (const g of list) {
+      if (g && !gaps.includes(g)) gaps.push(g);
+      if (gaps.length >= 8) break;
+    }
+    if (gaps.length >= 8) break;
+  }
+  return gaps;
+}
+
 // ----------------------------------------------------------------------------
 // STAGE 0 — BRIEFING PACKET
 // ----------------------------------------------------------------------------
@@ -274,6 +293,30 @@ async function stage0_briefing(
     }
   }
 
+  // ── Saturation Intelligence v1 — pull latest weekly snapshot (Job 3 output)
+  // Provides angle_gaps + saturation_score per priority cluster, computed once/week
+  // by cron-saturation-analysis. Lets the strategist avoid topics already saturated
+  // and prioritise gaps with high opportunity. Non-blocking : null-safe if absent.
+  let saturation_intel: Record<string, unknown> | null = null;
+  if (input.tracked_site_id) {
+    const { data: snap } = await supabase
+      .from("saturation_snapshots")
+      .select("clusters, global_score, generated_at")
+      .eq("tracked_site_id", input.tracked_site_id)
+      .order("generated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (snap) {
+      saturation_intel = {
+        global_score: snap.global_score,
+        clusters: snap.clusters,
+        snapshot_age_days: Math.round(
+          (Date.now() - new Date(snap.generated_at as string).getTime()) / 86_400_000,
+        ),
+      };
+    }
+  }
+
   const briefing: BriefingPacket = {
     domain: input.domain,
     content_type: input.content_type,
@@ -281,7 +324,7 @@ async function stage0_briefing(
     briefing_data: {
       angle_hints: (workbench ?? []).map((w) => w.title),
       keywords: (keywords ?? []).map((k) => k.keyword as string),
-      competitor_gaps: [],
+      competitor_gaps: extractAngleGaps(saturation_intel),
       seasonal_context: (seasonal ?? []).map((s) => s.event_name as string).join(", ") || null,
       spiral_phase: null,
       workbench_findings: (workbench ?? []).map((w) => ({
@@ -289,12 +332,13 @@ async function stage0_briefing(
         severity: w.severity as string,
         description: w.description as string | undefined,
       })),
-      business_context,
+      business_context: { ...business_context, saturation_intel },
     },
     source_signals: {
       workbench_count: workbench?.length ?? 0,
       keywords_count: keywords?.length ?? 0,
       seasonal_count: seasonal?.length ?? 0,
+      saturation_snapshot: saturation_intel ? "present" : "absent",
     },
     workbench_item_ids: (workbench ?? []).map((w) => w.id as string),
     spiral_phase: null,
