@@ -7,9 +7,9 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
-  Settings, FileText, CheckSquare, Wallet, Lock, Radar, Crown, Bug,
+  Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
-  Shield, Code2, ChevronDown,
+  Shield, Code2, ChevronDown, Search, Sparkles,
 } from 'lucide-react';
 
 interface TrackedSite {
@@ -30,17 +30,17 @@ interface SidebarItem {
 
 const translations = {
   fr: {
-    tracking: 'Mes sites', actionPlans: 'Plans d\'Action', correctiveCodes: '<Scripts>',
+    tracking: 'SEO', geo: 'GEO', actionPlans: 'Plans d\'Action', correctiveCodes: '<Scripts>',
     wallet: 'Portefeuille', reports: 'Rapports', settings: 'Paramètres', creator: 'Créateur',
     allSites: 'Tous les sites',
   },
   en: {
-    tracking: 'My Sites', actionPlans: 'Action Plans', correctiveCodes: '<Scripts>',
+    tracking: 'SEO', geo: 'GEO', actionPlans: 'Action Plans', correctiveCodes: '<Scripts>',
     wallet: 'Wallet', reports: 'Reports', settings: 'Settings', creator: 'Creator',
     allSites: 'All sites',
   },
   es: {
-    tracking: 'Mis sitios', actionPlans: 'Planes de Acción', correctiveCodes: '<Scripts>',
+    tracking: 'SEO', geo: 'GEO', actionPlans: 'Planes de Acción', correctiveCodes: '<Scripts>',
     wallet: 'Billetera', reports: 'Informes', settings: 'Configuración', creator: 'Creador',
     allSites: 'Todos los sitios',
   },
@@ -93,7 +93,8 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
   // Main navigation items
   const items: SidebarItem[] = [
-    { value: 'tracking', label: t.tracking, icon: Radar },
+    { value: 'tracking', label: t.tracking, icon: Search },
+    { value: 'geo', label: t.geo, icon: Sparkles },
     { value: 'action-plans', label: t.actionPlans, icon: CheckSquare, hideOnMobile: true },
     { value: 'corrective-codes', label: t.correctiveCodes, icon: Code2, hideOnMobile: true },
     { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true },
