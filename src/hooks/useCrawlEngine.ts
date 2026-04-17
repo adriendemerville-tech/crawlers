@@ -505,7 +505,9 @@ export function useCrawlEngine() {
 
       const total = detectedUrls.length;
       if (total > 0) {
-        setMaxPages(Math.min(total, isAdmin ? 500 : maxSliderCap));
+        // Max slider = nombre de pages détectées (admin/agency+ illimité, autres bornés au cap plan)
+        const cap = (isAdmin || isAgencyPlus) ? total : Math.min(total, maxSliderCap);
+        setMaxPages(cap);
       }
 
       setDetectionDone(true);
