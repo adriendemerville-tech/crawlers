@@ -358,6 +358,45 @@ export default function FeaturesCocoon() {
           </div>
         </section>
 
+        {/* Saturation Intelligence (weekly) */}
+        <section className="py-20 px-4 border-t border-[hsl(263,70%,15%)]">
+          <div className="max-w-5xl mx-auto space-y-10">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-bold text-white font-display">
+                Cocoon vivant — <span className="text-[#fbbf24]">rafraîchissement hebdomadaire</span>
+              </h2>
+              <p className="text-white/50 max-w-2xl mx-auto">
+                Tous les dimanches, le cocoon se recalcule automatiquement et son cache CMS est synchronisé.
+                Une analyse LLM ciblée mesure ensuite la saturation thématique des clusters prioritaires
+                pour orienter la production éditoriale vers les vrais gaps.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { time: '02:00 UTC', title: 'Cocoon refresh', desc: 'Recalcul du graphe orienté pondéré, détection de nouvelles cannibalisations, mise à jour des clusters.' },
+                { time: '03:00 UTC', title: 'CMS cache refresh', desc: 'Synchronisation WordPress, Shopify, IKtracker, Drupal, Odoo, PrestaShop pour disposer du contenu à jour.' },
+                { time: '04:00 UTC', title: 'Saturation LLM', desc: 'Top 5 clusters prioritaires uniquement (spiral_score ≥ 50). Gemini 3 Flash extrait les angles, Gemini 2.5 Pro synthétise score + gaps.' },
+              ].map((j, i) => (
+                <div key={j.title} className="p-6 rounded-xl border border-[hsl(263,70%,15%)] bg-[#0f0a1e]/80">
+                  <div className="text-xs font-mono text-[#a78bfa] mb-2">{j.time}</div>
+                  <h3 className="font-semibold text-white mb-2">Job {i + 1} — {j.title}</h3>
+                  <p className="text-sm text-white/50 leading-relaxed">{j.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-5 rounded-xl border border-[#fbbf24]/20 bg-[#fbbf24]/5">
+              <p className="text-[#fbbf24] font-semibold mb-2">Économie d'échelle</p>
+              <p className="text-sm text-white/60 leading-relaxed">
+                L'analyse LLM ne tourne que sur les clusters flaggés prioritaires par le scoring local et le moteur cocoon —
+                coût moyen <strong className="text-white">~0,09 €/site/semaine</strong>. Le snapshot est injecté dans le Stage 0
+                du pipeline éditorial pour éviter de publier un contenu sur un angle déjà saturé.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* CTA */}
         <section className="py-20 px-4 border-t border-[hsl(263,70%,15%)]">
           <div className="max-w-2xl mx-auto text-center space-y-8">

@@ -505,6 +505,45 @@ function BreathingSpiralPage() {
             </div>
           </section>
 
+          {/* ── Saturation Intelligence (weekly) ── */}
+          <section className="py-16 sm:py-20 bg-muted/30">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 text-center">
+                Intelligence de saturation hebdomadaire
+              </h2>
+              <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
+                Tous les dimanches, trois jobs autonomes recalculent l'état du site et alimentent le pipeline éditorial
+                avec un signal de <strong>saturation thématique</strong>. Objectif : ne jamais publier un contenu sur un angle déjà saturé,
+                concentrer la production sur les <strong>gaps angulaires</strong> à fort potentiel.
+              </p>
+
+              <div className="grid sm:grid-cols-3 gap-6 mb-10">
+                {[
+                  { time: '02:00 UTC', title: 'Cocoon refresh', desc: 'Recalcul du graphe de maillage interne pour chaque site activé. Détection des nouvelles cannibalisations et des évolutions de profondeur.' },
+                  { time: '03:00 UTC', title: 'CMS cache refresh', desc: 'Synchronisation des contenus publiés (WordPress, Shopify, IKtracker, Drupal, Odoo, PrestaShop). Base à jour pour la suite.' },
+                  { time: '04:00 UTC', title: 'Saturation LLM', desc: 'Analyse ciblée des clusters prioritaires (spiral_score ≥ 50). Gemini 3 Flash extrait les angles, Gemini 2.5 Pro synthétise score + gaps.' },
+                ].map((j, i) => (
+                  <Card key={j.title}>
+                    <CardContent className="pt-6">
+                      <div className="text-xs font-mono text-primary mb-2">{j.time}</div>
+                      <h3 className="font-semibold text-foreground mb-2">Job {i + 1} — {j.title}</h3>
+                      <p className="text-sm text-muted-foreground">{j.desc}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="p-4 rounded-lg bg-card border text-sm text-muted-foreground">
+                <p className="text-foreground font-semibold mb-2">Économie d'échelle</p>
+                <p>
+                  L'analyse LLM ne porte que sur les clusters flaggés prioritaires par le scoring local et le moteur cocoon.
+                  Coût moyen : <strong>~0,09 €/site/semaine</strong>. Le snapshot est ensuite injecté automatiquement dans le Stage 0
+                  du pipeline éditorial pour orienter chaque génération vers un angle non-saturé.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* ── GEO Elegance Section ── */}
           <section className="py-16 sm:py-20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6">
