@@ -220,6 +220,25 @@ async function estimateSiteComplexity(supabase: SupabaseClient, tracked_site_id?
   return 0;
 }
 
+// Extract `angle_gaps` from saturation snapshot clusters (Saturation Intelligence v1).
+// Returns up to 8 distinct gap labels, ordered by appearance in priority clusters.
+function extractAngleGaps(
+  intel: Record<string, unknown> | null,
+): string[] {
+  if (!intel) return [];
+  const clusters = (intel.clusters as Array<Record<string, unknown>>) || [];
+  const gaps: string[] = [];
+  for (const c of clusters) {
+    const list = (c.angle_gaps as string[]) || [];
+    for (const g of list) {
+      if (g && !gaps.includes(g)) gaps.push(g);
+      if (gaps.length >= 8) break;
+    }
+    if (gaps.length >= 8) break;
+  }
+  return gaps;
+}
+
 // ----------------------------------------------------------------------------
 // STAGE 0 — BRIEFING PACKET
 // ----------------------------------------------------------------------------
