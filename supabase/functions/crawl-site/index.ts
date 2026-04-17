@@ -195,23 +195,24 @@ Deno.serve(handleRequest(async (req) => {
       const spiderKey = Deno.env.get('SPIDER_API_KEY');
       if (spiderKey) {
         try {
-          const spiderRes = await fetch(`${SPIDER_API}/crawl`, {
+          // Use /links endpoint (URL-only, lightweight) instead of /crawl (full HTML, memory-heavy)
+          const spiderRes = await fetch(`${SPIDER_API}/links`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${spiderKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: normalizedUrl, limit, return_format: 'raw', depth: 0, request: 'http' }),
+            body: JSON.stringify({ url: normalizedUrl, limit, depth: 2, request: 'http' }),
           });
           if (spiderRes.ok) {
             const spiderData = await spiderRes.json();
             const spiderUrls = Array.isArray(spiderData)
-              ? spiderData.map((p: any) => p.url).filter(Boolean)
-              : [];
+              ? spiderData.map((p: any) => typeof p === 'string' ? p : p.url).filter(Boolean)
+              : (Array.isArray(spiderData?.links) ? spiderData.links : []);
             if (spiderUrls.length > 0) {
-              await trackPaidApiCall('crawl-site', 'spider', '/crawl', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-spider-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
-              console.log(`[${logId}] Spider.cloud map: ${spiderUrls.length} URLs`);
+              await trackPaidApiCall('crawl-site', 'spider', '/links', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-spider-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
+              console.log(`[${logId}] Spider.cloud links: ${spiderUrls.length} URLs`);
               return filterNonPageUrls(spiderUrls);
             }
           } else {
-            console.warn(`[${logId}] Spider.cloud map failed (${spiderRes.status})`);
+            console.warn(`[${logId}] Spider.cloud links failed (${spiderRes.status})`);
           }
         } catch (e) {
           console.warn(`[${logId}] Spider.cloud exception:`, e);
