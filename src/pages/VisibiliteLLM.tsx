@@ -10,7 +10,8 @@ import { LeadMagnetAudit } from '@/components/LeadMagnetAudit';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight, Brain, MessageSquare, Search, Target, Zap,
-  BarChart3, CheckCircle2, TrendingUp, Eye, BookOpen, Globe
+  BarChart3, CheckCircle2, TrendingUp, Eye, BookOpen, Globe,
+  Sparkles, Network, AlertTriangle, Layers, Gauge, Award
 } from 'lucide-react';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
