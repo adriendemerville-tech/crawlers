@@ -1620,6 +1620,77 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_hits: {
+        Row: {
+          bot_family: string | null
+          bot_name: string | null
+          cf_ray: string | null
+          country: string | null
+          domain: string
+          hit_at: string
+          id: number
+          ip_hash: string | null
+          is_ai_bot: boolean
+          is_human_sample: boolean
+          path: string | null
+          raw_meta: Json | null
+          referer: string | null
+          status_code: number | null
+          tracked_site_id: string
+          url: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          bot_family?: string | null
+          bot_name?: string | null
+          cf_ray?: string | null
+          country?: string | null
+          domain: string
+          hit_at?: string
+          id?: number
+          ip_hash?: string | null
+          is_ai_bot?: boolean
+          is_human_sample?: boolean
+          path?: string | null
+          raw_meta?: Json | null
+          referer?: string | null
+          status_code?: number | null
+          tracked_site_id: string
+          url: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          bot_family?: string | null
+          bot_name?: string | null
+          cf_ray?: string | null
+          country?: string | null
+          domain?: string
+          hit_at?: string
+          id?: number
+          ip_hash?: string | null
+          is_ai_bot?: boolean
+          is_human_sample?: boolean
+          path?: string | null
+          raw_meta?: Json | null
+          referer?: string | null
+          status_code?: number | null
+          tracked_site_id?: string
+          url?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_hits_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bundle_api_catalog: {
         Row: {
           api_name: string
@@ -1743,6 +1814,86 @@ export type Database = {
             foreignKeyName: "canva_connections_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cf_shield_configs: {
+        Row: {
+          cf_account_id: string | null
+          cf_route_pattern: string | null
+          cf_token_encrypted: string | null
+          cf_worker_name: string | null
+          cf_zone_id: string | null
+          created_at: string
+          deployed_at: string | null
+          deployment_mode: string
+          domain: string
+          hits_last_24h: number | null
+          hits_total: number | null
+          human_sample_rate: number
+          id: string
+          ingestion_secret: string
+          last_error: string | null
+          last_hit_at: string | null
+          last_verified_at: string | null
+          status: string
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cf_account_id?: string | null
+          cf_route_pattern?: string | null
+          cf_token_encrypted?: string | null
+          cf_worker_name?: string | null
+          cf_zone_id?: string | null
+          created_at?: string
+          deployed_at?: string | null
+          deployment_mode?: string
+          domain: string
+          hits_last_24h?: number | null
+          hits_total?: number | null
+          human_sample_rate?: number
+          id?: string
+          ingestion_secret?: string
+          last_error?: string | null
+          last_hit_at?: string | null
+          last_verified_at?: string | null
+          status?: string
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cf_account_id?: string | null
+          cf_route_pattern?: string | null
+          cf_token_encrypted?: string | null
+          cf_worker_name?: string | null
+          cf_zone_id?: string | null
+          created_at?: string
+          deployed_at?: string | null
+          deployment_mode?: string
+          domain?: string
+          hits_last_24h?: number | null
+          hits_total?: number | null
+          human_sample_rate?: number
+          id?: string
+          ingestion_secret?: string
+          last_error?: string | null
+          last_hit_at?: string | null
+          last_verified_at?: string | null
+          status?: string
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cf_shield_configs_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: true
             referencedRelation: "tracked_sites"
             referencedColumns: ["id"]
           },
@@ -11694,6 +11845,83 @@ export type Database = {
       }
     }
     Views: {
+      cf_shield_configs_safe: {
+        Row: {
+          cf_account_id: string | null
+          cf_route_pattern: string | null
+          cf_worker_name: string | null
+          cf_zone_id: string | null
+          created_at: string | null
+          deployed_at: string | null
+          deployment_mode: string | null
+          domain: string | null
+          has_token: boolean | null
+          hits_last_24h: number | null
+          hits_total: number | null
+          human_sample_rate: number | null
+          id: string | null
+          last_error: string | null
+          last_hit_at: string | null
+          last_verified_at: string | null
+          status: string | null
+          tracked_site_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cf_account_id?: string | null
+          cf_route_pattern?: string | null
+          cf_worker_name?: string | null
+          cf_zone_id?: string | null
+          created_at?: string | null
+          deployed_at?: string | null
+          deployment_mode?: string | null
+          domain?: string | null
+          has_token?: never
+          hits_last_24h?: number | null
+          hits_total?: number | null
+          human_sample_rate?: number | null
+          id?: string | null
+          last_error?: string | null
+          last_hit_at?: string | null
+          last_verified_at?: string | null
+          status?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cf_account_id?: string | null
+          cf_route_pattern?: string | null
+          cf_worker_name?: string | null
+          cf_zone_id?: string | null
+          created_at?: string | null
+          deployed_at?: string | null
+          deployment_mode?: string | null
+          domain?: string | null
+          has_token?: never
+          hits_last_24h?: number | null
+          hits_total?: number | null
+          human_sample_rate?: number | null
+          id?: string | null
+          last_error?: string | null
+          last_hit_at?: string | null
+          last_verified_at?: string | null
+          status?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cf_shield_configs_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: true
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cms_connections_safe: {
         Row: {
           auth_method: string | null
@@ -12048,6 +12276,10 @@ export type Database = {
       cleanup_expired_phone_callbacks: { Args: never; Returns: undefined }
       cleanup_expired_roles: { Args: never; Returns: undefined }
       cleanup_stale_sessions: { Args: never; Returns: number }
+      compute_ai_traffic_ratio: {
+        Args: { p_tracked_site_id: string; p_window_days?: number }
+        Returns: Json
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -12181,6 +12413,10 @@ export type Database = {
         }[]
       }
       recalculate_reliability: { Args: never; Returns: undefined }
+      resolve_human_sample_rate: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       resolve_identity_priority: {
         Args: { p_tracked_site_id: string }
         Returns: Json
