@@ -161,13 +161,6 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
       category: t.categories.monitoring,
       items: [
         {
-          icon: LayoutDashboard,
-          title: lang === 'fr' ? 'Ma Console' : lang === 'es' ? 'Mi Consola' : 'My Console',
-          description: lang === 'fr' ? 'Cockpit unifié SEO, GEO, contenu, plans d\'action et reporting dans un seul écran.' : lang === 'es' ? 'Cockpit unificado SEO, GEO, contenido, planes de acción y reporting en una sola pantalla.' : 'Unified cockpit: SEO, GEO, content, action plans and reporting in a single screen.',
-          href: '/features/console',
-          color: 'from-violet-500 to-fuchsia-600',
-        },
-        {
           icon: Globe,
           title: 'Score GEO',
           description: lang === 'fr' ? 'Mesurez votre visibilité dans les moteurs de recherche génératifs (ChatGPT, Gemini…).' : lang === 'es' ? 'Mida su visibilidad en los motores de búsqueda generativos.' : 'Measure your visibility in generative search engines (ChatGPT, Gemini…).',
