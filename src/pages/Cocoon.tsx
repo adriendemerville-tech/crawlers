@@ -6,7 +6,7 @@ import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useAISidebar } from "@/contexts/AISidebarContext";
+// useAISidebar removed: AISidebarPageWrapper handles the layout offset globally
 import { useCocoonTheme } from "@/hooks/useCocoonTheme";
 import { CocoonForceGraph3D } from "@/components/Cocoon/CocoonForceGraph3D";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
@@ -192,7 +192,7 @@ function CocoonContent() {
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();
-  const { cocoonExpanded } = useAISidebar();
+  // cocoonExpanded handled by AISidebarPageWrapper (paddingLeft) — no double offset here
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
@@ -728,7 +728,7 @@ function CocoonContent() {
         </div>
       )}
 
-      <div className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e] transition-all duration-300 ease-in-out" style={{ marginLeft: cocoonExpanded ? '28rem' : undefined }}>
+      <div className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e] transition-all duration-300 ease-in-out">
 
         {/* Top Bar */}
         {!isFullscreen && (
