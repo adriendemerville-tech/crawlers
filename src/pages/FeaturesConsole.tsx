@@ -7,6 +7,7 @@ import {
   Target, Globe, Store, Anchor, FileBox, Wallet, Crown, Settings, Shield,
   Network, Radio, ChevronRight, MonitorSmartphone, Layers, Eye,
 } from 'lucide-react';
+import consolePreview from '@/assets/console-preview.webp';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -47,6 +48,37 @@ export default function FeaturesConsole() {
       <Header />
 
       <main className="container mx-auto px-4 py-16 sm:py-24 max-w-6xl">
+        {/* Animated console preview */}
+        <section className="mb-16 -mt-4">
+          <div className="relative rounded-2xl overflow-hidden border border-border/60 bg-card/30 shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.35)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none z-10" />
+            <img
+              src={consolePreview}
+              alt="Aperçu animé de la console Crawlers : sidebar latérale, KPI, courbes de trafic et tableau de données"
+              width={1600}
+              height={1024}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              className="w-full h-auto block console-preview-anim"
+            />
+          </div>
+          <style>{`
+            @keyframes consolePreviewPan {
+              0%   { transform: scale(1.02) translate3d(0, 0, 0); }
+              50%  { transform: scale(1.06) translate3d(-1.5%, -1%, 0); }
+              100% { transform: scale(1.02) translate3d(0, 0, 0); }
+            }
+            .console-preview-anim {
+              animation: consolePreviewPan 18s ease-in-out infinite;
+              will-change: transform;
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .console-preview-anim { animation: none; }
+            }
+          `}</style>
+        </section>
+
         {/* Hero */}
         <section className="text-center space-y-6 mb-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/60 bg-card/40 text-xs uppercase tracking-widest text-muted-foreground">
