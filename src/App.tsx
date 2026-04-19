@@ -97,6 +97,7 @@ const APropos = lazy(() => import("./pages/APropos"));
 const AuditSemantique = lazy(() => import("./pages/AuditSemantique"));
 const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
 const ApiIntegrations = lazy(() => import("./pages/ApiIntegrations"));
+const CfShield = lazy(() => import("./pages/CfShield"));
 const ConversionOptimizer = lazy(() => import("./pages/ConversionOptimizer"));
 const ConversionOptimizerLanding = lazy(() => import("./pages/ConversionOptimizerLanding"));
 const BotActivity = lazy(() => import("./pages/BotActivity"));
