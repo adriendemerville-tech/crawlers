@@ -56,8 +56,8 @@ export function ShieldOnboardingBanner({ trackedSiteId, domain }: Props) {
         </div>
         <div className="flex shrink-0 gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link to="/guide/bouclier-cloudflare-ai-bots">
-              Voir la procédure
+            <Link to={`/cf-shield?site=${trackedSiteId}`}>
+              Activer le bouclier
               <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
             </Link>
           </Button>

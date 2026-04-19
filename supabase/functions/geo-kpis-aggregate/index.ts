@@ -50,15 +50,21 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Auth user
+    // Auth — accepte user JWT OU service role (cron interne)
     const authHeader = req.headers.get('Authorization') || '';
     const token = authHeader.replace('Bearer ', '');
-    const { data: userData } = await supabase.auth.getUser(token);
-    if (!userData?.user) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const isServiceCall = token === SUPABASE_SERVICE_ROLE_KEY;
+
+    let callerUserId: string | null = null;
+    if (!isServiceCall) {
+      const { data: userData } = await supabase.auth.getUser(token);
+      if (!userData?.user) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      callerUserId = userData.user.id;
     }
 
     const body = (await req.json().catch(() => ({}))) as RequestBody;
@@ -69,14 +75,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Vérifier ownership du site
+    // Vérifier ownership du site (sauf service call)
     const { data: site } = await supabase
       .from('tracked_sites')
       .select('id, domain, user_id')
       .eq('id', body.tracked_site_id)
       .maybeSingle();
 
-    if (!site || site.user_id !== userData.user.id) {
+    if (!site || (!isServiceCall && site.user_id !== callerUserId)) {
       return new Response(JSON.stringify({ error: 'forbidden' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
