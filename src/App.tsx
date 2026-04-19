@@ -224,6 +224,7 @@ const App = () => (
                           <Route path="/audit-semantique" element={<AuditSemantique />} />
                           <Route path="/google-business" element={<GoogleBusinessPage />} />
                           <Route path="/api-integrations" element={<ApiIntegrations />} />
+                          <Route path="/cf-shield" element={<CfShield />} />
                           <Route path="/app/conversion-optimizer" element={<ConversionOptimizer />} />
                           <Route path="/app/bot-activity" element={<BotActivity />} />
                           <Route path="/app/social" element={<SocialHub />} />
