@@ -25,6 +25,7 @@ import { GeoBotMixCard } from '@/components/Profile/geo/GeoBotMixCard';
 import { ShieldStatusCard } from '@/components/Profile/geo/ShieldStatusCard';
 import { AICrawlActivityCard } from '@/components/Profile/geo/AICrawlActivityCard';
 import { AIAttributionCard } from '@/components/Profile/geo/AIAttributionCard';
+import { ShieldOnboardingBanner } from '@/components/Profile/geo/ShieldOnboardingBanner';
 import { Loader2, Sparkles } from 'lucide-react';
 
 interface GEOTabProps {
@@ -151,6 +152,9 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
         <p className="text-sm text-muted-foreground mt-1">{t.description}</p>
         <p className="text-xs text-muted-foreground mt-1">{currentSite.domain}</p>
       </div>
+
+      {/* Onboarding Shield si non déployé */}
+      <ShieldOnboardingBanner trackedSiteId={currentSite.id} domain={currentSite.domain} />
 
       {/* Bandeau 7 KPIs GEO */}
       <GeoKpiBanner trackedSiteId={currentSite.id} />
