@@ -90,7 +90,12 @@ export default function BotActivityPage() {
     const { data } = await query;
 
     if (data) {
-      let filtered = data.map(e => ({ ...e, domain: domainMap[e.tracked_site_id] }));
+      let filtered: BotEntry[] = (data as any[]).map(e => ({
+        ...e,
+        domain: domainMap[e.tracked_site_id],
+        verification_status: e.verification_status as BotEntry['verification_status'],
+        verification_method: e.verification_method as BotEntry['verification_method'],
+      }));
 
       if (selectedIntent !== 'all') {
         filtered = filtered.filter(e => getBotIntent(e.bot_name) === selectedIntent);
