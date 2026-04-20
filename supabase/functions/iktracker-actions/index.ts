@@ -219,6 +219,61 @@ const STOP_WORDS = new Set([
   'article', 'tout', 'savoir', 'connaitre', 'comprendre', 'the', 'and', 'for',
 ])
 
+/**
+ * Domain-specific synonym clusters — words within the same cluster
+ * are considered semantically equivalent for dedup purposes.
+ * Each cluster represents a single concept.
+ */
+const SYNONYM_CLUSTERS: string[][] = [
+  // IKtracker domain: all terms related to "frais réels vs forfait"
+  ['frais', 'reels', 'bareme', 'kilometrique', 'abattement', 'forfaitaire', 'forfait', 'indemnites', 'kilométriques', 'ik'],
+  ['impots', 'impot', 'fiscal', 'fiscaux', 'fiscale', 'declaration', 'deduction', 'deduire', 'deductible'],
+  ['voiture', 'vehicule', 'auto', 'automobile', 'deplacement', 'trajet', 'kilometrage', 'km'],
+]
+
+/** Map each synonym to its cluster index for fast lookup */
+const SYNONYM_MAP = new Map<string, number>()
+for (let i = 0; i < SYNONYM_CLUSTERS.length; i++) {
+  for (const word of SYNONYM_CLUSTERS[i]) {
+    SYNONYM_MAP.set(normalizeForComparison(word), i)
+  }
+}
+
+/** 
+ * Compute topic fingerprint: maps each word to its synonym cluster ID,
+ * then returns the set of cluster IDs present in the text.
+ * Two texts sharing ≥50% of cluster IDs are considered same-topic.
+ */
+function topicFingerprint(text: string): Set<number> {
+  const normalized = normalizeForComparison(text)
+  const words = normalized.split(' ').filter(w => w.length > 2 && !STOP_WORDS.has(w))
+  const clusters = new Set<number>()
+  for (const w of words) {
+    const cid = SYNONYM_MAP.get(w)
+    if (cid !== undefined) clusters.add(cid)
+  }
+  return clusters
+}
+
+/** 
+ * Compute synonym-aware topic overlap between two titles.
+ * Maps words to synonym clusters, then computes Jaccard on cluster IDs.
+ */
+function synonymAwareOverlap(a: string, b: string): number {
+  const fpA = topicFingerprint(a)
+  const fpB = topicFingerprint(b)
+  // Also include non-synonym core keywords
+  const coreA = extractCoreKeywords(a)
+  const coreB = extractCoreKeywords(b)
+  // Merge: cluster IDs (as negative numbers to avoid collision) + core words
+  const setA = new Set<string>([...Array.from(fpA).map(c => `~${c}`), ...coreA])
+  const setB = new Set<string>([...Array.from(fpB).map(c => `~${c}`), ...coreB])
+  if (setA.size === 0 || setB.size === 0) return 0
+  let intersection = 0
+  for (const w of setA) { if (setB.has(w)) intersection++ }
+  return intersection / Math.min(setA.size, setB.size)
+}
+
 /** Extract core keywords from a title (words that carry real topic meaning) */
 function extractCoreKeywords(text: string): Set<string> {
   const normalized = normalizeForComparison(text)
@@ -243,8 +298,6 @@ function coreTopicOverlap(a: string, b: string): number {
   if (coreA.size === 0 || coreB.size === 0) return 0
   let intersection = 0
   for (const w of coreA) { if (coreB.has(w)) intersection++ }
-  // Use the smaller set as denominator — if all core words of one title
-  // appear in the other, they cover the same topic
   return intersection / Math.min(coreA.size, coreB.size)
 }
 
