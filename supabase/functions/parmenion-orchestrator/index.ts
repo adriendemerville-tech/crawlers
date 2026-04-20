@@ -19,6 +19,7 @@ import { buildPhaseInstructions } from '../_shared/parmenion/prompts.ts';
 import { enrichKeywordsForPrescribe } from '../_shared/parmenion/keywordEnrichment.ts';
 import { callLLMWithTools } from '../_shared/parmenion/llmClient.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
+import { loadPersonaRotation, buildPersonaPromptBlock, recordPersonaServed } from '../_shared/parmenion/personaEngine.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
@@ -1106,6 +1107,18 @@ RÈGLES:
     let diversityBlock = '';
     let existingArticleTitles: string[] = [];
     let topicExplorationBlock = '';
+    let personaBlock = '';
+    
+    // ── PERSONA DECOMPOSITION: strategic pre-processing ──
+    try {
+      const personas = await loadPersonaRotation(supabase, context.tracked_site_id, context.siteInfo || {});
+      if (personas.length > 0) {
+        personaBlock = buildPersonaPromptBlock(personas, context.siteInfo?.site_name || context.domain);
+        console.log(`[Parménion] 🎭 Persona engine: ${personas.length} personas, next="${personas[0].label}" (${personas[0].articles_count} articles, last=${personas[0].last_served_at || 'never'})`);
+      }
+    } catch (e) {
+      console.warn('[Parménion] Persona decomposition failed:', e);
+    }
     try {
       // Query ALL existing articles (published + drafts) via CMS scanner or direct DB
       const { data: existingPosts } = await supabase
@@ -1326,6 +1339,8 @@ ${briefBlock}
 
 ${diversityBlock}
 
+${personaBlock}
+
 ${topicExplorationBlock}
 
 ${existingTitlesBlock}
@@ -1519,6 +1534,18 @@ ${templateBlock}`;
     }
   } catch (e) {
     console.error('[Parménion] Pipeline opt-in check failed:', e);
+  }
+
+  // ── PERSONA ROTATION: record which persona was served ──
+  try {
+    const personas = await loadPersonaRotation(supabase, context.tracked_site_id, context.siteInfo || {});
+    if (personas.length > 0 && cmsActions.some(a => a._channel === 'content_editorial')) {
+      const nextPersona = personas[0];
+      await recordPersonaServed(supabase, context.tracked_site_id, context.user_id, nextPersona.key, context.cycleNumber || 0);
+      console.log(`[Parménion] 🎭 Persona served: "${nextPersona.label}" — next cycle will target a different persona`);
+    }
+  } catch (e) {
+    console.warn('[Parménion] Persona rotation recording failed:', e);
   }
 
   const functions: string[] = [];
