@@ -1191,6 +1191,8 @@ ${briefBlock}
 
 ${diversityBlock}
 
+${existingTitlesBlock}
+
 ${keywordEnrichment.promptBlock}
 
 ⚠️⚠️⚠️ RÈGLE CRITIQUE — SÉPARATION DIAGNOSTIC / CONTENU ⚠️⚠️⚠️
