@@ -194,7 +194,12 @@ export default function BotActivityPage() {
             </Card>
           </div>
 
-          {/* Filters */}
+          {/* Reliability widget */}
+          <ReliabilityWidget
+            siteIds={selectedSite === 'all' ? sites.map(s => s.id) : [selectedSite]}
+          />
+
+
           <div className="flex flex-wrap gap-3 items-center">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={selectedSite} onValueChange={setSelectedSite}>
