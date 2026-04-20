@@ -1536,6 +1536,18 @@ ${templateBlock}`;
     console.error('[Parménion] Pipeline opt-in check failed:', e);
   }
 
+  // ── PERSONA ROTATION: record which persona was served ──
+  try {
+    const personas = await loadPersonaRotation(supabase, context.tracked_site_id, context.siteInfo || {});
+    if (personas.length > 0 && cmsActions.some(a => a._channel === 'content_editorial')) {
+      const nextPersona = personas[0];
+      await recordPersonaServed(supabase, context.tracked_site_id, context.user_id, nextPersona.key, context.cycleNumber || 0);
+      console.log(`[Parménion] 🎭 Persona served: "${nextPersona.label}" — next cycle will target a different persona`);
+    }
+  } catch (e) {
+    console.warn('[Parménion] Persona rotation recording failed:', e);
+  }
+
   const functions: string[] = [];
   if (fixes.length > 0) functions.push('generate-corrective-code');
   if (cmsActions.length > 0) functions.push('iktracker-actions');
