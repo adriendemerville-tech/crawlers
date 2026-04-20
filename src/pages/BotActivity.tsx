@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getBotIntent, getIntentLabel, getIntentColor, BotIntent } from '@/components/BotActivity/botIntentMap';
 import { VerificationBadge } from '@/components/BotActivity/VerificationBadge';
+import { ReliabilityWidget } from '@/components/BotActivity/ReliabilityWidget';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -193,7 +194,12 @@ export default function BotActivityPage() {
             </Card>
           </div>
 
-          {/* Filters */}
+          {/* Reliability widget */}
+          <ReliabilityWidget
+            siteIds={selectedSite === 'all' ? sites.map(s => s.id) : [selectedSite]}
+          />
+
+
           <div className="flex flex-wrap gap-3 items-center">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={selectedSite} onValueChange={setSelectedSite}>
