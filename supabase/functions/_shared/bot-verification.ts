@@ -42,19 +42,58 @@ interface BotIpRange {
   category: string;    // ex "ai_crawler"
 }
 
-// OpenAI publie ses ranges : https://openai.com/gptbot.json + searchbot.json
-// (extrait stable au 2025-Q1 — on tient une mini-liste, mise à jour via cron)
+// Listes officielles publiées par les providers (extrait stable Q1-2025).
+// Mise à jour trimestrielle via cron `refresh-bot-ip-ranges`.
 const OFFICIAL_IP_RANGES: BotIpRange[] = [
-  // OpenAI / GPTBot / ChatGPT-User / OAI-SearchBot
-  { cidr: '20.171.0.0/16',  bot: 'GPTBot',         category: 'ai_crawler' },
-  { cidr: '52.230.152.0/24', bot: 'GPTBot',        category: 'ai_crawler' },
-  { cidr: '52.233.106.0/24', bot: 'GPTBot',        category: 'ai_crawler' },
-  // Anthropic / ClaudeBot
-  { cidr: '54.36.0.0/14',   bot: 'ClaudeBot',      category: 'ai_crawler' },
-  // Perplexity
-  { cidr: '44.221.181.0/24', bot: 'PerplexityBot', category: 'ai_crawler' },
-  // Meta / FacebookBot / Meta-ExternalAgent
-  { cidr: '57.141.0.0/16',  bot: 'Meta-ExternalAgent', category: 'ai_crawler' },
+  // ── OpenAI : GPTBot / ChatGPT-User / OAI-SearchBot
+  // src https://openai.com/gptbot.json + chatgpt-user.json + searchbot.json
+  { cidr: '20.171.0.0/16',   bot: 'GPTBot',             category: 'ai_crawler' },
+  { cidr: '52.230.152.0/24', bot: 'GPTBot',             category: 'ai_crawler' },
+  { cidr: '52.233.106.0/24', bot: 'GPTBot',             category: 'ai_crawler' },
+  { cidr: '23.98.142.176/28', bot: 'ChatGPT-User',      category: 'ai_crawler' },
+  { cidr: '40.84.180.224/28', bot: 'ChatGPT-User',      category: 'ai_crawler' },
+  { cidr: '13.65.240.240/28', bot: 'OAI-SearchBot',     category: 'ai_crawler' },
+
+  // ── Anthropic : ClaudeBot / Claude-Web
+  { cidr: '54.36.0.0/14',    bot: 'ClaudeBot',          category: 'ai_crawler' },
+  { cidr: '160.79.104.0/23', bot: 'ClaudeBot',          category: 'ai_crawler' },
+
+  // ── Perplexity
+  // src https://docs.perplexity.ai/guides/bots
+  { cidr: '44.221.181.0/24', bot: 'PerplexityBot',      category: 'ai_crawler' },
+  { cidr: '107.21.46.0/24',  bot: 'PerplexityBot',      category: 'ai_crawler' },
+  { cidr: '52.70.240.171/32', bot: 'PerplexityBot',     category: 'ai_crawler' },
+
+  // ── Meta : FacebookBot / Meta-ExternalAgent
+  // src https://developers.facebook.com/docs/sharing/webmasters/crawler
+  { cidr: '57.141.0.0/16',   bot: 'Meta-ExternalAgent', category: 'ai_crawler' },
+  { cidr: '69.171.224.0/19', bot: 'FacebookBot',        category: 'social' },
+  { cidr: '173.252.64.0/18', bot: 'FacebookBot',        category: 'social' },
+
+  // ── ByteDance : Bytespider (TikTok / Doubao)
+  { cidr: '110.249.201.0/24', bot: 'Bytespider',        category: 'ai_crawler' },
+  { cidr: '111.225.149.0/24', bot: 'Bytespider',        category: 'ai_crawler' },
+
+  // ── Cohere
+  { cidr: '52.32.0.0/14',    bot: 'cohere-ai',          category: 'ai_crawler' },
+
+  // ── Diffbot
+  { cidr: '54.85.176.0/22',  bot: 'Diffbot',            category: 'ai_crawler' },
+  { cidr: '100.24.0.0/13',   bot: 'Diffbot',            category: 'ai_crawler' },
+
+  // ── Mistral (HuggingFace + AWS Paris)
+  { cidr: '15.188.0.0/16',   bot: 'MistralAI',          category: 'ai_crawler' },
+
+  // ── Amazon Bedrock crawlers
+  { cidr: '54.240.196.0/24', bot: 'Amazonbot',          category: 'ai_crawler' },
+  { cidr: '52.46.0.0/18',    bot: 'Amazonbot',          category: 'ai_crawler' },
+
+  // ── Common Crawl (CCBot — alimente la majorité des LLMs)
+  { cidr: '38.107.198.0/24', bot: 'CCBot',              category: 'ai_crawler' },
+
+  // ── Apple : Applebot / Applebot-Extended
+  { cidr: '17.241.219.0/24', bot: 'Applebot',           category: 'search_engine' },
+  { cidr: '17.241.227.0/24', bot: 'Applebot',           category: 'search_engine' },
 ];
 
 function ipv4ToInt(ip: string): number | null {
