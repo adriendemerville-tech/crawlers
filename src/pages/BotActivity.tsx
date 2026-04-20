@@ -42,6 +42,9 @@ interface BotEntry {
   status_code: number | null;
   tracked_site_id: string;
   domain?: string;
+  verification_status?: 'verified' | 'suspect' | 'stealth' | 'unverified' | null;
+  verification_method?: 'rdns_match' | 'asn_range' | 'ua_only' | 'behavioral' | 'none' | null;
+  confidence_score?: number | null;
 }
 
 interface TrackedSite {
@@ -57,6 +60,7 @@ export default function BotActivityPage() {
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSite, setSelectedSite] = useState<string>('all');
   const [selectedIntent, setSelectedIntent] = useState<string>('all');
+  const [selectedTrust, setSelectedTrust] = useState<string>('all');
   const [isLive, setIsLive] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +81,7 @@ export default function BotActivityPage() {
 
     let query = supabase
       .from('log_entries')
-      .select('id, bot_name, bot_category, path, ts, status_code, tracked_site_id')
+      .select('id, bot_name, bot_category, path, ts, status_code, tracked_site_id, verification_status, verification_method, confidence_score')
       .in('tracked_site_id', siteIds)
       .eq('is_bot', true)
       .order('ts', { ascending: false })
@@ -91,11 +95,14 @@ export default function BotActivityPage() {
       if (selectedIntent !== 'all') {
         filtered = filtered.filter(e => getBotIntent(e.bot_name) === selectedIntent);
       }
+      if (selectedTrust !== 'all') {
+        filtered = filtered.filter(e => (e.verification_status || 'unverified') === selectedTrust);
+      }
 
       setEntries(filtered);
     }
     setLoading(false);
-  }, [user, sites, selectedSite, selectedIntent]);
+  }, [user, sites, selectedSite, selectedIntent, selectedTrust]);
 
   useEffect(() => { fetchSites(); }, [fetchSites]);
   useEffect(() => { if (sites.length > 0) fetchEntries(); }, [sites, fetchEntries]);
