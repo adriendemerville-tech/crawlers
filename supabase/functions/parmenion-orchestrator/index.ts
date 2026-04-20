@@ -1271,6 +1271,8 @@ ${briefBlock}
 
 ${diversityBlock}
 
+${topicExplorationBlock}
+
 ${existingTitlesBlock}
 
 ${keywordEnrichment.promptBlock}
