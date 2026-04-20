@@ -1171,20 +1171,11 @@ RÈGLES:
     }
 
     // ── EXISTING TITLES BLOCKLIST: prevent LLM from regenerating same topics ──
-    // Collect up to 30 most recent titles to inject as hard blocklist
-    // allArticles is populated earlier (line ~1054-1093) from CMS cache / IKtracker API
-    const existingTitlesBlock = (() => {
-      try {
-        // allArticles is defined in the diversity block scope above — re-fetch if needed
-        const titlesList: string[] = [];
-        // Use CMS cache first
-        const cachedTitles = (existingPosts || []).map((p: any) => p.title).filter(Boolean);
-        titlesList.push(...cachedTitles);
-        if (titlesList.length === 0) return '';
-        const unique = [...new Set(titlesList)].slice(0, 30);
-        return `\n⛔⛔⛔ ARTICLES EXISTANTS — NE PAS DUPLIQUER ⛔⛔⛔\nLe blog contient DÉJÀ ces ${unique.length} articles. Tu NE DOIS PAS créer d'article sur le même sujet, même avec un titre différent :\n${unique.map(t => `- ${t}`).join('\n')}\nSi le sujet que tu veux traiter est couvert ci-dessus → utilise update-post pour enrichir l'existant OU choisis un sujet TOTALEMENT différent.\n`;
-      } catch { return ''; }
-    })();
+    let existingTitlesBlock = '';
+    if (existingArticleTitles.length > 0) {
+      const unique = [...new Set(existingArticleTitles)].slice(0, 30);
+      existingTitlesBlock = `\n⛔⛔⛔ ARTICLES EXISTANTS — NE PAS DUPLIQUER ⛔⛔⛔\nLe blog contient DÉJÀ ces ${unique.length} articles. Tu NE DOIS PAS créer d'article sur le même sujet, même avec un titre différent :\n${unique.map(t => `- ${t}`).join('\n')}\nSi le sujet que tu veux traiter est couvert ci-dessus → utilise update-post pour enrichir l'existant OU choisis un sujet TOTALEMENT différent.\n`;
+    }
 
     const todayISO = new Date().toISOString().slice(0, 10);
     const sectorName = context.siteInfo?.market_sector || 'inconnu';
