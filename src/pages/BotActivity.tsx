@@ -218,6 +218,18 @@ export default function BotActivityPage() {
                 <SelectItem value="indexing">Indexation</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={selectedTrust} onValueChange={setSelectedTrust}>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="Tous les niveaux" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes fiabilités</SelectItem>
+                <SelectItem value="verified">Vérifiés (rDNS/IP)</SelectItem>
+                <SelectItem value="suspect">Suspects (UA seul)</SelectItem>
+                <SelectItem value="stealth">Furtifs</SelectItem>
+                <SelectItem value="unverified">Non vérifiés</SelectItem>
+              </SelectContent>
+            </Select>
             <span className="text-xs text-muted-foreground ml-auto">
               {stats.uniqueBots} bots uniques
             </span>
@@ -257,6 +269,12 @@ export default function BotActivityPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-sm">{entry.bot_name || 'Bot inconnu'}</span>
+                            <VerificationBadge
+                              status={entry.verification_status}
+                              method={entry.verification_method}
+                              confidence={entry.confidence_score}
+                              compact
+                            />
                             <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 h-4 border', intentColor)}>
                               {intentLabel}
                             </Badge>
