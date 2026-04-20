@@ -1706,6 +1706,7 @@ export type Database = {
           bot_family: string | null
           bot_name: string | null
           cf_ray: string | null
+          confidence_score: number | null
           country: string | null
           domain: string
           hit_at: string
@@ -1721,11 +1722,14 @@ export type Database = {
           url: string
           user_agent: string | null
           user_id: string
+          verification_method: string | null
+          verification_status: string | null
         }
         Insert: {
           bot_family?: string | null
           bot_name?: string | null
           cf_ray?: string | null
+          confidence_score?: number | null
           country?: string | null
           domain: string
           hit_at?: string
@@ -1741,11 +1745,14 @@ export type Database = {
           url: string
           user_agent?: string | null
           user_id: string
+          verification_method?: string | null
+          verification_status?: string | null
         }
         Update: {
           bot_family?: string | null
           bot_name?: string | null
           cf_ray?: string | null
+          confidence_score?: number | null
           country?: string | null
           domain?: string
           hit_at?: string
@@ -1761,6 +1768,8 @@ export type Database = {
           url?: string
           user_agent?: string | null
           user_id?: string
+          verification_method?: string | null
+          verification_status?: string | null
         }
         Relationships: [
           {
@@ -6780,6 +6789,7 @@ export type Database = {
           bot_category: Database["public"]["Enums"]["bot_category"] | null
           bot_name: string | null
           bytes_sent: number | null
+          confidence_score: number | null
           connector_id: string
           country_code: string | null
           created_at: string
@@ -6795,11 +6805,14 @@ export type Database = {
           tracked_site_id: string
           ts: string
           user_agent: string | null
+          verification_method: string | null
+          verification_status: string | null
         }
         Insert: {
           bot_category?: Database["public"]["Enums"]["bot_category"] | null
           bot_name?: string | null
           bytes_sent?: number | null
+          confidence_score?: number | null
           connector_id: string
           country_code?: string | null
           created_at?: string
@@ -6815,11 +6828,14 @@ export type Database = {
           tracked_site_id: string
           ts: string
           user_agent?: string | null
+          verification_method?: string | null
+          verification_status?: string | null
         }
         Update: {
           bot_category?: Database["public"]["Enums"]["bot_category"] | null
           bot_name?: string | null
           bytes_sent?: number | null
+          confidence_score?: number | null
           connector_id?: string
           country_code?: string | null
           created_at?: string
@@ -6835,6 +6851,8 @@ export type Database = {
           tracked_site_id?: string
           ts?: string
           user_agent?: string | null
+          verification_method?: string | null
+          verification_status?: string | null
         }
         Relationships: [
           {

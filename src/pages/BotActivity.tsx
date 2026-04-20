@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getBotIntent, getIntentLabel, getIntentColor, BotIntent } from '@/components/BotActivity/botIntentMap';
+import { VerificationBadge } from '@/components/BotActivity/VerificationBadge';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,9 @@ interface BotEntry {
   status_code: number | null;
   tracked_site_id: string;
   domain?: string;
+  verification_status?: 'verified' | 'suspect' | 'stealth' | 'unverified' | null;
+  verification_method?: 'rdns_match' | 'asn_range' | 'ua_only' | 'behavioral' | 'none' | null;
+  confidence_score?: number | null;
 }
 
 interface TrackedSite {
@@ -57,6 +61,7 @@ export default function BotActivityPage() {
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSite, setSelectedSite] = useState<string>('all');
   const [selectedIntent, setSelectedIntent] = useState<string>('all');
+  const [selectedTrust, setSelectedTrust] = useState<string>('all');
   const [isLive, setIsLive] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +82,7 @@ export default function BotActivityPage() {
 
     let query = supabase
       .from('log_entries')
-      .select('id, bot_name, bot_category, path, ts, status_code, tracked_site_id')
+      .select('id, bot_name, bot_category, path, ts, status_code, tracked_site_id, verification_status, verification_method, confidence_score')
       .in('tracked_site_id', siteIds)
       .eq('is_bot', true)
       .order('ts', { ascending: false })
@@ -86,16 +91,24 @@ export default function BotActivityPage() {
     const { data } = await query;
 
     if (data) {
-      let filtered = data.map(e => ({ ...e, domain: domainMap[e.tracked_site_id] }));
+      let filtered: BotEntry[] = (data as any[]).map(e => ({
+        ...e,
+        domain: domainMap[e.tracked_site_id],
+        verification_status: e.verification_status as BotEntry['verification_status'],
+        verification_method: e.verification_method as BotEntry['verification_method'],
+      }));
 
       if (selectedIntent !== 'all') {
         filtered = filtered.filter(e => getBotIntent(e.bot_name) === selectedIntent);
+      }
+      if (selectedTrust !== 'all') {
+        filtered = filtered.filter(e => (e.verification_status || 'unverified') === selectedTrust);
       }
 
       setEntries(filtered);
     }
     setLoading(false);
-  }, [user, sites, selectedSite, selectedIntent]);
+  }, [user, sites, selectedSite, selectedIntent, selectedTrust]);
 
   useEffect(() => { fetchSites(); }, [fetchSites]);
   useEffect(() => { if (sites.length > 0) fetchEntries(); }, [sites, fetchEntries]);
@@ -205,6 +218,18 @@ export default function BotActivityPage() {
                 <SelectItem value="indexing">Indexation</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={selectedTrust} onValueChange={setSelectedTrust}>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="Tous les niveaux" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes fiabilités</SelectItem>
+                <SelectItem value="verified">Vérifiés (rDNS/IP)</SelectItem>
+                <SelectItem value="suspect">Suspects (UA seul)</SelectItem>
+                <SelectItem value="stealth">Furtifs</SelectItem>
+                <SelectItem value="unverified">Non vérifiés</SelectItem>
+              </SelectContent>
+            </Select>
             <span className="text-xs text-muted-foreground ml-auto">
               {stats.uniqueBots} bots uniques
             </span>
@@ -244,6 +269,12 @@ export default function BotActivityPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-sm">{entry.bot_name || 'Bot inconnu'}</span>
+                            <VerificationBadge
+                              status={entry.verification_status}
+                              method={entry.verification_method}
+                              confidence={entry.confidence_score}
+                              compact
+                            />
                             <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 h-4 border', intentColor)}>
                               {intentLabel}
                             </Badge>
