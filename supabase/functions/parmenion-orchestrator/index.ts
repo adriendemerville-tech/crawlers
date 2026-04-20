@@ -907,6 +907,61 @@ async function prescribeWithDualPrompts(context: {
     ).join('\n\n');
   }
 
+  // ── TOPIC SUGGESTION ENGINE: generate business-relevant topic ideas based on audience ──
+  function generateTopicSuggestions(audience: string, sector: string, saturatedTopics: string[]): string[] {
+    // Map common audience segments to relevant business topics
+    const AUDIENCE_TOPICS: Record<string, string[]> = {
+      'indépendant': ['facturation électronique', 'cotisations sociales', 'prévoyance', 'retraite complémentaire', 'TVA auto-entrepreneur', 'comptabilité simplifiée', 'régime micro-entreprise'],
+      'entrepreneur': ['financement', 'business plan', 'levée de fonds', 'droit des sociétés', 'assurance RC pro', 'gestion de trésorerie', 'recrutement premier salarié'],
+      'artisan': ['apprentissage', 'qualifications professionnelles', 'label RGE', 'devis et facturation', 'assurance décennale', 'marchés publics', 'normes et réglementations'],
+      'agent immobilier': ['diagnostics obligatoires', 'loi Alur', 'mandats exclusifs', 'estimation immobilière', 'prospection digitale', 'gestion locative'],
+      'infirmier': ['convention CPAM', 'remplacements', 'cabinet libéral', 'cotisations CARPIMKO', 'télétransmission', 'formation continue DPC'],
+      'commerçant': ['bail commercial', 'caisse enregistreuse certifiée', 'soldes et promotions', 'droit de la consommation', 'fidélisation client', 'commerce en ligne'],
+      'avocat': ['déontologie', 'fixation des honoraires', 'marketing juridique', 'RPVA', 'aide juridictionnelle', 'spécialisation'],
+      'vrp': ['statut VRP', 'commissions', 'clause de non-concurrence', 'indemnité de clientèle', 'frais professionnels', 'secteur exclusif'],
+      'profession libérale': ['BNC', 'AGA', 'CFE', 'prévoyance Madelin', 'SCM', 'rétrocession honoraires'],
+    };
+
+    const SECTOR_TOPICS: Record<string, string[]> = {
+      'mobilité': ['prix des carburants', 'passage à l\'électrique', 'bonus écologique', 'ZFE', 'covoiturage professionnel', 'vélo de fonction', 'forfait mobilité durable'],
+      'comptabilité': ['facturation électronique 2026', 'archivage numérique', 'rapprochement bancaire', 'déclaration de TVA', 'bilan comptable', 'amortissements'],
+      'fiscalité': ['impôt sur le revenu', 'crédit d\'impôt', 'exonérations', 'contrôle fiscal', 'optimisation fiscale légale'],
+      'transport': ['carte grise', 'contrôle technique', 'leasing vs achat', 'flotte automobile', 'éco-conduite', 'assurance auto pro'],
+    };
+
+    const suggestions: string[] = [];
+    const saturatedSet = new Set(saturatedTopics.map(t => t.toLowerCase()));
+
+    // Match audience segments
+    for (const [key, topics] of Object.entries(AUDIENCE_TOPICS)) {
+      if (audience.includes(key)) {
+        for (const topic of topics) {
+          if (!saturatedSet.has(topic) && suggestions.length < 10) {
+            suggestions.push(topic);
+          }
+        }
+      }
+    }
+
+    // Match sector topics
+    for (const [key, topics] of Object.entries(SECTOR_TOPICS)) {
+      if (sector.includes(key)) {
+        for (const topic of topics) {
+          if (!saturatedSet.has(topic) && suggestions.length < 12) {
+            suggestions.push(topic);
+          }
+        }
+      }
+    }
+
+    // If no match, provide generic business topics
+    if (suggestions.length === 0) {
+      return ['facturation électronique', 'obligations légales', 'digitalisation', 'productivité', 'gestion administrative'];
+    }
+
+    return suggestions;
+  }
+
   // For content items: strip SEO jargon from titles/descriptions so LLM focuses on business topics
   const SEO_JARGON_PATTERNS = [
     /gap\s*(de\s*)?(citabilit[ée]|s[ée]mantique|de\s*contenu)/gi,
@@ -1050,6 +1105,7 @@ RÈGLES:
     // ── ARTICLE TYPE DIVERSITY & SEMANTIC RING ──
     let diversityBlock = '';
     let existingArticleTitles: string[] = [];
+    let topicExplorationBlock = '';
     try {
       // Query ALL existing articles (published + drafts) via CMS scanner or direct DB
       const { data: existingPosts } = await supabase
@@ -1136,6 +1192,85 @@ RÈGLES:
       
       diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages);
       existingArticleTitles = allArticles.map((a: any) => a.title).filter(Boolean);
+
+      // ═══ TOPIC EXPLORATION: Query cluster_definitions to map ALL available thematic territories ═══
+      const { data: allClusters } = await supabase
+        .from('cluster_definitions')
+        .select('id, cluster_name, ring, maturity_pct, keywords')
+        .eq('tracked_site_id', context.tracked_site_id)
+        .order('ring', { ascending: true });
+      
+      if (allClusters && allClusters.length > 0) {
+        // Count existing articles per cluster by keyword matching
+        const clusterCoverage = allClusters.map((c: any) => {
+          const clusterKws = (c.keywords || []).map((k: string) => k.toLowerCase());
+          let articleCount = 0;
+          for (const art of allArticles) {
+            const titleLower = (art.title || '').toLowerCase();
+            if (clusterKws.some((kw: string) => titleLower.includes(kw))) articleCount++;
+          }
+          return {
+            name: c.cluster_name,
+            ring: c.ring || 0,
+            maturity: c.maturity_pct || 0,
+            keywords: clusterKws.slice(0, 5),
+            articleCount,
+          };
+        });
+
+        // Detect monotopic workbench: all content items from same cluster?
+        const workbenchClusterIds = new Set(contentItems.map((it: any) => it.cluster_id).filter(Boolean));
+        const isMonotopic = workbenchClusterIds.size <= 1;
+
+        // Find underserved clusters (few articles, low maturity)
+        const underserved = clusterCoverage
+          .filter((c: any) => c.articleCount < 2 && c.maturity < 70)
+          .sort((a: any, b: any) => a.articleCount - b.articleCount || a.maturity - b.maturity)
+          .slice(0, 8);
+
+        // Find overserved clusters
+        const overserved = clusterCoverage
+          .filter((c: any) => c.articleCount >= 3)
+          .map((c: any) => `${c.name} (${c.articleCount} articles)`)
+          .slice(0, 5);
+
+        const lines: string[] = [];
+        lines.push(`\n═══ RÉDACTEUR EN CHEF — STRATÉGIE THÉMATIQUE ═══`);
+        lines.push(`Le blog couvre actuellement ${allArticles.length} articles répartis sur ${allClusters.length} clusters thématiques.`);
+        
+        if (overserved.length > 0) {
+          lines.push(`\nCLUSTERS SATURÉS (trop d'articles, ÉVITER): ${overserved.join(', ')}`);
+        }
+
+        if (underserved.length > 0) {
+          lines.push(`\nCLUSTERS À EXPLORER (peu ou pas d'articles) :`);
+          for (const c of underserved) {
+            lines.push(`  → ${c.name} (Ring ${c.ring}, ${c.articleCount} articles, maturité ${c.maturity}%) — mots-clés: ${c.keywords.join(', ')}`);
+          }
+        }
+
+        if (isMonotopic && underserved.length > 0) {
+          lines.push(`\n*** DIRECTIVE PRIORITAIRE ***`);
+          lines.push(`Tous les items du workbench ciblent le MÊME cluster. C'est un signal de monotopie.`);
+          lines.push(`Tu DOIS choisir un cluster DIFFÉRENT parmi les clusters à explorer ci-dessus.`);
+          lines.push(`L'audience de ce site (${context.siteInfo?.target_audience || 'professionnels'}) a des besoins variés :`);
+          // Inject audience-aware topic suggestions
+          const audience = (context.siteInfo?.target_audience || '').toLowerCase();
+          const sector = (context.siteInfo?.market_sector || '').toLowerCase();
+          const suggestions = generateTopicSuggestions(audience, sector, distribution.saturatedTopics);
+          if (suggestions.length > 0) {
+            lines.push(`Pistes thématiques à considérer :`);
+            for (const s of suggestions) {
+              lines.push(`  - ${s}`);
+            }
+          }
+        }
+
+        lines.push(`═══ FIN STRATÉGIE THÉMATIQUE ═══\n`);
+        topicExplorationBlock = lines.join('\n');
+        console.log(`[Parménion] 🗺️ Topic exploration: ${allClusters.length} clusters, ${underserved.length} underserved, monotopic=${isMonotopic}, overserved=${overserved.length}`);
+      }
+
       console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}], saturated=[${distribution.saturatedTopics.join(',')}], existing_titles=${existingArticleTitles.length}`);
     } catch (e) {
       console.warn('[Parménion] Diversity computation failed:', e);
@@ -1190,6 +1325,8 @@ ${kwCtx}
 ${briefBlock}
 
 ${diversityBlock}
+
+${topicExplorationBlock}
 
 ${existingTitlesBlock}
 
