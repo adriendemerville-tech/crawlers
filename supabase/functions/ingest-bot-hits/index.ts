@@ -13,6 +13,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { detectBot } from '../_shared/bot-detection.ts';
+import { verifyBot } from '../_shared/bot-verification.ts';
 
 interface RawHit {
   ts?: string | number;
@@ -137,9 +138,12 @@ Deno.serve(handleRequest(async (req) => {
 
   const rows = await Promise.all(trimmed.map(async (raw) => {
     const n = normalizeHit(raw);
+    // Vérification rapide IP-range only (le rDNS est trop lent ici, repassé par cron arrière-plan)
+    const verification = await verifyBot(n.ip, n.ua, { enableRdns: false });
     const detection = detectBot(n.ua);
-    const isAiBot = detection.is_bot && detection.bot_category === 'ai_crawler';
-    const isHuman = !detection.is_bot;
+    const isAiBot = (verification.is_bot && verification.bot_category === 'ai_crawler')
+      || (detection.is_bot && detection.bot_category === 'ai_crawler');
+    const isHuman = !verification.is_bot && !detection.is_bot;
 
     // Adaptive sampling for humans (we keep ALL bot hits, only sample humans)
     const isHumanSample = isHuman && Math.random() < sampleRate;
@@ -155,8 +159,8 @@ Deno.serve(handleRequest(async (req) => {
       url: n.url.slice(0, 2000),
       path: n.path.slice(0, 1000),
       user_agent: n.ua.slice(0, 500),
-      bot_family: botFamilyFromCategory(detection.bot_category),
-      bot_name: detection.bot_name || null,
+      bot_family: botFamilyFromCategory(verification.bot_category || detection.bot_category),
+      bot_name: verification.bot_name || detection.bot_name || null,
       is_ai_bot: isAiBot,
       is_human_sample: isHumanSample,
       status_code: n.status,
@@ -164,6 +168,9 @@ Deno.serve(handleRequest(async (req) => {
       ip_hash: ipHash,
       referer: n.referer ? n.referer.slice(0, 1000) : null,
       cf_ray: n.cf_ray,
+      verification_status: verification.status,
+      verification_method: verification.method,
+      confidence_score: verification.confidence,
       raw_meta: {},
     };
   }));
