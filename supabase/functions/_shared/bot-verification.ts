@@ -143,21 +143,32 @@ const rdnsCache = new Map<string, RdnsResult>();
 
 // Suffixes hostname officiels → bot connu
 const RDNS_SUFFIXES: Array<{ suffix: string; bot: string; category: string }> = [
-  { suffix: '.googlebot.com',         bot: 'Googlebot',     category: 'search_engine' },
-  { suffix: '.google.com',            bot: 'Google-Extended', category: 'ai_crawler' },
-  { suffix: '.search.msn.com',        bot: 'Bingbot',       category: 'search_engine' },
-  { suffix: '.applebot.apple.com',    bot: 'Applebot',      category: 'search_engine' },
-  { suffix: '.crawl.yahoo.net',       bot: 'Yahoo Slurp',   category: 'search_engine' },
-  { suffix: '.yandex.com',            bot: 'YandexBot',     category: 'search_engine' },
-  { suffix: '.yandex.net',            bot: 'YandexBot',     category: 'search_engine' },
-  { suffix: '.yandex.ru',             bot: 'YandexBot',     category: 'search_engine' },
-  { suffix: '.duckduckgo.com',        bot: 'DuckDuckBot',   category: 'search_engine' },
-  { suffix: '.crawl.baidu.com',       bot: 'Baiduspider',   category: 'search_engine' },
-  { suffix: '.openai.com',            bot: 'GPTBot',        category: 'ai_crawler' },
-  { suffix: '.anthropic.com',         bot: 'ClaudeBot',     category: 'ai_crawler' },
-  { suffix: '.perplexity.ai',         bot: 'PerplexityBot', category: 'ai_crawler' },
-  { suffix: '.facebook.com',          bot: 'FacebookBot',   category: 'social' },
-  { suffix: '.fbsv.net',              bot: 'FacebookBot',   category: 'social' },
+  { suffix: '.googlebot.com',         bot: 'Googlebot',         category: 'search_engine' },
+  { suffix: '.google.com',            bot: 'Google-Extended',   category: 'ai_crawler' },
+  { suffix: '.search.msn.com',        bot: 'Bingbot',           category: 'search_engine' },
+  { suffix: '.applebot.apple.com',    bot: 'Applebot',          category: 'search_engine' },
+  { suffix: '.crawl.yahoo.net',       bot: 'Yahoo Slurp',       category: 'search_engine' },
+  { suffix: '.yandex.com',            bot: 'YandexBot',         category: 'search_engine' },
+  { suffix: '.yandex.net',            bot: 'YandexBot',         category: 'search_engine' },
+  { suffix: '.yandex.ru',             bot: 'YandexBot',         category: 'search_engine' },
+  { suffix: '.duckduckgo.com',        bot: 'DuckDuckBot',       category: 'search_engine' },
+  { suffix: '.crawl.baidu.com',       bot: 'Baiduspider',       category: 'search_engine' },
+  { suffix: '.openai.com',            bot: 'GPTBot',            category: 'ai_crawler' },
+  { suffix: '.anthropic.com',         bot: 'ClaudeBot',         category: 'ai_crawler' },
+  { suffix: '.perplexity.ai',         bot: 'PerplexityBot',     category: 'ai_crawler' },
+  { suffix: '.facebook.com',          bot: 'FacebookBot',       category: 'social' },
+  { suffix: '.fbsv.net',              bot: 'FacebookBot',       category: 'social' },
+  // Élargissements
+  { suffix: '.bytedance.com',         bot: 'Bytespider',        category: 'ai_crawler' },
+  { suffix: '.tiktokv.com',           bot: 'Bytespider',        category: 'ai_crawler' },
+  { suffix: '.cohere.com',            bot: 'cohere-ai',         category: 'ai_crawler' },
+  { suffix: '.diffbot.com',           bot: 'Diffbot',           category: 'ai_crawler' },
+  { suffix: '.mistral.ai',            bot: 'MistralAI',         category: 'ai_crawler' },
+  { suffix: '.amazonaws.com',         bot: 'Amazonbot',         category: 'ai_crawler' }, // ambigu — confirmer via UA
+  { suffix: '.commoncrawl.org',       bot: 'CCBot',             category: 'ai_crawler' },
+  { suffix: '.semrush.com',           bot: 'SemrushBot',        category: 'seo_tool' },
+  { suffix: '.ahrefs.com',            bot: 'AhrefsBot',         category: 'seo_tool' },
+  { suffix: '.linkedin.com',          bot: 'LinkedInBot',       category: 'social' },
 ];
 
 async function dohQuery(name: string, type: 'PTR' | 'A'): Promise<string[]> {
