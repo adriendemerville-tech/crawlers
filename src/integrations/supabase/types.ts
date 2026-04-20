@@ -8029,6 +8029,59 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_rotation_log: {
+        Row: {
+          articles_count: number | null
+          created_at: string
+          cycle_number: number | null
+          id: string
+          last_served_at: string | null
+          pain_points: string[] | null
+          persona_key: string
+          persona_label: string
+          topics: string[] | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          articles_count?: number | null
+          created_at?: string
+          cycle_number?: number | null
+          id?: string
+          last_served_at?: string | null
+          pain_points?: string[] | null
+          persona_key: string
+          persona_label: string
+          topics?: string[] | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          articles_count?: number | null
+          created_at?: string
+          cycle_number?: number | null
+          id?: string
+          last_served_at?: string | null
+          pain_points?: string[] | null
+          persona_key?: string
+          persona_label?: string
+          topics?: string[] | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_rotation_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       predictions: {
         Row: {
           audit_id: string
