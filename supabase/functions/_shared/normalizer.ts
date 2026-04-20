@@ -3,7 +3,7 @@
  * then batch-inserts into log_entries table.
  */
 import { getServiceClient } from './supabaseClient.ts';
-import { detectBot } from './bot-detection.ts';
+import { verifyBotBatch } from './bot-verification.ts';
 import type { RawLogEntry } from './parsers.ts';
 
 interface NormalizeResult {
@@ -90,32 +90,42 @@ export async function normalize(
   const allIps = entries.map(e => e.ip).filter(Boolean) as string[];
   await batchResolveGeo(allIps);
 
-  // Enrich entries with bot detection + geo
-  const enriched = entries
-    .filter(e => e.ts && !isNaN(new Date(e.ts).getTime()))
-    .map(e => {
-      const bot = detectBot(e.user_agent);
-      const countryCode = e.ip ? (geoCache.get(e.ip) || null) : null;
+  // Filter valid timestamps first
+  const validEntries = entries.filter(e => e.ts && !isNaN(new Date(e.ts).getTime()));
 
-      return {
-        tracked_site_id: siteId,
-        connector_id: connectorId,
-        ts: new Date(e.ts!).toISOString(),
-        ip: e.ip || null,
-        user_agent: e.user_agent || null,
-        method: e.method || 'GET',
-        path: e.path || '/',
-        status_code: e.status_code || 0,
-        bytes_sent: e.bytes_sent || null,
-        referer: e.referer || null,
-        country_code: countryCode,
-        is_bot: bot.is_bot,
-        bot_name: bot.bot_name || null,
-        bot_category: bot.bot_category || null,
-        raw: e.raw || {},
-        source,
-      };
-    });
+  // Multi-layer bot verification (rDNS + ASN + UA), batched & cached per IP
+  const verifications = await verifyBotBatch(
+    validEntries.map(e => ({ ip: e.ip, ua: e.user_agent })),
+    { enableRdns: true, rdnsConcurrency: 8 },
+  );
+
+  // Enrich entries with verification + geo
+  const enriched = validEntries.map((e, i) => {
+    const v = verifications[i];
+    const countryCode = e.ip ? (geoCache.get(e.ip) || null) : null;
+
+    return {
+      tracked_site_id: siteId,
+      connector_id: connectorId,
+      ts: new Date(e.ts!).toISOString(),
+      ip: e.ip || null,
+      user_agent: e.user_agent || null,
+      method: e.method || 'GET',
+      path: e.path || '/',
+      status_code: e.status_code || 0,
+      bytes_sent: e.bytes_sent || null,
+      referer: e.referer || null,
+      country_code: countryCode,
+      is_bot: v.is_bot,
+      bot_name: v.bot_name,
+      bot_category: v.bot_category,
+      verification_status: v.status,
+      verification_method: v.method,
+      confidence_score: v.confidence,
+      raw: e.raw || {},
+      source,
+    };
+  });
 
   // Insert in batches
   const supabase = getServiceClient();
