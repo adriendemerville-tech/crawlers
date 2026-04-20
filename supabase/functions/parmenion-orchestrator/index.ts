@@ -1049,6 +1049,7 @@ RÈGLES:
 
     // ── ARTICLE TYPE DIVERSITY & SEMANTIC RING ──
     let diversityBlock = '';
+    let existingArticleTitles: string[] = [];
     try {
       // Query ALL existing articles (published + drafts) via CMS scanner or direct DB
       const { data: existingPosts } = await supabase
@@ -1134,7 +1135,8 @@ RÈGLES:
       }
       
       diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages);
-      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}], saturated=[${distribution.saturatedTopics.join(',')}]`);
+      existingArticleTitles = allArticles.map((a: any) => a.title).filter(Boolean);
+      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}], saturated=[${distribution.saturatedTopics.join(',')}], existing_titles=${existingArticleTitles.length}`);
     } catch (e) {
       console.warn('[Parménion] Diversity computation failed:', e);
     }
@@ -1168,6 +1170,13 @@ RÈGLES:
       console.warn('[Parménion] Failed to log generation:', e);
     }
 
+    // ── EXISTING TITLES BLOCKLIST: prevent LLM from regenerating same topics ──
+    let existingTitlesBlock = '';
+    if (existingArticleTitles.length > 0) {
+      const unique = [...new Set(existingArticleTitles)].slice(0, 30);
+      existingTitlesBlock = `\n⛔⛔⛔ ARTICLES EXISTANTS — NE PAS DUPLIQUER ⛔⛔⛔\nLe blog contient DÉJÀ ces ${unique.length} articles. Tu NE DOIS PAS créer d'article sur le même sujet, même avec un titre différent :\n${unique.map(t => `- ${t}`).join('\n')}\nSi le sujet que tu veux traiter est couvert ci-dessus → utilise update-post pour enrichir l'existant OU choisis un sujet TOTALEMENT différent.\n`;
+    }
+
     const todayISO = new Date().toISOString().slice(0, 10);
     const sectorName = context.siteInfo?.market_sector || 'inconnu';
     const siteName = context.siteInfo?.site_name || context.domain;
@@ -1181,6 +1190,8 @@ ${kwCtx}
 ${briefBlock}
 
 ${diversityBlock}
+
+${existingTitlesBlock}
 
 ${keywordEnrichment.promptBlock}
 

@@ -219,6 +219,61 @@ const STOP_WORDS = new Set([
   'article', 'tout', 'savoir', 'connaitre', 'comprendre', 'the', 'and', 'for',
 ])
 
+/**
+ * Domain-specific synonym clusters — words within the same cluster
+ * are considered semantically equivalent for dedup purposes.
+ * Each cluster represents a single concept.
+ */
+const SYNONYM_CLUSTERS: string[][] = [
+  // IKtracker domain: all terms related to "frais réels vs forfait"
+  ['frais', 'reels', 'bareme', 'kilometrique', 'abattement', 'forfaitaire', 'forfait', 'indemnites', 'kilométriques', 'ik'],
+  ['impots', 'impot', 'fiscal', 'fiscaux', 'fiscale', 'declaration', 'deduction', 'deduire', 'deductible'],
+  ['voiture', 'vehicule', 'auto', 'automobile', 'deplacement', 'trajet', 'kilometrage', 'km'],
+]
+
+/** Map each synonym to its cluster index for fast lookup */
+const SYNONYM_MAP = new Map<string, number>()
+for (let i = 0; i < SYNONYM_CLUSTERS.length; i++) {
+  for (const word of SYNONYM_CLUSTERS[i]) {
+    SYNONYM_MAP.set(normalizeForComparison(word), i)
+  }
+}
+
+/** 
+ * Compute topic fingerprint: maps each word to its synonym cluster ID,
+ * then returns the set of cluster IDs present in the text.
+ * Two texts sharing ≥50% of cluster IDs are considered same-topic.
+ */
+function topicFingerprint(text: string): Set<number> {
+  const normalized = normalizeForComparison(text)
+  const words = normalized.split(' ').filter(w => w.length > 2 && !STOP_WORDS.has(w))
+  const clusters = new Set<number>()
+  for (const w of words) {
+    const cid = SYNONYM_MAP.get(w)
+    if (cid !== undefined) clusters.add(cid)
+  }
+  return clusters
+}
+
+/** 
+ * Compute synonym-aware topic overlap between two titles.
+ * Maps words to synonym clusters, then computes Jaccard on cluster IDs.
+ */
+function synonymAwareOverlap(a: string, b: string): number {
+  const fpA = topicFingerprint(a)
+  const fpB = topicFingerprint(b)
+  // Also include non-synonym core keywords
+  const coreA = extractCoreKeywords(a)
+  const coreB = extractCoreKeywords(b)
+  // Merge: cluster IDs (as negative numbers to avoid collision) + core words
+  const setA = new Set<string>([...Array.from(fpA).map(c => `~${c}`), ...coreA])
+  const setB = new Set<string>([...Array.from(fpB).map(c => `~${c}`), ...coreB])
+  if (setA.size === 0 || setB.size === 0) return 0
+  let intersection = 0
+  for (const w of setA) { if (setB.has(w)) intersection++ }
+  return intersection / Math.min(setA.size, setB.size)
+}
+
 /** Extract core keywords from a title (words that carry real topic meaning) */
 function extractCoreKeywords(text: string): Set<string> {
   const normalized = normalizeForComparison(text)
@@ -243,8 +298,6 @@ function coreTopicOverlap(a: string, b: string): number {
   if (coreA.size === 0 || coreB.size === 0) return 0
   let intersection = 0
   for (const w of coreA) { if (coreB.has(w)) intersection++ }
-  // Use the smaller set as denominator — if all core words of one title
-  // appear in the other, they cover the same topic
   return intersection / Math.min(coreA.size, coreB.size)
 }
 
@@ -289,19 +342,21 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
     try {
       const posts = await listPostsForDedup(apiKey)
       
-      // Layer D (NEW): Topic saturation guard — block if ≥3 articles (incl. drafts) share same core topic
-      const incomingCore = extractCoreKeywords(title)
+      // Layer D: Topic saturation guard — block if ≥2 articles share same topic (synonym-aware)
       let sameTopicCount = 0
       const sameTopicTitles: string[] = []
       for (const post of posts) {
         if (!post.title) continue
-        const overlap = coreTopicOverlap(title, post.title)
-        if (overlap >= 0.60) {
+        // Use BOTH core overlap AND synonym-aware overlap
+        const coreOvl = coreTopicOverlap(title, post.title)
+        const synOvl = synonymAwareOverlap(title, post.title)
+        const bestOverlap = Math.max(coreOvl, synOvl)
+        if (bestOverlap >= 0.50) {
           sameTopicCount++
           sameTopicTitles.push(post.title)
         }
       }
-      if (sameTopicCount >= 3) {
+      if (sameTopicCount >= 2) {
         console.warn(`[iktracker-actions] TOPIC SATURATION BLOCKED: "${title}" — ${sameTopicCount} existing articles on same topic: ${sameTopicTitles.slice(0, 5).join(', ')}`)
         return {
           status: 409,
@@ -316,7 +371,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
       for (const post of posts) {
         if (!post.title) continue
 
-        // Layer A: Classic Jaccard on full title (lowered from 0.65 to 0.45)
+        // Layer A: Classic Jaccard on full title
         const sim = titleSimilarity(title, post.title)
         if (sim >= 0.45) {
           const existingSlug = post.slug || ''
@@ -332,7 +387,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           }
         }
 
-        // Layer B: Core topic overlap — if ≥80% of core keywords match, same topic
+        // Layer B: Core topic overlap — if ≥80% of core keywords match
         const coreOverlap = coreTopicOverlap(title, post.title)
         if (coreOverlap >= 0.80) {
           const existingSlug = post.slug || ''
@@ -348,7 +403,23 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           }
         }
 
-        // Layer C: Slug similarity (catches reformulations with same URL intent)
+        // Layer E (NEW): Synonym-aware overlap — catches "barème kilométrique" ≈ "abattement forfaitaire"
+        const synOverlap = synonymAwareOverlap(title, post.title)
+        if (synOverlap >= 0.55) {
+          const existingSlug = post.slug || ''
+          console.log(`[iktracker-actions] Synonym duplicate detected (synOverlap=${synOverlap.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
+          if (existingSlug) {
+            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            if (!dedupGuard.allowed) {
+              console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
+              return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
+            }
+            const updateResult = await callIktracker('PUT', `/posts/${existingSlug}`, apiKey, body)
+            return { ...updateResult, _upserted: true, _original_action: 'create-post', _duplicate_of: existingSlug, _similarity: synOverlap, _dedup_layer: 'synonym' }
+          }
+        }
+
+        // Layer C: Slug similarity
         if (slug && post.slug) {
           const slugSim = slugSimilarity(slug, post.slug)
           if (slugSim >= 0.70) {
