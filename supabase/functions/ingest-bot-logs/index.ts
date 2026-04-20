@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { verifyBotBatch } from '../_shared/bot-verification.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -130,9 +131,14 @@ Deno.serve(handleRequest(async (req) => {
       });
     }
 
-    // Prepare rows
-    const rows = batch.map((log) => {
-      const bot = detectBot(log.ua || null);
+    // Vérification multi-couches (rDNS + ASN + UA), batch et cache par IP
+    const verifications = await verifyBotBatch(
+      batch.map((log) => ({ ip: log.ip, ua: log.ua })),
+      { enableRdns: true, rdnsConcurrency: 8 },
+    );
+
+    const rows = batch.map((log, i) => {
+      const v = verifications[i];
       return {
         tracked_site_id: connector.tracked_site_id,
         connector_id: connector.id,
@@ -145,9 +151,12 @@ Deno.serve(handleRequest(async (req) => {
         bytes_sent: log.bytes || null,
         referer: log.referer || null,
         country_code: log.country || null,
-        is_bot: bot.isBot,
-        bot_name: bot.name,
-        bot_category: bot.isBot ? bot.category : null,
+        is_bot: v.is_bot,
+        bot_name: v.bot_name,
+        bot_category: v.bot_category,
+        verification_status: v.status,
+        verification_method: v.method,
+        confidence_score: v.confidence,
         source: connector.type || "cloudflare",
         raw: log,
       };
