@@ -1049,6 +1049,7 @@ RÈGLES:
 
     // ── ARTICLE TYPE DIVERSITY & SEMANTIC RING ──
     let diversityBlock = '';
+    let existingArticleTitles: string[] = [];
     try {
       // Query ALL existing articles (published + drafts) via CMS scanner or direct DB
       const { data: existingPosts } = await supabase
