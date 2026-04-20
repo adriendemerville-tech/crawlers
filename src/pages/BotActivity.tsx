@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getBotIntent, getIntentLabel, getIntentColor, BotIntent } from '@/components/BotActivity/botIntentMap';
 import { VerificationBadge } from '@/components/BotActivity/VerificationBadge';
+import { ReliabilityWidget } from '@/components/BotActivity/ReliabilityWidget';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
