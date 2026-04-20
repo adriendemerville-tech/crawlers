@@ -1339,6 +1339,8 @@ ${briefBlock}
 
 ${diversityBlock}
 
+${personaBlock}
+
 ${topicExplorationBlock}
 
 ${existingTitlesBlock}
