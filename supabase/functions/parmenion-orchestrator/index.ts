@@ -1135,7 +1135,8 @@ RÈGLES:
       }
       
       diversityBlock = buildDiversityPromptBlock(distribution, ringInfo, parentPages);
-      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}], saturated=[${distribution.saturatedTopics.join(',')}]`);
+      existingArticleTitles = allArticles.map((a: any) => a.title).filter(Boolean);
+      console.log(`[Parménion] 🎯 Diversity: recommended=${distribution.recommended}, ring=${ringInfo.ring}, overrep=[${distribution.overRepresented.join(',')}], saturated=[${distribution.saturatedTopics.join(',')}], existing_titles=${existingArticleTitles.length}`);
     } catch (e) {
       console.warn('[Parménion] Diversity computation failed:', e);
     }
