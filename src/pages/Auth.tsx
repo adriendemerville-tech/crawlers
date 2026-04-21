@@ -435,6 +435,16 @@ export default function Auth() {
                       </FormItem>
                     )}
                   />
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    />
+                    <label htmlFor="remember-me" className="text-xs text-muted-foreground cursor-pointer select-none">
+                      {t.rememberMe}
+                    </label>
+                  </div>
                   <div className="flex justify-center">
                     <Button type="submit" className="w-2/3 h-11 bg-[hsl(215,20%,28%)] hover:bg-[hsl(215,25%,35%)] text-white border-0 shadow-lg" disabled={isLoading || isLocked}>
                       {isLocked
