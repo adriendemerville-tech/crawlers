@@ -127,6 +127,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('remember_me') === 'true');
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
@@ -225,6 +226,14 @@ export default function Auth() {
     setIsLoading(true);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
+    // Remember me: save email for next visit
+    if (rememberMe) {
+      localStorage.setItem('remember_me', 'true');
+      localStorage.setItem('remember_email', data.email);
+    } else {
+      localStorage.removeItem('remember_me');
+      localStorage.removeItem('remember_email');
+    }
     const { error } = await signInWithEmail(data.email, data.password);
     setIsLoading(false);
 
