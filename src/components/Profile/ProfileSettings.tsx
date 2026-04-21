@@ -116,8 +116,29 @@ export function ProfileSettings() {
   const { playlistUri, savePlaylist, clearPlaylist } = useCustomPlaylist();
   const [playlistInput, setPlaylistInput] = useState('');
   const [gscConnecting, setGscConnecting] = useState(false);
+  const [metaAccount, setMetaAccount] = useState<{ platform: string; account_name: string | null; status: string } | null>(null);
+  const [metaLoading, setMetaLoading] = useState(true);
+  const [metaDisconnecting, setMetaDisconnecting] = useState(false);
 
   const gscConnected = !!profile?.gsc_access_token;
+
+  // Fetch Meta social account
+  useEffect(() => {
+    if (!user) return;
+    setMetaLoading(true);
+    supabase
+      .from('social_accounts' as any)
+      .select('platform, account_name, status')
+      .eq('user_id', user.id)
+      .in('platform', ['facebook', 'instagram'])
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        setMetaAccount(data || null);
+        setMetaLoading(false);
+      });
+  }, [user]);
 
   useEffect(() => {
     if (profile) {
