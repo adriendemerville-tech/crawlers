@@ -610,7 +610,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           <ContentArchitectToolbar activePanel={activePanel} onTogglePanel={handleTogglePanel} hasResult={!!result} colorTheme={colorTheme} />
 
           {activePanel ? (
-            <ResizablePanelGroup direction="horizontal" className="flex-1">
+            <ResizablePanelGroup direction="horizontal" className="flex-1" autoSaveId="content-architect-panels">
               {/* Left panel */}
               <ResizablePanel defaultSize={30} minSize={20} maxSize={45} className="flex flex-col bg-[#1e293b]">
                 {/* Panel content area */}
