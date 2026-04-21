@@ -336,6 +336,9 @@ const SocialHub = memo(function SocialHub() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button variant="outline" size="sm" onClick={() => setConnectModalOpen(true)} className="gap-1.5 text-xs shrink-0">
+                <Linkedin className="h-3.5 w-3.5" /> Connecter
+              </Button>
             </div>
 
             {/* EDITOR TAB */}
