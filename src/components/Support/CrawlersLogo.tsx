@@ -18,7 +18,7 @@ export function CrawlersLogo({ size = 20, className = '' }: { size?: number; cla
       </defs>
       <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#chatBotGrad)" />
       <g
-        transform="translate(8.4, 8.4) scale(1.3)"
+        transform="translate(9, 7.5) scale(1.25)"
         stroke="#ffffff"
         strokeWidth="1.5"
         strokeLinecap="round"

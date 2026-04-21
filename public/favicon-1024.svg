@@ -7,11 +7,8 @@
       <stop offset="100%" style="stop-color:#3b5998"/>
     </linearGradient>
   </defs>
-  
   <rect x="0" y="0" width="1024" height="1024" rx="200" ry="200" fill="url(#bgGradient)"/>
-  
-  <!-- Lucide Bot icon - scaled 27.73x (30% bigger than 21.33x) -->
-  <g transform="translate(179.25, 179.25) scale(27.73)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <g transform="translate(192, 160) scale(26.67)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <path d="M12 8V4H8"/>
     <rect x="4" y="8" width="16" height="12" rx="2"/>
     <path d="M2 14h2"/>
