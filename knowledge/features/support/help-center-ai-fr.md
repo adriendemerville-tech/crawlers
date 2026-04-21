@@ -65,6 +65,15 @@ Updated: 2026-04-08
 - Si l'utilisateur n'est pas Pro Agency+ : explique que la fonctionnalité est réservée à l'offre Pro Agency+, propose la page /tarifs
 - Ne mentionne JAMAIS les détails techniques (spiral_score, competitor_momentum_score, compute-spiral-signals)
 
+## Couverture Social Hub (Connexion réseaux sociaux)
+- Félix connaît le flux de connexion OAuth pour LinkedIn et Facebook/Instagram dans /app/social
+- Sait expliquer : cliquer sur "Connecter" lance une fenêtre d'autorisation sur la plateforme, puis redirige vers Crawlers
+- Prérequis : être connecté à Crawlers (compte utilisateur actif)
+- Troubleshooting : si la connexion échoue → vérifier que les popups ne sont pas bloquées, réessayer, vider le cache
+- Une fois connecté, les comptes apparaissent dans la liste avec statut "Connecté"
+- Les comptes connectés permettent la publication de contenus sociaux via Content Architect ou Parménion
+- Ne mentionne JAMAIS les noms de fonctions edge, les URLs de callback, ni les secrets OAuth
+
 ## Fonctionnalités avancées
 - **Voice input** : Bouton micro — Web Speech API (FR/EN/ES), transcription en temps réel
 - **Pièces jointes** : Bouton + — charge un rapport (`pdf_audits`) ou script (`site_script_rules`) du compte de l'utilisateur, avec bouton "Explique-moi"
