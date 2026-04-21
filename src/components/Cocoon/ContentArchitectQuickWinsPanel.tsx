@@ -75,10 +75,10 @@ export function ContentArchitectQuickWinsPanel({ trackedSiteId, domain, onApply 
       .limit(50);
 
     // Scope to tracked site if available
-    const wbPromise = (trackedSiteId
-      ? wbQuery.eq('tracked_site_id', trackedSiteId)
-      : wbQuery
-    ).then(({ data }) => {
+    const wbPromise = Promise.resolve(
+      (trackedSiteId ? wbQuery.eq('tracked_site_id', trackedSiteId) : wbQuery)
+    ).then(async (q) => {
+      const { data } = await q;
       if (data) {
         setItems(data.map((d: any) => ({
           ...d,
@@ -116,7 +116,7 @@ export function ContentArchitectQuickWinsPanel({ trackedSiteId, domain, onApply 
             })));
           }
         });
-      promises.push(kwPromise);
+      promises.push(Promise.resolve(kwPromise));
     }
 
     Promise.all(promises).finally(() => setLoading(false));
