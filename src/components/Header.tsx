@@ -116,7 +116,30 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const t = translations[language];
-  
+
+  // Auto-hide header on scroll down for /app pages
+  const isAppPage = location.pathname.startsWith('/app');
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    if (!isAppPage) {
+      setHeaderHidden(false);
+      return;
+    }
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollY.current;
+      if (delta > 10 && currentY > 80) {
+        setHeaderHidden(true);
+      } else if (delta < -5) {
+        setHeaderHidden(false);
+      }
+      lastScrollY.current = currentY;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isAppPage]);
 
   // Collaborator detection (team members cannot manage billing)
   const [isCollaborator, setIsCollaborator] = useState(false);
