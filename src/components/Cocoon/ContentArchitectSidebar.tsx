@@ -209,7 +209,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
       {activeSiteId && (
         <div className="flex-1 overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-3 py-1.5">
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Prompts</p>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Prompt structure</p>
             <button
               onClick={() => setShowNewPreset(true)}
               className="p-0.5 rounded hover:bg-slate-700/40 text-slate-500 hover:text-teal-400 transition-colors"

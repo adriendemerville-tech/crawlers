@@ -10,7 +10,7 @@ interface ToolbarItem {
 
 const TOOLBAR_ITEMS: ToolbarItem[] = [
   { id: 'quickwins', icon: Zap, label: 'Quick Wins' },
-  { id: 'prompt', icon: PenLine, label: 'Prompt' },
+  { id: 'prompt', icon: PenLine, label: 'Page' },
   { id: 'structure', icon: Layers, label: 'Structure' },
   { id: 'structured-data', icon: Braces, label: 'Données' },
   { id: 'images', icon: ImageIcon, label: 'Images' },
