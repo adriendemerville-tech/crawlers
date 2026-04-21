@@ -511,6 +511,96 @@ export function ProfileSettings() {
   );
 }
 
+function SocialAccountRow({ label, icon, account, loading, connecting, disconnecting, onConnect, onDisconnect, language, disconnectWarning }: {
+  label: string;
+  icon: React.ReactNode;
+  account?: { account_name: string | null; status: string };
+  loading: boolean;
+  connecting: boolean;
+  disconnecting: boolean;
+  onConnect: () => void;
+  onDisconnect: () => void;
+  language: string;
+  disconnectWarning: string;
+}) {
+  const connected = !!account;
+  return (
+    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
+      <div className="flex items-center gap-3">
+        {loading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        ) : connected ? (
+          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
+            <CheckCircle2 className="h-5 w-5 text-primary" />
+          </div>
+        ) : (
+          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+            {icon}
+          </div>
+        )}
+        <div>
+          <p className="font-medium text-sm">{label}</p>
+          {!loading && connected && account?.account_name && (
+            <p className="text-xs text-muted-foreground">{account.account_name}</p>
+          )}
+          {!loading && !connected && (
+            <p className="text-xs text-muted-foreground">
+              {language === 'fr' ? 'Non connecté' : language === 'es' ? 'No conectado' : 'Not connected'}
+            </p>
+          )}
+        </div>
+      </div>
+      {!loading && (
+        connected ? (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 shrink-0 bg-transparent border-border rounded-sm text-destructive hover:text-destructive"
+                disabled={disconnecting}
+              >
+                {disconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
+                {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {language === 'fr' ? `Déconnecter ${label} ?` : language === 'es' ? `Desconectar ${label}?` : `Disconnect ${label}?`}
+                </AlertDialogTitle>
+                <AlertDialogDescription>{disconnectWarning}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-transparent border-border rounded-sm">
+                  {language === 'fr' ? 'Annuler' : language === 'es' ? 'Cancelar' : 'Cancel'}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-sm"
+                  onClick={onDisconnect}
+                >
+                  {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 shrink-0 bg-transparent border-border rounded-sm"
+            disabled={connecting}
+            onClick={onConnect}
+          >
+            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+            {language === 'fr' ? 'Connecter' : language === 'es' ? 'Conectar' : 'Connect'}
+          </Button>
+        )
+      )}
+    </div>
+  );
+}
+
 function ThemeSettingsCard() {
   const { theme, setTheme } = useTheme();
   const { language } = useLanguage();
