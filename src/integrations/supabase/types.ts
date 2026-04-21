@@ -6906,6 +6906,10 @@ export type Database = {
           api_key: string
           created_at: string
           id: string
+          is_active: boolean
+          label: string
+          requests_count: number
+          selected_services: string[]
           updated_at: string
           user_id: string
         }
@@ -6913,6 +6917,10 @@ export type Database = {
           api_key: string
           created_at?: string
           id?: string
+          is_active?: boolean
+          label?: string
+          requests_count?: number
+          selected_services?: string[]
           updated_at?: string
           user_id: string
         }
@@ -6920,6 +6928,10 @@ export type Database = {
           api_key?: string
           created_at?: string
           id?: string
+          is_active?: boolean
+          label?: string
+          requests_count?: number
+          selected_services?: string[]
           updated_at?: string
           user_id?: string
         }
