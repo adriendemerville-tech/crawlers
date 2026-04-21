@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download } from 'lucide-react';
+import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download, Send } from 'lucide-react';
 import { generateParmenionReport } from '@/utils/parmenionPdfReport';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,6 +103,43 @@ export function ParmenionTargetPanel({
   const [cooldownInput, setCooldownInput] = useState<string>('1');
   const [histLoading, setHistLoading] = useState(false);
   const [modCounts, setModCounts] = useState<Record<number, number>>({});
+  const [escalatingIds, setEscalatingIds] = useState<Set<string>>(new Set());
+
+  const escalateToCto = useCallback(async (log: DecisionLog) => {
+    setEscalatingIds(prev => new Set(prev).add(log.id));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const directiveText = [
+        `[AUTO-ESCALADE Parménion #${log.cycle_number}]`,
+        `Phase: ${log.pipeline_phase || 'inconnue'}`,
+        `Domaine: ${log.domain}`,
+        `Objectif: ${log.goal_description}`,
+        `Fonctions: ${log.functions_called?.join(', ') || 'aucune'}`,
+        `Erreur: ${log.execution_error}`,
+        log.error_category ? `Catégorie: ${log.error_category}` : '',
+        '',
+        'Action requise: Investiguer la cause racine de cette erreur et proposer un correctif.',
+      ].filter(Boolean).join('\n');
+
+      const { error } = await supabase.from('agent_cto_directives').insert({
+        user_id: user.id,
+        directive_text: directiveText,
+        target_function: log.functions_called?.[0] || 'parmenion-orchestrator',
+        target_url: `https://${log.domain}`,
+        status: 'pending',
+      });
+
+      if (error) throw error;
+      toast({ title: 'Directive CTO créée', description: `Investigation #${log.cycle_number} ajoutée à la queue CTO` });
+    } catch (err: any) {
+      console.error('Escalation error:', err);
+      toast({ title: 'Erreur', description: 'Impossible de créer la directive CTO', variant: 'destructive' });
+    } finally {
+      setEscalatingIds(prev => { const n = new Set(prev); n.delete(log.id); return n; });
+    }
+  }, [toast]);
 
   const fetchLogs = useCallback(async () => {
     const { data, error } = await supabase
@@ -577,8 +614,18 @@ export function ParmenionTargetPanel({
                       )}
 
                       {log.execution_error && (
-                        <div className="mt-2 p-2 rounded bg-destructive/10 text-xs text-destructive">
-                          ⚠️ {log.execution_error}
+                        <div className="mt-2 p-2 rounded bg-destructive/10 text-xs text-destructive flex items-start justify-between gap-2">
+                          <span>⚠️ {log.execution_error}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 h-6 px-2 text-[10px] gap-1 border-destructive/30 text-destructive hover:bg-destructive/10"
+                            disabled={escalatingIds.has(log.id)}
+                            onClick={() => escalateToCto(log)}
+                          >
+                            <Send className="h-3 w-3" />
+                            {escalatingIds.has(log.id) ? '...' : 'CTO'}
+                          </Button>
                         </div>
                       )}
                     </div>
