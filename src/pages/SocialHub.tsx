@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import {
-  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings, ImageIcon
+  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings, ImageIcon, Linkedin
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
@@ -30,6 +30,7 @@ import { SocialStatsDashboard } from '@/components/Social/SocialStatsDashboard';
 import { SocialFeedColumns } from '@/components/Social/SocialFeedColumns';
 import { SocialActionPlan } from '@/components/Social/SocialActionPlan';
 import { SocialSettings } from '@/components/Social/SocialSettings';
+import { SocialConnectModal } from '@/components/Social/SocialConnectModal';
 import { SocialImageLibrary, type LibraryImage } from '@/components/Social/SocialImageLibrary';
 import { createPost, updatePost, publishPost, exportZip, fetchPosts, type SocialPost } from '@/lib/api/socialHub';
 import { useNavigate } from 'react-router-dom';
@@ -151,6 +152,7 @@ const SocialHub = memo(function SocialHub() {
   const [showLibrary, setShowLibrary] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(undefined);
   const [referenceImages, setReferenceImages] = useState<LibraryImage[]>([]);
+  const [connectModalOpen, setConnectModalOpen] = useState(false);
 
   const isPro = isAgencyPro || planType === 'agency_premium' || isAdmin;
   const isOverFreeLimit = !isPro && monthlyUsage >= FREE_MONTHLY_LIMIT;
@@ -334,6 +336,9 @@ const SocialHub = memo(function SocialHub() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button variant="outline" size="sm" onClick={() => setConnectModalOpen(true)} className="gap-1.5 text-xs shrink-0">
+                <Linkedin className="h-3.5 w-3.5" /> Connecter
+              </Button>
             </div>
 
             {/* EDITOR TAB */}
@@ -438,6 +443,7 @@ const SocialHub = memo(function SocialHub() {
         </div>
       </main>
       <Footer />
+      <SocialConnectModal open={connectModalOpen} onOpenChange={setConnectModalOpen} trackedSiteId={selectedSiteId} />
     </>
   );
 });
