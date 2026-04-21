@@ -159,6 +159,9 @@ export function PageTemplatesAdmin() {
             <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleCreateNew('landing')}>
               <Plus className="h-3 w-3" /> Landing
             </Button>
+            <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleCreateNew('product')}>
+              <Plus className="h-3 w-3" /> Produit
+            </Button>
             <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleCreateNew('article')}>
               <Plus className="h-3 w-3" /> Article
             </Button>
