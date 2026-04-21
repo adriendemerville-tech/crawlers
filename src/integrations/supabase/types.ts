@@ -10678,6 +10678,36 @@ export type Database = {
           },
         ]
       }
+      social_oauth_states: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          platform: string
+          state: string
+          tracked_site_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          platform: string
+          state: string
+          tracked_site_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          platform?: string
+          state?: string
+          tracked_site_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       social_post_metrics: {
         Row: {
           clicks: number | null
@@ -12488,6 +12518,7 @@ export type Database = {
       }
       cleanup_audit_cache_ttl: { Args: never; Returns: number }
       cleanup_expired_depth_conversations: { Args: never; Returns: undefined }
+      cleanup_expired_oauth_states: { Args: never; Returns: undefined }
       cleanup_expired_phone_callbacks: { Args: never; Returns: undefined }
       cleanup_expired_roles: { Args: never; Returns: undefined }
       cleanup_stale_sessions: { Args: never; Returns: number }
