@@ -370,115 +370,56 @@ export function ProfileSettings() {
         </CardContent>
       </Card>
 
-      {/* Meta (Facebook / Instagram) Connection */}
+      {/* Social Accounts — LinkedIn, Meta (Facebook / Instagram) */}
       <Card className="border-border/60">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.52 1.49-3.93 3.78-3.93 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 008.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>
-            Meta
+            <Link2 className="h-5 w-5" />
+            {language === 'fr' ? 'Comptes sociaux' : language === 'es' ? 'Cuentas sociales' : 'Social Accounts'}
           </CardTitle>
           <CardDescription>
             {language === 'fr'
-              ? 'Statut de connexion de votre compte Meta (Facebook / Instagram).'
+              ? 'Connectez vos comptes pour publier sur les réseaux sociaux.'
               : language === 'es'
-                ? 'Estado de conexión de su cuenta Meta (Facebook / Instagram).'
-                : 'Connection status of your Meta account (Facebook / Instagram).'}
+                ? 'Conecte sus cuentas para publicar en redes sociales.'
+                : 'Connect your accounts to publish on social media.'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
-            <div className="flex items-center gap-3">
-              {metaLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              ) : metaAccount ? (
-                <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                </div>
-              ) : (
-                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                  <Unplug className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
-              <div>
-                <p className="font-medium text-sm">
-                  {metaLoading
-                    ? (language === 'fr' ? 'Chargement...' : language === 'es' ? 'Cargando...' : 'Loading...')
-                    : metaAccount
-                      ? (language === 'fr' ? 'Compte Meta connecté' : language === 'es' ? 'Cuenta Meta conectada' : 'Meta account connected')
-                      : (language === 'fr' ? 'Non connecté' : language === 'es' ? 'No conectado' : 'Not connected')}
-                </p>
-                {!metaLoading && metaAccount?.account_name && (
-                  <p className="text-xs text-muted-foreground">{metaAccount.account_name}</p>
-                )}
-                {!metaLoading && !metaAccount && (
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'fr'
-                      ? 'Connectez votre compte depuis le module Social.'
-                      : language === 'es'
-                        ? 'Conecte su cuenta desde el módulo Social.'
-                        : 'Connect your account from the Social module.'}
-                  </p>
-                )}
-              </div>
-            </div>
-            {!metaLoading && metaAccount && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 shrink-0 bg-transparent border-border rounded-sm text-destructive hover:text-destructive"
-                    disabled={metaDisconnecting}
-                  >
-                    {metaDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
-                    {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      {language === 'fr' ? 'Déconnecter le compte Meta ?' : language === 'es' ? 'Desconectar la cuenta Meta?' : 'Disconnect Meta account?'}
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {language === 'fr'
-                        ? 'Cette action révoquera l\'accès à Facebook et Instagram. Vous pourrez reconnecter votre compte ultérieurement.'
-                        : language === 'es'
-                          ? 'Esta acción revocará el acceso a Facebook e Instagram. Podrá reconectar su cuenta más tarde.'
-                          : 'This will revoke access to Facebook and Instagram. You can reconnect your account later.'}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-transparent border-border rounded-sm">
-                      {language === 'fr' ? 'Annuler' : language === 'es' ? 'Cancelar' : 'Cancel'}
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-sm"
-                      onClick={async () => {
-                        if (!user) return;
-                        setMetaDisconnecting(true);
-                        try {
-                          await supabase
-                            .from('social_accounts' as any)
-                            .update({ status: 'revoked' } as any)
-                            .eq('user_id', user.id)
-                            .in('platform', ['facebook', 'instagram']);
-                          setMetaAccount(null);
-                          toast.success(language === 'fr' ? 'Compte Meta déconnecté' : language === 'es' ? 'Cuenta Meta desconectada' : 'Meta account disconnected');
-                        } catch (err) {
-                          console.error('Meta disconnect error:', err);
-                          toast.error(language === 'fr' ? 'Erreur lors de la déconnexion' : 'Disconnection error');
-                        } finally {
-                          setMetaDisconnecting(false);
-                        }
-                      }}
-                    >
-                      {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
+        <CardContent className="space-y-3">
+          {/* LinkedIn */}
+          <SocialAccountRow
+            label="LinkedIn"
+            icon={<svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>}
+            account={socialAccounts['linkedin']}
+            loading={socialLoading}
+            connecting={socialConnecting === 'linkedin'}
+            disconnecting={socialDisconnecting === 'linkedin'}
+            onConnect={() => handleSocialConnect('linkedin')}
+            onDisconnect={() => handleSocialDisconnect(['linkedin'])}
+            language={language}
+            disconnectWarning={language === 'fr'
+              ? 'Cette action révoquera l\'accès à LinkedIn. Vous pourrez reconnecter votre compte ultérieurement.'
+              : language === 'es'
+                ? 'Esta acción revocará el acceso a LinkedIn. Podrá reconectar su cuenta más tarde.'
+                : 'This will revoke access to LinkedIn. You can reconnect your account later.'}
+          />
+          {/* Meta (Facebook + Instagram) */}
+          <SocialAccountRow
+            label="Meta (Facebook / Instagram)"
+            icon={<svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.52 1.49-3.93 3.78-3.93 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 008.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>}
+            account={socialAccounts['facebook']}
+            loading={socialLoading}
+            connecting={socialConnecting === 'facebook'}
+            disconnecting={socialDisconnecting === 'facebook'}
+            onConnect={() => handleSocialConnect('facebook')}
+            onDisconnect={() => handleSocialDisconnect(['facebook', 'instagram'])}
+            language={language}
+            disconnectWarning={language === 'fr'
+              ? 'Cette action révoquera l\'accès à Facebook et Instagram. Vous pourrez reconnecter votre compte ultérieurement.'
+              : language === 'es'
+                ? 'Esta acción revocará el acceso a Facebook e Instagram. Podrá reconectar su cuenta más tarde.'
+                : 'This will revoke access to Facebook and Instagram. You can reconnect your account later.'}
+          />
         </CardContent>
       </Card>
 
