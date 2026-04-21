@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Save, Loader2, Globe, Music, X, Sun, Moon, RefreshCw, CheckCircle2, Search, EyeOff, Eye, Unplug } from 'lucide-react';
+import { User, Save, Loader2, Globe, Music, X, Sun, Moon, RefreshCw, CheckCircle2, Search, EyeOff, Eye, Unplug, Link2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
