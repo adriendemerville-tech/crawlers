@@ -210,7 +210,7 @@ export function Header() {
 
   return (
     <>
-    <header className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-6xl rounded-2xl border border-border/50 bg-card/70 backdrop-blur-xl shadow-lg shadow-black/5" role="banner">
+    <header className={`fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-6xl rounded-2xl border border-border/50 bg-card/70 backdrop-blur-xl shadow-lg shadow-black/5 transition-transform duration-300 ease-in-out ${headerHidden ? '-translate-y-[calc(100%+1rem)]' : ''}`} role="banner">
       <nav className="mx-auto flex h-12 sm:h-14 items-center justify-between px-4 sm:px-6" aria-label="Navigation principale">
         {/* Left side: Back button OR Logo + Language selector */}
         <div className="flex items-center gap-4">
