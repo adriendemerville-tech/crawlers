@@ -10,6 +10,7 @@ import { AnimatePresence } from 'framer-motion';
 import { VerificationCodeModal } from '@/components/VerificationCodeModal';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -35,6 +36,7 @@ const translations = {
     firstName: 'Prénom',
     lastName: 'Nom',
     loginButton: 'Se connecter',
+    rememberMe: 'Se souvenir de moi',
     signupButton: "S'inscrire",
     googleLogin: 'Continuer avec Google',
     noAccount: "Pas encore de compte ?",
@@ -68,6 +70,7 @@ const translations = {
     loginButton: 'Sign In',
     signupButton: 'Sign Up',
     googleLogin: 'Continue with Google',
+    rememberMe: 'Remember me',
     noAccount: "Don't have an account?",
     hasAccount: 'Already have an account?',
     backToHome: 'Back to home',
@@ -99,6 +102,7 @@ const translations = {
     loginButton: 'Iniciar sesión',
     signupButton: 'Registrarse',
     googleLogin: 'Continuar con Google',
+    rememberMe: 'Recordarme',
     noAccount: '¿No tienes cuenta?',
     hasAccount: '¿Ya tienes cuenta?',
     backToHome: 'Volver al inicio',
@@ -124,6 +128,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('remember_me') === 'true');
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
@@ -202,7 +207,7 @@ export default function Auth() {
     lastName: z.string().min(1, t.lastNameRequired),
   });
 
-  const prefillEmail = searchParams.get('email') || '';
+  const prefillEmail = searchParams.get('email') || localStorage.getItem('remember_email') || '';
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
@@ -222,6 +227,14 @@ export default function Auth() {
     setIsLoading(true);
     const verified = await verifyTurnstile();
     if (!verified) { setIsLoading(false); return; }
+    // Remember me: save email for next visit
+    if (rememberMe) {
+      localStorage.setItem('remember_me', 'true');
+      localStorage.setItem('remember_email', data.email);
+    } else {
+      localStorage.removeItem('remember_me');
+      localStorage.removeItem('remember_email');
+    }
     const { error } = await signInWithEmail(data.email, data.password);
     setIsLoading(false);
 
@@ -423,6 +436,16 @@ export default function Auth() {
                       </FormItem>
                     )}
                   />
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    />
+                    <label htmlFor="remember-me" className="text-xs text-muted-foreground cursor-pointer select-none">
+                      {t.rememberMe}
+                    </label>
+                  </div>
                   <div className="flex justify-center">
                     <Button type="submit" className="w-2/3 h-11 bg-[hsl(215,20%,28%)] hover:bg-[hsl(215,25%,35%)] text-white border-0 shadow-lg" disabled={isLoading || isLocked}>
                       {isLocked
