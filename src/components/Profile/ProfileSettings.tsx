@@ -183,7 +183,7 @@ export function ProfileSettings() {
   };
   const gscConnected = !!profile?.gsc_access_token;
 
-
+  useEffect(() => {
     if (profile) {
       setFirstName(profile.first_name || '');
       setLastName(profile.last_name || '');
