@@ -5773,6 +5773,7 @@ export type Database = {
       gsc_daily_positions: {
         Row: {
           clicks: number | null
+          country: string
           created_at: string
           ctr: number | null
           date_val: string
@@ -5786,6 +5787,7 @@ export type Database = {
         }
         Insert: {
           clicks?: number | null
+          country?: string
           created_at?: string
           ctr?: number | null
           date_val: string
@@ -5799,6 +5801,7 @@ export type Database = {
         }
         Update: {
           clicks?: number | null
+          country?: string
           created_at?: string
           ctr?: number | null
           date_val?: string
@@ -11475,6 +11478,7 @@ export type Database = {
           site_name: string
           social_profiles: Json | null
           target_audience: string | null
+          target_countries: string[]
           target_segment: string | null
           user_id: string
           voice_dna: Json | null
@@ -11538,6 +11542,7 @@ export type Database = {
           site_name?: string
           social_profiles?: Json | null
           target_audience?: string | null
+          target_countries?: string[]
           target_segment?: string | null
           user_id: string
           voice_dna?: Json | null
@@ -11601,6 +11606,7 @@ export type Database = {
           site_name?: string
           social_profiles?: Json | null
           target_audience?: string | null
+          target_countries?: string[]
           target_segment?: string | null
           user_id?: string
           voice_dna?: Json | null
