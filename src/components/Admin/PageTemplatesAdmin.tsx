@@ -110,15 +110,19 @@ export function PageTemplatesAdmin() {
     }
   };
 
-  const handleCreateNew = async (pageType: 'landing' | 'article') => {
+  const handleCreateNew = async (pageType: 'landing' | 'article' | 'product') => {
     try {
+      const labels: Record<string, string> = { landing: 'Landing Page Standard', article: 'Article Blog Standard', product: 'Fiche Produit Standard' };
+      const structures: Record<string, string> = {
+        landing: '# {TITRE}\n\n## {ACCROCHE}\n{paragraphe_hero}\n\n## Pourquoi {SUJET} ?\n{3_arguments}\n\n## Comment ça marche\n{étapes_numérotées}\n\n## Résultats concrets\n{chiffres_preuves}\n\n## FAQ\n{3-5_questions}\n\n## CTA\n{appel_action}',
+        article: '# {TITRE}\n\n{chapô_150_mots}\n\n## {H2_1}\n{section_400_mots}\n\n## {H2_2}\n{section_400_mots}\n\n### {H3_détail}\n{sous_section}\n\n## {H2_3}\n{section_400_mots}\n\n## FAQ\n{5_questions}\n\n## Conclusion\n{résumé_CTA}',
+        product: '# {NOM_PRODUIT}\n\n{description_80_mots}\n\n## Caractéristiques\n{tableau_specs}\n\n## À qui s\'adresse ce produit ?\n{personas}\n\n## Points forts et limites\n{analyse_objective}\n\n## FAQ\n{3_questions}\n\n## CTA\n{achat_devis}',
+      };
       const defaultTemplate = {
         page_type: pageType,
-        label: pageType === 'landing' ? 'Landing Page Standard' : 'Article Blog Standard',
-        structure_template: pageType === 'landing'
-          ? '# {TITRE}\n\n## {ACCROCHE}\n{paragraphe_hero}\n\n## Pourquoi {SUJET} ?\n{3_arguments}\n\n## Comment ça marche\n{étapes_numérotées}\n\n## Résultats concrets\n{chiffres_preuves}\n\n## FAQ\n{3-5_questions}\n\n## CTA\n{appel_action}'
-          : '# {TITRE}\n\n{chapô_150_mots}\n\n## {H2_1}\n{section_400_mots}\n\n## {H2_2}\n{section_400_mots}\n\n### {H3_détail}\n{sous_section}\n\n## {H2_3}\n{section_400_mots}\n\n## FAQ\n{5_questions}\n\n## Conclusion\n{résumé_CTA}',
-        seo_rules: 'Mot-clé principal dans H1, premier paragraphe et 2 H2. Meta title < 60 chars. Meta description < 160 chars avec CTA. Densité mot-clé 1-2%. Maillage interne : 3-5 liens vers pages Crawlers pertinentes.',
+        label: labels[pageType],
+        structure_template: structures[pageType],
+        seo_rules: 'Mot-clé principal dans H1, premier paragraphe et 2 H2. Meta title < 60 chars. Meta description < 160 chars avec CTA. Densité mot-clé 1-2%. Maillage interne : 3-5 liens vers pages pertinentes.',
         geo_rules: 'Passages citables (2-3 phrases autonomes résumant un concept clé). Structure FAQ pour featured snippets. Phrases "Selon [source]..." pour signaux E-E-A-T. Résumé à puces en début d\'article.',
         tone_guidelines: 'Ton expert mais accessible. Pas de jargon inutile. Exemples concrets. Voix active. Phrases courtes (< 25 mots). Pas de superlatifs vides.',
         system_prompt: `Tu es un rédacteur SEO/GEO expert. Tu crées du contenu optimisé pour les moteurs de recherche ET les LLMs (ChatGPT, Perplexity, Gemini). Chaque page doit être structurée, sourcée et citable.`,
@@ -154,6 +158,9 @@ export function PageTemplatesAdmin() {
           <div className="flex gap-1.5">
             <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleCreateNew('landing')}>
               <Plus className="h-3 w-3" /> Landing
+            </Button>
+            <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleCreateNew('product')}>
+              <Plus className="h-3 w-3" /> Produit
             </Button>
             <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleCreateNew('article')}>
               <Plus className="h-3 w-3" /> Article
