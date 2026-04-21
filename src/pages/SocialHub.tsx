@@ -30,6 +30,7 @@ import { SocialStatsDashboard } from '@/components/Social/SocialStatsDashboard';
 import { SocialFeedColumns } from '@/components/Social/SocialFeedColumns';
 import { SocialActionPlan } from '@/components/Social/SocialActionPlan';
 import { SocialSettings } from '@/components/Social/SocialSettings';
+import { SocialConnectModal } from '@/components/Social/SocialConnectModal';
 import { SocialImageLibrary, type LibraryImage } from '@/components/Social/SocialImageLibrary';
 import { createPost, updatePost, publishPost, exportZip, fetchPosts, type SocialPost } from '@/lib/api/socialHub';
 import { useNavigate } from 'react-router-dom';
