@@ -443,6 +443,7 @@ const SocialHub = memo(function SocialHub() {
         </div>
       </main>
       <Footer />
+      <SocialConnectModal open={connectModalOpen} onOpenChange={setConnectModalOpen} trackedSiteId={selectedSiteId} />
     </>
   );
 });
