@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import {
-  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings, ImageIcon
+  PenTool, CalendarDays, BarChart3, Columns3, Target, Loader2, ArrowLeft, Share2, Crown, Lock, Settings, ImageIcon, Linkedin
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
