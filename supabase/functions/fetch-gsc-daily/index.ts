@@ -144,8 +144,9 @@ Deno.serve(handleRequest(async (req) => {
         // Upsert (ON CONFLICT do update)
         for (let i = 0; i < insertRows.length; i += 100) {
           const batch = insertRows.slice(i, i + 100)
-          const { error } = await supabase.from('gsc_daily_positions').upsert(batch, {
+        const { error } = await supabase.from('gsc_daily_positions').upsert(batch, {
             onConflict: 'tracked_site_id,query,date_val,country',
+            ignoreDuplicates: false,
           })
           if (error) console.error(`[fetch-gsc-daily] Upsert error for ${cleanDomain}/${countryCode}:`, error)
           else totalInserted += batch.length
