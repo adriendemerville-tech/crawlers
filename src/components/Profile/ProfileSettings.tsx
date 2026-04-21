@@ -117,29 +117,70 @@ export function ProfileSettings() {
   const { playlistUri, savePlaylist, clearPlaylist } = useCustomPlaylist();
   const [playlistInput, setPlaylistInput] = useState('');
   const [gscConnecting, setGscConnecting] = useState(false);
-  const [metaAccount, setMetaAccount] = useState<{ platform: string; account_name: string | null; status: string } | null>(null);
-  const [metaLoading, setMetaLoading] = useState(true);
-  const [metaDisconnecting, setMetaDisconnecting] = useState(false);
+  const [socialAccounts, setSocialAccounts] = useState<Record<string, { account_name: string | null; status: string }>>({});
+  const [socialLoading, setSocialLoading] = useState(true);
+  const [socialConnecting, setSocialConnecting] = useState<string | null>(null);
+  const [socialDisconnecting, setSocialDisconnecting] = useState<string | null>(null);
 
-  const gscConnected = !!profile?.gsc_access_token;
-
-  // Fetch Meta social account
+  // Fetch all social accounts
   useEffect(() => {
     if (!user) return;
-    setMetaLoading(true);
+    setSocialLoading(true);
     supabase
       .from('social_accounts' as any)
       .select('platform, account_name, status')
       .eq('user_id', user.id)
-      .in('platform', ['facebook', 'instagram'])
       .eq('status', 'active')
-      .limit(1)
-      .maybeSingle()
       .then(({ data }: any) => {
-        setMetaAccount(data || null);
-        setMetaLoading(false);
+        const map: Record<string, { account_name: string | null; status: string }> = {};
+        (data || []).forEach((a: any) => { map[a.platform] = { account_name: a.account_name, status: a.status }; });
+        setSocialAccounts(map);
+        setSocialLoading(false);
       });
   }, [user]);
+
+  const handleSocialConnect = async (platform: string) => {
+    if (!user) return;
+    setSocialConnecting(platform);
+    try {
+      const { data, error } = await supabase.functions.invoke('social-oauth-init', {
+        body: { platform },
+      });
+      if (error) throw error;
+      if (data?.auth_url) {
+        window.location.href = data.auth_url;
+      }
+    } catch (err: any) {
+      console.error(`Social connect error (${platform}):`, err);
+      toast.error(language === 'fr' ? 'Erreur de connexion' : language === 'es' ? 'Error de conexión' : 'Connection error');
+    } finally {
+      setSocialConnecting(null);
+    }
+  };
+
+  const handleSocialDisconnect = async (platforms: string[]) => {
+    if (!user) return;
+    const key = platforms[0];
+    setSocialDisconnecting(key);
+    try {
+      await supabase
+        .from('social_accounts' as any)
+        .update({ status: 'revoked' } as any)
+        .eq('user_id', user.id)
+        .in('platform', platforms);
+      setSocialAccounts(prev => {
+        const next = { ...prev };
+        platforms.forEach(p => delete next[p]);
+        return next;
+      });
+      toast.success(language === 'fr' ? 'Compte déconnecté' : language === 'es' ? 'Cuenta desconectada' : 'Account disconnected');
+    } catch (err) {
+      console.error('Social disconnect error:', err);
+      toast.error(language === 'fr' ? 'Erreur lors de la déconnexion' : 'Disconnection error');
+    } finally {
+      setSocialDisconnecting(null);
+    }
+  };
 
   useEffect(() => {
     if (profile) {
