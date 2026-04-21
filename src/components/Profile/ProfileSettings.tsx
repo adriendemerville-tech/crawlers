@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Save, Loader2, Globe, Music, X, Sun, Moon, RefreshCw, CheckCircle2, Search, EyeOff, Eye } from 'lucide-react';
+import { User, Save, Loader2, Globe, Music, X, Sun, Moon, RefreshCw, CheckCircle2, Search, EyeOff, Eye, Unplug } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,8 +116,29 @@ export function ProfileSettings() {
   const { playlistUri, savePlaylist, clearPlaylist } = useCustomPlaylist();
   const [playlistInput, setPlaylistInput] = useState('');
   const [gscConnecting, setGscConnecting] = useState(false);
+  const [metaAccount, setMetaAccount] = useState<{ platform: string; account_name: string | null; status: string } | null>(null);
+  const [metaLoading, setMetaLoading] = useState(true);
+  const [metaDisconnecting, setMetaDisconnecting] = useState(false);
 
   const gscConnected = !!profile?.gsc_access_token;
+
+  // Fetch Meta social account
+  useEffect(() => {
+    if (!user) return;
+    setMetaLoading(true);
+    supabase
+      .from('social_accounts' as any)
+      .select('platform, account_name, status')
+      .eq('user_id', user.id)
+      .in('platform', ['facebook', 'instagram'])
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        setMetaAccount(data || null);
+        setMetaLoading(false);
+      });
+  }, [user]);
 
   useEffect(() => {
     if (profile) {
@@ -303,6 +324,90 @@ export function ProfileSettings() {
                   : 'Reconnecting preserves your existing data and adds new permissions.'}
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Meta (Facebook / Instagram) Connection */}
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.52 1.49-3.93 3.78-3.93 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 008.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>
+            Meta
+          </CardTitle>
+          <CardDescription>
+            {language === 'fr'
+              ? 'Statut de connexion de votre compte Meta (Facebook / Instagram).'
+              : language === 'es'
+                ? 'Estado de conexión de su cuenta Meta (Facebook / Instagram).'
+                : 'Connection status of your Meta account (Facebook / Instagram).'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
+            <div className="flex items-center gap-3">
+              {metaLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              ) : metaAccount ? (
+                <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                </div>
+              ) : (
+                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                  <Unplug className="h-5 w-5 text-muted-foreground" />
+                </div>
+              )}
+              <div>
+                <p className="font-medium text-sm">
+                  {metaLoading
+                    ? (language === 'fr' ? 'Chargement...' : language === 'es' ? 'Cargando...' : 'Loading...')
+                    : metaAccount
+                      ? (language === 'fr' ? 'Compte Meta connecté' : language === 'es' ? 'Cuenta Meta conectada' : 'Meta account connected')
+                      : (language === 'fr' ? 'Non connecté' : language === 'es' ? 'No conectado' : 'Not connected')}
+                </p>
+                {!metaLoading && metaAccount?.account_name && (
+                  <p className="text-xs text-muted-foreground">{metaAccount.account_name}</p>
+                )}
+                {!metaLoading && !metaAccount && (
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'fr'
+                      ? 'Connectez votre compte depuis le module Social.'
+                      : language === 'es'
+                        ? 'Conecte su cuenta desde el módulo Social.'
+                        : 'Connect your account from the Social module.'}
+                  </p>
+                )}
+              </div>
+            </div>
+            {!metaLoading && metaAccount && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 shrink-0 bg-transparent border-border rounded-sm text-destructive hover:text-destructive"
+                disabled={metaDisconnecting}
+                onClick={async () => {
+                  if (!user) return;
+                  setMetaDisconnecting(true);
+                  try {
+                    await supabase
+                      .from('social_accounts' as any)
+                      .update({ status: 'revoked' } as any)
+                      .eq('user_id', user.id)
+                      .in('platform', ['facebook', 'instagram']);
+                    setMetaAccount(null);
+                    toast.success(language === 'fr' ? 'Compte Meta déconnecté' : language === 'es' ? 'Cuenta Meta desconectada' : 'Meta account disconnected');
+                  } catch (err) {
+                    console.error('Meta disconnect error:', err);
+                    toast.error(language === 'fr' ? 'Erreur lors de la déconnexion' : 'Disconnection error');
+                  } finally {
+                    setMetaDisconnecting(false);
+                  }
+                }}
+              >
+                {metaDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
+                {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
