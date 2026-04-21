@@ -605,55 +605,24 @@ export function MyWallet() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
-              <FileText className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? 'Rapports & code correctifs ∞' : language === 'es' ? 'Informes & código ∞' : 'Reports & code ∞'}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
-              <Globe className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? 'Audit multi-pages' : language === 'es' ? 'Auditoría multi-página' : 'Multi-page audit'}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
-              <TrendingUp className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? '30 URL suivis' : language === 'es' ? '30 URL seguidos' : '30 tracked URLs'}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
-              <Palette className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
-              <Monitor className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? 'Multi-comptes' : language === 'es' ? 'Multi-cuentas' : 'Multi-account'}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
-              <Headphones className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
-              <Store className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? 'Google Business' : 'Google Business'}
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
-              <PenTool className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium leading-tight">
-                {language === 'fr' ? '80 créations de page inclus' : language === 'es' ? '80 creaciones de página' : '80 page creations included'}
-              </span>
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {[
+              { icon: FileText, label: language === 'fr' ? 'Audit expert & code correctif illimités' : language === 'es' ? 'Auditoría & código ilimitados' : 'Unlimited audit & corrective code' },
+              { icon: Globe, label: language === 'fr' ? 'Crawl multi-pages (5 000/mois)' : language === 'es' ? 'Crawl multi-página (5 000/mes)' : 'Multi-page crawl (5,000/mo)' },
+              { icon: PenTool, label: language === 'fr' ? 'Content Architect (80/mois)' : language === 'es' ? 'Content Architect (80/mes)' : 'Content Architect (80/mo)' },
+              { icon: TrendingUp, label: language === 'fr' ? '30 URL suivis' : language === 'es' ? '30 URL seguidos' : '30 tracked URLs' },
+              { icon: Palette, label: language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label' },
+              { icon: Monitor, label: language === 'fr' ? '2 comptes (1 collab.)' : language === 'es' ? '2 cuentas (1 colab.)' : '2 accounts (1 collab.)' },
+              { icon: Radar, label: language === 'fr' ? 'Benchmark rank SERP' : language === 'es' ? 'Benchmark rank SERP' : 'SERP rank benchmark' },
+              { icon: Headphones, label: language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support' },
+              { icon: Store, label: language === 'fr' ? 'Google Business' : 'Google Business' },
+              { icon: Network, label: language === 'fr' ? 'Cocoon sémantique' : language === 'es' ? 'Cocoon semántico' : 'Semantic cocoon' },
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
+                <item.icon className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                <span className="text-xs font-medium leading-tight">{item.label}</span>
+              </div>
+            ))}
           </div>
           <div className="flex items-center justify-between pt-1">
             <p className="text-2xl font-bold text-foreground">
