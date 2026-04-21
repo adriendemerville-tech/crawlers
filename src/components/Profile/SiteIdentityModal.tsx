@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Mic, MicOff, ChevronDown, ChevronUp, Loader2, Pencil, Check, X, Search, Sparkles } from 'lucide-react';
+import { Mic, MicOff, ChevronDown, ChevronUp, Loader2, Pencil, Check, X, Search, Sparkles, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { GSC_COUNTRIES, getCountryLabel } from '@/constants/countries';
 
 interface SiteIdentityModalProps {
   open: boolean;
@@ -576,6 +577,45 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
                 </div>
               </div>
             )}
+
+            {/* Target Countries — GSC multi-marché */}
+            <div className="pt-3 mt-2 border-t border-border/30 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" />
+                Marchés cibles (GSC)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {GSC_COUNTRIES.map((c) => {
+                  const selected = (site.target_countries as string[] || ['fra']).includes(c.code);
+                  return (
+                    <button
+                      key={c.code}
+                      onClick={async () => {
+                        const current: string[] = (site.target_countries as string[]) || ['fra'];
+                        const next = selected
+                          ? current.filter(cc => cc !== c.code)
+                          : [...current, c.code];
+                        if (next.length === 0) return; // at least 1
+                        await supabase.from('tracked_sites').update({ target_countries: next } as any).eq('id', site.id);
+                        site.target_countries = next;
+                        onUpdate?.();
+                        toast.success(`${c.label} ${selected ? 'retiré' : 'ajouté'}`);
+                      }}
+                      className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                        selected
+                          ? 'border-primary/50 bg-primary/10 text-foreground font-medium'
+                          : 'border-border/40 text-muted-foreground hover:border-border'
+                      }`}
+                    >
+                      {c.flag} {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground/60">
+                Les données GSC seront collectées pour chaque marché sélectionné
+              </p>
+            </div>
           </div>
 
           {/* INSTRUCTIONS VIEW */}
