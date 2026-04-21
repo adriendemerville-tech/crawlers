@@ -19,26 +19,26 @@ Deno.serve(handleRequest(async (req) => {
   const supabase = getServiceClient()
 
   // Determine sites to process
-  let sites: { id: string; domain: string; user_id: string }[] = []
+  let sites: { id: string; domain: string; user_id: string; target_countries?: string[] }[] = []
 
   if (body.all) {
     const { data } = await supabase
       .from('tracked_sites')
-      .select('id, domain, user_id')
+      .select('id, domain, user_id, target_countries')
       .eq('is_active', true)
       .limit(200)
     sites = data || []
   } else if (body.tracked_site_id) {
     const { data } = await supabase
       .from('tracked_sites')
-      .select('id, domain, user_id')
+      .select('id, domain, user_id, target_countries')
       .eq('id', body.tracked_site_id)
       .maybeSingle()
     if (data) sites = [data]
   } else {
     const { data } = await supabase
       .from('tracked_sites')
-      .select('id, domain, user_id')
+      .select('id, domain, user_id, target_countries')
       .eq('user_id', auth.userId)
       .eq('is_active', true)
     sites = data || []
