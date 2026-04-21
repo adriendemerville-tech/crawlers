@@ -206,7 +206,7 @@ export default function Auth() {
     lastName: z.string().min(1, t.lastNameRequired),
   });
 
-  const prefillEmail = searchParams.get('email') || '';
+  const prefillEmail = searchParams.get('email') || localStorage.getItem('remember_email') || '';
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
