@@ -1,6 +1,6 @@
 /**
  * SocialConnectModal — Modal for connecting social media accounts (LinkedIn, Facebook, Instagram).
- * Initiates OAuth flows and stores tokens in social_accounts table.
+ * Supports both OAuth flow (when configured) and manual token entry as fallback.
  */
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Linkedin, Facebook, Instagram, CheckCircle2, AlertCircle, Loader2, ExternalLink, Shield } from 'lucide-react';
+import { Linkedin, Facebook, Instagram, CheckCircle2, AlertCircle, Loader2, ExternalLink, Shield, KeyRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -46,13 +46,29 @@ export function SocialConnectModal({ open, onOpenChange, trackedSiteId }: Social
   const [manualToken, setManualToken] = useState('');
   const [manualPageId, setManualPageId] = useState('');
 
+  // Check for OAuth callback results in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('oauth_success');
+    const error = params.get('oauth_error');
+    if (success) {
+      toast.success(`${success} connecté avec succès`);
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    if (error) {
+      toast.error(`Erreur OAuth : ${error}`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   // Load existing connections
   useEffect(() => {
     if (!open || !user) return;
     const load = async () => {
       const { data } = await supabase
         .from('social_accounts' as any)
-        .select('platform, page_id, page_name, status, token_expires_at')
+        .select('platform, page_id, account_name, status, token_expires_at')
         .eq('user_id', user.id)
         .eq('status', 'active');
 
@@ -63,7 +79,7 @@ export function SocialConnectModal({ open, onOpenChange, trackedSiteId }: Social
             return {
               ...acc,
               connected: true,
-              accountName: match.page_name || match.page_id,
+              accountName: match.account_name || match.page_id,
               pageId: match.page_id,
               expiresAt: match.token_expires_at,
             };
@@ -74,6 +90,40 @@ export function SocialConnectModal({ open, onOpenChange, trackedSiteId }: Social
     };
     load();
   }, [open, user]);
+
+  const handleOAuthConnect = async (platform: string) => {
+    setLoading(platform);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error('Session expirée, reconnectez-vous'); return; }
+
+      const { data, error } = await supabase.functions.invoke('social-oauth-init', {
+        body: { platform, tracked_site_id: trackedSiteId },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        // OAuth not configured — fallback to manual
+        if (data.error.includes('not configured')) {
+          setManualMode(platform);
+          toast.info('OAuth non configuré — utilisez le mode manuel');
+          return;
+        }
+        throw new Error(data.error);
+      }
+
+      if (data?.auth_url) {
+        window.location.href = data.auth_url;
+      }
+    } catch (e: any) {
+      console.error('[SocialConnect] OAuth error:', e);
+      // Fallback to manual mode
+      setManualMode(platform);
+      toast.info('Connexion OAuth indisponible — mode manuel activé');
+    } finally {
+      setLoading(null);
+    }
+  };
 
   const handleManualSave = async (platform: string) => {
     if (!user || !manualToken || !manualPageId) {
@@ -89,10 +139,10 @@ export function SocialConnectModal({ open, onOpenChange, trackedSiteId }: Social
           platform,
           access_token: manualToken,
           page_id: manualPageId,
-          page_name: manualPageId,
+          account_name: manualPageId,
           status: 'active',
           tracked_site_id: trackedSiteId || null,
-          token_expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
+          token_expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
         } as any, { onConflict: 'user_id,platform' });
 
       if (error) throw error;
@@ -191,15 +241,26 @@ export function SocialConnectModal({ open, onOpenChange, trackedSiteId }: Social
                         {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Déconnecter'}
                       </Button>
                     ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setManualMode(isManual ? null : acc.platform)}
-                        disabled={isLoading}
-                        className="text-xs gap-1.5"
-                      >
-                        {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connecter'}
-                      </Button>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOAuthConnect(acc.platform)}
+                          disabled={isLoading}
+                          className="text-xs gap-1.5"
+                        >
+                          {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connecter'}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setManualMode(isManual ? null : acc.platform)}
+                          className="text-xs px-2"
+                          title="Configuration manuelle"
+                        >
+                          <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -271,10 +332,10 @@ export function SocialConnectModal({ open, onOpenChange, trackedSiteId }: Social
         <div className="text-[11px] text-muted-foreground space-y-1">
           <p className="flex items-center gap-1">
             <AlertCircle className="h-3 w-3 shrink-0" />
-            Les tokens manuels expirent après 60 jours. Pensez à les renouveler.
+            Le bouton « Connecter » lance le flux OAuth. Si non configuré, le mode manuel s'active automatiquement.
           </p>
           <p>
-            L'authentification OAuth automatique sera disponible prochainement.
+            Les tokens manuels expirent après 60 jours. L'OAuth automatique les renouvelle.
           </p>
         </div>
       </DialogContent>
