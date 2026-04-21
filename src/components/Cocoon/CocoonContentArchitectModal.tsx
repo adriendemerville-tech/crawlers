@@ -701,7 +701,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               {/* Shared "Instructions spécifiques" — always visible, resizable height */}
               <div className="border-t border-slate-700/60 flex flex-col" style={{ minHeight: '120px' }}>
                 <div className="px-3 pt-2 pb-1">
-                  <label className="text-[10px] text-slate-500 uppercase tracking-wider">Instructions spécifiques</label>
+                  <label className="text-[10px] text-slate-500 uppercase tracking-wider">Prompt contenu</label>
                 </div>
                 <div className="flex-1 px-3 pb-1">
                   <Textarea
