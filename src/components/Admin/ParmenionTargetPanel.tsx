@@ -614,8 +614,18 @@ export function ParmenionTargetPanel({
                       )}
 
                       {log.execution_error && (
-                        <div className="mt-2 p-2 rounded bg-destructive/10 text-xs text-destructive">
-                          ⚠️ {log.execution_error}
+                        <div className="mt-2 p-2 rounded bg-destructive/10 text-xs text-destructive flex items-start justify-between gap-2">
+                          <span>⚠️ {log.execution_error}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 h-6 px-2 text-[10px] gap-1 border-destructive/30 text-destructive hover:bg-destructive/10"
+                            disabled={escalatingIds.has(log.id)}
+                            onClick={() => escalateToCto(log)}
+                          >
+                            <Send className="h-3 w-3" />
+                            {escalatingIds.has(log.id) ? '...' : 'CTO'}
+                          </Button>
                         </div>
                       )}
                     </div>
