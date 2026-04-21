@@ -682,6 +682,20 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                     }}
                   />
                 )}
+                {activePanel === 'quickwins' && (
+                  <ContentArchitectQuickWinsPanel
+                    trackedSiteId={trackedSiteId}
+                    domain={domain}
+                    onApply={(item) => {
+                      if (item.keyword) setKeyword(item.keyword);
+                      if (item.url) setUrl(item.url);
+                      if (item.pageType) { setPageType(item.pageType); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }
+                      if (item.prompt) setPrompt(prev => prev ? `${prev}\n\n${item.prompt}` : item.prompt);
+                      setActivePanel('structure');
+                      toast.success('Quick win appliqué — complétez les champs et injectez');
+                    }}
+                  />
+                )}
               </div>
 
               {/* Shared "Instructions spécifiques" — always visible, resizable height */}
