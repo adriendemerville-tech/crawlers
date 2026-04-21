@@ -23,6 +23,7 @@ import { ContentArchitectStructuredDataPanel } from './ContentArchitectStructure
 import { ContentArchitectDraftPanel } from './ContentArchitectDraftPanel';
 import { ContentArchitectLibraryPanel } from './ContentArchitectLibraryPanel';
 import { ContentArchitectTasksPanel } from './ContentArchitectTasksPanel';
+import { ContentArchitectQuickWinsPanel } from './ContentArchitectQuickWinsPanel';
 import { ContentArchitectPreview } from './ContentArchitectPreview';
 import { ContentArchitectProvider } from '@/contexts/ContentArchitectContext';
 import { VoiceDNAEditor } from './VoiceDNAEditor';
