@@ -260,35 +260,6 @@ export function Header() {
                   ) : 'Crawlers'}
                 </span>
                 </div>
-                {/* Language selector below logo */}
-                {!isProfilePage && (
-                  <div className="absolute top-full left-0 hidden sm:flex items-center gap-0.5 ml-10" role="group" aria-label="Sélection de la langue">
-                    <button
-                      onClick={(e) => { e.preventDefault(); setLanguage('fr'); }}
-                      className={`h-4 w-4 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-40 hover:opacity-75'}`}
-                      aria-pressed={language === 'fr'}
-                      aria-label="Français"
-                    >
-                      <span className="text-[10px]">🇫🇷</span>
-                    </button>
-                    <button
-                      onClick={(e) => { e.preventDefault(); setLanguage('en'); }}
-                      className={`h-4 w-4 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-40 hover:opacity-75'}`}
-                      aria-pressed={language === 'en'}
-                      aria-label="English"
-                    >
-                      <span className="text-[10px]">🇬🇧</span>
-                    </button>
-                    <button
-                      onClick={(e) => { e.preventDefault(); setLanguage('es'); }}
-                      className={`h-4 w-4 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-40 hover:opacity-75'}`}
-                      aria-pressed={language === 'es'}
-                      aria-label="Español"
-                    >
-                      <span className="text-[10px]">🇪🇸</span>
-                    </button>
-                  </div>
-                )}
               </a>
             </>
           )}
