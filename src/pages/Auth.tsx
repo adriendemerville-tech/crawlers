@@ -10,6 +10,7 @@ import { AnimatePresence } from 'framer-motion';
 import { VerificationCodeModal } from '@/components/VerificationCodeModal';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
