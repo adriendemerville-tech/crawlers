@@ -380,33 +380,61 @@ export function ProfileSettings() {
               </div>
             </div>
             {!metaLoading && metaAccount && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 shrink-0 bg-transparent border-border rounded-sm text-destructive hover:text-destructive"
-                disabled={metaDisconnecting}
-                onClick={async () => {
-                  if (!user) return;
-                  setMetaDisconnecting(true);
-                  try {
-                    await supabase
-                      .from('social_accounts' as any)
-                      .update({ status: 'revoked' } as any)
-                      .eq('user_id', user.id)
-                      .in('platform', ['facebook', 'instagram']);
-                    setMetaAccount(null);
-                    toast.success(language === 'fr' ? 'Compte Meta déconnecté' : language === 'es' ? 'Cuenta Meta desconectada' : 'Meta account disconnected');
-                  } catch (err) {
-                    console.error('Meta disconnect error:', err);
-                    toast.error(language === 'fr' ? 'Erreur lors de la déconnexion' : 'Disconnection error');
-                  } finally {
-                    setMetaDisconnecting(false);
-                  }
-                }}
-              >
-                {metaDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
-                {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 shrink-0 bg-transparent border-border rounded-sm text-destructive hover:text-destructive"
+                    disabled={metaDisconnecting}
+                  >
+                    {metaDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
+                    {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {language === 'fr' ? 'Déconnecter le compte Meta ?' : language === 'es' ? 'Desconectar la cuenta Meta?' : 'Disconnect Meta account?'}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {language === 'fr'
+                        ? 'Cette action révoquera l\'accès à Facebook et Instagram. Vous pourrez reconnecter votre compte ultérieurement.'
+                        : language === 'es'
+                          ? 'Esta acción revocará el acceso a Facebook e Instagram. Podrá reconectar su cuenta más tarde.'
+                          : 'This will revoke access to Facebook and Instagram. You can reconnect your account later.'}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-transparent border-border rounded-sm">
+                      {language === 'fr' ? 'Annuler' : language === 'es' ? 'Cancelar' : 'Cancel'}
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-sm"
+                      onClick={async () => {
+                        if (!user) return;
+                        setMetaDisconnecting(true);
+                        try {
+                          await supabase
+                            .from('social_accounts' as any)
+                            .update({ status: 'revoked' } as any)
+                            .eq('user_id', user.id)
+                            .in('platform', ['facebook', 'instagram']);
+                          setMetaAccount(null);
+                          toast.success(language === 'fr' ? 'Compte Meta déconnecté' : language === 'es' ? 'Cuenta Meta desconectada' : 'Meta account disconnected');
+                        } catch (err) {
+                          console.error('Meta disconnect error:', err);
+                          toast.error(language === 'fr' ? 'Erreur lors de la déconnexion' : 'Disconnection error');
+                        } finally {
+                          setMetaDisconnecting(false);
+                        }
+                      }}
+                    >
+                      {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </div>
         </CardContent>
