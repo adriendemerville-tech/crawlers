@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useCredits } from '@/contexts/CreditsContext';
 import type { AudienceSegment } from './ContentArchitectOptionsPanel';
 import { X, FileText, Code2, Loader2, Image, Link2, Type, Hash, Syringe } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { ContentArchitectSidebar } from './ContentArchitectSidebar';
 import { ImageColumn } from './ImageStylePicker';
 import { Button } from '@/components/ui/button';
@@ -604,164 +605,162 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"><X className="w-4 h-4 text-slate-400" /></button>
         </div>
 
-        {/* Body: Toolbar + Panel + Resizable Preview */}
+        {/* Body: Toolbar + Resizable Panels */}
         <div className="flex-1 flex overflow-hidden">
           <ContentArchitectToolbar activePanel={activePanel} onTogglePanel={handleTogglePanel} hasResult={!!result} colorTheme={colorTheme} />
 
-          {/* Expandable panel + shared instructions */}
-          {activePanel && (
-            <div className="w-[320px] shrink-0 border-r border-slate-700/60 flex flex-col animate-in slide-in-from-left-2 duration-200 bg-[#1e293b]">
-              {/* Panel content area */}
-              <div className="flex-1 overflow-y-auto min-h-0">
-                {activePanel === 'prompt' && (
-                  <ContentArchitectPromptPanel
-                    trackedSiteId={trackedSiteId} pageType={pageType} prompt={prompt} setPrompt={setPrompt}
-                    domain={domain} url={url} setUrl={setUrl}
-                    onSelectPreset={(preset, site) => {
-                      if (preset.prompt_text) setPrompt(preset.prompt_text);
-                      setPageType(preset.page_type === 'landing' ? 'landing' : preset.page_type === 'product' ? 'product' : 'article');
-                      if (!url && site.domain) setUrl(`https://${site.domain}`);
-                    }}
-                  />
-                )}
-                {activePanel === 'structure' && (
-                  <ContentArchitectStructurePanel
-                    domain={domain || ''} directory={directory}
-                    setDirectory={(v) => { setDirectory(v); setAutoFilled(prev => new Set(prev).add('directory_manual')); }}
-                    directories={directories} slug={slug}
-                    setSlug={(v) => { setSlug(v); setAutoFilled(prev => new Set(prev).add('slug_manual')); }}
-                    keyword={keyword} setKeyword={setKeyword} pageType={pageType}
-                    setPageType={(v) => { setPageType(v); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }}
-                    length={length} setLength={setLength} h1Field={h1Field} setH1Field={setH1Field}
-                    h2Fields={h2Fields} setH2Fields={setH2Fields} keywordTags={keywordTags} setKeywordTags={setKeywordTags}
-                    keywordCloudSuggestions={keywordCloudSuggestions} autoFilled={autoFilled} isExistingPage={isExistingPage}
-                    detectPageTypeFromDirectory={detectPageTypeFromDirectory} result={result} setResult={setResult}
-                    loading={loading} onGenerate={handleGenerate} strategistLoading={strategistLoading}
-                    strategistDone={strategistDone} language={language} pageTypes={PAGE_TYPES} lengths={LENGTHS}
-                  />
-                )}
-                {activePanel === 'structured-data' && (
-                  <ContentArchitectStructuredDataPanel result={result} setResult={setResult} />
-                )}
-                {activePanel === 'images' && (
-                  <ContentArchitectImagePanel
-                    workflowStep={workflowStep} pageType={pageType} trackedSiteId={trackedSiteId} targetUrl={url}
-                    identityCard={identityCard} generatedImages={generatedImages} imageIterations={imageIterations}
-                    onImageGenerated={(dataUri, style) => { setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]); setImageIterations(prev => prev + 1); }}
-                    onImageRemoved={(index) => { setGeneratedImages(prev => prev.filter((_, i) => i !== index)); }}
-                    onImagePlacement={(index, placement) => { setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img)); }}
-                  />
-                )}
-                {activePanel === 'draft' && (
-                  <ContentArchitectDraftPanel
-                    domain={domain} trackedSiteId={trackedSiteId} result={result} keyword={keyword} url={url} pageType={pageType}
-                    onLoadDraft={applyDraft}
-                  />
-                )}
-                {activePanel === 'library' && (
-                  <ContentArchitectLibraryPanel trackedSiteId={trackedSiteId} domain={domain} />
-                )}
-                {activePanel === 'options' && (
-                  <ContentArchitectOptionsPanel
-                    competitorUrl={competitorUrl} setCompetitorUrl={setCompetitorUrl}
-                    ctaLink={ctaLink} setCtaLink={setCtaLink} photoUrl={photoUrl} setPhotoUrl={setPhotoUrl}
-                    tone={tone} setTone={setTone} autoFilled={autoFilled}
-                    audienceSegment={audienceSegment} setAudienceSegment={setAudienceSegment}
-                    audienceDetails={audienceDetails}
-                  />
-                )}
-                {activePanel === 'voice' && trackedSiteId && domain && (
-                  <VoiceDNAEditor trackedSiteId={trackedSiteId} domain={domain} />
-                )}
-                {activePanel === 'tasks' && (
-                  <ContentArchitectTasksPanel
-                    domain={domain} trackedSiteId={trackedSiteId}
-                    onApplyTask={(task) => {
-                      setPrompt(prev => prev ? `${prev}\n\n${task.title}: ${task.description}` : `${task.title}: ${task.description}`);
-                      toast.success('Tâche injectée dans les instructions');
-                    }}
-                  />
-                )}
-                {activePanel === 'quickwins' && (
-                  <ContentArchitectQuickWinsPanel
-                    trackedSiteId={trackedSiteId}
-                    domain={domain}
-                    onApply={(item) => {
-                      if (item.keyword) setKeyword(item.keyword);
-                      if (item.url) setUrl(item.url);
-                      if (item.pageType) { setPageType(item.pageType); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }
-                      if (item.prompt) setPrompt(prev => prev ? `${prev}\n\n${item.prompt}` : item.prompt);
-                      setActivePanel('structure');
-                      toast.success('Quick win appliqué — complétez les champs et injectez');
-                    }}
-                  />
-                )}
-              </div>
+          {activePanel ? (
+            <ResizablePanelGroup direction="horizontal" className="flex-1">
+              {/* Left panel */}
+              <ResizablePanel defaultSize={30} minSize={20} maxSize={45} className="flex flex-col bg-[#1e293b]">
+                {/* Panel content area */}
+                <div className="flex-1 overflow-y-auto min-h-0">
+                  {activePanel === 'prompt' && (
+                    <ContentArchitectPromptPanel
+                      trackedSiteId={trackedSiteId} pageType={pageType} prompt={prompt} setPrompt={setPrompt}
+                      domain={domain} url={url} setUrl={setUrl}
+                      onSelectPreset={(preset, site) => {
+                        if (preset.prompt_text) setPrompt(preset.prompt_text);
+                        setPageType(preset.page_type === 'landing' ? 'landing' : preset.page_type === 'product' ? 'product' : 'article');
+                        if (!url && site.domain) setUrl(`https://${site.domain}`);
+                      }}
+                    />
+                  )}
+                  {activePanel === 'structure' && (
+                    <ContentArchitectStructurePanel
+                      domain={domain || ''} directory={directory}
+                      setDirectory={(v) => { setDirectory(v); setAutoFilled(prev => new Set(prev).add('directory_manual')); }}
+                      directories={directories} slug={slug}
+                      setSlug={(v) => { setSlug(v); setAutoFilled(prev => new Set(prev).add('slug_manual')); }}
+                      keyword={keyword} setKeyword={setKeyword} pageType={pageType}
+                      setPageType={(v) => { setPageType(v); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }}
+                      length={length} setLength={setLength} h1Field={h1Field} setH1Field={setH1Field}
+                      h2Fields={h2Fields} setH2Fields={setH2Fields} keywordTags={keywordTags} setKeywordTags={setKeywordTags}
+                      keywordCloudSuggestions={keywordCloudSuggestions} autoFilled={autoFilled} isExistingPage={isExistingPage}
+                      detectPageTypeFromDirectory={detectPageTypeFromDirectory} result={result} setResult={setResult}
+                      loading={loading} onGenerate={handleGenerate} strategistLoading={strategistLoading}
+                      strategistDone={strategistDone} language={language} pageTypes={PAGE_TYPES} lengths={LENGTHS}
+                    />
+                  )}
+                  {activePanel === 'structured-data' && (
+                    <ContentArchitectStructuredDataPanel result={result} setResult={setResult} />
+                  )}
+                  {activePanel === 'images' && (
+                    <ContentArchitectImagePanel
+                      workflowStep={workflowStep} pageType={pageType} trackedSiteId={trackedSiteId} targetUrl={url}
+                      identityCard={identityCard} generatedImages={generatedImages} imageIterations={imageIterations}
+                      onImageGenerated={(dataUri, style) => { setGeneratedImages(prev => [...prev, { dataUri, style, placement: null }]); setImageIterations(prev => prev + 1); }}
+                      onImageRemoved={(index) => { setGeneratedImages(prev => prev.filter((_, i) => i !== index)); }}
+                      onImagePlacement={(index, placement) => { setGeneratedImages(prev => prev.map((img, i) => i === index ? { ...img, placement } : img)); }}
+                    />
+                  )}
+                  {activePanel === 'draft' && (
+                    <ContentArchitectDraftPanel
+                      domain={domain} trackedSiteId={trackedSiteId} result={result} keyword={keyword} url={url} pageType={pageType}
+                      onLoadDraft={applyDraft}
+                    />
+                  )}
+                  {activePanel === 'library' && (
+                    <ContentArchitectLibraryPanel trackedSiteId={trackedSiteId} domain={domain} />
+                  )}
+                  {activePanel === 'options' && (
+                    <ContentArchitectOptionsPanel
+                      competitorUrl={competitorUrl} setCompetitorUrl={setCompetitorUrl}
+                      ctaLink={ctaLink} setCtaLink={setCtaLink} photoUrl={photoUrl} setPhotoUrl={setPhotoUrl}
+                      tone={tone} setTone={setTone} autoFilled={autoFilled}
+                      audienceSegment={audienceSegment} setAudienceSegment={setAudienceSegment}
+                      audienceDetails={audienceDetails}
+                    />
+                  )}
+                  {activePanel === 'voice' && trackedSiteId && domain && (
+                    <VoiceDNAEditor trackedSiteId={trackedSiteId} domain={domain} />
+                  )}
+                  {activePanel === 'tasks' && (
+                    <ContentArchitectTasksPanel
+                      domain={domain} trackedSiteId={trackedSiteId}
+                      onApplyTask={(task) => {
+                        setPrompt(prev => prev ? `${prev}\n\n${task.title}: ${task.description}` : `${task.title}: ${task.description}`);
+                        toast.success('Tâche injectée dans les instructions');
+                      }}
+                    />
+                  )}
+                  {activePanel === 'quickwins' && (
+                    <ContentArchitectQuickWinsPanel
+                      trackedSiteId={trackedSiteId}
+                      domain={domain}
+                      onApply={(item) => {
+                        if (item.keyword) setKeyword(item.keyword);
+                        if (item.url) setUrl(item.url);
+                        if (item.pageType) { setPageType(item.pageType); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }
+                        if (item.prompt) setPrompt(prev => prev ? `${prev}\n\n${item.prompt}` : item.prompt);
+                        setActivePanel('structure');
+                        toast.success('Quick win appliqué — complétez les champs et injectez');
+                      }}
+                    />
+                  )}
+                </div>
 
-              {/* Shared "Instructions spécifiques" — always visible, resizable height */}
-              <div className="border-t border-slate-700/60 flex flex-col" style={{ minHeight: '120px' }}>
-                <div className="px-3 pt-2 pb-1">
-                  <label className="text-[10px] text-slate-500 uppercase tracking-wider">Prompt contenu</label>
+                {/* Shared prompt contenu */}
+                <div className="border-t border-slate-700/60 flex flex-col" style={{ minHeight: '120px' }}>
+                  <div className="px-3 pt-2 pb-1">
+                    <label className="text-[10px] text-slate-500 uppercase tracking-wider">Prompt contenu</label>
+                  </div>
+                  <div className="flex-1 px-3 pb-1">
+                    <Textarea
+                      value={prompt}
+                      onChange={e => setPrompt(e.target.value)}
+                      placeholder="Ex: Inclure un tableau comparatif, citer des sources…"
+                      className="w-full bg-slate-700/50 border-slate-600 text-white text-xs resize-y min-h-[60px] max-h-[300px]"
+                      style={{ height: '80px' }}
+                    />
+                  </div>
+                  <div className="px-3 pb-2 pt-1 sticky bottom-0 bg-[#1e293b]">
+                    <Button
+                      size="sm"
+                      onClick={handleGenerate}
+                      disabled={loading || !keyword}
+                      className="w-full text-xs gap-1.5 bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border border-teal-500/30"
+                    >
+                      <Syringe className="w-3 h-3 stroke-[1.5]" />
+                      Injecter
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex-1 px-3 pb-1">
-                  <Textarea
-                    value={prompt}
-                    onChange={e => setPrompt(e.target.value)}
-                    placeholder="Ex: Inclure un tableau comparatif, citer des sources…"
-                    className="w-full bg-slate-700/50 border-slate-600 text-white text-xs resize-y min-h-[60px] max-h-[300px]"
-                    style={{ height: '80px' }}
-                  />
-                </div>
-                <div className="px-3 pb-2 pt-1 sticky bottom-0 bg-[#1e293b]">
-                  <Button
-                    size="sm"
-                    onClick={handleGenerate}
-                    disabled={loading || !keyword}
-                    className="w-full text-xs gap-1.5 bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border border-teal-500/30"
-                  >
-                    <Syringe className="w-3 h-3 stroke-[1.5]" />
-                    Injecter
-                  </Button>
-                </div>
-              </div>
-            </div>
+              </ResizablePanel>
+
+              <ResizableHandle withHandle />
+
+              {/* Preview panel */}
+              <ResizablePanel defaultSize={70} minSize={40}>
+                <ContentArchitectProvider value={{
+                  result, setResult, loading, url,
+                  isEdited, onResetEdits: handleResetEdits,
+                  showGuide, setShowGuide, language, counters,
+                  onSaveDraft: handleSaveDraft, onPublish: handlePublish,
+                  publishing, savingDraft,
+                  hasCmsConnection, isExistingPage,
+                  creditsCost: !isAgencyPro ? 5 : null,
+                  colorTheme,
+                }}>
+                  <ContentArchitectPreview />
+                </ContentArchitectProvider>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            /* No panel open — full preview */
+            <ContentArchitectProvider value={{
+              result, setResult, loading, url,
+              isEdited, onResetEdits: handleResetEdits,
+              showGuide, setShowGuide, language, counters,
+              onSaveDraft: handleSaveDraft, onPublish: handlePublish,
+              publishing, savingDraft,
+              hasCmsConnection, isExistingPage,
+              creditsCost: !isAgencyPro ? 5 : null,
+              colorTheme,
+            }}>
+              <ContentArchitectPreview />
+            </ContentArchitectProvider>
           )}
-
-          {/* Draggable resize handle for preview width */}
-          {activePanel && (
-            <div
-              className="w-1 cursor-col-resize transition-colors shrink-0 hover:bg-teal-500/30 active:bg-teal-500/50"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const startX = e.clientX;
-                const panel = e.currentTarget.previousElementSibling as HTMLElement;
-                if (!panel) return;
-                const startWidth = panel.getBoundingClientRect().width;
-                const onMove = (ev: MouseEvent) => {
-                  const delta = ev.clientX - startX;
-                  const newWidth = Math.max(260, Math.min(500, startWidth + delta));
-                  panel.style.width = `${newWidth}px`;
-                };
-                const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onUp);
-              }}
-            />
-          )}
-
-          {/* Canvas / Preview */}
-          <ContentArchitectProvider value={{
-            result, setResult, loading, url,
-            isEdited, onResetEdits: handleResetEdits,
-            showGuide, setShowGuide, language, counters,
-            onSaveDraft: handleSaveDraft, onPublish: handlePublish,
-            publishing, savingDraft,
-            hasCmsConnection, isExistingPage,
-            creditsCost: !isAgencyPro ? 5 : null,
-            colorTheme,
-          }}>
-            <ContentArchitectPreview />
-          </ContentArchitectProvider>
         </div>
       </div>
     </div>
