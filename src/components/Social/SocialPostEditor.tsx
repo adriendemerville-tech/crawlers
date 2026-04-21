@@ -289,7 +289,7 @@ export const SocialPostEditor = memo(function SocialPostEditor({
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border">
+        <div className="flex items-center gap-2 pt-2 border-t border-border flex-wrap">
           <Button onClick={handleSave} disabled={saving} className="gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Sauvegarder
