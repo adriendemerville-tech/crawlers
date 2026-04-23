@@ -75,6 +75,9 @@ export default function RapportMatrice() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [view, setView] = useState<'document' | 'interactive'>('document');
+  // Sprint 5 — cross-filter state shared between Pivot and Cube + drill-down panel.
+  const [selectedFamilyId, setSelectedFamilyId] = useState<string | null>(null);
+  const [selectedVoxel, setSelectedVoxel] = useState<Voxel | null>(null);
   // Admin guard
   useEffect(() => {
     if (!authLoading && !adminLoading) {
