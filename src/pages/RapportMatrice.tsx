@@ -109,11 +109,57 @@ export default function RapportMatrice() {
 
   // Adapter for the interactive Pivot + Cube views.
   // Prefer native MatrixResult[] (Sprint 4) when available; fallback to legacy adapter.
-  const matrixResults = useMemo(() => {
-    if (nativeResults && nativeResults.length > 0) return nativeResults as any;
+  const matrixResults: MatrixResult[] = useMemo(() => {
+    if (nativeResults && nativeResults.length > 0) return nativeResults as MatrixResult[];
     if (!data) return [];
     return legacyToMatrixResults(data.results);
   }, [data, nativeResults]);
+
+  // Sprint 5 — derived state for cross-filter and drill-down.
+  const cubeLayout = useMemo(() => buildCubeLayout(matrixResults), [matrixResults]);
+
+  const drillResults: MatrixResult[] = useMemo(() => {
+    if (selectedVoxel) return selectedVoxel.results;
+    if (selectedFamilyId) {
+      return matrixResults.filter(r => {
+        const cat = (r as any).criterionCategory as string | undefined;
+        const id = cat && cat !== 'general' ? `cat:${cat}` : r.sourceFunction;
+        return id === selectedFamilyId;
+      });
+    }
+    return [];
+  }, [selectedVoxel, selectedFamilyId, matrixResults]);
+
+  const drillTitle = selectedVoxel
+    ? selectedVoxel.familyLabel
+    : selectedFamilyId
+      ? cubeLayout.axes.x.find(a => a.id === selectedFamilyId)?.label || selectedFamilyId
+      : '';
+
+  const drillSubtitle = selectedVoxel
+    ? `${selectedVoxel.typeLabel} · ${selectedVoxel.weightLabel}`
+    : selectedFamilyId
+      ? 'Tous types · tous poids'
+      : '';
+
+  const selectedVoxelKey = selectedVoxel
+    ? `${selectedVoxel.x}-${selectedVoxel.y}-${selectedVoxel.z}`
+    : null;
+
+  const handleVoxelSelect = useCallback((v: Voxel | null) => {
+    setSelectedVoxel(v);
+    if (v) setSelectedFamilyId(v.familyId);
+  }, []);
+
+  const handleFamilySelect = useCallback((familyId: string | null) => {
+    setSelectedFamilyId(familyId);
+    setSelectedVoxel(null);
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    setSelectedVoxel(null);
+    setSelectedFamilyId(null);
+  }, []);
 
   const handleCsv = async () => {
     if (!data) return;
