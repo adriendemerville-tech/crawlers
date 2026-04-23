@@ -1089,6 +1089,18 @@ export default function MatricePrompt() {
             </div>
           </div>
 
+          {/* Sprint 4 — live progress tracker (visible during execution and right after) */}
+          {(analyzing || progress.items.length > 0) && (
+            <div className="mb-6 max-w-3xl mx-auto">
+              <MatriceProgressTracker
+                completed={progress.completed}
+                total={progress.total}
+                currentLabel={progress.currentLabel}
+                items={progress.items}
+              />
+            </div>
+          )}
+
           {/* Benchmark Heatmap (shown when benchmark mode has results) */}
           {benchmarkData && (
             <div className="mb-6 border rounded-lg p-4 bg-card">
