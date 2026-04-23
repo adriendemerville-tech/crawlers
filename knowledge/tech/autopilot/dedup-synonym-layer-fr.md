@@ -1,5 +1,5 @@
 # Memory: tech/autopilot/dedup-synonym-layer-fr
-Updated: 2026-04-20
+Updated: 2026-04-23
 
 ## Couche de déduplication par synonymes — iktracker-actions
 
@@ -23,6 +23,15 @@ Parménion créait des articles en double sur le même sujet (ex: "frais réels 
 - Injection des 30 derniers titres d'articles existants comme blocklist explicite dans le prompt contenu
 - Le LLM reçoit la liste exacte des articles déjà publiés/en brouillon avec instruction de ne pas dupliquer
 
+#### Scan des brouillons IKtracker (correctif 2026-04-23)
+- L'API blog-api d'IKtracker supporte désormais `?status=draft`, `?status=all`, `?status=published`
+- **Sans header `x-api-key`** : l'API retourne uniquement les articles publiés (chemin public sécurisé)
+- **Avec header `x-api-key`** : accès complet aux brouillons
+- `listPosts()` accepte un paramètre `statusFilter` (string) au lieu d'un booléen `includeAll`
+- `listPostsForDedup()` utilise `status=all` pour scanner publiés + brouillons (107 articles total : 49 publiés + 58 brouillons)
+- `cmsContentScanner.ts` utilise `?status=all&limit=200` au lieu de `?all=true&limit=200`
+- Le handler `list-posts` supporte `params.status` (flat ou nested) et le fallback `params.all === true`
+
 ### Clusters de synonymes configurés
 1. Frais/réels/barème/kilométrique/abattement/forfaitaire/forfait/indemnités/IK
 2. Impôts/fiscal/déclaration/déduction/déductible
@@ -31,3 +40,4 @@ Parménion créait des articles en double sur le même sujet (ex: "frais réels 
 ### Fichiers modifiés
 - `supabase/functions/iktracker-actions/index.ts`
 - `supabase/functions/parmenion-orchestrator/index.ts`
+- `supabase/functions/_shared/cmsContentScanner.ts`
