@@ -679,23 +679,81 @@ export default function MatricePrompt() {
       // Tracker — emit pending events for every prompt
       const stdSeeds = seedsForStandardAudit(items, functionName);
       stdSeeds.forEach(s => progress.onCallEvent(makePending(s)));
-      stdSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
 
-      const { data: fnData, error: fnError } = await supabase.functions.invoke(functionName, {
-        body: {
-          url: url.trim(),
-          items,
-          engine_notes: activeMetadata?.engineNotes,
-          scoring_rubric: activeMetadata?.scoringGuide,
-        },
-      });
+      let fnData: any = null;
 
-      if (fnError || !fnData?.success) {
-        stdSeeds.forEach(s => progress.onCallEvent(makeError(s, fnData?.error || fnError?.message || 'Audit failed')));
-        throw new Error(fnData?.error || fnError?.message || 'Audit failed');
+      // ── Sprint 6 — Real SSE streaming for `audit-matrice` ──
+      if (functionName === 'audit-matrice') {
+        const seedById = new Map(stdSeeds.map(s => [s.criterionId!, s]));
+        const collected: any[] = [];
+        const controller = new AbortController();
+        sseAbortRef.current = controller;
+
+        try {
+          await streamAuditMatrice({
+            url: url.trim(),
+            items,
+            scoring_rubric: activeMetadata?.scoringGuide,
+            signal: controller.signal,
+            onEvent: (evt) => {
+              if (evt.event === 'start') {
+                // All items move to running as the LLM calls fire in parallel
+                stdSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
+              } else if (evt.event === 'item.update') {
+                const seed = seedById.get(evt.data?.id);
+                if (!seed) return;
+                if (evt.data.status === 'done') {
+                  collected.push(evt.data.result);
+                  progress.onCallEvent(makeDone(seed));
+                  // Progressive persistence — survives an accidental tab close
+                  try { sessionStorage.setItem('rapport_matrice_results_partial', JSON.stringify(collected)); } catch { /* quota */ }
+                } else if (evt.data.status === 'error') {
+                  progress.onCallEvent(makeError(seed, evt.data.error || 'Item failed'));
+                } else if (evt.data.status === 'running') {
+                  progress.onCallEvent(makeRunning(seed));
+                }
+              } else if (evt.event === 'complete') {
+                fnData = evt.data;
+              }
+            },
+          });
+        } catch (err: any) {
+          if (err?.name === 'AbortError') {
+            stdSeeds.forEach(s => {
+              // Only mark non-finished seeds as cancelled
+              progress.onCallEvent(makeError(s, 'Annulé par l\'utilisateur'));
+            });
+            toast.info('Analyse annulée');
+            return;
+          }
+          stdSeeds.forEach(s => progress.onCallEvent(makeError(s, err?.message || 'Stream error')));
+          throw err;
+        } finally {
+          sseAbortRef.current = null;
+        }
+
+        if (!fnData?.success) {
+          throw new Error(fnData?.error || 'Audit failed (no completion event)');
+        }
+      } else {
+        // ── Legacy path — synthetic events for parse-matrix-geo / hybrid ──
+        stdSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
+        const { data, error: fnError } = await supabase.functions.invoke(functionName, {
+          body: {
+            url: url.trim(),
+            items,
+            engine_notes: activeMetadata?.engineNotes,
+            scoring_rubric: activeMetadata?.scoringGuide,
+          },
+        });
+        if (fnError || !data?.success) {
+          stdSeeds.forEach(s => progress.onCallEvent(makeError(s, data?.error || fnError?.message || 'Audit failed')));
+          throw new Error(data?.error || fnError?.message || 'Audit failed');
+        }
+        stdSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
+        fnData = data;
       }
 
-      stdSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
 
       const auditResults = fnData.results.map((r: any) => ({
         id: r.id,
