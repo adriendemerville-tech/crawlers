@@ -17,22 +17,35 @@ export function ParmenionFuncStats() {
   useEffect(() => {
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from('parmenion_decision_log')
-          .select('functions_called');
-
-        if (error) throw error;
-
+        // Paginate to get ALL rows (default limit is 1000)
+        const PAGE_SIZE = 1000;
         const counts: Record<string, number> = {};
         let t = 0;
-        for (const row of data || []) {
-          const fns = (row as any).functions_called as string[] | null;
-          if (!fns) continue;
-          for (const f of fns) {
-            counts[f] = (counts[f] || 0) + 1;
-            t++;
+        let offset = 0;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('parmenion_decision_log')
+            .select('functions_called')
+            .range(offset, offset + PAGE_SIZE - 1);
+
+          if (error) throw error;
+          if (!data || data.length === 0) break;
+
+          for (const row of data) {
+            const fns = (row as any).functions_called as string[] | null;
+            if (!fns) continue;
+            for (const f of fns) {
+              counts[f] = (counts[f] || 0) + 1;
+              t++;
+            }
           }
+
+          hasMore = data.length === PAGE_SIZE;
+          offset += PAGE_SIZE;
         }
+
         setTotal(t);
         setStats(
           Object.entries(counts)
