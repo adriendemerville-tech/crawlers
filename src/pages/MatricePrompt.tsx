@@ -822,7 +822,7 @@ export default function MatricePrompt() {
           : `Audit du ${new Date().toLocaleString('fr-FR')}`;
         void saveAudit({
           label,
-          audit_type: activeMatriceType === 'eeat' ? 'eeat' : 'rapport',
+          audit_type: 'rapport',
           status: 'completed',
           global_score: crawlersGlobal,
           duration_ms: duration,
