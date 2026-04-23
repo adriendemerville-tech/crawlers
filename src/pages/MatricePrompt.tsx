@@ -3,7 +3,7 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, FileSpreadsheet, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, FileSpreadsheet, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle, History, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,8 @@ import { MatriceProgressTracker, MatriceErrorCard } from '@/components/Matrice';
 import { useMatriceProgress } from '@/hooks/useMatriceProgress';
 import { seedsForStandardAudit, seedsForBenchmark, makePending, makeRunning, makeDone, makeError } from '@/utils/matrice/matriceCallEvents';
 import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
+import { useMatriceAudits } from '@/hooks/useMatriceAudits';
+import { buildPivot } from '@/utils/matrice/pivotTransform';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -96,7 +98,13 @@ export default function MatricePrompt() {
   // Real-time progress tracker (Sprint 4 wiring)
   const progress = useMatriceProgress();
 
+  // Sprint 7 — Persistence layer for matrix_audits + resume.
+  const { saveAudit } = useMatriceAudits();
+  const auditStartRef = useRef<number | null>(null);
+  const [resumeBanner, setResumeBanner] = useState<{ count: number; total: number } | null>(null);
+
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
+  const PARTIAL_KEY = 'rapport_matrice_results_partial';
 
   const handleReportError = async () => {
     if (!errorTitle.trim() || !user) return;
@@ -153,6 +161,22 @@ export default function MatricePrompt() {
       setLoadingBatches(false);
     })();
   }, [user]);
+
+  // Sprint 7 — detect interrupted audit (saved progressively in sessionStorage by SSE flow).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PARTIAL_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.results) && parsed.total) {
+        if (parsed.results.length > 0 && parsed.results.length < parsed.total) {
+          setResumeBanner({ count: parsed.results.length, total: parsed.total });
+        }
+      }
+    } catch {
+      /* corrupted — ignore */
+    }
+  }, []);
 
   // Demo mode: inject simulated data for screenshots
   useEffect(() => {
@@ -601,6 +625,9 @@ export default function MatricePrompt() {
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
     setAnalyzing(true);
     setBenchmarkData(null);
+    setResumeBanner(null);
+    sessionStorage.removeItem(PARTIAL_KEY);
+    auditStartRef.current = Date.now();
     progress.reset();
     try {
       // ── BENCHMARK MODE ──────────────────────────────────────────────
@@ -762,6 +789,54 @@ export default function MatricePrompt() {
       }
 
       setResults(auditResults);
+
+      // Sprint 7 — auto-save into matrix_audits (history)
+      if (user) {
+        const nativeForSave: MatrixResult[] = auditResults.map((r: any, i: number) => {
+          const parsed = r.parsed_score ?? r.crawlers_score ?? null;
+          const crawlers = r.crawlers_score ?? null;
+          const matchType = parsed != null && crawlers != null && parsed !== crawlers ? 'partial' : 'exact';
+          const cat = String(r.axe || 'general').toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
+          const native: MatrixResult = {
+            criterionId: r.dbId || r.id || `row-${i}`,
+            criterionTitle: r.prompt || `Critère ${i + 1}`,
+            matchType,
+            parsedScore: typeof parsed === 'number' ? parsed : null,
+            parsedResponse: r.parsed_raw?.justification || r.parsed_raw?.seo_justification || null,
+            crawlersScore: typeof crawlers === 'number' ? crawlers : null,
+            crawlersData: r.raw_data ?? null,
+            sourceFunction: `cat-${cat}`,
+            confidence: 1,
+          };
+          (native as any).criterionCategory = cat;
+          (native as any).criterionWeight = r.poids ?? 1;
+          return native;
+        });
+        const pivotSnapshot = buildPivot(nativeForSave);
+        const duration = auditStartRef.current ? Date.now() - auditStartRef.current : null;
+        const activeBatch = batches.find(b => b.batch_id === activeBatchId);
+        const label = activeBatch
+          ? `${activeBatch.batch_label} — ${new URL(url.startsWith('http') ? url : `https://${url}`).hostname}`
+          : `Audit du ${new Date().toLocaleString('fr-FR')}`;
+        void saveAudit({
+          label,
+          audit_type: 'rapport',
+          status: 'completed',
+          global_score: crawlersGlobal,
+          duration_ms: duration,
+          results: nativeForSave,
+          pivot_snapshot: pivotSnapshot,
+        }).then(id => {
+          if (id) {
+            console.log('[matrix_audits] saved', id);
+            // Clear partial buffer once committed
+            sessionStorage.removeItem(PARTIAL_KEY);
+          }
+        });
+      }
+
       toast.success(`Analyse terminée — Score global : ${crawlersGlobal}/100`);
       window.dispatchEvent(new CustomEvent('expert-audit-complete', { detail: { source: 'matrice', url, score: crawlersGlobal } }));
     } catch (err: any) {
@@ -954,6 +1029,15 @@ export default function MatricePrompt() {
               <HelpCircle className="h-4 w-4" />
             </Button>
             <div className="flex-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs text-muted-foreground"
+              onClick={() => navigate('/matrice/historique')}
+              title="Historique des audits"
+            >
+              <History className="h-3.5 w-3.5" /> Historique
+            </Button>
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => setShowErrorDialog(true)}>
               <AlertTriangle className="h-3.5 w-3.5" /> Signaler une erreur
             </Button>
@@ -968,6 +1052,36 @@ export default function MatricePrompt() {
               </>
             )}
           </div>
+
+          {/* Sprint 7 — resume banner for interrupted audit */}
+          {resumeBanner && (
+            <div className="mb-4 border-2 border-brand-gold rounded-md p-3 bg-transparent flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <RotateCcw className="h-4 w-4 text-brand-gold" aria-hidden />
+                <span className="text-foreground">
+                  Audit interrompu détecté : <span className="font-mono">{resumeBanner.count}/{resumeBanner.total}</span> critères évalués.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-brand-gold text-brand-gold hover:text-brand-gold"
+                  onClick={handleAnalyze}
+                >
+                  Relancer l'audit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => { sessionStorage.removeItem(PARTIAL_KEY); setResumeBanner(null); }}
+                >
+                  Ignorer
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Error report dialog */}
           {showErrorDialog && (
