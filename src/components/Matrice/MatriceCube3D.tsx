@@ -7,7 +7,7 @@
 
 import { Suspense, useMemo, useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Html, GizmoHelper, GizmoViewcube } from '@react-three/drei';
+import { OrbitControls, Html, GizmoHelper, GizmoViewcube, Edges } from '@react-three/drei';
 import { Box } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { bucketToHsl, scoreToBucket } from '@/utils/matrice/heatmapScale';
@@ -60,11 +60,7 @@ function VoxelMesh({ voxel, origin, hovered, selected, onHover, onSelect }: Voxe
         roughness={0.45}
         metalness={0.15}
       />
-      {/* Outline edges for crisp look */}
-      <lineSegments>
-        <edgesGeometry args={[new (require('three').BoxGeometry)(SIZE, SIZE, SIZE)]} />
-        <lineBasicMaterial color="#1a0033" transparent opacity={0.35} />
-      </lineSegments>
+      <Edges threshold={15} color="#1a0033" />
     </mesh>
   );
 }
