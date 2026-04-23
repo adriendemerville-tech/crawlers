@@ -6,6 +6,8 @@
 
 export type MatchType = 'exact' | 'partial' | 'custom_only';
 
+export type AuditMode = 'standard' | 'benchmark';
+
 export interface AuditRoute {
   criterionId: string;
   criterionTitle: string;
@@ -14,7 +16,9 @@ export interface AuditRoute {
   matchType: MatchType;          // exact = 1 call, partial = 2 calls, custom_only = LLM only
   confidence: number;            // 0-1, how confident we are in this routing
   customPrompt?: string;         // If the user's file includes a specific prompt
-  targetProvider?: string;       // If targeting a specific LLM
+  targetProvider?: string;       // Legacy single provider (kept for backward compat)
+  targetProviders?: string[];    // Multi-LLM targeting (benchmark or fan-out)
+  mode?: AuditMode;              // 'benchmark' = N LLMs ; 'standard' = single LLM
   costEstimate: number;          // Estimated cost in USD
 }
 
