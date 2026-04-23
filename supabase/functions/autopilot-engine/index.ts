@@ -737,7 +737,7 @@ async function executeContentArchitect(
   if (funcResponse.status === 202 && funcResult.job_id) {
     const jobId = funcResult.job_id;
     console.log(`[AutopilotEngine] content-architecture-advisor job queued: ${jobId}, polling...`);
-    const pollDeadline = Date.now() + 90 * 1000;
+    const pollDeadline = Date.now() + 180 * 1000;
     let jobResult: any = null;
     let jobStatus = 'pending';
     
@@ -759,8 +759,8 @@ async function executeContentArchitect(
     if (jobStatus === 'completed') {
       executionResults.push({ function: 'content-architecture-advisor', status: 'success', http_status: 200, keyword: funcBody.keyword, result: { data: jobResult } });
     } else {
-      executionResults.push({ function: 'content-architecture-advisor', status: 'error', http_status: jobStatus === 'failed' ? 500 : 408, keyword: funcBody.keyword, result: jobResult || { error: 'Job timed out after 90s' } });
-      phaseErrors.push({ phase, function: 'content-architecture-advisor', severity: 'degraded', message: `content-architecture-advisor ${jobStatus === 'failed' ? 'failed' : 'timed out after 90s'}`, retryable: true });
+      executionResults.push({ function: 'content-architecture-advisor', status: 'error', http_status: jobStatus === 'failed' ? 500 : 408, keyword: funcBody.keyword, result: jobResult || { error: 'Job timed out after 180s' } });
+      phaseErrors.push({ phase, function: 'content-architecture-advisor', severity: 'degraded', message: `content-architecture-advisor ${jobStatus === 'failed' ? 'failed' : 'timed out after 180s'}`, retryable: true });
       setSuccess(false);
     }
   } else {
