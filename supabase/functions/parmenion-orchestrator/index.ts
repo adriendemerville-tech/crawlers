@@ -457,6 +457,7 @@ try {
         scoredWorkbenchItems,
         cmsInventory,
         baselineSeoScore,
+        iktrackerDrafts: iktrackerDrafts.length > 0 ? iktrackerDrafts : undefined,
       });
     }
 
