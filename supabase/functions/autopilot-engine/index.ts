@@ -1,7 +1,13 @@
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
-import { isIktrackerDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+import { isIktrackerDomain, isDictadeviDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+
+/** Resolve the right CMS bridge function for a given domain (IKtracker / Dictadevi). */
+function resolveCmsBridge(domain: string): string {
+  if (isDictadeviDomain(domain)) return 'dictadevi-actions';
+  return 'iktracker-actions'; // default (covers IKtracker + back-compat)
+}
 
 // ═══ Modular imports ═══
 import {
@@ -390,7 +396,7 @@ async function prepareExecuteActions(
   decision: any, site: SiteInfo, routedCmsActions: RoutedActions | null,
   supabase: any, config: AutopilotConfig,
 ) {
-  if (isIktrackerDomain(site.domain)) {
+  if (isIktrackerDomain(site.domain) || isDictadeviDomain(site.domain)) {
     if (!decision.action.payload) decision.action.payload = {};
     const hasCmsActions = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
     
