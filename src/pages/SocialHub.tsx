@@ -108,7 +108,7 @@ function BlurredDemoOverlay({ monthlyUsage, onUpgrade, onBack }: { monthlyUsage:
       </div>
 
       {/* Overlay message */}
-      <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/60 backdrop-blur-[2px]">
+      <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/80">
         <div className="text-center max-w-md px-6 py-8 bg-card border border-border rounded-xl shadow-xl">
           <Lock className="h-12 w-12 mx-auto text-emerald-600 dark:text-emerald-400 mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">Limite gratuite atteinte</h2>
