@@ -162,6 +162,22 @@ export default function MatricePrompt() {
     })();
   }, [user]);
 
+  // Sprint 7 — detect interrupted audit (saved progressively in sessionStorage by SSE flow).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PARTIAL_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.results) && parsed.total) {
+        if (parsed.results.length > 0 && parsed.results.length < parsed.total) {
+          setResumeBanner({ count: parsed.results.length, total: parsed.total });
+        }
+      }
+    } catch {
+      /* corrupted — ignore */
+    }
+  }, []);
+
   // Demo mode: inject simulated data for screenshots
   useEffect(() => {
     if (!isDemoMode || rows.length > 0) return;
