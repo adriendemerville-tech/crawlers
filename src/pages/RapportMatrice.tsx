@@ -71,6 +71,7 @@ export default function RapportMatrice() {
   const [copied, setCopied] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [view, setView] = useState<'document' | 'interactive'>('document');
   // Admin guard
   useEffect(() => {
     if (!authLoading && !adminLoading) {
