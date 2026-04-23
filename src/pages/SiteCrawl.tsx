@@ -53,6 +53,7 @@ export default function SiteCrawl() {
     totalEstimatedPages,
     isDetectingPages,
     detectionDone,
+    preScanDone,
     discoveredUrls,
     isReportOpen, setIsReportOpen,
     sitemapTree, sitemapPages,
