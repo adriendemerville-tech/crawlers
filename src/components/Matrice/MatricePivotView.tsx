@@ -23,9 +23,18 @@ import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
 export interface MatricePivotViewProps {
   results: MatrixResult[];
   className?: string;
+  /** Sprint 5 — externally selected family (highlights the row, auto-expands). */
+  selectedFamilyId?: string | null;
+  /** Sprint 5 — fired when the user clicks a family label. */
+  onFamilyClick?: (familyId: string | null) => void;
 }
 
-export function MatricePivotView({ results, className }: MatricePivotViewProps) {
+export function MatricePivotView({
+  results,
+  className,
+  selectedFamilyId,
+  onFamilyClick,
+}: MatricePivotViewProps) {
   const [heatmapOn, setHeatmapOn] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -33,8 +42,22 @@ export function MatricePivotView({ results, className }: MatricePivotViewProps) 
 
   const pivot = useMemo(() => buildPivot(results), [results]);
 
+  // Auto-expand the externally selected family.
+  useMemo(() => {
+    if (selectedFamilyId) {
+      setExpanded(prev => ({ ...prev, [selectedFamilyId]: true }));
+    }
+  }, [selectedFamilyId]);
+
   const toggleExpanded = (id: string) =>
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const handleFamilyClick = (id: string) => {
+    toggleExpanded(id);
+    if (onFamilyClick) {
+      onFamilyClick(selectedFamilyId === id ? null : id);
+    }
+  };
 
   const columns = useMemo<ColumnDef<PivotRow>[]>(() => {
     const cols: ColumnDef<PivotRow>[] = [
