@@ -399,16 +399,44 @@ try {
     } else {
       // Non-prescribe phases or empty workbench without forced content: single LLM call
       // For execute phase, scan CMS to provide inventory of existing content (avoid duplicates)
+      // Also fetch IKtracker drafts specifically so LLM can propose "publish draft" actions
       let cmsInventory: CmsContentInventory | null = null;
+      let iktrackerDrafts: any[] = [];
       if (currentPhase === 'execute') {
         try {
           const authUserId2 = authUserId || bodyUserId || tracked_site_id;
           cmsInventory = await scanCmsContent(tracked_site_id, authUserId2);
           if (cmsInventory.items.length > 0) {
-            console.log(`[Parménion] 📦 CMS inventory for execute: ${cmsInventory.items.length} items (${cmsInventory.drafts.length} drafts)`);
+            console.log(`[Parmenion] CMS inventory for execute: ${cmsInventory.items.length} items (${cmsInventory.drafts.length} drafts)`);
           }
         } catch (e) {
-          console.warn('[Parménion] CMS scan failed (non-blocking):', e);
+          console.warn('[Parmenion] CMS scan failed (non-blocking):', e);
+        }
+
+        // Fetch IKtracker drafts directly so the LLM can decide to publish them
+        if (isIktracker) {
+          try {
+            const draftRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/iktracker-actions`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ action: 'list-posts', limit: 100, status: 'draft' }),
+            });
+            if (draftRes.ok) {
+              const draftData = await draftRes.json();
+              const rawPosts = draftData?.data?.data?.posts || draftData?.data?.posts || draftData?.data?.data || draftData?.data || [];
+              iktrackerDrafts = Array.isArray(rawPosts) ? rawPosts.filter((p: any) => (p.status || '').toLowerCase() === 'draft') : [];
+              if (iktrackerDrafts.length > 0) {
+                console.log(`[Parmenion] Found ${iktrackerDrafts.length} IKtracker drafts available for publishing`);
+              }
+            } else {
+              await draftRes.text(); // consume body
+            }
+          } catch (e) {
+            console.warn('[Parmenion] IKtracker draft fetch failed (non-blocking):', e);
+          }
         }
       }
       decision = await askParmenionLLM({
@@ -429,6 +457,7 @@ try {
         scoredWorkbenchItems,
         cmsInventory,
         baselineSeoScore,
+        iktrackerDrafts: iktrackerDrafts.length > 0 ? iktrackerDrafts : undefined,
       });
     }
 
@@ -1150,7 +1179,7 @@ RÈGLES:
               'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ action: 'list-posts', limit: 300, all: true }),
+            body: JSON.stringify({ action: 'list-posts', limit: 300, status: 'all' }),
           });
           if (iktRes.ok) {
             const iktData = await iktRes.json();
@@ -1617,6 +1646,7 @@ async function askParmenionLLM(context: {
   scoredWorkbenchItems: any[];
   cmsInventory?: CmsContentInventory | null;
   baselineSeoScore?: SeoScoreV2 | null;
+  iktrackerDrafts?: any[];
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -1710,6 +1740,10 @@ CMS_INVENTORY (${context.cmsInventory.items.length} contenus existants, ${contex
 ${context.cmsInventory.drafts.map(d => `- [BROUILLON] "${d.title}" (slug: ${d.slug}, plateforme: ${d.platform})`).join('\n')}
 ${context.cmsInventory.published.slice(0, 20).map(d => `- [PUBLIÉ] "${d.title}" (slug: ${d.slug})`).join('\n')}
 ⚠️ Si tu veux créer un article sur un sujet déjà couvert par un brouillon ci-dessus, utilise "update-post" avec le slug du brouillon au lieu de "create-post".
+` : ''}${context.iktrackerDrafts && context.iktrackerDrafts.length > 0 ? `
+BROUILLONS IKTRACKER PRÊTS À PUBLIER (${context.iktrackerDrafts.length}):
+${context.iktrackerDrafts.slice(0, 15).map((d: any) => `- "${d.title}" (slug: ${d.slug}, créé: ${d.created_at || 'inconnu'})`).join('\n')}
+Tu peux publier un brouillon pertinent via update-post avec status: "published" au lieu de créer un nouvel article.
 ` : ''}
 
 DIAGNOSTICS DISPONIBLES:

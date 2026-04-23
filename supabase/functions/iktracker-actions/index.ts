@@ -130,15 +130,17 @@ type IktrackerPostSummary = {
   title?: string
 }
 
+const VALID_STATUS_FILTERS = new Set(['draft', 'published', 'all'])
+
 async function listPosts(apiKey: string, limit = 50, offset = 0, statusFilter?: string) {
+  const normalised = (statusFilter || 'all').toLowerCase()
+  const effectiveStatus = VALID_STATUS_FILTERS.has(normalised) ? normalised : 'all'
+
   const search = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
+    status: effectiveStatus,
   })
-
-  if (statusFilter) {
-    search.set('status', statusFilter)
-  }
 
   return callIktracker('GET', `/posts?${search.toString()}`, apiKey)
 }
@@ -588,7 +590,7 @@ try {
 
       // ── Posts ──
       case 'list-posts':
-        result = await listPosts(apiKey, params.limit, params.offset, params.status || (params.all === true ? 'all' : undefined))
+        result = await listPosts(apiKey, params.limit, params.offset, params.status ?? (params.all === true ? 'all' : 'all'))
         break
       case 'get-post':
         if (!params.slug) throw new Error('slug required')
