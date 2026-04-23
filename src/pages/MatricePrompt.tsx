@@ -1029,6 +1029,15 @@ export default function MatricePrompt() {
               <HelpCircle className="h-4 w-4" />
             </Button>
             <div className="flex-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs text-muted-foreground"
+              onClick={() => navigate('/matrice/historique')}
+              title="Historique des audits"
+            >
+              <History className="h-3.5 w-3.5" /> Historique
+            </Button>
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => setShowErrorDialog(true)}>
               <AlertTriangle className="h-3.5 w-3.5" /> Signaler une erreur
             </Button>
@@ -1043,6 +1052,36 @@ export default function MatricePrompt() {
               </>
             )}
           </div>
+
+          {/* Sprint 7 — resume banner for interrupted audit */}
+          {resumeBanner && (
+            <div className="mb-4 border-2 border-brand-gold rounded-md p-3 bg-transparent flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <RotateCcw className="h-4 w-4 text-brand-gold" aria-hidden />
+                <span className="text-foreground">
+                  Audit interrompu détecté : <span className="font-mono">{resumeBanner.count}/{resumeBanner.total}</span> critères évalués.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-brand-gold text-brand-gold hover:text-brand-gold"
+                  onClick={handleAnalyze}
+                >
+                  Relancer l'audit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => { sessionStorage.removeItem(PARTIAL_KEY); setResumeBanner(null); }}
+                >
+                  Ignorer
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Error report dialog */}
           {showErrorDialog && (
