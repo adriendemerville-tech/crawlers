@@ -84,6 +84,9 @@ export default function SiteCrawl() {
     addSelector, removeSelector,
   } = engine;
 
+  // Ready to show slider + launch = either pre-scan (Phase 0) or deep detect (Phase 1) completed
+  const readyToLaunch = preScanDone || detectionDone;
+
   // ── Report data (kept here since it depends on many pieces) ──
   const siteCrawlReportData = useMemo((): SiteCrawlReportData | null => {
     if (!crawlResult) return null;
