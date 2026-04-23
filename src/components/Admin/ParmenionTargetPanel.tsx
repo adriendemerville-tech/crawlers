@@ -56,6 +56,7 @@ interface AutopilotConfig {
   cooldown_hours: number;
   config_id: string;
   force_iktracker_article: boolean;
+  force_content_cycle: boolean;
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
