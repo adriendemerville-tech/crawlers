@@ -102,7 +102,7 @@ export async function scanCmsContent(
   if (isIktracker && iktrackerApiKey) {
     try {
       const baseUrl = IKTRACKER_BASE_URL;
-      const resp = await fetch(`${baseUrl}/posts?all=true&limit=200`, {
+      const resp = await fetch(`${baseUrl}/posts?status=all&limit=200`, {
         headers: { 'x-api-key': iktrackerApiKey },
         signal: AbortSignal.timeout(15000),
       });
