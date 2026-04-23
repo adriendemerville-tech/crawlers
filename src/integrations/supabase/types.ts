@@ -2143,6 +2143,36 @@ export type Database = {
           },
         ]
       }
+      cms_page_content: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          locale: string
+          page_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          locale?: string
+          page_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          locale?: string
+          page_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       cocoon_architect_drafts: {
         Row: {
           created_at: string

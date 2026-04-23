@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
+import { useGeoMetaTags } from '@/hooks/useGeoMetaTags';
 // Lazy reference — avoid static import that bloats critical bundle
 
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -152,6 +153,7 @@ const Index = () => {
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
+  useGeoMetaTags();
 
   // Fix canonical & hreflang for multilingual indexation (EN/ES pages)
   useCanonicalHreflang('/');
