@@ -23,10 +23,31 @@ export interface MatrixResult {
   confidence: number;
 }
 
+export type CallEventStatus = 'pending' | 'running' | 'done' | 'error';
+
+export interface CallEvent {
+  id: string;                  // unique per (fn, criterionId, provider?)
+  fn: string;                  // edge function name
+  criterionId?: string;        // optional, for LLM custom prompt calls
+  criterionTitle?: string;
+  provider?: string;           // for benchmark calls
+  promptIndex?: number;        // index of prompt in multi-prompt audit
+  promptTotal?: number;
+  label: string;               // human-readable
+  detail?: string;             // e.g. "gemini · prompt 2/5"
+  status: CallEventStatus;
+  errorMessage?: string;
+}
+
 export interface OrchestratorCallbacks {
   onProgress: (completed: number, total: number, currentCriterion: string) => void;
   onResult: (result: MatrixResult) => void;
   onError: (criterionId: string, error: string) => void;
+  /**
+   * Fired for every backend call lifecycle change.
+   * Listeners should upsert by `event.id`.
+   */
+  onCallEvent?: (event: CallEvent) => void;
 }
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
