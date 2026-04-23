@@ -909,7 +909,7 @@ async function prescribeWithDualPrompts(context: {
   const supabase = getServiceClient();
   if (!LOVABLE_API_KEY) return null;
 
-  const items = context.scoredWorkbenchItems;
+  const items = Array.isArray(context.scoredWorkbenchItems) ? context.scoredWorkbenchItems : [];
   // Use lane field from scoring function (dual-lane) or fallback to tier-based split
   const techItems = items.filter((it: any) => (it.lane || (it.tier <= 4 ? 'tech' : 'content')) === 'tech');
   const contentItems = items.filter((it: any) => (it.lane || (it.tier <= 4 ? 'tech' : 'content')) === 'content');
