@@ -1159,15 +1159,28 @@ export default function MatricePrompt() {
             </div>
           </div>
 
-          {/* Sprint 4 — live progress tracker (visible during execution and right after) */}
+          {/* Sprint 4/6 — live progress tracker + cancel (SSE only) */}
           {(analyzing || progress.items.length > 0) && (
-            <div className="mb-6 max-w-3xl mx-auto">
+            <div className="mb-6 max-w-3xl mx-auto space-y-2">
               <MatriceProgressTracker
                 completed={progress.completed}
                 total={progress.total}
                 currentLabel={progress.currentLabel}
                 items={progress.items}
               />
+              {analyzing && sseAbortRef.current && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelAnalyze}
+                    className="gap-2 border-brand-violet text-foreground hover:bg-brand-violet/10"
+                  >
+                    <XIcon className="h-3.5 w-3.5" />
+                    Annuler l'analyse
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
