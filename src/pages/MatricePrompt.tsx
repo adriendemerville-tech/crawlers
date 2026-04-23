@@ -601,6 +601,7 @@ export default function MatricePrompt() {
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
     setAnalyzing(true);
     setBenchmarkData(null);
+    progress.reset();
     try {
       // ── BENCHMARK MODE ──────────────────────────────────────────────
       if (activeMatriceType === 'benchmark') {
