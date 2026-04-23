@@ -625,6 +625,9 @@ export default function MatricePrompt() {
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
     setAnalyzing(true);
     setBenchmarkData(null);
+    setResumeBanner(null);
+    sessionStorage.removeItem(PARTIAL_KEY);
+    auditStartRef.current = Date.now();
     progress.reset();
     try {
       // ── BENCHMARK MODE ──────────────────────────────────────────────
