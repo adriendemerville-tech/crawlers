@@ -574,13 +574,10 @@ async function executeIktrackerActions(
         ...(cmsAction.body ? { body: cmsAction.body } : {}),
       };
 
-      console.log(`[AutopilotEngine] IKtracker CMS action: ${cmsAction.action}`, JSON.stringify(actionBody).slice(0, 500));
+      const bridge = resolveCmsBridge(site.domain);
+      console.log(`[AutopilotEngine] ${bridge} CMS action: ${cmsAction.action}`, JSON.stringify(actionBody).slice(0, 500));
 
-      const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(actionBody),
-      });
+      const funcResponse = await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, actionBody);
 
       const funcResult = await funcResponse.json().catch(() => ({}));
       
@@ -596,11 +593,8 @@ async function executeIktrackerActions(
           console.error(`[AutopilotEngine] 🚫 SEMANTIC GATE BLOCKED: Content for "${cmsAction.body.title}" has only ${Math.round(gate.identityOverlap * 100)}% identity overlap (need ≥15%). Matched: [${gate.matchedTerms.join(', ')}] / Total: [${gate.totalTerms.slice(0, 10).join(', ')}]`);
           const slugToDelete = cmsAction.body.slug || funcResult?.result?.slug;
           if (slugToDelete) {
-            await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'delete-post', slug: slugToDelete }),
-            }).catch((err) => console.warn('[AutopilotEngine] Failed to delete rejected post:', err));
+            await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, { action: 'delete-post', slug: slugToDelete })
+              .catch((err) => console.warn('[AutopilotEngine] Failed to delete rejected post:', err));
             console.log(`[AutopilotEngine] 🗑️ Deleted hallucinated post: ${slugToDelete}`);
           }
           executionResults.push({
@@ -674,11 +668,8 @@ async function generateAndAttachImage(cmsAction: any, funcResult: any, site: Sit
             const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(imgFileName);
             const slug = cmsAction.body.slug || funcResult?.result?.slug;
             if (slug) {
-              await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'update-post', slug, updates: { image_url: urlData.publicUrl } }),
-              }).catch((err) => console.warn('[AutopilotEngine] Image URL update failed:', err));
+              await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, { action: 'update-post', slug, updates: { image_url: urlData.publicUrl } })
+                .catch((err) => console.warn('[AutopilotEngine] Image URL update failed:', err));
             }
             console.log(`[AutopilotEngine] Image uploaded for "${cmsAction.body.title}": ${urlData.publicUrl}`);
             return true;
