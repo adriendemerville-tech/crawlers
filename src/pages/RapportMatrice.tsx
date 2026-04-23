@@ -95,6 +95,12 @@ export default function RapportMatrice() {
     return generateMatriceHTML(data, branding);
   }, [data, branding]);
 
+  // Adapter for the interactive Pivot + Cube views.
+  const matrixResults = useMemo(() => {
+    if (!data) return [];
+    return legacyToMatrixResults(data.results);
+  }, [data]);
+
   const handleCsv = async () => {
     if (!data) return;
     const header = 'Prompt,Axe,Poids,Score,Seuil Bon,Seuil Moyen,Seuil Mauvais,Verdict\n';
