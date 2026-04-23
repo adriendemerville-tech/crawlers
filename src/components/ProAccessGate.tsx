@@ -106,7 +106,7 @@ export function ProAccessGate({
               onClick={handleSubscribe}
             >
               <Crown className="h-4 w-4 text-yellow-300" />
-              {subscribeLoading ? "Redirection…" : "S'abonner · 29€/mois"}
+              {subscribeLoading ? "Redirection…" : "S'abonner · dès 26,10€/mois"}
             </Button>
           </CardContent>
         </Card>

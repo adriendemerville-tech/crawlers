@@ -117,6 +117,7 @@ export function MyWallet() {
   const { toast } = useToast();
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [walletBilling, setWalletBilling] = useState<'monthly' | 'annual'>('monthly');
   const [portalLoading, setPortalLoading] = useState(false);
   const [showFreeOfferModal, setShowFreeOfferModal] = useState(false);
   const [showRetentionModal, setShowRetentionModal] = useState(false);
@@ -624,16 +625,49 @@ export function MyWallet() {
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-between pt-1">
-            <p className="text-2xl font-bold text-foreground">
-              29€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
-            </p>
+          {/* Billing toggle */}
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              onClick={() => setWalletBilling('monthly')}
+              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                walletBilling === 'monthly'
+                  ? 'border-violet-500 text-foreground bg-violet-500/10'
+                  : 'border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {language === 'fr' ? 'Mensuel' : language === 'es' ? 'Mensual' : 'Monthly'}
+            </button>
+            <button
+              onClick={() => setWalletBilling('annual')}
+              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors relative ${
+                walletBilling === 'annual'
+                  ? 'border-violet-500 text-foreground bg-violet-500/10'
+                  : 'border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {language === 'fr' ? 'Annuel' : language === 'es' ? 'Anual' : 'Annual'}
+              <span className="absolute -top-2 -right-1.5 text-[9px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/30 rounded-full px-1 py-0.5 leading-none">
+                -10%
+              </span>
+            </button>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <div>
+              <p className="text-2xl font-bold text-foreground">
+                {walletBilling === 'annual' ? '26,10' : '29'}€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+              </p>
+              {walletBilling === 'annual' && (
+                <p className="text-[10px] text-muted-foreground">
+                  {language === 'fr' ? 'Facturé 313,20€/an' : language === 'es' ? 'Facturado 313,20€/año' : 'Billed €313.20/year'}
+                </p>
+              )}
+            </div>
             <Button
               onClick={async () => {
                 setSubscribeLoading(true);
                 try {
                   const resp = await supabase.functions.invoke('stripe-actions', {
-                    body: { action: 'subscription', returnUrl: window.location.href }
+                    body: { action: 'subscription', billing: walletBilling, returnUrl: window.location.href }
                   });
                   if (resp.error) {
                     let msg = String(resp.error);

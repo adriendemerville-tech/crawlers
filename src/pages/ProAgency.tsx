@@ -386,16 +386,22 @@ export default function ProAgency() {
   const { language } = useLanguage();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
   const t = translations[language] || translations.fr;
 
   useCanonicalHreflang('/pro-agency');
 
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  const proMonthly = 29;
+  const proAnnualMonthly = Math.round(proMonthly * 12 * 0.9 / 12 * 100) / 100; // 26.10
+  const displayPrice = billing === 'annual' ? proAnnualMonthly : proMonthly;
+  const formattedPrice = language === 'en' ? `€${displayPrice.toFixed(2)}` : `${displayPrice.toFixed(2).replace('.', ',')}€`;
+
   const doSubscribe = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription' } });
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription', billing } });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank', 'noopener');
     } catch (err: any) {
@@ -547,12 +553,49 @@ export default function ProAgency() {
                 </div>
               )}
 
+              {/* Billing toggle */}
+              <div className="mb-6 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setBilling('monthly')}
+                  className={`text-sm font-medium px-4 py-2 rounded-full border transition-colors ${
+                    billing === 'monthly'
+                      ? 'border-violet-500 text-foreground bg-violet-500/10'
+                      : 'border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {language === 'fr' ? 'Mensuel' : language === 'es' ? 'Mensual' : 'Monthly'}
+                </button>
+                <button
+                  onClick={() => setBilling('annual')}
+                  className={`text-sm font-medium px-4 py-2 rounded-full border transition-colors relative ${
+                    billing === 'annual'
+                      ? 'border-violet-500 text-foreground bg-violet-500/10'
+                      : 'border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {language === 'fr' ? 'Annuel' : language === 'es' ? 'Anual' : 'Annual'}
+                  <span className="absolute -top-2.5 -right-2 text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/30 rounded-full px-1.5 py-0.5 leading-none">
+                    -10%
+                  </span>
+                </button>
+              </div>
+
               {/* Price */}
-              <div className="mb-8 flex items-baseline justify-center gap-2">
+              <div className="mb-2 flex items-baseline justify-center gap-2">
                 <span className="text-lg text-muted-foreground">{t.fromLabel}</span>
-                <span className="text-5xl font-extrabold text-foreground">{t.price}</span>
+                <span className="text-5xl font-extrabold text-foreground">{formattedPrice}</span>
                 <span className="text-xl text-muted-foreground">{t.period}</span>
               </div>
+              {billing === 'annual' && (
+                <p className="text-xs text-muted-foreground text-center mb-6">
+                  {language === 'fr'
+                    ? `Facturé ${(proAnnualMonthly * 12).toFixed(2).replace('.', ',')}€/an — Engagement 12 mois`
+                    : language === 'es'
+                      ? `Facturado ${(proAnnualMonthly * 12).toFixed(2).replace('.', ',')}€/año — Compromiso 12 meses`
+                      : `Billed €${(proAnnualMonthly * 12).toFixed(2)}/year — 12-month commitment`}
+                </p>
+              )}
+              {billing === 'monthly' && <div className="mb-6" />}
 
               {/* CTA */}
               <div className="flex flex-col items-center gap-3">
