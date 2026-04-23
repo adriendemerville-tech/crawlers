@@ -126,19 +126,34 @@ function detectCustomPrompt(row: Record<string, any>): string | undefined {
   return undefined;
 }
 
-function detectTargetProvider(row: Record<string, any>): string | undefined {
+function detectTargetProviders(row: Record<string, any>): string[] {
   const providerKeys = ['llm', 'moteur', 'engine', 'provider', 'cible', 'target'];
   const KNOWN_PROVIDERS = ['chatgpt', 'gpt', 'gemini', 'claude', 'perplexity', 'mistral', 'copilot'];
+  const found = new Set<string>();
   for (const key of providerKeys) {
     for (const col of Object.keys(row)) {
       if (col.toLowerCase().includes(key) && row[col]) {
-        const val = String(row[col]).trim().toLowerCase();
-        const match = KNOWN_PROVIDERS.find(p => val.includes(p));
-        if (match) return match;
+        const raw = String(row[col]).trim().toLowerCase();
+        // Support "all", "tous", "*" → benchmark mode against all providers
+        if (/^(all|tous|tout|\*)$/.test(raw)) {
+          KNOWN_PROVIDERS.forEach(p => found.add(p));
+          continue;
+        }
+        // Support comma / semicolon / pipe separated lists
+        const parts = raw.split(/[,;|]+/).map(s => s.trim()).filter(Boolean);
+        for (const part of parts) {
+          const match = KNOWN_PROVIDERS.find(p => part.includes(p));
+          if (match) found.add(match);
+        }
       }
     }
   }
-  return undefined;
+  return Array.from(found);
+}
+
+function detectTargetProvider(row: Record<string, any>): string | undefined {
+  const providers = detectTargetProviders(row);
+  return providers[0];
 }
 
 function determineMatchType(fn: string, customPrompt?: string): MatchType {
