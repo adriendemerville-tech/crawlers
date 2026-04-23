@@ -93,6 +93,9 @@ export default function MatricePrompt() {
   const [showHelp, setShowHelp] = useState(false);
   const [activeMetadata, setActiveMetadata] = useState<MatrixMetadata | null>(null);
 
+  // Real-time progress tracker (Sprint 4 wiring)
+  const progress = useMatriceProgress();
+
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
 
   const handleReportError = async () => {
