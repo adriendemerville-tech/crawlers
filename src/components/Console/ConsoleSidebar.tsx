@@ -132,31 +132,53 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     const isActive = activeTab === item.value;
     const isLocked = item.proOnly && !isProUser;
     const Icon = item.icon;
+    const href = `/app/console?tab=${item.value}`;
+
+    const content = (
+      <>
+        <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && isProUser && 'text-yellow-500')} />
+        <span className="flex-1 truncate">
+          {item.beta && <span className="text-muted-foreground text-[9px] font-normal mr-1 uppercase">beta</span>}
+          {item.value === 'wallet' && isProUser ? (
+            <span className="font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
+              {item.label}
+            </span>
+          ) : item.label}
+        </span>
+        {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+      </>
+    );
+
+    const className = cn(
+      'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin transition-colors text-left',
+      isActive
+        ? 'bg-accent/60 text-foreground'
+        : 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
+      isLocked && 'opacity-40 cursor-not-allowed',
+    );
+
+    if (isLocked) {
+      return (
+        <div key={item.value}>
+          <button disabled className={className}>{content}</button>
+        </div>
+      );
+    }
 
     return (
       <div key={item.value}>
-        <button
-          onClick={() => !isLocked && onTabChange(item.value)}
-          disabled={isLocked}
-          className={cn(
-            'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin transition-colors text-left',
-            isActive
-              ? 'bg-accent/60 text-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
-            isLocked && 'opacity-40 cursor-not-allowed',
-          )}
+        <a
+          href={href}
+          onClick={(e) => {
+            // Allow native behavior for modifier-clicks (new tab/window) and middle-click
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+            e.preventDefault();
+            onTabChange(item.value);
+          }}
+          className={className}
         >
-          <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && isProUser && 'text-yellow-500')} />
-          <span className="flex-1 truncate">
-            {item.beta && <span className="text-muted-foreground text-[9px] font-normal mr-1 uppercase">beta</span>}
-            {item.value === 'wallet' && isProUser ? (
-              <span className="font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
-                {item.label}
-              </span>
-            ) : item.label}
-          </span>
-          {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
-        </button>
+          {content}
+        </a>
       </div>
     );
   };
