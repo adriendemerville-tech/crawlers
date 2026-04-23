@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Download, FileSpreadsheet, Link2, Printer, Loader2, Check, Share2 } from 'lucide-react';
+import { Download, FileSpreadsheet, Printer, Loader2, Check, Share2, FileText, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MatricePivotView, MatriceCube3D } from '@/components/Matrice';
+import { legacyToMatrixResults } from '@/utils/matrice/legacyToMatrixResult';
 
 interface MatriceReportData {
   kind: 'matrice';
@@ -69,6 +71,7 @@ export default function RapportMatrice() {
   const [copied, setCopied] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [view, setView] = useState<'document' | 'interactive'>('document');
   // Admin guard
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -91,6 +94,12 @@ export default function RapportMatrice() {
     if (!data) return '';
     return generateMatriceHTML(data, branding);
   }, [data, branding]);
+
+  // Adapter for the interactive Pivot + Cube views.
+  const matrixResults = useMemo(() => {
+    if (!data) return [];
+    return legacyToMatrixResults(data.results);
+  }, [data]);
 
   const handleCsv = async () => {
     if (!data) return;
@@ -190,6 +199,26 @@ export default function RapportMatrice() {
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
             <h1 className="text-base sm:text-lg font-semibold truncate">Rapport Matrice d'audit — {data.url}</h1>
             <div className="flex items-center gap-2 flex-shrink-0">
+              {/* View toggle: Document vs Interactive */}
+              <div className="hidden md:inline-flex border border-border rounded-md overflow-hidden mr-1">
+                <button
+                  type="button"
+                  onClick={() => setView('document')}
+                  className={`px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors ${view === 'document' ? 'bg-brand-violet/10 text-brand-violet' : 'text-muted-foreground hover:text-foreground'}`}
+                  aria-pressed={view === 'document'}
+                >
+                  <FileText className="h-3.5 w-3.5" /> Document
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView('interactive')}
+                  className={`px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors border-l border-border ${view === 'interactive' ? 'bg-brand-violet/10 text-brand-violet' : 'text-muted-foreground hover:text-foreground'}`}
+                  aria-pressed={view === 'interactive'}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" /> Pivot + Cube
+                </button>
+              </div>
+
               <Button onClick={handlePdfDownload} variant="outline" size="sm" className="gap-1.5" disabled={isGeneratingPdf}>
                 {isGeneratingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 <span className="hidden sm:inline">PDF</span>
@@ -208,7 +237,18 @@ export default function RapportMatrice() {
           </div>
         </header>
         <main className="flex-1 relative">
-          <iframe title="Rapport Matrice" srcDoc={htmlContent} className="w-full h-[calc(100vh-57px-40px)] bg-white" />
+          {view === 'document' ? (
+            <iframe title="Rapport Matrice" srcDoc={htmlContent} className="w-full h-[calc(100vh-57px-40px)] bg-white" />
+          ) : (
+            <div className="mx-auto max-w-7xl px-4 py-6 grid gap-6 lg:grid-cols-5">
+              <section className="lg:col-span-3 border-2 border-brand-violet rounded-md p-4 bg-transparent">
+                <MatricePivotView results={matrixResults} />
+              </section>
+              <section className="lg:col-span-2 border-2 border-brand-violet rounded-md p-4 bg-transparent">
+                <MatriceCube3D results={matrixResults} />
+              </section>
+            </div>
+          )}
         </main>
         <footer className="sticky bottom-0 z-50 border-t border-border bg-background/90 backdrop-blur">
           <div className="mx-auto max-w-6xl px-4 py-2 flex items-center justify-between">
