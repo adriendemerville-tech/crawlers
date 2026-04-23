@@ -618,6 +618,12 @@ export default function MatricePrompt() {
           llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
         }));
 
+        // Tracker — emit pending events for every (prompt × engine) pair
+        const benchEngines = Array.from(new Set(benchmarkItems.map(b => b.engine)));
+        const benchSeeds = seedsForBenchmark(benchmarkItems, benchEngines, 'parse-matrix-geo');
+        benchSeeds.forEach(s => progress.onCallEvent(makePending(s)));
+        benchSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
+
         const { data: fnData, error: fnError } = await supabase.functions.invoke('parse-matrix-geo', {
           body: {
             url: url.trim(),
@@ -629,8 +635,11 @@ export default function MatricePrompt() {
         });
 
         if (fnError || !fnData?.success) {
+          benchSeeds.forEach(s => progress.onCallEvent(makeError(s, fnData?.error || fnError?.message || 'Benchmark failed')));
           throw new Error(fnData?.error || fnError?.message || 'Benchmark failed');
         }
+
+        benchSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
 
         setBenchmarkData({
           results: fnData.results,
