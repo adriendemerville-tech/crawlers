@@ -109,16 +109,18 @@ Deno.serve(handleRequest(async (req) => {
     const etag = `"se-${formatted.length}-${maxLastmod}"`;
 
     // 6. Log to analytics
-    await supabase.from('analytics_events').insert({
-      event_type: 'sitemap_regenerated',
-      event_data: {
-        domain,
-        urls_count: formatted.length,
-        etag,
-        storage_path: `${BUCKET}/${SITEMAP_PATH}`,
-        trigger: body.trigger || 'manual',
-      },
-    }).catch(() => {});
+    try {
+      await supabase.from('analytics_events').insert({
+        event_type: 'sitemap_regenerated',
+        event_data: {
+          domain,
+          urls_count: formatted.length,
+          etag,
+          storage_path: `${BUCKET}/${SITEMAP_PATH}`,
+          trigger: body.trigger || 'manual',
+        },
+      });
+    } catch (_) { /* non-blocking */ }
 
     console.log(`[regenerate-sitemap] ✅ ${formatted.length} URLs → ${BUCKET}/${SITEMAP_PATH}`);
 
