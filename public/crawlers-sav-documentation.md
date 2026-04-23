@@ -1,7 +1,7 @@
 ---
 title: "Documentation SAV Crawlers.fr"
-version: "5.0"
-date: "2026-04-09"
+version: "6.0"
+date: "2026-04-23"
 usage: "Base de connaissance agent Limova + documentation publique /aide"
 confidentialite: "Public"
 ---
@@ -187,12 +187,16 @@ Accessible depuis Console > onglet GMB (réservé aux abonnés Pro Agency).
 
 **Interface trilingue :** disponible en français, anglais et espagnol.
 
-### Audit Matrice de Prompts
-Test de votre visibilité sur des prompts cibles dans plusieurs LLMs simultanément :
+### Audit Matrice de Prompts (immersif, temps réel)
+Test de votre visibilité sur des prompts cibles dans plusieurs LLMs simultanément, avec une expérience entièrement repensée :
 - Définissez vos prompts cibles (ex : "meilleure agence SEO Paris")
 - Crawlers interroge ChatGPT, Gemini, Perplexity, Claude
 - Résultats : taux de citation, sentiment, position dans la réponse
-- **Gestion des prompts** : les prompts sauvegardés sont affichés sous forme de cartes, renommables (double-clic ou icône crayon), supprimables au survol, et triés automatiquement par dernière utilisation (le plus récent en premier)
+- **Streaming temps réel** : chaque critère apparaît dès qu'il est évalué (pas d'attente de fin d'audit). Le cube 3D et la table pivot se remplissent progressivement.
+- **Trois visualisations interconnectées** : table pivot triable (vue analytique), cube 3D Three.js (critère × moteur × variant de prompt — couleur = score) et drill-down voxel détaillant le verdict, l'extrait de réponse et la tactique correctrice à appliquer.
+- **Gestion des prompts** : les prompts sauvegardés sont affichés sous forme de cartes, renommables (double-clic ou icône crayon), supprimables au survol, et triés automatiquement par dernière utilisation (le plus récent en premier).
+- **Reprise d'audit interrompu** : si l'audit a été coupé (fermeture d'onglet, perte de connexion), un bandeau "Reprendre l'audit interrompu (X/Y critères)" s'affiche au retour sur la page Matrice et propose de reprendre exactement là où vous en étiez.
+- **Historique & comparaison** : la vue "Historique" (accessible depuis la top bar) liste tous vos audits matriciels passés, permet de rejouer un audit archivé et de comparer le delta de scores entre deux audits pour mesurer vos progrès dans le temps.
 
 ### Rapports (Console)
 Onglet dédié à la gestion des rapports (réservé Pro Agency) :

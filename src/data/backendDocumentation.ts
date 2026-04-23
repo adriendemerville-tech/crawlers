@@ -344,7 +344,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`strategic-synthesis\` | ✅ | 0 | Micro-fn : synthèse finale LLM (Gemini Pro → Flash fallback) |
 | \`audit-compare\` | ✅ | 4 | Analyse concurrentielle face-à-face |
 | \`audit-local-seo\` | ✅ | 1 | Audit SEO local |
-| \`audit-matrice\` | ✅ | 2 | Audit matrice décisionnelle |
+| \`audit-matrice\` | ✅ | 2 | Audit matrice décisionnelle (streaming SSE temps réel — un événement \`voxel\` par critère + \`done\`/\`error\`) |
 | \`diagnose-hallucination\` | ✅ | 1 | Diagnostic d'hallucination LLM |
 | \`check-llm-depth\` | ✅ | 0 | Profondeur de visibilité LLM multi-itération |
 
@@ -887,8 +887,11 @@ Prompts LLM pour l'audit stratégique (monolithique et pipeline modulaire).
 ### \`dataForSeoStrategic.ts\`
 Utilitaires DataForSEO pour les fonctions stratégiques (SERP, volumes, KD).
 
-### \`matriceHtmlAnalysis.ts\` + \`matriceScoring.ts\` + \`matriceTypeDetector.ts\`
-Pipeline d'analyse HTML, scoring et détection de type pour la Matrice d'audit.
+### \`matriceHtmlAnalysis.ts\` + \`matriceScoring.ts\` + \`matriceTypeDetector.ts\` + \`matriceSseClient.ts\`
+Pipeline d'analyse HTML, scoring et détection de type pour la **Matrice d'audit (Sprints 1-7)** :
+- **Streaming SSE** (\`matriceSseClient.ts\`) : client EventSource côté \`MatricePrompt.tsx\` qui consomme les événements \`voxel\` (un par critère évalué), \`done\` et \`error\` émis par \`audit-matrice\`. Permet le rendu progressif du cube 3D et de la table pivot pendant l'audit.
+- **Visualisations** (\`MatriceCube3D\`, \`MatricePivotView\`, \`MatriceVoxelDetail\`) : cube 3D Three.js (axes : critère × moteur LLM × variant prompt), table pivot triable et drill-down voxel détaillant le verdict + extrait de réponse + tactique correctrice.
+- **Persistance & historique (Sprint 7)** : chaque audit est persisté dans \`matrix_audits\` (snapshot JSONB self-contained = résultats + pivot). Bandeau "Reprendre l'audit interrompu (X/Y critères)" en haut de \`MatricePrompt\` quand \`sessionStorage.rapport_matrice_results_partial\` est présent. Vue \`/matrice/historique\` accessible depuis la top bar : liste, comparaison delta scores entre 2 audits, rejeu d'un audit archivé.
 
 ### \`pageMetadata.ts\`
 Extraction et normalisation des métadonnées de page (title, meta, OG, etc.).
@@ -1625,6 +1628,8 @@ Chaque cycle boucle sur l'ensemble des phases pour garantir un traitement de bou
 | \`autopilot_configs\` | Configuration du pipeline par site (phases, mode, garde-fous, exclusions) |
 | \`autopilot_modification_log\` | Registre de chaque modification (phase, action, URL, diff, statut) |
 | \`parmenion_decision_log\` | Registre décisionnel de Parménion (but, tactique, risque, impact, tokens, coût) |
+| \`parmenion_targets\` | Cibles multi-tenant pilotées par Parménion (\`domain\`, \`label\`, \`platform\`, \`event_type\`, \`api_key_name\`, \`is_active\`) |
+| \`matrix_audits\` | Sprint 7 — historique des audits matriciels (\`label\`, \`audit_type\`, \`global_score\`, \`results\` JSONB, \`pivot_snapshot\` JSONB) |
 
 ## Moteur d'exécution (autopilot-engine)
 
@@ -1641,12 +1646,23 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
 4. **MAJ** : Incrémente \`total_cycles_run\`, met à jour \`last_cycle_at\`
 5. **Sync IKtracker** : Événement de statut final si applicable
 
-### Parménion — Intelligence décisionnelle
+### Parménion — Intelligence décisionnelle (V3 — prescribe déterministe)
 
 - **Modèle** : Gemini 2.5 Flash (escalade vers Pro si nécessaire)
-- **Raisonnement** : But → Tactique → Prudence (risque 1-5)
-- **Sécurité** : Risque ≥ 4 bloqué. Mode conservateur si erreurs > 20%
+- **Phase prescribe V3** : appel déterministe à \`cocoon-strategist\` qui retourne un plan priorisé (max 8 tâches) avec \`executor_function\`, \`urgency\`, \`depends_on\`, \`priority_score\`. L'exécuteur prend toujours la tâche #1. Fallback V2 (\`prescribeWithDualPrompts\`) si le stratège échoue.
+- **content_priority_mode** : booste x1.8 les tâches contenu (create_content, rewrite_content, publish_draft, improve_eeat).
+- **Sécurité** : Risque ≥ 4 bloqué. Mode conservateur si erreurs > 20% (segmenté par action_type).
 - **Apprentissage** : Boucle rétroaction T+30 via \`parmenion-feedback\`
+
+### Cibles multi-tenant (\`parmenion_targets\`)
+
+Parménion gère plusieurs sites cibles via la table \`parmenion_targets\`. Plateformes branchées et opérationnelles :
+
+| Domaine | Plateforme | Pont API | Statut autonomie |
+|---------|------------|----------|------------------|
+| \`crawlers.fr\` | \`internal\` | \`cms-patch-content\` (handler crawlers_internal) | ✅ Branché |
+| \`iktracker.fr\` | \`iktracker\` | \`iktracker-actions\` | ✅ Branché |
+| \`dictadevi.io\` | \`custom\` | ⚠️ Aucun pont API dédié | ⚠️ Cible enregistrée mais **non branchée** — il manque \`dictadevi-actions\`, le secret \`DICTADEVI_API_KEY\`, le routing \`platform='dictadevi'\` dans \`parmenion-orchestrator\` + \`autopilot-engine\`, et le mode \`dictadevi\` dans \`cmsContentScanner.ts\`. À implémenter au Sprint 8. |
 
 ### Cron jobs
 
@@ -1670,14 +1686,14 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '10.0.0',
-  lastUpdated: '2026-03-29',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect (crédits + images IA multi-moteurs) + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Quiz SEO + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine',
-  totalEdgeFunctions: 190,
-  totalSharedModules: 37,
-  totalTables: '149+',
-  totalLinesOfCode: '215 000+',
-  totalMigrations: 245,
-  totalPages: 41,
-  totalComponents: 315,
+  version: '11.0.0',
+  lastUpdated: '2026-04-23',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect (crédits + images IA multi-moteurs) + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Quiz SEO + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine + Matrice immersive (SSE + Pivot/Cube 3D + historique)',
+  totalEdgeFunctions: 192,
+  totalSharedModules: 38,
+  totalTables: '150+',
+  totalLinesOfCode: '218 000+',
+  totalMigrations: 247,
+  totalPages: 42,
+  totalComponents: 320,
 };
