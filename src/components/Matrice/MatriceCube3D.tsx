@@ -1,14 +1,20 @@
 /**
- * MatriceCube3D — Interactive 3D voxel cube (Sprint 3).
+ * MatriceCube3D — Interactive 3D voxel cube (Sprint 3 + 5).
  * Built on @react-three/fiber + drei (OrbitControls, Html tooltips).
  * Axes: X = famille, Y = type d'évaluation, Z = poids.
+ *
+ * Sprint 5 additions:
+ * - `selectedFamilyId`: dims voxels not matching the externally selected family
+ * - `onSelect(voxel)`: fired on click, also enables external drill-down panels
+ * - PNG snapshot button via the canvas WebGL context
+ *
  * Charte stricte: violet → gold heatmap, bordures, bg transparent, no IA-blue, no emoji.
  */
 
-import { Suspense, useMemo, useState, useCallback } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Suspense, useMemo, useState, useCallback, useRef, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, GizmoHelper, GizmoViewcube, Edges } from '@react-three/drei';
-import { Box } from 'lucide-react';
+import { Box, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { bucketToHsl, scoreToBucket } from '@/utils/matrice/heatmapScale';
 import { buildCubeLayout, type Voxel } from '@/utils/matrice/cubeLayout';
@@ -18,29 +24,37 @@ export interface MatriceCube3DProps {
   results: MatrixResult[];
   className?: string;
   /** Optional click handler when the user selects a voxel. */
-  onVoxelClick?: (voxel: Voxel) => void;
+  onVoxelClick?: (voxel: Voxel | null) => void;
+  /** External family selection — voxels not in this family are dimmed. */
+  selectedFamilyId?: string | null;
+  /** Externally controlled voxel selection (Sprint 5 cross-filter). */
+  selectedVoxelKey?: string | null;
 }
 
 // Spacing between voxel centers
 const STEP = 1.4;
 const SIZE = 1;
 
+const voxelKey = (v: Voxel) => `${v.x}-${v.y}-${v.z}`;
+
 interface VoxelMeshProps {
   voxel: Voxel;
   origin: { x: number; y: number; z: number };
   hovered: boolean;
   selected: boolean;
+  dimmed: boolean;
   onHover: (v: Voxel | null) => void;
   onSelect: (v: Voxel) => void;
 }
 
-function VoxelMesh({ voxel, origin, hovered, selected, onHover, onSelect }: VoxelMeshProps) {
+function VoxelMesh({ voxel, origin, hovered, selected, dimmed, onHover, onSelect }: VoxelMeshProps) {
   const color = useMemo(() => bucketToHsl(scoreToBucket(voxel.score)), [voxel.score]);
   const px = (voxel.x - origin.x) * STEP;
   const py = (voxel.y - origin.y) * STEP;
   const pz = (voxel.z - origin.z) * STEP;
   const scale = hovered || selected ? 1.15 : 1;
-  const opacity = voxel.score == null ? 0.35 : 0.92;
+  const baseOpacity = voxel.score == null ? 0.35 : 0.92;
+  const opacity = dimmed ? Math.min(baseOpacity, 0.18) : baseOpacity;
 
   return (
     <mesh
@@ -129,10 +143,49 @@ function AxisLabels({
   );
 }
 
-export function MatriceCube3D({ results, className, onVoxelClick }: MatriceCube3DProps) {
+/**
+ * Captures the canvas image data via the active WebGL context.
+ * Stored in a ref so the parent component can trigger a snapshot on demand.
+ */
+function SnapshotBridge({ snapshotRef }: { snapshotRef: React.MutableRefObject<(() => string | null) | null> }) {
+  const { gl, scene, camera } = useThree();
+  useEffect(() => {
+    snapshotRef.current = () => {
+      try {
+        // Force a fresh render (drei OrbitControls may not redraw between frames)
+        gl.render(scene, camera);
+        return gl.domElement.toDataURL('image/png');
+      } catch (err) {
+        console.error('[MatriceCube3D] snapshot failed', err);
+        return null;
+      }
+    };
+    return () => { snapshotRef.current = null; };
+  }, [gl, scene, camera, snapshotRef]);
+  return null;
+}
+
+export function MatriceCube3D({
+  results,
+  className,
+  onVoxelClick,
+  selectedFamilyId,
+  selectedVoxelKey,
+}: MatriceCube3DProps) {
   const layout = useMemo(() => buildCubeLayout(results), [results]);
   const [hovered, setHovered] = useState<Voxel | null>(null);
-  const [selected, setSelected] = useState<Voxel | null>(null);
+  const [internalSelected, setInternalSelected] = useState<Voxel | null>(null);
+  const snapshotRef = useRef<(() => string | null) | null>(null);
+
+  // Sync external voxel selection
+  useEffect(() => {
+    if (!selectedVoxelKey) {
+      setInternalSelected(null);
+      return;
+    }
+    const match = layout.voxels.find(v => voxelKey(v) === selectedVoxelKey);
+    if (match) setInternalSelected(match);
+  }, [selectedVoxelKey, layout]);
 
   const origin = useMemo(() => ({
     x: Math.max(0, (layout.axes.x.length - 1) / 2),
@@ -147,19 +200,46 @@ export function MatriceCube3D({ results, className, onVoxelClick }: MatriceCube3
   }), [layout, origin]);
 
   const handleSelect = useCallback((v: Voxel) => {
-    setSelected(prev => (prev && prev.x === v.x && prev.y === v.y && prev.z === v.z ? null : v));
-    onVoxelClick?.(v);
-  }, [onVoxelClick]);
+    const sameAsBefore = internalSelected
+      && voxelKey(internalSelected) === voxelKey(v);
+    const next = sameAsBefore ? null : v;
+    setInternalSelected(next);
+    onVoxelClick?.(next);
+  }, [internalSelected, onVoxelClick]);
+
+  const handleSnapshot = useCallback(() => {
+    if (!snapshotRef.current) return;
+    const dataUrl = snapshotRef.current();
+    if (!dataUrl) return;
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `matrice-cube-${new Date().toISOString().slice(0, 10)}.png`;
+    a.click();
+  }, []);
 
   const cameraDistance = Math.max(8, Math.max(layout.axes.x.length, layout.axes.y.length, layout.axes.z.length) * 2.2);
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">Vue Cube 3D</h3>
-        <span className="text-xs text-muted-foreground font-mono">
-          {layout.voxels.length} voxels · {results.length} critères
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground font-mono">
+            {layout.voxels.length} voxels · {results.length} critères
+          </span>
+          {results.length > 0 && (
+            <button
+              type="button"
+              onClick={handleSnapshot}
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs border border-brand-violet text-foreground rounded-md hover:border-brand-gold transition-colors bg-transparent"
+              aria-label="Exporter le cube en PNG"
+              title="Exporter le cube en PNG"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              PNG
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={cn(
@@ -178,7 +258,7 @@ export function MatriceCube3D({ results, className, onVoxelClick }: MatriceCube3
           <Canvas
             camera={{ position: [cameraDistance, cameraDistance * 0.8, cameraDistance], fov: 38 }}
             dpr={[1, 2]}
-            gl={{ antialias: true, alpha: true }}
+            gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
             style={{ background: 'transparent' }}
           >
             <ambientLight intensity={0.65} />
@@ -188,14 +268,16 @@ export function MatriceCube3D({ results, className, onVoxelClick }: MatriceCube3
             <Suspense fallback={null}>
               {layout.voxels.map((v) => {
                 const isHovered = !!hovered && hovered.x === v.x && hovered.y === v.y && hovered.z === v.z;
-                const isSelected = !!selected && selected.x === v.x && selected.y === v.y && selected.z === v.z;
+                const isSelected = !!internalSelected && voxelKey(internalSelected) === voxelKey(v);
+                const dimmed = !!selectedFamilyId && v.familyId !== selectedFamilyId;
                 return (
                   <VoxelMesh
-                    key={`${v.x}-${v.y}-${v.z}`}
+                    key={voxelKey(v)}
                     voxel={v}
                     origin={origin}
                     hovered={isHovered}
                     selected={isSelected}
+                    dimmed={dimmed}
                     onHover={setHovered}
                     onSelect={handleSelect}
                   />
@@ -222,12 +304,14 @@ export function MatriceCube3D({ results, className, onVoxelClick }: MatriceCube3
                 textColor="white"
               />
             </GizmoHelper>
+
+            <SnapshotBridge snapshotRef={snapshotRef} />
           </Canvas>
         )}
 
         {/* Floating tooltip — overlay HTML, not part of R3F */}
-        {(hovered || selected) && results.length > 0 && (() => {
-          const v = hovered ?? selected!;
+        {(hovered || internalSelected) && results.length > 0 && (() => {
+          const v = hovered ?? internalSelected!;
           return (
             <div className="absolute top-3 left-3 max-w-[260px] border-2 border-brand-violet bg-background/95 backdrop-blur-sm rounded-md p-3 text-xs space-y-1 pointer-events-none">
               <div className="font-semibold text-foreground">{v.familyLabel}</div>
@@ -264,7 +348,7 @@ export function MatriceCube3D({ results, className, onVoxelClick }: MatriceCube3
         ))}
         <span className="font-mono">100</span>
         <span className="ml-auto text-muted-foreground">
-          Glisser : rotation · Molette : zoom · Clic : sélection
+          Glisser · Molette · Clic
         </span>
       </div>
     </div>
