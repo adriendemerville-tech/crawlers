@@ -1088,6 +1088,8 @@ try {
         successful_past: feedbackAnalysis.successful.length,
         failed_past: feedbackAnalysis.failed.length,
         rollback_candidates: feedbackAnalysis.to_rollback.length,
+        content_priority_mode: content_priority_mode,
+        spiral_phase: spiralPhase,
         breakdown: {
           editorial: editorial_tasks.length,
           code: code_tasks.length,
