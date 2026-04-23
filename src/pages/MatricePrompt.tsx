@@ -24,6 +24,10 @@ import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
 import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScoringMethod, detectScoringSheet, SCORING_REGISTRY } from '@/utils/matrice/scoringDetector';
+import { MatriceProgressTracker, MatriceErrorCard } from '@/components/Matrice';
+import { useMatriceProgress } from '@/hooks/useMatriceProgress';
+import { seedsForStandardAudit, seedsForBenchmark, makePending, makeRunning, makeDone, makeError } from '@/utils/matrice/matriceCallEvents';
+import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
