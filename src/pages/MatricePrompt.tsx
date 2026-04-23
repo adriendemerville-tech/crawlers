@@ -96,6 +96,8 @@ export default function MatricePrompt() {
 
   // Real-time progress tracker (Sprint 4 wiring)
   const progress = useMatriceProgress();
+  // Sprint 6 — SSE abort controller for standard `audit-matrice` runs
+  const sseAbortRef = useRef<AbortController | null>(null);
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
 
