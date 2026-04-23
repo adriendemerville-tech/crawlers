@@ -8,8 +8,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { MatricePivotView, MatriceCube3D } from '@/components/Matrice';
+import { MatricePivotView, MatriceCube3D, MatriceVoxelDetail } from '@/components/Matrice';
 import { legacyToMatrixResults } from '@/utils/matrice/legacyToMatrixResult';
+import { buildCubeLayout, type Voxel } from '@/utils/matrice/cubeLayout';
+import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
 
 interface MatriceReportData {
   kind: 'matrice';
@@ -73,6 +75,9 @@ export default function RapportMatrice() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [view, setView] = useState<'document' | 'interactive'>('document');
+  // Sprint 5 — cross-filter state shared between Pivot and Cube + drill-down panel.
+  const [selectedFamilyId, setSelectedFamilyId] = useState<string | null>(null);
+  const [selectedVoxel, setSelectedVoxel] = useState<Voxel | null>(null);
   // Admin guard
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -104,11 +109,57 @@ export default function RapportMatrice() {
 
   // Adapter for the interactive Pivot + Cube views.
   // Prefer native MatrixResult[] (Sprint 4) when available; fallback to legacy adapter.
-  const matrixResults = useMemo(() => {
-    if (nativeResults && nativeResults.length > 0) return nativeResults as any;
+  const matrixResults: MatrixResult[] = useMemo(() => {
+    if (nativeResults && nativeResults.length > 0) return nativeResults as MatrixResult[];
     if (!data) return [];
     return legacyToMatrixResults(data.results);
   }, [data, nativeResults]);
+
+  // Sprint 5 — derived state for cross-filter and drill-down.
+  const cubeLayout = useMemo(() => buildCubeLayout(matrixResults), [matrixResults]);
+
+  const drillResults: MatrixResult[] = useMemo(() => {
+    if (selectedVoxel) return selectedVoxel.results;
+    if (selectedFamilyId) {
+      return matrixResults.filter(r => {
+        const cat = (r as any).criterionCategory as string | undefined;
+        const id = cat && cat !== 'general' ? `cat:${cat}` : r.sourceFunction;
+        return id === selectedFamilyId;
+      });
+    }
+    return [];
+  }, [selectedVoxel, selectedFamilyId, matrixResults]);
+
+  const drillTitle = selectedVoxel
+    ? selectedVoxel.familyLabel
+    : selectedFamilyId
+      ? cubeLayout.axes.x.find(a => a.id === selectedFamilyId)?.label || selectedFamilyId
+      : '';
+
+  const drillSubtitle = selectedVoxel
+    ? `${selectedVoxel.typeLabel} · ${selectedVoxel.weightLabel}`
+    : selectedFamilyId
+      ? 'Tous types · tous poids'
+      : '';
+
+  const selectedVoxelKey = selectedVoxel
+    ? `${selectedVoxel.x}-${selectedVoxel.y}-${selectedVoxel.z}`
+    : null;
+
+  const handleVoxelSelect = useCallback((v: Voxel | null) => {
+    setSelectedVoxel(v);
+    if (v) setSelectedFamilyId(v.familyId);
+  }, []);
+
+  const handleFamilySelect = useCallback((familyId: string | null) => {
+    setSelectedFamilyId(familyId);
+    setSelectedVoxel(null);
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    setSelectedVoxel(null);
+    setSelectedFamilyId(null);
+  }, []);
 
   const handleCsv = async () => {
     if (!data) return;
@@ -249,13 +300,32 @@ export default function RapportMatrice() {
           {view === 'document' ? (
             <iframe title="Rapport Matrice" srcDoc={htmlContent} className="w-full h-[calc(100vh-57px-40px)] bg-white" />
           ) : (
-            <div className="mx-auto max-w-7xl px-4 py-6 grid gap-6 lg:grid-cols-5">
+            <div className="mx-auto max-w-7xl px-4 py-6 grid gap-6 lg:grid-cols-6">
               <section className="lg:col-span-3 border-2 border-brand-violet rounded-md p-4 bg-transparent">
-                <MatricePivotView results={matrixResults} />
+                <MatricePivotView
+                  results={matrixResults}
+                  selectedFamilyId={selectedFamilyId}
+                  onFamilyClick={handleFamilySelect}
+                />
               </section>
-              <section className="lg:col-span-2 border-2 border-brand-violet rounded-md p-4 bg-transparent">
-                <MatriceCube3D results={matrixResults} />
+              <section className="lg:col-span-3 border-2 border-brand-violet rounded-md p-4 bg-transparent">
+                <MatriceCube3D
+                  results={matrixResults}
+                  selectedFamilyId={selectedFamilyId}
+                  selectedVoxelKey={selectedVoxelKey}
+                  onVoxelClick={handleVoxelSelect}
+                />
               </section>
+              {(selectedVoxel || selectedFamilyId) && drillResults.length > 0 && (
+                <section className="lg:col-span-6">
+                  <MatriceVoxelDetail
+                    title={drillTitle}
+                    subtitle={drillSubtitle}
+                    results={drillResults}
+                    onClose={handleCloseDetail}
+                  />
+                </section>
+              )}
             </div>
           )}
         </main>

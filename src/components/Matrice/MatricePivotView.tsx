@@ -23,9 +23,18 @@ import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
 export interface MatricePivotViewProps {
   results: MatrixResult[];
   className?: string;
+  /** Sprint 5 — externally selected family (highlights the row, auto-expands). */
+  selectedFamilyId?: string | null;
+  /** Sprint 5 — fired when the user clicks a family label. */
+  onFamilyClick?: (familyId: string | null) => void;
 }
 
-export function MatricePivotView({ results, className }: MatricePivotViewProps) {
+export function MatricePivotView({
+  results,
+  className,
+  selectedFamilyId,
+  onFamilyClick,
+}: MatricePivotViewProps) {
   const [heatmapOn, setHeatmapOn] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -33,8 +42,22 @@ export function MatricePivotView({ results, className }: MatricePivotViewProps) 
 
   const pivot = useMemo(() => buildPivot(results), [results]);
 
+  // Auto-expand the externally selected family.
+  useMemo(() => {
+    if (selectedFamilyId) {
+      setExpanded(prev => ({ ...prev, [selectedFamilyId]: true }));
+    }
+  }, [selectedFamilyId]);
+
   const toggleExpanded = (id: string) =>
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const handleFamilyClick = (id: string) => {
+    toggleExpanded(id);
+    if (onFamilyClick) {
+      onFamilyClick(selectedFamilyId === id ? null : id);
+    }
+  };
 
   const columns = useMemo<ColumnDef<PivotRow>[]>(() => {
     const cols: ColumnDef<PivotRow>[] = [
@@ -44,17 +67,22 @@ export function MatricePivotView({ results, className }: MatricePivotViewProps) 
         header: 'Famille',
         cell: ({ row }) => {
           const isOpen = !!expanded[row.original.familyId];
+          const isSelected = selectedFamilyId === row.original.familyId;
           return (
             <button
               type="button"
-              onClick={() => toggleExpanded(row.original.familyId)}
-              className="inline-flex items-center gap-1.5 text-left font-medium text-foreground hover:text-brand-violet transition-colors bg-transparent"
+              onClick={() => handleFamilyClick(row.original.familyId)}
+              className={cn(
+                'inline-flex items-center gap-1.5 text-left font-medium transition-colors bg-transparent',
+                isSelected ? 'text-brand-gold' : 'text-foreground hover:text-brand-violet',
+              )}
               aria-expanded={isOpen}
+              aria-pressed={isSelected}
               aria-label={`${isOpen ? 'Réduire' : 'Étendre'} ${row.original.familyLabel}`}
             >
               {isOpen
-                ? <ChevronDown className="h-4 w-4 text-brand-violet" aria-hidden />
-                : <ChevronRight className="h-4 w-4 text-brand-violet" aria-hidden />}
+                ? <ChevronDown className={cn('h-4 w-4', isSelected ? 'text-brand-gold' : 'text-brand-violet')} aria-hidden />
+                : <ChevronRight className={cn('h-4 w-4', isSelected ? 'text-brand-gold' : 'text-brand-violet')} aria-hidden />}
               {row.original.familyLabel}
               <span className="text-xs text-muted-foreground font-mono">
                 ({row.original.totalCount})
@@ -111,7 +139,7 @@ export function MatricePivotView({ results, className }: MatricePivotViewProps) 
 
     return cols;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pivot.columns, heatmapOn, expanded]);
+  }, [pivot.columns, heatmapOn, expanded, selectedFamilyId]);
 
   const table = useReactTable({
     data: pivot.rows,
@@ -213,14 +241,19 @@ export function MatricePivotView({ results, className }: MatricePivotViewProps) 
           <tbody>
             {table.getRowModel().rows.map(row => {
               const isOpen = !!expanded[row.original.familyId];
+              const isSelected = selectedFamilyId === row.original.familyId;
               return (
                 <Fragment key={row.id}>
-                  <tr className="hover:bg-brand-violet/5 transition-colors">
+                  <tr className={cn(
+                    'transition-colors',
+                    isSelected ? 'bg-brand-gold/10' : 'hover:bg-brand-violet/5',
+                  )}>
                     {row.getVisibleCells().map(cell => (
                       <td
                         key={cell.id}
                         className={cn(
-                          'px-3 py-2 border-b border-brand-violet/20',
+                          'px-3 py-2 border-b',
+                          isSelected ? 'border-brand-gold/40' : 'border-brand-violet/20',
                           cell.column.id === 'family' ? 'text-left' : 'text-center',
                         )}
                       >

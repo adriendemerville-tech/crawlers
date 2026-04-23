@@ -6,3 +6,5 @@ export { MatriceProgressTracker } from './MatriceProgressTracker';
 export type { MatriceProgressItem, MatriceProgressTrackerProps } from './MatriceProgressTracker';
 export { MatricePivotView } from './MatricePivotView';
 export { MatriceCube3D } from './MatriceCube3D';
+export { MatriceVoxelDetail } from './MatriceVoxelDetail';
+export type { MatriceVoxelDetailProps } from './MatriceVoxelDetail';
