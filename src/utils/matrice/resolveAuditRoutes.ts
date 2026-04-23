@@ -6,6 +6,8 @@
 
 export type MatchType = 'exact' | 'partial' | 'custom_only';
 
+export type AuditMode = 'standard' | 'benchmark';
+
 export interface AuditRoute {
   criterionId: string;
   criterionTitle: string;
@@ -14,7 +16,9 @@ export interface AuditRoute {
   matchType: MatchType;          // exact = 1 call, partial = 2 calls, custom_only = LLM only
   confidence: number;            // 0-1, how confident we are in this routing
   customPrompt?: string;         // If the user's file includes a specific prompt
-  targetProvider?: string;       // If targeting a specific LLM
+  targetProvider?: string;       // Legacy single provider (kept for backward compat)
+  targetProviders?: string[];    // Multi-LLM targeting (benchmark or fan-out)
+  mode?: AuditMode;              // 'benchmark' = N LLMs ; 'standard' = single LLM
   costEstimate: number;          // Estimated cost in USD
 }
 
@@ -122,19 +126,34 @@ function detectCustomPrompt(row: Record<string, any>): string | undefined {
   return undefined;
 }
 
-function detectTargetProvider(row: Record<string, any>): string | undefined {
+function detectTargetProviders(row: Record<string, any>): string[] {
   const providerKeys = ['llm', 'moteur', 'engine', 'provider', 'cible', 'target'];
   const KNOWN_PROVIDERS = ['chatgpt', 'gpt', 'gemini', 'claude', 'perplexity', 'mistral', 'copilot'];
+  const found = new Set<string>();
   for (const key of providerKeys) {
     for (const col of Object.keys(row)) {
       if (col.toLowerCase().includes(key) && row[col]) {
-        const val = String(row[col]).trim().toLowerCase();
-        const match = KNOWN_PROVIDERS.find(p => val.includes(p));
-        if (match) return match;
+        const raw = String(row[col]).trim().toLowerCase();
+        // Support "all", "tous", "*" → benchmark mode against all providers
+        if (/^(all|tous|tout|\*)$/.test(raw)) {
+          KNOWN_PROVIDERS.forEach(p => found.add(p));
+          continue;
+        }
+        // Support comma / semicolon / pipe separated lists
+        const parts = raw.split(/[,;|]+/).map(s => s.trim()).filter(Boolean);
+        for (const part of parts) {
+          const match = KNOWN_PROVIDERS.find(p => part.includes(p));
+          if (match) found.add(match);
+        }
       }
     }
   }
-  return undefined;
+  return Array.from(found);
+}
+
+function detectTargetProvider(row: Record<string, any>): string | undefined {
+  const providers = detectTargetProviders(row);
+  return providers[0];
 }
 
 function determineMatchType(fn: string, customPrompt?: string): MatchType {
@@ -164,7 +183,8 @@ export function resolveAuditRoutes(criteria: ParsedCriterion[]): AuditPlan {
   for (const criterion of criteria) {
     const searchText = `${criterion.title} ${criterion.category}`;
     const customPrompt = criterion.rawRow ? detectCustomPrompt(criterion.rawRow) : undefined;
-    const targetProvider = criterion.rawRow ? detectTargetProvider(criterion.rawRow) : undefined;
+    const targetProviders = criterion.rawRow ? detectTargetProviders(criterion.rawRow) : [];
+    const targetProvider = targetProviders[0];
 
     // Find best matching routing rule
     let bestRule: RoutingRule | null = null;
@@ -183,6 +203,13 @@ export function resolveAuditRoutes(criteria: ParsedCriterion[]): AuditPlan {
     const matchType = determineMatchType(fn, customPrompt);
     const cost = bestRule?.cost ?? 0.002;
 
+    // Benchmark mode = LLM function with multiple targeted providers (or "all")
+    const isLLMFn = ['check-llm', 'check-eeat', 'check-content-quality'].includes(fn);
+    const mode: AuditMode = isLLMFn && targetProviders.length > 1 ? 'benchmark' : 'standard';
+    // Cost: 1 call per provider when benchmark, otherwise standard
+    const providerMultiplier = mode === 'benchmark' ? targetProviders.length : 1;
+    const baseCost = matchType === 'partial' ? cost * 2 : cost;
+
     routes.push({
       criterionId: criterion.id,
       criterionTitle: criterion.title,
@@ -192,7 +219,9 @@ export function resolveAuditRoutes(criteria: ParsedCriterion[]): AuditPlan {
       confidence,
       customPrompt,
       targetProvider,
-      costEstimate: matchType === 'partial' ? cost * 2 : cost,
+      targetProviders: targetProviders.length > 0 ? targetProviders : undefined,
+      mode,
+      costEstimate: baseCost * providerMultiplier,
     });
 
     // Deduplicate calls
