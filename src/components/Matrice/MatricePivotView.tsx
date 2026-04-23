@@ -139,7 +139,7 @@ export function MatricePivotView({
 
     return cols;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pivot.columns, heatmapOn, expanded]);
+  }, [pivot.columns, heatmapOn, expanded, selectedFamilyId]);
 
   const table = useReactTable({
     data: pivot.rows,
