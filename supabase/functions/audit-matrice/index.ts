@@ -531,6 +531,7 @@ const clientIp = getClientIp(req)
         },
       })
 
+      concurrencyOwnedByStream = true
       return new Response(stream, {
         headers: {
           ...corsHeaders,
@@ -569,9 +570,9 @@ const clientIp = getClientIp(req)
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } finally {
-    // Note: in SSE mode, releaseConcurrency is called from the stream lifecycle (close/cancel).
-    // In JSON mode (or on early throw), release here.
-    if (!(req.headers.get('x-matrice-stream-released') === '1')) {
+    // In SSE mode, the ReadableStream owns the concurrency slot and releases it on close/cancel.
+    // In JSON mode (or on early throw before stream creation), release it here.
+    if (!concurrencyOwnedByStream) {
       try { releaseConcurrency('audit-matrice') } catch { /* idempotent */ }
     }
   }
