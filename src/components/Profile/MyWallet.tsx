@@ -110,7 +110,7 @@ interface Transaction {
 }
 
 export function MyWallet() {
-  const { balance, isAgencyPro, subscriptionStatus, loading: creditsLoading } = useCredits();
+  const { balance, isAgencyPro, subscriptionStatus, planType, loading: creditsLoading } = useCredits();
   const { language } = useLanguage();
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
@@ -436,7 +436,7 @@ export function MyWallet() {
                         </div>
                         <div>
                           <p className="text-sm font-medium">
-                            Pro Agency — 29€<span className="text-xs font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+                            {planType === 'agency_premium' ? 'Pro Agency +' : 'Pro Agency'}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {language === 'fr' ? 'Gérer, modifier ou résilier votre abonnement' : language === 'es' ? 'Gestionar, modificar o cancelar su suscripción' : 'Manage, update or cancel your subscription'}
