@@ -7423,6 +7423,54 @@ export type Database = {
           },
         ]
       }
+      matrix_audits: {
+        Row: {
+          audit_type: string
+          created_at: string
+          duration_ms: number | null
+          global_score: number | null
+          id: string
+          items_count: number
+          label: string
+          pivot_snapshot: Json | null
+          results: Json
+          site_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audit_type?: string
+          created_at?: string
+          duration_ms?: number | null
+          global_score?: number | null
+          id?: string
+          items_count?: number
+          label?: string
+          pivot_snapshot?: Json | null
+          results?: Json
+          site_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audit_type?: string
+          created_at?: string
+          duration_ms?: number | null
+          global_score?: number | null
+          id?: string
+          items_count?: number
+          label?: string
+          pivot_snapshot?: Json | null
+          results?: Json
+          site_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       matrix_display_schemas: {
         Row: {
           columns_config: Json
