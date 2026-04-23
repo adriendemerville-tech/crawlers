@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Download, FileSpreadsheet, Link2, Printer, Loader2, Check, Share2 } from 'lucide-react';
+import { Download, FileSpreadsheet, Printer, Loader2, Check, Share2, FileText, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MatricePivotView, MatriceCube3D } from '@/components/Matrice';
+import { legacyToMatrixResults } from '@/utils/matrice/legacyToMatrixResult';
 
 interface MatriceReportData {
   kind: 'matrice';
