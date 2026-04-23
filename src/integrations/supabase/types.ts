@@ -8026,6 +8026,7 @@ export type Database = {
       parmenion_targets: {
         Row: {
           api_key_name: string | null
+          autopilot_enabled: boolean
           created_at: string
           domain: string
           event_type: string
@@ -8037,6 +8038,7 @@ export type Database = {
         }
         Insert: {
           api_key_name?: string | null
+          autopilot_enabled?: boolean
           created_at?: string
           domain: string
           event_type?: string
@@ -8048,6 +8050,7 @@ export type Database = {
         }
         Update: {
           api_key_name?: string | null
+          autopilot_enabled?: boolean
           created_at?: string
           domain?: string
           event_type?: string
@@ -12702,6 +12705,10 @@ export type Database = {
       }
       get_database_size: { Args: never; Returns: Json }
       get_max_sessions: { Args: { p_user_id: string }; Returns: number }
+      get_parmenion_target_api_key: {
+        Args: { p_domain: string }
+        Returns: string
+      }
       get_seasonal_news: {
         Args: { p_geo?: string; p_limit?: number; p_sector?: string }
         Returns: {
