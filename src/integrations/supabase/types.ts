@@ -7945,6 +7945,42 @@ export type Database = {
           },
         ]
       }
+      parmenion_targets: {
+        Row: {
+          api_key_name: string | null
+          created_at: string
+          domain: string
+          event_type: string
+          id: string
+          is_active: boolean
+          label: string
+          platform: string
+          updated_at: string
+        }
+        Insert: {
+          api_key_name?: string | null
+          created_at?: string
+          domain: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          platform?: string
+          updated_at?: string
+        }
+        Update: {
+          api_key_name?: string | null
+          created_at?: string
+          domain?: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          platform?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patch_effectiveness: {
         Row: {
           agent_source: string
