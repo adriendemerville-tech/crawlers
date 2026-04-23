@@ -305,6 +305,7 @@ const clientIp = getClientIp(req)
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs)
 
   if (!acquireConcurrency('audit-matrice', 100)) return concurrencyResponse(corsHeaders)
+  let concurrencyOwnedByStream = false
 
   try {
     const body = await req.json() as { url: string; items: ItemInput[]; scoring_rubric?: any[]; stream?: boolean }
