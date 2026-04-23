@@ -193,15 +193,26 @@ export async function executeAuditPlan(
       parsedScore = crawlersScore;
       parsedResponse = null;
     } else if (route.matchType === 'partial') {
-      // Custom prompt result
+      // Custom prompt result — may be benchmark (multi-provider) or single
       const customKey = `${route.fn}:custom:${route.criterionId}`;
       const customData = fnResultCache.get(customKey);
-      parsedScore = extractScore(customData, route.fn);
-      parsedResponse = customData ? JSON.stringify(customData) : null;
+
+      if (customData?.mode === 'benchmark' && customData.providers) {
+        // Aggregate per-provider scores into a mean for parsedScore;
+        // keep full breakdown in parsedResponse for the UI.
+        const perProvider = customData.providers as Record<string, any>;
+        const scores = Object.values(perProvider)
+          .map((d) => extractScore(d, route.fn))
+          .filter((s): s is number => typeof s === 'number');
+        parsedScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+        parsedResponse = JSON.stringify({ benchmark: true, perProvider });
+      } else {
+        parsedScore = extractScore(customData, route.fn);
+        parsedResponse = customData ? JSON.stringify(customData) : null;
+      }
     } else {
       // custom_only — only LLM with user prompt, no Crawlers equivalent
       parsedScore = crawlersScore;
-      crawlersScore; // no separate crawlers score
     }
 
     const result: MatrixResult = {
