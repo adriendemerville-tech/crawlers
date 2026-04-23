@@ -67,17 +67,22 @@ export function MatricePivotView({
         header: 'Famille',
         cell: ({ row }) => {
           const isOpen = !!expanded[row.original.familyId];
+          const isSelected = selectedFamilyId === row.original.familyId;
           return (
             <button
               type="button"
-              onClick={() => toggleExpanded(row.original.familyId)}
-              className="inline-flex items-center gap-1.5 text-left font-medium text-foreground hover:text-brand-violet transition-colors bg-transparent"
+              onClick={() => handleFamilyClick(row.original.familyId)}
+              className={cn(
+                'inline-flex items-center gap-1.5 text-left font-medium transition-colors bg-transparent',
+                isSelected ? 'text-brand-gold' : 'text-foreground hover:text-brand-violet',
+              )}
               aria-expanded={isOpen}
+              aria-pressed={isSelected}
               aria-label={`${isOpen ? 'Réduire' : 'Étendre'} ${row.original.familyLabel}`}
             >
               {isOpen
-                ? <ChevronDown className="h-4 w-4 text-brand-violet" aria-hidden />
-                : <ChevronRight className="h-4 w-4 text-brand-violet" aria-hidden />}
+                ? <ChevronDown className={cn('h-4 w-4', isSelected ? 'text-brand-gold' : 'text-brand-violet')} aria-hidden />
+                : <ChevronRight className={cn('h-4 w-4', isSelected ? 'text-brand-gold' : 'text-brand-violet')} aria-hidden />}
               {row.original.familyLabel}
               <span className="text-xs text-muted-foreground font-mono">
                 ({row.original.totalCount})
