@@ -1646,6 +1646,7 @@ async function askParmenionLLM(context: {
   scoredWorkbenchItems: any[];
   cmsInventory?: CmsContentInventory | null;
   baselineSeoScore?: SeoScoreV2 | null;
+  iktrackerDrafts?: any[];
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -1739,6 +1740,10 @@ CMS_INVENTORY (${context.cmsInventory.items.length} contenus existants, ${contex
 ${context.cmsInventory.drafts.map(d => `- [BROUILLON] "${d.title}" (slug: ${d.slug}, plateforme: ${d.platform})`).join('\n')}
 ${context.cmsInventory.published.slice(0, 20).map(d => `- [PUBLIÉ] "${d.title}" (slug: ${d.slug})`).join('\n')}
 ⚠️ Si tu veux créer un article sur un sujet déjà couvert par un brouillon ci-dessus, utilise "update-post" avec le slug du brouillon au lieu de "create-post".
+` : ''}${context.iktrackerDrafts && context.iktrackerDrafts.length > 0 ? `
+BROUILLONS IKTRACKER PRÊTS À PUBLIER (${context.iktrackerDrafts.length}):
+${context.iktrackerDrafts.slice(0, 15).map((d: any) => `- "${d.title}" (slug: ${d.slug}, créé: ${d.created_at || 'inconnu'})`).join('\n')}
+Tu peux publier un brouillon pertinent via update-post avec status: "published" au lieu de créer un nouvel article.
 ` : ''}
 
 DIAGNOSTICS DISPONIBLES:
