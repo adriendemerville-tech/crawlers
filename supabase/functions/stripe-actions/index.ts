@@ -304,8 +304,8 @@ try {
     switch (action) {
       case 'checkout':          return await handleCheckout(req, body);
       case 'credit-checkout':   return await handleCreditCheckout(req, body);
-      case 'subscription':      return await handleSubscription(req);
-      case 'subscription_premium': return await handleSubscriptionPremium(req);
+      case 'subscription':      return await handleSubscription(req, body);
+      case 'subscription_premium': return await handleSubscriptionPremium(req, body);
       case 'portal':            return await handlePortal(req);
       case 'retention':         return await handleRetention(req);
       default:
