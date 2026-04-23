@@ -123,7 +123,7 @@ const CGVU = () => {
             <section id="description">
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">3. Description du Service</h2>
               <p>
-                Crawlers.fr fournit des <strong>outils d'analyse automatisée</strong> et des <strong>recommandations techniques</strong> générées par intelligence artificielle. Le service est accessible via un système de crédits à l'unité ou par abonnement mensuel.
+                Crawlers.fr fournit des <strong>outils d'analyse automatisée</strong> et des <strong>recommandations techniques</strong> générées par intelligence artificielle. Le service est accessible via un système de crédits à l'unité ou par abonnement mensuel ou annuel.
               </p>
               <p>L'offre se décline comme suit :</p>
               <ul>
@@ -132,8 +132,8 @@ const CGVU = () => {
                 <li><strong>Pack Lite</strong> (19 €) : 50 crédits d'analyse ;</li>
                 <li><strong>Pack Premium</strong> (45 €) : 150 crédits d'analyse ;</li>
                 
-                <li><strong>Abonnement Pro Agency</strong> (29 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses, 80 créations de pages/mois (Content Architect), 2 comptes inclus (1 collaborateur) ;</li>
-                <li><strong>Abonnement Pro Agency +</strong> (79 €/mois) : tout Pro Agency inclus + 50 000 pages de crawl/mois, Benchmark LLM & Profondeur LLM illimités (cache serveur de 2 heures), 150 créations de pages/mois (Content Architect), Google Business (GBP/GMB), 3 comptes inclus (2 collaborateurs).</li>
+                <li><strong>Abonnement Pro Agency</strong> (29 €/mois sans engagement, ou 26,10 €/mois avec engagement annuel soit 313,20 €/an — remise de 10%) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses, 80 créations de pages/mois (Content Architect), 2 comptes inclus (1 collaborateur) ;</li>
+                <li><strong>Abonnement Pro Agency +</strong> (79 €/mois sans engagement, ou 71,10 €/mois avec engagement annuel soit 853,20 €/an — remise de 10%) : tout Pro Agency inclus + 50 000 pages de crawl/mois, Benchmark LLM & Profondeur LLM illimités (cache serveur de 2 heures), 150 créations de pages/mois (Content Architect), Google Business (GBP/GMB), 3 comptes inclus (2 collaborateurs).</li>
               </ul>
             </section>
 
@@ -288,18 +288,24 @@ const CGVU = () => {
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">7. Abonnements Pro Agency et Pro Agency +</h2>
               <h3 className="text-lg font-semibold mt-4 mb-2">7.1. Modalités</h3>
               <p>
-                Les abonnements Crawlers sont proposés <strong>sans engagement</strong> :
+                Les abonnements Crawlers sont proposés selon deux formules de facturation :
               </p>
+              <p className="font-semibold mt-2">Formule mensuelle (sans engagement) :</p>
               <ul>
                 <li><strong>Pro Agency</strong> : 29 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
                 <li><strong>Pro Agency +</strong> : 79 € TTC par mois, sans engagement, reconduction tacite mensuelle.</li>
               </ul>
+              <p className="font-semibold mt-4">Formule annuelle (engagement 12 mois, remise de 10%) :</p>
+              <ul>
+                <li><strong>Pro Agency</strong> : 313,20 € TTC par an (soit 26,10 €/mois), engagement de 12 mois, reconduction tacite annuelle.</li>
+                <li><strong>Pro Agency +</strong> : 853,20 € TTC par an (soit 71,10 €/mois), engagement de 12 mois, reconduction tacite annuelle.</li>
+              </ul>
               <p className="mt-2">
-                Le paiement est prélevé automatiquement chaque mois via Stripe. L'utilisateur peut résilier à tout moment sans frais ni pénalités.
+                Le paiement est prélevé automatiquement (mensuellement ou annuellement selon la formule choisie) via Stripe. L'utilisateur peut choisir sa formule de facturation lors de la souscription.
               </p>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
-              <p className="font-semibold mt-2">Pro Agency (29€/mois) :</p>
+              <p className="font-semibold mt-2">Pro Agency (29€/mois ou 26,10€/mois en annuel) :</p>
               <ul>
                 <li>Accès illimité à l'ensemble des outils d'analyse et d'audit ;</li>
                 <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 5 000 pages/mois ;</li>
@@ -314,7 +320,7 @@ const CGVU = () => {
                 <li>Fonctionnalité Marque Blanche (White Label) — voir Article 8 ;</li>
                 <li>Support prioritaire.</li>
               </ul>
-              <p className="font-semibold mt-4">Pro Agency + (79€/mois) :</p>
+              <p className="font-semibold mt-4">Pro Agency + (79€/mois ou 71,10€/mois en annuel) :</p>
               <ul>
                 <li>Tout Pro Agency inclus ;</li>
                 <li><strong>Crawl multi-pages</strong> : Fair Use Policy de 50 000 pages/mois ;</li>
@@ -326,7 +332,10 @@ const CGVU = () => {
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.3. Résiliation</h3>
               <p>
-                L'utilisateur peut résilier son abonnement <strong>à tout moment, en un clic</strong>, depuis son espace personnel (Console &gt; Mon abonnement) ou via le portail de facturation Stripe. La résiliation prend effet à la fin de la période mensuelle en cours. Aucun remboursement prorata temporis n'est effectué pour le mois en cours. <strong>Aucun engagement de durée n'est requis.</strong>
+                <strong>Formule mensuelle :</strong> L'utilisateur peut résilier son abonnement <strong>à tout moment, en un clic</strong>, depuis son espace personnel (Console &gt; Mon abonnement) ou via le portail de facturation Stripe. La résiliation prend effet à la fin de la période mensuelle en cours. Aucun remboursement prorata temporis n'est effectué pour le mois en cours.
+              </p>
+              <p className="mt-2">
+                <strong>Formule annuelle :</strong> L'abonnement annuel engage l'utilisateur pour une durée de 12 mois. En cas de résiliation anticipée avant le terme de la période annuelle, <strong>aucun remboursement n'est effectué</strong> pour les mois restants. L'accès aux fonctionnalités est maintenu jusqu'à la fin de la période annuelle payée. Sans résiliation expresse, l'abonnement est reconduit tacitement pour une nouvelle période de 12 mois.
               </p>
             </section>
 

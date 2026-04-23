@@ -453,10 +453,10 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`restore-archived-user\` | ✅ | Restauration d'un compte archivé |
 | \`create-checkout\` | ✅ | Session Stripe pour achat audit |
 | \`create-credit-checkout\` | ✅ | Session Stripe pour achat crédits |
-| \`create-subscription-session\` | ✅ | Session Stripe pour abonnement |
+| \`create-subscription-session\` | ✅ | Session Stripe pour abonnement (mensuel ou annuel via param \`billing\`) |
 | \`create-customer-portal\` | ✅ | Portail client Stripe |
 | \`stripe-webhook\` | ❌ | Webhook Stripe (signature vérifiée) |
-| \`stripe-actions\` | ✅ | Actions Stripe groupées |
+| \`stripe-actions\` | ✅ | Actions Stripe groupées (subscription, subscription_premium, checkout, credit-checkout, portal, retention — supporte \`billing: 'annual'\` pour les abonnements) |
 | \`track-payment\` | ✅ | Tracking paiements |
 | \`apply-referral\` | ✅ | Applique un code de parrainage |
 | \`apply-affiliate\` | ✅ | Applique un code affilié |
