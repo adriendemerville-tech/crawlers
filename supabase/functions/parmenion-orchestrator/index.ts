@@ -1150,7 +1150,7 @@ RÈGLES:
               'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ action: 'list-posts', limit: 300, all: true }),
+            body: JSON.stringify({ action: 'list-posts', limit: 300, status: 'all' }),
           });
           if (iktRes.ok) {
             const iktData = await iktRes.json();
