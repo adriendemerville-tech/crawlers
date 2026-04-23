@@ -162,7 +162,7 @@ export function ParmenionTargetPanel({
   const fetchAutopilotConfig = useCallback(async () => {
     const { data } = await supabase
       .from('autopilot_configs')
-      .select('id, tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, cooldown_hours, force_iktracker_article, tracked_sites!inner(domain)')
+      .select('id, tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, cooldown_hours, force_iktracker_article, force_content_cycle, tracked_sites!inner(domain)')
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(10);
@@ -185,6 +185,7 @@ export function ParmenionTargetPanel({
         cooldown_hours: cd,
         config_id: (match as any).id,
         force_iktracker_article: (match as any).force_iktracker_article ?? false,
+        force_content_cycle: (match as any).force_content_cycle ?? false,
       });
       setCooldownInput(String(cd));
     }
