@@ -245,6 +245,37 @@ export function SavDashboard() {
           </ScrollArea>
         </CardContent>
       </Card>
+      {/* Churn Feedback */}
+      {churnFeedbacks.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              Avis de désabonnement ({churnFeedbacks.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="max-h-[300px]">
+              <div className="space-y-2">
+                {churnFeedbacks.map((fb: any) => (
+                  <div key={fb.id} className="border rounded-lg p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(fb.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
+                      </p>
+                      <div className="flex gap-1">
+                        {fb.plan_type && <Badge variant="outline" className="text-[10px]">{fb.plan_type}</Badge>}
+                        {fb.billing_period === 'annual' && <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-500">Annuel</Badge>}
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground">{fb.message}</p>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
