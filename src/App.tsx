@@ -87,6 +87,8 @@ const FeaturesCocoon = lazy(() => import("./pages/FeaturesCocoon"));
 const FeaturesConsole = lazy(() => import("./pages/FeaturesConsole"));
 const MatricePrompt = lazy(() => import("./pages/MatricePrompt"));
 const RapportMatrice = lazy(() => import("./pages/RapportMatrice"));
+const MatriceHistorique = lazy(() => import("./pages/MatriceHistorique"));
+const MatriceCompare = lazy(() => import("./pages/MatriceCompare"));
 const Aide = lazy(() => import("./pages/Aide"));
 const StrategeCocoon = lazy(() => import("./pages/StrategeCocoon"));
 const MarinaPage = lazy(() => import("./pages/Marina"));
@@ -212,6 +214,8 @@ const App = () => (
                           <Route path="/features/cocoon" element={<FeaturesCocoon />} />
                           <Route path="/features/console" element={<FeaturesConsole />} />
                           <Route path="/matrice" element={<MatricePrompt />} />
+                          <Route path="/matrice/historique" element={<MatriceHistorique />} />
+                          <Route path="/matrice/compare" element={<MatriceCompare />} />
                           <Route path="/app/rapport/matrice" element={<RapportMatrice />} />
                           <Route path="/aide" element={<Aide />} />
                           <Route path="/stratege-cocoon" element={<StrategeCocoon />} />
