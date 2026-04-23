@@ -98,7 +98,13 @@ export default function MatricePrompt() {
   // Real-time progress tracker (Sprint 4 wiring)
   const progress = useMatriceProgress();
 
+  // Sprint 7 — Persistence layer for matrix_audits + resume.
+  const { saveAudit } = useMatriceAudits();
+  const auditStartRef = useRef<number | null>(null);
+  const [resumeBanner, setResumeBanner] = useState<{ count: number; total: number } | null>(null);
+
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
+  const PARTIAL_KEY = 'rapport_matrice_results_partial';
 
   const handleReportError = async () => {
     if (!errorTitle.trim() || !user) return;
