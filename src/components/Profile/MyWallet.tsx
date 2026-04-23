@@ -117,6 +117,7 @@ export function MyWallet() {
   const { toast } = useToast();
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [walletBilling, setWalletBilling] = useState<'monthly' | 'annual'>('monthly');
   const [portalLoading, setPortalLoading] = useState(false);
   const [showFreeOfferModal, setShowFreeOfferModal] = useState(false);
   const [showRetentionModal, setShowRetentionModal] = useState(false);
