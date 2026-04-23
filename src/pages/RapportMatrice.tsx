@@ -300,13 +300,32 @@ export default function RapportMatrice() {
           {view === 'document' ? (
             <iframe title="Rapport Matrice" srcDoc={htmlContent} className="w-full h-[calc(100vh-57px-40px)] bg-white" />
           ) : (
-            <div className="mx-auto max-w-7xl px-4 py-6 grid gap-6 lg:grid-cols-5">
+            <div className="mx-auto max-w-7xl px-4 py-6 grid gap-6 lg:grid-cols-6">
               <section className="lg:col-span-3 border-2 border-brand-violet rounded-md p-4 bg-transparent">
-                <MatricePivotView results={matrixResults} />
+                <MatricePivotView
+                  results={matrixResults}
+                  selectedFamilyId={selectedFamilyId}
+                  onFamilyClick={handleFamilySelect}
+                />
               </section>
-              <section className="lg:col-span-2 border-2 border-brand-violet rounded-md p-4 bg-transparent">
-                <MatriceCube3D results={matrixResults} />
+              <section className="lg:col-span-3 border-2 border-brand-violet rounded-md p-4 bg-transparent">
+                <MatriceCube3D
+                  results={matrixResults}
+                  selectedFamilyId={selectedFamilyId}
+                  selectedVoxelKey={selectedVoxelKey}
+                  onVoxelClick={handleVoxelSelect}
+                />
               </section>
+              {(selectedVoxel || selectedFamilyId) && drillResults.length > 0 && (
+                <section className="lg:col-span-6">
+                  <MatriceVoxelDetail
+                    title={drillTitle}
+                    subtitle={drillSubtitle}
+                    results={drillResults}
+                    onClose={handleCloseDetail}
+                  />
+                </section>
+              )}
             </div>
           )}
         </main>
