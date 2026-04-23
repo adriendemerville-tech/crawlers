@@ -18,6 +18,38 @@ const CREDIT_PACKAGES = {
 
 type PackageType = keyof typeof CREDIT_PACKAGES;
 
+// Annual pricing: -10% discount
+const ANNUAL_PRICES: Record<string, { product: string; monthlyAmountCents: number; lookupKey: string }> = {
+  agency_pro:     { product: "prod_U4ya5iGWNTDQoE", monthlyAmountCents: 2900, lookupKey: "agency_pro_annual" },
+  agency_premium: { product: "prod_UDcQ9avN4kHNFF", monthlyAmountCents: 7900, lookupKey: "agency_premium_annual" },
+};
+
+async function getOrCreateAnnualPrice(planKey: string): Promise<string> {
+  const config = ANNUAL_PRICES[planKey];
+  if (!config) throw new Error(`Unknown plan: ${planKey}`);
+
+  // Try to find existing annual price by lookup_key
+  const existing = await stripe.prices.list({
+    lookup_keys: [config.lookupKey],
+    active: true,
+    limit: 1,
+  });
+  if (existing.data.length > 0) return existing.data[0].id;
+
+  // Create annual price: -10% → multiply monthly by 12 * 0.9
+  const annualAmountCents = Math.round(config.monthlyAmountCents * 12 * 0.9);
+  const price = await stripe.prices.create({
+    product: config.product,
+    unit_amount: annualAmountCents,
+    currency: "eur",
+    recurring: { interval: "year" },
+    lookup_key: config.lookupKey,
+    metadata: { discount: "10pct", billing: "annual" },
+  });
+  console.log(`Created annual price for ${planKey}: ${price.id} (${annualAmountCents} cents/year)`);
+  return price.id;
+}
+
 // ─── Helpers ───
 
 function json(body: unknown, status = 200) {
