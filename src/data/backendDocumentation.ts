@@ -344,7 +344,7 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`strategic-synthesis\` | ✅ | 0 | Micro-fn : synthèse finale LLM (Gemini Pro → Flash fallback) |
 | \`audit-compare\` | ✅ | 4 | Analyse concurrentielle face-à-face |
 | \`audit-local-seo\` | ✅ | 1 | Audit SEO local |
-| \`audit-matrice\` | ✅ | 2 | Audit matrice décisionnelle |
+| \`audit-matrice\` | ✅ | 2 | Audit matrice décisionnelle (streaming SSE temps réel — un événement \`voxel\` par critère + \`done\`/\`error\`) |
 | \`diagnose-hallucination\` | ✅ | 1 | Diagnostic d'hallucination LLM |
 | \`check-llm-depth\` | ✅ | 0 | Profondeur de visibilité LLM multi-itération |
 
