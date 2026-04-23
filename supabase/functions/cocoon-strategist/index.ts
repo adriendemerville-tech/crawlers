@@ -386,14 +386,29 @@ function label(key: string, lang: string): string {
 
 Deno.serve(handleRequest(async (req) => {
 try {
-    const auth = await getAuthenticatedUser(req);
-    if (!auth) {
-      return jsonError('Unauthorized', 401);
+    // Accept service_role key (internal calls from parmenion-orchestrator)
+    const authHeader = req.headers.get('Authorization') || '';
+    const isServiceRole = authHeader.includes(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '___none___');
+    
+    let auth: { userId: string; isAdmin: boolean } | null = null;
+    if (isServiceRole) {
+      // Service role bypass — use a synthetic admin identity
+      auth = { userId: 'service-role', isAdmin: true };
+    } else {
+      auth = await getAuthenticatedUser(req);
+      if (!auth) {
+        return jsonError('Unauthorized', 401);
+      }
     }
 
-    const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget, content_priority_mode = false, is_iktracker = false } = await req.json();
+    const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget, content_priority_mode = false, is_iktracker = false, caller_user_id } = await req.json();
     if (!tracked_site_id || !domain) {
       return jsonError('tracked_site_id and domain required', 400);
+    }
+
+    // When called via service role (from orchestrator), use the real user_id passed in body
+    if (isServiceRole && caller_user_id) {
+      auth = { ...auth!, userId: caller_user_id };
     }
 
     const budget = Math.min(task_budget || DEFAULT_TASK_BUDGET, 12);
