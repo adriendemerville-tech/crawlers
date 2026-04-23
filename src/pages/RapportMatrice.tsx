@@ -8,8 +8,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { MatricePivotView, MatriceCube3D } from '@/components/Matrice';
+import { MatricePivotView, MatriceCube3D, MatriceVoxelDetail } from '@/components/Matrice';
 import { legacyToMatrixResults } from '@/utils/matrice/legacyToMatrixResult';
+import { buildCubeLayout, type Voxel } from '@/utils/matrice/cubeLayout';
+import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
 
 interface MatriceReportData {
   kind: 'matrice';
