@@ -851,6 +851,9 @@ try {
           const guessedPageType = task.action_type === 'create_content' ? 'article' : 'article';
           task.image_recommendation = computeImageRecommendation(guessedPageType, null, sectorForImages, lang);
         }
+        // Set defaults for executor fields (will be refined in scoring phase)
+        task.urgency = task.urgency || 'medium';
+        task.executor_function = task.executor_function || '';
         rawTasks.push(task);
         taskCounter++;
       }
