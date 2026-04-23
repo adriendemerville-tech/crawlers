@@ -25,6 +25,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [loadingPlus, setLoadingPlus] = useState(false);
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
 
   const defaultTitle = t3(language,
     'Choisissez votre formule Pro',
@@ -46,7 +47,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     }
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription' } });
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription', billing } });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank', 'noopener');
     } catch (err: any) {
@@ -65,7 +66,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     }
     setLoadingPlus(true);
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription_premium' } });
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription_premium', billing } });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank', 'noopener');
     } catch (err: any) {
@@ -74,6 +75,15 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
       setLoadingPlus(false);
     }
   };
+
+  // Pricing calculations
+  const proMonthly = 29;
+  const plusMonthly = 79;
+  const proAnnualMonthly = Math.round(proMonthly * 12 * 0.9 / 12 * 100) / 100; // 26.10
+  const plusAnnualMonthly = Math.round(plusMonthly * 12 * 0.9 / 12 * 100) / 100; // 71.10
+
+  const proPrice = billing === 'annual' ? proAnnualMonthly : proMonthly;
+  const plusPrice = billing === 'annual' ? plusAnnualMonthly : plusMonthly;
 
   const proFeatures = [
     t3(language, '5 000 pages crawlées/mois', '5,000 pages/month', '5 000 páginas/mes'),
@@ -86,7 +96,6 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
   ];
 
   const plusFeatures = [
-    // Common with Pro Agency (upgraded)
     t3(language, '50 000 pages crawlées/mois', '50,000 pages/month', '50 000 páginas/mes'),
     t3(language, '50 pages par scan', '50 pages per scan', '50 páginas por escaneo'),
     t3(language, 'Audits & codes correctifs illimités', 'Unlimited audits & corrective code', 'Auditorías y código ilimitados'),
@@ -94,7 +103,6 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
     t3(language, 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)', 'Google Business (GBP/GMB)'),
     t3(language, 'Marque blanche + 3 comptes', 'White label + 3 accounts', 'Marca blanca + 3 cuentas'),
     t3(language, 'Benchmark rank SERP', 'SERP Rank Benchmark', 'Benchmark rank SERP'),
-    // Extras Pro Agency+
     'Conversion Optimizer',
     t3(language, 'API Marina', 'Marina API', 'API Marina'),
     t3(language, 'Analyse des logs', 'Log analysis', 'Análisis de logs'),
@@ -117,6 +125,34 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
 
   const enterpriseIcons = [Infinity, Users, Server, Database, Shield, Headphones, Users, Shield, Headphones, Server];
 
+  const billingToggle = (
+    <div className="flex items-center justify-center gap-3 mb-8">
+      <button
+        onClick={() => setBilling('monthly')}
+        className={`text-sm font-medium px-4 py-2 rounded-full border transition-colors ${
+          billing === 'monthly'
+            ? 'border-violet-500 text-foreground bg-violet-500/10'
+            : 'border-border text-muted-foreground hover:text-foreground'
+        }`}
+      >
+        {t3(language, 'Mensuel', 'Monthly', 'Mensual')}
+      </button>
+      <button
+        onClick={() => setBilling('annual')}
+        className={`text-sm font-medium px-4 py-2 rounded-full border transition-colors relative ${
+          billing === 'annual'
+            ? 'border-violet-500 text-foreground bg-violet-500/10'
+            : 'border-border text-muted-foreground hover:text-foreground'
+        }`}
+      >
+        {t3(language, 'Annuel', 'Annual', 'Anual')}
+        <span className="absolute -top-2.5 -right-2 text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/30 rounded-full px-1.5 py-0.5 leading-none">
+          -10%
+        </span>
+      </button>
+    </div>
+  );
+
   const cards = (
     <>
       {/* Pro Agency — Violet */}
@@ -126,11 +162,23 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <h3 className="text-2xl font-bold text-foreground">Pro Agency</h3>
         </div>
         <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-4xl font-extrabold text-foreground">29€</span>
-          <span className="text-lg text-muted-foreground">/mois</span>
+          <span className="text-4xl font-extrabold text-foreground">{proPrice.toFixed(2).replace('.', ',')}€</span>
+          <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')}</span>
         </div>
+        {billing === 'annual' && (
+          <p className="text-xs text-muted-foreground mb-1">
+            {t3(language,
+              `Facturé ${(proAnnualMonthly * 12).toFixed(2).replace('.', ',')}€/an`,
+              `Billed €${(proAnnualMonthly * 12).toFixed(2)}/year`,
+              `Facturado ${(proAnnualMonthly * 12).toFixed(2).replace('.', ',')}€/año`
+            )}
+          </p>
+        )}
         <p className="text-xs font-medium text-violet-500 mb-4">
-          {t3(language, 'Sans engagement', 'No commitment', 'Sin compromiso')}
+          {billing === 'annual'
+            ? t3(language, 'Engagement 12 mois', '12-month commitment', 'Compromiso 12 meses')
+            : t3(language, 'Sans engagement', 'No commitment', 'Sin compromiso')
+          }
         </p>
         <p className="text-sm text-muted-foreground mb-6">
           {t3(language, 'Freelances, consultants, petites agences (1-5 clients)', 'Freelancers, consultants, small agencies (1-5 clients)', 'Freelancers, consultores, pequeñas agencias (1-5 clientes)')}
@@ -157,7 +205,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
       <div className="relative rounded-2xl border-2 border-amber-400/60 bg-gradient-to-b from-amber-950/20 via-card to-card p-8 flex flex-col shadow-lg shadow-amber-500/5">
         <div className="absolute -top-3 right-6">
           <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-xs px-3 py-1 border-0">
-            ⚡ {t3(language, 'Volume', 'Volume', 'Volumen')}
+            {t3(language, 'Volume', 'Volume', 'Volumen')}
           </Badge>
         </div>
         <div className="flex items-center gap-3 mb-4">
@@ -167,11 +215,23 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">Pro Agency +</h3>
         </div>
         <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-4xl font-extrabold text-foreground">79€</span>
-          <span className="text-lg text-muted-foreground">/mois</span>
+          <span className="text-4xl font-extrabold text-foreground">{plusPrice.toFixed(2).replace('.', ',')}€</span>
+          <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')}</span>
         </div>
+        {billing === 'annual' && (
+          <p className="text-xs text-muted-foreground mb-1">
+            {t3(language,
+              `Facturé ${(plusAnnualMonthly * 12).toFixed(2).replace('.', ',')}€/an`,
+              `Billed €${(plusAnnualMonthly * 12).toFixed(2)}/year`,
+              `Facturado ${(plusAnnualMonthly * 12).toFixed(2).replace('.', ',')}€/año`
+            )}
+          </p>
+        )}
         <p className="text-xs font-medium text-amber-500 mb-4">
-          {t3(language, 'Sans engagement', 'No commitment', 'Sin compromiso')}
+          {billing === 'annual'
+            ? t3(language, 'Engagement 12 mois', '12-month commitment', 'Compromiso 12 meses')
+            : t3(language, 'Sans engagement', 'No commitment', 'Sin compromiso')
+          }
         </p>
         <p className="text-sm text-muted-foreground mb-6">
           {t3(language, 'Agences structurées, équipes internes SEO (10+ clients)', 'Structured agencies, in-house SEO teams (10+ clients)', 'Agencias estructuradas, equipos internos SEO (10+ clientes)')}
@@ -235,7 +295,12 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
   );
 
   if (embedded) {
-    return <div className="grid gap-6 md:grid-cols-3">{cards}</div>;
+    return (
+      <div>
+        {billingToggle}
+        <div className="grid gap-6 md:grid-cols-3">{cards}</div>
+      </div>
+    );
   }
 
   return (
@@ -245,6 +310,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <h2 className="text-2xl font-bold text-foreground sm:text-3xl">{title || defaultTitle}</h2>
           <p className="mt-3 text-muted-foreground">{subtitle || defaultSubtitle}</p>
         </div>
+        {billingToggle}
         <div className="grid gap-6 md:grid-cols-3">{cards}</div>
       </div>
     </section>
