@@ -7,6 +7,8 @@ interface CreditsContextType {
   loading: boolean;
   planType: string;
   subscriptionStatus: string | null;
+  billingPeriod: string;
+  subscriptionPeriodEnd: string | null;
   isAgencyPro: boolean;
   isAgencyPremium: boolean;
   refreshBalance: () => Promise<void>;
