@@ -81,8 +81,8 @@ export function useMatriceAudits() {
       }
       return {
         ...(data as any),
-        results: (data.results ?? []) as MatrixResult[],
-        pivot_snapshot: (data.pivot_snapshot ?? null) as PivotShape | null,
+        results: ((data.results ?? []) as unknown) as MatrixResult[],
+        pivot_snapshot: ((data.pivot_snapshot ?? null) as unknown) as PivotShape | null,
       };
     },
     [user],

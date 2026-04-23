@@ -8,3 +8,5 @@ export { MatricePivotView } from './MatricePivotView';
 export { MatriceCube3D } from './MatriceCube3D';
 export { MatriceVoxelDetail } from './MatriceVoxelDetail';
 export type { MatriceVoxelDetailProps } from './MatriceVoxelDetail';
+export { MatriceDeltaView } from './MatriceDeltaView';
+export type { MatriceDeltaViewProps } from './MatriceDeltaView';
