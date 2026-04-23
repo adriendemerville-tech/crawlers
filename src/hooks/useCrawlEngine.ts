@@ -806,6 +806,7 @@ export function useCrawlEngine() {
     totalEstimatedPages,
     isDetectingPages,
     detectionDone,
+    preScanDone,
     discoveredUrls,
     isReportOpen, setIsReportOpen,
 
