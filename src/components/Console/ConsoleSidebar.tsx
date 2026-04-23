@@ -241,10 +241,16 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
           [...items.filter(i => !i.hideOnMobile), ...bottomItems.filter(i => !i.hideOnMobile)].map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.value;
+            const href = `/app/console?tab=${item.value}`;
             return (
-              <button
+              <a
                 key={item.value}
-                onClick={() => onTabChange(item.value)}
+                href={href}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+                  e.preventDefault();
+                  onTabChange(item.value);
+                }}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-thin whitespace-nowrap transition-colors',
                   isActive ? 'bg-accent text-foreground' : 'text-muted-foreground',
@@ -252,7 +258,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
               >
                 <Icon className="h-3.5 w-3.5" />
                 {item.label}
-              </button>
+              </a>
             );
           })
         ) : (
