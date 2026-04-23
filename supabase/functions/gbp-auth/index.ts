@@ -376,7 +376,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
         }
       }
 
-      // Fetch real locations from GBP API
+      // Fetch real locations from GBP API and persist into gmb_locations
       const locations: Array<{id: string; location_name: string; address: string; phone: string; website: string; category: string}> = []
       try {
         if (accountId && accessToken) {
@@ -390,14 +390,47 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
               const locId = loc.name?.split('/').pop() || ''
               const addr = loc.storefrontAddress
               const addressStr = addr ? [addr.addressLines?.[0], addr.locality, addr.postalCode, addr.regionCode].filter(Boolean).join(', ') : ''
-              locations.push({
-                id: locId,
-                location_name: loc.title || 'Sans nom',
-                address: addressStr,
-                phone: loc.phoneNumbers?.primaryPhone || '',
-                website: loc.websiteUri || '',
-                category: loc.categories?.primaryCategory?.displayName || '',
-              })
+              const phone = loc.phoneNumbers?.primaryPhone || ''
+              const website = loc.websiteUri || ''
+              const category = loc.categories?.primaryCategory?.displayName || ''
+              const locationName = loc.title || 'Sans nom'
+
+              locations.push({ id: locId, location_name: locationName, address: addressStr, phone, website, category })
+
+              // Upsert into gmb_locations — match by user_id + place_id or location_name
+              try {
+                const { data: existing } = await supabase.from('gmb_locations')
+                  .select('id')
+                  .eq('user_id', user_id)
+                  .eq('location_name', locationName)
+                  .limit(1)
+
+                if (existing && existing.length > 0) {
+                  await supabase.from('gmb_locations').update({
+                    address: addressStr, phone, website, category,
+                    attributes: { google_location_name: loc.name, account_id: accountId },
+                    updated_at: new Date().toISOString(),
+                  }).eq('id', existing[0].id)
+                } else {
+                  // Find user's first tracked site as default
+                  const { data: sites } = await supabase.from('tracked_sites')
+                    .select('id').eq('user_id', user_id).limit(1)
+                  const trackedSiteId = sites?.[0]?.id
+                  if (trackedSiteId) {
+                    await supabase.from('gmb_locations').insert({
+                      user_id: user_id,
+                      tracked_site_id: trackedSiteId,
+                      location_name: locationName,
+                      place_id: null,
+                      address: addressStr, phone, website, category,
+                      attributes: { google_location_name: loc.name, account_id: accountId },
+                    })
+                    console.log(`[gbp-auth/status] Inserted gmb_location: ${locationName}`)
+                  }
+                }
+              } catch (upsertErr) {
+                console.warn('[gbp-auth/status] gmb_locations upsert error:', upsertErr)
+              }
             }
           } else {
             console.warn('[gbp-auth] Locations fetch failed:', await locResp.text())
