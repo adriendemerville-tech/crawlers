@@ -287,15 +287,21 @@ try {
       const subscription = event.data.object as Stripe.Subscription;
       const userId = subscription.metadata?.user_id;
       const planType = subscription.metadata?.plan_type || "agency_pro";
+      const billingPeriod = subscription.metadata?.billing || 
+        (subscription.items?.data?.[0]?.price?.recurring?.interval === 'year' ? 'annual' : 'monthly');
 
       if (userId) {
         const isActive = subscription.status === "active" || subscription.status === "trialing";
         const cancelAtPeriodEnd = subscription.cancel_at_period_end;
         
-        // If active but scheduled for cancellation, keep agency_pro until period end
         const effectiveStatus = isActive
           ? (cancelAtPeriodEnd ? "canceling" : "active")
           : subscription.status;
+
+        // Extract period end date from subscription
+        const periodEnd = subscription.current_period_end 
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : null;
 
         const { error: subError } = await supabase
           .from("profiles")
@@ -303,14 +309,16 @@ try {
             plan_type: isActive ? planType : "free",
             subscription_status: effectiveStatus,
             stripe_subscription_id: subscription.id,
+            billing_period: isActive ? billingPeriod : 'monthly',
+            subscription_period_end: periodEnd,
             updated_at: new Date().toISOString(),
           })
           .eq("user_id", userId);
 
         if (subError) {
-          console.error("❌ Error updating subscription status:", subError);
+          console.error("Error updating subscription status:", subError);
         } else {
-          console.log(`✅ Subscription ${subscription.id} → ${effectiveStatus} for user ${userId}`);
+          console.log(`Subscription ${subscription.id} -> ${effectiveStatus} (${billingPeriod}) for user ${userId}`);
         }
       }
     }

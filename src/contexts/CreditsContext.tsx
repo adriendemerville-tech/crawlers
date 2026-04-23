@@ -7,6 +7,8 @@ interface CreditsContextType {
   loading: boolean;
   planType: string;
   subscriptionStatus: string | null;
+  billingPeriod: string;
+  subscriptionPeriodEnd: string | null;
   isAgencyPro: boolean;
   isAgencyPremium: boolean;
   refreshBalance: () => Promise<void>;
@@ -21,6 +23,8 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const [planType, setPlanType] = useState('free');
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState('monthly');
+  const [subscriptionPeriodEnd, setSubscriptionPeriodEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchBalance = useCallback(async () => {
@@ -33,7 +37,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('credits_balance, plan_type, subscription_status, subscription_expires_at')
+        .select('credits_balance, plan_type, subscription_status, subscription_expires_at, billing_period, subscription_period_end')
         .eq('user_id', user.id)
         .single();
 
@@ -42,6 +46,8 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       setPlanType((data as any)?.plan_type || 'free');
       setSubscriptionStatus((data as any)?.subscription_status || null);
       setSubscriptionExpiresAt((data as any)?.subscription_expires_at || null);
+      setBillingPeriod((data as any)?.billing_period || 'monthly');
+      setSubscriptionPeriodEnd((data as any)?.subscription_period_end || null);
     } catch (error) {
       console.error('Error fetching credits balance:', error);
       setBalance(0);
@@ -118,7 +124,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const isAgencyPremium = planType === 'agency_premium' && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
 
   return (
-    <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, isAgencyPro, isAgencyPremium, refreshBalance, useCredit }}>
+    <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, billingPeriod, subscriptionPeriodEnd, isAgencyPro, isAgencyPremium, refreshBalance, useCredit }}>
       {children}
     </CreditsContext.Provider>
   );

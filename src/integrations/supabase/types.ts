@@ -1989,6 +1989,33 @@ export type Database = {
           },
         ]
       }
+      churn_feedback: {
+        Row: {
+          billing_period: string | null
+          created_at: string
+          id: string
+          message: string
+          plan_type: string | null
+          user_id: string
+        }
+        Insert: {
+          billing_period?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          plan_type?: string | null
+          user_id: string
+        }
+        Update: {
+          billing_period?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          plan_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cluster_definitions: {
         Row: {
           cluster_name: string
@@ -8216,6 +8243,7 @@ export type Database = {
           autonomy_raw: Json | null
           autonomy_score: number | null
           avatar_url: string | null
+          billing_period: string | null
           crawl_month_reset: string
           crawl_pages_this_month: number
           created_at: string
@@ -8242,6 +8270,7 @@ export type Database = {
           social_posts_this_month: number | null
           stripe_subscription_id: string | null
           subscription_expires_at: string | null
+          subscription_period_end: string | null
           subscription_status: string | null
           updated_at: string
           user_id: string
@@ -8268,6 +8297,7 @@ export type Database = {
           autonomy_raw?: Json | null
           autonomy_score?: number | null
           avatar_url?: string | null
+          billing_period?: string | null
           crawl_month_reset?: string
           crawl_pages_this_month?: number
           created_at?: string
@@ -8294,6 +8324,7 @@ export type Database = {
           social_posts_this_month?: number | null
           stripe_subscription_id?: string | null
           subscription_expires_at?: string | null
+          subscription_period_end?: string | null
           subscription_status?: string | null
           updated_at?: string
           user_id: string
@@ -8320,6 +8351,7 @@ export type Database = {
           autonomy_raw?: Json | null
           autonomy_score?: number | null
           avatar_url?: string | null
+          billing_period?: string | null
           crawl_month_reset?: string
           crawl_pages_this_month?: number
           created_at?: string
@@ -8346,6 +8378,7 @@ export type Database = {
           social_posts_this_month?: number | null
           stripe_subscription_id?: string | null
           subscription_expires_at?: string | null
+          subscription_period_end?: string | null
           subscription_status?: string | null
           updated_at?: string
           user_id?: string
