@@ -179,10 +179,14 @@ interface ImageRecommendation {
   reasoning: string;
 }
 
+type TaskUrgency = 'critical' | 'high' | 'medium' | 'low';
+
 interface StrategicTask {
   id: string;
   action_type: ActionType;
   priority: number; // 0-100
+  urgency: TaskUrgency;
+  executor_function: string; // exact edge function for deterministic routing
   title: string;
   description: string;
   affected_urls: string[];
@@ -193,6 +197,32 @@ interface StrategicTask {
   estimated_impact: 'high' | 'medium' | 'low';
   metadata?: Record<string, any>;
   image_recommendation?: ImageRecommendation;
+}
+
+// Content-creation action types that get boosted when content_priority_mode is ON
+const CONTENT_PRIORITY_ACTIONS: ActionType[] = [
+  'create_content', 'rewrite_content', 'publish_draft', 'improve_eeat',
+  'optimize_keyword_placement',
+];
+
+/** Map execution_mode + action_type to the exact function to call */
+function resolveExecutorFn(task: StrategicTask, isIktracker: boolean): string {
+  if (task.execution_mode === 'content_architect') return 'content-architecture-advisor';
+  if (task.execution_mode === 'code_architect') return 'generate-corrective-code';
+  if (task.action_type === 'add_internal_link' || task.action_type === 'remove_internal_link') {
+    return isIktracker ? 'iktracker-actions' : 'cms-push-code';
+  }
+  if (task.action_type === 'fix_redirect_chain') return 'cms-push-redirect';
+  if (task.action_type === 'publish_draft') return isIktracker ? 'iktracker-actions' : 'cms-push-draft';
+  return isIktracker ? 'iktracker-actions' : 'cms-push-code';
+}
+
+/** Derive urgency from impact + severity */
+function deriveUrgency(impact: 'high' | 'medium' | 'low', isDestructive: boolean): TaskUrgency {
+  if (impact === 'high' && !isDestructive) return 'critical';
+  if (impact === 'high') return 'high';
+  if (impact === 'medium') return 'medium';
+  return 'low';
 }
 
 interface ConflictResolution {
