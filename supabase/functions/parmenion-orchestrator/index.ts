@@ -319,74 +319,111 @@ try {
       }
     }
 
-    // ═══ PHASE 3: LLM Decision ═══
+    // ═══ PHASE 3: Decision ═══
     let decision: ParmenionDecision | null = null;
     
     if (currentPhase === 'prescribe') {
-      // ═══ PRESCRIBE V2: 2 parallel prompts × 2 tools (with dual-lane support) ═══
-      // Also triggered when force_content_cycle or force_iktracker_article is set (even with empty workbench)
+      // ═══ PRESCRIBE V3: Deterministic routing via cocoon-strategist ═══
+      // cocoon-strategist has the 360° view (4 diagnostics, conflicts, spiral, EEAT, SERP data).
+      // It returns a prioritized plan (max 8 tasks). Parménion executor takes task #1.
       
-      // If workbench is empty but content is forced, create a synthetic content item
-      if (scoredWorkbenchItems.length === 0 && forceContent) {
-        console.log(`[Parménion] ⚠️ Workbench empty but force_content=true, creating synthetic content item`);
-        // FIX: Inject full identity card context into synthetic item to prevent hallucinations
-        const identitySummary = siteInfo ? [
-          siteInfo.site_name && `Site: ${siteInfo.site_name}`,
-          siteInfo.market_sector && `Secteur: ${siteInfo.market_sector}`,
-          siteInfo.products_services && `Produits/Services: ${siteInfo.products_services}`,
-          siteInfo.target_audience && `Cible: ${siteInfo.target_audience}`,
-          siteInfo.commercial_area && `Zone: ${siteInfo.commercial_area}`,
-          siteInfo.entity_type && `Type: ${siteInfo.entity_type}`,
-          siteInfo.commercial_model && `Modèle: ${siteInfo.commercial_model}`,
-        ].filter(Boolean).join('. ') : '';
-        
-        const syntheticKeyword = siteKeywords[0] || siteInfo?.products_services?.split(',')[0]?.trim() || domain.replace(/\.\w+$/, '');
-        const syntheticDescription = identitySummary
-          ? `Article de blog pertinent pour ${siteInfo?.site_name || domain}. CONTEXTE IDENTITAIRE OBLIGATOIRE: ${identitySummary}. Le contenu DOIT correspondre à cette identité.`
-          : `Article de blog ou page de contenu pour renforcer l'autorité sémantique du site ${domain}`;
-        
-        scoredWorkbenchItems.push({
-          id: '00000000-0000-0000-0000-000000000000',
-          title: `Création de contenu éditorial pour ${siteInfo?.site_name || domain}`,
-          description: syntheticDescription,
-          finding_category: 'missing_page',
-          severity: 'high',
-          target_url: `https://${domain}`,
-          target_selector: null,
-          target_operation: 'create',
-          action_type: 'content',
-          payload: {
-            keyword: syntheticKeyword,
-            identity_context: identitySummary || null,
-            market_sector: siteInfo?.market_sector || null,
-            target_audience: siteInfo?.target_audience || null,
-            products_services: siteInfo?.products_services || null,
+      console.log(`[Parménion] 🧠 Prescribe V3: calling cocoon-strategist (deterministic). Force content: ${forceContent}`);
+      
+      try {
+        const strategistResp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/cocoon-strategist`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
           },
-          source_type: 'forced_cycle',
-          tier: 9,
-          base_score: 75,
-          severity_bonus: 100,
-          aging_bonus: 0,
-          gate_malus: 0,
-          spiral_score: 175,
-          created_at: new Date().toISOString(),
-          lane: 'content',
+          body: JSON.stringify({
+            tracked_site_id,
+            domain,
+            lang: 'fr',
+            task_budget: 8,
+            content_priority_mode: forceContent,
+            is_iktracker: isIktracker,
+          }),
+        });
+
+        if (!strategistResp.ok) {
+          const errText = await strategistResp.text();
+          console.error(`[Parménion] cocoon-strategist failed (${strategistResp.status}):`, errText);
+          // Fallback: use legacy dual-prompt if strategist fails
+          decision = await prescribeWithDualPrompts({
+            domain, cycle_number, conservativeMode, maxRisk, scoredWorkbenchItems,
+            siteKeywords, siteInfo, isIktracker, tracked_site_id,
+            force_content: forceContent, force_iktracker_article: force_iktracker_article === true,
+          });
+        } else {
+          const strategistData = await strategistResp.json();
+          const tasks = strategistData?.strategy?.tasks || [];
+          
+          if (tasks.length === 0) {
+            console.warn(`[Parménion] cocoon-strategist returned 0 tasks`);
+            // Fallback: legacy prescribe
+            decision = await prescribeWithDualPrompts({
+              domain, cycle_number, conservativeMode, maxRisk, scoredWorkbenchItems,
+              siteKeywords, siteInfo, isIktracker, tracked_site_id,
+              force_content: forceContent, force_iktracker_article: force_iktracker_article === true,
+            });
+          } else {
+            // ═══ BUILD DECISION FROM STRATEGIST PLAN ═══
+            const topTask = tasks[0];
+            const executorFn = topTask.executor_function || 'content-architecture-advisor';
+            
+            console.log(`[Parménion] 🎯 Strategist plan: ${tasks.length} tasks. #1: [${topTask.urgency}] ${topTask.action_type} → ${executorFn} | "${topTask.title}"`);
+            
+            decision = {
+              goal: {
+                type: topTask.action_type.includes('content') || topTask.action_type === 'publish_draft' 
+                  ? 'content_creation' 
+                  : topTask.action_type.includes('fix') || topTask.action_type.includes('redirect')
+                  ? 'technical_fix'
+                  : 'content_gap',
+                description: `[Prescribe V3 — Strategist] ${topTask.title}. Plan: ${tasks.length} tâches, urgence: ${topTask.urgency}.`,
+              },
+              tactic: {
+                initial_scope: { strategist_tasks: tasks.length, content_priority_mode: forceContent },
+                final_scope: { 
+                  selected_task: topTask.id, 
+                  executor_function: executorFn,
+                  full_plan: tasks.map((t: any) => ({ id: t.id, action_type: t.action_type, urgency: t.urgency, priority: t.priority_score || t.priority, executor: t.executor_function })),
+                },
+                scope_reductions: 0,
+                estimated_tokens: 0,
+                target_url: topTask.affected_urls?.[0] || `https://${domain}`,
+              },
+              prudence: {
+                impact_level: topTask.estimated_impact === 'high' ? 'avancé' : topTask.estimated_impact === 'medium' ? 'modéré' : 'faible',
+                risk_score: topTask.is_destructive ? Math.min(conservativeMode ? MAX_RISK_CONSERVATIVE : MAX_RISK_NORMAL, 2) : 1,
+                iterations: 0,
+                goal_changed: false,
+                reasoning: `Déterministe via cocoon-strategist. Tâche #1/${tasks.length}: "${topTask.title}" (${topTask.urgency}, score ${topTask.priority_score || topTask.priority}). ${strategistData?.conflicts_resolved?.length || 0} conflits résolus.`,
+              },
+              action: {
+                type: topTask.execution_mode === 'content_architect' ? 'cms' : topTask.execution_mode === 'code_architect' ? 'code' : 'mixed',
+                payload: {
+                  strategist_task: topTask,
+                  strategist_plan_id: strategistData?.plan_id,
+                  _prescribe_v3: true,
+                },
+                functions: [executorFn],
+              },
+              summary: `Prescribe V3 (strategist): #1/${tasks.length} "${topTask.title}" → ${executorFn}. Urgence: ${topTask.urgency}. ${forceContent ? 'Content priority ON.' : ''}`,
+            };
+          }
+        }
+      } catch (e) {
+        console.error('[Parménion] cocoon-strategist call failed:', e);
+        // Fallback to legacy
+        decision = await prescribeWithDualPrompts({
+          domain, cycle_number, conservativeMode, maxRisk, scoredWorkbenchItems,
+          siteKeywords, siteInfo, isIktracker, tracked_site_id,
+          force_content: forceContent, force_iktracker_article: force_iktracker_article === true,
         });
       }
       
-      decision = await prescribeWithDualPrompts({
-        domain,
-        cycle_number,
-        conservativeMode,
-        maxRisk,
-        scoredWorkbenchItems,
-        siteKeywords,
-        siteInfo,
-        isIktracker,
-        tracked_site_id,
-        force_content: forceContent,
-        force_iktracker_article: force_iktracker_article === true,
-      });
       if (!decision) {
         return jsonOk({
           cycle: cycle_number,
