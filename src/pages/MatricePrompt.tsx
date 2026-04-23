@@ -27,7 +27,6 @@ import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScori
 import { MatriceProgressTracker, MatriceErrorCard } from '@/components/Matrice';
 import { useMatriceProgress } from '@/hooks/useMatriceProgress';
 import { seedsForStandardAudit, seedsForBenchmark, makePending, makeRunning, makeDone, makeError } from '@/utils/matrice/matriceCallEvents';
-import { streamAuditMatrice } from '@/utils/matrice/matriceSseClient';
 import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
 
 /* ------------------------------------------------------------------ */
@@ -96,8 +95,6 @@ export default function MatricePrompt() {
 
   // Real-time progress tracker (Sprint 4 wiring)
   const progress = useMatriceProgress();
-  // Sprint 6 — SSE abort controller for standard `audit-matrice` runs
-  const sseAbortRef = useRef<AbortController | null>(null);
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
 
@@ -679,81 +676,23 @@ export default function MatricePrompt() {
       // Tracker — emit pending events for every prompt
       const stdSeeds = seedsForStandardAudit(items, functionName);
       stdSeeds.forEach(s => progress.onCallEvent(makePending(s)));
+      stdSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
 
-      let fnData: any = null;
+      const { data: fnData, error: fnError } = await supabase.functions.invoke(functionName, {
+        body: {
+          url: url.trim(),
+          items,
+          engine_notes: activeMetadata?.engineNotes,
+          scoring_rubric: activeMetadata?.scoringGuide,
+        },
+      });
 
-      // ── Sprint 6 — Real SSE streaming for `audit-matrice` ──
-      if (functionName === 'audit-matrice') {
-        const seedById = new Map(stdSeeds.map(s => [s.criterionId!, s]));
-        const collected: any[] = [];
-        const controller = new AbortController();
-        sseAbortRef.current = controller;
-
-        try {
-          await streamAuditMatrice({
-            url: url.trim(),
-            items,
-            scoring_rubric: activeMetadata?.scoringGuide,
-            signal: controller.signal,
-            onEvent: (evt) => {
-              if (evt.event === 'start') {
-                // All items move to running as the LLM calls fire in parallel
-                stdSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
-              } else if (evt.event === 'item.update') {
-                const seed = seedById.get(evt.data?.id);
-                if (!seed) return;
-                if (evt.data.status === 'done') {
-                  collected.push(evt.data.result);
-                  progress.onCallEvent(makeDone(seed));
-                  // Progressive persistence — survives an accidental tab close
-                  try { sessionStorage.setItem('rapport_matrice_results_partial', JSON.stringify(collected)); } catch { /* quota */ }
-                } else if (evt.data.status === 'error') {
-                  progress.onCallEvent(makeError(seed, evt.data.error || 'Item failed'));
-                } else if (evt.data.status === 'running') {
-                  progress.onCallEvent(makeRunning(seed));
-                }
-              } else if (evt.event === 'complete') {
-                fnData = evt.data;
-              }
-            },
-          });
-        } catch (err: any) {
-          if (err?.name === 'AbortError') {
-            stdSeeds.forEach(s => {
-              // Only mark non-finished seeds as cancelled
-              progress.onCallEvent(makeError(s, 'Annulé par l\'utilisateur'));
-            });
-            toast.info('Analyse annulée');
-            return;
-          }
-          stdSeeds.forEach(s => progress.onCallEvent(makeError(s, err?.message || 'Stream error')));
-          throw err;
-        } finally {
-          sseAbortRef.current = null;
-        }
-
-        if (!fnData?.success) {
-          throw new Error(fnData?.error || 'Audit failed (no completion event)');
-        }
-      } else {
-        // ── Legacy path — synthetic events for parse-matrix-geo / hybrid ──
-        stdSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
-        const { data, error: fnError } = await supabase.functions.invoke(functionName, {
-          body: {
-            url: url.trim(),
-            items,
-            engine_notes: activeMetadata?.engineNotes,
-            scoring_rubric: activeMetadata?.scoringGuide,
-          },
-        });
-        if (fnError || !data?.success) {
-          stdSeeds.forEach(s => progress.onCallEvent(makeError(s, data?.error || fnError?.message || 'Audit failed')));
-          throw new Error(data?.error || fnError?.message || 'Audit failed');
-        }
-        stdSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
-        fnData = data;
+      if (fnError || !fnData?.success) {
+        stdSeeds.forEach(s => progress.onCallEvent(makeError(s, fnData?.error || fnError?.message || 'Audit failed')));
+        throw new Error(fnData?.error || fnError?.message || 'Audit failed');
       }
 
+      stdSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
 
       const auditResults = fnData.results.map((r: any) => ({
         id: r.id,
@@ -823,23 +762,14 @@ export default function MatricePrompt() {
       }
 
       setResults(auditResults);
-      try { sessionStorage.removeItem('rapport_matrice_results_partial'); } catch { /* noop */ }
       toast.success(`Analyse terminée — Score global : ${crawlersGlobal}/100`);
       window.dispatchEvent(new CustomEvent('expert-audit-complete', { detail: { source: 'matrice', url, score: crawlersGlobal } }));
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de l\'analyse');
     } finally {
-      sseAbortRef.current = null;
       setAnalyzing(false);
     }
   };
-
-  /* Sprint 6 — Cancel an in-flight SSE audit */
-  const handleCancelAnalyze = useCallback(() => {
-    if (sseAbortRef.current) {
-      sseAbortRef.current.abort();
-    }
-  }, []);
 
   /* --- Report --- */
   const handleOpenReport = () => {
@@ -1159,28 +1089,15 @@ export default function MatricePrompt() {
             </div>
           </div>
 
-          {/* Sprint 4/6 — live progress tracker + cancel (SSE only) */}
+          {/* Sprint 4 — live progress tracker (visible during execution and right after) */}
           {(analyzing || progress.items.length > 0) && (
-            <div className="mb-6 max-w-3xl mx-auto space-y-2">
+            <div className="mb-6 max-w-3xl mx-auto">
               <MatriceProgressTracker
                 completed={progress.completed}
                 total={progress.total}
                 currentLabel={progress.currentLabel}
                 items={progress.items}
               />
-              {analyzing && sseAbortRef.current && (
-                <div className="flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCancelAnalyze}
-                    className="gap-2 border-brand-violet text-foreground hover:bg-brand-violet/10"
-                  >
-                    <XIcon className="h-3.5 w-3.5" />
-                    Annuler l'analyse
-                  </Button>
-                </div>
-              )}
             </div>
           )}
 
