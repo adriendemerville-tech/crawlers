@@ -137,7 +137,7 @@ async function listPosts(apiKey: string, limit = 50, offset = 0, includeAll = fa
   })
 
   if (includeAll) {
-    search.set('all', 'true')
+    search.set('status', 'all')
   }
 
   return callIktracker('GET', `/posts?${search.toString()}`, apiKey)
@@ -587,7 +587,7 @@ try {
 
       // ── Posts ──
       case 'list-posts':
-        result = await listPosts(apiKey, params.limit, params.offset)
+        result = await listPosts(apiKey, params.limit, params.offset, params.status === 'all' || params.all === true)
         break
       case 'get-post':
         if (!params.slug) throw new Error('slug required')
