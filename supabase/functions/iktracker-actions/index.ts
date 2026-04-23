@@ -130,14 +130,14 @@ type IktrackerPostSummary = {
   title?: string
 }
 
-async function listPosts(apiKey: string, limit = 50, offset = 0, includeAll = false) {
+async function listPosts(apiKey: string, limit = 50, offset = 0, statusFilter?: string) {
   const search = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   })
 
-  if (includeAll) {
-    search.set('status', 'all')
+  if (statusFilter) {
+    search.set('status', statusFilter)
   }
 
   return callIktracker('GET', `/posts?${search.toString()}`, apiKey)
@@ -168,7 +168,7 @@ async function listPostsForDedup(apiKey: string, maxPosts = 300, retries = 2): P
       const postsBySlug = new Map<string, IktrackerPostSummary>()
 
       for (let offset = 0; offset < maxPosts; offset += pageSize) {
-        const result = await listPosts(apiKey, Math.min(pageSize, maxPosts - offset), offset, true)
+        const result = await listPosts(apiKey, Math.min(pageSize, maxPosts - offset), offset, 'all')
         const pagePosts = extractPostSummaries(result.data)
 
         for (const post of pagePosts) {
@@ -588,7 +588,7 @@ try {
 
       // ── Posts ──
       case 'list-posts':
-        result = await listPosts(apiKey, params.limit, params.offset, params.status === 'all' || params.all === true)
+        result = await listPosts(apiKey, params.limit, params.offset, params.status || (params.all === true ? 'all' : undefined))
         break
       case 'get-post':
         if (!params.slug) throw new Error('slug required')
