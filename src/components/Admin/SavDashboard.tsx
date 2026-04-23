@@ -33,6 +33,7 @@ interface QualityStats {
 
 export function SavDashboard() {
   const [conversations, setConversations] = useState<SavConversation[]>([]);
+  const [churnFeedbacks, setChurnFeedbacks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [qualityStats, setQualityStats] = useState<QualityStats>({
@@ -43,7 +44,7 @@ export function SavDashboard() {
     setLoading(true);
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
-    const [convResult, qualityResult] = await Promise.all([
+    const [convResult, qualityResult, feedbackResult] = await Promise.all([
       supabase
         .from('sav_conversations')
         .select('*')
@@ -53,6 +54,11 @@ export function SavDashboard() {
         .from('sav_quality_scores' as any)
         .select('precision_score, escalated_to_phone, repeated_intent_count, user_message_count')
         .gte('scored_at', sevenDaysAgo),
+      supabase
+        .from('churn_feedback' as any)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50),
     ]);
 
     if (!convResult.error && convResult.data) {
@@ -71,6 +77,10 @@ export function SavDashboard() {
         ? Math.round(scores.reduce((a, q) => a + (q.user_message_count || 0), 0) / scored * 10) / 10
         : 0;
       setQualityStats({ avgScore, totalScored: scored, escalations, repeatedIntents, avgMessages });
+    }
+
+    if (!feedbackResult.error && feedbackResult.data) {
+      setChurnFeedbacks(feedbackResult.data as any[]);
     }
 
     setLoading(false);
