@@ -391,7 +391,7 @@ try {
       return jsonError('Unauthorized', 401);
     }
 
-    const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget } = await req.json();
+    const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget, content_priority_mode = false, is_iktracker = false } = await req.json();
     if (!tracked_site_id || !domain) {
       return jsonError('tracked_site_id and domain required', 400);
     }
