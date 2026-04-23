@@ -183,7 +183,8 @@ export function resolveAuditRoutes(criteria: ParsedCriterion[]): AuditPlan {
   for (const criterion of criteria) {
     const searchText = `${criterion.title} ${criterion.category}`;
     const customPrompt = criterion.rawRow ? detectCustomPrompt(criterion.rawRow) : undefined;
-    const targetProvider = criterion.rawRow ? detectTargetProvider(criterion.rawRow) : undefined;
+    const targetProviders = criterion.rawRow ? detectTargetProviders(criterion.rawRow) : [];
+    const targetProvider = targetProviders[0];
 
     // Find best matching routing rule
     let bestRule: RoutingRule | null = null;
@@ -202,6 +203,13 @@ export function resolveAuditRoutes(criteria: ParsedCriterion[]): AuditPlan {
     const matchType = determineMatchType(fn, customPrompt);
     const cost = bestRule?.cost ?? 0.002;
 
+    // Benchmark mode = LLM function with multiple targeted providers (or "all")
+    const isLLMFn = ['check-llm', 'check-eeat', 'check-content-quality'].includes(fn);
+    const mode: AuditMode = isLLMFn && targetProviders.length > 1 ? 'benchmark' : 'standard';
+    // Cost: 1 call per provider when benchmark, otherwise standard
+    const providerMultiplier = mode === 'benchmark' ? targetProviders.length : 1;
+    const baseCost = matchType === 'partial' ? cost * 2 : cost;
+
     routes.push({
       criterionId: criterion.id,
       criterionTitle: criterion.title,
@@ -211,7 +219,9 @@ export function resolveAuditRoutes(criteria: ParsedCriterion[]): AuditPlan {
       confidence,
       customPrompt,
       targetProvider,
-      costEstimate: matchType === 'partial' ? cost * 2 : cost,
+      targetProviders: targetProviders.length > 0 ? targetProviders : undefined,
+      mode,
+      costEstimate: baseCost * providerMultiplier,
     });
 
     // Deduplicate calls
