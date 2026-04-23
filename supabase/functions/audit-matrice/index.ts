@@ -305,9 +305,12 @@ const clientIp = getClientIp(req)
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs)
 
   if (!acquireConcurrency('audit-matrice', 100)) return concurrencyResponse(corsHeaders)
+  let concurrencyOwnedByStream = false
 
   try {
-    const { url, items, scoring_rubric } = await req.json() as { url: string; items: ItemInput[]; scoring_rubric?: any[] }
+    const body = await req.json() as { url: string; items: ItemInput[]; scoring_rubric?: any[]; stream?: boolean }
+    const { url, items, scoring_rubric } = body
+    const wantsStream = body.stream === true || /text\/event-stream/i.test(req.headers.get('accept') || '')
     if (scoring_rubric?.length) console.log(`[audit-matrice] Scoring rubric loaded: ${scoring_rubric.length} fields`)
 
     if (!url || !items || items.length === 0) {
@@ -393,83 +396,156 @@ const clientIp = getClientIp(req)
     }
 
     const htmlSummary = buildHtmlSummary(html)
-    const llmPromises: Promise<void>[] = []
-    const results: ItemResult[] = []
 
-    for (const item of detectedTypes) {
-      const llmPromise = evaluateWithLlm(
+    // Build per-item tasks. Each task resolves to an ItemResult.
+    type ItemTask = { item: typeof detectedTypes[number]; run: () => Promise<ItemResult> }
+    const tasks: ItemTask[] = detectedTypes.map((item) => {
+      const llmEval = () => evaluateWithLlm(
         item.prompt, normalizedUrl, htmlSummary,
         item.llm_name || 'google/gemini-2.5-flash',
         scoring_rubric
       )
 
       if (item._type === 'prompt') {
-        llmPromises.push((async () => {
-          const { score, raw } = await llmPromise
-          results.push({
-            id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
-            detected_type: 'prompt', crawlers_score: score, parsed_score: score,
-            raw_data: raw, parsed_raw: raw,
-            seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
-          })
-        })())
-        continue
+        return {
+          item,
+          run: async () => {
+            const { score, raw } = await llmEval()
+            return {
+              id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
+              detected_type: 'prompt', crawlers_score: score, parsed_score: score,
+              raw_data: raw, parsed_raw: raw,
+              seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
+            }
+          },
+        }
       }
 
       if (!htmlData) {
-        llmPromises.push((async () => {
-          const { score: pScore, raw: pRaw } = await llmPromise
-          results.push({
-            id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
-            detected_type: item._type, crawlers_score: 0, parsed_score: pScore,
-            raw_data: { error: 'HTML fetch failed' }, parsed_raw: pRaw,
-            seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
-          })
-        })())
-        continue
+        return {
+          item,
+          run: async () => {
+            const { score: pScore, raw: pRaw } = await llmEval()
+            return {
+              id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
+              detected_type: item._type, crawlers_score: 0, parsed_score: pScore,
+              raw_data: { error: 'HTML fetch failed' }, parsed_raw: pRaw,
+              seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
+            }
+          },
+        }
       }
 
-      let score: number
-      let raw: Record<string, any>
-
+      let engineScore: number
+      let engineRaw: Record<string, any>
       switch (item._type) {
         case 'balise':
-          ({ score, raw } = computeBaliseScore(item.prompt, htmlData))
-          break
+          ({ score: engineScore, raw: engineRaw } = computeBaliseScore(item.prompt, htmlData)); break
         case 'structured_data':
-          ({ score, raw } = computeStructuredDataScore(item.prompt, htmlData, robotsData, sitemapData, llmsTxtData))
-          break
+          ({ score: engineScore, raw: engineRaw } = computeStructuredDataScore(item.prompt, htmlData, robotsData, sitemapData, llmsTxtData)); break
         case 'performance':
-          ({ score, raw } = computePerformanceScore(item.prompt, psiData))
-          break
+          ({ score: engineScore, raw: engineRaw } = computePerformanceScore(item.prompt, psiData)); break
         case 'security':
-          ({ score, raw } = computeSecurityScore(item.prompt, htmlData))
-          break
+          ({ score: engineScore, raw: engineRaw } = computeSecurityScore(item.prompt, htmlData)); break
         case 'metric_combinee':
         default:
-          ({ score, raw } = computeCombinedScore(item.prompt, htmlData, robotsData, sitemapData, psiData))
-          break
+          ({ score: engineScore, raw: engineRaw } = computeCombinedScore(item.prompt, htmlData, robotsData, sitemapData, psiData)); break
       }
 
-      const engineScore = score
-      const engineRaw = raw
+      return {
+        item,
+        run: async () => {
+          const { score: pScore, raw: pRaw } = await llmEval()
+          return {
+            id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
+            detected_type: item._type, crawlers_score: engineScore, parsed_score: pScore,
+            raw_data: engineRaw, parsed_raw: pRaw,
+            seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
+          }
+        },
+      }
+    })
 
-      llmPromises.push((async () => {
-        const { score: pScore, raw: pRaw } = await llmPromise
-        results.push({
-          id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
-          detected_type: item._type, crawlers_score: engineScore, parsed_score: pScore,
-          raw_data: engineRaw, parsed_raw: pRaw,
-          seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
-        })
-      })())
+    /* ============= STREAMING (SSE) MODE ============= */
+    if (wantsStream) {
+      const stream = new ReadableStream({
+        async start(controller) {
+          const enc = new TextEncoder()
+          const send = (event: string, data: unknown) => {
+            try {
+              controller.enqueue(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
+            } catch { /* client disconnected */ }
+          }
+
+          // Init
+          send('start', {
+            url: normalizedUrl,
+            total: tasks.length,
+            items: tasks.map(t => ({ id: t.item.id, prompt: t.item.prompt, axe: t.item.axe, detected_type: t.item._type })),
+          })
+
+          // Mark all as running (LLM calls started in parallel below)
+          tasks.forEach(t => send('item.update', { id: t.item.id, status: 'running' }))
+
+          const collected: ItemResult[] = []
+          const runners = tasks.map(async (t) => {
+            try {
+              const res = await t.run()
+              collected.push(res)
+              send('item.update', {
+                id: t.item.id,
+                status: 'done',
+                result: res,
+              })
+            } catch (err) {
+              const message = err instanceof Error ? err.message : 'Unknown error'
+              send('item.update', { id: t.item.id, status: 'error', error: message })
+            }
+          })
+
+          await Promise.all(runners)
+
+          // Final ordered results + global score
+          const orderedResults = items.map(item => collected.find(r => r.id === item.id)!).filter(Boolean)
+          const totalWeight = orderedResults.reduce((s, r) => s + r.poids, 0)
+          const globalScore = totalWeight > 0
+            ? Math.round(orderedResults.reduce((s, r) => s + r.crawlers_score * r.poids, 0) / totalWeight)
+            : 0
+
+          send('complete', {
+            success: true,
+            url: normalizedUrl,
+            global_score: globalScore,
+            total_items: orderedResults.length,
+            results: orderedResults,
+          })
+
+          console.log(`[audit-matrice][SSE] Complete. Global score: ${globalScore}/100 (${orderedResults.length} items)`)
+          releaseConcurrency('audit-matrice')
+          controller.close()
+        },
+        cancel() {
+          // Client disconnected — release concurrency slot
+          console.log('[audit-matrice][SSE] Client disconnected, releasing concurrency')
+          releaseConcurrency('audit-matrice')
+        },
+      })
+
+      concurrencyOwnedByStream = true
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        },
+      })
     }
 
-    if (llmPromises.length > 0) {
-      await Promise.all(llmPromises)
-    }
-
-    const orderedResults = items.map(item => results.find(r => r.id === item.id)!)
+    /* ============= CLASSIC JSON MODE ============= */
+    const collected = await Promise.all(tasks.map(t => t.run()))
+    const orderedResults = items.map(item => collected.find(r => r.id === item.id)!)
     const totalWeight = orderedResults.reduce((s, r) => s + r.poids, 0)
     const globalScore = totalWeight > 0
       ? Math.round(orderedResults.reduce((s, r) => s + r.crawlers_score * r.poids, 0) / totalWeight)
@@ -494,6 +570,10 @@ const clientIp = getClientIp(req)
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } finally {
-    releaseConcurrency('audit-matrice')
+    // In SSE mode, the ReadableStream owns the concurrency slot and releases it on close/cancel.
+    // In JSON mode (or on early throw before stream creation), release it here.
+    if (!concurrencyOwnedByStream) {
+      try { releaseConcurrency('audit-matrice') } catch { /* idempotent */ }
+    }
   }
 }));
