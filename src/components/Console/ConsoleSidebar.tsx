@@ -132,31 +132,53 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     const isActive = activeTab === item.value;
     const isLocked = item.proOnly && !isProUser;
     const Icon = item.icon;
+    const href = `/app/console?tab=${item.value}`;
+
+    const content = (
+      <>
+        <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && isProUser && 'text-yellow-500')} />
+        <span className="flex-1 truncate">
+          {item.beta && <span className="text-muted-foreground text-[9px] font-normal mr-1 uppercase">beta</span>}
+          {item.value === 'wallet' && isProUser ? (
+            <span className="font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
+              {item.label}
+            </span>
+          ) : item.label}
+        </span>
+        {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+      </>
+    );
+
+    const className = cn(
+      'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin transition-colors text-left',
+      isActive
+        ? 'bg-accent/60 text-foreground'
+        : 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
+      isLocked && 'opacity-40 cursor-not-allowed',
+    );
+
+    if (isLocked) {
+      return (
+        <div key={item.value}>
+          <button disabled className={className}>{content}</button>
+        </div>
+      );
+    }
 
     return (
       <div key={item.value}>
-        <button
-          onClick={() => !isLocked && onTabChange(item.value)}
-          disabled={isLocked}
-          className={cn(
-            'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin transition-colors text-left',
-            isActive
-              ? 'bg-accent/60 text-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
-            isLocked && 'opacity-40 cursor-not-allowed',
-          )}
+        <a
+          href={href}
+          onClick={(e) => {
+            // Allow native behavior for modifier-clicks (new tab/window) and middle-click
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+            e.preventDefault();
+            onTabChange(item.value);
+          }}
+          className={className}
         >
-          <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && isProUser && 'text-yellow-500')} />
-          <span className="flex-1 truncate">
-            {item.beta && <span className="text-muted-foreground text-[9px] font-normal mr-1 uppercase">beta</span>}
-            {item.value === 'wallet' && isProUser ? (
-              <span className="font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
-                {item.label}
-              </span>
-            ) : item.label}
-          </span>
-          {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
-        </button>
+          {content}
+        </a>
       </div>
     );
   };
@@ -219,10 +241,16 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
           [...items.filter(i => !i.hideOnMobile), ...bottomItems.filter(i => !i.hideOnMobile)].map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.value;
+            const href = `/app/console?tab=${item.value}`;
             return (
-              <button
+              <a
                 key={item.value}
-                onClick={() => onTabChange(item.value)}
+                href={href}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+                  e.preventDefault();
+                  onTabChange(item.value);
+                }}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-thin whitespace-nowrap transition-colors',
                   isActive ? 'bg-accent text-foreground' : 'text-muted-foreground',
@@ -230,7 +258,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
               >
                 <Icon className="h-3.5 w-3.5" />
                 {item.label}
-              </button>
+              </a>
             );
           })
         ) : (
@@ -242,13 +270,18 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
         <div className="border-t border-border/40 px-2 py-2 space-y-0.5">
           {bottomItems.map(renderItem)}
 
-          <button
-            onClick={() => onTabChange('tracking-api')}
+          <a
+            href="/app/console?tab=tracking"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+              e.preventDefault();
+              onTabChange('tracking-api');
+            }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
           >
             <Network className="h-4 w-4 shrink-0" />
             <span>API</span>
-          </button>
+          </a>
         </div>
       )}
     </aside>
