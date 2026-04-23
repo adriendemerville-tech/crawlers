@@ -7,14 +7,42 @@
 /** IKtracker blog API base URL (single source of truth) */
 export const IKTRACKER_BASE_URL = 'https://yarjaudctshlxkatqgeb.supabase.co/functions/v1/blog-api';
 
+/** Dictadevi API base URL (single source of truth) */
+export const DICTADEVI_BASE_URL = 'https://dictadevi.io/api';
+
 /** Get IKtracker API key from environment */
 export function getIktrackerApiKey(): string | undefined {
   return Deno.env.get('IKTRACKER_API_KEY');
 }
 
+/**
+ * Get Dictadevi API key — first tries env (DICTADEVI_API_KEY), then falls back
+ * to the per-target value stored in parmenion_targets.api_key_name.
+ * Async because the fallback requires a DB lookup via the service role client.
+ */
+export async function getDictadeviApiKey(supabase?: {
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>
+}): Promise<string | undefined> {
+  const envKey = Deno.env.get('DICTADEVI_API_KEY');
+  if (envKey) return envKey;
+  if (!supabase) return undefined;
+  try {
+    const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: 'dictadevi.io' });
+    if (error || !data) return undefined;
+    return typeof data === 'string' ? data : undefined;
+  } catch (_) {
+    return undefined;
+  }
+}
+
 /** Check if domain belongs to IKtracker */
 export function isIktrackerDomain(domain: string): boolean {
   return domain.toLowerCase().includes('iktracker');
+}
+
+/** Check if domain belongs to Dictadevi */
+export function isDictadeviDomain(domain: string): boolean {
+  return domain.toLowerCase().includes('dictadevi');
 }
 
 /** Check if domain belongs to Crawlers */
@@ -23,9 +51,10 @@ export function isCrawlersDomain(domain: string): boolean {
 }
 
 /** Classify domain platform */
-export function detectPlatform(domain: string): 'iktracker' | 'crawlers' | 'external' {
+export function detectPlatform(domain: string): 'iktracker' | 'dictadevi' | 'crawlers' | 'external' {
   const d = domain.toLowerCase().replace(/^www\./, '');
   if (d.includes('iktracker')) return 'iktracker';
+  if (d.includes('dictadevi')) return 'dictadevi';
   if (d.includes('crawlers')) return 'crawlers';
   return 'external';
 }

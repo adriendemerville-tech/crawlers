@@ -1,7 +1,37 @@
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
-import { isIktrackerDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+import { isIktrackerDomain, isDictadeviDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+
+/** Resolve the right CMS bridge function for a given domain (IKtracker / Dictadevi). */
+function resolveCmsBridge(domain: string): string {
+  if (isDictadeviDomain(domain)) return 'dictadevi-actions';
+  return 'iktracker-actions'; // default (covers IKtracker + back-compat)
+}
+
+/**
+ * Call the appropriate CMS bridge for a domain. Adapts the payload shape:
+ *   - iktracker-actions expects { action, page_key, slug, updates, body } at root
+ *   - dictadevi-actions expects { action, params: { ... } }
+ * Returns the raw fetch Response so callers can inspect status/headers.
+ */
+function callCmsBridge(
+  domain: string,
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  actionBody: Record<string, unknown>,
+): Promise<Response> {
+  const bridge = resolveCmsBridge(domain);
+  const { action, ...rest } = actionBody;
+  const finalBody = bridge === 'dictadevi-actions'
+    ? { action, params: rest }
+    : actionBody;
+  return fetch(`${supabaseUrl}/functions/v1/${bridge}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${serviceRoleKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(finalBody),
+  });
+}
 
 // ═══ Modular imports ═══
 import {
@@ -390,7 +420,7 @@ async function prepareExecuteActions(
   decision: any, site: SiteInfo, routedCmsActions: RoutedActions | null,
   supabase: any, config: AutopilotConfig,
 ) {
-  if (isIktrackerDomain(site.domain)) {
+  if (isIktrackerDomain(site.domain) || isDictadeviDomain(site.domain)) {
     if (!decision.action.payload) decision.action.payload = {};
     const hasCmsActions = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
     
@@ -544,13 +574,10 @@ async function executeIktrackerActions(
         ...(cmsAction.body ? { body: cmsAction.body } : {}),
       };
 
-      console.log(`[AutopilotEngine] IKtracker CMS action: ${cmsAction.action}`, JSON.stringify(actionBody).slice(0, 500));
+      const bridge = resolveCmsBridge(site.domain);
+      console.log(`[AutopilotEngine] ${bridge} CMS action: ${cmsAction.action}`, JSON.stringify(actionBody).slice(0, 500));
 
-      const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(actionBody),
-      });
+      const funcResponse = await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, actionBody);
 
       const funcResult = await funcResponse.json().catch(() => ({}));
       
@@ -566,11 +593,8 @@ async function executeIktrackerActions(
           console.error(`[AutopilotEngine] 🚫 SEMANTIC GATE BLOCKED: Content for "${cmsAction.body.title}" has only ${Math.round(gate.identityOverlap * 100)}% identity overlap (need ≥15%). Matched: [${gate.matchedTerms.join(', ')}] / Total: [${gate.totalTerms.slice(0, 10).join(', ')}]`);
           const slugToDelete = cmsAction.body.slug || funcResult?.result?.slug;
           if (slugToDelete) {
-            await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'delete-post', slug: slugToDelete }),
-            }).catch((err) => console.warn('[AutopilotEngine] Failed to delete rejected post:', err));
+            await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, { action: 'delete-post', slug: slugToDelete })
+              .catch((err) => console.warn('[AutopilotEngine] Failed to delete rejected post:', err));
             console.log(`[AutopilotEngine] 🗑️ Deleted hallucinated post: ${slugToDelete}`);
           }
           executionResults.push({
@@ -644,11 +668,8 @@ async function generateAndAttachImage(cmsAction: any, funcResult: any, site: Sit
             const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(imgFileName);
             const slug = cmsAction.body.slug || funcResult?.result?.slug;
             if (slug) {
-              await fetch(`${SUPABASE_URL}/functions/v1/iktracker-actions`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'update-post', slug, updates: { image_url: urlData.publicUrl } }),
-              }).catch((err) => console.warn('[AutopilotEngine] Image URL update failed:', err));
+              await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, { action: 'update-post', slug, updates: { image_url: urlData.publicUrl } })
+                .catch((err) => console.warn('[AutopilotEngine] Image URL update failed:', err));
             }
             console.log(`[AutopilotEngine] Image uploaded for "${cmsAction.body.title}": ${urlData.publicUrl}`);
             return true;
