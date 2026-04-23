@@ -24,6 +24,10 @@ import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
 import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScoringMethod, detectScoringSheet, SCORING_REGISTRY } from '@/utils/matrice/scoringDetector';
+import { MatriceProgressTracker, MatriceErrorCard } from '@/components/Matrice';
+import { useMatriceProgress } from '@/hooks/useMatriceProgress';
+import { seedsForStandardAudit, seedsForBenchmark, makePending, makeRunning, makeDone, makeError } from '@/utils/matrice/matriceCallEvents';
+import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -88,6 +92,9 @@ export default function MatricePrompt() {
   const [submittingError, setSubmittingError] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [activeMetadata, setActiveMetadata] = useState<MatrixMetadata | null>(null);
+
+  // Real-time progress tracker (Sprint 4 wiring)
+  const progress = useMatriceProgress();
 
   const LAST_BATCH_KEY = 'matrice_last_batch_id';
 
@@ -594,6 +601,7 @@ export default function MatricePrompt() {
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
     setAnalyzing(true);
     setBenchmarkData(null);
+    progress.reset();
     try {
       // ── BENCHMARK MODE ──────────────────────────────────────────────
       if (activeMatriceType === 'benchmark') {
@@ -610,6 +618,12 @@ export default function MatricePrompt() {
           llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
         }));
 
+        // Tracker — emit pending events for every (prompt × engine) pair
+        const benchEngines = Array.from(new Set(benchmarkItems.map(b => b.engine)));
+        const benchSeeds = seedsForBenchmark(benchmarkItems, benchEngines, 'parse-matrix-geo');
+        benchSeeds.forEach(s => progress.onCallEvent(makePending(s)));
+        benchSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
+
         const { data: fnData, error: fnError } = await supabase.functions.invoke('parse-matrix-geo', {
           body: {
             url: url.trim(),
@@ -621,8 +635,11 @@ export default function MatricePrompt() {
         });
 
         if (fnError || !fnData?.success) {
+          benchSeeds.forEach(s => progress.onCallEvent(makeError(s, fnData?.error || fnError?.message || 'Benchmark failed')));
           throw new Error(fnData?.error || fnError?.message || 'Benchmark failed');
         }
+
+        benchSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
 
         setBenchmarkData({
           results: fnData.results,
@@ -656,6 +673,11 @@ export default function MatricePrompt() {
         : activeMatriceType === 'hybrid' ? 'parse-matrix-hybrid'
         : 'audit-matrice';
 
+      // Tracker — emit pending events for every prompt
+      const stdSeeds = seedsForStandardAudit(items, functionName);
+      stdSeeds.forEach(s => progress.onCallEvent(makePending(s)));
+      stdSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
+
       const { data: fnData, error: fnError } = await supabase.functions.invoke(functionName, {
         body: {
           url: url.trim(),
@@ -666,8 +688,11 @@ export default function MatricePrompt() {
       });
 
       if (fnError || !fnData?.success) {
+        stdSeeds.forEach(s => progress.onCallEvent(makeError(s, fnData?.error || fnError?.message || 'Audit failed')));
         throw new Error(fnData?.error || fnError?.message || 'Audit failed');
       }
+
+      stdSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
 
       const auditResults = fnData.results.map((r: any) => ({
         id: r.id,
@@ -760,6 +785,33 @@ export default function MatricePrompt() {
       parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * (useWeights ? r.poids : 1), 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
+
+    // Sprint 4 — persist enriched MatrixResult[] for the interactive Pivot+Cube view
+    const nativeResults: MatrixResult[] = results.map((r: any, i: number) => {
+      const parsed = r.parsed_score ?? r.crawlers_score ?? null;
+      const crawlers = r.crawlers_score ?? null;
+      const matchType = parsed != null && crawlers != null && parsed !== crawlers ? 'partial' : 'exact';
+      const cat = (r.axe || 'general')
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
+      const native = {
+        criterionId: r.dbId || r.id || `row-${i}`,
+        criterionTitle: r.prompt || `Critère ${i + 1}`,
+        matchType,
+        parsedScore: typeof parsed === 'number' ? parsed : null,
+        parsedResponse: r.parsed_raw?.justification || r.parsed_raw?.seo_justification || null,
+        crawlersScore: typeof crawlers === 'number' ? crawlers : null,
+        crawlersData: r.raw_data ?? null,
+        sourceFunction: `cat-${cat}`,
+        confidence: 1,
+      } as MatrixResult;
+      (native as any).criterionCategory = cat;
+      (native as any).criterionWeight = r.poids ?? 1;
+      return native;
+    });
+    sessionStorage.setItem('rapport_matrice_results_native', JSON.stringify(nativeResults));
+
     window.open('/app/rapport/matrice', '_blank');
   };
 
@@ -1036,6 +1088,18 @@ export default function MatricePrompt() {
               </Button>
             </div>
           </div>
+
+          {/* Sprint 4 — live progress tracker (visible during execution and right after) */}
+          {(analyzing || progress.items.length > 0) && (
+            <div className="mb-6 max-w-3xl mx-auto">
+              <MatriceProgressTracker
+                completed={progress.completed}
+                total={progress.total}
+                currentLabel={progress.currentLabel}
+                items={progress.items}
+              />
+            </div>
+          )}
 
           {/* Benchmark Heatmap (shown when benchmark mode has results) */}
           {benchmarkData && (

@@ -68,6 +68,7 @@ export default function RapportMatrice() {
   const { isAdmin, loading: adminLoading } = useAdmin();
   const navigate = useNavigate();
   const [data, setData] = useState<MatriceReportData | null>(null);
+  const [nativeResults, setNativeResults] = useState<any[] | null>(null);
   const [copied, setCopied] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -82,8 +83,14 @@ export default function RapportMatrice() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem('rapport_matrice_data');
-    if (!raw) return;
-    try { setData(JSON.parse(raw)); } catch { /* noop */ }
+    if (raw) {
+      try { setData(JSON.parse(raw)); } catch { /* noop */ }
+    }
+    // Sprint 4 — load enriched MatrixResult[] if produced by MatricePrompt
+    const native = sessionStorage.getItem('rapport_matrice_results_native');
+    if (native) {
+      try { setNativeResults(JSON.parse(native)); } catch { /* noop */ }
+    }
   }, []);
 
   const branding = profile?.plan_type === 'agency_pro' && (profile.agency_logo_url || profile.agency_primary_color)
@@ -96,10 +103,12 @@ export default function RapportMatrice() {
   }, [data, branding]);
 
   // Adapter for the interactive Pivot + Cube views.
+  // Prefer native MatrixResult[] (Sprint 4) when available; fallback to legacy adapter.
   const matrixResults = useMemo(() => {
+    if (nativeResults && nativeResults.length > 0) return nativeResults as any;
     if (!data) return [];
     return legacyToMatrixResults(data.results);
-  }, [data]);
+  }, [data, nativeResults]);
 
   const handleCsv = async () => {
     if (!data) return;
