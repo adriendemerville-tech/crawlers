@@ -673,6 +673,11 @@ export default function MatricePrompt() {
         : activeMatriceType === 'hybrid' ? 'parse-matrix-hybrid'
         : 'audit-matrice';
 
+      // Tracker — emit pending events for every prompt
+      const stdSeeds = seedsForStandardAudit(items, functionName);
+      stdSeeds.forEach(s => progress.onCallEvent(makePending(s)));
+      stdSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
+
       const { data: fnData, error: fnError } = await supabase.functions.invoke(functionName, {
         body: {
           url: url.trim(),
@@ -683,8 +688,11 @@ export default function MatricePrompt() {
       });
 
       if (fnError || !fnData?.success) {
+        stdSeeds.forEach(s => progress.onCallEvent(makeError(s, fnData?.error || fnError?.message || 'Audit failed')));
         throw new Error(fnData?.error || fnError?.message || 'Audit failed');
       }
+
+      stdSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
 
       const auditResults = fnData.results.map((r: any) => ({
         id: r.id,
