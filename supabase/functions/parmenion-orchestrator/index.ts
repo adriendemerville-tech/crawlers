@@ -513,15 +513,8 @@ try {
       }
       else if (currentPhase === 'diagnose') validatedFunctions.push('cocoon-diag-content');
       else if (currentPhase === 'prescribe') {
-        // Force content if force_content_cycle or force_iktracker_article
-        if (forceContent) {
-          validatedFunctions.push('content-architecture-advisor');
-        } else if (cycle_number % 2 === 1) {
-          // Alternate: odd cycles → content, even → tech
-          validatedFunctions.push('content-architecture-advisor');
-        } else {
-          validatedFunctions.push('generate-corrective-code');
-        }
+        // V3: prescribe is handled by cocoon-strategist, fallback to its output
+        validatedFunctions.push('cocoon-strategist');
       }
       else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? 'iktracker-actions' : 'wpsync');
       else if (currentPhase === 'validate') validatedFunctions.push('audit-expert-seo');
