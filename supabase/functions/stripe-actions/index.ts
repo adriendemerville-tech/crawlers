@@ -18,6 +18,38 @@ const CREDIT_PACKAGES = {
 
 type PackageType = keyof typeof CREDIT_PACKAGES;
 
+// Annual pricing: -10% discount
+const ANNUAL_PRICES: Record<string, { product: string; monthlyAmountCents: number; lookupKey: string }> = {
+  agency_pro:     { product: "prod_U4ya5iGWNTDQoE", monthlyAmountCents: 2900, lookupKey: "agency_pro_annual" },
+  agency_premium: { product: "prod_UDcQ9avN4kHNFF", monthlyAmountCents: 7900, lookupKey: "agency_premium_annual" },
+};
+
+async function getOrCreateAnnualPrice(planKey: string): Promise<string> {
+  const config = ANNUAL_PRICES[planKey];
+  if (!config) throw new Error(`Unknown plan: ${planKey}`);
+
+  // Try to find existing annual price by lookup_key
+  const existing = await stripe.prices.list({
+    lookup_keys: [config.lookupKey],
+    active: true,
+    limit: 1,
+  });
+  if (existing.data.length > 0) return existing.data[0].id;
+
+  // Create annual price: -10% → multiply monthly by 12 * 0.9
+  const annualAmountCents = Math.round(config.monthlyAmountCents * 12 * 0.9);
+  const price = await stripe.prices.create({
+    product: config.product,
+    unit_amount: annualAmountCents,
+    currency: "eur",
+    recurring: { interval: "year" },
+    lookup_key: config.lookupKey,
+    metadata: { discount: "10pct", billing: "annual" },
+  });
+  console.log(`Created annual price for ${planKey}: ${price.id} (${annualAmountCents} cents/year)`);
+  return price.id;
+}
+
 // ─── Helpers ───
 
 function json(body: unknown, status = 200) {
@@ -122,10 +154,11 @@ async function handleCreditCheckout(req: Request, body: any) {
   return json({ url: session.url, session_id: session.id, credits: pkg.credits, price: pkg.price_cents / 100 });
 }
 
-async function handleSubscription(req: Request) {
+async function handleSubscription(req: Request, body: any) {
   const auth = await getAuthUser(req);
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
+  const billing = body?.billing === 'annual' ? 'annual' : 'monthly';
   const origin = req.headers.get("origin") || "https://crawlers.fr";
   const { data: profile } = await auth.supabase
     .from("profiles")
@@ -146,16 +179,22 @@ async function handleSubscription(req: Request) {
     customerId = customer.id;
   }
 
-  const prices = await stripe.prices.list({ product: "prod_U4ya5iGWNTDQoE", active: true, type: "recurring", limit: 1 });
-  if (!prices.data.length) return json({ error: "Aucun prix récurrent trouvé pour ce produit." }, 500);
+  let priceId: string;
+  if (billing === 'annual') {
+    priceId = await getOrCreateAnnualPrice('agency_pro');
+  } else {
+    const prices = await stripe.prices.list({ product: "prod_U4ya5iGWNTDQoE", active: true, type: "recurring", limit: 1 });
+    if (!prices.data.length) return json({ error: "Aucun prix récurrent trouvé pour ce produit." }, 500);
+    priceId = prices.data[0].id;
+  }
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
-    line_items: [{ price: prices.data[0].id, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     mode: "subscription",
-    metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_pro" },
-    subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_pro" } },
+    metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_pro", billing },
+    subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_pro", billing } },
     success_url: `${origin}/tarifs?subscription_success=true`,
     cancel_url: `${origin}/tarifs?subscription_canceled=true`,
   });
@@ -163,10 +202,11 @@ async function handleSubscription(req: Request) {
   return json({ url: session.url, session_id: session.id });
 }
 
-async function handleSubscriptionPremium(req: Request) {
+async function handleSubscriptionPremium(req: Request, body: any) {
   const auth = await getAuthUser(req);
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
+  const billing = body?.billing === 'annual' ? 'annual' : 'monthly';
   const origin = req.headers.get("origin") || "https://crawlers.fr";
   const { data: profile } = await auth.supabase
     .from("profiles")
@@ -187,16 +227,22 @@ async function handleSubscriptionPremium(req: Request) {
     customerId = customer.id;
   }
 
-  const prices = await stripe.prices.list({ product: "prod_UDcQ9avN4kHNFF", active: true, type: "recurring", limit: 1 });
-  if (!prices.data.length) return json({ error: "Aucun prix récurrent trouvé pour ce produit Premium." }, 500);
+  let priceId: string;
+  if (billing === 'annual') {
+    priceId = await getOrCreateAnnualPrice('agency_premium');
+  } else {
+    const prices = await stripe.prices.list({ product: "prod_UDcQ9avN4kHNFF", active: true, type: "recurring", limit: 1 });
+    if (!prices.data.length) return json({ error: "Aucun prix récurrent trouvé pour ce produit Premium." }, 500);
+    priceId = prices.data[0].id;
+  }
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
-    line_items: [{ price: prices.data[0].id, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     mode: "subscription",
-    metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_premium" },
-    subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_premium" } },
+    metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_premium", billing },
+    subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_premium", billing } },
     success_url: `${origin}/tarifs?subscription_success=true`,
     cancel_url: `${origin}/tarifs?subscription_canceled=true`,
   });
@@ -258,8 +304,8 @@ try {
     switch (action) {
       case 'checkout':          return await handleCheckout(req, body);
       case 'credit-checkout':   return await handleCreditCheckout(req, body);
-      case 'subscription':      return await handleSubscription(req);
-      case 'subscription_premium': return await handleSubscriptionPremium(req);
+      case 'subscription':      return await handleSubscription(req, body);
+      case 'subscription_premium': return await handleSubscriptionPremium(req, body);
       case 'portal':            return await handlePortal(req);
       case 'retention':         return await handleRetention(req);
       default:
