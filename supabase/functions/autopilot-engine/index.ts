@@ -9,6 +9,30 @@ function resolveCmsBridge(domain: string): string {
   return 'iktracker-actions'; // default (covers IKtracker + back-compat)
 }
 
+/**
+ * Call the appropriate CMS bridge for a domain. Adapts the payload shape:
+ *   - iktracker-actions expects { action, page_key, slug, updates, body } at root
+ *   - dictadevi-actions expects { action, params: { ... } }
+ * Returns the raw fetch Response so callers can inspect status/headers.
+ */
+function callCmsBridge(
+  domain: string,
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  actionBody: Record<string, unknown>,
+): Promise<Response> {
+  const bridge = resolveCmsBridge(domain);
+  const { action, ...rest } = actionBody;
+  const finalBody = bridge === 'dictadevi-actions'
+    ? { action, params: rest }
+    : actionBody;
+  return fetch(`${supabaseUrl}/functions/v1/${bridge}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${serviceRoleKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(finalBody),
+  });
+}
+
 // ═══ Modular imports ═══
 import {
   COOLDOWN_HOURS, CYCLE_DEADLINE_MS, MAX_CMS_ACTIONS_PER_CYCLE,
