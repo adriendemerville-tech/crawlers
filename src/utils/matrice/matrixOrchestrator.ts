@@ -119,6 +119,27 @@ export async function executeAuditPlan(
   const total = plan.routes.length;
   let completed = 0;
 
+  const emit = (e: CallEvent) => callbacks.onCallEvent?.(e);
+
+  // Wraps a backend call with pending → running → done|error events.
+  const tracked = async <T,>(
+    eventBase: Omit<CallEvent, 'status'>,
+    exec: () => Promise<T>,
+  ): Promise<T> => {
+    emit({ ...eventBase, status: 'pending' });
+    emit({ ...eventBase, status: 'running' });
+    try {
+      const out = await exec();
+      const ok = out !== null && out !== undefined;
+      emit({ ...eventBase, status: ok ? 'done' : 'error', errorMessage: ok ? undefined : 'Empty response' });
+      return out;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Call failed';
+      emit({ ...eventBase, status: 'error', errorMessage: msg });
+      throw err;
+    }
+  };
+
   // Group routes by function for deduplication
   const fnGroups = new Map<string, AuditRoute[]>();
   for (const route of plan.routes) {
@@ -139,47 +160,95 @@ export async function executeAuditPlan(
   // Cache function results to avoid redundant calls
   const fnResultCache = new Map<string, any>();
 
+  // Pre-emit all planned events as 'pending' so the UI shows the full upcoming plan upfront
+  for (const fn of technicalFns) {
+    emit({ id: `tech:${fn}`, fn, label: fn, detail: 'technique', status: 'pending' });
+  }
+  for (const fn of llmFns) {
+    emit({ id: `llm-std:${fn}`, fn, label: `${fn} (référence)`, detail: 'crawlers', status: 'pending' });
+    const routes = fnGroups.get(fn) || [];
+    for (const route of routes) {
+      if (!route.customPrompt || fn !== 'check-llm') continue;
+      if (route.mode === 'benchmark' && route.targetProviders?.length) {
+        route.targetProviders.forEach((prov) => {
+          emit({
+            id: `llm-bench:${route.criterionId}:${prov}`,
+            fn, criterionId: route.criterionId, criterionTitle: route.criterionTitle,
+            provider: prov, label: route.criterionTitle, detail: prov, status: 'pending',
+          });
+        });
+      } else {
+        emit({
+          id: `llm-custom:${route.criterionId}`,
+          fn, criterionId: route.criterionId, criterionTitle: route.criterionTitle,
+          provider: route.targetProvider, label: route.criterionTitle,
+          detail: route.targetProvider || 'tous LLMs', status: 'pending',
+        });
+      }
+    }
+  }
+
   // Execute technical functions in parallel
   const technicalPromises = technicalFns.map(async (fn) => {
-    const data = await callWithFallback(fn, url);
-    fnResultCache.set(fn, data);
+    try {
+      const data = await tracked(
+        { id: `tech:${fn}`, fn, label: fn, detail: 'technique' },
+        () => callWithFallback(fn, url),
+      );
+      fnResultCache.set(fn, data);
+    } catch {
+      fnResultCache.set(fn, null);
+    }
   });
   await Promise.allSettled(technicalPromises);
 
   // Execute LLM functions staggered
   for (const fn of llmFns) {
     const routes = fnGroups.get(fn) || [];
-    // Check if any route has a custom prompt requiring a separate call
     const hasCustomPrompt = routes.some(r => r.customPrompt);
 
     // Standard Crawlers call (1 call per function)
-    const standardData = await callWithFallback(fn, url);
-    fnResultCache.set(fn, standardData);
+    try {
+      const standardData = await tracked(
+        { id: `llm-std:${fn}`, fn, label: `${fn} (référence)`, detail: 'crawlers' },
+        () => callWithFallback(fn, url),
+      );
+      fnResultCache.set(fn, standardData);
+    } catch {
+      fnResultCache.set(fn, null);
+    }
 
     // If custom prompts exist, make additional targeted calls
     // Each (prompt, provider) tuple = one separate call so:
     //  - audit multi-prompts → N appels (1 par prompt)
     //  - benchmark → N×P appels (1 par prompt × provider ciblé)
     if (hasCustomPrompt) {
-      for (const route of routes) {
-        if (!route.customPrompt || fn !== 'check-llm') continue;
-        const hydratedPrompt = hydratePrompt(route.customPrompt, url);
+      const customRoutes = routes.filter(r => r.customPrompt && fn === 'check-llm');
+      const promptTotal = customRoutes.length;
 
-        // Determine providers to query for this prompt
-        const providers: (string | undefined)[] =
-          route.mode === 'benchmark' && route.targetProviders && route.targetProviders.length > 0
-            ? route.targetProviders
-            : [route.targetProvider]; // single provider OR undefined → check-llm queries all
+      for (let pi = 0; pi < customRoutes.length; pi++) {
+        const route = customRoutes[pi];
+        const hydratedPrompt = hydratePrompt(route.customPrompt!, url);
+        const promptIndex = pi + 1;
 
-        if (route.mode === 'benchmark') {
-          // Benchmark: one call per (prompt × provider), aggregate
+        if (route.mode === 'benchmark' && route.targetProviders?.length) {
           const perProviderResults: Record<string, any> = {};
-          for (const prov of providers) {
-            const customData = await callFunction('check-llm', url, {
-              customPrompt: hydratedPrompt,
-              targetProvider: prov,
-            });
-            if (prov) perProviderResults[prov] = customData;
+          for (const prov of route.targetProviders) {
+            try {
+              const customData = await tracked(
+                {
+                  id: `llm-bench:${route.criterionId}:${prov}`,
+                  fn, criterionId: route.criterionId, criterionTitle: route.criterionTitle,
+                  provider: prov, promptIndex, promptTotal,
+                  label: route.criterionTitle,
+                  detail: `${prov} · prompt ${promptIndex}/${promptTotal}`,
+                },
+                () => callFunction('check-llm', url, { customPrompt: hydratedPrompt, targetProvider: prov }),
+              );
+              perProviderResults[prov] = customData;
+            } catch {
+              perProviderResults[prov] = null;
+            }
             await delay(300);
           }
           fnResultCache.set(`${fn}:custom:${route.criterionId}`, {
@@ -187,12 +256,24 @@ export async function executeAuditPlan(
             providers: perProviderResults,
           });
         } else {
-          // Standard: 1 call (with optional single provider filter)
-          const customData = await callFunction('check-llm', url, {
-            customPrompt: hydratedPrompt,
-            targetProvider: route.targetProvider,
-          });
-          fnResultCache.set(`${fn}:custom:${route.criterionId}`, customData);
+          try {
+            const customData = await tracked(
+              {
+                id: `llm-custom:${route.criterionId}`,
+                fn, criterionId: route.criterionId, criterionTitle: route.criterionTitle,
+                provider: route.targetProvider, promptIndex, promptTotal,
+                label: route.criterionTitle,
+                detail: `${route.targetProvider || 'tous LLMs'} · prompt ${promptIndex}/${promptTotal}`,
+              },
+              () => callFunction('check-llm', url, {
+                customPrompt: hydratedPrompt,
+                targetProvider: route.targetProvider,
+              }),
+            );
+            fnResultCache.set(`${fn}:custom:${route.criterionId}`, customData);
+          } catch {
+            fnResultCache.set(`${fn}:custom:${route.criterionId}`, null);
+          }
           await delay(300);
         }
       }
