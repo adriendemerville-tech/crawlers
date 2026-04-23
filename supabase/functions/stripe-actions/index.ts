@@ -202,10 +202,11 @@ async function handleSubscription(req: Request, body: any) {
   return json({ url: session.url, session_id: session.id });
 }
 
-async function handleSubscriptionPremium(req: Request) {
+async function handleSubscriptionPremium(req: Request, body: any) {
   const auth = await getAuthUser(req);
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
+  const billing = body?.billing === 'annual' ? 'annual' : 'monthly';
   const origin = req.headers.get("origin") || "https://crawlers.fr";
   const { data: profile } = await auth.supabase
     .from("profiles")
@@ -226,16 +227,22 @@ async function handleSubscriptionPremium(req: Request) {
     customerId = customer.id;
   }
 
-  const prices = await stripe.prices.list({ product: "prod_UDcQ9avN4kHNFF", active: true, type: "recurring", limit: 1 });
-  if (!prices.data.length) return json({ error: "Aucun prix récurrent trouvé pour ce produit Premium." }, 500);
+  let priceId: string;
+  if (billing === 'annual') {
+    priceId = await getOrCreateAnnualPrice('agency_premium');
+  } else {
+    const prices = await stripe.prices.list({ product: "prod_UDcQ9avN4kHNFF", active: true, type: "recurring", limit: 1 });
+    if (!prices.data.length) return json({ error: "Aucun prix récurrent trouvé pour ce produit Premium." }, 500);
+    priceId = prices.data[0].id;
+  }
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
-    line_items: [{ price: prices.data[0].id, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     mode: "subscription",
-    metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_premium" },
-    subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_premium" } },
+    metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_premium", billing },
+    subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_premium", billing } },
     success_url: `${origin}/tarifs?subscription_success=true`,
     cancel_url: `${origin}/tarifs?subscription_canceled=true`,
   });
