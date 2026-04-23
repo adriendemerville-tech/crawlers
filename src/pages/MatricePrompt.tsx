@@ -3,7 +3,7 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Upload, Search, Loader2, ArrowLeft, FileText, FileSpreadsheet, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle } from 'lucide-react';
+import { Upload, Search, Loader2, ArrowLeft, FileText, FileSpreadsheet, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle, History, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,8 @@ import { MatriceProgressTracker, MatriceErrorCard } from '@/components/Matrice';
 import { useMatriceProgress } from '@/hooks/useMatriceProgress';
 import { seedsForStandardAudit, seedsForBenchmark, makePending, makeRunning, makeDone, makeError } from '@/utils/matrice/matriceCallEvents';
 import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
+import { useMatriceAudits } from '@/hooks/useMatriceAudits';
+import { buildPivot } from '@/utils/matrice/pivotTransform';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
