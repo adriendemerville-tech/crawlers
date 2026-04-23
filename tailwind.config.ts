@@ -75,6 +75,17 @@ export default {
           DEFAULT: "hsl(var(--brand-violet))",
           muted: "hsl(var(--brand-violet-muted))",
         },
+        "brand-gold": {
+          DEFAULT: "hsl(var(--brand-gold))",
+          muted: "hsl(var(--brand-gold-muted))",
+        },
+        heat: {
+          0: "hsl(var(--heat-0))",
+          1: "hsl(var(--heat-1))",
+          2: "hsl(var(--heat-2))",
+          3: "hsl(var(--heat-3))",
+          4: "hsl(var(--heat-4))",
+        },
         linkedin: {
           DEFAULT: "hsl(201 100% 40%)",
         },

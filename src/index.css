@@ -22,6 +22,14 @@
     --primary-foreground: 210 40% 98%;
     --brand-violet: 262 83% 58%;
     --brand-violet-muted: 262 72% 96%;
+    --brand-gold: 45 93% 47%;
+    --brand-gold-muted: 45 90% 95%;
+    /* Heatmap palette — violet (low) → gold (high), zero IA-blue */
+    --heat-0: 262 60% 92%;
+    --heat-1: 262 70% 78%;
+    --heat-2: 280 65% 62%;
+    --heat-3: 25 88% 58%;
+    --heat-4: 45 93% 50%;
 
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -73,6 +81,13 @@
     --primary-foreground: 210 40% 98%;
     --brand-violet: 262 90% 72%;
     --brand-violet-muted: 262 42% 18%;
+    --brand-gold: 45 93% 60%;
+    --brand-gold-muted: 45 50% 18%;
+    --heat-0: 262 35% 22%;
+    --heat-1: 262 60% 45%;
+    --heat-2: 280 70% 58%;
+    --heat-3: 25 85% 60%;
+    --heat-4: 45 93% 60%;
 
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
