@@ -307,7 +307,9 @@ const clientIp = getClientIp(req)
   if (!acquireConcurrency('audit-matrice', 100)) return concurrencyResponse(corsHeaders)
 
   try {
-    const { url, items, scoring_rubric } = await req.json() as { url: string; items: ItemInput[]; scoring_rubric?: any[] }
+    const body = await req.json() as { url: string; items: ItemInput[]; scoring_rubric?: any[]; stream?: boolean }
+    const { url, items, scoring_rubric } = body
+    const wantsStream = body.stream === true || /text\/event-stream/i.test(req.headers.get('accept') || '')
     if (scoring_rubric?.length) console.log(`[audit-matrice] Scoring rubric loaded: ${scoring_rubric.length} fields`)
 
     if (!url || !items || items.length === 0) {
