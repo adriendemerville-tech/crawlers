@@ -241,14 +241,19 @@ export function MatricePivotView({
           <tbody>
             {table.getRowModel().rows.map(row => {
               const isOpen = !!expanded[row.original.familyId];
+              const isSelected = selectedFamilyId === row.original.familyId;
               return (
                 <Fragment key={row.id}>
-                  <tr className="hover:bg-brand-violet/5 transition-colors">
+                  <tr className={cn(
+                    'transition-colors',
+                    isSelected ? 'bg-brand-gold/10' : 'hover:bg-brand-violet/5',
+                  )}>
                     {row.getVisibleCells().map(cell => (
                       <td
                         key={cell.id}
                         className={cn(
-                          'px-3 py-2 border-b border-brand-violet/20',
+                          'px-3 py-2 border-b',
+                          isSelected ? 'border-brand-gold/40' : 'border-brand-violet/20',
                           cell.column.id === 'family' ? 'text-left' : 'text-center',
                         )}
                       >
