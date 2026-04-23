@@ -29,7 +29,7 @@ const i18n = {
   en: {
     heroTitle: "Reserved for Pros",
     heroDesc: "The Cocoon module is reserved for Pro Agency subscribers. Visualize your site's semantic architecture.",
-    subscribeCta: "Subscribe · €29/mo",
+    subscribeCta: "Subscribe · from €26.10/mo",
     features: ["Unlimited expert audit", "Unlimited corrective code", "LLM Visibility Benchmark", "Unlimited semantic Cocoon", "White Label"],
     authTitle: "Already have an account?",
     authDesc: "Sign in to access Cocoon or create your account.",
@@ -42,7 +42,7 @@ const i18n = {
   es: {
     heroTitle: "Reservado para Pros",
     heroDesc: "El módulo Cocoon está reservado para suscriptores Pro Agency. Visualice la arquitectura semántica de su sitio.",
-    subscribeCta: "Suscribirse · 29€/mes",
+    subscribeCta: "Suscribirse · desde 26,10€/mes",
     features: ["Auditoría experta ilimitada", "Código correctivo ilimitado", "Benchmark visibilidad LLM", "Cocoon semántico ilimitado", "Marca Blanca"],
     authTitle: "¿Ya tiene una cuenta?",
     authDesc: "Inicie sesión para acceder a Cocoon o cree su cuenta.",
