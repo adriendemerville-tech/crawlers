@@ -153,6 +153,7 @@ const Index = () => {
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
+  useGeoMetaTags();
 
   // Fix canonical & hreflang for multilingual indexation (EN/ES pages)
   useCanonicalHreflang('/');
