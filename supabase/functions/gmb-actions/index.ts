@@ -452,6 +452,132 @@ try {
     let result: any
 
     switch (action) {
+      case 'list-locations': {
+        // Fetch ALL locations from GBP API and upsert into gmb_locations
+        if (!token) {
+          return jsonError('Google Business Profile connection required. Please connect your Google account with GBP permissions.', 403)
+        }
+
+        // 1. List accounts
+        const acctResp = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+          headers: { Authorization: `Bearer ${token.access_token}` },
+        })
+        if (!acctResp.ok) {
+          const errBody = await acctResp.text().catch(() => '')
+          return jsonError(`Google Accounts API error (${acctResp.status}): ${errBody.slice(0, 200)}`, 502)
+        }
+        const acctBody = await acctResp.json()
+        const accounts = acctBody.accounts || []
+        if (accounts.length === 0) {
+          return jsonOk({ locations: [], imported: 0, message: 'No Google Business accounts found for this user.' })
+        }
+
+        const sb = getServiceClient()
+        const allLocations: any[] = []
+
+        for (const account of accounts) {
+          const accountId = account.name // e.g. "accounts/123"
+          let nextPageToken: string | undefined
+          do {
+            const url = new URL(`${GBP_BASE}/${accountId}/locations`)
+            url.searchParams.set('readMask', 'name,title,phoneNumbers,websiteUri,storefrontAddress,categories,regularHours,metadata')
+            url.searchParams.set('pageSize', '100')
+            if (nextPageToken) url.searchParams.set('pageToken', nextPageToken)
+
+            const locResp = await fetch(url.toString(), {
+              headers: { Authorization: `Bearer ${token.access_token}` },
+            })
+            if (!locResp.ok) {
+              console.error(`[gmb-actions] Locations API ${locResp.status} for ${accountId}`)
+              break
+            }
+            const locBody = await locResp.json()
+            const locations = locBody.locations || []
+
+            for (const loc of locations) {
+              const locationId = loc.name?.split('/').pop() || null
+              const address = formatAddress(loc.storefrontAddress)
+              const hours = formatHours(loc.regularHours)
+
+              allLocations.push({
+                location_name: loc.title || 'Sans nom',
+                place_id: loc.metadata?.placeId || null,
+                address,
+                phone: loc.phoneNumbers?.primaryPhone || null,
+                website: loc.websiteUri || null,
+                category: loc.categories?.primaryCategory?.displayName || null,
+                hours,
+                attributes: { google_location_name: loc.name, account_name: accountId },
+                _location_id: locationId,
+              })
+            }
+            nextPageToken = locBody.nextPageToken
+          } while (nextPageToken)
+        }
+
+        // 2. Upsert into gmb_locations
+        let imported = 0
+        for (const loc of allLocations) {
+          const { _location_id, ...insertData } = loc
+
+          // Check if already exists by place_id or location_name + user_id
+          let existingId: string | null = null
+          if (insertData.place_id) {
+            const { data: existing } = await sb.from('gmb_locations')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('place_id', insertData.place_id)
+              .limit(1)
+            if (existing?.length) existingId = existing[0].id
+          }
+          if (!existingId) {
+            const { data: existing } = await sb.from('gmb_locations')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('location_name', insertData.location_name)
+              .limit(1)
+            if (existing?.length) existingId = existing[0].id
+          }
+
+          if (existingId) {
+            await sb.from('gmb_locations').update({
+              ...insertData,
+              updated_at: new Date().toISOString(),
+            }).eq('id', existingId)
+          } else {
+            await sb.from('gmb_locations').insert({
+              ...insertData,
+              user_id: user.id,
+              tracked_site_id,
+            })
+            imported++
+          }
+        }
+
+        // 3. Update google_connections with first account/location IDs
+        if (accounts.length > 0 && allLocations.length > 0) {
+          const firstAccountId = accounts[0].name?.replace('accounts/', '')
+          const firstLocationId = allLocations[0]._location_id
+          await sb.from('google_connections')
+            .update({ gmb_account_id: firstAccountId, gmb_location_id: firstLocationId })
+            .eq('user_id', user.id)
+            .like('google_email', 'gbp:%')
+        }
+
+        result = {
+          locations: allLocations.map(l => ({
+            location_name: l.location_name,
+            place_id: l.place_id,
+            address: l.address,
+            category: l.category,
+          })),
+          total: allLocations.length,
+          imported,
+          message: `${allLocations.length} location(s) found, ${imported} new imported.`,
+        }
+        break
+      }
+
       case 'get-performance':
         result = token ? await getPerformanceReal(token, params) : getPerformanceSimulated()
         break
@@ -474,8 +600,8 @@ try {
         // Posts API not yet in GBP v1 — keep simulated
         result = {
           data: [
-            { id: '1', post_type: 'STANDARD', summary: '🎉 Nouvelle collection printemps !', status: 'published', published_at: '2026-03-15T09:00:00Z' },
-            { id: '2', post_type: 'EVENT', summary: '📅 Journée portes ouvertes le 22 mars.', status: 'published', published_at: '2026-03-10T10:00:00Z' },
+            { id: '1', post_type: 'STANDARD', summary: 'Nouvelle collection printemps !', status: 'published', published_at: '2026-03-15T09:00:00Z' },
+            { id: '2', post_type: 'EVENT', summary: 'Journee portes ouvertes le 22 mars.', status: 'published', published_at: '2026-03-10T10:00:00Z' },
           ],
           simulated: true,
         }
