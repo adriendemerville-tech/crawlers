@@ -56,6 +56,7 @@ interface AutopilotConfig {
   cooldown_hours: number;
   config_id: string;
   force_iktracker_article: boolean;
+  force_content_cycle: boolean;
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -161,7 +162,7 @@ export function ParmenionTargetPanel({
   const fetchAutopilotConfig = useCallback(async () => {
     const { data } = await supabase
       .from('autopilot_configs')
-      .select('id, tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, cooldown_hours, force_iktracker_article, tracked_sites!inner(domain)')
+      .select('id, tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, cooldown_hours, force_iktracker_article, force_content_cycle, tracked_sites!inner(domain)')
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(10);
@@ -184,6 +185,7 @@ export function ParmenionTargetPanel({
         cooldown_hours: cd,
         config_id: (match as any).id,
         force_iktracker_article: (match as any).force_iktracker_article ?? false,
+        force_content_cycle: (match as any).force_content_cycle ?? false,
       });
       setCooldownInput(String(cd));
     }
@@ -359,6 +361,31 @@ export function ParmenionTargetPanel({
               {isMobile ? 'Art' : (autopilotConfig?.force_iktracker_article ? '📝 Art:ON' : 'Article')}
             </Button>
           )}
+          <Button
+            variant={autopilotConfig?.force_content_cycle ? 'default' : 'outline'}
+            size="sm"
+            className={cn("gap-1.5 shrink-0", autopilotConfig?.force_content_cycle && "bg-violet-500 hover:bg-violet-600 text-white")}
+            disabled={!autopilotConfig?.config_id}
+            onClick={async () => {
+              const newVal = !autopilotConfig?.force_content_cycle;
+              const { error } = await supabase
+                .from('autopilot_configs')
+                .update({ force_content_cycle: newVal } as any)
+                .eq('id', autopilotConfig!.config_id);
+              if (!error) {
+                setAutopilotConfig(prev => prev ? { ...prev, force_content_cycle: newVal } : prev);
+                toast({
+                  title: newVal ? 'Priorité contenu activée' : 'Priorité contenu désactivée',
+                  description: newVal 
+                    ? `Le stratège priorisera la création de landing pages et articles pour ${targetLabel}.`
+                    : 'Le stratège équilibrera tech et contenu normalement.',
+                });
+              }
+            }}
+          >
+            <FileText className="h-4 w-4" />
+            {isMobile ? 'Prio' : (autopilotConfig?.force_content_cycle ? 'Contenu:ON' : 'Prio contenu')}
+          </Button>
           <Button variant="ghost" size="icon" onClick={fetchLogs} className="shrink-0 h-8 w-8">
             <RefreshCw className="h-4 w-4" />
           </Button>

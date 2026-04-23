@@ -179,10 +179,14 @@ interface ImageRecommendation {
   reasoning: string;
 }
 
+type TaskUrgency = 'critical' | 'high' | 'medium' | 'low';
+
 interface StrategicTask {
   id: string;
   action_type: ActionType;
   priority: number; // 0-100
+  urgency: TaskUrgency;
+  executor_function: string; // exact edge function for deterministic routing
   title: string;
   description: string;
   affected_urls: string[];
@@ -193,6 +197,32 @@ interface StrategicTask {
   estimated_impact: 'high' | 'medium' | 'low';
   metadata?: Record<string, any>;
   image_recommendation?: ImageRecommendation;
+}
+
+// Content-creation action types that get boosted when content_priority_mode is ON
+const CONTENT_PRIORITY_ACTIONS: ActionType[] = [
+  'create_content', 'rewrite_content', 'publish_draft', 'improve_eeat',
+  'optimize_keyword_placement',
+];
+
+/** Map execution_mode + action_type to the exact function to call */
+function resolveExecutorFn(task: StrategicTask, isIktracker: boolean): string {
+  if (task.execution_mode === 'content_architect') return 'content-architecture-advisor';
+  if (task.execution_mode === 'code_architect') return 'generate-corrective-code';
+  if (task.action_type === 'add_internal_link' || task.action_type === 'remove_internal_link') {
+    return isIktracker ? 'iktracker-actions' : 'cms-push-code';
+  }
+  if (task.action_type === 'fix_redirect_chain') return 'cms-push-redirect';
+  if (task.action_type === 'publish_draft') return isIktracker ? 'iktracker-actions' : 'cms-push-draft';
+  return isIktracker ? 'iktracker-actions' : 'cms-push-code';
+}
+
+/** Derive urgency from impact + severity */
+function deriveUrgency(impact: 'high' | 'medium' | 'low', isDestructive: boolean): TaskUrgency {
+  if (impact === 'high' && !isDestructive) return 'critical';
+  if (impact === 'high') return 'high';
+  if (impact === 'medium') return 'medium';
+  return 'low';
 }
 
 interface ConflictResolution {
@@ -361,7 +391,7 @@ try {
       return jsonError('Unauthorized', 401);
     }
 
-    const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget } = await req.json();
+    const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget, content_priority_mode = false, is_iktracker = false } = await req.json();
     if (!tracked_site_id || !domain) {
       return jsonError('tracked_site_id and domain required', 400);
     }
@@ -821,6 +851,9 @@ try {
           const guessedPageType = task.action_type === 'create_content' ? 'article' : 'article';
           task.image_recommendation = computeImageRecommendation(guessedPageType, null, sectorForImages, lang);
         }
+        // Set defaults for executor fields (will be refined in scoring phase)
+        task.urgency = task.urgency || 'medium';
+        task.executor_function = task.executor_function || '';
         rawTasks.push(task);
         taskCounter++;
       }
@@ -884,10 +917,19 @@ try {
       const urlSpiralMax = Math.max(0, ...task.affected_urls.map((u: string) => spiralUrlScoreMap.get(u) || 0));
       if (urlSpiralMax >= 60) spiralBoost *= 1.2;
 
-      task.priority = Math.round(sevWeight * catWeight * depthBoost * qualityBoost * spiralBoost * 10);
+      // Content priority mode: boost content creation/modification tasks
+      let contentPriorityBoost = 1.0;
+      if (content_priority_mode && CONTENT_PRIORITY_ACTIONS.includes(task.action_type as ActionType)) {
+        contentPriorityBoost = 1.8; // Strong boost to push content tasks to top
+      }
+
+      task.priority = Math.round(sevWeight * catWeight * depthBoost * qualityBoost * spiralBoost * contentPriorityBoost * 10);
+      task.urgency = deriveUrgency(task.estimated_impact, task.is_destructive);
+      task.executor_function = resolveExecutorFn(task, is_iktracker);
       if (!task.metadata) task.metadata = {};
       task.metadata.spiral_phase = spiralPhase;
       task.metadata.spiral_score_avg = avgSpiralScore;
+      task.metadata.content_priority_mode = content_priority_mode;
     }
 
     rawTasks.sort((a, b) => b.priority - a.priority);
@@ -1049,6 +1091,8 @@ try {
         successful_past: feedbackAnalysis.successful.length,
         failed_past: feedbackAnalysis.failed.length,
         rollback_candidates: feedbackAnalysis.to_rollback.length,
+        content_priority_mode: content_priority_mode,
+        spiral_phase: spiralPhase,
         breakdown: {
           editorial: editorial_tasks.length,
           code: code_tasks.length,
