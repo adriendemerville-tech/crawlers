@@ -270,13 +270,18 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
         <div className="border-t border-border/40 px-2 py-2 space-y-0.5">
           {bottomItems.map(renderItem)}
 
-          <button
-            onClick={() => onTabChange('tracking-api')}
+          <a
+            href="/app/console?tab=tracking"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+              e.preventDefault();
+              onTabChange('tracking-api');
+            }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
           >
             <Network className="h-4 w-4 shrink-0" />
             <span>API</span>
-          </button>
+          </a>
         </div>
       )}
     </aside>
