@@ -44,9 +44,9 @@ export function usePageContent(pageKey: string, defaults: PageContent = {}): {
           .eq('locale', language)
           .maybeSingle();
 
-        if (!cancelled && !error && data?.content) {
-          // Merge DB values over defaults so missing keys still have fallbacks
-          setContent(prev => ({ ...prev, ...(data.content as PageContent) }));
+        const row = data as any;
+        if (!cancelled && !error && row?.content) {
+          setContent(prev => ({ ...prev, ...(row.content as PageContent) }));
         }
       } catch {
         // Silently fall back to defaults
