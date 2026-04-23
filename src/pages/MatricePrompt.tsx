@@ -27,6 +27,7 @@ import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScori
 import { MatriceProgressTracker, MatriceErrorCard } from '@/components/Matrice';
 import { useMatriceProgress } from '@/hooks/useMatriceProgress';
 import { seedsForStandardAudit, seedsForBenchmark, makePending, makeRunning, makeDone, makeError } from '@/utils/matrice/matriceCallEvents';
+import { streamAuditMatrice } from '@/utils/matrice/matriceSseClient';
 import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
 
 /* ------------------------------------------------------------------ */
