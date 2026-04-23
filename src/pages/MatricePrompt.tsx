@@ -823,14 +823,23 @@ export default function MatricePrompt() {
       }
 
       setResults(auditResults);
+      try { sessionStorage.removeItem('rapport_matrice_results_partial'); } catch { /* noop */ }
       toast.success(`Analyse terminée — Score global : ${crawlersGlobal}/100`);
       window.dispatchEvent(new CustomEvent('expert-audit-complete', { detail: { source: 'matrice', url, score: crawlersGlobal } }));
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de l\'analyse');
     } finally {
+      sseAbortRef.current = null;
       setAnalyzing(false);
     }
   };
+
+  /* Sprint 6 — Cancel an in-flight SSE audit */
+  const handleCancelAnalyze = useCallback(() => {
+    if (sseAbortRef.current) {
+      sseAbortRef.current.abort();
+    }
+  }, []);
 
   /* --- Report --- */
   const handleOpenReport = () => {
