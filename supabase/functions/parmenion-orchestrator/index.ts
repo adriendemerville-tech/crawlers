@@ -343,6 +343,7 @@ try {
             task_budget: 8,
             content_priority_mode: forceContent,
             is_iktracker: isIktracker,
+            caller_user_id: authUserId || bodyUserId || null,
           }),
         });
 
