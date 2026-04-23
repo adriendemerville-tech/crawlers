@@ -7,8 +7,20 @@
 /** IKtracker blog API base URL (single source of truth) */
 export const IKTRACKER_BASE_URL = 'https://yarjaudctshlxkatqgeb.supabase.co/functions/v1/blog-api';
 
-/** Dictadevi API base URL (single source of truth) */
-export const DICTADEVI_BASE_URL = 'https://dictadevi.io/api';
+/** Dictadevi API base URL (REST custom v1, single source of truth). */
+export const DICTADEVI_BASE_URL = 'https://dictadevi.io/api/v1';
+
+/** Public sitemap & GEO resources exposed by Dictadevi (no auth). */
+export const DICTADEVI_PUBLIC_RESOURCES = {
+  sitemap: 'https://dictadevi.io/sitemap.xml',
+  sitemap_blog: 'https://dictadevi.io/sitemap-blog.xml',
+  sitemap_static: 'https://dictadevi.io/sitemap-static.xml',
+  sitemap_llm: 'https://dictadevi.io/sitemap-llm.xml',
+  llms_txt: 'https://dictadevi.io/llms.txt',
+  llms_full: 'https://dictadevi.io/llms-full.txt',
+  knowledge_json: 'https://dictadevi.io/knowledge.json',
+  rss: 'https://dictadevi.io/rss.xml',
+} as const;
 
 /** Get IKtracker API key from environment */
 export function getIktrackerApiKey(): string | undefined {
