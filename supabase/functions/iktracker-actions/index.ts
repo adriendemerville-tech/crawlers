@@ -551,7 +551,8 @@ try {
       const body = await req.json()
       action = body.action
       const { action: _, ...rest } = body
-      params = rest
+      // Support both flat params and nested { params: { ... } }
+      params = rest.params && typeof rest.params === 'object' ? { ...rest, ...rest.params } : rest
     }
 
     if (!action) {
