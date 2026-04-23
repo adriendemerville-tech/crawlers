@@ -136,11 +136,37 @@ export async function executeAuditPlan(
     fnResultCache.set(fn, standardData);
 
     // If custom prompts exist, make additional targeted calls
+    // Each (prompt, provider) tuple = one separate call so:
+    //  - audit multi-prompts → N appels (1 par prompt)
+    //  - benchmark → N×P appels (1 par prompt × provider ciblé)
     if (hasCustomPrompt) {
       for (const route of routes) {
-        if (route.customPrompt && fn === 'check-llm') {
-          // Hydrate placeholders with the actual URL/brand before sending
-          const hydratedPrompt = hydratePrompt(route.customPrompt, url);
+        if (!route.customPrompt || fn !== 'check-llm') continue;
+        const hydratedPrompt = hydratePrompt(route.customPrompt, url);
+
+        // Determine providers to query for this prompt
+        const providers: (string | undefined)[] =
+          route.mode === 'benchmark' && route.targetProviders && route.targetProviders.length > 0
+            ? route.targetProviders
+            : [route.targetProvider]; // single provider OR undefined → check-llm queries all
+
+        if (route.mode === 'benchmark') {
+          // Benchmark: one call per (prompt × provider), aggregate
+          const perProviderResults: Record<string, any> = {};
+          for (const prov of providers) {
+            const customData = await callFunction('check-llm', url, {
+              customPrompt: hydratedPrompt,
+              targetProvider: prov,
+            });
+            if (prov) perProviderResults[prov] = customData;
+            await delay(300);
+          }
+          fnResultCache.set(`${fn}:custom:${route.criterionId}`, {
+            mode: 'benchmark',
+            providers: perProviderResults,
+          });
+        } else {
+          // Standard: 1 call (with optional single provider filter)
           const customData = await callFunction('check-llm', url, {
             customPrompt: hydratedPrompt,
             targetProvider: route.targetProvider,
