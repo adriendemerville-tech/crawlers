@@ -53,6 +53,7 @@ export default function SiteCrawl() {
     totalEstimatedPages,
     isDetectingPages,
     detectionDone,
+    preScanDone,
     discoveredUrls,
     isReportOpen, setIsReportOpen,
     sitemapTree, sitemapPages,
@@ -82,6 +83,9 @@ export default function SiteCrawl() {
     viewCrawl, resetViewedCrawl,
     addSelector, removeSelector,
   } = engine;
+
+  // Ready to show slider + launch = either pre-scan (Phase 0) or deep detect (Phase 1) completed
+  const readyToLaunch = preScanDone || detectionDone;
 
   // ── Report data (kept here since it depends on many pieces) ──
   const siteCrawlReportData = useMemo((): SiteCrawlReportData | null => {
@@ -308,7 +312,7 @@ export default function SiteCrawl() {
           {/* Crawl Form */}
           <Card className="mb-6">
             <CardContent className="pt-6">
-              <form onSubmit={detectionDone ? handleSubmit : handleDetect} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -320,12 +324,15 @@ export default function SiteCrawl() {
                       disabled={isLoading}
                     />
                   </div>
-                  {!detectionDone ? (
-                    <Button type="submit" disabled={isLoading || !url || isDetectingPages} className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold px-6 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 hover:-translate-y-0.5">
-                      {isDetectingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                      {isDetectingPages ? t.detecting : t.detectBtn}
+                  {/* Pre-scan loading indicator (Phase 0 in progress) */}
+                  {isDetectingPages && !readyToLaunch && (
+                    <Button type="button" disabled className="gap-2 px-6">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t.detecting}
                     </Button>
-                  ) : (
+                  )}
+                  {/* Launch button (visible once Phase 0 or Phase 1 is done) */}
+                  {readyToLaunch && (
                     <Button
                       type="submit"
                       disabled={isLoading}
@@ -333,6 +340,13 @@ export default function SiteCrawl() {
                     >
                       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
                       {isLoading ? t.crawling : t.launchBtn}
+                    </Button>
+                  )}
+                  {/* Fallback: no URL entered yet */}
+                  {!isDetectingPages && !readyToLaunch && (
+                    <Button type="button" disabled className="gap-2 px-6">
+                      <Search className="h-4 w-4" />
+                      {t.launchBtn}
                     </Button>
                   )}
                 </div>
@@ -351,11 +365,36 @@ export default function SiteCrawl() {
                         Total: ~{totalEstimatedPages.toLocaleString()} {t.pages}
                       </span>
                     )}
+                    {/* Deep detect button (Phase 1) — optional, appears after Phase 0 */}
+                    {readyToLaunch && !detectionDone && !isDetectingPages && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDetect}
+                        className="gap-1.5 text-xs text-muted-foreground hover:text-foreground ml-auto h-6 px-2"
+                      >
+                        <Search className="w-3 h-3" />
+                        {language === 'fr' ? 'Scan approfondi' : language === 'es' ? 'Escaneo profundo' : 'Deep scan'}
+                      </Button>
+                    )}
+                    {isDetectingPages && readyToLaunch && (
+                      <span className="flex items-center gap-1 ml-auto text-xs text-violet-400">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        {language === 'fr' ? 'Scan approfondi…' : 'Deep scanning…'}
+                      </span>
+                    )}
+                    {detectionDone && (
+                      <span className="flex items-center gap-1 ml-auto text-xs text-emerald-500">
+                        <CheckCircle2 className="w-3 h-3" />
+                        {language === 'fr' ? 'Scan complet' : 'Full scan done'}
+                      </span>
+                    )}
                   </div>
                 )}
 
-                {/* Slider */}
-                {detectionDone && (
+                {/* Slider — visible as soon as Phase 0 (pre-scan) completes */}
+                {readyToLaunch && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{t.pagesToAnalyze}</span>
@@ -395,7 +434,7 @@ export default function SiteCrawl() {
                 )}
 
                 {/* Directory filters */}
-                {detectionDone && sitemapTree.length > 0 && (
+                {readyToLaunch && sitemapTree.length > 0 && (
                   <div className="space-y-3 p-3 rounded-lg border bg-muted/30">
                     <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       <Filter className="w-3 h-3" />

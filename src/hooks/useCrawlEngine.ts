@@ -57,6 +57,7 @@ export function useCrawlEngine() {
   const [totalEstimatedPages, setTotalEstimatedPages] = useState<number | null>(null);
   const [isDetectingPages, setIsDetectingPages] = useState(false);
   const [detectionDone, setDetectionDone] = useState(false);
+  const [preScanDone, setPreScanDone] = useState(false);
   const [discoveredUrls, setDiscoveredUrls] = useState<string[]>([]);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
@@ -272,6 +273,7 @@ export function useCrawlEngine() {
     setSitemapPagesCount(null);
     setTotalEstimatedPages(null);
     setDetectionDone(false);
+    setPreScanDone(false);
     setDiscoveredUrls([]);
     setSitemapTree([]);
     setSitemapPages([]);
@@ -344,6 +346,9 @@ export function useCrawlEngine() {
             setMaxPages(capMax);
           }
         }
+
+        // Phase 0 complete: unlock slider + launch button
+        if (!cancelled) setPreScanDone(true);
       } catch {
         // Silent
       } finally {
@@ -801,6 +806,7 @@ export function useCrawlEngine() {
     totalEstimatedPages,
     isDetectingPages,
     detectionDone,
+    preScanDone,
     discoveredUrls,
     isReportOpen, setIsReportOpen,
 
