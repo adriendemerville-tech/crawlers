@@ -789,6 +789,54 @@ export default function MatricePrompt() {
       }
 
       setResults(auditResults);
+
+      // Sprint 7 — auto-save into matrix_audits (history)
+      if (user) {
+        const nativeForSave: MatrixResult[] = auditResults.map((r: any, i: number) => {
+          const parsed = r.parsed_score ?? r.crawlers_score ?? null;
+          const crawlers = r.crawlers_score ?? null;
+          const matchType = parsed != null && crawlers != null && parsed !== crawlers ? 'partial' : 'exact';
+          const cat = String(r.axe || 'general').toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
+          const native: MatrixResult = {
+            criterionId: r.dbId || r.id || `row-${i}`,
+            criterionTitle: r.prompt || `Critère ${i + 1}`,
+            matchType,
+            parsedScore: typeof parsed === 'number' ? parsed : null,
+            parsedResponse: r.parsed_raw?.justification || r.parsed_raw?.seo_justification || null,
+            crawlersScore: typeof crawlers === 'number' ? crawlers : null,
+            crawlersData: r.raw_data ?? null,
+            sourceFunction: `cat-${cat}`,
+            confidence: 1,
+          };
+          (native as any).criterionCategory = cat;
+          (native as any).criterionWeight = r.poids ?? 1;
+          return native;
+        });
+        const pivotSnapshot = buildPivot(nativeForSave);
+        const duration = auditStartRef.current ? Date.now() - auditStartRef.current : null;
+        const activeBatch = batches.find(b => b.batch_id === activeBatchId);
+        const label = activeBatch
+          ? `${activeBatch.batch_label} — ${new URL(url.startsWith('http') ? url : `https://${url}`).hostname}`
+          : `Audit du ${new Date().toLocaleString('fr-FR')}`;
+        void saveAudit({
+          label,
+          audit_type: activeMatriceType === 'eeat' ? 'eeat' : 'rapport',
+          status: 'completed',
+          global_score: crawlersGlobal,
+          duration_ms: duration,
+          results: nativeForSave,
+          pivot_snapshot: pivotSnapshot,
+        }).then(id => {
+          if (id) {
+            console.log('[matrix_audits] saved', id);
+            // Clear partial buffer once committed
+            sessionStorage.removeItem(PARTIAL_KEY);
+          }
+        });
+      }
+
       toast.success(`Analyse terminée — Score global : ${crawlersGlobal}/100`);
       window.dispatchEvent(new CustomEvent('expert-audit-complete', { detail: { source: 'matrice', url, score: crawlersGlobal } }));
     } catch (err: any) {
