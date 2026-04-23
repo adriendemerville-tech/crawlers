@@ -785,6 +785,33 @@ export default function MatricePrompt() {
       parsedWeightedScore: tw > 0 ? Math.round(results.reduce((s: number, r: any) => s + (r.parsed_score ?? r.crawlers_score) * (useWeights ? r.poids : 1), 0) / tw) : 0,
     };
     sessionStorage.setItem('rapport_matrice_data', JSON.stringify(reportData));
+
+    // Sprint 4 — persist enriched MatrixResult[] for the interactive Pivot+Cube view
+    const nativeResults: MatrixResult[] = results.map((r: any, i: number) => {
+      const parsed = r.parsed_score ?? r.crawlers_score ?? null;
+      const crawlers = r.crawlers_score ?? null;
+      const matchType = parsed != null && crawlers != null && parsed !== crawlers ? 'partial' : 'exact';
+      const cat = (r.axe || 'general')
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
+      const native = {
+        criterionId: r.dbId || r.id || `row-${i}`,
+        criterionTitle: r.prompt || `Critère ${i + 1}`,
+        matchType,
+        parsedScore: typeof parsed === 'number' ? parsed : null,
+        parsedResponse: r.parsed_raw?.justification || r.parsed_raw?.seo_justification || null,
+        crawlersScore: typeof crawlers === 'number' ? crawlers : null,
+        crawlersData: r.raw_data ?? null,
+        sourceFunction: `cat-${cat}`,
+        confidence: 1,
+      } as MatrixResult;
+      (native as any).criterionCategory = cat;
+      (native as any).criterionWeight = r.poids ?? 1;
+      return native;
+    });
+    sessionStorage.setItem('rapport_matrice_results_native', JSON.stringify(nativeResults));
+
     window.open('/app/rapport/matrice', '_blank');
   };
 
