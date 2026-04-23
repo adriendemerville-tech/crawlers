@@ -914,10 +914,19 @@ try {
       const urlSpiralMax = Math.max(0, ...task.affected_urls.map((u: string) => spiralUrlScoreMap.get(u) || 0));
       if (urlSpiralMax >= 60) spiralBoost *= 1.2;
 
-      task.priority = Math.round(sevWeight * catWeight * depthBoost * qualityBoost * spiralBoost * 10);
+      // Content priority mode: boost content creation/modification tasks
+      let contentPriorityBoost = 1.0;
+      if (content_priority_mode && CONTENT_PRIORITY_ACTIONS.includes(task.action_type as ActionType)) {
+        contentPriorityBoost = 1.8; // Strong boost to push content tasks to top
+      }
+
+      task.priority = Math.round(sevWeight * catWeight * depthBoost * qualityBoost * spiralBoost * contentPriorityBoost * 10);
+      task.urgency = deriveUrgency(task.estimated_impact, task.is_destructive);
+      task.executor_function = resolveExecutorFn(task, is_iktracker);
       if (!task.metadata) task.metadata = {};
       task.metadata.spiral_phase = spiralPhase;
       task.metadata.spiral_score_avg = avgSpiralScore;
+      task.metadata.content_priority_mode = content_priority_mode;
     }
 
     rawTasks.sort((a, b) => b.priority - a.priority);
