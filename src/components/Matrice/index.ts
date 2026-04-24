@@ -10,3 +10,5 @@ export { MatriceVoxelDetail } from './MatriceVoxelDetail';
 export type { MatriceVoxelDetailProps } from './MatriceVoxelDetail';
 export { MatriceDeltaView } from './MatriceDeltaView';
 export type { MatriceDeltaViewProps } from './MatriceDeltaView';
+export { MatricePreviewCanvas } from './MatricePreviewCanvas';
+export type { MatricePreviewCanvasProps, MatricePreviewCriterion } from './MatricePreviewCanvas';
