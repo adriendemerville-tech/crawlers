@@ -2424,7 +2424,31 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const topEeat   = extractTopPriorities('eeat', eeatFindings);
         const topCocoon = extractTopPriorities('cocoon', cocoonFindings);
 
-        // Workbench snapshot (best effort — failure is non-fatal)
+        // ─── Step A: PUSH findings to architect_workbench BEFORE building the plan ───
+        // The consolidated plan reads from the workbench; if Marina did not write
+        // first, fresh reports would render an empty conclusion. Non-fatal on error.
+        try {
+          await writeMarinaFindingsToWorkbench(
+            sb,
+            [
+              { section: 'seo',      findings: seoFindings },
+              { section: 'geo',      findings: geoFindings },
+              { section: 'keywords', findings: kwFindings },
+              { section: 'eeat',     findings: eeatFindings },
+              { section: 'cocoon',   findings: cocoonFindings },
+            ],
+            {
+              domain,
+              url,
+              userId: parentJob.user_id,
+              trackedSiteId: trackedSiteId || null,
+            },
+          );
+        } catch (wbWriteErr) {
+          console.warn('[Marina] Workbench write failed (non-fatal):', wbWriteErr);
+        }
+
+        // ─── Step B: now read the workbench (Marina findings included) ───
         let workbenchTasks: WorkbenchTask[] = [];
         try {
           const { data: wb } = await sb
