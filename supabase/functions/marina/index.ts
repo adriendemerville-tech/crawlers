@@ -2379,11 +2379,82 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       try {
         console.log(`[Marina] Phase 3 Step 4: Generating section HTMLs...`);
         
-        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url, crawlSnapshot);
+        // ─── Top-3 priorities per section + consolidated plan ───
+        const seoFindings: RawFinding[] = (expertData?.recommendations || []).map((r: any) => ({
+          id: r.id, title: r.title || r.label || '', description: r.description || r.detail || '',
+          priority: r.priority || r.severity, category: r.category, fixes: r.fixes,
+        }));
+        const roadmap = strategicData?.executive_roadmap || strategicData?.strategic_roadmap || [];
+        const geoFindings: RawFinding[] = roadmap
+          .filter((it: any) => !/keyword|mots?-cl|content gap/i.test(`${it.category || ''} ${it.title || ''}`))
+          .map((it: any) => ({
+            title: it.prescriptive_action || it.title || it.action_concrete || '',
+            description: it.description || it.expected_roi || '',
+            priority: it.priority, category: it.category,
+          }));
+        const kwFindings: RawFinding[] = [
+          ...(strategicData?.keyword_positioning?.content_gaps || []).map((g: any) => ({
+            title: `Content gap : ${g.keyword || g.term || g}`,
+            description: `Volume ${g.volume || '-'} · ${g.priority || g.importance || ''}`,
+            priority: (g.priority || g.importance || 'important'),
+            category: 'keywords',
+          })),
+          ...roadmap.filter((it: any) => /keyword|mots?-cl/i.test(`${it.category || ''} ${it.title || ''}`))
+            .map((it: any) => ({
+              title: it.prescriptive_action || it.title || '',
+              description: it.description || '', priority: it.priority, category: 'keywords',
+            })),
+        ];
+        const eeatFindings: RawFinding[] = (expertData?.recommendations || [])
+          .filter((r: any) => /eeat|e-e-a-t|autorit|expertise|trust/i.test(`${r.category || ''} ${r.title || ''}`))
+          .map((r: any) => ({
+            title: r.title || '', description: r.description || '',
+            priority: r.priority, category: 'eeat', fixes: r.fixes,
+          }));
+        const cocoonFindings: RawFinding[] = (cocoonResult?._stratege_recommendations || []).map((r: any) => ({
+          title: r.title || '', description: r.description || '',
+          priority: /1/.test(r.priority || '') ? 'critical' : /2/.test(r.priority || '') ? 'important' : 'suggestion',
+          category: 'cocoon',
+        }));
+
+        const topSeo    = extractTopPriorities('seo', seoFindings);
+        const topGeo    = extractTopPriorities('geo', geoFindings);
+        const topKw     = extractTopPriorities('keywords', kwFindings);
+        const topEeat   = extractTopPriorities('eeat', eeatFindings);
+        const topCocoon = extractTopPriorities('cocoon', cocoonFindings);
+
+        // Workbench snapshot (best effort — failure is non-fatal)
+        let workbenchTasks: WorkbenchTask[] = [];
+        try {
+          const { data: wb } = await sb
+            .from('architect_workbench')
+            .select('id, title, description, severity, finding_category, status, source_type, target_url')
+            .eq('domain', domain)
+            .eq('user_id', parentJob.user_id)
+            .neq('status', 'done')
+            .order('created_at', { ascending: false })
+            .limit(50);
+          workbenchTasks = (wb as WorkbenchTask[]) || [];
+        } catch (wbErr) {
+          console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
+        }
+        const consolidatedPlan = buildConsolidatedActionPlan(
+          workbenchTasks,
+          [topSeo, topGeo, topKw, topEeat, topCocoon],
+          { maxItems: 12 },
+        );
+
+        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url, crawlSnapshot, renderTopPrioritiesHTML(topSeo));
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
-        const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain, llmVisibilityData);
-        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain);
+        const strategicHTML = generateStrategicSectionHTML(
+          strategicData, detectedLang, domain, llmVisibilityData,
+          renderTopPrioritiesHTML(topGeo),
+          renderTopPrioritiesHTML(topKw),
+          renderTopPrioritiesHTML(topEeat),
+        );
+        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
+        const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan);
 
         const tempPrefix = `marina/tmp/${jobId}`;
         const storageUploads = [
@@ -2406,11 +2477,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         await updateProgress(90, 'generating_report');
 
         html = compileMarinaReport(
-          { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML, indexation: indexationHTML || undefined },
+          { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML, indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML },
           detectedLang, domain, url, marinaBranding,
         );
 
-        console.log(`[Marina] ✅ Compiled report from 4 sections`);
+        console.log(`[Marina] ✅ Compiled report from 4 sections + consolidated plan`);
+
 
         Promise.allSettled(
           storageUploads.map(({ path }) => sb.storage.from('shared-reports').remove([path]))
