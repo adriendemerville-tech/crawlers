@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
-  Shield, Code2, ChevronDown, Search, Sparkles,
+  Shield, Code2, ChevronDown, Search, Sparkles, Database,
 } from 'lucide-react';
 
 interface TrackedSite {
@@ -103,6 +103,9 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true },
     ] : []),
     { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true },
+    ...(isProUser ? [
+      { value: 'gsc-bigquery', label: 'GSC BQ', icon: Database, hideOnMobile: true, beta: true },
+    ] : []),
     { value: 'gmb', label: 'GMB', icon: Store },
     { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true },
     ...(!isProUser ? [
