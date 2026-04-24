@@ -1432,6 +1432,7 @@ function compileMarinaReport(
       <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
       ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
+      ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
     </div>
 
     <!-- Section 1: Crawl -->
@@ -1456,6 +1457,12 @@ function compileMarinaReport(
     <div class="marina-separator"></div>
     <!-- Section 5: Indexation Health -->
     ${extractBodyContent(sectionHTMLs.indexation, { stripHeader: true, stripFooter: true })}
+    ` : ''}
+
+    ${sectionHTMLs.consolidatedPlan ? `
+    <div class="marina-separator"></div>
+    <!-- Final Section: Consolidated Action Plan -->
+    ${sectionHTMLs.consolidatedPlan}
     ` : ''}
 
     ${ctaHtml}
