@@ -980,7 +980,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 }
 
 // ─── Section 2: Technical SEO Audit (standalone HTML) ───
-function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string): string {
+function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = ''): string {
   const tr = getTranslations(lang);
   const techScore = expertSeoData?.totalScore || 0;
   const techMaxScore = expertSeoData?.maxScore || 200;
@@ -990,6 +990,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
+      ${topHtml}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(techScore, techMaxScore)}">${techScore} / ${techMaxScore}</div>
       </div>
@@ -1022,7 +1023,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any): string {
+function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = ''): string {
   const tr = getTranslations(lang);
   const stratScore = strategicData?.overallScore || 0;
   const stratIntro = strategicData?.introduction || {};
@@ -1133,7 +1134,7 @@ function generateIndexationSectionHTML(indexationData: any[], lang: string, doma
 }
 
 // ─── Section 4: Cocoon Analysis (standalone HTML) ───
-function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string): string {
+function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string, topHtml = ''): string {
   const tr = getTranslations(lang);
   const cocoonStats = cocoonData?.stats || null;
   const cocoonClusters = cocoonData?.cluster_summary || cocoonData?.clusters || null;
@@ -1149,6 +1150,7 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
+      ${topHtml}
       ${cocoonStats ? `
       <div class="stat-grid">
         <div class="stat-card"><div class="value">${cocoonStats.nodes_count || 0}</div><div class="label">Pages analysées</div></div>
