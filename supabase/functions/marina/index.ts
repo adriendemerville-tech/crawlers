@@ -8,6 +8,7 @@ import {
   type RawFinding,
   type WorkbenchTask,
 } from '../_shared/topPriorities.ts';
+import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
