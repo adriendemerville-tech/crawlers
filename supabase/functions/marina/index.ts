@@ -1049,6 +1049,9 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
+      ${topHtmlGeo}
+      ${topHtmlEeat}
+      ${topHtmlKw}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">${stratScore} / 100</div>
       </div>
