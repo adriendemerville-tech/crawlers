@@ -24,7 +24,7 @@ import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
 import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScoringMethod, detectScoringSheet, SCORING_REGISTRY } from '@/utils/matrice/scoringDetector';
-import { MatriceProgressTracker, MatriceErrorCard } from '@/components/Matrice';
+import { MatriceProgressTracker, MatriceErrorCard, MatricePreviewCanvas } from '@/components/Matrice';
 import { useMatriceProgress } from '@/hooks/useMatriceProgress';
 import { seedsForStandardAudit, seedsForBenchmark, makePending, makeRunning, makeDone, makeError } from '@/utils/matrice/matriceCallEvents';
 import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
@@ -1211,6 +1211,21 @@ export default function MatricePrompt() {
                 total={progress.total}
                 currentLabel={progress.currentLabel}
                 items={progress.items}
+              />
+            </div>
+          )}
+
+          {/* Pre-audit comprehension preview — visual proof that the source matrix
+              has been parsed and structured. Shown only before any analysis runs. */}
+          {rows.length > 0 && !results && !analyzing && !benchmarkData && (
+            <div className="mb-6">
+              <MatricePreviewCanvas
+                criteria={rows.map((r) => ({
+                  id: r.id,
+                  title: r.prompt,
+                  category: r.axe || 'general',
+                  selected: r.selected,
+                }))}
               />
             </div>
           )}
