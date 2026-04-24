@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Globe, FileText, ListTodo, BarChart3, Plus } from 'lucide-react';
+import { Globe, FileText, ListTodo, BarChart3, Plus, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ParmenionTargetPanel } from './ParmenionTargetPanel';
 import { ParmenionTaskPlan } from './ParmenionTaskPlan';
 import { ParmenionFuncStats } from './ParmenionFuncStats';
 import { ParmenionAddTargetModal } from './ParmenionAddTargetModal';
+import { ParmenionApiKeyManager } from './ParmenionApiKeyManager';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Target {
@@ -48,6 +49,10 @@ export function ParmenionDashboard() {
             <ListTodo className="h-4 w-4" />
             Plan de tâches
           </TabsTrigger>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Key className="h-4 w-4" />
+            Intégrations
+          </TabsTrigger>
           <TabsTrigger value="stats" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             Stats
@@ -83,6 +88,10 @@ export function ParmenionDashboard() {
             <ParmenionTaskPlan key={t.id} domain={t.domain} />
           ))}
         </div>
+      </TabsContent>
+
+      <TabsContent value="integrations" forceMount className="data-[state=inactive]:hidden">
+        <ParmenionApiKeyManager />
       </TabsContent>
 
       <TabsContent value="stats" forceMount className="data-[state=inactive]:hidden">
