@@ -1,4 +1,13 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import {
+  extractTopPriorities,
+  buildConsolidatedActionPlan,
+  renderTopPrioritiesHTML,
+  renderConsolidatedPlanHTML,
+  type SectionTopPriorities,
+  type RawFinding,
+  type WorkbenchTask,
+} from '../_shared/topPriorities.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
@@ -860,7 +869,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
 }
 
 // ─── Section 1: Crawl Report (standalone HTML) ───
-function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any): string {
+function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any, topHtml = ''): string {
   const tr = getTranslations(lang);
   const scores = expertSeoData?.scores || {};
   const rawData = expertSeoData?.rawData || {};
@@ -906,6 +915,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      ${topHtml}
       ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/200</strong>` : ''}</div>` : ''}
       <div class="stat-grid-4">
         <div class="stat-card"><div class="value">${crawlMeta.wordCount}</div><div class="label">Mots</div></div>
@@ -970,7 +980,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 }
 
 // ─── Section 2: Technical SEO Audit (standalone HTML) ───
-function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string): string {
+function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = ''): string {
   const tr = getTranslations(lang);
   const techScore = expertSeoData?.totalScore || 0;
   const techMaxScore = expertSeoData?.maxScore || 200;
@@ -980,6 +990,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
+      ${topHtml}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(techScore, techMaxScore)}">${techScore} / ${techMaxScore}</div>
       </div>
@@ -1012,7 +1023,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any): string {
+function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = ''): string {
   const tr = getTranslations(lang);
   const stratScore = strategicData?.overallScore || 0;
   const stratIntro = strategicData?.introduction || {};
@@ -1038,6 +1049,9 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
+      ${topHtmlGeo}
+      ${topHtmlEeat}
+      ${topHtmlKw}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">${stratScore} / 100</div>
       </div>
@@ -1123,7 +1137,7 @@ function generateIndexationSectionHTML(indexationData: any[], lang: string, doma
 }
 
 // ─── Section 4: Cocoon Analysis (standalone HTML) ───
-function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string): string {
+function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string, topHtml = ''): string {
   const tr = getTranslations(lang);
   const cocoonStats = cocoonData?.stats || null;
   const cocoonClusters = cocoonData?.cluster_summary || cocoonData?.clusters || null;
@@ -1139,6 +1153,7 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
+      ${topHtml}
       ${cocoonStats ? `
       <div class="stat-grid">
         <div class="stat-card"><div class="value">${cocoonStats.nodes_count || 0}</div><div class="label">Pages analysées</div></div>
@@ -1339,7 +1354,7 @@ interface MarinaBranding {
 
 // ─── Compile multiple section HTMLs into one final report ───
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string },
   lang: string,
   domain: string,
   url: string,
@@ -2364,11 +2379,82 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       try {
         console.log(`[Marina] Phase 3 Step 4: Generating section HTMLs...`);
         
-        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url, crawlSnapshot);
+        // ─── Top-3 priorities per section + consolidated plan ───
+        const seoFindings: RawFinding[] = (expertData?.recommendations || []).map((r: any) => ({
+          id: r.id, title: r.title || r.label || '', description: r.description || r.detail || '',
+          priority: r.priority || r.severity, category: r.category, fixes: r.fixes,
+        }));
+        const roadmap = strategicData?.executive_roadmap || strategicData?.strategic_roadmap || [];
+        const geoFindings: RawFinding[] = roadmap
+          .filter((it: any) => !/keyword|mots?-cl|content gap/i.test(`${it.category || ''} ${it.title || ''}`))
+          .map((it: any) => ({
+            title: it.prescriptive_action || it.title || it.action_concrete || '',
+            description: it.description || it.expected_roi || '',
+            priority: it.priority, category: it.category,
+          }));
+        const kwFindings: RawFinding[] = [
+          ...(strategicData?.keyword_positioning?.content_gaps || []).map((g: any) => ({
+            title: `Content gap : ${g.keyword || g.term || g}`,
+            description: `Volume ${g.volume || '-'} · ${g.priority || g.importance || ''}`,
+            priority: (g.priority || g.importance || 'important'),
+            category: 'keywords',
+          })),
+          ...roadmap.filter((it: any) => /keyword|mots?-cl/i.test(`${it.category || ''} ${it.title || ''}`))
+            .map((it: any) => ({
+              title: it.prescriptive_action || it.title || '',
+              description: it.description || '', priority: it.priority, category: 'keywords',
+            })),
+        ];
+        const eeatFindings: RawFinding[] = (expertData?.recommendations || [])
+          .filter((r: any) => /eeat|e-e-a-t|autorit|expertise|trust/i.test(`${r.category || ''} ${r.title || ''}`))
+          .map((r: any) => ({
+            title: r.title || '', description: r.description || '',
+            priority: r.priority, category: 'eeat', fixes: r.fixes,
+          }));
+        const cocoonFindings: RawFinding[] = (cocoonResult?._stratege_recommendations || []).map((r: any) => ({
+          title: r.title || '', description: r.description || '',
+          priority: /1/.test(r.priority || '') ? 'critical' : /2/.test(r.priority || '') ? 'important' : 'suggestion',
+          category: 'cocoon',
+        }));
+
+        const topSeo    = extractTopPriorities('seo', seoFindings);
+        const topGeo    = extractTopPriorities('geo', geoFindings);
+        const topKw     = extractTopPriorities('keywords', kwFindings);
+        const topEeat   = extractTopPriorities('eeat', eeatFindings);
+        const topCocoon = extractTopPriorities('cocoon', cocoonFindings);
+
+        // Workbench snapshot (best effort — failure is non-fatal)
+        let workbenchTasks: WorkbenchTask[] = [];
+        try {
+          const { data: wb } = await sb
+            .from('architect_workbench')
+            .select('id, title, description, severity, finding_category, status, source_type, target_url')
+            .eq('domain', domain)
+            .eq('user_id', parentJob.user_id)
+            .neq('status', 'done')
+            .order('created_at', { ascending: false })
+            .limit(50);
+          workbenchTasks = (wb as WorkbenchTask[]) || [];
+        } catch (wbErr) {
+          console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
+        }
+        const consolidatedPlan = buildConsolidatedActionPlan(
+          workbenchTasks,
+          [topSeo, topGeo, topKw, topEeat, topCocoon],
+          { maxItems: 12 },
+        );
+
+        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url, crawlSnapshot, renderTopPrioritiesHTML(topSeo));
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
-        const strategicHTML = generateStrategicSectionHTML(strategicData, detectedLang, domain, llmVisibilityData);
-        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain);
+        const strategicHTML = generateStrategicSectionHTML(
+          strategicData, detectedLang, domain, llmVisibilityData,
+          renderTopPrioritiesHTML(topGeo),
+          renderTopPrioritiesHTML(topKw),
+          renderTopPrioritiesHTML(topEeat),
+        );
+        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
+        const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan);
 
         const tempPrefix = `marina/tmp/${jobId}`;
         const storageUploads = [
@@ -2391,11 +2477,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         await updateProgress(90, 'generating_report');
 
         html = compileMarinaReport(
-          { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML, indexation: indexationHTML || undefined },
+          { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML, indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML },
           detectedLang, domain, url, marinaBranding,
         );
 
-        console.log(`[Marina] ✅ Compiled report from 4 sections`);
+        console.log(`[Marina] ✅ Compiled report from 4 sections + consolidated plan`);
+
 
         Promise.allSettled(
           storageUploads.map(({ path }) => sb.storage.from('shared-reports').remove([path]))
