@@ -869,7 +869,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
 }
 
 // ─── Section 1: Crawl Report (standalone HTML) ───
-function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any): string {
+function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any, topHtml = ''): string {
   const tr = getTranslations(lang);
   const scores = expertSeoData?.scores || {};
   const rawData = expertSeoData?.rawData || {};
@@ -915,6 +915,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      ${topHtml}
       ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/200</strong>` : ''}</div>` : ''}
       <div class="stat-grid-4">
         <div class="stat-card"><div class="value">${crawlMeta.wordCount}</div><div class="label">Mots</div></div>
