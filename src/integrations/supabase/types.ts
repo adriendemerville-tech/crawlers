@@ -5827,6 +5827,103 @@ export type Database = {
         }
         Relationships: []
       }
+      gsc_bigquery_cache: {
+        Row: {
+          bytes_processed: number | null
+          created_at: string
+          expires_at: string
+          id: string
+          query_hash: string
+          query_kind: string
+          result_payload: Json
+          rows_returned: number | null
+          site_id: string
+        }
+        Insert: {
+          bytes_processed?: number | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          query_hash: string
+          query_kind: string
+          result_payload: Json
+          rows_returned?: number | null
+          site_id: string
+        }
+        Update: {
+          bytes_processed?: number | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          query_hash?: string
+          query_kind?: string
+          result_payload?: Json
+          rows_returned?: number | null
+          site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsc_bigquery_cache_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gsc_bigquery_config: {
+        Row: {
+          created_at: string
+          dataset_id: string
+          enabled: boolean
+          gcp_project_id: string
+          id: string
+          last_verification_error: string | null
+          last_verification_status: string | null
+          last_verified_at: string | null
+          site_id: string
+          table_prefix: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dataset_id: string
+          enabled?: boolean
+          gcp_project_id: string
+          id?: string
+          last_verification_error?: string | null
+          last_verification_status?: string | null
+          last_verified_at?: string | null
+          site_id: string
+          table_prefix?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dataset_id?: string
+          enabled?: boolean
+          gcp_project_id?: string
+          id?: string
+          last_verification_error?: string | null
+          last_verification_status?: string | null
+          last_verified_at?: string | null
+          site_id?: string
+          table_prefix?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsc_bigquery_config_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: true
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gsc_daily_positions: {
         Row: {
           clicks: number | null
