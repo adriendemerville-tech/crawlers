@@ -1354,7 +1354,7 @@ interface MarinaBranding {
 
 // ─── Compile multiple section HTMLs into one final report ───
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string },
   lang: string,
   domain: string,
   url: string,
