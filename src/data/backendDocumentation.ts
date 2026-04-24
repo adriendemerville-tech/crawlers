@@ -497,7 +497,8 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 |----------|------|-------------|
 | \`wpsync\` | ✅ | Synchronisation WordPress |
 | \`drupal-actions\` | ✅ | Bridge CMS Drupal (JSON:API) |
-| \`iktracker-actions\` | ✅ | Bridge IKtracker (CRUD pages/articles) |
+| \`iktracker-actions\` | ✅ | Bridge IKtracker (CRUD pages/articles, code injection, redirects) |
+| \`dictadevi-actions\` | ✅ | Bridge Dictadevi REST v1 (CRUD posts, GET pages, /health) — Bearer \`dk_…\`, surface minimaliste : actions code/redirect/event renvoient 501 \`_not_supported_by_dictadevi\` |
 | \`register-cms-webhook\` | ✅ | Enregistrement webhooks CMS |
 | \`webhook-shopify-orders\` | ❌ | Webhook Shopify (commandes) |
 | \`webhook-woo-orders\` | ❌ | Webhook WooCommerce (commandes) |
@@ -769,6 +770,7 @@ Ces secrets sont configurés dans Lovable Cloud :
 | \`OPENROUTER_API_KEY\` | fallback IA | Clé OpenRouter (backup) |
 | \`LOVABLE_API_KEY\` | Lovable AI | Accès aux modèles Gemini/GPT |
 | \`IKTRACKER_API_KEY\` | \`iktracker-actions\` | Clé bridge IKtracker |
+| \`DICTADEVI_API_KEY\` | \`dictadevi-actions\` | Clé Bearer \`dk_…\` du bridge Dictadevi (optionnelle : fallback RPC \`get_parmenion_target_api_key('dictadevi.io')\` lit \`parmenion_targets.api_key_name\`) |
 | \`GOOGLE_PLACES_API_KEY\` | \`gmb-places-autocomplete\` | Clé Google Places API (autocomplete concurrents GMB) |
 | \`FLY_RENDERER_URL\` | rendering SPA | URL du renderer Fly.io |
 | \`FLY_RENDERER_SECRET\` | rendering SPA | Secret Fly.io |
@@ -1662,7 +1664,36 @@ Parménion gère plusieurs sites cibles via la table \`parmenion_targets\`. Plat
 |---------|------------|----------|------------------|
 | \`crawlers.fr\` | \`internal\` | \`cms-patch-content\` (handler crawlers_internal) | ✅ Branché |
 | \`iktracker.fr\` | \`iktracker\` | \`iktracker-actions\` | ✅ Branché |
-| \`dictadevi.io\` | \`custom\` | ⚠️ Aucun pont API dédié | ⚠️ Cible enregistrée mais **non branchée** — il manque \`dictadevi-actions\`, le secret \`DICTADEVI_API_KEY\`, le routing \`platform='dictadevi'\` dans \`parmenion-orchestrator\` + \`autopilot-engine\`, et le mode \`dictadevi\` dans \`cmsContentScanner.ts\`. À implémenter au Sprint 8. |
+| \`dictadevi.io\` | \`dictadevi\` | \`dictadevi-actions\` (REST v1, Bearer \`dk_…\`) | ✅ Branché (Sprint 8.1) — autonomie posts complète, pages en lecture seule, code/redirect/event non supportés par l'API Dictadevi |
+
+### Routing CMS (autopilot-engine)
+
+\`autopilot-engine.resolveCmsBridge(domain)\` choisit la fonction CMS à appeler en fonction du domaine :
+
+| Domaine détecté | Bridge utilisé | Format payload |
+|------------------|----------------|----------------|
+| \`*iktracker*\` | \`iktracker-actions\` | flat \`{ action, ...params }\` + header \`x-api-key\` |
+| \`*dictadevi*\` | \`dictadevi-actions\` | nested \`{ action, params: {...} }\` + header \`Authorization: Bearer dk_…\` |
+| autre | (skip / interne) | — |
+
+La garde éditoriale (refus si auteur ∈ {parménion, parmenion, crawlers autopilot} ou \`published_at\` > 6 mois) est appliquée de manière identique dans les deux bridges. \`pushIktrackerEvent\` reste gardé par \`isIktrackerDomain\` et n'est jamais invoqué pour Dictadevi.
+
+### Surface API Dictadevi (v1)
+
+Base URL : \`https://dictadevi.io/api/v1\` — voir \`knowledge/tech/api/dictadevi-bridge-fr.md\` pour le contrat complet.
+
+| Action bridge | Endpoint amont | Méthode |
+|---------------|----------------|---------|
+| \`test-connection\` | \`/health\` (public) + sonde \`/posts?limit=1\` | GET |
+| \`list-posts\` | \`/posts?status=&slug=&limit=&offset=\` | GET |
+| \`get-post\` | \`/posts/:slug\` | GET |
+| \`create-post\` | \`/posts\` (upsert si slug existe → bascule en update) | POST/PUT |
+| \`update-post\` | \`/posts/:slug\` | PUT |
+| \`delete-post\` | \`/posts/:slug\` | DELETE |
+| \`get-page\` | \`/pages/:key\` | GET |
+| \`get-public-resources\` | liste statique sitemaps + llms.txt + RSS (no auth) | — |
+
+Actions retournant **HTTP 501 \`_not_supported_by_dictadevi\`** (Dictadevi v1 ne les expose pas) : \`push-code-head/body/page\`, \`get-injection-*\`, \`*-robots-txt\`, \`*-redirect\`, \`push-event\`, \`*-page\` (write).
 
 ### Cron jobs
 
@@ -1686,8 +1717,8 @@ Parménion gère plusieurs sites cibles via la table \`parmenion_targets\`. Plat
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '11.0.0',
-  lastUpdated: '2026-04-23',
+  version: '11.1.0',
+  lastUpdated: '2026-04-24',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect (crédits + images IA multi-moteurs) + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Quiz SEO + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine + Matrice immersive (SSE + Pivot/Cube 3D + historique)',
   totalEdgeFunctions: 192,
   totalSharedModules: 38,
