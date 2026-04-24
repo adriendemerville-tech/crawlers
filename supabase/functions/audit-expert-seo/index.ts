@@ -1652,43 +1652,83 @@ function generateRecommendations(
     });
   }
 
-  // === FAQ SCHEMA CHECK ===
-  const hasFAQContent = /faq|questions? fréquentes|frequently asked|preguntas frecuentes/i.test(htmlAnalysis.rawHtml || '');
-  const hasFAQSchema = htmlAnalysis.schemaTypes?.some((t: string) => t.toLowerCase().includes('faqpage'));
-  if (hasFAQContent && !hasFAQSchema) {
+  // === FAQ DETECTION (deux signaux distincts) ===
+  // 1) faq_content_present : présence visible de Q/R dans le HTML rendu
+  //    On combine plusieurs patterns pour éviter les faux négatifs (sites JS, <details>, listes…)
+  //    et les faux positifs (mot "faq" dans une classe CSS ou un lien isolé).
+  const rawHtml = htmlAnalysis.rawHtml || '';
+  const faqHeadingRegex = /<h[1-6][^>]*>[^<]{0,120}(faq|questions?\s+fr[ée]quentes?|foire\s+aux\s+questions|frequently\s+asked|preguntas\s+frecuentes)[^<]{0,120}<\/h[1-6]>/i;
+  const faqDetailsRegex = /<details[^>]*>\s*<summary[^>]*>[\s\S]{1,200}\?[\s\S]{0,200}<\/summary>/i;
+  // Heuristique Q/R : au moins 2 questions interrogatives (terminées par "?") dans des balises de heading/strong/dt
+  const qaPairCount = (rawHtml.match(/<(?:h[2-6]|strong|dt|p)[^>]*>[^<]{8,180}\?\s*<\/(?:h[2-6]|strong|dt|p)>/gi) || []).length;
+  const faqLandmarkRegex = /(?:id|class|role|aria-label)\s*=\s*["'][^"']*\bfaq\b[^"']*["']/i;
+  const faqContentPresent =
+    faqHeadingRegex.test(rawHtml) ||
+    faqDetailsRegex.test(rawHtml) ||
+    qaPairCount >= 3 ||
+    faqLandmarkRegex.test(rawHtml);
+
+  // 2) faq_schema_present : JSON-LD FAQPage détecté
+  const faqSchemaPresent = !!htmlAnalysis.schemaTypes?.some((t: string) => t.toLowerCase().includes('faqpage'));
+
+  // Cas A — contenu visible mais schema absent : prioritaire (P1)
+  if (faqContentPresent && !faqSchemaPresent) {
     recommendations.push({
-      id: 'faq-no-schema',
+      id: 'faq-content-without-schema',
       priority: 'important',
       category: 'ia',
       icon: '🟠',
-      title: 'FAQ présente mais sans balisage FAQPage schema.org',
-      description: 'Une section FAQ est détectée mais sans balisage structuré FAQPage. Les moteurs IA (ChatGPT, Gemini, Perplexity) ne peuvent pas extraire vos Q&R de manière fiable. Ajoutez le schéma FAQPage pour maximiser la citabilité.',
+      title: 'FAQ présente mais non balisée en FAQPage schema.org',
+      description: 'Une section FAQ est détectée dans le HTML, mais sans balisage structuré FAQPage. Les moteurs IA (ChatGPT, Gemini, Perplexity) ne peuvent pas extraire vos Q&R de manière fiable et Google ne peut pas afficher les rich snippets FAQ.',
       fixes: [
         "Ajouter un script JSON-LD de type FAQPage avec mainEntity",
         "Chaque question doit être un objet Question avec acceptedAnswer",
-        "Les réponses doivent être complètes (2-4 phrases minimum, pas décoratives)"
+        "Les réponses doivent être complètes (2-4 phrases minimum, pas décoratives)",
+        "Valider avec Google Rich Results Test : search.google.com/test/rich-results",
       ],
       target_selector: 'schema_org',
       target_operation: 'create',
     });
   }
-  if (!hasFAQContent && htmlAnalysis.wordCount > 500) {
+
+  // Cas B — schema présent mais aucun contenu visible : signe d'un balisage orphelin ou rendu JS différé
+  if (!faqContentPresent && faqSchemaPresent) {
+    recommendations.push({
+      id: 'faq-schema-without-content',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Balisage FAQPage présent sans FAQ visible côté HTML',
+      description: 'Un schéma FAQPage est déclaré, mais aucune section FAQ n\'a été repérée dans le HTML servi. Cela peut indiquer un balisage orphelin, un contenu rendu uniquement en JavaScript (non vu par les crawlers IA) ou un schéma désynchronisé du contenu réel — ce qui peut être pénalisé par Google.',
+      fixes: [
+        "Vérifier que les Q/R du JSON-LD apparaissent réellement dans le HTML rendu (SSR ou pré-rendu)",
+        "S'assurer que le contenu visible reproduit fidèlement les questions et réponses du schéma",
+        "Tester l'URL avec l'outil de test des résultats enrichis Google et l'inspecteur d'URL Search Console",
+      ],
+      target_selector: 'content',
+      target_operation: 'update',
+    });
+  }
+
+  // Cas C — ni l'un ni l'autre, sur une page suffisamment dense : suggestion d'ajout
+  if (!faqContentPresent && !faqSchemaPresent && htmlAnalysis.wordCount > 500) {
     recommendations.push({
       id: 'no-faq-section',
       priority: 'suggestion',
       category: 'ia',
       icon: '💡',
-      title: 'Aucune section FAQ détectée',
-      description: 'Les pages sans FAQ structurée perdent un levier de citabilité GEO majeur. Les LLM extraient prioritairement les réponses directes aux questions. Ajoutez 3-6 vraies questions utilisateurs avec réponses complètes + balisage FAQPage.',
+      title: 'Aucune section FAQ détectée (contenu et balisage absents)',
+      description: 'Aucun contenu FAQ visible et aucun schéma FAQPage détectés. Les pages sans FAQ structurée perdent un levier de citabilité GEO majeur : les LLM extraient prioritairement les réponses directes aux questions.',
       fixes: [
-        "Ajouter une section FAQ avec 3-6 questions réelles",
-        "Baliser avec FAQPage schema.org",
-        "Les questions doivent refléter les recherches réelles (People Also Ask)"
+        "Ajouter une section FAQ avec 3-6 questions réelles (People Also Ask)",
+        "Baliser avec FAQPage schema.org pour la citabilité IA",
+        "Les questions doivent refléter les recherches utilisateurs réelles",
       ],
       target_selector: 'content',
       target_operation: 'append',
     });
   }
+  // Cas D — contenu + schema : tout va bien, aucune reco émise.
 
   // === BRAND AUTO-CITATION CHECK ===
   const brandName = htmlAnalysis.siteName || htmlAnalysis.domain?.split('.')[0] || '';
