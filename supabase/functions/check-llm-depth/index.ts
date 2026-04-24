@@ -492,7 +492,7 @@ async function runDepthConversation(
   // Track which gateway is active (may change on fallback)
   let activeGateway: Gateway = modelDef.gateway
 
-  for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS, 'check-llm-depth')) i++) {
+  for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS); i++) {
     messages.push({ role: 'user', content: prompts[i] })
     anglesTested.push(anglesLabels[i] || `Phase ${i + 1}`)
 
