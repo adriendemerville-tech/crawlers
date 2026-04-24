@@ -25,6 +25,7 @@ const MyContent = lazy(() => import('@/components/Profile/MyContent').then(m => 
 const MarinaConsoleTab = lazy(() => import('@/components/Profile/MarinaConsoleTab').then(m => ({ default: m.MarinaConsoleTab })));
 const SeaSeoBridgeTab = lazy(() => import('@/components/Profile/SeaSeoBridgeTab').then(m => ({ default: m.SeaSeoBridgeTab })));
 const IndexationMonitor = lazy(() => import('@/components/Console/IndexationMonitor').then(m => ({ default: m.IndexationMonitor })));
+const GscBigQueryPanel = lazy(() => import('@/components/Console/GscBigQueryPanel').then(m => ({ default: m.GscBigQueryPanel })));
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
 const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
 import { useAdmin } from '@/hooks/useAdmin';
@@ -153,6 +154,7 @@ function ProfileContent() {
       case 'marina': return <MarinaConsoleTab />;
       case 'sea-seo': return isProUser ? <SeaSeoBridgeTab /> : null;
       case 'indexation': return <IndexationMonitor externalSiteId={selectedSiteId} externalDomain={selectedDomain} />;
+      case 'gsc-bigquery': return isProUser ? <GscBigQueryPanel /> : null;
       case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />;
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;
