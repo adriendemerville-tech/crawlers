@@ -346,7 +346,7 @@ export function renderConsolidatedPlanHTML(items: ConsolidatedPlanItem[]): strin
   const newCount = items.length - wbCount;
 
   return `<div class="section">
-    <div class="section-title">📋 Plan d'action consolidé</div>
+    <div class="section-title">Plan d'action consolidé</div>
     <p style="font-size:12.5px;color:#4b5563;margin-bottom:12px;">
       ${items.length} action${items.length > 1 ? 's' : ''} prioritaire${items.length > 1 ? 's' : ''} —
       ${wbCount} déjà dans votre Workbench, ${newCount} nouvellement détectée${newCount > 1 ? 's' : ''} dans ce rapport.
