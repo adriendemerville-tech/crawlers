@@ -319,7 +319,7 @@ export function renderTopPrioritiesHTML(top: SectionTopPriorities): string {
 export function renderConsolidatedPlanHTML(items: ConsolidatedPlanItem[]): string {
   if (!items.length) {
     return `<div class="section">
-      <div class="section-title">📋 Plan d'action consolidé</div>
+      <div class="section-title">Plan d'action consolidé</div>
       <p style="color:#6b7280;font-size:13px;">Aucune action en attente. Excellente hygiène SEO/GEO.</p>
     </div>`;
   }
