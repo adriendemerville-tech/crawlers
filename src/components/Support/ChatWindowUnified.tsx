@@ -307,8 +307,6 @@ export function ChatWindowUnified({
     }
   };
 
-  const seedWithExtras = [...seedRef.current, ...extraMessages];
-
   const positionStyle = maximized
     ? { inset: '4rem 1rem 1rem 1rem' as const }
     : {
