@@ -96,7 +96,7 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 | `seedMessages` | ✅ onboarding/greeting | ✅ **Q4.1** greeting cocoon |
 | `onAssistantReply` | ✅ bug report + slash commands | ✅ auto-save reco |
 | `onActions` | ❌ délégué au shell (autoNavigate) | ❌ idem |
-| `initialSessionId` | ✅ **Q4.4** via panneau historique | ⏳ panneau historique côté Stratège (à brancher de la même manière) |
+| `initialSessionId` | ✅ **Q4.4** via panneau historique | ✅ **Q4.5** panneau historique branché de manière identique (`CopilotHistoryPanel persona="strategist"`) |
 
 > **Sprint 6 enfin exploité** : `useCopilot` hydrate désormais l'historique depuis `copilot_actions` (skills `_user_message` / `_assistant_reply`) quand `initialSessionId` est fourni.
 
