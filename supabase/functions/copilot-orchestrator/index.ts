@@ -1,24 +1,33 @@
 /**
- * copilot-orchestrator — Sprint 2 : agent loop + skills + persistence + approval.
+ * copilot-orchestrator — Sprint P1 : agent loop + skills + persistence + approval/reject.
  *
  * POST /copilot-orchestrator
  *   body : {
  *     persona: 'felix' | 'strategist',
  *     session_id?: string,
- *     message: string,
+ *     message?: string,
  *     context?: object,
- *     approve_action_id?: string   // pour ré-exécuter une action awaiting_approval
+ *     approve_action_id?: string,   // ré-exécute une action awaiting_approval
+ *     reject_action_id?: string,    // P1 #6 : marque rejected + notifie LLM
+ *     reject_reason?: string,
  *   }
- *   res  : { session_id, reply, actions, persona, awaiting_approvals }
+ *   res  : { session_id, reply, actions, persona, awaiting_approvals, iterations }
  *
  * Boucle :
- *   1. Charge l'historique de la session.
+ *   1. Charge l'historique de la session (incl. tool_calls/results — P0 #1).
  *   2. Appelle Lovable AI Gateway avec system prompt + tools de la persona.
  *   3. Si tool_calls → résout chaque skill via la policy (auto / approval / forbidden).
- *      - auto : exécute, log dans copilot_actions(status=success|error), réinjecte le résultat.
- *      - approval : crée copilot_actions(status=awaiting_approval), STOP la boucle.
- *      - forbidden : log status=rejected, réinjecte erreur "non autorisé".
+ *      - auto : exécute, log dans copilot_actions(success|error), réinjecte le résultat.
+ *      - approval : crée copilot_actions(awaiting_approval), arrête le batch (P0 #2).
+ *      - forbidden : log rejected, réinjecte erreur "non autorisé" (P1 #5 inviolable).
  *   4. Re-prompt jusqu'à `finish_reason=stop` ou max 6 itérations.
+ *
+ * P1 features :
+ *   #4 creator_mode persisté dans session.context.creator_mode
+ *   #5 FORBIDDEN_EVEN_IN_CREATOR — whitelist des skills inviolables
+ *   #6 reject_action_id — rejet explicite avec tool_result synthétique pour le LLM
+ *   #7 handleApproval re-prompt le LLM après exécution → réponse contextuelle
+ *   #8 vérif persona stricte sur approval/reject
  */
 
 import { corsHeaders } from '../_shared/cors.ts';
@@ -36,6 +45,8 @@ interface OrchestratorBody {
   message?: string;
   context?: Record<string, unknown>;
   approve_action_id?: string;
+  reject_action_id?: string;
+  reject_reason?: string;
 }
 
 interface ChatMessage {
@@ -52,6 +63,18 @@ interface ChatMessage {
 
 const MAX_ITERATIONS = 6;
 const HISTORY_LIMIT = 20;
+
+// P1 #5 — Skills INVIOLABLES même en mode créateur.
+// Toute skill listée ici reste forbidden quoi qu'il arrive (sécurité par design,
+// pas juste permission). Ajouter ici toute skill destructrice/irréversible
+// qui ne devrait jamais être contournée par /creator: ou /admin:.
+const FORBIDDEN_EVEN_IN_CREATOR: ReadonlySet<string> = new Set([
+  'delete_site',
+  'delete_user',
+  'rotate_keys',
+  'escalate_to_human',
+  'mass_delete',
+]);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -84,7 +107,7 @@ Deno.serve(async (req) => {
     const service = getServiceClient();
     serviceForCleanup = service;
 
-    // ── Cas approbation : ré-exécute une action awaiting_approval ──
+    // ── Cas approbation : ré-exécute + relance la boucle LLM (P1 #7) ──
     if (body.approve_action_id) {
       return await handleApproval({
         actionId: body.approve_action_id,
@@ -95,11 +118,23 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Cas rejet : marque rejected + notifie LLM (P1 #6) ──
+    if (body.reject_action_id) {
+      return await handleRejection({
+        actionId: body.reject_action_id,
+        reason: body.reject_reason,
+        userId,
+        userClient,
+        service,
+        persona,
+      });
+    }
+
     if (!body.message) return jsonError('message requis', 400);
 
     // ── Préfixe admin /creator: /createur: /admin: ────────
-    // Permet à l'administrateur (rôle 'admin') de débloquer les skills sensibles
-    // (CMS, déploiements, actions destructrices) en passant en mode "creator".
+    // P1 #4 — creator_mode est persisté dans session.context.creator_mode
+    // pour survivre entre deux requêtes HTTP de la même conversation.
     let userMessage = body.message;
     let isCreatorMode = false;
     const creatorPrefixMatch = userMessage.match(/^\s*\/(?:createur|creator|admin)\s*:\s*/i);
@@ -114,21 +149,29 @@ Deno.serve(async (req) => {
 
     // ── Session : create or load ─────────────────────────
     let sessionId: string;
+    let sessionContext: Record<string, unknown> = {};
+
     if (!body.session_id) {
+      // Nouvelle session : si creator_mode détecté on le grave dans le context
+      const initialContext = {
+        ...(body.context ?? {}),
+        ...(isCreatorMode ? { creator_mode: true } : {}),
+      };
       const { data: created, error: cErr } = await service
         .from('copilot_sessions')
         .insert({
           user_id: userId,
           persona: persona.id,
-          context: body.context ?? {},
+          context: initialContext,
           title: body.message.slice(0, 80),
           status: 'processing',
           processing_started_at: new Date().toISOString(),
         })
-        .select('id')
+        .select('id, context')
         .single();
       if (cErr || !created) return jsonError(`Création session : ${cErr?.message}`, 500);
       sessionId = created.id;
+      sessionContext = (created.context as Record<string, unknown>) ?? {};
       sessionIdForCleanup = sessionId;
     } else {
       sessionId = body.session_id;
@@ -136,14 +179,26 @@ Deno.serve(async (req) => {
 
       // Reconciliation : si la session est en 'processing' depuis > 90s, on la débloque.
       // (Cas crash entre tool_calls et persist final → message fantôme à éviter.)
+      // P1 #4/8 — on charge aussi context + persona pour vérifier la cohérence
       const { data: existingSess } = await service
         .from('copilot_sessions')
-        .select('status, processing_started_at')
+        .select('status, processing_started_at, context, persona')
         .eq('id', sessionId)
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (existingSess?.status === 'processing' && existingSess.processing_started_at) {
+      if (!existingSess) return jsonError('Session introuvable', 404);
+      // P1 #8 — la persona du body doit matcher celle figée à la création
+      if (existingSess.persona !== persona.id) {
+        return jsonError(
+          `Persona incohérent : la session a été créée avec '${existingSess.persona}', tu envoies '${persona.id}'.`,
+          400,
+        );
+      }
+
+      sessionContext = (existingSess.context as Record<string, unknown>) ?? {};
+
+      if (existingSess.status === 'processing' && existingSess.processing_started_at) {
         const elapsedMs = Date.now() - new Date(existingSess.processing_started_at).getTime();
         if (elapsedMs < 90_000) {
           return jsonError('Une réponse est déjà en cours de génération pour cette session. Patiente quelques secondes.', 409);
@@ -158,177 +213,46 @@ Deno.serve(async (req) => {
         });
       }
 
+      // P1 #4 — restore creator_mode depuis le context, ou l'active si nouveau préfixe admin valide
+      if (sessionContext.creator_mode === true) {
+        isCreatorMode = true;
+      }
+      if (isCreatorMode && sessionContext.creator_mode !== true) {
+        // Première activation dans une session existante → on persiste
+        sessionContext = { ...sessionContext, creator_mode: true };
+      }
+
       await service
         .from('copilot_sessions')
         .update({
           last_message_at: new Date().toISOString(),
           status: 'processing',
           processing_started_at: new Date().toISOString(),
+          context: sessionContext,
         })
         .eq('id', sessionId)
         .eq('user_id', userId);
     }
 
-    // ── Historique conversation ──────────────────────────
-    const history = await loadHistory(service, sessionId, userId);
-
-    // ── Construit messages pour LLM ──────────────────────
-    const contextStr = body.context && Object.keys(body.context).length > 0
-      ? `\n\nContexte courant :\n${JSON.stringify(body.context, null, 2)}`
-      : '';
-
-    const creatorBanner = isCreatorMode
-      ? `\n\n## ⚙️ MODE CRÉATEUR ACTIF\nL'administrateur créateur (rôle 'admin') t'a invoqué via le préfixe \`/creator :\` (ou \`/createur :\`, \`/admin :\`).\nDans ce mode :\n- Toutes les skills disponibles sont débloquées et exécutables sans approbation préalable (auto).\n- Les actions destructrices (CMS publish/patch, déploiements) sont autorisées.\n- Tu peux consulter le backend, dispatcher des directives, et agir au nom du créateur.\nLe préfixe a été retiré du message ci-dessous — réponds à la demande réelle du créateur.\n`
-      : '';
-
-    const messages: ChatMessage[] = [
-      { role: 'system', content: persona.systemPrompt + creatorBanner + contextStr },
-      ...history,
-      { role: 'user', content: userMessage },
-    ];
-
-    // ── Tools autorisés (auto + approval, on EXCLUT forbidden) ──
-    // En mode créateur : toutes les skills du registry sont accessibles.
-    const allowedSkills = isCreatorMode
-      ? Array.from(new Set([...Object.keys(persona.skillPolicies), ...listSkills()]))
-      : Object.keys(persona.skillPolicies).filter(
-          (s) => persona.skillPolicies[s] !== 'forbidden',
-        );
-    const tools = buildToolDefinitions(allowedSkills);
-
-    // ── Agent loop ───────────────────────────────────────
-    const ctx: SkillContext = { userId, sessionId, persona: persona.id, supabase: userClient, service };
-    const executedActions: Array<{ skill: string; status: string; output?: unknown; error?: string; action_id?: string }> = [];
-    const awaitingApprovals: Array<{ action_id: string; skill: string; input: unknown }> = [];
-
-    let finalReply = '';
-    let iterations = 0;
-
-    while (iterations < MAX_ITERATIONS) {
-      iterations++;
-      const llmResp = await callLLM(persona, messages, tools);
-
-      // Push le message assistant (avec ses éventuels tool_calls) dans l'historique courant.
-      messages.push({
-        role: 'assistant',
-        content: llmResp.content,
-        tool_calls: llmResp.tool_calls,
-      });
-
-      // Pas de tool calls → c'est la réponse finale
-      if (!llmResp.tool_calls || llmResp.tool_calls.length === 0) {
-        finalReply = llmResp.content ?? '';
-        break;
-      }
-
-      // Résout chaque tool call
-      // P0 #2 — dès qu'on rencontre une approval, on N'EXÉCUTE PLUS aucune skill
-      // suivante du même batch. Les autos restantes sont mises en attente
-      // d'approbation pour cohérence (l'user doit valider l'ensemble).
-      let stopForApproval = false;
-      for (const call of llmResp.tool_calls) {
-        const skillName = call.function.name;
-        // En mode créateur : toute skill connue passe en exécution automatique.
-        const basePolicy = resolveSkillPolicy(persona, skillName);
-        const policy = isCreatorMode && getSkill(skillName) ? 'auto' : basePolicy;
-        let parsedArgs: Record<string, unknown> = {};
-        try {
-          parsedArgs = JSON.parse(call.function.arguments || '{}');
-        } catch {
-          parsedArgs = {};
-        }
-
-        // FORBIDDEN — toujours rejeté, même après une approval (ne bloque pas le batch)
-        if (policy === 'forbidden' || !getSkill(skillName)) {
-          await logAction(service, sessionId, userId, persona.id, skillName, parsedArgs, null, 'rejected', 'Skill non autorisé pour cette persona', 0);
-          messages.push({
-            role: 'tool',
-            tool_call_id: call.id,
-            name: skillName,
-            content: JSON.stringify({ ok: false, error: 'Skill non autorisé pour cette persona' }),
-          });
-          executedActions.push({ skill: skillName, status: 'rejected', error: 'forbidden' });
-          continue;
-        }
-
-        // Si une approval a déjà été rencontrée dans ce batch, on bascule TOUTES
-        // les skills suivantes en attente d'approbation (même les autos).
-        const effectivePolicy = stopForApproval ? 'approval' : policy;
-
-        // APPROVAL : on enregistre, on signale awaiting, on continue à transformer
-        // les tool_calls restants en awaiting (boucle pas cassée pour bien tous
-        // les inscrire dans messages[] et copilot_actions).
-        if (effectivePolicy === 'approval') {
-          const { data: approvalAction } = await service
-            .from('copilot_actions')
-            .insert({
-              session_id: sessionId, user_id: userId, persona: persona.id,
-              skill: skillName, input: parsedArgs, status: 'awaiting_approval',
-            })
-            .select('id').single();
-          awaitingApprovals.push({ action_id: approvalAction?.id ?? '', skill: skillName, input: parsedArgs });
-          executedActions.push({ skill: skillName, status: 'awaiting_approval', action_id: approvalAction?.id });
-          messages.push({
-            role: 'tool',
-            tool_call_id: call.id,
-            name: skillName,
-            content: JSON.stringify({
-              ok: false,
-              awaiting_approval: true,
-              action_id: approvalAction?.id,
-              note: stopForApproval
-                ? 'Auto-skill mise en attente : une action précédente du même batch nécessite ton approbation.'
-                : undefined,
-            }),
-          });
-          stopForApproval = true;
-        } else {
-          // AUTO
-          const tStart = Date.now();
-          const skill = getSkill(skillName)!;
-          let result;
-          try {
-            result = await skill.handler(parsedArgs, ctx);
-          } catch (e) {
-            result = { ok: false, error: (e as Error).message };
-          }
-          const dur = Date.now() - tStart;
-          const { data: insertedAction } = await service
-            .from('copilot_actions')
-            .insert({
-              session_id: sessionId, user_id: userId, persona: persona.id,
-              skill: skillName, input: parsedArgs,
-              output: result.data ?? null,
-              status: result.ok ? 'success' : 'error',
-              error_message: result.ok ? null : result.error,
-              duration_ms: dur,
-            })
-            .select('id').single();
-          executedActions.push({ skill: skillName, status: result.ok ? 'success' : 'error', output: result.data, error: result.error, action_id: insertedAction?.id });
-          messages.push({
-            role: 'tool',
-            tool_call_id: call.id,
-            name: skillName,
-            content: JSON.stringify(result),
-          });
-        }
-      }
-
-      if (stopForApproval) {
-        // Demande à l'utilisateur de valider via une réponse explicite
-        finalReply = buildApprovalPromptText(awaitingApprovals);
-        break;
-      }
-    }
-
-    if (iterations >= MAX_ITERATIONS && !finalReply) {
-      finalReply = "Désolé, je n'ai pas pu finaliser cette demande après plusieurs essais. Reformule ou précise ce que tu veux faire.";
-    }
+    // ── Lance la boucle agent ────────────────────────────
+    const loopResult = await runAgentLoop({
+      persona,
+      sessionId,
+      userId,
+      userMessage,
+      runtimeContext: body.context,
+      isCreatorMode,
+      userClient,
+      service,
+      t0,
+      // Première itération : message user à pousser explicitement
+      initialUserMessage: { role: 'user', content: userMessage },
+    });
 
     // Persiste le message utilisateur + réponse finale comme paire conversation
     await service.from('copilot_actions').insert([
       { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: body.message }, status: 'success', duration_ms: 0 },
-      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: finalReply }, status: 'success', duration_ms: Date.now() - t0 },
+      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0 },
     ]);
 
     // Libère le statut processing → active (succès nominal)
@@ -338,11 +262,12 @@ Deno.serve(async (req) => {
 
     return jsonOk({
       session_id: sessionId,
-      reply: finalReply,
-      actions: executedActions,
-      awaiting_approvals: awaitingApprovals,
+      reply: loopResult.finalReply,
+      actions: loopResult.executedActions,
+      awaiting_approvals: loopResult.awaitingApprovals,
       persona: persona.id,
-      iterations,
+      iterations: loopResult.iterations,
+      creator_mode: isCreatorMode,
     });
   } catch (e) {
     console.error('[copilot-orchestrator] Erreur:', e);
@@ -363,7 +288,194 @@ Deno.serve(async (req) => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// Approval handler — exécute une action awaiting_approval
+// runAgentLoop — boucle LLM extraite pour réutilisation
+// (utilisée par le flux normal ET par handleApproval/handleRejection)
+// ═══════════════════════════════════════════════════════════
+interface AgentLoopResult {
+  finalReply: string;
+  executedActions: Array<{ skill: string; status: string; output?: unknown; error?: string; action_id?: string }>;
+  awaitingApprovals: Array<{ action_id: string; skill: string; input: unknown }>;
+  iterations: number;
+}
+
+async function runAgentLoop(args: {
+  persona: PersonaConfig;
+  sessionId: string;
+  userId: string;
+  userMessage: string;
+  runtimeContext?: Record<string, unknown>;
+  isCreatorMode: boolean;
+  userClient: ReturnType<typeof getUserClient>;
+  service: ReturnType<typeof getServiceClient>;
+  t0: number;
+  /** Message à pousser au début (user en flux normal, ou tool_result en post-approval) */
+  initialUserMessage?: ChatMessage;
+  /** Messages additionnels à pousser après l'historique (ex: paire tool_call+result post-approval) */
+  primingMessages?: ChatMessage[];
+}): Promise<AgentLoopResult> {
+  const { persona, sessionId, userId, runtimeContext, isCreatorMode, userClient, service } = args;
+
+  // ── Historique conversation ──────────────────────────
+  const history = await loadHistory(service, sessionId, userId);
+
+  // ── Construit messages pour LLM ──────────────────────
+  const contextStr = runtimeContext && Object.keys(runtimeContext).length > 0
+    ? `\n\nContexte courant :\n${JSON.stringify(runtimeContext, null, 2)}`
+    : '';
+
+  const creatorBanner = isCreatorMode
+    ? `\n\n## MODE CRÉATEUR ACTIF\nL'administrateur créateur (rôle 'admin') t'a invoqué via le préfixe \`/creator :\` (ou \`/createur :\`, \`/admin :\`).\nCe mode est persistant pour toute la session.\nDans ce mode :\n- Toutes les skills disponibles sont débloquées et exécutables sans approbation préalable (auto), SAUF les skills inviolables (suppressions massives, rotation de clés, escalade humaine).\n- Les actions destructrices courantes (CMS publish/patch, déploiements) sont autorisées.\n- Tu peux consulter le backend, dispatcher des directives, et agir au nom du créateur.\n`
+    : '';
+
+  const messages: ChatMessage[] = [
+    { role: 'system', content: persona.systemPrompt + creatorBanner + contextStr },
+    ...history,
+  ];
+  if (args.primingMessages) messages.push(...args.primingMessages);
+  if (args.initialUserMessage) messages.push(args.initialUserMessage);
+
+  // ── Tools autorisés ──
+  // En mode créateur : toutes les skills du registry sauf les inviolables (P1 #5).
+  const allowedSkills = isCreatorMode
+    ? Array.from(new Set([...Object.keys(persona.skillPolicies), ...listSkills()]))
+        .filter((s) => !FORBIDDEN_EVEN_IN_CREATOR.has(s))
+    : Object.keys(persona.skillPolicies).filter(
+        (s) => persona.skillPolicies[s] !== 'forbidden',
+      );
+  const tools = buildToolDefinitions(allowedSkills);
+
+  // ── Agent loop ───────────────────────────────────────
+  const ctx: SkillContext = { userId, sessionId, persona: persona.id, supabase: userClient, service };
+  const executedActions: AgentLoopResult['executedActions'] = [];
+  const awaitingApprovals: AgentLoopResult['awaitingApprovals'] = [];
+
+  let finalReply = '';
+  let iterations = 0;
+
+  while (iterations < MAX_ITERATIONS) {
+    iterations++;
+    const llmResp = await callLLM(persona, messages, tools);
+
+    messages.push({
+      role: 'assistant',
+      content: llmResp.content,
+      tool_calls: llmResp.tool_calls,
+    });
+
+    if (!llmResp.tool_calls || llmResp.tool_calls.length === 0) {
+      finalReply = llmResp.content ?? '';
+      break;
+    }
+
+    // P0 #2 — dès qu'on rencontre une approval, on N'EXÉCUTE PLUS aucune skill
+    // suivante du même batch. Les autos restantes sont mises en attente.
+    let stopForApproval = false;
+    for (const call of llmResp.tool_calls) {
+      const skillName = call.function.name;
+      const basePolicy = resolveSkillPolicy(persona, skillName);
+
+      // P1 #5 — INVIOLABLE : même en mode créateur ces skills restent forbidden
+      const isInviolable = FORBIDDEN_EVEN_IN_CREATOR.has(skillName);
+      const policy = (isCreatorMode && getSkill(skillName) && !isInviolable) ? 'auto' : basePolicy;
+
+      let parsedArgs: Record<string, unknown> = {};
+      try {
+        parsedArgs = JSON.parse(call.function.arguments || '{}');
+      } catch {
+        parsedArgs = {};
+      }
+
+      // FORBIDDEN — toujours rejeté, même après une approval (ne bloque pas le batch)
+      if (policy === 'forbidden' || !getSkill(skillName) || isInviolable) {
+        const errMsg = isInviolable
+          ? `Skill '${skillName}' inviolable — interdite même en mode créateur (sécurité par design).`
+          : 'Skill non autorisé pour cette persona';
+        await logAction(service, sessionId, userId, persona.id, skillName, parsedArgs, null, 'rejected', errMsg, 0);
+        messages.push({
+          role: 'tool',
+          tool_call_id: call.id,
+          name: skillName,
+          content: JSON.stringify({ ok: false, error: errMsg }),
+        });
+        executedActions.push({ skill: skillName, status: 'rejected', error: isInviolable ? 'inviolable' : 'forbidden' });
+        continue;
+      }
+
+      // Si une approval a déjà été rencontrée dans ce batch, on bascule TOUTES
+      // les skills suivantes en attente d'approbation (même les autos).
+      const effectivePolicy = stopForApproval ? 'approval' : policy;
+
+      if (effectivePolicy === 'approval') {
+        const { data: approvalAction } = await service
+          .from('copilot_actions')
+          .insert({
+            session_id: sessionId, user_id: userId, persona: persona.id,
+            skill: skillName, input: parsedArgs, status: 'awaiting_approval',
+          })
+          .select('id').single();
+        awaitingApprovals.push({ action_id: approvalAction?.id ?? '', skill: skillName, input: parsedArgs });
+        executedActions.push({ skill: skillName, status: 'awaiting_approval', action_id: approvalAction?.id });
+        messages.push({
+          role: 'tool',
+          tool_call_id: call.id,
+          name: skillName,
+          content: JSON.stringify({
+            ok: false,
+            awaiting_approval: true,
+            action_id: approvalAction?.id,
+            note: stopForApproval
+              ? 'Auto-skill mise en attente : une action précédente du même batch nécessite ton approbation.'
+              : undefined,
+          }),
+        });
+        stopForApproval = true;
+      } else {
+        // AUTO
+        const tStart = Date.now();
+        const skill = getSkill(skillName)!;
+        let result;
+        try {
+          result = await skill.handler(parsedArgs, ctx);
+        } catch (e) {
+          result = { ok: false, error: (e as Error).message };
+        }
+        const dur = Date.now() - tStart;
+        const { data: insertedAction } = await service
+          .from('copilot_actions')
+          .insert({
+            session_id: sessionId, user_id: userId, persona: persona.id,
+            skill: skillName, input: parsedArgs,
+            output: result.data ?? null,
+            status: result.ok ? 'success' : 'error',
+            error_message: result.ok ? null : result.error,
+            duration_ms: dur,
+          })
+          .select('id').single();
+        executedActions.push({ skill: skillName, status: result.ok ? 'success' : 'error', output: result.data, error: result.error, action_id: insertedAction?.id });
+        messages.push({
+          role: 'tool',
+          tool_call_id: call.id,
+          name: skillName,
+          content: JSON.stringify(result),
+        });
+      }
+    }
+
+    if (stopForApproval) {
+      finalReply = buildApprovalPromptText(awaitingApprovals);
+      break;
+    }
+  }
+
+  if (iterations >= MAX_ITERATIONS && !finalReply) {
+    finalReply = "Désolé, je n'ai pas pu finaliser cette demande après plusieurs essais. Reformule ou précise ce que tu veux faire.";
+  }
+
+  return { finalReply, executedActions, awaitingApprovals, iterations };
+}
+
+// ═══════════════════════════════════════════════════════════
+// Approval handler — exécute + relance LLM pour réponse contextuelle (P1 #7)
 // ═══════════════════════════════════════════════════════════
 async function handleApproval(args: {
   actionId: string;
@@ -373,14 +485,28 @@ async function handleApproval(args: {
   persona: PersonaConfig;
 }) {
   const { actionId, userId, userClient, service, persona } = args;
+  const t0 = Date.now();
+
+  // P1 #8 — vérif persona stricte : on join sur la session pour confirmer
+  // que l'action approuvée appartient bien à une session de la même persona.
   const { data: action, error } = await service
     .from('copilot_actions')
-    .select('*')
+    .select('id, session_id, skill, input, persona, copilot_sessions!inner(persona, context)')
     .eq('id', actionId)
     .eq('user_id', userId)
     .eq('status', 'awaiting_approval')
     .maybeSingle();
   if (error || !action) return jsonError('Action introuvable ou déjà traitée', 404);
+
+  // deno-lint-ignore no-explicit-any
+  const sessionData = (action as any).copilot_sessions;
+  const sessionPersona = sessionData?.persona;
+  if (sessionPersona && sessionPersona !== persona.id) {
+    return jsonError(`Persona incohérent : action liée à '${sessionPersona}', requête envoyée par '${persona.id}'.`, 400);
+  }
+  if (action.persona && action.persona !== persona.id) {
+    return jsonError(`Persona incohérent : action créée par '${action.persona}'.`, 400);
+  }
 
   const skill = getSkill(action.skill);
   if (!skill) {
@@ -396,8 +522,9 @@ async function handleApproval(args: {
     userId, sessionId: action.session_id, persona: persona.id,
     supabase: userClient, service,
   };
+
   const tStart = Date.now();
-  let result;
+  let result: { ok: boolean; data?: unknown; error?: string };
   try { result = await skill.handler(action.input as Record<string, unknown>, ctx); }
   catch (e) { result = { ok: false, error: (e as Error).message }; }
   const dur = Date.now() - tStart;
@@ -412,11 +539,148 @@ async function handleApproval(args: {
     duration_ms: dur,
   }).select('id').single();
 
+  // P1 #7 — relance la boucle LLM avec un message user synthétique pour
+  // que l'agent génère une réponse contextuelle ("c'est fait, voici le résultat").
+  const sessionContext = (sessionData?.context as Record<string, unknown>) ?? {};
+  const isCreatorMode = sessionContext.creator_mode === true;
+
+  const userConfirm = result.ok
+    ? `J'ai validé l'action **${action.skill}** que tu proposais. Elle a été exécutée avec succès. Résume-moi le résultat et propose la suite.`
+    : `J'ai validé l'action **${action.skill}** mais elle a échoué (\`${result.error ?? 'erreur inconnue'}\`). Explique-moi ce qui s'est passé et propose une alternative.`;
+
+  // Marque la session comme processing pendant le re-prompt
+  await service.from('copilot_sessions')
+    .update({ status: 'processing', processing_started_at: new Date().toISOString() })
+    .eq('id', action.session_id).eq('user_id', userId);
+
+  let loopResult: AgentLoopResult;
+  try {
+    loopResult = await runAgentLoop({
+      persona,
+      sessionId: action.session_id,
+      userId,
+      userMessage: userConfirm,
+      isCreatorMode,
+      userClient,
+      service,
+      t0,
+      initialUserMessage: { role: 'user', content: userConfirm },
+    });
+  } finally {
+    await service.from('copilot_sessions')
+      .update({ status: 'active', processing_started_at: null })
+      .eq('id', action.session_id).eq('user_id', userId);
+  }
+
+  // Persiste la paire user_message (synthétique) + assistant_reply
+  await service.from('copilot_actions').insert([
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userConfirm, _synthetic: true, _trigger: 'approval', completed_action_id: completed?.id }, status: 'success', duration_ms: 0 },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0 },
+  ]);
+
   return jsonOk({
     session_id: action.session_id,
     approved_action_id: actionId,
     completed_action_id: completed?.id,
     result,
+    reply: loopResult.finalReply,
+    actions: loopResult.executedActions,
+    awaiting_approvals: loopResult.awaitingApprovals,
+    iterations: loopResult.iterations,
+    persona: persona.id,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// Rejection handler — marque rejected + notifie LLM (P1 #6)
+// ═══════════════════════════════════════════════════════════
+async function handleRejection(args: {
+  actionId: string;
+  reason?: string;
+  userId: string;
+  userClient: ReturnType<typeof getUserClient>;
+  service: ReturnType<typeof getServiceClient>;
+  persona: PersonaConfig;
+}) {
+  const { actionId, reason, userId, userClient, service, persona } = args;
+  const t0 = Date.now();
+
+  // P1 #8 — vérif persona stricte
+  const { data: action, error } = await service
+    .from('copilot_actions')
+    .select('id, session_id, skill, input, persona, copilot_sessions!inner(persona, context)')
+    .eq('id', actionId)
+    .eq('user_id', userId)
+    .eq('status', 'awaiting_approval')
+    .maybeSingle();
+  if (error || !action) return jsonError('Action introuvable ou déjà traitée', 404);
+
+  // deno-lint-ignore no-explicit-any
+  const sessionData = (action as any).copilot_sessions;
+  const sessionPersona = sessionData?.persona;
+  if (sessionPersona && sessionPersona !== persona.id) {
+    return jsonError(`Persona incohérent : action liée à '${sessionPersona}'.`, 400);
+  }
+  if (action.persona && action.persona !== persona.id) {
+    return jsonError(`Persona incohérent : action créée par '${action.persona}'.`, 400);
+  }
+
+  // Sanitize la raison (max 500 chars, plain text)
+  const safeReason = (reason ?? '').toString().trim().slice(0, 500) || 'Refus utilisateur (sans détail)';
+
+  // Insère une ligne 'rejected' immuable (audit trail)
+  const { data: rejected } = await service.from('copilot_actions').insert({
+    session_id: action.session_id, user_id: userId, persona: persona.id,
+    skill: action.skill, input: action.input,
+    output: { rejected: true, reason: safeReason },
+    status: 'rejected',
+    error_message: safeReason,
+    duration_ms: 0,
+  }).select('id').single();
+
+  // P1 #7 — relance la boucle LLM avec un message user expliquant le rejet
+  const sessionContext = (sessionData?.context as Record<string, unknown>) ?? {};
+  const isCreatorMode = sessionContext.creator_mode === true;
+
+  const userReject = `J'ai refusé l'action **${action.skill}** que tu proposais. Raison : ${safeReason}. Propose-moi une alternative ou demande-moi plus de précisions.`;
+
+  await service.from('copilot_sessions')
+    .update({ status: 'processing', processing_started_at: new Date().toISOString() })
+    .eq('id', action.session_id).eq('user_id', userId);
+
+  let loopResult: AgentLoopResult;
+  try {
+    loopResult = await runAgentLoop({
+      persona,
+      sessionId: action.session_id,
+      userId,
+      userMessage: userReject,
+      isCreatorMode,
+      userClient,
+      service,
+      t0,
+      initialUserMessage: { role: 'user', content: userReject },
+    });
+  } finally {
+    await service.from('copilot_sessions')
+      .update({ status: 'active', processing_started_at: null })
+      .eq('id', action.session_id).eq('user_id', userId);
+  }
+
+  await service.from('copilot_actions').insert([
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userReject, _synthetic: true, _trigger: 'rejection', rejected_action_id: rejected?.id }, status: 'success', duration_ms: 0 },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0 },
+  ]);
+
+  return jsonOk({
+    session_id: action.session_id,
+    rejected_action_id: actionId,
+    rejection_record_id: rejected?.id,
+    reply: loopResult.finalReply,
+    actions: loopResult.executedActions,
+    awaiting_approvals: loopResult.awaitingApprovals,
+    iterations: loopResult.iterations,
+    persona: persona.id,
   });
 }
 
@@ -463,7 +727,6 @@ async function loadHistory(
 
   const messages: ChatMessage[] = [];
   for (const row of trimmed) {
-    // Skip les actions internes non conversationnelles
     if (row.skill === '_security_violation' || row.skill === '_assistant_intermediate') continue;
 
     if (row.skill === '_user_message') {
@@ -477,8 +740,6 @@ async function loadHistory(
       continue;
     }
 
-    // Skill métier exécutée → reconstruit la paire (assistant tool_call + tool result)
-    // L'ID de tool_call est synthétisé depuis l'ID de l'action pour rester déterministe.
     const toolCallId = `hist_${row.id.replace(/-/g, '').slice(0, 24)}`;
     messages.push({
       role: 'assistant',
@@ -493,12 +754,11 @@ async function loadHistory(
       }],
     });
 
-    // Construit le tool_result en respectant le statut historique
     let toolResult: unknown;
     if (row.status === 'awaiting_approval') {
       toolResult = { ok: false, awaiting_approval: true, action_id: row.id };
     } else if (row.status === 'rejected') {
-      toolResult = { ok: false, error: row.error_message ?? 'Action rejetée' };
+      toolResult = { ok: false, error: row.error_message ?? 'Action rejetée par l\'utilisateur', rejected: true };
     } else if (row.status === 'error') {
       toolResult = { ok: false, error: row.error_message ?? 'Erreur skill' };
     } else {
