@@ -38,6 +38,14 @@ import {
   type PersonaConfig,
 } from './personas.ts';
 import { getSkill, buildToolDefinitions, listSkills, type SkillContext } from './skills/registry.ts';
+import {
+  categorizeAction,
+  summarizeForHistory,
+  withTimeout,
+  withAbortableTimeout,
+  LLM_TIMEOUT_MS,
+  SKILL_TIMEOUT_MS,
+} from './helpers.ts';
 
 interface OrchestratorBody {
   persona: string;
@@ -210,6 +218,7 @@ Deno.serve(async (req) => {
           skill: '_assistant_reply', input: {},
           output: { content: "_(Réponse précédente interrompue après un délai serveur. Je reprends ici — n'hésite pas à reformuler si nécessaire.)_" },
           status: 'success', duration_ms: 0,
+          action_category: 'system',
         });
       }
 
@@ -251,8 +260,8 @@ Deno.serve(async (req) => {
 
     // Persiste le message utilisateur + réponse finale comme paire conversation
     await service.from('copilot_actions').insert([
-      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: body.message }, status: 'success', duration_ms: 0 },
-      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0 },
+      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: body.message }, status: 'success', duration_ms: 0, action_category: 'system' },
+      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
     ]);
 
     // Libère le statut processing → active (succès nominal)
@@ -362,6 +371,16 @@ async function runAgentLoop(args: {
       tool_calls: llmResp.tool_calls,
     });
 
+    // P2 #11 — persiste le texte intermédiaire (assistant qui parle AVANT d'appeler des tools)
+    if (llmResp.tool_calls && llmResp.tool_calls.length > 0 && llmResp.content && llmResp.content.trim().length > 0) {
+      await service.from('copilot_actions').insert({
+        session_id: sessionId, user_id: userId, persona: persona.id,
+        skill: '_assistant_intermediate', input: {},
+        output: { content: llmResp.content, iteration: iterations },
+        status: 'success', duration_ms: 0, action_category: 'system',
+      });
+    }
+
     if (!llmResp.tool_calls || llmResp.tool_calls.length === 0) {
       finalReply = llmResp.content ?? '';
       break;
@@ -411,6 +430,7 @@ async function runAgentLoop(args: {
           .insert({
             session_id: sessionId, user_id: userId, persona: persona.id,
             skill: skillName, input: parsedArgs, status: 'awaiting_approval',
+            action_category: categorizeAction(skillName),
           })
           .select('id').single();
         awaitingApprovals.push({ action_id: approvalAction?.id ?? '', skill: skillName, input: parsedArgs });
@@ -430,12 +450,16 @@ async function runAgentLoop(args: {
         });
         stopForApproval = true;
       } else {
-        // AUTO
+        // AUTO — P2 #13 : timeout 30s par skill (évite freeze sur fetch externe)
         const tStart = Date.now();
         const skill = getSkill(skillName)!;
-        let result;
+        let result: { ok: boolean; data?: unknown; error?: string };
         try {
-          result = await skill.handler(parsedArgs, ctx);
+          result = await withTimeout(
+            skill.handler(parsedArgs, ctx),
+            SKILL_TIMEOUT_MS,
+            `skill ${skillName}`,
+          );
         } catch (e) {
           result = { ok: false, error: (e as Error).message };
         }
@@ -449,6 +473,7 @@ async function runAgentLoop(args: {
             status: result.ok ? 'success' : 'error',
             error_message: result.ok ? null : result.error,
             duration_ms: dur,
+            action_category: categorizeAction(skillName),
           })
           .select('id').single();
         executedActions.push({ skill: skillName, status: result.ok ? 'success' : 'error', output: result.data, error: result.error, action_id: insertedAction?.id });
@@ -514,6 +539,7 @@ async function handleApproval(args: {
       session_id: action.session_id, user_id: userId, persona: persona.id,
       skill: action.skill, input: action.input, status: 'error',
       error_message: 'Skill introuvable au moment de l\'approbation',
+      action_category: categorizeAction(action.skill),
     });
     return jsonError('Skill introuvable', 400);
   }
@@ -525,8 +551,14 @@ async function handleApproval(args: {
 
   const tStart = Date.now();
   let result: { ok: boolean; data?: unknown; error?: string };
-  try { result = await skill.handler(action.input as Record<string, unknown>, ctx); }
-  catch (e) { result = { ok: false, error: (e as Error).message }; }
+  // P2 #13 — timeout 30s sur l'exécution post-approbation aussi
+  try {
+    result = await withTimeout(
+      skill.handler(action.input as Record<string, unknown>, ctx),
+      SKILL_TIMEOUT_MS,
+      `skill ${action.skill}`,
+    );
+  } catch (e) { result = { ok: false, error: (e as Error).message }; }
   const dur = Date.now() - tStart;
 
   // Insère une nouvelle ligne (audit trail immuable — on ne MAJ PAS l'ancienne)
@@ -537,6 +569,7 @@ async function handleApproval(args: {
     status: result.ok ? 'success' : 'error',
     error_message: result.ok ? null : result.error,
     duration_ms: dur,
+    action_category: categorizeAction(action.skill),
   }).select('id').single();
 
   // P1 #7 — relance la boucle LLM avec un message user synthétique pour
@@ -574,8 +607,8 @@ async function handleApproval(args: {
 
   // Persiste la paire user_message (synthétique) + assistant_reply
   await service.from('copilot_actions').insert([
-    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userConfirm, _synthetic: true, _trigger: 'approval', completed_action_id: completed?.id }, status: 'success', duration_ms: 0 },
-    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0 },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userConfirm, _synthetic: true, _trigger: 'approval', completed_action_id: completed?.id }, status: 'success', duration_ms: 0, action_category: 'system' },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
   ]);
 
   return jsonOk({
@@ -636,6 +669,7 @@ async function handleRejection(args: {
     status: 'rejected',
     error_message: safeReason,
     duration_ms: 0,
+    action_category: categorizeAction(action.skill),
   }).select('id').single();
 
   // P1 #7 — relance la boucle LLM avec un message user expliquant le rejet
@@ -668,8 +702,8 @@ async function handleRejection(args: {
   }
 
   await service.from('copilot_actions').insert([
-    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userReject, _synthetic: true, _trigger: 'rejection', rejected_action_id: rejected?.id }, status: 'success', duration_ms: 0 },
-    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0 },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userReject, _synthetic: true, _trigger: 'rejection', rejected_action_id: rejected?.id }, status: 'success', duration_ms: 0, action_category: 'system' },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
   ]);
 
   return jsonOk({
@@ -727,6 +761,8 @@ async function loadHistory(
 
   const messages: ChatMessage[] = [];
   for (const row of trimmed) {
+    // _security_violation : interne, jamais envoyé au LLM.
+    // _assistant_intermediate : déjà inclus implicitement via le tool_call suivant — éviter doublon.
     if (row.skill === '_security_violation' || row.skill === '_assistant_intermediate') continue;
 
     if (row.skill === '_user_message') {
@@ -762,7 +798,8 @@ async function loadHistory(
     } else if (row.status === 'error') {
       toolResult = { ok: false, error: row.error_message ?? 'Erreur skill' };
     } else {
-      toolResult = { ok: true, data: row.output };
+      // P2 #15 — tronque les outputs volumineux pour ne pas exploser la fenêtre LLM
+      toolResult = { ok: true, data: summarizeForHistory(row.output) };
     }
     messages.push({
       role: 'tool',
@@ -782,16 +819,22 @@ async function callLLM(
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) throw new Error('LOVABLE_API_KEY manquante');
 
-  const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: persona.model,
-      max_tokens: persona.maxOutputTokens,
-      messages,
-      tools: tools.length > 0 ? tools : undefined,
+  // P2 #13 — timeout 45s + AbortController pour libérer la connexion
+  const r = await withAbortableTimeout(
+    (signal) => fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: persona.model,
+        max_tokens: persona.maxOutputTokens,
+        messages,
+        tools: tools.length > 0 ? tools : undefined,
+      }),
+      signal,
     }),
-  });
+    LLM_TIMEOUT_MS,
+    'LLM Gateway',
+  );
 
   if (r.status === 429) throw new Error('LLM rate-limit (429). Réessaie dans quelques secondes.');
   if (r.status === 402) throw new Error('Crédits LLM épuisés (402). Recharge le workspace.');
@@ -843,6 +886,7 @@ async function logAction(
     status,
     error_message: errorMessage,
     duration_ms: durationMs,
+    action_category: categorizeAction(skill),
   });
 }
 
