@@ -132,8 +132,22 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
           >
             <Layers className="h-3.5 w-3.5" /> Par moteur
           </Button>
+          <Button
+            variant={viewMode === 'cube' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2 text-xs gap-1"
+            onClick={() => setViewMode('cube')}
+          >
+            <Box className="h-3.5 w-3.5" /> Cube 3D
+          </Button>
         </div>
       </div>
+
+      {/* ── VIEW: Cube 3D (Thème × Moteur × Famille) ────────────────────── */}
+      {viewMode === 'cube' && (
+        <BenchmarkCube3D results={results} themes={themes} engines={engines} />
+      )}
+
 
       {/* ── VIEW: Engine tabs (one at a time) ─────────────────────────── */}
       {viewMode === 'tabs' && (
