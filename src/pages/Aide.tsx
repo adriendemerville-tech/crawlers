@@ -665,6 +665,9 @@ const DOC_SECTIONS: DocSection[] = [
 <li>Explication des scores SEO, GEO et E-E-A-T</li>
 <li>Recherche Google en temps réel (SERP, positions, avis)</li>
 <li>Guide interactif : demande de scroller pour analyser davantage</li>
+<li><strong>Saisie vocale</strong> : bouton micro dans le composer (Web Speech API FR/EN/ES). Le transcript est ajouté au champ pour relecture avant envoi. La correction phonétique est enrichie automatiquement par les noms de domaines suivis dans votre compte.</li>
+<li><strong>Signalement de bug</strong> : bouton dédié dans le composer ou commande <code>/bug …</code>. Vous êtes notifié quand le bug est résolu.</li>
+<li><strong>Onboarding</strong> : messages d'accueil au premier démarrage uniquement</li>
 </ul>
 <p class="mt-2"><strong>Quiz intégrés :</strong></p>
 <ul class="list-disc pl-6 mt-1 space-y-1">
@@ -672,18 +675,21 @@ const DOC_SECTIONS: DocSection[] = [
 <li>Quiz Crawlers suggéré automatiquement sur la homepage 5s après la première visite</li>
 <li>Suggestion après 3+ questions sur les outils : « On peut faire un quiz en 2 min si tu veux »</li>
 <li>Disponibles en français, anglais et espagnol</li>
-</ul>`,
+<li>Accessibles aussi via les commandes <code>/quiz</code>, <code>/quiz crawlers</code>, <code>/enterprise</code></li>
+</ul>
+<p class="mt-2"><strong>Architecture (depuis 2026) :</strong> Félix et le Stratège Cocoon partagent un backend unifié (<code>copilot-orchestrator</code>) avec persistance des sessions et journalisation immuable des actions. Chaque persona a sa propre liste blanche d'actions (lecture, navigation, déclenchement d'audit, déploiement CMS) avec validation explicite pour les actions sensibles.</p>`,
       },
       {
         id: 'stratege-cocoon',
         title: 'Stratège Cocoon — Consultant SEO senior',
-        content: `Le Stratège Cocoon est l'IA du module Cocon Sémantique, réservé aux abonnés Pro Agency.
+        content: `Le Stratège Cocoon est l'IA du module Cocon Sémantique, réservé aux abonnés Pro Agency. Il partage le même backend que Félix (<code>copilot-orchestrator</code>) avec une persona distincte (modèle Gemini 2.5 Pro, 1500 tokens, accès à l'analyse Cocoon et au déploiement CMS sur validation).
 <p class="mt-2"><strong>Personnalité :</strong> consultant externe senior, cordial et pédagogue. Recommandations précises et actionnables tout en restant respectueux — l'utilisateur est son client. S'adapte au persona et au score de connaissances.</p>
 <ul class="list-disc pl-6 mt-2 space-y-1">
 <li>Diagnostic du maillage interne et pages orphelines</li>
 <li>Prescriptions concrètes : contenus, liens, architecture</li>
 <li>Mémoire persistante entre sessions</li>
 <li>Suivi d'impact T+30/60/90 via GSC & GA4</li>
+<li>Sélection de nœuds Cocoon (jusqu'à 5) pour cibler une analyse</li>
 </ul>
 <p class="mt-2"><strong>Quiz Cocoon</strong> (50 questions) :</p>
 <ul class="list-disc pl-6 mt-1 space-y-1">
