@@ -320,8 +320,15 @@ export function ChatWindowUnified({
     }
   };
 
-  const positionStyle = maximized
-    ? { inset: '4rem 1rem 1rem 1rem' as const }
+  // 3 modes : ancré pleine hauteur à droite (docked), flottant standard, ou minimisé.
+  const positionStyle = docked
+    ? {
+        right: 0,
+        top: 0,
+        bottom: 0,
+        width: '24rem',
+        borderRadius: 0,
+      }
     : {
         right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))',
         bottom: '5rem',
