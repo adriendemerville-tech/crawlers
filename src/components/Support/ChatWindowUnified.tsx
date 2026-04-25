@@ -15,7 +15,8 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, BellOff, Bug, Maximize2, Minimize2, Minus, X } from 'lucide-react';
+import { Bell, BellOff, Bug, PanelRightClose, PanelRightOpen, Minus, X } from 'lucide-react';
+import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
