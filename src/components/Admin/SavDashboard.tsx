@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
+import { CopilotSessionsCard } from './CopilotSessionsCard';
 
 interface SavConversation {
   id: string;
@@ -169,7 +170,10 @@ export function SavDashboard() {
         </CardContent>
       </Card>
 
-      {/* Conversations list */}
+      {/* Sessions Copilot (nouvelle architecture copilot_sessions / copilot_actions) */}
+      <CopilotSessionsCard />
+
+      {/* Conversations list (legacy sav_conversations — escalades phone & quality scores) */}
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
