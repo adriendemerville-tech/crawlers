@@ -29,6 +29,7 @@ import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
 import { SmartRecommendationsPanel } from '@/components/Profile/SmartRecommendationsPanel';
 import { FanOutRadarWidget } from '@/components/Profile/FanOutRadarWidget';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
+import { SmartCmsConnectModal } from '@/components/Profile/SmartCmsConnectModal';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
@@ -274,6 +275,8 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
   const t = translations[h.language] || translations.fr;
   const navigate = useNavigate();
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
+  const [smartCmsOpen, setSmartCmsOpen] = useState(false);
+  const [smartCmsSiteId, setSmartCmsSiteId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   // Open API panel when triggered from sidebar
@@ -472,10 +475,17 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                                     isStale && "border-amber-500/50 text-amber-600 hover:text-amber-500 hover:bg-amber-500/10",
                                   )}
                                   onClick={() => {
-                                    h.setWpConnectSiteId(h.currentSite!.id);
-                                    h.setShowWpModal(true);
-                                    h.setWpApiKeyVisible(false);
-                                    h.setWpApiKeyCopied(false);
+                                    if (isConnected && !isStale) {
+                                      // Manage existing connection
+                                      h.setWpConnectSiteId(h.currentSite!.id);
+                                      h.setShowWpModal(true);
+                                      h.setWpApiKeyVisible(false);
+                                      h.setWpApiKeyCopied(false);
+                                    } else {
+                                      // Smart auto-detect for new/stale connection
+                                      setSmartCmsSiteId(h.currentSite!.id);
+                                      setSmartCmsOpen(true);
+                                    }
                                   }}
                                 >
                                   {isConnected && !isStale ? (
@@ -1071,7 +1081,21 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
         </DialogContent>
       </Dialog>
 
-      {/* Architect Modal */}
+      {/* Smart CMS Connect — auto-detection wizard */}
+      {(() => {
+        const smartSite = h.sites.find(s => s.id === smartCmsSiteId);
+        if (!smartSite) return null;
+        return (
+          <SmartCmsConnectModal
+            open={smartCmsOpen}
+            onOpenChange={setSmartCmsOpen}
+            siteId={smartSite.id}
+            siteDomain={smartSite.domain}
+            siteApiKey={smartSite.api_key || ''}
+          />
+        );
+      })()}
+
       {(() => {
         const archSite = h.sites.find(s => s.id === h.architectSiteId);
         if (!archSite) return null;
