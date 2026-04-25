@@ -6,6 +6,7 @@
  */
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, RotateCcw, Send } from 'lucide-react';
 import { useCopilot, type CopilotPersona, type CopilotAction } from '@/hooks/useCopilot';
@@ -36,6 +37,8 @@ interface AgentChatShellProps {
     submitDraft: () => void;
     sending: boolean;
   }) => React.ReactNode;
+  /** Slot affiché à gauche du textarea (ex: ChatAttachmentPicker). */
+  composerLeading?: React.ReactNode;
   className?: string;
 }
 
@@ -50,6 +53,7 @@ export function AgentChatShell({
   seedMessages,
   composerExtras,
   renderComposerExtras,
+  composerLeading,
   className,
 }: AgentChatShellProps) {
   const navigate = useNavigate();
@@ -169,8 +173,8 @@ export function AgentChatShell({
                     <span className="text-xs">Réflexion en cours…</span>
                   </div>
                 ) : (
-                  <div className="prose prose-sm prose-invert max-w-none break-words">
-                    <ReactMarkdown>{m.content || ''}</ReactMarkdown>
+                  <div className="prose prose-sm prose-invert max-w-none break-words prose-table:my-2 prose-table:text-xs prose-th:border prose-th:border-border prose-th:bg-muted/30 prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content || ''}</ReactMarkdown>
                   </div>
                 )}
 
@@ -244,8 +248,9 @@ export function AgentChatShell({
       </div>
 
       {/* Composer */}
-      <form onSubmit={onSubmit} className="border-t border-border p-3">
+      <form onSubmit={onSubmit} className="relative border-t border-border p-3">
         <div className="flex items-end gap-2">
+          {composerLeading}
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
