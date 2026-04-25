@@ -188,7 +188,9 @@ Deno.serve(async (req) => {
       let stopForApproval = false;
       for (const call of llmResp.tool_calls) {
         const skillName = call.function.name;
-        const policy = resolveSkillPolicy(persona, skillName);
+        // En mode créateur : toute skill connue passe en exécution automatique.
+        const basePolicy = resolveSkillPolicy(persona, skillName);
+        const policy = isCreatorMode && getSkill(skillName) ? 'auto' : basePolicy;
         let parsedArgs: Record<string, unknown> = {};
         try {
           parsedArgs = JSON.parse(call.function.arguments || '{}');
