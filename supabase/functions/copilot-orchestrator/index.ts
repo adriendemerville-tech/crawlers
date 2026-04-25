@@ -432,6 +432,8 @@ async function logAction(
     duration_ms: durationMs,
   });
 }
+
+function jsonOk(data: unknown) {
   return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status: 200,
