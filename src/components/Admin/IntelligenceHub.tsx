@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bot, Search, Brain, Shield, Bug, Award, Palette, ListTodo } from 'lucide-react';
+import { Bot, Search, Brain, Shield, Bug, Award, Palette, ListTodo, Sparkles } from 'lucide-react';
 import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { SeoAgentDashboard } from './SeoAgentDashboard';
 import { UxAgentDashboard } from './UxAgentDashboard';
@@ -11,6 +11,7 @@ import { RecettageTab } from './RecettageTab';
 import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { FelixAgentBridgeControls } from './FelixAgentBridgeControls';
 import { AgentTaskPlanRegistry } from './AgentTaskPlanRegistry';
+import { CopilotDashboard } from './CopilotDashboard';
 
 export function IntelligenceHub() {
   return (
@@ -49,6 +50,10 @@ export function IntelligenceHub() {
             <ListTodo className="h-4 w-4" />
             <span className="hidden sm:inline">Plan tâches</span>
           </TabsTrigger>
+          <TabsTrigger value="copilot" className="flex-1 gap-2">
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Copilot</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="agent-seo" forceMount className="data-[state=inactive]:hidden">
@@ -84,6 +89,10 @@ export function IntelligenceHub() {
 
         <TabsContent value="task-plan" forceMount className="data-[state=inactive]:hidden">
           <AgentTaskPlanRegistry />
+        </TabsContent>
+
+        <TabsContent value="copilot" forceMount className="data-[state=inactive]:hidden">
+          <CopilotDashboard />
         </TabsContent>
       </Tabs>
     </div>
