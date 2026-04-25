@@ -1,12 +1,15 @@
 /**
  * ChatWindowUnified — Félix v2 branché sur copilot-orchestrator.
  *
- * Sprint 6 (cohabitation legacy) puis Sprint 8 (parité fonctionnelle) :
+ * Sprints 6→9 :
  * - chrome maison (header CrawlersLogo, mute, min/max, fermeture)
  * - injecte tracked_site_id/domain dans le contexte du copilot
  * - onboarding : seed messages premier-démarrage + marquage `felix_onboarding_done`
  * - bug report : bouton dédié dans le composer + slash command `/bug …`
  * - notification automatique des bug reports résolus
+ * - Sprint 9 : quiz SEO/Crawlers (SeoQuiz), formulaire Enterprise (EnterpriseQuiz),
+ *   validation admin de questions auto-générées (QuizValidationNotif), via
+ *   slash commands `/quiz`, `/quiz crawlers`, `/enterprise` ou auto-triggers.
  *
  * Charte : noir/blanc/violet/jaune d'or, boutons sans fond, pas d'emoji.
  */
@@ -15,6 +18,7 @@ import { useLocation } from 'react-router-dom';
 import { Bell, BellOff, Bug, Maximize2, Minimize2, Minus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useToast } from '@/hooks/use-toast';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import type { CopilotMessage } from '@/hooks/useCopilot';
@@ -24,13 +28,15 @@ import {
   markOnboardingDone,
 } from '@/utils/felixOnboarding';
 import { CrawlersLogo } from './CrawlersLogo';
+import { SeoQuiz } from './SeoQuiz';
+import { EnterpriseQuiz } from './EnterpriseQuiz';
+import { QuizValidationNotif } from './QuizValidationNotif';
 import { cn } from '@/lib/utils';
 
 interface ChatWindowUnifiedProps {
   onClose: () => void;
   triggerOnboarding?: boolean;
   onOnboardingConsumed?: () => void;
-  /** Conservés pour compat — pas encore actifs en v2. */
   autoStartCrawlersQuiz?: boolean;
   autoEnterpriseContact?: boolean;
   initialGreeting?: string | null;
@@ -42,6 +48,13 @@ const STARTERS = [
   'Ouvre la cocoon',
   'Quels sont mes quick wins SEO ?',
 ];
+
+interface QuizDataState {
+  questions: any[];
+  answerKey: any;
+  title: string;
+  isCrawlersQuiz: boolean;
+}
 
 function uid(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -76,9 +89,12 @@ export function ChatWindowUnified({
   onClose,
   triggerOnboarding,
   onOnboardingConsumed,
+  autoStartCrawlersQuiz,
+  autoEnterpriseContact,
   initialGreeting,
 }: ChatWindowUnifiedProps) {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const { toast } = useToast();
   const location = useLocation();
   const [minimized, setMinimized] = useState(false);
@@ -87,6 +103,16 @@ export function ChatWindowUnified({
   const [trackedSiteId, setTrackedSiteId] = useState<string | undefined>();
   const [domain, setDomain] = useState<string | undefined>();
   const [bugMode, setBugMode] = useState(false);
+
+  // Quiz / enterprise state
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizData, setQuizData] = useState<QuizDataState | null>(null);
+  const [showEnterpriseQuiz, setShowEnterpriseQuiz] = useState(false);
+  const [showQuizValidation, setShowQuizValidation] = useState(false);
+  const [extraMessages, setExtraMessages] = useState<CopilotMessage[]>([]);
+  const autoQuizFiredRef = useRef(false);
+  const autoEntFiredRef = useRef(false);
+
   // seedMessages doit être stable au mount pour éviter de réinitialiser le hook.
   const seedRef = useRef<CopilotMessage[]>([]);
   if (seedRef.current.length === 0) {
@@ -144,6 +170,74 @@ export function ChatWindowUnified({
     return () => { cancelled = true; };
   }, [user, toast]);
 
+  // Détection auto des questions à valider (admin).
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from('quiz_questions')
+        .select('id', { count: 'exact', head: true })
+        .eq('quiz_type', 'crawlers')
+        .eq('is_active', false)
+        .eq('auto_generated', true);
+      if (!cancelled && count && count > 0) setShowQuizValidation(true);
+    })();
+    return () => { cancelled = true; };
+  }, [isAdmin]);
+
+  // Auto-trigger quiz Crawlers depuis la bulle.
+  useEffect(() => {
+    if (!autoStartCrawlersQuiz || autoQuizFiredRef.current) return;
+    autoQuizFiredRef.current = true;
+    void launchQuiz('crawlers');
+  }, [autoStartCrawlersQuiz]);
+
+  // Auto-trigger contact entreprise.
+  useEffect(() => {
+    if (!autoEnterpriseContact || autoEntFiredRef.current) return;
+    autoEntFiredRef.current = true;
+    pushAssistant("**Offre Enterprise — Sur mesure**\n\nAvec plaisir. Réponds aux 7 questions ci-dessous pour qu'on prépare une proposition adaptée.");
+    setShowEnterpriseQuiz(true);
+  }, [autoEnterpriseContact]);
+
+  const pushAssistant = (content: string) => {
+    setExtraMessages((prev) => [
+      ...prev,
+      { id: uid(), role: 'assistant', content, createdAt: Date.now() },
+    ]);
+  };
+
+  const launchQuiz = async (mode: 'seo' | 'crawlers') => {
+    if (quizData || quizLoading) return;
+    setQuizLoading(true);
+    pushAssistant(
+      mode === 'crawlers'
+        ? '**Quiz Crawlers** — 10 questions sur la plateforme. 2 minutes.'
+        : '**Quiz SEO/GEO/LLM** — 10 questions pour évaluer ton niveau.',
+    );
+    try {
+      const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
+        body: {
+          action: mode === 'crawlers' ? 'get_crawlers_quiz' : 'get_seo_quiz',
+          language: 'fr',
+        },
+      });
+      if (error) throw error;
+      setQuizData({
+        questions: data.questions,
+        answerKey: data.answerKey,
+        title: mode === 'crawlers' ? 'Quiz Crawlers' : 'Quiz SEO/GEO/LLM',
+        isCrawlersQuiz: mode === 'crawlers',
+      });
+    } catch (e) {
+      console.error('Quiz error:', e);
+      pushAssistant("Désolé, le quiz n'a pas pu être chargé.");
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
   const toggleMute = () => {
     const next = !muted;
     setMuted(next);
@@ -160,12 +254,28 @@ export function ChatWindowUnified({
     bug_report_mode: bugMode || undefined,
   });
 
-  // Persiste le bug report dès que l'utilisateur tape un message en mode bug.
-  // Regex slash command : `/bug <description>` traité comme un bug direct.
+  // Persiste bug + intercepte slash commands quiz/enterprise.
   const onAssistantReply = async (
     reply: string,
     ctx: { sessionId: string | null; userMessage: string },
   ) => {
+    const txt = ctx.userMessage.trim().toLowerCase();
+    // Slash commands quiz (déclenchés après réponse assistant — accepté).
+    if (/^\/quiz\s+crawlers/.test(txt)) {
+      void launchQuiz('crawlers');
+      return;
+    }
+    if (/^\/quiz\b/.test(txt)) {
+      void launchQuiz('seo');
+      return;
+    }
+    if (/^\/enterprise\b/.test(txt) || /^\/entreprise\b/.test(txt)) {
+      pushAssistant("**Offre Enterprise** — réponds aux questions ci-dessous.");
+      setShowEnterpriseQuiz(true);
+      return;
+    }
+
+    // Bug report
     if (!user) return;
     const slashMatch = ctx.userMessage.match(/^\/bug\s+([\s\S]+)$/i);
     const description = bugMode
@@ -186,7 +296,7 @@ export function ChatWindowUnified({
       console.warn('[ChatWindowUnified] bug report insert failed:', error);
       toast({
         title: 'Bug report',
-        description: 'Échec de l\'enregistrement du bug, mais Félix a bien répondu.',
+        description: "Échec de l'enregistrement du bug, mais Félix a bien répondu.",
         variant: 'destructive',
       });
     } else {
@@ -197,6 +307,8 @@ export function ChatWindowUnified({
     }
   };
 
+  const seedWithExtras = [...seedRef.current, ...extraMessages];
+
   const positionStyle = maximized
     ? { inset: '4rem 1rem 1rem 1rem' as const }
     : {
@@ -205,6 +317,8 @@ export function ChatWindowUnified({
         width: '24rem',
         height: minimized ? '3rem' : '36rem',
       };
+
+  const hasOverlay = quizLoading || !!quizData || showEnterpriseQuiz || showQuizValidation;
 
   return (
     <div
@@ -275,33 +389,90 @@ export function ChatWindowUnified({
       )}
 
       {!minimized && (
-        <div className="flex-1 overflow-hidden">
-          <AgentChatShell
-            persona="felix"
-            title="Félix"
-            subtitle="Copilote SAV unifié — questions, audits, navigation"
-            starterPrompts={STARTERS}
-            getContext={getContext}
-            seedMessages={seedRef.current}
-            onAssistantReply={onAssistantReply}
-            composerExtras={
-              <button
-                type="button"
-                onClick={() => setBugMode((v) => !v)}
-                className={cn(
-                  'inline-flex items-center justify-center rounded-md border px-2 py-2 text-xs transition',
-                  bugMode
-                    ? 'border-primary text-primary'
-                    : 'border-border text-foreground hover:border-foreground/50',
-                )}
-                title="Signaler un bug"
-                aria-label="Signaler un bug"
-              >
-                <Bug className="h-3.5 w-3.5" />
-              </button>
-            }
-            className="h-full"
-          />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Overlays quiz / enterprise / validation */}
+          {hasOverlay && (
+            <div className="max-h-[55%] overflow-y-auto border-b border-border bg-muted/10 p-3 space-y-3">
+              {quizLoading && (
+                <div className="text-xs text-muted-foreground animate-pulse">
+                  Préparation du quiz…
+                </div>
+              )}
+              {quizData && (
+                <SeoQuiz
+                  questions={quizData.questions}
+                  answerKey={quizData.answerKey}
+                  quizTitle={quizData.title}
+                  onComplete={(score, total, wrongAnswers) => {
+                    const isCrawlers = quizData.isCrawlersQuiz;
+                    setQuizData(null);
+                    const level = score <= 3 ? 'Débutant' : score <= 6 ? 'Intermédiaire' : score <= 9 ? 'Avancé' : 'Expert';
+                    let wrongSection = '';
+                    if (wrongAnswers.length > 0) {
+                      wrongSection = '\n\n**Corrections :**\n' + wrongAnswers.map((w, i) =>
+                        `\n${i + 1}. **${w.question}**\n   - Bonne réponse : ${w.correct}\n   - ${w.explanation}`,
+                      ).join('');
+                    }
+                    pushAssistant(`**Score : ${score}/${total}** — Niveau : **${level}**${wrongSection}`);
+                    if (user) {
+                      supabase.from('analytics_events').insert({
+                        user_id: user.id,
+                        event_type: isCrawlers ? 'quiz:crawlers_score' : 'quiz:seo_score',
+                        event_data: { score, total, level, wrong_count: wrongAnswers.length, surface: 'felix-v2' },
+                      }).then(() => {});
+                    }
+                  }}
+                  onRequestCrawlersQuiz={() => void launchQuiz('crawlers')}
+                />
+              )}
+              {showEnterpriseQuiz && (
+                <EnterpriseQuiz
+                  userId={user?.id}
+                  onComplete={(summary) => {
+                    setShowEnterpriseQuiz(false);
+                    pushAssistant(summary);
+                  }}
+                />
+              )}
+              {showQuizValidation && isAdmin && (
+                <QuizValidationNotif
+                  onDone={(msg) => {
+                    setShowQuizValidation(false);
+                    pushAssistant(msg);
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+          <div className="flex-1 overflow-hidden">
+            <AgentChatShell
+              persona="felix"
+              title="Félix"
+              subtitle="Copilote SAV unifié — questions, audits, navigation"
+              starterPrompts={STARTERS}
+              getContext={getContext}
+              seedMessages={seedWithExtras}
+              onAssistantReply={onAssistantReply}
+              composerExtras={
+                <button
+                  type="button"
+                  onClick={() => setBugMode((v) => !v)}
+                  className={cn(
+                    'inline-flex items-center justify-center rounded-md border px-2 py-2 text-xs transition',
+                    bugMode
+                      ? 'border-primary text-primary'
+                      : 'border-border text-foreground hover:border-foreground/50',
+                  )}
+                  title="Signaler un bug"
+                  aria-label="Signaler un bug"
+                >
+                  <Bug className="h-3.5 w-3.5" />
+                </button>
+              }
+              className="h-full"
+            />
+          </div>
         </div>
       )}
     </div>
