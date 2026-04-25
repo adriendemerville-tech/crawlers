@@ -451,19 +451,25 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                           const isConnected = synced || isWidgetAlive;
                           const isStale = synced && !isWidgetAlive;
                           const tooltipText = isConnected && !isStale
-                            ? (h.language === 'fr' ? 'Votre site est branché' : h.language === 'es' ? 'Su sitio está conectado' : 'Your site is connected')
-                            : (h.language === 'fr' ? 'Votre site est débranché' : h.language === 'es' ? 'Su sitio está desconectado' : 'Your site is disconnected');
+                            ? (h.language === 'fr' ? 'CMS branché — cliquez pour gérer' : h.language === 'es' ? 'CMS conectado — clic para gestionar' : 'CMS connected — click to manage')
+                            : isStale
+                              ? (h.language === 'fr' ? 'CMS désynchronisé — cliquez pour reconnecter' : h.language === 'es' ? 'CMS desincronizado — clic para reconectar' : 'CMS out of sync — click to reconnect')
+                              : (h.language === 'fr' ? 'Brancher votre CMS (WordPress, Shopify, GTM…)' : h.language === 'es' ? 'Conectar su CMS (WordPress, Shopify, GTM…)' : 'Connect your CMS (WordPress, Shopify, GTM…)');
+                          const ctaLabel = isConnected && !isStale
+                            ? (h.language === 'fr' ? 'CMS branché' : h.language === 'es' ? 'CMS conectado' : 'CMS connected')
+                            : isStale
+                              ? (h.language === 'fr' ? 'Reconnecter CMS' : h.language === 'es' ? 'Reconectar CMS' : 'Reconnect CMS')
+                              : (h.language === 'fr' ? 'Brancher CMS' : h.language === 'es' ? 'Conectar CMS' : 'Connect CMS');
                           return (
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant="outline"
-                                  size="icon"
+                                  size="sm"
                                   className={cn(
-                                    "h-8 w-8 relative group",
+                                    "h-8 gap-1.5 relative group",
                                     isConnected && !isStale && "border-emerald-500/50 text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10",
                                     isStale && "border-amber-500/50 text-amber-600 hover:text-amber-500 hover:bg-amber-500/10",
-                                    !isConnected && !isStale && ""
                                   )}
                                   onClick={() => {
                                     h.setWpConnectSiteId(h.currentSite!.id);
@@ -483,6 +489,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                                       )} />
                                     </>
                                   )}
+                                  <span className="text-xs font-medium">{ctaLabel}</span>
                                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                     {tooltipText}
                                   </span>
