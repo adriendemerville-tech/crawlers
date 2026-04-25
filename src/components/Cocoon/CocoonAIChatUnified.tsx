@@ -129,8 +129,15 @@ export function CocoonAIChatUnified({
     nodes_count: nodes.length,
   });
 
-  const positionStyle = maximized
-    ? { inset: '4rem 1rem 1rem 1rem' as const }
+  // 3 modes : ancré pleine hauteur à gauche (docked), flottant standard, ou minimisé.
+  const positionStyle = docked
+    ? {
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: '28rem',
+        borderRadius: 0,
+      }
     : {
         left: '1.5rem',
         bottom: '5.5rem',
