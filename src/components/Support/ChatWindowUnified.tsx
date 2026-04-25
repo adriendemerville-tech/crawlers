@@ -65,6 +65,8 @@ function uid(): string {
 function buildSeedMessages(opts: {
   triggerOnboarding: boolean;
   initialGreeting?: string | null;
+  initialExpandedGreeting?: string | null;
+  docked?: boolean;
 }): CopilotMessage[] {
   const seed: CopilotMessage[] = [];
   if (opts.triggerOnboarding) {
@@ -76,11 +78,18 @@ function buildSeedMessages(opts: {
         createdAt: Date.parse(m.timestamp) || Date.now(),
       });
     }
-  } else if (opts.initialGreeting) {
+    return seed;
+  }
+  // B1 fix : préfère le greeting long si on s'ouvre déjà ancré, sinon le court.
+  // Si seul l'un des deux est fourni, on l'utilise.
+  const chosen = opts.docked
+    ? (opts.initialExpandedGreeting ?? opts.initialGreeting)
+    : (opts.initialGreeting ?? opts.initialExpandedGreeting);
+  if (chosen) {
     seed.push({
       id: uid(),
       role: 'assistant',
-      content: opts.initialGreeting,
+      content: chosen,
       createdAt: Date.now(),
     });
   }
