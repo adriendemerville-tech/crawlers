@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Layers, Grid3X3 } from 'lucide-react';
+import { Layers, Grid3X3, Box } from 'lucide-react';
+import { BenchmarkCube3D } from './BenchmarkCube3D';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
