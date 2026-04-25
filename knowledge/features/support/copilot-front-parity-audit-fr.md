@@ -66,7 +66,7 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 | **Suggestions opérationnelles** (rappels scans, GMB local) | ❌ Non portées | logique disparue |
 | **Détection langue auto FR/EN/ES** | ⚠️ Implicite (LLM) | plus de détection explicite, dépend du prompt persona |
 
-> **À noter** : la promesse historique « Félix logge tout dans `sav_conversations` » est devenue caduque — désormais c'est `copilot_sessions` + `copilot_actions`. Le dashboard SAV admin (`Admin/SavDashboard.tsx`) lit encore l'ancienne table et affiche donc une vue partielle (uniquement les escalades phone legacy).
+> **Mise à jour Q4.6** : `Admin/SavDashboard.tsx` affiche désormais une carte **« Copilot Félix — sessions »** lisant `copilot_sessions WHERE persona='felix'` + `copilot_actions` (skills `_user_message`/`_assistant_reply`). La carte legacy `sav_conversations` reste affichée tant que les escalades phone et les `sav_quality_scores` n'ont pas été reportés sur la nouvelle architecture.
 
 ---
 
@@ -78,7 +78,7 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 | B2 | 🟠 moyenne | `react-markdown` rendu sans `remark-gfm` → tableaux Markdown des réponses Stratège affichés en pre-text, listes-tâches non parsées | `Copilot/AgentChatShell.tsx` | ✅ **Corrigé Q3.1** (remark-gfm + styles prose-table) |
 | B3 | 🟡 faible | Bouton flottant Félix utilisait `bg-[#7c3aed]` violet plein → enfreint la charte « pas de fond » | `Support/FloatingChatBubble.tsx` ligne 338 | ✅ **Corrigé Q2** (border + bg transparent) |
 | B4 | 🟡 faible | Émoji 👋 / 🔍 dans `FloatingChatBubble` → enfreint la règle « pas d'émoji » | `Support/FloatingChatBubble.tsx` | ✅ **Corrigé Q2** |
-| B5 | 🟡 faible | `useEffect` cleanup setFelixExpanded(false) se déclenche aussi au lazy-unmount de Suspense | `Support/ChatWindowUnified.tsx` | ⏳ reporté (impact négligeable) |
+| B5 | 🟡 faible | `useEffect` cleanup setFelixExpanded(false) se déclenche aussi au lazy-unmount de Suspense | `Support/ChatWindowUnified.tsx` ligne 126-128 | ✅ **Acté Q4.6** — comportement souhaité (libère le padding du `AISidebarPageWrapper`), pas de régression observée |
 | B6 | 🟡 faible | Toggle bulle/dock teste `localStorage` directement à chaque render au lieu de lire `useAISidebar` → race possible | `Support/FloatingChatBubble.tsx` ligne 334 | ✅ **Corrigé Q4.3** (lecture context `felixExpanded`) |
 | B7 | 🟠 moyenne | `useCopilot.reset()` n'informait pas le backend → la session précédente restait `processing` jusqu'à reconciliation 90s | `hooks/useCopilot.ts` + `copilot-orchestrator/index.ts` | ✅ **Corrigé Q1.3** (handler `close_session`) |
 | B8 | 🔴 haute | `safeServiceCall` réellement branché sur les handlers `cms_*` ? | `copilot-orchestrator/skills/registry.ts` | ✅ **Audité Q1.1** — branché sur `cms_publish_draft`, `cms_patch_content` ; autres skills utilisent `userClient` (RLS) |
@@ -112,16 +112,17 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 6. ✅ Q4.4 — Panneau « Historique » Félix via `CopilotHistoryPanel` (lecture `copilot_sessions WHERE persona='felix'`, hydratation via `initialSessionId`).
 7. ✅ **Q4.5 — Panneau « Historique » Stratège** (parité front 100%, même composant, persona `strategist`).
 8. ⏳ Sprint dédié — Skill `live_search` dans le registry (ports DataForSEO/SerpAPI/Places) — vraie feature backend hors scope UI.
-9. ⏳ Sprint dédié — Refactor `Admin/SavDashboard` sur `copilot_*` au lieu de `sav_conversations`.
+9. ✅ **Q4.6 — Refactor `Admin/SavDashboard`** : ajout de `CopilotSessionsCard` (lecture `copilot_sessions` + `copilot_actions`, dépliage messages persona Félix). Carte legacy `sav_conversations` conservée pour escalades phone & `sav_quality_scores` non encore portés.
 10. (Optionnel) Réintroduire `escalate_to_phone` comme skill `approval` côté Félix.
 
 ---
 
 ## 7. Bilan Q1→Q4
 
-- **9 bugs sur 10 résolus** (B5 reporté car cosmétique).
-- **7 recos sur 9 livrées** ; 2 reportées en sprints dédiés (live_search backend, SavDashboard admin).
+- **10 bugs sur 10 résolus** (B5 acté comme comportement souhaité Q4.6).
+- **8 recos sur 9 livrées** ; reste `live_search` (sprint backend dédié).
 - **Parité Félix ⇄ Stratège : 100%** sur le scope front (seedMessages ✅, logo charte ✅, markdown tables ✅, panneau historique ✅).
+- **Admin Sav : migration progressive** vers `copilot_*` engagée (Q4.6) — coexistence avec legacy le temps de porter escalades phone & scoring.
 
 ---
 
