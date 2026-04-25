@@ -371,6 +371,16 @@ async function runAgentLoop(args: {
       tool_calls: llmResp.tool_calls,
     });
 
+    // P2 #11 — persiste le texte intermédiaire (assistant qui parle AVANT d'appeler des tools)
+    if (llmResp.tool_calls && llmResp.tool_calls.length > 0 && llmResp.content && llmResp.content.trim().length > 0) {
+      await service.from('copilot_actions').insert({
+        session_id: sessionId, user_id: userId, persona: persona.id,
+        skill: '_assistant_intermediate', input: {},
+        output: { content: llmResp.content, iteration: iterations },
+        status: 'success', duration_ms: 0, action_category: 'system',
+      });
+    }
+
     if (!llmResp.tool_calls || llmResp.tool_calls.length === 0) {
       finalReply = llmResp.content ?? '';
       break;
@@ -806,16 +816,22 @@ async function callLLM(
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) throw new Error('LOVABLE_API_KEY manquante');
 
-  const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: persona.model,
-      max_tokens: persona.maxOutputTokens,
-      messages,
-      tools: tools.length > 0 ? tools : undefined,
+  // P2 #13 — timeout 45s + AbortController pour libérer la connexion
+  const r = await withAbortableTimeout(
+    (signal) => fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: persona.model,
+        max_tokens: persona.maxOutputTokens,
+        messages,
+        tools: tools.length > 0 ? tools : undefined,
+      }),
+      signal,
     }),
-  });
+    LLM_TIMEOUT_MS,
+    'LLM Gateway',
+  );
 
   if (r.status === 429) throw new Error('LLM rate-limit (429). Réessaie dans quelques secondes.');
   if (r.status === 402) throw new Error('Crédits LLM épuisés (402). Recharge le workspace.');
