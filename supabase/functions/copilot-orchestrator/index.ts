@@ -409,6 +409,21 @@ async function handleApproval(args: {
 // Helpers
 // ═══════════════════════════════════════════════════════════
 
+/**
+ * Charge l'historique conversationnel ET les exécutions de skills.
+ *
+ * P0 #1 — On reconstruit toute la chaîne :
+ *   - _user_message → role='user'
+ *   - _assistant_reply → role='assistant' (texte final)
+ *   - skill métier (read_*, navigate_to, cms_*, …) → paire assistant(tool_call) + tool(tool_result)
+ *
+ * Sans ça, après une approbation le LLM ne voyait jamais le résultat de l'action exécutée
+ * et pouvait re-demander la même skill en boucle.
+ *
+ * On limite à HISTORY_LIMIT messages texte (user/assistant) et on injecte TOUTES les
+ * actions skills associées (peu nombreuses en pratique). Les actions internes type
+ * _security_violation / _assistant_intermediate sont ignorées.
+ */
 async function loadHistory(
   service: ReturnType<typeof getServiceClient>,
   sessionId: string,
@@ -416,27 +431,72 @@ async function loadHistory(
 ): Promise<ChatMessage[]> {
   const { data } = await service
     .from('copilot_actions')
-    .select('skill, input, output, created_at')
+    .select('id, skill, input, output, status, error_message, created_at')
     .eq('session_id', sessionId)
     .eq('user_id', userId)
-    .in('skill', ['_user_message', '_assistant_reply'])
-    .order('created_at', { ascending: false })
-    .limit(HISTORY_LIMIT);
-  if (!data) return [];
-  return data
-    .reverse()
-    .map((row): ChatMessage | null => {
-      if (row.skill === '_user_message') {
-        const content = (row.input as { content?: string })?.content ?? '';
-        return { role: 'user', content };
-      }
-      if (row.skill === '_assistant_reply') {
-        const content = (row.output as { content?: string })?.content ?? '';
-        return { role: 'assistant', content };
-      }
-      return null;
-    })
-    .filter((m): m is ChatMessage => m !== null);
+    .order('created_at', { ascending: true })
+    .limit(HISTORY_LIMIT * 4); // marge pour inclure les tool_calls intercalés
+  if (!data || data.length === 0) return [];
+
+  // On ne garde QUE les HISTORY_LIMIT dernières paires user/assistant
+  // mais on conserve toutes les actions skills entre elles.
+  const textRows = data.filter((r) => r.skill === '_user_message' || r.skill === '_assistant_reply');
+  const cutoffIdx = textRows.length > HISTORY_LIMIT
+    ? data.findIndex((r) => r.id === textRows[textRows.length - HISTORY_LIMIT].id)
+    : 0;
+  const trimmed = data.slice(Math.max(0, cutoffIdx));
+
+  const messages: ChatMessage[] = [];
+  for (const row of trimmed) {
+    // Skip les actions internes non conversationnelles
+    if (row.skill === '_security_violation' || row.skill === '_assistant_intermediate') continue;
+
+    if (row.skill === '_user_message') {
+      const content = (row.input as { content?: string })?.content ?? '';
+      messages.push({ role: 'user', content });
+      continue;
+    }
+    if (row.skill === '_assistant_reply') {
+      const content = (row.output as { content?: string })?.content ?? '';
+      messages.push({ role: 'assistant', content });
+      continue;
+    }
+
+    // Skill métier exécutée → reconstruit la paire (assistant tool_call + tool result)
+    // L'ID de tool_call est synthétisé depuis l'ID de l'action pour rester déterministe.
+    const toolCallId = `hist_${row.id.replace(/-/g, '').slice(0, 24)}`;
+    messages.push({
+      role: 'assistant',
+      content: null,
+      tool_calls: [{
+        id: toolCallId,
+        type: 'function',
+        function: {
+          name: row.skill,
+          arguments: JSON.stringify(row.input ?? {}),
+        },
+      }],
+    });
+
+    // Construit le tool_result en respectant le statut historique
+    let toolResult: unknown;
+    if (row.status === 'awaiting_approval') {
+      toolResult = { ok: false, awaiting_approval: true, action_id: row.id };
+    } else if (row.status === 'rejected') {
+      toolResult = { ok: false, error: row.error_message ?? 'Action rejetée' };
+    } else if (row.status === 'error') {
+      toolResult = { ok: false, error: row.error_message ?? 'Erreur skill' };
+    } else {
+      toolResult = { ok: true, data: row.output };
+    }
+    messages.push({
+      role: 'tool',
+      tool_call_id: toolCallId,
+      name: row.skill,
+      content: JSON.stringify(toolResult),
+    });
+  }
+  return messages;
 }
 
 async function callLLM(
