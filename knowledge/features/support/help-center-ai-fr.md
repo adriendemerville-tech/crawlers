@@ -1,5 +1,18 @@
 # Memory: features/support/help-center-ai-fr
-Updated: 2026-04-08
+Updated: 2026-04-25 (Sprint P2)
+
+> ⚠️ **État post-migration Copilot v2** : Félix tourne désormais sur l'edge function unifiée `copilot-orchestrator` (persona `felix`, Gemini 2.5 Flash). L'ancien `sav-agent` est legacy.
+> Plusieurs fonctionnalités historiques décrites ci-dessous **ne sont temporairement plus actives** côté nouveau frontend `ChatWindowUnified` :
+> - Pièces jointes (PDF audits, scripts) — composant `ChatAttachmentPicker` non monté
+> - Historique des conversations (`felix_conversations_archive`) — non réimplémenté
+> - Workflow post-audit guidé — non porté
+> - Capture screen context d'audit — `screenContext.ts` n'est plus appelé
+> - Live Search (DataForSEO / SerpAPI / Places) — skill manquante dans `skills/registry.ts`
+> - Mémoire persistante `site_memory` & enrichissement carte d'identité — non portés
+> - Escalade téléphone après 3 itérations — table `sav_conversations.phone_callback*` plus alimentée (cron de purge encore actif)
+> - Scoring `sav_quality_scores` — dashboard admin lit la table mais aucune insertion neuve
+> Les capacités encore actives sont : starter prompts, dock pleine hauteur (24 rem droite), mute, voice input, bug report (`/bug`), quiz SEO/Crawlers/Enterprise (`/quiz`, `/enterprise`), auto-navigation `navigate_to`, onboarding seed.
+> Cf. `knowledge/features/support/copilot-front-parity-audit-fr.md` pour l'audit complet et `knowledge/tech/copilot/copilot-orchestrator-architecture-fr.md` pour l'architecture.
 
 ## Agent SAV "Félix"
 - Modèle : Gemini Flash via Lovable AI Gateway (`LOVABLE_API_KEY`)
