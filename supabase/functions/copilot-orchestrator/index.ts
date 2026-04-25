@@ -118,6 +118,8 @@ Deno.serve(async (req) => {
           persona: persona.id,
           context: body.context ?? {},
           title: body.message.slice(0, 80),
+          status: 'processing',
+          processing_started_at: new Date().toISOString(),
         })
         .select('id')
         .single();
@@ -125,9 +127,38 @@ Deno.serve(async (req) => {
       sessionId = created.id;
     } else {
       sessionId = body.session_id;
+
+      // Reconciliation : si la session est en 'processing' depuis > 90s, on la débloque.
+      // (Cas crash entre tool_calls et persist final → message fantôme à éviter.)
+      const { data: existingSess } = await service
+        .from('copilot_sessions')
+        .select('status, processing_started_at')
+        .eq('id', sessionId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existingSess?.status === 'processing' && existingSess.processing_started_at) {
+        const elapsedMs = Date.now() - new Date(existingSess.processing_started_at).getTime();
+        if (elapsedMs < 90_000) {
+          return jsonError('Une réponse est déjà en cours de génération pour cette session. Patiente quelques secondes.', 409);
+        }
+        // > 90s : crash silencieux probable. On insère un message assistant "récupération"
+        // pour ne pas laisser des actions orphelines sans contexte textuel.
+        await service.from('copilot_actions').insert({
+          session_id: sessionId, user_id: userId, persona: persona.id,
+          skill: '_assistant_reply', input: {},
+          output: { content: "_(Réponse précédente interrompue après un délai serveur. Je reprends ici — n'hésite pas à reformuler si nécessaire.)_" },
+          status: 'success', duration_ms: 0,
+        });
+      }
+
       await service
         .from('copilot_sessions')
-        .update({ last_message_at: new Date().toISOString() })
+        .update({
+          last_message_at: new Date().toISOString(),
+          status: 'processing',
+          processing_started_at: new Date().toISOString(),
+        })
         .eq('id', sessionId)
         .eq('user_id', userId);
     }
