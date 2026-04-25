@@ -28,7 +28,7 @@ import {
   resolveSkillPolicy,
   type PersonaConfig,
 } from './personas.ts';
-import { getSkill, buildToolDefinitions, type SkillContext } from './skills/registry.ts';
+import { getSkill, buildToolDefinitions, listSkills, type SkillContext } from './skills/registry.ts';
 
 interface OrchestratorBody {
   persona: string;
@@ -93,6 +93,21 @@ Deno.serve(async (req) => {
 
     if (!body.message) return jsonError('message requis', 400);
 
+    // ── Préfixe admin /creator: /createur: /admin: ────────
+    // Permet à l'administrateur (rôle 'admin') de débloquer les skills sensibles
+    // (CMS, déploiements, actions destructrices) en passant en mode "creator".
+    let userMessage = body.message;
+    let isCreatorMode = false;
+    const creatorPrefixMatch = userMessage.match(/^\s*\/(?:createur|creator|admin)\s*:\s*/i);
+    if (creatorPrefixMatch) {
+      const { data: isAdmin } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
+      if (isAdmin === true) {
+        isCreatorMode = true;
+        userMessage = userMessage.slice(creatorPrefixMatch[0].length).trim();
+      }
+      // Si non-admin : on laisse le message tel quel, le préfixe est ignoré silencieusement
+    }
+
     // ── Session : create or load ─────────────────────────
     let sessionId: string;
     if (!body.session_id) {
@@ -125,16 +140,23 @@ Deno.serve(async (req) => {
       ? `\n\nContexte courant :\n${JSON.stringify(body.context, null, 2)}`
       : '';
 
+    const creatorBanner = isCreatorMode
+      ? `\n\n## ⚙️ MODE CRÉATEUR ACTIF\nL'administrateur créateur (rôle 'admin') t'a invoqué via le préfixe \`/creator :\` (ou \`/createur :\`, \`/admin :\`).\nDans ce mode :\n- Toutes les skills disponibles sont débloquées et exécutables sans approbation préalable (auto).\n- Les actions destructrices (CMS publish/patch, déploiements) sont autorisées.\n- Tu peux consulter le backend, dispatcher des directives, et agir au nom du créateur.\nLe préfixe a été retiré du message ci-dessous — réponds à la demande réelle du créateur.\n`
+      : '';
+
     const messages: ChatMessage[] = [
-      { role: 'system', content: persona.systemPrompt + contextStr },
+      { role: 'system', content: persona.systemPrompt + creatorBanner + contextStr },
       ...history,
-      { role: 'user', content: body.message },
+      { role: 'user', content: userMessage },
     ];
 
     // ── Tools autorisés (auto + approval, on EXCLUT forbidden) ──
-    const allowedSkills = Object.keys(persona.skillPolicies).filter(
-      (s) => persona.skillPolicies[s] !== 'forbidden',
-    );
+    // En mode créateur : toutes les skills du registry sont accessibles.
+    const allowedSkills = isCreatorMode
+      ? Array.from(new Set([...Object.keys(persona.skillPolicies), ...listSkills()]))
+      : Object.keys(persona.skillPolicies).filter(
+          (s) => persona.skillPolicies[s] !== 'forbidden',
+        );
     const tools = buildToolDefinitions(allowedSkills);
 
     // ── Agent loop ───────────────────────────────────────
@@ -166,7 +188,9 @@ Deno.serve(async (req) => {
       let stopForApproval = false;
       for (const call of llmResp.tool_calls) {
         const skillName = call.function.name;
-        const policy = resolveSkillPolicy(persona, skillName);
+        // En mode créateur : toute skill connue passe en exécution automatique.
+        const basePolicy = resolveSkillPolicy(persona, skillName);
+        const policy = isCreatorMode && getSkill(skillName) ? 'auto' : basePolicy;
         let parsedArgs: Record<string, unknown> = {};
         try {
           parsedArgs = JSON.parse(call.function.arguments || '{}');
