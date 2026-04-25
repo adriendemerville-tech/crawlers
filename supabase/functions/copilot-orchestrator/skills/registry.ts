@@ -130,7 +130,7 @@ const read_cocoon_graph: SkillDefinition = {
 
 const read_documentation: SkillDefinition = {
   name: 'read_documentation',
-  description: "Recherche dans la base de connaissance (lexique, guides, FAQ) par mot-clé.",
+  description: "Recherche dans la base des recommandations d'audit (titres + descriptions) par mot-clé. Retourne les recommandations les plus pertinentes pour l'utilisateur courant.",
   parameters: {
     type: 'object',
     properties: {
@@ -141,15 +141,24 @@ const read_documentation: SkillDefinition = {
   },
   handler: async (input, ctx) => {
     const query = String(input.query ?? '').trim();
-    const limit = Math.min(Number(input.limit ?? 5), 10);
+    const limit = Math.min(Math.max(Number(input.limit ?? 5), 1), 10);
     if (!query) return { ok: false, error: 'query requis' };
-    const { data, error } = await ctx.service
-      .from('lexique_terms')
-      .select('term, definition, category')
-      .or(`term.ilike.%${query}%,definition.ilike.%${query}%`)
+
+    // Sanitize : PostgREST `.or()` interprète virgules / parenthèses / guillemets.
+    // On retire tout caractère non alphanumérique/espace/tiret puis on tronque.
+    const safe = query.replace(/[^\p{L}\p{N}\s\-]/gu, ' ').trim().slice(0, 80);
+    if (!safe) return { ok: false, error: 'query invalide après nettoyage' };
+    const pattern = `%${safe}%`;
+
+    // Source : audit_recommendations_registry — filtré par RLS sur l'utilisateur courant.
+    const { data, error } = await ctx.supabase
+      .from('audit_recommendations_registry')
+      .select('id, title, description, category, priority, audit_type, fix_type, is_resolved, created_at')
+      .or(`title.ilike.${pattern},description.ilike.${pattern}`)
+      .order('created_at', { ascending: false })
       .limit(limit);
     if (error) return { ok: false, error: error.message };
-    return { ok: true, data: { results: data ?? [], count: data?.length ?? 0 } };
+    return { ok: true, data: { results: data ?? [], count: data?.length ?? 0, query: safe } };
   },
 };
 
