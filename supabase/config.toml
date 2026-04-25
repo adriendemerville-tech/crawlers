@@ -193,3 +193,13 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.geo-attribution-summary]
     verify_jwt = false
+  [functions.matrice-classify]
+    verify_jwt = false
+  [functions.audit-matrice]
+    verify_jwt = false
+  [functions.parse-doc-matrix]
+    verify_jwt = false
+  [functions.parse-matrix-geo]
+    verify_jwt = false
+  [functions.parse-matrix-hybrid]
+    verify_jwt = false
