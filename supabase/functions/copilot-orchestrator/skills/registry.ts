@@ -109,13 +109,22 @@ const read_cocoon_graph: SkillDefinition = {
   },
   handler: async (input, ctx) => {
     const siteId = String(input.tracked_site_id ?? '');
+    if (!siteId) return { ok: false, error: 'tracked_site_id requis' };
+    // Source réelle : cocoon_diagnostic_results (dernier diagnostic).
     const { data, error } = await ctx.supabase
-      .from('cocoon_graph_summary')
-      .select('total_pages, orphan_pages, max_depth, cannibalizations, last_calculated_at')
+      .from('cocoon_diagnostic_results')
+      .select('id, diagnostic_type, scores, findings, source_function, created_at')
       .eq('tracked_site_id', siteId)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
-    return { ok: true, data: data ?? { message: 'Pas encore de cocoon calculé' } };
+    if (!data) return { ok: true, data: { message: 'Pas encore de cocoon calculé' } };
+    // Tronque findings si trop volumineux.
+    const findings = data.findings && typeof data.findings === 'object'
+      ? Object.fromEntries(Object.entries(data.findings as Record<string, unknown>).slice(0, 8))
+      : data.findings;
+    return { ok: true, data: { ...data, findings } };
   },
 };
 
