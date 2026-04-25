@@ -15,11 +15,12 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Crosshair, PanelLeftClose, PanelLeftOpen, Minus, Sparkles, X } from 'lucide-react';
+import { Crosshair, History, PanelLeftClose, PanelLeftOpen, Minus, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
+import { CopilotHistoryPanel } from '@/components/Copilot/CopilotHistoryPanel';
 import { CrawlersLogo } from '@/components/Support/CrawlersLogo';
 import type { CopilotMessage } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
@@ -75,6 +76,11 @@ export function CocoonAIChatUnified({
   // Ref pour exposer la liste à jour au getContext (qui est ré-évalué à chaque envoi).
   const selectedNodesRef = useRef<SelectedNode[]>([]);
   selectedNodesRef.current = selectedNodes;
+
+  // Q4.4 (parité Félix) — historique des sessions Stratège.
+  const [showHistory, setShowHistory] = useState(false);
+  const [pickedSessionId, setPickedSessionId] = useState<string | null>(null);
+  const [shellKey, setShellKey] = useState(0);
 
   // Q4.1 — greeting Stratège (stable au mount, parité Félix).
   const seedRef = useRef<CopilotMessage[] | null>(null);
@@ -225,7 +231,7 @@ export function CocoonAIChatUnified({
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 relative">
               {onGenerateGraph && (
                 <button
                   type="button"
@@ -236,6 +242,20 @@ export function CocoonAIChatUnified({
                   Recalculer
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setShowHistory((v) => !v)}
+                className={cn(
+                  'rounded-md border p-1 transition',
+                  showHistory
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
+                )}
+                aria-label="Historique des conversations"
+                title="Historique"
+              >
+                <History className="h-3.5 w-3.5" />
+              </button>
               <button
                 type="button"
                 onClick={() => { setMinimized((v) => !v); if (docked) setCocoonExpanded(false); }}
@@ -263,6 +283,19 @@ export function CocoonAIChatUnified({
               </button>
             </div>
           </div>
+
+          {showHistory && !minimized && (
+            <div className="relative">
+              <CopilotHistoryPanel
+                persona="strategist"
+                userId={user?.id}
+                currentSessionId={pickedSessionId}
+                onPickSession={(sid) => { setPickedSessionId(sid); setShellKey((k) => k + 1); }}
+                onNewSession={() => { setPickedSessionId(null); setShellKey((k) => k + 1); }}
+                onClose={() => setShowHistory(false)}
+              />
+            </div>
+          )}
 
           {/* Sélection de nœuds — barre contextuelle */}
           {!minimized && (
@@ -315,6 +348,7 @@ export function CocoonAIChatUnified({
           {!minimized && (
             <div className="flex-1 overflow-hidden">
               <AgentChatShell
+                key={shellKey}
                 persona="strategist"
                 title="Stratège"
                 subtitle={
@@ -325,7 +359,8 @@ export function CocoonAIChatUnified({
                 starterPrompts={STARTERS}
                 getContext={getContext}
                 onAssistantReply={onAssistantReply}
-                seedMessages={seedRef.current ?? undefined}
+                seedMessages={pickedSessionId ? undefined : (seedRef.current ?? undefined)}
+                initialSessionId={pickedSessionId}
                 className="h-full"
               />
             </div>

@@ -96,7 +96,7 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 | `seedMessages` | ✅ onboarding/greeting | ✅ **Q4.1** greeting cocoon |
 | `onAssistantReply` | ✅ bug report + slash commands | ✅ auto-save reco |
 | `onActions` | ❌ délégué au shell (autoNavigate) | ❌ idem |
-| `initialSessionId` | ✅ **Q4.4** via panneau historique | ⏳ panneau historique côté Stratège (à brancher de la même manière) |
+| `initialSessionId` | ✅ **Q4.4** via panneau historique | ✅ **Q4.5** panneau historique branché de manière identique (`CopilotHistoryPanel persona="strategist"`) |
 
 > **Sprint 6 enfin exploité** : `useCopilot` hydrate désormais l'historique depuis `copilot_actions` (skills `_user_message` / `_assistant_reply`) quand `initialSessionId` est fourni.
 
@@ -109,18 +109,19 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 3. ✅ Q3.3 — `screen_context` injecté dans le `getContext()` de Félix via `captureScreenContext(location.pathname)`.
 4. ✅ Q4.1 — `seedMessages` Stratège (greeting cocoon adaptatif au domaine + nb nœuds).
 5. ✅ Q3.2 — `ChatAttachmentPicker` branché dans `composerLeading` de Félix (rapports + scripts + images).
-6. ✅ Q4.4 — Panneau « Historique » via `CopilotHistoryPanel` (lecture `copilot_sessions WHERE persona='felix'`, hydratation via `initialSessionId`).
-7. ⏳ Sprint dédié — Skill `live_search` dans le registry (ports DataForSEO/SerpAPI/Places) — vraie feature backend hors scope UI.
-8. ⏳ Sprint dédié — Refactor `Admin/SavDashboard` sur `copilot_*` au lieu de `sav_conversations`.
-9. (Optionnel) Réintroduire `escalate_to_phone` comme skill `approval` côté Félix.
+6. ✅ Q4.4 — Panneau « Historique » Félix via `CopilotHistoryPanel` (lecture `copilot_sessions WHERE persona='felix'`, hydratation via `initialSessionId`).
+7. ✅ **Q4.5 — Panneau « Historique » Stratège** (parité front 100%, même composant, persona `strategist`).
+8. ⏳ Sprint dédié — Skill `live_search` dans le registry (ports DataForSEO/SerpAPI/Places) — vraie feature backend hors scope UI.
+9. ⏳ Sprint dédié — Refactor `Admin/SavDashboard` sur `copilot_*` au lieu de `sav_conversations`.
+10. (Optionnel) Réintroduire `escalate_to_phone` comme skill `approval` côté Félix.
 
 ---
 
 ## 7. Bilan Q1→Q4
 
 - **9 bugs sur 10 résolus** (B5 reporté car cosmétique).
-- **6 recos sur 9 livrées** ; 2 reportées en sprints dédiés (live_search, SavDashboard).
-- **Parité Félix ⇄ Stratège** : seedMessages ✅, logo charte ✅, markdown tables ✅. Le panneau historique côté Stratège peut être ajouté en réutilisant `CopilotHistoryPanel persona="strategist"`.
+- **7 recos sur 9 livrées** ; 2 reportées en sprints dédiés (live_search backend, SavDashboard admin).
+- **Parité Félix ⇄ Stratège : 100%** sur le scope front (seedMessages ✅, logo charte ✅, markdown tables ✅, panneau historique ✅).
 
 ---
 
