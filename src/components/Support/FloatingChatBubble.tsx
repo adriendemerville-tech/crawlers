@@ -20,7 +20,7 @@ export function FloatingChatBubble() {
   });
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
-  const { cocoonExpanded } = useAISidebar();
+  const { felixExpanded, cocoonExpanded } = useAISidebar();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showOnboardingPulse, setShowOnboardingPulse] = useState(false);
   const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
@@ -330,7 +330,7 @@ export function FloatingChatBubble() {
       )}
 
       {/* Floating Button — Crawlers robot logo (hidden when sidebar is expanded) */}
-      {!(isOpen && localStorage.getItem('felix_sidebar_expanded') === '1') && !cocoonExpanded && (
+      {!(isOpen && felixExpanded) && !cocoonExpanded && (
         <>
           <button
             onClick={isOpen ? () => setIsOpen(false) : handleOpen}
