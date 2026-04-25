@@ -512,13 +512,12 @@ Deno.serve(handleRequest(async (req) => {
 
     // ── BENCHMARK MODE ──────────────────────────────────────────────
     if (mode === 'benchmark' && benchmark_items?.length) {
-      console.log(`[parse-matrix-geo] BENCHMARK mode for ${normalizedUrl} with ${benchmark_items.length} items`)
+      console.log(`[parse-matrix-geo] BENCHMARK mode for ${normalizedUrl} with ${benchmark_items.length} items (stream=${!!stream})`)
 
-      // Throughput: 5 items in parallel, no inter-batch sleep.
-      // 5 engines × 79 prompts = 395 items → ~80 batches × ~3s each = ~4 min.
-      // Each item runs 2 LLM calls; OpenRouter handles concurrency well at this scale.
-      const BATCH_SIZE = 5
-      const results: BenchmarkResult[] = []
+      // Throughput: 8 items in parallel, no inter-batch sleep.
+      // 5 engines × 79 prompts = 395 items → ~50 batches × ~3s each = ~2.5 min.
+      // OpenRouter handles concurrency well at this scale.
+      const BATCH_SIZE = 8
 
       // Normalize once: lowercase + trim engine/axe to avoid duplicate columns
       // ("ChatGPT" vs "chatgpt ") and duplicate Z-layers in the cube.
@@ -530,78 +529,148 @@ Deno.serve(handleRequest(async (req) => {
         theme: normalize(it.theme) || 'Général',
       }))
 
-      for (let i = 0; i < normalizedItems.length; i += BATCH_SIZE) {
-        const batch = normalizedItems.slice(i, i + BATCH_SIZE)
-        console.log(`[parse-matrix-geo] Benchmark batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(normalizedItems.length / BATCH_SIZE)}`)
+      // Shared core: process all batches, optionally streaming progress.
+      const processAll = async (
+        emit?: (event: string, payload: Record<string, any>) => Promise<void> | void
+      ): Promise<BenchmarkResult[]> => {
+        const results: BenchmarkResult[] = []
+        const totalBatches = Math.ceil(normalizedItems.length / BATCH_SIZE)
 
-        const batchResults = await Promise.all(
-          batch.map(async (item): Promise<BenchmarkResult> => {
-            const { score, raw, citation_found, citation_rank, citation_context } = await evaluateBenchmark(
-              item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-2.5-flash',
-              engine_notes, scoring_rubric
-            )
-            return {
-              id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
-              theme: item.theme, engine: item.engine,
-              detected_type: 'geo_benchmark',
-              crawlers_score: score, parsed_score: score,
-              raw_data: raw, parsed_raw: raw,
-              citation_found, citation_rank, citation_context,
-              seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
-            }
-          })
-        )
-        results.push(...batchResults)
-        // No sleep between batches — Promise.all already throttles correctly.
-      }
+        for (let i = 0; i < normalizedItems.length; i += BATCH_SIZE) {
+          const batch = normalizedItems.slice(i, i + BATCH_SIZE)
+          const batchIndex = Math.floor(i / BATCH_SIZE) + 1
+          console.log(`[parse-matrix-geo] Benchmark batch ${batchIndex}/${totalBatches}`)
 
-      // Build heatmap data: theme × engine (engines/themes case-insensitive, stable)
-      const themeOrder: string[] = []
-      const engineOrder: string[] = []
-      const seenT = new Set<string>()
-      const seenE = new Set<string>()
-      for (const r of results) {
-        if (!seenT.has(r.theme)) { seenT.add(r.theme); themeOrder.push(r.theme) }
-        if (!seenE.has(r.engine)) { seenE.add(r.engine); engineOrder.push(r.engine) }
-      }
-      const themes = themeOrder
-      const engines = engineOrder
-      const heatmap: Record<string, Record<string, { score: number; cited: boolean; rank: number | null; count: number; cited_count: number }>> = {}
+          const batchResults = await Promise.all(
+            batch.map(async (item): Promise<BenchmarkResult> => {
+              const { score, raw, citation_found, citation_rank, citation_context } = await evaluateBenchmark(
+                item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-2.5-flash',
+                engine_notes, scoring_rubric
+              )
+              const result: BenchmarkResult = {
+                id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,
+                theme: item.theme, engine: item.engine,
+                detected_type: 'geo_benchmark',
+                crawlers_score: score, parsed_score: score,
+                raw_data: raw, parsed_raw: raw,
+                citation_found, citation_rank, citation_context,
+                seuil_bon: item.seuil_bon, seuil_moyen: item.seuil_moyen, seuil_mauvais: item.seuil_mauvais,
+              }
+              if (emit) {
+                await emit('item', {
+                  id: result.id, engine: result.engine, theme: result.theme,
+                  axe: result.axe, score: result.crawlers_score,
+                  citation_found: result.citation_found, citation_rank: result.citation_rank,
+                })
+              }
+              return result
+            })
+          )
+          results.push(...batchResults)
 
-      for (const theme of themes) {
-        heatmap[theme] = {}
-        for (const engine of engines) {
-          const matches = results.filter(r => r.theme === theme && r.engine === engine)
-          if (matches.length === 0) {
-            heatmap[theme][engine] = { score: -1, cited: false, rank: null, count: 0, cited_count: 0 }
-          } else {
-            const citedCount = matches.filter(m => m.citation_found).length
-            const bestRank = matches.filter(m => m.citation_rank !== null).sort((a, b) => (a.citation_rank ?? 99) - (b.citation_rank ?? 99))[0]?.citation_rank ?? null
-            // For benchmark heatmap: score = best rank (lower is better), 0 = not cited
-            heatmap[theme][engine] = { score: bestRank ?? 0, cited: citedCount > 0, rank: bestRank, count: matches.length, cited_count: citedCount }
+          if (emit) {
+            await emit('progress', {
+              done: results.length,
+              total: normalizedItems.length,
+              batch: batchIndex,
+              total_batches: totalBatches,
+            })
           }
+        }
+        return results
+      }
+
+      // Build heatmap helper (shared by both modes).
+      const buildPayload = (results: BenchmarkResult[]) => {
+        const themeOrder: string[] = []
+        const engineOrder: string[] = []
+        const seenT = new Set<string>()
+        const seenE = new Set<string>()
+        for (const r of results) {
+          if (!seenT.has(r.theme)) { seenT.add(r.theme); themeOrder.push(r.theme) }
+          if (!seenE.has(r.engine)) { seenE.add(r.engine); engineOrder.push(r.engine) }
+        }
+        const themes = themeOrder
+        const engines = engineOrder
+        const heatmap: Record<string, Record<string, { score: number; cited: boolean; rank: number | null; count: number; cited_count: number }>> = {}
+
+        for (const theme of themes) {
+          heatmap[theme] = {}
+          for (const engine of engines) {
+            const matches = results.filter(r => r.theme === theme && r.engine === engine)
+            if (matches.length === 0) {
+              heatmap[theme][engine] = { score: -1, cited: false, rank: null, count: 0, cited_count: 0 }
+            } else {
+              const citedCount = matches.filter(m => m.citation_found).length
+              const bestRank = matches.filter(m => m.citation_rank !== null).sort((a, b) => (a.citation_rank ?? 99) - (b.citation_rank ?? 99))[0]?.citation_rank ?? null
+              heatmap[theme][engine] = { score: bestRank ?? 0, cited: citedCount > 0, rank: bestRank, count: matches.length, cited_count: citedCount }
+            }
+          }
+        }
+
+        const citationRate = results.length > 0
+          ? Math.round(results.filter(r => r.citation_found).length / results.length * 100)
+          : 0
+
+        const citedResults = results.filter(r => r.citation_found && r.citation_rank != null)
+        const avgRank = citedResults.length > 0
+          ? +(citedResults.reduce((s, r) => s + (r.citation_rank ?? 0), 0) / citedResults.length).toFixed(1)
+          : 0
+
+        return {
+          success: true, url: normalizedUrl, mode: 'benchmark',
+          global_score: avgRank, citation_rate: citationRate, avg_rank: avgRank,
+          total_items: results.length, audit_type: 'geo_benchmark',
+          themes, engines, heatmap, results,
         }
       }
 
-      const citationRate = results.length > 0
-        ? Math.round(results.filter(r => r.citation_found).length / results.length * 100)
-        : 0
+      // ── SSE streaming branch ──
+      if (stream) {
+        const encoder = new TextEncoder()
+        const sseBody = new ReadableStream({
+          async start(controller) {
+            const send = (event: string, data: Record<string, any>) => {
+              try {
+                controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
+              } catch (_) { /* client disconnected */ }
+            }
+            // Heartbeat to keep proxy connections alive (every 15s).
+            const heartbeat = setInterval(() => {
+              try { controller.enqueue(encoder.encode(`: ping\n\n`)) } catch (_) { /* noop */ }
+            }, 15_000)
 
-      // Global score for benchmark: average best rank among cited items
-      const citedResults = results.filter(r => r.citation_found && r.citation_rank != null)
-      const avgRank = citedResults.length > 0
-        ? +(citedResults.reduce((s, r) => s + (r.citation_rank ?? 0), 0) / citedResults.length).toFixed(1)
-        : 0
+            try {
+              send('start', { total: normalizedItems.length, batch_size: BATCH_SIZE })
+              const results = await processAll((event, payload) => send(event, payload))
+              const payload = buildPayload(results)
+              send('complete', payload)
+            } catch (e) {
+              send('error', { message: e instanceof Error ? e.message : 'Unknown' })
+            } finally {
+              clearInterval(heartbeat)
+              releaseConcurrency('parse-matrix-geo')
+              try { controller.close() } catch (_) { /* noop */ }
+            }
+          },
+        })
 
-      console.log(`[parse-matrix-geo] Benchmark complete. Avg rank: ${avgRank}, Citation rate: ${citationRate}%`)
+        return new Response(sseBody, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+          },
+        })
+      }
 
-      return jsonOk({
-        success: true, url: normalizedUrl, mode: 'benchmark',
-        global_score: avgRank, citation_rate: citationRate,
-        avg_rank: avgRank,
-        total_items: results.length, audit_type: 'geo_benchmark',
-        themes, engines, heatmap, results,
-      })
+      // ── Classic JSON branch (legacy) ──
+      const results = await processAll()
+      const payload = buildPayload(results)
+      console.log(`[parse-matrix-geo] Benchmark complete. Avg rank: ${payload.avg_rank}, Citation rate: ${payload.citation_rate}%`)
+      return jsonOk(payload)
     }
 
     // ── STANDARD MODE ───────────────────────────────────────────────
