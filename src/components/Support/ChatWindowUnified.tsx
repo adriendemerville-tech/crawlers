@@ -65,6 +65,8 @@ function uid(): string {
 function buildSeedMessages(opts: {
   triggerOnboarding: boolean;
   initialGreeting?: string | null;
+  initialExpandedGreeting?: string | null;
+  docked?: boolean;
 }): CopilotMessage[] {
   const seed: CopilotMessage[] = [];
   if (opts.triggerOnboarding) {
@@ -76,11 +78,18 @@ function buildSeedMessages(opts: {
         createdAt: Date.parse(m.timestamp) || Date.now(),
       });
     }
-  } else if (opts.initialGreeting) {
+    return seed;
+  }
+  // B1 fix : préfère le greeting long si on s'ouvre déjà ancré, sinon le court.
+  // Si seul l'un des deux est fourni, on l'utilise.
+  const chosen = opts.docked
+    ? (opts.initialExpandedGreeting ?? opts.initialGreeting)
+    : (opts.initialGreeting ?? opts.initialExpandedGreeting);
+  if (chosen) {
     seed.push({
       id: uid(),
       role: 'assistant',
-      content: opts.initialGreeting,
+      content: chosen,
       createdAt: Date.now(),
     });
   }
@@ -94,6 +103,7 @@ export function ChatWindowUnified({
   autoStartCrawlersQuiz,
   autoEnterpriseContact,
   initialGreeting,
+  initialExpandedGreeting,
 }: ChatWindowUnifiedProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
@@ -128,12 +138,15 @@ export function ChatWindowUnified({
   const autoEntFiredRef = useRef(false);
 
   // seedMessages doit être stable au mount pour éviter de réinitialiser le hook.
+  // B1 fix : on capture aussi initialExpandedGreeting + l'état docked au mount.
   const seedRef = useRef<CopilotMessage[]>([]);
   if (seedRef.current.length === 0) {
     const shouldOnboard = !!triggerOnboarding && !isOnboardingDone();
     seedRef.current = buildSeedMessages({
       triggerOnboarding: shouldOnboard,
       initialGreeting,
+      initialExpandedGreeting,
+      docked,
     });
     if (shouldOnboard) {
       markOnboardingDone();
