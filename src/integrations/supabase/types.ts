@@ -3522,6 +3522,95 @@ export type Database = {
         }
         Relationships: []
       }
+      copilot_actions: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          input: Json
+          llm_cost_usd: number | null
+          output: Json | null
+          persona: string
+          session_id: string
+          skill: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input?: Json
+          llm_cost_usd?: number | null
+          output?: Json | null
+          persona: string
+          session_id: string
+          skill: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input?: Json
+          llm_cost_usd?: number | null
+          output?: Json | null
+          persona?: string
+          session_id?: string
+          skill?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copilot_actions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "copilot_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      copilot_sessions: {
+        Row: {
+          context: Json
+          created_at: string
+          id: string
+          last_message_at: string
+          persona: string
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          persona: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          persona?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crawl_index_history: {
         Row: {
           crawl_id: string | null
