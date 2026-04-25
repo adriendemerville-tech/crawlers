@@ -1315,16 +1315,24 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 
 ---
 
-## Agent SAV IA — "Félix"
+## Agent SAV IA — "Félix" (architecture Copilot v2)
 
-### Architecture
+### Architecture unifiée — \\\`copilot-orchestrator\\\`
 
-- **Modèle** : Gemini 2.5 Flash via Lovable AI
+Depuis le Sprint Copilot, **Félix et le Stratège Cocoon partagent un seul backend** : la edge function \\\`copilot-orchestrator\\\`. Un fichier \\\`personas.ts\\\` définit l'identité, le modèle LLM, les tokens et la liste blanche des skills par persona. L'ancien \\\`sav-agent\\\` n'est plus appelé par le frontend.
+
+| Persona | Modèle | maxTokens | Skills auto | Skills approval | Skills forbidden |
+|---|---|---|---|---|---|
+| \\\`felix\\\` | gemini-2.5-flash | 800 | read_*, navigate_to, open_audit_panel | trigger_audit, refresh_kpis | cms_publish_draft, cms_patch_content |
+| \\\`strategist\\\` | gemini-2.5-pro | 1500 | read_*, analyze_cocoon, plan_editorial, navigate_to, open_audit_panel | trigger_audit, cms_publish_draft, cms_patch_content, deploy_cocoon_plan | (defaultSkillPolicy=forbidden) |
+
 - **Nom** : "Félix" — assistant SAV principal (icône robot violet #7C3AED)
-- **Limite** : 600 caractères max par défaut (3000 en mode narratif Parménion)
+- **Limite** : 800 tokens par défaut
 - **Ton** : Collègue sympa expert SEO/GEO, vouvoiement par défaut (tutoiement si l'utilisateur tutoie)
 - **Détection langue** : FR/EN/ES dès le premier message
 - **Personnalisation** : Utilise le prénom (table \\\`profiles\\\`), adaptation par niveau d'autonomie
+- **Persistance** : sessions dans \\\`copilot_sessions\\\`, audit trail immuable dans \\\`copilot_actions\\\` (purge 90j via cron \\\`copilot-purge-actions-daily\\\`)
+- **Frontend** : composant \\\`ChatWindowUnified.tsx\\\` (Félix v2) + shell réutilisable \\\`AgentChatShell.tsx\\\` (markdown, composer, render-prop \\\`renderComposerExtras\\\` pour micro/bug)
 
 ### Sources de données
 
@@ -1333,26 +1341,30 @@ Pipeline automatique EN/ES via Gemini 2.5 Flash Lite après génération FR.
 | Documentation SAV | /aide — base de connaissance publique |
 | Taxonomie frontend | Routes, onglets, positions des composants |
 | Données utilisateur | \\\`tracked_sites\\\`, \\\`crawl_pages\\\`, \\\`cocoon_sessions\\\`, audits |
+| Skills lecture | \\\`read_audit\\\`, \\\`read_site_kpis\\\`, \\\`read_cocoon_graph\\\`, \\\`read_documentation\\\` |
 
 ### Fonctionnalités avancées
 
-- **Voice input** : Bouton micro — Web Speech API (FR/EN/ES) avec vocabulaire phonétique STT
-- **Pièces jointes** : Bouton + — rapports ou scripts du compte pour explication
-- **Suggestions opérationnelles** : Rappels de scans, suggestions Cocoon, mémoire de site persistante
-- **Alertes proactives** : Alerte crédits bas (<3), alerte crawl proche du plafond (>80%), suggestion upgrade Pro Agency / Pro Agency+
-- **Signalement de bugs** : Détection NLP → bouton signaler → message pré-traduit pour le CTO → \\\`user_bug_reports\\\`
-- **Notification résolution** : Badge sur le bouton assistant quand un signalement est résolu par le CTO
-- **Mémoire de site** : Injecte les faits saillants des 3 sites les plus actifs via \\\`siteMemory.ts\\\`
-- **Modules partagés** : Accès en lecture aux résultats de \\\`computeCrawlPageQuality()\\\` et \\\`computeSeoScoreV2()\\\` pour contextualiser les explications (scores déterministes des pages et du site)
+- **Voice input** : Bouton micro dans \\\`ChatWindowUnified\\\` — composant \\\`ChatMicButton\\\` (Web Speech API FR/EN/ES) + correction phonétique via \\\`sttVocabulary.ts\\\` enrichie automatiquement par tous les domaines suivis de l'utilisateur. Le transcript est ajouté au draft via le helper \\\`appendToDraft\\\` exposé par \\\`renderComposerExtras\\\` (l'utilisateur relit/édite avant d'envoyer).
+- **Onboarding** : seedMessages affichés au premier démarrage + marquage \\\`felix_onboarding_done\\\` dans localStorage
+- **Quiz intégrés** : SeoQuiz / EnterpriseQuiz / QuizValidationNotif via slash commands \\\`/quiz\\\`, \\\`/quiz crawlers\\\`, \\\`/enterprise\\\` — overlay au-dessus du shell, score persisté dans \\\`analytics_events\\\`
+- **Signalement de bugs** : bouton dédié dans le composer ou slash \\\`/bug …\\\` → INSERT \\\`user_bug_reports\\\` (raw_message, route, context_data:{ai_summary, session_id}, source_assistant:'felix')
+- **Notification résolution** : toast automatique au mount quand un bug report a \\\`status=resolved\\\` et \\\`notified_user=false\\\`
+- **Suggestions opérationnelles** : navigation directe via skill \\\`navigate_to\\\` (\\\`autoNavigate=true\\\`)
 - **Animation d'invitation** : Ping-pong 20s après l'arrivée sur la home
 
 ### Mode Créateur (admin uniquement)
 
-Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\` dans \\\`profiles\\\`) :
-- Accès complet aux données backend (tables, edge functions, logs)
-- Interrogation croisée multi-tables avec explication
-- Consultation du code source des edge functions via \\\`view-function-source\\\`
-- **Interdit** : modification de la logique backend (lecture seule)
+L'administrateur ayant le rôle \\\`admin\\\` (table \\\`user_roles\\\`, vérifié via \\\`has_role\\\`) peut activer le **mode créateur** sur Félix _ou_ Stratège en préfixant son message par \\\`/creator :\\\`, \\\`/createur :\\\` ou \\\`/admin :\\\` (regex \\\`^\\\\s*\\\\/(?:createur|creator|admin)\\\\s*:\\\\s*\\\`).
+
+Comportement de l'orchestrator en mode créateur :
+1. Vérification du rôle via \\\`has_role(user_id, 'admin')\\\` — non-admin → préfixe ignoré silencieusement, le message est passé tel quel au LLM
+2. Préfixe retiré du message avant envoi au LLM
+3. Bannière \\\`## ⚙️ MODE CRÉATEUR ACTIF\\\` ajoutée au system prompt
+4. **Toutes** les skills du registry (\\\`listSkills()\\\`) sont injectées dans \\\`tools\\\` — pas seulement celles whitelistées par la persona
+5. La policy de chaque skill est forcée à \\\`auto\\\` (override de \\\`resolveSkillPolicy\\\`) — aucune approbation requise, CMS publish/patch inclus
+
+Ce comportement restitue la fonctionnalité historique de \\\`sav-agent\\\` perdue lors de la refacto Copilot, et l'étend désormais aussi au Stratège.
 
 ### Scoring de précision (\\\`sav_quality_scores\\\`)
 
@@ -1367,8 +1379,11 @@ Pour les administrateurs ayant le statut **créateur** (\\\`is_creator = true\\\
 
 ### Sécurité
 
+- RLS appliquée via \\\`userClient\\\` (token JWT) pour toutes les lectures user-scoped
+- \\\`defaultSkillPolicy = 'forbidden'\\\` pour toute skill non whitelistée
+- Audit trail append-only sur \\\`copilot_actions\\\` (pas d'UPDATE/DELETE policies)
 - Ne mentionne jamais les technologies internes (sauf mode créateur)
-- Explique, ne produit pas
+- Explique, ne produit pas (hors mode créateur)
 
 ---
 
