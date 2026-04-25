@@ -9,9 +9,11 @@ import { useAISidebar } from '@/contexts/AISidebarContext';
 import { CrawlersLogo } from './CrawlersLogo';
 import { isOnboardingDone } from '@/utils/felixOnboarding';
 import { playNotificationSound } from '@/utils/notificationSound';
+import { useFelixV2Flag } from '@/hooks/useFelixV2Flag';
 
-// Lazy load the chat window (heavy component with forms and messages)
+// Lazy load des deux variantes — l'une ou l'autre selon le flag.
 const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
+const ChatWindowUnified = lazy(() => import('./ChatWindowUnified').then(m => ({ default: m.ChatWindowUnified })));
 
 export function FloatingChatBubble() {
   const [isOpen, setIsOpen] = useState(() => {
