@@ -211,12 +211,12 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
                         )}
                       </td>
                       <td className="text-center px-2 py-2">
-                        <span className={cited ? 'text-emerald-400 font-semibold' : 'text-red-400'}>
-                          {cited ? '✓' : '✗'}
+                        <span className={cited ? 'text-brand-violet font-semibold' : 'text-muted-foreground'}>
+                          {cited ? <Check className="h-3.5 w-3.5 inline" /> : <X className="h-3.5 w-3.5 inline" />}
                         </span>
                       </td>
                       <td className="text-center px-2 py-2 font-mono">
-                        {rank != null ? getCitationIcon(cited, rank) : '—'}
+                        {rank != null ? <CitationGlyph cited={cited} rank={rank} /> : '—'}
                       </td>
                       <td className="px-3 py-2 text-muted-foreground">
                         <HoverCard openDelay={200}>
@@ -298,7 +298,7 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
                             <HoverCardTrigger asChild>
                               <button className={`inline-flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-md border transition-colors w-full ${getHeatColor(cell.score, cell.cited)}`}>
                                 <span className="font-bold text-sm">{cell.score}</span>
-                                <span className="text-[10px] opacity-80">{getCitationIcon(cell.cited, cell.rank)}</span>
+                                <span className="text-[10px] opacity-80"><CitationGlyph cited={cell.cited} rank={cell.rank} /></span>
                               </button>
                             </HoverCardTrigger>
                             <HoverCardContent side="top" className="w-72 text-xs">
@@ -333,18 +333,20 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
       {/* Legend */}
       <div className="flex items-center gap-4 text-[10px] text-muted-foreground flex-wrap">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" /> Cité + bon score
+          <span className="w-3 h-3 rounded bg-brand-gold/25 border border-brand-gold/50" /> Cité + bon score
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/30" /> Cité + score moyen
+          <span className="w-3 h-3 rounded bg-brand-gold/15 border border-brand-gold/30" /> Cité + score moyen
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-blue-500/15 border border-blue-500/20" /> Non cité + bon score
+          <span className="w-3 h-3 rounded bg-brand-violet/15 border border-brand-violet/25" /> Non cité + bon score
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-red-500/15 border border-red-500/20" /> Non cité + mauvais score
+          <span className="w-3 h-3 rounded bg-muted/20 border border-border/50" /> Non cité + faible score
         </span>
-        <span className="flex items-center gap-1">🥇 = 1er cité · ✓ = cité · ✗ = absent</span>
+        <span className="flex items-center gap-1">
+          <Trophy className="h-3 w-3 text-brand-gold" /> Rang 1 · <Check className="h-3 w-3 text-brand-violet" /> Cité · <X className="h-3 w-3" /> Absent
+        </span>
       </div>
     </div>
   );
