@@ -129,8 +129,10 @@ Deno.serve(async (req) => {
         .single();
       if (cErr || !created) return jsonError(`Création session : ${cErr?.message}`, 500);
       sessionId = created.id;
+      sessionIdForCleanup = sessionId;
     } else {
       sessionId = body.session_id;
+      sessionIdForCleanup = sessionId;
 
       // Reconciliation : si la session est en 'processing' depuis > 90s, on la débloque.
       // (Cas crash entre tool_calls et persist final → message fantôme à éviter.)
