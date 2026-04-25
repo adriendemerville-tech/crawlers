@@ -49,11 +49,17 @@ export function AgentChatShell({
   onAssistantReply,
   seedMessages,
   composerExtras,
+  renderComposerExtras,
   className,
 }: AgentChatShellProps) {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState('');
+
+  const appendToDraft = (text: string) => {
+    if (!text) return;
+    setDraft((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+  };
 
   const handleActions = (actions: CopilotAction[]) => {
     if (!autoNavigate) return;
