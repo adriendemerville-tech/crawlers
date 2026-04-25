@@ -32,6 +32,52 @@ export interface SkillDefinition {
 }
 
 // ═══════════════════════════════════════════════════════════
+// safeServiceCall — wrapper qui IMPOSE la vérification d'appartenance
+// avant tout appel utilisant le service role (qui bypass RLS).
+//
+// Tout handler d'écriture qui veut utiliser ctx.service DOIT passer par ici.
+// Le handler reçoit en 2e argument le client service uniquement après que
+// l'appartenance du tracked_site_id a été validée côté serveur.
+//
+// Si tracked_site_id est manquant, invalide, ou n'appartient pas à userId,
+// le wrapper renvoie une erreur AVANT d'invoquer le handler.
+// Cela rend impossible un oubli de check dans un nouveau handler.
+// ═══════════════════════════════════════════════════════════
+export async function safeServiceCall<T = unknown>(
+  ctx: SkillContext,
+  trackedSiteId: string | null | undefined,
+  handler: (service: SkillContext['service'], site: { id: string; user_id: string; domain: string }) => Promise<SkillResult & { data?: T }>,
+): Promise<SkillResult & { data?: T }> {
+  if (!trackedSiteId || typeof trackedSiteId !== 'string') {
+    return { ok: false, error: 'tracked_site_id requis pour les opérations service-role' };
+  }
+
+  // Vérification UNIQUE et CENTRALE de propriété via la fonction SECURITY DEFINER.
+  // On utilise ctx.service ici car owns_tracked_site() lit auth.uid() côté Postgres
+  // — mais comme on est en edge function on doit la requêter manuellement.
+  const { data: site, error } = await ctx.service
+    .from('tracked_sites')
+    .select('id, user_id, domain')
+    .eq('id', trackedSiteId)
+    .maybeSingle();
+
+  if (error) return { ok: false, error: `Vérif site : ${error.message}` };
+  if (!site) return { ok: false, error: 'Site introuvable' };
+  if (site.user_id !== ctx.userId) {
+    // Audit log : tentative d'accès cross-tenant
+    await ctx.service.from('copilot_actions').insert({
+      session_id: ctx.sessionId, user_id: ctx.userId, persona: ctx.persona,
+      skill: '_security_violation', input: { attempted_site_id: trackedSiteId },
+      status: 'rejected',
+      error_message: `Tentative d'accès au site ${trackedSiteId} appartenant à un autre utilisateur`,
+    }).then(() => {}).catch(() => {});
+    return { ok: false, error: 'Site non accessible (propriété refusée)' };
+  }
+
+  return await handler(ctx.service, site as { id: string; user_id: string; domain: string });
+}
+
+// ═══════════════════════════════════════════════════════════
 // LECTURE
 // ═══════════════════════════════════════════════════════════
 
