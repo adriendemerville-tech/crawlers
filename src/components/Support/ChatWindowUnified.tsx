@@ -432,6 +432,19 @@ export function ChatWindowUnified({
         </div>
       </div>
 
+      {showHistory && !minimized && (
+        <div className="relative">
+          <CopilotHistoryPanel
+            persona="felix"
+            userId={user?.id}
+            currentSessionId={pickedSessionId}
+            onPickSession={(sid) => { setPickedSessionId(sid); setShellKey((k) => k + 1); }}
+            onNewSession={() => { setPickedSessionId(null); setShellKey((k) => k + 1); }}
+            onClose={() => setShowHistory(false)}
+          />
+        </div>
+      )}
+
       {bugMode && !minimized && (
         <div className="border-b border-primary/40 bg-muted/20 px-3 py-1.5 text-[11px] text-foreground">
           Mode bug actif — décris le problème, il sera transmis à l'équipe.
