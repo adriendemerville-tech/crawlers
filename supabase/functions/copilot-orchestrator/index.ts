@@ -94,8 +94,8 @@ Deno.serve(async (req) => {
     if (!body.message) return jsonError('message requis', 400);
 
     // ── Session : create or load ─────────────────────────
-    let sessionId = body.session_id;
-    if (!sessionId) {
+    let sessionId: string;
+    if (!body.session_id) {
       const { data: created, error: cErr } = await service
         .from('copilot_sessions')
         .insert({
@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
       if (cErr || !created) return jsonError(`Création session : ${cErr?.message}`, 500);
       sessionId = created.id;
     } else {
+      sessionId = body.session_id;
       await service
         .from('copilot_sessions')
         .update({ last_message_at: new Date().toISOString() })
