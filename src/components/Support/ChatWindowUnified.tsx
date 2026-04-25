@@ -390,9 +390,14 @@ export function ChatWindowUnified({
 
       {!minimized && (
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Overlays quiz / enterprise / validation */}
-          {hasOverlay && (
+          {/* Overlays quiz / enterprise / validation + log assistant additionnel */}
+          {(hasOverlay || extraMessages.length > 0) && (
             <div className="max-h-[55%] overflow-y-auto border-b border-border bg-muted/10 p-3 space-y-3">
+              {extraMessages.map((m) => (
+                <div key={m.id} className="rounded-md border border-border px-3 py-2 text-xs text-foreground whitespace-pre-wrap">
+                  {m.content}
+                </div>
+              ))}
               {quizLoading && (
                 <div className="text-xs text-muted-foreground animate-pulse">
                   Préparation du quiz…
