@@ -9,10 +9,8 @@ import { useAISidebar } from '@/contexts/AISidebarContext';
 import { CrawlersLogo } from './CrawlersLogo';
 import { isOnboardingDone } from '@/utils/felixOnboarding';
 import { playNotificationSound } from '@/utils/notificationSound';
-import { useFelixV2Flag } from '@/hooks/useFelixV2Flag';
 
-// Lazy load des deux variantes — l'une ou l'autre selon le flag.
-const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
+// Lazy load du chat unifié (Sprint 9 — legacy ChatWindow supprimé).
 const ChatWindowUnified = lazy(() => import('./ChatWindowUnified').then(m => ({ default: m.ChatWindowUnified })));
 
 export function FloatingChatBubble() {
