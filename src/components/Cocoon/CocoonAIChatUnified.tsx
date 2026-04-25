@@ -231,7 +231,7 @@ export function CocoonAIChatUnified({
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 relative">
               {onGenerateGraph && (
                 <button
                   type="button"
@@ -242,6 +242,20 @@ export function CocoonAIChatUnified({
                   Recalculer
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setShowHistory((v) => !v)}
+                className={cn(
+                  'rounded-md border p-1 transition',
+                  showHistory
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
+                )}
+                aria-label="Historique des conversations"
+                title="Historique"
+              >
+                <History className="h-3.5 w-3.5" />
+              </button>
               <button
                 type="button"
                 onClick={() => { setMinimized((v) => !v); if (docked) setCocoonExpanded(false); }}
