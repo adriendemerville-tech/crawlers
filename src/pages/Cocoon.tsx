@@ -1102,15 +1102,27 @@ function CocoonContent() {
           {/* AI Chat — bottom left, shifted left */}
           {hasAccess && (
             <div className="relative ml-2 sm:ml-4">
-              <CocoonAIChat
-                nodes={nodes}
-                selectedNodeId={selectedNode?.id}
-                onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
-                onCancelPick={() => setNodePickerCallback(null)}
-                trackedSiteId={selectedSiteId}
-                domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
-                onGenerateGraph={handleCompute}
-              />
+              {strategistV2 ? (
+                <CocoonAIChatUnified
+                  nodes={nodes}
+                  selectedNodeId={selectedNode?.id}
+                  onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
+                  onCancelPick={() => setNodePickerCallback(null)}
+                  trackedSiteId={selectedSiteId}
+                  domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+                  onGenerateGraph={handleCompute}
+                />
+              ) : (
+                <CocoonAIChat
+                  nodes={nodes}
+                  selectedNodeId={selectedNode?.id}
+                  onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
+                  onCancelPick={() => setNodePickerCallback(null)}
+                  trackedSiteId={selectedSiteId}
+                  domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+                  onGenerateGraph={handleCompute}
+                />
+              )}
             </div>
           )}
 
