@@ -71,8 +71,8 @@ function getEngineColor(engine: string): string {
 /* ── Component ─────────────────────────────────────────────────────── */
 
 export default function BenchmarkHeatmap({ results, themes, engines, heatmap, globalScore, citationRate }: Props) {
-  // View mode: 'heatmap' (compact grid) or 'tabs' (one engine at a time)
-  const [viewMode, setViewMode] = useState<'heatmap' | 'tabs'>(engines.length > 3 ? 'tabs' : 'heatmap');
+  // View mode: 'heatmap' (compact grid), 'tabs' (one engine at a time), or 'cube' (3D)
+  const [viewMode, setViewMode] = useState<'heatmap' | 'tabs' | 'cube'>(engines.length > 3 ? 'tabs' : 'heatmap');
   const [activeEngine, setActiveEngine] = useState<string>(engines[0] || '');
 
   // Build heatmap from results if not provided
