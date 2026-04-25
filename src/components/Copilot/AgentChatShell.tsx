@@ -238,6 +238,7 @@ export function AgentChatShell({
             disabled={sending}
             className="flex-1 resize-none rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground outline-none transition focus:border-foreground/50 disabled:opacity-50"
           />
+          {composerExtras}
           <button
             type="submit"
             disabled={sending || !draft.trim()}
