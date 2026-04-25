@@ -48,6 +48,10 @@ export interface UseCopilotOptions {
   initialSessionId?: string | null;
   /** Hook appelé après chaque réponse assistant (utile pour exécuter les directives navigate_to/open_panel). */
   onActions?: (actions: CopilotAction[]) => void;
+  /** Hook appelé avec le contenu textuel de chaque réponse assistant non vide. */
+  onAssistantReply?: (reply: string, ctx: { sessionId: string | null; userMessage: string }) => void;
+  /** Messages d'amorçage injectés à l'init (onboarding, greeting). Affichés mais non envoyés au backend. */
+  seedMessages?: CopilotMessage[];
 }
 
 interface OrchestratorResponse {
