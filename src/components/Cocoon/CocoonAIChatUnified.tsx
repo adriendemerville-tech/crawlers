@@ -13,13 +13,15 @@
  *
  * Charte : noir/blanc/violet/jaune d'or, boutons sans fond.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Crosshair, PanelLeftClose, PanelLeftOpen, Minus, Network, Sparkles, X } from 'lucide-react';
+import { Crosshair, PanelLeftClose, PanelLeftOpen, Minus, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
+import { CrawlersLogo } from '@/components/Support/CrawlersLogo';
+import type { CopilotMessage } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
 
 const SEO_KEYWORDS = /maillage|h1|canonical|backlink|cocon|cluster|intent|crawl|serp|json-ld|schema|sitemap|robots|title|meta|alt|seo|geo|eeat|citabilit|trafic|traffic|linking|quick win|recommand|optimis|améliorer/i;
@@ -199,7 +201,7 @@ export function CocoonAIChatUnified({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <div className="flex min-w-0 items-center gap-2">
-              <Network className="h-4 w-4 text-foreground" />
+              <CrawlersLogo size={20} />
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold text-foreground">Stratège Cocoon</div>
                 <div className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
