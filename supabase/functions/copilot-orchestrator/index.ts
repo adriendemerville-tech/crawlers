@@ -82,6 +82,7 @@ Deno.serve(async (req) => {
     if (!persona) return jsonError(`Persona inconnu : ${body.persona}`, 400);
 
     const service = getServiceClient();
+    serviceForCleanup = service;
 
     // ── Cas approbation : ré-exécute une action awaiting_approval ──
     if (body.approve_action_id) {
