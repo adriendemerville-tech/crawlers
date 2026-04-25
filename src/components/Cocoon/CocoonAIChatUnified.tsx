@@ -284,6 +284,19 @@ export function CocoonAIChatUnified({
             </div>
           </div>
 
+          {showHistory && !minimized && (
+            <div className="relative">
+              <CopilotHistoryPanel
+                persona="strategist"
+                userId={user?.id}
+                currentSessionId={pickedSessionId}
+                onPickSession={(sid) => { setPickedSessionId(sid); setShellKey((k) => k + 1); }}
+                onNewSession={() => { setPickedSessionId(null); setShellKey((k) => k + 1); }}
+                onClose={() => setShowHistory(false)}
+              />
+            </div>
+          )}
+
           {/* Sélection de nœuds — barre contextuelle */}
           {!minimized && (
             <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-3 py-2">
