@@ -30,9 +30,11 @@ import {
 } from '@/utils/felixOnboarding';
 import { CrawlersLogo } from './CrawlersLogo';
 import { ChatMicButton } from './ChatMicButton';
+import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { SeoQuiz } from './SeoQuiz';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
+import { captureScreenContext } from '@/utils/screenContext';
 import { cn } from '@/lib/utils';
 
 interface ChatWindowUnifiedProps {
@@ -271,14 +273,18 @@ export function ChatWindowUnified({
     window.dispatchEvent(new Event('felix_mute_changed'));
   };
 
-  const getContext = () => ({
-    route: location.pathname,
-    tracked_site_id: trackedSiteId,
-    domain,
-    user_id: user?.id,
-    surface: 'felix-bubble',
-    bug_report_mode: bugMode || undefined,
-  });
+  const getContext = () => {
+    const screen = captureScreenContext(location.pathname);
+    return {
+      route: location.pathname,
+      tracked_site_id: trackedSiteId,
+      domain,
+      user_id: user?.id,
+      surface: 'felix-bubble',
+      bug_report_mode: bugMode || undefined,
+      screen_context: screen || undefined,
+    };
+  };
 
   // Persiste bug + intercepte slash commands quiz/enterprise.
   const onAssistantReply = async (
