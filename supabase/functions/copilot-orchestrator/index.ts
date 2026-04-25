@@ -93,6 +93,21 @@ Deno.serve(async (req) => {
 
     if (!body.message) return jsonError('message requis', 400);
 
+    // ── Préfixe admin /creator: /createur: /admin: ────────
+    // Permet à l'administrateur (rôle 'admin') de débloquer les skills sensibles
+    // (CMS, déploiements, actions destructrices) en passant en mode "creator".
+    let userMessage = body.message;
+    let isCreatorMode = false;
+    const creatorPrefixMatch = userMessage.match(/^\s*\/(?:createur|creator|admin)\s*:\s*/i);
+    if (creatorPrefixMatch) {
+      const { data: isAdmin } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
+      if (isAdmin === true) {
+        isCreatorMode = true;
+        userMessage = userMessage.slice(creatorPrefixMatch[0].length).trim();
+      }
+      // Si non-admin : on laisse le message tel quel, le préfixe est ignoré silencieusement
+    }
+
     // ── Session : create or load ─────────────────────────
     let sessionId: string;
     if (!body.session_id) {
