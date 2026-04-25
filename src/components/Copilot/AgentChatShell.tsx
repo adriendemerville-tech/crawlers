@@ -85,11 +85,15 @@ export function AgentChatShell({
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length, messages[messages.length - 1]?.content]);
 
-  const onSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const submitDraft = () => {
     if (!draft.trim() || sending) return;
     void sendMessage(draft);
     setDraft('');
+  };
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    submitDraft();
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
