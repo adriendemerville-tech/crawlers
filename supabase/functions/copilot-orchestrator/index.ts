@@ -117,6 +117,23 @@ Deno.serve(async (req) => {
     const service = getServiceClient();
     serviceForCleanup = service;
 
+    // ── Cas close_session : libère le verrou processing sans appel LLM (P2 fix B7) ──
+    // Appelé par useCopilot.reset() côté front pour ne pas laisser une session figée
+    // en 'processing' jusqu'à la reconciliation 90s.
+    if (body.close_session && body.session_id) {
+      const { error: closeErr } = await service
+        .from('copilot_sessions')
+        .update({ status: 'active', processing_started_at: null })
+        .eq('id', body.session_id)
+        .eq('user_id', userId)
+        .eq('persona', persona.id);
+      if (closeErr) return jsonError(`Fermeture session : ${closeErr.message}`, 500);
+      return new Response(
+        JSON.stringify({ session_id: body.session_id, closed: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     // ── Cas approbation : ré-exécute + relance la boucle LLM (P1 #7) ──
     if (body.approve_action_id) {
       return await handleApproval({
