@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug, ShieldCheck, Trash2, Crown, Eye, EyeOff, FileSearch, ChevronDown, Pencil, Radio, Pause, Play, RefreshCw } from 'lucide-react';
+import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search, AlertTriangle, Bug, ShieldCheck, Trash2, Crown, Eye, EyeOff, FileSearch, ChevronDown, Pencil, Radio, Pause, Play, RefreshCw, Network, Plug } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -38,6 +38,8 @@ interface UserKpis {
   planType: string;
   bundleApiCount: number;
   bundleMonthlyEur: number;
+  totalTrackedSites: number;
+  totalCmsConnected: number;
 }
 
 interface ScannedUrl {
@@ -217,8 +219,8 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
         }
       }
 
-      // URLs tested + bundle data
-      const [urlCountRes, bundleRes] = await Promise.all([
+      // URLs tested + bundle data + tracked sites + CMS connections
+      const [urlCountRes, bundleRes, trackedSitesRes, cmsConnectionsRes] = await Promise.all([
         supabase
           .from('analytics_events')
           .select('target_url', { count: 'exact', head: true })
@@ -230,6 +232,15 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
           .eq('user_id', userId)
           .eq('status', 'active')
           .maybeSingle() as any,
+        supabase
+          .from('tracked_sites')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId),
+        supabase
+          .from('cms_connections')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('status', 'active'),
       ]);
 
       const bundleData = bundleRes.data;
@@ -251,6 +262,8 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
         planType: (user as any).plan_type || 'free',
         bundleApiCount,
         bundleMonthlyEur,
+        totalTrackedSites: trackedSitesRes.count || 0,
+        totalCmsConnected: cmsConnectionsRes.count || 0,
       });
     } catch (err) {
       console.error('Error fetching KPIs:', err);
@@ -318,6 +331,8 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
     { icon: FileText, label: "Plans d'action", value: kpis.totalActionPlans, color: 'text-teal-500' },
     { icon: AlertTriangle, label: 'Erreurs back-end', value: kpis.totalBackendErrors, color: 'text-red-500' },
     { icon: Bug, label: 'Erreurs front-end', value: kpis.totalFrontendErrors, color: 'text-orange-600' },
+    { icon: Network, label: 'Sites trackés', value: kpis.totalTrackedSites, color: 'text-violet-500' },
+    { icon: Plug, label: 'CMS connectés', value: kpis.totalCmsConnected, color: 'text-yellow-500' },
     { icon: CreditCard, label: 'Plan', value: <Badge variant="outline">{kpis.planType}</Badge>, color: 'text-primary' },
     { icon: CreditCard, label: 'Bundle APIs', value: kpis.bundleApiCount > 0 ? <Badge variant="default" className="text-[10px]">{kpis.bundleApiCount} API{kpis.bundleApiCount > 1 ? 's' : ''} · {kpis.bundleMonthlyEur}€/mois</Badge> : '—', color: 'text-fuchsia-500' },
   ] : [];
