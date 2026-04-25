@@ -79,35 +79,39 @@ async function callWithFallback(fn: string, url: string, params?: Record<string,
 
 function extractScore(data: any, fn: string): number | null {
   if (!data) return null;
-  // Each function returns different score formats
-  switch (fn) {
-    case 'check-pagespeed':
-      return data.scores?.performance ?? data.score ?? null;
-    case 'check-geo':
-      return data.geoScore ?? data.score ?? null;
-    case 'check-llm':
-      return data.visibilityScore ?? data.score ?? null;
-    case 'check-crawlers':
-      return data.accessibilityScore ?? data.score ?? null;
-    case 'check-meta-tags':
-      return data.score ?? null;
-    case 'check-structured-data':
-      return data.score ?? null;
-    case 'check-robots-indexation':
-      return data.score ?? null;
-    case 'check-images':
-      return data.score ?? null;
-    case 'check-backlinks':
-      return data.score ?? null;
-    case 'check-content-quality':
-      return data.score ?? null;
-    case 'check-eeat':
-      return data.score ?? null;
-    case 'expert-audit':
-      return data.score ?? data.totalScore ?? null;
-    default:
-      return data.score ?? null;
+  // Each function returns different score formats — try function-specific first,
+  // then fall back to a broad sweep of common shapes so new edge function
+  // payloads don't silently produce null.
+  const direct = (() => {
+    switch (fn) {
+      case 'check-pagespeed':
+        return data.scores?.performance ?? data.score ?? null;
+      case 'check-geo':
+        return data.geoScore ?? data.score ?? null;
+      case 'check-llm':
+        return data.visibilityScore ?? data.score ?? null;
+      case 'check-crawlers':
+        return data.accessibilityScore ?? data.score ?? null;
+      case 'expert-audit':
+        return data.score ?? data.totalScore ?? data.globalScore ?? null;
+      default:
+        return data.score ?? null;
+    }
+  })();
+  if (typeof direct === 'number') return direct;
+
+  // Generic fallbacks for new/unhandled response shapes
+  const candidates = [
+    data.score, data.totalScore, data.globalScore, data.overallScore,
+    data.result?.score, data.result?.totalScore,
+    data.summary?.score, data.metrics?.score,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'number' && !Number.isNaN(c)) return c;
   }
+  // Last resort: 0–100 percentage-like field
+  if (typeof data.percentage === 'number') return data.percentage;
+  return null;
 }
 
 export async function executeAuditPlan(
