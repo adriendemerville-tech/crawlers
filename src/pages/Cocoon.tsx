@@ -14,6 +14,8 @@ import { CocoonRadialGraph } from "@/components/Cocoon/CocoonRadialGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
+import { CocoonAIChatUnified } from "@/components/Cocoon/CocoonAIChatUnified";
+import { useStrategistV2Flag } from "@/hooks/useStrategistV2Flag";
 import { CocoonRecommendationHistory } from "@/components/Cocoon/CocoonRecommendationHistory";
 import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
@@ -192,6 +194,7 @@ function CocoonContent() {
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();
+  const [strategistV2] = useStrategistV2Flag();
   // cocoonExpanded handled by AISidebarPageWrapper (paddingLeft) — no double offset here
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
@@ -1099,15 +1102,27 @@ function CocoonContent() {
           {/* AI Chat — bottom left, shifted left */}
           {hasAccess && (
             <div className="relative ml-2 sm:ml-4">
-              <CocoonAIChat
-                nodes={nodes}
-                selectedNodeId={selectedNode?.id}
-                onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
-                onCancelPick={() => setNodePickerCallback(null)}
-                trackedSiteId={selectedSiteId}
-                domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
-                onGenerateGraph={handleCompute}
-              />
+              {strategistV2 ? (
+                <CocoonAIChatUnified
+                  nodes={nodes}
+                  selectedNodeId={selectedNode?.id}
+                  onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
+                  onCancelPick={() => setNodePickerCallback(null)}
+                  trackedSiteId={selectedSiteId}
+                  domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+                  onGenerateGraph={handleCompute}
+                />
+              ) : (
+                <CocoonAIChat
+                  nodes={nodes}
+                  selectedNodeId={selectedNode?.id}
+                  onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
+                  onCancelPick={() => setNodePickerCallback(null)}
+                  trackedSiteId={selectedSiteId}
+                  domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+                  onGenerateGraph={handleCompute}
+                />
+              )}
             </div>
           )}
 
