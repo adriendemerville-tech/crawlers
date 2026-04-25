@@ -17,8 +17,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Crosshair, Maximize2, Minimize2, Minus, Network, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import { cn } from '@/lib/utils';
+
+const SEO_KEYWORDS = /maillage|h1|canonical|backlink|cocon|cluster|intent|crawl|serp|json-ld|schema|sitemap|robots|title|meta|alt|seo|geo|eeat|citabilit|trafic|traffic|linking|quick win|recommand|optimis|améliorer/i;
 
 interface CocoonAIChatUnifiedProps {
   nodes: any[];
@@ -127,6 +130,33 @@ export function CocoonAIChatUnified({
         width: '26rem',
         height: minimized ? '3rem' : '36rem',
       };
+
+  // Auto-save les réponses substantielles comme cocoon_recommendations,
+  // équivalent du flux du legacy CocoonAIChat (parité Sprint 8).
+  const onAssistantReply = async (reply: string) => {
+    if (!user || !trackedSiteId || !domain) return;
+    if (reply.length < 200) return;
+    if (!SEO_KEYWORDS.test(reply)) return;
+    const headingMatch = reply.match(/\*\*(.{5,80})\*\*/);
+    const firstLine = reply.replace(/[#*_`]/g, '').split('\n').find((l) => l.trim().length > 10);
+    const summary = (headingMatch?.[1] || firstLine || reply.slice(0, 100))
+      .replace(/[#*_`]/g, '')
+      .trim()
+      .slice(0, 100);
+    const { error } = await supabase.from('cocoon_recommendations').insert({
+      tracked_site_id: trackedSiteId,
+      user_id: user.id,
+      domain,
+      recommendation_text: reply,
+      summary,
+      source_context: {
+        surface: 'cocoon-strategist-v2',
+        nodes_count: nodes.length,
+        selected_nodes: selectedNodesRef.current.map((n) => n.id),
+      },
+    });
+    if (error) console.warn('[CocoonAIChatUnified] save reco failed:', error);
+  };
 
   return (
     <>
@@ -261,6 +291,7 @@ export function CocoonAIChatUnified({
                 }
                 starterPrompts={STARTERS}
                 getContext={getContext}
+                onAssistantReply={onAssistantReply}
                 className="h-full"
               />
             </div>

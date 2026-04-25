@@ -1,3 +1,8 @@
+/**
+ * @deprecated Sprint 8 — remplacé par CocoonAIChatUnified (`useStrategistV2Flag`).
+ * Conservé pour le deploy plan détaillé, l'architect modal et la capture
+ * screenshot. À retirer après portage de ces flux dans la v2.
+ */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';

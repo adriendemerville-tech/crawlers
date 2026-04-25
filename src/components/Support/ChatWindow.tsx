@@ -1,3 +1,9 @@
+/**
+ * @deprecated Sprint 8 — remplacé par ChatWindowUnified (`useFelixV2Flag`).
+ * Conservé en filet de sécurité (quiz Crawlers/SEO/Enterprise, archives
+ * locales, architect modal). Sera supprimé une fois ces flux portés
+ * dans la v2 ou re-modélisés via le copilot-orchestrator.
+ */
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink, History, ArrowLeft, ClipboardList } from 'lucide-react';

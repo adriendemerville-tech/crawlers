@@ -1,39 +1,39 @@
 /**
- * ChatWindowUnified — version "Félix v2" branchée sur l'orchestrateur unifié.
+ * ChatWindowUnified — Félix v2 branché sur copilot-orchestrator.
  *
- * Sprint 6 de la migration "1 backend, N personas".
- * Cohabite avec l'ancien ChatWindow.tsx (2100 lignes) derrière un feature flag
- * `felix_unified` dans localStorage (ou `?felix_v2=1` dans l'URL).
+ * Sprint 6 (cohabitation legacy) puis Sprint 8 (parité fonctionnelle) :
+ * - chrome maison (header CrawlersLogo, mute, min/max, fermeture)
+ * - injecte tracked_site_id/domain dans le contexte du copilot
+ * - onboarding : seed messages premier-démarrage + marquage `felix_onboarding_done`
+ * - bug report : bouton dédié dans le composer + slash command `/bug …`
+ * - notification automatique des bug reports résolus
  *
- * Cette version remplace toute la mécanique de messages locaux + appels
- * `agent-felix` par le shell générique `AgentChatShell` qui parle à
- * `copilot-orchestrator` (persona = `felix`). Pas d'archive locale, pas de
- * quiz embarqué : ces flux seront migrés progressivement (Sprints 7-8).
- *
- * Charte couleurs : noir/blanc/violet/jaune d'or, boutons sans fond.
+ * Charte : noir/blanc/violet/jaune d'or, boutons sans fond, pas d'emoji.
  */
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, BellOff, Maximize2, Minimize2, Minus, X } from 'lucide-react';
+import { Bell, BellOff, Bug, Maximize2, Minimize2, Minus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
+import type { CopilotMessage } from '@/hooks/useCopilot';
+import {
+  getOnboardingMessages,
+  isOnboardingDone,
+  markOnboardingDone,
+} from '@/utils/felixOnboarding';
 import { CrawlersLogo } from './CrawlersLogo';
 import { cn } from '@/lib/utils';
 
 interface ChatWindowUnifiedProps {
   onClose: () => void;
-  /** Conservé pour compat avec FloatingChatBubble — non utilisé en v2. */
   triggerOnboarding?: boolean;
-  /** Conservé pour compat — non utilisé en v2. */
   onOnboardingConsumed?: () => void;
-  /** Conservé pour compat — non utilisé en v2. */
+  /** Conservés pour compat — pas encore actifs en v2. */
   autoStartCrawlersQuiz?: boolean;
-  /** Conservé pour compat — non utilisé en v2. */
   autoEnterpriseContact?: boolean;
-  /** Message d'accueil custom (Aide → "Nous écrire"). */
   initialGreeting?: string | null;
-  /** Bloc dépliant additionnel — non rendu en v2 (à migrer). */
   initialExpandedGreeting?: string | null;
 }
 
@@ -43,17 +43,65 @@ const STARTERS = [
   'Quels sont mes quick wins SEO ?',
 ];
 
-export function ChatWindowUnified({ onClose, initialGreeting }: ChatWindowUnifiedProps) {
+function uid(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function buildSeedMessages(opts: {
+  triggerOnboarding: boolean;
+  initialGreeting?: string | null;
+}): CopilotMessage[] {
+  const seed: CopilotMessage[] = [];
+  if (opts.triggerOnboarding) {
+    for (const m of getOnboardingMessages(null)) {
+      seed.push({
+        id: uid(),
+        role: 'assistant',
+        content: m.content,
+        createdAt: Date.parse(m.timestamp) || Date.now(),
+      });
+    }
+  } else if (opts.initialGreeting) {
+    seed.push({
+      id: uid(),
+      role: 'assistant',
+      content: opts.initialGreeting,
+      createdAt: Date.now(),
+    });
+  }
+  return seed;
+}
+
+export function ChatWindowUnified({
+  onClose,
+  triggerOnboarding,
+  onOnboardingConsumed,
+  initialGreeting,
+}: ChatWindowUnifiedProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const location = useLocation();
   const [minimized, setMinimized] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const [muted, setMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
   const [trackedSiteId, setTrackedSiteId] = useState<string | undefined>();
   const [domain, setDomain] = useState<string | undefined>();
-  const seededRef = useRef(false);
+  const [bugMode, setBugMode] = useState(false);
+  // seedMessages doit être stable au mount pour éviter de réinitialiser le hook.
+  const seedRef = useRef<CopilotMessage[]>([]);
+  if (seedRef.current.length === 0) {
+    const shouldOnboard = !!triggerOnboarding && !isOnboardingDone();
+    seedRef.current = buildSeedMessages({
+      triggerOnboarding: shouldOnboard,
+      initialGreeting,
+    });
+    if (shouldOnboard) {
+      markOnboardingDone();
+      onOnboardingConsumed?.();
+    }
+  }
 
-  // Récupère le 1er site suivi (contexte par défaut Félix).
+  // 1er site suivi → contexte par défaut.
   useEffect(() => {
     if (!user) return;
     supabase
@@ -70,6 +118,32 @@ export function ChatWindowUnified({ onClose, initialGreeting }: ChatWindowUnifie
       });
   }, [user]);
 
+  // Notifier les bug reports résolus (équivalent du flux ChatWindow legacy).
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('user_bug_reports')
+        .select('id, cto_response')
+        .eq('user_id', user.id)
+        .eq('status', 'resolved')
+        .eq('notified_user', false);
+      if (cancelled || !data || data.length === 0) return;
+      for (const bug of data) {
+        toast({
+          title: 'Bug résolu',
+          description: bug.cto_response || 'Le problème a été corrigé.',
+        });
+      }
+      await supabase
+        .from('user_bug_reports')
+        .update({ notified_user: true })
+        .in('id', data.map((b) => b.id));
+    })();
+    return () => { cancelled = true; };
+  }, [user, toast]);
+
   const toggleMute = () => {
     const next = !muted;
     setMuted(next);
@@ -77,17 +151,52 @@ export function ChatWindowUnified({ onClose, initialGreeting }: ChatWindowUnifie
     window.dispatchEvent(new Event('felix_mute_changed'));
   };
 
-  // getContext est passé à useCopilot via AgentChatShell ; on le mémoïse via une
-  // fonction simple — l'exécution a lieu à chaque sendMessage.
   const getContext = () => ({
     route: location.pathname,
     tracked_site_id: trackedSiteId,
     domain,
     user_id: user?.id,
     surface: 'felix-bubble',
+    bug_report_mode: bugMode || undefined,
   });
 
-  // Position : capsule flottante en bas-droite, plein écran si maximisé.
+  // Persiste le bug report dès que l'utilisateur tape un message en mode bug.
+  // Regex slash command : `/bug <description>` traité comme un bug direct.
+  const onAssistantReply = async (
+    reply: string,
+    ctx: { sessionId: string | null; userMessage: string },
+  ) => {
+    if (!user) return;
+    const slashMatch = ctx.userMessage.match(/^\/bug\s+([\s\S]+)$/i);
+    const description = bugMode
+      ? ctx.userMessage
+      : slashMatch
+        ? slashMatch[1]
+        : null;
+    if (!description) return;
+    setBugMode(false);
+    const { error } = await supabase.from('user_bug_reports').insert({
+      user_id: user.id,
+      raw_message: description.slice(0, 4000),
+      route: location.pathname,
+      context_data: { ai_summary: reply.slice(0, 2000), session_id: ctx.sessionId },
+      source_assistant: 'felix',
+    });
+    if (error) {
+      console.warn('[ChatWindowUnified] bug report insert failed:', error);
+      toast({
+        title: 'Bug report',
+        description: 'Échec de l\'enregistrement du bug, mais Félix a bien répondu.',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Bug enregistré',
+        description: 'Notre équipe est notifiée. Tu seras prévenu quand il sera résolu.',
+      });
+    }
+  };
+
   const positionStyle = maximized
     ? { inset: '4rem 1rem 1rem 1rem' as const }
     : {
@@ -96,13 +205,6 @@ export function ChatWindowUnified({ onClose, initialGreeting }: ChatWindowUnifie
         width: '24rem',
         height: minimized ? '3rem' : '36rem',
       };
-
-  // Astuce : injecter le greeting initial via un starter visible (lecture seule).
-  // L'auto-envoi serait intrusif ; on laisse l'utilisateur cliquer.
-  const starters = initialGreeting && !seededRef.current
-    ? [initialGreeting, ...STARTERS]
-    : STARTERS;
-  if (initialGreeting) seededRef.current = true;
 
   return (
     <div
@@ -113,7 +215,6 @@ export function ChatWindowUnified({ onClose, initialGreeting }: ChatWindowUnifie
       role="dialog"
       aria-label="Félix — Copilote"
     >
-      {/* Header maison (chrome) — réutilise charte crawlers */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <CrawlersLogo size={28} />
@@ -130,7 +231,6 @@ export function ChatWindowUnified({ onClose, initialGreeting }: ChatWindowUnifie
             onClick={toggleMute}
             className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
             aria-label={muted ? 'Activer le son' : 'Couper le son'}
-            title={muted ? 'Activer le son' : 'Couper le son'}
           >
             {muted ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
           </button>
@@ -161,15 +261,45 @@ export function ChatWindowUnified({ onClose, initialGreeting }: ChatWindowUnifie
         </div>
       </div>
 
-      {/* Body — masqué quand minimisé pour gagner du DOM */}
+      {bugMode && !minimized && (
+        <div className="border-b border-primary/40 bg-muted/20 px-3 py-1.5 text-[11px] text-foreground">
+          Mode bug actif — décris le problème, il sera transmis à l'équipe.
+          <button
+            type="button"
+            onClick={() => setBugMode(false)}
+            className="ml-2 underline underline-offset-2 text-muted-foreground hover:text-foreground"
+          >
+            annuler
+          </button>
+        </div>
+      )}
+
       {!minimized && (
         <div className="flex-1 overflow-hidden">
           <AgentChatShell
             persona="felix"
             title="Félix"
             subtitle="Copilote SAV unifié — questions, audits, navigation"
-            starterPrompts={starters}
+            starterPrompts={STARTERS}
             getContext={getContext}
+            seedMessages={seedRef.current}
+            onAssistantReply={onAssistantReply}
+            composerExtras={
+              <button
+                type="button"
+                onClick={() => setBugMode((v) => !v)}
+                className={cn(
+                  'inline-flex items-center justify-center rounded-md border px-2 py-2 text-xs transition',
+                  bugMode
+                    ? 'border-primary text-primary'
+                    : 'border-border text-foreground hover:border-foreground/50',
+                )}
+                title="Signaler un bug"
+                aria-label="Signaler un bug"
+              >
+                <Bug className="h-3.5 w-3.5" />
+              </button>
+            }
             className="h-full"
           />
         </div>

@@ -48,6 +48,10 @@ export interface UseCopilotOptions {
   initialSessionId?: string | null;
   /** Hook appelé après chaque réponse assistant (utile pour exécuter les directives navigate_to/open_panel). */
   onActions?: (actions: CopilotAction[]) => void;
+  /** Hook appelé avec le contenu textuel de chaque réponse assistant non vide. */
+  onAssistantReply?: (reply: string, ctx: { sessionId: string | null; userMessage: string }) => void;
+  /** Messages d'amorçage injectés à l'init (onboarding, greeting). Affichés mais non envoyés au backend. */
+  seedMessages?: CopilotMessage[];
 }
 
 interface OrchestratorResponse {
@@ -64,13 +68,15 @@ function uid(): string {
 }
 
 export function useCopilot(options: UseCopilotOptions) {
-  const { persona, getContext, initialSessionId, onActions } = options;
+  const { persona, getContext, initialSessionId, onActions, onAssistantReply, seedMessages } = options;
 
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId ?? null);
-  const [messages, setMessages] = useState<CopilotMessage[]>([]);
+  const [messages, setMessages] = useState<CopilotMessage[]>(() => seedMessages ?? []);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sessionRef = useRef<string | null>(initialSessionId ?? null);
+  const onAssistantReplyRef = useRef(onAssistantReply);
+  onAssistantReplyRef.current = onAssistantReply;
 
   const callOrchestrator = useCallback(
     async (body: Record<string, unknown>): Promise<OrchestratorResponse> => {
@@ -133,6 +139,16 @@ export function useCopilot(options: UseCopilotOptions) {
           ),
         );
         if (data.actions?.length && onActions) onActions(data.actions);
+        if (data.reply && onAssistantReplyRef.current) {
+          try {
+            onAssistantReplyRef.current(data.reply, {
+              sessionId: sessionRef.current,
+              userMessage: trimmed,
+            });
+          } catch (err) {
+            console.warn('[useCopilot] onAssistantReply threw:', err);
+          }
+        }
       } catch (e) {
         const msg = (e as Error).message || 'Erreur inconnue';
         setError(msg);
