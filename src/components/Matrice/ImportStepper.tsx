@@ -266,7 +266,16 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
 
         console.log(`[ImportStepper] Data sheet "${sheetName}": ${rows.length} rows, ${h.length} cols`);
         dataSheetNames.push(sheetName);
-        dataRows = dataRows.concat(rows);
+        // ── Tag each row with its source sheet name as `axe` (= Z-axis of the cube) ──
+        // This preserves the multi-tab structure (e.g., Comparatif/Local/Transactionnel/Informationnel)
+        // so the backend can render distinct families instead of collapsing everything into "Benchmark".
+        // Only set `axe` if the row doesn't already have one (respect explicit user data).
+        const taggedRows = rows.map(r => ({
+          ...r,
+          axe: r.axe ?? r.Axe ?? r.AXE ?? r.famille ?? r.Famille ?? sheetName,
+          _source_sheet: sheetName, // kept as backup signal for the backend
+        }));
+        dataRows = dataRows.concat(taggedRows);
       }
 
       // Also parse non-selected meta sheets automatically (they enrich, not data)

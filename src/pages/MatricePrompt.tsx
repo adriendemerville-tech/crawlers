@@ -632,18 +632,45 @@ export default function MatricePrompt() {
     try {
       // ── BENCHMARK MODE ──────────────────────────────────────────────
       if (activeMatriceType === 'benchmark') {
-        const benchmarkItems = selectedRows.map(row => ({
-          id: row.id,
-          prompt: row.prompt,
-          theme: row.theme || row.axe || 'Général',
-          engine: row.engine || 'ChatGPT',
-          poids: row.poids,
-          axe: row.axe,
-          seuil_bon: row.seuil_bon,
-          seuil_moyen: row.seuil_moyen,
-          seuil_mauvais: row.seuil_mauvais,
-          llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
-        }));
+        // Detect available engines: prefer Engine Notes sheet, else extract from data, else default set
+        const enginesFromNotes = activeMetadata?.engineNotes?.map(n => n.engine).filter(Boolean) ?? [];
+        const enginesFromData = Array.from(new Set(selectedRows.map(r => r.engine).filter(Boolean))) as string[];
+        const targetEngines = enginesFromNotes.length > 0
+          ? enginesFromNotes
+          : (enginesFromData.length > 0 ? enginesFromData : ['ChatGPT', 'Gemini', 'Perplexity', 'Claude', 'Mistral']);
+
+        // If rows have NO explicit engine column, fan out each prompt × every target engine.
+        // Otherwise honor the per-row engine value (advanced use case).
+        const rowsHaveEngine = enginesFromData.length > 0;
+        const benchmarkItems = rowsHaveEngine
+          ? selectedRows.map(row => ({
+              id: row.id,
+              prompt: row.prompt,
+              theme: row.theme || row.axe || 'Général',
+              engine: row.engine!,
+              poids: row.poids,
+              axe: row.axe, // ← preserved Z-axis (sheet name: Comparatif/Local/Transactionnel/Informationnel)
+              seuil_bon: row.seuil_bon,
+              seuil_moyen: row.seuil_moyen,
+              seuil_mauvais: row.seuil_mauvais,
+              llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
+            }))
+          : selectedRows.flatMap(row =>
+              targetEngines.map(engine => ({
+                id: `${row.id}__${engine}`,
+                prompt: row.prompt,
+                theme: row.theme || row.axe || 'Général',
+                engine,
+                poids: row.poids,
+                axe: row.axe, // ← Z-axis kept distinct per onglet
+                seuil_bon: row.seuil_bon,
+                seuil_moyen: row.seuil_moyen,
+                seuil_mauvais: row.seuil_mauvais,
+                llm_name: row.isDefault.llm_name ? undefined : row.llm_name,
+              }))
+            );
+
+        console.log(`[MatricePrompt] Benchmark expansion: ${selectedRows.length} prompts × ${rowsHaveEngine ? '1 (per-row engine)' : targetEngines.length} engines = ${benchmarkItems.length} calls`);
 
         // Tracker — emit pending events for every (prompt × engine) pair
         const benchEngines = Array.from(new Set(benchmarkItems.map(b => b.engine)));
