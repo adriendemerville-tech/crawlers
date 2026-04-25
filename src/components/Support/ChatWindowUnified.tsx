@@ -177,11 +177,11 @@ export function ChatWindowUnified({
     setBugMode(false);
     const { error } = await supabase.from('user_bug_reports').insert({
       user_id: user.id,
-      description: description.slice(0, 4000),
-      page_url: location.pathname,
-      status: 'open',
-      ai_summary: reply.slice(0, 2000),
-    } as any);
+      raw_message: description.slice(0, 4000),
+      route: location.pathname,
+      context_data: { ai_summary: reply.slice(0, 2000), session_id: ctx.sessionId },
+      source_assistant: 'felix',
+    });
     if (error) {
       console.warn('[ChatWindowUnified] bug report insert failed:', error);
       toast({
