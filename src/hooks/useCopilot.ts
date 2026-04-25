@@ -78,6 +78,35 @@ export function useCopilot(options: UseCopilotOptions) {
   const onAssistantReplyRef = useRef(onAssistantReply);
   onAssistantReplyRef.current = onAssistantReply;
 
+  // P2 Q4.4 — hydrate historique si on reprend une session existante.
+  useEffect(() => {
+    if (!initialSessionId) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error: err } = await supabase
+        .from('copilot_actions')
+        .select('id, skill, input, output, created_at')
+        .eq('session_id', initialSessionId)
+        .in('skill', ['_user_message', '_assistant_reply'])
+        .order('created_at', { ascending: true });
+      if (cancelled || err || !data) return;
+      const hydrated: CopilotMessage[] = data.map((row: any) => {
+        const isUser = row.skill === '_user_message';
+        const content = isUser
+          ? (row.input?.message ?? row.input?.text ?? '')
+          : (row.output?.reply ?? row.output?.text ?? '');
+        return {
+          id: row.id,
+          role: isUser ? 'user' : 'assistant',
+          content: String(content),
+          createdAt: Date.parse(row.created_at) || Date.now(),
+        };
+      });
+      if (hydrated.length > 0) setMessages(hydrated);
+    })();
+    return () => { cancelled = true; };
+  }, [initialSessionId]);
+
   const callOrchestrator = useCallback(
     async (body: Record<string, unknown>): Promise<OrchestratorResponse> => {
       const { data, error: invokeErr } = await supabase.functions.invoke<OrchestratorResponse>(
