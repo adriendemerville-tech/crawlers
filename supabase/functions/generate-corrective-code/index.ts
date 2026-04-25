@@ -3026,12 +3026,15 @@ Deno.serve(handleRequest(async (req) => {
     // If processing a job, mark as processing
     if (incomingJobId) {
       _asyncJobId = incomingJobId;
-      const sbJob = getServiceClient();
-      await sbJob
-        .from('async_jobs')
-        .update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 })
-        .eq('id', incomingJobId)
-        .catch?.(() => {});
+      try {
+        const sbJob = getServiceClient();
+        await sbJob
+          .from('async_jobs')
+          .update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 })
+          .eq('id', incomingJobId);
+      } catch (e) {
+        console.error('[generate-corrective-code] Failed to mark job processing:', e);
+      }
     }
 
     // ── Fair Use (skip when running as background job) ──
