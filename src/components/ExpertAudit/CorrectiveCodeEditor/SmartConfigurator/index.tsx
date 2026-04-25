@@ -1050,25 +1050,105 @@ export function SmartConfigurator({
         ? fixConfigs.filter(f => f.deliveryChannel !== 'content' || !f.enabled)
         : fixConfigs;
 
-      const { data, error } = await supabase.functions.invoke('generate-corrective-code', {
-        body: {
-          fixes: fixesForCodeGen,
-          siteName,
-          siteUrl,
-          language,
-          roadmapContext,
-          auditContext: Object.keys(auditContext).length > 0 ? auditContext : undefined,
-        },
-      });
+      // ── ASYNC PATTERN: enqueue job, then poll ──
+      generationAbortRef.current = { aborted: false };
+      setGenerationProgress(0);
 
-      if (error) throw error;
+      const { data: enqueueData, error: enqueueError } = await supabase.functions.invoke(
+        'generate-corrective-code',
+        {
+          body: {
+            fixes: fixesForCodeGen,
+            siteName,
+            siteUrl,
+            language,
+            roadmapContext,
+            auditContext: Object.keys(auditContext).length > 0 ? auditContext : undefined,
+            async: true,
+          },
+        }
+      );
 
-      if (data?.success && data?.code) {
-        setGeneratedCode(data.code);
-        setCodeSource(data.source || 'new_generation');
-        setLibraryHits(data.libraryHits || 0);
+      if (enqueueError) throw enqueueError;
+      const jobId: string | undefined = enqueueData?.job_id;
+      if (!jobId) {
+        // Fallback: server replied synchronously (legacy) — treat as final result
+        if (enqueueData?.success && enqueueData?.code) {
+          setGeneratedCode(enqueueData.code);
+          setCodeSource(enqueueData.source || 'new_generation');
+          setLibraryHits(enqueueData.libraryHits || 0);
+          setIsArchived(false);
+          if (isAgencyPro || isAdmin || openMode) {
+            setHasPaid(true);
+            setShowLockOverlay(false);
+            handleArchiveSolution();
+            handleSaveToProfile();
+            autoTrackSite();
+          } else {
+            setTimeout(() => setShowLockOverlay(true), 4000);
+          }
+          return;
+        }
+        throw new Error('Aucun job_id retourné par le serveur');
+      }
+
+      // Poll the job until completed/failed or timeout (5 minutes max)
+      const POLL_INTERVAL_MS = 2500;
+      const MAX_POLL_MS = 5 * 60 * 1000;
+      const startedAt = Date.now();
+      const projectRef = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) || '';
+      const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) || `https://${projectRef}.supabase.co`;
+      const anonKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) || '';
+
+      let finalData: any = null;
+      while (true) {
+        if (generationAbortRef.current.aborted) {
+          throw new Error('Génération annulée');
+        }
+        if (Date.now() - startedAt > MAX_POLL_MS) {
+          throw new Error('Délai d\'attente dépassé (5 min). Réessayez.');
+        }
+
+        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+
+        const pollResp = await fetch(
+          `${supabaseUrl}/functions/v1/generate-corrective-code?job_id=${encodeURIComponent(jobId)}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${anonKey}`,
+              'apikey': anonKey,
+            },
+          }
+        );
+
+        if (!pollResp.ok) {
+          // Soft-fail on transient errors, retry next tick
+          console.warn('[Code Architect] poll non-OK:', pollResp.status);
+          continue;
+        }
+        const pollJson = await pollResp.json().catch(() => null);
+        if (!pollJson) continue;
+
+        if (pollJson.status === 'completed' && pollJson.data) {
+          finalData = pollJson.data;
+          setGenerationProgress(100);
+          break;
+        }
+        if (pollJson.status === 'failed') {
+          throw new Error(pollJson.error || 'Échec de génération');
+        }
+        // pending / processing
+        if (typeof pollJson.progress === 'number') {
+          setGenerationProgress(pollJson.progress);
+        }
+      }
+
+      if (finalData?.success && finalData?.code) {
+        setGeneratedCode(finalData.code);
+        setCodeSource(finalData.source || 'new_generation');
+        setLibraryHits(finalData.libraryHits || 0);
         setIsArchived(false);
-        // Subscribers, admins & freemium open mode get instant access, others see lock after delay
         if (isAgencyPro || isAdmin || openMode) {
           setHasPaid(true);
           setShowLockOverlay(false);
@@ -1076,12 +1156,10 @@ export function SmartConfigurator({
           handleSaveToProfile();
           autoTrackSite();
         } else {
-          setTimeout(() => {
-            setShowLockOverlay(true);
-          }, 4000);
+          setTimeout(() => setShowLockOverlay(true), 4000);
         }
       } else {
-        throw new Error(data?.error || 'Erreur lors de la génération');
+        throw new Error(finalData?.error || 'Erreur lors de la génération');
       }
     } catch (error) {
       console.error('Error generating corrective code:', error);
@@ -1093,8 +1171,9 @@ export function SmartConfigurator({
       setShowLockOverlay(false);
     } finally {
       setIsGenerating(false);
+      setGenerationProgress(0);
     }
-  }, [fixConfigs, siteName, siteUrl, language, toast, isAgencyPro]);
+  }, [fixConfigs, siteName, siteUrl, language, toast, isAgencyPro, hasCmsConnectionForContent, isAdmin, openMode]);
 
   // Copy to clipboard
   const handleCopy = useCallback(async () => {
