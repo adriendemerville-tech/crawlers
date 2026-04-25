@@ -15,8 +15,9 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Crosshair, Maximize2, Minimize2, Minus, Network, Sparkles, X } from 'lucide-react';
+import { Crosshair, PanelLeftClose, PanelLeftOpen, Minus, Network, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import { cn } from '@/lib/utils';
