@@ -13,13 +13,15 @@
  *
  * Charte : noir/blanc/violet/jaune d'or, boutons sans fond.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Crosshair, PanelLeftClose, PanelLeftOpen, Minus, Network, Sparkles, X } from 'lucide-react';
+import { Crosshair, PanelLeftClose, PanelLeftOpen, Minus, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
+import { CrawlersLogo } from '@/components/Support/CrawlersLogo';
+import type { CopilotMessage } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
 
 const SEO_KEYWORDS = /maillage|h1|canonical|backlink|cocon|cluster|intent|crawl|serp|json-ld|schema|sitemap|robots|title|meta|alt|seo|geo|eeat|citabilit|trafic|traffic|linking|quick win|recommand|optimis|améliorer/i;
@@ -73,6 +75,22 @@ export function CocoonAIChatUnified({
   // Ref pour exposer la liste à jour au getContext (qui est ré-évalué à chaque envoi).
   const selectedNodesRef = useRef<SelectedNode[]>([]);
   selectedNodesRef.current = selectedNodes;
+
+  // Q4.1 — greeting Stratège (stable au mount, parité Félix).
+  const seedRef = useRef<CopilotMessage[] | null>(null);
+  if (seedRef.current === null) {
+    const intro = domain
+      ? `**Stratège Cocoon** prêt. J'analyse le maillage de **${domain}** (${nodes.length} nœud${nodes.length > 1 ? 's' : ''}). Cible un nœud avec « Cibler un nœud » ou demande-moi un audit global.`
+      : `**Stratège Cocoon** prêt. Lance une analyse globale ou cible un nœud du graphe pour un diagnostic ciblé. Les actions CMS passent par approbation.`;
+    seedRef.current = [
+      {
+        id: `seed-${Date.now()}`,
+        role: 'assistant',
+        content: intro,
+        createdAt: Date.now(),
+      },
+    ];
+  }
 
   // Ajoute automatiquement le nœud sélectionné depuis la page (si dispo).
   useEffect(() => {
@@ -199,7 +217,7 @@ export function CocoonAIChatUnified({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <div className="flex min-w-0 items-center gap-2">
-              <Network className="h-4 w-4 text-foreground" />
+              <CrawlersLogo size={20} />
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold text-foreground">Stratège Cocoon</div>
                 <div className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -307,6 +325,7 @@ export function CocoonAIChatUnified({
                 starterPrompts={STARTERS}
                 getContext={getContext}
                 onAssistantReply={onAssistantReply}
+                seedMessages={seedRef.current ?? undefined}
                 className="h-full"
               />
             </div>

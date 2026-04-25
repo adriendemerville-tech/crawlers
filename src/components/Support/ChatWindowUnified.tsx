@@ -15,7 +15,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, BellOff, Bug, PanelRightClose, PanelRightOpen, Minus, X } from 'lucide-react';
+import { Bell, BellOff, Bug, History, PanelRightClose, PanelRightOpen, Minus, X } from 'lucide-react';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,6 +34,7 @@ import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { SeoQuiz } from './SeoQuiz';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
+import { CopilotHistoryPanel } from '@/components/Copilot/CopilotHistoryPanel';
 import { captureScreenContext } from '@/utils/screenContext';
 import { cn } from '@/lib/utils';
 
@@ -129,6 +130,10 @@ export function ChatWindowUnified({
   const [domain, setDomain] = useState<string | undefined>();
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [bugMode, setBugMode] = useState(false);
+  // Q4.4 — historique des sessions
+  const [showHistory, setShowHistory] = useState(false);
+  const [pickedSessionId, setPickedSessionId] = useState<string | null>(null);
+  const [shellKey, setShellKey] = useState(0);
 
   // Quiz / enterprise state
   const [quizLoading, setQuizLoading] = useState(false);
@@ -376,7 +381,21 @@ export function ChatWindowUnified({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 relative">
+          <button
+            type="button"
+            onClick={() => setShowHistory((v) => !v)}
+            className={cn(
+              'rounded-md border p-1 transition',
+              showHistory
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
+            )}
+            aria-label="Historique des conversations"
+            title="Historique"
+          >
+            <History className="h-3.5 w-3.5" />
+          </button>
           <button
             type="button"
             onClick={toggleMute}
@@ -412,6 +431,19 @@ export function ChatWindowUnified({
           </button>
         </div>
       </div>
+
+      {showHistory && !minimized && (
+        <div className="relative">
+          <CopilotHistoryPanel
+            persona="felix"
+            userId={user?.id}
+            currentSessionId={pickedSessionId}
+            onPickSession={(sid) => { setPickedSessionId(sid); setShellKey((k) => k + 1); }}
+            onNewSession={() => { setPickedSessionId(null); setShellKey((k) => k + 1); }}
+            onClose={() => setShowHistory(false)}
+          />
+        </div>
+      )}
 
       {bugMode && !minimized && (
         <div className="border-b border-primary/40 bg-muted/20 px-3 py-1.5 text-[11px] text-foreground">
@@ -490,12 +522,14 @@ export function ChatWindowUnified({
 
           <div className="flex-1 overflow-hidden">
             <AgentChatShell
+              key={shellKey}
               persona="felix"
               title="Félix"
               subtitle="Copilote SAV unifié — questions, audits, navigation"
               starterPrompts={STARTERS}
               getContext={getContext}
-              seedMessages={seedRef.current}
+              seedMessages={pickedSessionId ? undefined : seedRef.current}
+              initialSessionId={pickedSessionId}
               onAssistantReply={onAssistantReply}
               composerLeading={
                 <ChatAttachmentPicker
