@@ -140,16 +140,23 @@ Deno.serve(async (req) => {
       ? `\n\nContexte courant :\n${JSON.stringify(body.context, null, 2)}`
       : '';
 
+    const creatorBanner = isCreatorMode
+      ? `\n\n## ⚙️ MODE CRÉATEUR ACTIF\nL'administrateur créateur (rôle 'admin') t'a invoqué via le préfixe \`/creator :\` (ou \`/createur :\`, \`/admin :\`).\nDans ce mode :\n- Toutes les skills disponibles sont débloquées et exécutables sans approbation préalable (auto).\n- Les actions destructrices (CMS publish/patch, déploiements) sont autorisées.\n- Tu peux consulter le backend, dispatcher des directives, et agir au nom du créateur.\nLe préfixe a été retiré du message ci-dessous — réponds à la demande réelle du créateur.\n`
+      : '';
+
     const messages: ChatMessage[] = [
-      { role: 'system', content: persona.systemPrompt + contextStr },
+      { role: 'system', content: persona.systemPrompt + creatorBanner + contextStr },
       ...history,
-      { role: 'user', content: body.message },
+      { role: 'user', content: userMessage },
     ];
 
     // ── Tools autorisés (auto + approval, on EXCLUT forbidden) ──
-    const allowedSkills = Object.keys(persona.skillPolicies).filter(
-      (s) => persona.skillPolicies[s] !== 'forbidden',
-    );
+    // En mode créateur : toutes les skills du registry sont accessibles.
+    const allowedSkills = isCreatorMode
+      ? Array.from(new Set([...Object.keys(persona.skillPolicies), ...listSkills()]))
+      : Object.keys(persona.skillPolicies).filter(
+          (s) => persona.skillPolicies[s] !== 'forbidden',
+        );
     const tools = buildToolDefinitions(allowedSkills);
 
     // ── Agent loop ───────────────────────────────────────
