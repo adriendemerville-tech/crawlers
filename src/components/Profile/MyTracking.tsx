@@ -29,6 +29,7 @@ import { QuickWinsCard } from '@/components/Profile/QuickWinsCard';
 import { SmartRecommendationsPanel } from '@/components/Profile/SmartRecommendationsPanel';
 import { FanOutRadarWidget } from '@/components/Profile/FanOutRadarWidget';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
+import { SmartCmsConnectModal } from '@/components/Profile/SmartCmsConnectModal';
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
