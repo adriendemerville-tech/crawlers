@@ -761,6 +761,8 @@ async function loadHistory(
 
   const messages: ChatMessage[] = [];
   for (const row of trimmed) {
+    // _security_violation : interne, jamais envoyé au LLM.
+    // _assistant_intermediate : déjà inclus implicitement via le tool_call suivant — éviter doublon.
     if (row.skill === '_security_violation' || row.skill === '_assistant_intermediate') continue;
 
     if (row.skill === '_user_message') {
@@ -796,7 +798,8 @@ async function loadHistory(
     } else if (row.status === 'error') {
       toolResult = { ok: false, error: row.error_message ?? 'Erreur skill' };
     } else {
-      toolResult = { ok: true, data: row.output };
+      // P2 #15 — tronque les outputs volumineux pour ne pas exploser la fenêtre LLM
+      toolResult = { ok: true, data: summarizeForHistory(row.output) };
     }
     messages.push({
       role: 'tool',
