@@ -3524,6 +3524,7 @@ export type Database = {
       }
       copilot_actions: {
         Row: {
+          action_category: string | null
           created_at: string
           duration_ms: number | null
           error_message: string | null
@@ -3538,6 +3539,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          action_category?: string | null
           created_at?: string
           duration_ms?: number | null
           error_message?: string | null
@@ -3552,6 +3554,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          action_category?: string | null
           created_at?: string
           duration_ms?: number | null
           error_message?: string | null
