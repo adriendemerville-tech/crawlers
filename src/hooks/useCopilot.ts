@@ -139,6 +139,16 @@ export function useCopilot(options: UseCopilotOptions) {
           ),
         );
         if (data.actions?.length && onActions) onActions(data.actions);
+        if (data.reply && onAssistantReplyRef.current) {
+          try {
+            onAssistantReplyRef.current(data.reply, {
+              sessionId: sessionRef.current,
+              userMessage: trimmed,
+            });
+          } catch (err) {
+            console.warn('[useCopilot] onAssistantReply threw:', err);
+          }
+        }
       } catch (e) {
         const msg = (e as Error).message || 'Erreur inconnue';
         setError(msg);
