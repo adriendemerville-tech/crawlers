@@ -316,6 +316,11 @@ Deno.serve(async (req) => {
       { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: finalReply }, status: 'success', duration_ms: Date.now() - t0 },
     ]);
 
+    // Libère le statut processing → active (succès nominal)
+    await service.from('copilot_sessions')
+      .update({ status: 'active', processing_started_at: null })
+      .eq('id', sessionId).eq('user_id', userId);
+
     return jsonOk({
       session_id: sessionId,
       reply: finalReply,
@@ -327,6 +332,18 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error('[copilot-orchestrator] Erreur:', e);
     return jsonError((e as Error).message, 500);
+  } finally {
+    // Garantit la libération du statut processing même en cas de crash
+    if (sessionIdForCleanup && serviceForCleanup) {
+      try {
+        await serviceForCleanup.from('copilot_sessions')
+          .update({ status: 'active', processing_started_at: null })
+          .eq('id', sessionIdForCleanup)
+          .eq('status', 'processing');
+      } catch {
+        // best-effort
+      }
+    }
   }
 });
 
