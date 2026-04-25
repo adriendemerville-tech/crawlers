@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Layers, Grid3X3, Box } from 'lucide-react';
+import { Layers, Grid3X3, Box, Trophy, Medal, Award, Check, X } from 'lucide-react';
 import { BenchmarkCube3D } from './BenchmarkCube3D';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
@@ -29,35 +29,37 @@ interface Props {
   citationRate: number;
 }
 
-/* ── Score color utility ──────────────────────────────────────────── */
+/* ── Score color utility (charte: violet / gold / muted, pas de bleu IA) ──── */
 
 function getHeatColor(score: number, cited: boolean): string {
   if (score < 0) return 'bg-muted/30 text-muted-foreground';
-  if (cited && score >= 70) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-  if (cited && score >= 40) return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-  if (cited) return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-  if (score >= 70) return 'bg-blue-500/15 text-blue-400 border-blue-500/20';
-  if (score >= 40) return 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20';
-  return 'bg-red-500/15 text-red-400 border-red-500/20';
+  // Cited tiers: gold scale (best) → violet (mid) → muted (low)
+  if (cited && score >= 70) return 'bg-brand-gold/25 text-brand-gold border-brand-gold/50';
+  if (cited && score >= 40) return 'bg-brand-gold/15 text-brand-gold/90 border-brand-gold/30';
+  if (cited) return 'bg-brand-violet/20 text-brand-violet border-brand-violet/40';
+  // Not cited: violet faded → muted
+  if (score >= 70) return 'bg-brand-violet/15 text-brand-violet/80 border-brand-violet/25';
+  if (score >= 40) return 'bg-muted/40 text-muted-foreground border-border';
+  return 'bg-muted/20 text-muted-foreground/70 border-border/50';
 }
 
-function getCitationIcon(cited: boolean, rank: number | null): string {
-  if (!cited) return '✗';
-  if (rank === 1) return '🥇';
-  if (rank === 2) return '🥈';
-  if (rank === 3) return '🥉';
-  if (rank != null) return `#${rank}`;
-  return '✓';
+function CitationGlyph({ cited, rank }: { cited: boolean; rank: number | null }) {
+  if (!cited) return <X className="h-3 w-3 inline" aria-label="Non cité" />;
+  if (rank === 1) return <Trophy className="h-3 w-3 inline text-brand-gold" aria-label="Rang 1" />;
+  if (rank === 2) return <Medal className="h-3 w-3 inline text-brand-gold/80" aria-label="Rang 2" />;
+  if (rank === 3) return <Award className="h-3 w-3 inline text-brand-gold/60" aria-label="Rang 3" />;
+  if (rank != null) return <span className="font-mono text-[10px]">#{rank}</span>;
+  return <Check className="h-3 w-3 inline text-brand-violet" aria-label="Cité" />;
 }
 
-/* ── Engine color map ─────────────────────────────────────────────── */
+/* ── Engine color map (charte: violet/gold scale only, pas de bleu IA) ──── */
 
 const ENGINE_COLORS: Record<string, string> = {
-  chatgpt: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 data-[active=true]:bg-emerald-500/30',
-  gemini: 'bg-blue-500/15 text-blue-400 border-blue-500/40 data-[active=true]:bg-blue-500/30',
-  perplexity: 'bg-violet-500/15 text-violet-400 border-violet-500/40 data-[active=true]:bg-violet-500/30',
-  claude: 'bg-amber-500/15 text-amber-400 border-amber-500/40 data-[active=true]:bg-amber-500/30',
-  mistral: 'bg-orange-500/15 text-orange-400 border-orange-500/40 data-[active=true]:bg-orange-500/30',
+  chatgpt: 'bg-brand-violet/15 text-brand-violet border-brand-violet/40 data-[active=true]:bg-brand-violet/30',
+  gemini: 'bg-brand-gold/15 text-brand-gold border-brand-gold/40 data-[active=true]:bg-brand-gold/30',
+  perplexity: 'bg-brand-violet/20 text-brand-violet border-brand-violet/50 data-[active=true]:bg-brand-violet/35',
+  claude: 'bg-brand-gold/20 text-brand-gold border-brand-gold/50 data-[active=true]:bg-brand-gold/35',
+  mistral: 'bg-foreground/10 text-foreground border-foreground/20 data-[active=true]:bg-foreground/20',
 };
 
 function getEngineColor(engine: string): string {
