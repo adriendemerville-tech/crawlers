@@ -277,16 +277,26 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
   const [smartCmsOpen, setSmartCmsOpen] = useState(false);
   const [smartCmsSiteId, setSmartCmsSiteId] = useState<string | null>(null);
+  const [noSiteApiModalOpen, setNoSiteApiModalOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  // Open API panel when triggered from sidebar
+  // Open API panel when triggered from sidebar.
+  // Si aucun site n'est suivi : on bloque l'ouverture du panneau et on affiche
+  // une modal qui invite l'utilisateur à ajouter d'abord un domaine.
   useEffect(() => {
-    if (forceApiPanel && !h.showApiPanel) {
+    if (!forceApiPanel) return;
+    if (h.loading) return; // attendre le chargement initial des sites
+    if (h.sites.length === 0) {
+      setNoSiteApiModalOpen(true);
+      onApiPanelOpened?.();
+      return;
+    }
+    if (!h.showApiPanel) {
       h.setShowApiPanel(true);
       h.setSelectedSite(null);
       onApiPanelOpened?.();
     }
-  }, [forceApiPanel]);
+  }, [forceApiPanel, h.loading, h.sites.length]);
 
   // Sync with sidebar domain selector
   useEffect(() => {
@@ -964,6 +974,43 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
           )}
         </CardContent>
       </Card>
+
+      {/* No-site → API unavailable modal */}
+      <Dialog open={noSiteApiModalOpen} onOpenChange={setNoSiteApiModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {h.language === 'en'
+                ? 'APIs unavailable'
+                : h.language === 'es'
+                  ? 'APIs no disponibles'
+                  : 'API indisponibles'}
+            </DialogTitle>
+            <DialogDescription>
+              {h.language === 'en'
+                ? 'Add a domain in "My Sites" first.'
+                : h.language === 'es'
+                  ? 'Primero añada un dominio en "Mis sitios".'
+                  : 'Ajoutez d\'abord un domaine dans "Mes sites".'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setNoSiteApiModalOpen(false)}>
+              {h.language === 'en' ? 'Close' : h.language === 'es' ? 'Cerrar' : 'Fermer'}
+            </Button>
+            <Button
+              onClick={() => {
+                setNoSiteApiModalOpen(false);
+                h.setShowAddModal(true);
+              }}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              {t.addSite}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Site Modal */}
       <Dialog open={h.showAddModal} onOpenChange={h.setShowAddModal}>
