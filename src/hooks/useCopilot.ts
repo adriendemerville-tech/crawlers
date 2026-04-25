@@ -68,13 +68,15 @@ function uid(): string {
 }
 
 export function useCopilot(options: UseCopilotOptions) {
-  const { persona, getContext, initialSessionId, onActions } = options;
+  const { persona, getContext, initialSessionId, onActions, onAssistantReply, seedMessages } = options;
 
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId ?? null);
-  const [messages, setMessages] = useState<CopilotMessage[]>([]);
+  const [messages, setMessages] = useState<CopilotMessage[]>(() => seedMessages ?? []);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sessionRef = useRef<string | null>(initialSessionId ?? null);
+  const onAssistantReplyRef = useRef(onAssistantReply);
+  onAssistantReplyRef.current = onAssistantReply;
 
   const callOrchestrator = useCallback(
     async (body: Record<string, unknown>): Promise<OrchestratorResponse> => {
