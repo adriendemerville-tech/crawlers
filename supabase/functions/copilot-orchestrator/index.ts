@@ -222,6 +222,9 @@ Deno.serve(async (req) => {
       }
 
       // Résout chaque tool call
+      // P0 #2 — dès qu'on rencontre une approval, on N'EXÉCUTE PLUS aucune skill
+      // suivante du même batch. Les autos restantes sont mises en attente
+      // d'approbation pour cohérence (l'user doit valider l'ensemble).
       let stopForApproval = false;
       for (const call of llmResp.tool_calls) {
         const skillName = call.function.name;
@@ -235,7 +238,7 @@ Deno.serve(async (req) => {
           parsedArgs = {};
         }
 
-        // FORBIDDEN
+        // FORBIDDEN — toujours rejeté, même après une approval (ne bloque pas le batch)
         if (policy === 'forbidden' || !getSkill(skillName)) {
           await logAction(service, sessionId, userId, persona.id, skillName, parsedArgs, null, 'rejected', 'Skill non autorisé pour cette persona', 0);
           messages.push({
@@ -248,8 +251,14 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // APPROVAL : on enregistre, on stoppe la boucle.
-        if (policy === 'approval') {
+        // Si une approval a déjà été rencontrée dans ce batch, on bascule TOUTES
+        // les skills suivantes en attente d'approbation (même les autos).
+        const effectivePolicy = stopForApproval ? 'approval' : policy;
+
+        // APPROVAL : on enregistre, on signale awaiting, on continue à transformer
+        // les tool_calls restants en awaiting (boucle pas cassée pour bien tous
+        // les inscrire dans messages[] et copilot_actions).
+        if (effectivePolicy === 'approval') {
           const { data: approvalAction } = await service
             .from('copilot_actions')
             .insert({
@@ -259,12 +268,18 @@ Deno.serve(async (req) => {
             .select('id').single();
           awaitingApprovals.push({ action_id: approvalAction?.id ?? '', skill: skillName, input: parsedArgs });
           executedActions.push({ skill: skillName, status: 'awaiting_approval', action_id: approvalAction?.id });
-          // Réponse synthétique pour le LLM (mais on coupe la boucle après)
           messages.push({
             role: 'tool',
             tool_call_id: call.id,
             name: skillName,
-            content: JSON.stringify({ ok: false, awaiting_approval: true, action_id: approvalAction?.id }),
+            content: JSON.stringify({
+              ok: false,
+              awaiting_approval: true,
+              action_id: approvalAction?.id,
+              note: stopForApproval
+                ? 'Auto-skill mise en attente : une action précédente du même batch nécessite ton approbation.'
+                : undefined,
+            }),
           });
           stopForApproval = true;
         } else {
