@@ -129,20 +129,19 @@ export function ChatWindowUnified({
     }
   }
 
-  // 1er site suivi → contexte par défaut.
+  // 1er site suivi → contexte par défaut + tous les domaines pour le vocab STT.
   useEffect(() => {
     if (!user) return;
     supabase
       .from('tracked_sites')
       .select('id, domain')
       .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle()
+      .order('created_at', { ascending: true })
       .then(({ data }) => {
-        if (data) {
-          setTrackedSiteId(data.id);
-          setDomain(data.domain);
-        }
+        if (!data || data.length === 0) return;
+        setTrackedSiteId(data[0].id);
+        setDomain(data[0].domain);
+        setUserDomains(data.map((d) => d.domain).filter(Boolean));
       });
   }, [user]);
 
