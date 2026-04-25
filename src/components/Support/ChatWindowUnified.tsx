@@ -28,6 +28,7 @@ import {
   markOnboardingDone,
 } from '@/utils/felixOnboarding';
 import { CrawlersLogo } from './CrawlersLogo';
+import { ChatMicButton } from './ChatMicButton';
 import { SeoQuiz } from './SeoQuiz';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
