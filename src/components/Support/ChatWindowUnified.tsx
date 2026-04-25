@@ -368,7 +368,7 @@ export function ChatWindowUnified({
           </button>
           <button
             type="button"
-            onClick={() => { setMinimized((v) => !v); setMaximized(false); }}
+            onClick={() => { setMinimized((v) => !v); if (docked) setFelixExpanded(false); }}
             className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
             aria-label={minimized ? 'Restaurer' : 'Réduire'}
           >
@@ -376,11 +376,12 @@ export function ChatWindowUnified({
           </button>
           <button
             type="button"
-            onClick={() => { setMaximized((v) => !v); setMinimized(false); }}
+            onClick={() => { setFelixExpanded(!docked); setMinimized(false); }}
             className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
-            aria-label={maximized ? 'Réduire' : 'Agrandir'}
+            aria-label={docked ? 'Désancrer' : 'Ancrer en colonne pleine hauteur'}
+            title={docked ? 'Désancrer' : 'Ancrer en colonne pleine hauteur'}
           >
-            {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            {docked ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
           </button>
           <button
             type="button"
