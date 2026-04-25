@@ -12,6 +12,7 @@ interface BenchmarkResult {
   prompt: string;
   theme: string;
   engine: string;
+  axe?: string;
   crawlers_score: number;
   citation_found: boolean;
   citation_rank: number | null;
