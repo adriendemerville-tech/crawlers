@@ -631,6 +631,7 @@ Deno.serve(handleRequest(async (req) => {
 
       // ── SSE streaming branch ──
       if (stream) {
+        streamingOwnsConcurrency = true
         const encoder = new TextEncoder()
         const sseBody = new ReadableStream({
           async start(controller) {
