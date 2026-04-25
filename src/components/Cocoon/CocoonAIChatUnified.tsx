@@ -77,6 +77,11 @@ export function CocoonAIChatUnified({
   const selectedNodesRef = useRef<SelectedNode[]>([]);
   selectedNodesRef.current = selectedNodes;
 
+  // Q4.4 (parité Félix) — historique des sessions Stratège.
+  const [showHistory, setShowHistory] = useState(false);
+  const [pickedSessionId, setPickedSessionId] = useState<string | null>(null);
+  const [shellKey, setShellKey] = useState(0);
+
   // Q4.1 — greeting Stratège (stable au mount, parité Félix).
   const seedRef = useRef<CopilotMessage[] | null>(null);
   if (seedRef.current === null) {
