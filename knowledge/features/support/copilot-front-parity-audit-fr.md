@@ -72,18 +72,18 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 
 ## 4. Bugs / cassures identifiés
 
-| # | Sévérité | Bug | Fichier |
-|---|---|---|---|
-| B1 | 🟠 moyenne | Prop `initialExpandedGreeting` déclarée et passée par `FloatingChatBubble` mais **non destructurée** dans `ChatWindowUnified` (ligne 90-97) → la deuxième salutation longue ne s'affiche jamais | `Support/ChatWindowUnified.tsx` |
-| B2 | 🟠 moyenne | `react-markdown` rendu sans `remark-gfm` → tableaux Markdown des réponses Stratège affichés en pre-text, listes-tâches non parsées | `Copilot/AgentChatShell.tsx` |
-| B3 | 🟡 faible | `<button>` du bouton « Stratège » (ouverture) utilise `bg-[#7c3aed]` violet plein → enfreint la charte « pas de fond » | `Cocoon/CocoonAIChatUnified.tsx` ligne 182 OK (déjà sans fond), mais `FloatingChatBubble` ligne 338 enfreint la règle |
-| B4 | 🟡 faible | Émoji 👋 / 🔍 dans `FloatingChatBubble` (lignes 288, 306, 329) → enfreint la règle « pas d'émoji » | `Support/FloatingChatBubble.tsx` |
-| B5 | 🟡 faible | `useEffect(() => return () => setFelixExpanded(false))` se déclenche aussi au lazy-unmount de Suspense → si l'utilisateur navigue puis revient, l'état dock est perdu (pas critique car ré-ancrable) | `Support/ChatWindowUnified.tsx` lignes 113-115 |
-| B6 | 🟡 faible | Le toggle bulle/dock teste `localStorage.getItem('felix_sidebar_expanded') === '1'` directement à chaque render au lieu de lire `useAISidebar` → race possible juste après changement | `Support/FloatingChatBubble.tsx` ligne 334 |
-| B7 | 🟠 moyenne | Le hook `useCopilot.reset()` efface l'historique local **mais ne crée pas une nouvelle session côté backend** (le prochain `sendMessage` partira sans `session_id`, donc OK), mais la session précédente reste avec `status='processing'` jusqu'à reconciliation 90 s | `hooks/useCopilot.ts` |
-| B8 | 🔴 haute | `helpers.ts` (109 lignes) référencé par la doc, mais le `safeServiceCall` est-il **vraiment branché** sur les handlers `cms_*` du registry ? À auditer ligne par ligne | `supabase/functions/copilot-orchestrator/skills/registry.ts` |
-| B9 | 🟡 faible | Stratège n'a pas de logo de marque (`<Network/>` lucide) → incohérence visuelle | `Cocoon/CocoonAIChatUnified.tsx` ligne 202 |
-| B10 | 🟡 faible | `FloatingChatBubble.tsx` (B4) utilise des gradients violets `from-violet-500 to-violet-800` en dur (lignes 277, 295, 313) au lieu de tokens du design system | `Support/FloatingChatBubble.tsx` |
+| # | Sévérité | Bug | Fichier | Statut |
+|---|---|---|---|---|
+| B1 | 🟠 moyenne | Prop `initialExpandedGreeting` déclarée et passée par `FloatingChatBubble` mais **non destructurée** dans `ChatWindowUnified` → la salutation longue ne s'affichait jamais | `Support/ChatWindowUnified.tsx` | ✅ **Corrigé Q1.2** |
+| B2 | 🟠 moyenne | `react-markdown` rendu sans `remark-gfm` → tableaux Markdown des réponses Stratège affichés en pre-text, listes-tâches non parsées | `Copilot/AgentChatShell.tsx` | ⏳ Q3 |
+| B3 | 🟡 faible | Bouton flottant Félix utilisait `bg-[#7c3aed]` violet plein → enfreint la charte « pas de fond » | `Support/FloatingChatBubble.tsx` ligne 338 | ✅ **Corrigé Q2** (border + bg transparent) |
+| B4 | 🟡 faible | Émoji 👋 / 🔍 dans `FloatingChatBubble` → enfreint la règle « pas d'émoji » | `Support/FloatingChatBubble.tsx` | ✅ **Corrigé Q2** |
+| B5 | 🟡 faible | `useEffect` cleanup setFelixExpanded(false) se déclenche aussi au lazy-unmount de Suspense | `Support/ChatWindowUnified.tsx` | ⏳ Q3 |
+| B6 | 🟡 faible | Toggle bulle/dock teste `localStorage` directement à chaque render au lieu de lire `useAISidebar` → race possible | `Support/FloatingChatBubble.tsx` ligne 334 | ⏳ Q3 |
+| B7 | 🟠 moyenne | `useCopilot.reset()` n'informait pas le backend → la session précédente restait `processing` jusqu'à reconciliation 90s | `hooks/useCopilot.ts` + `copilot-orchestrator/index.ts` | ✅ **Corrigé Q1.3** (handler `close_session`) |
+| B8 | 🔴 haute | `safeServiceCall` réellement branché sur les handlers `cms_*` ? | `copilot-orchestrator/skills/registry.ts` | ✅ **Audité Q1.1** — branché sur `cms_publish_draft`, `cms_patch_content` ; autres skills utilisent `userClient` (RLS) |
+| B9 | 🟡 faible | Stratège n'a pas de logo de marque (`<Network/>` lucide) | `Cocoon/CocoonAIChatUnified.tsx` ligne 202 | ⏳ Q4 |
+| B10 | 🟡 faible | `FloatingChatBubble` utilisait gradients violets `from-violet-500 to-violet-800` en dur dans 3 tooltips | `Support/FloatingChatBubble.tsx` | ✅ **Corrigé Q2** (border primary + bg-background) |
 
 ---
 
