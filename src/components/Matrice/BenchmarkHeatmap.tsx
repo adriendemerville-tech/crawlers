@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Layers, Grid3X3 } from 'lucide-react';
+import { Layers, Grid3X3, Box } from 'lucide-react';
+import { BenchmarkCube3D } from './BenchmarkCube3D';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
@@ -11,6 +12,7 @@ interface BenchmarkResult {
   prompt: string;
   theme: string;
   engine: string;
+  axe?: string;
   crawlers_score: number;
   citation_found: boolean;
   citation_rank: number | null;
@@ -69,8 +71,8 @@ function getEngineColor(engine: string): string {
 /* ── Component ─────────────────────────────────────────────────────── */
 
 export default function BenchmarkHeatmap({ results, themes, engines, heatmap, globalScore, citationRate }: Props) {
-  // View mode: 'heatmap' (compact grid) or 'tabs' (one engine at a time)
-  const [viewMode, setViewMode] = useState<'heatmap' | 'tabs'>(engines.length > 3 ? 'tabs' : 'heatmap');
+  // View mode: 'heatmap' (compact grid), 'tabs' (one engine at a time), or 'cube' (3D)
+  const [viewMode, setViewMode] = useState<'heatmap' | 'tabs' | 'cube'>(engines.length > 3 ? 'tabs' : 'heatmap');
   const [activeEngine, setActiveEngine] = useState<string>(engines[0] || '');
 
   // Build heatmap from results if not provided
@@ -130,8 +132,22 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
           >
             <Layers className="h-3.5 w-3.5" /> Par moteur
           </Button>
+          <Button
+            variant={viewMode === 'cube' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2 text-xs gap-1"
+            onClick={() => setViewMode('cube')}
+          >
+            <Box className="h-3.5 w-3.5" /> Cube 3D
+          </Button>
         </div>
       </div>
+
+      {/* ── VIEW: Cube 3D (Thème × Moteur × Famille) ────────────────────── */}
+      {viewMode === 'cube' && (
+        <BenchmarkCube3D results={results} themes={themes} engines={engines} />
+      )}
+
 
       {/* ── VIEW: Engine tabs (one at a time) ─────────────────────────── */}
       {viewMode === 'tabs' && (
