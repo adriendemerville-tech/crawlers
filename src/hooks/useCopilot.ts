@@ -268,6 +268,7 @@ export function useCopilot(options: UseCopilotOptions) {
     error,
     sendMessage,
     approve,
+    reject,
     reset,
   };
 }
