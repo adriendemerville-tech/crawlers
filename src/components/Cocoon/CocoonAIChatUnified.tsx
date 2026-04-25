@@ -15,11 +15,12 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Crosshair, PanelLeftClose, PanelLeftOpen, Minus, Sparkles, X } from 'lucide-react';
+import { Crosshair, History, PanelLeftClose, PanelLeftOpen, Minus, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
+import { CopilotHistoryPanel } from '@/components/Copilot/CopilotHistoryPanel';
 import { CrawlersLogo } from '@/components/Support/CrawlersLogo';
 import type { CopilotMessage } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
