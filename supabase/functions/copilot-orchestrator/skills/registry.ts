@@ -75,14 +75,25 @@ const read_site_kpis: SkillDefinition = {
   handler: async (input, ctx) => {
     const siteId = String(input.tracked_site_id ?? '');
     if (!siteId) return { ok: false, error: 'tracked_site_id requis' };
-    const { data, error } = await ctx.supabase
+    // Colonnes réelles de tracked_sites (pas de seo_score/geo_score directement).
+    const { data: site, error } = await ctx.supabase
       .from('tracked_sites')
-      .select('id, domain, seo_score, geo_score, last_audit_at, business_profile')
+      .select('id, domain, site_name, brand_name, last_audit_at, eeat_score, business_type, market_sector, primary_language, target_countries')
       .eq('id', siteId)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
-    if (!data) return { ok: false, error: 'Site introuvable ou non accessible' };
-    return { ok: true, data };
+    if (!site) return { ok: false, error: 'Site introuvable ou non accessible' };
+
+    // Récupérer le dernier audit lié au domaine pour exposer un score.
+    const { data: lastAudit } = await ctx.supabase
+      .from('audits')
+      .select('id, url, fixes_count, dynamic_price, payment_status, created_at')
+      .eq('domain', site.domain)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return { ok: true, data: { ...site, last_audit: lastAudit ?? null } };
   },
 };
 
