@@ -14,6 +14,8 @@ import { CocoonRadialGraph } from "@/components/Cocoon/CocoonRadialGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
+import { CocoonAIChatUnified } from "@/components/Cocoon/CocoonAIChatUnified";
+import { useStrategistV2Flag } from "@/hooks/useStrategistV2Flag";
 import { CocoonRecommendationHistory } from "@/components/Cocoon/CocoonRecommendationHistory";
 import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
