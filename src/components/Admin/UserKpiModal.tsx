@@ -262,6 +262,8 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
         planType: (user as any).plan_type || 'free',
         bundleApiCount,
         bundleMonthlyEur,
+        totalTrackedSites: trackedSitesRes.count || 0,
+        totalCmsConnected: cmsConnectionsRes.count || 0,
       });
     } catch (err) {
       console.error('Error fetching KPIs:', err);
