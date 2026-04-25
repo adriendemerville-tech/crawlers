@@ -851,6 +851,7 @@ async function logAction(
     status,
     error_message: errorMessage,
     duration_ms: durationMs,
+    action_category: categorizeAction(skill),
   });
 }
 
