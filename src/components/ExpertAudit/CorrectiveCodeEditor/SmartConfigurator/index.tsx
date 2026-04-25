@@ -1909,28 +1909,43 @@ export function SmartConfigurator({
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={enabledCount === 0 || isGenerating}
-                    className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white border-0 text-xs h-8 px-3"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                        >
-                          <Code className="w-3 h-3" />
-                        </motion.div>
-                        Génération...
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-3 h-3" />
-                        Générer ({enabledCount})
-                      </>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={enabledCount === 0 || isGenerating}
+                      className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white border-0 text-xs h-8 px-3"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                          >
+                            <Code className="w-3 h-3" />
+                          </motion.div>
+                          Génération{generationProgress > 0 ? ` ${generationProgress}%` : '...'}
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-3 h-3" />
+                          Générer ({enabledCount})
+                        </>
+                      )}
+                    </Button>
+                    {isGenerating && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="text-xs h-8 px-2 border-foreground/30"
+                        onClick={() => {
+                          generationAbortRef.current.aborted = true;
+                        }}
+                        title="Annuler la génération"
+                      >
+                        Annuler
+                      </Button>
                     )}
-                  </Button>
+                  </div>
                 )}
               </div>
             </div>
