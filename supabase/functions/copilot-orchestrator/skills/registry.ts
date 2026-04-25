@@ -48,15 +48,16 @@ const read_audit: SkillDefinition = {
   handler: async (input, ctx) => {
     const auditId = String(input.audit_id ?? '');
     if (!auditId) return { ok: false, error: 'audit_id requis' };
+    // Table réelle : `audits` (cf. save-audit/index.ts).
     const { data, error } = await ctx.supabase
-      .from('expert_audits')
-      .select('id, url, score, created_at, raw_payload')
+      .from('audits')
+      .select('id, url, domain, sector, payment_status, fixes_count, dynamic_price, audit_data, created_at')
       .eq('id', auditId)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
     if (!data) return { ok: false, error: 'Audit introuvable' };
-    // Tronquer le raw_payload pour ne pas exploser la fenêtre LLM
-    const truncated = { ...data, raw_payload: summarizePayload(data.raw_payload) };
+    // Tronquer audit_data pour ne pas exploser la fenêtre LLM.
+    const truncated = { ...data, audit_data: summarizePayload(data.audit_data) };
     return { ok: true, data: truncated };
   },
 };
