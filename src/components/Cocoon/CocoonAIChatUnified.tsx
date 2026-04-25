@@ -76,6 +76,22 @@ export function CocoonAIChatUnified({
   const selectedNodesRef = useRef<SelectedNode[]>([]);
   selectedNodesRef.current = selectedNodes;
 
+  // Q4.1 — greeting Stratège (stable au mount, parité Félix).
+  const seedRef = useRef<CopilotMessage[] | null>(null);
+  if (seedRef.current === null) {
+    const intro = domain
+      ? `**Stratège Cocoon** prêt. J'analyse le maillage de **${domain}** (${nodes.length} nœud${nodes.length > 1 ? 's' : ''}). Cible un nœud avec « Cibler un nœud » ou demande-moi un audit global.`
+      : `**Stratège Cocoon** prêt. Lance une analyse globale ou cible un nœud du graphe pour un diagnostic ciblé. Les actions CMS passent par approbation.`;
+    seedRef.current = [
+      {
+        id: `seed-${Date.now()}`,
+        role: 'assistant',
+        content: intro,
+        createdAt: Date.now(),
+      },
+    ];
+  }
+
   // Ajoute automatiquement le nœud sélectionné depuis la page (si dispo).
   useEffect(() => {
     if (!selectedNodeId) return;
