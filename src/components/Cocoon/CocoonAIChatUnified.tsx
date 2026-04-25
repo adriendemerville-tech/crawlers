@@ -61,7 +61,13 @@ export function CocoonAIChatUnified({
     () => localStorage.getItem('cocoon_chat_open') === '1',
   );
   const [minimized, setMinimized] = useState(false);
-  const [maximized, setMaximized] = useState(false);
+  const { cocoonExpanded, setCocoonExpanded } = useAISidebar();
+  const docked = cocoonExpanded;
+
+  // Désancrer le panneau lors du démontage pour ne pas laisser le wrapper avec un padding fantôme.
+  useEffect(() => {
+    return () => setCocoonExpanded(false);
+  }, [setCocoonExpanded]);
   const [picking, setPicking] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState<SelectedNode[]>([]);
   // Ref pour exposer la liste à jour au getContext (qui est ré-évalué à chaque envoi).
