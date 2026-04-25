@@ -297,35 +297,44 @@ const cms_publish_draft: SkillDefinition = {
     properties: {
       draft_id: { type: 'string', description: 'UUID du brouillon' },
       draft_type: { type: 'string', enum: ['landing', 'blog'], default: 'landing' },
+      tracked_site_id: { type: 'string', description: 'UUID du site suivi propriétaire du brouillon (requis pour validation)' },
     },
-    required: ['draft_id'],
+    required: ['draft_id', 'tracked_site_id'],
   },
   handler: async (input, ctx) => {
     const draftId = String(input.draft_id ?? '').trim();
     const draftType = String(input.draft_type ?? 'landing');
+    const trackedSiteId = String(input.tracked_site_id ?? '').trim();
     if (!draftId) return { ok: false, error: 'draft_id requis' };
 
-    const table = draftType === 'blog' ? 'blog_articles' : 'seo_page_drafts';
-    // Vérifie d'abord la propriété via RLS (lecture user-scope)
-    const { data: existing, error: readErr } = await ctx.supabase
-      .from(table)
-      .select('id, status, title, slug')
-      .eq('id', draftId)
-      .maybeSingle();
-    if (readErr) return { ok: false, error: `Lecture ${table} : ${readErr.message}` };
-    if (!existing) return { ok: false, error: 'Brouillon introuvable ou non accessible (RLS)' };
-    if (existing.status === 'published') {
-      return { ok: true, data: { already_published: true, ...existing } };
-    }
+    // Toute opération service-role passe par safeServiceCall
+    return await safeServiceCall(ctx, trackedSiteId, async (service) => {
+      const table = draftType === 'blog' ? 'blog_articles' : 'seo_page_drafts';
 
-    const { data: updated, error: updErr } = await ctx.supabase
-      .from(table)
-      .update({ status: 'published', published_at: new Date().toISOString() })
-      .eq('id', draftId)
-      .select('id, status, title, slug')
-      .maybeSingle();
-    if (updErr) return { ok: false, error: `Publication ${table} : ${updErr.message}` };
-    return { ok: true, data: { table, ...updated } };
+      // Vérification supplémentaire : le brouillon appartient bien au user
+      const { data: existing, error: readErr } = await service
+        .from(table)
+        .select('id, status, title, slug, user_id')
+        .eq('id', draftId)
+        .maybeSingle();
+      if (readErr) return { ok: false, error: `Lecture ${table} : ${readErr.message}` };
+      if (!existing) return { ok: false, error: 'Brouillon introuvable' };
+      if ((existing as { user_id?: string }).user_id !== ctx.userId) {
+        return { ok: false, error: 'Brouillon non accessible (propriété refusée)' };
+      }
+      if (existing.status === 'published') {
+        return { ok: true, data: { already_published: true, ...existing } };
+      }
+
+      const { data: updated, error: updErr } = await service
+        .from(table)
+        .update({ status: 'published', published_at: new Date().toISOString() })
+        .eq('id', draftId)
+        .select('id, status, title, slug')
+        .maybeSingle();
+      if (updErr) return { ok: false, error: `Publication ${table} : ${updErr.message}` };
+      return { ok: true, data: { table, ...updated } };
+    });
   },
 };
 
@@ -362,34 +371,29 @@ const cms_patch_content: SkillDefinition = {
     const trackedSiteId = String(input.tracked_site_id ?? '').trim();
     const targetUrl = String(input.target_url ?? '').trim();
     const patches = Array.isArray(input.patches) ? input.patches : [];
-    if (!trackedSiteId) return { ok: false, error: 'tracked_site_id requis' };
     if (!targetUrl || !/^https?:\/\//.test(targetUrl)) return { ok: false, error: 'target_url absolue requise' };
     if (patches.length === 0) return { ok: false, error: 'au moins 1 patch requis' };
     if (patches.length > 20) return { ok: false, error: 'max 20 patches par appel' };
 
-    // Vérification d'appartenance du site via RLS (sinon l'opération est rejetée côté CMS aussi)
-    const { data: site, error: siteErr } = await ctx.supabase
-      .from('tracked_sites')
-      .select('id, domain')
-      .eq('id', trackedSiteId)
-      .maybeSingle();
-    if (siteErr) return { ok: false, error: `Vérif site : ${siteErr.message}` };
-    if (!site) return { ok: false, error: 'Site introuvable ou non accessible (RLS)' };
-
-    try {
-      const { data, error } = await ctx.supabase.functions.invoke('cms-patch-content', {
-        body: {
-          tracked_site_id: trackedSiteId,
-          target_url: targetUrl,
-          cms_post_id: input.cms_post_id ?? undefined,
-          patches,
-        },
-      });
-      if (error) return { ok: false, error: `cms-patch-content : ${error.message}` };
-      return { ok: true, data };
-    } catch (e) {
-      return { ok: false, error: `Echec cms-patch-content : ${(e as Error).message}` };
-    }
+    // Vérif d'appartenance centralisée AVANT toute invocation
+    return await safeServiceCall(ctx, trackedSiteId, async (_service, _site) => {
+      try {
+        // Invocation via le client utilisateur — la fonction cms-patch-content
+        // re-vérifie également la propriété côté serveur (defense in depth)
+        const { data, error } = await ctx.supabase.functions.invoke('cms-patch-content', {
+          body: {
+            tracked_site_id: trackedSiteId,
+            target_url: targetUrl,
+            cms_post_id: input.cms_post_id ?? undefined,
+            patches,
+          },
+        });
+        if (error) return { ok: false, error: `cms-patch-content : ${error.message}` };
+        return { ok: true, data };
+      } catch (e) {
+        return { ok: false, error: `Echec cms-patch-content : ${(e as Error).message}` };
+      }
+    });
   },
 };
 
