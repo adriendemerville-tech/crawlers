@@ -103,6 +103,7 @@ export function ChatWindowUnified({
   const [muted, setMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
   const [trackedSiteId, setTrackedSiteId] = useState<string | undefined>();
   const [domain, setDomain] = useState<string | undefined>();
+  const [userDomains, setUserDomains] = useState<string[]>([]);
   const [bugMode, setBugMode] = useState(false);
 
   // Quiz / enterprise state
