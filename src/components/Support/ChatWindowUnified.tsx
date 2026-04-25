@@ -497,6 +497,19 @@ export function ChatWindowUnified({
               getContext={getContext}
               seedMessages={seedRef.current}
               onAssistantReply={onAssistantReply}
+              composerLeading={
+                <ChatAttachmentPicker
+                  userId={user?.id}
+                  onAttach={(item) => {
+                    pushAssistant(
+                      `_Pièce jointe ajoutée :_ **${item.title}**${item.domain ? ` — ${item.domain}` : ''}`,
+                    );
+                  }}
+                  onImageAttach={(fileName) => {
+                    pushAssistant(`_Fichier joint :_ ${fileName}`);
+                  }}
+                />
+              }
               renderComposerExtras={({ appendToDraft }) => (
                 <>
                   <ChatMicButton
