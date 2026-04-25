@@ -407,7 +407,31 @@ function buildApprovalPromptText(approvals: Array<{ skill: string; input: unknow
   ].join('\n');
 }
 
-function jsonOk(data: unknown) {
+/** Log d'une action skill dans copilot_actions (audit trail immuable). */
+async function logAction(
+  service: ReturnType<typeof getServiceClient>,
+  sessionId: string,
+  userId: string,
+  personaId: string,
+  skill: string,
+  input: Record<string, unknown>,
+  output: unknown,
+  status: 'success' | 'error' | 'rejected' | 'awaiting_approval',
+  errorMessage: string | null,
+  durationMs: number,
+): Promise<void> {
+  await service.from('copilot_actions').insert({
+    session_id: sessionId,
+    user_id: userId,
+    persona: personaId,
+    skill,
+    input,
+    output,
+    status,
+    error_message: errorMessage,
+    duration_ms: durationMs,
+  });
+}
   return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status: 200,
