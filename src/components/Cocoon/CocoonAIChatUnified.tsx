@@ -1,0 +1,272 @@
+/**
+ * CocoonAIChatUnified — Stratège v2 branché sur copilot-orchestrator.
+ *
+ * Sprint 7 de la migration "1 backend, N personas". Cohabite avec
+ * CocoonAIChat.tsx (legacy ~2100 lignes) derrière le flag `strategist_unified`.
+ *
+ * Spécificités Stratège vs Félix :
+ * - Persona `strategist` (Gemini Pro, plus de skills + approval CMS).
+ * - Node picking : bouton qui appelle `onRequestNodePick`, le callback ajoute
+ *   le nœud à la liste sélectionnée, qui est injectée dans le contexte LLM
+ *   au prochain message (sous forme `selected_nodes: [{ id, url, title }]`).
+ * - Bouton "Générer le graphe" propagé (callback parent).
+ *
+ * Charte : noir/blanc/violet/jaune d'or, boutons sans fond.
+ */
+import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Crosshair, Maximize2, Minimize2, Minus, Network, Sparkles, X } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
+import { cn } from '@/lib/utils';
+
+interface CocoonAIChatUnifiedProps {
+  nodes: any[];
+  selectedNodeId?: string | null;
+  onRequestNodePick?: (callback: (node: any) => void) => void;
+  onCancelPick?: () => void;
+  trackedSiteId?: string;
+  domain?: string;
+  onGenerateGraph?: () => void;
+}
+
+interface SelectedNode {
+  id: string;
+  url?: string;
+  title?: string;
+}
+
+const STARTERS = [
+  'Audite la stratégie globale du cocoon',
+  'Identifie les pages orphelines et propose un maillage',
+  'Donne-moi 3 quick wins éditoriaux',
+];
+
+export function CocoonAIChatUnified({
+  nodes,
+  selectedNodeId,
+  onRequestNodePick,
+  onCancelPick,
+  trackedSiteId,
+  domain,
+  onGenerateGraph,
+}: CocoonAIChatUnifiedProps) {
+  const { user } = useAuth();
+  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(
+    () => localStorage.getItem('cocoon_chat_open') === '1',
+  );
+  const [minimized, setMinimized] = useState(false);
+  const [maximized, setMaximized] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [selectedNodes, setSelectedNodes] = useState<SelectedNode[]>([]);
+  // Ref pour exposer la liste à jour au getContext (qui est ré-évalué à chaque envoi).
+  const selectedNodesRef = useRef<SelectedNode[]>([]);
+  selectedNodesRef.current = selectedNodes;
+
+  // Ajoute automatiquement le nœud sélectionné depuis la page (si dispo).
+  useEffect(() => {
+    if (!selectedNodeId) return;
+    const node = nodes.find((n) => n.id === selectedNodeId);
+    if (!node) return;
+    setSelectedNodes((prev) =>
+      prev.some((n) => n.id === node.id)
+        ? prev
+        : [...prev, { id: node.id, url: node.url ?? node.data?.url, title: node.title ?? node.data?.title }].slice(-5),
+    );
+  }, [selectedNodeId, nodes]);
+
+  useEffect(() => {
+    localStorage.setItem('cocoon_chat_open', isOpen ? '1' : '0');
+  }, [isOpen]);
+
+  const startPicking = () => {
+    if (!onRequestNodePick) return;
+    setPicking(true);
+    onRequestNodePick((node: any) => {
+      setSelectedNodes((prev) =>
+        prev.some((n) => n.id === node.id)
+          ? prev
+          : [
+              ...prev,
+              {
+                id: node.id,
+                url: node.url ?? node.data?.url,
+                title: node.title ?? node.data?.title,
+              },
+            ].slice(-5),
+      );
+      setPicking(false);
+    });
+  };
+
+  const cancelPicking = () => {
+    setPicking(false);
+    onCancelPick?.();
+  };
+
+  const removeNode = (id: string) => {
+    setSelectedNodes((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const getContext = () => ({
+    route: location.pathname,
+    surface: 'cocoon-strategist',
+    tracked_site_id: trackedSiteId,
+    domain,
+    user_id: user?.id,
+    selected_nodes: selectedNodesRef.current,
+    nodes_count: nodes.length,
+  });
+
+  const positionStyle = maximized
+    ? { inset: '4rem 1rem 1rem 1rem' as const }
+    : {
+        left: '1.5rem',
+        bottom: '5.5rem',
+        width: '26rem',
+        height: minimized ? '3rem' : '36rem',
+      };
+
+  return (
+    <>
+      {/* Toggle button — capsule jaune d'or + violet, sans fond plein */}
+      {!isOpen && (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="inline-flex items-center gap-2 rounded-full border border-foreground px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary"
+          aria-label="Ouvrir le Stratège"
+        >
+          <Sparkles className="h-4 w-4" />
+          Stratège
+          <span className="rounded border border-current px-1.5 py-0.5 text-[9px] uppercase tracking-wide">v2</span>
+        </button>
+      )}
+
+      {/* Panel */}
+      {isOpen && (
+        <div
+          className="fixed z-[110] flex flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl"
+          style={positionStyle}
+          role="dialog"
+          aria-label="Stratège Cocoon — Copilote"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-border px-3 py-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <Network className="h-4 w-4 text-foreground" />
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-foreground">Stratège Cocoon</div>
+                <div className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Copilot v2 · unifié
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              {onGenerateGraph && (
+                <button
+                  type="button"
+                  onClick={onGenerateGraph}
+                  className="rounded-md border border-border px-2 py-1 text-[11px] text-foreground transition hover:border-foreground/50"
+                  title="Recalculer le graphe"
+                >
+                  Recalculer
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => { setMinimized((v) => !v); setMaximized(false); }}
+                className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
+                aria-label={minimized ? 'Restaurer' : 'Réduire'}
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMaximized((v) => !v); setMinimized(false); }}
+                className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
+                aria-label={maximized ? 'Réduire' : 'Agrandir'}
+              >
+                {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
+                aria-label="Fermer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Sélection de nœuds — barre contextuelle */}
+          {!minimized && (
+            <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-3 py-2">
+              <button
+                type="button"
+                onClick={picking ? cancelPicking : startPicking}
+                disabled={!onRequestNodePick}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition',
+                  picking
+                    ? 'border-primary text-primary'
+                    : 'border-border text-foreground hover:border-foreground/50',
+                  !onRequestNodePick && 'cursor-not-allowed opacity-40',
+                )}
+                title={picking ? 'Annuler la sélection' : 'Cibler un nœud du graphe'}
+              >
+                <Crosshair className="h-3 w-3" />
+                {picking ? 'Cliquez un nœud…' : 'Cibler un nœud'}
+              </button>
+              <div className="flex flex-1 flex-wrap items-center gap-1">
+                {selectedNodes.length === 0 ? (
+                  <span className="text-[10px] text-muted-foreground">
+                    Aucun nœud ciblé · le Stratège raisonne sur tout le cocoon.
+                  </span>
+                ) : (
+                  selectedNodes.map((n) => (
+                    <span
+                      key={n.id}
+                      className="inline-flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-[10px] text-foreground"
+                      title={n.url ?? n.id}
+                    >
+                      <span className="max-w-[12rem] truncate">{n.title || n.url || n.id.slice(0, 8)}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeNode(n.id)}
+                        className="text-muted-foreground transition hover:text-foreground"
+                        aria-label="Retirer ce nœud"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Body */}
+          {!minimized && (
+            <div className="flex-1 overflow-hidden">
+              <AgentChatShell
+                persona="strategist"
+                title="Stratège"
+                subtitle={
+                  domain
+                    ? `Analyse du cocoon de ${domain}${selectedNodes.length ? ` · ${selectedNodes.length} nœud(s) ciblé(s)` : ''}`
+                    : 'Analyse du cocoon — actions CMS sous approbation'
+                }
+                starterPrompts={STARTERS}
+                getContext={getContext}
+                className="h-full"
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
