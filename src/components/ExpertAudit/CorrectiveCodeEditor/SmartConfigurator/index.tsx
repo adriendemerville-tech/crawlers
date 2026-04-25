@@ -158,6 +158,8 @@ export function SmartConfigurator({
   const [activeTab, setActiveTab] = useState('technical');
   const [viewMode, setViewMode] = useState<ViewMode>(initialCode ? 'code' : 'visual');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState<number>(0);
+  const generationAbortRef = useRef<{ aborted: boolean }>({ aborted: false });
   const [generatedCode, setGeneratedCode] = useState<string>(initialCode);
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
