@@ -234,28 +234,35 @@ export async function executeAuditPlan(
         const route = customRoutes[pi];
         const hydratedPrompt = hydratePrompt(route.customPrompt!, url);
         const promptIndex = pi + 1;
+        // Suffix cache key with index to guarantee uniqueness even if
+        // criterionId is duplicated across rows of the source matrix.
+        const cacheKey = `${fn}:custom:${route.criterionId}:${pi}`;
 
         if (route.mode === 'benchmark' && route.targetProviders?.length) {
-          const perProviderResults: Record<string, any> = {};
-          for (const prov of route.targetProviders) {
-            try {
-              const customData = await tracked(
-                {
-                  id: `llm-bench:${route.criterionId}:${prov}`,
-                  fn, criterionId: route.criterionId, criterionTitle: route.criterionTitle,
-                  provider: prov, promptIndex, promptTotal,
-                  label: route.criterionTitle,
-                  detail: `${prov} · prompt ${promptIndex}/${promptTotal}`,
-                },
-                () => callFunction('check-llm', url, { customPrompt: hydratedPrompt, targetProvider: prov }),
-              );
-              perProviderResults[prov] = customData;
-            } catch {
-              perProviderResults[prov] = null;
-            }
-            await delay(300);
-          }
-          fnResultCache.set(`${fn}:custom:${route.criterionId}`, {
+          // Run all providers in parallel — each LLM call is independent and
+          // the rate-limit budget is per-provider, so sequential delay was
+          // adding minutes for no throughput gain.
+          const providerEntries = await Promise.all(
+            route.targetProviders.map(async (prov) => {
+              try {
+                const customData = await tracked(
+                  {
+                    id: `llm-bench:${route.criterionId}:${prov}`,
+                    fn, criterionId: route.criterionId, criterionTitle: route.criterionTitle,
+                    provider: prov, promptIndex, promptTotal,
+                    label: route.criterionTitle,
+                    detail: `${prov} · prompt ${promptIndex}/${promptTotal}`,
+                  },
+                  () => callFunction('check-llm', url, { customPrompt: hydratedPrompt, targetProvider: prov }),
+                );
+                return [prov, customData] as const;
+              } catch {
+                return [prov, null] as const;
+              }
+            }),
+          );
+          const perProviderResults: Record<string, any> = Object.fromEntries(providerEntries);
+          fnResultCache.set(cacheKey, {
             mode: 'benchmark',
             providers: perProviderResults,
           });
@@ -274,9 +281,9 @@ export async function executeAuditPlan(
                 targetProvider: route.targetProvider,
               }),
             );
-            fnResultCache.set(`${fn}:custom:${route.criterionId}`, customData);
+            fnResultCache.set(cacheKey, customData);
           } catch {
-            fnResultCache.set(`${fn}:custom:${route.criterionId}`, null);
+            fnResultCache.set(cacheKey, null);
           }
           await delay(300);
         }
