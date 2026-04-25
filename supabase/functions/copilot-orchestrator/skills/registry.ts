@@ -364,3 +364,18 @@ function summarizePayload(payload: unknown): unknown {
   out._other_keys = Object.keys(p).filter((k) => !(k in out));
   return out;
 }
+
+/** Résume une réponse d'audit (expert-audit / audit-strategique-ia / audit-expert-seo). */
+function summarizeAuditResponse(data: unknown): Record<string, unknown> {
+  if (!data || typeof data !== 'object') return { raw: data };
+  const d = data as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of ['audit_id', 'id', 'score', 'global_score', 'url', 'status', 'recommendations_count', 'critical_count']) {
+    if (k in d) out[k] = d[k];
+  }
+  if (Array.isArray((d as { recommendations?: unknown[] }).recommendations)) {
+    out.recommendations_count = (d as { recommendations: unknown[] }).recommendations.length;
+  }
+  out._available_keys = Object.keys(d).slice(0, 30);
+  return out;
+}
