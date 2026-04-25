@@ -325,6 +325,7 @@ export function CocoonAIChatUnified({
                 starterPrompts={STARTERS}
                 getContext={getContext}
                 onAssistantReply={onAssistantReply}
+                seedMessages={seedRef.current ?? undefined}
                 className="h-full"
               />
             </div>
