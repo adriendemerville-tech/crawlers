@@ -275,6 +275,8 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
   const t = translations[h.language] || translations.fr;
   const navigate = useNavigate();
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
+  const [smartCmsOpen, setSmartCmsOpen] = useState(false);
+  const [smartCmsSiteId, setSmartCmsSiteId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   // Open API panel when triggered from sidebar
