@@ -3306,52 +3306,73 @@ Deno.serve(handleRequest(async (req) => {
     // Mark workbench items as consumed by code architect
     await markWorkbenchConsumed(workbenchItemIds, 'code');
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        code,
-        codeMinified: minifiedCode,
-        fixesApplied: enabledFixes.length,
-        linesCount,
-        source,
-        libraryHits: libraryHits.length,
-        newGenerations: newGenerations.length,
-        registryRecommendationsCount: registryRecommendations.length,
-        workbenchItemsUsed: workbenchItemIds.length,
-        aiContentGenerated: Object.keys(aiContent).length > 0,
-        // ═══ NOUVEAUTÉS v4.0 ═══
-        cmsDetected: cmsSettings.cmsType || null,
-        syntaxValid: syntaxCheck.valid,
-        syntaxError: syntaxCheck.error || null,
-        sizeBytes: { original: originalSize, minified: minifiedSize, compressionRatio },
-        confidenceScores,
-        averageConfidence: avgConfidence,
-        estimatedImpact: {
-          seoPointsMin: totalImpactMin,
-          seoPointsMax: totalImpactMax,
-          summary: `+${totalImpactMin} à +${totalImpactMax} points SEO estimés`
-        },
-        versionDiff: versionDiff.hasChanges ? versionDiff : null,
-        fixesSummary: enabledFixes.map(f => {
-          const conf = confidenceScores.find(c => c.fixId === f.id);
-          return {
-            id: f.id,
-            label: f.label,
-            category: f.category,
-            priority: f.priority,
-            fromLibrary: libraryHits.includes(f.id),
-            confidence: conf?.confidence || 0,
-            source: conf?.source || 'template',
-            estimatedImpact: conf?.estimatedImpact || null,
-          };
-        }),
-        categorySummary: {
-          technical: technicalFixes.length,
-          tracking: trackingFixes.length,
-          strategic: strategicFixes.length,
-          hallucination: hallucinationFixes.length
-        }
+    const responsePayload = {
+      success: true,
+      code,
+      codeMinified: minifiedCode,
+      fixesApplied: enabledFixes.length,
+      linesCount,
+      source,
+      libraryHits: libraryHits.length,
+      newGenerations: newGenerations.length,
+      registryRecommendationsCount: registryRecommendations.length,
+      workbenchItemsUsed: workbenchItemIds.length,
+      aiContentGenerated: Object.keys(aiContent).length > 0,
+      cmsDetected: cmsSettings.cmsType || null,
+      syntaxValid: syntaxCheck.valid,
+      syntaxError: syntaxCheck.error || null,
+      sizeBytes: { original: originalSize, minified: minifiedSize, compressionRatio },
+      confidenceScores,
+      averageConfidence: avgConfidence,
+      estimatedImpact: {
+        seoPointsMin: totalImpactMin,
+        seoPointsMax: totalImpactMax,
+        summary: `+${totalImpactMin} à +${totalImpactMax} points SEO estimés`,
+      },
+      versionDiff: versionDiff.hasChanges ? versionDiff : null,
+      fixesSummary: enabledFixes.map(f => {
+        const conf = confidenceScores.find(c => c.fixId === f.id);
+        return {
+          id: f.id,
+          label: f.label,
+          category: f.category,
+          priority: f.priority,
+          fromLibrary: libraryHits.includes(f.id),
+          confidence: conf?.confidence || 0,
+          source: conf?.source || 'template',
+          estimatedImpact: conf?.estimatedImpact || null,
+        };
       }),
+      categorySummary: {
+        technical: technicalFixes.length,
+        tracking: trackingFixes.length,
+        strategic: strategicFixes.length,
+        hallucination: hallucinationFixes.length,
+      },
+    };
+
+    // If running as a background job, persist result to async_jobs and return ack
+    if (_asyncJobId) {
+      try {
+        const sbDone = getServiceClient();
+        await sbDone
+          .from('async_jobs')
+          .update({
+            status: 'completed',
+            progress: 100,
+            result_data: responsePayload,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', _asyncJobId);
+        console.log(`[generate-corrective-code] ✅ Job ${_asyncJobId} completed`);
+      } catch (e) {
+        console.error('[generate-corrective-code] Failed to persist job result:', e);
+      }
+      return jsonOk({ success: true, async_completed: true, job_id: _asyncJobId });
+    }
+
+    return new Response(
+      JSON.stringify(responsePayload),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -3359,6 +3380,24 @@ Deno.serve(handleRequest(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Error generating corrective code:', error);
     await trackEdgeFunctionError('generate-corrective-code', errorMessage).catch(() => {});
+
+    if (_asyncJobId) {
+      try {
+        const sbErr = getServiceClient();
+        await sbErr
+          .from('async_jobs')
+          .update({
+            status: 'failed',
+            error_message: errorMessage.slice(0, 2000),
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', _asyncJobId);
+      } catch (e) {
+        console.error('[generate-corrective-code] Failed to persist job error:', e);
+      }
+      return jsonOk({ success: false, async_failed: true, job_id: _asyncJobId, error: errorMessage });
+    }
+
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
