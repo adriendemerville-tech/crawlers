@@ -29,6 +29,13 @@ interface AgentChatShellProps {
   seedMessages?: import('@/hooks/useCopilot').CopilotMessage[];
   /** Boutons additionnels affichés à droite du composer (ex: bug report). */
   composerExtras?: React.ReactNode;
+  /** Variante render-prop : reçoit des helpers pour pousser du texte dans le draft (ex: micro). */
+  renderComposerExtras?: (helpers: {
+    appendToDraft: (text: string) => void;
+    setDraft: (text: string) => void;
+    submitDraft: () => void;
+    sending: boolean;
+  }) => React.ReactNode;
   className?: string;
 }
 
@@ -42,11 +49,17 @@ export function AgentChatShell({
   onAssistantReply,
   seedMessages,
   composerExtras,
+  renderComposerExtras,
   className,
 }: AgentChatShellProps) {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState('');
+
+  const appendToDraft = (text: string) => {
+    if (!text) return;
+    setDraft((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+  };
 
   const handleActions = (actions: CopilotAction[]) => {
     if (!autoNavigate) return;
@@ -72,11 +85,15 @@ export function AgentChatShell({
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length, messages[messages.length - 1]?.content]);
 
-  const onSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const submitDraft = () => {
     if (!draft.trim() || sending) return;
     void sendMessage(draft);
     setDraft('');
+  };
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    submitDraft();
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -238,7 +255,9 @@ export function AgentChatShell({
             disabled={sending}
             className="flex-1 resize-none rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground outline-none transition focus:border-foreground/50 disabled:opacity-50"
           />
-          {composerExtras}
+          {renderComposerExtras
+            ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending })
+            : composerExtras}
           <button
             type="submit"
             disabled={sending || !draft.trim()}

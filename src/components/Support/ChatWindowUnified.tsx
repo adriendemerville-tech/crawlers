@@ -28,6 +28,7 @@ import {
   markOnboardingDone,
 } from '@/utils/felixOnboarding';
 import { CrawlersLogo } from './CrawlersLogo';
+import { ChatMicButton } from './ChatMicButton';
 import { SeoQuiz } from './SeoQuiz';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
@@ -102,6 +103,7 @@ export function ChatWindowUnified({
   const [muted, setMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
   const [trackedSiteId, setTrackedSiteId] = useState<string | undefined>();
   const [domain, setDomain] = useState<string | undefined>();
+  const [userDomains, setUserDomains] = useState<string[]>([]);
   const [bugMode, setBugMode] = useState(false);
 
   // Quiz / enterprise state
@@ -127,20 +129,19 @@ export function ChatWindowUnified({
     }
   }
 
-  // 1er site suivi → contexte par défaut.
+  // 1er site suivi → contexte par défaut + tous les domaines pour le vocab STT.
   useEffect(() => {
     if (!user) return;
     supabase
       .from('tracked_sites')
       .select('id, domain')
       .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle()
+      .order('created_at', { ascending: true })
       .then(({ data }) => {
-        if (data) {
-          setTrackedSiteId(data.id);
-          setDomain(data.domain);
-        }
+        if (!data || data.length === 0) return;
+        setTrackedSiteId(data[0].id);
+        setDomain(data[0].domain);
+        setUserDomains(data.map((d) => d.domain).filter(Boolean));
       });
   }, [user]);
 
@@ -457,22 +458,28 @@ export function ChatWindowUnified({
               getContext={getContext}
               seedMessages={seedRef.current}
               onAssistantReply={onAssistantReply}
-              composerExtras={
-                <button
-                  type="button"
-                  onClick={() => setBugMode((v) => !v)}
-                  className={cn(
-                    'inline-flex items-center justify-center rounded-md border px-2 py-2 text-xs transition',
-                    bugMode
-                      ? 'border-primary text-primary'
-                      : 'border-border text-foreground hover:border-foreground/50',
-                  )}
-                  title="Signaler un bug"
-                  aria-label="Signaler un bug"
-                >
-                  <Bug className="h-3.5 w-3.5" />
-                </button>
-              }
+              renderComposerExtras={({ appendToDraft }) => (
+                <>
+                  <ChatMicButton
+                    onTranscript={(text) => appendToDraft(text)}
+                    userDomains={userDomains}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setBugMode((v) => !v)}
+                    className={cn(
+                      'inline-flex items-center justify-center rounded-md border px-2 py-2 text-xs transition',
+                      bugMode
+                        ? 'border-primary text-primary'
+                        : 'border-border text-foreground hover:border-foreground/50',
+                    )}
+                    title="Signaler un bug"
+                    aria-label="Signaler un bug"
+                  >
+                    <Bug className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              )}
               className="h-full"
             />
           </div>
