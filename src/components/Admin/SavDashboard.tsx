@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
+import { CopilotSessionsCard } from './CopilotSessionsCard';
 
 interface SavConversation {
   id: string;
