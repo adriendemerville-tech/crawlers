@@ -75,7 +75,7 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 | # | Sévérité | Bug | Fichier | Statut |
 |---|---|---|---|---|
 | B1 | 🟠 moyenne | Prop `initialExpandedGreeting` déclarée et passée par `FloatingChatBubble` mais **non destructurée** dans `ChatWindowUnified` → la salutation longue ne s'affichait jamais | `Support/ChatWindowUnified.tsx` | ✅ **Corrigé Q1.2** |
-| B2 | 🟠 moyenne | `react-markdown` rendu sans `remark-gfm` → tableaux Markdown des réponses Stratège affichés en pre-text, listes-tâches non parsées | `Copilot/AgentChatShell.tsx` | ⏳ Q3 |
+| B2 | 🟠 moyenne | `react-markdown` rendu sans `remark-gfm` → tableaux Markdown des réponses Stratège affichés en pre-text, listes-tâches non parsées | `Copilot/AgentChatShell.tsx` | ✅ **Corrigé Q3.1** (remark-gfm + styles prose-table) |
 | B3 | 🟡 faible | Bouton flottant Félix utilisait `bg-[#7c3aed]` violet plein → enfreint la charte « pas de fond » | `Support/FloatingChatBubble.tsx` ligne 338 | ✅ **Corrigé Q2** (border + bg transparent) |
 | B4 | 🟡 faible | Émoji 👋 / 🔍 dans `FloatingChatBubble` → enfreint la règle « pas d'émoji » | `Support/FloatingChatBubble.tsx` | ✅ **Corrigé Q2** |
 | B5 | 🟡 faible | `useEffect` cleanup setFelixExpanded(false) se déclenche aussi au lazy-unmount de Suspense | `Support/ChatWindowUnified.tsx` | ⏳ Q3 |
