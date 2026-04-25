@@ -107,6 +107,7 @@ const SocialHub = lazy(() => import("./pages/SocialHub"));
 const SocialContentCreator = lazy(() => import("./pages/SocialContentCreator"));
 const BreathingSpiral = lazy(() => import("./pages/BreathingSpiral"));
 const RankingSerp = lazy(() => import("./pages/RankingSerp"));
+const DiagnosticWaf = lazy(() => import("./pages/DiagnosticWaf"));
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
 const LegacyRapportRedirect = () => {
@@ -233,6 +234,7 @@ const App = () => (
                           <Route path="/app/bot-activity" element={<BotActivity />} />
                           <Route path="/app/social" element={<SocialHub />} />
                           <Route path="/social-content-creator" element={<SocialContentCreator />} />
+                          <Route path="/diagnostic-waf" element={<DiagnosticWaf />} />
                           <Route path="/privacy-google-ads" element={<Navigate to="/api-integrations#google-ads" replace />} />
                           {/* Legacy redirects → /app/* */}
                           <Route path="/console" element={<Navigate to="/app/console" replace />} />
