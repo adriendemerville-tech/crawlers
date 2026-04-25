@@ -277,16 +277,26 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
   const [hasAnyApiConnected, setHasAnyApiConnected] = useState(false);
   const [smartCmsOpen, setSmartCmsOpen] = useState(false);
   const [smartCmsSiteId, setSmartCmsSiteId] = useState<string | null>(null);
+  const [noSiteApiModalOpen, setNoSiteApiModalOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  // Open API panel when triggered from sidebar
+  // Open API panel when triggered from sidebar.
+  // Si aucun site n'est suivi : on bloque l'ouverture du panneau et on affiche
+  // une modal qui invite l'utilisateur à ajouter d'abord un domaine.
   useEffect(() => {
-    if (forceApiPanel && !h.showApiPanel) {
+    if (!forceApiPanel) return;
+    if (h.loading) return; // attendre le chargement initial des sites
+    if (h.sites.length === 0) {
+      setNoSiteApiModalOpen(true);
+      onApiPanelOpened?.();
+      return;
+    }
+    if (!h.showApiPanel) {
       h.setShowApiPanel(true);
       h.setSelectedSite(null);
       onApiPanelOpened?.();
     }
-  }, [forceApiPanel]);
+  }, [forceApiPanel, h.loading, h.sites.length]);
 
   // Sync with sidebar domain selector
   useEffect(() => {
