@@ -291,6 +291,7 @@ export function CocoonAIChatUnified({
                 }
                 starterPrompts={STARTERS}
                 getContext={getContext}
+                onAssistantReply={onAssistantReply}
                 className="h-full"
               />
             </div>
