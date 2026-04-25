@@ -38,6 +38,8 @@ interface UserKpis {
   planType: string;
   bundleApiCount: number;
   bundleMonthlyEur: number;
+  totalTrackedSites: number;
+  totalCmsConnected: number;
 }
 
 interface ScannedUrl {
