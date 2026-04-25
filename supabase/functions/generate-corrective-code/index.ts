@@ -2934,24 +2934,120 @@ async function computeVersionDiff(
 // ══════════════════════════════════════════════════════════════
 
 Deno.serve(handleRequest(async (req) => {
-const clientIp = getClientIp(req);
+  // ── ASYNC JOB POLLING (GET ?job_id=xxx) ──
+  const reqUrl = new URL(req.url);
+  const pollJobId = reqUrl.searchParams.get('job_id');
+  if (pollJobId && req.method === 'GET') {
+    const sb = getServiceClient();
+    const { data: job } = await sb
+      .from('async_jobs')
+      .select('status, result_data, error_message, progress')
+      .eq('id', pollJobId)
+      .maybeSingle();
+    if (!job) return jsonError('Job not found', 404);
+    if (job.status === 'completed') {
+      return jsonOk({ status: 'completed', progress: 100, data: job.result_data });
+    }
+    if (job.status === 'failed') {
+      return new Response(
+        JSON.stringify({ status: 'failed', error: job.error_message || 'Job failed' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    return jsonOk({ status: job.status, progress: job.progress || 0 });
+  }
+
+  const clientIp = getClientIp(req);
   const ipCheck = checkIpRate(clientIp, 'generate-corrective-code', 10, 60_000);
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
 
   if (!acquireConcurrency('generate-corrective-code', 20)) return concurrencyResponse(corsHeaders);
 
+  // Track job_id if processing async, so we persist result/error to async_jobs
+  let _asyncJobId: string | null = null;
+
   try {
-    // ── Fair Use ──
-    const userCtx = await getUserContext(req);
-    if (userCtx) {
-      const fairUse = await checkFairUse(userCtx.userId, 'corrective_code', userCtx.planType);
-      if (!fairUse.allowed) {
+    // Parse body once (we may need it for async detection)
+    const body = await req.json();
+    const isAsyncRequest = body?.async === true && !body?._job_id;
+    const incomingJobId: string | undefined = body?._job_id;
+
+    // ── ASYNC MODE: Enqueue + self-invoke + return 202 ──
+    if (isAsyncRequest) {
+      const userCtx = await getUserContext(req);
+      const ownerUserId = userCtx?.userId
+        || body?._service_user_id
+        || '00000000-0000-0000-0000-000000000000';
+
+      const sb = getServiceClient();
+      const { data: job, error: jobError } = await sb
+        .from('async_jobs')
+        .insert({
+          user_id: ownerUserId,
+          function_name: 'generate-corrective-code',
+          status: 'pending',
+          input_payload: {
+            siteUrl: body?.siteUrl,
+            siteName: body?.siteName,
+            fixesCount: Array.isArray(body?.fixes) ? body.fixes.length : 0,
+          },
+          progress: 0,
+        })
+        .select('id')
+        .single();
+
+      if (jobError || !job) {
         releaseConcurrency('generate-corrective-code');
-        return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        console.error('[generate-corrective-code] Failed to create async job:', jobError);
+        return jsonError('Failed to create async job', 500);
+      }
+
+      // Fire-and-forget self-invocation
+      const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+      const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const syncBody = { ...body, async: false, _job_id: job.id, _service_user_id: ownerUserId };
+      fetch(`${SUPABASE_URL}/functions/v1/generate-corrective-code`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(syncBody),
+      }).catch(err => console.error('[generate-corrective-code] Self-invoke failed:', err));
+
+      console.log(`[generate-corrective-code] 🚀 Async job created: ${job.id}`);
+      releaseConcurrency('generate-corrective-code');
+      return new Response(
+        JSON.stringify({ job_id: job.id, status: 'pending', async: true }),
+        { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // If processing a job, mark as processing
+    if (incomingJobId) {
+      _asyncJobId = incomingJobId;
+      const sbJob = getServiceClient();
+      await sbJob
+        .from('async_jobs')
+        .update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 })
+        .eq('id', incomingJobId)
+        .catch?.(() => {});
+    }
+
+    // ── Fair Use (skip when running as background job) ──
+    if (!_asyncJobId) {
+      const userCtx = await getUserContext(req);
+      if (userCtx) {
+        const fairUse = await checkFairUse(userCtx.userId, 'corrective_code', userCtx.planType);
+        if (!fairUse.allowed) {
+          releaseConcurrency('generate-corrective-code');
+          return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
+            status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
       }
     }
+
     const { 
       fixes, 
       siteName, 
@@ -2963,7 +3059,7 @@ const clientIp = getClientIp(req);
       technologyContext = '',
       roadmapContext = '',
       auditContext
-    }: GenerateRequest = await req.json();
+    }: GenerateRequest = body;
 
     console.log('═══════════════════════════════════════════════════════════════');
     console.log('🏗️ CODE ARCHITECT v4.0 — CLS-ZERO + Confidence + Telemetry');
