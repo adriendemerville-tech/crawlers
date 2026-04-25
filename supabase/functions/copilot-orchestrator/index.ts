@@ -59,6 +59,9 @@ Deno.serve(async (req) => {
   }
 
   const t0 = Date.now();
+  // Tracké hors-try pour pouvoir libérer le statut 'processing' en cas de crash.
+  let sessionIdForCleanup: string | null = null;
+  let serviceForCleanup: ReturnType<typeof getServiceClient> | null = null;
 
   try {
     // ── Auth ──────────────────────────────────────────────
@@ -79,6 +82,7 @@ Deno.serve(async (req) => {
     if (!persona) return jsonError(`Persona inconnu : ${body.persona}`, 400);
 
     const service = getServiceClient();
+    serviceForCleanup = service;
 
     // ── Cas approbation : ré-exécute une action awaiting_approval ──
     if (body.approve_action_id) {
@@ -118,16 +122,49 @@ Deno.serve(async (req) => {
           persona: persona.id,
           context: body.context ?? {},
           title: body.message.slice(0, 80),
+          status: 'processing',
+          processing_started_at: new Date().toISOString(),
         })
         .select('id')
         .single();
       if (cErr || !created) return jsonError(`Création session : ${cErr?.message}`, 500);
       sessionId = created.id;
+      sessionIdForCleanup = sessionId;
     } else {
       sessionId = body.session_id;
+      sessionIdForCleanup = sessionId;
+
+      // Reconciliation : si la session est en 'processing' depuis > 90s, on la débloque.
+      // (Cas crash entre tool_calls et persist final → message fantôme à éviter.)
+      const { data: existingSess } = await service
+        .from('copilot_sessions')
+        .select('status, processing_started_at')
+        .eq('id', sessionId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existingSess?.status === 'processing' && existingSess.processing_started_at) {
+        const elapsedMs = Date.now() - new Date(existingSess.processing_started_at).getTime();
+        if (elapsedMs < 90_000) {
+          return jsonError('Une réponse est déjà en cours de génération pour cette session. Patiente quelques secondes.', 409);
+        }
+        // > 90s : crash silencieux probable. On insère un message assistant "récupération"
+        // pour ne pas laisser des actions orphelines sans contexte textuel.
+        await service.from('copilot_actions').insert({
+          session_id: sessionId, user_id: userId, persona: persona.id,
+          skill: '_assistant_reply', input: {},
+          output: { content: "_(Réponse précédente interrompue après un délai serveur. Je reprends ici — n'hésite pas à reformuler si nécessaire.)_" },
+          status: 'success', duration_ms: 0,
+        });
+      }
+
       await service
         .from('copilot_sessions')
-        .update({ last_message_at: new Date().toISOString() })
+        .update({
+          last_message_at: new Date().toISOString(),
+          status: 'processing',
+          processing_started_at: new Date().toISOString(),
+        })
         .eq('id', sessionId)
         .eq('user_id', userId);
     }
@@ -279,6 +316,11 @@ Deno.serve(async (req) => {
       { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: finalReply }, status: 'success', duration_ms: Date.now() - t0 },
     ]);
 
+    // Libère le statut processing → active (succès nominal)
+    await service.from('copilot_sessions')
+      .update({ status: 'active', processing_started_at: null })
+      .eq('id', sessionId).eq('user_id', userId);
+
     return jsonOk({
       session_id: sessionId,
       reply: finalReply,
@@ -290,6 +332,18 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error('[copilot-orchestrator] Erreur:', e);
     return jsonError((e as Error).message, 500);
+  } finally {
+    // Garantit la libération du statut processing même en cas de crash
+    if (sessionIdForCleanup && serviceForCleanup) {
+      try {
+        await serviceForCleanup.from('copilot_sessions')
+          .update({ status: 'active', processing_started_at: null })
+          .eq('id', sessionIdForCleanup)
+          .eq('status', 'processing');
+      } catch {
+        // best-effort
+      }
+    }
   }
 });
 

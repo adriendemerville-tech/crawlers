@@ -3582,6 +3582,7 @@ export type Database = {
           id: string
           last_message_at: string
           persona: string
+          processing_started_at: string | null
           status: string
           title: string | null
           updated_at: string
@@ -3593,6 +3594,7 @@ export type Database = {
           id?: string
           last_message_at?: string
           persona: string
+          processing_started_at?: string | null
           status?: string
           title?: string | null
           updated_at?: string
@@ -3604,6 +3606,7 @@ export type Database = {
           id?: string
           last_message_at?: string
           persona?: string
+          processing_started_at?: string | null
           status?: string
           title?: string | null
           updated_at?: string
