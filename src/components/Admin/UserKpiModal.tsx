@@ -219,8 +219,8 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
         }
       }
 
-      // URLs tested + bundle data
-      const [urlCountRes, bundleRes] = await Promise.all([
+      // URLs tested + bundle data + tracked sites + CMS connections
+      const [urlCountRes, bundleRes, trackedSitesRes, cmsConnectionsRes] = await Promise.all([
         supabase
           .from('analytics_events')
           .select('target_url', { count: 'exact', head: true })
@@ -232,6 +232,15 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
           .eq('user_id', userId)
           .eq('status', 'active')
           .maybeSingle() as any,
+        supabase
+          .from('tracked_sites')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId),
+        supabase
+          .from('cms_connections')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('status', 'active'),
       ]);
 
       const bundleData = bundleRes.data;
