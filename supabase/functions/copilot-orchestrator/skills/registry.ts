@@ -178,27 +178,48 @@ const read_cocoon_graph: SkillDefinition = {
 
 const read_documentation: SkillDefinition = {
   name: 'read_documentation',
-  description: "Recherche dans la base des recommandations d'audit (titres + descriptions) par mot-clé. Retourne les recommandations les plus pertinentes pour l'utilisateur courant.",
+  description: "Recherche dans la base des recommandations d'audit (titres + descriptions) par mot-clé. Filtre optionnel par tracked_site_id pour rester dans le périmètre d'un site.",
   parameters: {
     type: 'object',
     properties: {
       query: { type: 'string', description: 'Mots-clés à chercher' },
       limit: { type: 'number', default: 5 },
+      tracked_site_id: { type: 'string', description: 'UUID du site (optionnel) — restreint la recherche à ce site' },
     },
     required: ['query'],
   },
   handler: async (input, ctx) => {
     const query = String(input.query ?? '').trim();
     const limit = Math.min(Math.max(Number(input.limit ?? 5), 1), 10);
+    const trackedSiteId = input.tracked_site_id ? String(input.tracked_site_id).trim() : null;
     if (!query) return { ok: false, error: 'query requis' };
 
-    // Sanitize : PostgREST `.or()` interprète virgules / parenthèses / guillemets.
-    // On retire tout caractère non alphanumérique/espace/tiret puis on tronque.
     const safe = query.replace(/[^\p{L}\p{N}\s\-]/gu, ' ').trim().slice(0, 80);
     if (!safe) return { ok: false, error: 'query invalide après nettoyage' };
     const pattern = `%${safe}%`;
 
-    // Source : audit_recommendations_registry — filtré par RLS sur l'utilisateur courant.
+    // P2 #14 — si tracked_site_id fourni, on valide la propriété puis on filtre.
+    // Sans ce check, RLS protège déjà mais on évite de retourner des recos d'un autre site du user.
+    if (trackedSiteId) {
+      const { data: site } = await ctx.service
+        .from('tracked_sites')
+        .select('id, user_id, domain')
+        .eq('id', trackedSiteId)
+        .maybeSingle();
+      if (!site || site.user_id !== ctx.userId) {
+        return { ok: false, error: 'Site introuvable ou non accessible' };
+      }
+      const { data, error } = await ctx.supabase
+        .from('audit_recommendations_registry')
+        .select('id, title, description, category, priority, audit_type, fix_type, is_resolved, created_at')
+        .eq('domain', site.domain)
+        .or(`title.ilike.${pattern},description.ilike.${pattern}`)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) return { ok: false, error: error.message };
+      return { ok: true, data: { results: data ?? [], count: data?.length ?? 0, query: safe, scoped_to: site.domain } };
+    }
+
     const { data, error } = await ctx.supabase
       .from('audit_recommendations_registry')
       .select('id, title, description, category, priority, audit_type, fix_type, is_resolved, created_at')
