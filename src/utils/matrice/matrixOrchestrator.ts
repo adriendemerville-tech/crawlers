@@ -293,6 +293,15 @@ export async function executeAuditPlan(
     await delay(250); // Stagger between LLM functions
   }
 
+  // Pre-compute the per-route custom-cache index so we read the same key
+  // we wrote during execution (guards against duplicate criterionId rows).
+  const customIndexByRoute = new Map<AuditRoute, number>();
+  for (const [fn, routes] of fnGroups) {
+    if (fn !== 'check-llm') continue;
+    const customRoutes = routes.filter(r => r.customPrompt);
+    customRoutes.forEach((r, i) => customIndexByRoute.set(r, i));
+  }
+
   // Map results to criteria
   for (const route of plan.routes) {
     const fnData = fnResultCache.get(route.fn);
@@ -307,7 +316,8 @@ export async function executeAuditPlan(
       parsedResponse = null;
     } else if (route.matchType === 'partial') {
       // Custom prompt result — may be benchmark (multi-provider) or single
-      const customKey = `${route.fn}:custom:${route.criterionId}`;
+      const pi = customIndexByRoute.get(route) ?? 0;
+      const customKey = `${route.fn}:custom:${route.criterionId}:${pi}`;
       const customData = fnResultCache.get(customKey);
 
       if (customData?.mode === 'benchmark' && customData.providers) {
