@@ -83,6 +83,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const IndiceAlignementStrategique = lazy(() => import("./pages/IndiceAlignementStrategique"));
 const ArchitecteGeneratif = lazy(() => import("./pages/ArchitecteGeneratif"));
 const Cocoon = lazy(() => import("./pages/Cocoon"));
+const CopilotPage = lazy(() => import("./pages/CopilotPage"));
 const FeaturesCocoon = lazy(() => import("./pages/FeaturesCocoon"));
 const FeaturesConsole = lazy(() => import("./pages/FeaturesConsole"));
 const MatricePrompt = lazy(() => import("./pages/MatricePrompt"));
@@ -212,6 +213,7 @@ const App = () => (
                           <Route path="/indice-alignement-strategique" element={<IndiceAlignementStrategique />} />
                           <Route path="/architecte-generatif" element={<ArchitecteGeneratif />} />
                           <Route path="/app/cocoon" element={<Cocoon />} />
+                          <Route path="/app/copilot" element={<CopilotPage />} />
                           <Route path="/features/cocoon" element={<FeaturesCocoon />} />
                           <Route path="/features/console" element={<FeaturesConsole />} />
                           <Route path="/matrice" element={<MatricePrompt />} />
