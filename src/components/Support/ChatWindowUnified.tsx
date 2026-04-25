@@ -100,8 +100,19 @@ export function ChatWindowUnified({
   const { toast } = useToast();
   const location = useLocation();
   const [minimized, setMinimized] = useState(false);
-  const [maximized, setMaximized] = useState(false);
+  const { felixExpanded, setFelixExpanded } = useAISidebar();
+  const docked = felixExpanded;
   const [muted, setMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
+
+  // Miroir du flag legacy lu par FloatingChatBubble pour masquer la bulle quand on est ancré.
+  useEffect(() => {
+    localStorage.setItem('felix_sidebar_expanded', docked ? '1' : '0');
+  }, [docked]);
+
+  // Désancrer à la fermeture pour libérer le padding global du wrapper.
+  useEffect(() => {
+    return () => setFelixExpanded(false);
+  }, [setFelixExpanded]);
   const [trackedSiteId, setTrackedSiteId] = useState<string | undefined>();
   const [domain, setDomain] = useState<string | undefined>();
   const [userDomains, setUserDomains] = useState<string[]>([]);
