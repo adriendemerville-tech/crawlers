@@ -92,9 +92,14 @@ Deno.test("withTimeout: résolution rapide → ok", async () => {
 });
 
 Deno.test("withTimeout: dépassement → rejet explicite", async () => {
+  let innerTid: number | undefined;
+  const slow = new Promise<string>((r) => {
+    innerTid = setTimeout(() => r("late"), 5000);
+  });
   await assertRejects(
-    () => withTimeout(new Promise((r) => setTimeout(() => r("late"), 200)), 50, "slow-call"),
+    () => withTimeout(slow, 50, "slow-call"),
     Error,
     "Timeout slow-call après 50ms",
   );
+  if (innerTid !== undefined) clearTimeout(innerTid);
 });
