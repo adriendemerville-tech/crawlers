@@ -299,7 +299,7 @@ const cms_publish_draft: SkillDefinition = {
     properties: {
       draft_id: { type: 'string', description: 'UUID du brouillon' },
       draft_type: { type: 'string', enum: ['landing', 'blog'], default: 'landing' },
-      tracked_site_id: { type: 'string', description: 'UUID du site suivi propriétaire du brouillon (requis pour validation)' },
+      tracked_site_id: { type: 'string', description: 'UUID du site suivi propriétaire du brouillon (requis pour validation de cohérence)' },
     },
     required: ['draft_id', 'tracked_site_id'],
   },
@@ -309,33 +309,73 @@ const cms_publish_draft: SkillDefinition = {
     const trackedSiteId = String(input.tracked_site_id ?? '').trim();
     if (!draftId) return { ok: false, error: 'draft_id requis' };
 
-    // Toute opération service-role passe par safeServiceCall
-    return await safeServiceCall(ctx, trackedSiteId, async (service) => {
-      const table = draftType === 'blog' ? 'blog_articles' : 'seo_page_drafts';
+    // P0 #3 — safeServiceCall valide d'abord la propriété du tracked_site,
+    // puis on valide la COHÉRENCE draft↔site (pas juste l'appartenance user).
+    return await safeServiceCall(ctx, trackedSiteId, async (service, site) => {
+      // ── Cas blog_articles : CMS interne crawlers.fr ─────────────────
+      // La table n'a ni user_id ni domain → réservée aux admins (auteur unique).
+      if (draftType === 'blog') {
+        const { data: isAdmin } = await service.rpc('has_role', {
+          _user_id: ctx.userId, _role: 'admin',
+        });
+        if (isAdmin !== true) {
+          return { ok: false, error: 'Publication blog réservée aux administrateurs (CMS interne).' };
+        }
+        const { data: article, error: readErr } = await service
+          .from('blog_articles')
+          .select('id, status, title, slug')
+          .eq('id', draftId)
+          .maybeSingle();
+        if (readErr) return { ok: false, error: `Lecture blog_articles : ${readErr.message}` };
+        if (!article) return { ok: false, error: 'Article introuvable' };
+        if (article.status === 'published') {
+          return { ok: true, data: { already_published: true, ...article } };
+        }
+        const { data: updated, error: updErr } = await service
+          .from('blog_articles')
+          .update({ status: 'published', published_at: new Date().toISOString() })
+          .eq('id', draftId)
+          .select('id, status, title, slug')
+          .maybeSingle();
+        if (updErr) return { ok: false, error: `Publication blog : ${updErr.message}` };
+        return { ok: true, data: { table: 'blog_articles', ...updated } };
+      }
 
-      // Vérification supplémentaire : le brouillon appartient bien au user
+      // ── Cas seo_page_drafts : multi-tenant ──────────────────────────
+      // Vérification stricte : draft.user_id = ctx.userId ET draft.domain = site.domain.
+      // Le 2nd check empêche un user de publier un draft du domaine A sur la fiche
+      // du site B (même propriétaire, sites différents) → cohérence garantie.
       const { data: existing, error: readErr } = await service
-        .from(table)
-        .select('id, status, title, slug, user_id')
+        .from('seo_page_drafts')
+        .select('id, status, title, slug, user_id, domain')
         .eq('id', draftId)
         .maybeSingle();
-      if (readErr) return { ok: false, error: `Lecture ${table} : ${readErr.message}` };
+      if (readErr) return { ok: false, error: `Lecture seo_page_drafts : ${readErr.message}` };
       if (!existing) return { ok: false, error: 'Brouillon introuvable' };
-      if ((existing as { user_id?: string }).user_id !== ctx.userId) {
+      if (existing.user_id !== ctx.userId) {
         return { ok: false, error: 'Brouillon non accessible (propriété refusée)' };
+      }
+      // Normalisation lowercase pour comparer www.x.com et x.com de manière souple
+      const draftDomain = (existing.domain ?? '').toLowerCase().replace(/^www\./, '');
+      const siteDomain = (site.domain ?? '').toLowerCase().replace(/^www\./, '');
+      if (!draftDomain || draftDomain !== siteDomain) {
+        return {
+          ok: false,
+          error: `Incohérence draft↔site : le brouillon vise le domaine "${existing.domain}" mais le site fourni est "${site.domain}". Refus de publication.`,
+        };
       }
       if (existing.status === 'published') {
         return { ok: true, data: { already_published: true, ...existing } };
       }
 
       const { data: updated, error: updErr } = await service
-        .from(table)
+        .from('seo_page_drafts')
         .update({ status: 'published', published_at: new Date().toISOString() })
         .eq('id', draftId)
-        .select('id, status, title, slug')
+        .select('id, status, title, slug, domain')
         .maybeSingle();
-      if (updErr) return { ok: false, error: `Publication ${table} : ${updErr.message}` };
-      return { ok: true, data: { table, ...updated } };
+      if (updErr) return { ok: false, error: `Publication seo_page_drafts : ${updErr.message}` };
+      return { ok: true, data: { table: 'seo_page_drafts', ...updated } };
     });
   },
 };
