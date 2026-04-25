@@ -488,6 +488,10 @@ Deno.serve(handleRequest(async (req) => {
   if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs)
   if (!acquireConcurrency('parse-matrix-geo', 50)) return concurrencyResponse(corsHeaders)
 
+  // When SSE streaming starts, the stream owns the concurrency slot
+  // and releases it itself; we must not release it twice in the outer finally.
+  let streamingOwnsConcurrency = false
+
   try {
     const body = await req.json()
     const { url, items, benchmark_items, mode, engine_notes, scoring_rubric, stream } = body as {
