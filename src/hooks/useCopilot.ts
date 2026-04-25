@@ -192,26 +192,60 @@ export function useCopilot(options: UseCopilotOptions) {
           persona,
           approve_action_id: actionId,
         });
-        const result = (data as unknown as { result?: { ok?: boolean; data?: unknown; error?: string } }).result;
-        const reply = result?.ok
-          ? `Action exécutée avec succès.`
-          : `Action en échec : ${result?.error ?? 'erreur inconnue'}`;
+        // P1 #7 — le backend renvoie maintenant un `reply` LLM contextuel
+        const d = data as unknown as { reply?: string; result?: { ok?: boolean; error?: string } };
+        const reply = d.reply
+          ?? (d.result?.ok ? 'Action exécutée avec succès.' : `Action en échec : ${d.result?.error ?? 'erreur inconnue'}`);
         setMessages((prev) =>
-          prev.map((m) =>
-            m.id === placeholder.id
-              ? { ...m, pending: false, content: reply }
-              : m,
-          ),
+          prev.map((m) => m.id === placeholder.id ? { ...m, pending: false, content: reply } : m),
         );
       } catch (e) {
         const msg = (e as Error).message || 'Erreur inconnue';
         setError(msg);
         setMessages((prev) =>
-          prev.map((m) =>
-            m.id === placeholder.id
-              ? { ...m, pending: false, content: `*Erreur : ${msg}*` }
-              : m,
-          ),
+          prev.map((m) => m.id === placeholder.id ? { ...m, pending: false, content: `*Erreur : ${msg}*` } : m),
+        );
+      } finally {
+        setSending(false);
+      }
+    },
+    [persona, sending, callOrchestrator],
+  );
+
+  // P1 #6 — Rejet explicite d'une action awaiting_approval
+  const reject = useCallback(
+    async (actionId: string, reason?: string) => {
+      if (sending) return;
+      setSending(true);
+      setError(null);
+
+      const ackMsg: CopilotMessage = {
+        id: uid(), role: 'user',
+        content: reason
+          ? `_Refus de l'action #${actionId.slice(0, 8)} — ${reason}_`
+          : `_Refus de l'action #${actionId.slice(0, 8)}_`,
+        createdAt: Date.now(),
+      };
+      const placeholder: CopilotMessage = {
+        id: uid(), role: 'assistant', content: '', pending: true, createdAt: Date.now() + 1,
+      };
+      setMessages((prev) => [...prev, ackMsg, placeholder]);
+
+      try {
+        const data = await callOrchestrator({
+          persona,
+          reject_action_id: actionId,
+          reject_reason: reason,
+        });
+        const reply = (data as { reply?: string }).reply ?? 'Action rejetée.';
+        setMessages((prev) =>
+          prev.map((m) => m.id === placeholder.id ? { ...m, pending: false, content: reply } : m),
+        );
+      } catch (e) {
+        const msg = (e as Error).message || 'Erreur inconnue';
+        setError(msg);
+        setMessages((prev) =>
+          prev.map((m) => m.id === placeholder.id ? { ...m, pending: false, content: `*Erreur : ${msg}*` } : m),
         );
       } finally {
         setSending(false);
