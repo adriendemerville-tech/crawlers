@@ -94,8 +94,8 @@ Deno.serve(async (req) => {
     if (!body.message) return jsonError('message requis', 400);
 
     // ── Session : create or load ─────────────────────────
-    let sessionId = body.session_id;
-    if (!sessionId) {
+    let sessionId: string;
+    if (!body.session_id) {
       const { data: created, error: cErr } = await service
         .from('copilot_sessions')
         .insert({
@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
       if (cErr || !created) return jsonError(`Création session : ${cErr?.message}`, 500);
       sessionId = created.id;
     } else {
+      sessionId = body.session_id;
       await service
         .from('copilot_sessions')
         .update({ last_message_at: new Date().toISOString() })
@@ -404,6 +405,32 @@ function buildApprovalPromptText(approvals: Array<{ skill: string; input: unknow
     '',
     "Réponds **valider** pour confirmer, ou précise autre chose pour ajuster.",
   ].join('\n');
+}
+
+/** Log d'une action skill dans copilot_actions (audit trail immuable). */
+async function logAction(
+  service: ReturnType<typeof getServiceClient>,
+  sessionId: string,
+  userId: string,
+  personaId: string,
+  skill: string,
+  input: Record<string, unknown>,
+  output: unknown,
+  status: 'success' | 'error' | 'rejected' | 'awaiting_approval',
+  errorMessage: string | null,
+  durationMs: number,
+): Promise<void> {
+  await service.from('copilot_actions').insert({
+    session_id: sessionId,
+    user_id: userId,
+    persona: personaId,
+    skill,
+    input,
+    output,
+    status,
+    error_message: errorMessage,
+    duration_ms: durationMs,
+  });
 }
 
 function jsonOk(data: unknown) {

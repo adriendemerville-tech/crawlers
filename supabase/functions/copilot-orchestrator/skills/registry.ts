@@ -169,56 +169,152 @@ const open_audit_panel: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// ACTIONS NÉCESSITANT APPROBATION (handlers stubs Sprint 2)
-// La policy 'approval' empêche l'exécution directe — voir orchestrator.
+// ACTIONS NÉCESSITANT APPROBATION — handlers réels Sprint 4
+// La policy 'approval' empêche l'exécution directe à la 1re itération
+// (l'orchestrator pause + log status=awaiting_approval). Quand l'utilisateur
+// valide, l'orchestrator rappelle ces handlers via handleApproval().
 // ═══════════════════════════════════════════════════════════
+
+const AUDIT_FN_BY_TYPE: Record<string, string> = {
+  expert: 'expert-audit',
+  eeat: 'audit-expert-seo',          // l'audit E-E-A-T est porté par audit-expert-seo
+  strategique: 'audit-strategique-ia',
+};
 
 const trigger_audit: SkillDefinition = {
   name: 'trigger_audit',
-  description: "Lance un audit expert SEO pour une URL donnée (consomme des crédits).",
+  description: "Lance un audit SEO réel pour une URL donnée (consomme des crédits). Types: expert (technique), eeat (E-E-A-T), strategique (GEO+IA).",
   parameters: {
     type: 'object',
     properties: {
-      url: { type: 'string' },
-      audit_type: { type: 'string', enum: ['expert', 'eeat', 'strategique'] },
+      url: { type: 'string', description: 'URL absolue à auditer (https://...)' },
+      audit_type: { type: 'string', enum: ['expert', 'eeat', 'strategique'], default: 'expert' },
     },
-    required: ['url', 'audit_type'],
+    required: ['url'],
   },
-  handler: async (input) => ({
-    ok: true,
-    data: { pending_action: 'trigger_audit', input },
-  }),
+  handler: async (input, ctx) => {
+    const url = String(input.url ?? '').trim();
+    const auditType = String(input.audit_type ?? 'expert');
+    if (!url || !/^https?:\/\//.test(url)) {
+      return { ok: false, error: 'url absolue (http/https) requise' };
+    }
+    const fnName = AUDIT_FN_BY_TYPE[auditType] ?? AUDIT_FN_BY_TYPE.expert;
+    try {
+      // Invocation via le client utilisateur → respecte RLS, fair-use et quotas du compte.
+      const { data, error } = await ctx.supabase.functions.invoke(fnName, {
+        body: { url, source: 'copilot', persona: ctx.persona },
+      });
+      if (error) return { ok: false, error: `Edge function ${fnName} : ${error.message}` };
+      const summary = summarizeAuditResponse(data);
+      return { ok: true, data: { audit_type: auditType, function: fnName, ...summary } };
+    } catch (e) {
+      return { ok: false, error: `Echec invocation ${fnName} : ${(e as Error).message}` };
+    }
+  },
 };
 
 const cms_publish_draft: SkillDefinition = {
   name: 'cms_publish_draft',
-  description: "Publie un brouillon de page SEO via le bridge CMS approprié.",
+  description: "Publie un brouillon SEO existant (table seo_page_drafts ou blog_articles) en passant le statut à 'published'.",
   parameters: {
     type: 'object',
-    properties: { draft_id: { type: 'string' } },
+    properties: {
+      draft_id: { type: 'string', description: 'UUID du brouillon' },
+      draft_type: { type: 'string', enum: ['landing', 'blog'], default: 'landing' },
+    },
     required: ['draft_id'],
   },
-  handler: async (input) => ({
-    ok: true,
-    data: { pending_action: 'cms_publish_draft', input },
-  }),
+  handler: async (input, ctx) => {
+    const draftId = String(input.draft_id ?? '').trim();
+    const draftType = String(input.draft_type ?? 'landing');
+    if (!draftId) return { ok: false, error: 'draft_id requis' };
+
+    const table = draftType === 'blog' ? 'blog_articles' : 'seo_page_drafts';
+    // Vérifie d'abord la propriété via RLS (lecture user-scope)
+    const { data: existing, error: readErr } = await ctx.supabase
+      .from(table)
+      .select('id, status, title, slug')
+      .eq('id', draftId)
+      .maybeSingle();
+    if (readErr) return { ok: false, error: `Lecture ${table} : ${readErr.message}` };
+    if (!existing) return { ok: false, error: 'Brouillon introuvable ou non accessible (RLS)' };
+    if (existing.status === 'published') {
+      return { ok: true, data: { already_published: true, ...existing } };
+    }
+
+    const { data: updated, error: updErr } = await ctx.supabase
+      .from(table)
+      .update({ status: 'published', published_at: new Date().toISOString() })
+      .eq('id', draftId)
+      .select('id, status, title, slug')
+      .maybeSingle();
+    if (updErr) return { ok: false, error: `Publication ${table} : ${updErr.message}` };
+    return { ok: true, data: { table, ...updated } };
+  },
 };
 
 const cms_patch_content: SkillDefinition = {
   name: 'cms_patch_content',
-  description: "Modifie un contenu CMS existant (HTML diff exigé avant exécution).",
+  description: "Applique des modifications granulaires (h1/h2/meta/faq/body/image…) sur une page existante d'un site connecté via cms-patch-content.",
   parameters: {
     type: 'object',
     properties: {
-      target_url: { type: 'string' },
-      patch: { type: 'object' },
+      tracked_site_id: { type: 'string', description: 'UUID du site suivi' },
+      target_url: { type: 'string', description: 'URL absolue de la page à patcher' },
+      cms_post_id: { type: 'string', description: 'ID interne du CMS si connu (optionnel)' },
+      patches: {
+        type: 'array',
+        description: 'Liste de patches { zone, action, value, selector?, old_value? }',
+        items: {
+          type: 'object',
+          properties: {
+            zone: { type: 'string', enum: ['h1','h2','h3','meta_title','meta_description','faq','body_section','image','alt_text','author','excerpt','slug','tags','schema_org','canonical','robots_meta','og_title','og_description','og_image'] },
+            action: { type: 'string', enum: ['replace','append','prepend','remove'] },
+            selector: { type: 'string' },
+            value: {},
+            old_value: { type: 'string' },
+          },
+          required: ['zone', 'action', 'value'],
+        },
+        minItems: 1,
+        maxItems: 20,
+      },
     },
-    required: ['target_url', 'patch'],
+    required: ['tracked_site_id', 'target_url', 'patches'],
   },
-  handler: async (input) => ({
-    ok: true,
-    data: { pending_action: 'cms_patch_content', input },
-  }),
+  handler: async (input, ctx) => {
+    const trackedSiteId = String(input.tracked_site_id ?? '').trim();
+    const targetUrl = String(input.target_url ?? '').trim();
+    const patches = Array.isArray(input.patches) ? input.patches : [];
+    if (!trackedSiteId) return { ok: false, error: 'tracked_site_id requis' };
+    if (!targetUrl || !/^https?:\/\//.test(targetUrl)) return { ok: false, error: 'target_url absolue requise' };
+    if (patches.length === 0) return { ok: false, error: 'au moins 1 patch requis' };
+    if (patches.length > 20) return { ok: false, error: 'max 20 patches par appel' };
+
+    // Vérification d'appartenance du site via RLS (sinon l'opération est rejetée côté CMS aussi)
+    const { data: site, error: siteErr } = await ctx.supabase
+      .from('tracked_sites')
+      .select('id, domain')
+      .eq('id', trackedSiteId)
+      .maybeSingle();
+    if (siteErr) return { ok: false, error: `Vérif site : ${siteErr.message}` };
+    if (!site) return { ok: false, error: 'Site introuvable ou non accessible (RLS)' };
+
+    try {
+      const { data, error } = await ctx.supabase.functions.invoke('cms-patch-content', {
+        body: {
+          tracked_site_id: trackedSiteId,
+          target_url: targetUrl,
+          cms_post_id: input.cms_post_id ?? undefined,
+          patches,
+        },
+      });
+      if (error) return { ok: false, error: `cms-patch-content : ${error.message}` };
+      return { ok: true, data };
+    } catch (e) {
+      return { ok: false, error: `Echec cms-patch-content : ${(e as Error).message}` };
+    }
+  },
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -266,5 +362,20 @@ function summarizePayload(payload: unknown): unknown {
     if (key in p) out[key] = p[key];
   }
   out._other_keys = Object.keys(p).filter((k) => !(k in out));
+  return out;
+}
+
+/** Résume une réponse d'audit (expert-audit / audit-strategique-ia / audit-expert-seo). */
+function summarizeAuditResponse(data: unknown): Record<string, unknown> {
+  if (!data || typeof data !== 'object') return { raw: data };
+  const d = data as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of ['audit_id', 'id', 'score', 'global_score', 'url', 'status', 'recommendations_count', 'critical_count']) {
+    if (k in d) out[k] = d[k];
+  }
+  if (Array.isArray((d as { recommendations?: unknown[] }).recommendations)) {
+    out.recommendations_count = (d as { recommendations: unknown[] }).recommendations.length;
+  }
+  out._available_keys = Object.keys(d).slice(0, 30);
   return out;
 }
