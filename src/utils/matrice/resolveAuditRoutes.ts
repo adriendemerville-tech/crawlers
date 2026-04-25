@@ -214,10 +214,14 @@ export function resolveAuditRoutes(criteria: ParsedCriterion[]): AuditPlan {
       }
     }
 
-    const fn = bestRule?.fn || 'check-content-quality'; // fallback to LLM analysis
+    // Fallback: if user provided a custom prompt → route to check-llm (it's their explicit ask).
+    // Otherwise → expert-audit (broad technical audit) rather than burning LLM tokens on
+    // unmatched criteria via check-content-quality.
+    const fallbackFn = customPrompt ? 'check-llm' : 'expert-audit';
+    const fn = bestRule?.fn || fallbackFn;
     const confidence = bestRule ? Math.min(1, bestRule.confidence * (bestScore / 2)) : 0.4;
     const matchType = determineMatchType(fn, customPrompt);
-    const cost = bestRule?.cost ?? 0.002;
+    const cost = bestRule?.cost ?? (customPrompt ? 0.016 : 0);
 
     // Benchmark mode = LLM function with multiple targeted providers (or "all")
     const isLLMFn = ['check-llm', 'check-eeat', 'check-content-quality'].includes(fn);
