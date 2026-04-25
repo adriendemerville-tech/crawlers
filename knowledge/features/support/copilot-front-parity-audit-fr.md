@@ -75,7 +75,7 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 | # | Sévérité | Bug | Fichier | Statut |
 |---|---|---|---|---|
 | B1 | 🟠 moyenne | Prop `initialExpandedGreeting` déclarée et passée par `FloatingChatBubble` mais **non destructurée** dans `ChatWindowUnified` → la salutation longue ne s'affichait jamais | `Support/ChatWindowUnified.tsx` | ✅ **Corrigé Q1.2** |
-| B2 | 🟠 moyenne | `react-markdown` rendu sans `remark-gfm` → tableaux Markdown des réponses Stratège affichés en pre-text, listes-tâches non parsées | `Copilot/AgentChatShell.tsx` | ⏳ Q3 |
+| B2 | 🟠 moyenne | `react-markdown` rendu sans `remark-gfm` → tableaux Markdown des réponses Stratège affichés en pre-text, listes-tâches non parsées | `Copilot/AgentChatShell.tsx` | ✅ **Corrigé Q3.1** (remark-gfm + styles prose-table) |
 | B3 | 🟡 faible | Bouton flottant Félix utilisait `bg-[#7c3aed]` violet plein → enfreint la charte « pas de fond » | `Support/FloatingChatBubble.tsx` ligne 338 | ✅ **Corrigé Q2** (border + bg transparent) |
 | B4 | 🟡 faible | Émoji 👋 / 🔍 dans `FloatingChatBubble` → enfreint la règle « pas d'émoji » | `Support/FloatingChatBubble.tsx` | ✅ **Corrigé Q2** |
 | B5 | 🟡 faible | `useEffect` cleanup setFelixExpanded(false) se déclenche aussi au lazy-unmount de Suspense | `Support/ChatWindowUnified.tsx` | ⏳ Q3 |
@@ -104,14 +104,14 @@ Liste des features documentées dans `knowledge/features/support/help-center-ai-
 
 ## 6. Recommandations de remédiation (ordre suggéré)
 
-1. **B1 / B8** — bugs corrects à corriger immédiatement.
-2. **B4 / B3 / B10** — conformité charte (pas d'émoji, pas de fond, tokens design system).
-3. Brancher `screen_context` du `screenContext.ts` dans le `getContext()` de Félix (10 lignes) → restaure la compréhension d'audit en temps réel.
-4. Ajouter un `seedMessages` Stratège (greeting cocoon).
-5. Brancher `ChatAttachmentPicker` dans `renderComposerExtras` de Félix (le composant existe déjà).
-6. Recréer un panneau « Historique » — soit côté front via lecture de `copilot_sessions WHERE persona='felix'`, soit en réintroduisant un export legacy.
-7. Ajouter une skill `live_search` dans le registry (ports DataForSEO/SerpAPI/Places).
-8. Aligner `Admin/SavDashboard` sur `copilot_*` au lieu de `sav_conversations`.
+1. **B1 / B8** — ✅ corrigés Q1.
+2. **B4 / B3 / B10** — ✅ conformité charte appliquée Q2.
+3. ✅ Q3.3 — `screen_context` injecté dans le `getContext()` de Félix via `captureScreenContext(location.pathname)`.
+4. ⏳ Q4 — Ajouter un `seedMessages` Stratège (greeting cocoon).
+5. ✅ Q3.2 — `ChatAttachmentPicker` branché dans `composerLeading` de Félix (rapports + scripts + images).
+6. ⏳ Q4 — Recréer un panneau « Historique » via lecture de `copilot_sessions WHERE persona='felix'`.
+7. ⏳ Q4 — Ajouter une skill `live_search` dans le registry (ports DataForSEO/SerpAPI/Places).
+8. ⏳ Q4 — Aligner `Admin/SavDashboard` sur `copilot_*` au lieu de `sav_conversations`.
 9. (Optionnel) Réintroduire `escalate_to_phone` comme skill `approval` côté Félix.
 
 ---
