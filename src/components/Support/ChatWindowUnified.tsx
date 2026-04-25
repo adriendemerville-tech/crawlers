@@ -15,7 +15,8 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, BellOff, Bug, Maximize2, Minimize2, Minus, X } from 'lucide-react';
+import { Bell, BellOff, Bug, PanelRightClose, PanelRightOpen, Minus, X } from 'lucide-react';
+import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -99,8 +100,19 @@ export function ChatWindowUnified({
   const { toast } = useToast();
   const location = useLocation();
   const [minimized, setMinimized] = useState(false);
-  const [maximized, setMaximized] = useState(false);
+  const { felixExpanded, setFelixExpanded } = useAISidebar();
+  const docked = felixExpanded;
   const [muted, setMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
+
+  // Miroir du flag legacy lu par FloatingChatBubble pour masquer la bulle quand on est ancré.
+  useEffect(() => {
+    localStorage.setItem('felix_sidebar_expanded', docked ? '1' : '0');
+  }, [docked]);
+
+  // Désancrer à la fermeture pour libérer le padding global du wrapper.
+  useEffect(() => {
+    return () => setFelixExpanded(false);
+  }, [setFelixExpanded]);
   const [trackedSiteId, setTrackedSiteId] = useState<string | undefined>();
   const [domain, setDomain] = useState<string | undefined>();
   const [userDomains, setUserDomains] = useState<string[]>([]);
@@ -308,8 +320,15 @@ export function ChatWindowUnified({
     }
   };
 
-  const positionStyle = maximized
-    ? { inset: '4rem 1rem 1rem 1rem' as const }
+  // 3 modes : ancré pleine hauteur à droite (docked), flottant standard, ou minimisé.
+  const positionStyle = docked
+    ? {
+        right: 0,
+        top: 0,
+        bottom: 0,
+        width: '24rem',
+        borderRadius: 0,
+      }
     : {
         right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))',
         bottom: '5rem',
@@ -349,7 +368,7 @@ export function ChatWindowUnified({
           </button>
           <button
             type="button"
-            onClick={() => { setMinimized((v) => !v); setMaximized(false); }}
+            onClick={() => { setMinimized((v) => !v); if (docked) setFelixExpanded(false); }}
             className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
             aria-label={minimized ? 'Restaurer' : 'Réduire'}
           >
@@ -357,11 +376,12 @@ export function ChatWindowUnified({
           </button>
           <button
             type="button"
-            onClick={() => { setMaximized((v) => !v); setMinimized(false); }}
+            onClick={() => { setFelixExpanded(!docked); setMinimized(false); }}
             className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
-            aria-label={maximized ? 'Réduire' : 'Agrandir'}
+            aria-label={docked ? 'Désancrer' : 'Ancrer en colonne pleine hauteur'}
+            title={docked ? 'Désancrer' : 'Ancrer en colonne pleine hauteur'}
           >
-            {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            {docked ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
           </button>
           <button
             type="button"

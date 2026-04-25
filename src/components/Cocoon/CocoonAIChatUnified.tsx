@@ -15,8 +15,9 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Crosshair, Maximize2, Minimize2, Minus, Network, Sparkles, X } from 'lucide-react';
+import { Crosshair, PanelLeftClose, PanelLeftOpen, Minus, Network, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import { cn } from '@/lib/utils';
@@ -60,7 +61,13 @@ export function CocoonAIChatUnified({
     () => localStorage.getItem('cocoon_chat_open') === '1',
   );
   const [minimized, setMinimized] = useState(false);
-  const [maximized, setMaximized] = useState(false);
+  const { cocoonExpanded, setCocoonExpanded } = useAISidebar();
+  const docked = cocoonExpanded;
+
+  // Désancrer le panneau lors du démontage pour ne pas laisser le wrapper avec un padding fantôme.
+  useEffect(() => {
+    return () => setCocoonExpanded(false);
+  }, [setCocoonExpanded]);
   const [picking, setPicking] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState<SelectedNode[]>([]);
   // Ref pour exposer la liste à jour au getContext (qui est ré-évalué à chaque envoi).
@@ -122,8 +129,15 @@ export function CocoonAIChatUnified({
     nodes_count: nodes.length,
   });
 
-  const positionStyle = maximized
-    ? { inset: '4rem 1rem 1rem 1rem' as const }
+  // 3 modes : ancré pleine hauteur à gauche (docked), flottant standard, ou minimisé.
+  const positionStyle = docked
+    ? {
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: '28rem',
+        borderRadius: 0,
+      }
     : {
         left: '1.5rem',
         bottom: '5.5rem',
@@ -206,7 +220,7 @@ export function CocoonAIChatUnified({
               )}
               <button
                 type="button"
-                onClick={() => { setMinimized((v) => !v); setMaximized(false); }}
+                onClick={() => { setMinimized((v) => !v); if (docked) setCocoonExpanded(false); }}
                 className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
                 aria-label={minimized ? 'Restaurer' : 'Réduire'}
               >
@@ -214,11 +228,12 @@ export function CocoonAIChatUnified({
               </button>
               <button
                 type="button"
-                onClick={() => { setMaximized((v) => !v); setMinimized(false); }}
+                onClick={() => { setCocoonExpanded(!docked); setMinimized(false); }}
                 className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
-                aria-label={maximized ? 'Réduire' : 'Agrandir'}
+                aria-label={docked ? 'Désancrer' : 'Ancrer en colonne pleine hauteur'}
+                title={docked ? 'Désancrer' : 'Ancrer en colonne pleine hauteur'}
               >
-                {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                {docked ? <PanelLeftClose className="h-3.5 w-3.5" /> : <PanelLeftOpen className="h-3.5 w-3.5" />}
               </button>
               <button
                 type="button"
