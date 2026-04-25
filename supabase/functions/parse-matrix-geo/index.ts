@@ -513,12 +513,25 @@ Deno.serve(handleRequest(async (req) => {
     if (mode === 'benchmark' && benchmark_items?.length) {
       console.log(`[parse-matrix-geo] BENCHMARK mode for ${normalizedUrl} with ${benchmark_items.length} items`)
 
-      const BATCH_SIZE = 2 // Lower batch size for benchmark (2 LLM calls per item)
+      // Throughput: 5 items in parallel, no inter-batch sleep.
+      // 5 engines × 79 prompts = 395 items → ~80 batches × ~3s each = ~4 min.
+      // Each item runs 2 LLM calls; OpenRouter handles concurrency well at this scale.
+      const BATCH_SIZE = 5
       const results: BenchmarkResult[] = []
 
-      for (let i = 0; i < benchmark_items.length; i += BATCH_SIZE) {
-        const batch = benchmark_items.slice(i, i + BATCH_SIZE)
-        console.log(`[parse-matrix-geo] Benchmark batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(benchmark_items.length / BATCH_SIZE)}`)
+      // Normalize once: lowercase + trim engine/axe to avoid duplicate columns
+      // ("ChatGPT" vs "chatgpt ") and duplicate Z-layers in the cube.
+      const normalize = (s: string | undefined | null) => String(s ?? '').trim()
+      const normalizedItems = benchmark_items.map(it => ({
+        ...it,
+        engine: normalize(it.engine) || 'ChatGPT',
+        axe: normalize(it.axe) || 'Général',
+        theme: normalize(it.theme) || 'Général',
+      }))
+
+      for (let i = 0; i < normalizedItems.length; i += BATCH_SIZE) {
+        const batch = normalizedItems.slice(i, i + BATCH_SIZE)
+        console.log(`[parse-matrix-geo] Benchmark batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(normalizedItems.length / BATCH_SIZE)}`)
 
         const batchResults = await Promise.all(
           batch.map(async (item): Promise<BenchmarkResult> => {
@@ -538,13 +551,20 @@ Deno.serve(handleRequest(async (req) => {
           })
         )
         results.push(...batchResults)
-
-        if (i + BATCH_SIZE < benchmark_items.length) await new Promise(r => setTimeout(r, 1000))
+        // No sleep between batches — Promise.all already throttles correctly.
       }
 
-      // Build heatmap data: theme × engine (aggregate multiple items per cell)
-      const themes = [...new Set(results.map(r => r.theme))]
-      const engines = [...new Set(results.map(r => r.engine))]
+      // Build heatmap data: theme × engine (engines/themes case-insensitive, stable)
+      const themeOrder: string[] = []
+      const engineOrder: string[] = []
+      const seenT = new Set<string>()
+      const seenE = new Set<string>()
+      for (const r of results) {
+        if (!seenT.has(r.theme)) { seenT.add(r.theme); themeOrder.push(r.theme) }
+        if (!seenE.has(r.engine)) { seenE.add(r.engine); engineOrder.push(r.engine) }
+      }
+      const themes = themeOrder
+      const engines = engineOrder
       const heatmap: Record<string, Record<string, { score: number; cited: boolean; rank: number | null; count: number; cited_count: number }>> = {}
 
       for (const theme of themes) {
