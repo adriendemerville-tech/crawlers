@@ -28,6 +28,8 @@ interface AgentChatShellProps {
   onAssistantReply?: (reply: string, ctx: { sessionId: string | null; userMessage: string }) => void;
   /** Messages d'amorçage (onboarding, greeting). Affichés mais non envoyés. */
   seedMessages?: import('@/hooks/useCopilot').CopilotMessage[];
+  /** Reprise d'une session existante : hydrate l'historique depuis copilot_actions. */
+  initialSessionId?: string | null;
   /** Boutons additionnels affichés à droite du composer (ex: bug report). */
   composerExtras?: React.ReactNode;
   /** Variante render-prop : reçoit des helpers pour pousser du texte dans le draft (ex: micro). */
@@ -51,6 +53,7 @@ export function AgentChatShell({
   autoNavigate = true,
   onAssistantReply,
   seedMessages,
+  initialSessionId,
   composerExtras,
   renderComposerExtras,
   composerLeading,
@@ -75,12 +78,13 @@ export function AgentChatShell({
     }
   };
 
-  const { messages, sending, error, sendMessage, approve, reject, reset } = useCopilot({
+  const { sessionId, messages, sending, error, sendMessage, approve, reject, reset } = useCopilot({
     persona,
     getContext,
     onActions: handleActions,
     onAssistantReply,
     seedMessages,
+    initialSessionId,
   });
 
   // Auto-scroll en bas à chaque nouveau message
