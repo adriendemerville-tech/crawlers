@@ -331,6 +331,8 @@ export function UserKpiModal({ user, open, onOpenChange, onDeleteUser, onToggleR
     { icon: FileText, label: "Plans d'action", value: kpis.totalActionPlans, color: 'text-teal-500' },
     { icon: AlertTriangle, label: 'Erreurs back-end', value: kpis.totalBackendErrors, color: 'text-red-500' },
     { icon: Bug, label: 'Erreurs front-end', value: kpis.totalFrontendErrors, color: 'text-orange-600' },
+    { icon: Network, label: 'Sites trackés', value: kpis.totalTrackedSites, color: 'text-violet-500' },
+    { icon: Plug, label: 'CMS connectés', value: kpis.totalCmsConnected, color: 'text-yellow-500' },
     { icon: CreditCard, label: 'Plan', value: <Badge variant="outline">{kpis.planType}</Badge>, color: 'text-primary' },
     { icon: CreditCard, label: 'Bundle APIs', value: kpis.bundleApiCount > 0 ? <Badge variant="default" className="text-[10px]">{kpis.bundleApiCount} API{kpis.bundleApiCount > 1 ? 's' : ''} · {kpis.bundleMonthlyEur}€/mois</Badge> : '—', color: 'text-fuchsia-500' },
   ] : [];
