@@ -34,7 +34,7 @@ export function FloatingChatBubble() {
   const isMobile = useIsMobile();
   const location = useLocation();
   const isSilentPage = location.pathname === '/' || location.pathname.startsWith('/blog');
-  const [felixV2] = useFelixV2Flag();
+  
 
   // Hide Félix on report preview/viewer pages
   const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
