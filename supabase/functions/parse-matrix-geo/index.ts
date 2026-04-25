@@ -490,13 +490,14 @@ Deno.serve(handleRequest(async (req) => {
 
   try {
     const body = await req.json()
-    const { url, items, benchmark_items, mode, engine_notes, scoring_rubric } = body as {
+    const { url, items, benchmark_items, mode, engine_notes, scoring_rubric, stream } = body as {
       url: string;
       items?: GeoItem[];
       benchmark_items?: BenchmarkItem[];
       mode?: 'standard' | 'benchmark';
       engine_notes?: EngineNoteInput[];
       scoring_rubric?: ScoringFieldInput[];
+      stream?: boolean;
     }
     
     if (engine_notes?.length) console.log(`[parse-matrix-geo] Engine notes loaded: ${engine_notes.map(n => n.engine).join(', ')}`)
