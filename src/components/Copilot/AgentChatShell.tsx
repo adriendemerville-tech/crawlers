@@ -71,7 +71,7 @@ export function AgentChatShell({
     }
   };
 
-  const { messages, sending, error, sendMessage, approve, reset } = useCopilot({
+  const { messages, sending, error, sendMessage, approve, reject, reset } = useCopilot({
     persona,
     getContext,
     onActions: handleActions,
@@ -220,7 +220,7 @@ export function AgentChatShell({
                           </button>
                           <button
                             type="button"
-                            onClick={() => void sendMessage('Annule cette action.')}
+                            onClick={() => void reject(ap.action_id)}
                             disabled={sending}
                             className="rounded-md border border-border px-3 py-1 text-xs transition hover:border-foreground/40 disabled:opacity-40"
                           >
