@@ -678,21 +678,99 @@ export default function MatricePrompt() {
         benchSeeds.forEach(s => progress.onCallEvent(makePending(s)));
         benchSeeds.forEach(s => progress.onCallEvent(makeRunning(s)));
 
-        const { data: fnData, error: fnError } = await supabase.functions.invoke('parse-matrix-geo', {
-          body: {
-            url: url.trim(),
-            benchmark_items: benchmarkItems,
-            mode: 'benchmark',
-            engine_notes: activeMetadata?.engineNotes,
-            scoring_rubric: activeMetadata?.scoringGuide,
-          },
-        });
+        // ── SSE streaming call: avoids the 150s edge-invoke timeout
+        //    and gives live progress to the tracker.
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+        const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const sessionResp = await supabase.auth.getSession();
+        const accessToken = sessionResp.data.session?.access_token || ANON_KEY;
 
-        if (fnError || !fnData?.success) {
-          benchSeeds.forEach(s => progress.onCallEvent(makeError(s, fnData?.error || fnError?.message || 'Benchmark failed')));
-          throw new Error(fnData?.error || fnError?.message || 'Benchmark failed');
+        let fnData: any = null;
+        let streamErr: string | null = null;
+        let lastProgressLog = 0;
+
+        try {
+          const sseResp = await fetch(`${SUPABASE_URL}/functions/v1/parse-matrix-geo`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+              'apikey': ANON_KEY,
+              'Accept': 'text/event-stream',
+            },
+            body: JSON.stringify({
+              url: url.trim(),
+              benchmark_items: benchmarkItems,
+              mode: 'benchmark',
+              stream: true,
+              engine_notes: activeMetadata?.engineNotes,
+              scoring_rubric: activeMetadata?.scoringGuide,
+            }),
+          });
+
+          if (!sseResp.ok || !sseResp.body) {
+            throw new Error(`HTTP ${sseResp.status}`);
+          }
+
+          const reader = sseResp.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            // Parse SSE frames separated by \n\n
+            let sepIdx;
+            while ((sepIdx = buffer.indexOf('\n\n')) !== -1) {
+              const frame = buffer.slice(0, sepIdx);
+              buffer = buffer.slice(sepIdx + 2);
+              if (!frame.trim() || frame.startsWith(':')) continue;
+
+              let eventName = 'message';
+              let dataStr = '';
+              for (const line of frame.split('\n')) {
+                if (line.startsWith('event:')) eventName = line.slice(6).trim();
+                else if (line.startsWith('data:')) dataStr += line.slice(5).trim();
+              }
+              if (!dataStr) continue;
+
+              let parsed: any;
+              try { parsed = JSON.parse(dataStr); } catch { continue; }
+
+              if (eventName === 'progress') {
+                const now = Date.now();
+                if (now - lastProgressLog > 1000) {
+                  console.log(`[MatricePrompt] Benchmark progress: ${parsed.done}/${parsed.total} (batch ${parsed.batch}/${parsed.total_batches})`);
+                  lastProgressLog = now;
+                }
+              } else if (eventName === 'item') {
+                // Mark this single (id, engine) call as done in the live tracker.
+                const seedId = `${parsed.id}__${parsed.engine}`;
+                progress.onCallEvent(makeDone({
+                  id: seedId,
+                  engine: parsed.engine,
+                  step: 'parse-matrix-geo',
+                  meta: { theme: parsed.theme, axe: parsed.axe },
+                } as any));
+              } else if (eventName === 'complete') {
+                fnData = parsed;
+              } else if (eventName === 'error') {
+                streamErr = parsed.message || 'Stream error';
+              }
+            }
+          }
+        } catch (e: any) {
+          streamErr = e?.message || 'Stream failed';
         }
 
+        if (streamErr || !fnData?.success) {
+          benchSeeds.forEach(s => progress.onCallEvent(makeError(s, streamErr || fnData?.error || 'Benchmark failed')));
+          throw new Error(streamErr || fnData?.error || 'Benchmark failed');
+        }
+
+        // Belt & suspenders: ensure every seed is marked done at the end.
         benchSeeds.forEach(s => progress.onCallEvent(makeDone(s)));
 
         setBenchmarkData({
