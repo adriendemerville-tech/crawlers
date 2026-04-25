@@ -55,6 +55,8 @@ interface OrchestratorBody {
   approve_action_id?: string;
   reject_action_id?: string;
   reject_reason?: string;
+  /** P2 fix B7 — libère immédiatement le verrou processing d'une session sans renvoyer de message. */
+  close_session?: boolean;
 }
 
 interface ChatMessage {
