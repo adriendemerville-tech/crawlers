@@ -522,12 +522,14 @@ export function ChatWindowUnified({
 
           <div className="flex-1 overflow-hidden">
             <AgentChatShell
+              key={shellKey}
               persona="felix"
               title="Félix"
               subtitle="Copilote SAV unifié — questions, audits, navigation"
               starterPrompts={STARTERS}
               getContext={getContext}
-              seedMessages={seedRef.current}
+              seedMessages={pickedSessionId ? undefined : seedRef.current}
+              initialSessionId={pickedSessionId}
               onAssistantReply={onAssistantReply}
               composerLeading={
                 <ChatAttachmentPicker
