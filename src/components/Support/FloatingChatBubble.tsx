@@ -40,7 +40,7 @@ export function FloatingChatBubble() {
   const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
   const isReportPage = hiddenRoutes.some(r => location.pathname.startsWith(r));
 
-  // Sync mute state from ChatWindow toggle
+  // Sync mute state from ChatWindowUnified toggle
   useEffect(() => {
     const handler = () => setIsMuted(localStorage.getItem('felix_muted') === '1');
     window.addEventListener('felix_mute_changed', handler);
@@ -315,7 +315,7 @@ export function FloatingChatBubble() {
           onClick={() => {
             setShowHallucinationBubble(false);
             setIsOpen(true);
-            // Dispatch event so ChatWindow can auto-send the diagnosis question
+            // Dispatch event so ChatWindowUnified can auto-send the diagnosis question
             setTimeout(() => window.dispatchEvent(new Event('felix-start-hallucination-diagnosis')), 300);
           }}
         >

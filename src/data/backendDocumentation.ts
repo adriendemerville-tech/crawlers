@@ -1018,7 +1018,7 @@ Le module Cocoon transforme les données de crawl d'un site en une **visualisati
 - **CocoonNodePanel.tsx** : Panneau latéral détaillé — i18n FR/EN/ES
   - **Bouton Auto-Maillage IA** : Déclenche \`cocoon-auto-linking\` pour la page sélectionnée. Affiche les suggestions avec badge Pré-scan (vert) ou IA (violet) et score de confiance.
   - **Toggles d'exclusion** : 3 interrupteurs par page (pas de liens sortants / pas de liens entrants / exclure totalement). Persistés dans \`cocoon_linking_exclusions\`.
-- **CocoonAIChat** : Chat Gemini 3 Flash avec streaming SSE
+- **CocoonAIChatUnified** : Chat Stratège v2 branché sur \`copilot-orchestrator\` (persona=strategist), node picking, auto-save recos
 - **Mode X-Ray** : Toggle nœuds fantômes
 - **Légende dynamique** : N'affiche que les types présents
 - **Auto-refresh** : Détecte retour utilisateur après audit/crawl
