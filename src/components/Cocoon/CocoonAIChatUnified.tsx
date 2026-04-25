@@ -17,8 +17,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Crosshair, Maximize2, Minimize2, Minus, Network, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import { cn } from '@/lib/utils';
+
+const SEO_KEYWORDS = /maillage|h1|canonical|backlink|cocon|cluster|intent|crawl|serp|json-ld|schema|sitemap|robots|title|meta|alt|seo|geo|eeat|citabilit|trafic|traffic|linking|quick win|recommand|optimis|améliorer/i;
 
 interface CocoonAIChatUnifiedProps {
   nodes: any[];
