@@ -348,6 +348,7 @@ export function CocoonAIChatUnified({
           {!minimized && (
             <div className="flex-1 overflow-hidden">
               <AgentChatShell
+                key={shellKey}
                 persona="strategist"
                 title="Stratège"
                 subtitle={
@@ -358,7 +359,8 @@ export function CocoonAIChatUnified({
                 starterPrompts={STARTERS}
                 getContext={getContext}
                 onAssistantReply={onAssistantReply}
-                seedMessages={seedRef.current ?? undefined}
+                seedMessages={pickedSessionId ? undefined : (seedRef.current ?? undefined)}
+                initialSessionId={pickedSessionId}
                 className="h-full"
               />
             </div>
