@@ -475,10 +475,17 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                                     isStale && "border-amber-500/50 text-amber-600 hover:text-amber-500 hover:bg-amber-500/10",
                                   )}
                                   onClick={() => {
-                                    h.setWpConnectSiteId(h.currentSite!.id);
-                                    h.setShowWpModal(true);
-                                    h.setWpApiKeyVisible(false);
-                                    h.setWpApiKeyCopied(false);
+                                    if (isConnected && !isStale) {
+                                      // Manage existing connection
+                                      h.setWpConnectSiteId(h.currentSite!.id);
+                                      h.setShowWpModal(true);
+                                      h.setWpApiKeyVisible(false);
+                                      h.setWpApiKeyCopied(false);
+                                    } else {
+                                      // Smart auto-detect for new/stale connection
+                                      setSmartCmsSiteId(h.currentSite!.id);
+                                      setSmartCmsOpen(true);
+                                    }
                                   }}
                                 >
                                   {isConnected && !isStale ? (
