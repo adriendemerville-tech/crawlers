@@ -131,6 +131,33 @@ export function CocoonAIChatUnified({
         height: minimized ? '3rem' : '36rem',
       };
 
+  // Auto-save les réponses substantielles comme cocoon_recommendations,
+  // équivalent du flux du legacy CocoonAIChat (parité Sprint 8).
+  const onAssistantReply = async (reply: string) => {
+    if (!user || !trackedSiteId || !domain) return;
+    if (reply.length < 200) return;
+    if (!SEO_KEYWORDS.test(reply)) return;
+    const headingMatch = reply.match(/\*\*(.{5,80})\*\*/);
+    const firstLine = reply.replace(/[#*_`]/g, '').split('\n').find((l) => l.trim().length > 10);
+    const summary = (headingMatch?.[1] || firstLine || reply.slice(0, 100))
+      .replace(/[#*_`]/g, '')
+      .trim()
+      .slice(0, 100);
+    const { error } = await supabase.from('cocoon_recommendations').insert({
+      tracked_site_id: trackedSiteId,
+      user_id: user.id,
+      domain,
+      recommendation_text: reply,
+      summary,
+      source_context: {
+        surface: 'cocoon-strategist-v2',
+        nodes_count: nodes.length,
+        selected_nodes: selectedNodesRef.current.map((n) => n.id),
+      },
+    });
+    if (error) console.warn('[CocoonAIChatUnified] save reco failed:', error);
+  };
+
   return (
     <>
       {/* Toggle button — capsule jaune d'or + violet, sans fond plein */}
