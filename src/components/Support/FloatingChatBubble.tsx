@@ -9,9 +9,11 @@ import { useAISidebar } from '@/contexts/AISidebarContext';
 import { CrawlersLogo } from './CrawlersLogo';
 import { isOnboardingDone } from '@/utils/felixOnboarding';
 import { playNotificationSound } from '@/utils/notificationSound';
+import { useFelixV2Flag } from '@/hooks/useFelixV2Flag';
 
-// Lazy load the chat window (heavy component with forms and messages)
+// Lazy load des deux variantes — l'une ou l'autre selon le flag.
 const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
+const ChatWindowUnified = lazy(() => import('./ChatWindowUnified').then(m => ({ default: m.ChatWindowUnified })));
 
 export function FloatingChatBubble() {
   const [isOpen, setIsOpen] = useState(() => {
@@ -34,6 +36,7 @@ export function FloatingChatBubble() {
   const isMobile = useIsMobile();
   const location = useLocation();
   const isSilentPage = location.pathname === '/' || location.pathname.startsWith('/blog');
+  const [felixV2] = useFelixV2Flag();
 
   // Hide Félix on report preview/viewer pages
   const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
@@ -251,22 +254,30 @@ export function FloatingChatBubble() {
 
   return (
     <>
-      {/* Chat Window - lazy loaded */}
+      {/* Chat Window - lazy loaded - bascule legacy / unifié via flag */}
       {isOpen && (
         <Suspense fallback={
           <div className="fixed bottom-20 z-[110] w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center" style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}>
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         }>
-          <ChatWindow
-            onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); setFelixGreeting(null); setFelixExpandedGreeting(null); }}
-            triggerOnboarding={triggerOnboarding}
-            onOnboardingConsumed={() => setTriggerOnboarding(false)}
-            autoStartCrawlersQuiz={autoStartCrawlersQuiz}
-            autoEnterpriseContact={autoEnterpriseContact}
-            initialGreeting={felixGreeting}
-            initialExpandedGreeting={felixExpandedGreeting}
-          />
+          {felixV2 ? (
+            <ChatWindowUnified
+              onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); setFelixGreeting(null); setFelixExpandedGreeting(null); }}
+              initialGreeting={felixGreeting}
+              initialExpandedGreeting={felixExpandedGreeting}
+            />
+          ) : (
+            <ChatWindow
+              onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); setFelixGreeting(null); setFelixExpandedGreeting(null); }}
+              triggerOnboarding={triggerOnboarding}
+              onOnboardingConsumed={() => setTriggerOnboarding(false)}
+              autoStartCrawlersQuiz={autoStartCrawlersQuiz}
+              autoEnterpriseContact={autoEnterpriseContact}
+              initialGreeting={felixGreeting}
+              initialExpandedGreeting={felixExpandedGreeting}
+            />
+          )}
         </Suspense>
       )}
 
