@@ -255,11 +255,20 @@ export function useCopilot(options: UseCopilotOptions) {
   );
 
   const reset = useCallback(() => {
+    // P2 fix B7 — libère le verrou processing côté backend (best effort, non bloquant).
+    const sid = sessionRef.current;
+    if (sid) {
+      void supabase.functions
+        .invoke('copilot-orchestrator', {
+          body: { persona, session_id: sid, close_session: true },
+        })
+        .catch(() => {/* ignore — la reconciliation 90s prendra le relais */});
+    }
     sessionRef.current = null;
     setSessionId(null);
     setMessages([]);
     setError(null);
-  }, []);
+  }, [persona]);
 
   return {
     sessionId,
