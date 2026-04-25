@@ -680,7 +680,7 @@ Deno.serve(handleRequest(async (req) => {
 
     console.log(`[parse-matrix-geo] Starting GEO audit for ${normalizedUrl} with ${items.length} items`)
 
-    const BATCH_SIZE = 3
+    const BATCH_SIZE = 6
     const results: GeoResult[] = []
 
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
@@ -701,8 +701,7 @@ Deno.serve(handleRequest(async (req) => {
         })
       )
       results.push(...batchResults)
-
-      if (i + BATCH_SIZE < items.length) await new Promise(r => setTimeout(r, 500))
+      // No inter-batch sleep — Promise.all + retry/backoff inside evaluateGeo handle 429s.
     }
 
     const orderedResults = items.map(item => results.find(r => r.id === item.id)!)
