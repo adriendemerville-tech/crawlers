@@ -28,7 +28,7 @@ import {
   resolveSkillPolicy,
   type PersonaConfig,
 } from './personas.ts';
-import { getSkill, buildToolDefinitions, type SkillContext } from './skills/registry.ts';
+import { getSkill, buildToolDefinitions, listSkills, type SkillContext } from './skills/registry.ts';
 
 interface OrchestratorBody {
   persona: string;
