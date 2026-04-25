@@ -194,6 +194,7 @@ function CocoonContent() {
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();
+  const [strategistV2] = useStrategistV2Flag();
   // cocoonExpanded handled by AISidebarPageWrapper (paddingLeft) — no double offset here
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
