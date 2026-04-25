@@ -29,6 +29,13 @@ interface AgentChatShellProps {
   seedMessages?: import('@/hooks/useCopilot').CopilotMessage[];
   /** Boutons additionnels affichés à droite du composer (ex: bug report). */
   composerExtras?: React.ReactNode;
+  /** Variante render-prop : reçoit des helpers pour pousser du texte dans le draft (ex: micro). */
+  renderComposerExtras?: (helpers: {
+    appendToDraft: (text: string) => void;
+    setDraft: (text: string) => void;
+    submitDraft: () => void;
+    sending: boolean;
+  }) => React.ReactNode;
   className?: string;
 }
 
