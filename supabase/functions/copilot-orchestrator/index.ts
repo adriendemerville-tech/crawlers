@@ -218,6 +218,7 @@ Deno.serve(async (req) => {
           skill: '_assistant_reply', input: {},
           output: { content: "_(Réponse précédente interrompue après un délai serveur. Je reprends ici — n'hésite pas à reformuler si nécessaire.)_" },
           status: 'success', duration_ms: 0,
+          action_category: 'system',
         });
       }
 
@@ -259,8 +260,8 @@ Deno.serve(async (req) => {
 
     // Persiste le message utilisateur + réponse finale comme paire conversation
     await service.from('copilot_actions').insert([
-      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: body.message }, status: 'success', duration_ms: 0 },
-      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0 },
+      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: body.message }, status: 'success', duration_ms: 0, action_category: 'system' },
+      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
     ]);
 
     // Libère le statut processing → active (succès nominal)
@@ -419,6 +420,7 @@ async function runAgentLoop(args: {
           .insert({
             session_id: sessionId, user_id: userId, persona: persona.id,
             skill: skillName, input: parsedArgs, status: 'awaiting_approval',
+            action_category: categorizeAction(skillName),
           })
           .select('id').single();
         awaitingApprovals.push({ action_id: approvalAction?.id ?? '', skill: skillName, input: parsedArgs });
@@ -438,12 +440,16 @@ async function runAgentLoop(args: {
         });
         stopForApproval = true;
       } else {
-        // AUTO
+        // AUTO — P2 #13 : timeout 30s par skill (évite freeze sur fetch externe)
         const tStart = Date.now();
         const skill = getSkill(skillName)!;
-        let result;
+        let result: { ok: boolean; data?: unknown; error?: string };
         try {
-          result = await skill.handler(parsedArgs, ctx);
+          result = await withTimeout(
+            skill.handler(parsedArgs, ctx),
+            SKILL_TIMEOUT_MS,
+            `skill ${skillName}`,
+          );
         } catch (e) {
           result = { ok: false, error: (e as Error).message };
         }
@@ -457,6 +463,7 @@ async function runAgentLoop(args: {
             status: result.ok ? 'success' : 'error',
             error_message: result.ok ? null : result.error,
             duration_ms: dur,
+            action_category: categorizeAction(skillName),
           })
           .select('id').single();
         executedActions.push({ skill: skillName, status: result.ok ? 'success' : 'error', output: result.data, error: result.error, action_id: insertedAction?.id });
