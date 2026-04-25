@@ -20,9 +20,17 @@ const RETENTION_DAYS = Number(Deno.env.get('COPILOT_RETENTION_DAYS') ?? '90');
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  // Sécurité : CRON_SECRET est OBLIGATOIRE. Si non configuré côté projet, l'endpoint refuse tout appel.
   const cronSecret = Deno.env.get('CRON_SECRET');
+  if (!cronSecret) {
+    console.error('[copilot-purge-actions] CRON_SECRET non configuré — endpoint désactivé.');
+    return new Response(JSON.stringify({ error: 'cron_secret_not_configured' }), {
+      status: 503,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
   const provided = req.headers.get('x-cron-secret');
-  if (cronSecret && provided !== cronSecret) {
+  if (provided !== cronSecret) {
     return new Response(JSON.stringify({ error: 'forbidden' }), {
       status: 403,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
