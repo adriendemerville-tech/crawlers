@@ -130,6 +130,10 @@ export function ChatWindowUnified({
   const [domain, setDomain] = useState<string | undefined>();
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [bugMode, setBugMode] = useState(false);
+  // Q4.4 — historique des sessions
+  const [showHistory, setShowHistory] = useState(false);
+  const [pickedSessionId, setPickedSessionId] = useState<string | null>(null);
+  const [shellKey, setShellKey] = useState(0);
 
   // Quiz / enterprise state
   const [quizLoading, setQuizLoading] = useState(false);
