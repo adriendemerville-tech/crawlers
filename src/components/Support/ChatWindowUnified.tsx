@@ -103,6 +103,7 @@ export function ChatWindowUnified({
   autoStartCrawlersQuiz,
   autoEnterpriseContact,
   initialGreeting,
+  initialExpandedGreeting,
 }: ChatWindowUnifiedProps) {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
@@ -137,12 +138,15 @@ export function ChatWindowUnified({
   const autoEntFiredRef = useRef(false);
 
   // seedMessages doit être stable au mount pour éviter de réinitialiser le hook.
+  // B1 fix : on capture aussi initialExpandedGreeting + l'état docked au mount.
   const seedRef = useRef<CopilotMessage[]>([]);
   if (seedRef.current.length === 0) {
     const shouldOnboard = !!triggerOnboarding && !isOnboardingDone();
     seedRef.current = buildSeedMessages({
       triggerOnboarding: shouldOnboard,
       initialGreeting,
+      initialExpandedGreeting,
+      docked,
     });
     if (shouldOnboard) {
       markOnboardingDone();
