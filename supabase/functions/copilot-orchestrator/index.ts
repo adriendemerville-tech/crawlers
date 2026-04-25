@@ -59,6 +59,9 @@ Deno.serve(async (req) => {
   }
 
   const t0 = Date.now();
+  // Tracké hors-try pour pouvoir libérer le statut 'processing' en cas de crash.
+  let sessionIdForCleanup: string | null = null;
+  let serviceForCleanup: ReturnType<typeof getServiceClient> | null = null;
 
   try {
     // ── Auth ──────────────────────────────────────────────
