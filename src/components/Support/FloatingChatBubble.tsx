@@ -271,62 +271,61 @@ export function FloatingChatBubble() {
         </Suspense>
       )}
 
-      {/* Onboarding tooltip */}
+      {/* Onboarding tooltip — charte : bordure + texte, pas de fond plein, pas d'émoji */}
       {showOnboardingPulse && !isOpen && (
         <div
-          className="fixed bottom-[72px] z-[110] max-w-[220px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
+          className="fixed bottom-[72px] z-[110] max-w-[220px] rounded-xl border border-primary/40 bg-background/95 backdrop-blur text-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
            style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}
           onClick={handleOpen}
         >
           <button
             onClick={(e) => { e.stopPropagation(); setShowOnboardingPulse(false); setNotifDismissedThisSession(true); }}
-            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 text-[10px] font-bold"
+            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border border-border bg-background text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-[10px] font-bold"
             aria-label="Fermer"
           >
             ✕
           </button>
-          👋 Bonjour, moi c'est Félix ! Veux-tu que je t'explique comment fonctionne Crawlers ?
+          Bonjour, moi c'est Félix. Veux-tu que je t'explique comment fonctionne Crawlers ?
         </div>
       )}
 
       {/* Guest quiz suggestion tooltip */}
       {guestBubbleVisible && !isOpen && !showOnboardingPulse && (
         <div
-          className="fixed bottom-[72px] z-[110] max-w-[240px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
+          className="fixed bottom-[72px] z-[110] max-w-[240px] rounded-xl border border-primary/40 bg-background/95 backdrop-blur text-foreground px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
            style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}
           onClick={() => { setShowGuestQuizSuggestion(false); setIsOpen(true); }}
         >
           <button
             onClick={(e) => { e.stopPropagation(); setShowGuestQuizSuggestion(false); }}
-            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 text-[10px] font-bold"
+            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border border-border bg-background text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-[10px] font-bold"
             aria-label="Fermer"
           >
             ✕
           </button>
-          👋 En quoi puis-je t'être utile ?
+          En quoi puis-je t'être utile&nbsp;?
         </div>
       )}
 
       {/* Hallucination diagnosis suggestion bubble */}
       {showHallucinationBubble && !isOpen && (
         <div
-          className="fixed bottom-[72px] z-[110] max-w-[260px] rounded-xl bg-gradient-to-b from-violet-500 to-violet-800 text-white px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group animate-bounce"
+          className="fixed bottom-[72px] z-[110] max-w-[260px] rounded-xl border border-primary/40 bg-background/95 backdrop-blur text-foreground px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group animate-bounce"
           style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}
           onClick={() => {
             setShowHallucinationBubble(false);
             setIsOpen(true);
-            // Dispatch event so ChatWindowUnified can auto-send the diagnosis question
             setTimeout(() => window.dispatchEvent(new Event('felix-start-hallucination-diagnosis')), 300);
           }}
         >
           <button
             onClick={(e) => { e.stopPropagation(); setShowHallucinationBubble(false); }}
-            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted/80 text-[10px] font-bold"
+            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border border-border bg-background text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-[10px] font-bold"
             aria-label="Fermer"
           >
             ✕
           </button>
-          🔍 Veux-tu que je t'aide à diagnostiquer cette hallucination ?
+          Veux-tu que je t'aide à diagnostiquer cette hallucination&nbsp;?
         </div>
       )}
 
@@ -335,7 +334,7 @@ export function FloatingChatBubble() {
         <>
           <button
             onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-            className={`fixed bottom-5 z-[110] h-[3.15rem] w-[3.15rem] rounded-full flex items-center justify-center transition-all duration-300 bg-[#7c3aed] hover:scale-105 focus:outline-none overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
+            className={`fixed bottom-5 z-[110] h-[3.15rem] w-[3.15rem] rounded-full flex items-center justify-center transition-all duration-300 border border-primary/60 bg-background/80 backdrop-blur hover:bg-background hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary overflow-hidden ${showBounce ? 'animate-felix-bounce' : ''}`}
             style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}
             aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
           >
