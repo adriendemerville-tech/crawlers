@@ -79,35 +79,39 @@ async function callWithFallback(fn: string, url: string, params?: Record<string,
 
 function extractScore(data: any, fn: string): number | null {
   if (!data) return null;
-  // Each function returns different score formats
-  switch (fn) {
-    case 'check-pagespeed':
-      return data.scores?.performance ?? data.score ?? null;
-    case 'check-geo':
-      return data.geoScore ?? data.score ?? null;
-    case 'check-llm':
-      return data.visibilityScore ?? data.score ?? null;
-    case 'check-crawlers':
-      return data.accessibilityScore ?? data.score ?? null;
-    case 'check-meta-tags':
-      return data.score ?? null;
-    case 'check-structured-data':
-      return data.score ?? null;
-    case 'check-robots-indexation':
-      return data.score ?? null;
-    case 'check-images':
-      return data.score ?? null;
-    case 'check-backlinks':
-      return data.score ?? null;
-    case 'check-content-quality':
-      return data.score ?? null;
-    case 'check-eeat':
-      return data.score ?? null;
-    case 'expert-audit':
-      return data.score ?? data.totalScore ?? null;
-    default:
-      return data.score ?? null;
+  // Each function returns different score formats — try function-specific first,
+  // then fall back to a broad sweep of common shapes so new edge function
+  // payloads don't silently produce null.
+  const direct = (() => {
+    switch (fn) {
+      case 'check-pagespeed':
+        return data.scores?.performance ?? data.score ?? null;
+      case 'check-geo':
+        return data.geoScore ?? data.score ?? null;
+      case 'check-llm':
+        return data.visibilityScore ?? data.score ?? null;
+      case 'check-crawlers':
+        return data.accessibilityScore ?? data.score ?? null;
+      case 'expert-audit':
+        return data.score ?? data.totalScore ?? data.globalScore ?? null;
+      default:
+        return data.score ?? null;
+    }
+  })();
+  if (typeof direct === 'number') return direct;
+
+  // Generic fallbacks for new/unhandled response shapes
+  const candidates = [
+    data.score, data.totalScore, data.globalScore, data.overallScore,
+    data.result?.score, data.result?.totalScore,
+    data.summary?.score, data.metrics?.score,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'number' && !Number.isNaN(c)) return c;
   }
+  // Last resort: 0–100 percentage-like field
+  if (typeof data.percentage === 'number') return data.percentage;
+  return null;
 }
 
 export async function executeAuditPlan(
@@ -230,28 +234,35 @@ export async function executeAuditPlan(
         const route = customRoutes[pi];
         const hydratedPrompt = hydratePrompt(route.customPrompt!, url);
         const promptIndex = pi + 1;
+        // Suffix cache key with index to guarantee uniqueness even if
+        // criterionId is duplicated across rows of the source matrix.
+        const cacheKey = `${fn}:custom:${route.criterionId}:${pi}`;
 
         if (route.mode === 'benchmark' && route.targetProviders?.length) {
-          const perProviderResults: Record<string, any> = {};
-          for (const prov of route.targetProviders) {
-            try {
-              const customData = await tracked(
-                {
-                  id: `llm-bench:${route.criterionId}:${prov}`,
-                  fn, criterionId: route.criterionId, criterionTitle: route.criterionTitle,
-                  provider: prov, promptIndex, promptTotal,
-                  label: route.criterionTitle,
-                  detail: `${prov} · prompt ${promptIndex}/${promptTotal}`,
-                },
-                () => callFunction('check-llm', url, { customPrompt: hydratedPrompt, targetProvider: prov }),
-              );
-              perProviderResults[prov] = customData;
-            } catch {
-              perProviderResults[prov] = null;
-            }
-            await delay(300);
-          }
-          fnResultCache.set(`${fn}:custom:${route.criterionId}`, {
+          // Run all providers in parallel — each LLM call is independent and
+          // the rate-limit budget is per-provider, so sequential delay was
+          // adding minutes for no throughput gain.
+          const providerEntries = await Promise.all(
+            route.targetProviders.map(async (prov) => {
+              try {
+                const customData = await tracked(
+                  {
+                    id: `llm-bench:${route.criterionId}:${prov}`,
+                    fn, criterionId: route.criterionId, criterionTitle: route.criterionTitle,
+                    provider: prov, promptIndex, promptTotal,
+                    label: route.criterionTitle,
+                    detail: `${prov} · prompt ${promptIndex}/${promptTotal}`,
+                  },
+                  () => callFunction('check-llm', url, { customPrompt: hydratedPrompt, targetProvider: prov }),
+                );
+                return [prov, customData] as const;
+              } catch {
+                return [prov, null] as const;
+              }
+            }),
+          );
+          const perProviderResults: Record<string, any> = Object.fromEntries(providerEntries);
+          fnResultCache.set(cacheKey, {
             mode: 'benchmark',
             providers: perProviderResults,
           });
@@ -270,9 +281,9 @@ export async function executeAuditPlan(
                 targetProvider: route.targetProvider,
               }),
             );
-            fnResultCache.set(`${fn}:custom:${route.criterionId}`, customData);
+            fnResultCache.set(cacheKey, customData);
           } catch {
-            fnResultCache.set(`${fn}:custom:${route.criterionId}`, null);
+            fnResultCache.set(cacheKey, null);
           }
           await delay(300);
         }
@@ -280,6 +291,15 @@ export async function executeAuditPlan(
     }
 
     await delay(250); // Stagger between LLM functions
+  }
+
+  // Pre-compute the per-route custom-cache index so we read the same key
+  // we wrote during execution (guards against duplicate criterionId rows).
+  const customIndexByRoute = new Map<AuditRoute, number>();
+  for (const [fn, routes] of fnGroups) {
+    if (fn !== 'check-llm') continue;
+    const customRoutes = routes.filter(r => r.customPrompt);
+    customRoutes.forEach((r, i) => customIndexByRoute.set(r, i));
   }
 
   // Map results to criteria
@@ -296,7 +316,8 @@ export async function executeAuditPlan(
       parsedResponse = null;
     } else if (route.matchType === 'partial') {
       // Custom prompt result — may be benchmark (multi-provider) or single
-      const customKey = `${route.fn}:custom:${route.criterionId}`;
+      const pi = customIndexByRoute.get(route) ?? 0;
+      const customKey = `${route.fn}:custom:${route.criterionId}:${pi}`;
       const customData = fnResultCache.get(customKey);
 
       if (customData?.mode === 'benchmark' && customData.providers) {

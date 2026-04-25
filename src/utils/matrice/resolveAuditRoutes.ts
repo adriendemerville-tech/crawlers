@@ -128,7 +128,19 @@ function detectCustomPrompt(row: Record<string, any>): string | undefined {
 
 function detectTargetProviders(row: Record<string, any>): string[] {
   const providerKeys = ['llm', 'moteur', 'engine', 'provider', 'cible', 'target'];
-  const KNOWN_PROVIDERS = ['chatgpt', 'gpt', 'gemini', 'claude', 'perplexity', 'mistral', 'copilot'];
+  // Order matters: longer/more-specific aliases must be tested first
+  // (e.g. "chatgpt" before "gpt" to avoid "chatgpt-4o" being detected as "gpt").
+  const PROVIDER_ALIASES: Array<{ canonical: string; aliases: RegExp[] }> = [
+    { canonical: 'chatgpt', aliases: [/\bchatgpt\b/, /\bchat[-\s]?gpt\b/] },
+    { canonical: 'perplexity', aliases: [/\bperplexity\b/, /\bpplx\b/] },
+    { canonical: 'gemini', aliases: [/\bgemini\b/, /\bbard\b/] },
+    { canonical: 'claude', aliases: [/\bclaude\b/, /\banthropic\b/] },
+    { canonical: 'mistral', aliases: [/\bmistral\b/, /\ble[-\s]?chat\b/] },
+    { canonical: 'copilot', aliases: [/\bcopilot\b/, /\bbing[-\s]?chat\b/] },
+    // Generic GPT (OpenAI API) — only after chatgpt has been ruled out
+    { canonical: 'gpt', aliases: [/\bgpt[-\s]?[345]/, /\bopenai\b/] },
+  ];
+  const ALL_CANONICAL = PROVIDER_ALIASES.map(p => p.canonical);
   const found = new Set<string>();
   for (const key of providerKeys) {
     for (const col of Object.keys(row)) {
@@ -136,14 +148,18 @@ function detectTargetProviders(row: Record<string, any>): string[] {
         const raw = String(row[col]).trim().toLowerCase();
         // Support "all", "tous", "*" → benchmark mode against all providers
         if (/^(all|tous|tout|\*)$/.test(raw)) {
-          KNOWN_PROVIDERS.forEach(p => found.add(p));
+          ALL_CANONICAL.forEach(p => found.add(p));
           continue;
         }
         // Support comma / semicolon / pipe separated lists
         const parts = raw.split(/[,;|]+/).map(s => s.trim()).filter(Boolean);
         for (const part of parts) {
-          const match = KNOWN_PROVIDERS.find(p => part.includes(p));
-          if (match) found.add(match);
+          for (const { canonical, aliases } of PROVIDER_ALIASES) {
+            if (aliases.some(re => re.test(part))) {
+              found.add(canonical);
+              break; // first match wins per part — preserves order priority
+            }
+          }
         }
       }
     }
@@ -198,10 +214,14 @@ export function resolveAuditRoutes(criteria: ParsedCriterion[]): AuditPlan {
       }
     }
 
-    const fn = bestRule?.fn || 'check-content-quality'; // fallback to LLM analysis
+    // Fallback: if user provided a custom prompt → route to check-llm (it's their explicit ask).
+    // Otherwise → expert-audit (broad technical audit) rather than burning LLM tokens on
+    // unmatched criteria via check-content-quality.
+    const fallbackFn = customPrompt ? 'check-llm' : 'expert-audit';
+    const fn = bestRule?.fn || fallbackFn;
     const confidence = bestRule ? Math.min(1, bestRule.confidence * (bestScore / 2)) : 0.4;
     const matchType = determineMatchType(fn, customPrompt);
-    const cost = bestRule?.cost ?? 0.002;
+    const cost = bestRule?.cost ?? (customPrompt ? 0.016 : 0);
 
     // Benchmark mode = LLM function with multiple targeted providers (or "all")
     const isLLMFn = ['check-llm', 'check-eeat', 'check-content-quality'].includes(fn);
