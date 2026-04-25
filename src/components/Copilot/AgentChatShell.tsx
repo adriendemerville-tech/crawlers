@@ -23,6 +23,12 @@ interface AgentChatShellProps {
   getContext?: () => Record<string, unknown> | undefined;
   /** Fonction d'extraction d'éventuelle directive `navigate_to` côté UI. */
   autoNavigate?: boolean;
+  /** Hook réponse assistant (sauvegarde recos, analytics…). */
+  onAssistantReply?: (reply: string, ctx: { sessionId: string | null; userMessage: string }) => void;
+  /** Messages d'amorçage (onboarding, greeting). Affichés mais non envoyés. */
+  seedMessages?: import('@/hooks/useCopilot').CopilotMessage[];
+  /** Boutons additionnels affichés à droite du composer (ex: bug report). */
+  composerExtras?: React.ReactNode;
   className?: string;
 }
 
@@ -33,6 +39,9 @@ export function AgentChatShell({
   starterPrompts = [],
   getContext,
   autoNavigate = true,
+  onAssistantReply,
+  seedMessages,
+  composerExtras,
   className,
 }: AgentChatShellProps) {
   const navigate = useNavigate();
@@ -53,6 +62,8 @@ export function AgentChatShell({
     persona,
     getContext,
     onActions: handleActions,
+    onAssistantReply,
+    seedMessages,
   });
 
   // Auto-scroll en bas à chaque nouveau message
