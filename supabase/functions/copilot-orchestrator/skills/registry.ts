@@ -48,15 +48,16 @@ const read_audit: SkillDefinition = {
   handler: async (input, ctx) => {
     const auditId = String(input.audit_id ?? '');
     if (!auditId) return { ok: false, error: 'audit_id requis' };
+    // Table réelle : `audits` (cf. save-audit/index.ts).
     const { data, error } = await ctx.supabase
-      .from('expert_audits')
-      .select('id, url, score, created_at, raw_payload')
+      .from('audits')
+      .select('id, url, domain, sector, payment_status, fixes_count, dynamic_price, audit_data, created_at')
       .eq('id', auditId)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
     if (!data) return { ok: false, error: 'Audit introuvable' };
-    // Tronquer le raw_payload pour ne pas exploser la fenêtre LLM
-    const truncated = { ...data, raw_payload: summarizePayload(data.raw_payload) };
+    // Tronquer audit_data pour ne pas exploser la fenêtre LLM.
+    const truncated = { ...data, audit_data: summarizePayload(data.audit_data) };
     return { ok: true, data: truncated };
   },
 };
@@ -74,14 +75,25 @@ const read_site_kpis: SkillDefinition = {
   handler: async (input, ctx) => {
     const siteId = String(input.tracked_site_id ?? '');
     if (!siteId) return { ok: false, error: 'tracked_site_id requis' };
-    const { data, error } = await ctx.supabase
+    // Colonnes réelles de tracked_sites (pas de seo_score/geo_score directement).
+    const { data: site, error } = await ctx.supabase
       .from('tracked_sites')
-      .select('id, domain, seo_score, geo_score, last_audit_at, business_profile')
+      .select('id, domain, site_name, brand_name, last_audit_at, eeat_score, business_type, market_sector, primary_language, target_countries')
       .eq('id', siteId)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
-    if (!data) return { ok: false, error: 'Site introuvable ou non accessible' };
-    return { ok: true, data };
+    if (!site) return { ok: false, error: 'Site introuvable ou non accessible' };
+
+    // Récupérer le dernier audit lié au domaine pour exposer un score.
+    const { data: lastAudit } = await ctx.supabase
+      .from('audits')
+      .select('id, url, fixes_count, dynamic_price, payment_status, created_at')
+      .eq('domain', site.domain)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return { ok: true, data: { ...site, last_audit: lastAudit ?? null } };
   },
 };
 
@@ -97,19 +109,28 @@ const read_cocoon_graph: SkillDefinition = {
   },
   handler: async (input, ctx) => {
     const siteId = String(input.tracked_site_id ?? '');
+    if (!siteId) return { ok: false, error: 'tracked_site_id requis' };
+    // Source réelle : cocoon_diagnostic_results (dernier diagnostic).
     const { data, error } = await ctx.supabase
-      .from('cocoon_graph_summary')
-      .select('total_pages, orphan_pages, max_depth, cannibalizations, last_calculated_at')
+      .from('cocoon_diagnostic_results')
+      .select('id, diagnostic_type, scores, findings, source_function, created_at')
       .eq('tracked_site_id', siteId)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
-    return { ok: true, data: data ?? { message: 'Pas encore de cocoon calculé' } };
+    if (!data) return { ok: true, data: { message: 'Pas encore de cocoon calculé' } };
+    // Tronque findings si trop volumineux.
+    const findings = data.findings && typeof data.findings === 'object'
+      ? Object.fromEntries(Object.entries(data.findings as Record<string, unknown>).slice(0, 8))
+      : data.findings;
+    return { ok: true, data: { ...data, findings } };
   },
 };
 
 const read_documentation: SkillDefinition = {
   name: 'read_documentation',
-  description: "Recherche dans la base de connaissance (lexique, guides, FAQ) par mot-clé.",
+  description: "Recherche dans la base des recommandations d'audit (titres + descriptions) par mot-clé. Retourne les recommandations les plus pertinentes pour l'utilisateur courant.",
   parameters: {
     type: 'object',
     properties: {
@@ -120,15 +141,24 @@ const read_documentation: SkillDefinition = {
   },
   handler: async (input, ctx) => {
     const query = String(input.query ?? '').trim();
-    const limit = Math.min(Number(input.limit ?? 5), 10);
+    const limit = Math.min(Math.max(Number(input.limit ?? 5), 1), 10);
     if (!query) return { ok: false, error: 'query requis' };
-    const { data, error } = await ctx.service
-      .from('lexique_terms')
-      .select('term, definition, category')
-      .or(`term.ilike.%${query}%,definition.ilike.%${query}%`)
+
+    // Sanitize : PostgREST `.or()` interprète virgules / parenthèses / guillemets.
+    // On retire tout caractère non alphanumérique/espace/tiret puis on tronque.
+    const safe = query.replace(/[^\p{L}\p{N}\s\-]/gu, ' ').trim().slice(0, 80);
+    if (!safe) return { ok: false, error: 'query invalide après nettoyage' };
+    const pattern = `%${safe}%`;
+
+    // Source : audit_recommendations_registry — filtré par RLS sur l'utilisateur courant.
+    const { data, error } = await ctx.supabase
+      .from('audit_recommendations_registry')
+      .select('id, title, description, category, priority, audit_type, fix_type, is_resolved, created_at')
+      .or(`title.ilike.${pattern},description.ilike.${pattern}`)
+      .order('created_at', { ascending: false })
       .limit(limit);
     if (error) return { ok: false, error: error.message };
-    return { ok: true, data: { results: data ?? [], count: data?.length ?? 0 } };
+    return { ok: true, data: { results: data ?? [], count: data?.length ?? 0, query: safe } };
   },
 };
 
