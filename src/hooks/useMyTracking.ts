@@ -710,6 +710,12 @@ export function useMyTracking() {
     const existing = sites.find(s => s.domain === domain);
     if (existing) {
       toast.error(t.alreadyTracked);
+      // Le site existe déjà : on ferme la modal et on bascule dessus.
+      setShowAddModal(false);
+      setNewUrl('');
+      setValidationResult({ valid: false, checked: false });
+      setSelectedSite(existing.id);
+      setShowApiPanel(false);
       return;
     }
     setAdding(true);
@@ -720,16 +726,39 @@ export function useMyTracking() {
         .select()
         .single();
       if (error) throw error;
+
+      // 1) Ferme la modal immédiatement (UX feedback instantané)
       setShowAddModal(false);
       setNewUrl('');
       setValidationResult({ valid: false, checked: false });
-      await fetchSites();
-      if (isAgencyPro && site) {
+
+      // 2) Ajout optimiste : insère le site en tête de la liste locale
+      //    pour qu'il apparaisse comme tracké sans attendre fetchSites().
+      if (site) {
+        setSites(prev => {
+          // évite tout doublon si un fetch concurrent l'a déjà inséré
+          if (prev.some(s => s.id === (site as TrackedSite).id)) return prev;
+          return [site as TrackedSite, ...prev];
+        });
+        // 3) Sélectionne le nouveau site et sort du panneau API si ouvert
         setSelectedSite(site.id);
+        setShowApiPanel(false);
+        toast.success(
+          language === 'fr' ? `Site ajouté : ${domain}` :
+          language === 'es' ? `Sitio añadido: ${domain}` :
+          `Site added: ${domain}`,
+        );
+      }
+
+      // 4) Refetch en arrière-plan pour garantir la cohérence (created_at, etc.)
+      void fetchSites();
+
+      if (isAgencyPro && site) {
         toast.info(language === 'fr' ? 'Analyse des KPIs en cours…' : language === 'es' ? 'Analizando KPIs…' : 'Analyzing KPIs…');
         runStreamingAudit(site as TrackedSite);
       }
-    } catch {
+    } catch (e) {
+      console.error('[handleAddSite] insert failed:', e);
       toast.error(t.invalidUrl);
     } finally {
       setAdding(false);
