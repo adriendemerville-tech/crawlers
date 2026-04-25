@@ -543,7 +543,10 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
 | \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation, monitoring diagnostics + stratège) |
 | \`agent-seo\` | ✅ | Agent SEO v2 (scoring 7 axes, persistance recommandations) |
-| \`sav-agent\` | ✅ | Assistant Félix (Gemini, alertes proactives, scoring précision, mémoire de site) |
+| \`copilot-orchestrator\` | ✅ | **Backend unifié Félix + Stratège Cocoon** (1 backend N personas, agent loop tool calling, policies auto/approval/forbidden, préfixe \`/creator :\` pour mode créateur admin) |
+| \`copilot-purge-actions\` | ✅ | Cron purge \`copilot_actions\` >90j (CRON_SECRET requis) |
+| \`copilot-admin-stats\` | ✅ | KPIs admin du copilot (sessions, coûts LLM, top skills, breakdown personas) |
+| \`sav-agent\` | ✅ | _(legacy)_ Ancien backend Félix — remplacé par \`copilot-orchestrator\` depuis Sprint 6 |
 | \`supervisor-actions\` | ✅ | Actions superviseur (orchestration agents) |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
 | \`update-config\` | ✅ | MAJ configuration système |
