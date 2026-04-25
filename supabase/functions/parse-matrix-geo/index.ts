@@ -728,6 +728,6 @@ Deno.serve(handleRequest(async (req) => {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } finally {
-    releaseConcurrency('parse-matrix-geo')
+    if (!streamingOwnsConcurrency) releaseConcurrency('parse-matrix-geo')
   }
 }))
