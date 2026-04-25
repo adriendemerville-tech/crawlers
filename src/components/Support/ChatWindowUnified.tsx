@@ -455,7 +455,7 @@ export function ChatWindowUnified({
               subtitle="Copilote SAV unifié — questions, audits, navigation"
               starterPrompts={STARTERS}
               getContext={getContext}
-              seedMessages={seedWithExtras}
+              seedMessages={seedRef.current}
               onAssistantReply={onAssistantReply}
               composerExtras={
                 <button
