@@ -1081,7 +1081,21 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
         </DialogContent>
       </Dialog>
 
-      {/* Architect Modal */}
+      {/* Smart CMS Connect — auto-detection wizard */}
+      {(() => {
+        const smartSite = h.sites.find(s => s.id === smartCmsSiteId);
+        if (!smartSite) return null;
+        return (
+          <SmartCmsConnectModal
+            open={smartCmsOpen}
+            onOpenChange={setSmartCmsOpen}
+            siteId={smartSite.id}
+            siteDomain={smartSite.domain}
+            siteApiKey={smartSite.api_key || ''}
+          />
+        );
+      })()}
+
       {(() => {
         const archSite = h.sites.find(s => s.id === h.architectSiteId);
         if (!archSite) return null;
