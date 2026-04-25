@@ -10,7 +10,7 @@
  * filtré sur _user_message / _assistant_reply). La reprise se fait en passant
  * un sessionId explicite.
  */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type CopilotPersona = 'felix' | 'strategist';
