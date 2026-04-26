@@ -16,7 +16,9 @@ try {
     // ─── POST: Generate magic link (called from SaaS frontend) ───
     if (req.method === 'POST') {
       const origin = req.headers.get('origin') || '';
-      if (!origin.includes('crawlers.fr') && !origin.includes('crawlers.fr')) {
+      const ALLOWED_ORIGINS = ['crawlers.fr', 'lovable.app', 'lovableproject.com', 'localhost'];
+      if (!ALLOWED_ORIGINS.some((o) => origin.includes(o))) {
+        console.warn('[wpsync] forbidden origin:', origin);
         return jsonError('Forbidden origin', 403);
       }
 
