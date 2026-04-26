@@ -263,6 +263,15 @@ export function CocoonAIChatUnified({
               )}
               <button
                 type="button"
+                onClick={cycleFontScale}
+                className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
+                aria-label="Taille du texte"
+                title={`Taille du texte (${Math.round(fontScale * 100)} %)`}
+              >
+                <Type className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowHistory((v) => !v)}
                 className={cn(
                   'rounded-md border p-1 transition',
