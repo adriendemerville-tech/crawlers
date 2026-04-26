@@ -135,6 +135,18 @@ export function ChatWindowUnified({
   const [showHistory, setShowHistory] = useState(false);
   const [pickedSessionId, setPickedSessionId] = useState<string | null>(null);
   const [shellKey, setShellKey] = useState(0);
+  // Zoom texte (persistant) — cycle 0.875 / 1 / 1.15 / 1.3 rem
+  const FONT_STEPS = [0.875, 1, 1.15, 1.3];
+  const [fontScale, setFontScale] = useState<number>(() => {
+    const v = parseFloat(localStorage.getItem('felix_font_scale') || '1');
+    return FONT_STEPS.includes(v) ? v : 1;
+  });
+  const cycleFontScale = () => {
+    const idx = FONT_STEPS.indexOf(fontScale);
+    const next = FONT_STEPS[(idx + 1) % FONT_STEPS.length];
+    setFontScale(next);
+    localStorage.setItem('felix_font_scale', String(next));
+  };
 
   // Quiz / enterprise state
   const [quizLoading, setQuizLoading] = useState(false);
