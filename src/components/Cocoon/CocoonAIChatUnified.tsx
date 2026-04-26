@@ -83,6 +83,23 @@ export function CocoonAIChatUnified({
   const [showHistory, setShowHistory] = useState(false);
   const [pickedSessionId, setPickedSessionId] = useState<string | null>(null);
   const [shellKey, setShellKey] = useState(0);
+  // Zoom texte (parité Félix)
+  const FONT_STEPS = [0.875, 1, 1.15, 1.3];
+  const [fontScale, setFontScale] = useState<number>(() => {
+    const v = parseFloat(localStorage.getItem('strategist_font_scale') || '1');
+    return FONT_STEPS.includes(v) ? v : 1;
+  });
+  const cycleFontScale = () => {
+    const idx = FONT_STEPS.indexOf(fontScale);
+    const next = FONT_STEPS[(idx + 1) % FONT_STEPS.length];
+    setFontScale(next);
+    localStorage.setItem('strategist_font_scale', String(next));
+  };
+  // Messages d'info additionnels (pièces jointes, rapports sélectionnés)
+  const [extraNotes, setExtraNotes] = useState<{ id: string; content: string }[]>([]);
+  const pushNote = (content: string) => {
+    setExtraNotes((prev) => [...prev, { id: `${Date.now()}-${Math.random()}`, content }]);
+  };
 
   // Q4.1 — greeting Stratège (stable au mount, parité Félix).
   const seedRef = useRef<CopilotMessage[] | null>(null);
