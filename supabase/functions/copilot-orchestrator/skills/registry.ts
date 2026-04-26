@@ -1656,6 +1656,11 @@ const SKILLS: Record<string, SkillDefinition> = {
   escalate_to_phone,
   // Skills admin (creator_mode only)
   admin_lookup_user,
+  admin_track_site,
+  admin_untrack_site,
+  admin_list_user_sites,
+  admin_reset_api_key,
+  admin_grant_pro,
 };
 
 export function getSkill(name: string): SkillDefinition | null {
