@@ -936,6 +936,262 @@ const propose_identity_suggestion: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// LIVE SEARCH — recherche temps réel SERP & Google Places
+// Sprint Q5 Bloc 2 — porté depuis sav-agent legacy.
+// Quotas (généreux):
+//   • free            : 3 recherches / session
+//   • agency_premium  : 5 recherches / session
+//   • agency_pro      : 20 recherches / jour (pas de plafond session)
+// Compteurs persistés dans copilot_sessions.context.live_search_count (session)
+// et comptés depuis analytics_events (event_type='copilot_live_search') pour le quota jour.
+// ═══════════════════════════════════════════════════════════
+
+interface LiveSearchQuota {
+  allowed: boolean;
+  used: number;
+  limit: number;
+  scope: 'session' | 'daily';
+  reason?: string;
+}
+
+async function checkLiveSearchQuota(ctx: SkillContext): Promise<LiveSearchQuota> {
+  // Plan utilisateur
+  const { data: prof } = await ctx.service
+    .from('profiles')
+    .select('plan_type, subscription_status')
+    .eq('user_id', ctx.userId)
+    .maybeSingle();
+  const plan = (prof?.plan_type as string) ?? 'free';
+  const isProActive = plan === 'agency_pro' &&
+    (prof?.subscription_status === 'active' || prof?.subscription_status === 'canceling');
+
+  if (isProActive) {
+    // Quota jour: 20
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await ctx.service
+      .from('analytics_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', ctx.userId)
+      .eq('event_type', 'copilot_live_search')
+      .gte('created_at', since);
+    const used = count ?? 0;
+    return {
+      allowed: used < 20,
+      used,
+      limit: 20,
+      scope: 'daily',
+      reason: used >= 20 ? 'Quota Pro Agency atteint (20 recherches / 24h).' : undefined,
+    };
+  }
+
+  // Free / agency_premium → quota par session
+  const limit = plan === 'agency_premium' ? 5 : 3;
+  const { data: sess } = await ctx.service
+    .from('copilot_sessions')
+    .select('context')
+    .eq('id', ctx.sessionId)
+    .maybeSingle();
+  const sessionCtx = (sess?.context as Record<string, unknown> | null) ?? {};
+  const used = Number(sessionCtx.live_search_count ?? 0);
+  return {
+    allowed: used < limit,
+    used,
+    limit,
+    scope: 'session',
+    reason: used >= limit
+      ? `Quota ${plan} atteint (${limit} recherches / conversation). Passez en Pro Agency pour 20/jour, ou ouvrez une nouvelle conversation.`
+      : undefined,
+  };
+}
+
+async function bumpSessionCounter(ctx: SkillContext): Promise<void> {
+  const { data: sess } = await ctx.service
+    .from('copilot_sessions')
+    .select('context')
+    .eq('id', ctx.sessionId)
+    .maybeSingle();
+  const sessionCtx = (sess?.context as Record<string, unknown> | null) ?? {};
+  const next = { ...sessionCtx, live_search_count: Number(sessionCtx.live_search_count ?? 0) + 1 };
+  await ctx.service
+    .from('copilot_sessions')
+    .update({ context: next })
+    .eq('id', ctx.sessionId);
+}
+
+async function runDataForSEO(query: string, location: string, language: string): Promise<unknown[] | null> {
+  const login = Deno.env.get('DATAFORSEO_LOGIN');
+  const pass = Deno.env.get('DATAFORSEO_PASSWORD');
+  if (!login || !pass) return null;
+  try {
+    const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Basic ' + btoa(`${login}:${pass}`),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([{ keyword: query, language_name: language, location_name: location, depth: 10 }]),
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const items = data?.tasks?.[0]?.result?.[0]?.items ?? [];
+    return items
+      .filter((i: { type?: string }) => i.type === 'organic')
+      .slice(0, 10)
+      .map((i: { rank_absolute?: number; title?: string; url?: string; description?: string }) => ({
+        position: i.rank_absolute,
+        title: i.title,
+        url: i.url,
+        description: i.description?.slice(0, 160),
+      }));
+  } catch (e) {
+    console.error('[copilot live_search] DataForSEO error:', (e as Error).message);
+    return null;
+  }
+}
+
+async function runSerpAPI(query: string, hl: string, gl: string): Promise<unknown[] | null> {
+  const key = Deno.env.get('SERPAPI_KEY');
+  if (!key) return null;
+  try {
+    const url = `https://serpapi.com/search.json?api_key=${key}&engine=google&q=${encodeURIComponent(query)}&hl=${hl}&gl=${gl}&num=10`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return (data.organic_results ?? []).slice(0, 10).map((r: { position?: number; title?: string; link?: string; snippet?: string }) => ({
+      position: r.position,
+      title: r.title,
+      url: r.link,
+      description: r.snippet?.slice(0, 160),
+    }));
+  } catch (e) {
+    console.error('[copilot live_search] SerpAPI error:', (e as Error).message);
+    return null;
+  }
+}
+
+async function runGooglePlaces(query: string, language: string): Promise<unknown[] | null> {
+  const key = Deno.env.get('GOOGLE_PLACES_API_KEY');
+  if (!key) return null;
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&language=${language}&key=${key}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return (data.results ?? []).slice(0, 5).map((r: {
+      name?: string; formatted_address?: string; rating?: number; user_ratings_total?: number;
+      types?: string[]; opening_hours?: { open_now?: boolean };
+    }) => ({
+      name: r.name,
+      address: r.formatted_address,
+      rating: r.rating,
+      reviews_count: r.user_ratings_total,
+      types: r.types?.slice(0, 3),
+      open_now: r.opening_hours?.open_now,
+    }));
+  } catch (e) {
+    console.error('[copilot live_search] Google Places error:', (e as Error).message);
+    return null;
+  }
+}
+
+const live_search: SkillDefinition = {
+  name: 'live_search',
+  description:
+    "Recherche en temps réel sur Google (SERP organique via DataForSEO + fallback SerpAPI) ou Google Places (avis, fiches locales, horaires). À utiliser quand l'utilisateur demande explicitement des infos fraîches : positions Google, classement, fiche établissement, avis, etc. Quota: free=3/conv, agency_premium=5/conv, agency_pro=20/jour.",
+  parameters: {
+    type: 'object',
+    properties: {
+      query: { type: 'string', description: 'Requête à exécuter (mots-clés ou nom de lieu).' },
+      mode: {
+        type: 'string',
+        enum: ['serp', 'places', 'auto'],
+        default: 'auto',
+        description: "'serp' = positions Google organiques, 'places' = fiche/avis Google, 'auto' = détection sur la requête.",
+      },
+      language: { type: 'string', default: 'French', description: 'Langue (DataForSEO format: French, English, ...).' },
+      country_code: { type: 'string', default: 'fr', description: 'Code pays ISO 2 lettres (fr, us, gb, ...).' },
+    },
+    required: ['query'],
+  },
+  handler: async (input, ctx) => {
+    const query = String(input.query ?? '').trim().slice(0, 200);
+    if (!query) return { ok: false, error: 'query requis' };
+
+    const reqMode = String(input.mode ?? 'auto');
+    const language = String(input.language ?? 'French');
+    const cc = String(input.country_code ?? 'fr').toLowerCase().slice(0, 2);
+    const location = cc === 'fr' ? 'France' : cc === 'us' ? 'United States' : cc === 'gb' ? 'United Kingdom' : 'France';
+    const hl = language.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+
+    // Détection auto du mode
+    let mode = reqMode;
+    if (mode === 'auto') {
+      const lower = query.toLowerCase();
+      const placesHints = /(avis|fiche|google maps|adresse|horaires|ouvert|restaurant|magasin|boutique|près de|proche)/;
+      mode = placesHints.test(lower) ? 'places' : 'serp';
+    }
+
+    // Quota
+    const quota = await checkLiveSearchQuota(ctx);
+    if (!quota.allowed) {
+      return {
+        ok: false,
+        error: quota.reason ?? 'Quota recherche en direct atteint.',
+        data: { quota_used: quota.used, quota_limit: quota.limit, quota_scope: quota.scope },
+      };
+    }
+
+    let results: unknown[] | null = null;
+    let source = '';
+    if (mode === 'places') {
+      results = await runGooglePlaces(query, hl);
+      source = 'Google Places';
+    } else {
+      results = await runDataForSEO(query, location, language);
+      source = 'Google SERP (DataForSEO)';
+      if (!results || results.length === 0) {
+        results = await runSerpAPI(query, hl, cc);
+        source = 'Google SERP (SerpAPI fallback)';
+      }
+    }
+
+    if (!results || results.length === 0) {
+      return { ok: false, error: `Aucun résultat ${source} pour "${query}".` };
+    }
+
+    // Bump compteur session (free / premium uniquement) + log analytics (toujours)
+    if (quota.scope === 'session') {
+      await bumpSessionCounter(ctx);
+    }
+    try {
+      await ctx.service.from('analytics_events').insert({
+        user_id: ctx.userId,
+        event_type: 'copilot_live_search',
+        event_data: {
+          source, query, mode, results_count: results.length,
+          persona: ctx.persona, session_id: ctx.sessionId,
+          quota_scope: quota.scope, quota_used_after: quota.used + 1, quota_limit: quota.limit,
+        },
+      });
+    } catch (e) {
+      console.warn('[copilot live_search] analytics insert failed:', (e as Error).message);
+    }
+
+    return {
+      ok: true,
+      data: {
+        source,
+        mode,
+        query,
+        results,
+        count: results.length,
+        quota: { used: quota.used + 1, limit: quota.limit, scope: quota.scope },
+      },
+    };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // REGISTRY
 // ═══════════════════════════════════════════════════════════
 
@@ -954,6 +1210,8 @@ const SKILLS: Record<string, SkillDefinition> = {
   write_site_memory,
   list_identity_suggestions,
   propose_identity_suggestion,
+  // Live Search (Sprint Q5 Bloc 2)
+  live_search,
   // Skills admin (creator_mode only)
   admin_lookup_user,
 };
