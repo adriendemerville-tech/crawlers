@@ -168,7 +168,7 @@ export function AgentChatShell({
             >
               <div
                 className={cn(
-                  'max-w-[85%] rounded-lg border px-3 py-2 text-sm',
+                  'max-w-[85%] rounded-lg border px-3 py-2 leading-relaxed',
                   m.role === 'user'
                     ? 'border-primary text-foreground'
                     : 'border-accent/60 text-foreground',
