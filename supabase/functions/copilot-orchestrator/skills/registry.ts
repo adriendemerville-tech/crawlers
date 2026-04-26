@@ -663,6 +663,279 @@ const admin_lookup_user: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// MÉMOIRE PERSISTANTE — site_memory
+// Permet à Félix de capitaliser sur les conversations en stockant
+// des insights par site (preference, insight, objective, context, identity).
+// ═══════════════════════════════════════════════════════════
+
+const VALID_MEMORY_CATEGORIES = ['preference', 'insight', 'objective', 'context', 'identity', 'general'] as const;
+
+const read_site_memory: SkillDefinition = {
+  name: 'read_site_memory',
+  description:
+    "Lit la mémoire persistante d'un site (préférences user, insights précédents, objectifs déclarés). À appeler en début de conversation pour rappeler le contexte du site. Accepte un UUID OU un domaine.",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string', description: "UUID du site OU domaine (ex: 'dictadevi.io')" },
+      category: {
+        type: 'string',
+        enum: [...VALID_MEMORY_CATEGORIES],
+        description: 'Filtre optionnel par catégorie (preference, insight, objective, context, identity, general).',
+      },
+      limit: { type: 'number', default: 20 },
+    },
+    required: ['tracked_site_id'],
+  },
+  handler: async (input, ctx) => {
+    const raw = String(input.tracked_site_id ?? '');
+    if (!raw) return { ok: false, error: 'tracked_site_id requis (UUID ou domaine)' };
+    const resolved = await resolveTrackedSite(ctx, raw);
+    if (!resolved) return { ok: false, error: `Aucun site suivi ne correspond à "${raw}".` };
+
+    const category = input.category ? String(input.category) : null;
+    const limit = Math.min(Math.max(Number(input.limit ?? 20), 1), 50);
+
+    let q = ctx.supabase
+      .from('site_memory')
+      .select('memory_key, memory_value, category, source, confidence, created_at, updated_at')
+      .eq('tracked_site_id', resolved.id)
+      .order('updated_at', { ascending: false })
+      .limit(limit);
+    if (category) q = q.eq('category', category);
+
+    const { data, error } = await q;
+    if (error) return { ok: false, error: error.message };
+    return {
+      ok: true,
+      data: {
+        site: resolved,
+        memories: data ?? [],
+        count: data?.length ?? 0,
+      },
+    };
+  },
+};
+
+const write_site_memory: SkillDefinition = {
+  name: 'write_site_memory',
+  description:
+    "Enregistre un insight structuré sur un site dans la mémoire persistante. À utiliser quand l'utilisateur partage une préférence (langue, ton), un objectif (priorité business), un insight (problème récurrent), un contexte (saisonnalité, événement), ou une donnée d'identité. Upsert sur (tracked_site_id, memory_key).",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string', description: 'UUID du site OU domaine' },
+      memory_key: {
+        type: 'string',
+        description: "Clé courte snake_case (ex: 'preferred_tone', 'q4_objective', 'recurring_issue').",
+      },
+      memory_value: { type: 'string', description: "Valeur en français, max 500 caractères." },
+      category: {
+        type: 'string',
+        enum: [...VALID_MEMORY_CATEGORIES],
+        description: 'Catégorie de la mémoire.',
+      },
+      confidence: {
+        type: 'number',
+        description: 'Confiance 0-1 (par défaut 0.7 si déduit, 1.0 si déclaré explicitement).',
+      },
+    },
+    required: ['tracked_site_id', 'memory_key', 'memory_value', 'category'],
+  },
+  handler: async (input, ctx) => {
+    const raw = String(input.tracked_site_id ?? '');
+    const memKey = String(input.memory_key ?? '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 80);
+    const memVal = String(input.memory_value ?? '').trim().slice(0, 500);
+    const category = String(input.category ?? 'general');
+    const confidence = Math.min(Math.max(Number(input.confidence ?? 0.7), 0), 1);
+    if (!raw || !memKey || !memVal) {
+      return { ok: false, error: 'tracked_site_id, memory_key et memory_value requis' };
+    }
+    if (!VALID_MEMORY_CATEGORIES.includes(category as typeof VALID_MEMORY_CATEGORIES[number])) {
+      return { ok: false, error: `category invalide. Valeurs: ${VALID_MEMORY_CATEGORIES.join(', ')}` };
+    }
+
+    const resolved = await resolveTrackedSite(ctx, raw);
+    if (!resolved) return { ok: false, error: `Aucun site suivi ne correspond à "${raw}".` };
+
+    // Upsert RLS-safe via le client utilisateur (RLS exige user_id = auth.uid()).
+    const { data, error } = await ctx.supabase
+      .from('site_memory')
+      .upsert(
+        {
+          tracked_site_id: resolved.id,
+          user_id: ctx.userId,
+          memory_key: memKey,
+          memory_value: memVal,
+          category,
+          source: ctx.persona, // 'felix' ou 'strategist'
+          confidence,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'tracked_site_id,memory_key' },
+      )
+      .select('memory_key, category, confidence, updated_at')
+      .maybeSingle();
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, data: { saved: data, site_domain: resolved.domain } };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+// CARTE D'IDENTITÉ — propositions d'enrichissement
+// Félix ne modifie JAMAIS directement tracked_sites.
+// Il propose des suggestions dans identity_card_suggestions
+// que l'utilisateur valide depuis Mes Sites → Identité.
+// ═══════════════════════════════════════════════════════════
+
+// Champs de tracked_sites que Félix peut suggérer.
+// Volontairement restreint — pas de subscription, pas de api_key, pas de user_id.
+const ALLOWED_IDENTITY_FIELDS = new Set([
+  'site_name',
+  'brand_name',
+  'business_type',
+  'market_sector',
+  'target_audience',
+  'products_services',
+  'commercial_area',
+  'address',
+  'company_size',
+  'founding_year',
+  'short_term_goal',
+  'mid_term_goal',
+  'main_serp_competitor',
+  'primary_language',
+  'commercial_model',
+  'entity_type',
+  'target_segment',
+  'primary_use_case',
+  'location_detail',
+  'gmb_city',
+  'is_local_business',
+  'is_seasonal',
+]);
+
+const list_identity_suggestions: SkillDefinition = {
+  name: 'list_identity_suggestions',
+  description:
+    "Liste les propositions d'enrichissement de la carte d'identité d'un site (en attente, validées, refusées). Utile pour vérifier ce qui a déjà été proposé avant d'en ajouter une nouvelle.",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string', description: 'UUID du site OU domaine' },
+      status: {
+        type: 'string',
+        enum: ['pending', 'accepted', 'rejected', 'all'],
+        default: 'pending',
+      },
+      limit: { type: 'number', default: 20 },
+    },
+    required: ['tracked_site_id'],
+  },
+  handler: async (input, ctx) => {
+    const raw = String(input.tracked_site_id ?? '');
+    if (!raw) return { ok: false, error: 'tracked_site_id requis' };
+    const resolved = await resolveTrackedSite(ctx, raw);
+    if (!resolved) return { ok: false, error: `Aucun site suivi ne correspond à "${raw}".` };
+
+    const status = String(input.status ?? 'pending');
+    const limit = Math.min(Math.max(Number(input.limit ?? 20), 1), 50);
+
+    let q = ctx.supabase
+      .from('identity_card_suggestions')
+      .select('id, field_name, current_value, suggested_value, source, reason, status, created_at, reviewed_at')
+      .eq('tracked_site_id', resolved.id)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (status !== 'all') q = q.eq('status', status);
+
+    const { data, error } = await q;
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, data: { site: resolved, suggestions: data ?? [], count: data?.length ?? 0 } };
+  },
+};
+
+const propose_identity_suggestion: SkillDefinition = {
+  name: 'propose_identity_suggestion',
+  description:
+    "Propose une mise à jour d'un champ de la carte d'identité d'un site. La proposition est mise en attente — l'utilisateur la valide depuis 'Mes Sites → Identité'. Félix ne modifie JAMAIS tracked_sites directement. À utiliser quand l'utilisateur déclare ou laisse deviner une info manquante (ex: 'on est une SARL fondée en 2018', 'on cible les TPE BtoB').",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string', description: 'UUID du site OU domaine' },
+      field_name: {
+        type: 'string',
+        description: `Nom du champ à enrichir. Valeurs autorisées : ${[...ALLOWED_IDENTITY_FIELDS].join(', ')}.`,
+      },
+      suggested_value: { type: 'string', description: 'Nouvelle valeur proposée, max 500 caractères.' },
+      reason: { type: 'string', description: "Justification courte (d'où vient l'info, pourquoi ce changement)." },
+    },
+    required: ['tracked_site_id', 'field_name', 'suggested_value'],
+  },
+  handler: async (input, ctx) => {
+    const raw = String(input.tracked_site_id ?? '');
+    const field = String(input.field_name ?? '').trim().toLowerCase();
+    const suggested = String(input.suggested_value ?? '').trim().slice(0, 500);
+    const reason = input.reason ? String(input.reason).slice(0, 300) : null;
+
+    if (!raw || !field || !suggested) {
+      return { ok: false, error: 'tracked_site_id, field_name et suggested_value requis' };
+    }
+    if (!ALLOWED_IDENTITY_FIELDS.has(field)) {
+      return { ok: false, error: `Champ "${field}" non autorisé. Champs valides : ${[...ALLOWED_IDENTITY_FIELDS].join(', ')}` };
+    }
+
+    const resolved = await resolveTrackedSite(ctx, raw);
+    if (!resolved) return { ok: false, error: `Aucun site suivi ne correspond à "${raw}".` };
+
+    // Lire la valeur courante depuis tracked_sites pour current_value
+    const { data: siteRow } = await ctx.supabase
+      .from('tracked_sites')
+      .select(field)
+      .eq('id', resolved.id)
+      .maybeSingle();
+    const siteRec = (siteRow ?? null) as unknown as Record<string, unknown> | null;
+    const currentVal = siteRec && siteRec[field] != null ? String(siteRec[field]) : null;
+
+    // Pas de doublon : si une suggestion pending existe déjà pour ce champ avec la même valeur, on no-op.
+    const { data: existing } = await ctx.supabase
+      .from('identity_card_suggestions')
+      .select('id, suggested_value')
+      .eq('tracked_site_id', resolved.id)
+      .eq('field_name', field)
+      .eq('status', 'pending')
+      .maybeSingle();
+    if (existing && existing.suggested_value === suggested) {
+      return { ok: true, data: { duplicate: true, suggestion_id: existing.id, message: 'Suggestion identique déjà en attente.' } };
+    }
+
+    const { data, error } = await ctx.supabase
+      .from('identity_card_suggestions')
+      .insert({
+        tracked_site_id: resolved.id,
+        user_id: ctx.userId,
+        field_name: field,
+        current_value: currentVal,
+        suggested_value: suggested,
+        source: ctx.persona,
+        reason,
+        status: 'pending',
+      })
+      .select('id, field_name, suggested_value, status, created_at')
+      .maybeSingle();
+    if (error) return { ok: false, error: error.message };
+    return {
+      ok: true,
+      data: {
+        suggestion: data,
+        site_domain: resolved.domain,
+        next_step: "L'utilisateur peut valider depuis Mes Sites → Identité.",
+      },
+    };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // REGISTRY
 // ═══════════════════════════════════════════════════════════
 
@@ -676,6 +949,11 @@ const SKILLS: Record<string, SkillDefinition> = {
   trigger_audit,
   cms_publish_draft,
   cms_patch_content,
+  // Mémoire persistante & enrichissement carte d'identité (Sprint Q5)
+  read_site_memory,
+  write_site_memory,
+  list_identity_suggestions,
+  propose_identity_suggestion,
   // Skills admin (creator_mode only)
   admin_lookup_user,
 };
