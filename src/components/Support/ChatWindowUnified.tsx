@@ -15,7 +15,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, BellOff, Bug, History, PanelRightClose, PanelRightOpen, Minus, X } from 'lucide-react';
+import { Bell, BellOff, History, PanelRightClose, PanelRightOpen, Minus, Type, X } from 'lucide-react';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +31,7 @@ import {
 import { CrawlersLogo } from './CrawlersLogo';
 import { ChatMicButton } from './ChatMicButton';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
+import { ChatReportSearch } from './ChatReportSearch';
 import { SeoQuiz } from './SeoQuiz';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
 import { QuizValidationNotif } from './QuizValidationNotif';
