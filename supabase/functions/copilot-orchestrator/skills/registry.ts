@@ -1192,6 +1192,130 @@ const live_search: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// ESCALADE TÉLÉPHONE — Sprint Q5 Bloc 3
+// Skill `approval` qui enregistre un numéro de rappel + expiration 48h
+// dans une sav_conversation "shadow" liée à la session copilot.
+// La policy 'approval' force le LLM à demander confirmation avant d'envoyer.
+// Les ops admin (SAV Dashboard legacy) consomment toujours sav_conversations.
+// ═══════════════════════════════════════════════════════════
+
+function normalizePhone(raw: string): string | null {
+  const digits = raw.replace(/[^\d+]/g, '');
+  if (!digits) return null;
+  // Accepte +33XXXXXXXXX, 0XXXXXXXXX, ou international ≥ 8 digits
+  if (/^\+\d{8,15}$/.test(digits)) return digits;
+  if (/^0\d{9}$/.test(digits)) return digits;
+  if (/^\d{8,15}$/.test(digits)) return digits;
+  return null;
+}
+
+const escalate_to_phone: SkillDefinition = {
+  name: 'escalate_to_phone',
+  description:
+    "Enregistre une demande de rappel téléphonique humain. À utiliser UNIQUEMENT quand l'utilisateur a déjà demandé 2-3 fois la même chose sans résolution, ou explicitement réclamé un humain. Nécessite l'approbation de l'utilisateur (le numéro est enregistré, expire dans 48h).",
+  parameters: {
+    type: 'object',
+    properties: {
+      phone: { type: 'string', description: "Numéro de téléphone fourni par l'utilisateur (FR ou international, ex: '+33612345678', '0612345678')." },
+      reason: { type: 'string', description: 'Résumé court du blocage (max 300 chars).' },
+      expires_in_hours: { type: 'number', default: 48, description: "Durée de validité du rappel (défaut 48h, max 168h)." },
+    },
+    required: ['phone', 'reason'],
+  },
+  handler: async (input, ctx) => {
+    const phone = normalizePhone(String(input.phone ?? ''));
+    if (!phone) return { ok: false, error: 'phone invalide. Format attendu: +33612345678 ou 0612345678.' };
+
+    const reason = String(input.reason ?? '').trim().slice(0, 300);
+    if (!reason) return { ok: false, error: 'reason requis (résumé du blocage)' };
+
+    const hours = Math.min(Math.max(Number(input.expires_in_hours ?? 48), 1), 168);
+    const expiresAt = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+
+    // 1) Récup / création de la sav_conversation "shadow" liée à cette session copilot
+    const { data: sess } = await ctx.service
+      .from('copilot_sessions')
+      .select('context, persona')
+      .eq('id', ctx.sessionId)
+      .maybeSingle();
+    const sessionCtx = (sess?.context as Record<string, unknown> | null) ?? {};
+    let savConvId = sessionCtx.sav_conversation_id as string | undefined;
+
+    if (!savConvId) {
+      const { data: prof } = await ctx.service
+        .from('profiles')
+        .select('email')
+        .eq('user_id', ctx.userId)
+        .maybeSingle();
+      const { data: created, error: cErr } = await ctx.service
+        .from('sav_conversations')
+        .insert({
+          user_id: ctx.userId,
+          user_email: prof?.email ?? null,
+          messages: [],
+          message_count: 0,
+          assistant_type: ctx.persona,
+          escalated: true,
+          phone_callback: phone,
+          phone_callback_expires_at: expiresAt,
+          metadata: { copilot_session_id: ctx.sessionId, escalation_reason: reason, source: 'copilot' },
+        })
+        .select('id')
+        .single();
+      if (cErr || !created) return { ok: false, error: `Création conversation SAV : ${cErr?.message ?? 'inconnue'}` };
+      savConvId = created.id;
+
+      // Persiste la liaison dans le context de la session pour les futurs scorings
+      await ctx.service
+        .from('copilot_sessions')
+        .update({ context: { ...sessionCtx, sav_conversation_id: savConvId } })
+        .eq('id', ctx.sessionId);
+    } else {
+      // Mise à jour : nouveau numéro / nouvelle expiration
+      const { error: uErr } = await ctx.service
+        .from('sav_conversations')
+        .update({
+          escalated: true,
+          phone_callback: phone,
+          phone_callback_expires_at: expiresAt,
+          metadata: { copilot_session_id: ctx.sessionId, escalation_reason: reason, source: 'copilot' },
+        })
+        .eq('id', savConvId)
+        .eq('user_id', ctx.userId);
+      if (uErr) return { ok: false, error: `MAJ conversation SAV : ${uErr.message}` };
+    }
+
+    // Log analytics
+    try {
+      await ctx.service.from('analytics_events').insert({
+        user_id: ctx.userId,
+        event_type: 'copilot_phone_escalation',
+        event_data: {
+          persona: ctx.persona,
+          session_id: ctx.sessionId,
+          sav_conversation_id: savConvId,
+          phone_masked: phone.slice(0, 4) + '****' + phone.slice(-2),
+          reason,
+          expires_at: expiresAt,
+        },
+      });
+    } catch (e) {
+      console.warn('[copilot escalate_to_phone] analytics insert failed:', (e as Error).message);
+    }
+
+    return {
+      ok: true,
+      data: {
+        sav_conversation_id: savConvId,
+        phone_masked: phone.slice(0, 4) + '****' + phone.slice(-2),
+        expires_at: expiresAt,
+        message: `Demande de rappel enregistrée. Un membre de l'équipe te rappellera sous ${hours}h au numéro fourni.`,
+      },
+    };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // REGISTRY
 // ═══════════════════════════════════════════════════════════
 
@@ -1212,6 +1336,8 @@ const SKILLS: Record<string, SkillDefinition> = {
   propose_identity_suggestion,
   // Live Search (Sprint Q5 Bloc 2)
   live_search,
+  // Escalade téléphone (Sprint Q5 Bloc 3)
+  escalate_to_phone,
   // Skills admin (creator_mode only)
   admin_lookup_user,
 };
