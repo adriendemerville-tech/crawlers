@@ -514,22 +514,35 @@ const admin_lookup_user: SkillDefinition = {
       if (domainFilter) sitesQuery = sitesQuery.ilike('domain', `%${domainFilter}%`);
       const { data: sites } = await sitesQuery.order('created_at', { ascending: false }).limit(20);
 
-      // 3) Pour chaque site, récupère les connexions CMS / Google / Matomo / Canva
+      // 3) Connexions Google et Canva : scope USER (pas site).
+      const [googleRes, canvaRes] = await Promise.all([
+        ctx.service.from('google_connections')
+          .select('id, google_email, gsc_site_urls, ga4_property_id, gmb_account_id, gmb_location_id, scopes, token_expiry, created_at, updated_at')
+          .eq('user_id', p.user_id),
+        ctx.service.from('canva_connections')
+          .select('id, status, scopes, display_name, canva_user_id, canva_team_id, token_expires_at, created_at, updated_at')
+          .eq('user_id', p.user_id),
+      ]);
+      const userGoogle = googleRes.data ?? [];
+      const userCanva = canvaRes.data ?? [];
+
+      // 4) Pour chaque site : connexions CMS (scope site) + matchs Google par URL.
       const sitesEnriched = await Promise.all((sites ?? []).map(async (s) => {
-        const [cmsRes, gscRes, matomoRes, canvaRes] = await Promise.all([
+        const [cmsRes, matomoRes] = await Promise.all([
           ctx.service.from('cms_connections')
             .select('id, platform, auth_method, status, site_url, scopes, capabilities, created_at, updated_at, token_expiry')
             .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
-          ctx.service.from('google_connections')
-            .select('id, service, status, scopes, created_at, updated_at, token_expiry')
-            .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
           ctx.service.from('matomo_connections')
-            .select('id, matomo_url, site_id, created_at')
+            .select('id, matomo_url, site_id, is_active, last_sync_at, sync_error, created_at')
             .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
-          ctx.service.from('canva_connections')
-            .select('id, status, scopes, created_at, updated_at, token_expiry')
-            .eq('user_id', p.user_id),
         ]);
+
+        // Matche les connexions Google qui couvrent ce domaine via gsc_site_urls
+        const domainNorm = (s.domain ?? '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+        const googleForSite = userGoogle.filter((g: any) => {
+          const urls: string[] = Array.isArray(g.gsc_site_urls) ? g.gsc_site_urls : [];
+          return urls.some((u) => String(u).toLowerCase().includes(domainNorm));
+        });
 
         return {
           site_id: s.id,
@@ -541,9 +554,8 @@ const admin_lookup_user: SkillDefinition = {
           connections: {
             cms: cmsRes.data ?? [],
             cms_count: (cmsRes.data ?? []).length,
-            google: gscRes.data ?? [],
+            google_for_this_site: googleForSite,
             matomo: matomoRes.data ?? [],
-            canva_workspace: canvaRes.data ?? [], // canva est par user, pas par site
           },
         };
       }));
@@ -558,6 +570,17 @@ const admin_lookup_user: SkillDefinition = {
         signup_date: p.created_at,
         sites_count: (sites ?? []).length,
         sites: sitesEnriched,
+        // Connexions au niveau user (pas par site)
+        user_level_connections: {
+          google_total: userGoogle.length,
+          google_accounts: userGoogle.map((g: any) => ({
+            id: g.id, email: g.google_email, gsc_sites: g.gsc_site_urls ?? [],
+            has_ga4: !!g.ga4_property_id, has_gmb: !!g.gmb_account_id,
+            scopes: g.scopes ?? [], token_expiry: g.token_expiry,
+          })),
+          canva_total: userCanva.length,
+          canva: userCanva,
+        },
       };
     }));
 
