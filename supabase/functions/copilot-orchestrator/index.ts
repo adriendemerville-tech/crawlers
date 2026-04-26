@@ -38,6 +38,7 @@ import {
   type PersonaConfig,
 } from './personas.ts';
 import { getSkill, buildToolDefinitions, listSkills, type SkillContext } from './skills/registry.ts';
+import { recordTurnQualityScore } from './scoring.ts';
 import {
   categorizeAction,
   summarizeForHistory,
@@ -282,6 +283,14 @@ Deno.serve(async (req) => {
       { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: body.message }, status: 'success', duration_ms: 0, action_category: 'system' },
       { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
     ]);
+
+    // Sprint Q5 Bloc 3 — scoring qualité (best-effort, n'arrête jamais le flux)
+    await recordTurnQualityScore({
+      service, sessionId, userId, persona: persona.id,
+      lastUserMessage: body.message,
+      assistantReply: loopResult.finalReply,
+      executedActions: loopResult.executedActions.map((a) => ({ skill: a.skill, status: a.status })),
+    });
 
     // Libère le statut processing → active (succès nominal)
     await service.from('copilot_sessions')
