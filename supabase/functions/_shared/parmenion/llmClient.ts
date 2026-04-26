@@ -39,7 +39,8 @@ export async function callLLMWithTools(
       { model, toolChoice: 'required', temp: 0.2 },
       { model, toolChoice: 'auto', temp: 0.3 },
     ];
-    if (model !== 'google/gemini-2.5-flash') {
+    if (model !== 'google/gemini-3-flash-preview') {
+      attempts.push({ model: 'google/gemini-3-flash-preview', toolChoice: 'required', temp: 0.3 });
       attempts.push({ model: 'google/gemini-2.5-flash', toolChoice: 'required', temp: 0.3 });
     }
 

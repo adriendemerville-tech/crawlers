@@ -66,7 +66,7 @@ export const STRATEGIST_CONFIG: PersonaConfig = {
   id: 'strategist',
   displayName: 'Stratège Cocoon',
   systemPrompt: STRATEGIST_PERSONA.styleGuide,
-  model: 'google/gemini-2.5-pro',
+  model: 'google/gemini-3.1-pro-preview',
   maxOutputTokens: 1500,
   skillPolicies: {
     // Lecture étendue
