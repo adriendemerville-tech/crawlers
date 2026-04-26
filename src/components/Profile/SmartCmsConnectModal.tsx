@@ -96,27 +96,25 @@ export function SmartCmsConnectModal({
     const url = `https://${siteDomain}`;
 
     try {
-      // Parallel calls
-      const [scan, waf, restProbe, pluginProbe] = await Promise.all([
+      // Cross-origin probes wrapped in safeProbe — CORS errors throw BEFORE
+      // .then(), so we must catch on the fetch itself, not just the response.
+      const safeProbe = (target: string) =>
+        fetch(target, { mode: 'no-cors' })
+          .then(() => ({ ok: true, status: 200 }))
+          .catch(() => ({ ok: false, status: 0 }));
+
+      // Use allSettled so a single failed leg never breaks the whole detection
+      const results = await Promise.allSettled([
         supabase.functions.invoke('scan-wp', { body: { url } }),
         supabase.functions.invoke('diagnose-waf', { body: { url } }),
-        fetch(`${url}/wp-json/wp/v2/`, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (compatible; CrawlersBot/2.0; +https://crawlers.fr)',
-          },
-        })
-          .then((r) => ({ ok: r.ok, status: r.status }))
-          .catch(() => ({ ok: false, status: 0 })),
-        fetch(`${url}/wp-json/crawlers/v1/`, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (compatible; CrawlersBot/2.0; +https://crawlers.fr)',
-          },
-        })
-          .then((r) => ({ ok: r.ok, status: r.status }))
-          .catch(() => ({ ok: false, status: 0 })),
+        safeProbe(`${url}/wp-json/wp/v2/`),
+        safeProbe(`${url}/wp-json/crawlers/v1/`),
       ]);
+
+      const scan = results[0].status === 'fulfilled' ? results[0].value : { data: null };
+      const waf = results[1].status === 'fulfilled' ? results[1].value : { data: null };
+      const restProbe = results[2].status === 'fulfilled' ? results[2].value : { ok: false, status: 0 };
+      const pluginProbe = results[3].status === 'fulfilled' ? results[3].value : { ok: false, status: 0 };
 
       const scanData = scan.data?.data || {};
       const wafData = waf.data?.data || waf.data || {};
