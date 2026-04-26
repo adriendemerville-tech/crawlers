@@ -41,6 +41,8 @@ interface AgentChatShellProps {
   }) => React.ReactNode;
   /** Slot affiché à gauche du textarea (ex: ChatAttachmentPicker). */
   composerLeading?: React.ReactNode;
+  /** Facteur multiplicateur de la taille du texte des messages (1 = défaut). */
+  fontScale?: number;
   className?: string;
 }
 
@@ -57,6 +59,7 @@ export function AgentChatShell({
   composerExtras,
   renderComposerExtras,
   composerLeading,
+  fontScale = 1,
   className,
 }: AgentChatShellProps) {
   const navigate = useNavigate();
