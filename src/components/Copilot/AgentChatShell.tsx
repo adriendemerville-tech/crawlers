@@ -157,7 +157,7 @@ export function AgentChatShell({
           </div>
         )}
 
-        <ul className="space-y-4">
+        <ul className="space-y-4" style={{ fontSize: `${fontScale}rem` }}>
           {messages.map((m) => (
             <li
               key={m.id}
