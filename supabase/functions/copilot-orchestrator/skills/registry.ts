@@ -461,6 +461,119 @@ const cms_patch_content: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// SKILLS ADMIN — réservées au mode créateur (/creator: /createur: /admin:)
+// Le registry les expose, mais les personas Félix/Stratège ne les listent
+// pas dans skillPolicies → 'forbidden' par défaut. Elles ne deviennent
+// disponibles qu'en mode créateur (orchestrator élargit allowedSkills).
+// Chaque handler revérifie has_role(admin) côté serveur (defense in depth).
+// ═══════════════════════════════════════════════════════════
+
+const admin_lookup_user: SkillDefinition = {
+  name: 'admin_lookup_user',
+  description: "[ADMIN] Recherche un utilisateur par nom/prénom/email et retourne ses sites suivis + statut des connexions CMS, Google (GSC/GA4), Matomo, Canva. Utiliser pour répondre aux questions support du type « X a-t-il pu connecter son CMS pour le site Y ? ». Filtre optionnel par domaine pour cibler un site précis.",
+  parameters: {
+    type: 'object',
+    properties: {
+      query: { type: 'string', description: "Nom, prénom ou email (fragment, recherche ILIKE)" },
+      domain: { type: 'string', description: "Domaine du site à filtrer (ex: 'sphaeragloballtd.com'), optionnel" },
+    },
+    required: ['query'],
+  },
+  handler: async (input, ctx) => {
+    const query = String(input.query ?? '').trim();
+    const domainFilter = input.domain ? String(input.domain).trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '') : null;
+    if (!query || query.length < 2) return { ok: false, error: 'query requis (min 2 caractères)' };
+
+    // Defense in depth : même si exposé uniquement en creator_mode, on revérifie le rôle.
+    const { data: isAdmin } = await ctx.service.rpc('has_role', { _user_id: ctx.userId, _role: 'admin' });
+    if (isAdmin !== true) {
+      return { ok: false, error: 'Skill admin réservée aux administrateurs.' };
+    }
+
+    const safe = query.replace(/[^\p{L}\p{N}\s\-@.]/gu, ' ').trim().slice(0, 80);
+    if (!safe) return { ok: false, error: 'query invalide après nettoyage' };
+    const pattern = `%${safe}%`;
+
+    // 1) Trouver les profils correspondants
+    const { data: profiles, error: pErr } = await ctx.service
+      .from('profiles')
+      .select('user_id, first_name, last_name, email, plan_type, subscription_status, created_at')
+      .or(`first_name.ilike.${pattern},last_name.ilike.${pattern},email.ilike.${pattern}`)
+      .limit(10);
+    if (pErr) return { ok: false, error: `Lecture profiles : ${pErr.message}` };
+    if (!profiles || profiles.length === 0) {
+      return { ok: true, data: { matches: [], message: `Aucun utilisateur trouvé pour "${safe}"` } };
+    }
+
+    const matches = await Promise.all(profiles.map(async (p) => {
+      // 2) Sites suivis
+      let sitesQuery = ctx.service
+        .from('tracked_sites')
+        .select('id, domain, site_name, brand_name, cms_platform, created_at, last_audit_at, last_cms_refresh_at')
+        .eq('user_id', p.user_id);
+      if (domainFilter) sitesQuery = sitesQuery.ilike('domain', `%${domainFilter}%`);
+      const { data: sites } = await sitesQuery.order('created_at', { ascending: false }).limit(20);
+
+      // 3) Pour chaque site, récupère les connexions CMS / Google / Matomo / Canva
+      const sitesEnriched = await Promise.all((sites ?? []).map(async (s) => {
+        const [cmsRes, gscRes, matomoRes, canvaRes] = await Promise.all([
+          ctx.service.from('cms_connections')
+            .select('id, platform, auth_method, status, site_url, scopes, capabilities, created_at, updated_at, token_expiry')
+            .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
+          ctx.service.from('google_connections')
+            .select('id, service, status, scopes, created_at, updated_at, token_expiry')
+            .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
+          ctx.service.from('matomo_connections')
+            .select('id, matomo_url, site_id, created_at')
+            .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
+          ctx.service.from('canva_connections')
+            .select('id, status, scopes, created_at, updated_at, token_expiry')
+            .eq('user_id', p.user_id),
+        ]);
+
+        return {
+          site_id: s.id,
+          domain: s.domain,
+          site_name: s.site_name,
+          cms_platform_declared: s.cms_platform,
+          last_cms_refresh_at: s.last_cms_refresh_at,
+          last_audit_at: s.last_audit_at,
+          connections: {
+            cms: cmsRes.data ?? [],
+            cms_count: (cmsRes.data ?? []).length,
+            google: gscRes.data ?? [],
+            matomo: matomoRes.data ?? [],
+            canva_workspace: canvaRes.data ?? [], // canva est par user, pas par site
+          },
+        };
+      }));
+
+      return {
+        user_id: p.user_id,
+        first_name: p.first_name,
+        last_name: p.last_name,
+        email: p.email,
+        plan_type: p.plan_type,
+        subscription_status: p.subscription_status,
+        signup_date: p.created_at,
+        sites_count: (sites ?? []).length,
+        sites: sitesEnriched,
+      };
+    }));
+
+    return {
+      ok: true,
+      data: {
+        query: safe,
+        domain_filter: domainFilter,
+        matches_count: matches.length,
+        matches,
+      },
+    };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // REGISTRY
 // ═══════════════════════════════════════════════════════════
 
@@ -474,6 +587,8 @@ const SKILLS: Record<string, SkillDefinition> = {
   trigger_audit,
   cms_publish_draft,
   cms_patch_content,
+  // Skills admin (creator_mode only)
+  admin_lookup_user,
 };
 
 export function getSkill(name: string): SkillDefinition | null {
