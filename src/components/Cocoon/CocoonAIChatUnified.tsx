@@ -15,13 +15,15 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Crosshair, History, PanelLeftClose, PanelLeftOpen, Minus, Sparkles, X } from 'lucide-react';
+import { Crosshair, History, PanelLeftClose, PanelLeftOpen, Minus, Sparkles, Type, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import { CopilotHistoryPanel } from '@/components/Copilot/CopilotHistoryPanel';
 import { CrawlersLogo } from '@/components/Support/CrawlersLogo';
+import { ChatAttachmentPicker } from '@/components/Support/ChatAttachmentPicker';
+import { ChatReportSearch } from '@/components/Support/ChatReportSearch';
 import type { CopilotMessage } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
 
@@ -81,6 +83,23 @@ export function CocoonAIChatUnified({
   const [showHistory, setShowHistory] = useState(false);
   const [pickedSessionId, setPickedSessionId] = useState<string | null>(null);
   const [shellKey, setShellKey] = useState(0);
+  // Zoom texte (parité Félix)
+  const FONT_STEPS = [0.875, 1, 1.15, 1.3];
+  const [fontScale, setFontScale] = useState<number>(() => {
+    const v = parseFloat(localStorage.getItem('strategist_font_scale') || '1');
+    return FONT_STEPS.includes(v) ? v : 1;
+  });
+  const cycleFontScale = () => {
+    const idx = FONT_STEPS.indexOf(fontScale);
+    const next = FONT_STEPS[(idx + 1) % FONT_STEPS.length];
+    setFontScale(next);
+    localStorage.setItem('strategist_font_scale', String(next));
+  };
+  // Messages d'info additionnels (pièces jointes, rapports sélectionnés)
+  const [extraNotes, setExtraNotes] = useState<{ id: string; content: string }[]>([]);
+  const pushNote = (content: string) => {
+    setExtraNotes((prev) => [...prev, { id: `${Date.now()}-${Math.random()}`, content }]);
+  };
 
   // Q4.1 — greeting Stratège (stable au mount, parité Félix).
   const seedRef = useRef<CopilotMessage[] | null>(null);
@@ -244,6 +263,15 @@ export function CocoonAIChatUnified({
               )}
               <button
                 type="button"
+                onClick={cycleFontScale}
+                className="rounded-md border border-transparent p-1 text-muted-foreground transition hover:border-border hover:text-foreground"
+                aria-label="Taille du texte"
+                title={`Taille du texte (${Math.round(fontScale * 100)} %)`}
+              >
+                <Type className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowHistory((v) => !v)}
                 className={cn(
                   'rounded-md border p-1 transition',
@@ -344,6 +372,17 @@ export function CocoonAIChatUnified({
             </div>
           )}
 
+          {/* Notes additionnelles (pièces jointes / rapports) */}
+          {!minimized && extraNotes.length > 0 && (
+            <div className="max-h-[30%] overflow-y-auto border-b border-border bg-muted/10 p-3 space-y-2">
+              {extraNotes.map((n) => (
+                <div key={n.id} className="rounded-md border border-border px-3 py-2 text-xs text-foreground whitespace-pre-wrap">
+                  {n.content}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Body */}
           {!minimized && (
             <div className="flex-1 overflow-hidden">
@@ -361,6 +400,30 @@ export function CocoonAIChatUnified({
                 onAssistantReply={onAssistantReply}
                 seedMessages={pickedSessionId ? undefined : (seedRef.current ?? undefined)}
                 initialSessionId={pickedSessionId}
+                fontScale={fontScale}
+                composerLeading={
+                  <ChatAttachmentPicker
+                    userId={user?.id}
+                    onAttach={(item) => {
+                      pushNote(
+                        `_Pièce jointe ajoutée :_ **${item.title}**${item.domain ? ` — ${item.domain}` : ''}`,
+                      );
+                    }}
+                    onImageAttach={(fileName) => {
+                      pushNote(`_Fichier joint :_ ${fileName}`);
+                    }}
+                  />
+                }
+                renderComposerExtras={user?.id ? () => (
+                  <ChatReportSearch
+                    userId={user.id}
+                    onSelect={(report) => {
+                      pushNote(
+                        `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
+                      );
+                    }}
+                  />
+                ) : undefined}
                 className="h-full"
               />
             </div>

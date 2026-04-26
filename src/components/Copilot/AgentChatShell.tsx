@@ -41,6 +41,8 @@ interface AgentChatShellProps {
   }) => React.ReactNode;
   /** Slot affiché à gauche du textarea (ex: ChatAttachmentPicker). */
   composerLeading?: React.ReactNode;
+  /** Facteur multiplicateur de la taille du texte des messages (1 = défaut). */
+  fontScale?: number;
   className?: string;
 }
 
@@ -57,6 +59,7 @@ export function AgentChatShell({
   composerExtras,
   renderComposerExtras,
   composerLeading,
+  fontScale = 1,
   className,
 }: AgentChatShellProps) {
   const navigate = useNavigate();
@@ -154,7 +157,7 @@ export function AgentChatShell({
           </div>
         )}
 
-        <ul className="space-y-4">
+        <ul className="space-y-4" style={{ fontSize: `${fontScale}rem` }}>
           {messages.map((m) => (
             <li
               key={m.id}
@@ -165,7 +168,7 @@ export function AgentChatShell({
             >
               <div
                 className={cn(
-                  'max-w-[85%] rounded-lg border px-3 py-2 text-sm',
+                  'max-w-[85%] rounded-lg border px-3 py-2 leading-relaxed',
                   m.role === 'user'
                     ? 'border-primary text-foreground'
                     : 'border-accent/60 text-foreground',
