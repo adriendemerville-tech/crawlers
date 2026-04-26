@@ -889,14 +889,13 @@ const propose_identity_suggestion: SkillDefinition = {
     if (!resolved) return { ok: false, error: `Aucun site suivi ne correspond à "${raw}".` };
 
     // Lire la valeur courante depuis tracked_sites pour current_value
-    const { data: site } = await ctx.supabase
+    const { data: siteRow } = await ctx.supabase
       .from('tracked_sites')
       .select(field)
       .eq('id', resolved.id)
       .maybeSingle();
-    const currentVal = site && (site as Record<string, unknown>)[field] != null
-      ? String((site as Record<string, unknown>)[field])
-      : null;
+    const siteRec = (siteRow ?? null) as unknown as Record<string, unknown> | null;
+    const currentVal = siteRec && siteRec[field] != null ? String(siteRec[field]) : null;
 
     // Pas de doublon : si une suggestion pending existe déjà pour ce champ avec la même valeur, on no-op.
     const { data: existing } = await ctx.supabase
