@@ -80,6 +80,60 @@ export async function safeServiceCall(
 }
 
 // ═══════════════════════════════════════════════════════════
+// resolveTrackedSite — accepte soit un UUID, soit un domaine,
+// et renvoie le tracked_site appartenant à l'utilisateur courant.
+// Tolère "dictadevi.io", "https://www.dictadevi.io/", etc.
+// Retourne null si rien trouvé (le handler décide du message d'erreur).
+// ═══════════════════════════════════════════════════════════
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function resolveTrackedSite(
+  ctx: SkillContext,
+  identifier: string | null | undefined,
+): Promise<{ id: string; domain: string } | null> {
+  const raw = String(identifier ?? '').trim();
+  if (!raw) return null;
+
+  // 1) UUID direct → on tente via le client RLS de l'utilisateur
+  if (UUID_RE.test(raw)) {
+    const { data } = await ctx.supabase
+      .from('tracked_sites')
+      .select('id, domain')
+      .eq('id', raw)
+      .maybeSingle();
+    if (data) return { id: data.id as string, domain: data.domain as string };
+    return null;
+  }
+
+  // 2) Sinon, on traite comme un domaine et on normalise
+  const domain = raw
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/.*$/, '')
+    .toLowerCase();
+  if (!domain) return null;
+
+  // Match exact d'abord, puis ilike en fallback. Toujours via RLS user.
+  const { data: exact } = await ctx.supabase
+    .from('tracked_sites')
+    .select('id, domain')
+    .eq('domain', domain)
+    .limit(1)
+    .maybeSingle();
+  if (exact) return { id: exact.id as string, domain: exact.domain as string };
+
+  const { data: like } = await ctx.supabase
+    .from('tracked_sites')
+    .select('id, domain')
+    .ilike('domain', `%${domain}%`)
+    .limit(1)
+    .maybeSingle();
+  if (like) return { id: like.id as string, domain: like.domain as string };
+
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════
 // LECTURE
 // ═══════════════════════════════════════════════════════════
 
