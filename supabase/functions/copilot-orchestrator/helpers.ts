@@ -14,8 +14,16 @@ export const MAX_OUTPUT_BYTES = 4_000; // ~1k tokens — au-delà on tronque dan
 export type ActionCategory = 'read' | 'navigate' | 'write' | 'destructive' | 'system' | 'other';
 
 const NAVIGATE_SKILLS = new Set(['navigate_to', 'open_audit_panel']);
-const WRITE_SKILLS = new Set(['cms_publish_draft', 'cms_patch_content', 'deploy_cocoon_plan', 'trigger_audit', 'refresh_kpis']);
-const DESTRUCTIVE_SKILLS = new Set(['delete_site', 'delete_user', 'rotate_keys', 'mass_delete', 'escalate_to_human']);
+const WRITE_SKILLS = new Set([
+  'cms_publish_draft', 'cms_patch_content', 'deploy_cocoon_plan', 'trigger_audit', 'refresh_kpis',
+  // Skills admin (creator_mode) — création/MAJ contrôlée
+  'admin_track_site', 'admin_grant_pro', 'admin_reset_api_key',
+]);
+const DESTRUCTIVE_SKILLS = new Set([
+  'delete_site', 'delete_user', 'rotate_keys', 'mass_delete', 'escalate_to_human',
+  // Skills admin destructives
+  'admin_untrack_site',
+]);
 
 export function categorizeAction(skill: string): ActionCategory {
   if (skill.startsWith('_')) return 'system';
