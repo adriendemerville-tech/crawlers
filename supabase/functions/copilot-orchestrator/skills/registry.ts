@@ -166,22 +166,28 @@ const read_audit: SkillDefinition = {
 
 const read_site_kpis: SkillDefinition = {
   name: 'read_site_kpis',
-  description: "Lit les KPIs courants d'un site suivi (SEO, GEO, trafic, dernière mesure).",
+  description: "Lit les KPIs courants d'un site suivi (SEO, GEO, trafic, dernière mesure). Accepte un UUID OU un domaine (ex: 'dictadevi.io', 'https://www.example.com').",
   parameters: {
     type: 'object',
     properties: {
-      tracked_site_id: { type: 'string', description: "UUID du site suivi" },
+      tracked_site_id: { type: 'string', description: "UUID du site suivi OU domaine (ex: 'dictadevi.io')" },
     },
     required: ['tracked_site_id'],
   },
   handler: async (input, ctx) => {
-    const siteId = String(input.tracked_site_id ?? '');
-    if (!siteId) return { ok: false, error: 'tracked_site_id requis' };
+    const raw = String(input.tracked_site_id ?? '');
+    if (!raw) return { ok: false, error: 'tracked_site_id requis (UUID ou domaine)' };
+
+    const resolved = await resolveTrackedSite(ctx, raw);
+    if (!resolved) {
+      return { ok: false, error: `Aucun site suivi ne correspond à "${raw}". Vérifiez l'UUID ou le domaine, ou assurez-vous que ce site est bien dans 'Mes Sites'.` };
+    }
+
     // Colonnes réelles de tracked_sites (pas de seo_score/geo_score directement).
     const { data: site, error } = await ctx.supabase
       .from('tracked_sites')
       .select('id, domain, site_name, brand_name, last_audit_at, eeat_score, business_type, market_sector, primary_language, target_countries')
-      .eq('id', siteId)
+      .eq('id', resolved.id)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
     if (!site) return { ok: false, error: 'Site introuvable ou non accessible' };
@@ -201,27 +207,33 @@ const read_site_kpis: SkillDefinition = {
 
 const read_cocoon_graph: SkillDefinition = {
   name: 'read_cocoon_graph',
-  description: "Statistiques résumées du graphe cocoon : nb pages, orphelines, profondeur, cannibalisations.",
+  description: "Statistiques résumées du graphe cocoon : nb pages, orphelines, profondeur, cannibalisations. Accepte un UUID OU un domaine.",
   parameters: {
     type: 'object',
     properties: {
-      tracked_site_id: { type: 'string' },
+      tracked_site_id: { type: 'string', description: "UUID du site OU domaine (ex: 'dictadevi.io')" },
     },
     required: ['tracked_site_id'],
   },
   handler: async (input, ctx) => {
-    const siteId = String(input.tracked_site_id ?? '');
-    if (!siteId) return { ok: false, error: 'tracked_site_id requis' };
+    const raw = String(input.tracked_site_id ?? '');
+    if (!raw) return { ok: false, error: 'tracked_site_id requis (UUID ou domaine)' };
+
+    const resolved = await resolveTrackedSite(ctx, raw);
+    if (!resolved) {
+      return { ok: false, error: `Aucun site suivi ne correspond à "${raw}".` };
+    }
+
     // Source réelle : cocoon_diagnostic_results (dernier diagnostic).
     const { data, error } = await ctx.supabase
       .from('cocoon_diagnostic_results')
       .select('id, diagnostic_type, scores, findings, source_function, created_at')
-      .eq('tracked_site_id', siteId)
+      .eq('tracked_site_id', resolved.id)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
-    if (!data) return { ok: true, data: { message: 'Pas encore de cocoon calculé' } };
+    if (!data) return { ok: true, data: { message: 'Pas encore de cocoon calculé', site: resolved } };
     // Tronque findings si trop volumineux.
     const findings = data.findings && typeof data.findings === 'object'
       ? Object.fromEntries(Object.entries(data.findings as Record<string, unknown>).slice(0, 8))
