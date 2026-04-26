@@ -36,3 +36,20 @@ Le dashboard Admin dispose d'un onglet 'SAV IA' centralisant l'historique des co
 ## Navigation Admin
 - **Onglet par défaut admin** : Intelligence Hub (pour les utilisateurs avec `canSeeIntelligence`), sinon Statistiques
 - L'Intelligence Hub est le premier item du menu latéral admin (au-dessus de Statistiques)
+
+## SAV Quality Scores — Source Copilot (Sprint Q5 Bloc 3)
+
+Depuis le Sprint Q5, le Copilot unifié (Félix + Stratège Cocoon) alimente la table `sav_quality_scores` exactement comme l'ancien `sav-agent`. Le SAV Dashboard admin (Conversations + Score) liste donc indifféremment les conversations SAV historiques **et** les conversations Copilot, sans changement d'UI.
+
+### Mapping
+- 1 `copilot_session` ↔ 1 `sav_conversations` "shadow" (créée à la volée), liée via `copilot_sessions.context.sav_conversation_id`.
+- 1 ligne `sav_quality_scores` par `conversation_id`, mise à jour à chaque réponse assistant.
+
+### Score
+Heuristique : démarre à 50, +20 si résolution rapide (≤ 2 messages user), -20 par intention répétée détectée (≥ 3 mots-clés communs sur les 5 derniers messages user), -50 si une escalade téléphone a été validée. Bornes 0–100.
+
+### Escalade téléphone
+La skill `escalate_to_phone` (politique `approval`) peut être déclenchée par Félix ou le Stratège après confirmation explicite de l'utilisateur. Elle marque la `sav_conversations` shadow comme escaladée et déclenche le décompte `-50` sur le score.
+
+### Champs renseignés
+`message_count`, `repeated_intent_count`, `escalated_to_phone`, `precision_score`, `detected_intent` (navigation/score/billing/bug/feature/cms/general), `intent_keywords` (max 10), `suggested_route` (1er lien interne extrait de la réponse).
