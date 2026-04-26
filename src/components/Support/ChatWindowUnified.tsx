@@ -553,6 +553,7 @@ export function ChatWindowUnified({
               seedMessages={pickedSessionId ? undefined : seedRef.current}
               initialSessionId={pickedSessionId}
               onAssistantReply={onAssistantReply}
+              fontScale={fontScale}
               composerLeading={
                 <ChatAttachmentPicker
                   userId={user?.id}
@@ -568,24 +569,20 @@ export function ChatWindowUnified({
               }
               renderComposerExtras={({ appendToDraft }) => (
                 <>
+                  {user?.id && (
+                    <ChatReportSearch
+                      userId={user.id}
+                      onSelect={(report) => {
+                        pushAssistant(
+                          `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
+                        );
+                      }}
+                    />
+                  )}
                   <ChatMicButton
                     onTranscript={(text) => appendToDraft(text)}
                     userDomains={userDomains}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setBugMode((v) => !v)}
-                    className={cn(
-                      'inline-flex items-center justify-center rounded-md border px-2 py-2 text-xs transition',
-                      bugMode
-                        ? 'border-primary text-primary'
-                        : 'border-border text-foreground hover:border-foreground/50',
-                    )}
-                    title="Signaler un bug"
-                    aria-label="Signaler un bug"
-                  >
-                    <Bug className="h-3.5 w-3.5" />
-                  </button>
                 </>
               )}
               className="h-full"
