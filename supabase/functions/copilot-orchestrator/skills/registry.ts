@@ -663,6 +663,322 @@ const admin_lookup_user: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// SKILLS ADMIN — gestion des sites trackés / plan / clé API
+// Toutes : creator_mode requis + revérif has_role(admin) defense in depth.
+// Pattern identique à admin_lookup_user.
+// ═══════════════════════════════════════════════════════════
+
+/** Normalise un domaine : strip protocol, www, trailing slash, lowercase. */
+function normalizeDomain(raw: string): string {
+  return String(raw ?? '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/.*$/, '')
+    .toLowerCase();
+}
+
+/** Résout un user_id à partir d'un email (recherche stricte profiles.email). */
+async function resolveUserIdByEmail(
+  service: SkillContext['service'],
+  email: string,
+): Promise<{ user_id: string; first_name: string | null; last_name: string | null; email: string } | null> {
+  const cleaned = email.trim().toLowerCase();
+  if (!cleaned || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) return null;
+  const { data } = await service
+    .from('profiles')
+    .select('user_id, first_name, last_name, email')
+    .ilike('email', cleaned)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    user_id: data.user_id as string,
+    first_name: (data.first_name as string | null) ?? null,
+    last_name: (data.last_name as string | null) ?? null,
+    email: (data.email as string) ?? cleaned,
+  };
+}
+
+const admin_track_site: SkillDefinition = {
+  name: 'admin_track_site',
+  description:
+    "[ADMIN] Ajoute manuellement un site à la liste des sites suivis (tracked_sites) d'un utilisateur identifié par son email. Idempotent (ON CONFLICT DO NOTHING sur user_id+domain).",
+  parameters: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', description: "Email du compte utilisateur cible" },
+      domain: { type: 'string', description: "Domaine à ajouter (ex: 'sphaeragloballtd.com'), sans https:// ni www" },
+      site_name: { type: 'string', description: "Nom d'affichage du site (optionnel, défaut = domain)" },
+    },
+    required: ['email', 'domain'],
+  },
+  handler: async (input, ctx) => {
+    const { data: isAdmin } = await ctx.service.rpc('has_role', { _user_id: ctx.userId, _role: 'admin' });
+    if (isAdmin !== true) return { ok: false, error: 'Skill admin réservée aux administrateurs.' };
+
+    const email = String(input.email ?? '').trim();
+    const domain = normalizeDomain(String(input.domain ?? ''));
+    const siteName = input.site_name ? String(input.site_name).trim().slice(0, 120) : domain;
+
+    if (!email) return { ok: false, error: 'email requis' };
+    if (!domain || !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain)) {
+      return { ok: false, error: `Domaine invalide après normalisation: "${domain}"` };
+    }
+
+    const target = await resolveUserIdByEmail(ctx.service, email);
+    if (!target) return { ok: false, error: `Aucun compte trouvé pour ${email}` };
+
+    // Vérifie si déjà présent (pour rapport clair)
+    const { data: existing } = await ctx.service
+      .from('tracked_sites')
+      .select('id, domain, site_name, created_at')
+      .eq('user_id', target.user_id)
+      .eq('domain', domain)
+      .maybeSingle();
+
+    if (existing) {
+      return {
+        ok: true,
+        data: {
+          already_existed: true,
+          tracked_site_id: existing.id,
+          domain: existing.domain,
+          site_name: existing.site_name,
+          target_user: { user_id: target.user_id, email: target.email, name: `${target.first_name ?? ''} ${target.last_name ?? ''}`.trim() },
+          message: `${domain} était déjà suivi par ${email} (depuis ${existing.created_at}).`,
+        },
+      };
+    }
+
+    const { data: created, error } = await ctx.service
+      .from('tracked_sites')
+      .insert({
+        user_id: target.user_id,
+        domain,
+        site_name: siteName,
+        last_audit_at: new Date().toISOString(),
+      })
+      .select('id, domain, site_name, created_at')
+      .single();
+
+    if (error) return { ok: false, error: `Insertion tracked_sites : ${error.message}` };
+
+    return {
+      ok: true,
+      data: {
+        already_existed: false,
+        tracked_site_id: created.id,
+        domain: created.domain,
+        site_name: created.site_name,
+        target_user: { user_id: target.user_id, email: target.email, name: `${target.first_name ?? ''} ${target.last_name ?? ''}`.trim() },
+        message: `✓ ${domain} ajouté aux sites suivis de ${email}.`,
+      },
+    };
+  },
+};
+
+const admin_untrack_site: SkillDefinition = {
+  name: 'admin_untrack_site',
+  description:
+    "[ADMIN] Retire un site de la liste des sites suivis d'un utilisateur (DELETE tracked_sites). Action destructive — l'historique des stats reste mais le suivi s'arrête.",
+  parameters: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', description: "Email du compte utilisateur cible" },
+      domain: { type: 'string', description: "Domaine à retirer" },
+    },
+    required: ['email', 'domain'],
+  },
+  handler: async (input, ctx) => {
+    const { data: isAdmin } = await ctx.service.rpc('has_role', { _user_id: ctx.userId, _role: 'admin' });
+    if (isAdmin !== true) return { ok: false, error: 'Skill admin réservée aux administrateurs.' };
+
+    const email = String(input.email ?? '').trim();
+    const domain = normalizeDomain(String(input.domain ?? ''));
+    if (!email) return { ok: false, error: 'email requis' };
+    if (!domain) return { ok: false, error: 'domain requis' };
+
+    const target = await resolveUserIdByEmail(ctx.service, email);
+    if (!target) return { ok: false, error: `Aucun compte trouvé pour ${email}` };
+
+    const { data: deleted, error } = await ctx.service
+      .from('tracked_sites')
+      .delete()
+      .eq('user_id', target.user_id)
+      .eq('domain', domain)
+      .select('id, domain');
+
+    if (error) return { ok: false, error: `Suppression tracked_sites : ${error.message}` };
+    if (!deleted || deleted.length === 0) {
+      return { ok: false, error: `Aucun site "${domain}" trouvé pour ${email}.` };
+    }
+
+    return {
+      ok: true,
+      data: {
+        deleted_count: deleted.length,
+        target_user: { user_id: target.user_id, email: target.email },
+        deleted_sites: deleted,
+        message: `✓ ${domain} retiré du suivi pour ${email}.`,
+      },
+    };
+  },
+};
+
+const admin_list_user_sites: SkillDefinition = {
+  name: 'admin_list_user_sites',
+  description:
+    "[ADMIN] Liste tous les sites suivis d'un utilisateur (par email). Retourne id, domain, site_name, plateforme CMS déclarée, dates d'audit/refresh.",
+  parameters: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', description: "Email du compte utilisateur cible" },
+    },
+    required: ['email'],
+  },
+  handler: async (input, ctx) => {
+    const { data: isAdmin } = await ctx.service.rpc('has_role', { _user_id: ctx.userId, _role: 'admin' });
+    if (isAdmin !== true) return { ok: false, error: 'Skill admin réservée aux administrateurs.' };
+
+    const email = String(input.email ?? '').trim();
+    if (!email) return { ok: false, error: 'email requis' };
+
+    const target = await resolveUserIdByEmail(ctx.service, email);
+    if (!target) return { ok: false, error: `Aucun compte trouvé pour ${email}` };
+
+    const { data: sites, error } = await ctx.service
+      .from('tracked_sites')
+      .select('id, domain, site_name, brand_name, cms_platform, business_type, market_sector, created_at, last_audit_at, last_cms_refresh_at')
+      .eq('user_id', target.user_id)
+      .order('created_at', { ascending: false });
+
+    if (error) return { ok: false, error: `Lecture tracked_sites : ${error.message}` };
+
+    return {
+      ok: true,
+      data: {
+        target_user: { user_id: target.user_id, email: target.email, name: `${target.first_name ?? ''} ${target.last_name ?? ''}`.trim() },
+        sites_count: sites?.length ?? 0,
+        sites: sites ?? [],
+      },
+    };
+  },
+};
+
+const admin_reset_api_key: SkillDefinition = {
+  name: 'admin_reset_api_key',
+  description:
+    "[ADMIN] Régénère la clé API (api_key UUID) du profil d'un utilisateur. ATTENTION : invalide la clé actuelle utilisée par le plugin WordPress et le widget GTM — le user devra la re-déployer.",
+  parameters: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', description: "Email du compte utilisateur cible" },
+    },
+    required: ['email'],
+  },
+  handler: async (input, ctx) => {
+    const { data: isAdmin } = await ctx.service.rpc('has_role', { _user_id: ctx.userId, _role: 'admin' });
+    if (isAdmin !== true) return { ok: false, error: 'Skill admin réservée aux administrateurs.' };
+
+    const email = String(input.email ?? '').trim();
+    if (!email) return { ok: false, error: 'email requis' };
+
+    const target = await resolveUserIdByEmail(ctx.service, email);
+    if (!target) return { ok: false, error: `Aucun compte trouvé pour ${email}` };
+
+    // Génère un nouvel UUID via gen_random_uuid() en base.
+    const newKey = crypto.randomUUID();
+    const { data: updated, error } = await ctx.service
+      .from('profiles')
+      .update({ api_key: newKey })
+      .eq('user_id', target.user_id)
+      .select('user_id, api_key')
+      .single();
+
+    if (error) return { ok: false, error: `Régénération api_key : ${error.message}` };
+
+    // On masque la clé dans la réponse (8 premiers chars seulement) — la clé entière reste en base.
+    const masked = String(updated.api_key).slice(0, 8) + '••••••••';
+    return {
+      ok: true,
+      data: {
+        target_user: { user_id: target.user_id, email: target.email },
+        api_key_preview: masked,
+        message: `✓ Clé API régénérée pour ${email} (préfixe ${masked}). Le user doit re-déployer le plugin WordPress / widget GTM.`,
+      },
+    };
+  },
+};
+
+const VALID_PLAN_TYPES = ['free', 'starter', 'agency_pro', 'agency_premium'] as const;
+
+const admin_grant_pro: SkillDefinition = {
+  name: 'admin_grant_pro',
+  description:
+    "[ADMIN] Force un plan d'abonnement sur le profil d'un utilisateur (plan_type + subscription_status). Utilisé pour offrir un accès Pro Agency / Agency+ temporaire (test, support, partenariat).",
+  parameters: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', description: "Email du compte utilisateur cible" },
+      plan_type: {
+        type: 'string',
+        enum: [...VALID_PLAN_TYPES],
+        description: "Plan à appliquer (free, starter, agency_pro, agency_premium)",
+      },
+      subscription_status: {
+        type: 'string',
+        enum: ['active', 'trialing', 'canceled'],
+        default: 'active',
+        description: "Statut Stripe-like (défaut: active)",
+      },
+    },
+    required: ['email', 'plan_type'],
+  },
+  handler: async (input, ctx) => {
+    const { data: isAdmin } = await ctx.service.rpc('has_role', { _user_id: ctx.userId, _role: 'admin' });
+    if (isAdmin !== true) return { ok: false, error: 'Skill admin réservée aux administrateurs.' };
+
+    const email = String(input.email ?? '').trim();
+    const planType = String(input.plan_type ?? '').trim();
+    const subStatus = String(input.subscription_status ?? 'active').trim();
+
+    if (!email) return { ok: false, error: 'email requis' };
+    if (!VALID_PLAN_TYPES.includes(planType as typeof VALID_PLAN_TYPES[number])) {
+      return { ok: false, error: `plan_type invalide. Valides: ${VALID_PLAN_TYPES.join(', ')}` };
+    }
+
+    const target = await resolveUserIdByEmail(ctx.service, email);
+    if (!target) return { ok: false, error: `Aucun compte trouvé pour ${email}` };
+
+    // Snapshot avant pour audit
+    const { data: before } = await ctx.service
+      .from('profiles')
+      .select('plan_type, subscription_status')
+      .eq('user_id', target.user_id)
+      .maybeSingle();
+
+    const { data: updated, error } = await ctx.service
+      .from('profiles')
+      .update({ plan_type: planType, subscription_status: subStatus })
+      .eq('user_id', target.user_id)
+      .select('user_id, plan_type, subscription_status')
+      .single();
+
+    if (error) return { ok: false, error: `MAJ profile : ${error.message}` };
+
+    return {
+      ok: true,
+      data: {
+        target_user: { user_id: target.user_id, email: target.email },
+        before: before ?? null,
+        after: { plan_type: updated.plan_type, subscription_status: updated.subscription_status },
+        message: `✓ ${email} passé de ${before?.plan_type ?? '—'}/${before?.subscription_status ?? '—'} → ${updated.plan_type}/${updated.subscription_status}.`,
+      },
+    };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // MÉMOIRE PERSISTANTE — site_memory
 // Permet à Félix de capitaliser sur les conversations en stockant
 // des insights par site (preference, insight, objective, context, identity).
