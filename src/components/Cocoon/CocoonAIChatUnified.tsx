@@ -372,6 +372,17 @@ export function CocoonAIChatUnified({
             </div>
           )}
 
+          {/* Notes additionnelles (pièces jointes / rapports) */}
+          {!minimized && extraNotes.length > 0 && (
+            <div className="max-h-[30%] overflow-y-auto border-b border-border bg-muted/10 p-3 space-y-2">
+              {extraNotes.map((n) => (
+                <div key={n.id} className="rounded-md border border-border px-3 py-2 text-xs text-foreground whitespace-pre-wrap">
+                  {n.content}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Body */}
           {!minimized && (
             <div className="flex-1 overflow-hidden">
@@ -389,6 +400,30 @@ export function CocoonAIChatUnified({
                 onAssistantReply={onAssistantReply}
                 seedMessages={pickedSessionId ? undefined : (seedRef.current ?? undefined)}
                 initialSessionId={pickedSessionId}
+                fontScale={fontScale}
+                composerLeading={
+                  <ChatAttachmentPicker
+                    userId={user?.id}
+                    onAttach={(item) => {
+                      pushNote(
+                        `_Pièce jointe ajoutée :_ **${item.title}**${item.domain ? ` — ${item.domain}` : ''}`,
+                      );
+                    }}
+                    onImageAttach={(fileName) => {
+                      pushNote(`_Fichier joint :_ ${fileName}`);
+                    }}
+                  />
+                }
+                renderComposerExtras={user?.id ? () => (
+                  <ChatReportSearch
+                    userId={user.id}
+                    onSelect={(report) => {
+                      pushNote(
+                        `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
+                      );
+                    }}
+                  />
+                ) : undefined}
                 className="h-full"
               />
             </div>
