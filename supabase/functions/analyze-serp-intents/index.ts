@@ -15,7 +15,7 @@
  *  7. Persistance dans serp_intent_analyses (upsert sur user_id, domain, keyword, page_url)
  */
 
-import { z } from 'npm:zod@3.23.8';
+// Validation manuelle légère (pas de zod ailleurs dans le projet)
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
@@ -27,15 +27,45 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 // Schémas
 // ───────────────────────────────────────────────────────────────
 
-const RequestSchema = z.object({
-  keyword: z.string().min(2).max(200),
-  domain: z.string().min(3).max(253),
-  page_url: z.string().url().nullable().optional(),
-  tracked_site_id: z.string().uuid().nullable().optional(),
-  location_name: z.string().default('France'),
-  language_code: z.string().default('fr'),
-  force_refresh: z.boolean().default(false),
-});
+interface AnalyzeRequest {
+  keyword: string;
+  domain: string;
+  page_url?: string | null;
+  tracked_site_id?: string | null;
+  location_name?: string;
+  language_code?: string;
+  force_refresh?: boolean;
+}
+
+function validateRequest(body: unknown): { ok: true; data: Required<Pick<AnalyzeRequest, 'keyword' | 'domain' | 'location_name' | 'language_code' | 'force_refresh'>> & Pick<AnalyzeRequest, 'page_url' | 'tracked_site_id'> } | { ok: false; error: string } {
+  if (!body || typeof body !== 'object') return { ok: false, error: 'body must be an object' };
+  const b = body as Record<string, unknown>;
+  if (typeof b.keyword !== 'string' || b.keyword.length < 2 || b.keyword.length > 200) {
+    return { ok: false, error: 'keyword must be a string (2-200 chars)' };
+  }
+  if (typeof b.domain !== 'string' || b.domain.length < 3 || b.domain.length > 253) {
+    return { ok: false, error: 'domain must be a string (3-253 chars)' };
+  }
+  if (b.page_url !== undefined && b.page_url !== null) {
+    if (typeof b.page_url !== 'string') return { ok: false, error: 'page_url must be a string or null' };
+    try { new URL(b.page_url); } catch { return { ok: false, error: 'page_url must be a valid URL' }; }
+  }
+  if (b.tracked_site_id !== undefined && b.tracked_site_id !== null && typeof b.tracked_site_id !== 'string') {
+    return { ok: false, error: 'tracked_site_id must be a string or null' };
+  }
+  return {
+    ok: true,
+    data: {
+      keyword: b.keyword,
+      domain: b.domain,
+      page_url: (b.page_url as string | null | undefined) ?? null,
+      tracked_site_id: (b.tracked_site_id as string | null | undefined) ?? null,
+      location_name: typeof b.location_name === 'string' ? b.location_name : 'France',
+      language_code: typeof b.language_code === 'string' ? b.language_code : 'fr',
+      force_refresh: b.force_refresh === true,
+    },
+  };
+}
 
 interface SerpItem {
   type: string;
