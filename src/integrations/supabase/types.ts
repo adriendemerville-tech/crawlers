@@ -12291,6 +12291,13 @@ export type Database = {
             foreignKeyName: "tracked_sites_google_connection_id_fkey"
             columns: ["google_connection_id"]
             isOneToOne: false
+            referencedRelation: "google_ads_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracked_sites_google_connection_id_fkey"
+            columns: ["google_connection_id"]
+            isOneToOne: false
             referencedRelation: "google_connections"
             referencedColumns: ["id"]
           },
@@ -12832,6 +12839,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      google_ads_connections_public: {
+        Row: {
+          account_name: string | null
+          created_at: string | null
+          customer_id: string | null
+          id: string | null
+          is_active: boolean | null
+          scopes: string[] | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_name?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string | null
+          is_active?: never
+          scopes?: string[] | null
+          status?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_name?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string | null
+          is_active?: never
+          scopes?: string[] | null
+          status?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       google_connections_safe: {
         Row: {
