@@ -3,20 +3,26 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
- * gbp-auth — Separate Google Business Profile OAuth2 flow
- * 
- * Actions:
- *   POST action=login      → Returns OAuth2 auth URL (GBP-only scopes)
- *   GET  (from Google)      → Callback: exchanges code, stores tokens, redirects
- *   POST action=disconnect  → Removes GBP connection for user
- *   POST action=status      → Returns GBP connection status
+ * gbp-auth — Google Business Profile actions
+ *
+ * 🔁 COMPAT WRAPPER (since 2026-04-27)
+ * Le flow OAuth Google Business Profile a été unifié dans `gsc-auth`.
+ * Cette fonction conserve les actions métier propres à GBP (status enrichi avec
+ * découverte des locations, refresh token, sync vers gmb_locations).
+ *
+ *   POST action=login      → Redirige vers gsc-auth avec modules=["gbp"]
+ *   GET  (callback Google)  → Plus utilisé. Redirect vers gsc-auth callback (rétrocompat URL).
+ *   POST action=disconnect  → Vide gmb_account_id/gmb_location_id sur google_connections
+ *   POST action=status      → Découverte/refresh accounts + locations, sync gmb_locations
+ *
+ * NOTE: les anciennes lignes préfixées "gbp:" dans google_connections ont été
+ * fusionnées dans la connexion principale du user (migration du 2026-04-27).
  */
 
 Deno.serve(handleRequest(async (req) => {
-const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
-  const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-  const REDIRECT_URI = `${supabaseUrl}/functions/v1/gbp-auth`
+  const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
+  const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')
 
   if (!clientId || !clientSecret) {
     return jsonError('Google credentials not configured', 500)
@@ -24,180 +30,19 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
 
   const supabase = getServiceClient()
 
-  // ═══════════ GET: OAuth callback from Google ═══════════
+  // ═══════════ GET: Legacy callback URL → forward to gsc-auth ═══════════
   if (req.method === 'GET') {
     const url = new URL(req.url)
-    const code = url.searchParams.get('code')
-    const state = url.searchParams.get('state') || ''
-    const error = url.searchParams.get('error')
-
-    const [userId, frontendOrigin] = state.split('|')
-    const redirectBase = frontendOrigin || 'https://crawlers.fr'
-
-    if (error) {
-      return new Response(null, {
-        status: 302,
-        headers: { Location: `${redirectBase}/console?tab=gmb&gbp_error=${encodeURIComponent(error)}` },
-      })
-    }
-
-    if (!code || !userId) {
-      return new Response(null, {
-        status: 302,
-        headers: { Location: `${redirectBase}/console?tab=gmb&gbp_error=missing_code` },
-      })
-    }
-
-    try {
-      // Exchange code for tokens
-      const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: clientId,
-          client_secret: clientSecret,
-          code,
-          grant_type: 'authorization_code',
-          redirect_uri: REDIRECT_URI,
-        }),
-      })
-
-      if (!tokenResp.ok) {
-        const errText = await tokenResp.text()
-        console.error('[gbp-auth] Token exchange failed:', errText)
-        return new Response(null, {
-          status: 302,
-          headers: { Location: `${redirectBase}/console?tab=gmb&gbp_error=token_exchange_failed` },
-        })
-      }
-
-      const tokens = await tokenResp.json()
-      const expiresAt = new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString()
-
-      // Fetch Google email
-      let googleEmail = 'unknown'
-      try {
-        const infoResp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: { Authorization: `Bearer ${tokens.access_token}` },
-        })
-        if (infoResp.ok) {
-          const info = await infoResp.json()
-          googleEmail = info.email || 'unknown'
-        }
-      } catch (_) { /* best effort */ }
-
-      // Try to discover GBP account & location
-      let gmbAccountId: string | null = null
-      let gmbLocationId: string | null = null
-      try {
-        console.log('[gbp-auth] 🔍 Starting GBP account discovery...')
-        const accountsResp = await fetch(
-          'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
-          { headers: { Authorization: `Bearer ${tokens.access_token}` } }
-        )
-        console.log(`[gbp-auth] Accounts API status: ${accountsResp.status}`)
-        if (accountsResp.ok) {
-          const accountsBody = await accountsResp.json()
-          const accounts = accountsBody.accounts || []
-          console.log(`[gbp-auth] Found ${accounts.length} account(s):`, JSON.stringify(accounts.map((a: any) => ({ name: a.name, type: a.type, role: a.role }))))
-          if (accounts.length > 0) {
-            gmbAccountId = accounts[0].name?.replace('accounts/', '') || null
-            console.log(`[gbp-auth] Using account: ${gmbAccountId}`)
-            // Fetch first location
-            if (gmbAccountId) {
-              const locUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${gmbAccountId}/locations?readMask=name,title,storefrontAddress`
-              console.log(`[gbp-auth] Fetching locations from: ${locUrl}`)
-              const locResp = await fetch(locUrl, {
-                headers: { Authorization: `Bearer ${tokens.access_token}` },
-              })
-              console.log(`[gbp-auth] Locations API status: ${locResp.status}`)
-              if (locResp.ok) {
-                const locBody = await locResp.json()
-                const locations = locBody.locations || []
-                console.log(`[gbp-auth] Found ${locations.length} location(s):`, JSON.stringify(locations.map((l: any) => ({ name: l.name, title: l.title }))))
-                if (locations.length > 0) {
-                  gmbLocationId = locations[0].name?.split('/').pop() || null
-                  console.log(`[gbp-auth] ✅ Selected location: ${gmbLocationId}`)
-                } else {
-                  console.warn('[gbp-auth] ⚠️ Account found but NO locations — user may need to create a GMB listing first')
-                }
-              } else {
-                const locErr = await locResp.text()
-                console.error(`[gbp-auth] ❌ Locations API error ${locResp.status}: ${locErr}`)
-              }
-            }
-          } else {
-            console.warn('[gbp-auth] ⚠️ No GMB accounts found for this Google account')
-          }
-        } else {
-          const errBody = await accountsResp.text()
-          console.error(`[gbp-auth] ❌ Accounts API error ${accountsResp.status}: ${errBody}`)
-        }
-      } catch (e) {
-        console.error('[gbp-auth] GBP discovery error:', e)
-      }
-
-      // Upsert into google_connections with gbp-specific flag
-      // Use a special google_email suffix to avoid collision with gsc-auth connections
-      const gbpEmail = `gbp:${googleEmail}`
-
-      await supabase.from('google_connections').upsert({
-        user_id: userId,
-        google_email: gbpEmail,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token || null,
-        token_expiry: expiresAt,
-        scopes: ['https://www.googleapis.com/auth/business.manage'],
-        gmb_account_id: gmbAccountId,
-        gmb_location_id: gmbLocationId,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,google_email' })
-
-      // Auto-link tracked sites to this GBP connection
-      const { data: conn } = await supabase
-        .from('google_connections')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('google_email', gbpEmail)
-        .single()
-
-      if (conn) {
-        // Link all user's tracked sites that don't already have a google_connection_id
-        const { data: sites } = await supabase
-          .from('tracked_sites')
-          .select('id')
-          .eq('user_id', userId)
-          .is('google_connection_id', null)
-
-        if (sites && sites.length > 0) {
-          for (const site of sites) {
-            await supabase
-              .from('tracked_sites')
-              .update({ google_connection_id: conn.id })
-              .eq('id', site.id)
-          }
-        }
-      }
-
-      return new Response(null, {
-        status: 302,
-        headers: { Location: `${redirectBase}/console?tab=gmb&gbp_connected=true&google_email=${encodeURIComponent(googleEmail)}` },
-      })
-
-    } catch (e) {
-      console.error('[gbp-auth] callback error:', e)
-      return new Response(null, {
-        status: 302,
-        headers: { Location: `${redirectBase}/console?tab=gmb&gbp_error=internal` },
-      })
-    }
+    const forward = `${supabaseUrl}/functions/v1/gsc-auth${url.search}`
+    console.log('[gbp-auth] Legacy GET callback → forwarding to gsc-auth')
+    return new Response(null, { status: 302, headers: { Location: forward } })
   }
 
   // ═══════════ POST: API actions ═══════════
   try {
     const { action, user_id: body_user_id, frontend_origin } = await req.json()
 
-    // ─── SECURITY: Validate JWT and enforce real user_id ─────────
+    // ─── SECURITY: Validate JWT ─────────
     const authHeader = req.headers.get('Authorization') || ''
     const token = authHeader.replace('Bearer ', '')
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -205,7 +50,6 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
 
     let user_id: string
     if (action === 'login') {
-      // Login doesn't require auth yet
       user_id = body_user_id || ''
     } else if (isServiceRole) {
       if (!body_user_id) return jsonError('user_id required for service calls', 400)
@@ -217,58 +61,53 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
       user_id = user.id
     }
 
-    // === LOGIN: Generate GBP-only OAuth URL ===
+    // === LOGIN: delegate to unified gsc-auth ===
     if (action === 'login') {
-      const stateValue = `${user_id || ''}|${frontend_origin || ''}`
-      const scopes = [
-        'https://www.googleapis.com/auth/business.manage',
-        'https://www.googleapis.com/auth/userinfo.email',
-      ]
-
-      const params = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: REDIRECT_URI,
-        response_type: 'code',
-        scope: scopes.join(' '),
-        access_type: 'offline',
-        prompt: 'consent',
-        state: stateValue,
+      const resp = await fetch(`${supabaseUrl}/functions/v1/gsc-auth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+        },
+        body: JSON.stringify({
+          action: 'login',
+          user_id,
+          frontend_origin,
+          modules: ['gsc', 'gmb'],
+        }),
       })
-
-      return new Response(JSON.stringify({
-        auth_url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
-      }), {
+      const data = await resp.json()
+      return new Response(JSON.stringify(data), {
+        status: resp.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // === DISCONNECT: Remove GBP connection ===
+    // === DISCONNECT: clear GMB-related fields on google_connections ===
     if (action === 'disconnect') {
-      if (!user_id) {
-        return jsonError('user_id required', 400)
-      }
+      if (!user_id) return jsonError('user_id required', 400)
 
-      // Find and delete GBP-specific connections (prefixed with gbp:)
-      const { data: gbpConns } = await supabase
+      const { data: conns } = await supabase
         .from('google_connections')
-        .select('id, google_email')
+        .select('id, scopes')
         .eq('user_id', user_id)
-        .like('google_email', 'gbp:%')
+        .or('gmb_account_id.not.is.null,gmb_location_id.not.is.null')
 
-      if (gbpConns && gbpConns.length > 0) {
-        for (const conn of gbpConns) {
-          // Unlink tracked sites using this connection
-          await supabase
-            .from('tracked_sites')
-            .update({ google_connection_id: null })
-            .eq('google_connection_id', conn.id)
-
-          // Delete the connection
-          await supabase
-            .from('google_connections')
-            .delete()
-            .eq('id', conn.id)
-        }
+      let cleared = 0
+      for (const conn of (conns || [])) {
+        const newScopes = (conn.scopes || []).filter(
+          (s: string) => s !== 'https://www.googleapis.com/auth/business.manage'
+        )
+        await supabase
+          .from('google_connections')
+          .update({
+            gmb_account_id: null,
+            gmb_location_id: null,
+            scopes: newScopes,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', conn.id)
+        cleared++
       }
 
       // Log event
@@ -276,34 +115,44 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
         await supabase.from('analytics_events').insert({
           user_id,
           event_type: 'gbp:disconnect',
-          event_data: { deleted_count: gbpConns?.length || 0 },
+          event_data: { cleared },
         })
       } catch (_) { /* best effort */ }
 
-      return jsonOk({ success: true, deleted: gbpConns?.length || 0 })
+      return jsonOk({ success: true, deleted: cleared })
     }
 
-    // === STATUS: Check if user has GBP connection & fetch locations ===
+    // === STATUS: Check GBP connection & fetch locations ===
     if (action === 'status') {
-      if (!user_id) {
-        return jsonError('user_id required', 400)
-      }
+      if (!user_id) return jsonError('user_id required', 400)
 
       const { data: gbpConn } = await supabase
         .from('google_connections')
-        .select('id, google_email, gmb_account_id, gmb_location_id, access_token, refresh_token, token_expiry')
+        .select('id, google_email, gmb_account_id, gmb_location_id, access_token, refresh_token, token_expiry, scopes')
         .eq('user_id', user_id)
-        .like('google_email', 'gbp:%')
+        .not('gmb_account_id', 'is', null)
+        .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
-      if (!gbpConn) {
+      // Fallback: any connection with business.manage scope (account_id may be discovered later)
+      const { data: gbpConnAlt } = !gbpConn ? await supabase
+        .from('google_connections')
+        .select('id, google_email, gmb_account_id, gmb_location_id, access_token, refresh_token, token_expiry, scopes')
+        .eq('user_id', user_id)
+        .contains('scopes', ['https://www.googleapis.com/auth/business.manage'])
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle() : { data: null }
+
+      const conn = gbpConn || gbpConnAlt
+      if (!conn) {
         return jsonOk({ connected: false, email: null, locations: [] })
       }
 
       // Refresh token if expired
-      let accessToken = gbpConn.access_token
-      if (gbpConn.token_expiry && new Date(gbpConn.token_expiry) <= new Date() && gbpConn.refresh_token) {
+      let accessToken = conn.access_token
+      if (conn.token_expiry && new Date(conn.token_expiry) <= new Date() && conn.refresh_token) {
         try {
           const refreshResp = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
@@ -311,7 +160,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
             body: new URLSearchParams({
               client_id: clientId,
               client_secret: clientSecret,
-              refresh_token: gbpConn.refresh_token,
+              refresh_token: conn.refresh_token,
               grant_type: 'refresh_token',
             }),
           })
@@ -323,30 +172,27 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
               access_token: accessToken,
               token_expiry: newExpiry,
               updated_at: new Date().toISOString(),
-            }).eq('id', gbpConn.id)
+            }).eq('id', conn.id)
           }
         } catch (e) {
           console.warn('[gbp-auth] Token refresh failed:', e)
         }
       }
 
-      // If gmb_account_id is null, retry discovery now that we have a valid token
-      let accountId = gbpConn.gmb_account_id
-      let locationId = gbpConn.gmb_location_id
+      // Auto-discover gmb_account_id if missing
+      let accountId = conn.gmb_account_id
+      let locationId = conn.gmb_location_id
 
       if (!accountId && accessToken) {
-        console.log('[gbp-auth/status] 🔄 gmb_account_id is null — retrying discovery...')
+        console.log('[gbp-auth/status] 🔄 Discovering accounts...')
         try {
           const acctResp = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
             headers: { Authorization: `Bearer ${accessToken}` },
           })
-          console.log(`[gbp-auth/status] Accounts API: ${acctResp.status}`)
           if (acctResp.ok) {
             const { accounts = [] } = await acctResp.json()
-            console.log(`[gbp-auth/status] Found ${accounts.length} account(s)`)
             if (accounts.length > 0) {
               accountId = accounts[0].name?.replace('accounts/', '') || null
-              console.log(`[gbp-auth/status] Using account: ${accountId}`)
               if (accountId) {
                 const locResp = await fetch(
                   `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${accountId}/locations?readMask=name,title,storefrontAddress`,
@@ -356,27 +202,22 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
                   const { locations: locs = [] } = await locResp.json()
                   if (locs.length > 0) {
                     locationId = locs[0].name?.split('/').pop() || null
-                    console.log(`[gbp-auth/status] ✅ Discovered location: ${locationId}`)
                   }
                 }
-                // Persist discovered IDs
                 await supabase.from('google_connections').update({
                   gmb_account_id: accountId,
                   gmb_location_id: locationId,
                   updated_at: new Date().toISOString(),
-                }).eq('id', gbpConn.id)
-                console.log('[gbp-auth/status] ✅ Persisted account/location IDs')
+                }).eq('id', conn.id)
               }
             }
-          } else {
-            console.warn('[gbp-auth/status] Accounts API failed:', await acctResp.text())
           }
         } catch (e) {
-          console.warn('[gbp-auth/status] Discovery retry failed:', e)
+          console.warn('[gbp-auth/status] Discovery failed:', e)
         }
       }
 
-      // Fetch real locations from GBP API and persist into gmb_locations
+      // Fetch locations and sync to gmb_locations
       const locations: Array<{id: string; location_name: string; address: string; phone: string; website: string; category: string}> = []
       try {
         if (accountId && accessToken) {
@@ -397,7 +238,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
 
               locations.push({ id: locId, location_name: locationName, address: addressStr, phone, website, category })
 
-              // Upsert into gmb_locations — match by user_id + place_id or location_name
+              // Upsert into gmb_locations
               try {
                 const { data: existing } = await supabase.from('gmb_locations')
                   .select('id')
@@ -412,28 +253,24 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
                     updated_at: new Date().toISOString(),
                   }).eq('id', existing[0].id)
                 } else {
-                  // Find user's first tracked site as default
                   const { data: sites } = await supabase.from('tracked_sites')
                     .select('id').eq('user_id', user_id).limit(1)
                   const trackedSiteId = sites?.[0]?.id
                   if (trackedSiteId) {
                     await supabase.from('gmb_locations').insert({
-                      user_id: user_id,
+                      user_id,
                       tracked_site_id: trackedSiteId,
                       location_name: locationName,
                       place_id: null,
                       address: addressStr, phone, website, category,
                       attributes: { google_location_name: loc.name, account_id: accountId },
                     })
-                    console.log(`[gbp-auth/status] Inserted gmb_location: ${locationName}`)
                   }
                 }
               } catch (upsertErr) {
                 console.warn('[gbp-auth/status] gmb_locations upsert error:', upsertErr)
               }
             }
-          } else {
-            console.warn('[gbp-auth] Locations fetch failed:', await locResp.text())
           }
         }
       } catch (e) {
@@ -442,7 +279,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
 
       return jsonOk({
         connected: true,
-        email: gbpConn.google_email?.replace('gbp:', '') || null,
+        email: conn.google_email || null,
         has_location: locations.length > 0,
         locations,
       })
