@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Globe, FileText, ListTodo, BarChart3, Plus, Key } from 'lucide-react';
+import { Globe, FileText, ListTodo, BarChart3, Plus, Key, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ParmenionTargetPanel } from './ParmenionTargetPanel';
 import { ParmenionTaskPlan } from './ParmenionTaskPlan';
 import { ParmenionFuncStats } from './ParmenionFuncStats';
 import { ParmenionAddTargetModal } from './ParmenionAddTargetModal';
 import { ParmenionApiKeyManager } from './ParmenionApiKeyManager';
+import { ParmenionExecutionStatus } from './ParmenionExecutionStatus';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Target {
@@ -33,12 +34,16 @@ export function ParmenionDashboard() {
 
   useEffect(() => { fetchTargets(); }, [fetchTargets]);
 
-  const defaultTab = targets.length > 0 ? targets[0].domain.replace(/\./g, '-') : 'task-plan';
+  const defaultTab = 'execution';
 
   return (
     <Tabs defaultValue={defaultTab} key={defaultTab} className="space-y-4">
       <div className="flex items-center gap-2">
         <TabsList className="flex-1 flex-wrap h-auto">
+          <TabsTrigger value="execution" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Exécution
+          </TabsTrigger>
           {targets.map((t) => (
             <TabsTrigger key={t.id} value={t.domain.replace(/\./g, '-')} className="gap-2">
               <Globe className="h-4 w-4" />
@@ -68,6 +73,10 @@ export function ParmenionDashboard() {
           Site
         </Button>
       </div>
+
+      <TabsContent value="execution" forceMount className="data-[state=inactive]:hidden">
+        <ParmenionExecutionStatus />
+      </TabsContent>
 
       {targets.map((t) => (
         <TabsContent key={t.id} value={t.domain.replace(/\./g, '-')} forceMount className="data-[state=inactive]:hidden">
