@@ -459,5 +459,47 @@ Deno.serve(handleRequest(async (req) => {
 
   const stats = computeStats(articles);
 
-  return jsonOk({ stats, domain, articles_fetched: articles.length });
+  // Build a lightweight article list for the UI (title, status, type, url, date)
+  const list = articles.map((a) => {
+    const rawStatus = (a.status || 'published').toLowerCase();
+    const normalizedStatus =
+      rawStatus === 'publish' || rawStatus === 'published' || rawStatus === 'live'
+        ? 'published'
+        : rawStatus === 'draft' || rawStatus === 'brouillon'
+        ? 'draft'
+        : rawStatus === 'archived' || rawStatus === 'trash'
+        ? 'archived'
+        : rawStatus;
+    const isPage = (a.categories || []).some((c) => c === 'Page' || c === 'Landing Page');
+    return {
+      title: a.title || '(sans titre)',
+      slug: a.slug || null,
+      status: normalizedStatus,
+      type: isPage ? 'page' : 'post',
+      published_at: a.published_at || a.created_at || null,
+      url: a.slug
+        ? domain.includes('crawlers')
+          ? isPage
+            ? `https://crawlers.fr/landing/${a.slug}`
+            : `https://crawlers.fr/blog/${a.slug}`
+          : domain.includes('iktracker')
+          ? isPage
+            ? `https://iktracker.fr/${a.slug}`
+            : `https://iktracker.fr/blog/${a.slug}`
+          : null
+        : null,
+    };
+  })
+  // Sort: drafts first, then by date desc
+  .sort((a, b) => {
+    if (a.status !== b.status) {
+      if (a.status === 'draft') return -1;
+      if (b.status === 'draft') return 1;
+    }
+    const da = a.published_at ? new Date(a.published_at).getTime() : 0;
+    const db = b.published_at ? new Date(b.published_at).getTime() : 0;
+    return db - da;
+  });
+
+  return jsonOk({ stats, domain, articles_fetched: articles.length, articles: list });
 }, 'cms-content-stats'));
