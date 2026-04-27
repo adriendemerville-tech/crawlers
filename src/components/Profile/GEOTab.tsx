@@ -27,6 +27,7 @@ import { AICrawlActivityCard } from '@/components/Profile/geo/AICrawlActivityCar
 import { AIAttributionCard } from '@/components/Profile/geo/AIAttributionCard';
 import { ShieldOnboardingBanner } from '@/components/Profile/geo/ShieldOnboardingBanner';
 import { Loader2, Sparkles } from 'lucide-react';
+import { MachineLayerCTA } from '@/components/MachineLayer/MachineLayerCTA';
 
 interface GEOTabProps {
   externalSiteId?: string | null;
