@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
+import { detectScoredWide, unpivotScoredWide, buildBenchmarkPayloadFromItems } from '@/utils/matrice/scoredWideUnpivot';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 import ImportStepper, { type MatrixMetadata } from '@/components/Matrice/ImportStepper';
 import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
