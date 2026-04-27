@@ -715,46 +715,7 @@ async function fetchGA4Metrics(accessToken: string, propertyId: string, startDat
       const path = r.dimensionValues?.[0]?.value
       if (path) scrollMap[path] = parseInt(r.metricValues?.[0]?.value || '0')
     }
-}
-
-/**
- * Persist GA4 behavioral metrics per page (engagement, scroll, clicks, conversions).
- */
-async function persistGA4BehavioralMetrics(
-  supabase: any,
-  userId: string,
-  trackedSiteId: string,
-  startDate: string,
-  endDate: string,
-  behavioralPages: any[],
-) {
-  const rows = behavioralPages.map((p: any) => ({
-    tracked_site_id: trackedSiteId,
-    user_id: userId,
-    page_path: p.path,
-    period_start: startDate,
-    period_end: endDate,
-    avg_engagement_time: p.avg_engagement_time || 0,
-    engaged_sessions: p.engaged_sessions || 0,
-    engagement_rate: p.engagement_rate || 0,
-    scroll_events: p.scroll_events || 0,
-    scroll_rate: p.scroll_rate || 0,
-    click_events: p.click_events || 0,
-    outbound_clicks: 0,
-    conversions: p.conversions || 0,
-    conversion_rate: p.conversion_rate || 0,
-    form_submissions: 0,
-    exit_rate: 0,
-    entries: p.sessions || 0,
-  }))
-
-  if (rows.length > 0) {
-    const { error } = await supabase
-      .from('ga4_behavioral_metrics')
-      .upsert(rows, { onConflict: 'tracked_site_id,page_path,period_start,period_end' })
-    if (error) console.error('[GA4] Behavioral metrics persist error:', error.message)
   }
-}
 
   // ─── Report 6: Click events per page ───────────────────────────
   const clickResp = await fetch(`${GA4_API}/properties/${numericId}:runReport`, {
@@ -801,6 +762,45 @@ async function persistGA4BehavioralMetrics(
     behavioral_pages: behavioralPages,
     period: { start_date: startDate, end_date: endDate },
     measured_at: new Date().toISOString(),
+  }
+}
+
+/**
+ * Persist GA4 behavioral metrics per page (engagement, scroll, clicks, conversions).
+ */
+async function persistGA4BehavioralMetrics(
+  supabase: any,
+  userId: string,
+  trackedSiteId: string,
+  startDate: string,
+  endDate: string,
+  behavioralPages: any[],
+) {
+  const rows = behavioralPages.map((p: any) => ({
+    tracked_site_id: trackedSiteId,
+    user_id: userId,
+    page_path: p.path,
+    period_start: startDate,
+    period_end: endDate,
+    avg_engagement_time: p.avg_engagement_time || 0,
+    engaged_sessions: p.engaged_sessions || 0,
+    engagement_rate: p.engagement_rate || 0,
+    scroll_events: p.scroll_events || 0,
+    scroll_rate: p.scroll_rate || 0,
+    click_events: p.click_events || 0,
+    outbound_clicks: 0,
+    conversions: p.conversions || 0,
+    conversion_rate: p.conversion_rate || 0,
+    form_submissions: 0,
+    exit_rate: 0,
+    entries: p.sessions || 0,
+  }))
+
+  if (rows.length > 0) {
+    const { error } = await supabase
+      .from('ga4_behavioral_metrics')
+      .upsert(rows, { onConflict: 'tracked_site_id,page_path,period_start,period_end' })
+    if (error) console.error('[GA4] Behavioral metrics persist error:', error.message)
   }
 }
 
