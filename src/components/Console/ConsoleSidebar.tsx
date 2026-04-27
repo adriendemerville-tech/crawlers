@@ -9,8 +9,9 @@ import { cn } from '@/lib/utils';
 import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
-  Shield, Code2, ChevronDown, Search, Sparkles, Database,
+  Shield, Code2, ChevronDown, Search, Sparkles, Database, SlidersHorizontal,
 } from 'lucide-react';
+import { useConsoleViewMode } from '@/contexts/ConsoleViewModeContext';
 
 interface TrackedSite {
   id: string;
@@ -26,6 +27,8 @@ interface SidebarItem {
   adminOnly?: boolean;
   hideOnMobile?: boolean;
   beta?: boolean;
+  /** When true, hidden in simplified (non-advanced) view. */
+  advancedOnly?: boolean;
 }
 
 const translations = {
@@ -60,6 +63,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
   const isMobile = useIsMobile();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const isProUser = isAgencyPro || isAdmin;
+  const { advanced, toggle } = useConsoleViewMode();
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
@@ -100,6 +104,20 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       });
   }, [user]);
 
+  // Liste des onglets cachés en vue simplifiée — doit rester synchro avec advancedOnly ci-dessous.
+  const ADVANCED_ONLY_TABS = [
+    'corrective-codes', 'crawls', 'sea-seo', 'indexation', 'gsc-bigquery',
+    'marina', 'bundle', 'tracking-api',
+  ];
+
+  // Si l'utilisateur passe en vue simplifiée alors qu'il est sur un onglet technique, on le ramène sur SEO.
+  useEffect(() => {
+    if (!advanced && ADVANCED_ONLY_TABS.includes(activeTab)) {
+      onTabChange('tracking');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [advanced]);
+
   const handleSiteChange = (siteId: string | null, domain: string | null) => {
     setSelectedSiteId(siteId);
     onSiteSelect?.(siteId, domain);
@@ -113,18 +131,18 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     { value: 'tracking', label: t.tracking, icon: Search },
     { value: 'geo', label: t.geo, icon: Sparkles },
     { value: 'action-plans', label: t.actionPlans, icon: CheckSquare, hideOnMobile: true },
-    { value: 'corrective-codes', label: t.correctiveCodes, icon: Code2, hideOnMobile: true },
-    { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true },
+    { value: 'corrective-codes', label: t.correctiveCodes, icon: Code2, hideOnMobile: true, advancedOnly: true },
+    { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true, advancedOnly: true },
     { value: 'drafts', label: 'Content', icon: FileEdit, hideOnMobile: true, beta: true },
     ...(isProUser ? [
-      { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true },
+      { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true, advancedOnly: true },
     ] : []),
-    { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true },
+    { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true, advancedOnly: true },
     ...(isProUser && (!gscBigQueryHidden || isAdmin) ? [
-      { value: 'gsc-bigquery', label: 'GSC BQ', icon: Database, hideOnMobile: true, beta: true },
+      { value: 'gsc-bigquery', label: 'GSC BQ', icon: Database, hideOnMobile: true, beta: true, advancedOnly: true },
     ] : []),
     { value: 'gmb', label: 'GMB', icon: Store },
-    { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true },
+    { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
     ...(!isProUser ? [
       { value: 'reports', label: t.reports, icon: FileText, hideOnMobile: true },
     ] : []),
@@ -141,13 +159,14 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     }] : [
       { value: 'wallet', label: t.wallet, icon: Wallet, hideOnMobile: true },
     ]),
-    ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true }] : []),
+    ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true, advancedOnly: true }] : []),
     { value: 'settings', label: t.settings, icon: Settings, hideOnMobile: true },
     ...(hasAdminAccess ? [{ value: 'admin', label: t.creator, icon: Shield }] : []),
   ];
 
   const renderItem = (item: SidebarItem) => {
     if (item.hideOnMobile && isMobile) return null;
+    if (item.advancedOnly && !advanced) return null;
 
     const isActive = activeTab === item.value;
     const isLocked = item.proOnly && !isProUser;
@@ -291,6 +310,33 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
       {!isMobile && (
         <div className="border-t border-border/40 px-2 py-2 space-y-0.5">
+          {/* View mode toggle — entre Rapports et Pro Agency */}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-pressed={advanced}
+            title={advanced ? 'Passer en vue simplifiée' : 'Passer en vue avancée'}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+          >
+            <SlidersHorizontal className="h-4 w-4 shrink-0" />
+            <span className="flex-1 text-left truncate">
+              {advanced ? 'Vue avancée' : 'Vue simplifiée'}
+            </span>
+            <span
+              className={cn(
+                'relative inline-flex h-4 w-7 items-center rounded-full border transition-colors',
+                advanced ? 'border-foreground/70' : 'border-border',
+              )}
+            >
+              <span
+                className={cn(
+                  'inline-block h-2.5 w-2.5 rounded-full bg-foreground transition-transform',
+                  advanced ? 'translate-x-3.5' : 'translate-x-0.5',
+                )}
+              />
+            </span>
+          </button>
+
           {bottomItems.map(renderItem)}
 
           <a
@@ -300,7 +346,10 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
               e.preventDefault();
               onTabChange('tracking-api');
             }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+            className={cn(
+              'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors',
+              !advanced && 'hidden',
+            )}
           >
             <Network className="h-4 w-4 shrink-0" />
             <span>API</span>

@@ -34,6 +34,7 @@ import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
 import { WelcomeBackModal } from '@/components/WelcomeBackModal';
 import { GoogleServicesOnboardingModal } from '@/components/Console/GoogleServicesOnboardingModal';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
+import { ConsoleViewModeProvider } from '@/contexts/ConsoleViewModeContext';
 
 const translations = {
   fr: { pageTitle: 'Console - Crawlers AI' },
@@ -262,7 +263,9 @@ class ProfileErrorBoundary extends Component<{ children: ReactNode }, { hasError
 export default function Profile() {
   return (
     <ProfileErrorBoundary>
-      <ProfileContent />
+      <ConsoleViewModeProvider>
+        <ProfileContent />
+      </ConsoleViewModeProvider>
     </ProfileErrorBoundary>
   );
 }
