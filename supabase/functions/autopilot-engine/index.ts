@@ -266,7 +266,9 @@ try {
           }
 
           // ═══ Store execution results ═══
-          const phaseStatus = config.implementation_mode === 'dry_run' ? 'dry_run' 
+          // Statut 'dry_run' réservé à la phase execute en mode dry_run (seule phase réellement bloquée).
+          // Les autres phases (audit/diagnose/prescribe/validate) reflètent leur exécution réelle.
+          const phaseStatus = isDryRunBlocked ? 'dry_run' 
             : phaseErrors.some(e => e.severity === 'critical') ? 'failed'
             : phaseErrors.some(e => e.severity === 'degraded') ? 'degraded'
             : executionSuccess ? 'completed' : 'partial';
