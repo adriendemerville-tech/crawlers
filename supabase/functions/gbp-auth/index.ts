@@ -182,6 +182,8 @@ Deno.serve(handleRequest(async (req) => {
       // Auto-discover gmb_account_id if missing
       let accountId = conn.gmb_account_id
       let locationId = conn.gmb_location_id
+      // Capture Google API error to surface to UI (e.g. 429 RESOURCE_EXHAUSTED, 403 PERMISSION_DENIED)
+      let googleApiError: { status: number; reason?: string; message?: string; raw?: string } | null = null
 
       if (!accountId && accessToken) {
         console.log('[gbp-auth/status] 🔄 Discovering accounts...')
@@ -203,6 +205,17 @@ Deno.serve(handleRequest(async (req) => {
                   if (locs.length > 0) {
                     locationId = locs[0].name?.split('/').pop() || null
                   }
+                } else {
+                  const raw = await locResp.text().catch(() => '')
+                  let parsed: any = null
+                  try { parsed = JSON.parse(raw) } catch { /* ignore */ }
+                  googleApiError = {
+                    status: locResp.status,
+                    reason: parsed?.error?.status || parsed?.error?.errors?.[0]?.reason,
+                    message: parsed?.error?.message,
+                    raw: raw.slice(0, 500),
+                  }
+                  console.error('[gbp-auth/status] ❌ Locations API error', googleApiError)
                 }
                 await supabase.from('google_connections').update({
                   gmb_account_id: accountId,
@@ -211,9 +224,21 @@ Deno.serve(handleRequest(async (req) => {
                 }).eq('id', conn.id)
               }
             }
+          } else {
+            const raw = await acctResp.text().catch(() => '')
+            let parsed: any = null
+            try { parsed = JSON.parse(raw) } catch { /* ignore */ }
+            googleApiError = {
+              status: acctResp.status,
+              reason: parsed?.error?.status || parsed?.error?.errors?.[0]?.reason,
+              message: parsed?.error?.message,
+              raw: raw.slice(0, 500),
+            }
+            console.error('[gbp-auth/status] ❌ Accounts API error', googleApiError)
           }
         } catch (e) {
           console.warn('[gbp-auth/status] Discovery failed:', e)
+          googleApiError = { status: 0, reason: 'NETWORK_ERROR', message: e instanceof Error ? e.message : String(e) }
         }
       }
 
