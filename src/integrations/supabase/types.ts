@@ -5189,6 +5189,59 @@ export type Database = {
           },
         ]
       }
+      ga4_traffic_sources_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          fetched_at: string
+          id: string
+          page_paths: string[]
+          page_paths_hash: string
+          period_end: string
+          period_start: string
+          sources_data: Json
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          fetched_at?: string
+          id?: string
+          page_paths?: string[]
+          page_paths_hash?: string
+          period_end: string
+          period_start: string
+          sources_data?: Json
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          fetched_at?: string
+          id?: string
+          page_paths?: string[]
+          page_paths_hash?: string
+          period_end?: string
+          period_start?: string
+          sources_data?: Json
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ga4_traffic_sources_cache_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       geo_kpi_snapshots: {
         Row: {
           aeo_avg: number | null
