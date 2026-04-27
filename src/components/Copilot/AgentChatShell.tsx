@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, RotateCcw, Send } from 'lucide-react';
+import { Check, Copy, Loader2, RotateCcw, Send } from 'lucide-react';
 import { useCopilot, type CopilotPersona, type CopilotAction } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
 
