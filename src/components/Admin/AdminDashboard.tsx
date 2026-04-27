@@ -175,6 +175,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         const config = data.card_order as Record<string, unknown>;
         setDocsHiddenForViewers(!!config.docs_hidden_for_viewers);
         setSimulatedDataEnabled(config.simulated_data_enabled !== false);
+        setGscBigQueryHidden(!!config.gsc_bigquery_hidden);
       }
     };
     loadDocVisibility();
