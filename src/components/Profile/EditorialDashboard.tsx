@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, BarChart3, Users, Tag, FileText, Clock, FileWarning, ImageOff, AlertTriangle, Type, RefreshCw, Plug, Globe } from 'lucide-react';
+import { Loader2, BarChart3, Users, Tag, FileText, Clock, FileWarning, ImageOff, AlertTriangle, Type, RefreshCw, Plug, Globe, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { CmsConnectionDialog } from './CmsConnectionDialog';
 
@@ -20,6 +20,15 @@ interface EditorialStats {
   missing_subtitle: number;
   top_topics: { name: string; count: number }[];
   seo_alerts: number;
+}
+
+interface ArticleListItem {
+  title: string;
+  slug: string | null;
+  status: string;
+  type: 'post' | 'page';
+  published_at: string | null;
+  url: string | null;
 }
 
 interface TrackedSite {
@@ -44,9 +53,11 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [stats, setStats] = useState<EditorialStats | null>(null);
+  const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -83,6 +94,8 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
     setLoading(true);
     setError(null);
     setStats(null);
+    setArticles([]);
+    setShowAll(false);
 
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('cms-content-stats', {
@@ -95,6 +108,7 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
         setError(data.message);
       } else if (data?.stats) {
         setStats(data.stats);
+        setArticles(Array.isArray(data.articles) ? data.articles : []);
       } else {
         setError('Impossible de récupérer les statistiques.');
       }
@@ -188,6 +202,71 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
                   </Badge>
                 )}
               </div>
+
+              {/* Liste des articles avec statut */}
+              {articles.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Articles &amp; pages ({articles.length})</span>
+                    </div>
+                    {articles.length > 10 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setShowAll(!showAll)}
+                      >
+                        {showAll ? 'Réduire' : `Voir tout (${articles.length})`}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="rounded-lg border border-border/40 bg-background/40 divide-y divide-border/30 max-h-96 overflow-y-auto">
+                    {(showAll ? articles : articles.slice(0, 10)).map((art, i) => (
+                      <div
+                        key={`${art.slug || 'no-slug'}-${i}`}
+                        className="flex items-center gap-3 px-3 py-2 hover:bg-muted/30 transition-colors"
+                      >
+                        <Badge
+                          variant={art.status === 'published' ? 'secondary' : 'outline'}
+                          className={`text-[10px] px-2 py-0.5 shrink-0 ${
+                            art.status === 'published'
+                              ? 'border-green-500/40 text-green-500 bg-green-500/10'
+                              : art.status === 'draft'
+                              ? 'border-yellow-500/40 text-yellow-500 bg-yellow-500/10'
+                              : 'border-border/40 text-muted-foreground'
+                          }`}
+                        >
+                          {art.status === 'published' ? 'En ligne' : art.status === 'draft' ? 'Brouillon' : art.status}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 text-muted-foreground">
+                          {art.type === 'page' ? 'Page' : 'Article'}
+                        </Badge>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm truncate" title={art.title}>{art.title}</div>
+                          {art.published_at && (
+                            <div className="text-[10px] text-muted-foreground">
+                              {new Date(art.published_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </div>
+                          )}
+                        </div>
+                        {art.url && (
+                          <a
+                            href={art.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                            title="Ouvrir"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
