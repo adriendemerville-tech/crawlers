@@ -809,8 +809,9 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
 
     return jsonError('Invalid action', 400);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('gsc-auth error:', error);
-    return jsonError(error.message, 500);
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    return jsonError(msg, 500);
   }
 }));
