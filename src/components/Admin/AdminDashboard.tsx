@@ -434,6 +434,19 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                     </Badge>
                   )}
                   <button
+                    onClick={toggleGscBigQueryHidden}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                    title="Masque l'onglet Console > GSC BigQuery pour tous les utilisateurs (admins exclus)"
+                  >
+                    {gscBigQueryHidden ? <EyeOff className="h-3 w-3 shrink-0" /> : <Eye className="h-3 w-3 shrink-0" />}
+                    <span className="truncate">{gscBigQueryHidden ? 'GSC BigQuery masqué (front)' : 'GSC BigQuery visible (front)'}</span>
+                  </button>
+                  {gscBigQueryHidden && (
+                    <Badge variant="secondary" className="text-[9px] mt-1 ml-2">
+                      Caché front
+                    </Badge>
+                  )}
+                  <button
                     onClick={() => setShowContentArchitect(true)}
                     className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                   >
