@@ -45,12 +45,12 @@
 /*.woff
   Cache-Control: public, max-age=31536000, immutable
 
-# HTML pages - short cache for dynamic content
+# HTML pages - short cache + stale-while-revalidate for instant repeat loads
 /*.html
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate, stale-while-revalidate=3600
 
 /
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate, stale-while-revalidate=3600
 
 # SEO/Bot files - moderate cache
 /robots.txt
