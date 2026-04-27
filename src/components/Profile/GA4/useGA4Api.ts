@@ -42,14 +42,16 @@ export function useGA4Api() {
   );
 
   const fetchSources = useCallback(
-    (args: { trackedSiteId: string; startDate: string; endDate: string; pagePaths: string[]; domain?: string }) =>
-      invoke<{ success: boolean; sources: GA4Source[] }>({
+    (args: { trackedSiteId: string; startDate: string; endDate: string; pagePaths: string[]; domain?: string; forceRefresh?: boolean; cacheTtlMinutes?: number }) =>
+      invoke<{ success: boolean; sources: GA4Source[]; cached_from?: 'db' | 'live'; fetched_at?: string; expires_at?: string }>({
         action: 'fetch_traffic_sources',
         tracked_site_id: args.trackedSiteId,
         start_date: args.startDate,
         end_date: args.endDate,
         page_paths: args.pagePaths,
         domain: args.domain,
+        force_refresh: args.forceRefresh ?? false,
+        cache_ttl_minutes: args.cacheTtlMinutes ?? 360,
       }),
     [invoke],
   );
