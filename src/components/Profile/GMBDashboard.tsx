@@ -1138,11 +1138,37 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
                 <p className="text-sm text-muted-foreground mt-1">
                   {gbpEmail && <span className="font-medium">{gbpEmail}</span>}
                 </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {language === 'fr' 
-                    ? 'Aucun établissement Google Business Profile n\'a été trouvé sur ce compte. Vérifiez que vous avez bien un profil d\'établissement actif sur Google Business.'
-                    : 'No Google Business Profile location was found on this account. Make sure you have an active business profile on Google Business.'}
-                </p>
+                {gbpApiError ? (
+                  <div className="mt-3 mx-auto max-w-md rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-left">
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                      {gbpApiError.code === 'QUOTA_EXCEEDED' && (language === 'fr' ? 'Quota Google Business Profile à 0' : 'Google Business Profile quota at 0')}
+                      {gbpApiError.code === 'PERMISSION_DENIED' && (language === 'fr' ? 'Accès API non autorisé' : 'API access not authorized')}
+                      {gbpApiError.code === 'SERVICE_DISABLED' && (language === 'fr' ? 'API Business Profile désactivée' : 'Business Profile API disabled')}
+                      {gbpApiError.code === 'UNAUTHORIZED' && (language === 'fr' ? 'Token Google expiré' : 'Google token expired')}
+                      {(!gbpApiError.code || gbpApiError.code === 'GOOGLE_API_ERROR') && (language === 'fr' ? 'Erreur Google API' : 'Google API error')}
+                      {gbpApiError.status ? ` (HTTP ${gbpApiError.status})` : ''}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                      {gbpApiError.hint}
+                    </p>
+                    {gbpApiError.code === 'QUOTA_EXCEEDED' && (
+                      <a
+                        href="https://support.google.com/business/contact/api_default"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mt-2 text-xs underline text-foreground hover:opacity-80"
+                      >
+                        {language === 'fr' ? 'Demander l\'accès à l\'API Google →' : 'Request Google API access →'}
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {language === 'fr'
+                      ? 'Aucun établissement Google Business Profile n\'a été trouvé sur ce compte. Vérifiez que vous avez bien un profil d\'établissement actif sur Google Business.'
+                      : 'No Google Business Profile location was found on this account. Make sure you have an active business profile on Google Business.'}
+                  </p>
+                )}
               </div>
               <div className="flex gap-2 justify-center">
                 <Button 
