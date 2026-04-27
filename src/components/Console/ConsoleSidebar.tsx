@@ -145,7 +145,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     }] : [
       { value: 'wallet', label: t.wallet, icon: Wallet, hideOnMobile: true },
     ]),
-    ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true }] : []),
+    ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true, advancedOnly: true }] : []),
     { value: 'settings', label: t.settings, icon: Settings, hideOnMobile: true },
     ...(hasAdminAccess ? [{ value: 'admin', label: t.creator, icon: Shield }] : []),
   ];
