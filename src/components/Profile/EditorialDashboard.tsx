@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, BarChart3, Users, Tag, FileText, Clock, FileWarning, ImageOff, AlertTriangle, Type, RefreshCw, Plug, Globe } from 'lucide-react';
+import { Loader2, BarChart3, Users, Tag, FileText, Clock, FileWarning, ImageOff, AlertTriangle, Type, RefreshCw, Plug, Globe, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { CmsConnectionDialog } from './CmsConnectionDialog';
 
@@ -20,6 +20,15 @@ interface EditorialStats {
   missing_subtitle: number;
   top_topics: { name: string; count: number }[];
   seo_alerts: number;
+}
+
+interface ArticleListItem {
+  title: string;
+  slug: string | null;
+  status: string;
+  type: 'post' | 'page';
+  published_at: string | null;
+  url: string | null;
 }
 
 interface TrackedSite {
