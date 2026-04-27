@@ -42,12 +42,17 @@ export function ParmenionAddTargetModal({ open, onOpenChange, onAdded }: Props) 
       const cleanDomain = domain.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
       const eventType = `cms_action:${cleanDomain.replace(/\./g, '_')}`;
 
+      // Récupérer l'admin courant pour l'enregistrer comme créateur
+      // → déclenche l'auto-rattachement du site dans "Mes Sites" + création de cms_connections
+      const { data: { user } } = await supabase.auth.getUser();
+
       const { error } = await supabase.from('parmenion_targets').insert({
         domain: cleanDomain,
         label: label.trim(),
         platform,
         event_type: eventType,
         api_key_name: apiKeyName.trim() || null,
+        created_by_user_id: user?.id ?? null,
       });
 
       if (error) {
