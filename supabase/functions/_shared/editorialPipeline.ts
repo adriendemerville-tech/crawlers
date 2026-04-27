@@ -458,10 +458,15 @@ ${strategy.outline.map((h, i) => `${i + 1}. ${h}`).join("\n")}
 
 MOTS-CLÉS À INTÉGRER NATURELLEMENT: ${briefing.briefing_data.keywords.slice(0, 5).join(", ")}
 
+⚠️ TYPOGRAPHIE FR — CASSE PHRASTIQUE OBLIGATOIRE :
+Tous les titres (title H1, sous-titres H2/H3, excerpt) DOIVENT être en casse phrastique française : majuscule UNIQUEMENT au premier mot et aux noms propres (marques, lieux, personnes, sigles). Le "Title Case" anglo-saxon (majuscule à chaque mot) est INTERDIT en français — il dégrade le CTR et brouille la reconnaissance d'entités par les LLMs.
+Correct : "Comment optimiser le budget crawl d'un site e-commerce"
+INTERDIT : "Comment Optimiser Le Budget Crawl D'un Site E-Commerce"
+
 Réponds en JSON strict :
 {
-  "title": "Titre H1 optimisé",
-  "content": "Contenu HTML complet (h2, p, ul, etc.)",
+  "title": "Titre H1 optimisé en casse phrastique",
+  "content": "Contenu HTML complet (h2, p, ul, etc.) — tous les <h2>/<h3> en casse phrastique",
   "excerpt": "Résumé 160 caractères max"
 }`;
 
