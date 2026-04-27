@@ -66,6 +66,17 @@ export function AgentChatShell({
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyMessage = async (id: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content || '');
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 1500);
+    } catch {
+      /* clipboard indisponible — silencieux */
+    }
+  };
 
   const appendToDraft = (text: string) => {
     if (!text) return;
