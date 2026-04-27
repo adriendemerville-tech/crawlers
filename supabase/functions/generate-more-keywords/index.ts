@@ -89,7 +89,7 @@ try {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Error:', error);
-    return jsonError(errorMessage, keywords: [], 500);
+    return jsonError(errorMessage, 500);
   }
 });
 
