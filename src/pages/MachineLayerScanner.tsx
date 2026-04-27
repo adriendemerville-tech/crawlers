@@ -133,11 +133,13 @@ export default function MachineLayerScanner() {
       created_at: new Date().toISOString(),
     });
 
+    // Route correcte = /architecte-generatif (page workbench Architect)
+    const target = '/architecte-generatif?source=machine-layer';
     if (!user) {
       toast.success('Vos correctifs sont prêts. Connectez-vous pour les injecter.');
-      navigate('/auth?redirect=/architect-generatif?source=machine-layer');
+      navigate(`/auth?redirect=${encodeURIComponent(target)}`);
     } else {
-      navigate('/architect-generatif?source=machine-layer');
+      navigate(target);
     }
   };
 
