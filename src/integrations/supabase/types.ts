@@ -10403,6 +10403,80 @@ export type Database = {
           },
         ]
       }
+      serp_intent_analyses: {
+        Row: {
+          analyzed_at: string
+          cost_usd: number | null
+          coverage_matrix: Json
+          created_at: string
+          detected_intents: Json
+          domain: string
+          expires_at: string
+          id: string
+          keyword: string
+          our_position: number | null
+          page_url: string | null
+          position_source: string | null
+          recommendations: Json
+          serp_features: Json
+          serp_provider: string
+          top_competitors: Json
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analyzed_at?: string
+          cost_usd?: number | null
+          coverage_matrix?: Json
+          created_at?: string
+          detected_intents?: Json
+          domain: string
+          expires_at?: string
+          id?: string
+          keyword: string
+          our_position?: number | null
+          page_url?: string | null
+          position_source?: string | null
+          recommendations?: Json
+          serp_features?: Json
+          serp_provider?: string
+          top_competitors?: Json
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analyzed_at?: string
+          cost_usd?: number | null
+          coverage_matrix?: Json
+          created_at?: string
+          detected_intents?: Json
+          domain?: string
+          expires_at?: string
+          id?: string
+          keyword?: string
+          our_position?: number | null
+          page_url?: string | null
+          position_source?: string | null
+          recommendations?: Json
+          serp_features?: Json
+          serp_provider?: string
+          top_competitors?: Json
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serp_intent_analyses_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       serp_snapshots: {
         Row: {
           avg_position: number | null
