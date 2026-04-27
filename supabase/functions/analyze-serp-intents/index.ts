@@ -136,7 +136,7 @@ async function fetchSerpDataForSEO(
 
     for (const it of items) {
       if (it.type !== 'organic') serp_features.add(it.type);
-      const anyIt = it as Record<string, unknown>;
+      const anyIt = it as unknown as Record<string, unknown>;
       if (it.type === 'people_also_ask' && Array.isArray(anyIt.items)) {
         for (const q of anyIt.items as Array<{ title?: string }>) {
           if (q.title) paa_questions.push(q.title);
