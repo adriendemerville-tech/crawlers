@@ -712,7 +712,8 @@ async function handleRejection(args: {
 
   // P1 #7 — relance la boucle LLM avec un message user expliquant le rejet
   const sessionContext = (sessionData?.context as Record<string, unknown>) ?? {};
-  const isCreatorMode = sessionContext.creator_mode === true;
+  const { data: isAdminReject } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
+  const isCreatorMode = sessionContext.creator_mode === true || isAdminReject === true;
 
   const userReject = `J'ai refusé l'action **${action.skill}** que tu proposais. Raison : ${safeReason}. Propose-moi une alternative ou demande-moi plus de précisions.`;
 
