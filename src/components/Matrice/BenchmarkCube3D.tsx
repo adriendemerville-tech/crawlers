@@ -239,8 +239,8 @@ export function BenchmarkCube3D({ results, themes, engines, className }: Benchma
   }, []);
 
   const cameraDistance = Math.max(
-    8,
-    Math.max(layout.axes.x.length, layout.axes.y.length, layout.axes.z.length) * 2.2,
+    10,
+    Math.max(layout.axes.x.length, layout.axes.y.length, layout.axes.z.length) * 1.6,
   );
 
   const tooltip = hovered ?? selected;
