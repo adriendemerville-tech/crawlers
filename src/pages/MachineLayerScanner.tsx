@@ -57,16 +57,29 @@ export default function MachineLayerScanner() {
     if (q && !result && !loading) setUrl(q);
   }, [searchParams, result, loading]);
 
-  const handleScan = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!url.trim()) { toast.error('Saisissez une URL.'); return; }
+  // Auto-launch via ?url= (déclenche un scan dès que Turnstile est prêt ou si l'utilisateur est connecté)
+  const autoTriggered = useRef(false);
+  useEffect(() => {
+    const q = searchParams.get('url');
+    if (!q || autoTriggered.current || result || loading) return;
+    setUrl(q);
+    if (user || isReady) {
+      autoTriggered.current = true;
+      // Laisser React appliquer setUrl avant le scan
+      setTimeout(() => handleScanWith(q), 50);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, result, loading, user, isReady]);
+
+  const handleScanWith = async (targetUrl: string) => {
+    if (!targetUrl.trim()) { toast.error('Saisissez une URL.'); return; }
     if (!user && !turnstileToken) { toast.error('Vérification anti-bot en cours…'); return; }
 
     setLoading(true);
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('machine-layer-scan', {
-        body: { url: url.trim(), turnstile_token: user ? undefined : turnstileToken },
+        body: { url: targetUrl.trim(), turnstile_token: user ? undefined : turnstileToken },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -78,6 +91,11 @@ export default function MachineLayerScanner() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleScan = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    return handleScanWith(url);
   };
 
   const familyCards = useMemo(() => {
