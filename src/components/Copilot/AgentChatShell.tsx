@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, RotateCcw, Send } from 'lucide-react';
+import { Check, Copy, Loader2, RotateCcw, Send } from 'lucide-react';
 import { useCopilot, type CopilotPersona, type CopilotAction } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
 
@@ -66,6 +66,17 @@ export function AgentChatShell({
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyMessage = async (id: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content || '');
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 1500);
+    } catch {
+      /* clipboard indisponible — silencieux */
+    }
+  };
 
   const appendToDraft = (text: string) => {
     if (!text) return;
@@ -158,30 +169,50 @@ export function AgentChatShell({
           </div>
         )}
 
-        <ul className="space-y-4" style={{ fontSize: `${fontScale}rem` }}>
+        <ul className="space-y-4">
           {messages.map((m) => (
             <li
               key={m.id}
               className={cn(
-                'flex w-full',
+                'group/msg flex w-full',
                 m.role === 'user' ? 'justify-end' : 'justify-start',
               )}
             >
               <div
                 className={cn(
-                  'max-w-[85%] rounded-lg border px-3 py-2 leading-relaxed',
+                  'relative max-w-[85%] rounded-lg border px-3 py-2 leading-relaxed',
                   m.role === 'user'
                     ? 'border-primary text-foreground'
                     : 'border-accent/60 text-foreground',
                 )}
+                style={{ fontSize: `${fontScale}rem` }}
               >
+                {/* Bouton copier minimaliste — visible au survol */}
+                {!m.pending && m.content && (
+                  <button
+                    type="button"
+                    onClick={() => copyMessage(m.id, m.content)}
+                    aria-label={copiedId === m.id ? 'Copié' : 'Copier le message'}
+                    title={copiedId === m.id ? 'Copié' : 'Copier'}
+                    className={cn(
+                      'absolute -top-2 right-2 rounded-md border border-border bg-background p-1 text-muted-foreground opacity-0 transition hover:border-foreground/50 hover:text-foreground group-hover/msg:opacity-100 focus:opacity-100',
+                    )}
+                  >
+                    {copiedId === m.id ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
+
                 {m.pending ? (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     <span className="text-xs">Réflexion en cours…</span>
                   </div>
                 ) : (
-                  <div className="prose prose-sm prose-invert max-w-none break-words prose-table:my-2 prose-table:text-xs prose-th:border prose-th:border-border prose-th:bg-muted/30 prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1">
+                  <div className="prose prose-invert max-w-none break-words prose-p:my-2 prose-headings:my-3 prose-table:my-2 prose-table:text-[0.9em] prose-th:border prose-th:border-border prose-th:bg-muted/30 prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1" style={{ fontSize: '1em' }}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content || ''}</ReactMarkdown>
                   </div>
                 )}
