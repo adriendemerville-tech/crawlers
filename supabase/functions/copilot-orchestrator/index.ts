@@ -160,19 +160,27 @@ Deno.serve(async (req) => {
 
     if (!body.message) return jsonError('message requis', 400);
 
-    // ── Préfixe admin /creator: /createur: /admin: ────────
+    // ── Détection a priori du rôle créateur (admin) ─────
     // P1 #4 — creator_mode est persisté dans session.context.creator_mode
     // pour survivre entre deux requêtes HTTP de la même conversation.
+    //
+    // Auto-activation : tout user avec le rôle 'admin' est automatiquement en mode créateur,
+    // sans avoir besoin du préfixe /creator: /admin:. Le préfixe reste supporté pour
+    // rétrocompatibilité (et pour qu'un admin puisse retirer le préfixe sans le savoir).
     let userMessage = body.message;
     let isCreatorMode = false;
+
+    // 1) Vérification a priori du rôle admin (cache pour la durée de la requête)
+    const { data: isAdminRole } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
+    const isAdmin = isAdminRole === true;
+    if (isAdmin) {
+      isCreatorMode = true;
+    }
+
+    // 2) Préfixe admin (rétrocompat) — strip silencieusement si présent
     const creatorPrefixMatch = userMessage.match(/^\s*\/(?:createur|creator|admin)\s*:\s*/i);
-    if (creatorPrefixMatch) {
-      const { data: isAdmin } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
-      if (isAdmin === true) {
-        isCreatorMode = true;
-        userMessage = userMessage.slice(creatorPrefixMatch[0].length).trim();
-      }
-      // Si non-admin : on laisse le message tel quel, le préfixe est ignoré silencieusement
+    if (creatorPrefixMatch && isAdmin) {
+      userMessage = userMessage.slice(creatorPrefixMatch[0].length).trim();
     }
 
     // ── Session : create or load ─────────────────────────
