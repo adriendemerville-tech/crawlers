@@ -68,6 +68,8 @@ const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress")
 const ProAgency = lazy(() => import("./pages/ProAgency"));
 const Observatoire = lazy(() => import("./pages/Observatoire"));
 const ContentArchitectPage = lazy(() => import("./pages/ContentArchitectPage"));
+const MachineLayerScanner = lazy(() => import("./pages/MachineLayerScanner"));
+const MachineLayerLanding = lazy(() => import("./pages/MachineLayerLanding"));
 const Faq = lazy(() => import("./pages/Faq"));
 const Methodologie = lazy(() => import("./pages/Methodologie"));
 const CGVU = lazy(() => import("./pages/CGVU"));
