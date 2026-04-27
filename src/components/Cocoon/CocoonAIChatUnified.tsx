@@ -414,16 +414,19 @@ export function CocoonAIChatUnified({
                     }}
                   />
                 }
-                renderComposerExtras={user?.id ? () => (
-                  <ChatReportSearch
-                    userId={user.id}
-                    onSelect={(report) => {
-                      pushNote(
-                        `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
-                      );
-                    }}
-                  />
-                ) : undefined}
+                renderComposerExtras={user?.id ? ({ slot }) => {
+                  if (slot !== 'leading') return null;
+                  return (
+                    <ChatReportSearch
+                      userId={user.id}
+                      onSelect={(report) => {
+                        pushNote(
+                          `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
+                        );
+                      }}
+                    />
+                  );
+                } : undefined}
                 className="h-full"
               />
             </div>
