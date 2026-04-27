@@ -5856,7 +5856,7 @@ export type Database = {
           },
         ]
       }
-      google_ads_connections: {
+      google_ads_connections_deprecated_20260427: {
         Row: {
           access_token: string | null
           account_name: string | null
@@ -5974,6 +5974,9 @@ export type Database = {
       google_connections: {
         Row: {
           access_token: string
+          ads_account_name: string | null
+          ads_customer_id: string | null
+          ads_status: string | null
           created_at: string | null
           ga4_property_id: string | null
           gmb_account_id: string | null
@@ -5989,6 +5992,9 @@ export type Database = {
         }
         Insert: {
           access_token: string
+          ads_account_name?: string | null
+          ads_customer_id?: string | null
+          ads_status?: string | null
           created_at?: string | null
           ga4_property_id?: string | null
           gmb_account_id?: string | null
@@ -6004,6 +6010,9 @@ export type Database = {
         }
         Update: {
           access_token?: string
+          ads_account_name?: string | null
+          ads_customer_id?: string | null
+          ads_status?: string | null
           created_at?: string | null
           ga4_property_id?: string | null
           gmb_account_id?: string | null
