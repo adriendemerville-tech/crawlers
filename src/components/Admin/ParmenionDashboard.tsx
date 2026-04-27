@@ -40,6 +40,10 @@ export function ParmenionDashboard() {
     <Tabs defaultValue={defaultTab} key={defaultTab} className="space-y-4">
       <div className="flex items-center gap-2">
         <TabsList className="flex-1 flex-wrap h-auto">
+          <TabsTrigger value="execution" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Exécution
+          </TabsTrigger>
           {targets.map((t) => (
             <TabsTrigger key={t.id} value={t.domain.replace(/\./g, '-')} className="gap-2">
               <Globe className="h-4 w-4" />
