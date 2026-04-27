@@ -120,7 +120,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true },
     ] : []),
     { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true },
-    ...(isProUser ? [
+    ...(isProUser && (!gscBigQueryHidden || isAdmin) ? [
       { value: 'gsc-bigquery', label: 'GSC BQ', icon: Database, hideOnMobile: true, beta: true },
     ] : []),
     { value: 'gmb', label: 'GMB', icon: Store },
