@@ -339,7 +339,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   // POST: API calls (login, fetch)
   // ═══════════════════════════════════════════════════════════════════
   try {
-    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email } = await req.json();
+    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email, modules, extra_scopes } = await req.json();
 
     // ─── SECURITY: Validate JWT and enforce real user_id ─────────
     const authHeader = req.headers.get('Authorization') || '';
