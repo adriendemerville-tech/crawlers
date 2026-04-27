@@ -142,25 +142,212 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
       return jsonOk({ success: true, property_id: resolvedPropertyId, ...metrics })
     }
 
-    // ─── Action: list_pages (DB-first, lit ga4_behavioral_metrics) ────
+    // ═══════════════════════════════════════════════════════════════
+    // GA4 EXPLORER actions (Console > Content > GA4 tab)
+    // DB-first : lit ga4_daily_metrics + ga4_behavioral_metrics, fallback API
+    // ═══════════════════════════════════════════════════════════════
+
+    const endD = end_date || new Date().toISOString().split('T')[0]
+    const startD = start_date || new Date(Date.now() - 28 * 86400000).toISOString().split('T')[0]
+
+    // ─── Action: list_pages ───────────────────────────────────────
     if (action === 'list_pages') {
-      const { tracked_site_id, start, end, limit = 200 } = await readExtraParams(req as any)
-      const siteId = tracked_site_id ?? body_user_id /* unused fallback */;
-      const { tracked_site_id: tsi2, start: s2, end: e2 } = arguments[0] as any || {}
-      // Use vars from main body
-      const startD = start_date || new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0]
-      const endD = end_date || new Date().toISOString().split('T')[0]
-      const trackedSiteId = (await safeJson(req)).tracked_site_id
-      const { data: rows } = await supabase
+      if (!tracked_site_id) return jsonError('tracked_site_id required', 400)
+      const { data: rows, error } = await supabase
         .from('ga4_behavioral_metrics')
-        .select('page_path, pageviews:engaged_sessions, sessions:engaged_sessions')
+        .select('page_path, pageviews, sessions, conversions')
         .eq('user_id', user_id)
-        .eq('tracked_site_id', trackedSiteId)
+        .eq('tracked_site_id', tracked_site_id)
         .gte('period_start', startD)
         .lte('period_end', endD)
-        .limit(limit)
-      const paths = Array.from(new Set((rows || []).map((r: any) => r.page_path))).sort()
-      return jsonOk({ success: true, pages: paths })
+        .limit(queryLimit)
+      if (error) return jsonError(error.message, 500)
+      const map = new Map<string, { path: string; pageviews: number; sessions: number; conversions: number }>()
+      for (const r of rows || []) {
+        const cur = map.get(r.page_path) || { path: r.page_path, pageviews: 0, sessions: 0, conversions: 0 }
+        cur.pageviews += r.pageviews || 0
+        cur.sessions += r.sessions || 0
+        cur.conversions += r.conversions || 0
+        map.set(r.page_path, cur)
+      }
+      const pages = Array.from(map.values()).sort((a, b) => b.pageviews - a.pageviews)
+      return jsonOk({ success: true, pages })
+    }
+
+    // ─── Action: fetch_timeseries ─────────────────────────────────
+    if (action === 'fetch_timeseries') {
+      if (!tracked_site_id) return jsonError('tracked_site_id required', 400)
+
+      // Aggregated daily series at site level (DB-first)
+      const { data: daily, error: dailyErr } = await supabase
+        .from('ga4_daily_metrics')
+        .select('metric_date, sessions, total_users, pageviews, revenue')
+        .eq('user_id', user_id)
+        .eq('tracked_site_id', tracked_site_id)
+        .gte('metric_date', startD)
+        .lte('metric_date', endD)
+        .order('metric_date', { ascending: true })
+      if (dailyErr) return jsonError(dailyErr.message, 500)
+
+      let series = (daily || []).map((r: any) => ({
+        date: r.metric_date,
+        sessions: r.sessions || 0,
+        users: r.total_users || 0,
+        pageviews: r.pageviews || 0,
+        revenue: parseFloat(r.revenue || '0'),
+        avg_engagement_time: 0,
+        engagement_rate: 0,
+      }))
+
+      // Per-page series (when user filtered specific pages)
+      let by_page: Record<string, any[]> | undefined
+      if (page_paths.length > 0) {
+        const { data: behavioral } = await supabase
+          .from('ga4_behavioral_metrics')
+          .select('page_path, period_start, period_end, pageviews, sessions, avg_engagement_time, engagement_rate, conversions')
+          .eq('user_id', user_id)
+          .eq('tracked_site_id', tracked_site_id)
+          .in('page_path', page_paths)
+          .gte('period_start', startD)
+          .lte('period_end', endD)
+        by_page = {}
+        for (const path of page_paths) {
+          const rowsForPath = (behavioral || []).filter((b: any) => b.page_path === path)
+          by_page[path] = rowsForPath.map((b: any) => ({
+            date: b.period_start,
+            sessions: b.sessions || 0,
+            pageviews: b.pageviews || 0,
+            avg_engagement_time: parseFloat(b.avg_engagement_time || '0'),
+            engagement_rate: parseFloat(b.engagement_rate || '0'),
+            conversions: b.conversions || 0,
+            users: 0,
+          }))
+        }
+      }
+
+      // Granularity aggregation (week / month) — done in JS for portability
+      if (granularity !== 'day') {
+        series = aggregateByPeriod(series, granularity)
+        if (by_page) {
+          for (const k of Object.keys(by_page)) {
+            by_page[k] = aggregateByPeriod(by_page[k], granularity)
+          }
+        }
+      }
+
+      // Comparison previous period (same length)
+      let compare_series: any[] | undefined
+      if (compare && series.length > 0) {
+        const days = Math.max(1, Math.ceil((new Date(endD).getTime() - new Date(startD).getTime()) / 86400000))
+        const prevEnd = new Date(new Date(startD).getTime() - 86400000).toISOString().split('T')[0]
+        const prevStart = new Date(new Date(startD).getTime() - (days + 1) * 86400000).toISOString().split('T')[0]
+        const { data: prev } = await supabase
+          .from('ga4_daily_metrics')
+          .select('metric_date, sessions, total_users, pageviews, revenue')
+          .eq('user_id', user_id)
+          .eq('tracked_site_id', tracked_site_id)
+          .gte('metric_date', prevStart)
+          .lte('metric_date', prevEnd)
+          .order('metric_date', { ascending: true })
+        compare_series = (prev || []).map((r: any) => ({
+          date: r.metric_date,
+          sessions: r.sessions || 0,
+          users: r.total_users || 0,
+          pageviews: r.pageviews || 0,
+          revenue: parseFloat(r.revenue || '0'),
+        }))
+        if (granularity !== 'day') compare_series = aggregateByPeriod(compare_series, granularity)
+      }
+
+      // KPI totals
+      const totals = series.reduce((acc, r) => ({
+        sessions: acc.sessions + r.sessions,
+        users: acc.users + r.users,
+        pageviews: acc.pageviews + r.pageviews,
+        revenue: acc.revenue + (r.revenue || 0),
+      }), { sessions: 0, users: 0, pageviews: 0, revenue: 0 })
+
+      const compareTotals = compare_series?.reduce((acc, r) => ({
+        sessions: acc.sessions + r.sessions,
+        users: acc.users + r.users,
+        pageviews: acc.pageviews + r.pageviews,
+        revenue: acc.revenue + (r.revenue || 0),
+      }), { sessions: 0, users: 0, pageviews: 0, revenue: 0 })
+
+      return jsonOk({
+        success: true,
+        granularity,
+        period: { start: startD, end: endD },
+        series,
+        by_page,
+        compare_series,
+        totals,
+        compare_totals: compareTotals,
+        cached_from: 'db',
+      })
+    }
+
+    // ─── Action: fetch_traffic_sources ────────────────────────────
+    if (action === 'fetch_traffic_sources') {
+      if (!tracked_site_id) return jsonError('tracked_site_id required', 400)
+      // GA4 Live API (sources non persistées en DB) — limité aux 7 catégories standard
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('ga4_property_id')
+        .eq('user_id', user_id)
+        .single()
+      const propId = property_id || profile?.ga4_property_id
+      if (!propId) return jsonError('No GA4 property configured', 404)
+
+      const dimFilter = page_paths.length > 0 ? {
+        filter: {
+          fieldName: 'pagePath',
+          inListFilter: { values: page_paths },
+        },
+      } : undefined
+
+      const resp = await fetch(`${GA4_API}/properties/${propId.replace(/^properties\//, '')}:runReport`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dateRanges: [{ startDate: startD, endDate: endD }],
+          dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+          metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
+          dimensionFilter: dimFilter,
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          limit: 20,
+        }),
+      })
+      if (!resp.ok) return jsonError(`GA4 API error: ${await resp.text()}`, resp.status)
+      trackPaidApiCall('fetch-ga4-data', 'google-ga4', 'runReport-sources')
+      const data = await resp.json()
+      const sources = (data.rows || []).map((r: any) => ({
+        channel: r.dimensionValues?.[0]?.value || '(unknown)',
+        sessions: parseInt(r.metricValues?.[0]?.value || '0'),
+        users: parseInt(r.metricValues?.[1]?.value || '0'),
+      }))
+      return jsonOk({ success: true, sources })
+    }
+
+    // ─── Action: detect_anomalies ─────────────────────────────────
+    // Z-score sur fenêtre glissante 14 jours, seuil |z| >= 2
+    if (action === 'detect_anomalies') {
+      if (!tracked_site_id) return jsonError('tracked_site_id required', 400)
+      const { data: daily } = await supabase
+        .from('ga4_daily_metrics')
+        .select('metric_date, sessions, total_users, pageviews')
+        .eq('user_id', user_id)
+        .eq('tracked_site_id', tracked_site_id)
+        .gte('metric_date', startD)
+        .lte('metric_date', endD)
+        .order('metric_date', { ascending: true })
+      const anomalies = detectAnomalies((daily || []).map((r: any) => ({
+        date: r.metric_date,
+        sessions: r.sessions || 0,
+        users: r.total_users || 0,
+        pageviews: r.pageviews || 0,
+      })))
+      return jsonOk({ success: true, anomalies })
     }
 
     return jsonError('Unknown action. Use: list_properties, save_property, fetch_metrics, fetch_timeseries, fetch_traffic_sources, list_pages, detect_anomalies', 400)
