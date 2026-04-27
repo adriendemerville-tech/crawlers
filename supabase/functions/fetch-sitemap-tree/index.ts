@@ -396,6 +396,6 @@ try {
 
   } catch (error) {
     console.error('[fetch-sitemap-tree] Error:', error);
-    return jsonError('Internal error', tree: [], totalUrls: 0, 500);
+    return jsonError('Internal error', 500);
   }
 }));
