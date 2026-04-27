@@ -832,3 +832,77 @@ async function persistGA4TopPages(
     if (error) console.error('[GA4] Top pages persist error:', error.message)
   }
 }
+// ═══════════════════════════════════════════════════════════════════════
+// GA4 Explorer helpers
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Bucket date 'YYYY-MM-DD' to start-of-week (Monday) or start-of-month. */
+function bucketKey(dateStr: string, granularity: 'week' | 'month'): string {
+  const d = new Date(dateStr)
+  if (granularity === 'month') {
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-01`
+  }
+  // week (ISO Monday)
+  const day = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() - day + 1)
+  return d.toISOString().split('T')[0]
+}
+
+function aggregateByPeriod(series: any[], granularity: 'day' | 'week' | 'month'): any[] {
+  if (granularity === 'day' || series.length === 0) return series
+  const buckets = new Map<string, any>()
+  for (const row of series) {
+    const key = bucketKey(row.date, granularity)
+    const cur = buckets.get(key) || { date: key, sessions: 0, users: 0, pageviews: 0, revenue: 0, conversions: 0, _count: 0, _sum_engagement_time: 0, _sum_engagement_rate: 0 }
+    cur.sessions += row.sessions || 0
+    cur.users += row.users || 0
+    cur.pageviews += row.pageviews || 0
+    cur.revenue += row.revenue || 0
+    cur.conversions += row.conversions || 0
+    cur._sum_engagement_time += row.avg_engagement_time || 0
+    cur._sum_engagement_rate += row.engagement_rate || 0
+    cur._count += 1
+    buckets.set(key, cur)
+  }
+  return Array.from(buckets.values())
+    .map((b) => ({
+      date: b.date,
+      sessions: b.sessions,
+      users: b.users,
+      pageviews: b.pageviews,
+      revenue: b.revenue,
+      conversions: b.conversions,
+      avg_engagement_time: b._count ? b._sum_engagement_time / b._count : 0,
+      engagement_rate: b._count ? b._sum_engagement_rate / b._count : 0,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+/** Z-score anomaly detection on rolling 14-day window. Returns points with |z| >= 2. */
+function detectAnomalies(series: { date: string; sessions: number; users: number; pageviews: number }[]) {
+  const out: { date: string; metric: string; value: number; mean: number; z: number; direction: 'up' | 'down' }[] = []
+  const metrics: Array<'sessions' | 'users' | 'pageviews'> = ['sessions', 'users', 'pageviews']
+  const window = 14
+  for (const metric of metrics) {
+    for (let i = window; i < series.length; i++) {
+      const slice = series.slice(i - window, i).map((r) => r[metric])
+      const mean = slice.reduce((s, v) => s + v, 0) / slice.length
+      const variance = slice.reduce((s, v) => s + (v - mean) ** 2, 0) / slice.length
+      const std = Math.sqrt(variance)
+      if (std === 0) continue
+      const value = series[i][metric]
+      const z = (value - mean) / std
+      if (Math.abs(z) >= 2) {
+        out.push({
+          date: series[i].date,
+          metric,
+          value,
+          mean: Math.round(mean),
+          z: Math.round(z * 100) / 100,
+          direction: z > 0 ? 'up' : 'down',
+        })
+      }
+    }
+  }
+  return out.sort((a, b) => b.date.localeCompare(a.date))
+}
