@@ -2081,6 +2081,7 @@ export type Database = {
           capabilities: Json | null
           created_at: string
           id: string
+          managed_by: string | null
           oauth_access_token: string | null
           oauth_refresh_token: string | null
           platform: Database["public"]["Enums"]["cms_platform"]
@@ -2101,6 +2102,7 @@ export type Database = {
           capabilities?: Json | null
           created_at?: string
           id?: string
+          managed_by?: string | null
           oauth_access_token?: string | null
           oauth_refresh_token?: string | null
           platform: Database["public"]["Enums"]["cms_platform"]
@@ -2121,6 +2123,7 @@ export type Database = {
           capabilities?: Json | null
           created_at?: string
           id?: string
+          managed_by?: string | null
           oauth_access_token?: string | null
           oauth_refresh_token?: string | null
           platform?: Database["public"]["Enums"]["cms_platform"]
