@@ -9,8 +9,9 @@ import { cn } from '@/lib/utils';
 import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
-  Shield, Code2, ChevronDown, Search, Sparkles, Database,
+  Shield, Code2, ChevronDown, Search, Sparkles, Database, SlidersHorizontal,
 } from 'lucide-react';
+import { useConsoleViewMode } from '@/contexts/ConsoleViewModeContext';
 
 interface TrackedSite {
   id: string;
