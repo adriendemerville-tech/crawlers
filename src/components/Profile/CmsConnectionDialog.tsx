@@ -93,6 +93,7 @@ const translations = {
     shopifyToken: 'Admin API Token',
     webflowToken: 'Webflow API Token',
     wixToken: 'Wix API Key',
+    adminRequired: 'The account used must have the Administrator role on the CMS to authorize the API connection.',
   },
   es: {
     title: 'Conexión API',
