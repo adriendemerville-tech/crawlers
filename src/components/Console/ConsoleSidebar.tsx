@@ -298,29 +298,79 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
             </button>
 
             {selectorOpen && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-y-auto">
-                <button
-                  onClick={() => handleSiteChange(null, null)}
-                  className={cn(
-                    'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
-                    !selectedSiteId ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
-                  )}
-                >
-                  <Globe className="h-3 w-3 shrink-0" />
-                  {t.allSites}
-                </button>
-                {sites.map(site => (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+                <div className="py-1 max-h-60 overflow-y-auto">
                   <button
-                    key={site.id}
-                    onClick={() => handleSiteChange(site.id, site.domain)}
+                    onClick={() => handleSiteChange(null, null)}
                     className={cn(
                       'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
-                      selectedSiteId === site.id ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
+                      !selectedSiteId ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
                     )}
                   >
-                    <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
+                    <Globe className="h-3 w-3 shrink-0" />
+                    {t.allSites}
                   </button>
-                ))}
+                  {sites.map(site => (
+                    <button
+                      key={site.id}
+                      onClick={() => handleSiteChange(site.id, site.domain)}
+                      className={cn(
+                        'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
+                        selectedSiteId === site.id ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
+                      )}
+                    >
+                      <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
+                    </button>
+                  ))}
+                </div>
+                {/* Add domain — hover reveals input */}
+                <div
+                  className="border-t border-border/60"
+                  onMouseEnter={() => setAddHover(true)}
+                  onMouseLeave={() => { if (!newDomain && !adding) setAddHover(false); }}
+                >
+                  {!addHover ? (
+                    <button
+                      type="button"
+                      onClick={() => setAddHover(true)}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/40 transition-colors"
+                    >
+                      <Plus className="h-3 w-3 shrink-0" />
+                      Ajouter un domaine
+                    </button>
+                  ) : (
+                    <form onSubmit={handleAddDomain} className="flex items-center gap-1 px-2 py-1.5">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={newDomain}
+                        onChange={(e) => setNewDomain(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') { setNewDomain(''); setAddHover(false); }
+                        }}
+                        placeholder="exemple.com"
+                        disabled={adding}
+                        className="flex-1 min-w-0 h-7 px-2 text-xs bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                      <button
+                        type="submit"
+                        disabled={adding || !newDomain.trim()}
+                        aria-label="Valider"
+                        className="h-7 w-7 flex items-center justify-center rounded border border-border hover:bg-accent/40 disabled:opacity-40"
+                      >
+                        {adding ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setNewDomain(''); setAddHover(false); }}
+                        aria-label="Annuler"
+                        className="h-7 w-7 flex items-center justify-center rounded border border-border hover:bg-accent/40"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
             )}
           </div>
