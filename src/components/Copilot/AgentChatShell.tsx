@@ -169,30 +169,50 @@ export function AgentChatShell({
           </div>
         )}
 
-        <ul className="space-y-4" style={{ fontSize: `${fontScale}rem` }}>
+        <ul className="space-y-4">
           {messages.map((m) => (
             <li
               key={m.id}
               className={cn(
-                'flex w-full',
+                'group/msg flex w-full',
                 m.role === 'user' ? 'justify-end' : 'justify-start',
               )}
             >
               <div
                 className={cn(
-                  'max-w-[85%] rounded-lg border px-3 py-2 leading-relaxed',
+                  'relative max-w-[85%] rounded-lg border px-3 py-2 leading-relaxed',
                   m.role === 'user'
                     ? 'border-primary text-foreground'
                     : 'border-accent/60 text-foreground',
                 )}
+                style={{ fontSize: `${fontScale}rem` }}
               >
+                {/* Bouton copier minimaliste — visible au survol */}
+                {!m.pending && m.content && (
+                  <button
+                    type="button"
+                    onClick={() => copyMessage(m.id, m.content)}
+                    aria-label={copiedId === m.id ? 'Copié' : 'Copier le message'}
+                    title={copiedId === m.id ? 'Copié' : 'Copier'}
+                    className={cn(
+                      'absolute -top-2 right-2 rounded-md border border-border bg-background p-1 text-muted-foreground opacity-0 transition hover:border-foreground/50 hover:text-foreground group-hover/msg:opacity-100 focus:opacity-100',
+                    )}
+                  >
+                    {copiedId === m.id ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
+
                 {m.pending ? (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     <span className="text-xs">Réflexion en cours…</span>
                   </div>
                 ) : (
-                  <div className="prose prose-sm prose-invert max-w-none break-words prose-table:my-2 prose-table:text-xs prose-th:border prose-th:border-border prose-th:bg-muted/30 prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1">
+                  <div className="prose prose-invert max-w-none break-words prose-p:my-2 prose-headings:my-3 prose-table:my-2 prose-table:text-[0.9em] prose-th:border prose-th:border-border prose-th:bg-muted/30 prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1" style={{ fontSize: '1em' }}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content || ''}</ReactMarkdown>
                   </div>
                 )}
