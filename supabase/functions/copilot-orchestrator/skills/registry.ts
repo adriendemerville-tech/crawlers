@@ -536,7 +536,7 @@ const cms_patch_content: SkillDefinition = {
 
 const admin_lookup_user: SkillDefinition = {
   name: 'admin_lookup_user',
-  description: "[ADMIN] Recherche un utilisateur par nom/prénom/email et retourne ses sites suivis + statut des connexions CMS, Google (GSC/GA4), Matomo, Canva. Utiliser pour répondre aux questions support du type « X a-t-il pu connecter son CMS pour le site Y ? ». Filtre optionnel par domaine pour cibler un site précis.",
+  description: "[ADMIN] Recherche un utilisateur par nom/prénom/email et retourne ses sites suivis + statut COMPLET des connexions : CMS user (UI), CMS miroir Parménion (admin-pushed via parmenion_targets), Google (GSC/GA4/GMB), Matomo, Canva, IKtracker. Distingue clairement cms_user (connexion explicite par l'utilisateur) de cms_parmenion_mirror (clé API ajoutée par admin dans Parménion → injection autopilote). Si parmenion_active=true sur un site, le pont autopilote pousse du contenu même sans connexion user. Filtre optionnel par domaine.",
   parameters: {
     type: 'object',
     properties: {
