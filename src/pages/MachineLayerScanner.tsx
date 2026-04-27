@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -28,15 +28,18 @@ interface ScanResponse {
   issues: Array<{ family: string; severity: string; key: string; message: string }>;
 }
 
-const FAMILY_ORDER: Array<{ key: string; signalKeys: string[] }> = [
-  { key: 'meta', signalKeys: ['meta', 'htmlLang'] },
-  { key: 'canonical', signalKeys: ['links'] },
-  { key: 'opengraph', signalKeys: ['openGraph'] },
-  { key: 'twitter', signalKeys: ['twitterCard'] },
-  { key: 'schema', signalKeys: ['schemaOrg', 'microdata', 'rdfa'] },
-  { key: 'robots', signalKeys: ['external'] },
-  { key: 'geo', signalKeys: [] },
-  { key: 'security', signalKeys: ['httpHeaders'] },
+// Mapping famille → sous-objets `detected_signals` à afficher dans la carte.
+// Pour `external`, on extrait des sous-clés précises afin que GEO et Robots
+// n'affichent que ce qui les concerne.
+const FAMILY_ORDER: Array<{ key: string; pickFrom: 'root' | 'external'; keys: string[] }> = [
+  { key: 'meta', pickFrom: 'root', keys: ['meta', 'htmlLang'] },
+  { key: 'canonical', pickFrom: 'root', keys: ['links'] },
+  { key: 'opengraph', pickFrom: 'root', keys: ['openGraph'] },
+  { key: 'twitter', pickFrom: 'root', keys: ['twitterCard'] },
+  { key: 'schema', pickFrom: 'root', keys: ['schemaOrg', 'microdata', 'rdfa'] },
+  { key: 'robots', pickFrom: 'external', keys: ['robotsTxt', 'sitemapXml'] },
+  { key: 'geo', pickFrom: 'external', keys: ['llmsTxt', 'aiTxt', 'aiPlugin'] },
+  { key: 'security', pickFrom: 'root', keys: ['httpHeaders'] },
 ];
 
 export default function MachineLayerScanner() {
@@ -54,16 +57,29 @@ export default function MachineLayerScanner() {
     if (q && !result && !loading) setUrl(q);
   }, [searchParams, result, loading]);
 
-  const handleScan = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!url.trim()) { toast.error('Saisissez une URL.'); return; }
+  // Auto-launch via ?url= (déclenche un scan dès que Turnstile est prêt ou si l'utilisateur est connecté)
+  const autoTriggered = useRef(false);
+  useEffect(() => {
+    const q = searchParams.get('url');
+    if (!q || autoTriggered.current || result || loading) return;
+    setUrl(q);
+    if (user || isReady) {
+      autoTriggered.current = true;
+      // Laisser React appliquer setUrl avant le scan
+      setTimeout(() => handleScanWith(q), 50);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, result, loading, user, isReady]);
+
+  const handleScanWith = async (targetUrl: string) => {
+    if (!targetUrl.trim()) { toast.error('Saisissez une URL.'); return; }
     if (!user && !turnstileToken) { toast.error('Vérification anti-bot en cours…'); return; }
 
     setLoading(true);
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('machine-layer-scan', {
-        body: { url: url.trim(), turnstile_token: user ? undefined : turnstileToken },
+        body: { url: targetUrl.trim(), turnstile_token: user ? undefined : turnstileToken },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -77,14 +93,22 @@ export default function MachineLayerScanner() {
     }
   };
 
+  const handleScan = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    return handleScanWith(url);
+  };
+
   const familyCards = useMemo(() => {
     if (!result) return [];
     return FAMILY_ORDER.map(f => {
       const fam = result.scores_by_family[f.key];
       if (!fam) return null;
       const detected: Record<string, any> = {};
-      f.signalKeys.forEach(k => {
-        const v = (result.detected_signals as any)[k];
+      const source = f.pickFrom === 'external'
+        ? (result.detected_signals as any).external || {}
+        : (result.detected_signals as any);
+      f.keys.forEach(k => {
+        const v = source[k];
         if (v != null) detected[k] = v;
       });
       const recos = result.recommendations.filter(r => r.family === f.key);
@@ -109,11 +133,13 @@ export default function MachineLayerScanner() {
       created_at: new Date().toISOString(),
     });
 
+    // Route correcte = /architecte-generatif (page workbench Architect)
+    const target = '/architecte-generatif?source=machine-layer';
     if (!user) {
       toast.success('Vos correctifs sont prêts. Connectez-vous pour les injecter.');
-      navigate('/auth?redirect=/architect-generatif?source=machine-layer');
+      navigate(`/auth?redirect=${encodeURIComponent(target)}`);
     } else {
-      navigate('/architect-generatif?source=machine-layer');
+      navigate(target);
     }
   };
 

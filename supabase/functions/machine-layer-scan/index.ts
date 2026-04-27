@@ -70,6 +70,26 @@ interface FetchResult {
 
 async function fetchPageWithCascade(targetUrl: string): Promise<FetchResult> {
   const t0 = Date.now();
+
+  // 0. Pre-flight HEAD pour éviter une cascade JS-rendering coûteuse sur 4xx/5xx
+  try {
+    const headCtrl = new AbortController();
+    const headTimer = setTimeout(() => headCtrl.abort(), 6000);
+    const headResp = await fetch(targetUrl, {
+      method: 'HEAD',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR-MachineLayer/1.0)' },
+      redirect: 'follow',
+      signal: headCtrl.signal,
+    }).catch(() => null);
+    clearTimeout(headTimer);
+    if (headResp && headResp.status >= 400 && headResp.status !== 405) {
+      // Construire un FetchResult minimal pour faire remonter l'erreur en amont
+      const headers: Record<string, string> = {};
+      headResp.headers.forEach((v, k) => { headers[k.toLowerCase()] = v; });
+      return { html: '', finalUrl: headResp.url || targetUrl, status: headResp.status, headers, rendered_via: 'static', duration_ms: Date.now() - t0 };
+    }
+  } catch { /* HEAD bloqué : on continue normalement */ }
+
   const result = await stealthFetch(targetUrl, { timeout: TIMEOUT_MS, maxRetries: 2 });
   const response = result.response;
 
@@ -711,7 +731,15 @@ Deno.serve(handleRequest(async (req) => {
     || 'unknown';
   const ipHash = await sha256(ip + (Deno.env.get('IP_HASH_SALT') || 'crawlers-fr-2026'));
 
-  // 1. Fetch HTML cascade
+  // 1. Fetch HTML cascade + fichiers racine en parallèle (~30% plus rapide)
+  // L'origin est calculée à partir de l'URL fournie, suffisante pour les fichiers /robots.txt etc.
+  const provisionalOrigin = new URL(targetUrl).origin;
+  const externalSignalsPromise = (async () => {
+    const tmp = { external: {} as any } as DetectedSignals;
+    await enrichExternal(tmp, provisionalOrigin);
+    return tmp.external;
+  })();
+
   let fetchResult: FetchResult;
   try {
     fetchResult = await fetchPageWithCascade(targetUrl);
@@ -725,10 +753,15 @@ Deno.serve(handleRequest(async (req) => {
 
   // 2. Parsing
   const signals = parseHtml(fetchResult.html, fetchResult.headers);
-  const origin = new URL(fetchResult.finalUrl).origin;
+  const finalOrigin = new URL(fetchResult.finalUrl).origin;
 
-  // 3. Enrichissement externe (parallèle)
-  await enrichExternal(signals, origin);
+  // 3. Récupération des signaux externes (déjà lancés en parallèle)
+  if (finalOrigin === provisionalOrigin) {
+    signals.external = await externalSignalsPromise;
+  } else {
+    // Origin a changé après redirect → re-fetch sur le bon domaine
+    await enrichExternal(signals, finalOrigin);
+  }
 
   // 4. Scoring
   const scoring = scoreSignals(signals);
