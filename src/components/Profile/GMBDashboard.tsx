@@ -933,6 +933,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(showSimulated ? (SIMULATED_LOCATIONS[0]?.id || null) : null);
   const [gbpConnected, setGbpConnected] = useState(false);
   const [gbpEmail, setGbpEmail] = useState<string | null>(null);
+  const [gbpApiError, setGbpApiError] = useState<{ code: string | null; hint: string | null; status?: number } | null>(null);
   const [gbpLoading, setGbpLoading] = useState(false);
   const [gbpDisconnecting, setGbpDisconnecting] = useState(false);
   const [locationsLoading, setLocationsLoading] = useState(!isGated);
