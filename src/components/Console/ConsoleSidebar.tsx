@@ -27,6 +27,8 @@ interface SidebarItem {
   adminOnly?: boolean;
   hideOnMobile?: boolean;
   beta?: boolean;
+  /** When true, hidden in simplified (non-advanced) view. */
+  advancedOnly?: boolean;
 }
 
 const translations = {
