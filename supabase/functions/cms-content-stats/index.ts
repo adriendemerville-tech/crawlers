@@ -196,8 +196,12 @@ async function fetchIktrackerArticles(): Promise<Article[]> {
     });
     if (!res.ok) break;
     const json = await res.json();
-    // iktracker-actions wraps in { data: { status, data } } or { data: [...] }
-    const rawData = json?.data?.data || json?.data;
+    // iktracker-actions wraps responses in several possible shapes:
+    //   { result: { data: { data: { posts: [...] } } } }   (current)
+    //   { data: { data: { posts: [...] } } }               (legacy)
+    //   { data: [...] }                                     (legacy flat)
+    const inner = json?.result?.data ?? json?.data;
+    const rawData = inner?.data ?? inner;
     const posts = Array.isArray(rawData) ? rawData : (rawData?.posts || []);
     if (posts.length === 0) break;
 
@@ -232,7 +236,8 @@ async function fetchIktrackerArticles(): Promise<Article[]> {
     });
     if (pagesRes.ok) {
       const pagesJson = await pagesRes.json();
-      const rawPages = pagesJson?.data?.data || pagesJson?.data;
+      const innerP = pagesJson?.result?.data ?? pagesJson?.data;
+      const rawPages = innerP?.data ?? innerP;
       const pages = Array.isArray(rawPages) ? rawPages : (rawPages?.pages || []);
       for (const pg of pages) {
         articles.push({
