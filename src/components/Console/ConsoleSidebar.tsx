@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
-  Shield, Code2, ChevronDown, Search, Sparkles, Database, SlidersHorizontal,
+  Shield, Code2, ChevronDown, Search, Sparkles, Database,
   Plus, Loader2, Check, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
