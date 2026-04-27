@@ -359,6 +359,12 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t.title} — {cmsLabel}</DialogTitle>
+          <div className="flex items-start gap-2 rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 mt-2">
+            <ShieldAlert className="h-4 w-4 text-yellow-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 font-medium leading-snug">
+              {(t as any).adminRequired}
+            </p>
+          </div>
           <DialogDescription className="text-xs space-y-1">
             <span>{helpText}</span>
             {cmsType === 'wordpress' && siteUrl && (
