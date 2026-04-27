@@ -263,7 +263,7 @@ export function AgentChatShell({
             <div className="flex flex-col items-center justify-end gap-1 shrink-0">
               {composerLeading}
               {renderComposerExtras
-                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending, slot: 'leading' } as any)
+                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending, slot: 'leading' })
                 : null}
             </div>
           )}
@@ -281,7 +281,7 @@ export function AgentChatShell({
             />
             <div className="absolute bottom-1.5 right-1.5">
               {renderComposerExtras
-                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending, slot: 'inside' } as any)
+                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending, slot: 'inside' })
                 : composerExtras}
             </div>
           </div>
