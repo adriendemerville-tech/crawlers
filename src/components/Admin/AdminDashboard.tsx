@@ -221,6 +221,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     await updateAdminConfig({ simulated_data_enabled: newValue });
   };
 
+  const toggleGscBigQueryHidden = async () => {
+    const newValue = !gscBigQueryHidden;
+    setGscBigQueryHidden(newValue);
+    await updateAdminConfig({ gsc_bigquery_hidden: newValue });
+  };
+
   const showDocs = canSeeDocs && !(readOnly && docsHiddenForViewers);
   const showAlgos = canSeeAlgos;
 
