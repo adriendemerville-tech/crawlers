@@ -243,9 +243,13 @@ try {
           }
 
           // ═══ Function execution ═══
+          // dry_run bloque UNIQUEMENT la phase 'execute' (push CMS).
+          // Les phases audit/diagnose/prescribe/validate doivent toujours s'exécuter
+          // pour alimenter audit_raw_data + architect_workbench, sinon dry_run = simulation à vide.
           const isPrescribeV2 = phase === 'prescribe' && decision.action?.payload?._prescribe_v2 === true;
+          const isDryRunBlocked = config.implementation_mode === 'dry_run' && phase === 'execute';
           
-          if (!isPrescribeV2 && config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
+          if (!isPrescribeV2 && !isDryRunBlocked && decision.action?.functions?.length > 0) {
             await executeFunctions(
               decision, siteInfo, config, phase, pipelinePhase, cycleNumber,
               supabase, executionResults, phaseErrors,
@@ -262,7 +266,9 @@ try {
           }
 
           // ═══ Store execution results ═══
-          const phaseStatus = config.implementation_mode === 'dry_run' ? 'dry_run' 
+          // Statut 'dry_run' réservé à la phase execute en mode dry_run (seule phase réellement bloquée).
+          // Les autres phases (audit/diagnose/prescribe/validate) reflètent leur exécution réelle.
+          const phaseStatus = isDryRunBlocked ? 'dry_run' 
             : phaseErrors.some(e => e.severity === 'critical') ? 'failed'
             : phaseErrors.some(e => e.severity === 'degraded') ? 'degraded'
             : executionSuccess ? 'completed' : 'partial';
@@ -289,7 +295,7 @@ try {
             description: `[${pipelinePhase.toUpperCase()}] ${decision.summary || decision.goal?.description || `Cycle #${cycleNumber}`}`,
             diff_before: decision.tactic?.initial_scope || {},
             diff_after: { execution: executionResults, decision: decision.prudence, errors: phaseErrors },
-            status: config.implementation_mode === 'dry_run' ? 'dry_run' : phaseStatus,
+            status: isDryRunBlocked ? 'dry_run' : phaseStatus,
           });
 
           if (phaseErrors.some(e => e.severity === 'critical')) {
