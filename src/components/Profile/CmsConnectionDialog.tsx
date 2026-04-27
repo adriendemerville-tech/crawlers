@@ -130,6 +130,7 @@ const translations = {
     shopifyToken: 'Token Admin API',
     webflowToken: 'Token API Webflow',
     wixToken: 'Clave API Wix',
+    adminRequired: 'La cuenta utilizada debe tener el rol de Administrador en el CMS para autorizar la conexión API.',
   },
 };
 
