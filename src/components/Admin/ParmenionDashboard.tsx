@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Globe, FileText, ListTodo, BarChart3, Plus, Key } from 'lucide-react';
+import { Globe, FileText, ListTodo, BarChart3, Plus, Key, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ParmenionTargetPanel } from './ParmenionTargetPanel';
 import { ParmenionTaskPlan } from './ParmenionTaskPlan';
 import { ParmenionFuncStats } from './ParmenionFuncStats';
 import { ParmenionAddTargetModal } from './ParmenionAddTargetModal';
 import { ParmenionApiKeyManager } from './ParmenionApiKeyManager';
+import { ParmenionExecutionStatus } from './ParmenionExecutionStatus';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Target {
