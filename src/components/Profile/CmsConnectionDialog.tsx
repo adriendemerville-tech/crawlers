@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, CheckCircle2, AlertCircle, Copy, Webhook, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -57,6 +58,7 @@ const translations = {
     webflowToken: 'Token API Webflow',
     wixToken: 'Clé API Wix',
     adminRequired: 'Le compte utilisé doit avoir le rôle Administrateur sur le CMS pour autoriser la connexion API.',
+    adminConsent: 'Je certifie disposer du rôle Administrateur sur ce CMS.',
   },
   en: {
     title: 'API Connection',
@@ -94,6 +96,7 @@ const translations = {
     webflowToken: 'Webflow API Token',
     wixToken: 'Wix API Key',
     adminRequired: 'The account used must have the Administrator role on the CMS to authorize the API connection.',
+    adminConsent: 'I confirm I have the Administrator role on this CMS.',
   },
   es: {
     title: 'Conexión API',
@@ -131,6 +134,7 @@ const translations = {
     webflowToken: 'Token API Webflow',
     wixToken: 'Clave API Wix',
     adminRequired: 'La cuenta utilizada debe tener el rol de Administrador en el CMS para autorizar la conexión API.',
+    adminConsent: 'Confirmo que tengo el rol de Administrador en este CMS.',
   },
 };
 
@@ -150,12 +154,14 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
 
   // Webhook registration state
   const [webhookStatus, setWebhookStatus] = useState<'idle' | 'registering' | 'success' | 'failed'>('idle');
+  const [adminConsent, setAdminConsent] = useState(false);
   const [fallbackWebhookUrl, setFallbackWebhookUrl] = useState('');
 
   useEffect(() => {
     if (!open) {
       setWebhookStatus('idle');
       setFallbackWebhookUrl('');
+      setAdminConsent(false);
       return;
     }
     (async () => {
@@ -343,8 +349,8 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
   };
 
   const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix' || cmsType === 'odoo' || cmsType === 'prestashop';
-  const canTest = siteUrl && (isApiKeyAuth ? password : username && password);
-  const canSave = selectedSiteId && siteUrl && (isApiKeyAuth ? password : username && password);
+  const canTest = adminConsent && siteUrl && (isApiKeyAuth ? password : username && password);
+  const canSave = adminConsent && selectedSiteId && siteUrl && (isApiKeyAuth ? password : username && password);
 
   const isEcommerce = cmsType === 'wordpress' || cmsType === 'shopify';
 
@@ -531,6 +537,21 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
               </div>
             </div>
           )}
+        </div>
+
+        <div className="flex items-start gap-2 px-1 pb-2">
+          <Checkbox
+            id="cms-admin-consent"
+            checked={adminConsent}
+            onCheckedChange={(v) => setAdminConsent(v === true)}
+            className="mt-0.5"
+          />
+          <Label
+            htmlFor="cms-admin-consent"
+            className="text-xs leading-snug cursor-pointer font-normal"
+          >
+            {(t as any).adminConsent}
+          </Label>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
