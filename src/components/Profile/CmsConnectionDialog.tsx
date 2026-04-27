@@ -539,6 +539,21 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
           )}
         </div>
 
+        <div className="flex items-start gap-2 px-1 pb-2">
+          <Checkbox
+            id="cms-admin-consent"
+            checked={adminConsent}
+            onCheckedChange={(v) => setAdminConsent(v === true)}
+            className="mt-0.5"
+          />
+          <Label
+            htmlFor="cms-admin-consent"
+            className="text-xs leading-snug cursor-pointer font-normal"
+          >
+            {(t as any).adminConsent}
+          </Label>
+        </div>
+
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={handleTest} disabled={!canTest || testing}>
             {testing ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" />{t.testing}</> : t.testConnection}
