@@ -592,23 +592,44 @@ const admin_lookup_user: SkillDefinition = {
       const userGoogle = googleRes.data ?? [];
       const userCanva = canvaRes.data ?? [];
 
-      // 4) Pour chaque site : connexions CMS (scope site) + matchs Google par URL.
+      // 4) Pour chaque site : connexions CMS + matchs Google par URL + targets Parménion (admin-pushed).
       const sitesEnriched = await Promise.all((sites ?? []).map(async (s) => {
-        const [cmsRes, matomoRes] = await Promise.all([
+        const domainNorm = (s.domain ?? '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+
+        const [cmsRes, matomoRes, parmenionRes, iktrackerRes] = await Promise.all([
           ctx.service.from('cms_connections')
-            .select('id, platform, auth_method, status, site_url, scopes, capabilities, created_at, updated_at, token_expiry')
+            .select('id, platform, auth_method, status, site_url, scopes, capabilities, created_at, updated_at, token_expiry, managed_by')
             .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
           ctx.service.from('matomo_connections')
             .select('id, matomo_url, site_id, is_active, last_sync_at, sync_error, created_at')
             .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
+          // Parménion : scope DOMAINE (pas user) — admin-pushed, indépendant de la propriété user
+          ctx.service.from('parmenion_targets')
+            .select('id, domain, label, platform, event_type, is_active, api_key_name, created_at, updated_at')
+            .ilike('domain', domainNorm),
+          // IKtracker : connexions admin-pushed pour le pont IK
+          ctx.service.from('iktracker_connections')
+            .select('id, domain, is_active, created_at, updated_at')
+            .ilike('domain', domainNorm)
+            .then((r: any) => r, () => ({ data: [] })), // table peut ne pas exister
         ]);
 
-        // Matche les connexions Google qui couvrent ce domaine via gsc_site_urls
-        const domainNorm = (s.domain ?? '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
         const googleForSite = userGoogle.filter((g: any) => {
           const urls: string[] = Array.isArray(g.gsc_site_urls) ? g.gsc_site_urls : [];
           return urls.some((u) => String(u).toLowerCase().includes(domainNorm));
         });
+
+        // Sépare connexions user vs miroirs Parménion pour transparence
+        const cmsAll = cmsRes.data ?? [];
+        const cmsUser = cmsAll.filter((c: any) => (c.managed_by ?? 'user') === 'user');
+        const cmsParmenionMirror = cmsAll.filter((c: any) => c.managed_by === 'parmenion');
+        const parmenionTargets = (parmenionRes.data ?? []).map((t: any) => ({
+          id: t.id, domain: t.domain, label: t.label, platform: t.platform,
+          event_type: t.event_type, is_active: t.is_active,
+          has_api_key: !!t.api_key_name && t.api_key_name.trim() !== '',
+          api_key_preview: t.api_key_name ? `${t.api_key_name.slice(0, 6)}…${t.api_key_name.slice(-4)}` : null,
+          created_at: t.created_at, updated_at: t.updated_at,
+        }));
 
         return {
           site_id: s.id,
@@ -618,10 +639,17 @@ const admin_lookup_user: SkillDefinition = {
           last_cms_refresh_at: s.last_cms_refresh_at,
           last_audit_at: s.last_audit_at,
           connections: {
-            cms: cmsRes.data ?? [],
-            cms_count: (cmsRes.data ?? []).length,
+            cms_user: cmsUser,                      // connexions CMS explicitement créées par le user
+            cms_parmenion_mirror: cmsParmenionMirror, // miroirs créés via Parménion (admin)
+            cms_count_total: cmsAll.length,
+            cms_count_user: cmsUser.length,
+            cms_count_parmenion: cmsParmenionMirror.length,
             google_for_this_site: googleForSite,
             matomo: matomoRes.data ?? [],
+            // Pont autopilote (admin) — distinct des CMS standards
+            parmenion_targets: parmenionTargets,
+            parmenion_active: parmenionTargets.some((t: any) => t.is_active && t.has_api_key),
+            iktracker_connections: (iktrackerRes as any)?.data ?? [],
           },
         };
       }));
