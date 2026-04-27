@@ -291,9 +291,41 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
     }
 
     // ─── Action: fetch_traffic_sources ────────────────────────────
+    // Stratégie : DB-first (cache TTL paramétrable) → fallback API GA4 live
     if (action === 'fetch_traffic_sources') {
       if (!tracked_site_id) return jsonError('tracked_site_id required', 400)
-      // GA4 Live API (sources non persistées en DB) — limité aux 7 catégories standard
+
+      // Empreinte stable du filtre pages (ordre indifférent)
+      const sortedPaths = [...page_paths].sort()
+      const pathsHash = sortedPaths.length === 0
+        ? ''
+        : await sha1(sortedPaths.join('|'))
+
+      // 1) Lookup cache DB
+      if (!force_refresh) {
+        const { data: cached } = await supabase
+          .from('ga4_traffic_sources_cache')
+          .select('sources_data, fetched_at, expires_at')
+          .eq('user_id', user_id)
+          .eq('tracked_site_id', tracked_site_id)
+          .eq('period_start', startD)
+          .eq('period_end', endD)
+          .eq('page_paths_hash', pathsHash)
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle()
+
+        if (cached?.sources_data) {
+          return jsonOk({
+            success: true,
+            sources: cached.sources_data,
+            cached_from: 'db',
+            fetched_at: cached.fetched_at,
+            expires_at: cached.expires_at,
+          })
+        }
+      }
+
+      // 2) Fallback : appel GA4 live
       const { data: profile } = await supabase
         .from('profiles')
         .select('ga4_property_id')
@@ -329,7 +361,31 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
         sessions: parseInt(r.metricValues?.[0]?.value || '0'),
         users: parseInt(r.metricValues?.[1]?.value || '0'),
       }))
-      return jsonOk({ success: true, sources })
+
+      // 3) Upsert cache
+      const fetchedAt = new Date()
+      const expiresAt = new Date(fetchedAt.getTime() + cache_ttl_minutes * 60_000)
+      await supabase
+        .from('ga4_traffic_sources_cache')
+        .upsert({
+          user_id,
+          tracked_site_id,
+          period_start: startD,
+          period_end: endD,
+          page_paths_hash: pathsHash,
+          page_paths: sortedPaths,
+          sources_data: sources,
+          fetched_at: fetchedAt.toISOString(),
+          expires_at: expiresAt.toISOString(),
+        }, { onConflict: 'tracked_site_id,period_start,period_end,page_paths_hash' })
+
+      return jsonOk({
+        success: true,
+        sources,
+        cached_from: 'live',
+        fetched_at: fetchedAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+      })
     }
 
     // ─── Action: detect_anomalies ─────────────────────────────────
