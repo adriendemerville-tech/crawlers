@@ -94,6 +94,8 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
     setLoading(true);
     setError(null);
     setStats(null);
+    setArticles([]);
+    setShowAll(false);
 
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('cms-content-stats', {
