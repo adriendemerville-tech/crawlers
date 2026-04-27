@@ -51,6 +51,7 @@ function ProfileContent() {
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [gscBigQueryHidden, setGscBigQueryHidden] = useState(false);
   const [showGoogleOnboarding, setShowGoogleOnboarding] = useState(false);
   const isMobile = useIsMobile();
   const isProUser = isAgencyPro || isAdmin;
