@@ -104,7 +104,7 @@ Deno.serve(handleRequest(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+}));
 
 // ══════════════════════════════════════════════════════════════
 // BROWSERLESS.IO IMPLEMENTATION
