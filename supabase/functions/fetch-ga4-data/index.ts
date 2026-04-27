@@ -965,3 +965,10 @@ function detectAnomalies(series: { date: string; sessions: number; users: number
   }
   return out.sort((a, b) => b.date.localeCompare(a.date))
 }
+
+// SHA-1 hex digest (used to fingerprint page_paths filter for cache key)
+async function sha1(input: string): Promise<string> {
+  const buf = new TextEncoder().encode(input)
+  const hashBuf = await crypto.subtle.digest('SHA-1', buf)
+  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
