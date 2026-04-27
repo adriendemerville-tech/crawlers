@@ -26,10 +26,22 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { handleWPIntegration } from '@/utils/wpIntegration';
 import { cn } from '@/lib/utils';
+
+// Domains routed to the custom_rest Bearer flow (cms-register-api-key edge fn).
+const CUSTOM_REST_PLATFORMS: Array<{ match: (d: string) => boolean; platform: string; label: string; keyPrefix: string; keyHelpUrl?: string }> = [
+  {
+    match: (d) => d.toLowerCase().includes('dictadevi'),
+    platform: 'dictadevi',
+    label: 'Dictadevi',
+    keyPrefix: 'dk_',
+    keyHelpUrl: 'https://dictadevi.io/admin/blog-api',
+  },
+];
 
 type Lang = 'fr' | 'en' | 'es';
 
@@ -66,10 +78,13 @@ export function SmartCmsConnectModal({
   siteApiKey,
 }: Props) {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const { language } = useLanguage();
   const lang = (language || 'fr') as Lang;
 
-  const [step, setStep] = useState<'idle' | 'detecting' | 'recommend' | 'manual' | 'already_connected'>('idle');
+  const customRest = CUSTOM_REST_PLATFORMS.find((p) => p.match(siteDomain)) || null;
+
+  const [step, setStep] = useState<'idle' | 'detecting' | 'recommend' | 'manual' | 'already_connected' | 'custom_rest'>('idle');
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [working, setWorking] = useState(false);
 
@@ -77,6 +92,11 @@ export function SmartCmsConnectModal({
   const [appUser, setAppUser] = useState('');
   const [appPassword, setAppPassword] = useState('');
   const [savingRest, setSavingRest] = useState(false);
+
+  // Custom REST (Bearer) form — Dictadevi & co.
+  const [bearerKey, setBearerKey] = useState('');
+  const [savingBearer, setSavingBearer] = useState(false);
+  const [adminKeyAvailable, setAdminKeyAvailable] = useState(false);
 
   // Existing CMS connections (loaded on open)
   const [existingConnections, setExistingConnections] = useState<
@@ -90,6 +110,7 @@ export function SmartCmsConnectModal({
     setWorking(false);
     setAppUser('');
     setAppPassword('');
+    setBearerKey('');
     setExistingConnections([]);
   };
 
@@ -117,6 +138,9 @@ export function SmartCmsConnectModal({
         setExistingConnections(rows);
         if (rows.length > 0) {
           setStep('already_connected');
+        } else if (customRest) {
+          // Domain matches a known custom_rest CMS (e.g. Dictadevi) → skip WP detection.
+          setStep('custom_rest');
         }
       } catch (e) {
         console.warn('[SmartCmsConnectModal] cms_connections check failed', e);
@@ -127,7 +151,62 @@ export function SmartCmsConnectModal({
     return () => {
       cancelled = true;
     };
-  }, [open, siteId]);
+  }, [open, siteId, customRest]);
+
+  // ─── Probe parmenion_targets for an admin-managed key (only for admins) ───
+  useEffect(() => {
+    if (!open || !customRest || !isAdmin || step !== 'custom_rest') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: siteDomain });
+        if (cancelled) return;
+        if (!error && typeof data === 'string' && data.startsWith(customRest.keyPrefix)) {
+          setAdminKeyAvailable(true);
+        }
+      } catch (_) { /* best effort */ }
+    })();
+    return () => { cancelled = true; };
+  }, [open, customRest, isAdmin, step, siteDomain]);
+
+  // ─── Save bearer key via cms-register-api-key edge function ───
+  const saveBearerKey = async (mode: 'manual' | 'reuse_admin') => {
+    if (!user || !customRest) return;
+    if (mode === 'manual' && (!bearerKey || !bearerKey.startsWith(customRest.keyPrefix))) {
+      toast.error(t3(
+        lang,
+        `La clé doit commencer par "${customRest.keyPrefix}"`,
+        `Key must start with "${customRest.keyPrefix}"`,
+        `La clave debe empezar con "${customRest.keyPrefix}"`,
+      ));
+      return;
+    }
+    setSavingBearer(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cms-register-api-key', {
+        body: {
+          tracked_site_id: siteId,
+          platform: customRest.platform,
+          mode,
+          ...(mode === 'manual' ? { api_key: bearerKey } : {}),
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Unknown error');
+      toast.success(t3(
+        lang,
+        `${customRest.label} branché — clé vérifiée et enregistrée.`,
+        `${customRest.label} connected — key verified and saved.`,
+        `${customRest.label} conectado — clave verificada y guardada.`,
+      ));
+      handleClose(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(msg);
+    } finally {
+      setSavingBearer(false);
+    }
+  };
 
   // ─── Step 1 — Auto-detection ───
   const runDetection = async () => {
@@ -476,6 +555,97 @@ export function SmartCmsConnectModal({
                   {t3(lang, 'Fermer', 'Close', 'Cerrar')}
                 </Button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Step custom_rest (Bearer dk_… for Dictadevi & co.) ─── */}
+        {step === 'custom_rest' && customRest && (
+          <div className="space-y-4 py-2">
+            <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">
+                  {t3(lang, `Brancher ${customRest.label} (API REST)`, `Connect ${customRest.label} (REST API)`, `Conectar ${customRest.label} (API REST)`)}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t3(
+                  lang,
+                  `Collez votre clé API ${customRest.label} (préfixe « ${customRest.keyPrefix} »). Elle sera testée auprès de l'API puis enregistrée chiffrée côté serveur.`,
+                  `Paste your ${customRest.label} API key (prefix "${customRest.keyPrefix}"). It will be tested against the API and stored server-side.`,
+                  `Pegue su clave API ${customRest.label} (prefijo "${customRest.keyPrefix}"). Será probada y almacenada en el servidor.`,
+                )}
+              </p>
+              {customRest.keyHelpUrl && (
+                <a
+                  href={customRest.keyHelpUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t3(lang, 'Générer une clé', 'Generate a key', 'Generar una clave')}
+                </a>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bearer-key">
+                {t3(lang, 'Clé API', 'API key', 'Clave API')} ({customRest.keyPrefix}…)
+              </Label>
+              <Input
+                id="bearer-key"
+                type="password"
+                value={bearerKey}
+                onChange={(e) => setBearerKey(e.target.value)}
+                placeholder={`${customRest.keyPrefix}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`}
+                autoComplete="off"
+              />
+            </div>
+
+            {isAdmin && adminKeyAvailable && (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
+                  <ShieldAlert className="h-3.5 w-3.5" />
+                  {t3(
+                    lang,
+                    'Clé admin déjà présente côté autopilote — vous pouvez la réutiliser pour ce compte.',
+                    'Admin key already stored for the autopilot — you can reuse it on this account.',
+                    'Clave admin ya almacenada para el autopiloto — puede reutilizarla en esta cuenta.',
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => saveBearerKey('reuse_admin')}
+                  disabled={savingBearer}
+                >
+                  {savingBearer && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  <PlugZap className="h-3.5 w-3.5" />
+                  {t3(lang, 'Utiliser la clé existante (admin)', 'Use existing admin key', 'Usar clave admin existente')}
+                </Button>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep('idle')}
+                className="flex-1"
+              >
+                {t3(lang, 'Autres méthodes', 'Other methods', 'Otros métodos')}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => saveBearerKey('manual')}
+                disabled={!bearerKey || savingBearer}
+                className="flex-1 gap-2"
+              >
+                {savingBearer && <Loader2 className="h-4 w-4 animate-spin" />}
+                {t3(lang, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
+              </Button>
             </div>
           </div>
         )}
