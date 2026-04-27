@@ -93,9 +93,11 @@ function ProfileContent() {
         if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
           const config = data.card_order as Record<string, unknown>;
           setSimulatedDataEnabled(config.simulated_data_enabled !== false);
+          setGscBigQueryHidden(!!config.gsc_bigquery_hidden);
           return;
         }
         setSimulatedDataEnabled(true);
+        setGscBigQueryHidden(false);
       });
   }, [user]);
 
