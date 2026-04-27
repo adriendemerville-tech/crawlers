@@ -96,6 +96,7 @@ const translations = {
     webflowToken: 'Webflow API Token',
     wixToken: 'Wix API Key',
     adminRequired: 'The account used must have the Administrator role on the CMS to authorize the API connection.',
+    adminConsent: 'I confirm I have the Administrator role on this CMS.',
   },
   es: {
     title: 'Conexión API',
