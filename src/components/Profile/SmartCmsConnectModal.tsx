@@ -138,6 +138,9 @@ export function SmartCmsConnectModal({
         setExistingConnections(rows);
         if (rows.length > 0) {
           setStep('already_connected');
+        } else if (customRest) {
+          // Domain matches a known custom_rest CMS (e.g. Dictadevi) → skip WP detection.
+          setStep('custom_rest');
         }
       } catch (e) {
         console.warn('[SmartCmsConnectModal] cms_connections check failed', e);
@@ -148,7 +151,62 @@ export function SmartCmsConnectModal({
     return () => {
       cancelled = true;
     };
-  }, [open, siteId]);
+  }, [open, siteId, customRest]);
+
+  // ─── Probe parmenion_targets for an admin-managed key (only for admins) ───
+  useEffect(() => {
+    if (!open || !customRest || !isAdmin || step !== 'custom_rest') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: siteDomain });
+        if (cancelled) return;
+        if (!error && typeof data === 'string' && data.startsWith(customRest.keyPrefix)) {
+          setAdminKeyAvailable(true);
+        }
+      } catch (_) { /* best effort */ }
+    })();
+    return () => { cancelled = true; };
+  }, [open, customRest, isAdmin, step, siteDomain]);
+
+  // ─── Save bearer key via cms-register-api-key edge function ───
+  const saveBearerKey = async (mode: 'manual' | 'reuse_admin') => {
+    if (!user || !customRest) return;
+    if (mode === 'manual' && (!bearerKey || !bearerKey.startsWith(customRest.keyPrefix))) {
+      toast.error(t3(
+        lang,
+        `La clé doit commencer par "${customRest.keyPrefix}"`,
+        `Key must start with "${customRest.keyPrefix}"`,
+        `La clave debe empezar con "${customRest.keyPrefix}"`,
+      ));
+      return;
+    }
+    setSavingBearer(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cms-register-api-key', {
+        body: {
+          tracked_site_id: siteId,
+          platform: customRest.platform,
+          mode,
+          ...(mode === 'manual' ? { api_key: bearerKey } : {}),
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Unknown error');
+      toast.success(t3(
+        lang,
+        `${customRest.label} branché — clé vérifiée et enregistrée.`,
+        `${customRest.label} connected — key verified and saved.`,
+        `${customRest.label} conectado — clave verificada y guardada.`,
+      ));
+      handleClose(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(msg);
+    } finally {
+      setSavingBearer(false);
+    }
+  };
 
   // ─── Step 1 — Auto-detection ───
   const runDetection = async () => {
