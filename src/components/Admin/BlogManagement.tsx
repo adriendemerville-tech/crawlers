@@ -437,22 +437,32 @@ export function BlogManagement() {
         </CardHeader>
         <CardContent>
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher par titre ou slug..."
+                placeholder="Rechercher par titre, slug, extrait ou mots-clés du contenu..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 pr-10"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Effacer la recherche"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ArticleStatus | 'all')}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-56">
                 <SelectValue placeholder="Filtrer par statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts ({articles.length})</SelectItem>
                 {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     <span className="flex items-center gap-2">
@@ -463,7 +473,21 @@ export function BlogManagement() {
                 ))}
               </SelectContent>
             </Select>
+            {(searchQuery || statusFilter !== 'all') && (
+              <Button
+                variant="outline"
+                onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Réinitialiser
+              </Button>
+            )}
           </div>
+          <p className="text-xs text-muted-foreground mb-6">
+            {filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''} affiché{filteredArticles.length !== 1 ? 's' : ''}
+            {(searchQuery || statusFilter !== 'all') && ` sur ${articles.length}`}
+          </p>
 
           {/* Status Badges Summary */}
           <div className="flex flex-wrap gap-2 mb-6">
