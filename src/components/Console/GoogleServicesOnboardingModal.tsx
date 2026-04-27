@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, Loader2, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,58 +12,53 @@ import { toast } from 'sonner';
 const i18n = {
   fr: {
     title: 'Connectez vos services Google',
-    desc: 'Pour pouvoir vous servir efficacement, Crawlers a besoin d\'accéder aux données de Google Business, GA4, Ads et Tag Manager.',
-    privacy: 'Les données sont anonymisées, ne sont pas cédées à des tiers. La déconnexion est possible à tout moment dans les paramètres.',
-    connect: 'Connecter mes services',
+    desc: 'Crawlers a besoin d\'accéder à Search Console, GA4, Google Business, Ads et Tag Manager. Vous pouvez tout connecter en une fois ou choisir module par module.',
+    privacy: 'Une seule autorisation Google couvre tous les services sélectionnés. Les données sont anonymisées, jamais cédées à des tiers, déconnexion possible à tout moment.',
+    selectAll: 'Tout sélectionner',
+    deselectAll: 'Tout désélectionner',
+    connectN: (n: number) => n === 1 ? 'Connecter ce service' : `Connecter les ${n} services sélectionnés`,
+    connectNone: 'Sélectionnez au moins un service',
     connected: 'Déjà connecté',
     connecting: 'Connexion…',
     errorConnect: 'Erreur de connexion',
+    alreadyConnected: 'Déjà connecté',
   },
   en: {
     title: 'Connect your Google services',
-    desc: 'To serve you effectively, Crawlers needs access to Google Business, GA4, Ads and Tag Manager data.',
-    privacy: 'Data is anonymized and not shared with third parties. You can disconnect at any time in settings.',
-    connect: 'Connect my services',
+    desc: 'Crawlers needs access to Search Console, GA4, Google Business, Ads and Tag Manager. Connect all at once or pick module by module.',
+    privacy: 'A single Google authorization covers all selected services. Data is anonymized, never shared, disconnection possible anytime.',
+    selectAll: 'Select all',
+    deselectAll: 'Deselect all',
+    connectN: (n: number) => n === 1 ? 'Connect this service' : `Connect ${n} selected services`,
+    connectNone: 'Select at least one service',
     connected: 'Already connected',
     connecting: 'Connecting…',
     errorConnect: 'Connection error',
+    alreadyConnected: 'Already connected',
   },
   es: {
     title: 'Conecte sus servicios Google',
-    desc: 'Para servirle eficazmente, Crawlers necesita acceder a los datos de Google Business, GA4, Ads y Tag Manager.',
-    privacy: 'Los datos son anonimizados y no se ceden a terceros. La desconexión es posible en cualquier momento en los ajustes.',
-    connect: 'Conectar mis servicios',
+    desc: 'Crawlers necesita acceso a Search Console, GA4, Google Business, Ads y Tag Manager. Conecte todo a la vez o módulo por módulo.',
+    privacy: 'Una sola autorización Google cubre todos los servicios seleccionados. Datos anonimizados, nunca cedidos, desconexión posible en cualquier momento.',
+    selectAll: 'Seleccionar todo',
+    deselectAll: 'Deseleccionar todo',
+    connectN: (n: number) => n === 1 ? 'Conectar este servicio' : `Conectar los ${n} servicios seleccionados`,
+    connectNone: 'Seleccione al menos un servicio',
     connected: 'Ya conectado',
     connecting: 'Conectando…',
     errorConnect: 'Error de conexión',
+    alreadyConnected: 'Ya conectado',
   },
 };
 
-const GOOGLE_SERVICES = [
-  {
-    key: 'gbp',
-    name: 'Google Business',
-    logo: 'https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg',
-    color: '#4285F4',
-  },
-  {
-    key: 'ga4',
-    name: 'Google Analytics 4',
-    logo: 'https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg',
-    color: '#E37400',
-  },
-  {
-    key: 'ads',
-    name: 'Google Ads',
-    logo: 'https://fonts.gstatic.com/s/i/productlogos/ads_round/v4/24px.svg',
-    color: '#4285F4',
-  },
-  {
-    key: 'gtm',
-    name: 'Tag Manager',
-    logo: 'https://www.gstatic.com/analytics-suite/header/suite/v2/ic_tag_manager.svg',
-    color: '#4285F4',
-  },
+type ModuleKey = 'gsc' | 'ga4' | 'gbp' | 'ads' | 'gtm';
+
+const GOOGLE_SERVICES: Array<{ key: ModuleKey; name: string; logo: string }> = [
+  { key: 'gsc', name: 'Search Console', logo: 'https://www.gstatic.com/images/branding/product/1x/search_console_48dp.png' },
+  { key: 'ga4', name: 'Analytics 4', logo: 'https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg' },
+  { key: 'gbp', name: 'Google Business', logo: 'https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg' },
+  { key: 'ads', name: 'Google Ads', logo: 'https://fonts.gstatic.com/s/i/productlogos/ads_round/v4/24px.svg' },
+  { key: 'gtm', name: 'Tag Manager', logo: 'https://www.gstatic.com/analytics-suite/header/suite/v2/ic_tag_manager.svg' },
 ];
 
 interface Props {
@@ -75,57 +71,71 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
   const { language } = useLanguage();
   const t = i18n[language] || i18n.fr;
   const [connecting, setConnecting] = useState(false);
-  const [connectedServices, setConnectedServices] = useState<Set<string>>(new Set());
+  const [connectedServices, setConnectedServices] = useState<Set<ModuleKey>>(new Set());
+  const [selected, setSelected] = useState<Set<ModuleKey>>(new Set());
 
   useEffect(() => {
     if (!open || !user) return;
     const check = async () => {
-      const connected = new Set<string>();
+      const connected = new Set<ModuleKey>();
       const gscOk = !!profile?.gsc_access_token;
 
+      // Single source of truth: google_connections (unifié depuis 2026-04-27)
       const { data: conns } = await supabase
         .from('google_connections_public' as any)
-        .select('id, ga4_property_id, gsc_site_urls')
+        .select('id, ga4_property_id, gsc_site_urls, gmb_account_id, ads_customer_id, scopes')
         .eq('user_id', user.id);
+
       if (conns?.length) {
-        if ((conns as any[]).some(c => !!c.ga4_property_id)) connected.add('ga4');
-        if ((conns as any[]).some(c => c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0)) connected.add('gsc');
+        for (const c of conns as any[]) {
+          if (c.ga4_property_id) connected.add('ga4');
+          if (c.gsc_site_urls && (c.gsc_site_urls as any[]).length > 0) connected.add('gsc');
+          if (c.gmb_account_id) connected.add('gbp');
+          if (c.ads_customer_id) connected.add('ads');
+          // GTM : déduit des scopes
+          const scopes: string[] = c.scopes || [];
+          if (scopes.some(s => s.includes('tagmanager'))) connected.add('gtm');
+        }
       }
       if (gscOk) connected.add('gsc');
 
-      // Check Ads
-      const { data: adsData } = await (supabase as any)
-        .from('google_ads_connections_public')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .limit(1)
-        .maybeSingle();
-      if (adsData) connected.add('ads');
-
-      // Check GBP via google_connections gmb fields
-      const { data: gbpConns } = await supabase
-        .from('google_connections_public' as any)
-        .select('id, gmb_account_id')
-        .eq('user_id', user.id);
-      if (gbpConns?.some(c => !!(c as any).gmb_account_id)) connected.add('gbp');
-
-      // GTM: check via profiles or assume connected with GSC (same OAuth)
-      if (gscOk) connected.add('gtm');
-
       setConnectedServices(connected);
+      // Pré-sélection : tout sauf ce qui est déjà connecté
+      setSelected(new Set(GOOGLE_SERVICES.filter(s => !connected.has(s.key)).map(s => s.key)));
     };
     check();
   }, [open, user, profile]);
 
   const allConnected = GOOGLE_SERVICES.every(s => connectedServices.has(s.key));
 
+  const toggle = (key: ModuleKey) => {
+    if (connectedServices.has(key)) return; // already connected, no-op
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    const remaining = GOOGLE_SERVICES.filter(s => !connectedServices.has(s.key)).map(s => s.key);
+    setSelected(new Set(remaining));
+  };
+  const deselectAll = () => setSelected(new Set());
+
   const handleConnect = async () => {
-    if (!user) return;
+    if (!user || selected.size === 0) return;
     setConnecting(true);
     try {
+      const modules = Array.from(selected);
       const { data, error } = await supabase.functions.invoke('gsc-auth', {
-        body: { action: 'login', user_id: user.id, frontend_origin: window.location.origin },
+        body: {
+          action: 'login',
+          user_id: user.id,
+          frontend_origin: window.location.origin,
+          modules,
+        },
       });
       if (error) throw error;
       if (data?.auth_url) {
@@ -138,6 +148,8 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
       setConnecting(false);
     }
   };
+
+  const remainingCount = GOOGLE_SERVICES.filter(s => !connectedServices.has(s.key)).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -152,32 +164,66 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Service cards */}
-          <div className="grid grid-cols-2 gap-2.5">
+          {/* Select / Deselect helpers */}
+          {!allConnected && remainingCount > 1 && (
+            <div className="flex items-center gap-3 text-[11px]">
+              <button
+                onClick={selectAll}
+                className="text-white/60 hover:text-white/90 transition-colors underline-offset-2 hover:underline"
+              >
+                {t.selectAll}
+              </button>
+              <span className="text-white/15">·</span>
+              <button
+                onClick={deselectAll}
+                className="text-white/60 hover:text-white/90 transition-colors underline-offset-2 hover:underline"
+              >
+                {t.deselectAll}
+              </button>
+            </div>
+          )}
+
+          {/* Service cards with checkboxes */}
+          <div className="grid grid-cols-1 gap-2">
             {GOOGLE_SERVICES.map((service) => {
               const isConnected = connectedServices.has(service.key);
+              const isSelected = selected.has(service.key);
               return (
-                <div
+                <label
                   key={service.key}
-                  className={`relative flex items-center gap-3 rounded-lg border px-3.5 py-3 transition-colors ${
+                  htmlFor={`gs-${service.key}`}
+                  className={`relative flex items-center gap-3 rounded-lg border px-3.5 py-2.5 transition-colors ${
                     isConnected
-                      ? 'border-emerald-500/30 bg-emerald-500/5'
-                      : 'border-white/8 bg-white/[0.02]'
+                      ? 'border-emerald-500/30 bg-emerald-500/5 cursor-default'
+                      : isSelected
+                      ? 'border-white/20 bg-white/[0.04] cursor-pointer'
+                      : 'border-white/8 bg-white/[0.02] cursor-pointer hover:bg-white/[0.04]'
                   }`}
                 >
+                  {!isConnected && (
+                    <Checkbox
+                      id={`gs-${service.key}`}
+                      checked={isSelected}
+                      onCheckedChange={() => toggle(service.key)}
+                      className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black data-[state=checked]:border-white"
+                    />
+                  )}
                   <img
                     src={service.logo}
                     alt={service.name}
-                    className="h-6 w-6 shrink-0"
+                    className="h-5 w-5 shrink-0"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-white/85 truncate">{service.name}</p>
                   </div>
                   {isConnected && (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span className="flex items-center gap-1.5 text-[10px] text-emerald-400/80">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      {t.alreadyConnected}
+                    </span>
                   )}
-                </div>
+                </label>
               );
             })}
           </div>
@@ -201,13 +247,12 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
           ) : (
             <Button
               onClick={handleConnect}
-              disabled={connecting}
-              className="w-full gap-2 bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white border border-white/10 font-medium shadow-none"
+              disabled={connecting || selected.size === 0}
+              variant="outline"
+              className="w-full gap-2 border-white/15 hover:border-white/30 hover:bg-white/[0.04] text-white font-medium shadow-none disabled:opacity-40"
             >
-              {connecting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : null}
-              {connecting ? t.connecting : t.connect}
+              {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {connecting ? t.connecting : selected.size === 0 ? t.connectNone : t.connectN(selected.size)}
             </Button>
           )}
         </div>
