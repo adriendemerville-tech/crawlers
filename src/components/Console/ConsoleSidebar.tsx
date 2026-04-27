@@ -152,6 +152,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
   const renderItem = (item: SidebarItem) => {
     if (item.hideOnMobile && isMobile) return null;
+    if (item.advancedOnly && !advanced) return null;
 
     const isActive = activeTab === item.value;
     const isLocked = item.proOnly && !isProUser;
