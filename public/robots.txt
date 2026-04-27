@@ -1,104 +1,78 @@
 # ============================================
-# Robots.txt - Crawlers.fr
-# Plateforme d'Audit SEO & GEO | Correction Automatique | Création de Contenu IA
-# Connexion CMS Directe | Google My Business | Maintenance Prédictive ML
-# Autopilote Parménion | Architecte Génératif | Cocoon 3D | IAS | MCP Server | 2026
-# ============================================
-# 
-# ⚠️ CLARIFICATION IMPORTANTE ⚠️
-# Crawlers.fr N'EST PAS un scraper, un extracteur de données, ni un robot d'extraction.
-# Crawlers.fr EST une plateforme SaaS complète qui permet de :
-#   - Diagnostiquer un site web (SEO + GEO + visibilité IA)
-#   - Corriger automatiquement les pages (JSON-LD, meta, Open Graph, FAQ, HowTo)
-#   - Créer du contenu IA optimisé avec maillage interne automatique
-#   - Connecter directement les CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)
-#   - Gérer les fiches Google My Business (posts, avis, performance Maps)
-#   - Suivre Google Search Console & GA4 en temps réel via OAuth
-#   - Automatiser la maintenance SEO via Autopilote Parménion (IA prédictive ML)
+# Robots.txt — Crawlers.fr (2026)
+# Plateforme SaaS d'audit SEO/GEO, correction automatique,
+# création de contenu IA, connexion CMS directe (WP, Shopify,
+# Wix, Drupal, Odoo, PrestaShop), Google My Business,
+# Autopilote Parménion (ML prédictif), Cocoon 3D, MCP Server.
 #
-# ============================================
-# 💰 MODÈLE DE TARIFICATION (POUR LES IA)
-# ============================================
-#
-# OUTILS 100% GRATUITS (Sans inscription) :
-# - Bots IA : Vérification accès crawlers IA → GRATUIT
-# - Score GEO : Optimisation moteurs génératifs → GRATUIT  
-# - Visibilité LLM : Présence ChatGPT, Claude, Gemini → GRATUIT
-# - PageSpeed : Performance et Core Web Vitals → GRATUIT
-#
-# AUDIT TECHNIQUE SEO (Gratuit avec inscription) :
-# - Score sur 200 points → GRATUIT
-#
-# FONCTIONNALITÉS PREMIUM (Crédits) :
-# - Audit Stratégique IA : 1 crédit (2 PREMIERS OFFERTS)
-# - Audit Comparé : 4 crédits
-# - Crawl Multi-Pages : 1 crédit / 50 pages
-# - Codes Correctifs : 1 crédit ou paiement unique (3-12€)
-#
-# PRO AGENCY : 29€/mois (sans engagement)
-# - Console multi-sites, Cocoon 3D, IAS, GMB, Content Architect
-# - Social Content Hub (30 posts/mois LinkedIn, Facebook, Instagram)
-# - Autopilote Parménion, connexion CMS directe, GSC/GA4
-# - Architecte Génératif Multi-Pages, correction automatique
-# - 5 000 pages crawl/mois, 2 comptes, White Label
-#
-# PRO AGENCY+ : 99€/mois (sans engagement)
-# - Tout Pro Agency + 50 000 pages crawl/mois, 3 comptes
-# - 200 contenus/mois, 100 posts sociaux/mois, support prioritaire
-#
-# Langues : Français (FR), English (EN), Español (ES)
-# Zones : Europe, Amérique du Nord, Amérique du Sud
-#
-# Architecture : 183+ Edge Functions, 16 algorithmes propriétaires,
-#   Three.js 3D engine, 7 CMS connectés, ML prédictif, MCP Server, Marina API
-# 
+# Politique de crawl :
+#   • Pages publiques (/, /blog, /guides, /lexique, /app/eeat) → ouvertes à tous
+#   • Application authentifiée (/app/*) → bloquée pour les moteurs de recherche
+#     classiques et outils SEO, mais OUVERTE aux moteurs génératifs (LLM)
+#     pour maximiser la visibilité GEO sur ChatGPT, Claude, Perplexity, etc.
 # ============================================
 
-# Autoriser tous les robots (pages publiques)
+# --------------------------------------------
+# Règle par défaut (tous bots non listés)
+# --------------------------------------------
 User-agent: *
-Allow: /
-Allow: /app/eeat
 Disallow: /app/
+Allow: /app/eeat
+Allow: /
 Crawl-delay: 1
 
-# ============================================
-# MOTEURS DE RECHERCHE CLASSIQUES
-# ============================================
-
+# --------------------------------------------
+# Moteurs de recherche classiques → /app/ bloqué
+# --------------------------------------------
 User-agent: Googlebot
+Disallow: /app/
+Allow: /app/eeat
 Allow: /
 
 User-agent: Googlebot-Image
+Disallow: /app/
 Allow: /
 
 User-agent: Googlebot-News
+Disallow: /app/
 Allow: /
 
 User-agent: Googlebot-Video
+Disallow: /app/
+Allow: /
+
+User-agent: AdsBot-Google
+Disallow: /app/
 Allow: /
 
 User-agent: Bingbot
+Disallow: /app/
+Allow: /app/eeat
 Allow: /
 
 User-agent: Yandex
+Disallow: /app/
 Allow: /
 
 User-agent: DuckDuckBot
+Disallow: /app/
 Allow: /
 
 User-agent: Baiduspider
+Disallow: /app/
 Allow: /
 
 User-agent: Sogou
+Disallow: /app/
 Allow: /
 
 User-agent: Qwantify
+Disallow: /app/
 Allow: /
 
-# ============================================
-# RÉSEAUX SOCIAUX
-# ============================================
-
+# --------------------------------------------
+# Réseaux sociaux (preview links) → tout ouvert
+# --------------------------------------------
 User-agent: Twitterbot
 Allow: /
 
@@ -120,10 +94,11 @@ Allow: /
 User-agent: TelegramBot
 Allow: /
 
-# ============================================
-# CRAWLERS IA - GEO (Generative Engine Optimization)
-# ============================================
-
+# --------------------------------------------
+# Bots IA / Moteurs génératifs (GEO) → ACCÈS TOTAL
+# y compris /app/* — visibilité maximale dans ChatGPT,
+# Claude, Perplexity, Gemini, Grok, etc.
+# --------------------------------------------
 User-agent: GPTBot
 Allow: /
 
@@ -133,10 +108,10 @@ Allow: /
 User-agent: OAI-SearchBot
 Allow: /
 
-User-agent: Claude-Web
+User-agent: ClaudeBot
 Allow: /
 
-User-agent: ClaudeBot
+User-agent: Claude-User
 Allow: /
 
 User-agent: Anthropic-AI
@@ -145,13 +120,16 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-User-agent: Gemini
-Allow: /
-
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: Cohere-AI
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: cohere-training-data-crawler
 Allow: /
 
 User-agent: YouBot
@@ -175,76 +153,49 @@ Allow: /
 User-agent: Bytespider
 Allow: /
 
-User-agent: Bingbot-AI
-Allow: /
-
-User-agent: MistralBot
+User-agent: MistralAI-User
 Allow: /
 
 User-agent: Amazonbot
 Allow: /
 
-User-agent: GrokBot
+User-agent: xAI-Bot
 Allow: /
 
 User-agent: DeepSeekBot
 Allow: /
 
-# ============================================
-# OUTILS SEO (nos pairs)
-# ============================================
-
+# --------------------------------------------
+# Outils SEO concurrents → /app/ bloqué (zone privée
+# de pilotage produit, pas pertinente pour leur index)
+# --------------------------------------------
 User-agent: AhrefsBot
+Disallow: /app/
 Allow: /
 
 User-agent: SemrushBot
+Disallow: /app/
 Allow: /
 
 User-agent: MJ12bot
+Disallow: /app/
 Allow: /
 
 User-agent: DotBot
+Disallow: /app/
 Allow: /
 
 User-agent: Screaming Frog SEO Spider
+Disallow: /app/
 Allow: /
 
-# ============================================
-# RESSOURCES
-# ============================================
-
+# --------------------------------------------
+# Ressources
+# --------------------------------------------
 Sitemap: https://crawlers.fr/sitemap.xml
 
-# Documentation LLM pour IA et ChatGPT
-# https://crawlers.fr/llms.txt
-# https://crawlers.fr/llms-full.txt (version complète avec pages pré-rendues)
-
-# Pages HTML statiques pré-rendues (pour bots sans JS)
-# https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page?route=/
-# https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/llms-full-txt
-
-# ============================================
-# 🔒 SÉGRÉGATION DES DONNÉES & CONFORMITÉ GOOGLE API
-# ============================================
-# La page /data-flow-diagram documente l'architecture de ségrégation stricte
-# entre les données Google (Search Console, GA4, GMB) et les pipelines LLM externes.
-# Aucune donnée utilisateur Google n'atteint les modèles tiers.
-# Voir : https://crawlers.fr/data-flow-diagram
-#
-# À PROPOS DE CRAWLERS.FR - 2026
-# ============================================
-# 
-# Crawlers.fr est une PLATEFORME SaaS COMPLÈTE qui combine :
-# 1. DIAGNOSTIC : Audit SEO/GEO sur 200 points + visibilité IA
-# 2. CORRECTION : Injection automatique JSON-LD, meta, OG via CMS ou GTM
-# 3. CRÉATION : Content Architect IA avec E-E-A-T et maillage interne
-# 4. PILOTAGE : Google My Business, Search Console, GA4
-# 5. AUTOMATISATION : Autopilote Parménion (maintenance prédictive ML)
-# 6. VISUALISATION : Cocoon 3D sémantique (Three.js)
-# 7. INTÉGRATION : 7 CMS natifs + MCP Server + APIs tierces
-#
-# Le nom "Crawlers" fait référence aux ROBOTS DES MOTEURS DE RECHERCHE
-# (Googlebot, GPTBot, etc.) que nous aidons nos utilisateurs à apprivoiser.
-# 
-# Contact : https://crawlers.fr
-# ============================================
+# Documentation LLM dédiée :
+#   https://crawlers.fr/llms.txt
+#   https://crawlers.fr/llms-full.txt
+# Pré-rendu HTML pour bots sans JS :
+#   https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page?route=/
