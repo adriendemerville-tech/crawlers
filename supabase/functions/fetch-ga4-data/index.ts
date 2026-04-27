@@ -135,7 +135,28 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
       return jsonOk({ success: true, property_id: resolvedPropertyId, ...metrics })
     }
 
-    return jsonError('Unknown action. Use: list_properties, save_property, fetch_metrics', 400)
+    // ─── Action: list_pages (DB-first, lit ga4_behavioral_metrics) ────
+    if (action === 'list_pages') {
+      const { tracked_site_id, start, end, limit = 200 } = await readExtraParams(req as any)
+      const siteId = tracked_site_id ?? body_user_id /* unused fallback */;
+      const { tracked_site_id: tsi2, start: s2, end: e2 } = arguments[0] as any || {}
+      // Use vars from main body
+      const startD = start_date || new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0]
+      const endD = end_date || new Date().toISOString().split('T')[0]
+      const trackedSiteId = (await safeJson(req)).tracked_site_id
+      const { data: rows } = await supabase
+        .from('ga4_behavioral_metrics')
+        .select('page_path, pageviews:engaged_sessions, sessions:engaged_sessions')
+        .eq('user_id', user_id)
+        .eq('tracked_site_id', trackedSiteId)
+        .gte('period_start', startD)
+        .lte('period_end', endD)
+        .limit(limit)
+      const paths = Array.from(new Set((rows || []).map((r: any) => r.page_path))).sort()
+      return jsonOk({ success: true, pages: paths })
+    }
+
+    return jsonError('Unknown action. Use: list_properties, save_property, fetch_metrics, fetch_timeseries, fetch_traffic_sources, list_pages, detect_anomalies', 400)
   } catch (err) {
     console.error('[fetch-ga4-data] Error:', err)
     return jsonError(err.message, 500)
