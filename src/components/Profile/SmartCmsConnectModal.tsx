@@ -389,8 +389,100 @@ export function SmartCmsConnectModal({
           </DialogDescription>
         </DialogHeader>
 
+        {/* ─── Checking existing ─── */}
+        {checkingExisting && step === 'idle' && (
+          <div className="space-y-3 py-8 text-center">
+            <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              {t3(lang, 'Vérification des connexions existantes…', 'Checking existing connections…', 'Comprobando conexiones existentes…')}
+            </p>
+          </div>
+        )}
+
+        {/* ─── Step already_connected ─── */}
+        {step === 'already_connected' && (
+          <div className="space-y-4 py-2">
+            <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <PlugZap className="h-5 w-5 text-emerald-600" />
+                <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                  {t3(
+                    lang,
+                    `CMS déjà branché (${existingConnections.length} canal${existingConnections.length > 1 ? 'aux' : ''} actif${existingConnections.length > 1 ? 's' : ''})`,
+                    `CMS already connected (${existingConnections.length} active channel${existingConnections.length > 1 ? 's' : ''})`,
+                    `CMS ya conectado (${existingConnections.length} canal${existingConnections.length > 1 ? 'es' : ''} activo${existingConnections.length > 1 ? 's' : ''})`,
+                  )}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t3(
+                  lang,
+                  "L'édition et la publication d'articles sont actives. Inutile de coller le widget.js dans GTM — celui-ci ne sert qu'au tracking, pas à l'écriture CMS.",
+                  'Editing and publishing are active. No need to paste widget.js in GTM — that script is only for tracking, not CMS write access.',
+                  'La edición y publicación están activas. No es necesario pegar widget.js en GTM — ese script solo sirve para tracking, no para escritura en el CMS.',
+                )}
+              </p>
+              <div className="space-y-1.5 pt-1">
+                {existingConnections.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded border border-emerald-500/20 bg-background"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      <span className="font-medium">{c.platform}</span>
+                      {c.managed_by && (
+                        <Badge variant="outline" className="text-[10px] py-0 h-4">
+                          {c.managed_by}
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground">
+                      {new Date(c.created_at).toLocaleDateString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-muted-foreground">
+                {t3(
+                  lang,
+                  'Vous voulez ajouter un canal supplémentaire (ex: tracking widget pour analytics) ?',
+                  'Want to add an additional channel (e.g. tracking widget for analytics)?',
+                  '¿Desea añadir un canal adicional (ej: widget de tracking para analytics)?',
+                )}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-2"
+                  onClick={() => {
+                    setStep('idle');
+                  }}
+                >
+                  <Wand2 className="h-3.5 w-3.5" />
+                  {t3(lang, 'Ajouter un autre canal', 'Add another channel', 'Añadir otro canal')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => handleClose(false)}
+                >
+                  {t3(lang, 'Fermer', 'Close', 'Cerrar')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ─── Step idle ─── */}
-        {step === 'idle' && (
+        {step === 'idle' && !checkingExisting && (
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
               {t3(
