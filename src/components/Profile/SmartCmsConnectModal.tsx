@@ -559,6 +559,97 @@ export function SmartCmsConnectModal({
           </div>
         )}
 
+        {/* ─── Step custom_rest (Bearer dk_… for Dictadevi & co.) ─── */}
+        {step === 'custom_rest' && customRest && (
+          <div className="space-y-4 py-2">
+            <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">
+                  {t3(lang, `Brancher ${customRest.label} (API REST)`, `Connect ${customRest.label} (REST API)`, `Conectar ${customRest.label} (API REST)`)}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t3(
+                  lang,
+                  `Collez votre clé API ${customRest.label} (préfixe « ${customRest.keyPrefix} »). Elle sera testée auprès de l'API puis enregistrée chiffrée côté serveur.`,
+                  `Paste your ${customRest.label} API key (prefix "${customRest.keyPrefix}"). It will be tested against the API and stored server-side.`,
+                  `Pegue su clave API ${customRest.label} (prefijo "${customRest.keyPrefix}"). Será probada y almacenada en el servidor.`,
+                )}
+              </p>
+              {customRest.keyHelpUrl && (
+                <a
+                  href={customRest.keyHelpUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t3(lang, 'Générer une clé', 'Generate a key', 'Generar una clave')}
+                </a>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bearer-key">
+                {t3(lang, 'Clé API', 'API key', 'Clave API')} ({customRest.keyPrefix}…)
+              </Label>
+              <Input
+                id="bearer-key"
+                type="password"
+                value={bearerKey}
+                onChange={(e) => setBearerKey(e.target.value)}
+                placeholder={`${customRest.keyPrefix}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`}
+                autoComplete="off"
+              />
+            </div>
+
+            {isAdmin && adminKeyAvailable && (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
+                  <ShieldAlert className="h-3.5 w-3.5" />
+                  {t3(
+                    lang,
+                    'Clé admin déjà présente côté autopilote — vous pouvez la réutiliser pour ce compte.',
+                    'Admin key already stored for the autopilot — you can reuse it on this account.',
+                    'Clave admin ya almacenada para el autopiloto — puede reutilizarla en esta cuenta.',
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => saveBearerKey('reuse_admin')}
+                  disabled={savingBearer}
+                >
+                  {savingBearer && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  <PlugZap className="h-3.5 w-3.5" />
+                  {t3(lang, 'Utiliser la clé existante (admin)', 'Use existing admin key', 'Usar clave admin existente')}
+                </Button>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep('idle')}
+                className="flex-1"
+              >
+                {t3(lang, 'Autres méthodes', 'Other methods', 'Otros métodos')}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => saveBearerKey('manual')}
+                disabled={!bearerKey || savingBearer}
+                className="flex-1 gap-2"
+              >
+                {savingBearer && <Loader2 className="h-4 w-4 animate-spin" />}
+                {t3(lang, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* ─── Step idle ─── */}
         {step === 'idle' && !checkingExisting && (
           <div className="space-y-4 py-4">
