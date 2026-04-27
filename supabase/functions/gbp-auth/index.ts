@@ -296,10 +296,44 @@ Deno.serve(handleRequest(async (req) => {
                 console.warn('[gbp-auth/status] gmb_locations upsert error:', upsertErr)
               }
             }
+          } else if (!googleApiError) {
+            const raw = await locResp.text().catch(() => '')
+            let parsed: any = null
+            try { parsed = JSON.parse(raw) } catch { /* ignore */ }
+            googleApiError = {
+              status: locResp.status,
+              reason: parsed?.error?.status || parsed?.error?.errors?.[0]?.reason,
+              message: parsed?.error?.message,
+              raw: raw.slice(0, 500),
+            }
+            console.error('[gbp-auth/status] ❌ Locations sync API error', googleApiError)
           }
         }
       } catch (e) {
         console.warn('[gbp-auth] Locations fetch error:', e)
+      }
+
+      // Map Google API errors to a friendly code for the UI
+      let errorCode: string | null = null
+      let errorHint: string | null = null
+      if (googleApiError) {
+        const { status, reason, message } = googleApiError
+        if (status === 429 || reason === 'RESOURCE_EXHAUSTED' || /quota/i.test(message || '')) {
+          errorCode = 'QUOTA_EXCEEDED'
+          errorHint = "L'API Google Business Profile a un quota de 0 requête/minute par défaut. Une demande d'accès doit être déposée auprès de Google."
+        } else if (status === 403 || reason === 'PERMISSION_DENIED') {
+          errorCode = 'PERMISSION_DENIED'
+          errorHint = "L'accès à l'API Google Business Profile n'est pas activé pour ce projet Google Cloud."
+        } else if (status === 401) {
+          errorCode = 'UNAUTHORIZED'
+          errorHint = 'Le token Google a expiré ou été révoqué. Reconnectez votre compte Google.'
+        } else if (reason === 'SERVICE_DISABLED') {
+          errorCode = 'SERVICE_DISABLED'
+          errorHint = "L'API Business Profile est désactivée sur le projet Google Cloud."
+        } else {
+          errorCode = 'GOOGLE_API_ERROR'
+          errorHint = message || 'Erreur Google API inconnue.'
+        }
       }
 
       return jsonOk({
@@ -307,6 +341,9 @@ Deno.serve(handleRequest(async (req) => {
         email: conn.google_email || null,
         has_location: locations.length > 0,
         locations,
+        google_api_error: googleApiError,
+        error_code: errorCode,
+        error_hint: errorHint,
       })
     }
 
