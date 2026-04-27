@@ -355,8 +355,13 @@ export function BlogManagement() {
   };
 
   const filteredArticles = articles.filter(article => {
-    const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          article.slug.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch = q === '' || (
+      article.title.toLowerCase().includes(q) ||
+      article.slug.toLowerCase().includes(q) ||
+      (article.excerpt || '').toLowerCase().includes(q) ||
+      (article.content || '').toLowerCase().includes(q)
+    );
     const matchesStatus = statusFilter === 'all' || article.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
