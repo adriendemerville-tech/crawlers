@@ -13281,6 +13281,9 @@ export type Database = {
         | "odoo"
         | "prestashop"
         | "crawlers_internal"
+        | "dictadevi"
+        | "iktracker"
+        | "custom_rest"
       content_page_type: "landing" | "product" | "article"
       diagnostic_source_type:
         | "crawl"
@@ -13490,6 +13493,9 @@ export const Constants = {
         "odoo",
         "prestashop",
         "crawlers_internal",
+        "dictadevi",
+        "iktracker",
+        "custom_rest",
       ],
       content_page_type: ["landing", "product", "article"],
       diagnostic_source_type: [
