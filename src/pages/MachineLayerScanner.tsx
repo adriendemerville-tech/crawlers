@@ -104,8 +104,11 @@ export default function MachineLayerScanner() {
       const fam = result.scores_by_family[f.key];
       if (!fam) return null;
       const detected: Record<string, any> = {};
-      f.signalKeys.forEach(k => {
-        const v = (result.detected_signals as any)[k];
+      const source = f.pickFrom === 'external'
+        ? (result.detected_signals as any).external || {}
+        : (result.detected_signals as any);
+      f.keys.forEach(k => {
+        const v = source[k];
         if (v != null) detected[k] = v;
       });
       const recos = result.recommendations.filter(r => r.family === f.key);
