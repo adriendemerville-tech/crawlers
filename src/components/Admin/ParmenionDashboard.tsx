@@ -74,6 +74,10 @@ export function ParmenionDashboard() {
         </Button>
       </div>
 
+      <TabsContent value="execution" forceMount className="data-[state=inactive]:hidden">
+        <ParmenionExecutionStatus />
+      </TabsContent>
+
       {targets.map((t) => (
         <TabsContent key={t.id} value={t.domain.replace(/\./g, '-')} forceMount className="data-[state=inactive]:hidden">
           <ParmenionTargetPanel
