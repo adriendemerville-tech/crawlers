@@ -61,6 +61,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
   const isMobile = useIsMobile();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const isProUser = isAgencyPro || isAdmin;
+  const { advanced, toggle } = useConsoleViewMode();
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
