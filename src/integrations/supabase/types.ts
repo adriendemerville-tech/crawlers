@@ -5101,6 +5101,47 @@ export type Database = {
           },
         ]
       }
+      ga4_page_groups: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          page_paths: string[]
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          page_paths?: string[]
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          page_paths?: string[]
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ga4_page_groups_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ga4_top_pages: {
         Row: {
           avg_duration: number | null

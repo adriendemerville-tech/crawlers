@@ -1,18 +1,19 @@
 import { lazy, Suspense } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { FileEdit, FileText, BarChart3, Cpu, Activity } from 'lucide-react';
+import { FileEdit, FileText, BarChart3, Cpu, Activity, LineChart } from 'lucide-react';
 
 const MyDrafts = lazy(() => import('@/components/Profile/MyDrafts').then(m => ({ default: m.MyDrafts })));
 const MyPromptBlocks = lazy(() => import('@/components/Profile/MyPromptBlocks').then(m => ({ default: m.MyPromptBlocks })));
 const EditorialDashboard = lazy(() => import('@/components/Profile/EditorialDashboard').then(m => ({ default: m.EditorialDashboard })));
 const EditorialLLMRoutingMatrix = lazy(() => import('@/components/Profile/EditorialLLMRoutingMatrix').then(m => ({ default: m.EditorialLLMRoutingMatrix })));
 const EditorialPipelineObservability = lazy(() => import('@/components/Profile/EditorialPipelineObservability').then(m => ({ default: m.EditorialPipelineObservability })));
+const GA4Explorer = lazy(() => import('@/components/Profile/GA4/GA4Explorer').then(m => ({ default: m.GA4Explorer })));
 
 const labels = {
-  fr: { drafts: 'Brouillons', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'Routage LLM', pipeline: 'Pipeline' },
-  en: { drafts: 'Drafts', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'LLM Routing', pipeline: 'Pipeline' },
-  es: { drafts: 'Borradores', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'Enrutado LLM', pipeline: 'Pipeline' },
+  fr: { drafts: 'Brouillons', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'Routage LLM', pipeline: 'Pipeline', ga4: 'GA4' },
+  en: { drafts: 'Drafts', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'LLM Routing', pipeline: 'Pipeline', ga4: 'GA4' },
+  es: { drafts: 'Borradores', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'Enrutado LLM', pipeline: 'Pipeline', ga4: 'GA4' },
 };
 
 export function MyContent({ externalDomain }: { externalDomain?: string | null }) {
@@ -41,6 +42,10 @@ export function MyContent({ externalDomain }: { externalDomain?: string | null }
         <TabsTrigger value="pipeline" className="gap-1.5 text-xs">
           <Activity className="h-3.5 w-3.5" />
           {t.pipeline}
+        </TabsTrigger>
+        <TabsTrigger value="ga4" className="gap-1.5 text-xs">
+          <LineChart className="h-3.5 w-3.5" />
+          {t.ga4}
         </TabsTrigger>
       </TabsList>
 
@@ -71,6 +76,12 @@ export function MyContent({ externalDomain }: { externalDomain?: string | null }
       <TabsContent value="pipeline">
         <Suspense fallback={null}>
           <EditorialPipelineObservability externalDomain={externalDomain} />
+        </Suspense>
+      </TabsContent>
+
+      <TabsContent value="ga4">
+        <Suspense fallback={null}>
+          <GA4Explorer externalDomain={externalDomain} />
         </Suspense>
       </TabsContent>
     </Tabs>
