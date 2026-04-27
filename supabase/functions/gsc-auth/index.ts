@@ -225,7 +225,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         }
       } catch (_) { /* best effort */ }
 
-      // Upsert into google_connections (multi-account support)
+      // Upsert into google_connections (multi-account support, unified OAuth)
       await supabase.from('google_connections').upsert({
         user_id: userId,
         google_email: googleEmail,
@@ -236,6 +236,9 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         ga4_property_id: ga4PropertyId,
         gmb_account_id: gmbAccountId,
         gmb_location_id: gmbLocationId,
+        ads_customer_id: adsCustomerId,
+        ads_account_name: adsAccountName,
+        ads_status: adsStatus,
         scopes: grantedScopes,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,google_email' });
