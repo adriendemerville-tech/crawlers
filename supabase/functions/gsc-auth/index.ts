@@ -176,6 +176,42 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         console.log('[gsc-auth] GMB auto-detect failed (best effort):', e);
       }
 
+      // Auto-detect Google Ads accessible accounts (only if adwords scope was granted)
+      let adsCustomerId: string | null = null;
+      let adsAccountName: string | null = null;
+      let adsStatus: string | null = null;
+      try {
+        const developerToken = Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN');
+        if (developerToken) {
+          const adsResp = await fetch('https://googleads.googleapis.com/v18/customers:listAccessibleCustomers', {
+            headers: {
+              Authorization: `Bearer ${tokens.access_token}`,
+              'developer-token': developerToken,
+            },
+          });
+          if (adsResp.ok) {
+            const adsData = await adsResp.json();
+            const resourceNames: string[] = adsData.resourceNames || [];
+            if (resourceNames.length > 0) {
+              adsCustomerId = resourceNames[0].replace('customers/', '');
+              adsAccountName = googleEmail;
+              adsStatus = 'active';
+              console.log(`[gsc-auth] Auto-detected Google Ads customer: ${adsCustomerId} for ${googleEmail}`);
+            } else {
+              console.log(`[gsc-auth] Ads listAccessibleCustomers OK but no customers for ${googleEmail}`);
+            }
+          } else {
+            const errBody = await adsResp.text().catch(() => '');
+            // 401/403 means scope not granted — silently skip (expected for users who didn't request Ads scope)
+            if (adsResp.status !== 401 && adsResp.status !== 403) {
+              console.log(`[gsc-auth] Google Ads API returned ${adsResp.status}: ${errBody.slice(0, 200)}`);
+            }
+          }
+        }
+      } catch (e) {
+        console.log('[gsc-auth] Google Ads auto-detect failed (best effort):', e);
+      }
+
       // Determine which scopes were actually granted by reading token info
       const grantedScopes: string[] = [];
       try {
