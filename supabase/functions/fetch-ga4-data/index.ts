@@ -25,7 +25,14 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
   try {
-    const { action, user_id: body_user_id, property_id, start_date, end_date, domain } = await req.json()
+    const body = await req.json()
+    const { action, user_id: body_user_id, property_id, start_date, end_date, domain } = body
+    const tracked_site_id: string | undefined = body.tracked_site_id
+    const page_paths: string[] = Array.isArray(body.page_paths) ? body.page_paths : []
+    const granularity: 'day' | 'week' | 'month' = body.granularity || 'day'
+    const channel_group: string | undefined = body.channel_group
+    const compare: boolean = body.compare === true
+    const queryLimit: number = Math.min(Math.max(parseInt(body.limit) || 200, 1), 5000)
 
     // ─── SECURITY: Validate JWT and enforce real user_id ─────────
     const authHeader = req.headers.get('Authorization') || ''
