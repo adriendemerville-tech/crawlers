@@ -70,7 +70,7 @@ export function SmartCmsConnectModal({
   const { language } = useLanguage();
   const lang = (language || 'fr') as Lang;
 
-  const [step, setStep] = useState<'idle' | 'detecting' | 'recommend' | 'manual'>('idle');
+  const [step, setStep] = useState<'idle' | 'detecting' | 'recommend' | 'manual' | 'already_connected'>('idle');
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [working, setWorking] = useState(false);
 
@@ -79,18 +79,56 @@ export function SmartCmsConnectModal({
   const [appPassword, setAppPassword] = useState('');
   const [savingRest, setSavingRest] = useState(false);
 
+  // Existing CMS connections (loaded on open)
+  const [existingConnections, setExistingConnections] = useState<
+    Array<{ id: string; platform: string; status: string; managed_by: string | null; created_at: string }>
+  >([]);
+  const [checkingExisting, setCheckingExisting] = useState(false);
+
   const reset = () => {
     setStep('idle');
     setDetection(null);
     setWorking(false);
     setAppUser('');
     setAppPassword('');
+    setExistingConnections([]);
   };
 
   const handleClose = (o: boolean) => {
     if (!o) reset();
     onOpenChange(o);
   };
+
+  // ─── On open: check if a CMS connection already exists ───
+  useEffect(() => {
+    if (!open || !siteId) return;
+    let cancelled = false;
+    (async () => {
+      setCheckingExisting(true);
+      try {
+        const { data, error } = await supabase
+          .from('cms_connections')
+          .select('id, platform, status, managed_by, created_at')
+          .eq('tracked_site_id', siteId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: true });
+        if (cancelled) return;
+        if (error) throw error;
+        const rows = (data || []) as Array<{ id: string; platform: string; status: string; managed_by: string | null; created_at: string }>;
+        setExistingConnections(rows);
+        if (rows.length > 0) {
+          setStep('already_connected');
+        }
+      } catch (e) {
+        console.warn('[SmartCmsConnectModal] cms_connections check failed', e);
+      } finally {
+        if (!cancelled) setCheckingExisting(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, siteId]);
 
   // ─── Step 1 — Auto-detection ───
   const runDetection = async () => {
