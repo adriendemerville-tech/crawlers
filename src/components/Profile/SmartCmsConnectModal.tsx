@@ -23,7 +23,6 @@ import {
   Zap,
   RefreshCw,
   PlugZap,
-  Unplug,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
