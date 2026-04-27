@@ -92,18 +92,27 @@ export function SignalCard({ family, label, score, max, detected, recommendation
             {detectedEntries.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">Rien détecté.</p>
             ) : (
-              <ul className="space-y-1.5 text-sm">
-                {detectedEntries.map(([k, v]) => (
-                  <li key={k} className="flex flex-col gap-0.5 sm:flex-row sm:gap-3">
-                    <span className="text-muted-foreground font-mono text-xs shrink-0 w-full sm:w-44 truncate">{k}</span>
-                    <span className="text-foreground font-mono text-xs break-all">
-                      {typeof v === 'string' ? (v.length > 200 ? v.substring(0, 200) + '…' : v)
-                        : Array.isArray(v) ? `${v.length} entrée(s)`
-                        : typeof v === 'object' ? JSON.stringify(v).substring(0, 150) + '…'
-                        : String(v)}
-                    </span>
-                  </li>
-                ))}
+              <ul className="space-y-2 text-sm">
+                {detectedEntries.map(([k, v]) => {
+                  const isComplex = Array.isArray(v) || (typeof v === 'object' && v !== null);
+                  const rendered = typeof v === 'string'
+                    ? v
+                    : isComplex
+                      ? JSON.stringify(v, null, 2)
+                      : String(v);
+                  return (
+                    <li key={k} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                      <span className="text-muted-foreground font-mono text-xs shrink-0 w-full sm:w-44 break-all sm:break-normal sm:truncate" title={k}>{k}</span>
+                      {isComplex ? (
+                        <pre className="flex-1 overflow-x-auto rounded bg-muted/40 p-2 text-[11px] leading-snug text-foreground/90 font-mono whitespace-pre-wrap break-all">
+                          <code>{rendered}</code>
+                        </pre>
+                      ) : (
+                        <span className="text-foreground font-mono text-xs break-all whitespace-pre-wrap">{rendered}</span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
