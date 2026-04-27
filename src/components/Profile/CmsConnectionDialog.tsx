@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CheckCircle2, AlertCircle, Copy, Webhook } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Copy, Webhook, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -56,6 +56,7 @@ const translations = {
     shopifyToken: 'Token Admin API',
     webflowToken: 'Token API Webflow',
     wixToken: 'Clé API Wix',
+    adminRequired: 'Le compte utilisé doit avoir le rôle Administrateur sur le CMS pour autoriser la connexion API.',
   },
   en: {
     title: 'API Connection',
@@ -92,6 +93,7 @@ const translations = {
     shopifyToken: 'Admin API Token',
     webflowToken: 'Webflow API Token',
     wixToken: 'Wix API Key',
+    adminRequired: 'The account used must have the Administrator role on the CMS to authorize the API connection.',
   },
   es: {
     title: 'Conexión API',
@@ -128,6 +130,7 @@ const translations = {
     shopifyToken: 'Token Admin API',
     webflowToken: 'Token API Webflow',
     wixToken: 'Clave API Wix',
+    adminRequired: 'La cuenta utilizada debe tener el rol de Administrador en el CMS para autorizar la conexión API.',
   },
 };
 
@@ -356,6 +359,12 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t.title} — {cmsLabel}</DialogTitle>
+          <div className="flex items-start gap-2 rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 mt-2">
+            <ShieldAlert className="h-4 w-4 text-yellow-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 font-medium leading-snug">
+              {(t as any).adminRequired}
+            </p>
+          </div>
           <DialogDescription className="text-xs space-y-1">
             <span>{helpText}</span>
             {cmsType === 'wordpress' && siteUrl && (
