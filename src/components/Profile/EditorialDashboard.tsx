@@ -53,9 +53,11 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [stats, setStats] = useState<EditorialStats | null>(null);
+  const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     (async () => {
