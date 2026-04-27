@@ -35,7 +35,7 @@ try {
     console.log(`📊 Generating keywords for ${domain} (mode: ${effectiveMode})`);
 
     if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
-      return jsonError('DataForSEO not configured', keywords: [], 200);
+      return jsonOk({ keywords: [], error: 'DataForSEO not configured' });
     }
 
     const extractedBrand = brandName || extractBrandFromDomain(domain);
