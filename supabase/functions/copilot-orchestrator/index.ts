@@ -160,19 +160,27 @@ Deno.serve(async (req) => {
 
     if (!body.message) return jsonError('message requis', 400);
 
-    // ── Préfixe admin /creator: /createur: /admin: ────────
+    // ── Détection a priori du rôle créateur (admin) ─────
     // P1 #4 — creator_mode est persisté dans session.context.creator_mode
     // pour survivre entre deux requêtes HTTP de la même conversation.
+    //
+    // Auto-activation : tout user avec le rôle 'admin' est automatiquement en mode créateur,
+    // sans avoir besoin du préfixe /creator: /admin:. Le préfixe reste supporté pour
+    // rétrocompatibilité (et pour qu'un admin puisse retirer le préfixe sans le savoir).
     let userMessage = body.message;
     let isCreatorMode = false;
+
+    // 1) Vérification a priori du rôle admin (cache pour la durée de la requête)
+    const { data: isAdminRole } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
+    const isAdmin = isAdminRole === true;
+    if (isAdmin) {
+      isCreatorMode = true;
+    }
+
+    // 2) Préfixe admin (rétrocompat) — strip silencieusement si présent
     const creatorPrefixMatch = userMessage.match(/^\s*\/(?:createur|creator|admin)\s*:\s*/i);
-    if (creatorPrefixMatch) {
-      const { data: isAdmin } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
-      if (isAdmin === true) {
-        isCreatorMode = true;
-        userMessage = userMessage.slice(creatorPrefixMatch[0].length).trim();
-      }
-      // Si non-admin : on laisse le message tel quel, le préfixe est ignoré silencieusement
+    if (creatorPrefixMatch && isAdmin) {
+      userMessage = userMessage.slice(creatorPrefixMatch[0].length).trim();
     }
 
     // ── Session : create or load ─────────────────────────
@@ -603,7 +611,9 @@ async function handleApproval(args: {
   // P1 #7 — relance la boucle LLM avec un message user synthétique pour
   // que l'agent génère une réponse contextuelle ("c'est fait, voici le résultat").
   const sessionContext = (sessionData?.context as Record<string, unknown>) ?? {};
-  const isCreatorMode = sessionContext.creator_mode === true;
+  // Auto-élévation : tout admin est en mode créateur a priori (cf. handler principal)
+  const { data: isAdminApprove } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
+  const isCreatorMode = sessionContext.creator_mode === true || isAdminApprove === true;
 
   const userConfirm = result.ok
     ? `J'ai validé l'action **${action.skill}** que tu proposais. Elle a été exécutée avec succès. Résume-moi le résultat et propose la suite.`
@@ -702,7 +712,8 @@ async function handleRejection(args: {
 
   // P1 #7 — relance la boucle LLM avec un message user expliquant le rejet
   const sessionContext = (sessionData?.context as Record<string, unknown>) ?? {};
-  const isCreatorMode = sessionContext.creator_mode === true;
+  const { data: isAdminReject } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
+  const isCreatorMode = sessionContext.creator_mode === true || isAdminReject === true;
 
   const userReject = `J'ai refusé l'action **${action.skill}** que tu proposais. Raison : ${safeReason}. Propose-moi une alternative ou demande-moi plus de précisions.`;
 
