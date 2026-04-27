@@ -12,6 +12,7 @@ import { SignalCard, type ScanRecommendation } from '@/components/MachineLayer/S
 import { setMachineLayerPreload } from '@/components/MachineLayer/preloadBridge';
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { supabase } from '@/integrations/supabase/client';
 import { ScanLine, ArrowRight, Loader2, Sparkles, Globe, Eye } from 'lucide-react';
 import { toast } from 'sonner';
