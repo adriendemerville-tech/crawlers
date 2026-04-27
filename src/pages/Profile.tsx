@@ -157,7 +157,7 @@ function ProfileContent() {
       case 'marina': return <MarinaConsoleTab />;
       case 'sea-seo': return isProUser ? <SeaSeoBridgeTab /> : null;
       case 'indexation': return <IndexationMonitor externalSiteId={selectedSiteId} externalDomain={selectedDomain} />;
-      case 'gsc-bigquery': return isProUser ? <GscBigQueryPanel /> : null;
+      case 'gsc-bigquery': return isProUser && (!gscBigQueryHidden || isAdmin) ? <GscBigQueryPanel /> : null;
       case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />;
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;
