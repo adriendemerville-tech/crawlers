@@ -611,7 +611,9 @@ async function handleApproval(args: {
   // P1 #7 — relance la boucle LLM avec un message user synthétique pour
   // que l'agent génère une réponse contextuelle ("c'est fait, voici le résultat").
   const sessionContext = (sessionData?.context as Record<string, unknown>) ?? {};
-  const isCreatorMode = sessionContext.creator_mode === true;
+  // Auto-élévation : tout admin est en mode créateur a priori (cf. handler principal)
+  const { data: isAdminApprove } = await service.rpc('has_role', { _user_id: userId, _role: 'admin' });
+  const isCreatorMode = sessionContext.creator_mode === true || isAdminApprove === true;
 
   const userConfirm = result.ok
     ? `J'ai validé l'action **${action.skill}** que tu proposais. Elle a été exécutée avec succès. Résume-moi le résultat et propose la suite.`
