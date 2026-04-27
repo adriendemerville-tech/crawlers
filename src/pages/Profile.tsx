@@ -51,6 +51,7 @@ function ProfileContent() {
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [gscBigQueryHidden, setGscBigQueryHidden] = useState(false);
   const [showGoogleOnboarding, setShowGoogleOnboarding] = useState(false);
   const isMobile = useIsMobile();
   const isProUser = isAgencyPro || isAdmin;
@@ -92,9 +93,11 @@ function ProfileContent() {
         if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
           const config = data.card_order as Record<string, unknown>;
           setSimulatedDataEnabled(config.simulated_data_enabled !== false);
+          setGscBigQueryHidden(!!config.gsc_bigquery_hidden);
           return;
         }
         setSimulatedDataEnabled(true);
+        setGscBigQueryHidden(false);
       });
   }, [user]);
 
@@ -154,7 +157,7 @@ function ProfileContent() {
       case 'marina': return <MarinaConsoleTab />;
       case 'sea-seo': return isProUser ? <SeaSeoBridgeTab /> : null;
       case 'indexation': return <IndexationMonitor externalSiteId={selectedSiteId} externalDomain={selectedDomain} />;
-      case 'gsc-bigquery': return isProUser ? <GscBigQueryPanel /> : null;
+      case 'gsc-bigquery': return isProUser && (!gscBigQueryHidden || isAdmin) ? <GscBigQueryPanel /> : null;
       case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />;
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;

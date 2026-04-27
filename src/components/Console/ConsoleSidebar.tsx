@@ -64,6 +64,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const [gscBigQueryHidden, setGscBigQueryHidden] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -79,6 +80,22 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
         if (s.length > 0 && !selectedSiteId) {
           setSelectedSiteId(s[0].id);
           onSiteSelect?.(s[0].id, s[0].domain);
+        }
+      });
+  }, [user]);
+
+  // Read global admin flag to hide GSC BigQuery tab from non-admins
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('admin_dashboard_config')
+      .select('card_order')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.card_order && typeof data.card_order === 'object' && !Array.isArray(data.card_order)) {
+          const config = data.card_order as Record<string, unknown>;
+          setGscBigQueryHidden(!!config.gsc_bigquery_hidden);
         }
       });
   }, [user]);
@@ -103,7 +120,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true },
     ] : []),
     { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true },
-    ...(isProUser ? [
+    ...(isProUser && (!gscBigQueryHidden || isAdmin) ? [
       { value: 'gsc-bigquery', label: 'GSC BQ', icon: Database, hideOnMobile: true, beta: true },
     ] : []),
     { value: 'gmb', label: 'GMB', icon: Store },

@@ -154,6 +154,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const [activeTab, setActiveTab] = useState(canSeeIntelligence ? 'intelligence' : 'analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [gscBigQueryHidden, setGscBigQueryHidden] = useState(false);
   const [showContentArchitect, setShowContentArchitect] = useState(false);
   const { notifications } = useAdminNotifications();
   const isMobile = useIsMobile();
@@ -174,6 +175,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         const config = data.card_order as Record<string, unknown>;
         setDocsHiddenForViewers(!!config.docs_hidden_for_viewers);
         setSimulatedDataEnabled(config.simulated_data_enabled !== false);
+        setGscBigQueryHidden(!!config.gsc_bigquery_hidden);
       }
     };
     loadDocVisibility();
@@ -217,6 +219,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     setSimulatedDataEnabled(newValue);
     onSimulatedDataChange?.(newValue);
     await updateAdminConfig({ simulated_data_enabled: newValue });
+  };
+
+  const toggleGscBigQueryHidden = async () => {
+    const newValue = !gscBigQueryHidden;
+    setGscBigQueryHidden(newValue);
+    await updateAdminConfig({ gsc_bigquery_hidden: newValue });
   };
 
   const showDocs = canSeeDocs && !(readOnly && docsHiddenForViewers);
@@ -423,6 +431,19 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                   {simulatedDataEnabled && (
                     <Badge variant="outline" className="text-[9px] mt-1 ml-2 border-orange-500/40 text-orange-500">
                       Simulé
+                    </Badge>
+                  )}
+                  <button
+                    onClick={toggleGscBigQueryHidden}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                    title="Masque l'onglet Console > GSC BigQuery pour tous les utilisateurs (admins exclus)"
+                  >
+                    {gscBigQueryHidden ? <EyeOff className="h-3 w-3 shrink-0" /> : <Eye className="h-3 w-3 shrink-0" />}
+                    <span className="truncate">{gscBigQueryHidden ? 'GSC BigQuery masqué (front)' : 'GSC BigQuery visible (front)'}</span>
+                  </button>
+                  {gscBigQueryHidden && (
+                    <Badge variant="secondary" className="text-[9px] mt-1 ml-2">
+                      Caché front
                     </Badge>
                   )}
                   <button
