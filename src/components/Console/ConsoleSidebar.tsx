@@ -284,7 +284,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     )}>
       {/* Domain selector */}
       {!isMobile && sites.length > 0 && (
-        <div className="px-2 pt-0 pb-1 space-y-1">
+        <div className="px-2 pt-6 pb-1 space-y-1">
           <div className="relative">
             <button
               onClick={() => setSelectorOpen(!selectorOpen)}
