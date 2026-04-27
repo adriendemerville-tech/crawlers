@@ -216,7 +216,7 @@ export default function MachineLayerScanner() {
                     setUrl(e.target.value);
                     if (urlValidation.suggestedUrl) urlValidation.dismissSuggestion();
                   }}
-                  className="pl-10 h-12 text-base"
+                  className="pl-11 h-12 text-base"
                   disabled={loading || urlValidation.isValidating}
                 />
               </div>
