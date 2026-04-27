@@ -10,7 +10,9 @@ import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
   Shield, Code2, ChevronDown, Search, Sparkles, Database, SlidersHorizontal,
+  Plus, Loader2, Check, X,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useConsoleViewMode } from '@/contexts/ConsoleViewModeContext';
 
 interface TrackedSite {
@@ -69,6 +71,56 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [gscBigQueryHidden, setGscBigQueryHidden] = useState(false);
+  const [addHover, setAddHover] = useState(false);
+  const [newDomain, setNewDomain] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  const handleAddDomain = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!user || !newDomain.trim() || adding) return;
+    setAdding(true);
+    try {
+      // 1. Probe URL
+      const { data: probe, error: probeErr } = await supabase.functions.invoke('check-url-reachable', {
+        body: { url: newDomain.trim() },
+      });
+      if (probeErr || !probe?.ok) {
+        toast.error('Site injoignable', { description: probe?.error || 'Vérifiez l\'URL' });
+        setAdding(false);
+        return;
+      }
+      const hostname = (probe.hostname as string).replace(/^www\./, '');
+
+      // 2. Check duplicate
+      const existing = sites.find(s => s.domain.replace(/^www\./, '') === hostname);
+      if (existing) {
+        handleSiteChange(existing.id, existing.domain);
+        setNewDomain('');
+        setAddHover(false);
+        setAdding(false);
+        return;
+      }
+
+      // 3. Insert
+      const { data: created, error: insErr } = await supabase
+        .from('tracked_sites')
+        .insert({ user_id: user.id, domain: hostname, site_name: hostname })
+        .select('id, domain, site_name')
+        .single();
+      if (insErr || !created) {
+        toast.error('Erreur lors de l\'ajout', { description: insErr?.message });
+        setAdding(false);
+        return;
+      }
+      setSites(prev => [...prev, created as TrackedSite].sort((a, b) => a.domain.localeCompare(b.domain)));
+      handleSiteChange(created.id, created.domain);
+      toast.success('Site ajouté au suivi');
+      setNewDomain('');
+      setAddHover(false);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -246,29 +298,79 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
             </button>
 
             {selectorOpen && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-y-auto">
-                <button
-                  onClick={() => handleSiteChange(null, null)}
-                  className={cn(
-                    'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
-                    !selectedSiteId ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
-                  )}
-                >
-                  <Globe className="h-3 w-3 shrink-0" />
-                  {t.allSites}
-                </button>
-                {sites.map(site => (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+                <div className="py-1 max-h-60 overflow-y-auto">
                   <button
-                    key={site.id}
-                    onClick={() => handleSiteChange(site.id, site.domain)}
+                    onClick={() => handleSiteChange(null, null)}
                     className={cn(
                       'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
-                      selectedSiteId === site.id ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
+                      !selectedSiteId ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
                     )}
                   >
-                    <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
+                    <Globe className="h-3 w-3 shrink-0" />
+                    {t.allSites}
                   </button>
-                ))}
+                  {sites.map(site => (
+                    <button
+                      key={site.id}
+                      onClick={() => handleSiteChange(site.id, site.domain)}
+                      className={cn(
+                        'w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left',
+                        selectedSiteId === site.id ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
+                      )}
+                    >
+                      <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
+                    </button>
+                  ))}
+                </div>
+                {/* Add domain — hover reveals input */}
+                <div
+                  className="border-t border-border/60"
+                  onMouseEnter={() => setAddHover(true)}
+                  onMouseLeave={() => { if (!newDomain && !adding) setAddHover(false); }}
+                >
+                  {!addHover ? (
+                    <button
+                      type="button"
+                      onClick={() => setAddHover(true)}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/40 transition-colors"
+                    >
+                      <Plus className="h-3 w-3 shrink-0" />
+                      Ajouter un domaine
+                    </button>
+                  ) : (
+                    <form onSubmit={handleAddDomain} className="flex items-center gap-1 px-2 py-1.5">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={newDomain}
+                        onChange={(e) => setNewDomain(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') { setNewDomain(''); setAddHover(false); }
+                        }}
+                        placeholder="exemple.com"
+                        disabled={adding}
+                        className="flex-1 min-w-0 h-7 px-2 text-xs bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                      <button
+                        type="submit"
+                        disabled={adding || !newDomain.trim()}
+                        aria-label="Valider"
+                        className="h-7 w-7 flex items-center justify-center rounded border border-border hover:bg-accent/40 disabled:opacity-40"
+                      >
+                        {adding ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setNewDomain(''); setAddHover(false); }}
+                        aria-label="Annuler"
+                        className="h-7 w-7 flex items-center justify-center rounded border border-border hover:bg-accent/40"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
             )}
           </div>
