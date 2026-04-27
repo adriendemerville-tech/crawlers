@@ -176,6 +176,42 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         console.log('[gsc-auth] GMB auto-detect failed (best effort):', e);
       }
 
+      // Auto-detect Google Ads accessible accounts (only if adwords scope was granted)
+      let adsCustomerId: string | null = null;
+      let adsAccountName: string | null = null;
+      let adsStatus: string | null = null;
+      try {
+        const developerToken = Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN');
+        if (developerToken) {
+          const adsResp = await fetch('https://googleads.googleapis.com/v18/customers:listAccessibleCustomers', {
+            headers: {
+              Authorization: `Bearer ${tokens.access_token}`,
+              'developer-token': developerToken,
+            },
+          });
+          if (adsResp.ok) {
+            const adsData = await adsResp.json();
+            const resourceNames: string[] = adsData.resourceNames || [];
+            if (resourceNames.length > 0) {
+              adsCustomerId = resourceNames[0].replace('customers/', '');
+              adsAccountName = googleEmail;
+              adsStatus = 'active';
+              console.log(`[gsc-auth] Auto-detected Google Ads customer: ${adsCustomerId} for ${googleEmail}`);
+            } else {
+              console.log(`[gsc-auth] Ads listAccessibleCustomers OK but no customers for ${googleEmail}`);
+            }
+          } else {
+            const errBody = await adsResp.text().catch(() => '');
+            // 401/403 means scope not granted — silently skip (expected for users who didn't request Ads scope)
+            if (adsResp.status !== 401 && adsResp.status !== 403) {
+              console.log(`[gsc-auth] Google Ads API returned ${adsResp.status}: ${errBody.slice(0, 200)}`);
+            }
+          }
+        }
+      } catch (e) {
+        console.log('[gsc-auth] Google Ads auto-detect failed (best effort):', e);
+      }
+
       // Determine which scopes were actually granted by reading token info
       const grantedScopes: string[] = [];
       try {
@@ -189,7 +225,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         }
       } catch (_) { /* best effort */ }
 
-      // Upsert into google_connections (multi-account support)
+      // Upsert into google_connections (multi-account support, unified OAuth)
       await supabase.from('google_connections').upsert({
         user_id: userId,
         google_email: googleEmail,
@@ -200,6 +236,9 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         ga4_property_id: ga4PropertyId,
         gmb_account_id: gmbAccountId,
         gmb_location_id: gmbLocationId,
+        ads_customer_id: adsCustomerId,
+        ads_account_name: adsAccountName,
+        ads_status: adsStatus,
         scopes: grantedScopes,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,google_email' });
@@ -300,7 +339,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   // POST: API calls (login, fetch)
   // ═══════════════════════════════════════════════════════════════════
   try {
-    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email } = await req.json();
+    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email, modules, extra_scopes } = await req.json();
 
     // ─── SECURITY: Validate JWT and enforce real user_id ─────────
     const authHeader = req.headers.get('Authorization') || '';
@@ -337,33 +376,57 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
       fullGoogleAccess = true;
     }
 
-    // === LOGIN: Generate OAuth URL ===
+    // === LOGIN: Generate OAuth URL (UNIFIED — accepts modules[] or extra_scopes[]) ===
     if (action === 'login') {
-      // state carries user_id + frontend origin for the GET callback redirect
+      // state format: "user_id|frontend_origin" — backward compatible
       const stateValue = `${user_id || ''}|${frontend_origin || ''}`;
-      // Build scopes: GSC always included; all others only when full access is enabled
-      const scopes = ['https://www.googleapis.com/auth/webmasters.readonly'];
-      if (fullGoogleAccess) {
-        scopes.push('https://www.googleapis.com/auth/analytics.readonly');
-        scopes.push('https://www.googleapis.com/auth/tagmanager.edit.containers');
-        scopes.push('https://www.googleapis.com/auth/tagmanager.publish');
-        scopes.push('https://www.googleapis.com/auth/business.manage');
-        scopes.push('https://www.googleapis.com/auth/indexing');
-        // Google Ads uses a separate OAuth flow via google-ads-connector
+
+      // Map module aliases → Google scopes (frontend can request "ads", "gmb", "ga4", "gsc", "gtm", "indexing")
+      const MODULE_SCOPES: Record<string, string[]> = {
+        gsc: ['https://www.googleapis.com/auth/webmasters.readonly'],
+        ga4: ['https://www.googleapis.com/auth/analytics.readonly'],
+        gmb: ['https://www.googleapis.com/auth/business.manage'],
+        ads: ['https://www.googleapis.com/auth/adwords', 'https://www.googleapis.com/auth/userinfo.email'],
+        gtm: [
+          'https://www.googleapis.com/auth/tagmanager.edit.containers',
+          'https://www.googleapis.com/auth/tagmanager.publish',
+        ],
+        indexing: ['https://www.googleapis.com/auth/indexing'],
+      };
+
+      // Always include GSC (legacy default for this endpoint)
+      const scopeSet = new Set<string>(['https://www.googleapis.com/auth/webmasters.readonly']);
+
+      // Mode 1: explicit modules[] from frontend (e.g. ["gsc","ga4","ads"])
+      if (Array.isArray(modules) && modules.length > 0) {
+        for (const m of modules) {
+          const s = MODULE_SCOPES[String(m).toLowerCase()];
+          if (s) s.forEach(v => scopeSet.add(v));
+        }
+      } else if (fullGoogleAccess) {
+        // Mode 2: legacy "full access" flag — request everything except Ads (still gated)
+        ['ga4', 'gtm', 'gmb', 'indexing'].forEach(k => MODULE_SCOPES[k].forEach(v => scopeSet.add(v)));
+      }
+
+      // Mode 3: explicit extra_scopes[] (escape hatch)
+      if (Array.isArray(extra_scopes)) {
+        for (const s of extra_scopes) if (typeof s === 'string') scopeSet.add(s);
       }
 
       const params = new URLSearchParams({
         client_id: clientId,
         redirect_uri: REDIRECT_URI,
         response_type: 'code',
-        scope: scopes.join(' '),
+        scope: Array.from(scopeSet).join(' '),
         access_type: 'offline',
-        prompt: 'consent',
+        prompt: 'consent', // forces refresh_token + re-consent on incremental scopes
         state: stateValue,
+        include_granted_scopes: 'true', // incremental authorization (Google merges with previously granted scopes)
       });
 
       return new Response(JSON.stringify({
         auth_url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+        scopes_requested: Array.from(scopeSet),
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -746,8 +809,9 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
 
     return jsonError('Invalid action', 400);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('gsc-auth error:', error);
-    return jsonError(error.message, 500);
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    return jsonError(msg, 500);
   }
 }));

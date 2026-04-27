@@ -73,16 +73,18 @@ try {
     // ANALYZE: Full SEA→SEO bridge
     // ═══════════════════════════════════════════════════════════════
     if (action === 'analyze') {
-      // 1. Get Google Ads data
+      // 1. Get Google Ads data from unified google_connections table
       const { data: adsConn } = await supabase
-        .from('google_ads_connections')
-        .select('*')
+        .from('google_connections')
+        .select('id, access_token, refresh_token, token_expiry, ads_customer_id, ads_account_name, ads_status')
         .eq('user_id', user_id)
+        .not('ads_customer_id', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle()
 
       if (!adsConn || !adsConn.access_token) {
-        return jsonError('Google Ads not connected',
-          code: 'ADS_NOT_CONNECTED', 400)
+        return jsonError('Google Ads not connected', 400)
       }
 
       // 2. Resolve Google token for GSC/GA4
@@ -106,10 +108,11 @@ try {
             if (refreshResp.ok) {
               const tokens = await refreshResp.json()
               adsToken = tokens.access_token
-              await supabase.from('google_ads_connections').update({
+              await supabase.from('google_connections').update({
                 access_token: tokens.access_token,
                 token_expiry: new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString(),
-              }).eq('user_id', user_id)
+                updated_at: new Date().toISOString(),
+              }).eq('id', adsConn.id)
             }
           } catch (e) {
             console.warn('Ads token refresh failed:', e)
@@ -120,7 +123,7 @@ try {
       // 4. Fetch Google Ads keyword performance (last 30 days)
       let adsKeywords: AdsKeyword[] = []
       try {
-        const customerId = adsConn.customer_id
+        const customerId = adsConn.ads_customer_id
         if (customerId && !customerId.startsWith('pending_')) {
           const query = `
             SELECT 
