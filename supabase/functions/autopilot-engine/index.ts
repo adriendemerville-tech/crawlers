@@ -243,9 +243,13 @@ try {
           }
 
           // ═══ Function execution ═══
+          // dry_run bloque UNIQUEMENT la phase 'execute' (push CMS).
+          // Les phases audit/diagnose/prescribe/validate doivent toujours s'exécuter
+          // pour alimenter audit_raw_data + architect_workbench, sinon dry_run = simulation à vide.
           const isPrescribeV2 = phase === 'prescribe' && decision.action?.payload?._prescribe_v2 === true;
+          const isDryRunBlocked = config.implementation_mode === 'dry_run' && phase === 'execute';
           
-          if (!isPrescribeV2 && config.implementation_mode !== 'dry_run' && decision.action?.functions?.length > 0) {
+          if (!isPrescribeV2 && !isDryRunBlocked && decision.action?.functions?.length > 0) {
             await executeFunctions(
               decision, siteInfo, config, phase, pipelinePhase, cycleNumber,
               supabase, executionResults, phaseErrors,
