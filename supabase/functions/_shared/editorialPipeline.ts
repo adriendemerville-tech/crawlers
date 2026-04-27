@@ -478,6 +478,11 @@ Réponds en JSON strict :
     excerpt: strategy.angle,
   };
 
+  // Safeguard typographique FR : casse phrastique stricte sur title + headings HTML
+  if (typeof parsed.title === "string") parsed.title = toFrenchSentenceCase(parsed.title);
+  if (typeof parsed.excerpt === "string") parsed.excerpt = toFrenchSentenceCase(parsed.excerpt);
+  if (typeof parsed.content === "string") parsed.content = normalizeHtmlHeadings(parsed.content);
+
   await logStage(supabase, {
     user_id: input.user_id,
     domain: input.domain,
