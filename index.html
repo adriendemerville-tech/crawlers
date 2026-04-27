@@ -95,7 +95,11 @@
     <link rel="dns-prefetch" href="https://tutlimtasnjabdfhpewu.supabase.co" />
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
-    
+
+    <!-- Preload critical display font (used in H1 hero) - LCP optimization -->
+    <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+
+
     <!-- Critical CSS for above-the-fold (LCP optimization) - INLINED, minimal -->
     <style>
       /* Font-display swap to prevent invisible text during load */
