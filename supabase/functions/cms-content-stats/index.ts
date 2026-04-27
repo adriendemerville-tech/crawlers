@@ -236,7 +236,8 @@ async function fetchIktrackerArticles(): Promise<Article[]> {
     });
     if (pagesRes.ok) {
       const pagesJson = await pagesRes.json();
-      const rawPages = pagesJson?.data?.data || pagesJson?.data;
+      const innerP = pagesJson?.result?.data ?? pagesJson?.data;
+      const rawPages = innerP?.data ?? innerP;
       const pages = Array.isArray(rawPages) ? rawPages : (rawPages?.pages || []);
       for (const pg of pages) {
         articles.push({
