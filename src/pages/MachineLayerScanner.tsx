@@ -28,15 +28,18 @@ interface ScanResponse {
   issues: Array<{ family: string; severity: string; key: string; message: string }>;
 }
 
-const FAMILY_ORDER: Array<{ key: string; signalKeys: string[] }> = [
-  { key: 'meta', signalKeys: ['meta', 'htmlLang'] },
-  { key: 'canonical', signalKeys: ['links'] },
-  { key: 'opengraph', signalKeys: ['openGraph'] },
-  { key: 'twitter', signalKeys: ['twitterCard'] },
-  { key: 'schema', signalKeys: ['schemaOrg', 'microdata', 'rdfa'] },
-  { key: 'robots', signalKeys: ['external'] },
-  { key: 'geo', signalKeys: [] },
-  { key: 'security', signalKeys: ['httpHeaders'] },
+// Mapping famille → sous-objets `detected_signals` à afficher dans la carte.
+// Pour `external`, on extrait des sous-clés précises afin que GEO et Robots
+// n'affichent que ce qui les concerne.
+const FAMILY_ORDER: Array<{ key: string; pickFrom: 'root' | 'external'; keys: string[] }> = [
+  { key: 'meta', pickFrom: 'root', keys: ['meta', 'htmlLang'] },
+  { key: 'canonical', pickFrom: 'root', keys: ['links'] },
+  { key: 'opengraph', pickFrom: 'root', keys: ['openGraph'] },
+  { key: 'twitter', pickFrom: 'root', keys: ['twitterCard'] },
+  { key: 'schema', pickFrom: 'root', keys: ['schemaOrg', 'microdata', 'rdfa'] },
+  { key: 'robots', pickFrom: 'external', keys: ['robotsTxt', 'sitemapXml'] },
+  { key: 'geo', pickFrom: 'external', keys: ['llmsTxt', 'aiTxt', 'aiPlugin'] },
+  { key: 'security', pickFrom: 'root', keys: ['httpHeaders'] },
 ];
 
 export default function MachineLayerScanner() {
