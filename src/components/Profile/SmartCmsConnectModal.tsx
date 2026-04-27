@@ -78,10 +78,13 @@ export function SmartCmsConnectModal({
   siteApiKey,
 }: Props) {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const { language } = useLanguage();
   const lang = (language || 'fr') as Lang;
 
-  const [step, setStep] = useState<'idle' | 'detecting' | 'recommend' | 'manual' | 'already_connected'>('idle');
+  const customRest = CUSTOM_REST_PLATFORMS.find((p) => p.match(siteDomain)) || null;
+
+  const [step, setStep] = useState<'idle' | 'detecting' | 'recommend' | 'manual' | 'already_connected' | 'custom_rest'>('idle');
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [working, setWorking] = useState(false);
 
@@ -89,6 +92,11 @@ export function SmartCmsConnectModal({
   const [appUser, setAppUser] = useState('');
   const [appPassword, setAppPassword] = useState('');
   const [savingRest, setSavingRest] = useState(false);
+
+  // Custom REST (Bearer) form — Dictadevi & co.
+  const [bearerKey, setBearerKey] = useState('');
+  const [savingBearer, setSavingBearer] = useState(false);
+  const [adminKeyAvailable, setAdminKeyAvailable] = useState(false);
 
   // Existing CMS connections (loaded on open)
   const [existingConnections, setExistingConnections] = useState<
@@ -102,6 +110,7 @@ export function SmartCmsConnectModal({
     setWorking(false);
     setAppUser('');
     setAppPassword('');
+    setBearerKey('');
     setExistingConnections([]);
   };
 
