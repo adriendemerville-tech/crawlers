@@ -32,12 +32,13 @@ interface AgentChatShellProps {
   initialSessionId?: string | null;
   /** Boutons additionnels affichés à droite du composer (ex: bug report). */
   composerExtras?: React.ReactNode;
-  /** Variante render-prop : reçoit des helpers pour pousser du texte dans le draft (ex: micro). */
+  /** Variante render-prop : reçoit des helpers pour pousser du texte dans le draft (ex: micro). `slot` indique où l'extra est rendu : 'inside' (dans le textarea, pour le micro) ou 'leading' (colonne gauche sous le bouton "+"). */
   renderComposerExtras?: (helpers: {
     appendToDraft: (text: string) => void;
     setDraft: (text: string) => void;
     submitDraft: () => void;
     sending: boolean;
+    slot: 'inside' | 'leading';
   }) => React.ReactNode;
   /** Slot affiché à gauche du textarea (ex: ChatAttachmentPicker). */
   composerLeading?: React.ReactNode;
