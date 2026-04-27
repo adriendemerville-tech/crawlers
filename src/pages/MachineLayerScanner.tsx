@@ -12,6 +12,7 @@ import { SignalCard, type ScanRecommendation } from '@/components/MachineLayer/S
 import { setMachineLayerPreload } from '@/components/MachineLayer/preloadBridge';
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { supabase } from '@/integrations/supabase/client';
 import { ScanLine, ArrowRight, Loader2, Sparkles, Globe, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -50,6 +51,7 @@ export default function MachineLayerScanner() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const urlValidation = useUrlValidation('fr');
 
   // Auto-launch via ?url=
   useEffect(() => {
@@ -71,15 +73,14 @@ export default function MachineLayerScanner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, result, loading, user, isReady]);
 
-  const handleScanWith = async (targetUrl: string) => {
-    if (!targetUrl.trim()) { toast.error('Saisissez une URL.'); return; }
+  const runScan = async (targetUrl: string) => {
     if (!user && !turnstileToken) { toast.error('Vérification anti-bot en cours…'); return; }
 
     setLoading(true);
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('machine-layer-scan', {
-        body: { url: targetUrl.trim(), turnstile_token: user ? undefined : turnstileToken },
+        body: { url: targetUrl, turnstile_token: user ? undefined : turnstileToken },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -93,9 +94,27 @@ export default function MachineLayerScanner() {
     }
   };
 
+  const handleScanWith = async (targetUrl: string) => {
+    if (!targetUrl.trim()) { toast.error('Saisissez une URL.'); return; }
+    // Normalise + valide l'URL côté serveur (corrige typos, ajoute https://, etc.)
+    await urlValidation.validateAndCorrect(targetUrl, async (validUrl) => {
+      setUrl(validUrl);
+      await runScan(validUrl);
+    });
+  };
+
   const handleScan = async (e?: React.FormEvent) => {
     e?.preventDefault();
     return handleScanWith(url);
+  };
+
+  const acceptSuggestion = () => {
+    if (!urlValidation.suggestedUrl) return;
+    const suggested = urlValidation.suggestedUrl;
+    urlValidation.acceptSuggestion(suggested, async (validUrl) => {
+      setUrl(validUrl);
+      await runScan(validUrl);
+    });
   };
 
   const familyCards = useMemo(() => {
@@ -187,28 +206,61 @@ export default function MachineLayerScanner() {
               <div className="relative flex-1">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  type="url"
-                  placeholder="https://votre-site.com"
+                  type="text"
+                  inputMode="url"
+                  autoComplete="url"
+                  spellCheck={false}
+                  placeholder="votre-site.com"
                   value={url}
-                  onChange={e => setUrl(e.target.value)}
+                  onChange={e => {
+                    setUrl(e.target.value);
+                    if (urlValidation.suggestedUrl) urlValidation.dismissSuggestion();
+                  }}
                   className="pl-10 h-12 text-base"
-                  disabled={loading}
+                  disabled={loading || urlValidation.isValidating}
                 />
               </div>
               <Button
                 type="submit"
                 size="lg"
-                disabled={loading || (!user && !isReady)}
+                disabled={loading || urlValidation.isValidating || (!user && !isReady)}
                 className="h-12 px-6"
                 variant="outline"
               >
                 {loading ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Scan en cours…</>
+                ) : urlValidation.isValidating ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Vérification de l'URL…</>
                 ) : (
                   <><ScanLine className="h-4 w-4 mr-2" /> Lancer le scan</>
                 )}
               </Button>
             </div>
+
+            {/* Suggestion de correction (typo détecté) */}
+            {urlValidation.suggestedUrl && (
+              <div className="flex flex-wrap items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-sm">
+                <span className="text-muted-foreground">{urlValidation.getSuggestionPrefix()}</span>
+                <code className="text-foreground font-medium">{urlValidation.suggestedUrl}</code>
+                <span className="text-muted-foreground">?</span>
+                <div className="ml-auto flex gap-2">
+                  <Button type="button" size="sm" variant="outline" onClick={acceptSuggestion}>
+                    Oui, scanner
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => urlValidation.dismissSuggestion()}>
+                    Non
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* URL introuvable */}
+            {urlValidation.urlNotFound && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                {urlValidation.getNotFoundMessage()}
+              </div>
+            )}
+
             {!user && (
               <div ref={containerRef} className="flex justify-center min-h-[65px]" />
             )}
