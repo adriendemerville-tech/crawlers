@@ -349,8 +349,8 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
   };
 
   const isApiKeyAuth = cmsType === 'shopify' || cmsType === 'webflow' || cmsType === 'wix' || cmsType === 'odoo' || cmsType === 'prestashop';
-  const canTest = siteUrl && (isApiKeyAuth ? password : username && password);
-  const canSave = selectedSiteId && siteUrl && (isApiKeyAuth ? password : username && password);
+  const canTest = adminConsent && siteUrl && (isApiKeyAuth ? password : username && password);
+  const canSave = adminConsent && selectedSiteId && siteUrl && (isApiKeyAuth ? password : username && password);
 
   const isEcommerce = cmsType === 'wordpress' || cmsType === 'shopify';
 
