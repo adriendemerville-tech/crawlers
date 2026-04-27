@@ -1038,6 +1038,7 @@ La page n'existe pas encore ou n'est pas accessible. Les recommandations partent
 - Cohérence temporelle obligatoire pour: recommended_h1, hn_hierarchy (H2/H3), introduction, sections.body_text, tldr_summary, FAQ, tableaux, résumés, meta_title, meta_description et json_ld_schemas.
 - N'ajoute PAS de date si elle n'apporte rien.
 - N'utilise PAS automatiquement le mot "Guide" dans le H1 ou les sections ; choisis la forme éditoriale la plus juste selon l'intention réelle.
+- **TYPOGRAPHIE FR — CASSE PHRASTIQUE STRICTE** : tous les titres générés (recommended_h1, hn_hierarchy H2/H3, sections.title, meta_title, og_tags.title, FAQ questions, tldr_summary) DOIVENT être en casse phrastique française : majuscule UNIQUEMENT sur le premier mot et les noms propres (marques, lieux, personnes, sigles). Le "Title Case" anglo-saxon (majuscule à chaque mot) est INTERDIT en français — il dégrade le CTR, brouille la reconnaissance d'entités nommées (NER) par les LLMs et envoie un signal de faible qualité (E-E-A-T). Exemple correct : "Comment optimiser le budget crawl d'un site e-commerce". Exemple INTERDIT : "Comment Optimiser Le Budget Crawl D'un Site E-Commerce". Cette règle ne s'applique PAS si la langue cible est l'anglais.
 
 ⚠️ ACTIVATION DES 5 CRITÈRES GEO :
 Active chaque critère selon les signaux disponibles. Voici l'état des signaux :
