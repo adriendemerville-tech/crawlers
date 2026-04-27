@@ -71,6 +71,56 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [gscBigQueryHidden, setGscBigQueryHidden] = useState(false);
+  const [addHover, setAddHover] = useState(false);
+  const [newDomain, setNewDomain] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  const handleAddDomain = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!user || !newDomain.trim() || adding) return;
+    setAdding(true);
+    try {
+      // 1. Probe URL
+      const { data: probe, error: probeErr } = await supabase.functions.invoke('check-url-reachable', {
+        body: { url: newDomain.trim() },
+      });
+      if (probeErr || !probe?.ok) {
+        toast.error('Site injoignable', { description: probe?.error || 'Vérifiez l\'URL' });
+        setAdding(false);
+        return;
+      }
+      const hostname = (probe.hostname as string).replace(/^www\./, '');
+
+      // 2. Check duplicate
+      const existing = sites.find(s => s.domain.replace(/^www\./, '') === hostname);
+      if (existing) {
+        handleSiteChange(existing.id, existing.domain);
+        setNewDomain('');
+        setAddHover(false);
+        setAdding(false);
+        return;
+      }
+
+      // 3. Insert
+      const { data: created, error: insErr } = await supabase
+        .from('tracked_sites')
+        .insert({ user_id: user.id, domain: hostname, site_name: hostname })
+        .select('id, domain, site_name')
+        .single();
+      if (insErr || !created) {
+        toast.error('Erreur lors de l\'ajout', { description: insErr?.message });
+        setAdding(false);
+        return;
+      }
+      setSites(prev => [...prev, created as TrackedSite].sort((a, b) => a.domain.localeCompare(b.domain)));
+      handleSiteChange(created.id, created.domain);
+      toast.success('Site ajouté au suivi');
+      setNewDomain('');
+      setAddHover(false);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
