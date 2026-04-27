@@ -492,7 +492,22 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
     }
   }
 
-  return callIktracker('POST', '/posts', apiKey, body)
+  // Final POST + record verdict in slug memory
+  const postResult = await callIktracker('POST', '/posts', apiKey, body)
+  if (slug) {
+    try {
+      const finalHash = await slugMemoryHashContent(body)
+      await slugMemoryRecordResult({
+        slug,
+        httpStatus: postResult.status,
+        responseBody: (postResult.data as Record<string, unknown>) ?? null,
+        contentHash: finalHash,
+      })
+    } catch (e) {
+      console.warn('[slugMemory] record (POST) failed:', e)
+    }
+  }
+  return postResult
 }
 
 async function updatePost(apiKey: string, slug: string, updates: Record<string, unknown>) {
