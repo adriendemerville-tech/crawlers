@@ -2,6 +2,12 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
+import {
+  isBlocked as slugMemoryIsBlocked,
+  shouldUsePut as slugMemoryShouldUsePut,
+  hashContent as slugMemoryHashContent,
+  recordResult as slugMemoryRecordResult,
+} from '../_shared/iktracker/slugMemory.ts';
 
 /**
  * iktracker-actions
