@@ -325,7 +325,51 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
   const slug = (body.slug as string) || ''
   const title = (body.title as string) || ''
 
-  // 1) Exact slug check
+  // ─── Slug Memory pre-check (anti-loop guard) ──────────────────────
+  // Blocks if slug was previously blacklisted/skipped by IKtracker admin,
+  // or if it's a near-variant of a blacklisted root.
+  if (slug) {
+    try {
+      const memCheck = await slugMemoryIsBlocked(slug)
+      if (memCheck.blocked) {
+        console.warn(`[iktracker-actions] SLUG MEMORY BLOCKED "${slug}": ${memCheck.reason}`)
+        return {
+          status: 409,
+          data: null,
+          error: memCheck.reason,
+          _slug_memory_blocked: true,
+          _matched_slug: memCheck.matched_slug,
+          _memory_status: memCheck.status,
+          _blocked_until: memCheck.blocked_until,
+          _original_action: 'create-post',
+        }
+      }
+    } catch (e) {
+      console.error('[iktracker-actions] slugMemoryIsBlocked failed (fail-open):', e)
+    }
+
+    // ─── Content-hash routing: if already published with different content → PUT ───
+    try {
+      const newHash = await slugMemoryHashContent(body)
+      const putRoute = await slugMemoryShouldUsePut(slug, newHash)
+      if (putRoute) {
+        console.log(`[iktracker-actions] Slug memory: "${slug}" already published (post_id=${putRoute.postId}), content changed → routing to PUT`)
+        const updateResult = await callIktracker('PUT', `/posts/${slug}`, apiKey, body)
+        // Record result with new hash on success
+        await slugMemoryRecordResult({
+          slug,
+          httpStatus: updateResult.status,
+          responseBody: (updateResult.data as Record<string, unknown>) ?? null,
+          contentHash: newHash,
+        }).catch((e) => console.warn('[slugMemory] record (PUT route) failed:', e))
+        return { ...updateResult, _upserted: true, _original_action: 'create-post', _slug_memory_route: 'put' }
+      }
+    } catch (e) {
+      console.error('[iktracker-actions] slug memory PUT routing failed (continuing with POST):', e)
+    }
+  }
+
+
   if (slug) {
     try {
       const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
