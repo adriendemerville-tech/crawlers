@@ -68,6 +68,8 @@ const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress")
 const ProAgency = lazy(() => import("./pages/ProAgency"));
 const Observatoire = lazy(() => import("./pages/Observatoire"));
 const ContentArchitectPage = lazy(() => import("./pages/ContentArchitectPage"));
+const MachineLayerScanner = lazy(() => import("./pages/MachineLayerScanner"));
+const MachineLayerLanding = lazy(() => import("./pages/MachineLayerLanding"));
 const Faq = lazy(() => import("./pages/Faq"));
 const Methodologie = lazy(() => import("./pages/Methodologie"));
 const CGVU = lazy(() => import("./pages/CGVU"));
@@ -207,6 +209,8 @@ const App = () => (
                           <Route path="/app/eeat" element={<AppEeat />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
                           <Route path="/app/site-crawl" element={<SiteCrawl />} />
+                          <Route path="/app/machine-layer" element={<MachineLayerScanner />} />
+                          <Route path="/machine-layer-scanner" element={<MachineLayerLanding />} />
                           <Route path="/app/ranking-serp" element={<RankingSerp />} />
                           <Route path="/app/audit-compare" element={<AuditCompare />} />
                           <Route path="/integration-gtm" element={<IntegrationGTM />} />

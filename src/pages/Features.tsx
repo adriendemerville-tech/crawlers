@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Sparkles, Bug, Network, Brain, ShieldCheck, Gauge, PenLine,
   Share2, BarChart3, Radar, Globe, Target, ArrowRight, Layers,
-  Search, Building2, FileSearch, Zap, Award, Swords, LayoutDashboard
+  Search, Building2, FileSearch, Zap, Award, Swords, LayoutDashboard, ScanLine
 } from 'lucide-react';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -78,6 +78,14 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
           description: lang === 'fr' ? 'Diagnostic SEO & GEO approfondi avec plan d\'action et code correctif prêt à déployer.' : lang === 'es' ? 'Diagnóstico SEO & GEO completo con plan de acción y código correctivo.' : 'In-depth SEO & GEO diagnosis with action plan and corrective code ready to deploy.',
           href: '/audit-expert',
           color: 'from-blue-500 to-indigo-600',
+        },
+        {
+          icon: ScanLine,
+          title: lang === 'fr' ? 'Machine Layer Scanner' : lang === 'es' ? 'Escáner de Capa Máquina' : 'Machine Layer Scanner',
+          description: lang === 'fr' ? 'Scan gratuit des signaux destinés aux moteurs et aux IA : meta, JSON-LD, robots.txt, llms.txt, headers HTTP. Recommandations rédigées prêtes à coller.' : lang === 'es' ? 'Escaneo gratuito de señales para motores e IA: meta, JSON-LD, robots.txt, llms.txt, encabezados HTTP.' : 'Free scan of signals for engines and AI: meta, JSON-LD, robots.txt, llms.txt, HTTP headers.',
+          href: '/machine-layer-scanner',
+          color: 'from-violet-500 to-fuchsia-600',
+          badge: lang === 'fr' ? 'Gratuit' : lang === 'es' ? 'Gratis' : 'Free',
         },
         {
           icon: ShieldCheck,
