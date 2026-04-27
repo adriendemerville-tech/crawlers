@@ -8424,6 +8424,7 @@ export type Database = {
           api_key_name: string | null
           autopilot_enabled: boolean
           created_at: string
+          created_by_user_id: string | null
           domain: string
           event_type: string
           id: string
@@ -8436,6 +8437,7 @@ export type Database = {
           api_key_name?: string | null
           autopilot_enabled?: boolean
           created_at?: string
+          created_by_user_id?: string | null
           domain: string
           event_type?: string
           id?: string
@@ -8448,6 +8450,7 @@ export type Database = {
           api_key_name?: string | null
           autopilot_enabled?: boolean
           created_at?: string
+          created_by_user_id?: string | null
           domain?: string
           event_type?: string
           id?: string
