@@ -206,28 +206,61 @@ export default function MachineLayerScanner() {
               <div className="relative flex-1">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  type="url"
-                  placeholder="https://votre-site.com"
+                  type="text"
+                  inputMode="url"
+                  autoComplete="url"
+                  spellCheck={false}
+                  placeholder="votre-site.com"
                   value={url}
-                  onChange={e => setUrl(e.target.value)}
+                  onChange={e => {
+                    setUrl(e.target.value);
+                    if (urlValidation.suggestedUrl) urlValidation.dismissSuggestion();
+                  }}
                   className="pl-10 h-12 text-base"
-                  disabled={loading}
+                  disabled={loading || urlValidation.isValidating}
                 />
               </div>
               <Button
                 type="submit"
                 size="lg"
-                disabled={loading || (!user && !isReady)}
+                disabled={loading || urlValidation.isValidating || (!user && !isReady)}
                 className="h-12 px-6"
                 variant="outline"
               >
                 {loading ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Scan en cours…</>
+                ) : urlValidation.isValidating ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Vérification de l'URL…</>
                 ) : (
                   <><ScanLine className="h-4 w-4 mr-2" /> Lancer le scan</>
                 )}
               </Button>
             </div>
+
+            {/* Suggestion de correction (typo détecté) */}
+            {urlValidation.suggestedUrl && (
+              <div className="flex flex-wrap items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-sm">
+                <span className="text-muted-foreground">{urlValidation.getSuggestionPrefix()}</span>
+                <code className="text-foreground font-medium">{urlValidation.suggestedUrl}</code>
+                <span className="text-muted-foreground">?</span>
+                <div className="ml-auto flex gap-2">
+                  <Button type="button" size="sm" variant="outline" onClick={acceptSuggestion}>
+                    Oui, scanner
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => urlValidation.dismissSuggestion()}>
+                    Non
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* URL introuvable */}
+            {urlValidation.urlNotFound && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                {urlValidation.getNotFoundMessage()}
+              </div>
+            )}
+
             {!user && (
               <div ref={containerRef} className="flex justify-center min-h-[65px]" />
             )}
