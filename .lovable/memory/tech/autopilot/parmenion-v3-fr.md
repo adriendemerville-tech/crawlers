@@ -3,10 +3,44 @@ name: Parmenion v3
 description: Parmenion Autopilot orchestration, pipeline phases, and audit enrichment
 type: feature
 ---
-## Parménion v3 — Orchestrateur Breathing Spiral (post-fix 2026-04-15)
+## Parménion v3 — Orchestrateur Breathing Spiral (post-fix 2026-04-27)
 
 ### Vue d'ensemble
 Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise le `spiral_score` pour prioriser les actions et un dual-lane scoring (tech + contenu) avec budget partagé configurable.
+
+### Périmètre du mode dry_run (v3.6 — 2026-04-27)
+
+**Problème racine** : `implementation_mode='dry_run'` court-circuitait **toutes les phases** (audit, diagnose, prescribe, validate), pas seulement le push CMS. Conséquence : 30 cycles "verts" sur dictadevi.io sans aucun audit réel ni alimentation du workbench.
+
+**Correction** : `dry_run` ne bloque désormais **que la phase `execute`** (push CMS).
+
+| Phase | dry_run avant | dry_run après |
+|---|---|---|
+| audit | ❌ skip | ✅ exécutée |
+| diagnose | ❌ skip | ✅ exécutée |
+| prescribe | ❌ skip | ✅ exécutée (workbench alimenté) |
+| **execute** | ❌ skip | ❌ **skip (inchangé)** |
+| validate | ❌ skip | ✅ exécutée |
+
+**Logique** (`autopilot-engine/index.ts` ~ligne 248) :
+```ts
+const isDryRunBlocked = config.implementation_mode === 'dry_run' && phase === 'execute';
+if (!isPrescribeV2 && !isDryRunBlocked && decision.action?.functions?.length > 0) {
+  await executeFunctions(...)
+}
+```
+
+Le statut `'dry_run'` dans `parmenion_decision_log.status` n'est désormais émis que pour la phase `execute`. Les autres phases reflètent leur exécution réelle (`completed`, `degraded`, `failed`).
+
+### Onglet "Exécution" (admin Parménion, v3.6)
+
+`src/components/Admin/ParmenionExecutionStatus.tsx` — onglet par défaut du dashboard. Pour chaque site branché :
+- Mode actuel (Dry-run / Auto / Review) avec rappel de ce qui est bloqué
+- Numéro du dernier cycle + total cycles + horodatage
+- Pipeline visuel 5 chips (audit/diagnose/prescribe/execute/validate) avec statut réel par phase au dernier cycle
+- Note pédagogique sous les sites en dry_run
+
+
 
 ### Pré-score déterministe (v3.5 — 2026-04-15)
 

@@ -1,10 +1,46 @@
 # Memory: tech/autopilot/parmenion-v3-fr
-Updated: 2026-04-12
+Updated: 2026-04-27
 
-## Parménion v3 — Orchestrateur Breathing Spiral (post-fix 2026-04-12)
+## Parménion v3 — Orchestrateur Breathing Spiral (post-fix 2026-04-27)
 
 ### Vue d'ensemble
 Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise le `spiral_score` pour prioriser les actions et un dual-lane scoring (tech + contenu) avec budget partagé configurable. La spirale se contracte ou s'expand automatiquement en fonction des 9 signaux temps réel (voir `breathing-spiral-strategy-fr.md`).
+
+### Périmètre du mode dry_run (v3.6 — 2026-04-27)
+
+**Problème racine** : avant ce patch, `implementation_mode='dry_run'` bloquait **toutes les phases** du pipeline (audit, diagnose, prescribe, validate), pas seulement le push CMS. Conséquence : un site en dry_run pouvait accumuler des dizaines de cycles "verts" sans qu'aucun audit ne soit réellement exécuté ni qu'aucun finding n'alimente l'`architect_workbench`. Cas observé : 30 cycles dictadevi.io = 30 simulations à vide.
+
+**Correction** : le mode `dry_run` ne bloque désormais **que la phase `execute`** (push CMS externe). Toutes les autres phases s'exécutent normalement et alimentent le workbench. Cette règle s'applique uniformément à tous les sites Parménion (présents et futurs).
+
+| Phase | dry_run avant | dry_run après |
+|---|---|---|
+| audit | ❌ skip | ✅ exécutée |
+| diagnose | ❌ skip | ✅ exécutée |
+| prescribe | ❌ skip | ✅ exécutée (workbench alimenté) |
+| **execute** | ❌ skip | ❌ **skip (inchangé)** |
+| validate | ❌ skip | ✅ exécutée |
+
+**Logique** (dans `autopilot-engine/index.ts`) :
+```ts
+const isDryRunBlocked = config.implementation_mode === 'dry_run' && phase === 'execute';
+if (!isPrescribeV2 && !isDryRunBlocked && decision.action?.functions?.length > 0) {
+  await executeFunctions(...)
+}
+```
+
+Le statut `'dry_run'` dans `parmenion_decision_log.status` et `autopilot_modification_log.status` n'est désormais émis que pour la phase `execute`. Les autres phases reflètent leur statut d'exécution réel (`completed`, `degraded`, `failed`, `partial`).
+
+### Onglet "Exécution" — admin Parménion (v3.6)
+
+Nouveau composant `src/components/Admin/ParmenionExecutionStatus.tsx`, ajouté comme **onglet par défaut** du dashboard Parménion (Admin → Parménion → Exécution). Pour chaque site Parménion actif, il affiche :
+- **Mode actuel** : badge coloré (Dry-run jaune / Auto vert / Review violet) avec rappel explicite de ce que ça bloque réellement
+- **Métadonnées** : numéro du dernier cycle, total cycles, date relative du dernier cycle
+- **Pipeline visuel** : 5 chips (audit → diagnose → prescribe → execute → validate) reflétant le statut réel de chaque phase au dernier cycle (Exécutée / Simulée / Échec / Dégradée / Partielle / Planifiée / Non atteinte)
+- **Note pédagogique** sous les sites en dry_run rappelant que seul `execute` est bloqué
+
+Les données sont lues depuis `parmenion_targets`, `tracked_sites`, `autopilot_configs` et `parmenion_decision_log` (filtré sur le `cycle_number` le plus récent par domaine).
+
+
 
 ### FIX critique v3.2 (2026-04-12) — 6 corrections
 
