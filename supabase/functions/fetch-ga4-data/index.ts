@@ -33,6 +33,9 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
     const channel_group: string | undefined = body.channel_group
     const compare: boolean = body.compare === true
     const queryLimit: number = Math.min(Math.max(parseInt(body.limit) || 200, 1), 5000)
+    const force_refresh: boolean = body.force_refresh === true
+    // TTL cache pour traffic sources (par défaut 6h, bornable 5min..24h)
+    const cache_ttl_minutes: number = Math.min(Math.max(parseInt(body.cache_ttl_minutes) || 360, 5), 1440)
 
     // ─── SECURITY: Validate JWT and enforce real user_id ─────────
     const authHeader = req.headers.get('Authorization') || ''
