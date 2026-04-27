@@ -161,6 +161,7 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
     if (!open) {
       setWebhookStatus('idle');
       setFallbackWebhookUrl('');
+      setAdminConsent(false);
       return;
     }
     (async () => {
