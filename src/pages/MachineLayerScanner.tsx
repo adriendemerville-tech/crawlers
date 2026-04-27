@@ -51,6 +51,7 @@ export default function MachineLayerScanner() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const urlValidation = useUrlValidation('fr');
 
   // Auto-launch via ?url=
   useEffect(() => {
@@ -72,15 +73,14 @@ export default function MachineLayerScanner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, result, loading, user, isReady]);
 
-  const handleScanWith = async (targetUrl: string) => {
-    if (!targetUrl.trim()) { toast.error('Saisissez une URL.'); return; }
+  const runScan = async (targetUrl: string) => {
     if (!user && !turnstileToken) { toast.error('Vérification anti-bot en cours…'); return; }
 
     setLoading(true);
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('machine-layer-scan', {
-        body: { url: targetUrl.trim(), turnstile_token: user ? undefined : turnstileToken },
+        body: { url: targetUrl, turnstile_token: user ? undefined : turnstileToken },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -94,9 +94,27 @@ export default function MachineLayerScanner() {
     }
   };
 
+  const handleScanWith = async (targetUrl: string) => {
+    if (!targetUrl.trim()) { toast.error('Saisissez une URL.'); return; }
+    // Normalise + valide l'URL côté serveur (corrige typos, ajoute https://, etc.)
+    await urlValidation.validateAndCorrect(targetUrl, async (validUrl) => {
+      setUrl(validUrl);
+      await runScan(validUrl);
+    });
+  };
+
   const handleScan = async (e?: React.FormEvent) => {
     e?.preventDefault();
     return handleScanWith(url);
+  };
+
+  const acceptSuggestion = () => {
+    if (!urlValidation.suggestedUrl) return;
+    const suggested = urlValidation.suggestedUrl;
+    urlValidation.acceptSuggestion(suggested, async (validUrl) => {
+      setUrl(validUrl);
+      await runScan(validUrl);
+    });
   };
 
   const familyCards = useMemo(() => {
