@@ -154,6 +154,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const [activeTab, setActiveTab] = useState(canSeeIntelligence ? 'intelligence' : 'analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const [gscBigQueryHidden, setGscBigQueryHidden] = useState(false);
   const [showContentArchitect, setShowContentArchitect] = useState(false);
   const { notifications } = useAdminNotifications();
   const isMobile = useIsMobile();
