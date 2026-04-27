@@ -154,6 +154,7 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
 
   // Webhook registration state
   const [webhookStatus, setWebhookStatus] = useState<'idle' | 'registering' | 'success' | 'failed'>('idle');
+  const [adminConsent, setAdminConsent] = useState(false);
   const [fallbackWebhookUrl, setFallbackWebhookUrl] = useState('');
 
   useEffect(() => {
