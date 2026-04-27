@@ -138,7 +138,7 @@ export function SignalCard({ family, label, score, max, detected, recommendation
                     </div>
                     {r.ready_to_paste && (
                       <div className="relative mt-2">
-                        <pre className="overflow-x-auto rounded bg-muted/40 p-2.5 text-[11px] leading-snug text-foreground/90 max-h-40">
+                        <pre className="overflow-x-auto rounded bg-muted/40 p-2.5 text-[11px] leading-snug text-foreground/90 whitespace-pre-wrap break-all">
                           <code>{r.ready_to_paste}</code>
                         </pre>
                         <Button
