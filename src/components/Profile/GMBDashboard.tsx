@@ -991,6 +991,11 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
         if (data?.connected) {
           setGbpConnected(true);
           setGbpEmail(data.email || null);
+          if (data?.error_code) {
+            setGbpApiError({ code: data.error_code, hint: data.error_hint, status: data.google_api_error?.status });
+          } else {
+            setGbpApiError(null);
+          }
           if (data.locations && Array.isArray(data.locations) && data.locations.length > 0) {
             setOrderedLocations(data.locations);
             setSelectedLocationId(data.locations[0]?.id || null);
@@ -1001,6 +1006,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
         } else {
           setGbpConnected(false);
           setGbpEmail(null);
+          setGbpApiError(null);
           setOrderedLocations([]);
           setSelectedLocationId(null);
         }
