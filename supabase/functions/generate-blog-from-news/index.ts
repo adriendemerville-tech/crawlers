@@ -5,6 +5,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { callOpenRouter } from '../_shared/openRouterAI.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { toFrenchSentenceCase, normalizeHtmlHeadings } from '../_shared/sentenceCase.ts';
 
 /**
  * Blog Article Generator v2
