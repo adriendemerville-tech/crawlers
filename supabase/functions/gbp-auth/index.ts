@@ -182,6 +182,8 @@ Deno.serve(handleRequest(async (req) => {
       // Auto-discover gmb_account_id if missing
       let accountId = conn.gmb_account_id
       let locationId = conn.gmb_location_id
+      // Capture Google API error to surface to UI (e.g. 429 RESOURCE_EXHAUSTED, 403 PERMISSION_DENIED)
+      let googleApiError: { status: number; reason?: string; message?: string; raw?: string } | null = null
 
       if (!accountId && accessToken) {
         console.log('[gbp-auth/status] 🔄 Discovering accounts...')
@@ -203,6 +205,17 @@ Deno.serve(handleRequest(async (req) => {
                   if (locs.length > 0) {
                     locationId = locs[0].name?.split('/').pop() || null
                   }
+                } else {
+                  const raw = await locResp.text().catch(() => '')
+                  let parsed: any = null
+                  try { parsed = JSON.parse(raw) } catch { /* ignore */ }
+                  googleApiError = {
+                    status: locResp.status,
+                    reason: parsed?.error?.status || parsed?.error?.errors?.[0]?.reason,
+                    message: parsed?.error?.message,
+                    raw: raw.slice(0, 500),
+                  }
+                  console.error('[gbp-auth/status] ❌ Locations API error', googleApiError)
                 }
                 await supabase.from('google_connections').update({
                   gmb_account_id: accountId,
@@ -211,9 +224,21 @@ Deno.serve(handleRequest(async (req) => {
                 }).eq('id', conn.id)
               }
             }
+          } else {
+            const raw = await acctResp.text().catch(() => '')
+            let parsed: any = null
+            try { parsed = JSON.parse(raw) } catch { /* ignore */ }
+            googleApiError = {
+              status: acctResp.status,
+              reason: parsed?.error?.status || parsed?.error?.errors?.[0]?.reason,
+              message: parsed?.error?.message,
+              raw: raw.slice(0, 500),
+            }
+            console.error('[gbp-auth/status] ❌ Accounts API error', googleApiError)
           }
         } catch (e) {
           console.warn('[gbp-auth/status] Discovery failed:', e)
+          googleApiError = { status: 0, reason: 'NETWORK_ERROR', message: e instanceof Error ? e.message : String(e) }
         }
       }
 
@@ -271,10 +296,44 @@ Deno.serve(handleRequest(async (req) => {
                 console.warn('[gbp-auth/status] gmb_locations upsert error:', upsertErr)
               }
             }
+          } else if (!googleApiError) {
+            const raw = await locResp.text().catch(() => '')
+            let parsed: any = null
+            try { parsed = JSON.parse(raw) } catch { /* ignore */ }
+            googleApiError = {
+              status: locResp.status,
+              reason: parsed?.error?.status || parsed?.error?.errors?.[0]?.reason,
+              message: parsed?.error?.message,
+              raw: raw.slice(0, 500),
+            }
+            console.error('[gbp-auth/status] ❌ Locations sync API error', googleApiError)
           }
         }
       } catch (e) {
         console.warn('[gbp-auth] Locations fetch error:', e)
+      }
+
+      // Map Google API errors to a friendly code for the UI
+      let errorCode: string | null = null
+      let errorHint: string | null = null
+      if (googleApiError) {
+        const { status, reason, message } = googleApiError
+        if (status === 429 || reason === 'RESOURCE_EXHAUSTED' || /quota/i.test(message || '')) {
+          errorCode = 'QUOTA_EXCEEDED'
+          errorHint = "L'API Google Business Profile a un quota de 0 requête/minute par défaut. Une demande d'accès doit être déposée auprès de Google."
+        } else if (status === 403 || reason === 'PERMISSION_DENIED') {
+          errorCode = 'PERMISSION_DENIED'
+          errorHint = "L'accès à l'API Google Business Profile n'est pas activé pour ce projet Google Cloud."
+        } else if (status === 401) {
+          errorCode = 'UNAUTHORIZED'
+          errorHint = 'Le token Google a expiré ou été révoqué. Reconnectez votre compte Google.'
+        } else if (reason === 'SERVICE_DISABLED') {
+          errorCode = 'SERVICE_DISABLED'
+          errorHint = "L'API Business Profile est désactivée sur le projet Google Cloud."
+        } else {
+          errorCode = 'GOOGLE_API_ERROR'
+          errorHint = message || 'Erreur Google API inconnue.'
+        }
       }
 
       return jsonOk({
@@ -282,6 +341,9 @@ Deno.serve(handleRequest(async (req) => {
         email: conn.google_email || null,
         has_location: locations.length > 0,
         locations,
+        google_api_error: googleApiError,
+        error_code: errorCode,
+        error_hint: errorHint,
       })
     }
 
