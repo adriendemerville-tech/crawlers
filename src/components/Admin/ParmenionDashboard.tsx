@@ -34,7 +34,7 @@ export function ParmenionDashboard() {
 
   useEffect(() => { fetchTargets(); }, [fetchTargets]);
 
-  const defaultTab = targets.length > 0 ? targets[0].domain.replace(/\./g, '-') : 'task-plan';
+  const defaultTab = 'execution';
 
   return (
     <Tabs defaultValue={defaultTab} key={defaultTab} className="space-y-4">
