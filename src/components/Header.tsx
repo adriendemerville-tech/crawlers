@@ -270,27 +270,27 @@ export function Header() {
           <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             <Link to="/features">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-thin text-primary-foreground">Features</span>
+                <span className="text-sm font-thin">Features</span>
               </Button>
             </Link>
             <Link to="/tarifs">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-thin text-primary-foreground">{language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}</span>
+                <span className="text-sm font-thin">{language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}</span>
               </Button>
             </Link>
             <Link to="/audit-expert">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-thin text-primary-foreground">Audit</span>
+                <span className="text-sm font-thin">Audit</span>
               </Button>
             </Link>
             <Link to="/eeat">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-thin text-primary-foreground">E-E-A-T</span>
+                <span className="text-sm font-thin">E-E-A-T</span>
               </Button>
             </Link>
             <Link to="/app/ranking-serp">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
-                <span className="text-sm font-thin text-primary-foreground">SERPs</span>
+                <span className="text-sm font-thin">SERPs</span>
               </Button>
             </Link>
           </div>
