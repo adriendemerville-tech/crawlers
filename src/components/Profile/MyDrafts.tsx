@@ -215,40 +215,9 @@ export function MyDrafts() {
               </div>
             </div>
           ) : (
-            <div className="flex gap-4">
-              {/* Left sidebar: domains */}
-              <div className="w-52 shrink-0 border-r pr-3 max-h-[70vh] overflow-y-auto">
-                <Button
-                  variant={selectedDomain === null ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="w-full justify-start text-xs mb-2"
-                  onClick={() => setSelectedDomain(null)}
-                >
-                  <Globe className="h-3.5 w-3.5 mr-2 shrink-0" />
-                  {t.allSites}
-                  <span className="ml-auto text-[10px] text-muted-foreground">{drafts.length}</span>
-                </Button>
-
-                {domains.map(domain => {
-                  const count = drafts.filter(d => d.domain === domain).length;
-                  return (
-                    <Button
-                      key={domain}
-                      variant={selectedDomain === domain ? 'secondary' : 'ghost'}
-                      size="sm"
-                      className="w-full justify-start text-xs mb-0.5"
-                      onClick={() => setSelectedDomain(domain)}
-                    >
-                      <Globe className="h-3 w-3 mr-1.5 shrink-0 text-primary" />
-                      <span className="truncate">{domain}</span>
-                      <span className="ml-auto text-[10px] text-muted-foreground">{count}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-
+            <div>
               {/* Drafts list */}
-              <div className="flex-1 space-y-2 min-w-0 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-2 min-w-0 max-h-[70vh] overflow-y-auto">
                 {filteredDrafts.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-sm text-muted-foreground">{t.noDrafts}</p>
