@@ -22,7 +22,7 @@ const SLUG_TABLE = 'iktracker_slug_memory';
 const SKIPPED_COOLDOWN_DAYS = 7;
 const ROOT_LEVENSHTEIN_MAX = 2; // strict threshold on year-stripped root
 
-export type SlugStatus = 'published' | 'blacklisted' | 'skipped' | 'duplicate' | 'error';
+export type SlugStatus = 'published' | 'blacklisted' | 'skipped' | 'duplicate' | 'error' | 'trashed';
 
 export interface BlockedResult {
   blocked: boolean;
@@ -140,6 +140,17 @@ export async function isBlocked(
         blocked: true,
         reason: `Slug definitively blacklisted by IKtracker admin: ${exact.reason ?? 'no reason given'}`,
         status: 'blacklisted',
+        matched_slug: slug,
+      };
+    }
+
+    // 409 slug_in_trash → soft-delete IKtracker, restauration admin uniquement.
+    // Ne JAMAIS retenter automatiquement (cf. CRAWLERS_BLOG_STATUS_UPDATE_PROMPT).
+    if (exact.status === 'trashed') {
+      return {
+        blocked: true,
+        reason: `Slug in IKtracker trash (soft-deleted): ${exact.reason ?? 'awaiting admin restore'}`,
+        status: 'trashed',
         matched_slug: slug,
       };
     }
@@ -284,13 +295,14 @@ export async function hashContent(payload: Record<string, unknown>): Promise<str
  * Persist the verdict from an IKtracker API call.
  *
  * Status mapping:
- *  - 201           → 'published' + store post_id + hash
- *  - 200 _skipped  → 'skipped'
- *  - 200 _upserted → 'published' (treat upsert as publish)
- *  - 403 editorial → 'duplicate'
- *  - 409 blacklist → 'blacklisted'
- *  - 409 saturated → 'duplicate'
- *  - 5xx           → 'error' (does NOT increment definitive blocking)
+ *  - 201                  → 'published' + store post_id + hash
+ *  - 200 _skipped         → 'skipped'
+ *  - 200 _upserted        → 'published' (treat upsert as publish)
+ *  - 403 editorial        → 'duplicate'
+ *  - 409 slug_blacklisted → 'blacklisted' (definitive admin reject)
+ *  - 409 slug_in_trash    → 'trashed' (soft-delete corbeille IKtracker, never retry)
+ *  - 409 saturated/other  → 'duplicate'
+ *  - 5xx                  → 'error' (does NOT increment definitive blocking)
  */
 export async function recordResult(input: RecordInput): Promise<void> {
   const supabase = getServiceClient();
@@ -359,9 +371,11 @@ function mapStatusFromResponse(httpStatus: number, body: Record<string, unknown>
   if (httpStatus === 409) {
     const errStr = String(body.error ?? '').toLowerCase();
     if (errStr.includes('blacklist')) return 'blacklisted';
+    if (errStr === 'slug_in_trash' || errStr.includes('trash')) return 'trashed';
     return 'duplicate';
   }
   if (body.error === 'slug_blacklisted') return 'blacklisted';
+  if (body.error === 'slug_in_trash') return 'trashed';
   return 'error';
 }
 
