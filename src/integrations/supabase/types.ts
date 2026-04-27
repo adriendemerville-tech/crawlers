@@ -7123,6 +7123,60 @@ export type Database = {
           },
         ]
       }
+      machine_layer_scans: {
+        Row: {
+          created_at: string
+          detected_signals: Json
+          domain: string
+          error_message: string | null
+          fetch_duration_ms: number | null
+          http_status: number | null
+          id: string
+          ip_hash: string | null
+          recommendations: Json
+          rendered_via: string
+          score_global: number
+          scores_by_family: Json
+          updated_at: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detected_signals?: Json
+          domain: string
+          error_message?: string | null
+          fetch_duration_ms?: number | null
+          http_status?: number | null
+          id?: string
+          ip_hash?: string | null
+          recommendations?: Json
+          rendered_via?: string
+          score_global?: number
+          scores_by_family?: Json
+          updated_at?: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detected_signals?: Json
+          domain?: string
+          error_message?: string | null
+          fetch_duration_ms?: number | null
+          http_status?: number | null
+          id?: string
+          ip_hash?: string | null
+          recommendations?: Json
+          rendered_via?: string
+          score_global?: number
+          scores_by_family?: Json
+          updated_at?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       magic_links: {
         Row: {
           created_at: string
