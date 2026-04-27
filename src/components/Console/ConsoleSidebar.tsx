@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
-  Shield, Code2, ChevronDown, Search, Sparkles, Database, SlidersHorizontal,
+  Shield, Code2, ChevronDown, Search, Sparkles, Database,
   Plus, Loader2, Check, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -284,7 +284,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     )}>
       {/* Domain selector */}
       {!isMobile && sites.length > 0 && (
-        <div className="px-2 pt-3 pb-1">
+        <div className="px-2 pt-0 pb-1 space-y-1">
           <div className="relative">
             <button
               onClick={() => setSelectorOpen(!selectorOpen)}
@@ -374,6 +374,32 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
               </div>
             )}
           </div>
+
+          {/* View mode toggle — juste sous le sélecteur, sans picto */}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-pressed={advanced}
+            title={advanced ? 'Passer en vue simplifiée' : 'Passer en vue avancée'}
+            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+          >
+            <span className="flex-1 text-left truncate">
+              {advanced ? 'Vue avancée' : 'Vue simplifiée'}
+            </span>
+            <span
+              className={cn(
+                'relative inline-flex h-4 w-7 items-center rounded-full border transition-colors',
+                advanced ? 'border-foreground/70' : 'border-border',
+              )}
+            >
+              <span
+                className={cn(
+                  'inline-block h-2.5 w-2.5 rounded-full bg-foreground transition-transform',
+                  advanced ? 'translate-x-3.5' : 'translate-x-0.5',
+                )}
+              />
+            </span>
+          </button>
         </div>
       )}
 
@@ -412,33 +438,6 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
       {!isMobile && (
         <div className="border-t border-border/40 px-2 py-2 space-y-0.5">
-          {/* View mode toggle — entre Rapports et Pro Agency */}
-          <button
-            type="button"
-            onClick={toggle}
-            aria-pressed={advanced}
-            title={advanced ? 'Passer en vue simplifiée' : 'Passer en vue avancée'}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
-          >
-            <SlidersHorizontal className="h-4 w-4 shrink-0" />
-            <span className="flex-1 text-left truncate">
-              {advanced ? 'Vue avancée' : 'Vue simplifiée'}
-            </span>
-            <span
-              className={cn(
-                'relative inline-flex h-4 w-7 items-center rounded-full border transition-colors',
-                advanced ? 'border-foreground/70' : 'border-border',
-              )}
-            >
-              <span
-                className={cn(
-                  'inline-block h-2.5 w-2.5 rounded-full bg-foreground transition-transform',
-                  advanced ? 'translate-x-3.5' : 'translate-x-0.5',
-                )}
-              />
-            </span>
-          </button>
-
           {bottomItems.map(renderItem)}
 
           <a
