@@ -108,6 +108,7 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
         setError(data.message);
       } else if (data?.stats) {
         setStats(data.stats);
+        setArticles(Array.isArray(data.articles) ? data.articles : []);
       } else {
         setError('Impossible de récupérer les statistiques.');
       }
