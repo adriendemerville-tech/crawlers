@@ -567,24 +567,27 @@ export function ChatWindowUnified({
                   }}
                 />
               }
-              renderComposerExtras={({ appendToDraft }) => (
-                <>
-                  {user?.id && (
-                    <ChatReportSearch
-                      userId={user.id}
-                      onSelect={(report) => {
-                        pushAssistant(
-                          `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
-                        );
-                      }}
+              renderComposerExtras={({ appendToDraft, slot }) => {
+                if (slot === 'inside') {
+                  return (
+                    <ChatMicButton
+                      onTranscript={(text) => appendToDraft(text)}
+                      userDomains={userDomains}
                     />
-                  )}
-                  <ChatMicButton
-                    onTranscript={(text) => appendToDraft(text)}
-                    userDomains={userDomains}
+                  );
+                }
+                // slot === 'leading' : sous le bouton "+", à gauche du textarea
+                return user?.id ? (
+                  <ChatReportSearch
+                    userId={user.id}
+                    onSelect={(report) => {
+                      pushAssistant(
+                        `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
+                      );
+                    }}
                   />
-                </>
-              )}
+                ) : null;
+              }}
               className="h-full"
             />
           </div>

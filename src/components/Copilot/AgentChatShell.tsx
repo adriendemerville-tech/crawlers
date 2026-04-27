@@ -32,12 +32,13 @@ interface AgentChatShellProps {
   initialSessionId?: string | null;
   /** Boutons additionnels affichés à droite du composer (ex: bug report). */
   composerExtras?: React.ReactNode;
-  /** Variante render-prop : reçoit des helpers pour pousser du texte dans le draft (ex: micro). */
+  /** Variante render-prop : reçoit des helpers pour pousser du texte dans le draft (ex: micro). `slot` indique où l'extra est rendu : 'inside' (dans le textarea, pour le micro) ou 'leading' (colonne gauche sous le bouton "+"). */
   renderComposerExtras?: (helpers: {
     appendToDraft: (text: string) => void;
     setDraft: (text: string) => void;
     submitDraft: () => void;
     sending: boolean;
+    slot: 'inside' | 'leading';
   }) => React.ReactNode;
   /** Slot affiché à gauche du textarea (ex: ChatAttachmentPicker). */
   composerLeading?: React.ReactNode;
@@ -255,33 +256,45 @@ export function AgentChatShell({
       </div>
 
       {/* Composer */}
-      <form onSubmit={onSubmit} className="relative border-t border-border p-3">
-        <div className="flex items-end gap-2">
-          {composerLeading}
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder={persona === 'felix' ? 'Une question pour Félix…' : 'Brief stratégique pour le Stratège…'}
-            rows={2}
-            disabled={sending}
-            className="flex-1 resize-none rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground outline-none transition focus:border-foreground/50 disabled:opacity-50"
-          />
-          {renderComposerExtras
-            ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending })
-            : composerExtras}
+      <form onSubmit={onSubmit} className="relative border-t border-border p-2">
+        <div className="flex items-stretch gap-2">
+          {/* Colonne gauche : "+" en haut, ChatReportSearch (et autres extras non-mic) en dessous */}
+          {(composerLeading || renderComposerExtras || composerExtras) && (
+            <div className="flex flex-col items-center justify-end gap-1 shrink-0">
+              {composerLeading}
+              {renderComposerExtras
+                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending, slot: 'leading' })
+                : null}
+            </div>
+          )}
+
+          {/* Champ texte avec micro à l'intérieur */}
+          <div className="relative flex-1">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder={persona === 'felix' ? 'Une question pour Félix…' : 'Brief stratégique pour le Stratège…'}
+              rows={2}
+              disabled={sending}
+              className="w-full resize-none rounded-md border border-border bg-transparent py-2 pl-3 pr-10 text-sm text-foreground outline-none transition focus:border-foreground/50 disabled:opacity-50"
+            />
+            <div className="absolute bottom-1.5 right-1.5">
+              {renderComposerExtras
+                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending, slot: 'inside' })
+                : composerExtras}
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={sending || !draft.trim()}
-            className="inline-flex items-center gap-1.5 rounded-md border border-foreground px-3 py-2 text-sm text-foreground transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center justify-center self-end rounded-md border border-foreground px-3 py-2 text-sm text-foreground transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Envoyer"
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </button>
         </div>
-        <p className="mt-1.5 text-[10px] text-muted-foreground">
-          Entrée pour envoyer · Maj+Entrée pour saut de ligne
-        </p>
       </form>
     </div>
   );
