@@ -425,6 +425,15 @@ IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir 
       throw new Error("AI returned incomplete article data");
     }
 
+    // ─── Safeguard typographique FR : casse phrastique stricte sur title + headings ───
+    const originalTitle = article.title;
+    article.title = toFrenchSentenceCase(article.title);
+    if (article.excerpt) article.excerpt = toFrenchSentenceCase(article.excerpt);
+    article.content = normalizeHtmlHeadings(article.content);
+    if (originalTitle !== article.title) {
+      console.log(`[blog-gen v2] Title-case normalized: "${originalTitle}" → "${article.title}"`);
+    }
+
     // ─── STEP 4: Quality scoring (inspired by expert-audit) ───
     const qualityScore = scoreGeneratedArticle(article.content);
     console.log(`[blog-gen v2] Quality score: ${qualityScore.overall}/100 | heading=${qualityScore.heading_structure} links=${qualityScore.internal_linking} kw=${qualityScore.keyword_density} eeat=${qualityScore.eeat_signals} data=${qualityScore.data_density}`);
