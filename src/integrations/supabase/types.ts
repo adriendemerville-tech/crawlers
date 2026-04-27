@@ -6459,6 +6459,59 @@ export type Database = {
           },
         ]
       }
+      iktracker_slug_memory: {
+        Row: {
+          attempts_count: number
+          blocked_until: string | null
+          domain: string
+          first_seen_at: string
+          hash_content: string | null
+          iktracker_post_id: string | null
+          last_response: Json | null
+          last_seen_at: string
+          reason: string | null
+          slug: string
+          status: string
+          tracked_site_id: string | null
+        }
+        Insert: {
+          attempts_count?: number
+          blocked_until?: string | null
+          domain?: string
+          first_seen_at?: string
+          hash_content?: string | null
+          iktracker_post_id?: string | null
+          last_response?: Json | null
+          last_seen_at?: string
+          reason?: string | null
+          slug: string
+          status: string
+          tracked_site_id?: string | null
+        }
+        Update: {
+          attempts_count?: number
+          blocked_until?: string | null
+          domain?: string
+          first_seen_at?: string
+          hash_content?: string | null
+          iktracker_post_id?: string | null
+          last_response?: Json | null
+          last_seen_at?: string
+          reason?: string | null
+          slug?: string
+          status?: string
+          tracked_site_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iktracker_slug_memory_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       image_style_preferences: {
         Row: {
           created_at: string
