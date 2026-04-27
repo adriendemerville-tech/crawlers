@@ -80,6 +80,14 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
           color: 'from-blue-500 to-indigo-600',
         },
         {
+          icon: ScanLine,
+          title: lang === 'fr' ? 'Machine Layer Scanner' : lang === 'es' ? 'Escáner de Capa Máquina' : 'Machine Layer Scanner',
+          description: lang === 'fr' ? 'Scan gratuit des signaux destinés aux moteurs et aux IA : meta, JSON-LD, robots.txt, llms.txt, headers HTTP. Recommandations rédigées prêtes à coller.' : lang === 'es' ? 'Escaneo gratuito de señales para motores e IA: meta, JSON-LD, robots.txt, llms.txt, encabezados HTTP.' : 'Free scan of signals for engines and AI: meta, JSON-LD, robots.txt, llms.txt, HTTP headers.',
+          href: '/machine-layer-scanner',
+          color: 'from-violet-500 to-fuchsia-600',
+          badge: lang === 'fr' ? 'Gratuit' : lang === 'es' ? 'Gratis' : 'Free',
+        },
+        {
           icon: ShieldCheck,
           title: 'E-E-A-T',
           description: lang === 'fr' ? 'Mesurez Expérience, Expertise, Autorité et Fiabilité — les 4 piliers de confiance Google.' : lang === 'es' ? 'Mida Experiencia, Pericia, Autoridad y Fiabilidad — los 4 pilares de confianza de Google.' : 'Measure Experience, Expertise, Authority & Trust — Google\'s 4 trust pillars.',
