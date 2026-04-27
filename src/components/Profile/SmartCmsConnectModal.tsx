@@ -26,10 +26,22 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { handleWPIntegration } from '@/utils/wpIntegration';
 import { cn } from '@/lib/utils';
+
+// Domains routed to the custom_rest Bearer flow (cms-register-api-key edge fn).
+const CUSTOM_REST_PLATFORMS: Array<{ match: (d: string) => boolean; platform: string; label: string; keyPrefix: string; keyHelpUrl?: string }> = [
+  {
+    match: (d) => d.toLowerCase().includes('dictadevi'),
+    platform: 'dictadevi',
+    label: 'Dictadevi',
+    keyPrefix: 'dk_',
+    keyHelpUrl: 'https://dictadevi.io/admin/blog-api',
+  },
+];
 
 type Lang = 'fr' | 'en' | 'es';
 
