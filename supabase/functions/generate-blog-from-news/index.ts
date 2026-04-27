@@ -5,6 +5,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { callOpenRouter } from '../_shared/openRouterAI.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { toFrenchSentenceCase, normalizeHtmlHeadings } from '../_shared/sentenceCase.ts';
 
 /**
  * Blog Article Generator v2
@@ -352,7 +353,8 @@ IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir 
    - Un <h2> principal
    - 3-4 <h3> pour structurer
    - Des <p>, <strong>, <em>
-3. **Bloc résumé AU DÉBUT :**
+3. **TYPOGRAPHIE FR — CASSE PHRASTIQUE OBLIGATOIRE** : le title, le slug visible, l'excerpt et tous les <h2>/<h3> doivent être en casse phrastique française : majuscule UNIQUEMENT au premier mot et aux noms propres (marques, lieux, sigles). Le "Title Case" anglais (majuscule à chaque mot) est INTERDIT en français — il dégrade le CTR et brouille la reconnaissance d'entités par les LLMs. Correct : "Comment optimiser le budget crawl en 2026". INTERDIT : "Comment Optimiser Le Budget Crawl En 2026".
+4. **Bloc résumé AU DÉBUT :**
 <div class="summary-card">
   <h4>📋 L'essentiel en 30 secondes</h4>
   <ul><li>4 points clés avec AU MOINS 1 chiffre vérifié et 1 mention de 2026</li></ul>
@@ -421,6 +423,15 @@ IMPORTANT : Utilise des ancres descriptives, JAMAIS "cliquez ici" ou "en savoir 
 
     if (!article.title || !article.slug || !article.content) {
       throw new Error("AI returned incomplete article data");
+    }
+
+    // ─── Safeguard typographique FR : casse phrastique stricte sur title + headings ───
+    const originalTitle = article.title;
+    article.title = toFrenchSentenceCase(article.title);
+    if (article.excerpt) article.excerpt = toFrenchSentenceCase(article.excerpt);
+    article.content = normalizeHtmlHeadings(article.content);
+    if (originalTitle !== article.title) {
+      console.log(`[blog-gen v2] Title-case normalized: "${originalTitle}" → "${article.title}"`);
     }
 
     // ─── STEP 4: Quality scoring (inspired by expert-audit) ───
