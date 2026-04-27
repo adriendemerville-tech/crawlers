@@ -104,6 +104,20 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       });
   }, [user]);
 
+  // Liste des onglets cachés en vue simplifiée — doit rester synchro avec advancedOnly ci-dessous.
+  const ADVANCED_ONLY_TABS = [
+    'corrective-codes', 'crawls', 'sea-seo', 'indexation', 'gsc-bigquery',
+    'marina', 'bundle', 'tracking-api',
+  ];
+
+  // Si l'utilisateur passe en vue simplifiée alors qu'il est sur un onglet technique, on le ramène sur SEO.
+  useEffect(() => {
+    if (!advanced && ADVANCED_ONLY_TABS.includes(activeTab)) {
+      onTabChange('tracking');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [advanced]);
+
   const handleSiteChange = (siteId: string | null, domain: string | null) => {
     setSelectedSiteId(siteId);
     onSiteSelect?.(siteId, domain);
