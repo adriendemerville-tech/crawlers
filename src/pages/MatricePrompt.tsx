@@ -346,6 +346,19 @@ export default function MatricePrompt() {
   const processImportedRows = useCallback(async (rawRows: any[], fileName: string, matriceType?: MatriceType, scoringMethod?: ScoringMethodId) => {
     if (rawRows.length === 0) return;
 
+    // ── Pré-détection : fichier benchmark déjà scoré (1 ligne = 1 prompt × N moteurs) ──
+    const headersRaw = Object.keys(rawRows[0] || {});
+    const wide = detectScoredWide(headersRaw);
+    if (wide.detected) {
+      const items = unpivotScoredWide(rawRows, wide);
+      const payload = buildBenchmarkPayloadFromItems(items);
+      setBenchmarkData(payload);
+      setRows([]);
+      setResults(null);
+      toast.success(`${payload.themes.length} prompts × ${payload.engines.length} moteurs importés (scores existants) — "${fileName}"`, { duration: 6000 });
+      return;
+    }
+
     // Use smart defaults based on detected matrice type and scoring method passed at call-site (avoids stale closure)
     const smartDef = matriceType ? getSmartDefaults(matriceType, scoringMethod) : getSmartDefaults('seo');
 
