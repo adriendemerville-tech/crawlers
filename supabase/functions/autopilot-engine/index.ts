@@ -295,7 +295,7 @@ try {
             description: `[${pipelinePhase.toUpperCase()}] ${decision.summary || decision.goal?.description || `Cycle #${cycleNumber}`}`,
             diff_before: decision.tactic?.initial_scope || {},
             diff_after: { execution: executionResults, decision: decision.prudence, errors: phaseErrors },
-            status: config.implementation_mode === 'dry_run' ? 'dry_run' : phaseStatus,
+            status: isDryRunBlocked ? 'dry_run' : phaseStatus,
           });
 
           if (phaseErrors.some(e => e.severity === 'critical')) {
