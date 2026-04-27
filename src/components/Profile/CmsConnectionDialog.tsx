@@ -134,6 +134,7 @@ const translations = {
     webflowToken: 'Token API Webflow',
     wixToken: 'Clave API Wix',
     adminRequired: 'La cuenta utilizada debe tener el rol de Administrador en el CMS para autorizar la conexión API.',
+    adminConsent: 'Confirmo que tengo el rol de Administrador en este CMS.',
   },
 };
 
