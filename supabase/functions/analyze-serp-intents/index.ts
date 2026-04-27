@@ -442,9 +442,9 @@ export default handleRequest(async (req) => {
   const auth = await getAuthenticatedUser(req);
   if (!auth) return jsonError('Unauthorized', 401);
 
-  const parsed = RequestSchema.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) {
-    return jsonError(`Invalid request: ${JSON.stringify(parsed.error.flatten().fieldErrors)}`, 400);
+  const parsed = validateRequest(await req.json().catch(() => ({})));
+  if (!parsed.ok) {
+    return jsonError(`Invalid request: ${parsed.error}`, 400);
   }
   const { keyword, domain, page_url, tracked_site_id, location_name, language_code, force_refresh } = parsed.data;
 
