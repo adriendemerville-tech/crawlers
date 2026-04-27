@@ -263,7 +263,9 @@ class ProfileErrorBoundary extends Component<{ children: ReactNode }, { hasError
 export default function Profile() {
   return (
     <ProfileErrorBoundary>
-      <ProfileContent />
+      <ConsoleViewModeProvider>
+        <ProfileContent />
+      </ConsoleViewModeProvider>
     </ProfileErrorBoundary>
   );
 }
