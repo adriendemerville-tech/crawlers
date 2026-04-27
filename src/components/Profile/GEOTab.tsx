@@ -27,6 +27,7 @@ import { AICrawlActivityCard } from '@/components/Profile/geo/AICrawlActivityCar
 import { AIAttributionCard } from '@/components/Profile/geo/AIAttributionCard';
 import { ShieldOnboardingBanner } from '@/components/Profile/geo/ShieldOnboardingBanner';
 import { Loader2, Sparkles } from 'lucide-react';
+import { MachineLayerCTA } from '@/components/MachineLayer/MachineLayerCTA';
 
 interface GEOTabProps {
   externalSiteId?: string | null;
@@ -144,13 +145,21 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-primary" />
-          {t.title}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">{t.description}</p>
-        <p className="text-xs text-muted-foreground mt-1">{currentSite.domain}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            {t.title}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">{t.description}</p>
+          <p className="text-xs text-muted-foreground mt-1">{currentSite.domain}</p>
+        </div>
+        <MachineLayerCTA
+          domain={currentSite.domain}
+          source="console_geo_header"
+          variant="header-button"
+          className="mt-1 shrink-0"
+        />
       </div>
 
       {/* Onboarding Shield si non déployé */}
