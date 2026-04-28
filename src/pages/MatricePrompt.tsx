@@ -21,7 +21,7 @@ import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 import { detectScoredWide, unpivotScoredWide, buildBenchmarkPayloadFromItems } from '@/utils/matrice/scoredWideUnpivot';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 import ImportStepper, { type MatrixMetadata } from '@/components/Matrice/ImportStepper';
-import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
+import { MatriceCanvas } from '@/components/Matrice/canvas';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
 import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScoringMethod, detectScoringSheet, SCORING_REGISTRY } from '@/utils/matrice/scoringDetector';
@@ -78,6 +78,7 @@ export default function MatricePrompt() {
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<any[] | null>(null);
   const [benchmarkData, setBenchmarkData] = useState<{ results: any[]; themes: string[]; engines: string[]; heatmap: any; globalScore: number; citationRate: number } | null>(null);
+  const [importedFormat, setImportedFormat] = useState<'scored-wide' | 'standard' | null>(null);
   // Dynamic column labels from fuzzy mapping (original header → mapped field)
   const [columnLabels, setColumnLabels] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -353,11 +354,13 @@ export default function MatricePrompt() {
       const items = unpivotScoredWide(rawRows, wide);
       const payload = buildBenchmarkPayloadFromItems(items);
       setBenchmarkData(payload);
+      setImportedFormat('scored-wide');
       setRows([]);
       setResults(null);
       toast.success(`${payload.themes.length} prompts × ${payload.engines.length} moteurs importés (scores existants) — "${fileName}"`, { duration: 6000 });
       return;
     }
+    setImportedFormat('standard');
 
     // Use smart defaults based on detected matrice type and scoring method passed at call-site (avoids stale closure)
     const smartDef = matriceType ? getSmartDefaults(matriceType, scoringMethod) : getSmartDefaults('seo');
@@ -1349,17 +1352,13 @@ export default function MatricePrompt() {
             </div>
           )}
 
-          {/* Benchmark Heatmap (shown when benchmark mode has results) */}
+          {/* Matrice canvas — dispatcher choisit le variant (scored-wide / geo / standard / expert)
+              et expose les 3 sous-vues (Heatmap / Par moteur / Cube 3D). */}
           {benchmarkData && (
             <div className="mb-6 border rounded-lg p-4 bg-card">
-              <h2 className="text-sm font-semibold mb-3 text-foreground">Benchmark Citabilité — Heatmap Thème × Engine</h2>
-              <BenchmarkHeatmap
-                results={benchmarkData.results}
-                themes={benchmarkData.themes}
-                engines={benchmarkData.engines}
-                heatmap={benchmarkData.heatmap}
-                globalScore={benchmarkData.globalScore}
-                citationRate={benchmarkData.citationRate}
+              <MatriceCanvas
+                benchmark={benchmarkData}
+                importedFormat={importedFormat}
               />
             </div>
           )}
