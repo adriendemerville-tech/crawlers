@@ -199,6 +199,7 @@ Deno.serve(handleRequest(async (req) => {
 
       // ── Business model heuristic → injected as context for LLM confirmation/override ──
       const bmDetection = (metadataResult as any)?.businessModelDetection;
+      if (bmDetection) businessModelDetectionRef = { model: bmDetection.model, confidence: bmDetection.confidence, needs_llm_fallback: bmDetection.needs_llm_fallback };
       if (bmDetection) {
         if (bmDetection.model && !bmDetection.needs_llm_fallback) {
           pageContentContext += `\nMODÈLE D'ACTIVITÉ DÉTECTÉ (heuristique HTML, confiance ${bmDetection.confidence}): ${bmDetection.model}. Confirme ou corrige dans business_model.`;
@@ -681,7 +682,7 @@ Réponds en JSON STRICT:
       } catch (wbErr) { console.warn('⚠️ Workbench persistence failed:', wbErr); }
     }
     trackAnalyzedUrl(url).catch(() => {});
-    persistIdentityData(domain, parsedAnalysis, jargonDistance).catch(() => {});
+    persistIdentityData(domain, parsedAnalysis, jargonDistance, businessModelDetectionRef).catch(() => {});
 
     if (jobSb && jobId) await jobSb.from('async_jobs').update({ status: 'completed', result_data: result.data, progress: 100, completed_at: new Date().toISOString() }).eq('id', jobId);
     return json(result);
