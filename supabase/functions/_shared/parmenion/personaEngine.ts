@@ -410,7 +410,7 @@ export function decomposePersonas(siteInfo: Partial<SiteInfo> & { business_model
 export async function loadPersonaRotation(
   supabase: any,
   trackedSiteId: string,
-  siteInfo: Partial<SiteInfo>,
+  siteInfo: Partial<SiteInfo> & { business_model?: string | null },
 ): Promise<Persona[]> {
   const decomposed = decomposePersonas(siteInfo);
 
