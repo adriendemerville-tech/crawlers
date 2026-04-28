@@ -537,6 +537,9 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
               <p className="text-center text-muted-foreground/50 text-sm tracking-widest select-none mt-1">…</p>
             )}
 
+            {/* Business Model — manual override (priority over LLM detection) */}
+            <BusinessModelSelector site={site} onUpdate={onUpdate} />
+
             {/* Enrichir button */}
             <div className="flex justify-end mt-3">
               <Button variant="outline" size="sm" onClick={scrapeSociete} disabled={isScraping} className="text-xs gap-1.5">
