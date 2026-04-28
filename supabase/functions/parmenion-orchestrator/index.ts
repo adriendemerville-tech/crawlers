@@ -80,20 +80,45 @@ try {
       ? (forced_phase as PipelinePhase) 
       : getNextPhase(lastPhase);
 
-    // ═══ SKIP AUDIT: If workbench already has fresh agent-seo findings, skip audit → prescribe ═══
+    // ═══ SKIP AUDIT (TTL 5j) ═══
+    // 1) Si workbench contient des findings agent-seo frais < 5 jours, skip
+    // 2) Sinon, on consulte parmenion_should_skip_phase (TTL + invalidation événementielle)
     if (currentPhase === 'audit') {
+      const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
       const { data: agentSeoItems, error: skipErr } = await supabase
         .from('architect_workbench')
         .select('id, source_function, created_at')
         .eq('domain', domain)
         .eq('source_function', 'agent-seo')
         .in('status', ['pending', 'in_progress'])
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', fiveDaysAgo)
         .limit(1);
-      
+
       if (!skipErr && agentSeoItems && agentSeoItems.length > 0) {
-        console.log(`[Parménion] ⏭️ Skipping audit — ${agentSeoItems.length}+ fresh workbench items from agent-seo found, jumping to prescribe`);
+        console.log(`[Parménion] ⏭️ Skip audit — workbench agent-seo frais (<5j) trouvé`);
         currentPhase = 'prescribe';
+      } else {
+        // Fallback : helper SQL combine TTL + invalidation événementielle
+        const { data: skipDecision } = await supabase
+          .rpc('parmenion_should_skip_phase', { p_domain: domain, p_phase: 'audit' });
+        if (skipDecision && (skipDecision as any).skip === true) {
+          console.log(`[Parménion] ⏭️ Skip audit — ${(skipDecision as any).reason} (last_phase_at=${(skipDecision as any).last_phase_at})`);
+          currentPhase = 'prescribe';
+        } else if (skipDecision) {
+          console.log(`[Parménion] ▶️ Audit requis — ${(skipDecision as any).reason}`);
+        }
+      }
+    }
+
+    // ═══ SKIP DIAGNOSE (TTL 5j + < 3 publi confirmées) ═══
+    if (currentPhase === 'diagnose') {
+      const { data: skipDecision } = await supabase
+        .rpc('parmenion_should_skip_phase', { p_domain: domain, p_phase: 'diagnose' });
+      if (skipDecision && (skipDecision as any).skip === true) {
+        console.log(`[Parménion] ⏭️ Skip diagnose — ${(skipDecision as any).reason} (publi_since=${(skipDecision as any).publi_since})`);
+        currentPhase = 'prescribe';
+      } else if (skipDecision) {
+        console.log(`[Parménion] ▶️ Diagnose requis — ${(skipDecision as any).reason} (publi_since=${(skipDecision as any).publi_since ?? 0})`);
       }
     }
 
@@ -521,6 +546,74 @@ try {
       else if (currentPhase === 'validate') validatedFunctions.push('audit-expert-seo');
     }
     decision.action.functions = validatedFunctions;
+
+    // ═══ VALIDATE CIBLÉ : URLs touchées par défaut, full re-crawl 1 cycle sur 4 ═══
+    if (currentPhase === 'validate') {
+      // Compter les cycles validate déjà exécutés pour ce domaine
+      const { count: prevValidateCount } = await supabase
+        .from('parmenion_decision_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('domain', domain)
+        .eq('pipeline_phase', 'validate')
+        .in('status', ['completed', 'dry_run']);
+
+      const isFullSweep = ((prevValidateCount || 0) % 4) === 3; // tous les 4 validate
+
+      if (isFullSweep) {
+        decision.action.payload = {
+          ...(decision.action.payload || {}),
+          validate_scope: { mode: 'full', reason: 'periodic_full_sweep_every_4', target_urls: null },
+        };
+        console.log(`[Parménion] 🔍 Validate FULL (sweep périodique 1/4) — prev=${prevValidateCount}`);
+      } else {
+        // Récupérer URLs touchées au dernier cycle execute
+        const { data: lastExecute } = await supabase
+          .from('parmenion_decision_log')
+          .select('action_payload, execution_results, created_at')
+          .eq('domain', domain)
+          .eq('pipeline_phase', 'execute')
+          .in('status', ['completed', 'dry_run'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const urls = new Set<string>();
+        const payload = (lastExecute?.action_payload as any) || {};
+        const results = (lastExecute?.execution_results as any) || {};
+
+        // 1) URLs explicitement listées dans action_payload
+        const payloadUrls = payload?.target_urls || payload?.urls || payload?.deployed_urls || [];
+        if (Array.isArray(payloadUrls)) payloadUrls.forEach((u: string) => u && urls.add(u));
+        if (payload?.target_url) urls.add(payload.target_url);
+
+        // 2) URLs publiées trouvées dans execution_results
+        const resultUrls = results?.deployed_urls || results?.published_urls || results?.urls || [];
+        if (Array.isArray(resultUrls)) resultUrls.forEach((u: string) => u && urls.add(u));
+
+        // 3) Filet de sécurité : content_deploy_snapshots vérifiés depuis le dernier execute
+        if (urls.size === 0 && lastExecute?.created_at) {
+          const { data: deployedSince } = await supabase
+            .from('content_deploy_snapshots')
+            .select('page_url')
+            .eq('tracked_site_id', tracked_site_id)
+            .eq('last_verification_status', 'ok')
+            .gte('last_verified_at', lastExecute.created_at)
+            .limit(20);
+          (deployedSince || []).forEach((r: any) => r?.page_url && urls.add(r.page_url));
+        }
+
+        const targetUrls = Array.from(urls).slice(0, 20);
+        decision.action.payload = {
+          ...(decision.action.payload || {}),
+          validate_scope: {
+            mode: targetUrls.length > 0 ? 'targeted' : 'fallback_full',
+            reason: targetUrls.length > 0 ? 'urls_from_last_execute' : 'no_urls_found_fallback',
+            target_urls: targetUrls.length > 0 ? targetUrls : null,
+          },
+        };
+        console.log(`[Parménion] 🔍 Validate ciblé — ${targetUrls.length} URL(s) (prev_validate=${prevValidateCount})`);
+      }
+    }
 
     // ═══ PHASE 5: Persist decision ═══
     const logEntry = {

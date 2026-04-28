@@ -12126,7 +12126,9 @@ export type Database = {
           is_seasonal: boolean | null
           jargon_distance: Json | null
           last_audit_at: string | null
+          last_audit_invalidated_at: string | null
           last_cms_refresh_at: string | null
+          last_cocoon_invalidated_at: string | null
           last_cocoon_refresh_at: string | null
           last_saturation_at: string | null
           last_sov_update: string | null
@@ -12190,7 +12192,9 @@ export type Database = {
           is_seasonal?: boolean | null
           jargon_distance?: Json | null
           last_audit_at?: string | null
+          last_audit_invalidated_at?: string | null
           last_cms_refresh_at?: string | null
+          last_cocoon_invalidated_at?: string | null
           last_cocoon_refresh_at?: string | null
           last_saturation_at?: string | null
           last_sov_update?: string | null
@@ -12254,7 +12258,9 @@ export type Database = {
           is_seasonal?: boolean | null
           jargon_distance?: Json | null
           last_audit_at?: string | null
+          last_audit_invalidated_at?: string | null
           last_cms_refresh_at?: string | null
+          last_cocoon_invalidated_at?: string | null
           last_cocoon_refresh_at?: string | null
           last_saturation_at?: string | null
           last_sov_update?: string | null
@@ -13320,6 +13326,10 @@ export type Database = {
           risk_calibrated: number
           risk_predicted: number
         }[]
+      }
+      parmenion_should_skip_phase: {
+        Args: { p_domain: string; p_phase: string }
+        Returns: Json
       }
       populate_architect_workbench: {
         Args: {
