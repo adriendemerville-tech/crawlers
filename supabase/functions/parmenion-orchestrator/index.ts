@@ -80,20 +80,45 @@ try {
       ? (forced_phase as PipelinePhase) 
       : getNextPhase(lastPhase);
 
-    // ═══ SKIP AUDIT: If workbench already has fresh agent-seo findings, skip audit → prescribe ═══
+    // ═══ SKIP AUDIT (TTL 5j) ═══
+    // 1) Si workbench contient des findings agent-seo frais < 5 jours, skip
+    // 2) Sinon, on consulte parmenion_should_skip_phase (TTL + invalidation événementielle)
     if (currentPhase === 'audit') {
+      const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
       const { data: agentSeoItems, error: skipErr } = await supabase
         .from('architect_workbench')
         .select('id, source_function, created_at')
         .eq('domain', domain)
         .eq('source_function', 'agent-seo')
         .in('status', ['pending', 'in_progress'])
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', fiveDaysAgo)
         .limit(1);
-      
+
       if (!skipErr && agentSeoItems && agentSeoItems.length > 0) {
-        console.log(`[Parménion] ⏭️ Skipping audit — ${agentSeoItems.length}+ fresh workbench items from agent-seo found, jumping to prescribe`);
+        console.log(`[Parménion] ⏭️ Skip audit — workbench agent-seo frais (<5j) trouvé`);
         currentPhase = 'prescribe';
+      } else {
+        // Fallback : helper SQL combine TTL + invalidation événementielle
+        const { data: skipDecision } = await supabase
+          .rpc('parmenion_should_skip_phase', { p_domain: domain, p_phase: 'audit' });
+        if (skipDecision && (skipDecision as any).skip === true) {
+          console.log(`[Parménion] ⏭️ Skip audit — ${(skipDecision as any).reason} (last_phase_at=${(skipDecision as any).last_phase_at})`);
+          currentPhase = 'prescribe';
+        } else if (skipDecision) {
+          console.log(`[Parménion] ▶️ Audit requis — ${(skipDecision as any).reason}`);
+        }
+      }
+    }
+
+    // ═══ SKIP DIAGNOSE (TTL 5j + < 3 publi confirmées) ═══
+    if (currentPhase === 'diagnose') {
+      const { data: skipDecision } = await supabase
+        .rpc('parmenion_should_skip_phase', { p_domain: domain, p_phase: 'diagnose' });
+      if (skipDecision && (skipDecision as any).skip === true) {
+        console.log(`[Parménion] ⏭️ Skip diagnose — ${(skipDecision as any).reason} (publi_since=${(skipDecision as any).publi_since})`);
+        currentPhase = 'prescribe';
+      } else if (skipDecision) {
+        console.log(`[Parménion] ▶️ Diagnose requis — ${(skipDecision as any).reason} (publi_since=${(skipDecision as any).publi_since ?? 0})`);
       }
     }
 
