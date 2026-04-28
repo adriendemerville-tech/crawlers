@@ -192,20 +192,33 @@ export function MatricePreviewCanvas({
       {/* Bouton de pré-analyse sémantique */}
       {!isAnalyzed && (
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAnalyze}
-            disabled={isLoading}
-            className="border-brand-violet"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4 mr-2" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAnalyze}
+              disabled={isLoading}
+              className="border-brand-violet"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
+              )}
+              {isLoading ? 'Compréhension en cours…' : 'Analyser la structure'}
+            </Button>
+            {isLoading && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => classifier.stop()}
+                className="border-destructive text-destructive hover:bg-destructive/10"
+                aria-label="Arrêter l'analyse"
+              >
+                Stop
+              </Button>
             )}
-            {isLoading ? 'Compréhension en cours…' : 'Analyser la structure'}
-          </Button>
+          </div>
 
           {isLoading && (
             <div className="flex-1 max-w-md">
