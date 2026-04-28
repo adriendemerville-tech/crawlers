@@ -4,12 +4,14 @@
 import { trackPaidApiCall } from '../tokenTracker.ts';
 import type { BrandSignal, EEATSignals, CtaSeoSignals } from './types.ts';
 import { DEFAULT_EEAT_SIGNALS, DEFAULT_CTA_SEO_SIGNALS } from './types.ts';
+import { detectBusinessModel, type BusinessModelDetection } from '../businessModelDetector.ts';
 
 export interface PageMetadataResult {
   context: string;
   brandSignals: BrandSignal[];
   eeatSignals: EEATSignals;
   ctaSeoSignals: CtaSeoSignals;
+  businessModelDetection?: BusinessModelDetection;
 }
 
 export async function extractPageMetadata(url: string): Promise<PageMetadataResult> {
@@ -215,7 +217,21 @@ export async function extractPageMetadata(url: string): Promise<PageMetadataResu
       ctaSeoSignals.seoTermsInBalises = balisesText.split(/\s+/).filter(w => w.length > 4);
     }
 
+    // ═══ BUSINESS MODEL DETECTION (heuristics on full HTML, before strip) ═══
+    let businessModelDetection: BusinessModelDetection | undefined;
+    try {
+      // We need the *original* full html, but at this point it has been stripped above.
+      // Re-fetch lightweight signals from the stripped + original captured fragments.
+      // Strategy: feed the body fragment we already had, before the strip overwrote `html`.
+      const htmlForDetection = bodyContent || html;
+      businessModelDetection = detectBusinessModel(htmlForDetection, {});
+      console.log(`🏢 Business model heuristic: ${businessModelDetection.model || 'unknown'} (conf=${businessModelDetection.confidence}, fallback=${businessModelDetection.needs_llm_fallback})`);
+    } catch (bmErr) {
+      console.log('🏢 Business model detection failed:', bmErr instanceof Error ? bmErr.message : bmErr);
+    }
+
     html = '';
+    return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals, businessModelDetection };
   } catch (e) {
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
