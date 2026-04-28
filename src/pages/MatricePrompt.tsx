@@ -21,7 +21,7 @@ import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
 import { detectScoredWide, unpivotScoredWide, buildBenchmarkPayloadFromItems } from '@/utils/matrice/scoredWideUnpivot';
 import { MatriceHelpModal } from '@/components/Matrice/MatriceHelpModal';
 import ImportStepper, { type MatrixMetadata } from '@/components/Matrice/ImportStepper';
-import BenchmarkHeatmap from '@/components/Matrice/BenchmarkHeatmap';
+import { MatriceCanvas } from '@/components/Matrice/canvas';
 import type { MatriceType } from '@/utils/matrice/typeDetector';
 import { getSmartDefaults } from '@/utils/matrice/smartDefaults';
 import { type ScoringMethodId, type ScoringMethod, getScoringConfig, detectScoringMethod, detectScoringSheet, SCORING_REGISTRY } from '@/utils/matrice/scoringDetector';
