@@ -244,13 +244,66 @@ const SECTOR_CROSS_TOPICS: Record<string, string[]> = {
   'juridique': ['réforme justice numérique', 'médiation obligatoire', 'protection données RGPD cabinet', 'IA et droit perspectives', 'cybersécurité cabinet'],
 };
 
+// ─── Business Model affinity ───────────────────────────────────────
+// Maps each business_model enum to the personas that make sense.
+// If a model has no entry, no filtering is applied (backward compatible).
+const BUSINESS_MODEL_PERSONAS: Record<string, string[]> = {
+  saas_b2b: ['entrepreneur', 'profession_liberale', 'avocat'],
+  saas_b2c: ['independant', 'profession_liberale'],
+  marketplace_b2b: ['entrepreneur', 'artisan', 'commercant', 'vrp'],
+  marketplace_b2c: ['independant', 'commercant'],
+  marketplace_b2b2c: ['entrepreneur', 'artisan', 'commercant', 'agent_immobilier', 'independant'],
+  ecommerce_b2c: ['independant', 'commercant'],
+  ecommerce_b2b: ['entrepreneur', 'artisan', 'commercant'],
+  media_publisher: ['independant', 'entrepreneur', 'profession_liberale'],
+  service_local: ['artisan', 'commercant', 'agent_immobilier', 'kinesitherapeute', 'infirmier', 'sage_femme'],
+  service_agency: ['entrepreneur', 'profession_liberale', 'avocat'],
+  leadgen: ['entrepreneur', 'agent_immobilier', 'avocat', 'profession_liberale'],
+  nonprofit: [],
+};
+
+/**
+ * Tone & jargon directives by business_model — injected into Parménion prompts
+ * to align voice with the audience the model implies.
+ */
+export function getBusinessModelTone(businessModel?: string | null): {
+  tone: string;
+  jargonLevel: 'pro_specialise' | 'pro_generaliste' | 'grand_public';
+  ctaStyle: string;
+} {
+  const m = (businessModel || '').toLowerCase();
+  if (m === 'saas_b2b' || m === 'service_agency' || m === 'leadgen') {
+    return { tone: 'expert / décisionnel', jargonLevel: 'pro_specialise', ctaStyle: 'demo / devis / RDV' };
+  }
+  if (m === 'marketplace_b2b' || m === 'ecommerce_b2b') {
+    return { tone: 'opérationnel B2B', jargonLevel: 'pro_specialise', ctaStyle: 'compte pro / catalogue' };
+  }
+  if (m === 'marketplace_b2b2c') {
+    return { tone: 'double face vendeur+acheteur', jargonLevel: 'pro_generaliste', ctaStyle: 'inscription vendeur ou achat' };
+  }
+  if (m === 'saas_b2c' || m === 'ecommerce_b2c' || m === 'marketplace_b2c') {
+    return { tone: 'accessible grand public', jargonLevel: 'grand_public', ctaStyle: 'essai gratuit / achat' };
+  }
+  if (m === 'media_publisher') {
+    return { tone: 'éditorial journalistique', jargonLevel: 'pro_generaliste', ctaStyle: 'newsletter / abonnement' };
+  }
+  if (m === 'service_local') {
+    return { tone: 'proximité de confiance', jargonLevel: 'grand_public', ctaStyle: 'appel / RDV / devis' };
+  }
+  if (m === 'nonprofit') {
+    return { tone: 'engagé / mission', jargonLevel: 'pro_generaliste', ctaStyle: 'don / adhésion / bénévolat' };
+  }
+  return { tone: 'neutre professionnel', jargonLevel: 'pro_generaliste', ctaStyle: 'contact / devis' };
+}
+
 // ─── Core logic ────────────────────────────────────────────────────
 
 /**
  * Decompose target_audience + client_targets into a list of Persona objects.
  * Pure function — no DB calls.
+ * If `business_model` is provided, restricts personas to those compatible.
  */
-export function decomposePersonas(siteInfo: Partial<SiteInfo>): Persona[] {
+export function decomposePersonas(siteInfo: Partial<SiteInfo> & { business_model?: string | null }): Persona[] {
   const audience = (siteInfo.target_audience || '').toLowerCase();
   const sector = (siteInfo.market_sector || '').toLowerCase();
   const clientTargets = siteInfo.client_targets;
@@ -327,8 +380,18 @@ export function decomposePersonas(siteInfo: Partial<SiteInfo>): Persona[] {
     }
   }
 
-  // 6. Build final Persona list
-  return [...matchedKeys].map(key => {
+  // 6. Filter by business_model affinity (if set and registry has an entry)
+  const businessModel = (siteInfo.business_model || '').toLowerCase();
+  const allowedForModel = BUSINESS_MODEL_PERSONAS[businessModel];
+  let finalKeys = [...matchedKeys];
+  if (Array.isArray(allowedForModel) && allowedForModel.length > 0) {
+    const filtered = finalKeys.filter(k => allowedForModel.includes(k));
+    // Only apply filter if it leaves at least one persona, otherwise keep originals
+    if (filtered.length > 0) finalKeys = filtered;
+  }
+
+  // 7. Build final Persona list
+  return finalKeys.map(key => {
     const base = PERSONA_REGISTRY[key];
     if (!base) return null;
     return {
@@ -347,7 +410,7 @@ export function decomposePersonas(siteInfo: Partial<SiteInfo>): Persona[] {
 export async function loadPersonaRotation(
   supabase: any,
   trackedSiteId: string,
-  siteInfo: Partial<SiteInfo>,
+  siteInfo: Partial<SiteInfo> & { business_model?: string | null },
 ): Promise<Persona[]> {
   const decomposed = decomposePersonas(siteInfo);
 
@@ -418,16 +481,22 @@ export async function recordPersonaServed(
  * Build the prompt block injected into Parménion's content prompt.
  * This is the "Rédacteur en Chef — Stratégie Persona" block.
  */
-export function buildPersonaPromptBlock(personas: Persona[], siteName: string): string {
+export function buildPersonaPromptBlock(personas: Persona[], siteName: string, businessModel?: string | null): string {
   if (personas.length === 0) return '';
 
   const nextPersona = personas[0]; // least-served
   const neverServed = personas.filter(p => !p.last_served_at);
   const leastServed = personas.filter(p => p.articles_count === 0);
+  const tone = getBusinessModelTone(businessModel);
 
   const lines: string[] = [];
   lines.push(`\n═══ RÉDACTEUR EN CHEF — STRATÉGIE PERSONA ═══`);
-  lines.push(`${siteName} s'adresse à ${personas.length} personas distinctes. Chaque cycle de contenu DOIT cibler une persona DIFFÉRENTE du cycle précédent.\n`);
+  lines.push(`${siteName} s'adresse à ${personas.length} personas distinctes. Chaque cycle de contenu DOIT cibler une persona DIFFÉRENTE du cycle précédent.`);
+  if (businessModel) {
+    lines.push(`Modèle économique : ${businessModel} → ton "${tone.tone}", jargon "${tone.jargonLevel}", CTA "${tone.ctaStyle}".\n`);
+  } else {
+    lines.push('');
+  }
 
   // Persona map
   lines.push(`PERSONAS IDENTIFIÉES :`);

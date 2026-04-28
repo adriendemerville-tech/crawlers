@@ -199,7 +199,7 @@ export async function persistIdentityData(
         .ilike('domain', `%${domain}%`)
         .limit(1)
         .maybeSingle();
-      const isManual = existing?.business_model_source === 'manual';
+      const isManual = existing?.business_model_source === 'manual' || existing?.business_model_source === 'user_manual';
       if (!isManual) {
         updatePayload.business_model = bmModel;
         updatePayload.business_model_confidence = bmConfidence;

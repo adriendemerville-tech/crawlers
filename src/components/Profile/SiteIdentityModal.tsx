@@ -225,6 +225,97 @@ function EditableKeyword({ value, onChange }: { value: string; onChange: (v: str
 }
 
 
+// ─── Business Model selector ──────────────────────────────────────
+const BUSINESS_MODELS: Array<{ value: string; label: string; group: string }> = [
+  { value: 'saas_b2b', label: 'SaaS B2B', group: 'SaaS' },
+  { value: 'saas_b2c', label: 'SaaS B2C', group: 'SaaS' },
+  { value: 'marketplace_b2b', label: 'Marketplace B2B', group: 'Marketplace' },
+  { value: 'marketplace_b2c', label: 'Marketplace B2C', group: 'Marketplace' },
+  { value: 'marketplace_b2b2c', label: 'Marketplace B2B2C', group: 'Marketplace' },
+  { value: 'ecommerce_b2c', label: 'E-commerce B2C', group: 'E-commerce' },
+  { value: 'ecommerce_b2b', label: 'E-commerce B2B', group: 'E-commerce' },
+  { value: 'media_publisher', label: 'Média / Éditeur', group: 'Média' },
+  { value: 'service_local', label: 'Service local', group: 'Service' },
+  { value: 'service_agency', label: 'Agence de service', group: 'Service' },
+  { value: 'leadgen', label: 'Lead generation', group: 'Service' },
+  { value: 'nonprofit', label: 'Non marchand', group: 'Autre' },
+];
+
+function BusinessModelSelector({ site, onUpdate }: { site: Record<string, any>; onUpdate?: () => void }) {
+  const current = site.business_model as string | null;
+  const source = site.business_model_source as string | null;
+  const confidence = site.business_model_confidence as number | null;
+  const [saving, setSaving] = useState(false);
+
+  const handleSelect = async (value: string) => {
+    setSaving(true);
+    try {
+      await supabase
+        .from('tracked_sites')
+        .update({
+          business_model: value as any,
+          business_model_source: 'user_manual',
+          business_model_confidence: 1.0,
+          business_model_detected_at: new Date().toISOString(),
+        } as any)
+        .eq('id', site.id);
+      site.business_model = value;
+      site.business_model_source = 'user_manual';
+      site.business_model_confidence = 1.0;
+      toast.success('Modèle économique enregistré');
+      onUpdate?.();
+    } catch (e) {
+      console.warn('Failed to save business_model:', e);
+      toast.error('Échec de la mise à jour');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const sourceLabel = source === 'user_manual'
+    ? 'Confirmé manuellement'
+    : source === 'llm'
+      ? `Détecté par IA (confiance ${Math.round((confidence || 0) * 100)}%)`
+      : source === 'heuristic'
+        ? `Détecté par signaux (confiance ${Math.round((confidence || 0) * 100)}%)`
+        : 'Non détecté';
+
+  return (
+    <div className="pt-3 mt-2 border-t border-border/30 space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Modèle économique</p>
+        <span className={`text-[10px] ${source === 'user_manual' ? 'text-emerald-500' : 'text-muted-foreground/60'}`}>
+          {sourceLabel}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {BUSINESS_MODELS.map((m) => {
+          const selected = current === m.value;
+          return (
+            <button
+              key={m.value}
+              disabled={saving}
+              onClick={() => handleSelect(m.value)}
+              className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                selected
+                  ? 'border-primary/60 bg-primary/10 text-foreground font-medium'
+                  : 'border-border/40 text-muted-foreground hover:border-border'
+              } disabled:opacity-50`}
+              title={m.group}
+            >
+              {m.label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[10px] text-muted-foreground/60">
+        La sélection manuelle prévaut sur la détection automatique et alimente Parménion (CTA, ton, personas).
+      </p>
+    </div>
+  );
+}
+
+
 type ModalView = 'attributes' | 'instructions';
 type VoiceStep = 'idle' | 'recording' | 'processing' | 'summary' | 'confirming' | 'done';
 
@@ -536,6 +627,9 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
             {hasHiddenEmpty && (
               <p className="text-center text-muted-foreground/50 text-sm tracking-widest select-none mt-1">…</p>
             )}
+
+            {/* Business Model — manual override (priority over LLM detection) */}
+            <BusinessModelSelector site={site} onUpdate={onUpdate} />
 
             {/* Enrichir button */}
             <div className="flex justify-end mt-3">
