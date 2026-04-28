@@ -78,6 +78,7 @@ export default function MatricePrompt() {
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<any[] | null>(null);
   const [benchmarkData, setBenchmarkData] = useState<{ results: any[]; themes: string[]; engines: string[]; heatmap: any; globalScore: number; citationRate: number } | null>(null);
+  const [importedFormat, setImportedFormat] = useState<'scored-wide' | 'standard' | null>(null);
   // Dynamic column labels from fuzzy mapping (original header → mapped field)
   const [columnLabels, setColumnLabels] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -353,11 +354,13 @@ export default function MatricePrompt() {
       const items = unpivotScoredWide(rawRows, wide);
       const payload = buildBenchmarkPayloadFromItems(items);
       setBenchmarkData(payload);
+      setImportedFormat('scored-wide');
       setRows([]);
       setResults(null);
       toast.success(`${payload.themes.length} prompts × ${payload.engines.length} moteurs importés (scores existants) — "${fileName}"`, { duration: 6000 });
       return;
     }
+    setImportedFormat('standard');
 
     // Use smart defaults based on detected matrice type and scoring method passed at call-site (avoids stale closure)
     const smartDef = matriceType ? getSmartDefaults(matriceType, scoringMethod) : getSmartDefaults('seo');
