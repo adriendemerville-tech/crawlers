@@ -54,6 +54,7 @@ export type IdentitySource =
   | 'agent_seo'      // SEO agent
   | 'marina'         // Marina pipeline
   | 'matrix'         // Matrice d'audit
+  | 'extension'      // Crawlers Chrome extension
   | 'system'         // System/migration
 
 export interface IdentityWriteRequest {
