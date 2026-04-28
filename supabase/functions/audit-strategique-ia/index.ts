@@ -144,6 +144,7 @@ Deno.serve(handleRequest(async (req) => {
     let preCrawlResult: PreCrawlResult | null = null;
     let siteIdentityCtx: Record<string, unknown> | null = null;
     let trackedSiteIdForCrawl: string | null = null;
+    let businessModelDetectionRef: { model: string | null; confidence: number; needs_llm_fallback: boolean } | null = null;
 
     if (useCache) {
       console.log('⚡ SMART CACHE: Using cached context — skipping all data collection');
