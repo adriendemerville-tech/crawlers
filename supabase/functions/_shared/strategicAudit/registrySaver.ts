@@ -141,9 +141,14 @@ export async function feedKeywordUniverse(authHeader: string, domain: string, pa
   } catch (kwErr) { console.warn('[audit-strategique-ia] keyword_universe upsert failed:', kwErr); }
 }
 
-/** Normalize and persist client_targets + jargon_distance to identity card */
-export async function persistIdentityData(domain: string, parsedAnalysis: any, jargonDistance: any): Promise<void> {
-  if (!domain || (!parsedAnalysis?.client_targets && !jargonDistance)) return;
+/** Normalize and persist client_targets + jargon_distance + business_model to identity card */
+export async function persistIdentityData(
+  domain: string,
+  parsedAnalysis: any,
+  jargonDistance: any,
+  businessModelDetection?: { model: string | null; confidence: number; needs_llm_fallback: boolean } | null,
+): Promise<void> {
+  if (!domain || (!parsedAnalysis?.client_targets && !jargonDistance && !businessModelDetection && !parsedAnalysis?.business_model)) return;
   try {
     const svcSb = getServiceClient();
     const updatePayload: Record<string, any> = {};
@@ -160,7 +165,55 @@ export async function persistIdentityData(domain: string, parsedAnalysis: any, j
       console.log(`[audit-strategique-ia] client_targets normalized: P=${normalized.primary.length} S=${normalized.secondary.length} U=${normalized.untapped.length}`);
     }
     if (jargonDistance) updatePayload.jargon_distance = jargonDistance;
-    await svcSb.from('tracked_sites').update(updatePayload).ilike('domain', `%${domain}%`);
-    console.log(`[audit-strategique-ia] client_targets + jargon_distance persisted for ${domain}`);
+
+    // ── Business model: priority manual (already in DB) > LLM > heuristic ──
+    const ALLOWED = new Set([
+      'saas_b2b','saas_b2c','marketplace_b2b','marketplace_b2c','marketplace_b2b2c',
+      'ecommerce_b2c','ecommerce_b2b','media_publisher','service_local','service_agency',
+      'leadgen','nonprofit',
+    ]);
+    let bmModel: string | null = null;
+    let bmConfidence = 0;
+    let bmSource: 'heuristic' | 'llm' | null = null;
+
+    // Heuristic baseline
+    if (businessModelDetection?.model && ALLOWED.has(businessModelDetection.model)) {
+      bmModel = businessModelDetection.model;
+      bmConfidence = Math.max(0, Math.min(1, Number(businessModelDetection.confidence || 0)));
+      bmSource = 'heuristic';
+    }
+    // LLM override (only if heuristic confidence was insufficient OR LLM is more confident)
+    const llmModel = parsedAnalysis?.business_model?.model;
+    const llmConf = Number(parsedAnalysis?.business_model?.confidence ?? 0);
+    if (llmModel && ALLOWED.has(llmModel) && (bmConfidence < 0.7 || llmConf > bmConfidence)) {
+      bmModel = llmModel;
+      bmConfidence = Math.max(0, Math.min(1, llmConf || 0.6));
+      bmSource = 'llm';
+    }
+
+    if (bmModel && bmSource) {
+      // Don't overwrite a manual value
+      const { data: existing } = await svcSb
+        .from('tracked_sites')
+        .select('business_model, business_model_source')
+        .ilike('domain', `%${domain}%`)
+        .limit(1)
+        .maybeSingle();
+      const isManual = existing?.business_model_source === 'manual';
+      if (!isManual) {
+        updatePayload.business_model = bmModel;
+        updatePayload.business_model_confidence = bmConfidence;
+        updatePayload.business_model_source = bmSource;
+        updatePayload.business_model_detected_at = new Date().toISOString();
+        console.log(`[audit-strategique-ia] business_model=${bmModel} (${bmSource}, conf=${bmConfidence})`);
+      } else {
+        console.log(`[audit-strategique-ia] business_model preserved (manual override in DB)`);
+      }
+    }
+
+    if (Object.keys(updatePayload).length > 0) {
+      await svcSb.from('tracked_sites').update(updatePayload).ilike('domain', `%${domain}%`);
+      console.log(`[audit-strategique-ia] identity persisted for ${domain}: keys=${Object.keys(updatePayload).join(',')}`);
+    }
   } catch (e) { console.warn('[audit-strategique-ia] Failed to persist identity data:', e); }
 }
