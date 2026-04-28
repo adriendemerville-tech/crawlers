@@ -1692,7 +1692,7 @@ ${templateBlock}`;
 
   // ── PERSONA ROTATION: record which persona was served ──
   try {
-    const personas = await loadPersonaRotation(supabase, context.tracked_site_id, context.siteInfo || {});
+    const personas = await loadPersonaRotation(supabase, context.tracked_site_id, { ...(context.siteInfo || {}), business_model: (context.siteInfo as any)?.business_model || null });
     if (personas.length > 0 && cmsActions.some(a => a._channel === 'content_editorial')) {
       const nextPersona = personas[0];
       await recordPersonaServed(supabase, context.tracked_site_id, context.user_id, nextPersona.key, context.cycleNumber || 0);
