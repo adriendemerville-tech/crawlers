@@ -723,6 +723,8 @@ export interface BuildContentBriefInput {
   jargon_distance?: number | null;
   language?: string;
   secondary_keywords?: string[];
+  /** Modèle d'activité du site (depuis tracked_sites.business_model) */
+  business_model?: SiteBusinessModelLite | null;
   // Voice DNA from tracked_sites
   voice_dna?: any;
   // Supabase client for internal links resolution
@@ -735,6 +737,7 @@ export async function buildContentBrief(input: BuildContentBriefInput): Promise<
     title = '', finding_category = '', sector = '',
     jargon_distance = null, language = 'fr',
     secondary_keywords = [],
+    business_model = null,
   } = input;
 
   const config = PAGE_TYPE_CONFIGS[page_type] || PAGE_TYPE_CONFIGS.article;
@@ -745,8 +748,8 @@ export async function buildContentBrief(input: BuildContentBriefInput): Promise<
   // Detect angle from keyword + context
   const angle = detectAngle(page_type, keyword, title, finding_category);
 
-  // Detect CTA
-  const ctaType = detectCTA(page_type, sector, keyword);
+  // Detect CTA — business_model takes priority over heuristics
+  const ctaType = detectCTA(page_type, sector, keyword, business_model);
 
   // E-E-A-T signals
   const eeatSignals = resolveEEATSignals(page_type, sector);
