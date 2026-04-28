@@ -1265,7 +1265,7 @@ RÈGLES:
     
     // ── PERSONA DECOMPOSITION: strategic pre-processing ──
     try {
-      const personas = await loadPersonaRotation(supabase, context.tracked_site_id, context.siteInfo || {});
+      const personas = await loadPersonaRotation(supabase, context.tracked_site_id, { ...(context.siteInfo || {}), business_model: (context.siteInfo as any)?.business_model || null });
       if (personas.length > 0) {
         personaBlock = buildPersonaPromptBlock(personas, context.siteInfo?.site_name || context.domain);
         console.log(`[Parménion] 🎭 Persona engine: ${personas.length} personas, next="${personas[0].label}" (${personas[0].articles_count} articles, last=${personas[0].last_served_at || 'never'})`);
