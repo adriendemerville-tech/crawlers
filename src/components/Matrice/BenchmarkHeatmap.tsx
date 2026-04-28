@@ -30,17 +30,15 @@ interface Props {
 }
 
 /* ── Score color utility (charte: violet / gold / muted, pas de bleu IA) ──── */
-
+/* Palette inspirée de la capture source : vert clair (bon score), jaune (moyen),
+   rose pâle (faible / non cité), gris (absence de donnée). Texte toujours noir
+   pour la lisibilité sur fonds clairs. */
 function getHeatColor(score: number, cited: boolean): string {
-  if (score < 0) return 'bg-muted/30 text-muted-foreground';
-  // Cited tiers: gold scale (best) → violet (mid) → muted (low)
-  if (cited && score >= 70) return 'bg-brand-gold/25 text-brand-gold border-brand-gold/50';
-  if (cited && score >= 40) return 'bg-brand-gold/15 text-brand-gold/90 border-brand-gold/30';
-  if (cited) return 'bg-brand-violet/20 text-brand-violet border-brand-violet/40';
-  // Not cited: violet faded → muted
-  if (score >= 70) return 'bg-brand-violet/15 text-brand-violet/80 border-brand-violet/25';
-  if (score >= 40) return 'bg-muted/40 text-muted-foreground border-border';
-  return 'bg-muted/20 text-muted-foreground/70 border-border/50';
+  if (score < 0) return 'bg-muted/30 text-muted-foreground border-border';
+  if (score >= 70) return 'bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-200/80 dark:text-emerald-950';
+  if (score >= 40) return 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-200/80 dark:text-amber-950';
+  if (cited) return 'bg-rose-100 text-rose-950 border-rose-300 dark:bg-rose-200/80 dark:text-rose-950';
+  return 'bg-rose-50 text-rose-900 border-rose-200 dark:bg-rose-100/70 dark:text-rose-950';
 }
 
 function CitationGlyph({ cited, rank }: { cited: boolean; rank: number | null }) {
@@ -49,7 +47,7 @@ function CitationGlyph({ cited, rank }: { cited: boolean; rank: number | null })
   if (rank === 2) return <Medal className="h-3 w-3 inline text-brand-gold/80" aria-label="Rang 2" />;
   if (rank === 3) return <Award className="h-3 w-3 inline text-brand-gold/60" aria-label="Rang 3" />;
   if (rank != null) return <span className="font-mono text-[10px]">#{rank}</span>;
-  return <Check className="h-3 w-3 inline text-brand-violet" aria-label="Cité" />;
+  return <Check className="h-3 w-3 inline text-emerald-700" aria-label="Cité" />;
 }
 
 /* ── Engine color map (charte: violet/gold scale only, pas de bleu IA) ──── */
@@ -298,25 +296,37 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
                         <td key={engine} className="text-center px-1 py-1">
                           <HoverCard openDelay={200}>
                             <HoverCardTrigger asChild>
-                              <button className={`inline-flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-md border transition-colors w-full ${getHeatColor(cell.score, cell.cited)}`}>
-                                <span className="font-bold text-sm">{cell.score}</span>
-                                <span className="text-[10px] opacity-80"><CitationGlyph cited={cell.cited} rank={cell.rank} /></span>
+                              <button className={`inline-flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-md border transition-colors w-full ${getHeatColor(cell.score, cell.cited)}`}>
+                                <span className="font-bold text-base leading-tight">{cell.score}</span>
+                                <span className="text-[10px] opacity-90 flex items-center gap-1">
+                                  {cell.cited ? (
+                                    <>
+                                      <Check className="h-3 w-3" />
+                                      <span>{cell.rank ? `rang ${cell.rank}` : 'cité'}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="h-3 w-3" />
+                                      <span>non cité</span>
+                                    </>
+                                  )}
+                                </span>
                               </button>
                             </HoverCardTrigger>
-                            <HoverCardContent side="top" className="w-72 text-xs">
+                            <HoverCardContent side="top" className="w-80 text-xs">
                               <p className="font-semibold mb-1">{theme} × {engine}</p>
-                              <p className="text-muted-foreground">Score: {cell.score}/100</p>
+                              <p className="text-muted-foreground">Score : {cell.score}/100</p>
                               <p className="text-muted-foreground">
-                                Citation: {cell.cited ? `Oui (rang ${cell.rank || '?'})` : 'Non détectée'}
+                                Citation : {cell.cited ? `Oui (rang ${cell.rank || '?'})` : 'Non détectée'}
                               </p>
                               {matchResult?.citation_context && (
-                                <p className="text-muted-foreground mt-1 italic">
-                                  « {matchResult.citation_context.substring(0, 150)} »
+                                <p className="mt-2 italic border-t pt-2 whitespace-pre-wrap">
+                                  « {matchResult.citation_context} »
                                 </p>
                               )}
-                              {matchResult?.raw_data?.engine_response_preview && (
+                              {matchResult?.raw_data?.engine_response_preview && matchResult.raw_data.engine_response_preview !== matchResult.citation_context && (
                                 <p className="text-muted-foreground/60 mt-1 text-[10px]">
-                                  {matchResult.raw_data.engine_response_preview.substring(0, 200)}…
+                                  {String(matchResult.raw_data.engine_response_preview).substring(0, 200)}…
                                 </p>
                               )}
                             </HoverCardContent>
@@ -335,19 +345,16 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
       {/* Legend */}
       <div className="flex items-center gap-4 text-[10px] text-muted-foreground flex-wrap">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-brand-gold/25 border border-brand-gold/50" /> Cité + bon score
+          <span className="w-3 h-3 rounded bg-emerald-100 border border-emerald-300" /> Bon score (≥70)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-brand-gold/15 border border-brand-gold/30" /> Cité + score moyen
+          <span className="w-3 h-3 rounded bg-amber-100 border border-amber-300" /> Score moyen (40-69)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-brand-violet/15 border border-brand-violet/25" /> Non cité + bon score
+          <span className="w-3 h-3 rounded bg-rose-100 border border-rose-300" /> Faible / non cité (&lt;40)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-muted/20 border border-border/50" /> Non cité + faible score
-        </span>
-        <span className="flex items-center gap-1">
-          <Trophy className="h-3 w-3 text-brand-gold" /> Rang 1 · <Check className="h-3 w-3 text-brand-violet" /> Cité · <X className="h-3 w-3" /> Absent
+          <Trophy className="h-3 w-3 text-brand-gold" /> Rang 1 · <Check className="h-3 w-3 text-emerald-700" /> Cité · <X className="h-3 w-3" /> Absent
         </span>
       </div>
     </div>

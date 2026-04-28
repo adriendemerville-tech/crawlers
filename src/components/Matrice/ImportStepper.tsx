@@ -7,6 +7,7 @@ import { FileSpreadsheet, Search, Trash2, CheckCircle2, ArrowRight, ArrowLeft, L
 import { detectMatriceType, type MatriceType, type DetectionResult } from '@/utils/matrice/typeDetector';
 import { cleanImportedData, type CleaningResult } from '@/utils/matrice/columnCleaner';
 import { sanitizeAllPrompts } from '@/utils/matrice/promptSanitizer';
+import { detectScoredWide } from '@/utils/matrice/scoredWideUnpivot';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
@@ -328,7 +329,22 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
         console.log(`[ImportStepper] Identity card: ${Object.keys(card.variables).length} vars, brand="${card.brandName}", url="${card.brandUrl}"`);
       }
 
-      const result = cleanImportedData(h, dataRows);
+      // ── Bypass cleaning if file is a "scored-wide" benchmark ────────
+      // (sinon les colonnes _Score_Citabilite / _Mentionne / _Cite seraient supprimées
+      //  et la heatmap n'aurait plus de quoi se nourrir).
+      const wideDet = detectScoredWide(h);
+      let result: CleaningResult;
+      if (wideDet.detected) {
+        console.log('[ImportStepper] Scored-wide détecté → bypass cleaning :', wideDet.reason);
+        result = {
+          cleanedRows: dataRows,
+          removedColumns: [],
+          keptColumns: h,
+          stats: { originalColumns: h.length, removedColumns: 0, keptColumns: h.length, originalRows: dataRows.length, cleanedRows: dataRows.length },
+        };
+      } else {
+        result = cleanImportedData(h, dataRows);
+      }
 
       // Sanitize prompts: replace hardcoded URLs/brand names with placeholders
       result.cleanedRows = sanitizeAllPrompts(result.cleanedRows, card ?? undefined);
