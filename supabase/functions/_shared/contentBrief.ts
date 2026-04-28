@@ -549,9 +549,54 @@ function detectAngle(
 
 // ═══ CTA DETECTION ═══
 
-function detectCTA(pageType: PageType, sector: string, keyword: string): CTAType {
+export type SiteBusinessModelLite =
+  | 'saas_b2b' | 'saas_b2c'
+  | 'marketplace_b2b' | 'marketplace_b2c' | 'marketplace_b2b2c'
+  | 'ecommerce_b2c' | 'ecommerce_b2b'
+  | 'media_publisher' | 'service_local' | 'service_agency'
+  | 'leadgen' | 'nonprofit';
+
+function detectCTA(
+  pageType: PageType,
+  sector: string,
+  keyword: string,
+  businessModel?: SiteBusinessModelLite | null,
+): CTAType {
   const combined = `${sector} ${keyword}`.toLowerCase();
-  
+
+  // ── Business model takes priority over heuristics ──
+  if (businessModel) {
+    if (pageType === 'product' || pageType === 'landing') {
+      switch (businessModel) {
+        case 'saas_b2b':         return 'demo-request';
+        case 'saas_b2c':         return 'free-trial';
+        case 'marketplace_b2b':
+        case 'marketplace_b2c':
+        case 'marketplace_b2b2c': return 'browse-catalog' as CTAType;
+        case 'ecommerce_b2c':    return 'buy-now';
+        case 'ecommerce_b2b':    return 'quote-request';
+        case 'service_local':    return 'book-appointment' as CTAType;
+        case 'service_agency':   return 'contact-form';
+        case 'leadgen':          return 'download';
+        case 'media_publisher':  return 'newsletter';
+        case 'nonprofit':        return 'donate' as CTAType;
+      }
+    }
+    if (pageType === 'article') {
+      switch (businessModel) {
+        case 'saas_b2b':         return 'demo-request';
+        case 'saas_b2c':         return 'free-trial';
+        case 'leadgen':          return 'download';
+        case 'media_publisher':  return 'newsletter';
+        case 'nonprofit':        return 'donate' as CTAType;
+        case 'ecommerce_b2c':
+        case 'ecommerce_b2b':    return 'browse-catalog' as CTAType;
+        default:                 return 'newsletter';
+      }
+    }
+  }
+
+  // ── Legacy fallback ──
   if (pageType === 'product') {
     if (combined.match(/saas|logiciel|outil|plateforme/)) return 'free-trial';
     return 'buy-now';
@@ -565,7 +610,7 @@ function detectCTA(pageType: PageType, sector: string, keyword: string): CTAType
     if (combined.match(/guide|ebook|livre blanc|checklist/)) return 'download';
     return 'newsletter';
   }
-  
+
   return PAGE_TYPE_CONFIGS[pageType]?.default_cta || 'contact-form';
 }
 
