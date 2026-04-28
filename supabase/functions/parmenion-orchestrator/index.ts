@@ -547,6 +547,74 @@ try {
     }
     decision.action.functions = validatedFunctions;
 
+    // ═══ VALIDATE CIBLÉ : URLs touchées par défaut, full re-crawl 1 cycle sur 4 ═══
+    if (currentPhase === 'validate') {
+      // Compter les cycles validate déjà exécutés pour ce domaine
+      const { count: prevValidateCount } = await supabase
+        .from('parmenion_decision_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('domain', domain)
+        .eq('pipeline_phase', 'validate')
+        .in('status', ['completed', 'dry_run']);
+
+      const isFullSweep = ((prevValidateCount || 0) % 4) === 3; // tous les 4 validate
+
+      if (isFullSweep) {
+        decision.action.payload = {
+          ...(decision.action.payload || {}),
+          validate_scope: { mode: 'full', reason: 'periodic_full_sweep_every_4', target_urls: null },
+        };
+        console.log(`[Parménion] 🔍 Validate FULL (sweep périodique 1/4) — prev=${prevValidateCount}`);
+      } else {
+        // Récupérer URLs touchées au dernier cycle execute
+        const { data: lastExecute } = await supabase
+          .from('parmenion_decision_log')
+          .select('action_payload, execution_results, created_at')
+          .eq('domain', domain)
+          .eq('pipeline_phase', 'execute')
+          .in('status', ['completed', 'dry_run'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const urls = new Set<string>();
+        const payload = (lastExecute?.action_payload as any) || {};
+        const results = (lastExecute?.execution_results as any) || {};
+
+        // 1) URLs explicitement listées dans action_payload
+        const payloadUrls = payload?.target_urls || payload?.urls || payload?.deployed_urls || [];
+        if (Array.isArray(payloadUrls)) payloadUrls.forEach((u: string) => u && urls.add(u));
+        if (payload?.target_url) urls.add(payload.target_url);
+
+        // 2) URLs publiées trouvées dans execution_results
+        const resultUrls = results?.deployed_urls || results?.published_urls || results?.urls || [];
+        if (Array.isArray(resultUrls)) resultUrls.forEach((u: string) => u && urls.add(u));
+
+        // 3) Filet de sécurité : content_deploy_snapshots vérifiés depuis le dernier execute
+        if (urls.size === 0 && lastExecute?.created_at) {
+          const { data: deployedSince } = await supabase
+            .from('content_deploy_snapshots')
+            .select('page_url')
+            .eq('tracked_site_id', tracked_site_id)
+            .eq('last_verification_status', 'ok')
+            .gte('last_verified_at', lastExecute.created_at)
+            .limit(20);
+          (deployedSince || []).forEach((r: any) => r?.page_url && urls.add(r.page_url));
+        }
+
+        const targetUrls = Array.from(urls).slice(0, 20);
+        decision.action.payload = {
+          ...(decision.action.payload || {}),
+          validate_scope: {
+            mode: targetUrls.length > 0 ? 'targeted' : 'fallback_full',
+            reason: targetUrls.length > 0 ? 'urls_from_last_execute' : 'no_urls_found_fallback',
+            target_urls: targetUrls.length > 0 ? targetUrls : null,
+          },
+        };
+        console.log(`[Parménion] 🔍 Validate ciblé — ${targetUrls.length} URL(s) (prev_validate=${prevValidateCount})`);
+      }
+    }
+
     // ═══ PHASE 5: Persist decision ═══
     const logEntry = {
       tracked_site_id,
