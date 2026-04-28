@@ -380,8 +380,18 @@ export function decomposePersonas(siteInfo: Partial<SiteInfo> & { business_model
     }
   }
 
-  // 6. Build final Persona list
-  return [...matchedKeys].map(key => {
+  // 6. Filter by business_model affinity (if set and registry has an entry)
+  const businessModel = (siteInfo.business_model || '').toLowerCase();
+  const allowedForModel = BUSINESS_MODEL_PERSONAS[businessModel];
+  let finalKeys = [...matchedKeys];
+  if (Array.isArray(allowedForModel) && allowedForModel.length > 0) {
+    const filtered = finalKeys.filter(k => allowedForModel.includes(k));
+    // Only apply filter if it leaves at least one persona, otherwise keep originals
+    if (filtered.length > 0) finalKeys = filtered;
+  }
+
+  // 7. Build final Persona list
+  return finalKeys.map(key => {
     const base = PERSONA_REGISTRY[key];
     if (!base) return null;
     return {
