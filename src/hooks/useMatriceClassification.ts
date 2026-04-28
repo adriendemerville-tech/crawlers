@@ -75,8 +75,6 @@ export function useMatriceClassification() {
     try {
       const { data, error } = await supabase.functions.invoke('matrice-classify', {
         body: { criteria },
-        // @ts-expect-error supabase-js forwards the signal to fetch
-        signal: controller.signal,
       });
 
       window.clearInterval(ticker);
