@@ -123,18 +123,18 @@ export function unpivotScoredWide(
   const engineColumns = detection.engines.map(eng => ({
     engine: eng,
     score: detection.scoreColumns[eng],
-    verdict: findEngineColumn(headers, eng, /.*/) /* la colonne nue "ChatGPT" si elle existe */,
-    cite: findEngineColumn(headers, eng, /(_cite$|\.fr_cite$|_cit[eé]e?$)/i),
-    rank: findEngineColumn(headers, eng, /(_rang|rank)/i),
-    mentionne: findEngineColumn(headers, eng, /(_mention)/i),
-    recommande: findEngineColumn(headers, eng, /(_recommand|recommend)/i),
-    typeSrc: findEngineColumn(headers, eng, /(type_de_source|sources?)/i),
-    url: findEngineColumn(headers, eng, /(_url)/i),
+    verdict: null as string | null,
+    cite: findEngineColumn(headers, eng, /(cite$|frcite$|citee?$)/i),
+    rank: findEngineColumn(headers, eng, /(rang|rank)/i),
+    mentionne: findEngineColumn(headers, eng, /mention/i),
+    recommande: findEngineColumn(headers, eng, /(recommand|recommend)/i),
+    typeSrc: findEngineColumn(headers, eng, /(typedesource|sources?$)/i),
+    url: findEngineColumn(headers, eng, /url/i),
   }));
 
-  // Recherche la colonne "verdict" plus précisément : exactement le nom du moteur
+  // Verdict = colonne dont le nom (normalisé) est exactement le nom du moteur
   for (const ec of engineColumns) {
-    const exact = headers.find(h => h.toLowerCase() === ec.engine.toLowerCase());
+    const exact = headers.find(h => norm(h) === norm(ec.engine));
     if (exact) ec.verdict = exact;
   }
 
