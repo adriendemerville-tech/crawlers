@@ -481,16 +481,22 @@ export async function recordPersonaServed(
  * Build the prompt block injected into Parménion's content prompt.
  * This is the "Rédacteur en Chef — Stratégie Persona" block.
  */
-export function buildPersonaPromptBlock(personas: Persona[], siteName: string): string {
+export function buildPersonaPromptBlock(personas: Persona[], siteName: string, businessModel?: string | null): string {
   if (personas.length === 0) return '';
 
   const nextPersona = personas[0]; // least-served
   const neverServed = personas.filter(p => !p.last_served_at);
   const leastServed = personas.filter(p => p.articles_count === 0);
+  const tone = getBusinessModelTone(businessModel);
 
   const lines: string[] = [];
   lines.push(`\n═══ RÉDACTEUR EN CHEF — STRATÉGIE PERSONA ═══`);
-  lines.push(`${siteName} s'adresse à ${personas.length} personas distinctes. Chaque cycle de contenu DOIT cibler une persona DIFFÉRENTE du cycle précédent.\n`);
+  lines.push(`${siteName} s'adresse à ${personas.length} personas distinctes. Chaque cycle de contenu DOIT cibler une persona DIFFÉRENTE du cycle précédent.`);
+  if (businessModel) {
+    lines.push(`Modèle économique : ${businessModel} → ton "${tone.tone}", jargon "${tone.jargonLevel}", CTA "${tone.ctaStyle}".\n`);
+  } else {
+    lines.push('');
+  }
 
   // Persona map
   lines.push(`PERSONAS IDENTIFIÉES :`);
