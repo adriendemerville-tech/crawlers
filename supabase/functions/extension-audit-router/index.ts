@@ -127,20 +127,26 @@ Deno.serve(async (req) => {
     if (isTracked && trackedSite) {
       try {
         const identityUpdates = mapDomToIdentity(domSignals);
-        const bm = detectBusinessModelFromDom(domSignals);
-        if (bm && trackedSite.business_model_source !== 'user_manual' && trackedSite.business_model_source !== 'manual') {
-          identityUpdates.business_model = bm.value;
-          identityUpdates.business_model_confidence = bm.confidence;
-          identityUpdates.business_model_source = 'extension_heuristic';
-          identityUpdates.business_model_detected_at = new Date().toISOString();
-        }
+        // Push gateway-allowed fields (cms_platform, primary_language)
         if (Object.keys(identityUpdates).length > 0) {
-          await writeIdentity(svc, {
-            domain: trackedSite.domain,
-            updates: identityUpdates,
+          await writeIdentity({
+            siteId: trackedSite.id,
+            fields: identityUpdates,
             source: 'extension',
+            userId: user.id,
             forceDirectWrite: true,
           });
+          identityUpdated = true;
+        }
+        // business_model — direct write (not in gateway whitelist), respect manual override
+        const bm = detectBusinessModelFromDom(domSignals);
+        if (bm && trackedSite.business_model_source !== 'user_manual' && trackedSite.business_model_source !== 'manual') {
+          await svc.from('tracked_sites').update({
+            business_model: bm.value,
+            business_model_confidence: bm.confidence,
+            business_model_source: 'extension_heuristic',
+            business_model_detected_at: new Date().toISOString(),
+          } as any).eq('id', trackedSite.id);
           identityUpdated = true;
         }
       } catch (e) {
