@@ -1352,17 +1352,13 @@ export default function MatricePrompt() {
             </div>
           )}
 
-          {/* Benchmark Heatmap (shown when benchmark mode has results) */}
+          {/* Matrice canvas — dispatcher choisit le variant (scored-wide / geo / standard / expert)
+              et expose les 3 sous-vues (Heatmap / Par moteur / Cube 3D). */}
           {benchmarkData && (
             <div className="mb-6 border rounded-lg p-4 bg-card">
-              <h2 className="text-sm font-semibold mb-3 text-foreground">Benchmark Citabilité — Heatmap Thème × Engine</h2>
-              <BenchmarkHeatmap
-                results={benchmarkData.results}
-                themes={benchmarkData.themes}
-                engines={benchmarkData.engines}
-                heatmap={benchmarkData.heatmap}
-                globalScore={benchmarkData.globalScore}
-                citationRate={benchmarkData.citationRate}
+              <MatriceCanvas
+                benchmark={benchmarkData}
+                importedFormat={importedFormat}
               />
             </div>
           )}
