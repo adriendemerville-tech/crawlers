@@ -30,17 +30,15 @@ interface Props {
 }
 
 /* ── Score color utility (charte: violet / gold / muted, pas de bleu IA) ──── */
-
+/* Palette inspirée de la capture source : vert clair (bon score), jaune (moyen),
+   rose pâle (faible / non cité), gris (absence de donnée). Texte toujours noir
+   pour la lisibilité sur fonds clairs. */
 function getHeatColor(score: number, cited: boolean): string {
-  if (score < 0) return 'bg-muted/30 text-muted-foreground';
-  // Cited tiers: gold scale (best) → violet (mid) → muted (low)
-  if (cited && score >= 70) return 'bg-brand-gold/25 text-brand-gold border-brand-gold/50';
-  if (cited && score >= 40) return 'bg-brand-gold/15 text-brand-gold/90 border-brand-gold/30';
-  if (cited) return 'bg-brand-violet/20 text-brand-violet border-brand-violet/40';
-  // Not cited: violet faded → muted
-  if (score >= 70) return 'bg-brand-violet/15 text-brand-violet/80 border-brand-violet/25';
-  if (score >= 40) return 'bg-muted/40 text-muted-foreground border-border';
-  return 'bg-muted/20 text-muted-foreground/70 border-border/50';
+  if (score < 0) return 'bg-muted/30 text-muted-foreground border-border';
+  if (score >= 70) return 'bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-200/80 dark:text-emerald-950';
+  if (score >= 40) return 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-200/80 dark:text-amber-950';
+  if (cited) return 'bg-rose-100 text-rose-950 border-rose-300 dark:bg-rose-200/80 dark:text-rose-950';
+  return 'bg-rose-50 text-rose-900 border-rose-200 dark:bg-rose-100/70 dark:text-rose-950';
 }
 
 function CitationGlyph({ cited, rank }: { cited: boolean; rank: number | null }) {
@@ -49,7 +47,7 @@ function CitationGlyph({ cited, rank }: { cited: boolean; rank: number | null })
   if (rank === 2) return <Medal className="h-3 w-3 inline text-brand-gold/80" aria-label="Rang 2" />;
   if (rank === 3) return <Award className="h-3 w-3 inline text-brand-gold/60" aria-label="Rang 3" />;
   if (rank != null) return <span className="font-mono text-[10px]">#{rank}</span>;
-  return <Check className="h-3 w-3 inline text-brand-violet" aria-label="Cité" />;
+  return <Check className="h-3 w-3 inline text-emerald-700" aria-label="Cité" />;
 }
 
 /* ── Engine color map (charte: violet/gold scale only, pas de bleu IA) ──── */
