@@ -333,19 +333,16 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
       {/* Legend */}
       <div className="flex items-center gap-4 text-[10px] text-muted-foreground flex-wrap">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-brand-gold/25 border border-brand-gold/50" /> Cité + bon score
+          <span className="w-3 h-3 rounded bg-emerald-100 border border-emerald-300" /> Bon score (≥70)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-brand-gold/15 border border-brand-gold/30" /> Cité + score moyen
+          <span className="w-3 h-3 rounded bg-amber-100 border border-amber-300" /> Score moyen (40-69)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-brand-violet/15 border border-brand-violet/25" /> Non cité + bon score
+          <span className="w-3 h-3 rounded bg-rose-100 border border-rose-300" /> Faible / non cité (&lt;40)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-muted/20 border border-border/50" /> Non cité + faible score
-        </span>
-        <span className="flex items-center gap-1">
-          <Trophy className="h-3 w-3 text-brand-gold" /> Rang 1 · <Check className="h-3 w-3 text-brand-violet" /> Cité · <X className="h-3 w-3" /> Absent
+          <Trophy className="h-3 w-3 text-brand-gold" /> Rang 1 · <Check className="h-3 w-3 text-emerald-700" /> Cité · <X className="h-3 w-3" /> Absent
         </span>
       </div>
     </div>
