@@ -4,7 +4,7 @@
  * pass surfaced before the user runs the actual audit.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type MatriceFamily =
@@ -42,16 +42,32 @@ const INITIAL: State = { loading: false, error: null, results: null, progress: 0
 
 export function useMatriceClassification() {
   const [state, setState] = useState<State>(INITIAL);
+  const abortRef = useRef<AbortController | null>(null);
+  const cancelledRef = useRef(false);
 
-  const reset = useCallback(() => setState(INITIAL), []);
+  const reset = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    cancelledRef.current = false;
+    setState(INITIAL);
+  }, []);
+
+  const stop = useCallback(() => {
+    cancelledRef.current = true;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setState({ loading: false, error: 'Analyse interrompue', results: null, progress: 0 });
+  }, []);
 
   const classify = useCallback(async (criteria: ClassifyInput[]) => {
     if (criteria.length === 0) return null;
 
+    cancelledRef.current = false;
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setState({ loading: true, error: null, results: null, progress: 0.05 });
 
-    // Faux progrès animé — donne à l'user la sensation que ça travaille,
-    // jusqu'à ce que la vraie réponse arrive (Gemini Flash Lite ~ 3-8s).
     const ticker = window.setInterval(() => {
       setState((s) => (s.loading ? { ...s, progress: Math.min(0.9, s.progress + 0.05) } : s));
     }, 350);
@@ -59,9 +75,13 @@ export function useMatriceClassification() {
     try {
       const { data, error } = await supabase.functions.invoke('matrice-classify', {
         body: { criteria },
+        // @ts-expect-error supabase-js forwards the signal to fetch
+        signal: controller.signal,
       });
 
       window.clearInterval(ticker);
+
+      if (cancelledRef.current) return null;
 
       if (error) throw new Error(error.message || 'Classification failed');
       if (data?.error) throw new Error(data.error);
@@ -71,14 +91,17 @@ export function useMatriceClassification() {
       for (const r of list) map[r.id] = r;
 
       setState({ loading: false, error: null, results: map, progress: 1 });
+      abortRef.current = null;
       return map;
     } catch (e) {
       window.clearInterval(ticker);
+      if (cancelledRef.current) return null;
       const message = e instanceof Error ? e.message : 'Erreur inconnue';
       setState({ loading: false, error: message, results: null, progress: 0 });
+      abortRef.current = null;
       return null;
     }
   }, []);
 
-  return { ...state, classify, reset };
+  return { ...state, classify, reset, stop };
 }
