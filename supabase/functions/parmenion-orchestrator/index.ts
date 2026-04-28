@@ -1232,6 +1232,7 @@ RÈGLES:
         ? Array.from({ length: Math.min(10, keywordEnrichment.totalKeywords) }).map((_, i) => '')
         : [],
       voice_dna: voiceDna,
+      business_model: (context.siteInfo as any)?.business_model || null,
       supabase,
     });
     const briefBlock = briefToPromptBlock(contentBrief);

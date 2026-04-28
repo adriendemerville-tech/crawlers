@@ -12099,6 +12099,12 @@ export type Database = {
           api_key: string
           brand_name: string | null
           brand_site_url: string | null
+          business_model:
+            | Database["public"]["Enums"]["site_business_model"]
+            | null
+          business_model_confidence: number | null
+          business_model_detected_at: string | null
+          business_model_source: string | null
           business_type: string | null
           client_targets: Json | null
           cms_platform: string | null
@@ -12165,6 +12171,12 @@ export type Database = {
           api_key?: string
           brand_name?: string | null
           brand_site_url?: string | null
+          business_model?:
+            | Database["public"]["Enums"]["site_business_model"]
+            | null
+          business_model_confidence?: number | null
+          business_model_detected_at?: string | null
+          business_model_source?: string | null
           business_type?: string | null
           client_targets?: Json | null
           cms_platform?: string | null
@@ -12231,6 +12243,12 @@ export type Database = {
           api_key?: string
           brand_name?: string | null
           brand_site_url?: string | null
+          business_model?:
+            | Database["public"]["Enums"]["site_business_model"]
+            | null
+          business_model_confidence?: number | null
+          business_model_detected_at?: string | null
+          business_model_source?: string | null
           business_type?: string | null
           client_targets?: Json | null
           cms_platform?: string | null
@@ -13521,6 +13539,19 @@ export type Database = {
         | "webflow"
         | "wix"
         | "drupal"
+      site_business_model:
+        | "saas_b2b"
+        | "saas_b2c"
+        | "marketplace_b2b"
+        | "marketplace_b2c"
+        | "marketplace_b2b2c"
+        | "ecommerce_b2c"
+        | "ecommerce_b2b"
+        | "media_publisher"
+        | "service_local"
+        | "service_agency"
+        | "leadgen"
+        | "nonprofit"
       team_role: "owner" | "editor" | "auditor"
       workbench_item_status:
         | "pending"
@@ -13738,6 +13769,20 @@ export const Constants = {
         "webflow",
         "wix",
         "drupal",
+      ],
+      site_business_model: [
+        "saas_b2b",
+        "saas_b2c",
+        "marketplace_b2b",
+        "marketplace_b2c",
+        "marketplace_b2b2c",
+        "ecommerce_b2c",
+        "ecommerce_b2b",
+        "media_publisher",
+        "service_local",
+        "service_agency",
+        "leadgen",
+        "nonprofit",
       ],
       team_role: ["owner", "editor", "auditor"],
       workbench_item_status: [

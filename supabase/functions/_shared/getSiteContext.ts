@@ -52,7 +52,7 @@ interface GetBySiteId {
 
 type GetContextParams = GetByDomain | GetBySiteId
 
-const CONTEXT_FIELDS = 'id, domain, site_name, market_sector, products_services, target_audience, commercial_area, company_size, address, identity_confidence, identity_source, identity_enriched_at, primary_language, brand_name, business_type, competitors, cms_platform, founding_year, siren_siret, gmb_presence, gmb_city, social_profiles, legal_structure, client_targets, jargon_distance, commercial_model, nonprofit_type, entity_type, media_specialties'
+const CONTEXT_FIELDS = 'id, domain, site_name, market_sector, products_services, target_audience, commercial_area, company_size, address, identity_confidence, identity_source, identity_enriched_at, primary_language, brand_name, business_type, competitors, cms_platform, founding_year, siren_siret, gmb_presence, gmb_city, social_profiles, legal_structure, client_targets, jargon_distance, commercial_model, nonprofit_type, entity_type, media_specialties, business_model, business_model_confidence, business_model_source'
 
 /**
  * Fetch site from DB and ensure its identity card is enriched.

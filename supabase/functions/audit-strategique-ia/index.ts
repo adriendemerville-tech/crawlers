@@ -144,6 +144,7 @@ Deno.serve(handleRequest(async (req) => {
     let preCrawlResult: PreCrawlResult | null = null;
     let siteIdentityCtx: Record<string, unknown> | null = null;
     let trackedSiteIdForCrawl: string | null = null;
+    let businessModelDetectionRef: { model: string | null; confidence: number; needs_llm_fallback: boolean } | null = null;
 
     if (useCache) {
       console.log('⚡ SMART CACHE: Using cached context — skipping all data collection');
@@ -195,6 +196,18 @@ Deno.serve(handleRequest(async (req) => {
       ctaSeoSignalsForJargon = metadataResult?.ctaSeoSignals || ctaSeoSignalsForJargon;
       rankingOverview = rkOverviewResult;
       if (preCrawlContext) pageContentContext += '\n' + preCrawlContext;
+
+      // ── Business model heuristic → injected as context for LLM confirmation/override ──
+      const bmDetection = (metadataResult as any)?.businessModelDetection;
+      if (bmDetection) businessModelDetectionRef = { model: bmDetection.model, confidence: bmDetection.confidence, needs_llm_fallback: bmDetection.needs_llm_fallback };
+      if (bmDetection) {
+        if (bmDetection.model && !bmDetection.needs_llm_fallback) {
+          pageContentContext += `\nMODÈLE D'ACTIVITÉ DÉTECTÉ (heuristique HTML, confiance ${bmDetection.confidence}): ${bmDetection.model}. Confirme ou corrige dans business_model.`;
+        } else {
+          const top3 = (bmDetection.candidates || []).slice(0, 3).map((c: any) => `${c.model}(${c.score})`).join(', ');
+          pageContentContext += `\nMODÈLE D'ACTIVITÉ INCERTAIN (heuristique HTML faible, confiance ${bmDetection.confidence}). Top candidats: ${top3}. Choisis impérativement la valeur la plus juste dans business_model.`;
+        }
+      }
 
       const context = detectBusinessContext(domain, pageContentContext);
 
@@ -669,7 +682,7 @@ Réponds en JSON STRICT:
       } catch (wbErr) { console.warn('⚠️ Workbench persistence failed:', wbErr); }
     }
     trackAnalyzedUrl(url).catch(() => {});
-    persistIdentityData(domain, parsedAnalysis, jargonDistance).catch(() => {});
+    persistIdentityData(domain, parsedAnalysis, jargonDistance, businessModelDetectionRef).catch(() => {});
 
     if (jobSb && jobId) await jobSb.from('async_jobs').update({ status: 'completed', result_data: result.data, progress: 100, completed_at: new Date().toISOString() }).eq('id', jobId);
     return json(result);
