@@ -143,6 +143,7 @@ export function mergeParallelResults(resultA: any, resultB: any, resultC: any): 
     brand_authority: resultA?.brand_authority || { dna_analysis: '', thought_leadership_score: 0, entity_strength: 'unknown' },
     social_signals: resultA?.social_signals || { proof_sources: [], thought_leadership: { founder_authority: 'unknown', entity_recognition: '', eeat_score: 0, analysis: '' }, sentiment: { overall_polarity: 'neutral', hallucination_risk: 'medium', reputation_vibration: '' } },
     client_targets: resultA?.client_targets || { primary: [], secondary: [], untapped: [] },
+    business_model: resultA?.business_model || null,
     executive_summary: resultA?.executive_summary || '',
     overallScore: resultA?.overallScore ?? 0,
 
