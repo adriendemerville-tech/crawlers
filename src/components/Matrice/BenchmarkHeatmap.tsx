@@ -296,25 +296,37 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
                         <td key={engine} className="text-center px-1 py-1">
                           <HoverCard openDelay={200}>
                             <HoverCardTrigger asChild>
-                              <button className={`inline-flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-md border transition-colors w-full ${getHeatColor(cell.score, cell.cited)}`}>
-                                <span className="font-bold text-sm">{cell.score}</span>
-                                <span className="text-[10px] opacity-80"><CitationGlyph cited={cell.cited} rank={cell.rank} /></span>
+                              <button className={`inline-flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-md border transition-colors w-full ${getHeatColor(cell.score, cell.cited)}`}>
+                                <span className="font-bold text-base leading-tight">{cell.score}</span>
+                                <span className="text-[10px] opacity-90 flex items-center gap-1">
+                                  {cell.cited ? (
+                                    <>
+                                      <Check className="h-3 w-3" />
+                                      <span>{cell.rank ? `rang ${cell.rank}` : 'cité'}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="h-3 w-3" />
+                                      <span>non cité</span>
+                                    </>
+                                  )}
+                                </span>
                               </button>
                             </HoverCardTrigger>
-                            <HoverCardContent side="top" className="w-72 text-xs">
+                            <HoverCardContent side="top" className="w-80 text-xs">
                               <p className="font-semibold mb-1">{theme} × {engine}</p>
-                              <p className="text-muted-foreground">Score: {cell.score}/100</p>
+                              <p className="text-muted-foreground">Score : {cell.score}/100</p>
                               <p className="text-muted-foreground">
-                                Citation: {cell.cited ? `Oui (rang ${cell.rank || '?'})` : 'Non détectée'}
+                                Citation : {cell.cited ? `Oui (rang ${cell.rank || '?'})` : 'Non détectée'}
                               </p>
                               {matchResult?.citation_context && (
-                                <p className="text-muted-foreground mt-1 italic">
-                                  « {matchResult.citation_context.substring(0, 150)} »
+                                <p className="mt-2 italic border-t pt-2 whitespace-pre-wrap">
+                                  « {matchResult.citation_context} »
                                 </p>
                               )}
-                              {matchResult?.raw_data?.engine_response_preview && (
+                              {matchResult?.raw_data?.engine_response_preview && matchResult.raw_data.engine_response_preview !== matchResult.citation_context && (
                                 <p className="text-muted-foreground/60 mt-1 text-[10px]">
-                                  {matchResult.raw_data.engine_response_preview.substring(0, 200)}…
+                                  {String(matchResult.raw_data.engine_response_preview).substring(0, 200)}…
                                 </p>
                               )}
                             </HoverCardContent>
