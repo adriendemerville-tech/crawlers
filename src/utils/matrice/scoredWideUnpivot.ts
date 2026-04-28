@@ -56,11 +56,16 @@ const numish = (v: any): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+/** Normalise un header pour matching tolérant : lowercase, supprime espaces/_/-/./newlines */
+function norm(s: string): string {
+  return String(s ?? '').toLowerCase().replace(/[\s_\-.\n\r]+/g, '');
+}
+
 function findEngineColumn(headers: string[], engine: string, suffixRegex: RegExp): string | null {
-  const eng = engine.toLowerCase();
+  const eng = norm(engine);
   for (const h of headers) {
-    const lower = h.toLowerCase();
-    if (lower.startsWith(eng) && suffixRegex.test(lower)) return h;
+    const n = norm(h);
+    if (n.startsWith(eng) && suffixRegex.test(n)) return h;
   }
   return null;
 }
@@ -72,7 +77,9 @@ function findEngineColumn(headers: string[], engine: string, suffixRegex: RegExp
  */
 export function detectScoredWide(headers: string[]): ScoredWideDetection {
   const scoreColumns: Record<string, string> = {};
-  const scoreRe = /(score_?citab|score_?cit|score_?moyen|_score$|_note$|score$)/i;
+  // Suffixes acceptés (post-normalisation, donc sans séparateurs) :
+  // scorecitabilite, scorecitab, scorecit, scoremoyen, score, note
+  const scoreRe = /(scorecitab|scorecit|scoremoyen|score$|note$)/i;
 
   for (const eng of KNOWN_ENGINES) {
     const col = findEngineColumn(headers, eng, scoreRe);
@@ -81,13 +88,15 @@ export function detectScoredWide(headers: string[]): ScoredWideDetection {
 
   const engines = Object.keys(scoreColumns);
   if (engines.length >= 2) {
+    console.log('[scoredWideUnpivot] Détecté:', engines, 'depuis', headers.length, 'headers');
     return {
       detected: true,
       engines,
-      reason: `Format pré-scoré détecté : ${engines.length} moteurs avec colonne score (${engines.join(', ')})`,
+      reason: `Format pré-scoré détecté : ${engines.length} moteurs (${engines.join(', ')})`,
       scoreColumns,
     };
   }
+  console.log('[scoredWideUnpivot] Non détecté. Headers:', headers.slice(0, 20));
   return { detected: false, engines, reason: 'Aucun bloc moteur scoré détecté', scoreColumns };
 }
 
