@@ -196,6 +196,17 @@ Deno.serve(handleRequest(async (req) => {
       rankingOverview = rkOverviewResult;
       if (preCrawlContext) pageContentContext += '\n' + preCrawlContext;
 
+      // ── Business model heuristic → injected as context for LLM confirmation/override ──
+      const bmDetection = (metadataResult as any)?.businessModelDetection;
+      if (bmDetection) {
+        if (bmDetection.model && !bmDetection.needs_llm_fallback) {
+          pageContentContext += `\nMODÈLE D'ACTIVITÉ DÉTECTÉ (heuristique HTML, confiance ${bmDetection.confidence}): ${bmDetection.model}. Confirme ou corrige dans business_model.`;
+        } else {
+          const top3 = (bmDetection.candidates || []).slice(0, 3).map((c: any) => `${c.model}(${c.score})`).join(', ');
+          pageContentContext += `\nMODÈLE D'ACTIVITÉ INCERTAIN (heuristique HTML faible, confiance ${bmDetection.confidence}). Top candidats: ${top3}. Choisis impérativement la valeur la plus juste dans business_model.`;
+        }
+      }
+
       const context = detectBusinessContext(domain, pageContentContext);
 
       // ── Site identity card ──
