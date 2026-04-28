@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crawlers</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <img src="icons/icon-48.png" alt="Crawlers" width="24" height="24" />
+      <span>Crawlers</span>
+    </div>
+    <button id="signout-btn" class="link-btn hidden">Déconnexion</button>
+  </header>
+
+  <!-- ─── LOGIN VIEW ─── -->
+  <section id="view-login" class="view">
+    <h1>Connectez-vous</h1>
+    <p class="subtitle">Utilisez votre compte Crawlers.</p>
+    <form id="login-form" class="form">
+      <label>
+        <span>Email</span>
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+      <label>
+        <span>Mot de passe</span>
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <button type="submit" class="btn-primary" id="login-submit">Se connecter</button>
+      <p id="login-error" class="error hidden"></p>
+    </form>
+    <p class="footer-link">
+      Pas de compte ? <a href="https://crawlers.fr" target="_blank" rel="noopener">Créer un compte</a>
+    </p>
+  </section>
+
+  <!-- ─── MAIN VIEW ─── -->
+  <section id="view-main" class="view hidden">
+    <div class="page-info">
+      <p class="label">Page courante</p>
+      <p class="url" id="current-url">—</p>
+      <div class="mode-badge" id="mode-badge">
+        <span class="mode-dot"></span>
+        <span class="mode-label">Détection…</span>
+      </div>
+    </div>
+
+    <button id="audit-btn" class="btn-primary big">
+      Auditer cette page
+    </button>
+
+    <div id="audit-status" class="status hidden"></div>
+
+    <div id="audit-results" class="results hidden">
+      <div class="results-header">
+        <h2>Résultats</h2>
+        <a href="#" id="open-app" class="link-btn" target="_blank">Voir dans Crawlers</a>
+      </div>
+      <div id="results-content"></div>
+    </div>
+  </section>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
