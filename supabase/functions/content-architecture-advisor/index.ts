@@ -807,6 +807,7 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
       language: language_code,
       secondary_keywords: workbenchKeywords.map((k: any) => k.payload?.keyword || k.title).filter(Boolean).slice(0, 10),
       voice_dna: voiceDna,
+      business_model: (siteIdentity as any)?.business_model || null,
       supabase: serviceClient,
     })
     const briefBlock = briefToPromptBlock(contentBrief)
