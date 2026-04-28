@@ -33,6 +33,7 @@ export default function ExtensionDownload() {
       <SEOHead
         title="Extension Chrome Crawlers — Audit SEO en 1 clic"
         description="Installez l'extension Crawlers et auditez n'importe quelle page web en un clic. Findings injectés directement dans votre Workbench."
+        path="/extension"
       />
       <div className="min-h-screen bg-background text-foreground">
         <div className="max-w-3xl mx-auto px-4 py-16">
