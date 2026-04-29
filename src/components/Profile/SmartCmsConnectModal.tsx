@@ -270,13 +270,21 @@ export function SmartCmsConnectModal({
           'WordPress not detected. The GTM/script widget works with all CMS.',
           'WordPress no detectado. El widget GTM/script es compatible con todos los CMS.',
         );
-      } else if (pluginInstalled) {
-        recommended = 'magic_link';
+      } else if (restOpen && !wafBlocking) {
+        recommended = 'rest_api';
         reason = t3(
           lang,
-          'Plugin Crawlers déjà installé — connexion en 1 clic via Magic Link.',
-          'Crawlers plugin already installed — 1-click connection via Magic Link.',
-          'Plugin Crawlers ya instalado — conexión de 1 clic vía Magic Link.',
+          'API REST WordPress accessible. Connectez-vous avec un Application Password (2 minutes).',
+          'WordPress REST API accessible. Connect with an Application Password (2 minutes).',
+          'API REST WordPress accesible. Conéctese con una Application Password (2 minutos).',
+        );
+      } else if (pluginInstalled) {
+        recommended = 'rest_api';
+        reason = t3(
+          lang,
+          'Plugin Crawlers détecté. Connectez-vous avec un Application Password.',
+          'Crawlers plugin detected. Connect with an Application Password.',
+          'Plugin Crawlers detectado. Conéctese con una Application Password.',
         );
       } else if (restOpen && !wafBlocking) {
         recommended = 'rest_api';
