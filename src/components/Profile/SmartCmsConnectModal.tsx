@@ -330,6 +330,20 @@ export function SmartCmsConnectModal({
     setWorking(true);
     try {
       if (path === 'magic_link') {
+        // Garde-fou : Magic Link nécessite le plugin Crawlers côté WordPress
+        if (detection && !detection.pluginInstalled) {
+          toast.error(
+            t3(
+              lang,
+              'Le plugin Crawlers n\'est pas encore installé sur ce site. Téléchargez-le et activez-le dans WordPress avant d\'utiliser le Magic Link.',
+              'The Crawlers plugin is not installed on this site yet. Download and activate it in WordPress before using Magic Link.',
+              'El plugin Crawlers aún no está instalado en este sitio. Descárguelo y actívelo en WordPress antes de usar el Magic Link.',
+            ),
+            { duration: 8000 },
+          );
+          setWorking(false);
+          return;
+        }
         await handleWPIntegration('magic_link', {
           siteId,
           domain: siteDomain,
