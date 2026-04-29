@@ -622,6 +622,8 @@ async function handleCreateUser(body: any, req: Request) {
   }
 
   // Create profile (the trigger may do it, but let's ensure with upsert)
+  const finalPlan = plan_type || 'free';
+  const isPaidPlan = ['agency_pro', 'agency_premium'].includes(finalPlan);
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert({
@@ -630,7 +632,8 @@ async function handleCreateUser(body: any, req: Request) {
       first_name: first_name || '',
       last_name: last_name || '',
       persona_type: persona_type || null,
-      plan_type: plan_type || 'free',
+      plan_type: finalPlan,
+      subscription_status: isPaidPlan ? 'active' : null,
       credits_balance: credits_balance || 0,
     } as any, { onConflict: 'user_id' });
 
@@ -664,7 +667,17 @@ async function handleUpdateUserProfile(body: any, req: Request) {
   if (first_name !== undefined) updates.first_name = first_name;
   if (last_name !== undefined) updates.last_name = last_name;
   if (persona_type !== undefined) updates.persona_type = persona_type;
-  if (plan_type !== undefined) updates.plan_type = plan_type;
+  if (plan_type !== undefined) {
+    updates.plan_type = plan_type;
+    // Sync subscription_status with plan: paid plans → 'active', free → null.
+    // Required by CreditsContext (isAgencyPro/Premium check both fields).
+    const isPaidPlan = ['agency_pro', 'agency_premium'].includes(plan_type);
+    updates.subscription_status = isPaidPlan ? 'active' : null;
+    if (!isPaidPlan) {
+      updates.stripe_subscription_id = null;
+      updates.subscription_expires_at = null;
+    }
+  }
   if (newEmail !== undefined) updates.email = normalizeEmail(newEmail);
 
   if (Object.keys(updates).length === 0) return json({ error: 'No fields to update' }, 400);
