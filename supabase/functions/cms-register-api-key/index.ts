@@ -128,6 +128,39 @@ async function probeBearer(
   }
 }
 
+// ── Generic probe (custom auth header) ──
+async function probeRemote(
+  baseUrl: string,
+  writeProbePath: string,
+  headers: Record<string, string>,
+  healthPath?: string,
+  timeoutMs = 10000,
+): Promise<{ healthOk: boolean; writeReady: boolean; healthStatus: number; writeStatus: number }> {
+  let healthStatus = 0
+  let writeStatus = 0
+
+  if (healthPath) {
+    try {
+      const r = await fetch(`${baseUrl}${healthPath}`, { signal: AbortSignal.timeout(timeoutMs) })
+      healthStatus = r.status
+    } catch (_) { /* network */ }
+  } else {
+    healthStatus = 200 // skip when not provided
+  }
+
+  try {
+    const r = await fetch(`${baseUrl}${writeProbePath}`, { headers, signal: AbortSignal.timeout(timeoutMs) })
+    writeStatus = r.status
+  } catch (_) { /* network */ }
+
+  return {
+    healthOk: healthStatus === 200,
+    writeReady: writeStatus >= 200 && writeStatus < 300,
+    healthStatus,
+    writeStatus,
+  }
+}
+
 // ── Handler ──
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
@@ -153,6 +186,7 @@ Deno.serve(async (req: Request) => {
     tracked_site_id?: string
     api_key?: string
     platform?: string
+    site_url?: string
     mode?: 'manual' | 'reuse_admin'
   } = {}
   try { body = await req.json() } catch {
@@ -196,10 +230,11 @@ Deno.serve(async (req: Request) => {
 
   // ── Resolve platform ──
   const platform = (body.platform || inferPlatformFromDomain(site.domain) || '').toLowerCase()
-  const cfg = PLATFORM_REGISTRY[platform]
-  if (!cfg) {
+  const staticCfg = PLATFORM_REGISTRY[platform]
+  const remoteCfg = REMOTE_PLATFORM_REGISTRY[platform]
+  if (!staticCfg && !remoteCfg) {
     return new Response(JSON.stringify({
-      error: `Unsupported platform "${platform}" — known: ${Object.keys(PLATFORM_REGISTRY).join(', ')}`,
+      error: `Unsupported platform "${platform}" — known: ${[...Object.keys(PLATFORM_REGISTRY), ...Object.keys(REMOTE_PLATFORM_REGISTRY)].join(', ')}`,
     }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -242,10 +277,41 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // ── Resolve baseUrl + auth headers + probe ──
+  let baseUrl: string
+  let authHeaders: Record<string, string>
+  let healthPath: string | undefined
+  let writeProbePath: string
+  let prefix: string | undefined
+
+  if (staticCfg) {
+    baseUrl = staticCfg.baseUrl
+    authHeaders = { Authorization: `Bearer ${apiKey}` }
+    healthPath = staticCfg.healthPath
+    writeProbePath = staticCfg.writeProbePath
+    prefix = staticCfg.apiKeyPrefix
+  } else {
+    const userSiteUrl = (body.site_url || `https://${site.domain}`).trim()
+    try {
+      const u = new URL(userSiteUrl)
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new Error('bad protocol')
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid site_url' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    baseUrl = remoteCfg!.resolveBaseUrl!(userSiteUrl)
+    authHeaders = remoteCfg!.authHeader!(apiKey)
+    healthPath = remoteCfg!.healthPath
+    writeProbePath = remoteCfg!.writeProbePath
+    prefix = remoteCfg!.apiKeyPrefix
+  }
+
   // ── Sanity check on prefix ──
-  if (cfg.apiKeyPrefix && !apiKey.startsWith(cfg.apiKeyPrefix)) {
+  if (prefix && !apiKey.startsWith(prefix)) {
     return new Response(JSON.stringify({
-      error: `API key for ${platform} must start with "${cfg.apiKeyPrefix}"`,
+      error: `API key for ${platform} must start with "${prefix}"`,
     }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -253,10 +319,10 @@ Deno.serve(async (req: Request) => {
   }
 
   // ── Probe the remote API ──
-  const probe = await probeBearer(cfg, apiKey)
+  const probe = await probeRemote(baseUrl, writeProbePath, authHeaders, healthPath)
   if (!probe.healthOk) {
     return new Response(JSON.stringify({
-      error: `Remote /health unreachable (status ${probe.healthStatus})`,
+      error: `Remote ${healthPath || ''} unreachable (status ${probe.healthStatus})`,
       probe,
     }), {
       status: 502,
@@ -265,7 +331,7 @@ Deno.serve(async (req: Request) => {
   }
   if (!probe.writeReady) {
     return new Response(JSON.stringify({
-      error: `API key rejected by ${platform} (probe ${cfg.writeProbePath} → ${probe.writeStatus})`,
+      error: `API key rejected by ${platform} (probe ${writeProbePath} → ${probe.writeStatus})`,
       probe,
     }), {
       status: 401,
@@ -274,10 +340,11 @@ Deno.serve(async (req: Request) => {
   }
 
   // ── Upsert cms_connections ──
+  const authMethod = staticCfg ? 'bearer' : (platform === 'prestashop' || platform === 'drupal' ? 'basic' : 'bearer')
   const capabilities = {
     posts: true,
     pages: 'read',
-    auth_scheme: 'bearer',
+    auth_scheme: authMethod,
     bridge: platform === 'dictadevi' ? 'dictadevi-actions' : undefined,
     registered_via: mode,
     last_probe: {
@@ -293,9 +360,9 @@ Deno.serve(async (req: Request) => {
       user_id: auth.userId,
       tracked_site_id: trackedSiteId,
       platform,
-      auth_method: 'bearer',
+      auth_method: authMethod,
       api_key: apiKey,
-      site_url: cfg.baseUrl,
+      site_url: baseUrl,
       scopes: ['posts:read', 'posts:write', 'pages:read'],
       status: 'active',
       capabilities,
@@ -316,10 +383,10 @@ Deno.serve(async (req: Request) => {
   // ── Mirror signature into tracked_sites.current_config (drives the green badge) ──
   const newConfig = {
     ...(site.current_config as Record<string, unknown> | null || {}),
-    cms_type: 'custom_rest',
+    cms_type: staticCfg ? 'custom_rest' : platform,
     platform,
-    base_url: cfg.baseUrl,
-    auth_type: 'bearer',
+    base_url: baseUrl,
+    auth_type: authMethod,
     bridge: platform === 'dictadevi' ? 'dictadevi-actions' : undefined,
     connected_at: new Date().toISOString(),
   }
@@ -338,7 +405,7 @@ Deno.serve(async (req: Request) => {
     success: true,
     platform,
     write_ready: true,
-    base_url: cfg.baseUrl,
+    base_url: baseUrl,
     mode,
   }), {
     status: 200,
