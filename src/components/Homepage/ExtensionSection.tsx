@@ -26,7 +26,7 @@ export function ExtensionSection() {
       title: 'Audit any page in 1 click',
       desc: 'Pilot mode on your tracked sites, Spy mode on competitors. Findings injected straight into your Workbench.',
       cta: 'Download the extension',
-      bullets: ['Strategic', 'E-E-A-T', 'Conversion', 'Machine Layer'],
+      bullets: ['SEO Audit', 'Strategic', 'E-E-A-T', 'Conversion', 'Machine Layer'],
     },
   }[language as 'fr' | 'es' | 'en'] || {} as any;
 
