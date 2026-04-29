@@ -242,6 +242,46 @@ Deno.serve(async (req) => {
       }
     }
 
+    // From E-E-A-T audit (sync mode → result direct ; sinon score uniquement)
+    const eeatScore = eeatResult?.score ?? eeatResult?.result?.score ?? null;
+    const eeatIssues = eeatResult?.issues || eeatResult?.result?.issues || [];
+    if (Array.isArray(eeatIssues)) {
+      for (const issue of eeatIssues.slice(0, 4)) {
+        findings.push({
+          title: issue.title || issue.label || 'Signal E-E-A-T manquant',
+          category: 'eeat',
+          severity: issue.severity || (issue.priority === 'high' ? 'high' : 'medium'),
+        });
+      }
+    }
+
+    // From Machine Layer Scan
+    const machineLayerScore = machineLayerResult?.score_global ?? null;
+    const machineLayerIssues = machineLayerResult?.issues || [];
+    if (Array.isArray(machineLayerIssues)) {
+      for (const issue of machineLayerIssues.slice(0, 4)) {
+        findings.push({
+          title: issue.title || issue.label || issue.message || 'Signal machine manquant',
+          category: 'machine_layer',
+          severity: issue.severity || 'medium',
+        });
+      }
+    }
+
+    // From Conversion analysis (Mode Pilote uniquement)
+    const conversionAxes = conversionResult?.scores || conversionResult?.analysis?.scores || null;
+    const conversionScore = conversionAxes?.conversion?.score ?? null;
+    const conversionSuggestions = conversionResult?.suggestions || conversionResult?.analysis?.suggestions || [];
+    if (Array.isArray(conversionSuggestions)) {
+      for (const sug of conversionSuggestions.slice(0, 4)) {
+        findings.push({
+          title: sug.title || sug.label || sug.suggested_text?.slice(0, 80) || 'Optimisation conversion',
+          category: 'conversion',
+          severity: sug.priority === 'high' ? 'high' : 'medium',
+        });
+      }
+    }
+
     const criticalCount = findings.filter((f) => f.severity === 'high' || f.severity === 'critical').length;
 
     // ── 5. Log analytics event ──
@@ -255,6 +295,9 @@ Deno.serve(async (req) => {
           is_tracked: isTracked,
           findings_count: findings.length,
           identity_updated: identityUpdated,
+          eeat_score: eeatScore,
+          machine_layer_score: machineLayerScore,
+          conversion_score: conversionScore,
         },
       });
     } catch (_e) { /* non-blocking */ }
@@ -270,6 +313,14 @@ Deno.serve(async (req) => {
         identity_updated: identityUpdated,
       },
       findings,
+      scores: {
+        strategic: strategicResult?.data?.overallScore || null,
+        expert: expertResult?.overallScore || null,
+        eeat: eeatScore,
+        machine_layer: machineLayerScore,
+        conversion: conversionScore,
+      },
+      // Backward-compat
       strategic_score: strategicResult?.data?.overallScore || null,
       expert_score: expertResult?.overallScore || null,
     });
