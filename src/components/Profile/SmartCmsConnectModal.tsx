@@ -53,7 +53,7 @@ interface Props {
   siteApiKey: string;
 }
 
-type Path = 'magic_link' | 'rest_api' | 'plugin_manual' | 'gtm_widget';
+type Path = 'rest_api' | 'plugin_manual' | 'gtm_widget';
 
 interface DetectionResult {
   isWordPress: boolean;
@@ -270,13 +270,21 @@ export function SmartCmsConnectModal({
           'WordPress not detected. The GTM/script widget works with all CMS.',
           'WordPress no detectado. El widget GTM/script es compatible con todos los CMS.',
         );
-      } else if (pluginInstalled) {
-        recommended = 'magic_link';
+      } else if (restOpen && !wafBlocking) {
+        recommended = 'rest_api';
         reason = t3(
           lang,
-          'Plugin Crawlers déjà installé — connexion en 1 clic via Magic Link.',
-          'Crawlers plugin already installed — 1-click connection via Magic Link.',
-          'Plugin Crawlers ya instalado — conexión de 1 clic vía Magic Link.',
+          'API REST WordPress accessible. Connectez-vous avec un Application Password (2 minutes).',
+          'WordPress REST API accessible. Connect with an Application Password (2 minutes).',
+          'API REST WordPress accesible. Conéctese con una Application Password (2 minutos).',
+        );
+      } else if (pluginInstalled) {
+        recommended = 'rest_api';
+        reason = t3(
+          lang,
+          'Plugin Crawlers détecté. Connectez-vous avec un Application Password.',
+          'Crawlers plugin detected. Connect with an Application Password.',
+          'Plugin Crawlers detectado. Conéctese con una Application Password.',
         );
       } else if (restOpen && !wafBlocking) {
         recommended = 'rest_api';
@@ -329,30 +337,7 @@ export function SmartCmsConnectModal({
   const executePath = async (path: Path) => {
     setWorking(true);
     try {
-      if (path === 'magic_link') {
-        // Garde-fou : Magic Link nécessite le plugin Crawlers côté WordPress
-        if (detection && !detection.pluginInstalled) {
-          toast.error(
-            t3(
-              lang,
-              'Le plugin Crawlers n\'est pas encore installé sur ce site. Téléchargez-le et activez-le dans WordPress avant d\'utiliser le Magic Link.',
-              'The Crawlers plugin is not installed on this site yet. Download and activate it in WordPress before using Magic Link.',
-              'El plugin Crawlers aún no está instalado en este sitio. Descárguelo y actívelo en WordPress antes de usar el Magic Link.',
-            ),
-            { duration: 8000 },
-          );
-          setWorking(false);
-          return;
-        }
-        await handleWPIntegration('magic_link', {
-          siteId,
-          domain: siteDomain,
-          apiKey: siteApiKey,
-          userId: user?.id,
-          language: lang,
-        });
-        handleClose(false);
-      } else if (path === 'plugin_manual') {
+      if (path === 'plugin_manual') {
         await handleWPIntegration('download', {
           siteId,
           domain: siteDomain,
@@ -360,7 +345,7 @@ export function SmartCmsConnectModal({
           userId: user?.id,
           language: lang,
         });
-        // Stay open so user can chain with magic link after install
+        // Stay open so user can chain with REST API after install
       } else if (path === 'rest_api') {
         setStep('manual');
       } else if (path === 'gtm_widget') {
@@ -445,11 +430,6 @@ export function SmartCmsConnectModal({
 
   // ─── UI ───
   const pathLabels: Record<Path, { title: string; cta: string; icon: any }> = {
-    magic_link: {
-      title: t3(lang, 'Magic Link', 'Magic Link', 'Magic Link'),
-      cta: t3(lang, 'Brancher en 1 clic', '1-click connect', 'Conectar en 1 clic'),
-      icon: Zap,
-    },
     rest_api: {
       title: t3(lang, 'API REST WordPress', 'WordPress REST API', 'API REST WordPress'),
       cta: t3(lang, 'Saisir mes identifiants', 'Enter credentials', 'Ingresar credenciales'),
@@ -467,7 +447,7 @@ export function SmartCmsConnectModal({
     },
   };
 
-  const allPaths: Path[] = ['magic_link', 'rest_api', 'plugin_manual', 'gtm_widget'];
+  const allPaths: Path[] = ['rest_api', 'plugin_manual', 'gtm_widget'];
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -778,7 +758,7 @@ export function SmartCmsConnectModal({
               )}
               <Button
                 onClick={() => executePath(detection.recommended)}
-                disabled={working || (detection.recommended === 'magic_link' && !detection.pluginInstalled)}
+                disabled={working}
                 variant="outline"
                 className="w-full gap-2 mt-2"
               >
@@ -808,7 +788,6 @@ export function SmartCmsConnectModal({
                   .map((p) => {
                     const meta = pathLabels[p];
                     const Icon = meta.icon;
-                    const needsPlugin = p === 'magic_link' && !detection.pluginInstalled;
                     return (
                       <Button
                         key={p}
@@ -816,13 +795,11 @@ export function SmartCmsConnectModal({
                         size="sm"
                         className="justify-start gap-2"
                         onClick={() => executePath(p)}
-                        disabled={working || needsPlugin}
-                        title={needsPlugin ? t3(lang, 'Installez d\'abord le plugin Crawlers', 'Install the Crawlers plugin first', 'Instale primero el plugin Crawlers') : undefined}
+                        disabled={working}
                       >
                         <Icon className="h-3.5 w-3.5" />
                         <span className="text-xs">
                           {meta.title} — {meta.cta}
-                          {needsPlugin && ` · ${t3(lang, 'plugin requis', 'plugin required', 'plugin requerido')}`}
                         </span>
                       </Button>
                     );
