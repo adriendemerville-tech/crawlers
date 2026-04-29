@@ -296,9 +296,9 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
         <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
           {t3(language,
-            'Choisissez votre CMS ci-dessous, puis suivez les étapes. Aucune action requise sur la clé API : elle est déjà intégrée aux snippets et au plugin.',
-            'Pick your CMS below, then follow the steps. No action needed on the API Key — it is already embedded in the snippets and plugin.',
-            'Elija su CMS a continuación y siga los pasos. No hay nada que hacer con la clave API: ya está integrada en los snippets y el plugin.'
+            'Choisissez votre CMS ci-dessous, puis suivez les étapes.',
+            'Pick your CMS below, then follow the steps.',
+            'Elija su CMS a continuación y siga los pasos.'
           )}
         </p>
       </DialogHeader>
