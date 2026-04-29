@@ -807,6 +807,13 @@ export function useCrawlEngine() {
     isDetectingPages,
     detectionDone,
     preScanDone,
+    // Mapping bloqué = pré-scan terminé mais aucune source n'a renvoyé de pages
+    // (sitemap inaccessible / 403 WAF, GSC non connecté, etc.)
+    mappingBlocked: preScanDone
+      && (sitemapPagesCount == null || sitemapPagesCount === 0)
+      && (indexedPagesCount == null || indexedPagesCount === 0)
+      && (totalEstimatedPages == null || totalEstimatedPages === 0)
+      && !detectionDone,
     discoveredUrls,
     isReportOpen, setIsReportOpen,
 
