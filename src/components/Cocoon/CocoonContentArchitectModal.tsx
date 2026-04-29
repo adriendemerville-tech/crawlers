@@ -645,6 +645,16 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                       detectPageTypeFromDirectory={detectPageTypeFromDirectory} result={result} setResult={setResult}
                       loading={loading} onGenerate={handleGenerate} strategistLoading={strategistLoading}
                       strategistDone={strategistDone} language={language} pageTypes={PAGE_TYPES} lengths={LENGTHS}
+                      cacheInfo={cacheInfo} crawlersReco={crawlersReco}
+                      onApplyRecommendation={() => {
+                        if (!crawlersReco?.markdown) return;
+                        const lines = crawlersReco.markdown.split('\n');
+                        const h1Line = lines.find(l => l.startsWith('# '));
+                        const h2Lines = lines.filter(l => l.startsWith('## ')).map(l => l.replace(/^##\s+/, '').trim());
+                        if (h1Line) setH1Field(h1Line.replace(/^#\s+/, '').trim());
+                        if (h2Lines.length > 0) setH2Fields(h2Lines);
+                        toast.success('Recommandation Crawlers appliquée');
+                      }}
                     />
                   )}
                   {activePanel === 'structured-data' && (
