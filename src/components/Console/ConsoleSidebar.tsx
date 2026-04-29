@@ -201,6 +201,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     ...(isProUser ? [
       { value: 'reports-tab', label: t.reports, icon: FileBox, hideOnMobile: true },
     ] : []),
+    { value: 'tracking-api', label: 'API', icon: Network, hideOnMobile: true, advancedOnly: true },
   ];
 
   // Bottom items: Pro Agency, Wallet, Settings, Creator, API
