@@ -57,6 +57,23 @@ async function flushBuffer(secret) {
 export default {
   async fetch(request, env, ctx) {
     const secret = env.CRAWLERS_SECRET;
+    const url = new URL(request.url);
+
+    // ── Proxy /sitemap.xml → CDN Supabase ──────────────────────
+    // Sert le sitemap dynamique sans exposer l'URL Storage publique
+    if (url.pathname === "/sitemap.xml") {
+      const cdnRes = await fetch(SITEMAP_CDN_URL, {
+        cf: { cacheTtl: 3600, cacheEverything: true },
+      });
+      return new Response(cdnRes.body, {
+        status: cdnRes.status,
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          "Cache-Control": "public, max-age=3600, s-maxage=86400",
+          "X-Proxied-From": "supabase-cdn",
+        },
+      });
+    }
 
     // Laisser passer la requête immédiatement (zero latence ajoutée)
     const response = await fetch(request);
