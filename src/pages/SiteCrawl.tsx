@@ -19,6 +19,7 @@ import { ReportPreviewModal } from '@/components/ReportPreview';
 import { SiteCrawlReportData } from '@/components/ReportPreview/generators/siteCrawlHtmlGenerator';
 import { HttpStatusChart } from '@/components/SiteCrawl/HttpStatusChart';
 import { StrategicErrorBoundary } from '@/components/ExpertAudit/StrategicErrorBoundary';
+import { ProAccessGate } from '@/components/ProAccessGate';
 import { MaillageIPRCard, computeMaillageFromCrawlPages } from '@/components/ExpertAudit/MaillageIPRCard';
 import { FairUseLimitModal } from '@/components/SiteCrawl/FairUseLimitModal';
 import { getScoreColor, getScoreBg } from '@/components/SiteCrawl/types';
@@ -172,6 +173,18 @@ export default function SiteCrawl() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  // Gate non-connectés : proposer connexion / inscription / abonnement
+  if (!user) {
+    return (
+      <ProAccessGate
+        featureName="Crawl Multi-Pages"
+        featureDescription="Connectez-vous ou créez un compte pour analyser jusqu'à 5000 pages de votre site."
+        returnPath="/app/console"
+        returnLabel="Retour Console"
+      />
     );
   }
 
