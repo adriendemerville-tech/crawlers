@@ -709,9 +709,9 @@ const Index = () => {
           </Suspense>
         </div>
 
-        {/* Chrome Extension — short teaser */}
+        {/* Breathing Spiral — Innovation de rupture */}
         <Suspense fallback={<SectionSkeleton />}>
-          <ExtensionSection />
+          <BreathingSpiralSection />
         </Suspense>
 
 
@@ -800,9 +800,9 @@ const Index = () => {
         </Suspense>
 
 
-        {/* Breathing Spiral — Innovation de rupture */}
+        {/* Chrome Extension — short teaser */}
         <Suspense fallback={<SectionSkeleton />}>
-          <BreathingSpiralSection />
+          <ExtensionSection />
         </Suspense>
 
 
