@@ -722,7 +722,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                   <div className="px-3 pb-2 pt-1 sticky bottom-0 bg-[#1e293b]">
                     <Button
                       size="sm"
-                      onClick={handleGenerate}
+                      onClick={() => handleGenerate(false)}
                       disabled={loading || !keyword}
                       className="w-full text-xs gap-1.5 bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border border-teal-500/30"
                     >
