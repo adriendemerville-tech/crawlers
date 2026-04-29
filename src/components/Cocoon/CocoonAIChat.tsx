@@ -8,7 +8,31 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap, Maximize2, Minimize2, Minus, ExternalLink } from 'lucide-react';
 import { Syringe, Hammer, PenTool } from 'lucide-react';
-import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw } from 'lucide-react';
+import { Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw } from 'lucide-react';
+
+/** Logo robot doré du Stratège Cocoon — identique à celui de la Home (AIAgentsSection) */
+function GoldCrawlersLogo({ size = 16, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width={size} height={size} className={className}>
+      <defs>
+        <linearGradient id="cocoonStrategistGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: '#f5c842' }} />
+          <stop offset="50%" style={{ stopColor: '#d4a853' }} />
+          <stop offset="100%" style={{ stopColor: '#b8860b' }} />
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#cocoonStrategistGoldGrad)" />
+      <g transform="translate(8.4, 8.4) scale(1.3)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M12 8V4H8" />
+        <rect x="4" y="8" width="16" height="12" rx="2" />
+        <path d="M2 14h2" />
+        <path d="M20 14h2" />
+        <path d="M9 13v2" />
+        <path d="M15 13v2" />
+      </g>
+    </svg>
+  );
+}
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
