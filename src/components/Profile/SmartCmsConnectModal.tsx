@@ -53,7 +53,7 @@ interface Props {
   siteApiKey: string;
 }
 
-type Path = 'magic_link' | 'rest_api' | 'plugin_manual' | 'gtm_widget';
+type Path = 'rest_api' | 'plugin_manual' | 'gtm_widget';
 
 interface DetectionResult {
   isWordPress: boolean;
