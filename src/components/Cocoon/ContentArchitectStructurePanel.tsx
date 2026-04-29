@@ -189,9 +189,47 @@ export function ContentArchitectStructurePanel({
         </div>
       </ScrollArea>
 
+      {/* Cache badge + Recommandation Crawlers */}
+      {(cacheInfo?.cached || crawlersReco) && (
+        <div className="shrink-0 px-3 py-2 border-t border-white/10 space-y-2">
+          {cacheInfo?.cached && (
+            <div className="flex items-center justify-between text-[10px] text-white/50">
+              <span>Depuis le cache{typeof cacheInfo.ageDays === 'number' ? ` · ${cacheInfo.ageDays}j` : ''}</span>
+              <button
+                onClick={() => onGenerate(true)}
+                disabled={loading}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-white/20 text-white/70 hover:text-white hover:border-white/40 transition-colors"
+                title="Forcer une nouvelle génération"
+              >
+                <RefreshCw className="w-2.5 h-2.5" />
+                Régénérer
+              </button>
+            </div>
+          )}
+          {crawlersReco && (
+            <div className="rounded border border-[#fbbf24]/20 bg-[#fbbf24]/5 p-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-semibold text-[#fbbf24]/80">Recommandation Crawlers</span>
+                {onApplyRecommendation && (
+                  <button
+                    onClick={onApplyRecommendation}
+                    className="text-[9px] px-1.5 py-0.5 rounded border border-[#fbbf24]/40 text-[#fbbf24]/90 hover:bg-[#fbbf24]/10 transition-colors"
+                  >
+                    Utiliser
+                  </button>
+                )}
+              </div>
+              <p className="text-[9px] text-white/40 leading-relaxed line-clamp-3">
+                Une structure similaire a déjà été optimisée sur Crawlers pour cette intention.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Sticky generate button */}
       <div className="shrink-0 p-3 border-t border-white/10">
-        <Button onClick={onGenerate} disabled={loading || !keyword || (!directory && !slug)} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
+        <Button onClick={() => onGenerate(false)} disabled={loading || !keyword || (!directory && !slug)} className="w-full bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold h-9 text-xs">
           {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />{t3(language, 'Génération…', 'Generating…', 'Generando…')}</> : <><Send className="w-3.5 h-3.5 mr-2" />{t3(language, 'Générer la page', 'Generate page', 'Generar página')}</>}
         </Button>
       </div>
