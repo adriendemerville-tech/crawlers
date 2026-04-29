@@ -12,21 +12,21 @@ export function ExtensionSection() {
       title: 'Auditez n\'importe quelle page en 1 clic',
       desc: 'Mode Pilote sur vos sites trackés, mode Espion sur vos concurrents. Findings injectés directement dans votre Workbench.',
       cta: 'Télécharger l\'extension',
-      bullets: ['Stratégique', 'E-E-A-T', 'Conversion', 'Machine Layer'],
+      bullets: ['Audit SEO', 'Stratégique', 'E-E-A-T', 'Conversion', 'Machine Layer'],
     },
     es: {
       eyebrow: 'Extensión Chrome',
       title: 'Audita cualquier página en 1 clic',
       desc: 'Modo Piloto en tus sitios, modo Espía en competidores. Hallazgos inyectados en tu Workbench.',
       cta: 'Descargar la extensión',
-      bullets: ['Estratégico', 'E-E-A-T', 'Conversión', 'Machine Layer'],
+      bullets: ['Auditoría SEO', 'Estratégico', 'E-E-A-T', 'Conversión', 'Machine Layer'],
     },
     en: {
       eyebrow: 'Chrome Extension',
       title: 'Audit any page in 1 click',
       desc: 'Pilot mode on your tracked sites, Spy mode on competitors. Findings injected straight into your Workbench.',
       cta: 'Download the extension',
-      bullets: ['Strategic', 'E-E-A-T', 'Conversion', 'Machine Layer'],
+      bullets: ['SEO Audit', 'Strategic', 'E-E-A-T', 'Conversion', 'Machine Layer'],
     },
   }[language as 'fr' | 'es' | 'en'] || {} as any;
 
