@@ -330,6 +330,20 @@ export function SmartCmsConnectModal({
     setWorking(true);
     try {
       if (path === 'magic_link') {
+        // Garde-fou : Magic Link nécessite le plugin Crawlers côté WordPress
+        if (detection && !detection.pluginInstalled) {
+          toast.error(
+            t3(
+              lang,
+              'Le plugin Crawlers n\'est pas encore installé sur ce site. Téléchargez-le et activez-le dans WordPress avant d\'utiliser le Magic Link.',
+              'The Crawlers plugin is not installed on this site yet. Download and activate it in WordPress before using Magic Link.',
+              'El plugin Crawlers aún no está instalado en este sitio. Descárguelo y actívelo en WordPress antes de usar el Magic Link.',
+            ),
+            { duration: 8000 },
+          );
+          setWorking(false);
+          return;
+        }
         await handleWPIntegration('magic_link', {
           siteId,
           domain: siteDomain,
@@ -728,9 +742,19 @@ export function SmartCmsConnectModal({
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">{detection.reason}</p>
+              {detection.recommended === 'magic_link' && !detection.pluginInstalled && (
+                <div className="rounded border border-amber-500/40 bg-amber-500/5 p-2 text-xs text-amber-700 dark:text-amber-400">
+                  {t3(
+                    lang,
+                    '⚠ Le plugin Crawlers doit être installé et activé sur WordPress avant d\'utiliser le Magic Link. Utilisez d\'abord « Télécharger le plugin ».',
+                    '⚠ The Crawlers plugin must be installed and activated on WordPress before using Magic Link. Use "Download plugin" first.',
+                    '⚠ El plugin Crawlers debe estar instalado y activado en WordPress antes de usar el Magic Link. Use primero "Descargar plugin".',
+                  )}
+                </div>
+              )}
               <Button
                 onClick={() => executePath(detection.recommended)}
-                disabled={working}
+                disabled={working || (detection.recommended === 'magic_link' && !detection.pluginInstalled)}
                 variant="outline"
                 className="w-full gap-2 mt-2"
               >
@@ -760,6 +784,7 @@ export function SmartCmsConnectModal({
                   .map((p) => {
                     const meta = pathLabels[p];
                     const Icon = meta.icon;
+                    const needsPlugin = p === 'magic_link' && !detection.pluginInstalled;
                     return (
                       <Button
                         key={p}
@@ -767,11 +792,13 @@ export function SmartCmsConnectModal({
                         size="sm"
                         className="justify-start gap-2"
                         onClick={() => executePath(p)}
-                        disabled={working}
+                        disabled={working || needsPlugin}
+                        title={needsPlugin ? t3(lang, 'Installez d\'abord le plugin Crawlers', 'Install the Crawlers plugin first', 'Instale primero el plugin Crawlers') : undefined}
                       >
                         <Icon className="h-3.5 w-3.5" />
                         <span className="text-xs">
                           {meta.title} — {meta.cta}
+                          {needsPlugin && ` · ${t3(lang, 'plugin requis', 'plugin required', 'plugin requerido')}`}
                         </span>
                       </Button>
                     );
