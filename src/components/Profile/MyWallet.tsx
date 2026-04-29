@@ -28,6 +28,7 @@ import { RetentionModal } from '@/components/Profile/RetentionModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 import { CrawlQuotaCard } from '@/components/Profile/CrawlQuotaCard';
 import { ContentQuotaCard } from '@/components/Profile/ContentQuotaCard';
+import { ProAgencyPaywallModal } from '@/components/Profile/ProAgencyPaywallModal';
 
 const translations = {
   fr: {
@@ -555,8 +556,10 @@ export function MyWallet() {
   }
 
   // Free users: full wallet with credits, upsell, and transaction history
+  // + paywall différé (modal bloquante après quelques secondes) car ils accèdent à l'onglet "Pro Agency"
   return (
     <div className="space-y-6">
+      <ProAgencyPaywallModal delayMs={6000} />
       {/* Balance Card */}
       <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
         <CardHeader className="pb-2">

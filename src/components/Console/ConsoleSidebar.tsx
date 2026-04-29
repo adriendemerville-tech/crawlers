@@ -206,12 +206,12 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
   // Bottom items: Pro Agency, Wallet, Settings, Creator, API
   const bottomItems: SidebarItem[] = [
-    ...(isProUser ? [{
-      value: 'wallet', label: planType === 'agency_premium' ? 'Pro Agency +' : 'Pro Agency',
-      icon: Crown, hideOnMobile: true,
-    }] : [
-      { value: 'wallet', label: t.wallet, icon: Wallet, hideOnMobile: true },
-    ]),
+    {
+      value: 'wallet',
+      label: planType === 'agency_premium' ? 'Pro Agency +' : 'Pro Agency',
+      icon: Crown,
+      hideOnMobile: true,
+    },
     ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true, advancedOnly: true }] : []),
     { value: 'settings', label: t.settings, icon: Settings, hideOnMobile: true },
     ...(hasAdminAccess ? [{ value: 'admin', label: t.creator, icon: Shield }] : []),
@@ -228,10 +228,10 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
     const content = (
       <>
-        <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && isProUser && 'text-yellow-500')} />
+        <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && 'text-yellow-500')} />
         <span className="flex-1 truncate">
           {item.beta && <span className="text-muted-foreground text-[9px] font-normal mr-1 uppercase">beta</span>}
-          {item.value === 'wallet' && isProUser ? (
+          {item.value === 'wallet' ? (
             <span className="font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
               {item.label}
             </span>
