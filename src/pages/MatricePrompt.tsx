@@ -641,7 +641,27 @@ export default function MatricePrompt() {
     if (!url.trim()) { toast.error('Entrez une URL'); return; }
     if (selectedRows.length === 0) { toast.error('Sélectionnez au moins un KPI'); return; }
     setAnalyzing(true);
-    setBenchmarkData(null);
+    // Préserve la structure du canvas (themes / engines / axes / heatmap shell)
+    // pour ne PAS revenir au canvas par défaut, mais reset les scores à -1
+    // afin que l'analyse Crawlers les remplace ensuite.
+    setBenchmarkData((prev) => {
+      if (!prev) return null;
+      const blankHeatmap: typeof prev.heatmap = {};
+      for (const theme of prev.themes) {
+        blankHeatmap[theme] = {};
+        for (const engine of prev.engines) {
+          blankHeatmap[theme][engine] = { score: -1, cited: false, rank: null, count: 0, cited_count: 0 } as any;
+        }
+      }
+      const blankResults = (prev.results || []).map((r: any) => ({
+        ...r,
+        crawlers_score: -1,
+        citation_found: false,
+        citation_rank: null,
+        citation_context: '',
+      }));
+      return { ...prev, heatmap: blankHeatmap, results: blankResults, globalScore: 0, citationRate: 0 };
+    });
     setResumeBanner(null);
     sessionStorage.removeItem(PARTIAL_KEY);
     auditStartRef.current = Date.now();

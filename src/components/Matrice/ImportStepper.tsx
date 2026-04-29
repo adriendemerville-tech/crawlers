@@ -101,6 +101,16 @@ function isVariableSheet(sheetName: string, headers: string[]): boolean {
 
 const ENGINE_NOTES_PATTERNS = [/^engine.?notes?/i, /^notes?.?moteur/i, /^citation.?guide/i];
 const SCORING_GUIDE_PATTERNS = [/^scoring.?guide/i, /^grille.?scoring/i, /^scoring$/i, /^codage/i];
+const SUMMARY_SHEET_PATTERNS = [
+  /synth[èe]se/i,
+  /^r[ée]sum[ée]$/i,
+  /^summary$/i,
+  /^totaux?$/i,
+  /^aggreg/i,
+  /^bilan$/i,
+  /^scores?\s+par\s+(moteur|prompt)/i,
+  /^statistiques?$/i,
+];
 
 function isEngineNotesSheet(sheetName: string, headers: string[]): boolean {
   if (ENGINE_NOTES_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
@@ -112,6 +122,10 @@ function isScoringGuideSheet(sheetName: string, headers: string[]): boolean {
   if (SCORING_GUIDE_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
   const hJoined = headers.map(h => h.toLowerCase()).join('|');
   return hJoined.includes('what_to_code') && hJoined.includes('allowed_values');
+}
+
+function isSummarySheet(sheetName: string, _headers: string[]): boolean {
+  return SUMMARY_SHEET_PATTERNS.some(p => p.test(sheetName.trim()));
 }
 
 function extractEngineNotes(rows: Record<string, any>[], headers: string[]): EngineNote[] {
@@ -182,35 +196,52 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const [identityCard, setIdentityCard] = useState<IdentityCard | null>(null);
   const [detectedVariableSheets, setDetectedVariableSheets] = useState<string[]>([]);
   const [detectedMetaSheets, setDetectedMetaSheets] = useState<Record<string, 'engine_notes' | 'scoring_guide'>>({});
+  const [detectedSummarySheets, setDetectedSummarySheets] = useState<string[]>([]);
   const [matrixMetadata, setMatrixMetadata] = useState<MatrixMetadata | null>(null);
   const [loading, setLoading] = useState(false);
 
   const hasMultipleSheets = sheetNames.length > 1;
   const steps = hasMultipleSheets ? STEPS_MULTI : STEPS_SINGLE;
 
-  // ── Auto-detect variable + metadata sheets on open ──────────────────
+  // ── Auto-detect variable + metadata + summary sheets on open ────────
+  // Pré-coche également les onglets "data" pertinents (ni variable, ni méta,
+  // ni résumé) afin que l'utilisateur n'importe pas de doublons (ex: Synthèse,
+  // Scores par prompt) qui dégradent la heatmap.
   useEffect(() => {
     if (!open || !workbook || sheetNames.length === 0) return;
     const detectSpecialSheets = async () => {
       const { utils } = await import('xlsx');
       const varSheets: string[] = [];
       const metaSheets: Record<string, 'engine_notes' | 'scoring_guide'> = {};
+      const summarySheets: string[] = [];
+      const dataSheets: string[] = [];
       for (const name of sheetNames) {
         const sheet = workbook.Sheets[name];
         const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
-        if (rows.length > 0) {
-          const h = Object.keys(rows[0]);
-          if (isVariableSheet(name, h)) {
-            varSheets.push(name);
-          } else if (isEngineNotesSheet(name, h)) {
-            metaSheets[name] = 'engine_notes';
-          } else if (isScoringGuideSheet(name, h)) {
-            metaSheets[name] = 'scoring_guide';
-          }
+        if (rows.length === 0) continue;
+        const h = Object.keys(rows[0]);
+        if (isVariableSheet(name, h)) {
+          varSheets.push(name);
+        } else if (isEngineNotesSheet(name, h)) {
+          metaSheets[name] = 'engine_notes';
+        } else if (isScoringGuideSheet(name, h)) {
+          metaSheets[name] = 'scoring_guide';
+        } else if (isSummarySheet(name, h)) {
+          summarySheets.push(name);
+        } else {
+          dataSheets.push(name);
         }
       }
       setDetectedVariableSheets(varSheets);
       setDetectedMetaSheets(metaSheets);
+      setDetectedSummarySheets(summarySheets);
+      // Pré-coche uniquement les onglets data détectés. Si aucun n'a été
+      // identifié comme tel, on retombe sur la sélection vide (l'utilisateur
+      // choisit manuellement).
+      if (dataSheets.length > 0) {
+        setSelectedSheets(dataSheets);
+        console.log(`[ImportStepper] Auto-sélection de ${dataSheets.length} onglet(s) data:`, dataSheets, '— écartés:', { variables: varSheets, meta: Object.keys(metaSheets), résumés: summarySheets });
+      }
     };
     detectSpecialSheets();
   }, [open, workbook, sheetNames]);
@@ -491,17 +522,21 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
               const isVar = detectedVariableSheets.includes(name);
               const metaType = detectedMetaSheets[name];
               const isMetaSheet = !!metaType;
+              const isSummary = detectedSummarySheets.includes(name);
               const sheetIcon = isVar ? <CreditCard className="h-4 w-4 shrink-0 text-amber-500" />
                 : metaType === 'engine_notes' ? <BookOpen className="h-4 w-4 shrink-0 text-cyan-500" />
                 : metaType === 'scoring_guide' ? <BarChart3 className="h-4 w-4 shrink-0 text-emerald-500" />
+                : isSummary ? <BarChart3 className="h-4 w-4 shrink-0 text-muted-foreground/60" />
                 : <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />;
               const badgeLabel = isVar ? "Carte d'identité"
                 : metaType === 'engine_notes' ? 'Instructions moteur'
                 : metaType === 'scoring_guide' ? 'Grille scoring'
+                : isSummary ? 'Résumé (doublon)'
                 : null;
               const badgeColor = isVar ? 'border-amber-500/30 text-amber-500'
                 : metaType === 'engine_notes' ? 'border-cyan-500/30 text-cyan-500'
                 : metaType === 'scoring_guide' ? 'border-emerald-500/30 text-emerald-500'
+                : isSummary ? 'border-muted-foreground/30 text-muted-foreground'
                 : '';
               return (
                 <button
@@ -523,7 +558,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                       {badgeLabel}
                     </Badge>
                   )}
-                  {isMetaSheet && !isChecked && (
+                  {(isMetaSheet || isSummary) && !isChecked && (
                     <span className="text-[9px] text-muted-foreground/60">auto</span>
                   )}
                 </button>
