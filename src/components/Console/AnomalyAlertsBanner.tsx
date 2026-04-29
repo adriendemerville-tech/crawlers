@@ -34,15 +34,39 @@ const severityConfig: Record<string, { bg: string; border: string; icon: any; te
 
 type TickerItem = { id: string; icon: any; bg: string; border: string; textColor: string; title: string; desc: string };
 
-type TickerItem = { id: string; icon: any; bg: string; border: string; textColor: string; title: string; desc: string };
-
 export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnabled }: AnomalyAlertsBannerProps) {
   const [alerts, setAlerts] = useState<AnomalyAlert[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [hidden, setHidden] = useState(() => localStorage.getItem('ticker_hidden_default') === '1');
   const [paused, setPaused] = useState(false);
+  const [ga4Connected, setGa4Connected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number | null>(null);
+
+  // Detect GA4 connection — banner only shows when GA4 is actually connected
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { if (!cancelled) setGa4Connected(false); return; }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('ga4_property_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      let ok = !!(profile as any)?.ga4_property_id;
+      if (!ok) {
+        const { data: conns } = await supabase
+          .from('google_connections')
+          .select('ga4_property_id')
+          .eq('user_id', user.id);
+        ok = !!(conns as any[] | null)?.some(c => !!c.ga4_property_id);
+      }
+      if (!cancelled) setGa4Connected(ok);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
 
   useEffect(() => {
     if (!trackedSiteId) { setAlerts([]); return; }
