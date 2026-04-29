@@ -100,7 +100,7 @@ async function launchAudit() {
   if (!currentTab?.url) return;
   el.auditBtn.disabled = true;
   el.auditResults.classList.add('hidden');
-  setStatus('<span class="spinner"></span> Audit en cours… cela peut prendre 30 à 60 s.');
+  setStatus('<span class="spinner"></span> Audit en cours (Stratégique + Expert + E-E-A-T + Machine Layer + Conversion)… 60 à 90 s.');
 
   try {
     const session = await getSession();
