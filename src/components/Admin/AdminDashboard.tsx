@@ -312,12 +312,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'functions': return <FunctionsManagement />;
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
-      case 'parmenion': return <ParmenionDashboard />;
-      case 'workbench': return <WorkbenchAdmin />;
-      case 'eeat': return <EeatScoringAdmin />;
-      case 'marina': return <MarinaDashboard />;
-      case 'prospects': return <ProspectPipelineDashboard />;
-      case 'social-hub': return <SocialContentDashboard simulatedDataEnabled={simulatedDataEnabled} />;
+      case 'parmenion': return wrap(<ParmenionDashboard />);
+      case 'workbench': return wrap(<WorkbenchAdmin />);
+      case 'eeat': return wrap(<EeatScoringAdmin />);
+      case 'marina': return wrap(<MarinaDashboard />);
+      case 'prospects': return wrap(<ProspectPipelineDashboard />);
+      case 'social-hub': return wrap(<SocialContentDashboard simulatedDataEnabled={simulatedDataEnabled} />);
       case 'sitemap': return <SitemapMonitorWidget />;
       default: return <AnalyticsDashboard />;
     }
