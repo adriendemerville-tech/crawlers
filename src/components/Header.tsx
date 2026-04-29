@@ -387,15 +387,7 @@ export function Header() {
             </>
           )}
 
-          {/* Console — for paid users */}
-          {!isProfilePage && !isAuditExpertPage && (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free'))) && (
-            <Link to="/app/console">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground ${isProfilePage ? 'border border-muted-foreground' : ''}`}>
-                <LayoutDashboard className="h-4 w-4" />
-                <span className="text-sm">{t.console}</span>
-              </Button>
-            </Link>
-          )}
+          {/* Console button moved next to Profile (right side) — duplicate removed */}
         </div>}
 
         {/* Console-only centered shortcuts: Matrice, Crawl, Audit, Cocoon, Content, Social Hub */}
