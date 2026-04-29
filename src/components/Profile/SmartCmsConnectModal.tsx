@@ -430,11 +430,6 @@ export function SmartCmsConnectModal({
 
   // ─── UI ───
   const pathLabels: Record<Path, { title: string; cta: string; icon: any }> = {
-    magic_link: {
-      title: t3(lang, 'Magic Link', 'Magic Link', 'Magic Link'),
-      cta: t3(lang, 'Brancher en 1 clic', '1-click connect', 'Conectar en 1 clic'),
-      icon: Zap,
-    },
     rest_api: {
       title: t3(lang, 'API REST WordPress', 'WordPress REST API', 'API REST WordPress'),
       cta: t3(lang, 'Saisir mes identifiants', 'Enter credentials', 'Ingresar credenciales'),
@@ -452,7 +447,7 @@ export function SmartCmsConnectModal({
     },
   };
 
-  const allPaths: Path[] = ['magic_link', 'rest_api', 'plugin_manual', 'gtm_widget'];
+  const allPaths: Path[] = ['rest_api', 'plugin_manual', 'gtm_widget'];
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
