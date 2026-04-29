@@ -10,8 +10,8 @@ import { CrawlersLogo } from './CrawlersLogo';
 import { isOnboardingDone } from '@/utils/felixOnboarding';
 import { playNotificationSound } from '@/utils/notificationSound';
 
-// Lazy load du chat unifié (Sprint 9 — legacy ChatWindow supprimé).
-const ChatWindowUnified = lazy(() => import('./ChatWindowUnified').then(m => ({ default: m.ChatWindowUnified })));
+// Lazy load de l'ancien shell Félix dédié, antérieur à la refactorisation agents.
+const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
 
 export function FloatingChatBubble() {
   const [isOpen, setIsOpen] = useState(() => {
@@ -40,7 +40,7 @@ export function FloatingChatBubble() {
   const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
   const isReportPage = hiddenRoutes.some(r => location.pathname.startsWith(r));
 
-  // Sync mute state from ChatWindowUnified toggle
+  // Sync mute state from ChatWindow toggle
   useEffect(() => {
     const handler = () => setIsMuted(localStorage.getItem('felix_muted') === '1');
     window.addEventListener('felix_mute_changed', handler);
@@ -252,14 +252,14 @@ export function FloatingChatBubble() {
 
   return (
     <>
-      {/* Chat Window unifié — lazy loaded */}
+      {/* Chat Window legacy dédié — lazy loaded */}
       {isOpen && (
         <Suspense fallback={
           <div className="fixed bottom-20 z-[110] w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center" style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}>
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         }>
-          <ChatWindowUnified
+          <ChatWindow
             onClose={() => { setIsOpen(false); setTriggerOnboarding(false); setAutoStartCrawlersQuiz(false); setAutoEnterpriseContact(false); setFelixGreeting(null); setFelixExpandedGreeting(null); }}
             triggerOnboarding={triggerOnboarding}
             onOnboardingConsumed={() => setTriggerOnboarding(false)}
