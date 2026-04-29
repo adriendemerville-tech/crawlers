@@ -788,7 +788,6 @@ export function SmartCmsConnectModal({
                   .map((p) => {
                     const meta = pathLabels[p];
                     const Icon = meta.icon;
-                    const needsPlugin = p === 'magic_link' && !detection.pluginInstalled;
                     return (
                       <Button
                         key={p}
@@ -796,13 +795,11 @@ export function SmartCmsConnectModal({
                         size="sm"
                         className="justify-start gap-2"
                         onClick={() => executePath(p)}
-                        disabled={working || needsPlugin}
-                        title={needsPlugin ? t3(lang, 'Installez d\'abord le plugin Crawlers', 'Install the Crawlers plugin first', 'Instale primero el plugin Crawlers') : undefined}
+                        disabled={working}
                       >
                         <Icon className="h-3.5 w-3.5" />
                         <span className="text-xs">
                           {meta.title} — {meta.cta}
-                          {needsPlugin && ` · ${t3(lang, 'plugin requis', 'plugin required', 'plugin requerido')}`}
                         </span>
                       </Button>
                     );
