@@ -2108,7 +2108,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
             : 'bg-[#fbbf24]/10 border-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/20'
         } backdrop-blur-md`}
       >
-        <MessageSquare className="w-4 h-4" />
+        <GoldCrawlersLogo size={18} />
         <span className="text-xs font-medium">{t.title}</span>
         {messages.length > 0 && (
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#fbbf24]/20 font-mono">{messages.length}</span>
