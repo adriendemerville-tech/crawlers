@@ -131,6 +131,9 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
   const [generatingLink, setGeneratingLink] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testingGtm, setTestingGtm] = useState(false);
+  const [restApiKey, setRestApiKey] = useState('');
+  const [restApiKeyVisible, setRestApiKeyVisible] = useState(false);
+  const [savingRestKey, setSavingRestKey] = useState(false);
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
