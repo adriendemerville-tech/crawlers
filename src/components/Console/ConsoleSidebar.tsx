@@ -228,10 +228,10 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
     const content = (
       <>
-        <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && isProUser && 'text-yellow-500')} />
+        <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && 'text-yellow-500')} />
         <span className="flex-1 truncate">
           {item.beta && <span className="text-muted-foreground text-[9px] font-normal mr-1 uppercase">beta</span>}
-          {item.value === 'wallet' && isProUser ? (
+          {item.value === 'wallet' ? (
             <span className="font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
               {item.label}
             </span>
