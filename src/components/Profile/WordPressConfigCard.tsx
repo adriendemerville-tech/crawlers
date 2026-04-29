@@ -296,9 +296,9 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
         <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
           {t3(language,
-            'Choisissez votre CMS ci-dessous, puis suivez les étapes. Aucune action requise sur la clé API : elle est déjà intégrée aux snippets et au plugin.',
-            'Pick your CMS below, then follow the steps. No action needed on the API Key — it is already embedded in the snippets and plugin.',
-            'Elija su CMS a continuación y siga los pasos. No hay nada que hacer con la clave API: ya está integrada en los snippets y el plugin.'
+            'Choisissez votre CMS ci-dessous, puis suivez les étapes.',
+            'Pick your CMS below, then follow the steps.',
+            'Elija su CMS a continuación y siga los pasos.'
           )}
         </p>
       </DialogHeader>
@@ -336,39 +336,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </div>
       </div>
 
-      {/* ─── API Key — repliée par défaut, juste pour copie/audit ─── */}
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="apikey" className="border rounded-xl bg-muted/10 px-4">
-          <AccordionTrigger className="py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
-            <span className="flex items-center gap-2">
-              <Eye className="h-3.5 w-3.5" />
-              {t3(language, 'Voir ma clé API (optionnel)', 'View my API Key (optional)', 'Ver mi clave API (opcional)')}
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="pb-3">
-            <p className="text-[10px] text-muted-foreground mb-2 leading-snug">
-              {t3(language,
-                'Vous n\'avez normalement pas besoin de la copier : elle est déjà pré-remplie dans le plugin .zip et dans tous les snippets ci-dessous. Affichée ici uniquement pour audit ou intégration manuelle.',
-                'You normally do not need to copy it: it is already pre-filled in the .zip plugin and in every snippet below. Shown here only for audit or manual integration.',
-                'Normalmente no necesita copiarla: ya está pre-rellenada en el plugin .zip y en todos los snippets siguientes. Se muestra aquí solo para auditoría o integración manual.'
-              )}
-            </p>
-            <div className="flex items-center gap-1.5">
-              <Input
-                readOnly
-                value={apiKeyVisible ? siteApiKey : maskedKey}
-                className="font-mono text-[11px] bg-background h-8 flex-1 cursor-default"
-              />
-              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setApiKeyVisible(!apiKeyVisible)}>
-                {apiKeyVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-              </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={handleCopyApiKey}>
-                {apiKeyCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-              </Button>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      {/* API Key section removed — la clé est déjà embarquée dans plugin/snippets, l'utilisateur n'a rien à en faire */}
 
       {connectMethod !== 'gtm' ? (
         <div className="space-y-3 pt-1">
