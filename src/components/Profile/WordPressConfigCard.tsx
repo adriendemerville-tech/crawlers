@@ -265,6 +265,33 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
       </DialogHeader>
 
+      {/* ─── API Key — placée en premier ─── */}
+      <div className="rounded-xl border bg-muted/20 px-5 py-4 space-y-2">
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {t3(language, 'Clé API de ce site', 'Site API Key', 'Clave API del sitio')}
+        </label>
+        <div className="flex items-center gap-1.5">
+          <Input
+            readOnly
+            value={apiKeyVisible ? siteApiKey : maskedKey}
+            className="font-mono text-[11px] bg-background h-8 flex-1 cursor-default"
+          />
+          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setApiKeyVisible(!apiKeyVisible)}>
+            {apiKeyVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          </Button>
+          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={handleCopyApiKey}>
+            {apiKeyCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+          </Button>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          {t3(language,
+            'Cette clé est pré-remplie dans les snippets ci-dessous. Ne la partagez pas.',
+            'This key is pre-filled in the snippets below. Do not share it.',
+            'Esta clave está pre-rellenada en los snippets siguientes. No la comparta.'
+          )}
+        </p>
+      </div>
+
       {/* ─── CMS selector — square cards ─── */}
       <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
