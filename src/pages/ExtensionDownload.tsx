@@ -101,11 +101,10 @@ export default function ExtensionDownload() {
             </section>
 
             <Button
-              variant="outline"
               size="lg"
               onClick={handleDownload}
               disabled={downloading}
-              className="gap-2 mb-12"
+              className="bg-background hover:bg-accent hover:text-accent-foreground h-11 rounded-md px-8 text-base gap-2 mb-12 border-2 border-violet-600"
             >
               <Download className="h-5 w-5" />
               {downloading ? 'Téléchargement…' : 'Télécharger l\'extension (.zip)'}
