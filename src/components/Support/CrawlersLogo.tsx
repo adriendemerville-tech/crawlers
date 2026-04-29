@@ -9,10 +9,11 @@ export function CrawlersLogo({ size = 20, className = '' }: { size?: number; cla
       className={className}
     >
       <defs>
-        <linearGradient id="chatBotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: '#f5c842' }} />
-          <stop offset="50%" style={{ stopColor: '#d4a853' }} />
-          <stop offset="100%" style={{ stopColor: '#b8860b' }} />
+        <linearGradient id="chatBotGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style={{ stopColor: '#d4a853' }} />
+          <stop offset="30%" style={{ stopColor: '#8b5cf6' }} />
+          <stop offset="70%" style={{ stopColor: '#7c3aed' }} />
+          <stop offset="100%" style={{ stopColor: '#3b5998' }} />
         </linearGradient>
       </defs>
       <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#chatBotGrad)" />
