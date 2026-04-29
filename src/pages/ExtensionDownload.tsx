@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, CheckCircle2 } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
+import { Header } from '@/components/Header';
+
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 export default function ExtensionDownload() {
   const [downloading, setDownloading] = useState(false);
