@@ -742,14 +742,32 @@ export function SmartCmsConnectModal({
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">{detection.reason}</p>
-              {detection.recommended === 'magic_link' && !detection.pluginInstalled && (
-                <div className="rounded border border-amber-500/40 bg-amber-500/5 p-2 text-xs text-amber-700 dark:text-amber-400">
-                  {t3(
-                    lang,
-                    '⚠ Le plugin Crawlers doit être installé et activé sur WordPress avant d\'utiliser le Magic Link. Utilisez d\'abord « Télécharger le plugin ».',
-                    '⚠ The Crawlers plugin must be installed and activated on WordPress before using Magic Link. Use "Download plugin" first.',
-                    '⚠ El plugin Crawlers debe estar instalado y activado en WordPress antes de usar el Magic Link. Use primero "Descargar plugin".',
-                  )}
+              {!detection.pluginInstalled && (
+                <div className="rounded border border-amber-500/40 bg-amber-500/5 p-3 space-y-2">
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    {t3(
+                      lang,
+                      'Le plugin Crawlers n\'est pas détecté sur ce WordPress. Téléchargez-le ci-dessous (ZIP + instructions d\'installation), puis installez-le via Extensions → Ajouter → Téléverser une extension. La connexion Magic Link sera alors disponible.',
+                      'The Crawlers plugin is not detected on this WordPress. Download it below (ZIP + install instructions), then install it via Plugins → Add New → Upload Plugin. Magic Link will then be available.',
+                      'El plugin Crawlers no se detecta en este WordPress. Descárguelo abajo (ZIP + instrucciones), luego instálelo en Plugins → Añadir → Subir plugin. Magic Link estará disponible.',
+                    )}
+                  </p>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                  >
+                    <a href="/crawlers-fr-plugin.zip" download="crawlers-fr-plugin.zip">
+                      <Download className="h-3.5 w-3.5" />
+                      {t3(
+                        lang,
+                        'Télécharger le plugin (.zip + instructions)',
+                        'Download the plugin (.zip + instructions)',
+                        'Descargar el plugin (.zip + instrucciones)',
+                      )}
+                    </a>
+                  </Button>
                 </div>
               )}
               <Button
