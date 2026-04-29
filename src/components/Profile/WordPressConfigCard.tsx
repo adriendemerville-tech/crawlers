@@ -370,10 +370,8 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </AccordionItem>
       </Accordion>
 
-      <Separator />
-
       {connectMethod !== 'gtm' ? (
-        <div className="space-y-4 pt-1">
+        <div className="space-y-3 pt-1">
           {/* CMS name + subtitle */}
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
