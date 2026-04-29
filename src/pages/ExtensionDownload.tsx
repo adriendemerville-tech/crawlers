@@ -49,19 +49,51 @@ export default function ExtensionDownload() {
               d'identité de vos sites trackés est enrichie en continu.
             </p>
 
-            <div className="flex flex-col gap-3 mb-12">
-              {[
-                'Audit stratégique + technique sur la page courante',
-                'Détection automatique mode Pilote (vos sites) ou Espion (concurrents)',
-                'Enrichissement carte d\'identité (CMS, modèle économique, langue)',
-                'Workbench alimenté en temps réel',
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0 text-[hsl(var(--brand-violet))]" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
+            <section className="mb-10">
+              <h2 className="text-xl font-semibold mb-4">Audits lancés en 1 clic</h2>
+              <p className="text-sm text-muted-foreground mb-5">
+                Sur chaque page que vous décidez d'auditer, l'extension déclenche
+                <strong className="text-foreground"> jusqu'à 5 moteurs en parallèle</strong> et
+                consolide les findings dans votre Workbench.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { title: 'Audit stratégique IA (GEO)', desc: 'Visibilité dans les réponses IA, citabilité, fan-out, E-E-A-T sémantique.' },
+                  { title: 'Audit Expert technique', desc: 'Performance, balises, HTTP, indexabilité, structure HTML.' },
+                  { title: 'Score E-E-A-T', desc: 'Expertise, autorité, fiabilité — issues priorisés et plan correctif.' },
+                  { title: 'Machine Layer scan', desc: 'JSON-LD, OpenGraph, robots.txt, llms.txt, signaux machine pour bots IA.' },
+                  { title: 'Conversion Optimizer', desc: 'Suggestions UX/CRO sur la page (uniquement sur vos sites trackés).' },
+                ].map((item) => (
+                  <div key={item.title} className="border border-border rounded-md p-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-[hsl(var(--brand-violet))]" />
+                      <div>
+                        <p className="font-medium text-sm">{item.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="mb-10">
+              <h2 className="text-xl font-semibold mb-4">Ce que l'extension fait aussi</h2>
+              <div className="flex flex-col gap-2.5">
+                {[
+                  'Détection automatique du mode : Pilote (vos sites suivis) ou Espion (concurrents)',
+                  'Enrichissement de la carte d\'identité — CMS, modèle économique, langue, secteur',
+                  'Findings injectés en temps réel dans le Workbench du site concerné',
+                  'Lien direct vers le rapport complet dans l\'app Crawlers',
+                  'Aucun audit passif : rien ne part tant que vous ne cliquez pas',
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-3">
+                    <CheckCircle2 className="h-4 w-4 mt-1 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    <span className="text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
 
             <Button
               variant="outline"
