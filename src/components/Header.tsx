@@ -220,7 +220,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/console')}
                 className="gap-2 text-muted-foreground hover:text-foreground"
                 aria-label={t.back}
               >
