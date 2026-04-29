@@ -758,7 +758,7 @@ export function SmartCmsConnectModal({
               )}
               <Button
                 onClick={() => executePath(detection.recommended)}
-                disabled={working || (detection.recommended === 'magic_link' && !detection.pluginInstalled)}
+                disabled={working}
                 variant="outline"
                 className="w-full gap-2 mt-2"
               >
