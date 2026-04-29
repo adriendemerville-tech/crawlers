@@ -511,22 +511,54 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
                     'Odoo: genere una clave API de usuario (Preferencias → Cuenta → Claves API) para autenticación XML-RPC / REST.'
                   )}
                 </p>
-                <div className="flex items-center gap-1.5 pt-1">
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                    {t3(language, 'URL du site', 'Site URL', 'URL del sitio')}
+                  </label>
                   <Input
                     value={wpUrl}
-                    readOnly
-                    placeholder={t3(language, 'URL de votre site', 'Your site URL', 'URL de su sitio')}
-                    className="font-mono text-[11px] h-8 bg-background cursor-default flex-1"
+                    onChange={(e) => setWpUrl(e.target.value)}
+                    placeholder={t3(language, 'https://votre-site.com', 'https://your-site.com', 'https://su-sitio.com')}
+                    className="font-mono text-[11px] h-8 bg-background"
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                    {connectMethod === 'shopify' && t3(language, 'Token Admin API', 'Admin API token', 'Token Admin API')}
+                    {connectMethod === 'wix' && t3(language, 'Clé API Wix', 'Wix API key', 'Clave API Wix')}
+                    {connectMethod === 'prestashop' && t3(language, 'Clé Webservice', 'Webservice key', 'Clave Webservice')}
+                    {connectMethod === 'drupal' && t3(language, 'Identifiants Basic Auth (user:password en base64)', 'Basic Auth credentials (user:password base64)', 'Credenciales Basic Auth (usuario:contraseña base64)')}
+                    {connectMethod === 'odoo' && t3(language, 'Clé API utilisateur', 'User API key', 'Clave API de usuario')}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={restApiKeyVisible ? 'text' : 'password'}
+                      value={restApiKey}
+                      onChange={(e) => setRestApiKey(e.target.value)}
+                      placeholder={connectMethod === 'shopify' ? 'shpat_…' : '••••••••'}
+                      className="font-mono text-[11px] h-8 bg-background pr-9"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setRestApiKeyVisible(v => !v)}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                    >
+                      {restApiKeyVisible ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end pt-1">
                   <Button
-                    onClick={handleTestConnection}
-                    disabled={!isValidWpUrl || testingConnection}
+                    onClick={handleSaveRestApiKey}
+                    disabled={!isValidWpUrl || !restApiKey.trim() || savingRestKey}
                     variant="outline"
                     size="sm"
-                    className="gap-1.5 text-xs h-8 px-3 shrink-0"
+                    className="gap-1.5 text-xs h-8 px-3"
                   >
-                    {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
-                    {t3(language, 'Tester l\'API', 'Test API', 'Probar API')}
+                    {savingRestKey ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plug className="h-3 w-3" />}
+                    {t3(language, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
                   </Button>
                 </div>
               </div>
