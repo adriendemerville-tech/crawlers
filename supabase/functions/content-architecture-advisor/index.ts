@@ -1547,7 +1547,40 @@ FRAÎCHEUR & DÉNOMINATION:
       result.existing_page_scan = { has_existing_content: false, injection_points: null }
     }
 
-    return jsonOk({ data: result })
+    // ── Persist .md cache + fetch cross-user "Recommandation Crawlers" ──
+    let crawlersRecommendation: { markdown: string; created_at: string } | null = null
+    try {
+      const generatedMd = payloadToMarkdown(result, {
+        domain, keyword, page_type,
+        length: contentLengthForKey,
+        lang: language_code,
+        secondary_keywords: (body as { keywords?: string[] }).keywords,
+      })
+      if (!isServiceRole) {
+        await saveCache(serviceClient, {
+          userId: user.id,
+          cacheKey: persistentKey,
+          domain, keyword, page_type,
+          length: contentLengthForKey,
+          lang: language_code,
+          markdown: generatedMd,
+          payload: result,
+          is_shareable: true,
+        })
+        // Recommandation Crawlers (anonymisée) — autre user, même intention
+        const userClientForReco = getUserClient(authHeader)
+        const reco = await getCrawlersRecommendation(userClientForReco, persistentKey)
+        if (reco) {
+          crawlersRecommendation = { markdown: reco.markdown, created_at: reco.created_at }
+        }
+      }
+      result._markdown = generatedMd
+    } catch (e) {
+      console.error('[content-advisor] Cache persist error:', e)
+    }
+
+    return jsonOk({ data: result, crawlers_recommendation: crawlersRecommendation })
+
 
   } catch (error) {
     console.error('[content-advisor] Error:', error)
