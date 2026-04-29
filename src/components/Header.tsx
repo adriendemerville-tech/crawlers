@@ -310,21 +310,12 @@ export function Header() {
           )}
 
           {/* 2. Crawl (violet) */}
-          {isAuditExpertPage ? (
-            <a href="/app/site-crawl" target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
-                <Bug className="h-3.5 w-3.5" />
-                <span className="text-sm font-semibold">Crawl</span>
-              </Button>
-            </a>
-          ) : (
-            <Link to="/app/site-crawl">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
-                <Bug className="h-3.5 w-3.5" />
-                <span className="text-sm font-semibold">Crawl</span>
-              </Button>
-            </Link>
-          )}
+          <Link to="/app/site-crawl">
+            <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-500 hover:text-purple-400 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+              <Bug className="h-3.5 w-3.5" />
+              <span className="text-sm font-semibold">Crawl</span>
+            </Button>
+          </Link>
 
           <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
