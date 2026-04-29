@@ -9,6 +9,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.ts';
 import { extractInjectionPoints, injectionPointsToPrompt, type InjectionPoints } from '../_shared/injectionPoints.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
+import { buildCacheKey, getUserCache, getCrawlersRecommendation, saveCache, payloadToMarkdown } from '../_shared/contentArchitectCache.ts';
 
 // Map content-architect page_type → editorial pipeline content_type
 const PAGE_TYPE_TO_CONTENT_TYPE: Record<string, ContentType> = {
@@ -288,13 +289,40 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     const domain = extractDomain(url)
     const serviceClient = getServiceClient()
 
-    // ── Cache check ──
+    // ── Cache check (legacy short-TTL) ──
     const ck = cacheKey('content-architecture-advisor', { domain, keyword, page_type, location_code })
-    const cached = await getCached(ck)
-    if (cached) {
-      console.log(`[content-advisor] Cache hit for ${domain}/${keyword}`)
-      return jsonOk({ data: cached, cached: true })
+    const forceRegenerate = (body as { force_regenerate?: boolean }).force_regenerate === true
+    if (!forceRegenerate) {
+      const cached = await getCached(ck)
+      if (cached) {
+        console.log(`[content-advisor] Legacy cache hit for ${domain}/${keyword}`)
+        return jsonOk({ data: cached, cached: true })
+      }
     }
+
+    // ── Persistent .md cache (per-user, 30d TTL) ──
+    const contentLengthForKey = (body as { content_length?: string }).content_length
+    const persistentKey = await buildCacheKey({
+      domain, keyword,
+      page_type,
+      length: contentLengthForKey,
+      lang: language_code,
+      secondary_keywords: (body as { keywords?: string[] }).keywords,
+    })
+    if (!forceRegenerate && !isServiceRole) {
+      const own = await getUserCache(serviceClient, user.id, persistentKey)
+      if (own) {
+        console.log(`[content-advisor] Persistent .md cache HIT (self) for ${keyword}`)
+        return jsonOk({
+          data: own.payload,
+          cached: true,
+          cache_source: 'self',
+          cache_age_days: Math.floor((Date.now() - new Date(own.created_at).getTime()) / 86400000),
+          markdown: own.markdown,
+        })
+      }
+    }
+
 
     // ── Step 1: Site Identity + CMS Detection + Content Template ──
     if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 10 }).eq('id', jobId)
@@ -1519,7 +1547,40 @@ FRAÎCHEUR & DÉNOMINATION:
       result.existing_page_scan = { has_existing_content: false, injection_points: null }
     }
 
-    return jsonOk({ data: result })
+    // ── Persist .md cache + fetch cross-user "Recommandation Crawlers" ──
+    let crawlersRecommendation: { markdown: string; created_at: string } | null = null
+    try {
+      const generatedMd = payloadToMarkdown(result, {
+        domain, keyword, page_type,
+        length: contentLengthForKey,
+        lang: language_code,
+        secondary_keywords: (body as { keywords?: string[] }).keywords,
+      })
+      if (!isServiceRole) {
+        await saveCache(serviceClient, {
+          userId: user.id,
+          cacheKey: persistentKey,
+          domain, keyword, page_type,
+          length: contentLengthForKey,
+          lang: language_code,
+          markdown: generatedMd,
+          payload: result,
+          is_shareable: true,
+        })
+        // Recommandation Crawlers (anonymisée) — autre user, même intention
+        const userClientForReco = getUserClient(authHeader)
+        const reco = await getCrawlersRecommendation(userClientForReco, persistentKey)
+        if (reco) {
+          crawlersRecommendation = { markdown: reco.markdown, created_at: reco.created_at }
+        }
+      }
+      result._markdown = generatedMd
+    } catch (e) {
+      console.error('[content-advisor] Cache persist error:', e)
+    }
+
+    return jsonOk({ data: result, crawlers_recommendation: crawlersRecommendation })
+
 
   } catch (error) {
     console.error('[content-advisor] Error:', error)

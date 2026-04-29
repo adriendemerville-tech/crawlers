@@ -135,6 +135,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
   const [strategistLoading, setStrategistLoading] = useState(false);
   const [strategistDone, setStrategistDone] = useState(false);
+  const [cacheInfo, setCacheInfo] = useState<{ cached: boolean; ageDays?: number } | null>(null);
+  const [crawlersReco, setCrawlersReco] = useState<{ markdown: string; created_at: string } | null>(null);
 
   // Form fields
   const [directory, setDirectory] = useState('');
@@ -517,17 +519,20 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   };
 
   // ── Generate ──
-  const handleGenerate = useCallback(async () => {
+  const handleGenerate = useCallback(async (forceRegenerate = false) => {
     if (!keyword || (!directory && !slug)) { toast.error('Mot-clé et répertoire/slug requis'); return; }
-    setLoading(true); setResult(null);
+    setLoading(true); setResult(null); setCacheInfo(null); setCrawlersReco(null);
     try {
       const { data, error } = await supabase.functions.invoke('content-architecture-advisor', {
-        body: { url, keyword, keywords: keywordTags, page_type: pageType, tracked_site_id: trackedSiteId, content_length: length, custom_prompt: prompt, cta_link: ctaLink, photo_url: photoUrl, competitor_url: competitorUrl, tone, target_audience_segment: audienceSegment },
+        body: { url, keyword, keywords: keywordTags, page_type: pageType, tracked_site_id: trackedSiteId, content_length: length, custom_prompt: prompt, cta_link: ctaLink, photo_url: photoUrl, competitor_url: competitorUrl, tone, target_audience_segment: audienceSegment, force_regenerate: forceRegenerate },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const resData = data?.data || data;
       setResult(resData); setOriginalResult(JSON.parse(JSON.stringify(resData)));
+      // Cache + recommandation Crawlers
+      if (data?.cached) setCacheInfo({ cached: true, ageDays: data?.cache_age_days });
+      if (data?.crawlers_recommendation) setCrawlersReco(data.crawlers_recommendation);
       if (resData?.content_structure?.recommended_h1) setH1Field(resData.content_structure.recommended_h1);
       const sections = resData?.content_structure?.sections || [];
       if (sections.length > 0) setH2Fields(sections.map((s: any) => s.title || '').filter(Boolean));
@@ -539,7 +544,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
       setActivePanel(null);
     } catch (err: any) { toast.error(err.message || 'Erreur'); }
     finally { setLoading(false); }
-  }, [url, keyword, pageType, trackedSiteId, length, prompt, ctaLink, photoUrl, competitorUrl, tone, isExistingPage, directory, slug]);
+  }, [url, keyword, pageType, trackedSiteId, length, prompt, ctaLink, photoUrl, competitorUrl, tone, isExistingPage, directory, slug, keywordTags, audienceSegment]);
 
   // ── Publish ──
   const handlePublish = useCallback(async () => {
@@ -640,6 +645,16 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                       detectPageTypeFromDirectory={detectPageTypeFromDirectory} result={result} setResult={setResult}
                       loading={loading} onGenerate={handleGenerate} strategistLoading={strategistLoading}
                       strategistDone={strategistDone} language={language} pageTypes={PAGE_TYPES} lengths={LENGTHS}
+                      cacheInfo={cacheInfo} crawlersReco={crawlersReco}
+                      onApplyRecommendation={() => {
+                        if (!crawlersReco?.markdown) return;
+                        const lines = crawlersReco.markdown.split('\n');
+                        const h1Line = lines.find(l => l.startsWith('# '));
+                        const h2Lines = lines.filter(l => l.startsWith('## ')).map(l => l.replace(/^##\s+/, '').trim());
+                        if (h1Line) setH1Field(h1Line.replace(/^#\s+/, '').trim());
+                        if (h2Lines.length > 0) setH2Fields(h2Lines);
+                        toast.success('Recommandation Crawlers appliquée');
+                      }}
                     />
                   )}
                   {activePanel === 'structured-data' && (
@@ -717,7 +732,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                   <div className="px-3 pb-2 pt-1 sticky bottom-0 bg-[#1e293b]">
                     <Button
                       size="sm"
-                      onClick={handleGenerate}
+                      onClick={() => handleGenerate(false)}
                       disabled={loading || !keyword}
                       className="w-full text-xs gap-1.5 bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border border-teal-500/30"
                     >

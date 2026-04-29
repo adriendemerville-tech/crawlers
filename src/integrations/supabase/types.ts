@@ -2935,6 +2935,60 @@ export type Database = {
           },
         ]
       }
+      content_architect_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          domain: string | null
+          expires_at: string
+          hit_count: number
+          id: string
+          is_shareable: boolean
+          keyword: string
+          lang: string | null
+          last_used_at: string
+          length: string | null
+          markdown: string
+          page_type: string | null
+          payload: Json | null
+          user_id: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          domain?: string | null
+          expires_at?: string
+          hit_count?: number
+          id?: string
+          is_shareable?: boolean
+          keyword: string
+          lang?: string | null
+          last_used_at?: string
+          length?: string | null
+          markdown: string
+          page_type?: string | null
+          payload?: Json | null
+          user_id: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          domain?: string | null
+          expires_at?: string
+          hit_count?: number
+          id?: string
+          is_shareable?: boolean
+          keyword?: string
+          lang?: string | null
+          last_used_at?: string
+          length?: string | null
+          markdown?: string
+          page_type?: string | null
+          payload?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       content_deploy_snapshots: {
         Row: {
           consecutive_failures: number | null
@@ -13269,6 +13323,15 @@ export type Database = {
           source_name: string
           source_url: string
           summary: string
+        }[]
+      }
+      get_shared_architect_recommendation: {
+        Args: { _cache_key: string }
+        Returns: {
+          created_at: string
+          hit_count: number
+          markdown: string
+          payload: Json
         }[]
       }
       get_short_link_by_code: {
