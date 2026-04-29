@@ -1660,6 +1660,155 @@ const escalate_to_phone: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// COCOON STRATÈGE — wrappers vers les edge functions existantes
+// (récupère la puissance de l'ancien Stratège dans le Copilot unifié)
+// ═══════════════════════════════════════════════════════════
+
+const analyze_cocoon: SkillDefinition = {
+  name: 'analyze_cocoon',
+  description: "Lance un diagnostic stratégique complet du cocoon sémantique d'un site (4 axes parallèles : content, semantic, structure, authority) et renvoie les findings priorisés. Pas de modification du site.",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string', description: 'UUID du site suivi' },
+      domain: { type: 'string', description: 'Domaine du site (ex: example.com)' },
+      force_refresh: { type: 'boolean', default: false },
+    },
+    required: ['tracked_site_id', 'domain'],
+  },
+  handler: async (input, ctx) => {
+    const trackedSiteId = String(input.tracked_site_id ?? '').trim();
+    const domain = String(input.domain ?? '').trim();
+    if (!trackedSiteId || !domain) return { ok: false, error: 'tracked_site_id et domain requis' };
+    try {
+      const { data, error } = await ctx.supabase.functions.invoke('cocoon-strategist', {
+        body: {
+          tracked_site_id: trackedSiteId,
+          domain,
+          force_refresh: !!input.force_refresh,
+          lang: 'fr',
+          // Diagnostic seul → pas de boost prio création contenu
+          content_priority_mode: false,
+        },
+      });
+      if (error) return { ok: false, error: `cocoon-strategist : ${error.message}` };
+      const d = (data ?? {}) as Record<string, unknown>;
+      return {
+        ok: true,
+        data: {
+          findings: (d.findings as unknown[])?.slice(0, 10) ?? [],
+          tasks_count: Array.isArray(d.tasks) ? (d.tasks as unknown[]).length : 0,
+          axes: d.axes ?? null,
+          summary: d.summary ?? null,
+        },
+      };
+    } catch (e) {
+      return { ok: false, error: `Echec analyze_cocoon : ${(e as Error).message}` };
+    }
+  },
+};
+
+const plan_editorial: SkillDefinition = {
+  name: 'plan_editorial',
+  description: "Génère un plan de tâches éditoriales déterministe (jusqu'à 8 tâches typées : create_content, rewrite_then_link, fix_cannibalization, add_internal_link, restructure_tree…) à partir du diagnostic Cocoon. Persiste les tâches en base, prêtes à être ouvertes dans le Plan de tâches.",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string' },
+      domain: { type: 'string' },
+      task_budget: { type: 'number', default: 8, description: 'Nombre max de tâches (1-12)' },
+      content_priority_mode: { type: 'boolean', default: true, description: 'Boost x1.8 sur tâches de création contenu' },
+    },
+    required: ['tracked_site_id', 'domain'],
+  },
+  handler: async (input, ctx) => {
+    const trackedSiteId = String(input.tracked_site_id ?? '').trim();
+    const domain = String(input.domain ?? '').trim();
+    if (!trackedSiteId || !domain) return { ok: false, error: 'tracked_site_id et domain requis' };
+    const budget = Math.min(12, Math.max(1, Number(input.task_budget ?? 8)));
+    try {
+      const { data, error } = await ctx.supabase.functions.invoke('cocoon-strategist', {
+        body: {
+          tracked_site_id: trackedSiteId,
+          domain,
+          lang: 'fr',
+          task_budget: budget,
+          content_priority_mode: input.content_priority_mode !== false,
+        },
+      });
+      if (error) return { ok: false, error: `cocoon-strategist : ${error.message}` };
+      const d = (data ?? {}) as Record<string, unknown>;
+      const tasks = (d.tasks as Array<Record<string, unknown>>) ?? [];
+      return {
+        ok: true,
+        data: {
+          tasks_count: tasks.length,
+          editorial_count: tasks.filter(t => t.execution_mode === 'content_architect').length,
+          code_count: tasks.filter(t => t.execution_mode === 'code_architect').length,
+          ops_count: tasks.filter(t => t.execution_mode === 'operational_queue').length,
+          top_tasks: tasks.slice(0, 5).map(t => ({
+            title: t.title ?? t.action_type,
+            action_type: t.action_type,
+            execution_mode: t.execution_mode,
+            target_url: t.target_url,
+            priority: t.priority,
+          })),
+          // Directive UI : ouvre le Plan de tâches sur ce site
+          ui_action: { action: 'navigate', path: `/app/cocoon?tab=plan&site=${trackedSiteId}` },
+        },
+      };
+    } catch (e) {
+      return { ok: false, error: `Echec plan_editorial : ${(e as Error).message}` };
+    }
+  },
+};
+
+const deploy_cocoon_plan: SkillDefinition = {
+  name: 'deploy_cocoon_plan',
+  description: "Déploie un lot de liens internes recommandés sur le site (injection 3 tiers : wrap direct → context sentence → phrase-pont IA). Action destructive : nécessite approbation utilisateur. Mode 'preview' possible pour simuler sans écrire.",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string' },
+      recommendations: {
+        type: 'array',
+        description: "Liste de recommandations { source_url, target_url, anchor_text, context_sentence? }",
+        items: { type: 'object' },
+      },
+      mode: { type: 'string', enum: ['preview', 'deploy'], default: 'deploy' },
+    },
+    required: ['tracked_site_id', 'recommendations'],
+  },
+  handler: async (input, ctx) => {
+    const trackedSiteId = String(input.tracked_site_id ?? '').trim();
+    const recos = Array.isArray(input.recommendations) ? input.recommendations : [];
+    const mode = input.mode === 'preview' ? 'preview' : 'deploy';
+    if (!trackedSiteId) return { ok: false, error: 'tracked_site_id requis' };
+    if (recos.length === 0) return { ok: false, error: 'recommendations[] non vide requis' };
+    if (recos.length > 50) return { ok: false, error: 'Maximum 50 recommandations par lot' };
+    try {
+      const { data, error } = await ctx.supabase.functions.invoke('cocoon-deploy-links', {
+        body: { tracked_site_id: trackedSiteId, recommendations: recos, mode },
+      });
+      if (error) return { ok: false, error: `cocoon-deploy-links : ${error.message}` };
+      const d = (data ?? {}) as Record<string, unknown>;
+      return {
+        ok: true,
+        data: {
+          mode,
+          deployed: d.deployed ?? null,
+          failed: d.failed ?? null,
+          preview: d.preview ?? null,
+          ui_action: { action: 'navigate', path: `/app/cocoon?tab=maillage&site=${trackedSiteId}` },
+        },
+      };
+    } catch (e) {
+      return { ok: false, error: `Echec deploy_cocoon_plan : ${(e as Error).message}` };
+    }
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // REGISTRY
 // ═══════════════════════════════════════════════════════════
 
@@ -1673,6 +1822,10 @@ const SKILLS: Record<string, SkillDefinition> = {
   trigger_audit,
   cms_publish_draft,
   cms_patch_content,
+  // Stratège Cocoon — analyse, plan, déploiement (récupération post-refacto)
+  analyze_cocoon,
+  plan_editorial,
+  deploy_cocoon_plan,
   // Mémoire persistante & enrichissement carte d'identité (Sprint Q5)
   read_site_memory,
   write_site_memory,
