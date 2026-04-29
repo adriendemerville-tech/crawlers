@@ -32,46 +32,6 @@ const severityConfig: Record<string, { bg: string; border: string; icon: any; te
   ga4_down: { bg: 'bg-red-500/10', border: 'border-red-500/30', icon: TrendingDown, text: 'text-red-400' },
 };
 
-const GA4_SIMULATED = [
-  { page: '/guide-seo-2025', delta: +34, metric: 'sessions' },
-  { page: '/audit-technique', delta: +18, metric: 'users' },
-  { page: '/blog/core-web-vitals', delta: -12, metric: 'sessions' },
-  { page: '/tarifs', delta: +52, metric: 'conversions' },
-  { page: '/contact', delta: -8, metric: 'bounce_rate' },
-  { page: '/blog/netlinking-guide', delta: +27, metric: 'sessions' },
-  { page: '/outil-crawl', delta: +41, metric: 'users' },
-  { page: '/faq', delta: -5, metric: 'sessions' },
-];
-
-const METRIC_LABELS: Record<string, string> = {
-  sessions: 'sessions',
-  users: 'utilisateurs',
-  conversions: 'conversions',
-  bounce_rate: 'taux de rebond',
-};
-
-function buildGscNews(): { id: string; title: string; desc: string; severity: string }[] {
-  return [
-    { id: 'gsc-1', title: 'GSC · Couverture', desc: 'Nouvelles pages indexées détectées cette semaine', severity: 'gsc' },
-    { id: 'gsc-2', title: 'GSC · Performance', desc: 'CTR moyen en hausse de 0.3% sur 7 jours', severity: 'gsc' },
-    { id: 'gsc-3', title: 'GSC · Erreurs', desc: '2 nouvelles erreurs 404 détectées par Googlebot', severity: 'warning' },
-  ];
-}
-
-function buildGa4Items(): { id: string; title: string; desc: string; severity: string }[] {
-  return GA4_SIMULATED.map((a, i) => {
-    const isUp = a.delta > 0;
-    const sign = isUp ? '+' : '';
-    const label = METRIC_LABELS[a.metric] || a.metric;
-    return {
-      id: `ga4-${i}`,
-      title: `GA4 · ${a.page}`,
-      desc: `${sign}${a.delta}% ${label}`,
-      severity: isUp ? 'ga4_up' : 'ga4_down',
-    };
-  });
-}
-
 type TickerItem = { id: string; icon: any; bg: string; border: string; textColor: string; title: string; desc: string };
 
 export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnabled }: AnomalyAlertsBannerProps) {
@@ -79,8 +39,34 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [hidden, setHidden] = useState(() => localStorage.getItem('ticker_hidden_default') === '1');
   const [paused, setPaused] = useState(false);
+  const [ga4Connected, setGa4Connected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number | null>(null);
+
+  // Detect GA4 connection — banner only shows when GA4 is actually connected
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { if (!cancelled) setGa4Connected(false); return; }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('ga4_property_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      let ok = !!(profile as any)?.ga4_property_id;
+      if (!ok) {
+        const { data: conns } = await supabase
+          .from('google_connections')
+          .select('ga4_property_id')
+          .eq('user_id', user.id);
+        ok = !!(conns as any[] | null)?.some(c => !!c.ga4_property_id);
+      }
+      if (!cancelled) setGa4Connected(ok);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
 
   useEffect(() => {
     if (!trackedSiteId) { setAlerts([]); return; }
@@ -122,25 +108,16 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
     }
   };
 
-  // Build unified ticker items
-  const gscItems = trackedSiteId ? buildGscNews() : [];
-  const ga4Items = simulatedDataEnabled ? buildGa4Items() : [];
-
-  const tickerItems: TickerItem[] = [
-    ...alerts.filter(a => !dismissed.has(a.id)).map(a => {
+  // Build unified ticker items — only real anomaly alerts (no simulated GA4/GSC cards)
+  const tickerItems: TickerItem[] = alerts
+    .filter(a => !dismissed.has(a.id))
+    .map(a => {
       const c = severityConfig[a.severity] || severityConfig.info;
       return { id: a.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: a.domain, desc: `${a.description}${a.affected_pages > 0 ? ` (${a.affected_pages} pages)` : ''}` };
-    }),
-    ...gscItems.filter(g => !dismissed.has(g.id)).map(g => {
-      const c = severityConfig[g.severity] || severityConfig.gsc;
-      return { id: g.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: g.title, desc: g.desc };
-    }),
-    ...ga4Items.filter(g => !dismissed.has(g.id)).map(g => {
-      const c = severityConfig[g.severity] || severityConfig.ga4_up;
-      return { id: g.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: g.title, desc: g.desc };
-    }),
-  ];
+    });
 
+  // Hide entire banner when GA4 is not connected
+  if (!ga4Connected) return null;
   if (tickerItems.length === 0) return null;
 
   if (hidden) {
