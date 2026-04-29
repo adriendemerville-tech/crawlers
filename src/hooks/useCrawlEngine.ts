@@ -188,6 +188,10 @@ export function useCrawlEngine() {
 
     pollingCrawlIdRef.current = crawlResult.id;
     const crawlId = crawlResult.id;
+    // Watchdog : si le crawl reste bloqué en mapping/queued sans progression > 120s, on le force-stop
+    const watchdogStartedAt = Date.now();
+    let lastProgressSnapshot = `${crawlResult.status}:${crawlResult.crawled_pages || 0}`;
+    let lastProgressAt = Date.now();
 
     pollingIntervalRef.current = setInterval(async () => {
       try {
