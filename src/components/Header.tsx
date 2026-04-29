@@ -639,7 +639,7 @@ export function Header() {
     </header>
     <div className="h-14 sm:h-20" aria-hidden="true" />
     <>
-      {isAdmin && showContentArchitect && createPortal(
+      {showContentArchitect && createPortal(
         <Suspense fallback={null}>
           <CocoonContentArchitectModal
             isOpen={showContentArchitect}
