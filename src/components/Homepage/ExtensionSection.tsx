@@ -12,7 +12,7 @@ export function ExtensionSection() {
       title: 'Auditez n\'importe quelle page en 1 clic',
       desc: 'Mode Pilote sur vos sites trackés, mode Espion sur vos concurrents. Findings injectés directement dans votre Workbench.',
       cta: 'Télécharger l\'extension',
-      bullets: ['Stratégique', 'E-E-A-T', 'Conversion', 'Machine Layer'],
+      bullets: ['Audit SEO', 'Stratégique', 'E-E-A-T', 'Conversion', 'Machine Layer'],
     },
     es: {
       eyebrow: 'Extensión Chrome',
