@@ -165,11 +165,11 @@ export function useAdmin() {
 
   const hasAdminAccess = isAdmin || isViewer || isViewerLevel2 || isAuditor;
   const isReadOnly = (isViewer || isViewerLevel2 || isAuditor) && !isAdmin;
-  // viewer_level2 & auditor can't see docs; auditor can't see intelligence, finances, users
+  // viewers (L1 & L2) see finances, users & usage stats in read-only; auditor excluded from finances/users
   const canSeeDocs = isAdmin || isViewer;
   const canSeeAlgos = isAdmin || isViewer;
-  const canSeeFinances = isAdmin || isViewer;
-  const canSeeUsers = isAdmin || isViewer;
+  const canSeeFinances = isAdmin || isViewer || isViewerLevel2;
+  const canSeeUsers = isAdmin || isViewer || isViewerLevel2;
   const canSeeIntelligence = isAdmin || isViewer || isViewerLevel2; // auditor excluded
 
   return { 
