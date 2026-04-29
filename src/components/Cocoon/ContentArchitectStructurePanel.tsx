@@ -31,12 +31,15 @@ interface ContentArchitectStructurePanelProps {
   result: any;
   setResult: (v: any) => void;
   loading: boolean;
-  onGenerate: () => void;
+  onGenerate: (force?: boolean) => void;
   strategistLoading: boolean;
   strategistDone: boolean;
   language: string;
   pageTypes: { value: string; label: string }[];
   lengths: { value: string; label: string }[];
+  cacheInfo?: { cached: boolean; ageDays?: number } | null;
+  crawlersReco?: { markdown: string; created_at: string } | null;
+  onApplyRecommendation?: () => void;
 }
 
 export function ContentArchitectStructurePanel({
