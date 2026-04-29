@@ -326,14 +326,14 @@ export default function SiteCrawl() {
                     />
                   </div>
                   {/* Pre-scan loading indicator (Phase 0 in progress) */}
-                  {isDetectingPages && !readyToLaunch && (
+                  {isDetectingPages && !readyToLaunch && !mappingBlocked && (
                     <Button type="button" disabled className="gap-2 px-6">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       {t.detecting}
                     </Button>
                   )}
-                  {/* Launch button (visible once Phase 0 or Phase 1 is done) */}
-                  {readyToLaunch && (
+                  {/* Launch button (visible once Phase 0 or Phase 1 is done, OR if mapping is blocked) */}
+                  {(readyToLaunch || mappingBlocked) && (
                     <Button
                       type="submit"
                       disabled={isLoading}
@@ -344,13 +344,27 @@ export default function SiteCrawl() {
                     </Button>
                   )}
                   {/* Fallback: no URL entered yet */}
-                  {!isDetectingPages && !readyToLaunch && (
+                  {!isDetectingPages && !readyToLaunch && !mappingBlocked && (
                     <Button type="button" disabled className="gap-2 px-6">
                       <Search className="h-4 w-4" />
                       {t.launchBtn}
                     </Button>
                   )}
                 </div>
+
+                {/* Mapping bloqué par le serveur cible (sitemap 403, robots.txt inaccessible…) */}
+                {mappingBlocked && (
+                  <div className="flex items-start gap-2 px-3 py-2 rounded-md border border-amber-500/40 bg-amber-500/5 text-xs text-amber-700 dark:text-amber-300">
+                    <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>
+                      {language === 'fr'
+                        ? 'Pré-mapping bloqué par le serveur cible (sitemap inaccessible). Démarrez l\'analyse — la découverte se fera pendant le crawl.'
+                        : language === 'es'
+                        ? 'Pre-mapeo bloqueado por el servidor (sitemap inaccesible). Inicie el análisis — el descubrimiento se hará durante el crawl.'
+                        : 'Pre-mapping blocked by the target server (sitemap unreachable). Start the analysis — discovery will happen during the crawl.'}
+                    </span>
+                  </div>
+                )}
 
                 {/* Page count info */}
                 {(totalEstimatedPages || indexedPagesCount || sitemapPagesCount) && (
