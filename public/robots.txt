@@ -192,7 +192,7 @@ Allow: /
 # --------------------------------------------
 # Ressources
 # --------------------------------------------
-Sitemap: https://crawlers.fr/sitemap.xml
+Sitemap: https://tutlimtasnjabdfhpewu.supabase.co/storage/v1/object/public/public-assets/sitemap.xml
 
 # Documentation LLM dédiée :
 #   https://crawlers.fr/llms.txt
