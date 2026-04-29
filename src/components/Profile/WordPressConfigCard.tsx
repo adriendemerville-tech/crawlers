@@ -296,9 +296,15 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </DialogDescription>
         <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
           {t3(language,
-            'Choisissez votre CMS ci-dessous, puis suivez les étapes.',
-            'Pick your CMS below, then follow the steps.',
-            'Elija su CMS a continuación y siga los pasos.'
+            'Brancher votre site permet à Crawlers de déployer automatiquement vos optimisations SEO/GEO (balises, JSON-LD, scripts correctifs) sans que vous ayez à toucher au code.',
+            'Connecting your site lets Crawlers automatically deploy your SEO/GEO optimizations (meta tags, JSON-LD, corrective scripts) without you touching any code.',
+            'Conectar su sitio permite a Crawlers desplegar automáticamente sus optimizaciones SEO/GEO (etiquetas, JSON-LD, scripts correctivos) sin tocar el código.'
+          )}
+          <br />
+          {t3(language,
+            'Choisissez votre CMS ci-dessous puis suivez les étapes — tout est pré-configuré, aucune clé à copier.',
+            'Pick your CMS below and follow the steps — everything is pre-configured, no key to copy.',
+            'Elija su CMS a continuación y siga los pasos: todo está preconfigurado, sin clave que copiar.'
           )}
         </p>
       </DialogHeader>
