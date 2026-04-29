@@ -380,36 +380,37 @@ export function SmartCmsConnectModal({
     }
   };
 
-  // ─── Step 3 — Save REST API credentials ───
+  // ─── Step 3 — Save REST API credentials (Application Password) ───
   const saveRestApi = async () => {
     if (!user || !appUser || !appPassword) return;
     setSavingRest(true);
     try {
-      // Test first
-      const test = await supabase.functions.invoke('wpsync', {
-        body: {
-          action: 'test-connection',
-          site_url: `https://${siteDomain}`,
-          auth_method: 'basic_auth',
-          basic_user: appUser,
-          basic_pass: appPassword,
+      // 1) Validate credentials against /wp-json/wp/v2/users/me via dedicated edge fn
+      const { data: test, error: testErr } = await supabase.functions.invoke(
+        'wp-test-connection',
+        {
+          body: {
+            site_url: `https://${siteDomain}`,
+            username: appUser,
+            app_password: appPassword,
+          },
         },
-      });
+      );
 
-      const ok = test.data?.success || test.data?.status === 'ok';
-      if (!ok) {
+      if (testErr) {
+        toast.error(testErr.message || t3(lang, 'Erreur de test', 'Test error', 'Error de prueba'));
+        return;
+      }
+
+      if (!test?.ok) {
         toast.error(
-          test.data?.error ||
-            t3(
-              lang,
-              'Identifiants invalides',
-              'Invalid credentials',
-              'Credenciales inválidas',
-            ),
+          test?.error ||
+            t3(lang, 'Identifiants refusés', 'Credentials rejected', 'Credenciales rechazadas'),
         );
         return;
       }
 
+      // 2) Persist
       const { error } = await supabase.from('cms_connections').upsert(
         {
           user_id: user.id,
@@ -427,7 +428,12 @@ export function SmartCmsConnectModal({
       if (error) throw error;
 
       toast.success(
-        t3(lang, 'CMS branché avec succès', 'CMS connected', 'CMS conectado'),
+        t3(
+          lang,
+          `CMS branché — connecté en tant que ${test.user?.name || appUser}`,
+          `CMS connected — signed in as ${test.user?.name || appUser}`,
+          `CMS conectado — sesión como ${test.user?.name || appUser}`,
+        ),
       );
       handleClose(false);
     } catch (e: any) {
