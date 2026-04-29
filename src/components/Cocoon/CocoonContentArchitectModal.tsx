@@ -135,6 +135,8 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
   const [identityCard, setIdentityCard] = useState<Record<string, any> | null>(null);
   const [strategistLoading, setStrategistLoading] = useState(false);
   const [strategistDone, setStrategistDone] = useState(false);
+  const [cacheInfo, setCacheInfo] = useState<{ cached: boolean; ageDays?: number } | null>(null);
+  const [crawlersReco, setCrawlersReco] = useState<{ markdown: string; created_at: string } | null>(null);
 
   // Form fields
   const [directory, setDirectory] = useState('');
