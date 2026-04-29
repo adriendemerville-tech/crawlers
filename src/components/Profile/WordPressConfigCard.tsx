@@ -347,98 +347,160 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             </div>
           </div>
 
-          {/* Steps 1 & 2 side by side */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Step 1: Download */}
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-medium text-muted-foreground">
-                {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
-              </p>
-              <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs" size="sm">
-                <Download className="h-3 w-3" />
-                {t3(language, 'Plugin .zip', 'Plugin .zip', 'Plugin .zip')}
-              </Button>
-              <p className="text-[9px] text-muted-foreground">
-                {t3(language,
-                  'WordPress → Extensions → Ajouter → Téléverser.',
-                  'WordPress → Plugins → Add New → Upload.',
-                  'WordPress → Plugins → Añadir → Subir.'
-                )}
-              </p>
-            </div>
+          {connectMethod === 'wordpress' ? (
+            <>
+              {/* WordPress: Plugin .zip + Magic Link */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Step 1: Download plugin */}
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium text-muted-foreground">
+                    {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
+                  </p>
+                  <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs" size="sm">
+                    <Download className="h-3 w-3" />
+                    {t3(language, 'Plugin .zip', 'Plugin .zip', 'Plugin .zip')}
+                  </Button>
+                  <p className="text-[9px] text-muted-foreground">
+                    {t3(language,
+                      'WordPress → Extensions → Ajouter → Téléverser.',
+                      'WordPress → Plugins → Add New → Upload.',
+                      'WordPress → Plugins → Añadir → Subir.'
+                    )}
+                  </p>
+                </div>
 
-            {/* Step 2: URL + Magic Link */}
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-medium text-muted-foreground">
-                {t3(language, '2. Connexion automatique', '2. Auto-connect', '2. Conexión automática')}
-              </p>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={wpUrl}
-                  readOnly
-                  className="font-mono text-[11px] h-8 bg-muted/50 cursor-default"
-                />
+                {/* Step 2: URL + Magic Link */}
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium text-muted-foreground">
+                    {t3(language, '2. Connexion automatique', '2. Auto-connect', '2. Conexión automática')}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={wpUrl}
+                      readOnly
+                      className="font-mono text-[11px] h-8 bg-muted/50 cursor-default"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      onClick={handleMagicLink}
+                      disabled={!isValidWpUrl || generatingLink || !user}
+                      className="gap-1.5 bg-primary hover:bg-primary/90 text-xs h-8 px-3"
+                      size="sm"
+                    >
+                      {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
+                      {t3(language, 'Lien Magique', 'Magic Link', 'Enlace Mágico')}
+                    </Button>
+                    <Button
+                      onClick={handleTestConnection}
+                      disabled={!isValidWpUrl || testingConnection}
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs h-8 px-3"
+                    >
+                      {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
+                      {t3(language, 'Tester', 'Test', 'Probar')}
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  onClick={handleMagicLink}
-                  disabled={!isValidWpUrl || generatingLink || !user}
-                  className="gap-1.5 bg-primary hover:bg-primary/90 text-xs h-8 px-3"
-                  size="sm"
-                >
-                  {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
-                  {t3(language, 'Lien Magique', 'Magic Link', 'Enlace Mágico')}
-                </Button>
-                <Button
-                  onClick={handleTestConnection}
-                  disabled={!isValidWpUrl || testingConnection}
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-xs h-8 px-3"
-                >
-                  {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
-                  {t3(language, 'Tester', 'Test', 'Probar')}
-                </Button>
-              </div>
-            </div>
-          </div>
 
-          {/* Manual install accordion */}
-          <Accordion type="single" collapsible>
-            <AccordionItem value="manual" className="border-dashed">
-              <AccordionTrigger className="text-[11px] py-2 text-muted-foreground hover:text-foreground">
-                {t3(language, 'Installation manuelle (PHP)', 'Manual install (PHP)', 'Instalación manual (PHP)')}
-              </AccordionTrigger>
-              <AccordionContent>
-                <p className="text-[10px] text-muted-foreground mb-2">
+              {/* Manual install accordion (WordPress only) */}
+              <Accordion type="single" collapsible>
+                <AccordionItem value="manual" className="border-dashed">
+                  <AccordionTrigger className="text-[11px] py-2 text-muted-foreground hover:text-foreground">
+                    {t3(language, 'Installation manuelle (PHP)', 'Manual install (PHP)', 'Instalación manual (PHP)')}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-[10px] text-muted-foreground mb-2">
+                      {t3(language,
+                        'Copiez ce code PHP dans un fichier et placez-le dans wp-content/plugins/',
+                        'Copy this PHP code into a file and place it in wp-content/plugins/',
+                        'Copie este código PHP en un archivo y colóquelo en wp-content/plugins/'
+                      )}
+                    </p>
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-1 right-1 gap-1 z-10 h-6 text-[10px] px-2"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(phpCode);
+                          setCodeCopied(true);
+                          toast.success(t3(language, 'Code PHP copié !', 'PHP code copied!', '¡Código PHP copiado!'));
+                          setTimeout(() => setCodeCopied(false), 2000);
+                        }}
+                      >
+                        {codeCopied ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
+                        {t3(language, 'Copier', 'Copy', 'Copiar')}
+                      </Button>
+                      <pre className="bg-muted rounded-md p-2.5 text-[10px] leading-relaxed overflow-x-auto max-h-40 font-mono border">
+                        {phpCode.slice(0, 600)}...
+                      </pre>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </>
+          ) : (
+            <>
+              {/* Non-WordPress CMS: connexion API REST uniquement */}
+              <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 space-y-2">
+                <p className="text-[11px] font-medium text-foreground">
                   {t3(language,
-                    'Copiez ce code PHP dans un fichier et placez-le dans wp-content/plugins/',
-                    'Copy this PHP code into a file and place it in wp-content/plugins/',
-                    'Copie este código PHP en un archivo y colóquelo en wp-content/plugins/'
+                    'Connexion via API REST',
+                    'REST API connection',
+                    'Conexión vía API REST'
                   )}
                 </p>
-                <div className="relative">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  {connectMethod === 'shopify' && t3(language,
+                    'Shopify ne nécessite pas de plugin. Configurez l\'API Admin (Admin → Apps → Develop apps) et collez le token + URL de boutique ci-dessous.',
+                    'Shopify does not need a plugin. Configure the Admin API (Admin → Apps → Develop apps) and paste the token + shop URL below.',
+                    'Shopify no necesita plugin. Configure la API Admin (Admin → Apps → Develop apps) y pegue el token + URL de la tienda.'
+                  )}
+                  {connectMethod === 'wix' && t3(language,
+                    'Wix expose une API REST. Générez une clé API dans le tableau de bord Wix puis collez-la ci-dessous.',
+                    'Wix exposes a REST API. Generate an API key in the Wix dashboard then paste it below.',
+                    'Wix expone una API REST. Genere una clave API en el panel de Wix y péguela a continuación.'
+                  )}
+                  {connectMethod === 'prestashop' && t3(language,
+                    'PrestaShop : activez le webservice (Paramètres avancés → Webservice) et générez une clé API.',
+                    'PrestaShop: enable the webservice (Advanced Parameters → Webservice) and generate an API key.',
+                    'PrestaShop: active el webservice (Parámetros avanzados → Webservice) y genere una clave API.'
+                  )}
+                  {connectMethod === 'drupal' && t3(language,
+                    'Drupal : activez le module REST + Basic Auth puis créez un utilisateur dédié.',
+                    'Drupal: enable the REST + Basic Auth modules then create a dedicated user.',
+                    'Drupal: active los módulos REST + Basic Auth y cree un usuario dedicado.'
+                  )}
+                  {connectMethod === 'odoo' && t3(language,
+                    'Odoo : générez une clé API utilisateur (Préférences → Compte → Clés API) pour l\'authentification XML-RPC / REST.',
+                    'Odoo: generate a user API key (Preferences → Account → API Keys) for XML-RPC / REST auth.',
+                    'Odoo: genere una clave API de usuario (Preferencias → Cuenta → Claves API) para autenticación XML-RPC / REST.'
+                  )}
+                </p>
+                <div className="flex items-center gap-1.5 pt-1">
+                  <Input
+                    value={wpUrl}
+                    readOnly
+                    placeholder={t3(language, 'URL de votre site', 'Your site URL', 'URL de su sitio')}
+                    className="font-mono text-[11px] h-8 bg-background cursor-default flex-1"
+                  />
                   <Button
+                    onClick={handleTestConnection}
+                    disabled={!isValidWpUrl || testingConnection}
                     variant="outline"
                     size="sm"
-                    className="absolute top-1 right-1 gap-1 z-10 h-6 text-[10px] px-2"
-                    onClick={async () => {
-                      await navigator.clipboard.writeText(phpCode);
-                      setCodeCopied(true);
-                      toast.success(t3(language, 'Code PHP copié !', 'PHP code copied!', '¡Código PHP copiado!'));
-                      setTimeout(() => setCodeCopied(false), 2000);
-                    }}
+                    className="gap-1.5 text-xs h-8 px-3 shrink-0"
                   >
-                    {codeCopied ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
-                    {t3(language, 'Copier', 'Copy', 'Copiar')}
+                    {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
+                    {t3(language, 'Tester l\'API', 'Test API', 'Probar API')}
                   </Button>
-                  <pre className="bg-muted rounded-md p-2.5 text-[10px] leading-relaxed overflow-x-auto max-h-40 font-mono border">
-                    {phpCode.slice(0, 600)}...
-                  </pre>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-3 pt-1">
