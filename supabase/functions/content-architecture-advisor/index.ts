@@ -289,13 +289,40 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     const domain = extractDomain(url)
     const serviceClient = getServiceClient()
 
-    // ── Cache check ──
+    // ── Cache check (legacy short-TTL) ──
     const ck = cacheKey('content-architecture-advisor', { domain, keyword, page_type, location_code })
-    const cached = await getCached(ck)
-    if (cached) {
-      console.log(`[content-advisor] Cache hit for ${domain}/${keyword}`)
-      return jsonOk({ data: cached, cached: true })
+    const forceRegenerate = (body as { force_regenerate?: boolean }).force_regenerate === true
+    if (!forceRegenerate) {
+      const cached = await getCached(ck)
+      if (cached) {
+        console.log(`[content-advisor] Legacy cache hit for ${domain}/${keyword}`)
+        return jsonOk({ data: cached, cached: true })
+      }
     }
+
+    // ── Persistent .md cache (per-user, 30d TTL) ──
+    const contentLengthForKey = (body as { content_length?: string }).content_length
+    const persistentKey = await buildCacheKey({
+      domain, keyword,
+      page_type,
+      length: contentLengthForKey,
+      lang: language_code,
+      secondary_keywords: (body as { keywords?: string[] }).keywords,
+    })
+    if (!forceRegenerate && !isServiceRole) {
+      const own = await getUserCache(serviceClient, user.id, persistentKey)
+      if (own) {
+        console.log(`[content-advisor] Persistent .md cache HIT (self) for ${keyword}`)
+        return jsonOk({
+          data: own.payload,
+          cached: true,
+          cache_source: 'self',
+          cache_age_days: Math.floor((Date.now() - new Date(own.created_at).getTime()) / 86400000),
+          markdown: own.markdown,
+        })
+      }
+    }
+
 
     // ── Step 1: Site Identity + CMS Detection + Content Template ──
     if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 10 }).eq('id', jobId)
