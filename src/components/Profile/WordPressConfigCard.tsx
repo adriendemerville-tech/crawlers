@@ -234,6 +234,34 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
     }
   };
 
+  const handleSaveRestApiKey = async () => {
+    if (!restApiKey.trim() || !isValidWpUrl) {
+      toast.error(t3(language, 'Renseignez la clé API et l\'URL', 'Enter the API key and URL', 'Ingrese la clave API y la URL'));
+      return;
+    }
+    setSavingRestKey(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cms-register-api-key', {
+        body: {
+          tracked_site_id: siteId,
+          platform: connectMethod,
+          site_url: wpUrl.replace(/\/+$/, ''),
+          api_key: restApiKey.trim(),
+          mode: 'manual',
+        },
+      });
+      if (error) throw new Error(error.message || 'Save failed');
+      if (data?.error) throw new Error(data.error);
+      toast.success(t3(language, 'Connexion API enregistrée !', 'API connection saved!', '¡Conexión API guardada!'));
+      setRestApiKey('');
+      onConnectionSuccess?.();
+    } catch (e: any) {
+      toast.error(e?.message || t3(language, 'Échec de l\'enregistrement', 'Save failed', 'Error al guardar'));
+    } finally {
+      setSavingRestKey(false);
+    }
+  };
+
   const gtmSnippet = `<script>\n  window.CRAWLERS_API_KEY = "${siteApiKey}";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`;
 
   const handleCopyGtmSnippet = async () => {
