@@ -709,6 +709,11 @@ const Index = () => {
           </Suspense>
         </div>
 
+        {/* Chrome Extension — short teaser */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <ExtensionSection />
+        </Suspense>
+
 
         {/* Google Cross Data — SEA→SEO Bridge */}
         <Suspense fallback={<SectionSkeleton />}>
