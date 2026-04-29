@@ -36,17 +36,17 @@ interface SidebarItem {
 const translations = {
   fr: {
     tracking: 'SEO', geo: 'GEO', actionPlans: 'Plans d\'Action', correctiveCodes: '<Scripts>',
-    wallet: 'Portefeuille', reports: 'Rapports', settings: 'Paramètres', creator: 'Créateur',
+    wallet: 'Portefeuille', reports: 'Rapports', settings: 'Paramètres', creator: 'Administration',
     allSites: 'Tous les sites',
   },
   en: {
     tracking: 'SEO', geo: 'GEO', actionPlans: 'Action Plans', correctiveCodes: '<Scripts>',
-    wallet: 'Wallet', reports: 'Reports', settings: 'Settings', creator: 'Creator',
+    wallet: 'Wallet', reports: 'Reports', settings: 'Settings', creator: 'Administration',
     allSites: 'All sites',
   },
   es: {
     tracking: 'SEO', geo: 'GEO', actionPlans: 'Planes de Acción', correctiveCodes: '<Scripts>',
-    wallet: 'Billetera', reports: 'Informes', settings: 'Configuración', creator: 'Creador',
+    wallet: 'Billetera', reports: 'Informes', settings: 'Configuración', creator: 'Administración',
     allSites: 'Todos los sitios',
   },
 };
