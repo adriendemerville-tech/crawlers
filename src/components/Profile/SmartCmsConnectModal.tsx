@@ -380,36 +380,37 @@ export function SmartCmsConnectModal({
     }
   };
 
-  // ─── Step 3 — Save REST API credentials ───
+  // ─── Step 3 — Save REST API credentials (Application Password) ───
   const saveRestApi = async () => {
     if (!user || !appUser || !appPassword) return;
     setSavingRest(true);
     try {
-      // Test first
-      const test = await supabase.functions.invoke('wpsync', {
-        body: {
-          action: 'test-connection',
-          site_url: `https://${siteDomain}`,
-          auth_method: 'basic_auth',
-          basic_user: appUser,
-          basic_pass: appPassword,
+      // 1) Validate credentials against /wp-json/wp/v2/users/me via dedicated edge fn
+      const { data: test, error: testErr } = await supabase.functions.invoke(
+        'wp-test-connection',
+        {
+          body: {
+            site_url: `https://${siteDomain}`,
+            username: appUser,
+            app_password: appPassword,
+          },
         },
-      });
+      );
 
-      const ok = test.data?.success || test.data?.status === 'ok';
-      if (!ok) {
+      if (testErr) {
+        toast.error(testErr.message || t3(lang, 'Erreur de test', 'Test error', 'Error de prueba'));
+        return;
+      }
+
+      if (!test?.ok) {
         toast.error(
-          test.data?.error ||
-            t3(
-              lang,
-              'Identifiants invalides',
-              'Invalid credentials',
-              'Credenciales inválidas',
-            ),
+          test?.error ||
+            t3(lang, 'Identifiants refusés', 'Credentials rejected', 'Credenciales rechazadas'),
         );
         return;
       }
 
+      // 2) Persist
       const { error } = await supabase.from('cms_connections').upsert(
         {
           user_id: user.id,
@@ -427,7 +428,12 @@ export function SmartCmsConnectModal({
       if (error) throw error;
 
       toast.success(
-        t3(lang, 'CMS branché avec succès', 'CMS connected', 'CMS conectado'),
+        t3(
+          lang,
+          `CMS branché — connecté en tant que ${test.user?.name || appUser}`,
+          `CMS connected — signed in as ${test.user?.name || appUser}`,
+          `CMS conectado — sesión como ${test.user?.name || appUser}`,
+        ),
       );
       handleClose(false);
     } catch (e: any) {
@@ -836,59 +842,146 @@ export function SmartCmsConnectModal({
           </div>
         )}
 
-        {/* ─── Step manual REST API ─── */}
+        {/* ─── Step manual REST API (Application Password guided) ─── */}
         {step === 'manual' && (
           <div className="space-y-4 py-2">
-            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">
+            <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <KeyRound className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">
+                  {t3(
+                    lang,
+                    'Connexion via Application Password',
+                    'Connect with an Application Password',
+                    'Conexión mediante Application Password',
+                  )}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
                 {t3(
                   lang,
-                  'Comment obtenir un Application Password ?',
-                  'How to get an Application Password?',
-                  '¿Cómo obtener una Application Password?',
+                  'Méthode officielle WordPress depuis la version 5.6 — aucun plugin requis. Suivez ces 4 étapes :',
+                  'Official WordPress method since 5.6 — no plugin required. Follow these 4 steps:',
+                  'Método oficial de WordPress desde 5.6 — sin plugin. Siga estos 4 pasos:',
                 )}
               </p>
-              <p>
-                WP Admin → {t3(lang, 'Utilisateurs', 'Users', 'Usuarios')} →{' '}
-                {t3(lang, 'Profil', 'Profile', 'Perfil')} →{' '}
-                {t3(
-                  lang,
-                  "Mots de passe d'application",
-                  'Application Passwords',
-                  'Contraseñas de aplicación',
-                )}
-              </p>
-              <a
-                href={`https://${siteDomain}/wp-admin/profile.php#application-passwords-section`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-primary hover:underline"
-              >
-                <ExternalLink className="h-3 w-3" />
-                {t3(lang, 'Ouvrir mon WP Admin', 'Open my WP Admin', 'Abrir mi WP Admin')}
-              </a>
             </div>
+
+            {/* Visual step-by-step guide */}
+            <ol className="space-y-2.5 text-sm">
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">1</span>
+                <div className="flex-1">
+                  <p>
+                    {t3(
+                      lang,
+                      'Ouvrez votre profil WordPress',
+                      'Open your WordPress profile',
+                      'Abra su perfil WordPress',
+                    )}
+                  </p>
+                  <a
+                    href={`https://${siteDomain}/wp-admin/profile.php#application-passwords-section`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-0.5"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {siteDomain}/wp-admin/profile.php
+                  </a>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">2</span>
+                <div className="flex-1">
+                  <p>
+                    {t3(
+                      lang,
+                      'Faites défiler jusqu\'à « Mots de passe d\'application »',
+                      'Scroll down to "Application Passwords"',
+                      'Desplácese hasta «Contraseñas de aplicación»',
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t3(
+                      lang,
+                      'Section visible en bas de la page Profil.',
+                      'Section visible at the bottom of the Profile page.',
+                      'Sección visible al final de la página Perfil.',
+                    )}
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">3</span>
+                <div className="flex-1">
+                  <p>
+                    {t3(
+                      lang,
+                      'Saisissez « crawlers.fr » comme nom et cliquez sur « Ajouter »',
+                      'Enter "crawlers.fr" as name and click "Add"',
+                      'Escriba «crawlers.fr» como nombre y haga clic en «Añadir»',
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t3(
+                      lang,
+                      'WordPress affiche un mot de passe en 6 blocs (24 caractères).',
+                      'WordPress displays a 6-block password (24 characters).',
+                      'WordPress muestra una contraseña de 6 bloques (24 caracteres).',
+                    )}
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">4</span>
+                <div className="flex-1">
+                  <p>
+                    {t3(
+                      lang,
+                      'Copiez ce mot de passe et collez-le ci-dessous avec votre identifiant WP',
+                      'Copy this password and paste it below with your WP username',
+                      'Copie esa contraseña y péguela abajo con su usuario WP',
+                    )}
+                  </p>
+                </div>
+              </li>
+            </ol>
+
+            <Separator />
 
             <div className="space-y-2">
               <Label htmlFor="wp-user">
-                {t3(lang, "Nom d'utilisateur WP", 'WP Username', 'Nombre de usuario WP')}
+                {t3(lang, "Identifiant WP", 'WP Username', 'Usuario WP')}
               </Label>
               <Input
                 id="wp-user"
                 value={appUser}
                 onChange={(e) => setAppUser(e.target.value)}
                 placeholder="admin"
+                autoComplete="username"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="wp-pass">Application Password</Label>
+              <Label htmlFor="wp-pass">
+                {t3(lang, "Mot de passe d'application", 'Application Password', 'Contraseña de aplicación')}
+              </Label>
               <Input
                 id="wp-pass"
                 type="password"
                 value={appPassword}
                 onChange={(e) => setAppPassword(e.target.value)}
                 placeholder="xxxx xxxx xxxx xxxx xxxx xxxx"
+                autoComplete="off"
               />
+              <p className="text-xs text-muted-foreground">
+                {t3(
+                  lang,
+                  'Les espaces sont conservés tels quels — collez la chaîne complète.',
+                  'Spaces are preserved as-is — paste the full string.',
+                  'Los espacios se conservan tal cual — pegue la cadena completa.',
+                )}
+              </p>
             </div>
 
             <div className="flex gap-2">
