@@ -1620,7 +1620,7 @@ Termina con un resumen ejecutivo y próximos pasos.`,
           {/* Header — compact */}
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
             <div className="flex items-center gap-2">
-              <Bot className="w-3.5 h-3.5 text-[#fbbf24]" />
+              <GoldCrawlersLogo size={18} />
               <p className="text-[11px] font-semibold text-[#fbbf24]">{t.title}</p>
             </div>
             <div className="flex items-center gap-1">
