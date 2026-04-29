@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Download, CheckCircle2 } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
@@ -58,13 +59,17 @@ export default function ExtensionDownload() {
               </p>
               <div className="grid sm:grid-cols-2 gap-3">
                 {[
-                  { title: 'Audit stratégique IA (GEO)', desc: 'Visibilité dans les réponses IA, citabilité, fan-out, E-E-A-T sémantique.' },
-                  { title: 'Audit Expert technique', desc: 'Performance, balises, HTTP, indexabilité, structure HTML.' },
-                  { title: 'Score E-E-A-T', desc: 'Expertise, autorité, fiabilité — issues priorisés et plan correctif.' },
-                  { title: 'Machine Layer scan', desc: 'JSON-LD, OpenGraph, robots.txt, llms.txt, signaux machine pour bots IA.' },
-                  { title: 'Conversion Optimizer', desc: 'Suggestions UX/CRO sur la page (uniquement sur vos sites trackés).' },
+                  { title: 'Audit stratégique IA (GEO)', desc: 'Visibilité dans les réponses IA, citabilité, fan-out, E-E-A-T sémantique.', href: '/score-geo' },
+                  { title: 'Audit Expert technique', desc: 'Performance, balises, HTTP, indexabilité, structure HTML.', href: '/audit-expert' },
+                  { title: 'Score E-E-A-T', desc: 'Expertise, autorité, fiabilité — issues priorisés et plan correctif.', href: '/eeat' },
+                  { title: 'Machine Layer scan', desc: 'JSON-LD, OpenGraph, robots.txt, llms.txt, signaux machine pour bots IA.', href: '/machine-layer-scanner' },
+                  { title: 'Conversion Optimizer', desc: 'Suggestions UX/CRO sur la page (uniquement sur vos sites trackés).', href: '/conversion-optimizer' },
                 ].map((item) => (
-                  <div key={item.title} className="border border-border rounded-md p-3">
+                  <Link
+                    key={item.title}
+                    to={item.href}
+                    className="border border-border rounded-md p-3 transition-colors hover:border-[hsl(var(--brand-violet))] hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-violet))]"
+                  >
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-[hsl(var(--brand-violet))]" />
                       <div>
@@ -72,7 +77,7 @@ export default function ExtensionDownload() {
                         <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </section>
