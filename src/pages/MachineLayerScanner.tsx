@@ -310,7 +310,7 @@ export default function MachineLayerScanner() {
             {/* CTA Architect */}
             <Card className="p-6 sm:p-8 border-primary/40 bg-gradient-to-br from-primary/5 to-accent/5">
               <div className="flex flex-col items-center text-center gap-4">
-                <Sparkles className="h-8 w-8 text-primary" />
+
                 <h3 className="text-xl font-bold">Injecter directement dans mon site</h3>
                 <p className="text-sm text-muted-foreground max-w-xl">
                   {user
