@@ -201,6 +201,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     ...(isProUser ? [
       { value: 'reports-tab', label: t.reports, icon: FileBox, hideOnMobile: true },
     ] : []),
+    { value: 'tracking-api', label: 'API', icon: Network, hideOnMobile: true, advancedOnly: true },
   ];
 
   // Bottom items: Pro Agency, Wallet, Settings, Creator, API
@@ -439,22 +440,6 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       {!isMobile && (
         <div className="border-t border-border/40 px-2 py-2 space-y-0.5">
           {bottomItems.map(renderItem)}
-
-          <a
-            href="/app/console?tab=tracking"
-            onClick={(e) => {
-              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
-              e.preventDefault();
-              onTabChange('tracking-api');
-            }}
-            className={cn(
-              'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors',
-              !advanced && 'hidden',
-            )}
-          >
-            <Network className="h-4 w-4 shrink-0" />
-            <span>API</span>
-          </a>
         </div>
       )}
     </aside>
