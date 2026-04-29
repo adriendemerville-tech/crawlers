@@ -62,23 +62,27 @@ const ProductShowcaseSection = memo(() => {
   ];
 
   const navigate = useCallback((dir: 1 | -1) => {
-    if (isTransitioning) return;
-    setDirection(dir);
-    setIsTransitioning(true);
-    // After fade-out, switch slide and fade-in
-    timeoutRef.current = setTimeout(() => {
-      setCurrent((prev) => (prev + dir + slides.length) % slides.length);
-      setIsTransitioning(false);
-    }, 300);
-  }, [slides.length, isTransitioning]);
+    setIsTransitioning((transitioning) => {
+      if (transitioning) return transitioning;
+      setDirection(dir);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setCurrent((prev) => (prev + dir + slides.length) % slides.length);
+        setIsTransitioning(false);
+      }, 300);
+      return true;
+    });
+  }, [slides.length]);
 
   useEffect(() => {
     const timer = setInterval(() => navigate(1), 6000);
-    return () => {
-      clearInterval(timer);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
+    return () => clearInterval(timer);
   }, [navigate]);
+
+  // Safety net: clear any lingering timeout on unmount only
+  useEffect(() => () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  }, []);
 
   const slide = slides[current];
   const Icon = slide.icon;
