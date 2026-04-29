@@ -15,10 +15,13 @@ interface CocoonAccessGateProps {
 const i18n = {
   fr: {
     heroTitle: "Réservé aux Pros",
+    heroTitleAnon: "Connectez-vous pour accéder",
     heroDesc: "Le module Cocoon est réservé aux abonnés Pro Agency. Visualisez l'architecture sémantique de votre site.",
+    heroDescAnon: "Le module Cocoon nécessite un compte. Connectez-vous ou inscrivez-vous, puis activez votre abonnement Pro Agency.",
     subscribeCta: "S'abonner · dès 26,10€/mois",
     features: ["Audit expert illimité", "Code correctif illimité", "Benchmark visibilité LLM", "Cocoon sémantique illimité", "Marque Blanche"],
     authTitle: "Vous avez déjà un compte ?",
+    authTitleAnon: "Accédez à votre compte",
     authDesc: "Connectez-vous pour accéder à Cocoon ou créez votre compte.",
     loginCta: "Se connecter",
     signupCta: "S'inscrire",
@@ -28,10 +31,13 @@ const i18n = {
   },
   en: {
     heroTitle: "Reserved for Pros",
+    heroTitleAnon: "Sign in to access",
     heroDesc: "The Cocoon module is reserved for Pro Agency subscribers. Visualize your site's semantic architecture.",
+    heroDescAnon: "The Cocoon module requires an account. Sign in or sign up, then activate your Pro Agency subscription.",
     subscribeCta: "Subscribe · from €26.10/mo",
     features: ["Unlimited expert audit", "Unlimited corrective code", "LLM Visibility Benchmark", "Unlimited semantic Cocoon", "White Label"],
     authTitle: "Already have an account?",
+    authTitleAnon: "Access your account",
     authDesc: "Sign in to access Cocoon or create your account.",
     loginCta: "Sign in",
     signupCta: "Sign up",
@@ -41,10 +47,13 @@ const i18n = {
   },
   es: {
     heroTitle: "Reservado para Pros",
+    heroTitleAnon: "Inicie sesión para acceder",
     heroDesc: "El módulo Cocoon está reservado para suscriptores Pro Agency. Visualice la arquitectura semántica de su sitio.",
+    heroDescAnon: "El módulo Cocoon requiere una cuenta. Inicie sesión o regístrese, luego active su suscripción Pro Agency.",
     subscribeCta: "Suscribirse · desde 26,10€/mes",
     features: ["Auditoría experta ilimitada", "Código correctivo ilimitado", "Benchmark visibilidad LLM", "Cocoon semántico ilimitado", "Marca Blanca"],
     authTitle: "¿Ya tiene una cuenta?",
+    authTitleAnon: "Acceda a su cuenta",
     authDesc: "Inicie sesión para acceder a Cocoon o cree su cuenta.",
     loginCta: "Iniciar sesión",
     signupCta: "Registrarse",
@@ -56,8 +65,9 @@ const i18n = {
 
 export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
   const navigate = useNavigate();
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, user } = useAuth();
   const t = i18n[language] || i18n.fr;
+  const isAnon = !user;
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -114,9 +124,9 @@ export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
               <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-yellow-500/10 border border-violet-500/20">
                 <Crown className="h-5 w-5 text-yellow-500" />
               </div>
-              {t.heroTitle}
+              {isAnon ? t.heroTitleAnon : t.heroTitle}
             </CardTitle>
-            <CardDescription className="text-white/50">{t.heroDesc}</CardDescription>
+            <CardDescription className="text-white/50">{isAnon ? t.heroDescAnon : t.heroDesc}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <ul className="grid gap-1.5">
@@ -144,7 +154,7 @@ export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2 text-white">
               <LogIn className="h-4 w-4 text-violet-400" />
-              {t.authTitle}
+              {isAnon ? t.authTitleAnon : t.authTitle}
             </CardTitle>
             <CardDescription className="text-white/40 text-sm">{t.authDesc}</CardDescription>
           </CardHeader>
