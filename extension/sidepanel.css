@@ -294,3 +294,37 @@ h2 {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.scores-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.score-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.score-card.muted {
+  opacity: 0.55;
+}
+
+.score-card .score-num {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--violet);
+  line-height: 1.1;
+}
+
+.score-card .score-lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 3px;
+}

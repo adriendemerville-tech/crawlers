@@ -155,40 +155,35 @@ Deno.serve(async (req) => {
     }
 
     // ── 2. Launch audits in parallel ──
-    const audits: Array<Promise<any>> = [];
-
-    // Strategic audit
-    audits.push(
-      fetch(`${SUPABASE_URL}/functions/v1/audit-strategique-ia`, {
+    const callFn = (name: string, payload: unknown) =>
+      fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
         method: 'POST',
         headers: {
           Authorization: authHeader,
           apikey: ANON_KEY,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: targetUrl, lang: 'fr' }),
+        body: JSON.stringify(payload),
       })
         .then((r) => r.ok ? r.json() : null)
-        .catch((e) => { console.warn('[router] strategic failed', e); return null; })
-    );
+        .catch((e) => { console.warn(`[router] ${name} failed`, e); return null; });
 
-    // Expert audit (technical)
-    audits.push(
-      fetch(`${SUPABASE_URL}/functions/v1/expert-audit`, {
-        method: 'POST',
-        headers: {
-          Authorization: authHeader,
-          apikey: ANON_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: targetUrl }),
-      })
-        .then((r) => r.ok ? r.json() : null)
-        .catch((e) => { console.warn('[router] expert failed', e); return null; })
-    );
+    const audits: Array<Promise<any>> = [
+      callFn('audit-strategique-ia', { url: targetUrl, lang: 'fr' }),
+      callFn('expert-audit', { url: targetUrl }),
+      callFn('check-eeat', { url: targetUrl, tracked_site_id: trackedSite?.id || null, forceCrawl: false }),
+      callFn('machine-layer-scan', { url: targetUrl, turnstile_token: 'TURNSTILE_UNAVAILABLE' }),
+    ];
 
-    // Run with a 60s deadline
-    const auditDeadline = new Promise((resolve) => setTimeout(() => resolve('timeout'), 60_000));
+    // Conversion analysis only available in Mode Pilote (requires tracked_site_id)
+    if (isTracked && trackedSite) {
+      audits.push(callFn('analyze-ux-context', { tracked_site_id: trackedSite.id, page_url: targetUrl }));
+    } else {
+      audits.push(Promise.resolve(null));
+    }
+
+    // Run with a 90s deadline (E-E-A-T + ML scan can be slow)
+    const auditDeadline = new Promise((resolve) => setTimeout(() => resolve('timeout'), 90_000));
     const results: any = await Promise.race([
       Promise.allSettled(audits),
       auditDeadline,
@@ -196,9 +191,15 @@ Deno.serve(async (req) => {
 
     let strategicResult = null;
     let expertResult = null;
+    let eeatResult: any = null;
+    let machineLayerResult: any = null;
+    let conversionResult: any = null;
     if (Array.isArray(results)) {
       strategicResult = results[0]?.status === 'fulfilled' ? results[0].value : null;
       expertResult = results[1]?.status === 'fulfilled' ? results[1].value : null;
+      eeatResult = results[2]?.status === 'fulfilled' ? results[2].value : null;
+      machineLayerResult = results[3]?.status === 'fulfilled' ? results[3].value : null;
+      conversionResult = results[4]?.status === 'fulfilled' ? results[4].value : null;
     }
 
     // ── 3. Irrigate architect_workbench (if tracked site) ──
@@ -241,6 +242,46 @@ Deno.serve(async (req) => {
       }
     }
 
+    // From E-E-A-T audit (sync mode → result direct ; sinon score uniquement)
+    const eeatScore = eeatResult?.score ?? eeatResult?.result?.score ?? null;
+    const eeatIssues = eeatResult?.issues || eeatResult?.result?.issues || [];
+    if (Array.isArray(eeatIssues)) {
+      for (const issue of eeatIssues.slice(0, 4)) {
+        findings.push({
+          title: issue.title || issue.label || 'Signal E-E-A-T manquant',
+          category: 'eeat',
+          severity: issue.severity || (issue.priority === 'high' ? 'high' : 'medium'),
+        });
+      }
+    }
+
+    // From Machine Layer Scan
+    const machineLayerScore = machineLayerResult?.score_global ?? null;
+    const machineLayerIssues = machineLayerResult?.issues || [];
+    if (Array.isArray(machineLayerIssues)) {
+      for (const issue of machineLayerIssues.slice(0, 4)) {
+        findings.push({
+          title: issue.title || issue.label || issue.message || 'Signal machine manquant',
+          category: 'machine_layer',
+          severity: issue.severity || 'medium',
+        });
+      }
+    }
+
+    // From Conversion analysis (Mode Pilote uniquement)
+    const conversionAxes = conversionResult?.scores || conversionResult?.analysis?.scores || null;
+    const conversionScore = conversionAxes?.conversion?.score ?? null;
+    const conversionSuggestions = conversionResult?.suggestions || conversionResult?.analysis?.suggestions || [];
+    if (Array.isArray(conversionSuggestions)) {
+      for (const sug of conversionSuggestions.slice(0, 4)) {
+        findings.push({
+          title: sug.title || sug.label || sug.suggested_text?.slice(0, 80) || 'Optimisation conversion',
+          category: 'conversion',
+          severity: sug.priority === 'high' ? 'high' : 'medium',
+        });
+      }
+    }
+
     const criticalCount = findings.filter((f) => f.severity === 'high' || f.severity === 'critical').length;
 
     // ── 5. Log analytics event ──
@@ -254,6 +295,9 @@ Deno.serve(async (req) => {
           is_tracked: isTracked,
           findings_count: findings.length,
           identity_updated: identityUpdated,
+          eeat_score: eeatScore,
+          machine_layer_score: machineLayerScore,
+          conversion_score: conversionScore,
         },
       });
     } catch (_e) { /* non-blocking */ }
@@ -269,6 +313,14 @@ Deno.serve(async (req) => {
         identity_updated: identityUpdated,
       },
       findings,
+      scores: {
+        strategic: strategicResult?.data?.overallScore || null,
+        expert: expertResult?.overallScore || null,
+        eeat: eeatScore,
+        machine_layer: machineLayerScore,
+        conversion: conversionScore,
+      },
+      // Backward-compat
       strategic_score: strategicResult?.data?.overallScore || null,
       expert_score: expertResult?.overallScore || null,
     });
