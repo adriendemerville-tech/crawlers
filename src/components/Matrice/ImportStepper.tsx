@@ -522,17 +522,21 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
               const isVar = detectedVariableSheets.includes(name);
               const metaType = detectedMetaSheets[name];
               const isMetaSheet = !!metaType;
+              const isSummary = detectedSummarySheets.includes(name);
               const sheetIcon = isVar ? <CreditCard className="h-4 w-4 shrink-0 text-amber-500" />
                 : metaType === 'engine_notes' ? <BookOpen className="h-4 w-4 shrink-0 text-cyan-500" />
                 : metaType === 'scoring_guide' ? <BarChart3 className="h-4 w-4 shrink-0 text-emerald-500" />
+                : isSummary ? <BarChart3 className="h-4 w-4 shrink-0 text-muted-foreground/60" />
                 : <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" />;
               const badgeLabel = isVar ? "Carte d'identité"
                 : metaType === 'engine_notes' ? 'Instructions moteur'
                 : metaType === 'scoring_guide' ? 'Grille scoring'
+                : isSummary ? 'Résumé (doublon)'
                 : null;
               const badgeColor = isVar ? 'border-amber-500/30 text-amber-500'
                 : metaType === 'engine_notes' ? 'border-cyan-500/30 text-cyan-500'
                 : metaType === 'scoring_guide' ? 'border-emerald-500/30 text-emerald-500'
+                : isSummary ? 'border-muted-foreground/30 text-muted-foreground'
                 : '';
               return (
                 <button
@@ -554,7 +558,7 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
                       {badgeLabel}
                     </Badge>
                   )}
-                  {isMetaSheet && !isChecked && (
+                  {(isMetaSheet || isSummary) && !isChecked && (
                     <span className="text-[9px] text-muted-foreground/60">auto</span>
                   )}
                 </button>
