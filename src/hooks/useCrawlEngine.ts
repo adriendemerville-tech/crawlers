@@ -256,6 +256,38 @@ export function useCrawlEngine() {
             setPhase('');
             toast.error(sanitizedResult.error_message || t.errorCrawl);
           }
+          if (sanitizedResult.status === 'stopped') {
+            clearInterval(pollingIntervalRef.current!);
+            pollingIntervalRef.current = null;
+            pollingCrawlIdRef.current = null;
+            setIsLoading(false);
+            setPhase('');
+          }
+
+          // ── Watchdog : libère l'UI si le crawl reste bloqué en mapping/queued sans progression ──
+          const snapshot = `${sanitizedResult.status}:${sanitizedResult.crawled_pages || 0}`;
+          if (snapshot !== lastProgressSnapshot) {
+            lastProgressSnapshot = snapshot;
+            lastProgressAt = Date.now();
+          }
+          const stuckMs = Date.now() - lastProgressAt;
+          const isStuckPhase = sanitizedResult.status === 'mapping' || sanitizedResult.status === 'queued';
+          if (isStuckPhase && stuckMs > 120_000 && Date.now() - watchdogStartedAt > 30_000) {
+            clearInterval(pollingIntervalRef.current!);
+            pollingIntervalRef.current = null;
+            pollingCrawlIdRef.current = null;
+            // Marque le crawl stopped en base pour ne pas réapparaître bloqué
+            supabase.from('site_crawls').update({
+              status: 'stopped',
+              error_message: 'Mapping bloqué — sitemap inaccessible ou serveur cible non répondant',
+            }).eq('id', crawlId).then(() => {});
+            setCrawlResult(prev => prev ? { ...prev, status: 'stopped' } : prev);
+            setIsLoading(false);
+            setPhase('');
+            toast.error(language === 'fr'
+              ? 'Mapping bloqué (sitemap inaccessible). Crawl interrompu — réessayez avec « Lancer l\'analyse ».'
+              : 'Mapping stuck (sitemap unreachable). Crawl aborted — retry with "Start analysis".');
+          }
         }
       } catch (pollErr) {
         console.error('[CrawlPoll] Error during polling:', pollErr);
