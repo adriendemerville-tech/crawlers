@@ -276,13 +276,13 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
   return (
     <>
       {/* Header — Title above CMS cards */}
-      <DialogHeader className="pb-3">
-        <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
-          <Cable className="h-6 w-6 text-primary" />
+      <DialogHeader className="pb-1.5">
+        <DialogTitle className="flex items-center gap-2.5 text-xl font-bold">
+          <Cable className="h-5 w-5 text-primary" />
           {t3(language, 'Brancher mon site', 'Connect my site', 'Conectar mi sitio')}
         </DialogTitle>
-        <DialogDescription className="flex items-center gap-2 mt-1">
-          <span className="font-mono text-xs">{siteDomain}</span>
+        <DialogDescription className="flex items-center gap-2 mt-0.5">
+          <span className="font-mono text-[11px]">{siteDomain}</span>
           <Badge
             variant={isConnected ? 'default' : 'outline'}
             className={isConnected ? 'bg-emerald-600 hover:bg-emerald-600 text-white text-[10px] px-1.5 py-0' : 'text-[10px] px-1.5 py-0'}
@@ -294,38 +294,18 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             )}
           </Badge>
         </DialogDescription>
-      </DialogHeader>
-
-      {/* ─── API Key — placée en premier ─── */}
-      <div className="rounded-xl border bg-muted/20 px-5 py-4 space-y-2">
-        <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          {t3(language, 'Clé API de ce site', 'Site API Key', 'Clave API del sitio')}
-        </label>
-        <div className="flex items-center gap-1.5">
-          <Input
-            readOnly
-            value={apiKeyVisible ? siteApiKey : maskedKey}
-            className="font-mono text-[11px] bg-background h-8 flex-1 cursor-default"
-          />
-          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setApiKeyVisible(!apiKeyVisible)}>
-            {apiKeyVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={handleCopyApiKey}>
-            {apiKeyCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-          </Button>
-        </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
           {t3(language,
-            'Cette clé est pré-remplie dans les snippets ci-dessous. Ne la partagez pas.',
-            'This key is pre-filled in the snippets below. Do not share it.',
-            'Esta clave está pre-rellenada en los snippets siguientes. No la comparta.'
+            'Choisissez votre CMS ci-dessous, puis suivez les étapes. Aucune action requise sur la clé API : elle est déjà intégrée aux snippets et au plugin.',
+            'Pick your CMS below, then follow the steps. No action needed on the API Key — it is already embedded in the snippets and plugin.',
+            'Elija su CMS a continuación y siga los pasos. No hay nada que hacer con la clave API: ya está integrada en los snippets y el plugin.'
           )}
         </p>
-      </div>
+      </DialogHeader>
 
-      {/* ─── CMS selector — square cards ─── */}
-      <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
-        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+      {/* ─── CMS selector — square cards (en premier) ─── */}
+      <div className="rounded-xl border bg-muted/20 p-3 space-y-2">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
           {([
             { key: 'wordpress' as const, label: 'WordPress', logo: cmsWordpress },
             { key: 'shopify' as const, label: 'Shopify', logo: cmsShopify },
@@ -337,7 +317,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
           ] as const).map(cms => (
             <button
               key={cms.key}
-              className={`flex flex-col items-center justify-center gap-1.5 rounded-xl text-[11px] font-semibold transition-all border-2 p-2 aspect-[1/0.78] ${
+              className={`flex flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-semibold transition-all border-2 p-1.5 aspect-[1/0.72] ${
                 connectMethod === cms.key
                   ? 'bg-primary/10 border-primary/50 text-foreground shadow-sm'
                   : 'bg-background border-border hover:border-primary/30 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
@@ -347,7 +327,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               <img
                 src={cms.logo}
                 alt={cms.label}
-                className={`h-28 w-28 object-contain ${'darkInvert' in cms && cms.darkInvert ? 'dark:invert' : ''}`}
+                className={`h-20 w-20 object-contain ${'darkInvert' in cms && cms.darkInvert ? 'dark:invert' : ''}`}
                 loading="lazy"
               />
               {cms.label}
@@ -356,10 +336,42 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
         </div>
       </div>
 
-      <Separator />
+      {/* ─── API Key — repliée par défaut, juste pour copie/audit ─── */}
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="apikey" className="border rounded-xl bg-muted/10 px-4">
+          <AccordionTrigger className="py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+            <span className="flex items-center gap-2">
+              <Eye className="h-3.5 w-3.5" />
+              {t3(language, 'Voir ma clé API (optionnel)', 'View my API Key (optional)', 'Ver mi clave API (opcional)')}
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="pb-3">
+            <p className="text-[10px] text-muted-foreground mb-2 leading-snug">
+              {t3(language,
+                'Vous n\'avez normalement pas besoin de la copier : elle est déjà pré-remplie dans le plugin .zip et dans tous les snippets ci-dessous. Affichée ici uniquement pour audit ou intégration manuelle.',
+                'You normally do not need to copy it: it is already pre-filled in the .zip plugin and in every snippet below. Shown here only for audit or manual integration.',
+                'Normalmente no necesita copiarla: ya está pre-rellenada en el plugin .zip y en todos los snippets siguientes. Se muestra aquí solo para auditoría o integración manual.'
+              )}
+            </p>
+            <div className="flex items-center gap-1.5">
+              <Input
+                readOnly
+                value={apiKeyVisible ? siteApiKey : maskedKey}
+                className="font-mono text-[11px] bg-background h-8 flex-1 cursor-default"
+              />
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setApiKeyVisible(!apiKeyVisible)}>
+                {apiKeyVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={handleCopyApiKey}>
+                {apiKeyCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {connectMethod !== 'gtm' ? (
-        <div className="space-y-4 pt-1">
+        <div className="space-y-3 pt-1">
           {/* CMS name + subtitle */}
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
