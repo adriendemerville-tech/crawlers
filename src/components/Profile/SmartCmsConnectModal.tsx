@@ -742,9 +742,19 @@ export function SmartCmsConnectModal({
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">{detection.reason}</p>
+              {detection.recommended === 'magic_link' && !detection.pluginInstalled && (
+                <div className="rounded border border-amber-500/40 bg-amber-500/5 p-2 text-xs text-amber-700 dark:text-amber-400">
+                  {t3(
+                    lang,
+                    '⚠ Le plugin Crawlers doit être installé et activé sur WordPress avant d\'utiliser le Magic Link. Utilisez d\'abord « Télécharger le plugin ».',
+                    '⚠ The Crawlers plugin must be installed and activated on WordPress before using Magic Link. Use "Download plugin" first.',
+                    '⚠ El plugin Crawlers debe estar instalado y activado en WordPress antes de usar el Magic Link. Use primero "Descargar plugin".',
+                  )}
+                </div>
+              )}
               <Button
                 onClick={() => executePath(detection.recommended)}
-                disabled={working}
+                disabled={working || (detection.recommended === 'magic_link' && !detection.pluginInstalled)}
                 variant="outline"
                 className="w-full gap-2 mt-2"
               >
