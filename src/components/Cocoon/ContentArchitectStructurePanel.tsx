@@ -48,6 +48,7 @@ export function ContentArchitectStructurePanel({
   keywordTags, setKeywordTags, keywordCloudSuggestions, autoFilled, isExistingPage,
   detectPageTypeFromDirectory, result, setResult, loading, onGenerate,
   strategistLoading, strategistDone, language, pageTypes, lengths,
+  cacheInfo, crawlersReco, onApplyRecommendation,
 }: ContentArchitectStructurePanelProps) {
   return (
     <div className="flex flex-col h-full">
