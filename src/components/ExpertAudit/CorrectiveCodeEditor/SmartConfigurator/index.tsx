@@ -2014,7 +2014,7 @@ export function SmartConfigurator({
 
       {/* Connect Site Modal — multi-CMS */}
       <Dialog open={showConnectSiteModal} onOpenChange={setShowConnectSiteModal} modal={true}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden max-h-[85vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-2xl px-8 py-7 overflow-hidden max-h-[85vh] overflow-y-auto space-y-5" onOpenAutoFocus={(e) => e.preventDefault()}>
           {wpSiteData ? (
             <WordPressConfigCard
               siteId={wpSiteData.id}
