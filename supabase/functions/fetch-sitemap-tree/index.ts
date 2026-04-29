@@ -355,6 +355,70 @@ try {
     // Deduplicate
     allUrls = [...new Set(allUrls)].slice(0, MAX_URLS);
 
+    // ── Fallback Firecrawl /map quand fetch direct est bloqué (OVH/Cloudflare 403) ──
+    let fallbackSource: string | null = null;
+    if (allUrls.length === 0) {
+      const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+      if (firecrawlKey) {
+        // Rate-limit anti-abus : 1 fallback Firecrawl / domaine / 24h via domain_data_cache
+        const { data: recentFallback } = await supabase
+          .from('domain_data_cache')
+          .select('expires_at')
+          .eq('data_type', 'sitemap_firecrawl_fallback')
+          .eq('domain', cleanDomain)
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle();
+
+        if (recentFallback) {
+          console.log(`[fetch-sitemap-tree] Firecrawl fallback rate-limited for ${cleanDomain} (1/24h)`);
+        } else {
+          console.log(`[fetch-sitemap-tree] Direct fetch returned 0 URLs, trying Firecrawl /map fallback for ${cleanDomain}`);
+          try {
+            const fcController = new AbortController();
+            const fcTid = setTimeout(() => fcController.abort(), 25_000);
+            const fcRes = await fetch('https://api.firecrawl.dev/v2/map', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${firecrawlKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                url: `https://${cleanDomain}`,
+                limit: MAX_URLS,
+                includeSubdomains: false,
+              }),
+              signal: fcController.signal,
+            });
+            clearTimeout(fcTid);
+
+            if (fcRes.ok) {
+              const fcData = await fcRes.json();
+              const links: string[] = Array.isArray(fcData?.links)
+                ? fcData.links.map((l: any) => typeof l === 'string' ? l : l?.url).filter(Boolean)
+                : Array.isArray(fcData?.data?.links) ? fcData.data.links : [];
+              if (links.length > 0) {
+                allUrls = [...new Set(links)].slice(0, MAX_URLS);
+                fallbackSource = 'firecrawl_map';
+                console.log(`[fetch-sitemap-tree] Firecrawl fallback recovered ${allUrls.length} URLs for ${cleanDomain}`);
+              }
+            } else {
+              console.warn(`[fetch-sitemap-tree] Firecrawl /map failed: ${fcRes.status}`);
+            }
+          } catch (fcErr) {
+            console.warn('[fetch-sitemap-tree] Firecrawl fallback error:', fcErr);
+          }
+
+          // Marque le fallback (succès ou échec) pour rate-limiter 24h
+          await supabase.from('domain_data_cache').upsert({
+            domain: cleanDomain,
+            data_type: 'sitemap_firecrawl_fallback',
+            result_data: { attempted: true, recovered: allUrls.length, source: fallbackSource },
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          }, { onConflict: 'domain,data_type' }).catch(() => {});
+        }
+      }
+    }
+
     const tree = clusterUrls(allUrls, cleanDomain);
 
     const result = {
@@ -362,6 +426,7 @@ try {
       totalUrls: allUrls.length,
       domain: cleanDomain,
       fetchedAt: new Date().toISOString(),
+      source: fallbackSource || 'direct_fetch',
     };
 
     // Cache results
