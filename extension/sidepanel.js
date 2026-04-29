@@ -189,6 +189,9 @@ function extractDomSignals() {
 function renderResults(data) {
   const summary = data.summary || {};
   const findings = data.findings || [];
+  const scores = data.scores || {};
+
+  const fmtScore = (s) => (s === null || s === undefined) ? '—' : Math.round(Number(s));
 
   const summaryHtml = `
     <div class="summary">
@@ -209,11 +212,21 @@ function renderResults(data) {
         <div class="lbl">Carte ID</div>
       </div>
     </div>
+    <div class="scores-grid">
+      <div class="score-card"><div class="score-num">${fmtScore(scores.strategic)}</div><div class="score-lbl">Stratégique</div></div>
+      <div class="score-card"><div class="score-num">${fmtScore(scores.expert)}</div><div class="score-lbl">Expert</div></div>
+      <div class="score-card"><div class="score-num">${fmtScore(scores.eeat)}</div><div class="score-lbl">E-E-A-T</div></div>
+      <div class="score-card"><div class="score-num">${fmtScore(scores.machine_layer)}</div><div class="score-lbl">Machine Layer</div></div>
+      <div class="score-card ${scores.conversion === null ? 'muted' : ''}">
+        <div class="score-num">${fmtScore(scores.conversion)}</div>
+        <div class="score-lbl">Conversion${scores.conversion === null ? ' (Pilote)' : ''}</div>
+      </div>
+    </div>
   `;
 
   const findingsHtml = findings.length === 0
     ? '<p style="color: var(--text-muted); font-size: 13px;">Aucun finding remonté.</p>'
-    : findings.slice(0, 10).map((f) => `
+    : findings.slice(0, 12).map((f) => `
         <div class="finding ${f.severity || 'medium'}">
           <div class="finding-title">${escapeHtml(f.title || 'Finding')}</div>
           <div class="finding-meta">${escapeHtml(f.category || '')} · ${escapeHtml(f.severity || '')}</div>
