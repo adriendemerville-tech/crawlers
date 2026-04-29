@@ -206,12 +206,12 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
   // Bottom items: Pro Agency, Wallet, Settings, Creator, API
   const bottomItems: SidebarItem[] = [
-    ...(isProUser ? [{
-      value: 'wallet', label: planType === 'agency_premium' ? 'Pro Agency +' : 'Pro Agency',
-      icon: Crown, hideOnMobile: true,
-    }] : [
-      { value: 'wallet', label: t.wallet, icon: Wallet, hideOnMobile: true },
-    ]),
+    {
+      value: 'wallet',
+      label: planType === 'agency_premium' ? 'Pro Agency +' : 'Pro Agency',
+      icon: Crown,
+      hideOnMobile: true,
+    },
     ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true, advancedOnly: true }] : []),
     { value: 'settings', label: t.settings, icon: Settings, hideOnMobile: true },
     ...(hasAdminAccess ? [{ value: 'admin', label: t.creator, icon: Shield }] : []),
