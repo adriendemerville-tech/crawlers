@@ -25,6 +25,10 @@ const ENDPOINT = globalThis.CRAWLERS_INGEST_URL || "https://api.crawlers.fr/func
 const BATCH_SIZE = 20;
 const FLUSH_INTERVAL_MS = 5000; // 5 secondes
 
+// Proxy : /sitemap.xml → CDN Supabase (public-assets bucket)
+// Permet à https://crawlers.fr/sitemap.xml de servir le XML généré dynamiquement
+const SITEMAP_CDN_URL = "https://tutlimtasnjabdfhpewu.supabase.co/storage/v1/object/public/public-assets/sitemap.xml";
+
 // Buffer en mémoire du Worker (partagé entre requêtes sur le même isolate)
 let buffer = [];
 let flushTimeout = null;
