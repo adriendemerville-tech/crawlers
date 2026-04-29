@@ -36,6 +36,16 @@ interface PlatformConfig {
   domainHints: string[]
 }
 
+interface RemotePlatformConfig {
+  // Used when no static baseUrl (resolved per-site from siteUrl)
+  resolveBaseUrl?: (siteUrl: string) => string
+  healthPath?: string
+  writeProbePath: string
+  apiKeyPrefix?: string
+  authHeader?: (key: string) => Record<string, string>
+  domainHints: string[]
+}
+
 const PLATFORM_REGISTRY: Record<string, PlatformConfig> = {
   dictadevi: {
     baseUrl: DICTADEVI_BASE_URL,
@@ -43,6 +53,40 @@ const PLATFORM_REGISTRY: Record<string, PlatformConfig> = {
     writeProbePath: '/posts?limit=1',
     apiKeyPrefix: 'dk_',
     domainHints: ['dictadevi'],
+  },
+}
+
+// Platforms requiring a per-site base URL (no static baseUrl)
+const REMOTE_PLATFORM_REGISTRY: Record<string, RemotePlatformConfig> = {
+  shopify: {
+    resolveBaseUrl: (u) => u.replace(/\/+$/, '') + '/admin/api/2024-10',
+    writeProbePath: '/shop.json',
+    authHeader: (k) => ({ 'X-Shopify-Access-Token': k }),
+    domainHints: ['myshopify.com'],
+  },
+  wix: {
+    resolveBaseUrl: (u) => u.replace(/\/+$/, ''),
+    writeProbePath: '/_functions/health',
+    authHeader: (k) => ({ Authorization: k }),
+    domainHints: ['wixsite.com', 'wix.com'],
+  },
+  prestashop: {
+    resolveBaseUrl: (u) => u.replace(/\/+$/, '') + '/api',
+    writeProbePath: '/?output_format=JSON',
+    authHeader: (k) => ({ Authorization: 'Basic ' + btoa(k + ':') }),
+    domainHints: [],
+  },
+  drupal: {
+    resolveBaseUrl: (u) => u.replace(/\/+$/, ''),
+    writeProbePath: '/jsonapi',
+    authHeader: (k) => ({ Authorization: 'Basic ' + k }),
+    domainHints: [],
+  },
+  odoo: {
+    resolveBaseUrl: (u) => u.replace(/\/+$/, ''),
+    writeProbePath: '/web/session/get_session_info',
+    authHeader: (k) => ({ Authorization: 'Bearer ' + k }),
+    domainHints: [],
   },
 }
 
