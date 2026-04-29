@@ -433,15 +433,15 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
             );
           })
         ) : (
-          items.map(renderItem)
+          <>
+            {items.map(renderItem)}
+            {/* Pro Agency, Paramètres, Administration : remontés directement sous API,
+                séparés par un mince filet pour rester visuellement distincts */}
+            <div className="my-1 border-t border-border/40" />
+            {bottomItems.map(renderItem)}
+          </>
         )}
       </nav>
-
-      {!isMobile && (
-        <div className="border-t border-border/40 px-2 py-2 space-y-0.5">
-          {bottomItems.map(renderItem)}
-        </div>
-      )}
     </aside>
   );
 }
