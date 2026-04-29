@@ -101,6 +101,16 @@ function isVariableSheet(sheetName: string, headers: string[]): boolean {
 
 const ENGINE_NOTES_PATTERNS = [/^engine.?notes?/i, /^notes?.?moteur/i, /^citation.?guide/i];
 const SCORING_GUIDE_PATTERNS = [/^scoring.?guide/i, /^grille.?scoring/i, /^scoring$/i, /^codage/i];
+const SUMMARY_SHEET_PATTERNS = [
+  /synth[èe]se/i,
+  /^r[ée]sum[ée]$/i,
+  /^summary$/i,
+  /^totaux?$/i,
+  /^aggreg/i,
+  /^bilan$/i,
+  /^scores?\s+par\s+(moteur|prompt)/i,
+  /^statistiques?$/i,
+];
 
 function isEngineNotesSheet(sheetName: string, headers: string[]): boolean {
   if (ENGINE_NOTES_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
@@ -112,6 +122,10 @@ function isScoringGuideSheet(sheetName: string, headers: string[]): boolean {
   if (SCORING_GUIDE_PATTERNS.some(p => p.test(sheetName.trim()))) return true;
   const hJoined = headers.map(h => h.toLowerCase()).join('|');
   return hJoined.includes('what_to_code') && hJoined.includes('allowed_values');
+}
+
+function isSummarySheet(sheetName: string, _headers: string[]): boolean {
+  return SUMMARY_SHEET_PATTERNS.some(p => p.test(sheetName.trim()));
 }
 
 function extractEngineNotes(rows: Record<string, any>[], headers: string[]): EngineNote[] {
