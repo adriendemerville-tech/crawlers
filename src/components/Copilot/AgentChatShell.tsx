@@ -217,22 +217,17 @@ export function AgentChatShell({
                   </div>
                 )}
 
-                {/* Actions exécutées (résumé) */}
-                {m.actions && m.actions.length > 0 && (
+                {/* Actions exécutées : masquées (télémétrie interne — non destinée à l'utilisateur).
+                    Les erreurs restent visibles pour aider au support. */}
+                {m.actions && m.actions.some(a => a.status === 'error') && (
                   <div className="mt-2 space-y-1 border-t border-border/50 pt-2">
-                    {m.actions.map((a, i) => (
+                    {m.actions.filter(a => a.status === 'error').map((a, i) => (
                       <div
                         key={`${m.id}-act-${i}`}
-                        className={cn(
-                          'flex items-center gap-2 text-[10px] uppercase tracking-wide',
-                          a.status === 'success' && 'text-foreground/70',
-                          a.status === 'error' && 'text-destructive',
-                          a.status === 'rejected' && 'text-muted-foreground line-through',
-                          a.status === 'awaiting_approval' && 'text-primary',
-                        )}
+                        className="flex items-center gap-2 text-[11px] text-destructive"
                       >
-                        <span className="rounded border border-current px-1.5 py-0.5">{a.status}</span>
-                        <span className="truncate">{a.skill}</span>
+                        <span className="rounded border border-current px-1.5 py-0.5">erreur</span>
+                        <span className="truncate">{a.error || 'Une action a échoué'}</span>
                       </div>
                     ))}
                   </div>
