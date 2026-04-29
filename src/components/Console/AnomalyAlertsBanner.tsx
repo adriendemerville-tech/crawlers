@@ -32,45 +32,7 @@ const severityConfig: Record<string, { bg: string; border: string; icon: any; te
   ga4_down: { bg: 'bg-red-500/10', border: 'border-red-500/30', icon: TrendingDown, text: 'text-red-400' },
 };
 
-const GA4_SIMULATED = [
-  { page: '/guide-seo-2025', delta: +34, metric: 'sessions' },
-  { page: '/audit-technique', delta: +18, metric: 'users' },
-  { page: '/blog/core-web-vitals', delta: -12, metric: 'sessions' },
-  { page: '/tarifs', delta: +52, metric: 'conversions' },
-  { page: '/contact', delta: -8, metric: 'bounce_rate' },
-  { page: '/blog/netlinking-guide', delta: +27, metric: 'sessions' },
-  { page: '/outil-crawl', delta: +41, metric: 'users' },
-  { page: '/faq', delta: -5, metric: 'sessions' },
-];
-
-const METRIC_LABELS: Record<string, string> = {
-  sessions: 'sessions',
-  users: 'utilisateurs',
-  conversions: 'conversions',
-  bounce_rate: 'taux de rebond',
-};
-
-function buildGscNews(): { id: string; title: string; desc: string; severity: string }[] {
-  return [
-    { id: 'gsc-1', title: 'GSC · Couverture', desc: 'Nouvelles pages indexées détectées cette semaine', severity: 'gsc' },
-    { id: 'gsc-2', title: 'GSC · Performance', desc: 'CTR moyen en hausse de 0.3% sur 7 jours', severity: 'gsc' },
-    { id: 'gsc-3', title: 'GSC · Erreurs', desc: '2 nouvelles erreurs 404 détectées par Googlebot', severity: 'warning' },
-  ];
-}
-
-function buildGa4Items(): { id: string; title: string; desc: string; severity: string }[] {
-  return GA4_SIMULATED.map((a, i) => {
-    const isUp = a.delta > 0;
-    const sign = isUp ? '+' : '';
-    const label = METRIC_LABELS[a.metric] || a.metric;
-    return {
-      id: `ga4-${i}`,
-      title: `GA4 · ${a.page}`,
-      desc: `${sign}${a.delta}% ${label}`,
-      severity: isUp ? 'ga4_up' : 'ga4_down',
-    };
-  });
-}
+type TickerItem = { id: string; icon: any; bg: string; border: string; textColor: string; title: string; desc: string };
 
 type TickerItem = { id: string; icon: any; bg: string; border: string; textColor: string; title: string; desc: string };
 
