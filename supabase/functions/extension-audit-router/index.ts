@@ -155,40 +155,35 @@ Deno.serve(async (req) => {
     }
 
     // ── 2. Launch audits in parallel ──
-    const audits: Array<Promise<any>> = [];
-
-    // Strategic audit
-    audits.push(
-      fetch(`${SUPABASE_URL}/functions/v1/audit-strategique-ia`, {
+    const callFn = (name: string, payload: unknown) =>
+      fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
         method: 'POST',
         headers: {
           Authorization: authHeader,
           apikey: ANON_KEY,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: targetUrl, lang: 'fr' }),
+        body: JSON.stringify(payload),
       })
         .then((r) => r.ok ? r.json() : null)
-        .catch((e) => { console.warn('[router] strategic failed', e); return null; })
-    );
+        .catch((e) => { console.warn(`[router] ${name} failed`, e); return null; });
 
-    // Expert audit (technical)
-    audits.push(
-      fetch(`${SUPABASE_URL}/functions/v1/expert-audit`, {
-        method: 'POST',
-        headers: {
-          Authorization: authHeader,
-          apikey: ANON_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: targetUrl }),
-      })
-        .then((r) => r.ok ? r.json() : null)
-        .catch((e) => { console.warn('[router] expert failed', e); return null; })
-    );
+    const audits: Array<Promise<any>> = [
+      callFn('audit-strategique-ia', { url: targetUrl, lang: 'fr' }),
+      callFn('expert-audit', { url: targetUrl }),
+      callFn('check-eeat', { url: targetUrl, tracked_site_id: trackedSite?.id || null, forceCrawl: false }),
+      callFn('machine-layer-scan', { url: targetUrl, turnstile_token: 'TURNSTILE_UNAVAILABLE' }),
+    ];
 
-    // Run with a 60s deadline
-    const auditDeadline = new Promise((resolve) => setTimeout(() => resolve('timeout'), 60_000));
+    // Conversion analysis only available in Mode Pilote (requires tracked_site_id)
+    if (isTracked && trackedSite) {
+      audits.push(callFn('analyze-ux-context', { tracked_site_id: trackedSite.id, page_url: targetUrl }));
+    } else {
+      audits.push(Promise.resolve(null));
+    }
+
+    // Run with a 90s deadline (E-E-A-T + ML scan can be slow)
+    const auditDeadline = new Promise((resolve) => setTimeout(() => resolve('timeout'), 90_000));
     const results: any = await Promise.race([
       Promise.allSettled(audits),
       auditDeadline,
@@ -196,9 +191,15 @@ Deno.serve(async (req) => {
 
     let strategicResult = null;
     let expertResult = null;
+    let eeatResult: any = null;
+    let machineLayerResult: any = null;
+    let conversionResult: any = null;
     if (Array.isArray(results)) {
       strategicResult = results[0]?.status === 'fulfilled' ? results[0].value : null;
       expertResult = results[1]?.status === 'fulfilled' ? results[1].value : null;
+      eeatResult = results[2]?.status === 'fulfilled' ? results[2].value : null;
+      machineLayerResult = results[3]?.status === 'fulfilled' ? results[3].value : null;
+      conversionResult = results[4]?.status === 'fulfilled' ? results[4].value : null;
     }
 
     // ── 3. Irrigate architect_workbench (if tracked site) ──
