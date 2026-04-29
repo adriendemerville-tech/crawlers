@@ -196,35 +196,52 @@ export default function ImportStepper({ open, sheetNames, workbook, onComplete, 
   const [identityCard, setIdentityCard] = useState<IdentityCard | null>(null);
   const [detectedVariableSheets, setDetectedVariableSheets] = useState<string[]>([]);
   const [detectedMetaSheets, setDetectedMetaSheets] = useState<Record<string, 'engine_notes' | 'scoring_guide'>>({});
+  const [detectedSummarySheets, setDetectedSummarySheets] = useState<string[]>([]);
   const [matrixMetadata, setMatrixMetadata] = useState<MatrixMetadata | null>(null);
   const [loading, setLoading] = useState(false);
 
   const hasMultipleSheets = sheetNames.length > 1;
   const steps = hasMultipleSheets ? STEPS_MULTI : STEPS_SINGLE;
 
-  // ── Auto-detect variable + metadata sheets on open ──────────────────
+  // ── Auto-detect variable + metadata + summary sheets on open ────────
+  // Pré-coche également les onglets "data" pertinents (ni variable, ni méta,
+  // ni résumé) afin que l'utilisateur n'importe pas de doublons (ex: Synthèse,
+  // Scores par prompt) qui dégradent la heatmap.
   useEffect(() => {
     if (!open || !workbook || sheetNames.length === 0) return;
     const detectSpecialSheets = async () => {
       const { utils } = await import('xlsx');
       const varSheets: string[] = [];
       const metaSheets: Record<string, 'engine_notes' | 'scoring_guide'> = {};
+      const summarySheets: string[] = [];
+      const dataSheets: string[] = [];
       for (const name of sheetNames) {
         const sheet = workbook.Sheets[name];
         const rows = utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
-        if (rows.length > 0) {
-          const h = Object.keys(rows[0]);
-          if (isVariableSheet(name, h)) {
-            varSheets.push(name);
-          } else if (isEngineNotesSheet(name, h)) {
-            metaSheets[name] = 'engine_notes';
-          } else if (isScoringGuideSheet(name, h)) {
-            metaSheets[name] = 'scoring_guide';
-          }
+        if (rows.length === 0) continue;
+        const h = Object.keys(rows[0]);
+        if (isVariableSheet(name, h)) {
+          varSheets.push(name);
+        } else if (isEngineNotesSheet(name, h)) {
+          metaSheets[name] = 'engine_notes';
+        } else if (isScoringGuideSheet(name, h)) {
+          metaSheets[name] = 'scoring_guide';
+        } else if (isSummarySheet(name, h)) {
+          summarySheets.push(name);
+        } else {
+          dataSheets.push(name);
         }
       }
       setDetectedVariableSheets(varSheets);
       setDetectedMetaSheets(metaSheets);
+      setDetectedSummarySheets(summarySheets);
+      // Pré-coche uniquement les onglets data détectés. Si aucun n'a été
+      // identifié comme tel, on retombe sur la sélection vide (l'utilisateur
+      // choisit manuellement).
+      if (dataSheets.length > 0) {
+        setSelectedSheets(dataSheets);
+        console.log(`[ImportStepper] Auto-sélection de ${dataSheets.length} onglet(s) data:`, dataSheets, '— écartés:', { variables: varSheets, meta: Object.keys(metaSheets), résumés: summarySheets });
+      }
     };
     detectSpecialSheets();
   }, [open, workbook, sheetNames]);
