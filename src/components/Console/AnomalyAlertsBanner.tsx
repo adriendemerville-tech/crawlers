@@ -108,25 +108,16 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
     }
   };
 
-  // Build unified ticker items
-  const gscItems = trackedSiteId ? buildGscNews() : [];
-  const ga4Items = simulatedDataEnabled ? buildGa4Items() : [];
-
-  const tickerItems: TickerItem[] = [
-    ...alerts.filter(a => !dismissed.has(a.id)).map(a => {
+  // Build unified ticker items — only real anomaly alerts (no simulated GA4/GSC cards)
+  const tickerItems: TickerItem[] = alerts
+    .filter(a => !dismissed.has(a.id))
+    .map(a => {
       const c = severityConfig[a.severity] || severityConfig.info;
       return { id: a.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: a.domain, desc: `${a.description}${a.affected_pages > 0 ? ` (${a.affected_pages} pages)` : ''}` };
-    }),
-    ...gscItems.filter(g => !dismissed.has(g.id)).map(g => {
-      const c = severityConfig[g.severity] || severityConfig.gsc;
-      return { id: g.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: g.title, desc: g.desc };
-    }),
-    ...ga4Items.filter(g => !dismissed.has(g.id)).map(g => {
-      const c = severityConfig[g.severity] || severityConfig.ga4_up;
-      return { id: g.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: g.title, desc: g.desc };
-    }),
-  ];
+    });
 
+  // Hide entire banner when GA4 is not connected
+  if (!ga4Connected) return null;
   if (tickerItems.length === 0) return null;
 
   if (hidden) {
