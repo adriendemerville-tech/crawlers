@@ -1039,17 +1039,44 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             </DialogTitle>
             <DialogDescription className="text-sm pt-2">
               {language === 'fr'
-                ? 'Entrez les informations de votre instance Matomo pour synchroniser les métriques de trafic.'
+                ? 'Matomo est une alternative open-source à Google Analytics que vous hébergez vous-même. En la connectant à Crawlers, vous synchronisez les métriques de trafic de votre site sans dépendre des cookies Google.'
                 : language === 'es'
-                  ? 'Ingrese la información de su instancia Matomo para sincronizar métricas de tráfico.'
-                  : 'Enter your Matomo instance details to sync traffic metrics.'}
+                  ? 'Matomo es una alternativa open-source a Google Analytics que usted aloja. Al conectarla a Crawlers, sincroniza las métricas de tráfico de su sitio sin depender de las cookies de Google.'
+                  : 'Matomo is a self-hosted open-source alternative to Google Analytics. Connecting it to Crawlers syncs your site\'s traffic metrics without relying on Google cookies.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            {/* Étapes pédagogiques */}
+            <div className="rounded-md border border-dashed bg-muted/30 p-3 space-y-1">
+              <p className="text-[12px] font-semibold text-foreground">
+                {language === 'fr' ? 'Comment trouver vos identifiants ?' : language === 'es' ? '¿Cómo encontrar sus credenciales?' : 'How to find your credentials?'}
+              </p>
+              <ol className="text-[11px] text-muted-foreground leading-snug list-decimal list-inside space-y-0.5">
+                <li>{language === 'fr'
+                  ? 'Connectez-vous à votre instance Matomo (l\'URL ressemble à https://analytics.votre-domaine.com).'
+                  : language === 'es'
+                    ? 'Inicie sesión en su instancia Matomo (la URL se parece a https://analytics.su-dominio.com).'
+                    : 'Sign in to your Matomo instance (URL looks like https://analytics.your-domain.com).'}
+                </li>
+                <li>{language === 'fr'
+                  ? 'Cliquez sur votre avatar (haut droite) → Personnel → Sécurité → « Tokens d\'authentification API » → Créer un nouveau token. Copiez la valeur.'
+                  : language === 'es'
+                    ? 'Haga clic en su avatar (arriba derecha) → Personal → Seguridad → "Tokens de autenticación API" → Crear nuevo token. Copie el valor.'
+                    : 'Click your avatar (top right) → Personal → Security → "Auth tokens" → Create new token. Copy the value.'}
+                </li>
+                <li>{language === 'fr'
+                  ? 'L\'ID du site se trouve en haut à gauche de Matomo (ex : « Site #1 ») ou dans Administration → Sites web → colonne ID.'
+                  : language === 'es'
+                    ? 'El ID del sitio aparece arriba a la izquierda en Matomo (ej. "Sitio #1") o en Administración → Sitios web → columna ID.'
+                    : 'The site ID appears top-left in Matomo (e.g. "Site #1") or in Administration → Websites → ID column.'}
+                </li>
+              </ol>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">
-                {language === 'fr' ? 'Site suivi' : language === 'es' ? 'Sitio rastreado' : 'Tracked site'}
+                {language === 'fr' ? 'Site suivi (chez Crawlers)' : language === 'es' ? 'Sitio rastreado (en Crawlers)' : 'Tracked site (in Crawlers)'}
               </label>
               <select
                 value={matomoForm.tracked_site_id}
@@ -1063,34 +1090,33 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">URL Matomo</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'URL de votre instance Matomo' : language === 'es' ? 'URL de su instancia Matomo' : 'Your Matomo instance URL'}
+              </label>
               <Input
-                placeholder="https://analytics.example.com"
+                placeholder="https://example.com"
                 value={matomoForm.matomo_url}
                 onChange={e => setMatomoForm(f => ({ ...f, matomo_url: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Token Auth</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'Token d\'authentification API' : language === 'es' ? 'Token de autenticación API' : 'API auth token'}
+              </label>
               <Input
                 type="password"
-                placeholder="token_auth Matomo"
+                placeholder={language === 'fr' ? 'clé' : language === 'es' ? 'clave' : 'key'}
                 value={matomoForm.token_auth}
                 onChange={e => setMatomoForm(f => ({ ...f, token_auth: e.target.value }))}
               />
-              <p className="text-[11px] text-muted-foreground/70">
-                {language === 'fr'
-                  ? 'Trouvable dans Matomo → Administration → Personnel → Sécurité → Tokens API'
-                  : 'Found in Matomo → Administration → Personal → Security → API Tokens'}
-              </p>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">
-                {language === 'fr' ? 'ID du site Matomo' : 'Matomo Site ID'}
+                {language === 'fr' ? 'ID du site Matomo (numérique)' : language === 'es' ? 'ID del sitio Matomo (numérico)' : 'Matomo site ID (numeric)'}
               </label>
               <Input
                 type="number"
-                placeholder="1"
+                placeholder={language === 'fr' ? 'ex : 1' : language === 'es' ? 'ej. 1' : 'e.g. 1'}
                 value={matomoForm.site_id}
                 onChange={e => setMatomoForm(f => ({ ...f, site_id: e.target.value }))}
               />
