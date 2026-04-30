@@ -389,7 +389,7 @@ Deno.serve(async (req: Request) => {
       scopes: ['posts:read', 'posts:write', 'pages:read'],
       status: 'active',
       capabilities,
-      managed_by: mode === 'reuse_admin' ? 'admin' : 'user',
+      managed_by: mode === 'manual' ? 'user' : 'admin',
       updated_at: new Date().toISOString(),
     } as Record<string, unknown>, {
       onConflict: 'user_id,tracked_site_id,platform',
