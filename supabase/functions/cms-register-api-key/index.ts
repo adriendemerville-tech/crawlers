@@ -390,7 +390,7 @@ Deno.serve(async (req: Request) => {
   const { error: upsertErr } = await supabase
     .from('cms_connections')
     .upsert({
-      user_id: auth.userId,
+      user_id: ownerUserId,
       tracked_site_id: trackedSiteId,
       platform,
       auth_method: authMethod,
