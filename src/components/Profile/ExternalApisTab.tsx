@@ -1150,17 +1150,17 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             </DialogTitle>
             <DialogDescription className="text-sm pt-2">
               {language === 'fr'
-                ? 'Sélectionnez le site à connecter pour l\'analyse des logs serveur.'
+                ? 'L\'analyse de logs serveur permet à Crawlers de voir tout ce qui passe sur votre site (visiteurs humains, bots IA, erreurs 404, performances réelles), avec une précision impossible à obtenir via JavaScript seul. Crawlers vous propose plusieurs façons de récupérer ces logs selon votre hébergement.'
                 : language === 'es'
-                  ? 'Seleccione el sitio a conectar para el análisis de logs del servidor.'
-                  : 'Select the site to connect for server log analysis.'}
+                  ? 'El análisis de logs del servidor permite a Crawlers ver todo lo que pasa en su sitio (visitantes humanos, bots IA, errores 404, rendimiento real), con una precisión imposible de obtener solo con JavaScript. Crawlers le ofrece varias formas de recuperar estos logs según su alojamiento.'
+                  : 'Server log analysis lets Crawlers see everything happening on your site (human visitors, AI bots, 404 errors, real performance) with a precision impossible to achieve via JavaScript alone. Crawlers offers several ways to retrieve these logs depending on your hosting.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">
-                {language === 'fr' ? 'Site suivi' : language === 'es' ? 'Sitio rastreado' : 'Tracked site'}
+                {language === 'fr' ? 'Site suivi (chez Crawlers)' : language === 'es' ? 'Sitio rastreado (en Crawlers)' : 'Tracked site (in Crawlers)'}
               </label>
               <select
                 value={logTrackedSiteId}
@@ -1175,18 +1175,39 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             </div>
 
             {selectedLogService && (
-              <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground">
+              <div className="p-3 rounded-lg bg-muted/30 border border-dashed border-border text-xs text-muted-foreground space-y-2">
+                <p className="font-semibold text-foreground text-[12px]">
+                  {language === 'fr' ? 'Comment ça marche ?' : language === 'es' ? '¿Cómo funciona?' : 'How does it work?'}
+                </p>
+                <p className="leading-snug">
                   {selectedLogService.description[language] || selectedLogService.description.fr}
                 </p>
                 {['agent', 'upload', 'wordpress_plugin'].includes(selectedLogService.type) && (
-                  <p>{language === 'fr' ? 'Une clé API sera générée et copiée automatiquement.' : 'An API key will be generated and copied automatically.'}</p>
+                  <p className="leading-snug">
+                    {language === 'fr'
+                      ? 'À la création, Crawlers génère une clé API unique que vous devrez copier (elle ne sera plus affichée ensuite) puis configurer dans l\'agent / le plugin / l\'outil d\'upload pour authentifier vos envois de logs.'
+                      : language === 'es'
+                        ? 'Al crear, Crawlers genera una clave API única que deberá copiar (no se volverá a mostrar) y configurar en el agente / plugin / herramienta de carga para autenticar sus envíos de logs.'
+                        : 'On creation, Crawlers generates a unique API key you\'ll need to copy (it won\'t be shown again) then configure in the agent / plugin / upload tool to authenticate your log uploads.'}
+                  </p>
                 )}
                 {['cloudflare', 'vercel'].includes(selectedLogService.type) && (
-                  <p>{language === 'fr' ? 'Configurez le webhook dans votre dashboard externe.' : 'Configure the webhook in your external dashboard.'}</p>
+                  <p className="leading-snug">
+                    {language === 'fr'
+                      ? 'Crawlers vous fournira une URL de webhook à coller dans votre tableau de bord (Cloudflare Logpush ou Vercel Log Drains). Vos logs seront alors transmis en temps réel.'
+                      : language === 'es'
+                        ? 'Crawlers le proporcionará una URL de webhook que pegará en su panel (Cloudflare Logpush o Vercel Log Drains). Sus logs se transmitirán entonces en tiempo real.'
+                        : 'Crawlers will give you a webhook URL to paste into your dashboard (Cloudflare Logpush or Vercel Log Drains). Your logs will then stream in real time.'}
+                  </p>
                 )}
                 {['wpengine', 'kinsta', 'sftp', 'aws'].includes(selectedLogService.type) && (
-                  <p>{language === 'fr' ? 'La synchronisation se fera automatiquement toutes les heures.' : 'Sync will happen automatically every hour.'}</p>
+                  <p className="leading-snug">
+                    {language === 'fr'
+                      ? 'Une fois la connexion établie, Crawlers ira chercher vos fichiers de logs automatiquement toutes les heures et les analysera dans la foulée.'
+                      : language === 'es'
+                        ? 'Una vez establecida la conexión, Crawlers buscará sus archivos de logs automáticamente cada hora y los analizará en seguida.'
+                        : 'Once connected, Crawlers will fetch your log files automatically every hour and analyse them right away.'}
+                  </p>
                 )}
               </div>
             )}
