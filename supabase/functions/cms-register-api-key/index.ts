@@ -172,9 +172,9 @@ Deno.serve(async (req: Request) => {
     })
   }
 
-  // ── Auth: required (multi-tenant) ──
+  // ── Auth: required (multi-tenant). Service-role allowed ONLY for mode=env (admin-triggered binding) ──
   const auth = await getAuthenticatedUser(req)
-  if (!auth || auth.userId === 'service-role') {
+  if (!auth) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
