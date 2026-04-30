@@ -502,7 +502,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
                     {t3(language, 'URL du site', 'Site URL', 'URL del sitio')}
                   </label>
                   <Input
-                    value={wpUrl}
+                    value={wpUrl && wpUrl !== `https://${site?.domain || ''}` ? wpUrl : ''}
                     onChange={(e) => setWpUrl(e.target.value)}
                     placeholder="https://example.com"
                     className="font-mono text-[11px] h-8 bg-background"
