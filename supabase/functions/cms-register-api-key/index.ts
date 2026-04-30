@@ -187,7 +187,7 @@ Deno.serve(async (req: Request) => {
     api_key?: string
     platform?: string
     site_url?: string
-    mode?: 'manual' | 'reuse_admin'
+    mode?: 'manual' | 'reuse_admin' | 'env'
   } = {}
   try { body = await req.json() } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
