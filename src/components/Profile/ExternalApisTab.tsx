@@ -1039,17 +1039,44 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             </DialogTitle>
             <DialogDescription className="text-sm pt-2">
               {language === 'fr'
-                ? 'Entrez les informations de votre instance Matomo pour synchroniser les métriques de trafic.'
+                ? 'Matomo est une alternative open-source à Google Analytics que vous hébergez vous-même. En la connectant à Crawlers, vous synchronisez les métriques de trafic de votre site sans dépendre des cookies Google.'
                 : language === 'es'
-                  ? 'Ingrese la información de su instancia Matomo para sincronizar métricas de tráfico.'
-                  : 'Enter your Matomo instance details to sync traffic metrics.'}
+                  ? 'Matomo es una alternativa open-source a Google Analytics que usted aloja. Al conectarla a Crawlers, sincroniza las métricas de tráfico de su sitio sin depender de las cookies de Google.'
+                  : 'Matomo is a self-hosted open-source alternative to Google Analytics. Connecting it to Crawlers syncs your site\'s traffic metrics without relying on Google cookies.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            {/* Étapes pédagogiques */}
+            <div className="rounded-md border border-dashed bg-muted/30 p-3 space-y-1">
+              <p className="text-[12px] font-semibold text-foreground">
+                {language === 'fr' ? 'Comment trouver vos identifiants ?' : language === 'es' ? '¿Cómo encontrar sus credenciales?' : 'How to find your credentials?'}
+              </p>
+              <ol className="text-[11px] text-muted-foreground leading-snug list-decimal list-inside space-y-0.5">
+                <li>{language === 'fr'
+                  ? 'Connectez-vous à votre instance Matomo (l\'URL ressemble à https://analytics.votre-domaine.com).'
+                  : language === 'es'
+                    ? 'Inicie sesión en su instancia Matomo (la URL se parece a https://analytics.su-dominio.com).'
+                    : 'Sign in to your Matomo instance (URL looks like https://analytics.your-domain.com).'}
+                </li>
+                <li>{language === 'fr'
+                  ? 'Cliquez sur votre avatar (haut droite) → Personnel → Sécurité → « Tokens d\'authentification API » → Créer un nouveau token. Copiez la valeur.'
+                  : language === 'es'
+                    ? 'Haga clic en su avatar (arriba derecha) → Personal → Seguridad → "Tokens de autenticación API" → Crear nuevo token. Copie el valor.'
+                    : 'Click your avatar (top right) → Personal → Security → "Auth tokens" → Create new token. Copy the value.'}
+                </li>
+                <li>{language === 'fr'
+                  ? 'L\'ID du site se trouve en haut à gauche de Matomo (ex : « Site #1 ») ou dans Administration → Sites web → colonne ID.'
+                  : language === 'es'
+                    ? 'El ID del sitio aparece arriba a la izquierda en Matomo (ej. "Sitio #1") o en Administración → Sitios web → columna ID.'
+                    : 'The site ID appears top-left in Matomo (e.g. "Site #1") or in Administration → Websites → ID column.'}
+                </li>
+              </ol>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">
-                {language === 'fr' ? 'Site suivi' : language === 'es' ? 'Sitio rastreado' : 'Tracked site'}
+                {language === 'fr' ? 'Site suivi (chez Crawlers)' : language === 'es' ? 'Sitio rastreado (en Crawlers)' : 'Tracked site (in Crawlers)'}
               </label>
               <select
                 value={matomoForm.tracked_site_id}
@@ -1063,34 +1090,33 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">URL Matomo</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'URL de votre instance Matomo' : language === 'es' ? 'URL de su instancia Matomo' : 'Your Matomo instance URL'}
+              </label>
               <Input
-                placeholder="https://analytics.example.com"
+                placeholder="https://example.com"
                 value={matomoForm.matomo_url}
                 onChange={e => setMatomoForm(f => ({ ...f, matomo_url: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Token Auth</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                {language === 'fr' ? 'Token d\'authentification API' : language === 'es' ? 'Token de autenticación API' : 'API auth token'}
+              </label>
               <Input
                 type="password"
-                placeholder="token_auth Matomo"
+                placeholder={language === 'fr' ? 'clé' : language === 'es' ? 'clave' : 'key'}
                 value={matomoForm.token_auth}
                 onChange={e => setMatomoForm(f => ({ ...f, token_auth: e.target.value }))}
               />
-              <p className="text-[11px] text-muted-foreground/70">
-                {language === 'fr'
-                  ? 'Trouvable dans Matomo → Administration → Personnel → Sécurité → Tokens API'
-                  : 'Found in Matomo → Administration → Personal → Security → API Tokens'}
-              </p>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">
-                {language === 'fr' ? 'ID du site Matomo' : 'Matomo Site ID'}
+                {language === 'fr' ? 'ID du site Matomo (numérique)' : language === 'es' ? 'ID del sitio Matomo (numérico)' : 'Matomo site ID (numeric)'}
               </label>
               <Input
                 type="number"
-                placeholder="1"
+                placeholder={language === 'fr' ? 'ex : 1' : language === 'es' ? 'ej. 1' : 'e.g. 1'}
                 value={matomoForm.site_id}
                 onChange={e => setMatomoForm(f => ({ ...f, site_id: e.target.value }))}
               />
@@ -1124,17 +1150,17 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             </DialogTitle>
             <DialogDescription className="text-sm pt-2">
               {language === 'fr'
-                ? 'Sélectionnez le site à connecter pour l\'analyse des logs serveur.'
+                ? 'L\'analyse de logs serveur permet à Crawlers de voir tout ce qui passe sur votre site (visiteurs humains, bots IA, erreurs 404, performances réelles), avec une précision impossible à obtenir via JavaScript seul. Crawlers vous propose plusieurs façons de récupérer ces logs selon votre hébergement.'
                 : language === 'es'
-                  ? 'Seleccione el sitio a conectar para el análisis de logs del servidor.'
-                  : 'Select the site to connect for server log analysis.'}
+                  ? 'El análisis de logs del servidor permite a Crawlers ver todo lo que pasa en su sitio (visitantes humanos, bots IA, errores 404, rendimiento real), con una precisión imposible de obtener solo con JavaScript. Crawlers le ofrece varias formas de recuperar estos logs según su alojamiento.'
+                  : 'Server log analysis lets Crawlers see everything happening on your site (human visitors, AI bots, 404 errors, real performance) with a precision impossible to achieve via JavaScript alone. Crawlers offers several ways to retrieve these logs depending on your hosting.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">
-                {language === 'fr' ? 'Site suivi' : language === 'es' ? 'Sitio rastreado' : 'Tracked site'}
+                {language === 'fr' ? 'Site suivi (chez Crawlers)' : language === 'es' ? 'Sitio rastreado (en Crawlers)' : 'Tracked site (in Crawlers)'}
               </label>
               <select
                 value={logTrackedSiteId}
@@ -1149,18 +1175,39 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
             </div>
 
             {selectedLogService && (
-              <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground">
+              <div className="p-3 rounded-lg bg-muted/30 border border-dashed border-border text-xs text-muted-foreground space-y-2">
+                <p className="font-semibold text-foreground text-[12px]">
+                  {language === 'fr' ? 'Comment ça marche ?' : language === 'es' ? '¿Cómo funciona?' : 'How does it work?'}
+                </p>
+                <p className="leading-snug">
                   {selectedLogService.description[language] || selectedLogService.description.fr}
                 </p>
                 {['agent', 'upload', 'wordpress_plugin'].includes(selectedLogService.type) && (
-                  <p>{language === 'fr' ? 'Une clé API sera générée et copiée automatiquement.' : 'An API key will be generated and copied automatically.'}</p>
+                  <p className="leading-snug">
+                    {language === 'fr'
+                      ? 'À la création, Crawlers génère une clé API unique que vous devrez copier (elle ne sera plus affichée ensuite) puis configurer dans l\'agent / le plugin / l\'outil d\'upload pour authentifier vos envois de logs.'
+                      : language === 'es'
+                        ? 'Al crear, Crawlers genera una clave API única que deberá copiar (no se volverá a mostrar) y configurar en el agente / plugin / herramienta de carga para autenticar sus envíos de logs.'
+                        : 'On creation, Crawlers generates a unique API key you\'ll need to copy (it won\'t be shown again) then configure in the agent / plugin / upload tool to authenticate your log uploads.'}
+                  </p>
                 )}
                 {['cloudflare', 'vercel'].includes(selectedLogService.type) && (
-                  <p>{language === 'fr' ? 'Configurez le webhook dans votre dashboard externe.' : 'Configure the webhook in your external dashboard.'}</p>
+                  <p className="leading-snug">
+                    {language === 'fr'
+                      ? 'Crawlers vous fournira une URL de webhook à coller dans votre tableau de bord (Cloudflare Logpush ou Vercel Log Drains). Vos logs seront alors transmis en temps réel.'
+                      : language === 'es'
+                        ? 'Crawlers le proporcionará una URL de webhook que pegará en su panel (Cloudflare Logpush o Vercel Log Drains). Sus logs se transmitirán entonces en tiempo real.'
+                        : 'Crawlers will give you a webhook URL to paste into your dashboard (Cloudflare Logpush or Vercel Log Drains). Your logs will then stream in real time.'}
+                  </p>
                 )}
                 {['wpengine', 'kinsta', 'sftp', 'aws'].includes(selectedLogService.type) && (
-                  <p>{language === 'fr' ? 'La synchronisation se fera automatiquement toutes les heures.' : 'Sync will happen automatically every hour.'}</p>
+                  <p className="leading-snug">
+                    {language === 'fr'
+                      ? 'Une fois la connexion établie, Crawlers ira chercher vos fichiers de logs automatiquement toutes les heures et les analysera dans la foulée.'
+                      : language === 'es'
+                        ? 'Una vez establecida la conexión, Crawlers buscará sus archivos de logs automáticamente cada hora y los analizará en seguida.'
+                        : 'Once connected, Crawlers will fetch your log files automatically every hour and analyse them right away.'}
+                  </p>
                 )}
               </div>
             )}

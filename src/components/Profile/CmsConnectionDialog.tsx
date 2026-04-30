@@ -40,13 +40,13 @@ const translations = {
     testSuccess: 'Connexion réussie !',
     testFailed: 'Échec de la connexion',
     saved: 'Connexion enregistrée !',
-    wpHelp: 'Utilisez un "Application Password" WordPress (Utilisateurs → Profil → Mots de passe d\'application).',
-    drupalHelp: 'Utilisez Basic Auth ou configurez le module Simple OAuth pour OAuth 2.0.',
-    shopifyHelp: 'Entrez l\'URL de votre boutique Shopify et votre token d\'accès Admin API.',
-    webflowHelp: 'Entrez votre token API Webflow (Site Settings → Integrations → API Access).',
-    wixHelp: 'Entrez votre clé API Wix (Tableau de bord Wix → Dev Center → API Keys).',
-    odooHelp: 'Entrez l\'URL de votre instance Odoo, le nom de la base de données, et votre clé API ou mot de passe.',
-    prestashopHelp: 'Entrez votre clé API Webservice PrestaShop (Back Office → Paramètres avancés → Webservice).',
+    wpHelp: '1. Connectez-vous à votre WordPress → Utilisateurs → Profil → section « Mots de passe d\'application ». 2. Saisissez « Crawlers » comme nom et cliquez sur « Ajouter ». 3. Copiez le mot de passe généré (24 caractères avec espaces) et collez-le ci-dessous, avec votre nom d\'utilisateur WordPress.',
+    drupalHelp: '1. Dans Étendre → activez « RESTful Web Services », « Basic Auth » et « Serialization ». 2. Créez un utilisateur dédié avec rôle administrateur (Personnes → Ajouter). 3. Saisissez ses identifiants ci-dessous. Pour OAuth 2.0, installez le module Simple OAuth.',
+    shopifyHelp: '1. Dans votre admin Shopify → Réglages → Applications et canaux de vente → Développer des applications → Créer une application. 2. Onglet « Configuration » : activez les scopes Admin API « read_content, write_content, read_themes, write_themes ». 3. Installez l\'app et copiez le token (commence par shpat_…) ci-dessous.',
+    webflowHelp: '1. Dans Webflow → Site Settings → onglet « Apps & Integrations » → section « API Access ». 2. Cliquez sur « Generate API Token », nommez-le « Crawlers » et donnez les permissions Sites + CMS en lecture/écriture. 3. Copiez le token généré et collez-le ci-dessous.',
+    wixHelp: '1. Connectez-vous à manage.wix.com → Paramètres → Clés API. 2. Cliquez sur « Générer une clé API » et accordez les permissions « Sites » et « Data Items » en lecture/écriture. 3. Copiez la clé et collez-la ci-dessous.',
+    odooHelp: '1. Dans votre Odoo → cliquez sur votre avatar (haut droite) → Préférences → onglet « Sécurité du compte » → « Nouvelle clé API ». 2. Nommez-la « Crawlers » et copiez la clé immédiatement (elle ne sera plus affichée). 3. Collez-la ci-dessous avec l\'URL de votre instance.',
+    prestashopHelp: '1. Dans le back-office PrestaShop → Paramètres avancés → Webservice. Activez le webservice. 2. Cliquez sur « Ajouter une nouvelle clé webservice », cochez GET/POST/PUT sur products, categories, cms_pages et meta. 3. Copiez la clé générée ci-dessous.',
     prestashopToken: 'Clé API Webservice',
     webhookAutoSuccess: 'Webhook de suivi des commandes enregistré automatiquement ✓',
     webhookAutoFailed: 'Enregistrement automatique du webhook impossible. Instructions manuelles ci-dessous.',
@@ -78,13 +78,13 @@ const translations = {
     testSuccess: 'Connection successful!',
     testFailed: 'Connection failed',
     saved: 'Connection saved!',
-    wpHelp: 'Use a WordPress "Application Password" (Users → Profile → Application Passwords).',
-    drupalHelp: 'Use Basic Auth or configure the Simple OAuth module for OAuth 2.0.',
-    shopifyHelp: 'Enter your Shopify store URL and Admin API access token.',
-    webflowHelp: 'Enter your Webflow API token (Site Settings → Integrations → API Access).',
-    wixHelp: 'Enter your Wix API key (Wix Dashboard → Dev Center → API Keys).',
-    odooHelp: 'Enter your Odoo instance URL, database name, and API key or password.',
-    prestashopHelp: 'Enter your PrestaShop Webservice API key (Back Office → Advanced Parameters → Webservice).',
+    wpHelp: '1. Sign in to your WordPress → Users → Profile → "Application Passwords" section. 2. Type "Crawlers" as the name and click "Add". 3. Copy the generated password (24 chars with spaces) and paste it below, along with your WordPress username.',
+    drupalHelp: '1. In Extend → enable "RESTful Web Services", "Basic Auth" and "Serialization". 2. Create a dedicated user with administrator role (People → Add). 3. Enter their credentials below. For OAuth 2.0, install the Simple OAuth module.',
+    shopifyHelp: '1. In your Shopify admin → Settings → Apps and sales channels → Develop apps → Create an app. 2. "Configuration" tab: enable Admin API scopes "read_content, write_content, read_themes, write_themes". 3. Install the app and copy the token (starts with shpat_…) below.',
+    webflowHelp: '1. In Webflow → Site Settings → "Apps & Integrations" tab → "API Access" section. 2. Click "Generate API Token", name it "Crawlers" and grant Sites + CMS read/write permissions. 3. Copy the generated token and paste it below.',
+    wixHelp: '1. Sign in to manage.wix.com → Settings → API Keys. 2. Click "Generate API Key" and grant "Sites" and "Data Items" read/write permissions. 3. Copy the key and paste it below.',
+    odooHelp: '1. In your Odoo → click your avatar (top right) → Preferences → "Account Security" tab → "New API Key". 2. Name it "Crawlers" and copy the key right away (it won\'t be shown again). 3. Paste it below with your instance URL.',
+    prestashopHelp: '1. In the PrestaShop back-office → Advanced Parameters → Webservice. Enable the webservice. 2. Click "Add new webservice key", check GET/POST/PUT on products, categories, cms_pages and meta. 3. Copy the generated key below.',
     prestashopToken: 'Webservice API Key',
     webhookAutoSuccess: 'Order tracking webhook registered automatically ✓',
     webhookAutoFailed: 'Automatic webhook registration failed. See manual instructions below.',
@@ -116,13 +116,13 @@ const translations = {
     testSuccess: '¡Conexión exitosa!',
     testFailed: 'Conexión fallida',
     saved: '¡Conexión guardada!',
-    wpHelp: 'Use un "Application Password" de WordPress (Usuarios → Perfil → Contraseñas de aplicación).',
-    drupalHelp: 'Use Basic Auth o configure el módulo Simple OAuth para OAuth 2.0.',
-    shopifyHelp: 'Ingrese la URL de su tienda Shopify y el token de acceso Admin API.',
-    webflowHelp: 'Ingrese su token API de Webflow (Configuración del sitio → Integraciones → Acceso API).',
-    wixHelp: 'Ingrese su clave API de Wix (Panel de Wix → Dev Center → API Keys).',
-    odooHelp: 'Ingrese la URL de su instancia Odoo, el nombre de la base de datos y su clave API o contraseña.',
-    prestashopHelp: 'Ingrese su clave API del Webservice PrestaShop (Back Office → Parámetros avanzados → Webservice).',
+    wpHelp: '1. Inicie sesión en su WordPress → Usuarios → Perfil → sección "Contraseñas de aplicación". 2. Escriba "Crawlers" como nombre y haga clic en "Añadir". 3. Copie la contraseña generada (24 caracteres con espacios) y péguela a continuación, con su nombre de usuario WordPress.',
+    drupalHelp: '1. En Extender → active "RESTful Web Services", "Basic Auth" y "Serialization". 2. Cree un usuario dedicado con rol de administrador (Personas → Añadir). 3. Introduzca sus credenciales a continuación. Para OAuth 2.0, instale el módulo Simple OAuth.',
+    shopifyHelp: '1. En su admin Shopify → Ajustes → Apps y canales de venta → Desarrollar apps → Crear una app. 2. Pestaña "Configuración": active los scopes Admin API "read_content, write_content, read_themes, write_themes". 3. Instale la app y copie el token (empieza por shpat_…) a continuación.',
+    webflowHelp: '1. En Webflow → Site Settings → pestaña "Apps & Integrations" → sección "API Access". 2. Haga clic en "Generate API Token", nómbrelo "Crawlers" y conceda permisos Sites + CMS en lectura/escritura. 3. Copie el token generado y péguelo a continuación.',
+    wixHelp: '1. Inicie sesión en manage.wix.com → Configuración → Claves API. 2. Haga clic en "Generar clave API" y conceda permisos "Sites" y "Data Items" en lectura/escritura. 3. Copie la clave y péguela a continuación.',
+    odooHelp: '1. En su Odoo → haga clic en su avatar (arriba derecha) → Preferencias → pestaña "Seguridad de la cuenta" → "Nueva clave API". 2. Nómbrela "Crawlers" y copie la clave de inmediato (no se volverá a mostrar). 3. Péguela a continuación con la URL de su instancia.',
+    prestashopHelp: '1. En el back-office PrestaShop → Parámetros avanzados → Webservice. Active el webservice. 2. Haga clic en "Añadir nueva clave webservice", marque GET/POST/PUT en products, categories, cms_pages y meta. 3. Copie la clave generada a continuación.',
     prestashopToken: 'Clave API Webservice',
     webhookAutoSuccess: 'Webhook de seguimiento de pedidos registrado automáticamente ✓',
     webhookAutoFailed: 'Registro automático del webhook fallido. Vea las instrucciones manuales.',
@@ -372,7 +372,7 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
             </p>
           </div>
           <DialogDescription className="text-xs space-y-1">
-            <span>{helpText}</span>
+            <span className="block whitespace-pre-line leading-relaxed">{helpText}</span>
             {cmsType === 'wordpress' && siteUrl && (
               <a
                 href={`${siteUrl.replace(/\/$/, '')}/wp-admin/users.php?page=application-passwords`}
@@ -493,7 +493,12 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
           )}
           <div className="space-y-1.5">
             <Label className="text-xs">{tokenLabel}</Label>
-            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} />
+            <Input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder={language === 'fr' ? 'clé' : language === 'es' ? 'clave' : 'key'}
+            />
           </div>
 
           {/* Test result */}
