@@ -476,91 +476,132 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             </>
           ) : (
             <>
-              {/* Non-WordPress CMS: connexion API REST uniquement */}
-              <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 space-y-2">
-                <p className="text-[11px] font-medium text-foreground">
-                  {t3(language,
-                    'Connexion via API REST',
-                    'REST API connection',
-                    'Conexión vía API REST'
-                  )}
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  {connectMethod === 'shopify' && t3(language,
-                    'Shopify ne nécessite pas de plugin. Configurez l\'API Admin (Admin → Apps → Develop apps) et collez le token + URL de boutique ci-dessous.',
-                    'Shopify does not need a plugin. Configure the Admin API (Admin → Apps → Develop apps) and paste the token + shop URL below.',
-                    'Shopify no necesita plugin. Configure la API Admin (Admin → Apps → Develop apps) y pegue el token + URL de la tienda.'
-                  )}
-                  {connectMethod === 'wix' && t3(language,
-                    'Wix expose une API REST. Générez une clé API dans le tableau de bord Wix puis collez-la ci-dessous.',
-                    'Wix exposes a REST API. Generate an API key in the Wix dashboard then paste it below.',
-                    'Wix expone una API REST. Genere una clave API en el panel de Wix y péguela a continuación.'
-                  )}
-                  {connectMethod === 'prestashop' && t3(language,
-                    'PrestaShop : activez le webservice (Paramètres avancés → Webservice) et générez une clé API.',
-                    'PrestaShop: enable the webservice (Advanced Parameters → Webservice) and generate an API key.',
-                    'PrestaShop: active el webservice (Parámetros avanzados → Webservice) y genere una clave API.'
-                  )}
-                  {connectMethod === 'drupal' && t3(language,
-                    'Drupal : activez le module REST + Basic Auth puis créez un utilisateur dédié.',
-                    'Drupal: enable the REST + Basic Auth modules then create a dedicated user.',
-                    'Drupal: active los módulos REST + Basic Auth y cree un usuario dedicado.'
-                  )}
-                  {connectMethod === 'odoo' && t3(language,
-                    'Odoo : générez une clé API utilisateur (Préférences → Compte → Clés API) pour l\'authentification XML-RPC / REST.',
-                    'Odoo: generate a user API key (Preferences → Account → API Keys) for XML-RPC / REST auth.',
-                    'Odoo: genere una clave API de usuario (Preferencias → Cuenta → Claves API) para autenticación XML-RPC / REST.'
-                  )}
-                </p>
-                <div className="space-y-1.5 pt-1">
-                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-                    {t3(language, 'URL du site', 'Site URL', 'URL del sitio')}
-                  </label>
-                  <Input
-                    value={wpUrl && wpUrl !== `https://${siteDomain}` ? wpUrl : ''}
-                    onChange={(e) => setWpUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    className="font-mono text-[11px] h-8 bg-background"
-                  />
+              {/* Non-WordPress CMS: 2 étapes pédagogiques (générer la clé chez le CMS, puis coller ici) */}
+              <div className="space-y-4">
+                {/* Step 1: Générer la clé chez le CMS */}
+                <div className="space-y-2 rounded-md border border-dashed bg-muted/20 p-3">
+                  <p className="text-[12px] font-semibold text-foreground">
+                    {connectMethod === 'shopify' && t3(language,
+                      `1. Créez un token Admin API dans Shopify`,
+                      `1. Create an Admin API token in Shopify`,
+                      `1. Cree un token Admin API en Shopify`
+                    )}
+                    {connectMethod === 'wix' && t3(language,
+                      `1. Générez une clé API dans Wix`,
+                      `1. Generate an API key in Wix`,
+                      `1. Genere una clave API en Wix`
+                    )}
+                    {connectMethod === 'prestashop' && t3(language,
+                      `1. Créez une clé Webservice dans PrestaShop`,
+                      `1. Create a Webservice key in PrestaShop`,
+                      `1. Cree una clave Webservice en PrestaShop`
+                    )}
+                    {connectMethod === 'drupal' && t3(language,
+                      `1. Activez l'API REST + Basic Auth dans Drupal`,
+                      `1. Enable REST API + Basic Auth in Drupal`,
+                      `1. Active la API REST + Basic Auth en Drupal`
+                    )}
+                    {connectMethod === 'odoo' && t3(language,
+                      `1. Générez une clé API utilisateur dans Odoo`,
+                      `1. Generate a user API key in Odoo`,
+                      `1. Genere una clave API de usuario en Odoo`
+                    )}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    {connectMethod === 'shopify' && t3(language,
+                      `Dans votre admin Shopify, allez dans Réglages → Applications et canaux de vente → Développer des applications → Créer une application. Dans l'onglet "Configuration", activez les scopes Admin API "read_content, write_content, read_themes, write_themes". Cliquez sur Installer, puis copiez le token (commence par shpat_…). Crawlers s'en sert pour publier vos pages et corriger vos balises sans plugin.`,
+                      `In your Shopify admin, go to Settings → Apps and sales channels → Develop apps → Create an app. In the "Configuration" tab, enable the Admin API scopes "read_content, write_content, read_themes, write_themes". Click Install, then copy the token (starts with shpat_…). Crawlers uses it to publish your pages and fix your tags with no plugin.`,
+                      `En su admin de Shopify, vaya a Ajustes → Apps y canales de venta → Desarrollar apps → Crear una app. En la pestaña "Configuración", active los scopes Admin API "read_content, write_content, read_themes, write_themes". Haga clic en Instalar y copie el token (empieza por shpat_…). Crawlers lo usa para publicar sus páginas y corregir sus etiquetas sin plugin.`
+                    )}
+                    {connectMethod === 'wix' && t3(language,
+                      `Connectez-vous à manage.wix.com → Paramètres → Clés API. Cliquez sur "Générer une clé API", attribuez-lui les permissions "Sites" et "Data Items" en lecture/écriture, validez puis copiez la clé. Crawlers l'utilisera pour mettre à jour vos pages et balises directement depuis votre tableau de bord, sans rien installer.`,
+                      `Sign in to manage.wix.com → Settings → API Keys. Click "Generate API Key", grant it "Sites" and "Data Items" read/write permissions, validate then copy the key. Crawlers will use it to update your pages and tags directly from your dashboard, with nothing to install.`,
+                      `Inicie sesión en manage.wix.com → Configuración → Claves API. Haga clic en "Generar clave API", concédale permisos de "Sites" y "Data Items" en lectura/escritura, valide y copie la clave. Crawlers la usará para actualizar sus páginas y etiquetas directamente desde su panel, sin instalar nada.`
+                    )}
+                    {connectMethod === 'prestashop' && t3(language,
+                      `Dans votre back-office PrestaShop, allez dans Paramètres avancés → Webservice. Activez le webservice si ce n'est pas déjà fait, puis cliquez sur "Ajouter une nouvelle clé webservice". Cochez les permissions GET, POST, PUT sur les ressources "products", "categories", "cms_pages", "meta", validez puis copiez la clé générée.`,
+                      `In your PrestaShop back-office, go to Advanced Parameters → Webservice. Enable the webservice if not already done, then click "Add new webservice key". Check GET, POST, PUT permissions on "products", "categories", "cms_pages", "meta" resources, validate then copy the generated key.`,
+                      `En su back-office PrestaShop, vaya a Parámetros avanzados → Webservice. Active el webservice si no lo está, luego haga clic en "Añadir nueva clave webservice". Marque permisos GET, POST, PUT en los recursos "products", "categories", "cms_pages", "meta", valide y copie la clave generada.`
+                    )}
+                    {connectMethod === 'drupal' && t3(language,
+                      `Dans Drupal, allez dans Étendre → activez les modules "RESTful Web Services", "Basic Auth" et "Serialization". Créez ensuite un utilisateur dédié à Crawlers (Personnes → Ajouter) avec le rôle "administrateur" ou un rôle disposant des permissions "Restful create/update node". Crawlers utilisera ses identifiants encodés en base64 pour publier et corriger vos contenus.`,
+                      `In Drupal, go to Extend → enable the "RESTful Web Services", "Basic Auth" and "Serialization" modules. Then create a dedicated Crawlers user (People → Add) with the "administrator" role or a role with "Restful create/update node" permissions. Crawlers will use base64-encoded credentials to publish and fix your content.`,
+                      `En Drupal, vaya a Extender → active los módulos "RESTful Web Services", "Basic Auth" y "Serialization". Luego cree un usuario dedicado a Crawlers (Personas → Añadir) con el rol "administrador" o uno con permisos "Restful create/update node". Crawlers usará credenciales codificadas en base64 para publicar y corregir su contenido.`
+                    )}
+                    {connectMethod === 'odoo' && t3(language,
+                      `Connectez-vous à votre Odoo → cliquez sur votre avatar en haut à droite → Préférences → onglet "Sécurité du compte" → "Nouvelle clé API". Donnez-lui un nom (ex : Crawlers) et copiez la clé immédiatement (elle ne sera plus affichée ensuite). Vérifiez aussi que votre utilisateur a les droits d'édition sur les modules Site Web / Blog / Pages.`,
+                      `Sign in to your Odoo → click your avatar (top right) → Preferences → "Account Security" tab → "New API Key". Give it a name (e.g. Crawlers) and copy the key right away (it won't be shown again). Also check your user has edit rights on the Website / Blog / Pages modules.`,
+                      `Inicie sesión en su Odoo → haga clic en su avatar (arriba derecha) → Preferencias → pestaña "Seguridad de la cuenta" → "Nueva clave API". Asígnele un nombre (ej. Crawlers) y copie la clave de inmediato (no se volverá a mostrar). Verifique también que su usuario tiene derechos de edición en los módulos Sitio Web / Blog / Páginas.`
+                    )}
+                  </p>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-                    {connectMethod === 'shopify' && t3(language, 'Token Admin API', 'Admin API token', 'Token Admin API')}
-                    {connectMethod === 'wix' && t3(language, 'Clé API Wix', 'Wix API key', 'Clave API Wix')}
-                    {connectMethod === 'prestashop' && t3(language, 'Clé Webservice', 'Webservice key', 'Clave Webservice')}
-                    {connectMethod === 'drupal' && t3(language, 'Identifiants Basic Auth (user:password en base64)', 'Basic Auth credentials (user:password base64)', 'Credenciales Basic Auth (usuario:contraseña base64)')}
-                    {connectMethod === 'odoo' && t3(language, 'Clé API utilisateur', 'User API key', 'Clave API de usuario')}
-                  </label>
-                  <div className="relative">
+
+                {/* Step 2: Coller URL + clé */}
+                <div className="space-y-2 rounded-md border border-dashed bg-muted/20 p-3">
+                  <p className="text-[12px] font-semibold text-foreground">
+                    {t3(language,
+                      '2. Collez l\'URL et la clé ci-dessous',
+                      '2. Paste the URL and key below',
+                      '2. Pegue la URL y la clave a continuación'
+                    )}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    {t3(language,
+                      'Renseignez l\'adresse exacte de votre site (avec https://) et la clé que vous venez de générer. Crawlers va tester la connexion en direct, puis enregistrer le lien — le bouton « CMS branché » passera au vert dans Mes Sites.',
+                      'Enter your site\'s exact address (with https://) and the key you just generated. Crawlers will test the connection live, then save the link — the "CMS connected" button will turn green in My Sites.',
+                      'Introduzca la dirección exacta de su sitio (con https://) y la clave que acaba de generar. Crawlers probará la conexión en vivo y guardará el enlace — el botón "CMS conectado" se pondrá verde en Mis Sitios.'
+                    )}
+                  </p>
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                      {t3(language, 'URL du site', 'Site URL', 'URL del sitio')}
+                    </label>
                     <Input
-                      type={restApiKeyVisible ? 'text' : 'password'}
-                      value={restApiKey}
-                      onChange={(e) => setRestApiKey(e.target.value)}
-                      placeholder={t3(language, 'clé', 'key', 'clave')}
-                      className="font-mono text-[11px] h-8 bg-background pr-9"
+                      value={wpUrl && wpUrl !== `https://${siteDomain}` ? wpUrl : ''}
+                      onChange={(e) => setWpUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="font-mono text-[11px] h-8 bg-background"
                     />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                      {connectMethod === 'shopify' && t3(language, 'Token Admin API', 'Admin API token', 'Token Admin API')}
+                      {connectMethod === 'wix' && t3(language, 'Clé API Wix', 'Wix API key', 'Clave API Wix')}
+                      {connectMethod === 'prestashop' && t3(language, 'Clé Webservice', 'Webservice key', 'Clave Webservice')}
+                      {connectMethod === 'drupal' && t3(language, 'Identifiants Basic Auth (user:password en base64)', 'Basic Auth credentials (user:password base64)', 'Credenciales Basic Auth (usuario:contraseña base64)')}
+                      {connectMethod === 'odoo' && t3(language, 'Clé API utilisateur', 'User API key', 'Clave API de usuario')}
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type={restApiKeyVisible ? 'text' : 'password'}
+                        value={restApiKey}
+                        onChange={(e) => setRestApiKey(e.target.value)}
+                        placeholder={t3(language, 'clé', 'key', 'clave')}
+                        className="font-mono text-[11px] h-8 bg-background pr-9"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setRestApiKeyVisible(v => !v)}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                      >
+                        {restApiKeyVisible ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end pt-1">
                     <Button
-                      type="button"
-                      variant="ghost"
+                      onClick={handleSaveRestApiKey}
+                      disabled={!isValidWpUrl || !restApiKey.trim() || savingRestKey}
+                      variant="outline"
                       size="sm"
-                      onClick={() => setRestApiKeyVisible(v => !v)}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                      className="gap-1.5 text-xs h-8 px-3"
                     >
-                      {restApiKeyVisible ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {savingRestKey ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plug className="h-3 w-3" />}
+                      {t3(language, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
                     </Button>
                   </div>
-                </div>
-                <div className="flex items-center justify-end pt-1">
-                  <Button
-                    onClick={handleSaveRestApiKey}
-                    disabled={!isValidWpUrl || !restApiKey.trim() || savingRestKey}
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs h-8 px-3"
-                  >
-                    {savingRestKey ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plug className="h-3 w-3" />}
-                    {t3(language, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
-                  </Button>
                 </div>
               </div>
             </>
