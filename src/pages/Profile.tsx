@@ -190,7 +190,7 @@ function ProfileContent() {
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <FreeTrialBanner />
-        <div className={cn('flex-1 flex', isMobile ? 'flex-col' : 'flex-row')}>
+        <div className={cn('flex-1 flex', isMobile ? 'flex-col' : 'flex-row items-start')}>
           <ConsoleSidebar
             activeTab={activeTab}
             onTabChange={handleTabChange}
