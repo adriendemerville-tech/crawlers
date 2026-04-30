@@ -623,10 +623,19 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
             </div>
           </div>
 
+          {/* Intro pédagogique GTM */}
+          <p className="text-[11px] text-muted-foreground leading-snug rounded-md border border-dashed bg-muted/20 px-3 py-2">
+            {t3(language,
+              'Cette méthode fonctionne sur tous les sites (React, Vue, sites custom, e-commerce sans plugin officiel…). Le widget Crawlers est un petit script qui se charge en différé et applique vos optimisations SEO/GEO côté navigateur. Vous pouvez l\'installer en un clic via Google Tag Manager ou le coller manuellement dans votre <head>.',
+              'This method works on any site (React, Vue, custom sites, e-commerce without official plugin…). The Crawlers widget is a small deferred script that applies your SEO/GEO optimisations in the browser. Install it in one click via Google Tag Manager, or paste it manually into your <head>.',
+              'Este método funciona en cualquier sitio (React, Vue, sitios personalizados, e-commerce sin plugin oficial…). El widget Crawlers es un pequeño script diferido que aplica sus optimizaciones SEO/GEO en el navegador. Instálelo en un clic via Google Tag Manager o péguelo manualmente en su <head>.'
+            )}
+          </p>
+
           {/* Step 1: Copy snippet */}
           <div className="space-y-1.5">
             <p className="text-[11px] font-medium text-muted-foreground">
-              {t3(language, '1. Copiez ce code', '1. Copy this code', '1. Copie este código')}
+              {t3(language, '1. Copiez ce code (déjà rempli avec votre clé)', '1. Copy this code (already filled with your key)', '1. Copie este código (ya rellenado con su clave)')}
             </p>
             <div className="relative group rounded-lg bg-zinc-950 border border-zinc-800 overflow-hidden">
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800 bg-zinc-900/60">
