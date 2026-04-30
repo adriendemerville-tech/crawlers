@@ -267,10 +267,33 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+  } else if (mode === 'env') {
+    if (!auth.isAdmin) {
+      return new Response(JSON.stringify({ error: 'env mode requires admin role' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    // Per-platform env var name (currently only dictadevi)
+    const envVarName = platform === 'dictadevi' ? 'DICTADEVI_API_KEY' : ''
+    if (!envVarName) {
+      return new Response(JSON.stringify({ error: `mode=env not supported for platform "${platform}"` }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const envKey = Deno.env.get(envVarName)
+    if (!envKey) {
+      return new Response(JSON.stringify({ error: `${envVarName} is not configured in edge env` }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    apiKey = envKey
   } else {
     apiKey = (body.api_key || '').trim()
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'api_key is required (or use mode=reuse_admin)' }), {
+      return new Response(JSON.stringify({ error: 'api_key is required (or use mode=reuse_admin|env)' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
