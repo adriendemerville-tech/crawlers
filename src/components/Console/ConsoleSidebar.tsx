@@ -281,7 +281,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       isMobile
         ? 'w-full border-r-0 border-b pb-2'
         // Desktop : sticky pleine hauteur pour garder sous-menu + sélecteur de domaine fixes au scroll
-        : 'w-[200px] sticky top-0 self-start h-screen overflow-hidden',
+        : 'w-[200px] sticky top-0 self-start h-screen max-h-screen overflow-hidden z-30',
     )}>
       {/* Domain selector */}
       {!isMobile && sites.length > 0 && (
