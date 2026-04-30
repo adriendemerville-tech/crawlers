@@ -220,13 +220,23 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-  if (site.user_id !== auth.userId) {
+  // service-role bypass allowed only for mode=env (admin-triggered server binding)
+  const isServiceRole = auth.userId === 'service-role'
+  if (isServiceRole && mode !== 'env') {
+    return new Response(JSON.stringify({ error: 'service-role only allowed with mode=env' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+  if (!isServiceRole && site.user_id !== auth.userId) {
     console.warn(`[cms-register-api-key] User ${auth.userId} attempted to bind site ${trackedSiteId} owned by ${site.user_id}`)
     return new Response(JSON.stringify({ error: 'You do not own this site' }), {
       status: 403,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
+  // Effective owner for the cms_connections row
+  const ownerUserId = isServiceRole ? site.user_id : auth.userId
 
   // ── Resolve platform ──
   const platform = (body.platform || inferPlatformFromDomain(site.domain) || '').toLowerCase()
