@@ -428,7 +428,7 @@ Deno.serve(async (req: Request) => {
     .from('tracked_sites')
     .update({ current_config: newConfig })
     .eq('id', trackedSiteId)
-    .eq('user_id', auth.userId)
+    .eq('user_id', ownerUserId)
 
   if (cfgErr) {
     console.warn('[cms-register-api-key] tracked_sites.current_config update failed (non-blocking):', cfgErr)
