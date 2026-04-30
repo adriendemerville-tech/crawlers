@@ -372,7 +372,7 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
             </p>
           </div>
           <DialogDescription className="text-xs space-y-1">
-            <span>{helpText}</span>
+            <span className="block whitespace-pre-line leading-relaxed">{helpText}</span>
             {cmsType === 'wordpress' && siteUrl && (
               <a
                 href={`${siteUrl.replace(/\/$/, '')}/wp-admin/users.php?page=application-passwords`}
@@ -493,7 +493,12 @@ export function CmsConnectionDialog({ open, onOpenChange, cmsType }: CmsConnecti
           )}
           <div className="space-y-1.5">
             <Label className="text-xs">{tokenLabel}</Label>
-            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} />
+            <Input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder={language === 'fr' ? 'clé' : language === 'es' ? 'clave' : 'key'}
+            />
           </div>
 
           {/* Test result */}
