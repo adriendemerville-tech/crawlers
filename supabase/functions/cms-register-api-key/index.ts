@@ -278,8 +278,8 @@ Deno.serve(async (req: Request) => {
       })
     }
   } else if (mode === 'env') {
-    if (!auth.isAdmin) {
-      return new Response(JSON.stringify({ error: 'env mode requires admin role' }), {
+    if (!isServiceRole && !auth.isAdmin) {
+      return new Response(JSON.stringify({ error: 'env mode requires admin role or service-role' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
