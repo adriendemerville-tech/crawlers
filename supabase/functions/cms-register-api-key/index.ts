@@ -172,9 +172,9 @@ Deno.serve(async (req: Request) => {
     })
   }
 
-  // ── Auth: required (multi-tenant) ──
+  // ── Auth: required (multi-tenant). Service-role allowed ONLY for mode=env (admin-triggered binding) ──
   const auth = await getAuthenticatedUser(req)
-  if (!auth || auth.userId === 'service-role') {
+  if (!auth) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -187,7 +187,7 @@ Deno.serve(async (req: Request) => {
     api_key?: string
     platform?: string
     site_url?: string
-    mode?: 'manual' | 'reuse_admin'
+    mode?: 'manual' | 'reuse_admin' | 'env'
   } = {}
   try { body = await req.json() } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
@@ -220,13 +220,23 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-  if (site.user_id !== auth.userId) {
+  // service-role bypass allowed only for mode=env (admin-triggered server binding)
+  const isServiceRole = auth.userId === 'service-role'
+  if (isServiceRole && mode !== 'env') {
+    return new Response(JSON.stringify({ error: 'service-role only allowed with mode=env' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+  if (!isServiceRole && site.user_id !== auth.userId) {
     console.warn(`[cms-register-api-key] User ${auth.userId} attempted to bind site ${trackedSiteId} owned by ${site.user_id}`)
     return new Response(JSON.stringify({ error: 'You do not own this site' }), {
       status: 403,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
+  // Effective owner for the cms_connections row
+  const ownerUserId = isServiceRole ? site.user_id : auth.userId
 
   // ── Resolve platform ──
   const platform = (body.platform || inferPlatformFromDomain(site.domain) || '').toLowerCase()
@@ -267,10 +277,33 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+  } else if (mode === 'env') {
+    if (!isServiceRole && !auth.isAdmin) {
+      return new Response(JSON.stringify({ error: 'env mode requires admin role or service-role' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    // Per-platform env var name (currently only dictadevi)
+    const envVarName = platform === 'dictadevi' ? 'DICTADEVI_API_KEY' : ''
+    if (!envVarName) {
+      return new Response(JSON.stringify({ error: `mode=env not supported for platform "${platform}"` }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const envKey = Deno.env.get(envVarName)
+    if (!envKey) {
+      return new Response(JSON.stringify({ error: `${envVarName} is not configured in edge env` }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    apiKey = envKey
   } else {
     apiKey = (body.api_key || '').trim()
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'api_key is required (or use mode=reuse_admin)' }), {
+      return new Response(JSON.stringify({ error: 'api_key is required (or use mode=reuse_admin|env)' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -357,7 +390,7 @@ Deno.serve(async (req: Request) => {
   const { error: upsertErr } = await supabase
     .from('cms_connections')
     .upsert({
-      user_id: auth.userId,
+      user_id: ownerUserId,
       tracked_site_id: trackedSiteId,
       platform,
       auth_method: authMethod,
@@ -366,7 +399,7 @@ Deno.serve(async (req: Request) => {
       scopes: ['posts:read', 'posts:write', 'pages:read'],
       status: 'active',
       capabilities,
-      managed_by: mode === 'reuse_admin' ? 'admin' : 'user',
+      managed_by: mode === 'manual' ? 'user' : 'admin',
       updated_at: new Date().toISOString(),
     } as Record<string, unknown>, {
       onConflict: 'user_id,tracked_site_id,platform',
@@ -395,7 +428,7 @@ Deno.serve(async (req: Request) => {
     .from('tracked_sites')
     .update({ current_config: newConfig })
     .eq('id', trackedSiteId)
-    .eq('user_id', auth.userId)
+    .eq('user_id', ownerUserId)
 
   if (cfgErr) {
     console.warn('[cms-register-api-key] tracked_sites.current_config update failed (non-blocking):', cfgErr)
