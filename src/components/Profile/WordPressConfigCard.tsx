@@ -502,9 +502,9 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
                     {t3(language, 'URL du site', 'Site URL', 'URL del sitio')}
                   </label>
                   <Input
-                    value={wpUrl}
+                    value={wpUrl && wpUrl !== `https://${siteDomain}` ? wpUrl : ''}
                     onChange={(e) => setWpUrl(e.target.value)}
-                    placeholder={t3(language, 'https://votre-site.com', 'https://your-site.com', 'https://su-sitio.com')}
+                    placeholder="https://example.com"
                     className="font-mono text-[11px] h-8 bg-background"
                   />
                 </div>
@@ -521,7 +521,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
                       type={restApiKeyVisible ? 'text' : 'password'}
                       value={restApiKey}
                       onChange={(e) => setRestApiKey(e.target.value)}
-                      placeholder={connectMethod === 'shopify' ? 'shpat_…' : '••••••••'}
+                      placeholder={t3(language, 'clé', 'key', 'clave')}
                       className="font-mono text-[11px] h-8 bg-background pr-9"
                     />
                     <Button
