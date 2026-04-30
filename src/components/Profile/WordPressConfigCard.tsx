@@ -366,39 +366,54 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
 
           {connectMethod === 'wordpress' ? (
             <>
-              {/* WordPress: Plugin .zip + Magic Link */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Step 1: Download plugin */}
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-medium text-muted-foreground">
-                    {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
-                  </p>
-                  <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs" size="sm">
-                    <Download className="h-3 w-3" />
-                    {t3(language, 'Plugin .zip', 'Plugin .zip', 'Plugin .zip')}
-                  </Button>
-                  <p className="text-[9px] text-muted-foreground">
+              {/* WordPress: Plugin .zip + Magic Link — étapes verticales avec explications */}
+              <div className="space-y-4">
+                {/* Step 1: Download & install plugin */}
+                <div className="space-y-2 rounded-md border border-dashed bg-muted/20 p-3">
+                  <p className="text-[12px] font-semibold text-foreground">
                     {t3(language,
-                      'WordPress → Extensions → Ajouter → Téléverser.',
-                      'WordPress → Plugins → Add New → Upload.',
-                      'WordPress → Plugins → Añadir → Subir.'
+                      '1. Installez le plugin Crawlers sur WordPress',
+                      '1. Install the Crawlers plugin on WordPress',
+                      '1. Instale el plugin Crawlers en WordPress'
                     )}
                   </p>
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    {t3(language,
+                      'Téléchargez le fichier .zip ci-dessous, puis dans votre administration WordPress allez dans Extensions → Ajouter une extension → Téléverser une extension. Sélectionnez le .zip, installez puis activez. La clé API est déjà embarquée dans le plugin, rien à copier.',
+                      'Download the .zip file below, then in your WordPress admin go to Plugins → Add New → Upload Plugin. Select the .zip, install and activate. The API key is already embedded in the plugin, nothing to copy.',
+                      'Descargue el archivo .zip a continuación, luego en la administración de WordPress vaya a Plugins → Añadir nuevo → Subir plugin. Seleccione el .zip, instale y active. La clave API ya está incluida en el plugin, no hay que copiar nada.'
+                    )}
+                  </p>
+                  <Button onClick={handleDownloadPlugin} className="gap-2 bg-primary hover:bg-primary/90 text-xs h-8" size="sm">
+                    <Download className="h-3 w-3" />
+                    {t3(language, 'Télécharger le plugin .zip', 'Download plugin .zip', 'Descargar plugin .zip')}
+                  </Button>
                 </div>
 
-                {/* Step 2: URL + Magic Link */}
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-medium text-muted-foreground">
-                    {t3(language, '2. Connexion automatique', '2. Auto-connect', '2. Conexión automática')}
+                {/* Step 2: Magic Link */}
+                <div className="space-y-2 rounded-md border border-dashed bg-muted/20 p-3">
+                  <p className="text-[12px] font-semibold text-foreground">
+                    {t3(language,
+                      '2. Lancez la connexion automatique (Lien Magique)',
+                      '2. Launch the auto-connection (Magic Link)',
+                      '2. Inicie la conexión automática (Enlace Mágico)'
+                    )}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={wpUrl}
-                      readOnly
-                      className="font-mono text-[11px] h-8 bg-muted/50 cursor-default"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5">
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    {t3(language,
+                      'Une fois le plugin activé sur votre site, cliquez sur Lien Magique : un lien sécurisé à usage unique ouvre votre wp-admin et finalise la liaison entre Crawlers et WordPress, sans rien à saisir. Le bouton Tester vérifie simplement que votre site répond.',
+                      'Once the plugin is activated on your site, click Magic Link: a secure single-use link opens your wp-admin and finalises the connection between Crawlers and WordPress, with nothing to type. The Test button just checks your site responds.',
+                      'Una vez activado el plugin, haga clic en Enlace Mágico: un enlace seguro de un solo uso abre su wp-admin y finaliza la conexión entre Crawlers y WordPress, sin nada que escribir. El botón Probar solo comprueba que su sitio responde.'
+                    )}
+                  </p>
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-snug">
+                    {t3(language,
+                      '⚠ Le Lien Magique ne fonctionne que si l\'étape 1 est terminée (plugin installé et activé).',
+                      '⚠ The Magic Link only works once step 1 is complete (plugin installed and activated).',
+                      '⚠ El Enlace Mágico solo funciona una vez completado el paso 1 (plugin instalado y activado).'
+                    )}
+                  </p>
+                  <div className="flex items-center gap-1.5 pt-1">
                     <Button
                       onClick={handleMagicLink}
                       disabled={!isValidWpUrl || generatingLink || !user}
@@ -416,7 +431,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
                       className="gap-1.5 text-xs h-8 px-3"
                     >
                       {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
-                      {t3(language, 'Tester', 'Test', 'Probar')}
+                      {t3(language, 'Tester le site', 'Test site', 'Probar sitio')}
                     </Button>
                   </div>
                 </div>
