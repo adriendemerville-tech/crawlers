@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download, Send } from 'lucide-react';
+import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download, Send, Database } from 'lucide-react';
 import { generateParmenionReport } from '@/utils/parmenionPdfReport';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -105,6 +105,10 @@ export function ParmenionTargetPanel({
   const [histLoading, setHistLoading] = useState(false);
   const [modCounts, setModCounts] = useState<Record<number, number>>({});
   const [escalatingIds, setEscalatingIds] = useState<Set<string>>(new Set());
+  const [dictadeviContextEnabled, setDictadeviContextEnabled] = useState<boolean>(true);
+  const [dictadeviContextSaving, setDictadeviContextSaving] = useState(false);
+
+  const isDictadeviTarget = (targetDomain || '').toLowerCase().includes('dictadevi');
 
   const escalateToCto = useCallback(async (log: DecisionLog) => {
     setEscalatingIds(prev => new Set(prev).add(log.id));
@@ -223,6 +227,52 @@ export function ParmenionTargetPanel({
 
   useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchHistory(); fetchModCounts(); }, [fetchLogs, fetchAutopilotConfig, fetchHistory, fetchModCounts]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
+
+  // Charge l'état du toggle "contexte métier Dictadevi" depuis tracked_sites.current_config
+  useEffect(() => {
+    if (!isDictadeviTarget || !autopilotConfig?.tracked_site_id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('tracked_sites')
+        .select('current_config')
+        .eq('id', autopilotConfig.tracked_site_id)
+        .maybeSingle();
+      const cfg = (data?.current_config ?? {}) as Record<string, unknown>;
+      setDictadeviContextEnabled(cfg.dictadevi_context_enabled !== false);
+    })();
+  }, [isDictadeviTarget, autopilotConfig?.tracked_site_id]);
+
+  const handleToggleDictadeviContext = async () => {
+    if (!autopilotConfig?.tracked_site_id) return;
+    const next = !dictadeviContextEnabled;
+    setDictadeviContextSaving(true);
+    setDictadeviContextEnabled(next);
+    try {
+      const { data: current } = await supabase
+        .from('tracked_sites')
+        .select('current_config')
+        .eq('id', autopilotConfig.tracked_site_id)
+        .maybeSingle();
+      const cfg = { ...(current?.current_config as Record<string, unknown> ?? {}), dictadevi_context_enabled: next };
+      const { error } = await supabase
+        .from('tracked_sites')
+        .update({ current_config: cfg } as any)
+        .eq('id', autopilotConfig.tracked_site_id);
+      if (error) throw error;
+      toast({
+        title: next ? 'Contexte Dictadevi activé' : 'Contexte Dictadevi désactivé',
+        description: next
+          ? 'DTU, lexique et fourchettes de prix injectés dans le rédacteur.'
+          : 'Le rédacteur n\'utilisera plus le contexte métier Dictadevi.',
+      });
+    } catch (e) {
+      console.error('[ParmenionTargetPanel] toggle dictadevi context', e);
+      setDictadeviContextEnabled(!next);
+      toast({ title: 'Erreur', description: 'Échec de la mise à jour du contexte.', variant: 'destructive' });
+    } finally {
+      setDictadeviContextSaving(false);
+    }
+  };
 
   useEffect(() => {
     const channel = supabase
@@ -386,6 +436,19 @@ export function ParmenionTargetPanel({
             <FileText className="h-4 w-4" />
             {isMobile ? 'Prio' : (autopilotConfig?.force_content_cycle ? 'Contenu:ON' : 'Prio contenu')}
           </Button>
+          {isDictadeviTarget && (
+            <Button
+              variant={dictadeviContextEnabled ? 'default' : 'outline'}
+              size="sm"
+              className={cn("gap-1.5 shrink-0", dictadeviContextEnabled && "bg-violet-500 hover:bg-violet-600 text-white")}
+              disabled={!autopilotConfig?.tracked_site_id || dictadeviContextSaving}
+              onClick={handleToggleDictadeviContext}
+              title="Injection des sources DTU, lexique et fourchettes de prix Dictadevi dans le rédacteur"
+            >
+              <Database className="h-4 w-4" />
+              {isMobile ? 'Ctx' : (dictadeviContextEnabled ? 'Contexte:ON' : 'Contexte')}
+            </Button>
+          )}
           <Button variant="ghost" size="icon" onClick={fetchLogs} className="shrink-0 h-8 w-8">
             <RefreshCw className="h-4 w-4" />
           </Button>

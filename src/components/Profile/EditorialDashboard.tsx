@@ -3,9 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Loader2, BarChart3, Users, Tag, FileText, Clock, FileWarning, ImageOff, AlertTriangle, Type, RefreshCw, Plug, Globe, ExternalLink, Database } from 'lucide-react';
+import { Loader2, BarChart3, Users, Tag, FileText, Clock, FileWarning, ImageOff, AlertTriangle, Type, RefreshCw, Plug, Globe, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { CmsConnectionDialog } from './CmsConnectionDialog';
 
@@ -60,8 +58,6 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
   const [error, setError] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [contextEnabled, setContextEnabled] = useState<boolean>(true);
-  const [contextSaving, setContextSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -126,47 +122,6 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
   };
 
   const selectedDomain = sites.find(s => s.id === selectedSiteId)?.domain;
-  const isDictadeviSite = !!selectedDomain && selectedDomain.toLowerCase().includes('dictadevi');
-
-  // Charge l'état du toggle contexte pour le site sélectionné
-  useEffect(() => {
-    if (!selectedSiteId || !isDictadeviSite) return;
-    (async () => {
-      const { data } = await supabase
-        .from('tracked_sites')
-        .select('current_config')
-        .eq('id', selectedSiteId)
-        .maybeSingle();
-      const cfg = (data?.current_config ?? {}) as Record<string, unknown>;
-      setContextEnabled(cfg.dictadevi_context_enabled !== false); // default ON
-    })();
-  }, [selectedSiteId, isDictadeviSite]);
-
-  const handleToggleContext = async (next: boolean) => {
-    if (!selectedSiteId) return;
-    setContextSaving(true);
-    setContextEnabled(next); // optimistic
-    try {
-      const { data: current } = await supabase
-        .from('tracked_sites')
-        .select('current_config')
-        .eq('id', selectedSiteId)
-        .maybeSingle();
-      const cfg = { ...(current?.current_config as Record<string, unknown> ?? {}), dictadevi_context_enabled: next };
-      const { error: upErr } = await supabase
-        .from('tracked_sites')
-        .update({ current_config: cfg })
-        .eq('id', selectedSiteId);
-      if (upErr) throw upErr;
-      toast.success(next ? 'Contexte Dictadevi activé' : 'Contexte Dictadevi désactivé');
-    } catch (e: any) {
-      console.error('[EditorialDashboard] toggle context', e);
-      setContextEnabled(!next); // rollback
-      toast.error('Échec de la mise à jour du contexte');
-    } finally {
-      setContextSaving(false);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -195,29 +150,6 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
           </div>
         </CardHeader>
 
-        {isDictadeviSite && (
-          <div className="px-6 pb-3">
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-border/40 bg-background/40 px-3 py-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Database className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div className="min-w-0">
-                  <Label htmlFor="dictadevi-context-toggle" className="text-sm font-medium cursor-pointer">
-                    Contexte métier Dictadevi
-                  </Label>
-                  <div className="text-[11px] text-muted-foreground leading-tight">
-                    Injection des sources DTU, lexique et fourchettes de prix dans la rédaction.
-                  </div>
-                </div>
-              </div>
-              <Switch
-                id="dictadevi-context-toggle"
-                checked={contextEnabled}
-                onCheckedChange={handleToggleContext}
-                disabled={contextSaving}
-              />
-            </div>
-          </div>
-        )}
 
         <CardContent>
           {loading && (
