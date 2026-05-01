@@ -217,11 +217,6 @@ function ProfileContent() {
             </motion.div>
           </main>
         </div>
-        <div className={cn(!isMobile && 'ml-[200px]')}>
-          <Suspense fallback={null}>
-            <Footer />
-          </Suspense>
-        </div>
         {showCreditModal && (
           <CreditTopUpModal
             open={showCreditModal}
