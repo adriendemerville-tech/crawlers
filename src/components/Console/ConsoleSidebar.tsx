@@ -277,11 +277,11 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
   return (
     <aside className={cn(
-      'shrink-0 border-r border-border/50 bg-background/50 flex flex-col',
+      'border-border/50 bg-background/50 flex flex-col',
       isMobile
-        ? 'w-full border-r-0 border-b pb-2'
-        // Desktop : sticky pleine hauteur pour garder sous-menu + sélecteur de domaine fixes au scroll
-        : 'w-[200px] sticky top-0 self-start h-screen max-h-screen overflow-hidden z-30',
+        ? 'w-full border-b border-r-0 pb-2'
+        // Desktop : fixed pleine hauteur — totalement indépendant du scroll de la console
+        : 'fixed top-0 left-0 w-[200px] h-screen border-r overflow-y-auto z-30',
     )}>
       {/* Domain selector */}
       {!isMobile && sites.length > 0 && (
