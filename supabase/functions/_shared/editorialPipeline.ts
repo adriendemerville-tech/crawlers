@@ -11,6 +11,13 @@
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { toFrenchSentenceCase, normalizeHtmlHeadings } from "./sentenceCase.ts";
+import { isDictadeviDomain } from "./domainUtils.ts";
+import {
+  fetchDictadeviContext,
+  renderDictadeviContextBlock,
+  extractDictadeviSources,
+  type DictadeviContext,
+} from "./dictadeviContext.ts";
 
 // ----------------------------------------------------------------------------
 // TYPES
