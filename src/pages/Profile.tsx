@@ -200,7 +200,7 @@ function ProfileContent() {
             }}
             
           />
-          <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-2 max-w-7xl">
+          <main className={cn('flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-2 max-w-7xl', !isMobile && 'ml-[200px]')}>
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}
