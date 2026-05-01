@@ -436,6 +436,19 @@ export function ParmenionTargetPanel({
             <FileText className="h-4 w-4" />
             {isMobile ? 'Prio' : (autopilotConfig?.force_content_cycle ? 'Contenu:ON' : 'Prio contenu')}
           </Button>
+          {isDictadeviTarget && (
+            <Button
+              variant={dictadeviContextEnabled ? 'default' : 'outline'}
+              size="sm"
+              className={cn("gap-1.5 shrink-0", dictadeviContextEnabled && "bg-violet-500 hover:bg-violet-600 text-white")}
+              disabled={!autopilotConfig?.tracked_site_id || dictadeviContextSaving}
+              onClick={handleToggleDictadeviContext}
+              title="Injection des sources DTU, lexique et fourchettes de prix Dictadevi dans le rédacteur"
+            >
+              <Database className="h-4 w-4" />
+              {isMobile ? 'Ctx' : (dictadeviContextEnabled ? 'Contexte:ON' : 'Contexte')}
+            </Button>
+          )}
           <Button variant="ghost" size="icon" onClick={fetchLogs} className="shrink-0 h-8 w-8">
             <RefreshCw className="h-4 w-4" />
           </Button>
