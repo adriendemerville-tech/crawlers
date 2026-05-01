@@ -181,9 +181,13 @@ export function AgentChatShell({
               <div
                 className={cn(
                   'relative max-w-[85%] rounded-lg border px-3 py-2 leading-relaxed',
-                  m.role === 'user'
-                    ? 'border-primary text-foreground'
-                    : 'border-accent/60 text-foreground',
+                  persona === 'felix'
+                    ? m.role === 'user'
+                      ? 'border-border bg-white text-black [&_*]:!text-black'
+                      : 'border-primary bg-primary text-primary-foreground [&_*]:!text-primary-foreground'
+                    : m.role === 'user'
+                      ? 'border-primary text-foreground'
+                      : 'border-accent/60 text-foreground',
                 )}
                 style={{ fontSize: `${fontScale}rem` }}
               >
