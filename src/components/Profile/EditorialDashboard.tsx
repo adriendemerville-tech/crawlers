@@ -195,6 +195,30 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
           </div>
         </CardHeader>
 
+        {isDictadeviSite && (
+          <div className="px-6 pb-3">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-border/40 bg-background/40 px-3 py-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Database className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <Label htmlFor="dictadevi-context-toggle" className="text-sm font-medium cursor-pointer">
+                    Contexte métier Dictadevi
+                  </Label>
+                  <div className="text-[11px] text-muted-foreground leading-tight">
+                    Injection des sources DTU, lexique et fourchettes de prix dans la rédaction.
+                  </div>
+                </div>
+              </div>
+              <Switch
+                id="dictadevi-context-toggle"
+                checked={contextEnabled}
+                onCheckedChange={handleToggleContext}
+                disabled={contextSaving}
+              />
+            </div>
+          </div>
+        )}
+
         <CardContent>
           {loading && (
             <div className="flex items-center justify-center py-12">
