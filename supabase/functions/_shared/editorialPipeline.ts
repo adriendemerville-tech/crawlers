@@ -11,6 +11,13 @@
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { toFrenchSentenceCase, normalizeHtmlHeadings } from "./sentenceCase.ts";
+import { isDictadeviDomain } from "./domainUtils.ts";
+import {
+  fetchDictadeviContext,
+  renderDictadeviContextBlock,
+  extractDictadeviSources,
+  type DictadeviContext,
+} from "./dictadeviContext.ts";
 
 // ----------------------------------------------------------------------------
 // TYPES
@@ -448,6 +455,27 @@ async function stage2_writer(
   pipeline_run_id: string,
 ) {
   const t0 = Date.now();
+
+  // ── Dictadevi context (auto pour domaines dictadevi.*) ──────────────────────
+  let dictadeviCtx: DictadeviContext | null = null;
+  let dictadeviBlock = '';
+  if (isDictadeviDomain(input.domain)) {
+    try {
+      const q = (briefing.briefing_data.keywords[0] || strategy.angle || input.user_brief || '').slice(0, 200);
+      if (q) {
+        dictadeviCtx = await fetchDictadeviContext(q);
+        dictadeviBlock = renderDictadeviContextBlock(dictadeviCtx);
+        console.log(`[editorial-pipeline] Dictadevi context injecté (q="${q}", chunks=${dictadeviCtx.knowledge.chunks?.length || 0}, terms=${dictadeviCtx.lexicon.terms?.length || 0}, ranges=${dictadeviCtx.catalog.ranges?.length || 0})`);
+      }
+    } catch (e) {
+      console.warn('[editorial-pipeline] Dictadevi context indisponible — fallback sans ancrage', e);
+    }
+  }
+
+  const dictadeviRules = dictadeviBlock
+    ? `\n\nCONTEXTE MÉTIER ANCRÉ (sources Dictadevi) :\n${dictadeviBlock}\n\nRÈGLES STRICTES (non-négociables) :\n- Si tu cites une norme (ex: DTU 25.41), tu DOIS référencer le source_reference exact présent dans <dictadevi_context>.\n- Si tu donnes un prix, utilise UNIQUEMENT les fourchettes de catalog_ranges. JAMAIS de prix inventé.\n- Réutilise le vocabulaire EXACT des terms du lexique pour matcher la longue traîne SEO.`
+    : '';
+
   const prompt = `Tu es le Rédacteur. Rédige le contenu en suivant strictement la stratégie fournie.
 
 TYPE: ${input.content_type}
@@ -457,7 +485,7 @@ LONGUEUR CIBLE: ${strategy.target_length} mots
 PLAN:
 ${strategy.outline.map((h, i) => `${i + 1}. ${h}`).join("\n")}
 
-MOTS-CLÉS À INTÉGRER NATURELLEMENT: ${briefing.briefing_data.keywords.slice(0, 5).join(", ")}
+MOTS-CLÉS À INTÉGRER NATURELLEMENT: ${briefing.briefing_data.keywords.slice(0, 5).join(", ")}${dictadeviRules}
 
 ⚠️ TYPOGRAPHIE FR — CASSE PHRASTIQUE OBLIGATOIRE :
 Tous les titres (title H1, sous-titres H2/H3, excerpt) DOIVENT être en casse phrastique française : majuscule UNIQUEMENT au premier mot et aux noms propres (marques, lieux, personnes, sigles). Le "Title Case" anglo-saxon (majuscule à chaque mot) est INTERDIT en français — il dégrade le CTR et brouille la reconnaissance d'entités par les LLMs.
@@ -482,6 +510,16 @@ Réponds en JSON strict :
   if (typeof parsed.title === "string") parsed.title = toFrenchSentenceCase(parsed.title);
   if (typeof parsed.excerpt === "string") parsed.excerpt = toFrenchSentenceCase(parsed.excerpt);
   if (typeof parsed.content === "string") parsed.content = normalizeHtmlHeadings(parsed.content);
+
+  // Section "Sources" en fin d'article si contexte Dictadevi présent
+  if (dictadeviCtx && typeof parsed.content === "string") {
+    const { references, disclaimer } = extractDictadeviSources(dictadeviCtx);
+    if (references.length || disclaimer) {
+      const items = references.map(r => `<li>${r}</li>`).join('');
+      const discl = disclaimer ? `<p class="text-sm text-muted-foreground"><em>${disclaimer}</em></p>` : '';
+      parsed.content += `\n<section class="sources"><h2>Sources</h2>${items ? `<ul>${items}</ul>` : ''}${discl}</section>`;
+    }
+  }
 
   await logStage(supabase, {
     user_id: input.user_id,
