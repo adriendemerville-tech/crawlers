@@ -228,6 +228,52 @@ export function ParmenionTargetPanel({
   useEffect(() => { fetchLogs(); fetchAutopilotConfig(); fetchHistory(); fetchModCounts(); }, [fetchLogs, fetchAutopilotConfig, fetchHistory, fetchModCounts]);
   useEffect(() => { fetchErrorRate(); }, [logs, fetchErrorRate]);
 
+  // Charge l'état du toggle "contexte métier Dictadevi" depuis tracked_sites.current_config
+  useEffect(() => {
+    if (!isDictadeviTarget || !autopilotConfig?.tracked_site_id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('tracked_sites')
+        .select('current_config')
+        .eq('id', autopilotConfig.tracked_site_id)
+        .maybeSingle();
+      const cfg = (data?.current_config ?? {}) as Record<string, unknown>;
+      setDictadeviContextEnabled(cfg.dictadevi_context_enabled !== false);
+    })();
+  }, [isDictadeviTarget, autopilotConfig?.tracked_site_id]);
+
+  const handleToggleDictadeviContext = async () => {
+    if (!autopilotConfig?.tracked_site_id) return;
+    const next = !dictadeviContextEnabled;
+    setDictadeviContextSaving(true);
+    setDictadeviContextEnabled(next);
+    try {
+      const { data: current } = await supabase
+        .from('tracked_sites')
+        .select('current_config')
+        .eq('id', autopilotConfig.tracked_site_id)
+        .maybeSingle();
+      const cfg = { ...(current?.current_config as Record<string, unknown> ?? {}), dictadevi_context_enabled: next };
+      const { error } = await supabase
+        .from('tracked_sites')
+        .update({ current_config: cfg } as any)
+        .eq('id', autopilotConfig.tracked_site_id);
+      if (error) throw error;
+      toast({
+        title: next ? 'Contexte Dictadevi activé' : 'Contexte Dictadevi désactivé',
+        description: next
+          ? 'DTU, lexique et fourchettes de prix injectés dans le rédacteur.'
+          : 'Le rédacteur n\'utilisera plus le contexte métier Dictadevi.',
+      });
+    } catch (e) {
+      console.error('[ParmenionTargetPanel] toggle dictadevi context', e);
+      setDictadeviContextEnabled(!next);
+      toast({ title: 'Erreur', description: 'Échec de la mise à jour du contexte.', variant: 'destructive' });
+    } finally {
+      setDictadeviContextSaving(false);
+    }
+  };
+
   useEffect(() => {
     const channel = supabase
       .channel(`parmenion-live-${targetDomain}`)
