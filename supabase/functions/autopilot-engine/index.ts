@@ -124,6 +124,29 @@ try {
           }
         }
 
+        // ═══ Backlog guard : si > 5 décisions CMS planned non exécutées, pause le site ═══
+        const PLANNED_BACKLOG_THRESHOLD = 5;
+        const { count: plannedBacklog } = await supabase
+          .from('parmenion_decision_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('tracked_site_id', config.tracked_site_id)
+          .eq('action_type', 'cms')
+          .eq('status', 'planned');
+
+        if ((plannedBacklog ?? 0) > PLANNED_BACKLOG_THRESHOLD) {
+          await supabase
+            .from('autopilot_configs')
+            .update({ status: 'paused', updated_at: new Date().toISOString() })
+            .eq('id', config.id);
+          results.push({
+            site_id: config.tracked_site_id,
+            domain: siteInfo.domain,
+            status: 'paused_backlog',
+            error: `${plannedBacklog} décisions CMS en attente (> ${PLANNED_BACKLOG_THRESHOLD}). Autopilot mis en pause pour ce site.`,
+          });
+          continue;
+        }
+
         // ═══ Update status to 'running' ═══
         await supabase
           .from('autopilot_configs')
