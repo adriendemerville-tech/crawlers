@@ -105,6 +105,10 @@ export function ParmenionTargetPanel({
   const [histLoading, setHistLoading] = useState(false);
   const [modCounts, setModCounts] = useState<Record<number, number>>({});
   const [escalatingIds, setEscalatingIds] = useState<Set<string>>(new Set());
+  const [dictadeviContextEnabled, setDictadeviContextEnabled] = useState<boolean>(true);
+  const [dictadeviContextSaving, setDictadeviContextSaving] = useState(false);
+
+  const isDictadeviTarget = (targetDomain || '').toLowerCase().includes('dictadevi');
 
   const escalateToCto = useCallback(async (log: DecisionLog) => {
     setEscalatingIds(prev => new Set(prev).add(log.id));
