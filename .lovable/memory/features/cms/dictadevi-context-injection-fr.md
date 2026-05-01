@@ -13,6 +13,7 @@ Pour les domaines `dictadevi.*`, le Stage 2 Writer (`editorialPipeline.ts`) appe
 - **Timeout** : 8s, retry 1× sur 5xx/network, log explicite sur 429
 - **Query** : 1er mot-clé du brief (ou angle stratégique en fallback)
 - **Tolérance** : si l'un des 3 endpoints échoue, le pipeline continue sans bloquer
+- **Toggle on/off** : `tracked_sites.current_config.dictadevi_context_enabled` (défaut `true`). UI dans `EditorialDashboard` (Switch visible uniquement si domaine = dictadevi). Si `false`, le contexte n'est pas fetché et aucune règle n'est injectée dans le prompt Writer.
 
 Le contexte est sérialisé dans le prompt sous balise `<dictadevi_context>` avec règles strictes :
 - Toute norme citée DOIT référencer le `source_reference` exact
