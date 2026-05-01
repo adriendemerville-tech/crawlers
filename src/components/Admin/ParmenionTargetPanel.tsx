@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download, Send } from 'lucide-react';
+import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download, Send, Database } from 'lucide-react';
 import { generateParmenionReport } from '@/utils/parmenionPdfReport';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
