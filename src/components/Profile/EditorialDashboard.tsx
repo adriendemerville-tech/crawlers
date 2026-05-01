@@ -60,6 +60,8 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
   const [error, setError] = useState<string | null>(null);
   const [cmsDialogOpen, setCmsDialogOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [contextEnabled, setContextEnabled] = useState<boolean>(true);
+  const [contextSaving, setContextSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
