@@ -126,47 +126,6 @@ export function EditorialDashboard({ externalDomain }: { externalDomain?: string
   };
 
   const selectedDomain = sites.find(s => s.id === selectedSiteId)?.domain;
-  const isDictadeviSite = !!selectedDomain && selectedDomain.toLowerCase().includes('dictadevi');
-
-  // Charge l'état du toggle contexte pour le site sélectionné
-  useEffect(() => {
-    if (!selectedSiteId || !isDictadeviSite) return;
-    (async () => {
-      const { data } = await supabase
-        .from('tracked_sites')
-        .select('current_config')
-        .eq('id', selectedSiteId)
-        .maybeSingle();
-      const cfg = (data?.current_config ?? {}) as Record<string, unknown>;
-      setContextEnabled(cfg.dictadevi_context_enabled !== false); // default ON
-    })();
-  }, [selectedSiteId, isDictadeviSite]);
-
-  const handleToggleContext = async (next: boolean) => {
-    if (!selectedSiteId) return;
-    setContextSaving(true);
-    setContextEnabled(next); // optimistic
-    try {
-      const { data: current } = await supabase
-        .from('tracked_sites')
-        .select('current_config')
-        .eq('id', selectedSiteId)
-        .maybeSingle();
-      const cfg = { ...(current?.current_config as Record<string, unknown> ?? {}), dictadevi_context_enabled: next };
-      const { error: upErr } = await supabase
-        .from('tracked_sites')
-        .update({ current_config: cfg })
-        .eq('id', selectedSiteId);
-      if (upErr) throw upErr;
-      toast.success(next ? 'Contexte Dictadevi activé' : 'Contexte Dictadevi désactivé');
-    } catch (e: any) {
-      console.error('[EditorialDashboard] toggle context', e);
-      setContextEnabled(!next); // rollback
-      toast.error('Échec de la mise à jour du contexte');
-    } finally {
-      setContextSaving(false);
-    }
-  };
 
   return (
     <div className="space-y-4">
