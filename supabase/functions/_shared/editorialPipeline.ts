@@ -456,19 +456,37 @@ async function stage2_writer(
 ) {
   const t0 = Date.now();
 
-  // ── Dictadevi context (auto pour domaines dictadevi.*) ──────────────────────
+  // ── Dictadevi context (domaines dictadevi.*, opt-out via current_config) ────
   let dictadeviCtx: DictadeviContext | null = null;
   let dictadeviBlock = '';
   if (isDictadeviDomain(input.domain)) {
+    // Lecture du toggle on/off depuis tracked_sites.current_config (default ON)
+    let contextEnabled = true;
     try {
-      const q = (briefing.briefing_data.keywords[0] || strategy.angle || input.user_brief || '').slice(0, 200);
-      if (q) {
-        dictadeviCtx = await fetchDictadeviContext(q);
-        dictadeviBlock = renderDictadeviContextBlock(dictadeviCtx);
-        console.log(`[editorial-pipeline] Dictadevi context injecté (q="${q}", chunks=${dictadeviCtx.knowledge.chunks?.length || 0}, terms=${dictadeviCtx.lexicon.terms?.length || 0}, ranges=${dictadeviCtx.catalog.ranges?.length || 0})`);
-      }
+      const { data: site } = await supabase
+        .from('tracked_sites')
+        .select('current_config')
+        .eq('domain', input.domain)
+        .maybeSingle();
+      const cfg = (site?.current_config ?? {}) as Record<string, unknown>;
+      if (cfg.dictadevi_context_enabled === false) contextEnabled = false;
     } catch (e) {
-      console.warn('[editorial-pipeline] Dictadevi context indisponible — fallback sans ancrage', e);
+      console.warn('[editorial-pipeline] lecture current_config échouée — défaut ON', e);
+    }
+
+    if (!contextEnabled) {
+      console.log('[editorial-pipeline] Dictadevi context DÉSACTIVÉ (toggle off)');
+    } else {
+      try {
+        const q = (briefing.briefing_data.keywords[0] || strategy.angle || input.user_brief || '').slice(0, 200);
+        if (q) {
+          dictadeviCtx = await fetchDictadeviContext(q);
+          dictadeviBlock = renderDictadeviContextBlock(dictadeviCtx);
+          console.log(`[editorial-pipeline] Dictadevi context injecté (q="${q}", chunks=${dictadeviCtx.knowledge.chunks?.length || 0}, terms=${dictadeviCtx.lexicon.terms?.length || 0}, ranges=${dictadeviCtx.catalog.ranges?.length || 0})`);
+        }
+      } catch (e) {
+        console.warn('[editorial-pipeline] Dictadevi context indisponible — fallback sans ancrage', e);
+      }
     }
   }
 
