@@ -200,7 +200,7 @@ function PipelineCard({
   const p = extracted.payload;
 
   const runSkill = async (
-    fn: 'update-claims-audit' | 'update-topic-gaps' | 'update-guidance',
+    fn: 'update-claims-audit' | 'update-topic-gaps' | 'update-guidance' | 'update-internal-mentions' | 'update-draft-consolidate' | 'update-publish-draft',
     stage: Stage,
     extra: Record<string, unknown> = {},
   ) => {
@@ -225,6 +225,23 @@ function PipelineCard({
 
   const handleClaims = () => runSkill('update-claims-audit', 'claims');
   const handleGuidance = () => runSkill('update-guidance', 'guidance');
+  const handleMentions = () => runSkill('update-internal-mentions', 'mentions');
+  const handleConsolidate = () => runSkill('update-draft-consolidate', 'draft');
+  const [publishing, setPublishing] = useState(false);
+  const handlePublish = async () => {
+    if (!confirm('Publier ce draft en mode patch sur la page existante du CMS ?')) return;
+    setPublishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-publish-draft', { body: { slug } });
+      if (error) throw error;
+      if (data?.error) { toast.error('Publication échouée', { description: data.message || data.error }); return; }
+      toast.success('Patch CMS envoyé', { description: data?.target_url });
+    } catch (e) {
+      toast.error('Erreur', { description: (e as Error).message });
+    } finally {
+      setPublishing(false);
+    }
+  };
   const handleTopicGaps = () => {
     const urls = competitorInput
       .split(/[\s,;]+/)
@@ -325,12 +342,53 @@ function PipelineCard({
               onClick={handleGuidance}
               disabled={running !== null}
             />
+
+            <ActionRow
+              icon={Link2}
+              label="Mentions internes"
+              hint="Suggère des pages internes à lier vers cette page (scan cocoon)."
+              running={running === 'mentions'}
+              done={!!stages.mentions}
+              onClick={handleMentions}
+              disabled={running !== null}
+            />
+
+            <ActionRow
+              icon={FileText}
+              label="Consolider en draft (pipeline éditoriale)"
+              hint="Branche le brief sur la pipeline 4-stages → draft HTML refondu."
+              running={running === 'draft'}
+              done={!!stages.draft}
+              onClick={handleConsolidate}
+              disabled={running !== null || !stages.guidance}
+            />
+
+            {stages.draft && (
+              <div className="border border-foreground/30 rounded-md p-2 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[11px] font-medium">Publier (patch CMS)</div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Met à jour la page existante via cms-patch-content (h1, body, meta).
+                  </p>
+                </div>
+                <button
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  className="px-3 py-1 text-[10px] font-medium border border-foreground/40 rounded hover:bg-accent/40 transition-colors disabled:opacity-40 flex items-center gap-1 shrink-0"
+                >
+                  {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  Publier
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Aperçus payload */}
           {stages.claims && <ClaimsPreview payload={stages.claims.payload} />}
           {stages.topic_gaps && <TopicGapsPreview payload={stages.topic_gaps.payload} />}
           {stages.guidance && <GuidancePreview payload={stages.guidance.payload} />}
+          {stages.mentions && <MentionsPreview payload={stages.mentions.payload} />}
+          {stages.draft && <DraftPreview payload={stages.draft.payload} />}
 
           <div className="text-[10px] text-muted-foreground font-mono">
             slug: {slug} · extrait le {p?.extracted_at ? new Date(p.extracted_at).toLocaleString('fr-FR') : '—'}
@@ -442,6 +500,57 @@ function GuidancePreview({ payload }: { payload: any }) {
         <div className="text-[10px]">
           <span className="font-medium text-emerald-700">À ajouter ({payload.must_add.length}) : </span>
           {payload.must_add.slice(0, 4).map((a: any) => a.section).join(' · ')}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MentionsPreview({ payload }: { payload: any }) {
+  const items = (payload?.suggestions || []).slice(0, 6);
+  return (
+    <div className="border border-border/40 rounded-md p-2 space-y-1.5">
+      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+        Mentions internes ({payload?.suggestions?.length || 0} sur {payload?.candidates_scanned || 0} pages scannées)
+      </div>
+      {items.length === 0 ? (
+        <div className="text-[10px] text-muted-foreground">Aucune suggestion pertinente.</div>
+      ) : (
+        <ul className="space-y-0.5">
+          {items.map((m: any, i: number) => (
+            <li key={i} className="text-[10px] flex items-center gap-2 min-w-0">
+              <span className="px-1 rounded bg-muted text-[9px] shrink-0">×{m.score}</span>
+              <span className="truncate font-medium">{m.anchor}</span>
+              <span className="truncate text-muted-foreground font-mono">→ {m.source_url}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function DraftPreview({ payload }: { payload: any }) {
+  const d = payload?.diff || {};
+  return (
+    <div className="border border-foreground/30 rounded-md p-2 space-y-1.5">
+      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Draft consolidé</div>
+      {payload?.title && <div className="text-[11px] font-medium">{payload.title}</div>}
+      <div className="flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
+        <span>{d.old_word_count ?? '—'} mots → <span className="text-foreground font-medium">{d.new_word_count ?? '—'}</span></span>
+        {typeof d.delta_words === 'number' && (
+          <span className={cn(d.delta_words >= 0 ? 'text-emerald-600' : 'text-amber-600')}>
+            {d.delta_words >= 0 ? '+' : ''}{d.delta_words} mots ({d.delta_pct ?? '—'}%)
+          </span>
+        )}
+        {payload?.pipeline?.tonalizer_used && <span>· tonalizer ✓</span>}
+      </div>
+      {payload?.excerpt && (
+        <div className="text-[10px] text-muted-foreground italic line-clamp-2">{payload.excerpt}</div>
+      )}
+      {payload?.pipeline?.strategist?.angle && (
+        <div className="text-[10px]">
+          <span className="font-medium">Angle : </span>{payload.pipeline.strategist.angle}
         </div>
       )}
     </div>
