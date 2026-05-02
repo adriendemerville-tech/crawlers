@@ -66,20 +66,33 @@ export function UpdatePipelinePanel({ externalDomain }: { externalDomain?: strin
 
   const isPremiumPlus = isAgencyPro || PREMIUM_PLANS.has((planType || '').toLowerCase());
 
-  const loadArtifacts = async () => {
+  const loadArtifacts = useCallback(async () => {
     if (!user) return;
     setLoadingList(true);
     const { data } = await supabase
       .from('update_artifacts' as any)
       .select('*')
-      .eq('stage', 'extracted')
       .order('updated_at', { ascending: false })
-      .limit(20);
-    setArtifacts((data as unknown as Artifact[]) || []);
+      .limit(80);
+    setArtifacts((data as unknown as AnyArtifact[]) || []);
     setLoadingList(false);
-  };
+  }, [user]);
 
-  useEffect(() => { loadArtifacts(); }, [user, externalDomain]);
+  useEffect(() => { loadArtifacts(); }, [loadArtifacts, externalDomain]);
+
+  // Regroupe les artefacts par slug pour afficher l'état du pipeline par page
+  const bySlug = new Map<string, Partial<Record<Stage, AnyArtifact>>>();
+  for (const a of artifacts) {
+    if (!bySlug.has(a.slug)) bySlug.set(a.slug, {});
+    bySlug.get(a.slug)![a.stage] = a;
+  }
+  const slugs = Array.from(bySlug.entries())
+    .filter(([, stages]) => stages.extracted) // n'affiche que les pipelines démarrés
+    .sort(([, a], [, b]) => {
+      const ta = Math.max(...Object.values(a).map((x) => new Date(x!.updated_at).getTime()));
+      const tb = Math.max(...Object.values(b).map((x) => new Date(x!.updated_at).getTime()));
+      return tb - ta;
+    });
 
   const handleExtract = async () => {
     if (!url.trim()) return;
