@@ -225,6 +225,23 @@ function PipelineCard({
 
   const handleClaims = () => runSkill('update-claims-audit', 'claims');
   const handleGuidance = () => runSkill('update-guidance', 'guidance');
+  const handleMentions = () => runSkill('update-internal-mentions', 'mentions');
+  const handleConsolidate = () => runSkill('update-draft-consolidate', 'draft');
+  const [publishing, setPublishing] = useState(false);
+  const handlePublish = async () => {
+    if (!confirm('Publier ce draft en mode patch sur la page existante du CMS ?')) return;
+    setPublishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-publish-draft', { body: { slug } });
+      if (error) throw error;
+      if (data?.error) { toast.error('Publication échouée', { description: data.message || data.error }); return; }
+      toast.success('Patch CMS envoyé', { description: data?.target_url });
+    } catch (e) {
+      toast.error('Erreur', { description: (e as Error).message });
+    } finally {
+      setPublishing(false);
+    }
+  };
   const handleTopicGaps = () => {
     const urls = competitorInput
       .split(/[\s,;]+/)
