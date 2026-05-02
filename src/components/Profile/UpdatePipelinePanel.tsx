@@ -29,31 +29,6 @@ interface AnyArtifact {
   updated_at: string;
 }
 
-interface ExtractedPayload {
-  final_url: string;
-  status_code: number;
-  title: string | null;
-  meta_description: string | null;
-  canonical: string | null;
-  h1: string[];
-  h2: string[];
-  h3: string[];
-  word_count: number;
-  links: { internal: string[]; external: string[] };
-  extracted_at: string;
-}
-
-interface Artifact {
-  id: string;
-  slug: string;
-  url: string;
-  stage: string;
-  payload: ExtractedPayload;
-  source: string;
-  created_at: string;
-  updated_at: string;
-}
-
 const PREMIUM_PLANS = new Set(['premium', 'premium_yearly', 'agency_pro', 'agency_premium', 'pro_agency']);
 
 export function UpdatePipelinePanel({ externalDomain }: { externalDomain?: string | null }) {
@@ -61,7 +36,7 @@ export function UpdatePipelinePanel({ externalDomain }: { externalDomain?: strin
   const { planType, isAgencyPro } = useCredits();
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const [artifacts, setArtifacts] = useState<AnyArtifact[]>([]);
   const [loadingList, setLoadingList] = useState(true);
 
   const isPremiumPlus = isAgencyPro || PREMIUM_PLANS.has((planType || '').toLowerCase());
