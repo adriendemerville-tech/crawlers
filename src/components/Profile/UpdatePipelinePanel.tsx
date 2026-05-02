@@ -342,12 +342,53 @@ function PipelineCard({
               onClick={handleGuidance}
               disabled={running !== null}
             />
+
+            <ActionRow
+              icon={Link2}
+              label="Mentions internes"
+              hint="Suggère des pages internes à lier vers cette page (scan cocoon)."
+              running={running === 'mentions'}
+              done={!!stages.mentions}
+              onClick={handleMentions}
+              disabled={running !== null}
+            />
+
+            <ActionRow
+              icon={FileText}
+              label="Consolider en draft (pipeline éditoriale)"
+              hint="Branche le brief sur la pipeline 4-stages → draft HTML refondu."
+              running={running === 'draft'}
+              done={!!stages.draft}
+              onClick={handleConsolidate}
+              disabled={running !== null || !stages.guidance}
+            />
+
+            {stages.draft && (
+              <div className="border border-foreground/30 rounded-md p-2 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[11px] font-medium">Publier (patch CMS)</div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Met à jour la page existante via cms-patch-content (h1, body, meta).
+                  </p>
+                </div>
+                <button
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  className="px-3 py-1 text-[10px] font-medium border border-foreground/40 rounded hover:bg-accent/40 transition-colors disabled:opacity-40 flex items-center gap-1 shrink-0"
+                >
+                  {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  Publier
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Aperçus payload */}
           {stages.claims && <ClaimsPreview payload={stages.claims.payload} />}
           {stages.topic_gaps && <TopicGapsPreview payload={stages.topic_gaps.payload} />}
           {stages.guidance && <GuidancePreview payload={stages.guidance.payload} />}
+          {stages.mentions && <MentionsPreview payload={stages.mentions.payload} />}
+          {stages.draft && <DraftPreview payload={stages.draft.payload} />}
 
           <div className="text-[10px] text-muted-foreground font-mono">
             slug: {slug} · extrait le {p?.extracted_at ? new Date(p.extracted_at).toLocaleString('fr-FR') : '—'}
