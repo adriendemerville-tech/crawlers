@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { FileEdit, FileText, BarChart3, Cpu, Activity, LineChart, RefreshCw } from 'lucide-react';
 
 const MyDrafts = lazy(() => import('@/components/Profile/MyDrafts').then(m => ({ default: m.MyDrafts })));
