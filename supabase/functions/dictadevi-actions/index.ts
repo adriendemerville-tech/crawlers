@@ -153,6 +153,7 @@ async function listPosts(apiKey: string, params: Record<string, unknown>) {
 const getPost = (apiKey: string, slug: string) => callDictadevi('GET', `/posts/${slug}`, apiKey)
 
 async function createPost(apiKey: string, body: Record<string, unknown>) {
+  ensureHtmlContent(body, `create-post:${(body.slug as string) || '(no-slug)'}`)
   const slug = (body.slug as string) || ''
   // Upsert behaviour: if slug already exists, switch to update (with guard).
   if (slug) {
@@ -172,6 +173,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
 }
 
 async function updatePost(apiKey: string, slug: string, updates: Record<string, unknown>) {
+  ensureHtmlContent(updates, `update-post:${slug}`)
   const existing = await callDictadevi('GET', `/posts/${slug}`, apiKey)
   if (existing.status === 200 && existing.data) {
     const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
