@@ -8,13 +8,26 @@
  *
  * Sprints suivants : ajouter les onglets guidance/claims/topic_gaps/mentions/draft.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
-import { Loader2, Lock, RefreshCw, FileText, Link2, Hash } from 'lucide-react';
+import { Loader2, Lock, RefreshCw, FileText, Link2, Hash, ShieldCheck, GitCompare, Sparkles, Check, AlertTriangle, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+type Stage = 'extracted' | 'claims' | 'topic_gaps' | 'guidance' | 'mentions' | 'draft';
+
+interface AnyArtifact {
+  id: string;
+  slug: string;
+  url: string;
+  stage: Stage;
+  payload: any;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface ExtractedPayload {
   final_url: string;
