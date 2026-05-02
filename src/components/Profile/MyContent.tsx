@@ -20,6 +20,7 @@ const labels = {
 
 export function MyContent({ externalDomain }: { externalDomain?: string | null }) {
   const { language } = useLanguage();
+  const { isAdmin } = useAdmin();
   const t = labels[language as keyof typeof labels] || labels.fr;
 
   return (
