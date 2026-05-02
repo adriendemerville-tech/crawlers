@@ -200,7 +200,7 @@ function PipelineCard({
   const p = extracted.payload;
 
   const runSkill = async (
-    fn: 'update-claims-audit' | 'update-topic-gaps' | 'update-guidance',
+    fn: 'update-claims-audit' | 'update-topic-gaps' | 'update-guidance' | 'update-internal-mentions' | 'update-draft-consolidate' | 'update-publish-draft',
     stage: Stage,
     extra: Record<string, unknown> = {},
   ) => {
