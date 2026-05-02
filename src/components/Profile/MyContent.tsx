@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { FileEdit, FileText, BarChart3, Cpu, Activity, LineChart } from 'lucide-react';
+import { FileEdit, FileText, BarChart3, Cpu, Activity, LineChart, RefreshCw } from 'lucide-react';
 
 const MyDrafts = lazy(() => import('@/components/Profile/MyDrafts').then(m => ({ default: m.MyDrafts })));
 const MyPromptBlocks = lazy(() => import('@/components/Profile/MyPromptBlocks').then(m => ({ default: m.MyPromptBlocks })));
@@ -9,11 +9,12 @@ const EditorialDashboard = lazy(() => import('@/components/Profile/EditorialDash
 const EditorialLLMRoutingMatrix = lazy(() => import('@/components/Profile/EditorialLLMRoutingMatrix').then(m => ({ default: m.EditorialLLMRoutingMatrix })));
 const EditorialPipelineObservability = lazy(() => import('@/components/Profile/EditorialPipelineObservability').then(m => ({ default: m.EditorialPipelineObservability })));
 const GA4Explorer = lazy(() => import('@/components/Profile/GA4/GA4Explorer').then(m => ({ default: m.GA4Explorer })));
+const UpdatePipelinePanel = lazy(() => import('@/components/Profile/UpdatePipelinePanel').then(m => ({ default: m.UpdatePipelinePanel })));
 
 const labels = {
-  fr: { drafts: 'Brouillons', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'Routage LLM', pipeline: 'Pipeline', ga4: 'GA4' },
-  en: { drafts: 'Drafts', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'LLM Routing', pipeline: 'Pipeline', ga4: 'GA4' },
-  es: { drafts: 'Borradores', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'Enrutado LLM', pipeline: 'Pipeline', ga4: 'GA4' },
+  fr: { drafts: 'Brouillons', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'Routage LLM', pipeline: 'Pipeline', ga4: 'GA4', refresh: 'Refresh' },
+  en: { drafts: 'Drafts', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'LLM Routing', pipeline: 'Pipeline', ga4: 'GA4', refresh: 'Refresh' },
+  es: { drafts: 'Borradores', prompts: 'Prompts', dashboard: 'Dashboard', routing: 'Enrutado LLM', pipeline: 'Pipeline', ga4: 'GA4', refresh: 'Refresh' },
 };
 
 export function MyContent({ externalDomain }: { externalDomain?: string | null }) {
