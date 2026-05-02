@@ -1,37 +1,26 @@
 ---
-name: tech/api/dictadevi-bridge-fr
-description: Pont API Crawlers ↔ Dictadevi (REST custom v1) — base /api/v1, auth Bearer dk_, posts CRUD + pages GET + health. Aucune injection code/redirect/event.
+name: Dictadevi Bridge
+description: Bridge dictadevi-actions, garde éditoriale, et conversion Markdown→HTML automatique sur create-post / update-post
 type: feature
 ---
 
-# Pont Crawlers ↔ Dictadevi (Sprint 8.1)
+## Bridge dictadevi-actions
 
-Mise à jour de Sprint 8 après réception de la doc API officielle (`knowledge/tech/api/dictadevi-bridge-fr.md`).
+Pont REST entre Crawlers (Parménion) et l'API custom Dictadevi (`https://dictadevi.io/api/v1`, auth `Bearer dk_...`).
 
-## Différences vs IKtracker
-- **Base URL** : `https://dictadevi.io/api/v1` (et non `/api`)
-- **Auth** : `Authorization: Bearer dk_…` (et non `x-api-key`)
-- **Surface API minimaliste** : uniquement `/health`, `/posts` (CRUD complet) et `/pages/:key` (GET).
-- **PAS supportés** : `push-code-*`, `get-injection-*`, `redirects`, `robots.txt`, `push-event`, `list-pages`, `create/update/delete-page`. Le pont retourne **HTTP 501** + `_not_supported_by_dictadevi: true` pour ces actions, sans appeler l'API.
+### Garde Markdown→HTML (mai 2026)
+Parménion et le pipeline éditorial peuvent produire spontanément du Markdown (`#`, `**`, listes `-`). Dictadevi attend du HTML rendu — sinon le contenu s'affiche brut.
 
-## Routing autopilot
-- `autopilot-engine.resolveCmsBridge(domain)` → `dictadevi-actions` si `isDictadeviDomain(domain)`.
-- Payload envoyé : `{ action, params: {...} }` (Dictadevi), vs flat (IKtracker).
-- `pushIktrackerEvent` est gardé par `isIktrackerDomain` → jamais appelé pour Dictadevi.
-- `cms-push-code` / `cms-push-redirect` sont des Edge Functions séparées (non routées via `dictadevi-actions`) — elles doivent gérer Dictadevi via leur propre logique CMS adapter.
+`ensureHtmlContent()` est appelé sur **tout `create-post` / `update-post`** avant push :
+- Champs scannés : `content`, `body`, `excerpt`
+- Détection : signaux Markdown (`^# `, `**…**`, `[text](url)`, etc.) ET absence de balises HTML structurelles (`<p>`, `<h1-6>`, `<ul>`, …)
+- Conversion : `marked@12.0.2` (GFM activé, pas de `breaks`)
+- Idempotent : si déjà HTML, aucune transformation
+- Logué : `[dictadevi-actions] create-post:slug: champ "body" converti Markdown→HTML (X → Y chars)`
 
-## Auth fallback
-`getDictadeviApiKey(supabase)` :
-1. `Deno.env.get('DICTADEVI_API_KEY')` (prioritaire si défini)
-2. Sinon RPC `get_parmenion_target_api_key('dictadevi.io')` → lit `parmenion_targets.api_key_name` en clair (toléré au Sprint 8 par décision utilisateur).
-
-## Garde éditoriale
-Cohérente avec `iktracker-actions` :
+### Garde éditoriale
 - Refus si auteur ∈ {parménion, parmenion, crawlers autopilot}
 - Refus si `published_at` > 6 mois
 
-## Ressources publiques (no auth)
-Action `get-public-resources` retourne la liste statique des sitemaps + llms.txt + knowledge.json + RSS exposée par Dictadevi (utile pour le crawl GEO).
-
-## Health check
-`test-connection` appelle `GET /health` (public) puis sonde `GET /posts?limit=1` avec la clé pour vérifier `write_ready`.
+### Actions non supportées par Dictadevi v1 (→ 501)
+push-code-*, get-injection-*, robots, redirects, push-event, *-page (Dictadevi n'expose que `/posts` en écriture).

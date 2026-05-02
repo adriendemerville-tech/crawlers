@@ -1,6 +1,48 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
 import { DICTADEVI_BASE_URL, DICTADEVI_PUBLIC_RESOURCES, getDictadeviApiKey } from '../_shared/domainUtils.ts'
+import { marked } from 'https://esm.sh/marked@12.0.2'
+
+// ── Markdown → HTML guard ──
+// Dictadevi attend du HTML rendu. Parménion / pipeline éditorial peuvent
+// produire spontanément du Markdown. On convertit défensivement avant push.
+const CONTENT_FIELDS = ['content', 'body', 'excerpt'] as const
+const MD_SIGNALS = /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|>\s|\d+\.\s|```)|(\*\*[^*\n]+\*\*)|(__[^_\n]+__)|(\[[^\]]+\]\([^)]+\))/
+
+function looksLikeHtml(s: string): boolean {
+  // Considère HTML dès qu'on voit un tag de structure éditoriale connu.
+  return /<\s*(p|h[1-6]|ul|ol|li|blockquote|section|article|div|figure|table|br|strong|em|a)\b/i.test(s)
+}
+
+function looksLikeMarkdown(s: string): boolean {
+  if (!s || typeof s !== 'string') return false
+  if (looksLikeHtml(s)) return false
+  return MD_SIGNALS.test(s)
+}
+
+function convertMarkdownToHtml(md: string): string {
+  try {
+    marked.setOptions({ gfm: true, breaks: false })
+    const html = marked.parse(md, { async: false }) as string
+    return html.trim()
+  } catch (e) {
+    console.warn('[dictadevi-actions] marked.parse failed, returning original:', (e as Error).message)
+    return md
+  }
+}
+
+/** Convertit en place les champs textuels Markdown → HTML. Mutation idempotente. */
+function ensureHtmlContent(body: Record<string, unknown>, ctx: string): void {
+  for (const field of CONTENT_FIELDS) {
+    const val = body[field]
+    if (typeof val !== 'string' || !val.trim()) continue
+    if (looksLikeMarkdown(val)) {
+      const html = convertMarkdownToHtml(val)
+      console.log(`[dictadevi-actions] ${ctx}: champ "${field}" converti Markdown→HTML (${val.length} → ${html.length} chars)`)
+      body[field] = html
+    }
+  }
+}
 
 /**
  * dictadevi-actions
@@ -111,6 +153,7 @@ async function listPosts(apiKey: string, params: Record<string, unknown>) {
 const getPost = (apiKey: string, slug: string) => callDictadevi('GET', `/posts/${slug}`, apiKey)
 
 async function createPost(apiKey: string, body: Record<string, unknown>) {
+  ensureHtmlContent(body, `create-post:${(body.slug as string) || '(no-slug)'}`)
   const slug = (body.slug as string) || ''
   // Upsert behaviour: if slug already exists, switch to update (with guard).
   if (slug) {
@@ -130,6 +173,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
 }
 
 async function updatePost(apiKey: string, slug: string, updates: Record<string, unknown>) {
+  ensureHtmlContent(updates, `update-post:${slug}`)
   const existing = await callDictadevi('GET', `/posts/${slug}`, apiKey)
   if (existing.status === 200 && existing.data) {
     const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
