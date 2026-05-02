@@ -12388,6 +12388,48 @@ export type Database = {
           },
         ]
       }
+      update_artifacts: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          payload: Json
+          slug: string
+          source: string
+          stage: string
+          tracked_site_id: string | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json
+          slug: string
+          source?: string
+          stage: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json
+          slug?: string
+          source?: string
+          stage?: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       url_correction_decisions: {
         Row: {
           corrected_url: string | null
