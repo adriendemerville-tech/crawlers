@@ -32,6 +32,10 @@ export function MyContent({ externalDomain }: { externalDomain?: string | null }
           <FileEdit className="h-3.5 w-3.5" />
           {t.drafts}
         </TabsTrigger>
+        <TabsTrigger value="refresh" className="gap-1.5 text-xs">
+          <RefreshCw className="h-3.5 w-3.5" />
+          {t.refresh}
+        </TabsTrigger>
         <TabsTrigger value="prompts" className="gap-1.5 text-xs">
           <FileText className="h-3.5 w-3.5" />
           {t.prompts}
