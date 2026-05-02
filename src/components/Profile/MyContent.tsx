@@ -66,6 +66,12 @@ export function MyContent({ externalDomain }: { externalDomain?: string | null }
         </Suspense>
       </TabsContent>
 
+      <TabsContent value="refresh">
+        <Suspense fallback={null}>
+          <UpdatePipelinePanel externalDomain={externalDomain} />
+        </Suspense>
+      </TabsContent>
+
       <TabsContent value="prompts">
         <Suspense fallback={null}>
           <MyPromptBlocks />
