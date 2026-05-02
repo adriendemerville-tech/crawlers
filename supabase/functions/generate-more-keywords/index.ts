@@ -376,7 +376,7 @@ async function checkNewRankings(
         method: 'POST',
         headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify(tasks),
-      }));
+      });
 
       if (response.ok) {
         const data = await response.json();
