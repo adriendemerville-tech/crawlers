@@ -46,14 +46,18 @@ export function MyContent({ externalDomain }: { externalDomain?: string | null }
           <Cpu className="h-3.5 w-3.5" />
           {t.routing}
         </TabsTrigger>
-        <TabsTrigger value="pipeline" className="gap-1.5 text-xs">
-          <Activity className="h-3.5 w-3.5" />
-          {t.pipeline}
-        </TabsTrigger>
-        <TabsTrigger value="ga4" className="gap-1.5 text-xs">
-          <LineChart className="h-3.5 w-3.5" />
-          {t.ga4}
-        </TabsTrigger>
+        {isAdmin && (
+          <TabsTrigger value="pipeline" className="gap-1.5 text-xs">
+            <Activity className="h-3.5 w-3.5" />
+            {t.pipeline}
+          </TabsTrigger>
+        )}
+        {isAdmin && (
+          <TabsTrigger value="ga4" className="gap-1.5 text-xs">
+            <LineChart className="h-3.5 w-3.5" />
+            {t.ga4}
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="dashboard">
