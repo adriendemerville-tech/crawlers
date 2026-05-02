@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { FileEdit, FileText, BarChart3, Cpu, Activity, LineChart, RefreshCw } from 'lucide-react';
 
 const MyDrafts = lazy(() => import('@/components/Profile/MyDrafts').then(m => ({ default: m.MyDrafts })));
@@ -19,6 +20,7 @@ const labels = {
 
 export function MyContent({ externalDomain }: { externalDomain?: string | null }) {
   const { language } = useLanguage();
+  const { isAdmin } = useAdmin();
   const t = labels[language as keyof typeof labels] || labels.fr;
 
   return (
@@ -44,14 +46,18 @@ export function MyContent({ externalDomain }: { externalDomain?: string | null }
           <Cpu className="h-3.5 w-3.5" />
           {t.routing}
         </TabsTrigger>
-        <TabsTrigger value="pipeline" className="gap-1.5 text-xs">
-          <Activity className="h-3.5 w-3.5" />
-          {t.pipeline}
-        </TabsTrigger>
-        <TabsTrigger value="ga4" className="gap-1.5 text-xs">
-          <LineChart className="h-3.5 w-3.5" />
-          {t.ga4}
-        </TabsTrigger>
+        {isAdmin && (
+          <TabsTrigger value="pipeline" className="gap-1.5 text-xs">
+            <Activity className="h-3.5 w-3.5" />
+            {t.pipeline}
+          </TabsTrigger>
+        )}
+        {isAdmin && (
+          <TabsTrigger value="ga4" className="gap-1.5 text-xs">
+            <LineChart className="h-3.5 w-3.5" />
+            {t.ga4}
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="dashboard">
@@ -84,17 +90,21 @@ export function MyContent({ externalDomain }: { externalDomain?: string | null }
         </Suspense>
       </TabsContent>
 
-      <TabsContent value="pipeline">
-        <Suspense fallback={null}>
-          <EditorialPipelineObservability externalDomain={externalDomain} />
-        </Suspense>
-      </TabsContent>
+      {isAdmin && (
+        <TabsContent value="pipeline">
+          <Suspense fallback={null}>
+            <EditorialPipelineObservability externalDomain={externalDomain} />
+          </Suspense>
+        </TabsContent>
+      )}
 
-      <TabsContent value="ga4">
-        <Suspense fallback={null}>
-          <GA4Explorer externalDomain={externalDomain} />
-        </Suspense>
-      </TabsContent>
+      {isAdmin && (
+        <TabsContent value="ga4">
+          <Suspense fallback={null}>
+            <GA4Explorer externalDomain={externalDomain} />
+          </Suspense>
+        </TabsContent>
+      )}
     </Tabs>
   );
 }
