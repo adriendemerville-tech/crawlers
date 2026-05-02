@@ -91,7 +91,7 @@ try {
     console.error('❌ Error:', error);
     return jsonError(errorMessage, 500);
   }
-});
+}));
 
 function extractBrandFromDomain(domain: string): string {
   const parts = domain.toLowerCase().split('.');
