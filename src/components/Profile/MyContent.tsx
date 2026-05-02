@@ -90,17 +90,21 @@ export function MyContent({ externalDomain }: { externalDomain?: string | null }
         </Suspense>
       </TabsContent>
 
-      <TabsContent value="pipeline">
-        <Suspense fallback={null}>
-          <EditorialPipelineObservability externalDomain={externalDomain} />
-        </Suspense>
-      </TabsContent>
+      {isAdmin && (
+        <TabsContent value="pipeline">
+          <Suspense fallback={null}>
+            <EditorialPipelineObservability externalDomain={externalDomain} />
+          </Suspense>
+        </TabsContent>
+      )}
 
-      <TabsContent value="ga4">
-        <Suspense fallback={null}>
-          <GA4Explorer externalDomain={externalDomain} />
-        </Suspense>
-      </TabsContent>
+      {isAdmin && (
+        <TabsContent value="ga4">
+          <Suspense fallback={null}>
+            <GA4Explorer externalDomain={externalDomain} />
+          </Suspense>
+        </TabsContent>
+      )}
     </Tabs>
   );
 }
