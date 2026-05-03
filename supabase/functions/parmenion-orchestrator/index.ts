@@ -374,6 +374,7 @@ try {
             lang: 'fr',
             task_budget: 8,
             content_priority_mode: forceContent,
+            disable_new_content: contentDisabled,
             is_iktracker: isIktracker,
             caller_user_id: authUserId || bodyUserId || null,
           }),
