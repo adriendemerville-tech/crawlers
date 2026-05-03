@@ -401,7 +401,7 @@ try {
       }
     }
 
-    const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget, content_priority_mode = false, is_iktracker = false, caller_user_id } = await req.json();
+    const { tracked_site_id, domain, force_refresh = false, lang = 'fr', task_budget, content_priority_mode = false, disable_new_content = false, is_iktracker = false, caller_user_id } = await req.json();
     if (!tracked_site_id || !domain) {
       return jsonError('tracked_site_id and domain required', 400);
     }
@@ -949,8 +949,18 @@ try {
 
     rawTasks.sort((a, b) => b.priority - a.priority);
 
+    // Throttle: when new-content creation is disabled, drop tasks that would create new pages/posts.
+    // We keep rewrite/enrich/fix/links — only block actual creations.
+    const NEW_CONTENT_ACTIONS: ActionType[] = ['create_content', 'publish_draft'];
+    const filteredTasks = disable_new_content
+      ? rawTasks.filter(t => !NEW_CONTENT_ACTIONS.includes(t.action_type as ActionType))
+      : rawTasks;
+    if (disable_new_content) {
+      console.log(`[cocoon-strategist] 🚦 disable_new_content=true → filtered ${rawTasks.length - filteredTasks.length} new-content tasks`);
+    }
+
     // Apply budget: keep top N tasks
-    const selectedTasks = rawTasks.slice(0, budget);
+    const selectedTasks = filteredTasks.slice(0, budget);
 
     // Build dependency graph (simple: content creation before linking)
     const contentCreationIds = selectedTasks
