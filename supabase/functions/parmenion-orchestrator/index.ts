@@ -296,8 +296,13 @@ try {
     // ═══ PHASE 2b: DUAL-LANE ALGORITHMIC SCORING (prescribe phase) ═══
     let scoredWorkbenchItems: any[] = [];
     // PROACTIVE MODE: Always force content if not explicitly disabled — Parménion must always find something to do
-    const forceContent = force_content_cycle === true || force_iktracker_article === true;
-    const budgetPct = typeof content_budget_pct === 'number' ? content_budget_pct : (force_iktracker_article ? 50 : 30);
+    // EXCEPT if disable_new_content=true (throttle limit reached): cycle continues but stays tech-only.
+    const contentDisabled = disable_new_content === true;
+    const forceContent = !contentDisabled && (force_content_cycle === true || force_iktracker_article === true);
+    const budgetPct = contentDisabled ? 0 : (typeof content_budget_pct === 'number' ? content_budget_pct : (force_iktracker_article ? 50 : 30));
+    if (contentDisabled) {
+      console.log(`[Parménion] 🚦 Content creation disabled for ${domain} (throttle: ${throttle_info?.created}/${throttle_info?.max} per ${throttle_info?.period}). Tech-only cycle.`);
+    }
     
     if (currentPhase === 'prescribe') {
       const userId = authUserId || bodyUserId || tracked_site_id;
