@@ -124,21 +124,40 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('tracked_sites')
-      .select('id, domain, site_name')
-      .eq('user_id', user.id)
-      .order('domain')
-      .then(({ data }) => {
-        const s = (data as TrackedSite[]) || [];
-        setSites(s);
-        // Auto-select first site
-        if (s.length > 0 && !selectedSiteId) {
-          setSelectedSiteId(s[0].id);
-          onSiteSelect?.(s[0].id, s[0].domain);
-        }
-      });
-  }, [user]);
+    const fetchSites = () => {
+      supabase
+        .from('tracked_sites')
+        .select('id, domain, site_name')
+        .eq('user_id', user.id)
+        .order('domain')
+        .then(({ data }) => {
+          const s = (data as TrackedSite[]) || [];
+          setSites(s);
+          // If currently selected site no longer exists, fall back to first
+          if (selectedSiteId && !s.some(x => x.id === selectedSiteId)) {
+            const next = s[0] || null;
+            setSelectedSiteId(next?.id || null);
+            onSiteSelect?.(next?.id || null, next?.domain || null);
+          } else if (s.length > 0 && !selectedSiteId) {
+            setSelectedSiteId(s[0].id);
+            onSiteSelect?.(s[0].id, s[0].domain);
+          }
+        });
+    };
+    fetchSites();
+
+    // Realtime: refresh when a tracked site is added or removed
+    const channel = supabase
+      .channel(`tracked_sites_sidebar_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tracked_sites', filter: `user_id=eq.${user.id}` },
+        () => fetchSites(),
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user, selectedSiteId, onSiteSelect]);
 
   // Read global admin flag to hide GSC BigQuery tab from non-admins
   useEffect(() => {
