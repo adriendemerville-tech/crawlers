@@ -9,6 +9,7 @@ import { ParmenionAddTargetModal } from './ParmenionAddTargetModal';
 import { ParmenionApiKeyManager } from './ParmenionApiKeyManager';
 import { ParmenionExecutionStatus } from './ParmenionExecutionStatus';
 import { ParmenionSlugMemory } from './ParmenionSlugMemory';
+import { ParmenionThrottleControl } from './ParmenionThrottleControl';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Target {
