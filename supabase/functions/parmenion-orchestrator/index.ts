@@ -334,10 +334,12 @@ try {
       // Option A: Budget partagé — allocate items proportionally
       // Default: 70% tech budget, 30% content budget (configurable via content_budget_pct)
       const totalSlots = 8;
-      const contentSlots = forceContent 
-        ? totalSlots  // Option D: force content → all slots to content
-        : Math.max(2, Math.round(totalSlots * budgetPct / 100));
-      const techSlots = forceContent ? 0 : totalSlots - contentSlots;
+      const contentSlots = contentDisabled
+        ? 0
+        : (forceContent
+          ? totalSlots  // Option D: force content → all slots to content
+          : Math.max(2, Math.round(totalSlots * budgetPct / 100)));
+      const techSlots = contentDisabled ? totalSlots : (forceContent ? 0 : totalSlots - contentSlots);
       
       const allocatedTech = techItems.slice(0, techSlots);
       const allocatedContent = contentItems.slice(0, contentSlots);
