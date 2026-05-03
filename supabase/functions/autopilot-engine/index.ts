@@ -147,6 +147,36 @@ try {
           continue;
         }
 
+        // ═══ Throttle guard : limite de contenus créés par jour/semaine (parmenion_targets) ═══
+        const { data: targetThrottle } = await supabase
+          .from('parmenion_targets')
+          .select('max_content_per_period, throttle_period')
+          .eq('domain', siteInfo.domain)
+          .eq('is_active', true)
+          .maybeSingle();
+        if (targetThrottle) {
+          const maxPerPeriod = (targetThrottle as any).max_content_per_period ?? 3;
+          const period = ((targetThrottle as any).throttle_period as 'day' | 'week') ?? 'day';
+          const sinceMs = period === 'week' ? 7 * 24 * 3600 * 1000 : 24 * 3600 * 1000;
+          const since = new Date(Date.now() - sinceMs).toISOString();
+          const { count: createdCount } = await supabase
+            .from('parmenion_decision_log')
+            .select('id', { count: 'exact', head: true })
+            .eq('tracked_site_id', config.tracked_site_id)
+            .eq('action_type', 'cms')
+            .eq('status', 'completed')
+            .gte('created_at', since);
+          if ((createdCount ?? 0) >= maxPerPeriod) {
+            results.push({
+              site_id: config.tracked_site_id,
+              domain: siteInfo.domain,
+              status: 'throttled',
+              error: `Limite atteinte : ${createdCount}/${maxPerPeriod} contenus créés sur la dernière ${period === 'week' ? 'semaine' : 'journée'}.`,
+            });
+            continue;
+          }
+        }
+
         // ═══ Update status to 'running' ═══
         await supabase
           .from('autopilot_configs')
