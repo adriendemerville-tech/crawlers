@@ -8493,7 +8493,9 @@ export type Database = {
           id: string
           is_active: boolean
           label: string
+          max_content_per_period: number
           platform: string
+          throttle_period: Database["public"]["Enums"]["parmenion_throttle_period"]
           updated_at: string
         }
         Insert: {
@@ -8506,7 +8508,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           label: string
+          max_content_per_period?: number
           platform?: string
+          throttle_period?: Database["public"]["Enums"]["parmenion_throttle_period"]
           updated_at?: string
         }
         Update: {
@@ -8519,7 +8523,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           label?: string
+          max_content_per_period?: number
           platform?: string
+          throttle_period?: Database["public"]["Enums"]["parmenion_throttle_period"]
           updated_at?: string
         }
         Relationships: []
@@ -13629,6 +13635,7 @@ export type Database = {
         | "aws"
         | "vercel"
         | "wordpress_plugin"
+      parmenion_throttle_period: "day" | "week"
       report_type:
         | "seo_technical"
         | "seo_strategic"
@@ -13858,6 +13865,7 @@ export const Constants = {
         "vercel",
         "wordpress_plugin",
       ],
+      parmenion_throttle_period: ["day", "week"],
       report_type: [
         "seo_technical",
         "seo_strategic",
