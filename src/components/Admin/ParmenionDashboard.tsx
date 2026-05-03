@@ -86,14 +86,17 @@ export function ParmenionDashboard() {
 
       {targets.map((t) => (
         <TabsContent key={t.id} value={t.domain.replace(/\./g, '-')} forceMount className="data-[state=inactive]:hidden">
-          <ParmenionTargetPanel
-            targetLabel={t.label}
-            targetDomain={t.domain}
-            eventType={t.event_type}
-            historyTitle={`Historique ${t.label}`}
-            historyDescription={`Actions CMS effectuées sur ${t.domain}`}
-            showForceArticle
-          />
+          <div className="space-y-4">
+            <ParmenionThrottleControl targetId={t.id} targetLabel={t.label} />
+            <ParmenionTargetPanel
+              targetLabel={t.label}
+              targetDomain={t.domain}
+              eventType={t.event_type}
+              historyTitle={`Historique ${t.label}`}
+              historyDescription={`Actions CMS effectuées sur ${t.domain}`}
+              showForceArticle
+            />
+          </div>
         </TabsContent>
       ))}
 
