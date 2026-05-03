@@ -125,15 +125,16 @@ export function ScannedUrlsRegistry() {
         if (d) trackedDomainsMap[d] = { userId: ts.user_id, createdAt: ts.created_at };
       }
 
-      // Merge: start with analyzed_urls
+      // Merge: start with analyzed_urls — but EXCLUDE any URL whose domain is tracked
+      // (tracked sites are monitored scans, they would falsify the public scan registry)
       const mergedMap: Record<string, MergedUrl> = {};
-      
+
       for (const u of (urlsRes.data || [])) {
         const d = u.domain?.toLowerCase();
-        const isAlsoTracked = d ? !!trackedDomainsMap[d] : false;
-        const userId = eventsByUrl[u.url] || (isAlsoTracked && d ? trackedDomainsMap[d].userId : undefined);
+        if (d && trackedDomainsMap[d]) continue; // skip — will be added from tracked_sites below
+        const userId = eventsByUrl[u.url];
         const profile = userId ? profileMap[userId] : undefined;
-        
+
         mergedMap[d || u.url] = {
           id: u.id,
           url: u.url,
@@ -141,13 +142,13 @@ export function ScannedUrlsRegistry() {
           analysis_count: u.analysis_count,
           first_analyzed_at: u.first_analyzed_at,
           last_analyzed_at: u.last_analyzed_at,
-          source: isAlsoTracked ? 'both' : 'analyzed',
+          source: 'analyzed',
           userName: profile?.name,
           userEmail: profile?.email,
         };
       }
 
-      // Add tracked_sites domains not already in analyzed_urls
+      // Add tracked_sites domains (always shown as 'tracked', never mixed with scan counts)
       for (const ts of trackedSites) {
         const d = ts.domain?.toLowerCase();
         if (!d || mergedMap[d]) continue;

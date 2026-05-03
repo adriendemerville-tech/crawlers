@@ -766,7 +766,23 @@ export function useMyTracking() {
   };
 
   // ─── Remove site ───
+  // Supprime un site suivi : désactive aussi l'autopilot lié et la cible Parménion
+  // sur le même domaine afin que plus aucun audit / cycle automatique ne tourne.
   const handleRemoveSite = async (siteId: string, t: Record<string, string>) => {
+    const site = sites.find(s => s.id === siteId);
+    // 1) Désactiver l'autopilot (si présent)
+    await supabase
+      .from('autopilot_configs')
+      .update({ is_active: false })
+      .eq('tracked_site_id', siteId);
+    // 2) Désactiver la cible Parménion sur ce domaine (si présente)
+    if (site?.domain) {
+      await supabase
+        .from('parmenion_targets')
+        .update({ is_active: false })
+        .ilike('domain', site.domain);
+    }
+    // 3) Suppression du site suivi
     await supabase.from('tracked_sites').delete().eq('id', siteId);
     setSites(prev => prev.filter(s => s.id !== siteId));
     if (selectedSite === siteId) {
