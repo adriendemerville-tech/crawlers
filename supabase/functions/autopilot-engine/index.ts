@@ -148,6 +148,10 @@ try {
         }
 
         // ═══ Throttle guard : limite de contenus créés par jour/semaine (parmenion_targets) ═══
+        // Au lieu de skip le cycle, on bascule en mode "tech-only" : pas de nouveau contenu,
+        // le cycle continue avec audit/diagnostic/prescription sur les actions techniques.
+        let contentThrottled = false;
+        let throttleInfo: { created: number; max: number; period: 'day' | 'week' } | null = null;
         const { data: targetThrottle } = await supabase
           .from('parmenion_targets')
           .select('max_content_per_period, throttle_period')
@@ -159,21 +163,18 @@ try {
           const period = ((targetThrottle as any).throttle_period as 'day' | 'week') ?? 'day';
           const sinceMs = period === 'week' ? 7 * 24 * 3600 * 1000 : 24 * 3600 * 1000;
           const since = new Date(Date.now() - sinceMs).toISOString();
+          // On compte les créations réelles d'articles (create-post) sur la période.
           const { count: createdCount } = await supabase
-            .from('parmenion_decision_log')
+            .from('autopilot_modification_log')
             .select('id', { count: 'exact', head: true })
             .eq('tracked_site_id', config.tracked_site_id)
-            .eq('action_type', 'cms')
+            .eq('action_type', 'create-post')
             .eq('status', 'completed')
             .gte('created_at', since);
+          throttleInfo = { created: createdCount ?? 0, max: maxPerPeriod, period };
           if ((createdCount ?? 0) >= maxPerPeriod) {
-            results.push({
-              site_id: config.tracked_site_id,
-              domain: siteInfo.domain,
-              status: 'throttled',
-              error: `Limite atteinte : ${createdCount}/${maxPerPeriod} contenus créés sur la dernière ${period === 'week' ? 'semaine' : 'journée'}.`,
-            });
-            continue;
+            contentThrottled = true;
+            console.log(`[AutopilotEngine] 🚦 Content throttled for ${siteInfo.domain}: ${createdCount}/${maxPerPeriod} per ${period}. Cycle continues in tech-only mode.`);
           }
         }
 
@@ -222,9 +223,11 @@ try {
               cycle_number: cycleNumber,
               user_id: config.user_id,
               forced_phase: phase,
-              force_content_cycle: config.force_content_cycle ?? true,
-              content_budget_pct: config.content_budget_pct ?? 30,
-              force_iktracker_article: config.force_iktracker_article ?? false,
+              force_content_cycle: contentThrottled ? false : (config.force_content_cycle ?? true),
+              content_budget_pct: contentThrottled ? 0 : (config.content_budget_pct ?? 30),
+              force_iktracker_article: contentThrottled ? false : (config.force_iktracker_article ?? false),
+              disable_new_content: contentThrottled,
+              throttle_info: throttleInfo,
             }),
           });
 

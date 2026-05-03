@@ -57,7 +57,7 @@ try {
       authUserId = auth.userId;
     }
 
-    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct, force_iktracker_article } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct, force_iktracker_article, disable_new_content, throttle_info } = await req.json();
     if (!tracked_site_id || !domain) {
       return jsonError('tracked_site_id and domain required', 400);
     }
@@ -296,8 +296,13 @@ try {
     // ═══ PHASE 2b: DUAL-LANE ALGORITHMIC SCORING (prescribe phase) ═══
     let scoredWorkbenchItems: any[] = [];
     // PROACTIVE MODE: Always force content if not explicitly disabled — Parménion must always find something to do
-    const forceContent = force_content_cycle === true || force_iktracker_article === true;
-    const budgetPct = typeof content_budget_pct === 'number' ? content_budget_pct : (force_iktracker_article ? 50 : 30);
+    // EXCEPT if disable_new_content=true (throttle limit reached): cycle continues but stays tech-only.
+    const contentDisabled = disable_new_content === true;
+    const forceContent = !contentDisabled && (force_content_cycle === true || force_iktracker_article === true);
+    const budgetPct = contentDisabled ? 0 : (typeof content_budget_pct === 'number' ? content_budget_pct : (force_iktracker_article ? 50 : 30));
+    if (contentDisabled) {
+      console.log(`[Parménion] 🚦 Content creation disabled for ${domain} (throttle: ${throttle_info?.created}/${throttle_info?.max} per ${throttle_info?.period}). Tech-only cycle.`);
+    }
     
     if (currentPhase === 'prescribe') {
       const userId = authUserId || bodyUserId || tracked_site_id;
@@ -329,10 +334,12 @@ try {
       // Option A: Budget partagé — allocate items proportionally
       // Default: 70% tech budget, 30% content budget (configurable via content_budget_pct)
       const totalSlots = 8;
-      const contentSlots = forceContent 
-        ? totalSlots  // Option D: force content → all slots to content
-        : Math.max(2, Math.round(totalSlots * budgetPct / 100));
-      const techSlots = forceContent ? 0 : totalSlots - contentSlots;
+      const contentSlots = contentDisabled
+        ? 0
+        : (forceContent
+          ? totalSlots  // Option D: force content → all slots to content
+          : Math.max(2, Math.round(totalSlots * budgetPct / 100)));
+      const techSlots = contentDisabled ? totalSlots : (forceContent ? 0 : totalSlots - contentSlots);
       
       const allocatedTech = techItems.slice(0, techSlots);
       const allocatedContent = contentItems.slice(0, contentSlots);
@@ -367,6 +374,7 @@ try {
             lang: 'fr',
             task_budget: 8,
             content_priority_mode: forceContent,
+            disable_new_content: contentDisabled,
             is_iktracker: isIktracker,
             caller_user_id: authUserId || bodyUserId || null,
           }),
