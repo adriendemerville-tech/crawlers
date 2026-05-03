@@ -223,9 +223,11 @@ try {
               cycle_number: cycleNumber,
               user_id: config.user_id,
               forced_phase: phase,
-              force_content_cycle: config.force_content_cycle ?? true,
-              content_budget_pct: config.content_budget_pct ?? 30,
-              force_iktracker_article: config.force_iktracker_article ?? false,
+              force_content_cycle: contentThrottled ? false : (config.force_content_cycle ?? true),
+              content_budget_pct: contentThrottled ? 0 : (config.content_budget_pct ?? 30),
+              force_iktracker_article: contentThrottled ? false : (config.force_iktracker_article ?? false),
+              disable_new_content: contentThrottled,
+              throttle_info: throttleInfo,
             }),
           });
 
