@@ -958,6 +958,9 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       ${crawlMeta.performanceScore ? `
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Core Web Vitals (PageSpeed)</h3>
+        <p style="font-size:12px;color:var(--muted-foreground,#666);margin:0 0 10px;line-height:1.5;">
+          Performances constatées sur session mobile, peuvent différer des performances ordinateur. Depuis 2021, les performances mobiles sont prépondérantes pour le ranking dans Google. En France en 2026, 65% des requêtes search sont mobiles. En revanche, la conversion est 2x plus importante sur desktop.
+        </p>
         <div class="stat-grid-4">
           <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance /100</div></div>
           ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.lcp) > 60 ? (Number(crawlMeta.lcp) / 1000).toFixed(2) : Number(crawlMeta.lcp).toFixed(2)}s</div><div class="label">LCP</div></div>` : ''}
