@@ -3886,10 +3886,12 @@ export type Database = {
           images_total: number | null
           images_without_alt: number | null
           index_source: string | null
+          intent_confidence: number | null
           internal_links: number | null
           is_indexable: boolean | null
           issues: Json | null
           meta_description: string | null
+          page_intent: string | null
           page_type_override: string | null
           path: string
           redirect_url: string | null
@@ -3929,10 +3931,12 @@ export type Database = {
           images_total?: number | null
           images_without_alt?: number | null
           index_source?: string | null
+          intent_confidence?: number | null
           internal_links?: number | null
           is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
+          page_intent?: string | null
           page_type_override?: string | null
           path?: string
           redirect_url?: string | null
@@ -3972,10 +3976,12 @@ export type Database = {
           images_total?: number | null
           images_without_alt?: number | null
           index_source?: string | null
+          intent_confidence?: number | null
           internal_links?: number | null
           is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
+          page_intent?: string | null
           page_type_override?: string | null
           path?: string
           redirect_url?: string | null
