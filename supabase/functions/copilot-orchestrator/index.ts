@@ -52,6 +52,7 @@ import {
   wrapUserContent,
   wrapToolResult,
 } from '../_shared/promptSafety.ts';
+import { embedText, toPgVector } from '../_shared/embeddings.ts';
 
 interface OrchestratorBody {
   persona: string;
@@ -382,6 +383,36 @@ async function runAgentLoop(args: {
     ...history,
   ];
   if (args.primingMessages) messages.push(...args.primingMessages);
+
+  // ── Mémoire vectorielle hybride (cross-sessions) ──────
+  // On récupère les K tours sémantiquement les plus proches du message courant
+  // dans les AUTRES sessions du même user (même persona). Injecté comme tool_result
+  // wrappé via wrapToolResult — le LLM le voit comme une donnée, pas une instruction.
+  // RÈGLE : on n'embed et ne recherche QUE les messages utilisateur (anti auto-renforcement).
+  if (args.initialUserMessage?.role === 'user' && typeof args.initialUserMessage.content === 'string') {
+    const recallText = await recallMemoryContext(
+      service,
+      args.userId,
+      persona.id,
+      args.initialUserMessage.content,
+      sessionId,
+    );
+    if (recallText) {
+      const tcId = `mem_${Math.random().toString(36).slice(2, 12)}`;
+      messages.push({
+        role: 'assistant',
+        content: null,
+        tool_calls: [{ id: tcId, type: 'function', function: { name: 'memory_recall', arguments: '{}' } }],
+      });
+      messages.push({
+        role: 'tool',
+        tool_call_id: tcId,
+        name: 'memory_recall',
+        content: wrapToolResult('memory_recall', { ok: true, recalled_turns: recallText }),
+      });
+    }
+  }
+
   if (args.initialUserMessage) {
     // Wrap le contenu utilisateur pour empêcher prompt injection
     const wrapped = args.initialUserMessage.role === 'user' && typeof args.initialUserMessage.content === 'string'
@@ -951,4 +982,135 @@ function jsonError(message: string, status = 400) {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status,
   });
+}
+
+// ═══════════════════════════════════════════════════════════
+// recallMemoryContext — récupère les K tours user les plus pertinents
+// (cross-sessions, même persona, même user) via la RPC hybride.
+// Retourne un texte compact prêt à injecter, ou null si rien d'intéressant.
+//
+// RÈGLES (cf. note d'architecture §4.1) :
+//   - On embed UNIQUEMENT le message user courant (pas d'assistant_reply).
+//   - On exclut la session courante pour éviter de re-citer le tour qu'on est
+//     en train de traiter.
+//   - Best-effort : toute erreur => null (jamais bloquant).
+// ═══════════════════════════════════════════════════════════
+const MEMORY_TOP_K = 4;
+const MEMORY_MIN_SCORE = 0.45;
+
+async function recallMemoryContext(
+  service: ReturnType<typeof getServiceClient>,
+  userId: string,
+  personaId: string,
+  query: string,
+  excludeSessionId: string,
+): Promise<string | null> {
+  try {
+    const trimmed = query.trim();
+    if (trimmed.length < 8) return null;
+
+    const emb = await embedText(trimmed);
+    if (!emb) return null;
+
+    // RPC SECURITY DEFINER filtrée par auth.uid() — on impersonate via headers ?
+    // Le service client bypasse auth.uid() (= NULL), donc on doit appeler la RPC
+    // avec un client user-scoped. On utilise une variante : exécution via SQL avec
+    // set_config local. Plus simple : on fait une requête directe vector.
+    const { data, error } = await service.rpc('search_copilot_turns_hybrid', {
+      query_embedding: toPgVector(emb.embedding),
+      query_text: trimmed,
+      p_persona: personaId,
+      p_session_exclude: excludeSessionId,
+      match_count: MEMORY_TOP_K,
+    });
+
+    // Service role => auth.uid() est NULL => RPC retourne 0 ligne.
+    // Fallback : requête directe filtrée manuellement par user_id.
+    let rows: Array<{ message: string; assistant_reply: string | null; created_at: string; hybrid_score: number }>;
+    if (error || !data || (Array.isArray(data) && data.length === 0)) {
+      const { data: fallback, error: fbErr } = await service
+        .from('copilot_actions')
+        .select('id, session_id, input, created_at, embedding')
+        .eq('user_id', userId)
+        .eq('persona', personaId)
+        .eq('skill', '_user_message')
+        .neq('session_id', excludeSessionId)
+        .not('embedding', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (fbErr || !fallback || fallback.length === 0) return null;
+
+      // Cosine en JS sur les 50 derniers (cher mais OK pour 50)
+      const queryVec = emb.embedding;
+      const scored = fallback
+        .map((r: { id: string; session_id: string; input: { message?: string; text?: string } | null; created_at: string; embedding: string | number[] }) => {
+          const v = typeof r.embedding === 'string'
+            ? JSON.parse(r.embedding) as number[]
+            : r.embedding;
+          if (!Array.isArray(v) || v.length !== queryVec.length) return null;
+          let dot = 0, na = 0, nb = 0;
+          for (let i = 0; i < queryVec.length; i++) {
+            dot += queryVec[i] * v[i];
+            na += queryVec[i] * queryVec[i];
+            nb += v[i] * v[i];
+          }
+          const sim = dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-9);
+          return {
+            id: r.id,
+            session_id: r.session_id,
+            message: r.input?.message ?? r.input?.text ?? '',
+            created_at: r.created_at,
+            hybrid_score: sim,
+          };
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null && x.hybrid_score >= MEMORY_MIN_SCORE)
+        .sort((a, b) => b.hybrid_score - a.hybrid_score)
+        .slice(0, MEMORY_TOP_K);
+
+      if (scored.length === 0) return null;
+
+      // Récupère les replies associées
+      const sessionIds = [...new Set(scored.map((s) => s.session_id))];
+      const { data: replies } = await service
+        .from('copilot_actions')
+        .select('session_id, output, created_at')
+        .eq('user_id', userId)
+        .eq('skill', '_assistant_reply')
+        .in('session_id', sessionIds)
+        .order('created_at', { ascending: true });
+
+      const replyMap = new Map<string, string>();
+      for (const s of scored) {
+        const reply = (replies ?? []).find((r: { session_id: string; output: { content?: string } | null; created_at: string }) =>
+          r.session_id === s.session_id && new Date(r.created_at) > new Date(s.created_at),
+        );
+        if (reply?.output?.content) replyMap.set(s.id, String(reply.output.content));
+      }
+
+      rows = scored.map((s) => ({
+        message: s.message,
+        assistant_reply: replyMap.get(s.id) ?? null,
+        created_at: s.created_at,
+        hybrid_score: s.hybrid_score,
+      }));
+    } else {
+      rows = (data as Array<{ message: string; assistant_reply: string | null; created_at: string; hybrid_score: number }>)
+        .filter((r) => r.hybrid_score >= MEMORY_MIN_SCORE);
+    }
+
+    if (rows.length === 0) return null;
+
+    // Format compact pour le LLM
+    const formatted = rows.map((r, i) => {
+      const date = new Date(r.created_at).toISOString().slice(0, 10);
+      const userMsg = r.message.slice(0, 280);
+      const reply = (r.assistant_reply ?? '').slice(0, 320);
+      return `[${i + 1}] ${date} (score=${r.hybrid_score.toFixed(2)})\n  Q: ${userMsg}${reply ? `\n  R: ${reply}` : ''}`;
+    }).join('\n\n');
+
+    return `Tours conversationnels antérieurs sémantiquement proches (autres sessions du même utilisateur, même persona):\n\n${formatted}`;
+  } catch (e) {
+    console.warn('[recallMemoryContext] erreur:', (e as Error).message);
+    return null;
+  }
 }
