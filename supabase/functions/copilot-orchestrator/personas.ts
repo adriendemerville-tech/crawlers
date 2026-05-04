@@ -87,6 +87,7 @@ export const STRATEGIST_CONFIG: PersonaConfig = {
     // Analyse / planification automatique
     analyze_cocoon: 'auto',
     plan_editorial: 'auto',
+    audit_internal_mesh: 'auto',
     // Navigation OK
     navigate_to: 'auto',
     open_audit_panel: 'auto',
