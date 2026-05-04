@@ -47,6 +47,11 @@ import {
   LLM_TIMEOUT_MS,
   SKILL_TIMEOUT_MS,
 } from './helpers.ts';
+import {
+  PROMPT_SAFETY_PREAMBLE,
+  wrapUserContent,
+  wrapToolResult,
+} from '../_shared/promptSafety.ts';
 
 interface OrchestratorBody {
   persona: string;
@@ -373,11 +378,17 @@ async function runAgentLoop(args: {
     : '';
 
   const messages: ChatMessage[] = [
-    { role: 'system', content: persona.systemPrompt + creatorBanner + contextStr },
+    { role: 'system', content: PROMPT_SAFETY_PREAMBLE + persona.systemPrompt + creatorBanner + contextStr },
     ...history,
   ];
   if (args.primingMessages) messages.push(...args.primingMessages);
-  if (args.initialUserMessage) messages.push(args.initialUserMessage);
+  if (args.initialUserMessage) {
+    // Wrap le contenu utilisateur pour empêcher prompt injection
+    const wrapped = args.initialUserMessage.role === 'user' && typeof args.initialUserMessage.content === 'string'
+      ? { ...args.initialUserMessage, content: wrapUserContent(args.initialUserMessage.content) }
+      : args.initialUserMessage;
+    messages.push(wrapped);
+  }
 
   // ── Tools autorisés ──
   // En mode créateur : toutes les skills du registry sauf les inviolables (P1 #5).
@@ -450,7 +461,7 @@ async function runAgentLoop(args: {
           role: 'tool',
           tool_call_id: call.id,
           name: skillName,
-          content: JSON.stringify({ ok: false, error: errMsg }),
+          content: wrapToolResult(skillName, { ok: false, error: errMsg }),
         });
         executedActions.push({ skill: skillName, status: 'rejected', error: isInviolable ? 'inviolable' : 'forbidden' });
         continue;
@@ -475,7 +486,7 @@ async function runAgentLoop(args: {
           role: 'tool',
           tool_call_id: call.id,
           name: skillName,
-          content: JSON.stringify({
+          content: wrapToolResult(skillName, {
             ok: false,
             awaiting_approval: true,
             action_id: approvalAction?.id,
@@ -517,7 +528,7 @@ async function runAgentLoop(args: {
           role: 'tool',
           tool_call_id: call.id,
           name: skillName,
-          content: JSON.stringify(result),
+          content: wrapToolResult(skillName, result),
         });
       }
     }
@@ -806,7 +817,7 @@ async function loadHistory(
 
     if (row.skill === '_user_message') {
       const content = (row.input as { content?: string })?.content ?? '';
-      messages.push({ role: 'user', content });
+      messages.push({ role: 'user', content: wrapUserContent(content) });
       continue;
     }
     if (row.skill === '_assistant_reply') {
@@ -844,7 +855,7 @@ async function loadHistory(
       role: 'tool',
       tool_call_id: toolCallId,
       name: row.skill,
-      content: JSON.stringify(toolResult),
+      content: wrapToolResult(row.skill, toolResult),
     });
   }
   return messages;
