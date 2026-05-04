@@ -383,6 +383,36 @@ async function runAgentLoop(args: {
     ...history,
   ];
   if (args.primingMessages) messages.push(...args.primingMessages);
+
+  // ── Mémoire vectorielle hybride (cross-sessions) ──────
+  // On récupère les K tours sémantiquement les plus proches du message courant
+  // dans les AUTRES sessions du même user (même persona). Injecté comme tool_result
+  // wrappé via wrapToolResult — le LLM le voit comme une donnée, pas une instruction.
+  // RÈGLE : on n'embed et ne recherche QUE les messages utilisateur (anti auto-renforcement).
+  if (args.initialUserMessage?.role === 'user' && typeof args.initialUserMessage.content === 'string') {
+    const recallText = await recallMemoryContext(
+      service,
+      args.userId,
+      persona.id,
+      args.initialUserMessage.content,
+      sessionId,
+    );
+    if (recallText) {
+      const tcId = `mem_${Math.random().toString(36).slice(2, 12)}`;
+      messages.push({
+        role: 'assistant',
+        content: null,
+        tool_calls: [{ id: tcId, type: 'function', function: { name: 'memory_recall', arguments: '{}' } }],
+      });
+      messages.push({
+        role: 'tool',
+        tool_call_id: tcId,
+        name: 'memory_recall',
+        content: wrapToolResult('memory_recall', { ok: true, recalled_turns: recallText }),
+      });
+    }
+  }
+
   if (args.initialUserMessage) {
     // Wrap le contenu utilisateur pour empêcher prompt injection
     const wrapped = args.initialUserMessage.role === 'user' && typeof args.initialUserMessage.content === 'string'
