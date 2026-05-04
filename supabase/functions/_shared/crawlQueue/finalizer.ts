@@ -5,6 +5,7 @@ import type { PageAnalysis } from './types.ts';
 import { detectDuplicates, computeBFSDepths } from './duplicateDetector.ts';
 import { saveRawAuditData } from '../saveRawAuditData.ts';
 import { classifyAndAssignRings } from '../spiralClassifier.ts';
+import { classifyPageIntent, aggregateIntents } from '../pageIntent.ts';
 
 export async function finalizeJob(
   supabase: any,
