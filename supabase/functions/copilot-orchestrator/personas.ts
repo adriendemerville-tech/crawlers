@@ -39,6 +39,7 @@ export const FELIX_CONFIG: PersonaConfig = {
     read_site_kpis: 'auto',
     read_user_profile: 'auto',
     read_documentation: 'auto',
+    audit_internal_mesh: 'auto',
     // Mémoire persistante & carte d'identité (Sprint Q5 — Bloc Mémoire & Identité)
     read_site_memory: 'auto',
     write_site_memory: 'auto',
