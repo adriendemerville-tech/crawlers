@@ -44,7 +44,7 @@ Deno.serve(handleRequest(async (req) => {
 
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       console.error('[gmb-places-autocomplete] API status:', data.status, data.error_message)
-      return jsonError(data.error_message || data.status, predictions: [], 502)
+      return jsonError(data.error_message || data.status, { predictions: [] }, 502)
     }
 
     // Fetch details for each place to get rating, reviews, etc.
