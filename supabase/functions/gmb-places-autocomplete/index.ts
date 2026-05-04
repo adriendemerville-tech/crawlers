@@ -91,6 +91,6 @@ Deno.serve(handleRequest(async (req) => {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[gmb-places-autocomplete] error:', msg)
-    return jsonError(msg, predictions: [], 500)
+    return jsonError(msg, { predictions: [] }, 500)
   }
 })
