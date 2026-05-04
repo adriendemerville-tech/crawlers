@@ -302,4 +302,4 @@ try {
     console.error('[gmb-local-competitors] error:', msg)
     return jsonError(msg, 500)
   }
-})
+}))
