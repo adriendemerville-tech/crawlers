@@ -10748,6 +10748,7 @@ export type Database = {
           domain: string
           error_message: string | null
           id: string
+          intent_distribution: Json | null
           max_depth: number | null
           status: string
           tone_consistency_score: number | null
@@ -10767,6 +10768,7 @@ export type Database = {
           domain: string
           error_message?: string | null
           id?: string
+          intent_distribution?: Json | null
           max_depth?: number | null
           status?: string
           tone_consistency_score?: number | null
@@ -10786,6 +10788,7 @@ export type Database = {
           domain?: string
           error_message?: string | null
           id?: string
+          intent_distribution?: Json | null
           max_depth?: number | null
           status?: string
           tone_consistency_score?: number | null
