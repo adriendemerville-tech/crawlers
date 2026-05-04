@@ -444,7 +444,7 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
             temperature: 0.2,
             max_tokens: 1500,
           }),
-        });
+    });
 
         if (validationResponse.ok) {
           const validationData = await validationResponse.json();
