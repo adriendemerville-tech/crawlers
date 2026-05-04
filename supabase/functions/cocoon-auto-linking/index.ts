@@ -231,10 +231,16 @@ Réponds UNIQUEMENT avec un JSON array:
                         properties: {
                           target_url: { type: 'string' },
                           anchor_text: { type: 'string' },
+                          anchor_variants: {
+                            type: 'array',
+                            items: { type: 'string' },
+                            minItems: 1,
+                            maxItems: 3,
+                          },
                           context_sentence: { type: 'string' },
                           confidence: { type: 'number' },
                         },
-                        required: ['target_url', 'anchor_text', 'context_sentence', 'confidence'],
+                        required: ['target_url', 'anchor_text', 'anchor_variants', 'context_sentence', 'confidence'],
                         additionalProperties: false,
                       },
                     },
