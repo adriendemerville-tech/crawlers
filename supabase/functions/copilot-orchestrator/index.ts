@@ -855,7 +855,7 @@ async function loadHistory(
       role: 'tool',
       tool_call_id: toolCallId,
       name: row.skill,
-      content: JSON.stringify(toolResult),
+      content: wrapToolResult(row.skill, toolResult),
     });
   }
   return messages;
