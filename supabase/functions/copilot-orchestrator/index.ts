@@ -817,7 +817,7 @@ async function loadHistory(
 
     if (row.skill === '_user_message') {
       const content = (row.input as { content?: string })?.content ?? '';
-      messages.push({ role: 'user', content });
+      messages.push({ role: 'user', content: wrapUserContent(content) });
       continue;
     }
     if (row.skill === '_assistant_reply') {
