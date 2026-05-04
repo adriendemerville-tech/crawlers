@@ -69,15 +69,26 @@ try {
 
     const domain = site.domain?.replace(/^www\./, '') || ''
     const isIktracker = isIktrackerDomain(domain)
-    const isCrawlers = domain.includes('crawlers')
+
+    // ── Priority 1: connected CMS (cms_connections) → universal route via cms-patch-content
+    const { data: cmsConn } = await supabase
+      .from('cms_connections')
+      .select('id, platform, status')
+      .eq('tracked_site_id', tracked_site_id)
+      .eq('status', 'connected')
+      .maybeSingle()
 
     let deployResult: unknown
+    let path: 'cms_connection' | 'iktracker' | 'site_rules'
 
-    if (isIktracker) {
-      // ── Path 1: IKtracker API ──
+    if (cmsConn) {
+      path = 'cms_connection'
+      deployResult = await deployViaCmsPatch(authHeader, tracked_site_id, recommendations, mode)
+    } else if (isIktracker) {
+      path = 'iktracker'
       deployResult = await deployViaIktracker(supabase, recommendations, mode)
     } else {
-      // ── Path 2: site_script_rules (widget injection) ──
+      path = 'site_rules'
       deployResult = await deployViaSiteRules(supabase, site, user.id, recommendations, mode)
     }
 
@@ -88,13 +99,14 @@ try {
       event_data: {
         tracked_site_id,
         domain,
-        path: isIktracker ? 'iktracker' : 'site_rules',
+        path,
+        platform: cmsConn?.platform || (isIktracker ? 'iktracker' : 'widget'),
         mode,
         count: recommendations.length,
       },
     })
 
-    return jsonOk({ success: true, path: isIktracker ? 'iktracker' : 'site_rules', mode, result: deployResult })
+    return jsonOk({ success: true, path, mode, result: deployResult })
   } catch (error) {
     console.error('[cocoon-deploy-links] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
