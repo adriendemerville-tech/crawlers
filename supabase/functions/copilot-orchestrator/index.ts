@@ -461,7 +461,7 @@ async function runAgentLoop(args: {
           role: 'tool',
           tool_call_id: call.id,
           name: skillName,
-          content: JSON.stringify({ ok: false, error: errMsg }),
+          content: wrapToolResult(skillName, { ok: false, error: errMsg }),
         });
         executedActions.push({ skill: skillName, status: 'rejected', error: isInviolable ? 'inviolable' : 'forbidden' });
         continue;
