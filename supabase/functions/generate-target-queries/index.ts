@@ -555,7 +555,7 @@ function detectObviousInconsistencies(generated: any, ctx: StrategicContext, bra
     const themeMatches = themes.filter(t => {
       const words = t.split(/\s+/).filter((w: string) => w.length > 3);
       return words.some(w => queriesText.includes(w));
-    }));
+    });
     if (themeMatches.length === 0 && themes.length >= 3) {
       console.log(`[CoherenceCheck] No keyword theme match found in queries`);
       return true;
