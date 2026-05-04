@@ -60,6 +60,26 @@ export async function finalizeJob(
     }
   }
 
+  // ── Page intent classification (heuristic, deterministic, no LLM) ──
+  let intentDistribution: ReturnType<typeof aggregateIntents> | null = null;
+  if (pages.length > 0) {
+    for (const page of pages) {
+      const sig = classifyPageIntent({
+        url: page.url, path: page.path, title: page.title, h1: page.h1,
+        meta_description: page.meta_description, schema_org_types: page.schema_org_types,
+        word_count: page.word_count, internal_links: page.internal_links,
+        external_links: page.external_links,
+      });
+      page.page_intent = sig.intent;
+      page.intent_confidence = sig.confidence;
+      await supabase.from('crawl_pages')
+        .update({ page_intent: sig.intent, intent_confidence: sig.confidence })
+        .eq('id', page.id);
+    }
+    intentDistribution = aggregateIntents(pages);
+    console.log(`[Worker] 🎯 Intent distribution:`, intentDistribution.by_intent);
+  }
+
   // ── AI Summary ──
   let aiSummary = '';
   let aiRecommendations: any[] = [];
@@ -74,6 +94,7 @@ export async function finalizeJob(
     avg_score: avgScore,
     ai_summary: aiSummary,
     ai_recommendations: aiRecommendations,
+    intent_distribution: intentDistribution,
     completed_at: new Date().toISOString(),
   }).eq('id', job.crawl_id);
 
