@@ -1809,6 +1809,114 @@ const deploy_cocoon_plan: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// audit_internal_mesh — Rapport synthétique maillage interne
+// (orphelines + dead-ends + hubs faibles + intentions)
+// ═══════════════════════════════════════════════════════════
+const audit_internal_mesh: SkillDefinition = {
+  name: 'audit_internal_mesh',
+  description: "Audit synthétique du maillage interne d'un site : orphelines, dead-ends, hubs sous-maillés, distribution Know/Do/Buy/Navigate/Unknown. Renvoie un rapport markdown lisible + métriques agrégées. Aucune modification du site.",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string', description: 'UUID du site suivi' },
+      domain: { type: 'string', description: 'Domaine du site (fallback si tracked_site_id absent)' },
+    },
+    required: [],
+  },
+  handler: async (input, ctx) => {
+    const trackedSiteId = String(input.tracked_site_id ?? '').trim();
+    const domain = String(input.domain ?? '').trim().replace(/^www\./, '');
+    if (!trackedSiteId && !domain) return { ok: false, error: 'tracked_site_id ou domain requis' };
+
+    // 1. Find latest completed crawl
+    let crawlQuery = ctx.supabase.from('site_crawls').select('id, domain, intent_distribution, completed_at').eq('status', 'completed').order('created_at', { ascending: false }).limit(1);
+    if (domain) crawlQuery = crawlQuery.or(`domain.eq.${domain},domain.eq.www.${domain}`);
+    const { data: crawls } = await crawlQuery;
+    const crawl = crawls?.[0];
+    if (!crawl) return { ok: false, error: 'Aucun crawl terminé pour ce site. Lance un audit d’abord.' };
+
+    // 2. Pull pages
+    const { data: pages } = await ctx.supabase
+      .from('crawl_pages')
+      .select('url, path, title, h1, internal_links, external_links, anchor_texts, page_intent, intent_confidence, seo_score, crawl_depth, is_indexable')
+      .eq('crawl_id', crawl.id);
+    const list = (pages ?? []) as any[];
+    if (list.length === 0) return { ok: false, error: 'Crawl vide' };
+
+    // 3. Compute inbound link count → orphans + dead-ends
+    const norm = (u: string) => { try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; } };
+    const inbound = new Map<string, number>();
+    for (const p of list) inbound.set(norm(p.url), 0);
+    for (const p of list) {
+      for (const link of (p.anchor_texts || [])) {
+        if (link.type === 'internal') {
+          const target = norm(link.href.startsWith('/') ? `https://x${link.href}` : link.href);
+          if (inbound.has(target)) inbound.set(target, (inbound.get(target) || 0) + 1);
+        }
+      }
+    }
+    const orphans = list.filter(p => (inbound.get(norm(p.url)) || 0) === 0 && norm(p.url) !== '/');
+    const deadEnds = list.filter(p => (p.internal_links || 0) === 0 && p.is_indexable);
+    const weakHubs = list.filter(p => (p.crawl_depth ?? 99) <= 1 && (p.internal_links || 0) < 5);
+
+    // 4. Intent agg (use stored or recompute summary)
+    const dist = (crawl as any).intent_distribution || (() => {
+      const acc: Record<string, number> = { know: 0, do: 0, buy: 0, navigate: 0, unknown: 0 };
+      for (const p of list) acc[p.page_intent || 'unknown'] = (acc[p.page_intent || 'unknown'] || 0) + 1;
+      return { total: list.length, by_intent: acc };
+    })();
+
+    // 5. Build markdown report
+    const fmt = (n: number) => String(n).padStart(3, ' ');
+    const md = [
+      `## Audit maillage interne — ${crawl.domain}`,
+      `_Crawl : ${new Date(crawl.completed_at).toLocaleDateString('fr-FR')} • ${list.length} pages_`,
+      '',
+      `### Distribution d'intentions`,
+      `- **Know** (informationnel) : ${dist.by_intent?.know ?? 0}`,
+      `- **Do** (action) : ${dist.by_intent?.do ?? 0}`,
+      `- **Buy** (transactionnel) : ${dist.by_intent?.buy ?? 0}`,
+      `- **Navigate** (navigation) : ${dist.by_intent?.navigate ?? 0}`,
+      `- **Unknown** (signal < 0,7) : ${dist.by_intent?.unknown ?? 0}`,
+      '',
+      `### Anomalies détectées`,
+      `- Pages **orphelines** (zéro lien entrant) : **${orphans.length}**`,
+      `- Pages **dead-end** (zéro lien sortant interne) : **${deadEnds.length}**`,
+      `- **Hubs faibles** (depth ≤ 1, < 5 liens sortants) : **${weakHubs.length}**`,
+      '',
+    ];
+    if (orphans.length > 0) {
+      md.push(`#### Top 10 orphelines`);
+      for (const p of orphans.slice(0, 10)) md.push(`- ${p.url}`);
+      md.push('');
+    }
+    if (deadEnds.length > 0) {
+      md.push(`#### Top 5 dead-ends`);
+      for (const p of deadEnds.slice(0, 5)) md.push(`- ${p.url}`);
+      md.push('');
+    }
+    if (weakHubs.length > 0) {
+      md.push(`#### Hubs à renforcer`);
+      for (const p of weakHubs.slice(0, 5)) md.push(`- ${p.url} _(${p.internal_links} liens)_`);
+    }
+
+    return {
+      ok: true,
+      data: {
+        crawl_id: crawl.id,
+        total_pages: list.length,
+        intent_distribution: dist,
+        orphans_count: orphans.length,
+        dead_ends_count: deadEnds.length,
+        weak_hubs_count: weakHubs.length,
+        report_markdown: md.join('\n'),
+        ui_action: trackedSiteId ? { action: 'navigate', path: `/app/cocoon?tab=plan&site=${trackedSiteId}` } : undefined,
+      },
+    };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // REGISTRY
 // ═══════════════════════════════════════════════════════════
 
