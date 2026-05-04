@@ -3587,6 +3587,7 @@ export type Database = {
           action_category: string | null
           created_at: string
           duration_ms: number | null
+          embedding: string | null
           error_message: string | null
           id: string
           input: Json
@@ -3596,12 +3597,14 @@ export type Database = {
           session_id: string
           skill: string
           status: string
+          tsv: unknown
           user_id: string
         }
         Insert: {
           action_category?: string | null
           created_at?: string
           duration_ms?: number | null
+          embedding?: string | null
           error_message?: string | null
           id?: string
           input?: Json
@@ -3611,12 +3614,14 @@ export type Database = {
           session_id: string
           skill: string
           status?: string
+          tsv?: unknown
           user_id: string
         }
         Update: {
           action_category?: string | null
           created_at?: string
           duration_ms?: number | null
+          embedding?: string | null
           error_message?: string | null
           id?: string
           input?: Json
@@ -3626,6 +3631,7 @@ export type Database = {
           session_id?: string
           skill?: string
           status?: string
+          tsv?: unknown
           user_id?: string
         }
         Relationships: [
@@ -13558,6 +13564,30 @@ export type Database = {
           total_score: number
         }[]
       }
+      search_copilot_turns_hybrid: {
+        Args: {
+          bm25_weight?: number
+          cosine_weight?: number
+          match_count?: number
+          p_persona?: string
+          p_session_exclude?: string
+          query_embedding: string
+          query_text: string
+        }
+        Returns: {
+          assistant_reply: string
+          bm25_rank: number
+          cosine_sim: number
+          created_at: string
+          hybrid_score: number
+          id: string
+          message: string
+          persona: string
+          session_id: string
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       title_similarity: { Args: { a: string; b: string }; Returns: number }
       upsert_analyzed_url: {
         Args: { p_domain: string; p_url: string }
