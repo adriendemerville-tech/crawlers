@@ -486,7 +486,7 @@ async function runAgentLoop(args: {
           role: 'tool',
           tool_call_id: call.id,
           name: skillName,
-          content: JSON.stringify({
+          content: wrapToolResult(skillName, {
             ok: false,
             awaiting_approval: true,
             action_id: approvalAction?.id,
