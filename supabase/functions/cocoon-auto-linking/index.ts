@@ -292,6 +292,7 @@ Réponds UNIQUEMENT avec un JSON array:
             source_url,
             target_url: s.target_url,
             anchor_text: s.anchor_text,
+            anchor_variants: s.anchor_variants,
             context_sentence: s.context_sentence,
             confidence: s.confidence,
             is_active: true,
