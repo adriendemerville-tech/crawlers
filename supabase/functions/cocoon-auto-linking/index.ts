@@ -162,10 +162,18 @@ try {
 
     // Add pre-scan matches (no AI needed)
     for (const match of preScanMatches.slice(0, max_links)) {
+      // Build naive variants from the matched title (full / first 4 words / first 2 words)
+      const words = match.matchedText.split(/\s+/).filter(Boolean);
+      const variants = [
+        match.matchedText,
+        words.slice(0, 4).join(' '),
+        words.slice(0, 2).join(' '),
+      ].filter((v, i, a) => v && v.length >= 3 && a.indexOf(v) === i).slice(0, 3);
       suggestions.push({
         target_url: match.url,
         target_title: match.title,
-        anchor_text: match.matchedText,
+        anchor_text: variants[0],
+        anchor_variants: variants,
         context_sentence: `Le titre "${match.matchedText}" apparaît déjà dans le texte source.`,
         confidence: 0.95,
         pre_scan_match: true,
