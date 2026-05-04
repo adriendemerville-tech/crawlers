@@ -505,7 +505,7 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+}));
 
 /**
  * Quick heuristic check: does the generated output seem inconsistent with strategic context?
