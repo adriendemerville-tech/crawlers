@@ -203,14 +203,14 @@ ${targetList}
 
 RÈGLES:
 - Choisis maximum ${remainingSlots} liens les plus pertinents sémantiquement
-- L'ancre doit être un texte EXISTANT dans le contenu source, ou une variante naturelle
-- L'ancre doit faire 2-6 mots, pas le titre exact de la page cible
-- Privilégie les ancres contextuelles (pas de "cliquez ici")
+- Pour chaque lien, propose 3 variantes d'ancres ordonnées de la plus naturelle à la plus exacte (anchor_variants)
+- L'ancre principale (anchor_text) = première variante
+- Chaque ancre fait 2-6 mots, pas le titre exact de la page cible, pas de "cliquez ici"
 - Indique la phrase complète du contenu où placer le lien
 - Score de confiance entre 0 et 1
 
 Réponds UNIQUEMENT avec un JSON array:
-[{"target_url":"...","anchor_text":"...","context_sentence":"...","confidence":0.8}]`;
+[{"target_url":"...","anchor_text":"...","anchor_variants":["v1","v2","v3"],"context_sentence":"...","confidence":0.8}]`;
 
         try {
           const aiResp = await callLovableAI({
