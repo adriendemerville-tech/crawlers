@@ -1934,6 +1934,7 @@ const SKILLS: Record<string, SkillDefinition> = {
   analyze_cocoon,
   plan_editorial,
   deploy_cocoon_plan,
+  audit_internal_mesh,
   // Mémoire persistante & enrichissement carte d'identité (Sprint Q5)
   read_site_memory,
   write_site_memory,
