@@ -2220,6 +2220,7 @@ export type Database = {
       cocoon_auto_links: {
         Row: {
           anchor_text: string
+          anchor_variants: string[] | null
           confidence: number | null
           context_sentence: string | null
           created_at: string | null
@@ -2235,6 +2236,7 @@ export type Database = {
         }
         Insert: {
           anchor_text: string
+          anchor_variants?: string[] | null
           confidence?: number | null
           context_sentence?: string | null
           created_at?: string | null
@@ -2250,6 +2252,7 @@ export type Database = {
         }
         Update: {
           anchor_text?: string
+          anchor_variants?: string[] | null
           confidence?: number | null
           context_sentence?: string | null
           created_at?: string | null
