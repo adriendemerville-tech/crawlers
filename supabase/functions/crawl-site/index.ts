@@ -580,11 +580,24 @@ Deno.serve(handleRequest(async (req) => {
     // If all pages were reused, finalize immediately
     if (urls.length === 0) {
       console.log(`[${crawlId}] ♻️ 100% incrémental — toutes les ${reusedCount} pages réutilisées`);
+
+      // Recompute intent_distribution from reused pages
+      let intentDistribution: any = null;
+      try {
+        const { aggregateIntents } = await import('../_shared/pageIntent.ts');
+        const { data: reusedPages } = await supabase
+          .from('crawl_pages')
+          .select('page_intent, intent_confidence')
+          .eq('crawl_id', crawlId);
+        intentDistribution = aggregateIntents(reusedPages || []);
+      } catch (e) { console.warn('[crawl-site] intent agg failed', e); }
+
       await supabase.from('site_crawls').update({
         status: 'completed',
         completed_at: new Date().toISOString(),
         crawled_pages: reusedCount,
         total_pages: reusedCount,
+        intent_distribution: intentDistribution,
       }).eq('id', crawlId);
 
       return new Response(JSON.stringify({
@@ -597,6 +610,7 @@ Deno.serve(handleRequest(async (req) => {
         incremental: true,
         sitemapPageCount,
         gscIndexedCount,
+        intent_distribution: intentDistribution,
         message: `♻️ ${reusedCount} pages réutilisées du crawl précédent — aucun re-crawl nécessaire`,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
