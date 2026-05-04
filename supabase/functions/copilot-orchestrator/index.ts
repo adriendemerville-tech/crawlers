@@ -52,6 +52,7 @@ import {
   wrapUserContent,
   wrapToolResult,
 } from '../_shared/promptSafety.ts';
+import { embedText, toPgVector } from '../_shared/embeddings.ts';
 
 interface OrchestratorBody {
   persona: string;
