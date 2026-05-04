@@ -47,6 +47,11 @@ import {
   LLM_TIMEOUT_MS,
   SKILL_TIMEOUT_MS,
 } from './helpers.ts';
+import {
+  PROMPT_SAFETY_PREAMBLE,
+  wrapUserContent,
+  wrapToolResult,
+} from '../_shared/promptSafety.ts';
 
 interface OrchestratorBody {
   persona: string;
