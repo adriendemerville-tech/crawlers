@@ -378,11 +378,17 @@ async function runAgentLoop(args: {
     : '';
 
   const messages: ChatMessage[] = [
-    { role: 'system', content: persona.systemPrompt + creatorBanner + contextStr },
+    { role: 'system', content: PROMPT_SAFETY_PREAMBLE + persona.systemPrompt + creatorBanner + contextStr },
     ...history,
   ];
   if (args.primingMessages) messages.push(...args.primingMessages);
-  if (args.initialUserMessage) messages.push(args.initialUserMessage);
+  if (args.initialUserMessage) {
+    // Wrap le contenu utilisateur pour empêcher prompt injection
+    const wrapped = args.initialUserMessage.role === 'user' && typeof args.initialUserMessage.content === 'string'
+      ? { ...args.initialUserMessage, content: wrapUserContent(args.initialUserMessage.content) }
+      : args.initialUserMessage;
+    messages.push(wrapped);
+  }
 
   // ── Tools autorisés ──
   // En mode créateur : toutes les skills du registry sauf les inviolables (P1 #5).
