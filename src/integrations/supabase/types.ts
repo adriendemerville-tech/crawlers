@@ -2220,6 +2220,7 @@ export type Database = {
       cocoon_auto_links: {
         Row: {
           anchor_text: string
+          anchor_variants: string[] | null
           confidence: number | null
           context_sentence: string | null
           created_at: string | null
@@ -2235,6 +2236,7 @@ export type Database = {
         }
         Insert: {
           anchor_text: string
+          anchor_variants?: string[] | null
           confidence?: number | null
           context_sentence?: string | null
           created_at?: string | null
@@ -2250,6 +2252,7 @@ export type Database = {
         }
         Update: {
           anchor_text?: string
+          anchor_variants?: string[] | null
           confidence?: number | null
           context_sentence?: string | null
           created_at?: string | null
@@ -3886,10 +3889,12 @@ export type Database = {
           images_total: number | null
           images_without_alt: number | null
           index_source: string | null
+          intent_confidence: number | null
           internal_links: number | null
           is_indexable: boolean | null
           issues: Json | null
           meta_description: string | null
+          page_intent: string | null
           page_type_override: string | null
           path: string
           redirect_url: string | null
@@ -3929,10 +3934,12 @@ export type Database = {
           images_total?: number | null
           images_without_alt?: number | null
           index_source?: string | null
+          intent_confidence?: number | null
           internal_links?: number | null
           is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
+          page_intent?: string | null
           page_type_override?: string | null
           path?: string
           redirect_url?: string | null
@@ -3972,10 +3979,12 @@ export type Database = {
           images_total?: number | null
           images_without_alt?: number | null
           index_source?: string | null
+          intent_confidence?: number | null
           internal_links?: number | null
           is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
+          page_intent?: string | null
           page_type_override?: string | null
           path?: string
           redirect_url?: string | null
@@ -10742,6 +10751,7 @@ export type Database = {
           domain: string
           error_message: string | null
           id: string
+          intent_distribution: Json | null
           max_depth: number | null
           status: string
           tone_consistency_score: number | null
@@ -10761,6 +10771,7 @@ export type Database = {
           domain: string
           error_message?: string | null
           id?: string
+          intent_distribution?: Json | null
           max_depth?: number | null
           status?: string
           tone_consistency_score?: number | null
@@ -10780,6 +10791,7 @@ export type Database = {
           domain?: string
           error_message?: string | null
           id?: string
+          intent_distribution?: Json | null
           max_depth?: number | null
           status?: string
           tone_consistency_score?: number | null
