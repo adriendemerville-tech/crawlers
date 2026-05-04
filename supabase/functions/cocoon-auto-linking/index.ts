@@ -260,10 +260,15 @@ Réponds UNIQUEMENT avec un JSON array:
             
             for (const link of aiLinks.slice(0, remainingSlots)) {
               const targetInfo = needsAI.find(t => t.url === link.target_url);
+              const variants: string[] = Array.isArray(link.anchor_variants) && link.anchor_variants.length > 0
+                ? link.anchor_variants.filter((v: any) => typeof v === 'string' && v.length >= 2).slice(0, 3)
+                : [link.anchor_text];
+              if (!variants.includes(link.anchor_text)) variants.unshift(link.anchor_text);
               suggestions.push({
                 target_url: link.target_url,
                 target_title: targetInfo?.title || targetInfo?.h1 || link.target_url,
-                anchor_text: link.anchor_text,
+                anchor_text: variants[0] || link.anchor_text,
+                anchor_variants: variants.slice(0, 3),
                 context_sentence: link.context_sentence,
                 confidence: Math.min(1, Math.max(0, link.confidence || 0.7)),
                 pre_scan_match: false,
