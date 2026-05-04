@@ -528,7 +528,7 @@ async function runAgentLoop(args: {
           role: 'tool',
           tool_call_id: call.id,
           name: skillName,
-          content: JSON.stringify(result),
+          content: wrapToolResult(skillName, result),
         });
       }
     }
