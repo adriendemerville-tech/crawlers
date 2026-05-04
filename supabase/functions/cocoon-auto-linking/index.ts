@@ -17,6 +17,8 @@ interface LinkSuggestion {
   target_url: string;
   target_title: string;
   anchor_text: string;
+  /** Top-3 alternative anchors (anchor_text is variants[0]). */
+  anchor_variants: string[];
   context_sentence: string;
   confidence: number;
   pre_scan_match: boolean;
