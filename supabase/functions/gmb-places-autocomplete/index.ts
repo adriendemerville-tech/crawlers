@@ -37,14 +37,14 @@ Deno.serve(handleRequest(async (req) => {
     const response = await fetch(url.toString())
     if (!response.ok) {
       console.error('[gmb-places-autocomplete] Google API error:', response.status)
-      return jsonError('Google API error', predictions: [], 502)
+      return jsonError('Google API error', { predictions: [] }, 502)
     }
 
     const data = await response.json()
 
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       console.error('[gmb-places-autocomplete] API status:', data.status, data.error_message)
-      return jsonError(data.error_message || data.status, predictions: [], 502)
+      return jsonError(data.error_message || data.status, { predictions: [] }, 502)
     }
 
     // Fetch details for each place to get rating, reviews, etc.
