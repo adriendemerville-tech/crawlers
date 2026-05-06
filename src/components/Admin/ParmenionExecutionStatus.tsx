@@ -36,7 +36,7 @@ function PhaseChip({ phase, status }: { phase: Phase; status: PhaseStatus }) {
     skipped: { icon: MinusCircle, label: 'Non atteinte', cls: 'border-border text-muted-foreground/60' },
   };
 
-  const c = status ? config[status] : config.skipped;
+  const c = status && config[status] ? config[status] : config.skipped;
   const Icon = c.icon;
 
   return (
