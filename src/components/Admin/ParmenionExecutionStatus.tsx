@@ -25,6 +25,20 @@ interface SiteRow {
   phases: Record<Phase, PhaseStatus>;
 }
 
+interface TrackedSiteRef {
+  id: string;
+  domain: string;
+}
+
+interface AutopilotConfigRef {
+  tracked_site_id: string;
+  implementation_mode: ImplementationMode | null;
+  is_active: boolean | null;
+  status: string | null;
+  last_cycle_at: string | null;
+  total_cycles_run: number | null;
+}
+
 function PhaseChip({ phase, status }: { phase: Phase; status: PhaseStatus }) {
   const config: Record<string, { icon: typeof CheckCircle2; label: string; cls: string }> = {
     completed: { icon: CheckCircle2, label: 'Exécutée', cls: 'border-emerald-500/40 text-emerald-700 dark:text-emerald-300' },
@@ -88,16 +102,17 @@ export function ParmenionExecutionStatus() {
       .select('id, domain')
       .in('domain', domains);
 
-    const siteIdByDomain = new Map((sites || []).map((s: any) => [s.domain, s.id]));
-    const trackedIds = (sites || []).map((s: any) => s.id);
+    const siteRows = (sites || []) as TrackedSiteRef[];
+    const siteIdByDomain = new Map(siteRows.map((s) => [s.domain, s.id]));
+    const trackedIds = siteRows.map((s) => s.id);
 
     const { data: configs } = await supabase
       .from('autopilot_configs')
       .select('tracked_site_id, implementation_mode, is_active, status, last_cycle_at, total_cycles_run')
       .in('tracked_site_id', trackedIds.length ? trackedIds : ['00000000-0000-0000-0000-000000000000']);
 
-    const configByDomain = new Map<string, any>();
-    for (const cfg of configs || []) {
+    const configByDomain = new Map<string, AutopilotConfigRef>();
+    for (const cfg of ((configs || []) as AutopilotConfigRef[])) {
       const domain = [...siteIdByDomain.entries()].find(([, id]) => id === cfg.tracked_site_id)?.[0];
       if (domain) configByDomain.set(domain, cfg);
     }
