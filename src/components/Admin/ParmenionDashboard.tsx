@@ -80,12 +80,12 @@ export function ParmenionDashboard() {
         </Button>
       </div>
 
-      <TabsContent value="execution" forceMount className="data-[state=inactive]:hidden">
+      <TabsContent value="execution">
         <ParmenionExecutionStatus />
       </TabsContent>
 
       {targets.map((t) => (
-        <TabsContent key={t.id} value={t.domain.replace(/\./g, '-')} forceMount className="data-[state=inactive]:hidden">
+        <TabsContent key={t.id} value={t.domain.replace(/\./g, '-')}>
           <div className="space-y-4">
             <ParmenionThrottleControl targetId={t.id} targetLabel={t.label} />
             <ParmenionTargetPanel
@@ -100,7 +100,7 @@ export function ParmenionDashboard() {
         </TabsContent>
       ))}
 
-      <TabsContent value="task-plan" forceMount className="data-[state=inactive]:hidden">
+      <TabsContent value="task-plan">
         <div className="space-y-4">
           {targets.map((t) => (
             <ParmenionTaskPlan key={t.id} domain={t.domain} />
@@ -108,15 +108,15 @@ export function ParmenionDashboard() {
         </div>
       </TabsContent>
 
-      <TabsContent value="integrations" forceMount className="data-[state=inactive]:hidden">
+      <TabsContent value="integrations">
         <ParmenionApiKeyManager />
       </TabsContent>
 
-      <TabsContent value="slug-memory" forceMount className="data-[state=inactive]:hidden">
+      <TabsContent value="slug-memory">
         <ParmenionSlugMemory />
       </TabsContent>
 
-      <TabsContent value="stats" forceMount className="data-[state=inactive]:hidden">
+      <TabsContent value="stats">
         <ParmenionFuncStats />
       </TabsContent>
 
