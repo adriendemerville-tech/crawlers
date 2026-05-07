@@ -642,6 +642,11 @@ const Index = () => {
 
         {/* ─── Homepage marketing sections ─── */}
 
+        {/* Témoignages — preuve sociale immédiate après le hero */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <TestimonialsCarousel />
+        </Suspense>
+
         {/* Pain Points — before Pro Agency */}
         <Suspense fallback={<SectionSkeleton />}>
           <PainPointsSection />
@@ -857,9 +862,6 @@ const Index = () => {
 
 
 
-        <Suspense fallback={<SectionSkeleton />}>
-          <TestimonialsCarousel />
-        </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
           <FAQSection />
         </Suspense>

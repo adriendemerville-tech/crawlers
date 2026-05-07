@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { FileSearch, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { TrustBadge } from '@/components/TrustBadge';
 
 // Lazy load framer-motion - only needed after hydration for animations
 const MotionSpan = lazy(() => 
@@ -56,6 +57,14 @@ function HeroSectionComponent() {
       </div>
 
       <div className="relative mx-auto w-full max-w-5xl text-center">
+        {/* Sur-titre SEO + GEO */}
+        <p className="mb-3 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-amber-400">
+          {language === 'fr'
+            ? 'SEO Google + GEO IA · un seul audit'
+            : language === 'es'
+            ? 'SEO Google + GEO IA · una sola auditoría'
+            : 'Google SEO + AI GEO · one single audit'}
+        </p>
         {/* Animated headline */}
         <h1 className="mb-6 text-xl font-extrabold tracking-tight leading-[1.15] sm:text-5xl lg:text-[4rem] xl:text-7xl font-display text-center sm:whitespace-nowrap">
           <span
@@ -129,14 +138,19 @@ function HeroSectionComponent() {
                 <span className="font-bold text-amber-400 text-lg">
                   {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
                 </span>
-                <span className="text-xs font-normal text-muted-foreground">SEO-GEO. OFFERT</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {language === 'fr' ? '20 crédits offerts' : language === 'es' ? '20 créditos gratis' : '20 free credits'}
+                </span>
               </div>
             </Button>
           </Link>
         </div>
 
+        {/* Trust badge — preuve sociale immédiate */}
+        <TrustBadge className="mt-4" />
+
         {/* Secondary CTAs */}
-        <div className="mt-6 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <div className="mt-2 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-foreground dark:text-primary-foreground">
             {language === 'fr' ? 'Créer un compte gratuit →' : language === 'es' ? 'Crear una cuenta gratis →' : 'Create a free account →'}
           </Link>
