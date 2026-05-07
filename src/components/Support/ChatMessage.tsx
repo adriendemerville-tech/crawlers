@@ -47,13 +47,13 @@ export function ChatMessage({ content, isAdmin, isOwn, createdAt, deviceInfo, is
         className={cn(
           'max-w-[80%] rounded-lg px-3 py-2 text-sm relative',
           isAdmin
-            ? 'bg-violet-100 dark:bg-violet-900/40 text-foreground'
-            : 'bg-primary text-primary-foreground'
+            ? 'bg-violet-600 text-white dark:bg-violet-900/40 dark:text-white'
+            : 'bg-gray-100 text-gray-900 dark:bg-primary dark:text-primary-foreground'
         )}
       >
         {isAdmin && (
-          <span className="text-xs font-medium text-violet-600 dark:text-violet-400 block mb-1">
-            Support
+          <span className="text-xs font-medium text-white/90 block mb-1">
+            Félix
           </span>
         )}
 
@@ -80,9 +80,9 @@ export function ChatMessage({ content, isAdmin, isOwn, createdAt, deviceInfo, is
             {canEdit && (
               <button
                 onClick={() => { setEditContent(content); setEditing(true); }}
-                className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800"
+                className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/20 dark:hover:bg-violet-800"
               >
-                <Pencil className="h-3 w-3 text-muted-foreground" />
+                <Pencil className="h-3 w-3 text-white/80 dark:text-muted-foreground" />
               </button>
             )}
           </>
@@ -91,8 +91,8 @@ export function ChatMessage({ content, isAdmin, isOwn, createdAt, deviceInfo, is
         <span className={cn(
           'text-[10px] block mt-1',
           isAdmin 
-            ? 'text-violet-500 dark:text-violet-400' 
-            : 'text-primary-foreground/70'
+            ? 'text-white/70 dark:text-violet-300' 
+            : 'text-gray-500 dark:text-primary-foreground/70'
         )}>
           {format(new Date(createdAt), 'HH:mm', { locale: fr })}
         </span>
@@ -101,7 +101,7 @@ export function ChatMessage({ content, isAdmin, isOwn, createdAt, deviceInfo, is
         {isAdminView && !isAdmin && deviceInfo && (
           <div className={cn(
             'flex items-center gap-1 mt-1.5 pt-1.5 border-t text-[9px] leading-tight',
-            'border-primary-foreground/20 text-primary-foreground/50'
+            'border-gray-300 text-gray-500 dark:border-primary-foreground/20 dark:text-primary-foreground/50'
           )}>
             <DeviceIcon className="h-3 w-3 shrink-0" />
             <span>
