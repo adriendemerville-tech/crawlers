@@ -101,7 +101,7 @@ export function ChatMessage({ content, isAdmin, isOwn, createdAt, deviceInfo, is
         {isAdminView && !isAdmin && deviceInfo && (
           <div className={cn(
             'flex items-center gap-1 mt-1.5 pt-1.5 border-t text-[9px] leading-tight',
-            'border-primary-foreground/20 text-primary-foreground/50'
+            'border-gray-300 text-gray-500 dark:border-primary-foreground/20 dark:text-primary-foreground/50'
           )}>
             <DeviceIcon className="h-3 w-3 shrink-0" />
             <span>
