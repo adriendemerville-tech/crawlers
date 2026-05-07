@@ -80,9 +80,9 @@ export function ChatMessage({ content, isAdmin, isOwn, createdAt, deviceInfo, is
             {canEdit && (
               <button
                 onClick={() => { setEditContent(content); setEditing(true); }}
-                className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-violet-200 dark:hover:bg-violet-800"
+                className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/20 dark:hover:bg-violet-800"
               >
-                <Pencil className="h-3 w-3 text-muted-foreground" />
+                <Pencil className="h-3 w-3 text-white/80 dark:text-muted-foreground" />
               </button>
             )}
           </>
