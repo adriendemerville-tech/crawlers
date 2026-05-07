@@ -204,7 +204,16 @@ try {
         }
 
         // ═══ Backlog guard : si > 5 décisions CMS planned non exécutées, pause le site ═══
+        // Peut être désactivé par CMS via parmenion_targets.backlog_guard_paused = true.
         const PLANNED_BACKLOG_THRESHOLD = 5;
+        const { data: targetGuard } = await supabase
+          .from('parmenion_targets')
+          .select('backlog_guard_paused')
+          .eq('domain', siteInfo.domain)
+          .eq('is_active', true)
+          .maybeSingle();
+        const backlogGuardDisabled = (targetGuard as any)?.backlog_guard_paused === true;
+
         const { count: plannedBacklog } = await supabase
           .from('parmenion_decision_log')
           .select('id', { count: 'exact', head: true })
@@ -212,7 +221,7 @@ try {
           .eq('action_type', 'cms')
           .eq('status', 'planned');
 
-        if ((plannedBacklog ?? 0) > PLANNED_BACKLOG_THRESHOLD) {
+        if (!backlogGuardDisabled && (plannedBacklog ?? 0) > PLANNED_BACKLOG_THRESHOLD) {
           await supabase
             .from('autopilot_configs')
             .update({ status: 'paused', updated_at: new Date().toISOString() })

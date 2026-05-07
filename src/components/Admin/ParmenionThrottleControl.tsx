@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Gauge, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -19,20 +20,23 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
   const { toast } = useToast();
   const [maxContent, setMaxContent] = useState<number>(3);
   const [period, setPeriod] = useState<Period>('day');
+  const [backlogGuardPaused, setBacklogGuardPaused] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [togglingGuard, setTogglingGuard] = useState(false);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       const { data } = await supabase
         .from('parmenion_targets')
-        .select('max_content_per_period, throttle_period')
+        .select('max_content_per_period, throttle_period, backlog_guard_paused')
         .eq('id', targetId)
         .maybeSingle();
       if (data) {
         setMaxContent((data as any).max_content_per_period ?? 3);
         setPeriod(((data as any).throttle_period as Period) ?? 'day');
+        setBacklogGuardPaused(!!(data as any).backlog_guard_paused);
       }
       setLoading(false);
     })();
@@ -49,6 +53,26 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Limite mise à jour', description: `${maxContent} contenu(s) max / ${period === 'day' ? 'jour' : 'semaine'} pour ${targetLabel}.` });
+    }
+  };
+
+  const toggleBacklogGuard = async (checked: boolean) => {
+    setTogglingGuard(true);
+    const { error } = await supabase
+      .from('parmenion_targets')
+      .update({ backlog_guard_paused: checked })
+      .eq('id', targetId);
+    setTogglingGuard(false);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      setBacklogGuardPaused(checked);
+      toast({
+        title: checked ? 'Backlog Guard en pause' : 'Backlog Guard réactivé',
+        description: checked
+          ? `Parménion peut publier librement sur ${targetLabel} sans limite de file d'attente.`
+          : `Parménion sera pausé au-delà de 5 décisions CMS en attente sur ${targetLabel}.`,
+      });
     }
   };
 
@@ -94,6 +118,23 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
         <p className="text-xs text-muted-foreground basis-full">
           0 = aucune création (mises à jour uniquement). Au-delà de la limite, Parménion saute le cycle de création.
         </p>
+
+        <div className="basis-full border-t pt-3 mt-2 flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <Label htmlFor={`guard-${targetId}`} className="flex items-center gap-2">
+              Pause Backlog Guard
+            </Label>
+            <p className="text-xs text-muted-foreground max-w-md">
+              Si activé, Parménion ignore le seuil des 5 décisions CMS en attente et publie à son rythme d'origine sur ce CMS.
+            </p>
+          </div>
+          <Switch
+            id={`guard-${targetId}`}
+            checked={backlogGuardPaused}
+            onCheckedChange={toggleBacklogGuard}
+            disabled={loading || togglingGuard}
+          />
+        </div>
       </CardContent>
     </Card>
   );
