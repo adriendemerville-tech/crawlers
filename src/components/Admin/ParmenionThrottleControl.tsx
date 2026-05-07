@@ -118,6 +118,27 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
         <p className="text-xs text-muted-foreground basis-full">
           0 = aucune création (mises à jour uniquement). Au-delà de la limite, Parménion saute le cycle de création.
         </p>
+
+        <div className="basis-full border-t pt-3 mt-2 flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <Label htmlFor={`guard-${targetId}`} className="flex items-center gap-2">
+              Pause Backlog Guard
+            </Label>
+            <p className="text-xs text-muted-foreground max-w-md">
+              Si activé, Parménion ignore le seuil des 5 décisions CMS en attente et publie à son rythme d'origine sur ce CMS.
+            </p>
+          </div>
+          <Switch
+            id={`guard-${targetId}`}
+            checked={backlogGuardPaused}
+            onCheckedChange={toggleBacklogGuard}
+            disabled={loading || togglingGuard}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
       </CardContent>
     </Card>
   );
