@@ -137,7 +137,7 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
   const loopItems = [...tickerItems, ...tickerItems];
 
   return (
-    <div className="w-full mb-4 space-y-1">
+    <div className="w-full mb-2 space-y-0.5">
       <div className="flex items-center justify-end gap-1">
         <button
           onClick={() => setHidden(true)}
@@ -153,7 +153,7 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
         onClick={() => setPaused(p => !p)}
         title={paused ? 'Cliquer pour reprendre' : 'Cliquer pour mettre en pause'}
       >
-        <div ref={scrollRef} className="flex gap-3 overflow-x-hidden pb-1">
+        <div ref={scrollRef} className="flex gap-3 overflow-x-hidden pb-0.5">
           {loopItems.map((item, idx) => {
             const Icon = item.icon;
             return (
