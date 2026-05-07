@@ -483,7 +483,7 @@ export default function ConversionOptimizer() {
                   variant="outline"
                   onClick={handleAnalyze}
                   disabled={!selectedPageUrl || analyzing}
-                  className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                  className="gap-2"
                 >
                   {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
                   {analyzing ? 'Analyse en cours...' : 'Analyser'}
@@ -492,7 +492,7 @@ export default function ConversionOptimizer() {
                   variant="outline"
                   onClick={() => setShowReport(true)}
                   disabled={!result}
-                  className="gap-2 bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                  className="gap-2"
                 >
                   <FileText className="h-4 w-4" />
                   Rapport
@@ -501,9 +501,7 @@ export default function ConversionOptimizer() {
                   variant="outline"
                   onClick={() => setShowContentArchitect(true)}
                   disabled={!freshAnalysis || analyzing}
-                  className={`gap-2 transition-all ${freshAnalysis && !analyzing
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
-                    : 'bg-transparent text-white/40 border-white/20 cursor-not-allowed'}`}
+                  className="gap-2"
                 >
                   <PenTool className="h-4 w-4" />
                   Optimiser
