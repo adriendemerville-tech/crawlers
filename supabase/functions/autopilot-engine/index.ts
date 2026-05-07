@@ -44,6 +44,85 @@ import { trackAnalyticsEvent, pushIktrackerEvent } from '../_shared/autopilot/ik
 import { runPostAudit, runPostDiagnose } from '../_shared/autopilot/postDiagnose.ts';
 import { checkSemanticGate } from '../_shared/autopilot/semanticGate.ts';
 import { markDeployedItems } from '../_shared/autopilot/postExecute.ts';
+import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
+
+/** Slugify FR title for iktracker create-post. */
+function slugifyFr(s: string): string {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+/**
+ * Adapter Prescribe V3 → cms_actions for iktracker/dictadevi.
+ * V3 produces { strategist_task, _prescribe_v3 } but no cms_actions; iktracker-actions
+ * needs an explicit create-post payload. We pick the first missing_page (or task title),
+ * run the editorial pipeline (briefing → strategist → writer → tonalizer) and emit one
+ * create-post action in DRAFT status.
+ */
+async function buildV3CmsActionsForIktracker(
+  decision: any, site: SiteInfo, supabase: any, config: AutopilotConfig,
+): Promise<Array<Record<string, unknown>> | null> {
+  const payload = decision?.action?.payload;
+  if (!payload?._prescribe_v3) return null;
+  const task = payload.strategist_task;
+  if (!task) return null;
+
+  const goalType = decision?.goal?.type || '';
+  const isContent = goalType === 'content_creation' || goalType === 'content_gap'
+    || (typeof task.action_type === 'string' && (task.action_type.includes('content') || task.action_type === 'publish_draft'));
+  if (!isContent) return null;
+
+  const missing = task?.metadata?.strategic_priorities?.missing_pages?.[0];
+  const title: string = missing?.title || task?.title || '';
+  if (!title || title.length < 5) {
+    console.warn('[AutopilotEngine][V3→cms] No usable title in strategist_task');
+    return null;
+  }
+  const keywords: string[] = (missing?.target_keywords || task?.metadata?.target_keywords || []).slice(0, 5);
+  const brief = `${title}${keywords.length ? `\nMots-clés cibles: ${keywords.join(', ')}` : ''}${missing?.rationale ? `\n${missing.rationale}` : ''}`;
+
+  try {
+    console.log(`[AutopilotEngine][V3→cms] Running editorial pipeline for "${title}" on ${site.domain}`);
+    const result = await runEditorialPipeline(supabase, {
+      user_id: config.user_id,
+      domain: site.domain,
+      tracked_site_id: config.tracked_site_id,
+      content_type: 'blog_article' as ContentType,
+      user_brief: brief,
+    });
+    const finalTitle = result?.final?.title || title;
+    const finalContent = result?.final?.content || result?.draft?.content;
+    if (!finalContent || String(finalContent).length < 200) {
+      console.warn(`[AutopilotEngine][V3→cms] Pipeline returned empty/short content for "${finalTitle}", aborting`);
+      return null;
+    }
+    const slug = slugifyFr(finalTitle);
+    const cmsAction = {
+      action: 'create-post',
+      _channel: 'content_editorial',
+      body: {
+        title: finalTitle,
+        slug,
+        status: 'draft',
+        content: finalContent,
+        excerpt: result?.final?.excerpt || null,
+        meta_title: result?.final?.meta_title || finalTitle,
+        meta_description: result?.final?.meta_description || (typeof finalContent === 'string' ? finalContent.slice(0, 155) : null),
+        _pipeline_run_id: result?.pipeline_run_id || null,
+        _v3_task_id: task?.id || null,
+      },
+    };
+    console.log(`[AutopilotEngine][V3→cms] Built create-post for "${finalTitle}" (slug=${slug}, ${String(finalContent).length} chars)`);
+    return [cmsAction];
+  } catch (e) {
+    console.error('[AutopilotEngine][V3→cms] Editorial pipeline failed:', e);
+    return null;
+  }
+}
 
 /**
  * Autopilot Engine — Moteur d'exécution autonome des cycles
