@@ -863,9 +863,6 @@ const Index = () => {
 
 
         <Suspense fallback={<SectionSkeleton />}>
-          <TestimonialsCarousel />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
           <FAQSection />
         </Suspense>
       </main>
