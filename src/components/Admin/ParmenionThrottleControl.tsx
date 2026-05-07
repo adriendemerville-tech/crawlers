@@ -139,7 +139,3 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
     </Card>
   );
 }
-      </CardContent>
-    </Card>
-  );
-}
