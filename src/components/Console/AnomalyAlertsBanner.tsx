@@ -122,7 +122,7 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
 
   if (hidden) {
     return (
-      <div className="w-full flex justify-end mb-2">
+      <div className="w-full flex justify-end mb-1">
         <button
           onClick={() => setHidden(false)}
           className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md border border-border/50 bg-muted/30"
