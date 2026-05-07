@@ -1,0 +1,1 @@
+ALTER TABLE public.parmenion_targets ADD COLUMN IF NOT EXISTS backlog_guard_paused BOOLEAN NOT NULL DEFAULT false;

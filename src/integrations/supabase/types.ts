@@ -8501,6 +8501,7 @@ export type Database = {
         Row: {
           api_key_name: string | null
           autopilot_enabled: boolean
+          backlog_guard_paused: boolean
           created_at: string
           created_by_user_id: string | null
           domain: string
@@ -8516,6 +8517,7 @@ export type Database = {
         Insert: {
           api_key_name?: string | null
           autopilot_enabled?: boolean
+          backlog_guard_paused?: boolean
           created_at?: string
           created_by_user_id?: string | null
           domain: string
@@ -8531,6 +8533,7 @@ export type Database = {
         Update: {
           api_key_name?: string | null
           autopilot_enabled?: boolean
+          backlog_guard_paused?: boolean
           created_at?: string
           created_by_user_id?: string | null
           domain?: string
