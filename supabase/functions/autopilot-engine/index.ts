@@ -569,7 +569,16 @@ async function prepareExecuteActions(
       decision.action.payload.cms_actions = routedCmsActions.all;
       decision.action.payload._routed = routedCmsActions;
       console.log(`[AutopilotEngine] Injected ${routedCmsActions.all.length} routed CMS actions into execute phase for ${site.domain}`);
-    } else if (!hasCmsActions) {
+    } else if (!hasCmsActions && decision.action.payload._prescribe_v3) {
+      // ─── Prescribe V3 adapter: turn strategist_task into a real create-post ───
+      const v3Actions = await buildV3CmsActionsForIktracker(decision, site, supabase, config);
+      if (v3Actions && v3Actions.length > 0) {
+        decision.action.payload.cms_actions = v3Actions;
+        decision.action.payload._v3_adapted = true;
+        console.log(`[AutopilotEngine] V3 adapter: built ${v3Actions.length} CMS actions for ${site.domain}`);
+      }
+    }
+    if (!Array.isArray(decision.action.payload.cms_actions) || decision.action.payload.cms_actions.length === 0) {
       // Fallback: build META-ONLY CMS actions from recommendations
       console.log(`[AutopilotEngine] No CMS actions available for ${site.domain}, building fallback META-ONLY from recommendations`);
       try {
