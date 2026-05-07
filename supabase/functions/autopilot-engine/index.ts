@@ -374,7 +374,7 @@ try {
 
           // ═══ EXECUTE PHASE: Prepare CMS actions ═══
           if (phase === 'execute') {
-            prepareExecuteActions(decision, siteInfo, routedCmsActions, supabase, config);
+            await prepareExecuteActions(decision, siteInfo, routedCmsActions, supabase, config);
           }
 
           // ═══ Function execution ═══
