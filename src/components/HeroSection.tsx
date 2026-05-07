@@ -57,6 +57,14 @@ function HeroSectionComponent() {
       </div>
 
       <div className="relative mx-auto w-full max-w-5xl text-center">
+        {/* Sur-titre SEO + GEO */}
+        <p className="mb-3 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-amber-400">
+          {language === 'fr'
+            ? 'SEO Google + GEO IA · un seul audit'
+            : language === 'es'
+            ? 'SEO Google + GEO IA · una sola auditoría'
+            : 'Google SEO + AI GEO · one single audit'}
+        </p>
         {/* Animated headline */}
         <h1 className="mb-6 text-xl font-extrabold tracking-tight leading-[1.15] sm:text-5xl lg:text-[4rem] xl:text-7xl font-display text-center sm:whitespace-nowrap">
           <span
