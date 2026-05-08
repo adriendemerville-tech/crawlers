@@ -22,6 +22,28 @@ const ORGANIZATION_JSON_LD = {
   },
 };
 
+const WEBSITE_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Crawlers.fr',
+  url: SITE_URL,
+  inLanguage: ['fr', 'en', 'es'],
+  publisher: { '@type': 'Organization', name: 'Crawlers', url: SITE_URL },
+  // Référence explicite du sitemap XML (signal pour crawlers & moteurs génératifs)
+  hasPart: {
+    '@type': 'WebPage',
+    '@id': `${SITE_URL}/sitemap.xml`,
+    name: 'Sitemap XML',
+    url: `${SITE_URL}/sitemap.xml`,
+    encodingFormat: 'application/xml',
+  },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SITE_URL}/blog?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+};
+
 interface SEOHeadProps {
   title: string;
   description: string;
