@@ -63,7 +63,7 @@ function KpiCard({ label, value, sub, change }: { label: string; value: string; 
 export function GA4KpiCards({ totals, compareTotals, avgEngagementTime, avgEngagementRate, loading }: Props) {
   if (loading || !totals) {
     return (
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:gap-4 2xl:gap-5">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="h-[80px] animate-pulse bg-muted/40" />
         ))}
