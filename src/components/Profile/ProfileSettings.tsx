@@ -505,9 +505,77 @@ export function ProfileSettings() {
       {/* Theme Settings */}
       <ThemeSettingsCard />
 
+      {/* Text Size Settings */}
+      <TextSizeSettingsCard />
+
       {/* Ticker Settings */}
       <TickerSettingsCard />
     </div>
+  );
+}
+
+const TEXT_SIZE_KEY = 'ui.textSize';
+type TextSize = 'small' | 'default' | 'large';
+
+function applyTextSize(size: TextSize) {
+  if (typeof document === 'undefined') return;
+  if (size === 'default') {
+    document.documentElement.removeAttribute('data-text-size');
+  } else {
+    document.documentElement.setAttribute('data-text-size', size);
+  }
+}
+
+function TextSizeSettingsCard() {
+  const { language } = useLanguage();
+  const [size, setSize] = useState<TextSize>(() => {
+    if (typeof window === 'undefined') return 'default';
+    return (localStorage.getItem(TEXT_SIZE_KEY) as TextSize) || 'default';
+  });
+
+  useEffect(() => {
+    applyTextSize(size);
+    try { localStorage.setItem(TEXT_SIZE_KEY, size); } catch { /* ignore */ }
+  }, [size]);
+
+  const labels = language === 'en'
+    ? { title: 'Text size', desc: 'Adjust root font size and spacing on screens wider than 1536px.', s: 'Small', d: 'Default', l: 'Large' }
+    : language === 'es'
+    ? { title: 'Tamaño del texto', desc: 'Ajusta el tamaño base y el espaciado en pantallas de más de 1536px.', s: 'Pequeño', d: 'Por defecto', l: 'Grande' }
+    : { title: 'Taille du texte', desc: "Ajuste la taille racine et l'espacement sur les écrans larges (>1536px).", s: 'Petit', d: 'Défaut', l: 'Grand' };
+
+  const options: { value: TextSize; label: string }[] = [
+    { value: 'small', label: labels.s },
+    { value: 'default', label: labels.d },
+    { value: 'large', label: labels.l },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{labels.title}</CardTitle>
+        <CardDescription>{labels.desc}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="inline-flex rounded-md border border-border overflow-hidden">
+          {options.map((opt, i) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setSize(opt.value)}
+              className={`px-4 py-2 text-sm transition-colors ${
+                size === opt.value
+                  ? 'bg-foreground/10 text-foreground font-medium'
+                  : 'bg-transparent text-muted-foreground hover:text-foreground'
+              } ${i > 0 ? 'border-l border-border' : ''}`}
+              aria-pressed={size === opt.value}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
