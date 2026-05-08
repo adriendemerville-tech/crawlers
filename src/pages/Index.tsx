@@ -69,10 +69,11 @@ const DashboardSkeleton = memo(() => (
   </div>
 ));
 
-// Minimal skeleton for below-fold sections
+// Minimal skeleton for below-fold sections — hauteur réservée pour éviter le CLS
 const SectionSkeleton = memo(() => (
-  <div className="h-64 animate-pulse bg-muted/20" />
+  <div className="min-h-[400px] animate-pulse bg-muted/20" aria-hidden="true" />
 ));
+
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<ToolTab>('crawlers');
