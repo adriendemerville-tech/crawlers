@@ -645,16 +645,16 @@ const Index = () => {
 
         {/* Témoignages — preuve sociale immédiate après le hero */}
         <Suspense fallback={<SectionSkeleton />}>
-          <TestimonialsCarousel />
+          <div className="cv-auto-sm"><TestimonialsCarousel /></div>
         </Suspense>
 
         {/* Pain Points — before Pro Agency */}
         <Suspense fallback={<SectionSkeleton />}>
-          <PainPointsSection />
+          <div className="cv-auto"><PainPointsSection /></div>
         </Suspense>
 
         {/* Pro Agency hero */}
-        <section className="relative overflow-hidden py-14 sm:py-20">
+        <section className="relative overflow-hidden py-14 sm:py-20 cv-auto">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--brand-violet)/0.06),transparent_60%)]" />
             <div className="relative mx-auto max-w-4xl px-4 text-center">
               <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
@@ -705,39 +705,39 @@ const Index = () => {
 
         {/* Trust Banner — right after Pro Agency */}
         <Suspense fallback={<SectionSkeleton />}>
-          <TrustBanner />
+          <div className="cv-auto"><TrustBanner /></div>
         </Suspense>
 
         {/* Product Showcase — Screenshots */}
         <div id="features">
           <Suspense fallback={<SectionSkeleton />}>
-            <ProductShowcaseSection />
+            <div className="cv-auto-lg"><ProductShowcaseSection /></div>
           </Suspense>
         </div>
 
         {/* Breathing Spiral — Innovation de rupture */}
         <Suspense fallback={<SectionSkeleton />}>
-          <BreathingSpiralSection />
+          <div className="cv-auto-lg"><BreathingSpiralSection /></div>
         </Suspense>
 
 
         {/* Google Cross Data — SEA→SEO Bridge */}
         <Suspense fallback={<SectionSkeleton />}>
-          <GoogleCrossDataSection />
+          <div className="cv-auto"><GoogleCrossDataSection /></div>
         </Suspense>
 
         <Suspense fallback={<SectionSkeleton />}>
-          <MomentumSection />
+          <div className="cv-auto"><MomentumSection /></div>
         </Suspense>
 
         {/* AI Agents — Félix & Stratège Cocoon */}
         <Suspense fallback={<SectionSkeleton />}>
-          <AIAgentsSection />
+          <div className="cv-auto-lg"><AIAgentsSection /></div>
         </Suspense>
 
         {/* Content Architect */}
         <Suspense fallback={<SectionSkeleton />}>
-          <ContentArchitectSection />
+          <div className="cv-auto-lg"><ContentArchitectSection /></div>
         </Suspense>
 
         {/* E-E-A-T Section */}
