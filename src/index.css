@@ -571,3 +571,13 @@
   contain-intrinsic-size: 1px 900px;
 }
 
+/* Large secondary screens (>1536px): bump root font-size to scale all rem-based
+   typography & spacing (Tailwind tokens) by ~6-9%, improving readability without
+   touching individual components. */
+@media (min-width: 1536px) {
+  :root { font-size: 17px; }
+}
+@media (min-width: 1920px) {
+  :root { font-size: 17.5px; }
+}
+
