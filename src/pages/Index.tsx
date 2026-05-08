@@ -24,6 +24,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
+import { LazyVisible } from '@/components/LazyVisible';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
@@ -710,35 +711,47 @@ const Index = () => {
 
         {/* Product Showcase — Screenshots */}
         <div id="features">
-          <Suspense fallback={<SectionSkeleton />}>
-            <div className="cv-auto-lg"><ProductShowcaseSection /></div>
-          </Suspense>
+          <LazyVisible minHeight="600px">
+            <Suspense fallback={<SectionSkeleton />}>
+              <div className="cv-auto-lg"><ProductShowcaseSection /></div>
+            </Suspense>
+          </LazyVisible>
         </div>
 
-        {/* Breathing Spiral — Innovation de rupture */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto-lg"><BreathingSpiralSection /></div>
-        </Suspense>
+        {/* Breathing Spiral — Canvas + framer-motion (gros chunk) */}
+        <LazyVisible minHeight="600px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto-lg"><BreathingSpiralSection /></div>
+          </Suspense>
+        </LazyVisible>
 
 
         {/* Google Cross Data — SEA→SEO Bridge */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto"><GoogleCrossDataSection /></div>
-        </Suspense>
+        <LazyVisible minHeight="500px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto"><GoogleCrossDataSection /></div>
+          </Suspense>
+        </LazyVisible>
 
-        <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto"><MomentumSection /></div>
-        </Suspense>
+        <LazyVisible minHeight="400px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto"><MomentumSection /></div>
+          </Suspense>
+        </LazyVisible>
 
         {/* AI Agents — Félix & Stratège Cocoon */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto-lg"><AIAgentsSection /></div>
-        </Suspense>
+        <LazyVisible minHeight="500px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto-lg"><AIAgentsSection /></div>
+          </Suspense>
+        </LazyVisible>
 
         {/* Content Architect */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto-lg"><ContentArchitectSection /></div>
-        </Suspense>
+        <LazyVisible minHeight="500px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto-lg"><ContentArchitectSection /></div>
+          </Suspense>
+        </LazyVisible>
 
         {/* E-E-A-T Section */}
         <section className="py-20 relative overflow-hidden cv-auto">
@@ -801,15 +814,19 @@ const Index = () => {
         </section>
 
 
-        <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto"><HybridSection /></div>
-        </Suspense>
+        <LazyVisible minHeight="500px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto"><HybridSection /></div>
+          </Suspense>
+        </LazyVisible>
 
 
         {/* Chrome Extension — short teaser */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto"><ExtensionSection /></div>
-        </Suspense>
+        <LazyVisible minHeight="400px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto"><ExtensionSection /></div>
+          </Suspense>
+        </LazyVisible>
 
 
         {/* Active crawl notification banner */}
@@ -863,9 +880,11 @@ const Index = () => {
 
 
 
-        <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto"><FAQSection /></div>
-        </Suspense>
+        <LazyVisible minHeight="500px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto"><FAQSection /></div>
+          </Suspense>
+        </LazyVisible>
       </main>
       <Suspense fallback={<div className="h-48 bg-muted/10" />}>
         <Footer />
