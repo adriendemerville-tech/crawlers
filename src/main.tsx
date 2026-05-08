@@ -6,6 +6,14 @@ import { initGlobalErrorListener } from "./lib/globalErrorListener";
 // Start capturing JS errors before React mounts
 initGlobalErrorListener();
 
+// Apply persisted text-size preference before render to avoid flash
+try {
+  const ts = localStorage.getItem('ui.textSize');
+  if (ts === 'small' || ts === 'large') {
+    document.documentElement.setAttribute('data-text-size', ts);
+  }
+} catch { /* ignore */ }
+
 createRoot(document.getElementById("root")!).render(<App />);
 
 // Load non-critical display fonts after first paint (via <link> to avoid Vite render-blocking CSS chunk)
