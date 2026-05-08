@@ -58,7 +58,7 @@ function HeroSectionComponent() {
 
       <div className="relative mx-auto w-full max-w-5xl text-center">
         {/* Sur-titre SEO + GEO */}
-        <p className="mb-3 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-amber-400">
+        <p className="mb-3 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400">
           {language === 'fr'
             ? 'SEO Google + GEO IA · un seul audit'
             : language === 'es'
@@ -111,7 +111,7 @@ function HeroSectionComponent() {
 
         {/* URL input + CTA Audit Expert */}
         <div className="mt-2 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-4" style={{ maxWidth: 'min(90%, 44rem)' }}>
-          <span className="hidden sm:inline-flex shrink-0 items-center text-sm font-semibold text-amber-400 uppercase tracking-wide">Étape 1</span>
+          <span className="hidden sm:inline-flex shrink-0 items-center text-sm font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Étape 1</span>
           <div className="flex-1 relative">
             <Input
               type="text"
@@ -132,10 +132,10 @@ function HeroSectionComponent() {
             <Button
               variant="outline"
               size="lg"
-              className="h-12 sm:h-16 gap-2 rounded-xl border-amber-400 border-2 px-6 sm:px-10 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap w-full sm:w-auto"
+              className="h-12 sm:h-16 gap-2 rounded-xl border-amber-500 dark:border-amber-400 border-2 px-6 sm:px-10 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap w-full sm:w-auto"
             >
               <div className="flex flex-col items-start leading-tight">
-                <span className="font-bold text-amber-400 text-lg">
+                <span className="font-bold text-amber-700 dark:text-amber-400 text-lg">
                   {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
                 </span>
                 <span className="text-xs font-normal text-muted-foreground">

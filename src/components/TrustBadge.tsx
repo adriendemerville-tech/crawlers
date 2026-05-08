@@ -14,7 +14,7 @@ export function TrustBadge({ className = '' }: TrustBadgeProps) {
   
   return (
     <div className={`flex items-center justify-center gap-2 py-4 ${className}`}>
-      <div className="flex items-center gap-0.5" aria-label={`Note: ${RATING_VALUE} sur 5`}>
+      <div className="flex items-center gap-0.5" role="img" aria-label={`Note : ${RATING_VALUE} sur 5`}>
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
