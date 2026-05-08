@@ -95,7 +95,7 @@ export function GeoKpiBanner({ trackedSiteId }: GeoKpiBannerProps) {
       : 'Neutre';
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 xl:gap-4 2xl:gap-5">
       <Tile
         icon={<Sparkles className="h-3.5 w-3.5" />}
         label="Score GEO"

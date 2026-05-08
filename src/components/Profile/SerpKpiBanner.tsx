@@ -193,7 +193,7 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
       </CardHeader>
       <CardContent className="space-y-4">
         {/* KPI row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 xl:gap-4 2xl:gap-5">
           <div className="rounded-lg border bg-card p-3 space-y-1">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Home className="h-3 w-3" />
