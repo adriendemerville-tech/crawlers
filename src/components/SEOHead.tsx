@@ -22,6 +22,28 @@ const ORGANIZATION_JSON_LD = {
   },
 };
 
+const WEBSITE_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Crawlers.fr',
+  url: SITE_URL,
+  inLanguage: ['fr', 'en', 'es'],
+  publisher: { '@type': 'Organization', name: 'Crawlers', url: SITE_URL },
+  // Référence explicite du sitemap XML (signal pour crawlers & moteurs génératifs)
+  hasPart: {
+    '@type': 'WebPage',
+    '@id': `${SITE_URL}/sitemap.xml`,
+    name: 'Sitemap XML',
+    url: `${SITE_URL}/sitemap.xml`,
+    encodingFormat: 'application/xml',
+  },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SITE_URL}/blog?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+};
+
 interface SEOHeadProps {
   title: string;
   description: string;
@@ -82,8 +104,9 @@ export function SEOHead({ title, description, path, ogType = 'website', noIndex 
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={OG_IMAGE} />
 
-      {/* Organization JSON-LD (global) */}
+      {/* Organization + WebSite JSON-LD (global, inclut référence sitemap) */}
       <script type="application/ld+json">{JSON.stringify(ORGANIZATION_JSON_LD)}</script>
+      <script type="application/ld+json">{JSON.stringify(WEBSITE_JSON_LD)}</script>
 
       {children}
     </Helmet>
