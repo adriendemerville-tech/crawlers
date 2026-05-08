@@ -741,7 +741,7 @@ const Index = () => {
         </Suspense>
 
         {/* E-E-A-T Section */}
-        <section className="py-20 relative overflow-hidden">
+        <section className="py-20 relative overflow-hidden cv-auto">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/3 via-transparent to-emerald-500/3" />
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex flex-col lg:flex-row items-center gap-12">
@@ -802,13 +802,13 @@ const Index = () => {
 
 
         <Suspense fallback={<SectionSkeleton />}>
-          <HybridSection />
+          <div className="cv-auto"><HybridSection /></div>
         </Suspense>
 
 
         {/* Chrome Extension — short teaser */}
         <Suspense fallback={<SectionSkeleton />}>
-          <ExtensionSection />
+          <div className="cv-auto"><ExtensionSection /></div>
         </Suspense>
 
 
