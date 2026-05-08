@@ -554,3 +554,20 @@
 .dark {
   --muted-foreground: 215 20% 72%; /* was 65% — now meets 4.5:1 on dark bg */
 }
+
+/* ─── Core Web Vitals: skip rendering off-screen sections ─── */
+/* Réduit le travail de layout/paint au scroll → améliore INP & LCP sur mobile.
+   `contain-intrinsic-size` réserve de la hauteur pour éviter tout CLS. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
+}
+.cv-auto-sm {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 320px;
+}
+.cv-auto-lg {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 900px;
+}
+
