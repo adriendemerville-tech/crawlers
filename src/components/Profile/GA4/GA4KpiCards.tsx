@@ -72,7 +72,7 @@ export function GA4KpiCards({ totals, compareTotals, avgEngagementTime, avgEngag
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:gap-4 2xl:gap-5">
       <KpiCard
         label="Sessions"
         value={formatNumber(totals.sessions)}
