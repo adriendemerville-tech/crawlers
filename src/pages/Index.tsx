@@ -864,7 +864,7 @@ const Index = () => {
 
 
         <Suspense fallback={<SectionSkeleton />}>
-          <FAQSection />
+          <div className="cv-auto"><FAQSection /></div>
         </Suspense>
       </main>
       <Suspense fallback={<div className="h-48 bg-muted/10" />}>
