@@ -214,7 +214,7 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
         <CardContent className="space-y-4">
           {/* Stats summary */}
           {checks.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 xl:gap-4 2xl:gap-5">
               <div className="rounded-lg border p-3 text-center">
                 <div className="text-2xl font-bold">{checks.length}</div>
                 <div className="text-xs text-muted-foreground">{t3(language, 'Pages vérifiées', 'Pages checked', 'Páginas verificadas')}</div>
