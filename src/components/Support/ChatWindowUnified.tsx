@@ -265,7 +265,8 @@ export function ChatWindowUnified({
     try {
       const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
         body: {
-          action: mode === 'crawlers' ? 'get_crawlers_quiz' : 'get_seo_quiz',
+          action: mode === 'crawlers' ? 'get_crawlers_quiz' : 'get_questions',
+          user_id: user?.id,
           language: 'fr',
         },
       });
