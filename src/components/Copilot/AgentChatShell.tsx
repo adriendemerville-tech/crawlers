@@ -5,8 +5,7 @@
  * Pas de couleur de fond sur les boutons (charte crawlers).
  */
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { MarkdownWithQcm } from './MarkdownWithQcm';
 import { useNavigate } from 'react-router-dom';
 import { Check, Copy, Loader2, RotateCcw, Send } from 'lucide-react';
 import { useCopilot, type CopilotPersona, type CopilotAction } from '@/hooks/useCopilot';
