@@ -265,7 +265,8 @@ export function ChatWindowUnified({
     try {
       const { data, error } = await supabase.functions.invoke('felix-seo-quiz', {
         body: {
-          action: mode === 'crawlers' ? 'get_crawlers_quiz' : 'get_seo_quiz',
+          action: mode === 'crawlers' ? 'get_crawlers_quiz' : 'get_questions',
+          user_id: user?.id,
           language: 'fr',
         },
       });
@@ -322,6 +323,18 @@ export function ChatWindowUnified({
     if (/^\/enterprise\b/.test(txt) || /^\/entreprise\b/.test(txt)) {
       pushAssistant("**Offre Enterprise** — réponds aux questions ci-dessous.");
       setShowEnterpriseQuiz(true);
+      return;
+    }
+
+    // Détection langage naturel : "fais-moi un quiz / qcm…"
+    if (
+      !quizData &&
+      !quizLoading &&
+      /\b(qcm|quiz)\b/i.test(ctx.userMessage) &&
+      /\b(fais|fait|génère|genere|propose|lance|donne|cr[ée]e|veux|envoie|teste|test)\b/i.test(ctx.userMessage)
+    ) {
+      const crawlersIntent = /crawlers|plateforme|produit|outil/i.test(ctx.userMessage);
+      void launchQuiz(crawlersIntent ? 'crawlers' : 'seo');
       return;
     }
 

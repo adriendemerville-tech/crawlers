@@ -5,8 +5,7 @@
  * Pas de couleur de fond sur les boutons (charte crawlers).
  */
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { MarkdownWithQcm } from './MarkdownWithQcm';
 import { useNavigate } from 'react-router-dom';
 import { Check, Copy, Loader2, RotateCcw, Send } from 'lucide-react';
 import { useCopilot, type CopilotPersona, type CopilotAction } from '@/hooks/useCopilot';
@@ -217,7 +216,7 @@ export function AgentChatShell({
                   </div>
                 ) : (
                   <div className="prose prose-sm dark:prose-invert max-w-none break-words text-foreground prose-p:my-2 prose-p:text-foreground prose-headings:my-3 prose-headings:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-ol:text-foreground prose-ul:text-foreground prose-a:text-primary prose-table:my-2 prose-table:text-[0.9em] prose-th:border prose-th:border-border prose-th:bg-muted/30 prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1" style={{ fontSize: '1em' }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content || ''}</ReactMarkdown>
+                    <MarkdownWithQcm content={m.content || ''} />
                   </div>
                 )}
 
