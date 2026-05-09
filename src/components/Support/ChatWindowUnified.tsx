@@ -326,6 +326,18 @@ export function ChatWindowUnified({
       return;
     }
 
+    // Détection langage naturel : "fais-moi un quiz / qcm…"
+    if (
+      !quizData &&
+      !quizLoading &&
+      /\b(qcm|quiz)\b/i.test(ctx.userMessage) &&
+      /\b(fais|fait|génère|genere|propose|lance|donne|cr[ée]e|veux|envoie|teste|test)\b/i.test(ctx.userMessage)
+    ) {
+      const crawlersIntent = /crawlers|plateforme|produit|outil/i.test(ctx.userMessage);
+      void launchQuiz(crawlersIntent ? 'crawlers' : 'seo');
+      return;
+    }
+
     // Bug report
     if (!user) return;
     const slashMatch = ctx.userMessage.match(/^\/bug\s+([\s\S]+)$/i);
