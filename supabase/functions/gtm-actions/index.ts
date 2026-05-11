@@ -1,3 +1,4 @@
+import { type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
@@ -44,7 +45,10 @@ const supabase = getServiceClient();
     // Resolve Google token for user
     const accessToken = await resolveGoogleToken(supabase, user_id);
     if (!accessToken) {
-      return jsonError('Google not connected or token expired', { code: 'NO_GOOGLE_TOKEN' }, 401);
+      return new Response(JSON.stringify({ error: 'Google not connected or token expired', code: 'NO_GOOGLE_TOKEN' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     switch (action) {
@@ -65,13 +69,13 @@ const supabase = getServiceClient();
     console.error('[gtm-actions] Error:', error);
     return jsonError(error instanceof Error ? error.message : 'Internal error', 500);
   }
-});
+}));
 
 // ═══════════════════════════════════════════════
 // Token resolution
 // ═══════════════════════════════════════════════
 
-async function resolveGoogleToken(supabase: ReturnType<typeof createClient>, userId: string): Promise<string | null> {
+async function resolveGoogleToken(supabase: SupabaseClient, userId: string): Promise<string | null> {
   const { data: connections } = await supabase
     .from('google_connections')
     .select('access_token, refresh_token, token_expiry')
@@ -133,8 +137,10 @@ async function handleListContainers(accessToken: string) {
   if (!accountsResp.ok) {
     const errBody = await accountsResp.text();
     if (accountsResp.status === 403) {
-      return jsonError('GTM access denied. Please reconnect Google with GTM permissions.',
-        code: 'GTM_SCOPE_MISSING', 403);
+      return new Response(JSON.stringify({ error: 'GTM access denied. Please reconnect Google with GTM permissions.', code: 'GTM_SCOPE_MISSING' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     throw new Error(`GTM API accounts error ${accountsResp.status}: ${errBody}`);
   }
@@ -179,7 +185,7 @@ async function handleListContainers(accessToken: string) {
 
 async function handleDeployTag(
   accessToken: string,
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userId: string,
   siteId: string,
   containerPath: string,
@@ -389,5 +395,5 @@ async function handleRemoveTag(accessToken: string, containerPath: string) {
     throw new Error(`Failed to delete tag: ${deleteResp.status} ${err}`);
   }
 
-  return jsonOk({ success: true, message: 'Crawlers tag removed' }));
+  return jsonOk({ success: true, message: 'Crawlers tag removed' });
 }
