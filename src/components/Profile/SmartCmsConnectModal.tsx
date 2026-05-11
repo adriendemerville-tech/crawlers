@@ -245,6 +245,7 @@ export function SmartCmsConnectModal({
         `${customRest.label} connected — key verified and saved.`,
         `${customRest.label} conectado — clave verificada y guardada.`,
       ));
+      persistCreds({ bearer: mode === 'manual' ? bearerKey : undefined });
       handleClose(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
