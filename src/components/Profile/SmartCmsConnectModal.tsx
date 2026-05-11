@@ -23,6 +23,8 @@ import {
   Zap,
   RefreshCw,
   PlugZap,
+  Check,
+  AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -92,6 +94,8 @@ export function SmartCmsConnectModal({
   const [appUser, setAppUser] = useState('');
   const [appPassword, setAppPassword] = useState('');
   const [savingRest, setSavingRest] = useState(false);
+  const [restSuccess, setRestSuccess] = useState(false);
+  const [restError, setRestError] = useState<string | null>(null);
 
   // Custom REST (Bearer) form — Dictadevi & co.
   const [bearerKey, setBearerKey] = useState('');
@@ -112,6 +116,8 @@ export function SmartCmsConnectModal({
     setAppPassword('');
     setBearerKey('');
     setExistingConnections([]);
+    setRestSuccess(false);
+    setRestError(null);
   };
 
   const handleClose = (o: boolean) => {
@@ -367,7 +373,21 @@ export function SmartCmsConnectModal({
 
   // ─── Step 3 — Save REST API credentials (Application Password) ───
   const saveRestApi = async () => {
-    if (!user || !appUser || !appPassword) return;
+    console.log('[SmartCmsConnectModal] saveRestApi click', { hasUser: !!user, appUser: !!appUser, appPassword: !!appPassword, siteId, siteDomain });
+    setRestError(null);
+    setRestSuccess(false);
+    if (!user) {
+      const msg = t3(lang, 'Session expirée — reconnectez-vous.', 'Session expired — please sign in again.', 'Sesión expirada — vuelva a iniciar sesión.');
+      setRestError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (!appUser || !appPassword) {
+      const msg = t3(lang, 'Identifiant et mot de passe requis.', 'Username and password required.', 'Usuario y contraseña requeridos.');
+      setRestError(msg);
+      toast.error(msg);
+      return;
+    }
     setSavingRest(true);
     try {
       // 1) Validate credentials against /wp-json/wp/v2/users/me via dedicated edge fn
@@ -382,16 +402,21 @@ export function SmartCmsConnectModal({
         },
       );
 
+      console.log('[SmartCmsConnectModal] wp-test-connection result', { test, testErr });
+
       if (testErr) {
-        toast.error(testErr.message || t3(lang, 'Erreur de test', 'Test error', 'Error de prueba'));
+        const msg = testErr.message || t3(lang, 'Erreur de test', 'Test error', 'Error de prueba');
+        setRestError(msg);
+        toast.error(t3(lang, 'Échec du test de connexion', 'Connection test failed', 'Fallo de la prueba de conexión'), { description: msg });
         return;
       }
 
       if (!test?.ok) {
-        toast.error(
-          test?.error ||
-            t3(lang, 'Identifiants refusés', 'Credentials rejected', 'Credenciales rechazadas'),
-        );
+        const detail = test?.error || t3(lang, 'Identifiants refusés', 'Credentials rejected', 'Credenciales rechazadas');
+        const statusInfo = test?.status ? ` (HTTP ${test.status}${test?.code ? ` · ${test.code}` : ''})` : '';
+        const msg = `${detail}${statusInfo}`;
+        setRestError(msg);
+        toast.error(t3(lang, 'Connexion WordPress refusée', 'WordPress connection rejected', 'Conexión WordPress rechazada'), { description: msg });
         return;
       }
 
@@ -412,6 +437,7 @@ export function SmartCmsConnectModal({
 
       if (error) throw error;
 
+      setRestSuccess(true);
       toast.success(
         t3(
           lang,
@@ -420,9 +446,12 @@ export function SmartCmsConnectModal({
           `CMS conectado — sesión como ${test.user?.name || appUser}`,
         ),
       );
-      handleClose(false);
+      setTimeout(() => handleClose(false), 1200);
     } catch (e: any) {
-      toast.error(e.message);
+      const msg = e?.message || String(e);
+      console.error('[SmartCmsConnectModal] saveRestApi error', e);
+      setRestError(msg);
+      toast.error(t3(lang, 'Erreur', 'Error', 'Error'), { description: msg });
     } finally {
       setSavingRest(false);
     }
@@ -972,13 +1001,29 @@ export function SmartCmsConnectModal({
               <Button
                 variant="outline"
                 onClick={saveRestApi}
-                disabled={!appUser || !appPassword || savingRest}
+                disabled={!appUser || !appPassword || savingRest || restSuccess}
                 className="flex-1 gap-2"
               >
                 {savingRest && <Loader2 className="h-4 w-4 animate-spin" />}
-                {t3(lang, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
+                {restSuccess && <Check className="h-4 w-4 text-emerald-500" />}
+                {restSuccess
+                  ? t3(lang, 'Connecté', 'Connected', 'Conectado')
+                  : t3(lang, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
               </Button>
             </div>
+            {restError && (
+              <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div>
+                    <div className="font-medium">
+                      {t3(lang, 'Échec de la connexion', 'Connection failed', 'Fallo de conexión')}
+                    </div>
+                    <div className="mt-1 text-xs opacity-90 break-words">{restError}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
