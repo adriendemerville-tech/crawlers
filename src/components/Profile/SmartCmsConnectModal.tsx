@@ -25,6 +25,8 @@ import {
   PlugZap,
   Check,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,6 +98,8 @@ export function SmartCmsConnectModal({
   const [savingRest, setSavingRest] = useState(false);
   const [restSuccess, setRestSuccess] = useState(false);
   const [restError, setRestError] = useState<string | null>(null);
+  const [showAppPassword, setShowAppPassword] = useState(false);
+  const [showBearerKey, setShowBearerKey] = useState(false);
 
   // Custom REST (Bearer) form — Dictadevi & co.
   const [bearerKey, setBearerKey] = useState('');
@@ -623,14 +627,25 @@ export function SmartCmsConnectModal({
               <Label htmlFor="bearer-key">
                 {t3(lang, 'Clé API', 'API key', 'Clave API')} ({customRest.keyPrefix}…)
               </Label>
-              <Input
-                id="bearer-key"
-                type="password"
-                value={bearerKey}
-                onChange={(e) => setBearerKey(e.target.value)}
-                placeholder={`${customRest.keyPrefix}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`}
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  id="bearer-key"
+                  type={showBearerKey ? 'text' : 'password'}
+                  value={bearerKey}
+                  onChange={(e) => setBearerKey(e.target.value)}
+                  placeholder={`${customRest.keyPrefix}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`}
+                  autoComplete="off"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowBearerKey((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showBearerKey ? t3(lang, 'Masquer', 'Hide', 'Ocultar') : t3(lang, 'Afficher', 'Show', 'Mostrar')}
+                >
+                  {showBearerKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             {isAdmin && adminKeyAvailable && (
@@ -972,14 +987,25 @@ export function SmartCmsConnectModal({
               <Label htmlFor="wp-pass">
                 {t3(lang, "Mot de passe d'application", 'Application Password', 'Contraseña de aplicación')}
               </Label>
-              <Input
-                id="wp-pass"
-                type="password"
-                value={appPassword}
-                onChange={(e) => setAppPassword(e.target.value)}
-                placeholder="xxxx xxxx xxxx xxxx xxxx xxxx"
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  id="wp-pass"
+                  type={showAppPassword ? 'text' : 'password'}
+                  value={appPassword}
+                  onChange={(e) => setAppPassword(e.target.value)}
+                  placeholder="xxxx xxxx xxxx xxxx xxxx xxxx"
+                  autoComplete="off"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAppPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showAppPassword ? t3(lang, 'Masquer', 'Hide', 'Ocultar') : t3(lang, 'Afficher', 'Show', 'Mostrar')}
+                >
+                  {showAppPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {t3(
                   lang,
