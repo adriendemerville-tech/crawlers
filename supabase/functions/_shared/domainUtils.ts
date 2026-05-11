@@ -28,23 +28,32 @@ export function getIktrackerApiKey(): string | undefined {
 }
 
 /**
- * Get Dictadevi API key — first tries env (DICTADEVI_API_KEY), then falls back
- * to the per-target value stored in parmenion_targets.api_key_name.
- * Async because the fallback requires a DB lookup via the service role client.
+ * Get Dictadevi API key.
+ *
+ * Priorité (DB d'abord pour que toute MAJ via Admin > Parménion > Intégrations
+ * prenne effet immédiatement, sans rotation de secret) :
+ *   1. parmenion_targets.api_key_name (RPC SECURITY DEFINER) — source de vérité
+ *   2. Deno.env.get('DICTADEVI_API_KEY') — fallback bootstrap / dev
+ *
+ * Inversion vs. comportement précédent : si la priorité env était conservée,
+ * une rotation côté UI était silencieusement ignorée tant que le secret env
+ * n'était pas mis à jour manuellement.
  */
 export async function getDictadeviApiKey(supabase?: {
   rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>
 }): Promise<string | undefined> {
-  const envKey = Deno.env.get('DICTADEVI_API_KEY');
-  if (envKey) return envKey;
-  if (!supabase) return undefined;
-  try {
-    const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: 'dictadevi.io' });
-    if (error || !data) return undefined;
-    return typeof data === 'string' ? data : undefined;
-  } catch (_) {
-    return undefined;
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: 'dictadevi.io' });
+      if (!error && typeof data === 'string' && data.trim().length > 0) {
+        return data.trim();
+      }
+    } catch (_) {
+      // fallback env
+    }
   }
+  const envKey = Deno.env.get('DICTADEVI_API_KEY');
+  return envKey && envKey.trim().length > 0 ? envKey.trim() : undefined;
 }
 
 /** Check if domain belongs to IKtracker */
