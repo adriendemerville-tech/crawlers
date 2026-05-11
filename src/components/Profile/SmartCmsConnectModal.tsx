@@ -116,6 +116,8 @@ export function SmartCmsConnectModal({
     setAppPassword('');
     setBearerKey('');
     setExistingConnections([]);
+    setRestSuccess(false);
+    setRestError(null);
   };
 
   const handleClose = (o: boolean) => {
