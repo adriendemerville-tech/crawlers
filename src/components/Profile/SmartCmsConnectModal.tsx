@@ -684,6 +684,15 @@ export function SmartCmsConnectModal({
                   {showBearerKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+                <Checkbox
+                  checked={rememberCreds}
+                  onCheckedChange={(c) => setRememberCreds(c === true)}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t3(lang, 'Enregistrer mes identifiants', 'Remember my credentials', 'Recordar mis credenciales')}
+                </span>
+              </label>
             </div>
 
             {isAdmin && adminKeyAvailable && (
