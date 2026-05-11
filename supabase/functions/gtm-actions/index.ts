@@ -389,5 +389,5 @@ async function handleRemoveTag(accessToken: string, containerPath: string) {
     throw new Error(`Failed to delete tag: ${deleteResp.status} ${err}`);
   }
 
-  return jsonOk({ success: true, message: 'Crawlers tag removed' }));
+  return jsonOk({ success: true, message: 'Crawlers tag removed' });
 }
