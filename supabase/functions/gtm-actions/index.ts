@@ -44,7 +44,7 @@ const supabase = getServiceClient();
     // Resolve Google token for user
     const accessToken = await resolveGoogleToken(supabase, user_id);
     if (!accessToken) {
-      return jsonError('Google not connected or token expired', code: 'NO_GOOGLE_TOKEN', 401);
+      return jsonError('Google not connected or token expired', { code: 'NO_GOOGLE_TOKEN' }, 401);
     }
 
     switch (action) {
