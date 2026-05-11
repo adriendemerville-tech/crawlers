@@ -997,13 +997,29 @@ export function SmartCmsConnectModal({
               <Button
                 variant="outline"
                 onClick={saveRestApi}
-                disabled={!appUser || !appPassword || savingRest}
+                disabled={!appUser || !appPassword || savingRest || restSuccess}
                 className="flex-1 gap-2"
               >
                 {savingRest && <Loader2 className="h-4 w-4 animate-spin" />}
-                {t3(lang, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
+                {restSuccess && <Check className="h-4 w-4 text-emerald-500" />}
+                {restSuccess
+                  ? t3(lang, 'Connecté', 'Connected', 'Conectado')
+                  : t3(lang, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
               </Button>
             </div>
+            {restError && (
+              <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div>
+                    <div className="font-medium">
+                      {t3(lang, 'Échec de la connexion', 'Connection failed', 'Fallo de conexión')}
+                    </div>
+                    <div className="mt-1 text-xs opacity-90 break-words">{restError}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
