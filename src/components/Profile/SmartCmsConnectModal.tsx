@@ -369,7 +369,21 @@ export function SmartCmsConnectModal({
 
   // ─── Step 3 — Save REST API credentials (Application Password) ───
   const saveRestApi = async () => {
-    if (!user || !appUser || !appPassword) return;
+    console.log('[SmartCmsConnectModal] saveRestApi click', { hasUser: !!user, appUser: !!appUser, appPassword: !!appPassword, siteId, siteDomain });
+    setRestError(null);
+    setRestSuccess(false);
+    if (!user) {
+      const msg = t3(lang, 'Session expirée — reconnectez-vous.', 'Session expired — please sign in again.', 'Sesión expirada — vuelva a iniciar sesión.');
+      setRestError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (!appUser || !appPassword) {
+      const msg = t3(lang, 'Identifiant et mot de passe requis.', 'Username and password required.', 'Usuario y contraseña requeridos.');
+      setRestError(msg);
+      toast.error(msg);
+      return;
+    }
     setSavingRest(true);
     try {
       // 1) Validate credentials against /wp-json/wp/v2/users/me via dedicated edge fn
@@ -384,16 +398,21 @@ export function SmartCmsConnectModal({
         },
       );
 
+      console.log('[SmartCmsConnectModal] wp-test-connection result', { test, testErr });
+
       if (testErr) {
-        toast.error(testErr.message || t3(lang, 'Erreur de test', 'Test error', 'Error de prueba'));
+        const msg = testErr.message || t3(lang, 'Erreur de test', 'Test error', 'Error de prueba');
+        setRestError(msg);
+        toast.error(t3(lang, 'Échec du test de connexion', 'Connection test failed', 'Fallo de la prueba de conexión'), { description: msg });
         return;
       }
 
       if (!test?.ok) {
-        toast.error(
-          test?.error ||
-            t3(lang, 'Identifiants refusés', 'Credentials rejected', 'Credenciales rechazadas'),
-        );
+        const detail = test?.error || t3(lang, 'Identifiants refusés', 'Credentials rejected', 'Credenciales rechazadas');
+        const statusInfo = test?.status ? ` (HTTP ${test.status}${test?.code ? ` · ${test.code}` : ''})` : '';
+        const msg = `${detail}${statusInfo}`;
+        setRestError(msg);
+        toast.error(t3(lang, 'Connexion WordPress refusée', 'WordPress connection rejected', 'Conexión WordPress rechazada'), { description: msg });
         return;
       }
 
@@ -414,6 +433,7 @@ export function SmartCmsConnectModal({
 
       if (error) throw error;
 
+      setRestSuccess(true);
       toast.success(
         t3(
           lang,
@@ -422,9 +442,12 @@ export function SmartCmsConnectModal({
           `CMS conectado — sesión como ${test.user?.name || appUser}`,
         ),
       );
-      handleClose(false);
+      setTimeout(() => handleClose(false), 1200);
     } catch (e: any) {
-      toast.error(e.message);
+      const msg = e?.message || String(e);
+      console.error('[SmartCmsConnectModal] saveRestApi error', e);
+      setRestError(msg);
+      toast.error(t3(lang, 'Erreur', 'Error', 'Error'), { description: msg });
     } finally {
       setSavingRest(false);
     }
