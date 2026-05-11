@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -106,6 +107,10 @@ export function SmartCmsConnectModal({
   const [savingBearer, setSavingBearer] = useState(false);
   const [adminKeyAvailable, setAdminKeyAvailable] = useState(false);
 
+  // Remember credentials locally (per site)
+  const credsStorageKey = siteDomain ? `cms-creds:${siteDomain}` : '';
+  const [rememberCreds, setRememberCreds] = useState(true);
+
   // Existing CMS connections (loaded on open)
   const [existingConnections, setExistingConnections] = useState<
     Array<{ id: string; platform: string; status: string; managed_by: string | null; created_at: string }>
@@ -163,6 +168,37 @@ export function SmartCmsConnectModal({
     };
   }, [open, siteId, customRest]);
 
+  // ─── Load remembered credentials on open ───
+  useEffect(() => {
+    if (!open || !credsStorageKey) return;
+    try {
+      const raw = localStorage.getItem(credsStorageKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as { user?: string; pass?: string; bearer?: string };
+        if (saved.user) setAppUser(saved.user);
+        if (saved.pass) setAppPassword(saved.pass);
+        if (saved.bearer) setBearerKey(saved.bearer);
+        setRememberCreds(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [open, credsStorageKey]);
+
+  // Persist or clear remembered credentials
+  const persistCreds = (payload: { user?: string; pass?: string; bearer?: string }) => {
+    if (!credsStorageKey) return;
+    try {
+      if (rememberCreds) {
+        localStorage.setItem(credsStorageKey, JSON.stringify(payload));
+      } else {
+        localStorage.removeItem(credsStorageKey);
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
   // ─── Probe parmenion_targets for an admin-managed key (only for admins) ───
   useEffect(() => {
     if (!open || !customRest || !isAdmin || step !== 'custom_rest') return;
@@ -209,6 +245,7 @@ export function SmartCmsConnectModal({
         `${customRest.label} connected — key verified and saved.`,
         `${customRest.label} conectado — clave verificada y guardada.`,
       ));
+      persistCreds({ bearer: mode === 'manual' ? bearerKey : undefined });
       handleClose(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -442,6 +479,7 @@ export function SmartCmsConnectModal({
       if (error) throw error;
 
       setRestSuccess(true);
+      persistCreds({ user: appUser, pass: appPassword });
       toast.success(
         t3(
           lang,
@@ -646,6 +684,15 @@ export function SmartCmsConnectModal({
                   {showBearerKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+                <Checkbox
+                  checked={rememberCreds}
+                  onCheckedChange={(c) => setRememberCreds(c === true)}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t3(lang, 'Enregistrer mes identifiants', 'Remember my credentials', 'Recordar mis credenciales')}
+                </span>
+              </label>
             </div>
 
             {isAdmin && adminKeyAvailable && (
@@ -1014,6 +1061,15 @@ export function SmartCmsConnectModal({
                   'Los espacios se conservan tal cual — pegue la cadena completa.',
                 )}
               </p>
+              <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+                <Checkbox
+                  checked={rememberCreds}
+                  onCheckedChange={(c) => setRememberCreds(c === true)}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t3(lang, 'Enregistrer mes identifiants', 'Remember my credentials', 'Recordar mis credenciales')}
+                </span>
+              </label>
             </div>
 
             <div className="flex gap-2">
