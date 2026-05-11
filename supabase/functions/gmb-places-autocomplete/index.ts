@@ -93,4 +93,4 @@ Deno.serve(handleRequest(async (req) => {
     console.error('[gmb-places-autocomplete] error:', msg)
     return jsonError(msg, { predictions: [] }, 500)
   }
-})
+}))
