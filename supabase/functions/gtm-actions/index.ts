@@ -184,7 +184,7 @@ async function handleListContainers(accessToken: string) {
 
 async function handleDeployTag(
   accessToken: string,
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userId: string,
   siteId: string,
   containerPath: string,
