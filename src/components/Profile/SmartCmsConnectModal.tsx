@@ -92,6 +92,8 @@ export function SmartCmsConnectModal({
   const [appUser, setAppUser] = useState('');
   const [appPassword, setAppPassword] = useState('');
   const [savingRest, setSavingRest] = useState(false);
+  const [restSuccess, setRestSuccess] = useState(false);
+  const [restError, setRestError] = useState<string | null>(null);
 
   // Custom REST (Bearer) form — Dictadevi & co.
   const [bearerKey, setBearerKey] = useState('');
