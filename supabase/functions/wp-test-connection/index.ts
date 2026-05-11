@@ -219,39 +219,51 @@ Deno.serve(async (req) => {
   let lastMessage: string | undefined;
 
   for (const strat of strategies) {
-    try {
-      const { res, payload } = await strat.fn();
-      const user = parseUserPayload(payload);
+    let attemptResult: { res: Response; payload: any } | null = null;
 
-      if (res.status === 200 && user) {
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            status: 200,
-            message: `Application Password valide (via ${strat.label})`,
-            auth_strategy: strat.name,
-            user,
-            attempts: [...attempts, { strategy: strat.name, status: 200 }],
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-        );
+    // 1 try + 1 retry on timeout/network error
+    for (let tryNo = 1; tryNo <= 2; tryNo++) {
+      try {
+        attemptResult = await strat.fn();
+        break;
+      } catch (e: any) {
+        const isAbort = e?.name === 'AbortError';
+        attempts.push({
+          strategy: strat.name,
+          error: `${isAbort ? 'timeout' : (e?.message || 'network error')}${tryNo === 1 ? ' (retry)' : ' (abandon)'}`,
+        });
+        if (tryNo === 1) {
+          await new Promise((r) => setTimeout(r, 500));
+        }
       }
-
-      lastStatus = res.status;
-      lastCode = payload?.code;
-      lastMessage = payload?.message;
-      attempts.push({ strategy: strat.name, status: res.status, code: payload?.code });
-
-      // If 403 (auth OK but no rights), stop — escalating won't help
-      if (res.status === 403) break;
-    } catch (e: any) {
-      const isAbort = e?.name === 'AbortError';
-      attempts.push({
-        strategy: strat.name,
-        error: isAbort ? 'timeout' : (e?.message || 'network error'),
-      });
-      // On network error, try next strategy
     }
+
+    if (!attemptResult) continue; // both tries failed → next strategy
+
+    const { res, payload } = attemptResult;
+    const user = parseUserPayload(payload);
+
+    if (res.status === 200 && user) {
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          status: 200,
+          message: `Application Password valide (via ${strat.label})`,
+          auth_strategy: strat.name,
+          user,
+          attempts: [...attempts, { strategy: strat.name, status: 200 }],
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    lastStatus = res.status;
+    lastCode = payload?.code;
+    lastMessage = payload?.message;
+    attempts.push({ strategy: strat.name, status: res.status, code: payload?.code });
+
+    // If 403 (auth OK but no rights), stop — escalating won't help
+    if (res.status === 403) break;
   }
 
   const message = mapErrorMessage(lastStatus, lastCode, lastMessage);
