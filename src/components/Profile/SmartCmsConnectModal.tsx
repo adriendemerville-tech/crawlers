@@ -987,14 +987,25 @@ export function SmartCmsConnectModal({
               <Label htmlFor="wp-pass">
                 {t3(lang, "Mot de passe d'application", 'Application Password', 'Contraseña de aplicación')}
               </Label>
-              <Input
-                id="wp-pass"
-                type="password"
-                value={appPassword}
-                onChange={(e) => setAppPassword(e.target.value)}
-                placeholder="xxxx xxxx xxxx xxxx xxxx xxxx"
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  id="wp-pass"
+                  type={showAppPassword ? 'text' : 'password'}
+                  value={appPassword}
+                  onChange={(e) => setAppPassword(e.target.value)}
+                  placeholder="xxxx xxxx xxxx xxxx xxxx xxxx"
+                  autoComplete="off"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAppPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showAppPassword ? t3(lang, 'Masquer', 'Hide', 'Ocultar') : t3(lang, 'Afficher', 'Show', 'Mostrar')}
+                >
+                  {showAppPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {t3(
                   lang,
