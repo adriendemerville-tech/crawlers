@@ -479,6 +479,7 @@ export function SmartCmsConnectModal({
       if (error) throw error;
 
       setRestSuccess(true);
+      persistCreds({ user: appUser, pass: appPassword });
       toast.success(
         t3(
           lang,
