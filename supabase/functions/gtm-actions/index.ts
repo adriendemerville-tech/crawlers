@@ -65,7 +65,7 @@ const supabase = getServiceClient();
     console.error('[gtm-actions] Error:', error);
     return jsonError(error instanceof Error ? error.message : 'Internal error', 500);
   }
-});
+}));
 
 // ═══════════════════════════════════════════════
 // Token resolution
@@ -134,7 +134,7 @@ async function handleListContainers(accessToken: string) {
     const errBody = await accountsResp.text();
     if (accountsResp.status === 403) {
       return jsonError('GTM access denied. Please reconnect Google with GTM permissions.',
-        code: 'GTM_SCOPE_MISSING', 403);
+        { code: 'GTM_SCOPE_MISSING' }, 403);
     }
     throw new Error(`GTM API accounts error ${accountsResp.status}: ${errBody}`);
   }
