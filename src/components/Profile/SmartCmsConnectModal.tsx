@@ -627,14 +627,25 @@ export function SmartCmsConnectModal({
               <Label htmlFor="bearer-key">
                 {t3(lang, 'Clé API', 'API key', 'Clave API')} ({customRest.keyPrefix}…)
               </Label>
-              <Input
-                id="bearer-key"
-                type="password"
-                value={bearerKey}
-                onChange={(e) => setBearerKey(e.target.value)}
-                placeholder={`${customRest.keyPrefix}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`}
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  id="bearer-key"
+                  type={showBearerKey ? 'text' : 'password'}
+                  value={bearerKey}
+                  onChange={(e) => setBearerKey(e.target.value)}
+                  placeholder={`${customRest.keyPrefix}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`}
+                  autoComplete="off"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowBearerKey((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showBearerKey ? t3(lang, 'Masquer', 'Hide', 'Ocultar') : t3(lang, 'Afficher', 'Show', 'Mostrar')}
+                >
+                  {showBearerKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             {isAdmin && adminKeyAvailable && (
