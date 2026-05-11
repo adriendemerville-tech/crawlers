@@ -107,6 +107,10 @@ export function SmartCmsConnectModal({
   const [savingBearer, setSavingBearer] = useState(false);
   const [adminKeyAvailable, setAdminKeyAvailable] = useState(false);
 
+  // Remember credentials locally (per site)
+  const credsStorageKey = siteDomain ? `cms-creds:${siteDomain}` : '';
+  const [rememberCreds, setRememberCreds] = useState(true);
+
   // Existing CMS connections (loaded on open)
   const [existingConnections, setExistingConnections] = useState<
     Array<{ id: string; platform: string; status: string; managed_by: string | null; created_at: string }>
