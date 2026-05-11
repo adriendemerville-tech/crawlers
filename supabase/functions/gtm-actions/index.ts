@@ -1,4 +1,5 @@
-import { getServiceClient, getUserClient, type SupabaseClient } from '../_shared/supabaseClient.ts'
+import { type SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
