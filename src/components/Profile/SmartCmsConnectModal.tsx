@@ -168,6 +168,37 @@ export function SmartCmsConnectModal({
     };
   }, [open, siteId, customRest]);
 
+  // ─── Load remembered credentials on open ───
+  useEffect(() => {
+    if (!open || !credsStorageKey) return;
+    try {
+      const raw = localStorage.getItem(credsStorageKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as { user?: string; pass?: string; bearer?: string };
+        if (saved.user) setAppUser(saved.user);
+        if (saved.pass) setAppPassword(saved.pass);
+        if (saved.bearer) setBearerKey(saved.bearer);
+        setRememberCreds(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [open, credsStorageKey]);
+
+  // Persist or clear remembered credentials
+  const persistCreds = (payload: { user?: string; pass?: string; bearer?: string }) => {
+    if (!credsStorageKey) return;
+    try {
+      if (rememberCreds) {
+        localStorage.setItem(credsStorageKey, JSON.stringify(payload));
+      } else {
+        localStorage.removeItem(credsStorageKey);
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
   // ─── Probe parmenion_targets for an admin-managed key (only for admins) ───
   useEffect(() => {
     if (!open || !customRest || !isAdmin || step !== 'custom_rest') return;
