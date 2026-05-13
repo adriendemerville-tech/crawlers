@@ -26,23 +26,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
     
-    <!-- SEO Meta Tags — Dynamic per-page via React Helmet; fallback only -->
-    <title>Crawlers.fr — Audit SEO & GEO | Correction Automatique | Création Contenu IA</title>
-    <meta name="description" content="Plateforme SaaS d'audit SEO, GEO et visibilité IA. Correction automatique des pages, création de contenu IA, connexion CMS directe (WordPress, Shopify, Wix), gestion Google My Business, maintenance prédictive ML. Gratuit à Pro Agency+ 99€/mois." />
+    <!-- SEO Meta Tags — Dynamic per-page via React Helmet (useCanonicalHreflang); fallback only -->
+    <title>Crawlers.fr — Audit SEO, GEO et visibilité IA</title>
+    <meta name="description" content="Plateforme d'audit SEO et GEO : correction automatique des pages, contenu IA et connexion CMS directe pour piloter votre visibilité Google et IA." />
     <meta name="author" content="Crawlers.fr" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="bingbot" content="index, follow" />
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://crawlers.fr/" />
+
+    <!-- Canonical & hreflang are injected dynamically per-route by useCanonicalHreflang — no static canonical here to avoid duplicates. -->
     <link rel="alternate" type="application/rss+xml" title="Crawlers.fr — Blog SEO & GEO" href="https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/rss-feed" />
-    
-    <!-- Language alternates -->
-    <link rel="alternate" hreflang="fr" href="https://crawlers.fr/" />
-    <link rel="alternate" hreflang="en" href="https://crawlers.fr/?lang=en" />
-    <link rel="alternate" hreflang="es" href="https://crawlers.fr/?lang=es" />
-    <link rel="alternate" hreflang="x-default" href="https://crawlers.fr/" />
 
     <!-- Robot Discovery Links -->
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" title="Sitemap XML" />
@@ -52,9 +45,9 @@
     <meta name="ai.txt" content="/llms.txt" />
     <meta name="generator" content="Crawlers.fr - Audit SEO & GEO Expert" />
     
-    <!-- Open Graph -->
-    <meta property="og:title" content="Crawlers.fr — Audit SEO & GEO | Correction Automatique | Contenu IA" />
-    <meta property="og:description" content="Audit SEO/GEO, correction automatique des pages, création de contenu IA, connexion CMS directe, Google My Business, maintenance prédictive ML. Gratuit à Pro Agency+ 99€/mois." />
+    <!-- Open Graph (fallback générique — chaque route remplace via Helmet/SEOHead) -->
+    <meta property="og:title" content="Crawlers.fr" />
+    <meta property="og:description" content="Plateforme d'audit SEO et GEO et de pilotage de visibilité IA." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://crawlers.fr/" />
     <meta property="og:image" content="https://crawlers.fr/og-image.png" />
@@ -69,8 +62,8 @@
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@crawlersfr" />
-    <meta name="twitter:title" content="Crawlers.fr — Audit SEO & GEO | Correction Automatique | Contenu IA" />
-    <meta name="twitter:description" content="Audit SEO/GEO, correction automatique, création contenu IA, CMS direct, GMB, maintenance prédictive ML. Gratuit à Pro Agency+." />
+    <meta name="twitter:title" content="Crawlers.fr" />
+    <meta name="twitter:description" content="Plateforme d'audit SEO et GEO et de pilotage de visibilité IA." />
     <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
     <meta name="twitter:image:alt" content="Crawlers.fr - Plateforme SEO, GEO & IA Complète" />
     

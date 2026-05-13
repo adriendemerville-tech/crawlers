@@ -322,3 +322,47 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 # Zones : Europe, Amérique du Nord, Amérique du Sud
 # Version complète (llms-full.txt) : https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/llms-full-txt
 # Pages HTML pré-rendues : https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page?route=/
+
+## Pages
+
+- [Accueil](/): Plateforme d'audit SEO et GEO et de pilotage de visibilité IA.
+- [Tarifs](/tarifs): Plans Gratuit, Pro Agency 59€/mois, Pro Agency+ 99€/mois.
+- [Audit Expert SEO](/audit-expert): Audit technique gratuit sur 200 points.
+- [Audit SEO gratuit](/audit-seo-gratuit): Diagnostic instantané d'une URL.
+- [Score GEO](/score-geo): Mesure de visibilité dans les IA génératives.
+- [Visibilité LLM](/visibilite-llm): Présence de marque dans ChatGPT, Claude, Gemini, Perplexity.
+- [Analyse Bots IA](/analyse-bots-ia): Vérification d'accès des bots IA aux pages.
+- [PageSpeed](/pagespeed): Core Web Vitals desktop et mobile (LCP, INP, CLS).
+- [E-E-A-T](/eeat): Audit Expérience, Expertise, Autorité, Fiabilité.
+- [GEO — Generative Engine Optimization](/generative-engine-optimization): Optimisation pour les moteurs génératifs.
+- [Indice d'Alignement Stratégique](/indice-alignement-strategique): Diagnostic Brand vs Non-Brand via GSC.
+- [Architecte Génératif](/architecte-generatif): Correction automatique multi-pages (JSON-LD, meta, OG, FAQ).
+- [Content Architect](/content-architect): Création de contenu IA ancré métier avec maillage interne.
+- [Conversion Optimizer](/conversion-optimizer): Optimisation de conversion via GA4.
+- [Google Business](/google-business): Gestion multi-fiches GMB.
+- [Intégration GTM](/integration-gtm): Déploiement des correctifs via Google Tag Manager.
+- [API & Intégrations](/api-integrations): Connecteurs CMS, GSC, GA4, MCP.
+- [Marina](/marina): Rapport SEO et GEO complet en un clic.
+- [Matrice d'audit](/matrice): Benchmark multi-critères public.
+- [Observatoire](/observatoire): Indicateurs sectoriels SEO et GEO.
+- [Pro Agency](/pro-agency): Console multi-sites et outils Pro.
+- [Comparatif Crawlers vs Semrush](/comparatif-crawlers-semrush): Comparaison fonctionnelle.
+- [Comparatif Claude vs Crawlers](/comparatif-claude-vs-crawlers): IA généraliste vs plateforme SEO/GEO.
+- [Comparatif plateformes SEO IA](/comparatif-plateforme-seo-ia): Panorama des solutions SEO et GEO.
+- [Guide audit SEO](/guide-audit-seo): Méthodologie d'audit pas à pas.
+- [Guides](/guides): Hub des guides SEO et GEO.
+- [Blog](/blog): Articles SEO, GEO et visibilité IA.
+- [Lexique](/lexique): Définitions SEO, GEO et IA.
+- [FAQ](/faq): Questions fréquentes.
+- [Méthodologie](/methodologie): Méthodologie d'évaluation Crawlers.
+- [À propos](/a-propos): À propos de Crawlers.fr.
+- [Aide](/aide): Centre d'aide et support.
+- [Extension](/extension): Extension navigateur Crawlers.
+
+## Optional
+
+- [Mentions légales](/mentions-legales)
+- [Politique de confidentialité](/politique-confidentialite)
+- [Conditions d'utilisation](/conditions-utilisation)
+- [CGVU](/cgvu)
+- [RGPD](/rgpd)
