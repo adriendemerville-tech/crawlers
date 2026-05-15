@@ -542,6 +542,7 @@ const translations = {
 };
 
 export default function Marina() {
+  useCanonicalHreflang('/marina');
   const { user } = useAuth();
   const { balance: credits, refreshBalance: refreshCredits, useCredit } = useCredits();
   const { language } = useLanguage();

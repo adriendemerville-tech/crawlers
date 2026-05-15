@@ -107,6 +107,7 @@ const PILLARS = [
 ];
 
 export default function AppEeat() {
+  useCanonicalHreflang('/app/eeat');
   const { language } = useLanguage();
   const t = i18n[language] || i18n.fr;
   const { user } = useAuth();

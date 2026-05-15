@@ -33,6 +33,7 @@ const V = {
 };
 
 const SeaSeoBridgePage = memo(() => {
+  useCanonicalHreflang('/sea-seo-bridge');
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',

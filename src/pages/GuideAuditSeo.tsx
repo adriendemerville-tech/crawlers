@@ -93,6 +93,7 @@ const faqSchema = {
 };
 
 export default function GuideAuditSeo() {
+  useCanonicalHreflang('/guide-audit-seo');
   useEffect(() => {
     const schemas = [
       { id: 'guide-article', data: articleSchema },

@@ -500,6 +500,7 @@ const t = {
 
 /* ─── Component ─── */
 const ContentArchitectPage = memo(() => {
+  useCanonicalHreflang('/content-architect');
   const { language } = useLanguage();
   const { user } = useAuth();
   const { balance } = useCredits();

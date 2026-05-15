@@ -153,6 +153,7 @@ const useCases = [
 ];
 
 export default function StrategeCocoon() {
+  useCanonicalHreflang('/stratege-cocoon');
   const { language } = useLanguage();
 
   return (

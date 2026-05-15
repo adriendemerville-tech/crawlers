@@ -71,6 +71,7 @@ function VerdictIcon({ level }: { level: 'ok' | 'warning' | 'error' }) {
 }
 
 export default function DiagnosticWaf() {
+  useCanonicalHreflang('/diagnostic-waf');
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DiagResult | null>(null);

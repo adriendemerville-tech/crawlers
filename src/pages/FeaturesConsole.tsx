@@ -35,6 +35,7 @@ const proModules = [
 ];
 
 export default function FeaturesConsole() {
+  useCanonicalHreflang('/features/console');
   return (
     <div className="min-h-screen bg-background">
       <Helmet>

@@ -45,6 +45,7 @@ const FAMILY_ORDER: Array<{ key: string; pickFrom: 'root' | 'external'; keys: st
 ];
 
 export default function MachineLayerScanner() {
+  useCanonicalHreflang('/app/machine-layer');
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScanResponse | null>(null);

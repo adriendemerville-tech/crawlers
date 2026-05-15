@@ -231,6 +231,7 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
 }
 
 export default function Features() {
+  useCanonicalHreflang('/features');
   const { language } = useLanguage();
   const t = i18n[language];
   const featureGroups = getFeatures(language);

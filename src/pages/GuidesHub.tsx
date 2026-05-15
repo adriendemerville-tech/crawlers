@@ -30,6 +30,7 @@ const collectionJsonLd = {
 };
 
 function GuidesHubComponent() {
+  useCanonicalHreflang('/guides');
   const { language } = useLanguage();
   const [guides, setGuides] = useState<GuideEntry[]>([]);
   const [loading, setLoading] = useState(true);

@@ -11,6 +11,7 @@ import { ScanLine, Bot, ArrowRight, Layers, Eye, Code2 } from 'lucide-react';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 export default function MachineLayerLanding() {
+  useCanonicalHreflang('/machine-layer-scanner');
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
