@@ -1,4 +1,5 @@
 import { memo, Suspense, lazy } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ const V = {
 };
 
 const SeaSeoBridgePage = memo(() => {
+  useCanonicalHreflang('/sea-seo-bridge');
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -154,7 +156,6 @@ const SeaSeoBridgePage = memo(() => {
       <Helmet>
         <title>SEA → SEO Bridge — Croisement Google Ads & SEO par l'IA | Crawlers.fr</title>
         <meta name="description" content="Identifiez les mots-clés payants convertibles en trafic organique. L'IA croise Google Ads, Search Console, GA4 et Cocoon pour révéler les opportunités SEO cachées dans vos campagnes SEA." />
-        <link rel="canonical" href="https://crawlers.fr/sea-seo-bridge" />
         <meta property="og:title" content="SEA → SEO Bridge — Croisement Google Ads & SEO par l'IA" />
         <meta property="og:description" content="Module d'analyse croisée qui identifie les mots-clés payants convertibles en trafic organique grâce à l'intelligence artificielle." />
         <meta property="og:type" content="website" />

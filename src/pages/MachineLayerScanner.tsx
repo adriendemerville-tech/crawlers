@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -44,6 +45,7 @@ const FAMILY_ORDER: Array<{ key: string; pickFrom: 'root' | 'external'; keys: st
 ];
 
 export default function MachineLayerScanner() {
+  useCanonicalHreflang('/app/machine-layer');
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScanResponse | null>(null);
@@ -168,7 +170,6 @@ export default function MachineLayerScanner() {
         <title>Machine Layer Scanner — Crawlers.fr | Audit signaux SEO/GEO</title>
         <meta name="description" content="Scannez gratuitement la couche machine de votre site : meta, OpenGraph, JSON-LD, robots.txt, llms.txt, headers HTTP. Recommandations rédigées prêtes à coller." />
         <meta name="robots" content="index, follow, max-image-preview:large" />
-        <link rel="canonical" href="https://crawlers.fr/app/machine-layer" />
         <script type="application/ld+json">{JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'WebApplication',

@@ -129,7 +129,6 @@ const AuditSeoGratuit = () => {
         <title>Audit SEO en Ligne 2026 — Score 200 Points, Visibilité IA | Crawlers.fr</title>
         <meta name="description" content="Audit SEO gratuit sur 200 points : Core Web Vitals, JSON-LD, robots.txt, visibilité LLM. Résultats en 2 min, code correctif inclus." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://crawlers.fr/audit-seo-gratuit" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/audit-seo-gratuit" />

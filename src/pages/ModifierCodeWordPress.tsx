@@ -154,7 +154,6 @@ const ModifierCodeWordPress = () => {
       <Helmet>
         <title>{SEO_META.title}</title>
         <meta name="description" content={SEO_META.description} />
-        <link rel="canonical" href={SEO_META.canonical} />
         <meta property="og:title" content={SEO_META.ogTitle} />
         <meta property="og:description" content={SEO_META.description} />
         <meta property="og:url" content={SEO_META.canonical} />

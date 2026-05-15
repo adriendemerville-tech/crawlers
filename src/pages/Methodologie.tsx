@@ -172,7 +172,6 @@ export default function Methodologie() {
         <title>Méthodologie d'audit SEO & GEO — 7 algorithmes | Crawlers.fr</title>
         <meta name="description" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires, 150+ points d'audit, architecture multi-fallback, RGPD natif. Comment nous calculons vos scores SEO et GEO." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://crawlers.fr/methodologie" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/methodologie" />

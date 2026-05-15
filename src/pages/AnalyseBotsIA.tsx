@@ -88,7 +88,6 @@ const AnalyseBotsIA = () => {
         <title>Analyse Bots IA — Votre site est-il visible par ChatGPT, Claude, Perplexity ? | Crawlers</title>
         <meta name="description" content="Vérifiez gratuitement si votre robots.txt bloque les crawlers IA. Analysez l'accès de GPTBot, ClaudeBot, PerplexityBot à votre site et optimisez votre visibilité GEO en 2026." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://crawlers.fr/analyse-bots-ia" />
         <meta property="og:title" content="Analyse Bots IA — Votre site bloque-t-il les crawlers IA ?" />
         <meta property="og:description" content="Vérifiez si GPTBot, ClaudeBot, PerplexityBot peuvent accéder à votre site. Audit gratuit robots.txt pour l'IA." />
         <meta property="og:type" content="article" />

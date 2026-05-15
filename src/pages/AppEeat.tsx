@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { SEOHead } from '@/components/SEOHead';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -106,6 +107,7 @@ const PILLARS = [
 ];
 
 export default function AppEeat() {
+  useCanonicalHreflang('/app/eeat');
   const { language } = useLanguage();
   const t = i18n[language] || i18n.fr;
   const { user } = useAuth();
@@ -194,7 +196,6 @@ export default function AppEeat() {
         description={t.meta}
         path="/app/eeat"
       >
-        <link rel="canonical" href="https://crawlers.fr/app/eeat" />
       </SEOHead>
 
       <Header />

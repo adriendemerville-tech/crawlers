@@ -76,7 +76,6 @@ const ScoreGEO = () => {
         <title>Score GEO — Mesurez votre visibilité IA (ChatGPT, Claude, Perplexity) | Crawlers</title>
         <meta name="description" content="Obtenez votre Score GEO gratuit et mesurez la capacité de votre site à être cité par les moteurs de recherche génératifs. Optimisez votre visibilité IA en 2026." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://crawlers.fr/score-geo" />
         <meta property="og:title" content="Score GEO — Mesurez votre visibilité dans les réponses IA" />
         <meta property="og:description" content="Votre site est-il optimisé pour ChatGPT, Claude et Perplexity ? Obtenez votre Score GEO gratuit." />
         <meta property="og:type" content="article" />

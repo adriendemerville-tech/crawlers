@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
@@ -230,6 +231,7 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
 }
 
 export default function Features() {
+  useCanonicalHreflang('/features');
   const { language } = useLanguage();
   const t = i18n[language];
   const featureGroups = getFeatures(language);
@@ -239,7 +241,6 @@ export default function Features() {
       <Helmet>
         <title>{t.metaTitle}</title>
         <meta name="description" content={t.metaDesc} />
-        <link rel="canonical" href="https://crawlers.fr/features" />
       </Helmet>
       <Header />
 

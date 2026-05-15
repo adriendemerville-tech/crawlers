@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
@@ -34,6 +35,7 @@ const proModules = [
 ];
 
 export default function FeaturesConsole() {
+  useCanonicalHreflang('/features/console');
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -42,7 +44,6 @@ export default function FeaturesConsole() {
           name="description"
           content="La Console Crawlers réunit SEO, GEO, plans d'action, scripts, crawls, content, GMB, indexation et reporting dans un cockpit unique. Découvrez son design et ses 16 modules."
         />
-        <link rel="canonical" href="https://crawlers.fr/features/console" />
       </Helmet>
 
       <Header />

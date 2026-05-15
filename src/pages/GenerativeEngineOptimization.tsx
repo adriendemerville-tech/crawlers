@@ -147,7 +147,6 @@ const GenerativeEngineOptimization = () => {
         <title>GEO : Generative Engine Optimization — Guide Complet 2026 | Crawlers.fr</title>
         <meta name="description" content="Qu'est-ce que le GEO ? Guide complet de la Generative Engine Optimization : définition, différences avec le SEO, stratégies d'optimisation pour ChatGPT, Perplexity, Gemini." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://crawlers.fr/generative-engine-optimization" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/generative-engine-optimization" />

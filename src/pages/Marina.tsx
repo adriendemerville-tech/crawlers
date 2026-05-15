@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense} from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -541,6 +542,7 @@ const translations = {
 };
 
 export default function Marina() {
+  useCanonicalHreflang('/marina');
   const { user } = useAuth();
   const { balance: credits, refreshBalance: refreshCredits, useCredit } = useCredits();
   const { language } = useLanguage();
@@ -727,7 +729,6 @@ export default function Marina() {
         <html lang={t.meta.lang} />
         <title>{t.meta.title}</title>
         <meta name="description" content={t.meta.description} />
-        <link rel="canonical" href="https://crawlers.fr/marina" />
         <meta property="og:title" content={t.meta.ogTitle} />
         <meta property="og:description" content={t.meta.ogDesc} />
         <meta property="og:type" content="website" />

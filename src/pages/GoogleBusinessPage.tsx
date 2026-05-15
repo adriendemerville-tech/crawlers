@@ -253,7 +253,6 @@ export default function GoogleBusinessPage() {
         <meta property="og:description" content="Analysez et optimisez votre fiche Google Business pour le SEO local et les moteurs IA. Score sur 42 critères, benchmark concurrent, recommandations GEO." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://crawlers.fr/google-business" />
-        <link rel="canonical" href="https://crawlers.fr/google-business" />
       </Helmet>
 
       <Header />

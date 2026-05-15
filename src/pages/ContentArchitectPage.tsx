@@ -1,4 +1,5 @@
 import { memo, useState, lazy, Suspense } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';
@@ -499,6 +500,7 @@ const t = {
 
 /* ─── Component ─── */
 const ContentArchitectPage = memo(() => {
+  useCanonicalHreflang('/content-architect');
   const { language } = useLanguage();
   const { user } = useAuth();
   const { balance } = useCredits();
@@ -510,7 +512,6 @@ const ContentArchitectPage = memo(() => {
       <Helmet>
         <title>{tr.meta.title}</title>
         <meta name="description" content={tr.meta.description} />
-        <link rel="canonical" href="https://crawlers.fr/content-architect" />
         <meta property="og:title" content={tr.meta.title} />
         <meta property="og:description" content={tr.meta.description} />
         <meta property="og:type" content="website" />

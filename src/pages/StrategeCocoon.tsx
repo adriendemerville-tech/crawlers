@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -152,6 +153,7 @@ const useCases = [
 ];
 
 export default function StrategeCocoon() {
+  useCanonicalHreflang('/stratege-cocoon');
   const { language } = useLanguage();
 
   return (
@@ -159,7 +161,6 @@ export default function StrategeCocoon() {
       <Helmet>
         <title>Stratège Cocoon — Consultant IA SEO Senior | Crawlers.fr</title>
         <meta name="description" content="Stratège Cocoon est un consultant IA senior qui analyse votre cocon sémantique, prescrit des actions concrètes et mesure l'impact réel sur votre SEO. Réservé aux abonnés Pro Agency." />
-        <link rel="canonical" href="https://crawlers.fr/stratege-cocoon" />
       </Helmet>
 
       <Suspense fallback={null}>
