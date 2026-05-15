@@ -199,3 +199,39 @@ Sitemap: https://crawlers.fr/sitemap.xml
 #   https://crawlers.fr/llms-full.txt
 # Pré-rendu HTML pour bots sans JS :
 #   https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page?route=/
+
+# --------------------------------------------
+# Pages clés (aide à la découvrabilité pour bots IA)
+# --------------------------------------------
+# Accueil               : https://crawlers.fr/
+# Tarifs                : https://crawlers.fr/tarifs
+# Audit Expert SEO      : https://crawlers.fr/audit-expert
+# Audit SEO gratuit     : https://crawlers.fr/audit-seo-gratuit
+# Score GEO             : https://crawlers.fr/score-geo
+# Visibilité LLM        : https://crawlers.fr/visibilite-llm
+# Analyse Bots IA       : https://crawlers.fr/analyse-bots-ia
+# PageSpeed             : https://crawlers.fr/pagespeed
+# E-E-A-T               : https://crawlers.fr/eeat
+# GEO                   : https://crawlers.fr/generative-engine-optimization
+# IAS                   : https://crawlers.fr/indice-alignement-strategique
+# Architecte Génératif  : https://crawlers.fr/architecte-generatif
+# Content Architect     : https://crawlers.fr/content-architect
+# Conversion Optimizer  : https://crawlers.fr/conversion-optimizer
+# Google Business       : https://crawlers.fr/google-business
+# Intégration GTM       : https://crawlers.fr/integration-gtm
+# API & Intégrations    : https://crawlers.fr/api-integrations
+# Marina                : https://crawlers.fr/marina
+# Matrice d'audit       : https://crawlers.fr/matrice
+# Observatoire          : https://crawlers.fr/observatoire
+# Pro Agency            : https://crawlers.fr/pro-agency
+# Stratège Cocoon       : https://crawlers.fr/stratege-cocoon
+# Social Content Hub    : https://crawlers.fr/social-content-creator
+# Guides                : https://crawlers.fr/guides
+# Guide audit SEO       : https://crawlers.fr/guide-audit-seo
+# Blog                  : https://crawlers.fr/blog
+# Lexique               : https://crawlers.fr/lexique
+# FAQ                   : https://crawlers.fr/faq
+# Méthodologie          : https://crawlers.fr/methodologie
+# À propos              : https://crawlers.fr/a-propos
+# Aide                  : https://crawlers.fr/aide
+
