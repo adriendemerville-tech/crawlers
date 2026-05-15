@@ -1,4 +1,5 @@
 import { memo, useState, lazy, Suspense } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';

@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Header } from '@/components/Header';
 import { lazy, Suspense, useEffect } from 'react';
 import { Button } from '@/components/ui/button';

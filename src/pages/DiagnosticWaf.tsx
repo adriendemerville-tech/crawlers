@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { Loader2, Shield, CheckCircle2, XCircle, AlertTriangle, Globe, ArrowRight, Copy, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';

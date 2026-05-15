@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { SEOHead } from '@/components/SEOHead';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
