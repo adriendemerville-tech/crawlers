@@ -510,7 +510,6 @@ const ContentArchitectPage = memo(() => {
       <Helmet>
         <title>{tr.meta.title}</title>
         <meta name="description" content={tr.meta.description} />
-        <link rel="canonical" href="https://crawlers.fr/content-architect" />
         <meta property="og:title" content={tr.meta.title} />
         <meta property="og:description" content={tr.meta.description} />
         <meta property="og:type" content="website" />

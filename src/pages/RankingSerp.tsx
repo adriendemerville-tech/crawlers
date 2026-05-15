@@ -443,7 +443,6 @@ const RankingSerp = memo(() => {
            'Compara las posiciones de Google para cualquier palabra clave mediante 4 proveedores SERP simultáneamente (DataForSEO, SerpApi, Serper, Bright Data). Herramienta gratuita.'
         )} />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
-        <link rel="canonical" href="https://crawlers.fr/app/ranking-serp" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

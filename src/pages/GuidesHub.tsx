@@ -56,7 +56,6 @@ function GuidesHubComponent() {
       <Helmet>
         <title>Guides SEO & GEO par métier | Crawlers</title>
         <meta name="description" content="Guides pratiques SEO et GEO adaptés à votre métier : artisan, commerçant, PME, startup, agence SEO, consultant. Améliorez votre visibilité sur Google et les IA." />
-        <link rel="canonical" href="https://crawlers.fr/guides" />
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Guides SEO & GEO par métier | Crawlers" />
         <meta property="og:description" content="Guides pratiques pour améliorer votre visibilité sur Google et les IA." />

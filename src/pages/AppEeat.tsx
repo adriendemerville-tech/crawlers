@@ -194,7 +194,6 @@ export default function AppEeat() {
         description={t.meta}
         path="/app/eeat"
       >
-        <link rel="canonical" href="https://crawlers.fr/app/eeat" />
       </SEOHead>
 
       <Header />

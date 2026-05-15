@@ -827,7 +827,6 @@ export default function Lexique() {
         <meta name="description" content="Lexique SEO, GEO et IA 2026 — définitions complètes : GEO, AEO, E-E-A-T, LLM, IAS, cocon sémantique, Part de Voix, Triangle Prédictif." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta name="keywords" content="lexique SEO, glossaire GEO, définitions performance web, LCP, CLS, LLM, SGE, E-E-A-T, Core Web Vitals, 2026" />
-        <link rel="canonical" href="https://crawlers.fr/lexique" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/lexique" />

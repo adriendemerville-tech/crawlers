@@ -118,7 +118,6 @@ export default function ComparatifClaudeVsCrawlers() {
       <Helmet>
         <title>Claude Cowork + Code vs Crawlers.fr — Comparatif SEO/GEO 2026</title>
         <meta name="description" content="Claude Cowork, Claude Code et MCP vs Crawlers.fr : comparatif détaillé pour freelances SEO. 14 critères, tarifs, limites, intégrations. Pourquoi 29€/mois de Crawlers remplace votre stack Claude." />
-        <link rel="canonical" href={`${SITE_URL}/comparatif-claude-vs-crawlers`} />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Crawlers.fr" />

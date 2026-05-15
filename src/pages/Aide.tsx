@@ -774,7 +774,6 @@ export default function Aide() {
         <title>Centre d'aide Crawlers.fr — Documentation SEO, GEO & visibilité IA</title>
         <meta name="description" content="Trouvez toutes les réponses sur les audits SEO, le GEO Score, la visibilité LLM, les crédits et le plan Pro Agency. Documentation complète Crawlers.fr." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://crawlers.fr/aide" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/aide" />

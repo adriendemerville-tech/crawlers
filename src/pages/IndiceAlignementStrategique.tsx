@@ -77,7 +77,6 @@ export default function IndiceAlignementStrategique() {
         <title>{title}</title>
         <meta name="description" content={metaDesc} />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
-        <link rel="canonical" href="https://crawlers.fr/indice-alignement-strategique" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/indice-alignement-strategique" />

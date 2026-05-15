@@ -502,7 +502,6 @@ export default function ProAgency() {
         <title>Pro Agency — 29€/mois garanti à vie | Crawlers.fr</title>
         <meta name="description" content="Plan Pro Agency Crawlers.fr — 29€/mois garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, crawl 5000 pages, agents IA, cocon sémantique." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://crawlers.fr/pro-agency" />
         <meta property="og:type" content="product" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/pro-agency" />

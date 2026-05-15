@@ -116,7 +116,6 @@ export default function GuideAuditSeo() {
       <Helmet>
         <title>Audit SEO & GEO 2026 : Guide Identity-First Complet</title>
         <meta name="description" content="Guide exhaustif pour réaliser un audit SEO/GEO en 2026. Méthodologie Identity-First de Crawlers.fr : 168 critères, Score GEO, visibilité LLM, Cocoon 3D." />
-        <link rel="canonical" href="https://crawlers.fr/guide-audit-seo" />
         <meta property="og:title" content="Guide Ultime de l'Audit SEO & GEO en 2026" />
         <meta property="og:description" content="Méthodologie Identity-First, Score GEO, visibilité LLM et plan d'action pour auditer votre site en 2026." />
         <meta property="og:type" content="article" />

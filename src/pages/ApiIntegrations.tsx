@@ -190,7 +190,6 @@ export default function ApiIntegrations() {
       <Helmet>
         <title>API & Intégrations — Connectez vos outils SEO | Crawlers.fr</title>
         <meta name="description" content="Découvrez toutes les API et intégrations disponibles dans Crawlers.fr : Google Search Console, GA4, Matomo, CMS, Marina API. Données anonymisées, déconnexion en 1 clic." />
-        <link rel="canonical" href="https://crawlers.fr/api-integrations" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",

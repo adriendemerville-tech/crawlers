@@ -172,7 +172,6 @@ export default function EEATPage() {
         <title>E-E-A-T : Experience, Expertise, Autorité, Confiance — Guide SEO & GEO 2026 | Crawlers.fr</title>
         <meta name="description" content="Comprendre l'E-E-A-T de Google : définition des 4 piliers (Experience, Expertise, Authoritativeness, Trust), impact sur le SEO et le GEO, scoring algorithmique Crawlers.fr et plan d'action concret." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://crawlers.fr/eeat" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/eeat" />

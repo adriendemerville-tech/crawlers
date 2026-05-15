@@ -129,7 +129,6 @@ export default function DiagnosticWaf() {
       <Helmet>
         <title>Diagnostic WAF — Pourquoi mon site est-il bloqué ? | Crawlers.fr</title>
         <meta name="description" content="Outil de diagnostic gratuit pour comprendre pourquoi un scan échoue : codes HTTP, redirections, robots.txt, headers et User-Agent." />
-        <link rel="canonical" href="https://crawlers.fr/diagnostic-waf" />
       </Helmet>
 
       <main className="container max-w-5xl mx-auto px-4 py-12">

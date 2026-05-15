@@ -727,7 +727,6 @@ export default function Marina() {
         <html lang={t.meta.lang} />
         <title>{t.meta.title}</title>
         <meta name="description" content={t.meta.description} />
-        <link rel="canonical" href="https://crawlers.fr/marina" />
         <meta property="og:title" content={t.meta.ogTitle} />
         <meta property="og:description" content={t.meta.ogDesc} />
         <meta property="og:type" content="website" />

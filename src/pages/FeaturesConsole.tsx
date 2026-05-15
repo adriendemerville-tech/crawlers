@@ -42,7 +42,6 @@ export default function FeaturesConsole() {
           name="description"
           content="La Console Crawlers réunit SEO, GEO, plans d'action, scripts, crawls, content, GMB, indexation et reporting dans un cockpit unique. Découvrez son design et ses 16 modules."
         />
-        <link rel="canonical" href="https://crawlers.fr/features/console" />
       </Helmet>
 
       <Header />

@@ -87,7 +87,6 @@ const PageSpeedLanding = () => {
         <title>Test PageSpeed & Core Web Vitals — Analysez la vitesse de votre site | Crawlers</title>
         <meta name="description" content="Testez gratuitement la vitesse de votre site. Analysez LCP, INP, CLS et les Core Web Vitals. Obtenez des recommandations d'optimisation pour améliorer votre score Google PageSpeed." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://crawlers.fr/pagespeed" />
         <meta property="og:title" content="Test PageSpeed & Core Web Vitals — Performance de votre site" />
         <meta property="og:description" content="Analysez gratuitement les Core Web Vitals de votre site et obtenez des recommandations d'optimisation." />
         <meta property="og:type" content="article" />

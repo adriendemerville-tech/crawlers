@@ -239,7 +239,6 @@ export default function Features() {
       <Helmet>
         <title>{t.metaTitle}</title>
         <meta name="description" content={t.metaDesc} />
-        <link rel="canonical" href="https://crawlers.fr/features" />
       </Helmet>
       <Header />
 
