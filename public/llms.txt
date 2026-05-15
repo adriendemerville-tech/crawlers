@@ -358,6 +358,19 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - [À propos](/a-propos): À propos de Crawlers.fr.
 - [Aide](/aide): Centre d'aide et support.
 - [Extension](/extension): Extension navigateur Crawlers.
+- [Analyse site web gratuit](/analyse-site-web-gratuit): Diagnostic instantané SEO/GEO d'une URL.
+- [Audit sémantique](/audit-semantique): Gaps de contenu vs concurrents et plan d'action.
+- [SEA → SEO Bridge](/sea-seo-bridge): Conversion d'opportunités Google Ads en pages SEO.
+- [Stratège Cocoon](/stratege-cocoon): Stratégie de cocon sémantique pilotée par IA.
+- [Modifier code WordPress](/modifier-code-wordpress): Injection de correctifs via WordPress REST API.
+- [Machine Layer Scanner](/machine-layer-scanner): Scan de la couche machine (JSON-LD, meta, robots).
+- [Breathing Spiral](/breathing-spiral): Stratégie éditoriale en spirale Parménion.
+- [Social Content Creator](/social-content-creator): Génération de posts sociaux SEO/GEO.
+- [Diagnostic WAF](/diagnostic-waf): Diagnostic des règles WAF bloquantes.
+- [Analyse de logs](/analyse-logs): Analyse de logs serveur pour bots IA et SEO.
+- [Fonctionnalités](/features): Vue d'ensemble des modules de la plateforme.
+- [Cocoon — Fonctionnalités](/features/cocoon): Détail du module Cocoon 3D.
+- [Console — Fonctionnalités](/features/console): Détail de la console multi-sites Pro Agency.
 
 ## Optional
 
