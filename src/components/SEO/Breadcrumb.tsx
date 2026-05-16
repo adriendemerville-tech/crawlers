@@ -127,17 +127,18 @@ export function Breadcrumb({ customItems, currentLabel, visuallyHidden = false }
     if (customItems) return customItems;
 
     const segments = pathname.split('/').filter(Boolean);
-    const trail: BreadcrumbItem[] = [{ name: 'Accueil', url: SITE_URL }];
+    const trail: BreadcrumbItem[] = [{ name: 'Accueil', url: `${SITE_URL}/`, navigable: true }];
 
     let currentPath = '';
     segments.forEach((segment, index) => {
       currentPath += `/${segment}`;
       const isLast = index === segments.length - 1;
+      const navigable = isLast || !NON_NAVIGABLE_SEGMENTS.has(segment);
       const label = isLast && currentLabel
         ? currentLabel
         : PATH_LABELS[segment] || decodeURIComponent(segment).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
-      trail.push({ name: label, url: `${SITE_URL}${currentPath}` });
+      trail.push({ name: label, url: `${SITE_URL}${currentPath}`, navigable });
     });
 
     return trail;
@@ -148,12 +149,19 @@ export function Breadcrumb({ customItems, currentLabel, visuallyHidden = false }
     return {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
-      "itemListElement": items.map((item, index) => ({
-        "@type": "ListItem",
-        "position": index + 1,
-        "name": item.name,
-        "item": item.url,
-      })),
+      "itemListElement": items.map((item, index) => {
+        const listItem: Record<string, unknown> = {
+          "@type": "ListItem",
+          "position": index + 1,
+          "name": item.name,
+        };
+        // Google Rich Results: omit `item` for non-navigable segments
+        // (avoids "Invalid item URL" errors on virtual route prefixes).
+        if (item.navigable) {
+          listItem.item = item.url;
+        }
+        return listItem;
+      }),
     };
   }, [items]);
 
