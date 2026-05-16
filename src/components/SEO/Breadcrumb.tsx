@@ -79,9 +79,27 @@ const PATH_LABELS: Record<string, string> = {
   'features': 'Fonctionnalités',
 };
 
+/**
+ * Path segments that exist only as URL prefixes — NOT real routes.
+ * For these, breadcrumb emits a `ListItem` WITHOUT `item` (Google-compliant)
+ * and renders a non-clickable label in the visible nav.
+ * Prevents "Invalid item URL" errors in Google Rich Results Test.
+ */
+const NON_NAVIGABLE_SEGMENTS = new Set<string>([
+  'app',         // /app/* — no /app index
+  'guide',       // /guide/:slug — index is /guides
+  'landing',     // /landing/:slug — no /landing index
+  'rapport',     // /app/rapport/* — no /app/rapport index
+  'temporarylink',
+  'temporaryreport',
+  'r',
+  's',
+]);
+
 interface BreadcrumbItem {
   name: string;
   url: string;
+  navigable: boolean;
 }
 
 interface BreadcrumbProps {
