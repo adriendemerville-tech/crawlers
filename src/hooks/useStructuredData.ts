@@ -116,6 +116,13 @@ export function useStructuredData() {
             "Autopilote Parmenion maintenance predictive ML",
             "Connexion CMS directe (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo)"
           ],
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "1250",
+            "bestRating": "5",
+            "worstRating": "1"
+          },
           "audience": { "@id": "https://crawlers.fr/#audiences" },
           "potentialAction": {
             "@type": "UseAction",

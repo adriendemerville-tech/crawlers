@@ -164,6 +164,24 @@ export default function Methodologie() {
     }
   };
 
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Comment Crawlers.fr réalise un audit SEO & GEO complet",
+    "description": "Méthodologie pas-à-pas : de l'analyse technique au plan d'action priorisé, via les 7 algorithmes propriétaires et l'enrichissement LLM multi-modèles.",
+    "totalTime": "PT3M",
+    "inLanguage": "fr",
+    "supply": [{ "@type": "HowToSupply", "name": "URL du site à auditer" }],
+    "tool": [{ "@type": "HowToTool", "name": "Plateforme Crawlers.fr" }],
+    "step": [
+      { "@type": "HowToStep", "position": 1, "name": "Collecte technique", "text": "Crawl récursif du site (sitemap-first), récupération HTML, headers HTTP, robots.txt, Core Web Vitals via CrUX et analyse des logs serveur.", "url": "https://crawlers.fr/methodologie#collecte" },
+      { "@type": "HowToStep", "position": 2, "name": "Analyse algorithmique", "text": "Exécution parallèle de 7 algorithmes propriétaires : TF-IDF, GEO Score, IAS, Part de Voix, Triangle Prédictif, Empreinte Lexicale, PageRank Interne.", "url": "https://crawlers.fr/methodologie#algos" },
+      { "@type": "HowToStep", "position": 3, "name": "Enrichissement LLM", "text": "Interrogation parallèle de ChatGPT, Gemini, Perplexity et Claude pour mesurer la visibilité IA, détecter les hallucinations et évaluer la citabilité.", "url": "https://crawlers.fr/methodologie#llm" },
+      { "@type": "HowToStep", "position": 4, "name": "Génération de correctifs", "text": "Code correctif personnalisé (JSON-LD, balises méta, maillage) prêt à déployer via WordPress, GTM ou SDK sécurisé avec kill switch distant.", "url": "https://crawlers.fr/methodologie#correctifs" },
+      { "@type": "HowToStep", "position": 5, "name": "Scoring et plan d'action", "text": "Score global sur 200 points, export PDF, plan d'action priorisé par impact business et suivi temporel via la console de monitoring.", "url": "https://crawlers.fr/methodologie#scoring" }
+    ]
+  };
+
   const totalPoints = auditCategories.reduce((sum, c) => sum + c.count, 0);
 
   return (
@@ -183,6 +201,7 @@ export default function Methodologie() {
         <meta name="twitter:title" content="Méthodologie d'audit SEO & GEO — 7 algorithmes | Crawlers.fr" />
         <meta name="twitter:description" content="7 algorithmes propriétaires, 150+ points d'audit, architecture multi-fallback." />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
       </Helmet>
       <Header />
       <main className="min-h-screen bg-background pt-20">
