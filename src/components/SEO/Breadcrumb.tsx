@@ -99,7 +99,7 @@ const NON_NAVIGABLE_SEGMENTS = new Set<string>([
 interface BreadcrumbItem {
   name: string;
   url: string;
-  navigable: boolean;
+  navigable?: boolean;
 }
 
 interface BreadcrumbProps {
