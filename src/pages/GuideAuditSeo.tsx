@@ -92,6 +92,24 @@ const faqSchema = {
   }))
 };
 
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Comment réaliser un audit SEO & GEO Identity-First en 2026",
+  "description": "Méthode pas-à-pas pour auditer un site web en couvrant simultanément le référencement Google et la visibilité dans les moteurs IA (ChatGPT, Gemini, Perplexity, Claude).",
+  "totalTime": "PT30M",
+  "inLanguage": "fr",
+  "supply": [{ "@type": "HowToSupply", "name": "URL du site à auditer" }],
+  "tool": [{ "@type": "HowToTool", "name": "Crawlers.fr (audit gratuit)" }],
+  "step": [
+    { "@type": "HowToStep", "position": 1, "name": "Cartographier l'identité du site", "text": "Définir le positionnement, la cible et les requêtes brand vs non-brand. C'est la base de l'approche Identity-First : sans identité claire, le scoring est biaisé.", "url": "https://crawlers.fr/guide-audit-seo#identity" },
+    { "@type": "HowToStep", "position": 2, "name": "Audit technique SEO (168 critères)", "text": "Vérifier indexation, robots.txt, sitemap, Core Web Vitals (LCP, INP, CLS), balises meta, JSON-LD, canoniques et hreflang.", "url": "https://crawlers.fr/guide-audit-seo#technique" },
+    { "@type": "HowToStep", "position": 3, "name": "Mesurer le Score GEO", "text": "Tester la citabilité du contenu par les LLM, vérifier l'accès des bots IA (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) et la qualité des données structurées.", "url": "https://crawlers.fr/guide-audit-seo#geo" },
+    { "@type": "HowToStep", "position": 4, "name": "Tester la visibilité LLM", "text": "Interroger en parallèle ChatGPT, Gemini, Perplexity et Claude sur les requêtes cibles pour mesurer mentions, citations et hallucinations.", "url": "https://crawlers.fr/guide-audit-seo#llm" },
+    { "@type": "HowToStep", "position": 5, "name": "Construire le plan d'action priorisé", "text": "Classer les actions par impact business et coût d'implémentation, puis déployer via CMS direct, GTM ou correctifs JSON-LD.", "url": "https://crawlers.fr/guide-audit-seo#plan" }
+  ]
+};
+
 export default function GuideAuditSeo() {
   useCanonicalHreflang('/guide-audit-seo');
   useEffect(() => {
