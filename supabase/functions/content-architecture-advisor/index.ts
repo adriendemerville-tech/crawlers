@@ -1150,7 +1150,10 @@ FRAÎCHEUR & DÉNOMINATION:
         ? ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash']
         : ['google/gemini-2.5-flash'];
 
-    const LLM_TIMEOUT_MS = 150000; // 150s (was 120s)
+    // 90s leaves 60s headroom under the 150s edge-function CPU wall-time,
+    // so a timeout fires *inside* the function and the catch block can mark
+    // the async job as 'failed' instead of leaving it stuck in 'processing'.
+    const LLM_TIMEOUT_MS = 90000;
 
     async function callLLMWithRetry(): Promise<Response> {
       for (let attempt = 0; attempt < modelTiers.length; attempt++) {

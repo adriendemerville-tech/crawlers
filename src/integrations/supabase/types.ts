@@ -13497,6 +13497,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      reap_zombie_async_jobs: { Args: never; Returns: number }
       recalculate_reliability: { Args: never; Returns: undefined }
       resolve_human_sample_rate: {
         Args: { p_user_id: string }
