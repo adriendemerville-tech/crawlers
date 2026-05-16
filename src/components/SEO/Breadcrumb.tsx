@@ -186,8 +186,11 @@ export function Breadcrumb({ customItems, currentLabel, visuallyHidden = false }
                   {index > 0 && (
                     <ChevronRight className="h-3 w-3 text-muted-foreground/50 shrink-0" />
                   )}
-                  {isLast ? (
-                    <span className="text-foreground/70 font-medium truncate max-w-[200px]" aria-current="page">
+                  {isLast || item.navigable === false ? (
+                    <span
+                      className={isLast ? "text-foreground/70 font-medium truncate max-w-[200px]" : "truncate max-w-[180px] opacity-70"}
+                      {...(isLast ? { 'aria-current': 'page' as const } : {})}
+                    >
                       {index === 0 && <Home className="h-3 w-3 inline mr-1" />}
                       {item.name}
                     </span>
