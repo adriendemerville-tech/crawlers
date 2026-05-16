@@ -116,6 +116,7 @@ export default function GuideAuditSeo() {
     const schemas = [
       { id: 'guide-article', data: articleSchema },
       { id: 'guide-faq', data: faqSchema },
+      { id: 'guide-howto', data: howToSchema },
     ];
     schemas.forEach(({ id, data }) => {
       const s = document.createElement('script');
