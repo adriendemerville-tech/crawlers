@@ -201,6 +201,7 @@ export default function Methodologie() {
         <meta name="twitter:title" content="Méthodologie d'audit SEO & GEO — 7 algorithmes | Crawlers.fr" />
         <meta name="twitter:description" content="7 algorithmes propriétaires, 150+ points d'audit, architecture multi-fallback." />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
       </Helmet>
       <Header />
       <main className="min-h-screen bg-background pt-20">
