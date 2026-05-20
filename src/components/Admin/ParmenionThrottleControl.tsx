@@ -125,8 +125,9 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
               Pause Backlog Guard
             </Label>
             <p className="text-xs text-muted-foreground max-w-md">
-              Si activé, Parménion ignore le seuil des 5 décisions CMS en attente et publie à son rythme d'origine sur ce CMS.
+              Si activé, Parménion ignore le seuil de 5 décisions CMS en attente (depuis plus d'1h) et publie à son rythme d'origine sur ce CMS.
             </p>
+
           </div>
           <Switch
             id={`guard-${targetId}`}
