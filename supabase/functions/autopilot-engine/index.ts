@@ -203,12 +203,20 @@ try {
           }
         }
 
-        // ═══ Backlog guard : si > 5 décisions CMS planned non exécutées, pause le site ═══
-        // Peut être désactivé par CMS via parmenion_targets.backlog_guard_paused = true.
+        // ═══ Backlog guard (soft) : si > 5 décisions CMS planned non exécutées,
+        // on inhibe UNIQUEMENT la création de nouveaux contenus pour ce cycle.
+        // Le pipeline continue normalement (audit/diag/prescribe/execute) sur les autres
+        // leviers (réécriture, EEAT, maillage, métadonnées, tech, redirects…).
+        // Désactivable via parmenion_targets.backlog_guard_paused = true.
+        let contentThrottled = false;
+        let throttleInfo: { created: number; max: number; period: 'day' | 'week' } | null = null;
+        let backlogGuardActive = false;
+        let backlogCount = 0;
+
         const PLANNED_BACKLOG_THRESHOLD = 5;
         const { data: targetGuard } = await supabase
           .from('parmenion_targets')
-          .select('backlog_guard_paused')
+          .select('backlog_guard_paused, max_content_per_period, throttle_period')
           .eq('domain', siteInfo.domain)
           .eq('is_active', true)
           .maybeSingle();
@@ -220,35 +228,27 @@ try {
           .eq('tracked_site_id', config.tracked_site_id)
           .eq('action_type', 'cms')
           .eq('status', 'planned');
+        backlogCount = plannedBacklog ?? 0;
 
-        if (!backlogGuardDisabled && (plannedBacklog ?? 0) > PLANNED_BACKLOG_THRESHOLD) {
-          await supabase
-            .from('autopilot_configs')
-            .update({ status: 'paused', updated_at: new Date().toISOString() })
-            .eq('id', config.id);
-          results.push({
-            site_id: config.tracked_site_id,
-            domain: siteInfo.domain,
-            status: 'paused_backlog',
-            error: `${plannedBacklog} décisions CMS en attente (> ${PLANNED_BACKLOG_THRESHOLD}). Autopilot mis en pause pour ce site.`,
-          });
-          continue;
+        if (!backlogGuardDisabled && backlogCount > PLANNED_BACKLOG_THRESHOLD) {
+          contentThrottled = true;
+          backlogGuardActive = true;
+          console.log(`[AutopilotEngine] 🧯 Backlog guard SOFT for ${siteInfo.domain}: ${backlogCount} CMS planned > ${PLANNED_BACKLOG_THRESHOLD}. Création de contenu inhibée, autres optimisations actives.`);
+          // Si le site avait été mis en 'paused' par l'ancien guard hard, on le relance en idle.
+          if (config.status === 'paused') {
+            await supabase
+              .from('autopilot_configs')
+              .update({ status: 'idle', updated_at: new Date().toISOString() })
+              .eq('id', config.id);
+          }
         }
 
         // ═══ Throttle guard : limite de contenus créés par jour/semaine (parmenion_targets) ═══
         // Au lieu de skip le cycle, on bascule en mode "tech-only" : pas de nouveau contenu,
         // le cycle continue avec audit/diagnostic/prescription sur les actions techniques.
-        let contentThrottled = false;
-        let throttleInfo: { created: number; max: number; period: 'day' | 'week' } | null = null;
-        const { data: targetThrottle } = await supabase
-          .from('parmenion_targets')
-          .select('max_content_per_period, throttle_period')
-          .eq('domain', siteInfo.domain)
-          .eq('is_active', true)
-          .maybeSingle();
-        if (targetThrottle) {
-          const maxPerPeriod = (targetThrottle as any).max_content_per_period ?? 3;
-          const period = ((targetThrottle as any).throttle_period as 'day' | 'week') ?? 'day';
+        if (targetGuard) {
+          const maxPerPeriod = (targetGuard as any).max_content_per_period ?? 3;
+          const period = ((targetGuard as any).throttle_period as 'day' | 'week') ?? 'day';
           const sinceMs = period === 'week' ? 7 * 24 * 3600 * 1000 : 24 * 3600 * 1000;
           const since = new Date(Date.now() - sinceMs).toISOString();
           // On compte les créations réelles d'articles (create-post) sur la période.
