@@ -214,6 +214,7 @@ try {
         let backlogCount = 0;
 
         const PLANNED_BACKLOG_THRESHOLD = 5;
+        const BACKLOG_GRACE_MINUTES = 60; // ignore les décisions trop récentes (< 1h)
         const { data: targetGuard } = await supabase
           .from('parmenion_targets')
           .select('backlog_guard_paused, max_content_per_period, throttle_period')
@@ -222,18 +223,21 @@ try {
           .maybeSingle();
         const backlogGuardDisabled = (targetGuard as any)?.backlog_guard_paused === true;
 
+        const graceCutoff = new Date(Date.now() - BACKLOG_GRACE_MINUTES * 60 * 1000).toISOString();
         const { count: plannedBacklog } = await supabase
           .from('parmenion_decision_log')
           .select('id', { count: 'exact', head: true })
           .eq('tracked_site_id', config.tracked_site_id)
           .eq('action_type', 'cms')
-          .eq('status', 'planned');
+          .eq('status', 'planned')
+          .lt('created_at', graceCutoff);
         backlogCount = plannedBacklog ?? 0;
 
         if (!backlogGuardDisabled && backlogCount > PLANNED_BACKLOG_THRESHOLD) {
           contentThrottled = true;
           backlogGuardActive = true;
-          console.log(`[AutopilotEngine] 🧯 Backlog guard SOFT for ${siteInfo.domain}: ${backlogCount} CMS planned > ${PLANNED_BACKLOG_THRESHOLD}. Création de contenu inhibée, autres optimisations actives.`);
+          console.log(`[AutopilotEngine] 🧯 Backlog guard SOFT for ${siteInfo.domain}: ${backlogCount} CMS planned >${BACKLOG_GRACE_MINUTES}min (seuil ${PLANNED_BACKLOG_THRESHOLD}). Création de contenu inhibée, autres optimisations actives.`);
+
           // Si le site avait été mis en 'paused' par l'ancien guard hard, on le relance en idle.
           if (config.status === 'paused') {
             await supabase
