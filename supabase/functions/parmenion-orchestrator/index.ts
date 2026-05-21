@@ -63,7 +63,12 @@ try {
     }
 
     const supabase = getServiceClient();
-    const isIktracker = isIktrackerDomain(domain);
+    // NOTE: Dictadevi expose une API REST custom (CRUD posts) très proche d'IKtracker.
+    // On le traite comme IKtracker côté orchestrator (même fonction `iktracker-actions`,
+    // mêmes instructions LLM, mêmes drafts). autopilot-engine.callCmsBridge ré-aiguille
+    // ensuite vers `dictadevi-actions` au moment de l'exécution.
+    const isDictadevi = isDictadeviDomain(domain);
+    const isIktracker = isIktrackerDomain(domain) || isDictadevi;
 
     // ═══ PHASE 0: Determine current pipeline phase ═══
     const { data: lastCompletedDecisions } = await supabase
