@@ -492,26 +492,30 @@ try {
         // Fetch IKtracker drafts directly so the LLM can decide to publish them
         if (isIktracker) {
           try {
-            const draftRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/iktracker-actions`, {
+            const bridgeFn = isDictadevi ? 'dictadevi-actions' : 'iktracker-actions';
+            const bridgeBody = isDictadevi
+              ? { action: 'list-posts', params: { limit: 100, status: 'draft' } }
+              : { action: 'list-posts', limit: 100, status: 'draft' };
+            const draftRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/${bridgeFn}`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ action: 'list-posts', limit: 100, status: 'draft' }),
+              body: JSON.stringify(bridgeBody),
             });
             if (draftRes.ok) {
               const draftData = await draftRes.json();
               const rawPosts = draftData?.data?.data?.posts || draftData?.data?.posts || draftData?.data?.data || draftData?.data || [];
               iktrackerDrafts = Array.isArray(rawPosts) ? rawPosts.filter((p: any) => (p.status || '').toLowerCase() === 'draft') : [];
               if (iktrackerDrafts.length > 0) {
-                console.log(`[Parmenion] Found ${iktrackerDrafts.length} IKtracker drafts available for publishing`);
+                console.log(`[Parmenion] Found ${iktrackerDrafts.length} ${bridgeFn} drafts available for publishing`);
               }
             } else {
               await draftRes.text(); // consume body
             }
           } catch (e) {
-            console.warn('[Parmenion] IKtracker draft fetch failed (non-blocking):', e);
+            console.warn('[Parmenion] CMS draft fetch failed (non-blocking):', e);
           }
         }
       }
