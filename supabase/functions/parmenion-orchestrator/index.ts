@@ -4,7 +4,7 @@ import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPa
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
-import { isIktrackerDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+import { isIktrackerDomain, isDictadeviDomain, normalizePageKey } from '../_shared/domainUtils.ts';
 import { computeSeoScoreV2, extractTextContent, type SeoScoreV2, type BusinessProfile } from '../_shared/seoScoringV2.ts';
 
 // ═══ Modular imports ═══
@@ -63,7 +63,12 @@ try {
     }
 
     const supabase = getServiceClient();
-    const isIktracker = isIktrackerDomain(domain);
+    // NOTE: Dictadevi expose une API REST custom (CRUD posts) très proche d'IKtracker.
+    // On le traite comme IKtracker côté orchestrator (même fonction `iktracker-actions`,
+    // mêmes instructions LLM, mêmes drafts). autopilot-engine.callCmsBridge ré-aiguille
+    // ensuite vers `dictadevi-actions` au moment de l'exécution.
+    const isDictadevi = isDictadeviDomain(domain);
+    const isIktracker = isIktrackerDomain(domain) || isDictadevi;
 
     // ═══ PHASE 0: Determine current pipeline phase ═══
     const { data: lastCompletedDecisions } = await supabase
@@ -123,7 +128,7 @@ try {
     }
 
     let baselineSeoScore: SeoScoreV2 | null = null;
-    console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
+    console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, CustomREST: ${isIktracker} (dictadevi=${isDictadevi})`);
 
     // ═══ PHASE 1: Segmented feedback — Check error rate by action type ═══
     const { data: errorRateData } = await supabase.rpc('parmenion_error_rate', { p_domain: domain });
@@ -487,26 +492,30 @@ try {
         // Fetch IKtracker drafts directly so the LLM can decide to publish them
         if (isIktracker) {
           try {
-            const draftRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/iktracker-actions`, {
+            const bridgeFn = isDictadevi ? 'dictadevi-actions' : 'iktracker-actions';
+            const bridgeBody = isDictadevi
+              ? { action: 'list-posts', params: { limit: 100, status: 'draft' } }
+              : { action: 'list-posts', limit: 100, status: 'draft' };
+            const draftRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/${bridgeFn}`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ action: 'list-posts', limit: 100, status: 'draft' }),
+              body: JSON.stringify(bridgeBody),
             });
             if (draftRes.ok) {
               const draftData = await draftRes.json();
               const rawPosts = draftData?.data?.data?.posts || draftData?.data?.posts || draftData?.data?.data || draftData?.data || [];
               iktrackerDrafts = Array.isArray(rawPosts) ? rawPosts.filter((p: any) => (p.status || '').toLowerCase() === 'draft') : [];
               if (iktrackerDrafts.length > 0) {
-                console.log(`[Parmenion] Found ${iktrackerDrafts.length} IKtracker drafts available for publishing`);
+                console.log(`[Parmenion] Found ${iktrackerDrafts.length} ${bridgeFn} drafts available for publishing`);
               }
             } else {
               await draftRes.text(); // consume body
             }
           } catch (e) {
-            console.warn('[Parmenion] IKtracker draft fetch failed (non-blocking):', e);
+            console.warn('[Parmenion] CMS draft fetch failed (non-blocking):', e);
           }
         }
       }
