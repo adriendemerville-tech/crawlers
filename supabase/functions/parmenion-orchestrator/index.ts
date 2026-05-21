@@ -473,72 +473,143 @@ try {
         });
       }
     } else {
-      // Non-prescribe phases or empty workbench without forced content: single LLM call
-      // For execute phase, scan CMS to provide inventory of existing content (avoid duplicates)
-      // Also fetch IKtracker drafts specifically so LLM can propose "publish draft" actions
-      let cmsInventory: CmsContentInventory | null = null;
-      let iktrackerDrafts: any[] = [];
+      // ═══ EXECUTE PHASE — DETERMINISTIC BRIDGE FROM LAST PRESCRIBE V3 PLAN ═══
+      // Au lieu de laisser le LLM execute décider librement (et oublier d'émettre
+      // des cms_actions), on récupère le dernier plan PRESCRIBE V3 et on le rejoue.
+      // L'adapter `buildV3CmsActionsForIktracker` dans autopilot-engine (lignes 60-125)
+      // convertit ensuite `strategist_task` en `create-post` concret via la pipeline éditoriale.
+      // Le LLM execute n'est appelé qu'en dernier recours (aucun plan exploitable).
+      let deterministicExecute = false;
       if (currentPhase === 'execute') {
-        try {
-          const authUserId2 = authUserId || bodyUserId || tracked_site_id;
-          cmsInventory = await scanCmsContent(tracked_site_id, authUserId2);
-          if (cmsInventory.items.length > 0) {
-            console.log(`[Parmenion] CMS inventory for execute: ${cmsInventory.items.length} items (${cmsInventory.drafts.length} drafts)`);
-          }
-        } catch (e) {
-          console.warn('[Parmenion] CMS scan failed (non-blocking):', e);
-        }
+        const { data: lastPrescribe } = await supabase
+          .from('parmenion_decision_log')
+          .select('id, action_type, action_payload, goal_type, goal_description, created_at')
+          .eq('domain', domain)
+          .eq('pipeline_phase', 'prescribe')
+          .in('status', ['completed', 'dry_run', 'planned'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-        // Fetch IKtracker drafts directly so the LLM can decide to publish them
-        if (isIktracker) {
-          try {
-            const bridgeFn = isDictadevi ? 'dictadevi-actions' : 'iktracker-actions';
-            const bridgeBody = isDictadevi
-              ? { action: 'list-posts', params: { limit: 100, status: 'draft' } }
-              : { action: 'list-posts', limit: 100, status: 'draft' };
-            const draftRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/${bridgeFn}`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-                'Content-Type': 'application/json',
+        const prescribePayload: any = lastPrescribe?.action_payload || null;
+        const hasV3Plan = prescribePayload && prescribePayload._prescribe_v3 === true && prescribePayload.strategist_task;
+
+        if (hasV3Plan) {
+          const task = prescribePayload.strategist_task;
+          const executorFn = task.executor_function
+            || (isIktracker ? 'iktracker-actions' : 'wpsync');
+          const isContentTask = (lastPrescribe?.goal_type === 'content_creation' || lastPrescribe?.goal_type === 'content_gap')
+            || (typeof task.action_type === 'string' && (task.action_type.includes('content') || task.action_type === 'publish_draft'));
+          // Pour les tâches contenu sur CMS custom REST, on force la fonction d'exécution
+          // sur le bridge approprié pour que l'adapter V3→cms se déclenche dans autopilot-engine.
+          const finalExecutorFn = isContentTask && isIktracker ? 'iktracker-actions' : executorFn;
+
+          console.log(`[Parménion] 🔁 EXECUTE déterministe: réutilise plan prescribe ${lastPrescribe.id} → task "${task.title}" via ${finalExecutorFn}`);
+
+          decision = {
+            goal: {
+              type: lastPrescribe?.goal_type || (isContentTask ? 'content_creation' : 'technical_fix'),
+              description: `[Execute V3 — déterministe] ${task.title || lastPrescribe?.goal_description || 'rejoue plan prescribe'}`,
+            },
+            tactic: {
+              initial_scope: { from_prescribe: lastPrescribe.id, task_id: task.id || null },
+              final_scope: { executor_function: finalExecutorFn, content_task: isContentTask },
+              scope_reductions: 0,
+              estimated_tokens: 0,
+              target_url: task.affected_urls?.[0] || `https://${domain}`,
+            },
+            prudence: {
+              impact_level: task.estimated_impact === 'high' ? 'avancé' : task.estimated_impact === 'medium' ? 'modéré' : 'faible',
+              risk_score: task.is_destructive ? Math.min(maxRisk, 2) : 1,
+              iterations: 0,
+              goal_changed: false,
+              reasoning: `Exécution déterministe du plan PRESCRIBE V3 ${lastPrescribe.id}. Pas d'appel LLM execute. Adapter autopilot-engine convertit strategist_task → cms_actions.`,
+            },
+            action: {
+              type: isContentTask ? 'cms' : 'mixed',
+              payload: {
+                _prescribe_v3: true,
+                _execute_deterministic: true,
+                strategist_task: task,
+                strategist_plan_id: prescribePayload.strategist_plan_id || null,
+                _from_prescribe_decision_id: lastPrescribe.id,
               },
-              body: JSON.stringify(bridgeBody),
-            });
-            if (draftRes.ok) {
-              const draftData = await draftRes.json();
-              const rawPosts = draftData?.data?.data?.posts || draftData?.data?.posts || draftData?.data?.data || draftData?.data || [];
-              iktrackerDrafts = Array.isArray(rawPosts) ? rawPosts.filter((p: any) => (p.status || '').toLowerCase() === 'draft') : [];
-              if (iktrackerDrafts.length > 0) {
-                console.log(`[Parmenion] Found ${iktrackerDrafts.length} ${bridgeFn} drafts available for publishing`);
-              }
-            } else {
-              await draftRes.text(); // consume body
-            }
-          } catch (e) {
-            console.warn('[Parmenion] CMS draft fetch failed (non-blocking):', e);
-          }
+              functions: [finalExecutorFn],
+            },
+            summary: `Execute déterministe V3 → ${finalExecutorFn} | "${task.title}" (plan ${lastPrescribe.id})`,
+          };
+          deterministicExecute = true;
+        } else {
+          console.log(`[Parménion] ⚠️ EXECUTE: aucun plan PRESCRIBE V3 trouvé pour ${domain} → fallback LLM execute`);
         }
       }
-      decision = await askParmenionLLM({
-        domain,
-        cycle_number,
-        currentPhase,
-        conservativeMode,
-        maxRisk,
-        diagnostics,
-        cocoon,
-        pastErrors,
-        previousPhaseResults,
-        pendingRecommendations,
-        rawAuditData,
-        isIktracker,
-        siteKeywords,
-        siteInfo,
-        scoredWorkbenchItems,
-        cmsInventory,
-        baselineSeoScore,
-        iktrackerDrafts: iktrackerDrafts.length > 0 ? iktrackerDrafts : undefined,
-      });
+
+      if (!deterministicExecute) {
+        // Non-prescribe phases or empty workbench without forced content: single LLM call
+        // For execute phase fallback, scan CMS and fetch drafts so LLM has context.
+        let cmsInventory: CmsContentInventory | null = null;
+        let iktrackerDrafts: any[] = [];
+        if (currentPhase === 'execute') {
+          try {
+            const authUserId2 = authUserId || bodyUserId || tracked_site_id;
+            cmsInventory = await scanCmsContent(tracked_site_id, authUserId2);
+            if (cmsInventory.items.length > 0) {
+              console.log(`[Parmenion] CMS inventory for execute: ${cmsInventory.items.length} items (${cmsInventory.drafts.length} drafts)`);
+            }
+          } catch (e) {
+            console.warn('[Parmenion] CMS scan failed (non-blocking):', e);
+          }
+
+          if (isIktracker) {
+            try {
+              const bridgeFn = isDictadevi ? 'dictadevi-actions' : 'iktracker-actions';
+              const bridgeBody = isDictadevi
+                ? { action: 'list-posts', params: { limit: 100, status: 'draft' } }
+                : { action: 'list-posts', limit: 100, status: 'draft' };
+              const draftRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/${bridgeFn}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bridgeBody),
+              });
+              if (draftRes.ok) {
+                const draftData = await draftRes.json();
+                const rawPosts = draftData?.data?.data?.posts || draftData?.data?.posts || draftData?.data?.data || draftData?.data || [];
+                iktrackerDrafts = Array.isArray(rawPosts) ? rawPosts.filter((p: any) => (p.status || '').toLowerCase() === 'draft') : [];
+                if (iktrackerDrafts.length > 0) {
+                  console.log(`[Parmenion] Found ${iktrackerDrafts.length} ${bridgeFn} drafts available for publishing`);
+                }
+              } else {
+                await draftRes.text();
+              }
+            } catch (e) {
+              console.warn('[Parmenion] CMS draft fetch failed (non-blocking):', e);
+            }
+          }
+        }
+        decision = await askParmenionLLM({
+          domain,
+          cycle_number,
+          currentPhase,
+          conservativeMode,
+          maxRisk,
+          diagnostics,
+          cocoon,
+          pastErrors,
+          previousPhaseResults,
+          pendingRecommendations,
+          rawAuditData,
+          isIktracker,
+          siteKeywords,
+          siteInfo,
+          scoredWorkbenchItems,
+          cmsInventory,
+          baselineSeoScore,
+          iktrackerDrafts: iktrackerDrafts.length > 0 ? iktrackerDrafts : undefined,
+        });
+      }
     }
 
     if (!decision) {
