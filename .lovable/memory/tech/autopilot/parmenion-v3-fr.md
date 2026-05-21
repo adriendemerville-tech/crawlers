@@ -8,6 +8,14 @@ type: feature
 ### Vue d'ensemble
 Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise le `spiral_score` pour prioriser les actions et un dual-lane scoring (tech + contenu) avec budget partagé configurable.
 
+### EXECUTE déterministe V3 (2026-05-21)
+
+**Problème racine** : la phase `execute` appelait `askParmenionLLM` librement → le LLM oubliait souvent d'émettre `cms_actions` ("No cms_actions and no JS fixes in payload"), donc le plan PRESCRIBE V3 (loggé avec `_prescribe_v3` + `strategist_task`) restait lettre morte sur Dictadevi/IKtracker.
+
+**Correction** : `parmenion-orchestrator` (branche EXECUTE) fetch maintenant le **dernier `parmenion_decision_log` phase=prescribe** pour le domaine, et si son `action_payload._prescribe_v3 === true`, il rejoue déterministiquement le `strategist_task` (zéro LLM execute). L'adapter `buildV3CmsActionsForIktracker` dans `autopilot-engine` (lignes 60-125) convertit ensuite le task en `create-post` réel via `runEditorialPipeline`. Le LLM execute n'est appelé qu'en fallback si aucun plan V3 disponible.
+
+Payload émis : `{ _prescribe_v3: true, _execute_deterministic: true, strategist_task, _from_prescribe_decision_id }`.
+
 ### Périmètre du mode dry_run (v3.6 — 2026-04-27)
 
 **Problème racine** : `implementation_mode='dry_run'` court-circuitait **toutes les phases** (audit, diagnose, prescribe, validate), pas seulement le push CMS. Conséquence : 30 cycles "verts" sur dictadevi.io sans aucun audit réel ni alimentation du workbench.
