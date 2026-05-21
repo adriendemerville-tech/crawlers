@@ -128,7 +128,7 @@ try {
     }
 
     let baselineSeoScore: SeoScoreV2 | null = null;
-    console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, IKtracker: ${isIktracker}`);
+    console.log(`[Parménion] Domain: ${domain}, Cycle: ${cycle_number}, Phase: ${currentPhase}, LastPhase: ${lastPhase || 'none'}, CustomREST: ${isIktracker} (dictadevi=${isDictadevi})`);
 
     // ═══ PHASE 1: Segmented feedback — Check error rate by action type ═══
     const { data: errorRateData } = await supabase.rpc('parmenion_error_rate', { p_domain: domain });
