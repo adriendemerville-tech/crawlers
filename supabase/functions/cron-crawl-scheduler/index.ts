@@ -1,0 +1,227 @@
+/**
+ * cron-crawl-scheduler — Planificateur automatique de crawls
+ *
+ * Lancé quotidiennement par pg_cron (03h).
+ * Pour chaque `parmenion_targets` actif :
+ *   - Si dernier crawl complet > 15j (ou jamais) → lance un FULL crawl (maxPages=300)
+ *   - Sinon si dernier crawl ciblé > 5j → lance un crawl ciblé sur le répertoire le plus actif
+ *
+ * Stratégie de rotation : priorité aux répertoires actifs (pondéré par recent_pages).
+ */
+import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+
+const FULL_INTERVAL_MS_DEFAULT = 15 * 86_400_000;
+const TARGETED_INTERVAL_MS_DEFAULT = 5 * 86_400_000;
+
+interface DirectoryStat {
+  path: string;            // e.g. "/blog"
+  recent_pages: number;    // pages publiées/modifiées récemment
+  total_pages: number;
+  last_crawled_at?: string | null;
+}
+
+async function discoverDirectories(supabase: any, domain: string): Promise<DirectoryStat[]> {
+  // Source 1 : crawl_pages du dernier crawl (segmenter par 1er niveau de path)
+  const { data: lastCrawl } = await supabase
+    .from('site_crawls')
+    .select('id')
+    .ilike('domain', domain)
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!lastCrawl?.id) return [];
+
+  const { data: pages } = await supabase
+    .from('crawl_pages')
+    .select('path, last_modified, updated_at')
+    .eq('crawl_id', lastCrawl.id)
+    .limit(2000);
+
+  if (!pages?.length) return [];
+
+  const map = new Map<string, { total: number; recent: number }>();
+  const thirtyDaysAgo = Date.now() - 30 * 86_400_000;
+
+  for (const p of pages as any[]) {
+    const path = (p.path || '/') as string;
+    const seg = '/' + (path.split('/').filter(Boolean)[0] || '');
+    const key = seg === '/' ? '/' : seg;
+    const cur = map.get(key) || { total: 0, recent: 0 };
+    cur.total += 1;
+    const ts = p.last_modified || p.updated_at;
+    if (ts && new Date(ts).getTime() > thirtyDaysAgo) cur.recent += 1;
+    map.set(key, cur);
+  }
+
+  return Array.from(map.entries())
+    .filter(([path, s]) => path !== '/' && s.total >= 2) // ignore racine et répertoires triviaux
+    .map(([path, s]) => ({ path, total_pages: s.total, recent_pages: s.recent }));
+}
+
+function pickNextDirectory(
+  discovered: DirectoryStat[],
+  stored: DirectoryStat[],
+): DirectoryStat | null {
+  if (!discovered.length) return null;
+  const storedMap = new Map(stored.map(d => [d.path, d.last_crawled_at || null]));
+  // Score = recent_pages * 10 + (jours depuis last_crawled) — priorité actifs ET stales
+  const scored = discovered.map(d => {
+    const lastAt = storedMap.get(d.path);
+    const daysSince = lastAt ? (Date.now() - new Date(lastAt).getTime()) / 86_400_000 : 365;
+    return { dir: d, score: d.recent_pages * 10 + daysSince };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0]?.dir || null;
+}
+
+async function triggerCrawl(
+  domain: string,
+  userId: string,
+  opts: { maxPages: number; urlFilter?: string },
+): Promise<{ crawlId: string | null; error?: string }> {
+  const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+  const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/crawl-site`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_ROLE_KEY}` },
+      body: JSON.stringify({
+        url: `https://${domain}`,
+        maxPages: opts.maxPages,
+        userId,
+        forceRefresh: true,
+        ...(opts.urlFilter ? { urlFilter: opts.urlFilter } : {}),
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      return { crawlId: null, error: data.error || `HTTP ${res.status}` };
+    }
+    return { crawlId: data.crawlId || null };
+  } catch (e) {
+    return { crawlId: null, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+Deno.serve(handleRequest(async (req: Request) => {
+  try {
+    // Auth : service role uniquement (cron) ou admin manuel
+    const authHeader = req.headers.get('Authorization') || '';
+    const isService = authHeader.includes(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '___');
+    if (!isService) {
+      const { getAuthenticatedUser } = await import('../_shared/auth.ts');
+      const auth = await getAuthenticatedUser(req);
+      if (!auth?.isAdmin) return jsonError('Admin only', 403);
+    }
+
+    const supabase = getServiceClient();
+    const body = await req.json().catch(() => ({}));
+    const dryRun: boolean = !!body.dry_run;
+    const onlyDomain: string | null = body.only_domain || null;
+
+    // 1) Tous les targets actifs
+    let q = supabase
+      .from('parmenion_targets')
+      .select('domain, created_by_user_id')
+      .eq('is_active', true)
+      .eq('autopilot_enabled', true);
+    if (onlyDomain) q = q.eq('domain', onlyDomain);
+    const { data: targets, error: tErr } = await q;
+    if (tErr) return jsonError(`targets query failed: ${tErr.message}`, 500);
+
+    const results: any[] = [];
+    const now = Date.now();
+
+    for (const t of (targets || []) as any[]) {
+      const domain = (t.domain as string).toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      const userId = t.created_by_user_id;
+      if (!userId) {
+        results.push({ domain, skipped: 'no_user_id' });
+        continue;
+      }
+
+      // 2) Upsert schedule row
+      const { data: sched } = await supabase
+        .from('site_crawl_schedule')
+        .select('*')
+        .eq('domain', domain)
+        .maybeSingle();
+
+      if (!sched) {
+        await supabase.from('site_crawl_schedule').insert({ domain, user_id: userId });
+      }
+
+      const fullIntervalMs = ((sched?.full_interval_days as number) || 15) * 86_400_000;
+      const targetedIntervalMs = ((sched?.targeted_interval_days as number) || 5) * 86_400_000;
+      const enabled = sched?.enabled !== false;
+      if (!enabled) {
+        results.push({ domain, skipped: 'disabled' });
+        continue;
+      }
+
+      const lastFull = sched?.last_full_crawl_at ? new Date(sched.last_full_crawl_at).getTime() : 0;
+      const lastTargeted = sched?.last_targeted_crawl_at ? new Date(sched.last_targeted_crawl_at).getTime() : 0;
+      const fullStale = !lastFull || (now - lastFull) > fullIntervalMs;
+      const targetedStale = !lastTargeted || (now - lastTargeted) > targetedIntervalMs;
+
+      // 3) Décision : full > targeted (un seul par run pour respecter quotas)
+      if (fullStale) {
+        if (dryRun) {
+          results.push({ domain, action: 'full_crawl', age_days: lastFull ? Math.round((now - lastFull) / 86_400_000) : null, dry: true });
+          continue;
+        }
+        const { crawlId, error } = await triggerCrawl(domain, userId, { maxPages: 300 });
+        if (crawlId) {
+          await supabase.from('site_crawl_schedule').update({
+            last_full_crawl_at: new Date().toISOString(),
+            last_full_crawl_id: crawlId,
+          }).eq('domain', domain);
+        }
+        results.push({ domain, action: 'full_crawl', crawl_id: crawlId, error });
+      } else if (targetedStale) {
+        const discovered = await discoverDirectories(supabase, domain);
+        const storedDirs = (sched?.directories as DirectoryStat[]) || [];
+        const next = pickNextDirectory(discovered, storedDirs);
+        if (!next) {
+          results.push({ domain, skipped: 'no_directories' });
+          continue;
+        }
+        if (dryRun) {
+          results.push({ domain, action: 'targeted_crawl', directory: next.path, dry: true });
+          continue;
+        }
+        // urlFilter regex échappée (path simple "/blog" → "^/blog/?")
+        const escaped = next.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const urlFilter = `^${escaped}(/|$)`;
+        const { crawlId, error } = await triggerCrawl(domain, userId, { maxPages: 80, urlFilter });
+        if (crawlId) {
+          // Met à jour le timestamp du répertoire dans la liste stockée
+          const updatedDirs = discovered.map(d => ({
+            ...d,
+            last_crawled_at: d.path === next.path ? new Date().toISOString() : (storedDirs.find(s => s.path === d.path)?.last_crawled_at || null),
+          }));
+          await supabase.from('site_crawl_schedule').update({
+            last_targeted_crawl_at: new Date().toISOString(),
+            last_targeted_directory: next.path,
+            directories: updatedDirs,
+          }).eq('domain', domain);
+        }
+        results.push({ domain, action: 'targeted_crawl', directory: next.path, crawl_id: crawlId, error });
+      } else {
+        results.push({
+          domain,
+          skipped: 'up_to_date',
+          full_age_days: lastFull ? Math.round((now - lastFull) / 86_400_000) : null,
+          targeted_age_days: lastTargeted ? Math.round((now - lastTargeted) / 86_400_000) : null,
+        });
+      }
+    }
+
+    return jsonOk({ success: true, processed: results.length, results });
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : String(e), 500);
+  }
+}));
