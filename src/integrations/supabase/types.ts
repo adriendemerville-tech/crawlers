@@ -10748,6 +10748,54 @@ export type Database = {
         }
         Relationships: []
       }
+      site_crawl_schedule: {
+        Row: {
+          created_at: string
+          directories: Json
+          domain: string
+          enabled: boolean
+          full_interval_days: number
+          id: string
+          last_full_crawl_at: string | null
+          last_full_crawl_id: string | null
+          last_targeted_crawl_at: string | null
+          last_targeted_directory: string | null
+          targeted_interval_days: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          directories?: Json
+          domain: string
+          enabled?: boolean
+          full_interval_days?: number
+          id?: string
+          last_full_crawl_at?: string | null
+          last_full_crawl_id?: string | null
+          last_targeted_crawl_at?: string | null
+          last_targeted_directory?: string | null
+          targeted_interval_days?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          directories?: Json
+          domain?: string
+          enabled?: boolean
+          full_interval_days?: number
+          id?: string
+          last_full_crawl_at?: string | null
+          last_full_crawl_id?: string | null
+          last_targeted_crawl_at?: string | null
+          last_targeted_directory?: string | null
+          targeted_interval_days?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       site_crawls: {
         Row: {
           ai_recommendations: Json | null
