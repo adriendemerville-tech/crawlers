@@ -7,7 +7,7 @@
  * Supports: WordPress, Shopify, IKtracker, Drupal, Wix, Webflow, Odoo, PrestaShop
  */
 import { getServiceClient } from './supabaseClient.ts';
-import { isIktrackerDomain, isCrawlersDomain, getIktrackerApiKey, IKTRACKER_BASE_URL } from './domainUtils.ts';
+import { isIktrackerDomain, isCrawlersDomain, getIktrackerApiKey, IKTRACKER_BASE_URL, DICTADEVI_BASE_URL, getDictadeviApiKey } from './domainUtils.ts';
 
 export interface CmsContentItem {
   title: string;
@@ -80,12 +80,12 @@ export async function scanCmsContent(
     errors: [],
   };
 
-  // 1) Check for CMS connections
+  // 1) Check for CMS connections (status may be 'active' or 'connected' depending on platform)
   const { data: connections } = await supabase
     .from('cms_connections')
     .select('*')
     .eq('tracked_site_id', trackedSiteId)
-    .eq('status', 'connected');
+    .in('status', ['active', 'connected']);
 
   // 2) Check for IKtracker (tracked_sites with api_key)
   const { data: site } = await supabase
@@ -195,7 +195,7 @@ export async function scanCmsContent(
     }
   }
 
-  // 5) Scan WordPress connections
+  // 5) Scan platform-specific connections
   if (connections) {
     for (const conn of connections) {
       try {
@@ -203,8 +203,12 @@ export async function scanCmsContent(
           await scanWordPress(conn, inventory);
         } else if (conn.platform === 'shopify') {
           await scanShopify(conn, inventory);
+        } else if (conn.platform === 'dictadevi') {
+          await scanDictadevi(conn, inventory, supabase);
+        } else {
+          // Unknown platform — log to surface routing gaps
+          inventory.errors.push(`${conn.platform}: no scanner implemented`);
         }
-        // Other CMS can be added here
       } catch (e) {
         inventory.errors.push(`${conn.platform}: ${e instanceof Error ? e.message : String(e)}`);
       }
@@ -318,4 +322,43 @@ async function scanShopify(conn: any, inventory: CmsContentInventory) {
   } catch (_) { /* skip */ }
 
   inventory.scanned_platforms.push('shopify');
+}
+
+async function scanDictadevi(conn: any, inventory: CmsContentInventory, supabase: any) {
+  // Dictadevi v1 API key is resolved via DB-first helper (parmenion_targets) with env fallback
+  const apiKey = await getDictadeviApiKey(supabase);
+  if (!apiKey) {
+    inventory.errors.push('dictadevi: no API key resolved (parmenion_targets + DICTADEVI_API_KEY both empty)');
+    return;
+  }
+
+  // Scan posts (all statuses, paginated up to 200)
+  try {
+    const resp = await fetch(`${DICTADEVI_BASE_URL}/posts?limit=200`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      const posts: any[] = Array.isArray(data) ? data : (data?.posts || data?.data?.posts || data?.data || []);
+      for (const post of posts) {
+        inventory.items.push({
+          title: post.title || '',
+          slug: post.slug || '',
+          status: mapStatus(post.status),
+          content_type: 'post',
+          platform: 'dictadevi',
+          url: post.slug ? `https://dictadevi.io/blog/${post.slug}` : undefined,
+          updated_at: post.updated_at || post.created_at,
+          excerpt: post.excerpt || post.meta_description || '',
+        });
+      }
+    } else {
+      inventory.errors.push(`dictadevi: list-posts HTTP ${resp.status}`);
+    }
+  } catch (e) {
+    inventory.errors.push(`dictadevi: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  inventory.scanned_platforms.push('dictadevi');
 }
