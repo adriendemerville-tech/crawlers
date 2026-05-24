@@ -492,7 +492,27 @@ try {
           .maybeSingle();
 
         const prescribePayload: any = lastPrescribe?.action_payload || null;
-        const hasV3Plan = prescribePayload && prescribePayload._prescribe_v3 === true && prescribePayload.strategist_task;
+        let hasV3Plan = prescribePayload && prescribePayload._prescribe_v3 === true && prescribePayload.strategist_task;
+
+        // ─── Anti double-execute guard ───
+        // Si un execute antérieur référence déjà ce prescribe via _from_prescribe_decision_id
+        // avec un statut succès (completed/partial/degraded), on ne le rejoue pas.
+        // Bascule en fallback LLM execute (qui pourra skipper ou choisir une autre voie).
+        if (hasV3Plan && lastPrescribe) {
+          const { data: priorExecute } = await supabase
+            .from('parmenion_decision_log')
+            .select('id, status, created_at')
+            .eq('domain', domain)
+            .eq('pipeline_phase', 'execute')
+            .in('status', ['completed', 'partial', 'degraded'])
+            .filter('action_payload->>_from_prescribe_decision_id', 'eq', lastPrescribe.id)
+            .limit(1)
+            .maybeSingle();
+          if (priorExecute) {
+            console.log(`[Parménion] 🛡️ EXECUTE déterministe SKIP: prescribe ${lastPrescribe.id} déjà consommé par execute ${priorExecute.id} (${priorExecute.status})`);
+            hasV3Plan = false;
+          }
+        }
 
         if (hasV3Plan) {
           const task = prescribePayload.strategist_task;

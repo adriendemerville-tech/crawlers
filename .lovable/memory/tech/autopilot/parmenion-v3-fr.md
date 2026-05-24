@@ -14,6 +14,8 @@ Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, cap
 
 **Correction** : `parmenion-orchestrator` (branche EXECUTE) fetch maintenant le **dernier `parmenion_decision_log` phase=prescribe** pour le domaine, et si son `action_payload._prescribe_v3 === true`, il rejoue déterministiquement le `strategist_task` (zéro LLM execute). L'adapter `buildV3CmsActionsForIktracker` dans `autopilot-engine` (lignes 60-125) convertit ensuite le task en `create-post` réel via `runEditorialPipeline`. Le LLM execute n'est appelé qu'en fallback si aucun plan V3 disponible.
 
+**Anti double-execute guard (2026-05-21)** : avant de rejouer un prescribe V3, le bridge vérifie qu'aucun `parmenion_decision_log` phase=execute avec statut `completed|partial|degraded` ne référence déjà ce prescribe via `action_payload->>_from_prescribe_decision_id`. Si oui → skip déterministe + fallback LLM. Empêche la double-publication d'un même `strategist_task` si plusieurs cycles execute s'enchaînent.
+
 Payload émis : `{ _prescribe_v3: true, _execute_deterministic: true, strategist_task, _from_prescribe_decision_id }`.
 
 ### Périmètre du mode dry_run (v3.6 — 2026-04-27)
