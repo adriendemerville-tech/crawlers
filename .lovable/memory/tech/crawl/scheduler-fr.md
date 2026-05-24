@@ -18,8 +18,11 @@ type: feature
 1. Cron pg_cron `cron-crawl-scheduler-daily` (03h00 UTC, jobid 58)
 2. Pour chaque `parmenion_targets` actif (autopilot_enabled=true) :
    - Upsert `site_crawl_schedule` (1 ligne par domaine)
-   - Si `last_full_crawl_at > full_interval_days` → full crawl, met à jour `last_full_crawl_at/id`
-   - Sinon si `last_targeted_crawl_at > targeted_interval_days` → targeted crawl, met à jour `last_targeted_crawl_at/directory/directories[]`
+   - **File d'attente / priorités** : query `site_crawls` du domaine avec status in (pending,processing,queued).
+     - Si un crawl est in-flight → skip (`crawl_in_flight`, report au run suivant). Détection full vs targeted via `url_filter` (null = full).
+     - Règle : full in-flight bloque tout ; targeted in-flight bloque aussi le full (qui retentera demain).
+   - Sinon si `last_full_crawl_at > full_interval_days` → full crawl, MAJ `last_full_crawl_at/id`
+   - Sinon si `last_targeted_crawl_at > targeted_interval_days` → targeted crawl, MAJ `last_targeted_crawl_at/directory/directories[]`
    - Sinon skip (`up_to_date`)
 3. Fallback `user_id` : si `parmenion_targets.created_by_user_id` est null, récupère depuis le dernier `site_crawls.user_id` du domaine
 
