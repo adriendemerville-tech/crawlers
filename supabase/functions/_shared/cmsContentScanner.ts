@@ -80,12 +80,12 @@ export async function scanCmsContent(
     errors: [],
   };
 
-  // 1) Check for CMS connections
+  // 1) Check for CMS connections (status may be 'active' or 'connected' depending on platform)
   const { data: connections } = await supabase
     .from('cms_connections')
     .select('*')
     .eq('tracked_site_id', trackedSiteId)
-    .eq('status', 'connected');
+    .in('status', ['active', 'connected']);
 
   // 2) Check for IKtracker (tracked_sites with api_key)
   const { data: site } = await supabase
