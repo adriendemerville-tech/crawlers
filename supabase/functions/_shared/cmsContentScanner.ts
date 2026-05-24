@@ -7,7 +7,7 @@
  * Supports: WordPress, Shopify, IKtracker, Drupal, Wix, Webflow, Odoo, PrestaShop
  */
 import { getServiceClient } from './supabaseClient.ts';
-import { isIktrackerDomain, isCrawlersDomain, getIktrackerApiKey, IKTRACKER_BASE_URL } from './domainUtils.ts';
+import { isIktrackerDomain, isCrawlersDomain, getIktrackerApiKey, IKTRACKER_BASE_URL, DICTADEVI_BASE_URL, getDictadeviApiKey } from './domainUtils.ts';
 
 export interface CmsContentItem {
   title: string;
