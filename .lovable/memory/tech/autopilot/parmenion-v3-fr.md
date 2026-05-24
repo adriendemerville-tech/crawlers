@@ -5,6 +5,19 @@ type: feature
 ---
 ## Parménion v3 — Orchestrateur Breathing Spiral (post-fix 2026-04-27)
 
+### Auto-trigger Crawl (2026-05-24)
+
+**Problème racine** : Parménion consomme les données crawl via `cocoon-diag-semantic` / `audit-expert-seo` mais ne déclenchait jamais de crawl. Si `site_crawls` était vide ou obsolète (ex. Dictadevi, dernier crawl 23 avril → 1 mois), tous les cycles produisaient 0 findings → workbench vide → 0 publications.
+
+**Correction** : phase 0bis dans `parmenion-orchestrator` (avant audit/diagnose). Si `currentPhase ∈ {audit, diagnose}` et dernier `site_crawls.completed` > 14j (ou absent) :
+1. Fire-and-forget `crawl-site` (mode analyze, maxPages=80, forceRefresh=true) avec `bodyUserId`
+2. Insert `parmenion_decision_log` (status=degraded, action_type=crawl_refresh)
+3. Return `{ skipped: true, reason: 'crawl_refresh_triggered' }` → cycle reporté
+
+Si un crawl est `pending`/`processing` → cycle reporté (`reason: crawl_in_flight`). Si frais (<14j) → continue normalement.
+
+
+
 ### Vue d'ensemble
 Parménion (v3) est l'unique macro-orchestrateur de la **Breathing Spiral**, capable de piloter le cycle complet (Audit → Diagnostic → Prescription → Exécution → Validation). Il utilise le `spiral_score` pour prioriser les actions et un dual-lane scoring (tech + contenu) avec budget partagé configurable.
 
