@@ -36,30 +36,27 @@ async function discoverDirectories(supabase: any, domain: string): Promise<Direc
 
   const { data: pages } = await supabase
     .from('crawl_pages')
-    .select('path, last_modified, updated_at')
+    .select('path')
     .eq('crawl_id', lastCrawl.id)
     .limit(2000);
 
   if (!pages?.length) return [];
 
-  const map = new Map<string, { total: number; recent: number }>();
-  const thirtyDaysAgo = Date.now() - 30 * 86_400_000;
-
+  const map = new Map<string, number>();
   for (const p of pages as any[]) {
     const path = (p.path || '/') as string;
     const seg = '/' + (path.split('/').filter(Boolean)[0] || '');
-    const key = seg === '/' ? '/' : seg;
-    const cur = map.get(key) || { total: 0, recent: 0 };
-    cur.total += 1;
-    const ts = p.last_modified || p.updated_at;
-    if (ts && new Date(ts).getTime() > thirtyDaysAgo) cur.recent += 1;
-    map.set(key, cur);
+    if (seg === '/') continue;
+    map.set(seg, (map.get(seg) || 0) + 1);
   }
 
+  // "recent_pages" proxy = nombre total de pages dans le répertoire
+  // (plus de pages = répertoire plus actif/important)
   return Array.from(map.entries())
-    .filter(([path, s]) => path !== '/' && s.total >= 2) // ignore racine et répertoires triviaux
-    .map(([path, s]) => ({ path, total_pages: s.total, recent_pages: s.recent }));
+    .filter(([, count]) => count >= 2)
+    .map(([path, count]) => ({ path, total_pages: count, recent_pages: count }));
 }
+
 
 function pickNextDirectory(
   discovered: DirectoryStat[],
