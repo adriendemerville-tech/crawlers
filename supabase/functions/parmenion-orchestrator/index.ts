@@ -85,6 +85,56 @@ try {
       ? (forced_phase as PipelinePhase) 
       : getNextPhase(lastPhase);
 
+    // ═══ PHASE 0bis: ensure fresh crawl data (auto-trigger if >14j stale) ═══
+    // Parménion ne peut pas auditer/diagnostiquer un site sans crawl récent.
+    // Si le dernier crawl > 14j (ou absent), on déclenche un crawl async et on reporte le cycle.
+    if (currentPhase === 'audit' || currentPhase === 'diagnose') {
+      const { data: lastCrawl } = await supabase
+        .from('site_crawls')
+        .select('id, created_at, status')
+        .ilike('domain', domain)
+        .in('status', ['completed', 'processing', 'pending'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const lastCrawlAt = lastCrawl?.created_at ? new Date(lastCrawl.created_at).getTime() : 0;
+      const ageDays = lastCrawlAt ? (Date.now() - lastCrawlAt) / 86_400_000 : 999;
+      const isStale = ageDays > 14;
+      const isInFlight = !!lastCrawl && ['processing', 'pending'].includes((lastCrawl as any).status);
+
+      if (isStale && !isInFlight) {
+        console.log(`[Parménion] 🕸️ Crawl stale (${ageDays.toFixed(1)}j) pour ${domain} — déclenchement crawl refresh async`);
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+        const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        fetch(`${SUPABASE_URL}/functions/v1/crawl-site`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_ROLE_KEY}` },
+          body: JSON.stringify({ url: `https://${domain}`, maxPages: 80, userId: bodyUserId, forceRefresh: true }),
+        }).catch(e => console.warn('[Parménion] crawl-site trigger failed:', e));
+
+        await supabase.from('parmenion_decision_log').insert({
+          tracked_site_id, domain, cycle_number, pipeline_phase: currentPhase,
+          status: 'degraded', goal_type: 'data_refresh',
+          goal_description: `Crawl obsolète (${ageDays.toFixed(0)}j) — refresh déclenché, cycle reporté`,
+          action_type: 'crawl_refresh',
+          action_payload: { triggered_crawl: true, age_days: Math.round(ageDays), mode: 'analyze', max_pages: 80 },
+        });
+
+        return jsonOk({
+          success: true, skipped: true, reason: 'crawl_refresh_triggered',
+          age_days: Math.round(ageDays), phase: currentPhase,
+          message: 'Crawl refresh déclenché en arrière-plan — prochain cycle exploitera les données fraîches',
+        });
+      } else if (isInFlight) {
+        console.log(`[Parménion] ⏳ Crawl en cours (${(lastCrawl as any).status}) pour ${domain} — cycle reporté`);
+        return jsonOk({ success: true, skipped: true, reason: 'crawl_in_flight', phase: currentPhase });
+      } else {
+        console.log(`[Parménion] ✅ Crawl frais (${ageDays.toFixed(1)}j) pour ${domain}`);
+      }
+    }
+
+
     // ═══ SKIP AUDIT (TTL 5j) ═══
     // 1) Si workbench contient des findings agent-seo frais < 5 jours, skip
     // 2) Sinon, on consulte parmenion_should_skip_phase (TTL + invalidation événementielle)
