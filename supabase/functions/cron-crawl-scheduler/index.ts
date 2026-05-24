@@ -177,6 +177,33 @@ Deno.serve(handleRequest(async (req: Request) => {
       const fullStale = !lastFull || (now - lastFull) > fullIntervalMs;
       const targetedStale = !lastTargeted || (now - lastTargeted) > targetedIntervalMs;
 
+      // 2bis) FILE D'ATTENTE — vérifie qu'aucun crawl n'est en cours pour ce domaine.
+      // Règle de priorité :
+      //   1. Full crawl in-flight → bloque TOUT (full + targeted) jusqu'à completion
+      //   2. Targeted crawl in-flight → bloque tout nouveau crawl (full attendra le prochain run)
+      //   3. Aucun in-flight → déclenche selon staleness (full > targeted)
+      // Le cron tournant chaque jour, un crawl reporté sera retenté au run suivant.
+      const { data: inFlight } = await supabase
+        .from('site_crawls')
+        .select('id, status, url_filter, created_at')
+        .ilike('domain', domain)
+        .in('status', ['pending', 'processing', 'queued'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (inFlight) {
+        const kind = (inFlight as any).url_filter ? 'targeted' : 'full';
+        results.push({
+          domain,
+          skipped: 'crawl_in_flight',
+          in_flight_kind: kind,
+          in_flight_id: (inFlight as any).id,
+          in_flight_status: (inFlight as any).status,
+        });
+        continue;
+      }
+
       // 3) Décision : full > targeted (un seul par run pour respecter quotas)
       if (fullStale) {
         if (dryRun) {
