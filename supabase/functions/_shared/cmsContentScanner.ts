@@ -195,7 +195,7 @@ export async function scanCmsContent(
     }
   }
 
-  // 5) Scan WordPress connections
+  // 5) Scan platform-specific connections
   if (connections) {
     for (const conn of connections) {
       try {
@@ -203,8 +203,12 @@ export async function scanCmsContent(
           await scanWordPress(conn, inventory);
         } else if (conn.platform === 'shopify') {
           await scanShopify(conn, inventory);
+        } else if (conn.platform === 'dictadevi') {
+          await scanDictadevi(conn, inventory, supabase);
+        } else {
+          // Unknown platform — log to surface routing gaps
+          inventory.errors.push(`${conn.platform}: no scanner implemented`);
         }
-        // Other CMS can be added here
       } catch (e) {
         inventory.errors.push(`${conn.platform}: ${e instanceof Error ? e.message : String(e)}`);
       }
