@@ -134,11 +134,24 @@ Deno.serve(handleRequest(async (req: Request) => {
 
     for (const t of (targets || []) as any[]) {
       const domain = (t.domain as string).toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-      const userId = t.created_by_user_id;
+      let userId: string | null = t.created_by_user_id;
+      if (!userId) {
+        // Fallback : récupère le user_id du dernier crawl existant pour ce domaine
+        const { data: prev } = await supabase
+          .from('site_crawls')
+          .select('user_id')
+          .ilike('domain', domain)
+          .not('user_id', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        userId = prev?.user_id || null;
+      }
       if (!userId) {
         results.push({ domain, skipped: 'no_user_id' });
         continue;
       }
+
 
       // 2) Upsert schedule row
       const { data: sched } = await supabase
