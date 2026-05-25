@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight, Shield, Brain, Award, CheckCircle2,
   BarChart3, Target, BookOpen, Globe, FileText, Zap,
-  AlertTriangle, TrendingUp, Search, Users, Briefcase, Building2, Rocket
+  AlertTriangle, TrendingUp, Search, Users, Briefcase, Building2
 } from 'lucide-react';
 import heroImage from '@/assets/landing/eeat-hero.webp';
 import { QuickEEATTest } from '@/components/eeat/QuickEEATTest';
