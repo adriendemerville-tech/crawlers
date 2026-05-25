@@ -1935,6 +1935,115 @@ const market_diagnosis: SkillDefinition = {
       }] : []),
     ];
 
+    // ─── Page Targeting Matrix V2 (8 axes / 8 verdicts) ───
+    let pageTargeting: PageDecision[] = [];
+    let pageTargetingMeta: Record<string, unknown> = { enabled: false };
+    try {
+      const { data: ts } = await ctx.service
+        .from('tracked_sites')
+        .select('id, business_model')
+        .eq('user_id', ctx.userId).ilike('domain', `%${domain}%`)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+      if (ts?.id) {
+        const weights = getBusinessModelWeights(ts.business_model);
+        const signals = await fetchPageSignals(ctx, ts.id);
+        if (signals.size > 0) {
+          const maxPV = Math.max(1, ...[...signals.values()].map((s) => s.pageviews_30d));
+          const maxRD = Math.max(1, ...[...signals.values()].map((s) => s.referring_domains));
+
+          const candidates: Array<{ kw: string; vol: number }> = [
+            ...quickWins.map((q) => ({ kw: String(q.keyword ?? ''), vol: Number(q.volume ?? 0) })),
+            ...contentGaps.map((g) => ({ kw: String(g.keyword ?? ''), vol: Number(g.volume ?? 0) })),
+          ].filter((c) => c.kw.length > 2).slice(0, 15);
+
+          const decisions: PageDecision[] = [];
+          const seenUrls = new Set<string>();
+          for (const c of candidates) {
+            const page = await pickPageForKeyword(signals, c.kw);
+            if (!page || seenUrls.has(page.url)) continue;
+            seenUrls.add(page.url);
+            decisions.push(decidePageVerdict(page, c.kw, c.vol, weights, maxPV, maxRD));
+          }
+
+          // Cooldown 90j : exclure URLs déjà dans workbench récent
+          const ninetyDays = new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString();
+          const { data: recent } = await ctx.service
+            .from('architect_workbench')
+            .select('target_url')
+            .eq('user_id', ctx.userId).eq('domain', domain)
+            .gte('created_at', ninetyDays);
+          const onCooldown = new Set((recent ?? []).map((r) => r.target_url).filter(Boolean));
+
+          // Max 3 REPURPOSE / diagnostic
+          let repurposeCount = 0;
+          pageTargeting = decisions
+            .filter((d) => d.verdict !== 'INSUFFICIENT_DATA' && !onCooldown.has(d.url))
+            .filter((d) => {
+              if (d.verdict !== 'REPURPOSE') return true;
+              if (repurposeCount >= 3) return false;
+              repurposeCount++; return true;
+            })
+            .sort((a, b) => {
+              const rank: Record<PageVerdict, number> = {
+                PROTECT_PILLAR: 0, PROTECT_REVENUE: 1, PROTECT_AUTHORITY: 2,
+                PROTECT_TRAFFIC: 3, OPTIMIZE: 4, BOOST: 5, REPURPOSE: 6,
+                ARCHIVE: 7, INSUFFICIENT_DATA: 8,
+              };
+              return (rank[a.verdict] ?? 9) - (rank[b.verdict] ?? 9) || b.score - a.score;
+            })
+            .slice(0, 10);
+
+          // Insert workbench findings (status=pending, validation manuelle UI)
+          if (pageTargeting.length) {
+            const sevByVerdict: Record<string, string> = {
+              PROTECT_PILLAR: 'critical', PROTECT_REVENUE: 'high', PROTECT_AUTHORITY: 'high',
+              PROTECT_TRAFFIC: 'medium', OPTIMIZE: 'medium', BOOST: 'medium',
+              REPURPOSE: 'high', ARCHIVE: 'low',
+            };
+            const rows = pageTargeting.map((d) => ({
+              user_id: ctx.userId,
+              tracked_site_id: ts.id,
+              domain,
+              source_type: 'felix' as const,
+              source_function: 'market_diagnosis',
+              source_record_id: ctx.sessionId ?? null,
+              finding_category: 'page_targeting',
+              severity: sevByVerdict[d.verdict] ?? 'medium',
+              title: `[${d.verdict}] ${d.proposed_keyword}`,
+              description: `${d.risk_note}\n\nAction proposée : ${d.action}`,
+              target_url: d.url,
+              action_type: d.verdict === 'ARCHIVE' ? 'code' : 'content',
+              status: 'pending' as const,
+              payload: {
+                verdict: d.verdict, score: d.score, axes_used: d.axes_used,
+                proposed_keyword: d.proposed_keyword, volume: d.volume,
+                business_model: ts.business_model, weights, source: 'market_diagnosis_v2',
+              },
+            }));
+            await ctx.service.from('architect_workbench').insert(rows);
+          }
+
+          pageTargetingMeta = {
+            enabled: true, pages_scanned: signals.size,
+            decisions_total: decisions.length,
+            verdicts_count: pageTargeting.reduce((acc, d) => {
+              acc[d.verdict] = (acc[d.verdict] ?? 0) + 1; return acc;
+            }, {} as Record<string, number>),
+            on_cooldown_excluded: decisions.length - pageTargeting.length,
+            business_model: ts.business_model ?? 'generic',
+          };
+        } else {
+          pageTargetingMeta = { enabled: false, reason: 'no_crawl_pages' };
+        }
+      } else {
+        pageTargetingMeta = { enabled: false, reason: 'tracked_site_not_found' };
+      }
+    } catch (e) {
+      console.warn('[market_diagnosis] page targeting failed:', (e as Error).message);
+      pageTargetingMeta = { enabled: false, reason: 'error', error: (e as Error).message };
+    }
+
     try {
       await ctx.service.from('analytics_events').insert({
         user_id: ctx.userId,
@@ -1943,6 +2052,7 @@ const market_diagnosis: SkillDefinition = {
           domain, has_seed: !!seed, persona: ctx.persona, session_id: ctx.sessionId,
           quota_used_after: quota.used + 1, quota_limit: quota.limit,
           plan_steps: actionPlan.length, quick_wins: quickWins.length, content_gaps: contentGaps.length,
+          page_targeting: pageTargetingMeta,
         },
       });
     } catch (e) {
@@ -1970,11 +2080,18 @@ const market_diagnosis: SkillDefinition = {
         } : { error: 'no_backlinks_data' },
         long_tail_suggestions: seed ? longTail : null,
         seo_plan: {
-          summary: `${quickWins.length} quick wins • ${contentGaps.length} gaps contenu • ${backlinksPriority.length} action(s) backlinks`,
+          summary: `${quickWins.length} quick wins • ${contentGaps.length} gaps contenu • ${backlinksPriority.length} action(s) backlinks • ${pageTargeting.length} pages ciblées`,
           quick_wins: quickWins,
           content_gaps: contentGaps,
           backlinks_priority: backlinksPriority,
           action_plan: actionPlan,
+        },
+        page_targeting: {
+          meta: pageTargetingMeta,
+          decisions: pageTargeting,
+          notice: pageTargeting.length
+            ? `${pageTargeting.length} suggestions de ciblage page ajoutées au workbench (validation manuelle requise dans Mes Sites > Plan d'action).`
+            : 'Aucune suggestion (crawl/GA4/GSC manquants, ou pages déjà en cooldown 90j).',
         },
         quota: { used: quota.used + 1, limit: quota.limit, scope: 'daily' },
       },
