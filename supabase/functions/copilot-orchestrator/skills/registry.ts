@@ -1601,7 +1601,7 @@ async function dfsPost(endpoint: string, body: unknown): Promise<unknown | null>
 const market_diagnosis: SkillDefinition = {
   name: 'market_diagnosis',
   description:
-    "Diagnostic SEO marché complet d'un domaine via DataForSEO (Authority Score, top keywords positionnés, profil backlinks, suggestions long-tail). À utiliser quand l'utilisateur demande 'pourquoi mon SEO ne décolle pas', 'analyse mon référencement', 'qui me link', 'quels mots-clés cibler'. Heavy : quota free=1/jour, premium=3/jour, pro=10/jour.",
+    "Diagnostic SEO marché complet d'un domaine via DataForSEO (Authority Score, top keywords positionnés, profil backlinks, suggestions long-tail) + plan SEO actionnable priorisé (quick wins SERP, gaps de contenu, backlinks). À utiliser quand l'utilisateur demande 'pourquoi mon SEO ne décolle pas', 'analyse mon référencement', 'quel plan d'action SEO', 'qui me link', 'quels mots-clés cibler'. Heavy : quota free=1/jour, premium=3/jour, pro=10/jour.",
   parameters: {
     type: 'object',
     properties: {
@@ -1687,6 +1687,61 @@ const market_diagnosis: SkillDefinition = {
         };
       });
 
+    // ─── Plan SEO déterministe (sans appel LLM) ───
+    const quickWins = topKeywords
+      .filter((k) => typeof k.position === 'number' && k.position! >= 4 && k.position! <= 20 && (k.volume ?? 0) >= 50)
+      .sort((a, b) => (b.volume ?? 0) - (a.volume ?? 0))
+      .slice(0, 5)
+      .map((k) => ({
+        keyword: k.keyword,
+        current_position: k.position,
+        volume: k.volume,
+        url: k.url,
+        action: `Optimiser ${k.url ?? '(page à identifier)'} pour passer de #${k.position} au top 3 (title, H1, intent match, maillage interne, FAQ schema).`,
+      }));
+
+    const contentGaps = (seed ? longTail : [])
+      .filter((k) => (k.volume ?? 0) >= 100 && (k.competition ?? 1) < 0.5)
+      .slice(0, 5)
+      .map((k) => ({
+        keyword: k.keyword,
+        volume: k.volume,
+        competition: k.competition,
+        action: `Créer une page dédiée ciblant "${k.keyword}" — faible concurrence, volume exploitable.`,
+      }));
+
+    const bl = backlinks as { referring_main_domains?: number; backlinks_spam_score?: number } | null;
+    const refDomains = bl?.referring_main_domains ?? 0;
+    const spamScore = bl?.backlinks_spam_score ?? 0;
+    const backlinksPriority: string[] = [];
+    if (refDomains < 20) backlinksPriority.push(`Profil backlinks faible (${refDomains} domaines référents) — lancer une campagne digital PR / guest posts ciblée (objectif +10 domaines/trimestre).`);
+    if (spamScore > 20) backlinksPriority.push(`Spam score élevé (${spamScore}) — auditer et désavouer les backlinks toxiques via Search Console.`);
+    if (refDomains >= 20 && spamScore <= 20) backlinksPriority.push(`Profil backlinks sain (${refDomains} domaines, spam ${spamScore}) — capitaliser via linkable assets (études, outils gratuits, calculateurs).`);
+
+    const actionPlan = [
+      ...(quickWins.length ? [{
+        priority: 1,
+        horizon: '0-30 jours',
+        title: 'Quick wins SERP',
+        why: 'Pages déjà positionnées #4-20 : meilleur ROI court terme.',
+        actions: quickWins.map((q) => q.action),
+      }] : []),
+      ...(contentGaps.length ? [{
+        priority: 2,
+        horizon: '30-90 jours',
+        title: 'Combler les gaps de contenu long-tail',
+        why: 'Mots-clés à faible concurrence et volume exploitable identifiés via DataForSEO.',
+        actions: contentGaps.map((g) => g.action),
+      }] : []),
+      ...(backlinksPriority.length ? [{
+        priority: 3,
+        horizon: '60-180 jours',
+        title: 'Renforcer le profil de backlinks',
+        why: 'Autorité de domaine = levier structurel sur tous les classements.',
+        actions: backlinksPriority,
+      }] : []),
+    ];
+
     try {
       await ctx.service.from('analytics_events').insert({
         user_id: ctx.userId,
@@ -1694,6 +1749,7 @@ const market_diagnosis: SkillDefinition = {
         event_data: {
           domain, has_seed: !!seed, persona: ctx.persona, session_id: ctx.sessionId,
           quota_used_after: quota.used + 1, quota_limit: quota.limit,
+          plan_steps: actionPlan.length, quick_wins: quickWins.length, content_gaps: contentGaps.length,
         },
       });
     } catch (e) {
@@ -1720,6 +1776,13 @@ const market_diagnosis: SkillDefinition = {
             .slice(0, 5),
         } : { error: 'no_backlinks_data' },
         long_tail_suggestions: seed ? longTail : null,
+        seo_plan: {
+          summary: `${quickWins.length} quick wins • ${contentGaps.length} gaps contenu • ${backlinksPriority.length} action(s) backlinks`,
+          quick_wins: quickWins,
+          content_gaps: contentGaps,
+          backlinks_priority: backlinksPriority,
+          action_plan: actionPlan,
+        },
         quota: { used: quota.used + 1, limit: quota.limit, scope: 'daily' },
       },
     };
