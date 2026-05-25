@@ -185,6 +185,9 @@ const GenerativeEngineOptimization = () => {
               ChatGPT, Claude, Perplexity, Google SGE. Ce guide définit le concept, détaille les 5 piliers d'une 
               stratégie GEO efficace, et vous montre comment mesurer votre visibilité IA gratuitement.
             </p>
+            <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-6 text-base text-foreground italic">
+              La Generative Engine Optimization (GEO) optimise un contenu pour qu'il soit cité par les moteurs de recherche génératifs — ChatGPT, Claude, Perplexity, Gemini et Google AI Overviews — là où le SEO optimise pour les pages bleues de Google.
+            </blockquote>
             <img 
               src={heroImage} 
               alt="Illustration du concept de Generative Engine Optimization montrant les connexions entre ChatGPT, Perplexity, Claude et le contenu web optimisé"

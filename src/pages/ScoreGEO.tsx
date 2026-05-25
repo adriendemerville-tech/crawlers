@@ -100,6 +100,9 @@ const ScoreGEO = () => {
               Le <strong>Score GEO</strong> évalue la probabilité que votre contenu soit cité par <strong>ChatGPT, Claude, Perplexity</strong> et Google SGE. 
               Un score faible signifie que les IA vous ignorent — même si votre SEO classique est bon.
             </p>
+            <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-6 text-base text-foreground italic max-w-3xl mx-auto text-left">
+              Le Score GEO note de 0 à 100 la probabilité qu'un site soit cité par ChatGPT, Claude, Perplexity et Google AI Overviews — un indicateur clé du référencement GEO et du LLM SEO.
+            </blockquote>
             <Button asChild size="lg" className="text-base px-8">
               <Link to="/audit-expert">
                 Obtenir mon Score GEO <ArrowRight className="ml-2 h-5 w-5" />
