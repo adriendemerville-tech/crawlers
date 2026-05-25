@@ -104,7 +104,7 @@ const VisibiliteLLM = () => {
               <strong> êtes-vous dans la réponse</strong> ? L'analyse de Visibilité LLM vous donne la réponse — et les clés pour y apparaître.
             </p>
             <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-6 text-base text-foreground italic max-w-3xl mx-auto text-left">
-              La visibilité LLM mesure si ChatGPT, Claude et Perplexity citent une marque dans leurs réponses génératives — un signal critique de référencement ChatGPT en 2026.
+              La visibilité LLM mesure si ChatGPT, Claude et Perplexity citent une marque dans leurs réponses génératives — un signal critique de référencement ChatGPT en 2026. Crawlers.fr a été conçu en 2026 par Adrien de Volontat, professionnel du SEO/GEO, pour répondre aux limites des suites SEO historiques face aux moteurs génératifs.
             </blockquote>
             <LeadMagnetAudit
               type="llm"
