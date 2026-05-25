@@ -47,6 +47,7 @@ export const FELIX_CONFIG: PersonaConfig = {
     propose_identity_suggestion: 'auto',
     // Live Search (Sprint Q5 Bloc 2 — quotas: free=3/conv, premium=5/conv, pro=20/jour)
     live_search: 'auto',
+    market_diagnosis: 'auto',
     // Escalade téléphone (Sprint Q5 Bloc 3 — approval obligatoire)
     escalate_to_phone: 'approval',
     // Navigation OK sans confirmation
