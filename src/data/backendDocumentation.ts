@@ -537,7 +537,7 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
-| \`track-analytics\` | ❌ | Tracking événements analytics |
+| \`track-analytics\` | ❌ | Tracking événements analytics — appelé en **fire-and-forget** via \`fetch\` natif (\`keepalive: true\`) depuis \`useAnalytics.ts\` pour ne jamais bloquer le rendu / la navigation (~1.87s gagnés sur la home) |
 | \`fetch-news\` | ❌ | Récupère les actualités SEO |
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
 | \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
