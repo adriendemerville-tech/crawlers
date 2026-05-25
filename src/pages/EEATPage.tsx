@@ -13,6 +13,7 @@ import {
   AlertTriangle, TrendingUp, Search, Users, Briefcase, Building2, Rocket
 } from 'lucide-react';
 import heroImage from '@/assets/landing/eeat-hero.webp';
+import { QuickEEATTest } from '@/components/eeat/QuickEEATTest';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -179,6 +180,9 @@ export default function EEATPage() {
       <Header />
 
       <main className="flex-1">
+        {/* Lead magnet : test E-E-A-T rapide */}
+        <QuickEEATTest />
+
         {/* Hero */}
         <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-amber-500/5 to-background">
           <div className="mx-auto max-w-4xl">
