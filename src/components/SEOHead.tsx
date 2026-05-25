@@ -236,6 +236,7 @@ export function SEOHead({ title, description, path, ogType = 'website', noIndex 
       <script type="application/ld+json">{JSON.stringify(ORGANIZATION_JSON_LD)}</script>
       <script type="application/ld+json">{JSON.stringify(WEBSITE_JSON_LD)}</script>
       <script type="application/ld+json">{JSON.stringify(PERSON_JSON_LD)}</script>
+      <script type="application/ld+json">{JSON.stringify(SOFTWARE_APPLICATION_JSON_LD)}</script>
 
       {children}
     </Helmet>
