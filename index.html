@@ -1,27 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
   <head>
-    <!-- Google tag (gtag.js) — Fully deferred to load + 3s, prod only (Core Web Vitals) -->
+    <!-- Google tag (gtag.js) — gtag is loaded by GTM below to avoid duplicate ~155KB download -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-0S0D56VSWQ', { send_page_view: false });
-      window.addEventListener('load', function() {
-        var h = window.location.hostname;
-        if (h.includes('lovableproject.com') || h.includes('lovable.app') || h === 'localhost') return;
-        var inject = function() {
-          var s = document.createElement('script');
-          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-0S0D56VSWQ';
-          s.async = true;
-          document.head.appendChild(s);
-        };
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(inject, { timeout: 5000 });
-        } else {
-          setTimeout(inject, 3000);
-        }
-      });
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
@@ -173,19 +158,26 @@
     
     <!-- JSON-LD structured data is injected dynamically via useStructuredData hook to reduce HTML payload -->
     
-    <!-- Google Tag Manager - Deferred for better FCP/LCP -->
+    <!-- Google Tag Manager - Loaded on first user interaction OR after 8s idle (best LCP) -->
     <script>
-    window.addEventListener('load', function() {
-      var h = window.location.hostname;
-      if (h.includes('lovableproject.com') || h.includes('lovable.app') || h === 'localhost') return;
-      setTimeout(function() {
+    (function() {
+      var loaded = false;
+      function loadGTM() {
+        if (loaded) return;
+        loaded = true;
+        var h = window.location.hostname;
+        if (h.includes('lovableproject.com') || h.includes('lovable.app') || h === 'localhost') return;
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
         j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
         })(window,document,'script','dataLayer','GTM-TDGHZZ49');
-      }, 4000);
-    });
+      }
+      var evts = ['pointerdown','touchstart','keydown','scroll','mousemove'];
+      var fire = function(){ evts.forEach(function(e){ window.removeEventListener(e, fire, {passive:true}); }); loadGTM(); };
+      evts.forEach(function(e){ window.addEventListener(e, fire, {passive:true, once:true}); });
+      window.addEventListener('load', function(){ setTimeout(loadGTM, 8000); });
+    })();
     </script>
 
     <!-- JSON-LD structured data injected dynamically via useStructuredData hook to reduce HTML payload and improve FCP -->
