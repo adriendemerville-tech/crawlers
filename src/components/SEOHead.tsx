@@ -4,6 +4,31 @@ import { useLanguage } from '@/contexts/LanguageContext';
 const SITE_URL = 'https://crawlers.fr';
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
+const PERSON_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': `${SITE_URL}/a-propos#adrien-de-volontat`,
+  name: 'Adrien de Volontat',
+  jobTitle: 'Professionnel du SEO/GEO, fondateur de Crawlers.fr',
+  description: "Professionnel du SEO et du GEO (Generative Engine Optimization). A conçu Crawlers.fr en 2026 pour répondre aux limites des suites SEO historiques face aux moteurs génératifs (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews).",
+  url: `${SITE_URL}/a-propos`,
+  worksFor: { '@id': `${SITE_URL}/#organization` },
+  knowsAbout: [
+    'SEO technique',
+    'Generative Engine Optimization (GEO)',
+    'Answer Engine Optimization (AEO)',
+    'Visibilité LLM (ChatGPT, Claude, Perplexity, Gemini)',
+    'E-E-A-T',
+    'Cocon sémantique 3D',
+    'Crawl & log analysis',
+    'Core Web Vitals',
+    'Schema.org',
+  ],
+  sameAs: [
+    'https://www.linkedin.com/in/adriendevolontat/',
+  ],
+};
+
 const ORGANIZATION_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
@@ -17,8 +42,9 @@ const ORGANIZATION_JSON_LD = {
     width: 1200,
     height: 630,
   },
-  description: 'Plateforme SEO & GEO tout-en-un : audits, maillage intelligent, autopilote, visibilité IA générative (ChatGPT, Gemini, Perplexity, Claude).',
+  description: 'Plateforme SEO & GEO tout-en-un, conçue par un professionnel du SEO/GEO : audits, maillage intelligent, autopilote, visibilité IA générative (ChatGPT, Gemini, Perplexity, Claude).',
   foundingDate: '2026-03-18',
+  founder: { '@id': `${SITE_URL}/a-propos#adrien-de-volontat` },
   areaServed: ['FR', 'BE', 'CH', 'CA', 'LU', 'MC'],
   knowsAbout: [
     'SEO technique',
@@ -137,6 +163,7 @@ export function SEOHead({ title, description, path, ogType = 'website', noIndex 
       {/* Organization + WebSite JSON-LD (global, inclut référence sitemap) */}
       <script type="application/ld+json">{JSON.stringify(ORGANIZATION_JSON_LD)}</script>
       <script type="application/ld+json">{JSON.stringify(WEBSITE_JSON_LD)}</script>
+      <script type="application/ld+json">{JSON.stringify(PERSON_JSON_LD)}</script>
 
       {children}
     </Helmet>

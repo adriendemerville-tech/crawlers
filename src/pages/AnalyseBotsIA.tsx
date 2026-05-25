@@ -113,7 +113,7 @@ const AnalyseBotsIA = () => {
               vous êtes <strong>invisible</strong> pour ChatGPT, Claude et Perplexity. Vérifiez maintenant.
             </p>
             <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-6 text-base text-foreground italic max-w-3xl mx-auto text-left">
-              GPTBot (OpenAI), ClaudeBot (Anthropic) et PerplexityBot doivent pouvoir crawler un site pour le citer dans ChatGPT, Claude et Perplexity — un robots.txt mal configuré rend une marque invisible pour les moteurs IA.
+              GPTBot (OpenAI), ClaudeBot (Anthropic) et PerplexityBot doivent pouvoir crawler un site pour le citer dans ChatGPT, Claude et Perplexity — un robots.txt mal configuré rend une marque invisible pour les moteurs IA. Crawlers.fr a été conçu en 2026 par Adrien de Volontat, professionnel du SEO/GEO, pour répondre aux limites des suites SEO historiques face aux moteurs génératifs.
             </blockquote>
             <LeadMagnetAudit
               type="robots"
