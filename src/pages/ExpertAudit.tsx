@@ -46,8 +46,8 @@ const faqSchemaData = {
 
 const metaData = {
   fr: {
-    title: "Audit Technique & Stratégique SEO/GEO — Check-up complet | Crawlers.fr",
-    description: "Audit technique et stratégique de votre SEO et GEO : performance, Core Web Vitals, citabilité LLM (ChatGPT, Claude, Perplexity), données structurées JSON-LD et code correctif personnalisé. Check-up complet en 2 minutes."
+    title: "Audit SEO & GEO expert — check-up technique complet",
+    description: "Audit SEO et GEO par un expert : Core Web Vitals, citabilité ChatGPT/Claude/Perplexity, JSON-LD et code correctif. Check-up en 2 min."
   },
   en: {
     title: "Technical & Strategic SEO/GEO Audit — Complete Check-up | Crawlers.fr",

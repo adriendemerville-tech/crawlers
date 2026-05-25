@@ -16,8 +16,8 @@ const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.
 
 const i18n = {
   fr: {
-    title: "Cocoon — Architecte de Cocon Sémantique IA | Crawlers.fr",
-    metaDesc: "Visualisation 3D du maillage interne, détection de cannibalisation, auto-maillage IA, clustering sémantique, ROI prédictif et optimisation GEO pour les moteurs IA.",
+    title: "Cocoon — architecte de cocon sémantique IA | Crawlers.fr",
+    metaDesc: "Créer un cocon sémantique en 3D : maillage interne, détection cannibalisation, auto-maillage IA, clustering et ROI prédictif GEO.",
     badge: "Module Pro Agency",
     heroTitle1: "Votre site est un ",
     heroHighlight: "organisme vivant",

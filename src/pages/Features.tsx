@@ -26,7 +26,7 @@ const i18n = {
     title: 'Toutes les fonctionnalités',
     subtitle: 'Un écosystème complet pour piloter et automatiser\nvotre SEO, votre GEO et votre visibilité IA.',
     metaTitle: 'Fonctionnalités — Crawlers.fr | SEO & GEO tout-en-un',
-    metaDesc: 'Découvrez toutes les fonctionnalités de Crawlers.fr : audit SEO 168 critères, maillage Cocoon, Content Architect, Score GEO, E-E-A-T, Autopilot et plus.',
+    metaDesc: 'Toutes les fonctionnalités Crawlers.fr : audit SEO 168 critères, cocon sémantique, Content Architect, Score GEO, E-E-A-T, Autopilot.',
     cta: 'Découvrir',
     categories: {
       analysis: 'Analyse & Audit',

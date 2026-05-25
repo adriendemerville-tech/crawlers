@@ -240,12 +240,12 @@ export default function GoogleBusinessPage() {
     <>
       <Helmet>
         <title>{t3(language,
-          'Google Business Profile (GMB) — Optimisation SEO Local & GEO | Crawlers.fr',
-          'Google Business Profile (GMB) — Local SEO & GEO Optimization | Crawlers.fr',
-          'Google Business Profile (GMB) — Optimización SEO Local & GEO | Crawlers.fr'
+          'Google Business Profile : SEO local & GEO IA — Crawlers',
+          'Google Business Profile — Local SEO & GEO Optimization | Crawlers.fr',
+          'Google Business Profile — Optimización SEO Local & GEO | Crawlers.fr'
         )}</title>
         <meta name="description" content={t3(language,
-          'Optimisez votre fiche Google Business Profile pour le SEO local et la visibilité IA (GEO). Score de complétude, benchmark concurrentiel, recommandations IA. Intégré à Crawlers.fr.',
+          'Optimisez votre Google Business Profile pour le SEO local et la visibilité IA (GEO). Score complétude, benchmark concurrent, recos IA.',
           'Optimize your Google Business Profile for local SEO and AI visibility (GEO). Completeness score, competitive benchmark, AI recommendations. Integrated with Crawlers.fr.',
           'Optimice su Google Business Profile para SEO local y visibilidad IA (GEO). Score de completitud, benchmark competitivo, recomendaciones IA. Integrado con Crawlers.fr.'
         )} />
