@@ -84,8 +84,8 @@ const PageSpeedLanding = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Test PageSpeed & Core Web Vitals — Analysez la vitesse de votre site | Crawlers</title>
-        <meta name="description" content="Testez gratuitement la vitesse de votre site. Analysez LCP, INP, CLS et les Core Web Vitals. Obtenez des recommandations d'optimisation pour améliorer votre score Google PageSpeed." />
+        <title>Test vitesse site & Core Web Vitals — PageSpeed gratuit</title>
+        <meta name="description" content="Testez gratuitement la vitesse de votre site. Analyse LCP, INP, CLS et Core Web Vitals avec recommandations Google PageSpeed." />
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Test PageSpeed & Core Web Vitals — Performance de votre site" />
         <meta property="og:description" content="Analysez gratuitement les Core Web Vitals de votre site et obtenez des recommandations d'optimisation." />

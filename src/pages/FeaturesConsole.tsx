@@ -39,10 +39,10 @@ export default function FeaturesConsole() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Ma Console — Crawlers.fr | Cockpit SEO & GEO unifié</title>
+        <title>Console SEO & GEO Crawlers — cockpit unifié 16 modules</title>
         <meta
           name="description"
-          content="La Console Crawlers réunit SEO, GEO, plans d'action, scripts, crawls, content, GMB, indexation et reporting dans un cockpit unique. Découvrez son design et ses 16 modules."
+          content="La Console Crawlers réunit SEO, GEO, plans d'action, crawls, content, GMB et reporting dans un cockpit outil SEO unifié pour agences."
         />
       </Helmet>
 

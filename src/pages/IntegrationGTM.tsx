@@ -87,7 +87,7 @@ export default function IntegrationGTM() {
           'Conectar su sitio — API, WordPress, GTM | Crawlers.fr'
         )}</title>
         <meta name="description" content={t3(language,
-          'Connectez votre site à Crawlers.AI en 30 secondes. 3 méthodes : API CMS, plugin WordPress, Google Tag Manager. Injection automatique, sandboxing, débranchage instantané.',
+          'Connectez votre site à Crawlers via Google Tag Manager, WordPress ou API CMS en 30 s. Injection auto, sandboxing, débranchage instant.',
           'Connect your site to Crawlers.AI in 30 seconds. 3 methods: CMS API, WordPress plugin, Google Tag Manager. Auto injection, sandboxing, instant disconnect.',
           'Conecte su sitio a Crawlers.AI en 30 segundos. 3 métodos: API CMS, plugin WordPress, Google Tag Manager. Inyección automática, sandboxing, desconexión instantánea.'
         )} />
