@@ -269,27 +269,27 @@ export function Header() {
         {!isProfilePage && isHomePage && (
           <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             <Link to="/features">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-thin">Features</span>
               </Button>
             </Link>
             <Link to="/tarifs">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-thin">{language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}</span>
               </Button>
             </Link>
             <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-thin">Audit</span>
               </Button>
             </Link>
             <Link to="/eeat">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-thin">E-E-A-T</span>
               </Button>
             </Link>
             <Link to="/app/ranking-serp">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
                 <span className="text-sm font-thin">SERPs</span>
               </Button>
             </Link>
@@ -300,7 +300,7 @@ export function Header() {
           {user && profile?.plan_type && profile.plan_type !== 'free' && (
             <>
               <Link to="/matrice">
-                <Button variant="ghost" size="sm" className={`gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
+                <Button variant="ghost" size="sm" className={`gap-1.5 text-foreground/80 hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
                   <Grid3X3 className="h-3.5 w-3.5" />
                   <span className="text-sm font-semibold">Matrice</span>
                 </Button>
@@ -385,7 +385,7 @@ export function Header() {
         {location.pathname === '/app/console' && (
           <div className="hidden sm:flex items-center gap-0.5 absolute left-1/2 -translate-x-1/2">
             <Link to="/matrice">
-              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
                 <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Matrice
               </Button>
