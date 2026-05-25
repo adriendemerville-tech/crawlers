@@ -84,6 +84,7 @@ export const STRATEGIST_CONFIG: PersonaConfig = {
     propose_identity_suggestion: 'auto',
     // Live Search (parité Félix)
     live_search: 'auto',
+    market_diagnosis: 'auto',
     // Escalade téléphone (parité Félix — approval obligatoire)
     escalate_to_phone: 'approval',
     // Analyse / planification automatique
