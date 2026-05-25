@@ -2133,6 +2133,8 @@ const SKILLS: Record<string, SkillDefinition> = {
   propose_identity_suggestion,
   // Live Search (Sprint Q5 Bloc 2)
   live_search,
+  // Diagnostic marché SEO complet (DataForSEO orchestré)
+  market_diagnosis,
   // Escalade téléphone (Sprint Q5 Bloc 3)
   escalate_to_phone,
   // Skills admin (creator_mode only)
