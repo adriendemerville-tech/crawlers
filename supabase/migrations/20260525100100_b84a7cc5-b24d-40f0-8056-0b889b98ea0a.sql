@@ -1,0 +1,1 @@
+UPDATE public.autopilot_configs SET status = 'running', updated_at = now() WHERE tracked_site_id IN (SELECT id FROM public.tracked_sites WHERE domain = 'dictadevi.io') AND status = 'paused';
