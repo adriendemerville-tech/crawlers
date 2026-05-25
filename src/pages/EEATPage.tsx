@@ -541,23 +541,25 @@ export default function EEATPage() {
         </section>
 
         {/* FAQ */}
-        <section className="py-12 sm:py-16 px-4 bg-muted/30">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-              Questions fréquentes — E-E-A-T, SEO et choix d'un consultant
-            </h2>
-            <div className="space-y-4">
-              {(structuredData["@graph"].find(g => g["@type"] === "FAQPage") as any)?.mainEntity?.map((faq: any, i: number) => (
-                <Card key={i}>
-                  <CardContent className="p-5">
-                    <h3 className="font-bold text-foreground mb-2 text-sm">{faq.name}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{faq.acceptedAnswer.text}</p>
-                  </CardContent>
-                </Card>
-              ))}
+        <LazyVisible minHeight="600px">
+          <section className="py-12 sm:py-16 px-4 bg-muted/30">
+            <div className="mx-auto max-w-4xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
+                Questions fréquentes — E-E-A-T, SEO et choix d'un consultant
+              </h2>
+              <div className="space-y-4">
+                {(structuredData["@graph"].find(g => g["@type"] === "FAQPage") as any)?.mainEntity?.map((faq: any, i: number) => (
+                  <Card key={i}>
+                    <CardContent className="p-5">
+                      <h3 className="font-bold text-foreground mb-2 text-sm">{faq.name}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{faq.acceptedAnswer.text}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </LazyVisible>
 
         {/* CTA final */}
         <section className="py-12 sm:py-16 px-4">
