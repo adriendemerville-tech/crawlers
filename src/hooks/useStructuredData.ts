@@ -25,7 +25,7 @@ export function useStructuredData() {
           },
           "foundingDate": "2026-03-18",
           "founder": { "@id": "https://crawlers.fr/#founder" },
-          "description": "Editeur de la plateforme d'audit SEO, GEO et visibilite IA Crawlers.fr. Premier outil francophone couvrant simultanement SEO technique, GEO Score, visibilite LLM et generation de correctifs actionnables.",
+          "description": "Plateforme d'audit SEO, GEO et visibilite IA Crawlers.fr, concue par un professionnel du SEO/GEO pour ses confreres. Premier outil francophone couvrant simultanement SEO technique, GEO Score, visibilite LLM (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews) et generation de correctifs actionnables.",
           "areaServed": ["FR", "BE", "CH", "CA", "LU", "MC"],
           "knowsAbout": [
             "SEO technique", "Generative Engine Optimization", "Answer Engine Optimization",
