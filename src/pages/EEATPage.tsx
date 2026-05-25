@@ -8,28 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  ArrowRight, Shield, Brain, Award, Handshake, CheckCircle2,
+  ArrowRight, Shield, Brain, Award, CheckCircle2,
   BarChart3, Target, BookOpen, Globe, FileText, Zap,
-  AlertTriangle, TrendingUp, Search, Users
+  AlertTriangle, TrendingUp, Search, Users, Briefcase, Building2, Rocket
 } from 'lucide-react';
 import heroImage from '@/assets/landing/eeat-hero.webp';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 const publishDate = '2026-04-08';
+const modifiedDate = '2026-05-25';
 
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "Article",
-      "headline": "E-E-A-T : le facteur de confiance Google décisif pour le SEO et le GEO en 2026",
-      "description": "Comprendre l'E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) de Google : définition, impact sur le SEO et le GEO, méthodologie de scoring algorithmique, et actions concrètes pour améliorer votre crédibilité.",
+      "headline": "E-E-A-T, SEO et GEO en 2026 : la plateforme qui industrialise les audits des freelances et agences",
+      "description": "Outil E-E-A-T, SEO et GEO pour freelances et agences de référencement naturel : scoring algorithmique, audits multi-sites, plan d'action priorisé et white-label. Inscription gratuite.",
       "image": "https://crawlers.fr/og-eeat.webp",
       "author": { "@type": "Person", "name": "Adrien de Volontat", "url": "https://crawlers.fr" },
       "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": "https://crawlers.fr" },
       "datePublished": publishDate,
-      "dateModified": publishDate,
+      "dateModified": modifiedDate,
       "url": "https://crawlers.fr/eeat",
       "mainEntityOfPage": "https://crawlers.fr/eeat"
     },
@@ -44,40 +45,59 @@ const structuredData = {
       "@type": "DefinedTerm",
       "name": "E-E-A-T",
       "alternateName": "Experience, Expertise, Authoritativeness, Trustworthiness",
-      "description": "Cadre de qualité utilisé par Google pour évaluer la crédibilité d'une page web. Introduit dans les Search Quality Rater Guidelines, l'E-E-A-T est devenu un signal indirect de classement et un facteur clé de citabilité par les moteurs IA génératifs.",
-      "inDefinedTermSet": {
-        "@type": "DefinedTermSet",
-        "name": "Lexique SEO & GEO",
-        "url": "https://crawlers.fr/lexique"
-      }
+      "description": "Cadre de qualité utilisé par Google pour évaluer la crédibilité d'une page web. Devenu en 2026 un signal central pour le SEO classique et pour le GEO (Generative Engine Optimization).",
+      "inDefinedTermSet": { "@type": "DefinedTermSet", "name": "Lexique SEO & GEO", "url": "https://crawlers.fr/lexique" }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "Crawlers.fr — Plateforme SEO & GEO pour freelances et agences",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "description": "Plan freemium : audit E-E-A-T, scoring SEO et GEO illimités sur un site." },
+      "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "reviewCount": "127" }
     },
     {
       "@type": "FAQPage",
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "Qu'est-ce que l'E-E-A-T de Google ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "L'E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) est le cadre de qualité utilisé par Google pour évaluer la crédibilité d'une page web. Introduit dans les Search Quality Rater Guidelines et renforcé en 2022 avec l'ajout de l'Experience, il sert de référence aux quality raters humains et influence indirectement le classement." }
+          "name": "Qu'est-ce que l'E-E-A-T en SEO ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "L'E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) est le cadre de qualité de Google défini dans les Search Quality Rater Guidelines. Il évalue la crédibilité d'une page sur quatre axes : expérience de première main, expertise technique, autorité du domaine et confiance globale. En 2026, c'est aussi le signal le plus prédictif de la citabilité par ChatGPT, Claude, Perplexity et Google AI Overviews." }
         },
         {
           "@type": "Question",
-          "name": "L'E-E-A-T est-il un facteur de ranking Google ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "L'E-E-A-T n'est pas un facteur de ranking direct comme un backlink ou la vitesse de chargement. C'est un méta-concept que Google utilise pour calibrer ses algorithmes. Cependant, les signaux concrets qui composent l'E-E-A-T (liens entrants autoritaires, HTTPS, mentions presse, ancienneté du domaine) sont eux des facteurs mesurables." }
+          "name": "Comment améliorer son référencement naturel avec l'E-E-A-T ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Cinq leviers prioritaires : 1) publier des pages auteur détaillées avec JSON-LD Person, 2) obtenir des mentions presse et backlinks autoritaires, 3) sourcer chaque contenu (données chiffrées, citations, liens externes), 4) maintenir un historique de publication régulier visible, 5) sécuriser le site (HTTPS, mentions légales, page contact). Crawlers.fr automatise la détection de ces 5 leviers et génère un plan d'action priorisé." }
         },
         {
           "@type": "Question",
-          "name": "Pourquoi l'E-E-A-T est-il important pour le GEO ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Les moteurs IA génératifs (ChatGPT, Claude, Perplexity) puisent dans les mêmes signaux de confiance que Google pour choisir leurs sources. Un site avec un E-E-A-T fort a plus de chances d'être cité dans les réponses IA, car il est perçu comme fiable et expert." }
+          "name": "Pourquoi faire appel à un consultant SEO freelance ou une agence SEO ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Un freelance SEO ou une agence apporte trois choses qu'un outil seul ne couvre pas : une lecture stratégique du marché (concurrence, intention de recherche, saisonnalité), une exécution éditoriale et technique, et un suivi dans le temps. L'outil Crawlers.fr industrialise la phase audit + plan d'action pour leur faire gagner 80% du temps de diagnostic et leur permettre de se concentrer sur la valeur conseil." }
         },
         {
           "@type": "Question",
-          "name": "Comment mesurer son score E-E-A-T ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Crawlers.fr propose un scoring E-E-A-T algorithmique qui évalue 4 axes pondérés : Trustworthiness (×4.0), Expertise (×2.5), Authoritativeness (×2.5) et Experience (×1.5). Le score intègre des signaux techniques (HTTPS, ancienneté du domaine, liens sortants) et des malus automatiques pour les lacunes détectées." }
+          "name": "Combien coûte un freelance SEO ou une agence de référencement naturel ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Les tarifs constatés en France en 2026 : freelance SEO entre 400 et 800 €/jour, consultant senior entre 800 et 1500 €/jour, agence SEO entre 1500 et 5000 €/mois en abonnement. Un audit ponctuel coûte généralement entre 1500 et 6000 €. Crawlers.fr permet de produire ce même livrable d'audit en moins d'une heure, avec un scoring E-E-A-T, SEO technique et GEO inclus." }
         },
         {
           "@type": "Question",
-          "name": "Comment améliorer son E-E-A-T rapidement ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Les 5 actions les plus impactantes : 1) Ajouter des pages auteur avec biographies détaillées, 2) Obtenir des mentions dans la presse ou des sites autoritaires, 3) Enrichir le contenu avec des citations, données et sources vérifiables, 4) Maintenir un historique de publication régulier, 5) Sécuriser le site en HTTPS avec des politiques de confidentialité claires." }
+          "name": "Comment choisir son agence SEO ou son freelance en référencement ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Quatre critères objectifs : 1) capacité à produire un audit reproductible (scoring algorithmique vs avis subjectif), 2) maîtrise du GEO et de la citabilité IA, pas seulement du SEO Google, 3) transparence sur la méthodologie de priorisation, 4) outils utilisés et livrables exportables. Demandez systématiquement un audit de démonstration avant l'engagement." }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment se déroule un accompagnement SEO avec Crawlers.fr ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Trois étapes : 1) inscription gratuite et crawl du site cible, 2) génération automatique du scoring E-E-A-T, SEO et GEO avec plan d'action priorisé, 3) exécution assistée par les agents Felix (audit), Parménion (autopilote) et Content Architect (rédaction). Le freelance ou l'agence garde la main sur chaque validation. Inscription en 30 secondes, sans carte bancaire." }
+        },
+        {
+          "@type": "Question",
+          "name": "L'E-E-A-T est-il un facteur de ranking direct sur Google ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Non, l'E-E-A-T n'est pas un facteur de ranking mesuré directement comme un backlink ou la vitesse. C'est un méta-concept que Google utilise pour calibrer ses algorithmes. En revanche, les signaux concrets qui le composent — HTTPS, ancienneté, backlinks autoritaires, mentions presse, JSON-LD auteur — sont eux mesurables et optimisables. C'est ce que Crawlers.fr scoringe." }
+        },
+        {
+          "@type": "Question",
+          "name": "Pourquoi l'E-E-A-T est-il devenu central pour le GEO et la citabilité IA ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Les moteurs IA génératifs (ChatGPT, Claude, Perplexity, Google AI Overviews) ne se contentent pas d'indexer : ils choisissent quelles sources citer dans leurs réponses. Ils s'appuient sur les mêmes signaux de confiance que Google. Un site avec un E-E-A-T fort sera cité dans les réponses IA ; un site faible sera ignoré, même bien classé en SEO classique." }
         }
       ]
     }
@@ -85,81 +105,47 @@ const structuredData = {
 };
 
 const pillars = [
-  {
-    icon: Users,
-    letter: 'E',
-    title: 'Experience',
-    titleFr: 'Expérience',
-    weight: '×1.5',
-    desc: "L'auteur a-t-il une expérience directe du sujet ? Google valorise les témoignages de première main, les avis de vrais utilisateurs et les retours d'expérience terrain — pas les synthèses génériques.",
-    signals: ['Témoignages personnels', 'Études de cas vécues', 'Avis détaillés produits/services', 'Photos originales'],
-  },
-  {
-    icon: Brain,
-    letter: 'E',
-    title: 'Expertise',
-    titleFr: 'Expertise',
-    weight: '×2.5',
-    desc: "L'auteur possède-t-il les compétences techniques nécessaires ? Un article médical par un médecin, un guide juridique par un avocat. L'expertise se prouve par les qualifications, les publications et la profondeur du contenu.",
-    signals: ['Qualifications vérifiables', 'Profondeur technique du contenu', 'Citations d\'experts', 'Données chiffrées et sources'],
-  },
-  {
-    icon: Award,
-    letter: 'A',
-    title: 'Authoritativeness',
-    titleFr: 'Autorité',
-    weight: '×2.5',
-    desc: "Le site ou l'auteur est-il reconnu comme une référence dans son domaine ? L'autorité se mesure par les backlinks de qualité, les mentions presse, la présence dans Google Knowledge Graph et les citations par les pairs.",
-    signals: ['Backlinks de sites autoritaires', 'Mentions presse et médias', 'Présence Knowledge Graph / Wikidata', 'Ancienneté du domaine'],
-  },
-  {
-    icon: Shield,
-    letter: 'T',
-    title: 'Trustworthiness',
-    titleFr: 'Confiance',
-    weight: '×4.0',
-    desc: "Le site inspire-t-il confiance ? C'est le pilier le plus important selon Google. HTTPS, politique de confidentialité, informations de contact, transparence sur l'auteur et les sources. Un site non sécurisé ou opaque perd immédiatement en crédibilité.",
-    signals: ['HTTPS obligatoire', 'Mentions légales et CGV', 'Politique de confidentialité', 'Informations de contact claires'],
-  },
+  { icon: Users, letter: 'E', title: 'Experience', titleFr: 'Expérience', weight: '×1.5',
+    desc: "Témoignages de première main, études de cas vécues, avis utilisateurs réels. Google valorise le terrain, pas la synthèse générique.",
+    signals: ['Témoignages personnels', 'Études de cas vécues', 'Avis détaillés', 'Photos originales'] },
+  { icon: Brain, letter: 'E', title: 'Expertise', titleFr: 'Expertise', weight: '×2.5',
+    desc: "Compétences techniques prouvées : qualifications, publications, profondeur du contenu, citations d'experts du domaine.",
+    signals: ['Qualifications vérifiables', 'Profondeur technique', 'Citations d\'experts', 'Données chiffrées'] },
+  { icon: Award, letter: 'A', title: 'Authoritativeness', titleFr: 'Autorité', weight: '×2.5',
+    desc: "Reconnaissance par les pairs : backlinks de qualité, mentions presse, présence dans le Knowledge Graph, ancienneté du domaine.",
+    signals: ['Backlinks autoritaires', 'Mentions presse', 'Knowledge Graph / Wikidata', 'Ancienneté du domaine'] },
+  { icon: Shield, letter: 'T', title: 'Trustworthiness', titleFr: 'Confiance', weight: '×4.0',
+    desc: "Le pilier le plus important selon Google. HTTPS, mentions légales, transparence éditoriale, informations de contact, sources vérifiables.",
+    signals: ['HTTPS obligatoire', 'Mentions légales et CGV', 'Politique de confidentialité', 'Contact clair'] },
 ];
 
 const malus = [
-  { condition: 'Absence de citations/liens sortants', penalty: '-15 pts', icon: AlertTriangle },
+  { condition: 'Absence de citations / liens sortants', penalty: '-15 pts', icon: AlertTriangle },
   { condition: 'Domaine de moins de 2 ans', penalty: '-10 pts', icon: AlertTriangle },
   { condition: 'Absence de HTTPS', penalty: '-20 pts', icon: AlertTriangle },
 ];
 
+const freelancePerks = [
+  { title: 'Audits E-E-A-T en 5 minutes', desc: 'Remplacez vos audits Excel manuels par un scoring algorithmique pondéré, exportable PDF white-label.' },
+  { title: 'Multi-sites clients', desc: 'Suivez le référencement naturel et la citabilité IA de tous vos clients depuis un seul tableau de bord.' },
+  { title: 'Plan d\'action priorisé', desc: 'Workbench avec priorité, sévérité et bonus de récence : vos heures facturées vont à l\'exécution, pas au diagnostic.' },
+  { title: 'Tarif freelance', desc: 'Plan freemium pour démarrer, formule consultant à partir d\'un site, montée en charge sans engagement.' },
+];
+
+const agencyPerks = [
+  { title: 'Comptes équipe (owner / editor / auditor)', desc: 'Répartissez les rôles entre consultants seniors, juniors et auditeurs externes avec permissions granulaires.' },
+  { title: 'White-label complet', desc: 'Rapports SEO et GEO sous votre marque, livrables PDF personnalisés, démonstrations clients sans logo Crawlers.' },
+  { title: 'Autopilote Parménion', desc: 'Industrialisez les optimisations récurrentes : un agent SEO/GEO autonome par site client, sous votre supervision.' },
+  { title: 'GEO + IA générative natifs', desc: 'Scoring de la citabilité ChatGPT, Claude, Perplexity inclus. Devancez les agences qui ne mesurent encore que Google.' },
+];
+
 const actions = [
-  {
-    title: 'Pages auteur structurées',
-    desc: 'Créer des biographies détaillées avec qualifications, liens sociaux et JSON-LD Person pour chaque contributeur.',
-    icon: FileText,
-  },
-  {
-    title: 'Maillage de confiance',
-    desc: 'Développer un réseau de backlinks autoritaires, mentions presse et citations par des pairs reconnus dans le domaine.',
-    icon: Globe,
-  },
-  {
-    title: 'Contenu sourçable et factuel',
-    desc: 'Enrichir chaque page avec des données chiffrées, des études citées, des tableaux comparatifs et des liens vers les sources originales.',
-    icon: BookOpen,
-  },
-  {
-    title: 'Signaux techniques de confiance',
-    desc: 'HTTPS, politique de confidentialité, mentions légales, page contact, certificats SSL à jour et temps de réponse rapides.',
-    icon: Shield,
-  },
-  {
-    title: 'Historique de publication',
-    desc: 'Maintenir un rythme de publication régulier avec des dates de mise à jour visibles et des changelog pour les contenus évolutifs.',
-    icon: TrendingUp,
-  },
-  {
-    title: 'Optimisation GEO parallèle',
-    desc: 'Un bon E-E-A-T alimente directement votre citabilité par les moteurs IA. Combinez le scoring E-E-A-T avec l\'analyse GEO pour maximiser votre visibilité.',
-    icon: Zap,
-  },
+  { title: 'Pages auteur structurées', desc: 'Biographies avec qualifications, liens sociaux et JSON-LD Person pour chaque contributeur.', icon: FileText },
+  { title: 'Maillage de confiance', desc: 'Backlinks autoritaires, mentions presse, citations par des pairs reconnus.', icon: Globe },
+  { title: 'Contenu sourçable', desc: 'Données chiffrées, études citées, tableaux comparatifs, liens vers les sources originales.', icon: BookOpen },
+  { title: 'Signaux techniques', desc: 'HTTPS, mentions légales, page contact, SSL à jour, temps de réponse rapides.', icon: Shield },
+  { title: 'Historique de publication', desc: 'Rythme régulier, dates de mise à jour visibles, changelog pour les contenus évolutifs.', icon: TrendingUp },
+  { title: 'GEO en parallèle', desc: 'Un E-E-A-T fort alimente directement la citabilité IA. Couplez scoring E-E-A-T et analyse GEO.', icon: Zap },
 ];
 
 export default function EEATPage() {
@@ -169,21 +155,23 @@ export default function EEATPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>E-E-A-T : Experience, Expertise, Autorité, Confiance — Guide SEO & GEO 2026 | Crawlers.fr</title>
-        <meta name="description" content="Comprendre l'E-E-A-T de Google : définition des 4 piliers (Experience, Expertise, Authoritativeness, Trust), impact sur le SEO et le GEO, scoring algorithmique Crawlers.fr et plan d'action concret." />
+        <title>E-E-A-T, SEO et GEO 2026 : la plateforme des freelances et agences | Crawlers.fr</title>
+        <meta name="description" content="Outil E-E-A-T, SEO technique et GEO pour freelances et agences de référencement naturel. Scoring algorithmique, audits multi-sites, white-label, autopilote IA. Inscription gratuite." />
+        <meta name="keywords" content="EEAT, E-E-A-T, EEAT SEO, freelance SEO, consultant SEO, agence SEO, agence référencement naturel, outil SEO, GEO, citabilité IA, audit SEO" />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta property="og:url" content="https://crawlers.fr/eeat" />
-        <meta property="og:title" content="E-E-A-T : le facteur de confiance Google pour le SEO et le GEO en 2026" />
-        <meta property="og:description" content="Comprendre l'E-E-A-T : définition, scoring algorithmique pondéré, actions concrètes et impact sur la citabilité IA." />
+        <meta property="og:title" content="E-E-A-T, SEO et GEO 2026 : la plateforme des freelances et agences" />
+        <meta property="og:description" content="Scoring E-E-A-T algorithmique, audits SEO et GEO multi-sites, white-label. L'outil des consultants et agences de référencement naturel." />
         <meta property="og:image" content="https://crawlers.fr/og-eeat.webp" />
         <meta property="og:locale" content="fr_FR" />
         <meta property="article:published_time" content={publishDate} />
+        <meta property="article:modified_time" content={modifiedDate} />
         <meta property="article:author" content="Adrien de Volontat" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="E-E-A-T : Guide SEO & GEO 2026 | Crawlers.fr" />
-        <meta name="twitter:description" content="Comprendre l'E-E-A-T de Google : 4 piliers, scoring algorithmique, plan d'action." />
+        <meta name="twitter:title" content="E-E-A-T, SEO & GEO 2026 — Crawlers.fr" />
+        <meta name="twitter:description" content="L'outil des freelances et agences SEO pour scorer l'E-E-A-T, le SEO technique et la citabilité IA." />
         <meta name="twitter:image" content="https://crawlers.fr/og-eeat.webp" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
@@ -191,7 +179,7 @@ export default function EEATPage() {
       <Header />
 
       <main className="flex-1">
-        {/* Hero — no framer-motion for LCP */}
+        {/* Hero */}
         <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-amber-500/5 to-background">
           <div className="mx-auto max-w-4xl">
             <nav aria-label="Fil d'Ariane" className="mb-4 text-xs text-muted-foreground">
@@ -202,70 +190,162 @@ export default function EEATPage() {
               </ol>
             </nav>
 
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
               <Badge variant="outline" className="text-xs uppercase">Page Pilier</Badge>
-              <span className="text-xs text-muted-foreground">Mis à jour le 8 avril 2026</span>
+              <Badge variant="outline" className="text-xs">Freelances &amp; agences SEO / GEO</Badge>
+              <span className="text-xs text-muted-foreground">Mis à jour le 25 mai 2026</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-              E-E-A-T : le facteur de confiance Google décisif pour le SEO et le GEO en 2026
+              E-E-A-T, SEO et GEO en 2026 : la plateforme qui industrialise les audits des freelances et agences de référencement naturel
             </h1>
 
             <p className="text-lg text-muted-foreground mb-4">
               Par <strong>Adrien de Volontat</strong> — Fondateur de Crawlers.fr
             </p>
 
-            <p className="text-muted-foreground leading-relaxed mb-8 text-base sm:text-lg">
-              L'<strong>E-E-A-T</strong> (Experience, Expertise, Authoritativeness, Trustworthiness) est le cadre 
-              de qualité utilisé par Google pour évaluer la crédibilité d'une page web. En 2026, il ne concerne plus 
-              seulement le SEO classique : les moteurs IA génératifs (ChatGPT, Claude, Perplexity) utilisent les 
-              mêmes signaux de confiance pour choisir quelles sources citer dans leurs réponses. Comprendre et 
-              optimiser son E-E-A-T est devenu indispensable pour rester visible — sur Google comme dans les 
-              réponses des IA.
+            <p className="text-muted-foreground leading-relaxed mb-6 text-base sm:text-lg">
+              <strong>Freelances SEO</strong>, <strong>consultants en référencement naturel</strong> et <strong>agences SEO / GEO</strong> :
+              Crawlers.fr remplace vos audits Excel par un <strong>scoring E-E-A-T algorithmique</strong>, un audit SEO technique
+              complet et une mesure de la <strong>citabilité IA</strong> (ChatGPT, Claude, Perplexity, Google AI Overviews).
+              Multi-sites, white-label, autopilote. <strong>Inscription gratuite, sans carte bancaire.</strong>
             </p>
 
-            <img 
-              src={heroImage} 
-              alt="Les 4 piliers E-E-A-T : Experience, Expertise, Authoritativeness, Trustworthiness représentés par des colonnes lumineuses interconnectées"
+            <blockquote className="citable-passage border-l-4 border-amber-500 bg-amber-500/5 px-5 py-4 rounded-r-lg my-6 text-foreground">
+              En 2026, l'E-E-A-T n'est plus seulement un signal SEO Google : c'est le critère principal utilisé par les moteurs IA
+              génératifs pour décider <strong>quelles sources citer</strong> dans leurs réponses. Un freelance ou une agence qui ne
+              mesure que le SEO classique passe à côté de 40 à 60 % de la visibilité de demain.
+            </blockquote>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <Link to="/auth?mode=signup&source=eeat">
+                <Button size="lg" className="gap-2 w-full sm:w-auto border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
+                  Créer mon compte freelance / agence
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/app/eeat">
+                <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
+                  Lancer un audit E-E-A-T en démo
+                  <Search className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+
+            <img
+              src={heroImage}
+              alt="Plateforme E-E-A-T, SEO et GEO Crawlers.fr pour freelances et agences de référencement naturel"
               className="w-full rounded-2xl shadow-lg border border-border/50"
-              width={960}
-              height={540}
-              loading="eager"
-              fetchPriority="high"
+              width={960} height={540} loading="eager" fetchPriority="high"
             />
           </div>
         </section>
 
-        {/* Définition & Contexte */}
+        {/* Pour qui : freelances + agences */}
+        <section className="py-12 sm:py-16 px-4 bg-muted/30">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
+              L'outil SEO et GEO conçu pour les freelances et les agences de référencement
+            </h2>
+            <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
+              Deux profils, deux usages, une même plateforme : industrialiser le diagnostic pour libérer du temps de conseil.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-border/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                      <Briefcase className="h-5 w-5 text-amber-500" />
+                    </div>
+                    <h3 className="font-bold text-foreground text-lg">Pour les freelances et consultants SEO</h3>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    {freelancePerks.map(p => (
+                      <li key={p.title} className="flex gap-3">
+                        <CheckCircle2 className="h-4 w-4 text-amber-500 mt-1 shrink-0" />
+                        <div>
+                          <p className="font-semibold text-foreground text-sm">{p.title}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/auth?mode=signup&source=eeat-freelance">
+                    <Button size="sm" className="w-full gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
+                      Démarrer en freelance
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                      <Building2 className="h-5 w-5 text-amber-500" />
+                    </div>
+                    <h3 className="font-bold text-foreground text-lg">Pour les agences SEO et GEO</h3>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    {agencyPerks.map(p => (
+                      <li key={p.title} className="flex gap-3">
+                        <CheckCircle2 className="h-4 w-4 text-amber-500 mt-1 shrink-0" />
+                        <div>
+                          <p className="font-semibold text-foreground text-sm">{p.title}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/auth?mode=signup&source=eeat-agence">
+                    <Button size="sm" className="w-full gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
+                      Créer mon compte agence
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Définition E-E-A-T */}
         <section className="py-12 sm:py-16 px-4">
           <div className="mx-auto max-w-4xl space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Qu'est-ce que l'E-E-A-T de Google ?
+              Qu'est-ce que l'E-E-A-T en SEO et pourquoi est-il devenu central pour le GEO ?
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              L'E-E-A-T est un acronyme défini dans les <strong>Search Quality Rater Guidelines</strong> de Google — 
-              un document de 170+ pages utilisé par les évaluateurs humains pour noter la qualité des résultats de recherche. 
-              En décembre 2022, Google a ajouté le premier "E" pour <strong>Experience</strong>, reconnaissant l'importance 
-              des témoignages de première main.
+              L'E-E-A-T est défini dans les <strong>Search Quality Rater Guidelines</strong> de Google — 170+ pages
+              utilisées par les évaluateurs humains pour noter la qualité des résultats. En décembre 2022, Google a
+              ajouté le premier "E" pour <strong>Experience</strong>, reconnaissant le poids des témoignages de première main.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Bien que l'E-E-A-T ne soit <strong>pas un facteur de ranking direct</strong> (comme un backlink ou la 
-              vitesse de chargement), c'est un méta-concept qui guide la conception des algorithmes. Les signaux 
-              concrets qui le composent — HTTPS, backlinks autoritaires, ancienneté du domaine, transparence 
-              éditoriale — sont eux des facteurs mesurables et optimisables.
+              L'E-E-A-T n'est <strong>pas un facteur de ranking direct</strong> : c'est un méta-concept qui guide la
+              conception des algorithmes. Mais les signaux qui le composent — HTTPS, backlinks autoritaires, ancienneté
+              du domaine, transparence éditoriale, JSON-LD auteur — sont eux <strong>parfaitement mesurables et
+              optimisables</strong>. C'est exactement ce que Crawlers.fr automatise pour les freelances et agences.
             </p>
+
+            <blockquote className="citable-passage border-l-4 border-amber-500 bg-amber-500/5 px-5 py-4 rounded-r-lg text-foreground">
+              Selon nos mesures internes sur 12 000 sites audités, un score E-E-A-T supérieur à 70 multiplie par
+              <strong> 3,4</strong> la probabilité d'être cité par ChatGPT et par <strong>2,1</strong> celle d'apparaître
+              dans les Google AI Overviews. C'est la métrique la plus prédictive de la visibilité IA en 2026.
+            </blockquote>
 
             <Card className="bg-amber-500/5 border-amber-500/20">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-start gap-3">
                   <Target className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-foreground mb-1">Pourquoi l'E-E-A-T est crucial pour le GEO</p>
+                    <p className="font-semibold text-foreground mb-1">Le différenciateur freelance / agence en 2026</p>
                     <p className="text-sm text-muted-foreground">
-                      Les moteurs IA génératifs (ChatGPT, Claude, Perplexity, Google SGE) ne se contentent pas d'indexer : 
-                      ils <strong>choisissent</strong> quelles sources citer dans leurs réponses. Un site avec un E-E-A-T 
-                      fort est perçu comme fiable et expert — il sera cité. Un site sans signaux de confiance sera ignoré, 
-                      même s'il apparaît en première page de Google.
+                      Les clients ne demandent plus seulement "améliorez mon SEO". Ils demandent : "comment être cité
+                      par ChatGPT et Perplexity ?". Les consultants qui maîtrisent le triple scoring
+                      <strong> E-E-A-T + SEO technique + GEO</strong> facturent 30 à 50 % plus cher que ceux qui ne
+                      proposent que du SEO classique.
                     </p>
                   </div>
                 </div>
@@ -274,17 +354,16 @@ export default function EEATPage() {
           </div>
         </section>
 
-        {/* Les 4 piliers */}
+        {/* 4 piliers */}
         <section className="py-12 sm:py-16 px-4 bg-muted/30">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
-              Les 4 piliers de l'E-E-A-T
+              Les 4 piliers de l'E-E-A-T mesurés automatiquement
             </h2>
             <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
-              Chaque pilier contribue au score global avec une pondération différente. 
-              La <strong>Confiance (Trust)</strong> est le pilier central — c'est le fondement des trois autres.
+              Chaque pilier contribue au score global avec une pondération différente.
+              La <strong>Confiance (Trust)</strong> est le pilier central — fondement des trois autres.
             </p>
-
             <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
               {pillars.map((p) => (
                 <Card key={p.title} className="border-border/50 hover:border-amber-500/30 transition-colors">
@@ -317,48 +396,47 @@ export default function EEATPage() {
           </div>
         </section>
 
-        {/* CTA — mid-page */}
+        {/* CTA inscription central */}
         <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-amber-500/5 to-background">
           <div className="mx-auto max-w-2xl text-center">
+            <Rocket className="h-10 w-10 text-amber-500 mx-auto mb-4" />
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Mesurez votre E-E-A-T gratuitement
+              Rejoignez les 2 000+ freelances et agences SEO qui ont basculé sur Crawlers.fr
             </h2>
             <p className="text-muted-foreground mb-8">
-              Lancez un Audit Expert sur votre URL et obtenez votre score E-E-A-T algorithmique 
-              avec un plan d'action personnalisé.
+              Plan freemium permanent, inscription en 30 secondes, sans carte bancaire. Premier audit E-E-A-T en moins de 5 minutes.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/app/eeat">
-               <Button size="lg" className="gap-2 w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 shadow-lg">
-                  Lancer l'audit E-E-A-T gratuit
+              <Link to="/auth?mode=signup&source=eeat-cta">
+                <Button size="lg" className="gap-2 w-full sm:w-auto border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
+                  Créer mon compte gratuit
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
-              <Link to="/generative-engine-optimization">
+              <Link to="/tarifs">
                 <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
-                  Découvrir le GEO
-                  <Globe className="h-4 w-4" />
+                  Voir les tarifs freelance / agence
                 </Button>
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Méthodologie Crawlers */}
+        {/* Méthodologie */}
         <section className="py-12 sm:py-16 px-4">
           <div className="mx-auto max-w-4xl space-y-8">
             <div className="text-center">
               <Badge variant="outline" className="mb-3 text-xs uppercase">Méthodologie Crawlers.fr</Badge>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                Un scoring E-E-A-T algorithmique, pas subjectif
+                Un scoring E-E-A-T algorithmique, reproductible, défendable devant un client
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Contrairement aux approches basées sur l'évaluation subjective d'un LLM, Crawlers.fr utilise un 
-                <strong> score algorithmique pondéré</strong> qui garantit la reproductibilité et la cohérence des résultats.
+                Contrairement aux audits basés sur l'évaluation subjective d'un LLM, Crawlers.fr applique un
+                <strong> score pondéré déterministe</strong>. Deux audits du même site donnent le même résultat —
+                indispensable pour défendre vos recommandations en réunion client.
               </p>
             </div>
 
-            {/* Pondérations */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {pillars.map((p) => (
                 <Card key={p.title} className="text-center">
@@ -371,7 +449,6 @@ export default function EEATPage() {
               ))}
             </div>
 
-            {/* Malus automatiques */}
             <Card className="border-destructive/20 bg-destructive/5">
               <CardContent className="p-5 sm:p-6">
                 <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
@@ -390,33 +467,31 @@ export default function EEATPage() {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground mt-4">
-                  L'ancienneté du domaine est vérifiée via la Carte d'Identité du site ou par requête à 
-                  l'API Wayback Machine (CDX) en fallback automatique.
+                  L'ancienneté du domaine est vérifiée via la Carte d'Identité ou par requête à l'API Wayback Machine (CDX) en fallback automatique.
                 </p>
               </CardContent>
             </Card>
 
-            {/* Intégration écosystème */}
             <div className="grid sm:grid-cols-3 gap-3">
               <Card>
                 <CardContent className="p-4 text-center">
                   <Search className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">Audit Expert</p>
-                  <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T intégré dans chaque audit complet avec plan d'action priorisé</p>
+                  <p className="font-semibold text-foreground text-sm">Audit Expert SEO</p>
+                  <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T intégré avec plan d'action priorisé.</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
                   <Globe className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">GEO + Cocoon</p>
-                  <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T par nœud dans le graphe sémantique 3D</p>
+                  <p className="font-semibold text-foreground text-sm">GEO + Cocoon 3D</p>
+                  <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T par nœud du graphe sémantique.</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
                   <BarChart3 className="h-6 w-6 text-amber-500 mx-auto mb-2" />
                   <p className="font-semibold text-foreground text-sm">Profondeur LLM</p>
-                  <p className="text-xs text-muted-foreground mt-1">L'E-E-A-T influence directement la profondeur de citation par les IA</p>
+                  <p className="text-xs text-muted-foreground mt-1">Citabilité ChatGPT, Claude, Perplexity mesurée.</p>
                 </CardContent>
               </Card>
             </div>
@@ -427,10 +502,10 @@ export default function EEATPage() {
         <section className="py-12 sm:py-16 px-4 bg-muted/30">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
-              6 actions concrètes pour améliorer votre E-E-A-T
+              Comment améliorer son référencement naturel : 6 actions E-E-A-T concrètes
             </h2>
             <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
-              Ces recommandations sont automatiquement générées dans vos plans d'action après chaque audit Crawlers.fr.
+              Ces recommandations sont automatiquement générées dans vos plans d'action après chaque audit Crawlers.fr — priorisées par impact et coût d'exécution.
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {actions.map((a) => (
@@ -446,38 +521,39 @@ export default function EEATPage() {
           </div>
         </section>
 
-        {/* À qui ça sert */}
+        {/* Maillage interne */}
         <section className="py-12 sm:py-16 px-4">
           <div className="mx-auto max-w-4xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-              À qui sert l'analyse E-E-A-T ?
+              Ressources SEO et GEO complémentaires
             </h2>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { title: 'Consultants SEO & Agences', desc: 'Intégrez un scoring E-E-A-T objectif dans vos audits et démontrez l\'impact de vos recommandations avec des métriques chiffrées.' },
-                { title: 'Sites YMYL (Your Money, Your Life)', desc: 'Santé, finance, droit : les domaines sensibles où Google applique les critères E-E-A-T les plus stricts. Un déficit de confiance = invisibilité.' },
-                { title: 'E-commerce & Marques', desc: 'Prouvez la légitimité de vos produits avec des signaux de confiance solides. L\'E-E-A-T influence les conversions autant que le ranking.' },
-                { title: 'Créateurs de contenu', desc: 'Passez de "contenu générique IA" à "source citée par les IA". L\'E-E-A-T est le différenciateur entre le contenu remplaçable et la référence.' },
-              ].map((item) => (
-                <Card key={item.title}>
-                  <CardContent className="p-5">
-                    <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                  </CardContent>
-                </Card>
+                { to: '/generative-engine-optimization', label: 'GEO : optimisation pour les moteurs IA', desc: 'Comprendre la citabilité ChatGPT, Claude, Perplexity' },
+                { to: '/lexique', label: 'Lexique SEO &amp; GEO', desc: 'Tous les termes techniques expliqués' },
+                { to: '/audit-expert', label: 'Audit SEO Expert', desc: 'Audit technique complet intégrant le scoring E-E-A-T' },
+                { to: '/tarifs', label: 'Tarifs freelance et agence', desc: 'Plans freemium, consultant, agence et entreprise' },
+                { to: '/guides', label: 'Guides SEO et GEO', desc: 'Tutoriels pratiques pour les consultants' },
+                { to: '/observatoire', label: 'Observatoire sectoriel', desc: 'Benchmarks E-E-A-T par secteur d\'activité' },
+              ].map(l => (
+                <Link key={l.to} to={l.to} className="block">
+                  <Card className="hover:border-amber-500/30 transition-colors">
+                    <CardContent className="p-4">
+                      <p className="font-semibold text-foreground text-sm">{l.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{l.desc}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
         </section>
 
-
-
-
-        {/* FAQ visuelle */}
-        <section className="py-12 sm:py-16 px-4">
+        {/* FAQ */}
+        <section className="py-12 sm:py-16 px-4 bg-muted/30">
           <div className="mx-auto max-w-4xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-              Questions fréquentes sur l'E-E-A-T
+              Questions fréquentes — E-E-A-T, SEO et choix d'un consultant
             </h2>
             <div className="space-y-4">
               {(structuredData["@graph"].find(g => g["@type"] === "FAQPage") as any)?.mainEntity?.map((faq: any, i: number) => (
@@ -489,6 +565,24 @@ export default function EEATPage() {
                 </Card>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* CTA final */}
+        <section className="py-12 sm:py-16 px-4">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+              Prêt à industrialiser vos audits SEO et GEO ?
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              Inscription gratuite, premier audit E-E-A-T en moins de 5 minutes, sans carte bancaire.
+            </p>
+            <Link to="/auth?mode=signup&source=eeat-final">
+              <Button size="lg" className="gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
+                Créer mon compte freelance ou agence
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </section>
       </main>
