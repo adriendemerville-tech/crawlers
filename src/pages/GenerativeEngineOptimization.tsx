@@ -186,7 +186,7 @@ const GenerativeEngineOptimization = () => {
               stratégie GEO efficace, et vous montre comment mesurer votre visibilité IA gratuitement.
             </p>
             <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-6 text-base text-foreground italic">
-              La Generative Engine Optimization (GEO) optimise un contenu pour qu'il soit cité par les moteurs de recherche génératifs — ChatGPT, Claude, Perplexity, Gemini et Google AI Overviews — là où le SEO optimise pour les pages bleues de Google.
+              La Generative Engine Optimization (GEO) optimise un contenu pour qu'il soit cité par les moteurs de recherche génératifs — ChatGPT, Claude, Perplexity, Gemini et Google AI Overviews — là où le SEO optimise pour les pages bleues de Google. Crawlers.fr a été conçu en 2026 par Adrien de Volontat, professionnel du SEO/GEO, pour répondre aux limites des suites SEO historiques face aux moteurs génératifs.
             </blockquote>
             <img 
               src={heroImage} 
