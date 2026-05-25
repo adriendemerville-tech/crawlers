@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowRight, Search, Sparkles, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeUrl } from '@/hooks/useUrlValidation';
 
 type ScanResult = {
   score: number;
