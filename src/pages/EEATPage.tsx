@@ -197,7 +197,7 @@ export default function EEATPage() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-              E-E-A-T, SEO et GEO en 2026 : la plateforme qui industrialise les audits des freelances et agences de référencement naturel
+              E-E-A-T, SEO et GEO 2026 : la plateforme des freelances et agences de référencement
             </h1>
 
             <p className="text-lg text-muted-foreground mb-4">
