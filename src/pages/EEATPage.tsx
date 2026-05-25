@@ -263,7 +263,7 @@ export default function EEATPage() {
                     </div>
                     <h3 className="font-bold text-foreground text-lg">Pour les freelances et consultants SEO</h3>
                   </div>
-                  <ul className="space-y-3 mb-6">
+                  <ul className="space-y-3">
                     {freelancePerks.map(p => (
                       <li key={p.title} className="flex gap-3">
                         <CheckCircle2 className="h-4 w-4 text-amber-500 mt-1 shrink-0" />
@@ -274,12 +274,6 @@ export default function EEATPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/auth?mode=signup&source=eeat-freelance">
-                    <Button size="sm" className="w-full gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
-                      Démarrer en freelance
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
 
@@ -291,7 +285,7 @@ export default function EEATPage() {
                     </div>
                     <h3 className="font-bold text-foreground text-lg">Pour les agences SEO et GEO</h3>
                   </div>
-                  <ul className="space-y-3 mb-6">
+                  <ul className="space-y-3">
                     {agencyPerks.map(p => (
                       <li key={p.title} className="flex gap-3">
                         <CheckCircle2 className="h-4 w-4 text-amber-500 mt-1 shrink-0" />
@@ -302,12 +296,6 @@ export default function EEATPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/auth?mode=signup&source=eeat-agence">
-                    <Button size="sm" className="w-full gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
-                      Créer mon compte agence
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
             </div>
