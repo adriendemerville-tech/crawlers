@@ -55,8 +55,7 @@ const structuredData = {
       "name": "Crawlers.fr — Plateforme SEO & GEO pour freelances et agences",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "description": "Plan freemium : audit E-E-A-T, scoring SEO et GEO illimités sur un site." },
-      "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "reviewCount": "127" }
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "description": "Plan freemium : audit E-E-A-T, scoring SEO et GEO illimités sur un site." }
     },
     {
       "@type": "FAQPage",
