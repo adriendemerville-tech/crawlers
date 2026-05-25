@@ -701,8 +701,8 @@ function CocoonContent() {
   return (
     <>
       <Helmet>
-        <title>Cocon Sémantique 3D — Architecture SEO | Crawlers.fr</title>
-        <meta name="description" content="Cocon sémantique 3D — visualisez et optimisez l'architecture sémantique de votre site. TF-IDF, clusters thématiques, recommandations de maillage automatiques." />
+        <title>Cocon sémantique 3D : architecture SEO & maillage interne</title>
+        <meta name="description" content="Créer un cocon sémantique : visualisez en 3D votre architecture SEO. TF-IDF, clusters thématiques et maillage interne automatique." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
