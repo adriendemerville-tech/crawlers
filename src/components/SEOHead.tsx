@@ -163,6 +163,7 @@ export function SEOHead({ title, description, path, ogType = 'website', noIndex 
       {/* Organization + WebSite JSON-LD (global, inclut référence sitemap) */}
       <script type="application/ld+json">{JSON.stringify(ORGANIZATION_JSON_LD)}</script>
       <script type="application/ld+json">{JSON.stringify(WEBSITE_JSON_LD)}</script>
+      <script type="application/ld+json">{JSON.stringify(PERSON_JSON_LD)}</script>
 
       {children}
     </Helmet>
