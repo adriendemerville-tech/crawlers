@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowRight, Search, Sparkles, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeUrl } from '@/hooks/useUrlValidation';
 
 type ScanResult = {
   score: number;
@@ -33,13 +34,19 @@ export function QuickEEATTest() {
     e.preventDefault();
     const trimmed = url.trim();
     if (!trimmed) return;
+    const normalized = normalizeUrl(trimmed);
+    if (!normalized) {
+      toast({ title: 'URL invalide', description: 'Saisissez un domaine (ex. iktracker.fr).', variant: 'destructive' });
+      return;
+    }
+    if (normalized !== trimmed) setUrl(normalized);
     setScanning(true);
     setProgress(0);
     setResult(null);
 
     try {
       const { data: jobData, error: jobError } = await supabase.functions.invoke('check-eeat', {
-        body: { url: trimmed, async: true },
+        body: { url: normalized, async: true },
       });
       if (jobError) throw jobError;
       if (!jobData?.job_id) throw new Error('Aucun job_id retourné');
@@ -113,8 +120,10 @@ export function QuickEEATTest() {
           <CardContent className="p-5 sm:p-7">
             <form onSubmit={handleScan} className="flex flex-col sm:flex-row gap-3">
               <Input
-                type="url"
-                placeholder="https://votre-site.fr/page"
+                type="text"
+                inputMode="url"
+                autoComplete="url"
+                placeholder="iktracker.fr ou https://votre-site.fr/page"
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 disabled={scanning}
