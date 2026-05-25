@@ -513,32 +513,34 @@ export default function EEATPage() {
         </section>
 
         {/* Maillage interne */}
-        <section className="py-12 sm:py-16 px-4">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-              Ressources SEO et GEO complémentaires
-            </h2>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {[
-                { to: '/generative-engine-optimization', label: 'GEO : optimisation pour les moteurs IA', desc: 'Comprendre la citabilité ChatGPT, Claude, Perplexity' },
-                { to: '/lexique', label: 'Lexique SEO &amp; GEO', desc: 'Tous les termes techniques expliqués' },
-                { to: '/audit-expert', label: 'Audit SEO Expert', desc: 'Audit technique complet intégrant le scoring E-E-A-T' },
-                { to: '/tarifs', label: 'Tarifs freelance et agence', desc: 'Plans freemium, consultant, agence et entreprise' },
-                { to: '/guides', label: 'Guides SEO et GEO', desc: 'Tutoriels pratiques pour les consultants' },
-                { to: '/observatoire', label: 'Observatoire sectoriel', desc: 'Benchmarks E-E-A-T par secteur d\'activité' },
-              ].map(l => (
-                <Link key={l.to} to={l.to} className="block">
-                  <Card className="hover:border-amber-500/30 transition-colors">
-                    <CardContent className="p-4">
-                      <p className="font-semibold text-foreground text-sm">{l.label}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{l.desc}</p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+        <LazyVisible minHeight="400px">
+          <section className="py-12 sm:py-16 px-4">
+            <div className="mx-auto max-w-4xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
+                Ressources SEO et GEO complémentaires
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { to: '/generative-engine-optimization', label: 'GEO : optimisation pour les moteurs IA', desc: 'Comprendre la citabilité ChatGPT, Claude, Perplexity' },
+                  { to: '/lexique', label: 'Lexique SEO &amp; GEO', desc: 'Tous les termes techniques expliqués' },
+                  { to: '/audit-expert', label: 'Audit SEO Expert', desc: 'Audit technique complet intégrant le scoring E-E-A-T' },
+                  { to: '/tarifs', label: 'Tarifs freelance et agence', desc: 'Plans freemium, consultant, agence et entreprise' },
+                  { to: '/guides', label: 'Guides SEO et GEO', desc: 'Tutoriels pratiques pour les consultants' },
+                  { to: '/observatoire', label: 'Observatoire sectoriel', desc: 'Benchmarks E-E-A-T par secteur d\'activité' },
+                ].map(l => (
+                  <Link key={l.to} to={l.to} className="block">
+                    <Card className="hover:border-amber-500/30 transition-colors">
+                      <CardContent className="p-4">
+                        <p className="font-semibold text-foreground text-sm">{l.label}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{l.desc}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </LazyVisible>
 
         {/* FAQ */}
         <LazyVisible minHeight="600px">
