@@ -1794,7 +1794,7 @@ async function pickPageForKeyword(
 const market_diagnosis: SkillDefinition = {
   name: 'market_diagnosis',
   description:
-    "Diagnostic SEO marché complet d'un domaine via DataForSEO (Authority Score, top keywords positionnés, profil backlinks, suggestions long-tail) + plan SEO actionnable priorisé (quick wins SERP, gaps de contenu, backlinks). À utiliser quand l'utilisateur demande 'pourquoi mon SEO ne décolle pas', 'analyse mon référencement', 'quel plan d'action SEO', 'qui me link', 'quels mots-clés cibler'. Heavy : quota free=1/jour, premium=3/jour, pro=10/jour.",
+    "Diagnostic SEO marché d'un domaine via DataForSEO (Authority Score, top keywords, backlinks, long-tail) + plan SEO actionnable + matrice Page Targeting V2 (8 axes A-H, 8 verdicts dont PROTECT_PILLAR intouchable, PROTECT_REVENUE, PROTECT_AUTHORITY, PROTECT_TRAFFIC, OPTIMIZE, BOOST, REPURPOSE, ARCHIVE) avec poids modulés par business_model. Insère des suggestions dans le workbench (validation manuelle). Garde-fous : cooldown 90j, max 3 REPURPOSE/diagnostic, min 2 axes mesurés. Quota free=1/jour, premium=3/jour, pro=10/jour.",
   parameters: {
     type: 'object',
     properties: {
