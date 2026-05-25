@@ -156,8 +156,8 @@ const ComparatifCrawlersSemrush = () => {
   return (
     <>
       <Helmet>
-        <title>Crawlers.fr vs Semrush : Comparatif Complet 2026 — 28 Critères</title>
-        <meta name="description" content="Comparaison détaillée Crawlers.fr vs Semrush : 28 critères, tarifs (gratuit vs 130€/mois), GEO, Content Architect, Cocoon 3D, marque blanche. Guide pour choisir." />
+        <title>Alternative Semrush 2026 : Crawlers.fr — 28 critères</title>
+        <meta name="description" content="Alternative à Semrush : comparatif Crawlers.fr vs Semrush sur 28 critères. Tarifs (gratuit vs 130€/mois), GEO, Cocoon 3D, marque blanche." />
         <meta property="og:title" content="Crawlers.fr vs Semrush : Comparatif 2026 — 28 Critères" />
         <meta property="og:description" content="Semrush domine le SEO classique. Crawlers.fr innove en GEO, audit IA et génération de code. Tableau comparatif complet + FAQ." />
         <meta property="og:url" content={`${SITE_URL}/comparatif-crawlers-semrush`} />

@@ -224,8 +224,8 @@ export default function ComparatifPlateforme() {
   return (
     <>
       <Helmet>
-        <title>Crawlers vs Claude vs OpenAI — Plateforme SEO/GEO dédiée vs Agents IA</title>
-        <meta name="description" content="Pourquoi une plateforme spécialisée SEO/GEO qui stocke et croise les données surpasse les agents IA généralistes comme Claude, ChatGPT ou Cowork pour le référencement." />
+        <title>Plateforme SEO/GEO vs agents IA généralistes (Claude, GPT)</title>
+        <meta name="description" content="Pourquoi une plateforme SEO/GEO dédiée qui croise vos données surpasse Claude, ChatGPT ou Cowork pour le référencement naturel." />
         <script type="application/ld+json">{JSON.stringify(articleSD)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSD)}</script>
         <script type="application/ld+json">{JSON.stringify(faqSD)}</script>
