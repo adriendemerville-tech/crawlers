@@ -120,8 +120,10 @@ export function QuickEEATTest() {
           <CardContent className="p-5 sm:p-7">
             <form onSubmit={handleScan} className="flex flex-col sm:flex-row gap-3">
               <Input
-                type="url"
-                placeholder="https://votre-site.fr/page"
+                type="text"
+                inputMode="url"
+                autoComplete="url"
+                placeholder="iktracker.fr ou https://votre-site.fr/page"
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 disabled={scanning}
