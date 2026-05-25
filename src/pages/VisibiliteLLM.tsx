@@ -76,8 +76,8 @@ const VisibiliteLLM = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Visibilité LLM — Votre marque est-elle citée par ChatGPT et Claude ? | Crawlers</title>
-        <meta name="description" content="Analysez si ChatGPT, Claude et Perplexity citent votre marque. Mesurez votre citabilité LLM et améliorez votre présence dans les réponses IA en 2026." />
+        <title>Visibilité LLM : votre marque est-elle citée par ChatGPT ?</title>
+        <meta name="description" content="Mesurez si ChatGPT, Claude et Perplexity citent votre marque. Améliorez votre référencement ChatGPT et votre visibilité LLM en 2026." />
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Visibilité LLM — Votre marque est-elle citée par les IA ?" />
         <meta property="og:description" content="Découvrez si ChatGPT, Claude et Perplexity mentionnent votre marque. Audit de citabilité LLM gratuit." />
