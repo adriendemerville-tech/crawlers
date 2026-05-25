@@ -1601,7 +1601,7 @@ async function dfsPost(endpoint: string, body: unknown): Promise<unknown | null>
 const market_diagnosis: SkillDefinition = {
   name: 'market_diagnosis',
   description:
-    "Diagnostic SEO marché complet d'un domaine via DataForSEO (Authority Score, top keywords positionnés, profil backlinks, suggestions long-tail). À utiliser quand l'utilisateur demande 'pourquoi mon SEO ne décolle pas', 'analyse mon référencement', 'qui me link', 'quels mots-clés cibler'. Heavy : quota free=1/jour, premium=3/jour, pro=10/jour.",
+    "Diagnostic SEO marché complet d'un domaine via DataForSEO (Authority Score, top keywords positionnés, profil backlinks, suggestions long-tail) + plan SEO actionnable priorisé (quick wins SERP, gaps de contenu, backlinks). À utiliser quand l'utilisateur demande 'pourquoi mon SEO ne décolle pas', 'analyse mon référencement', 'quel plan d'action SEO', 'qui me link', 'quels mots-clés cibler'. Heavy : quota free=1/jour, premium=3/jour, pro=10/jour.",
   parameters: {
     type: 'object',
     properties: {
