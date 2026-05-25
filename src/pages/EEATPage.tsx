@@ -10,10 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight, Shield, Brain, Award, CheckCircle2,
   BarChart3, Target, BookOpen, Globe, FileText, Zap,
-  AlertTriangle, TrendingUp, Search, Users, Briefcase, Building2, Rocket
+  AlertTriangle, TrendingUp, Search, Users, Briefcase, Building2
 } from 'lucide-react';
 import heroImage from '@/assets/landing/eeat-hero.webp';
 import { QuickEEATTest } from '@/components/eeat/QuickEEATTest';
+import { LazyVisible } from '@/components/LazyVisible';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -54,8 +55,7 @@ const structuredData = {
       "name": "Crawlers.fr — Plateforme SEO & GEO pour freelances et agences",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "description": "Plan freemium : audit E-E-A-T, scoring SEO et GEO illimités sur un site." },
-      "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "reviewCount": "127" }
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "description": "Plan freemium : audit E-E-A-T, scoring SEO et GEO illimités sur un site." }
     },
     {
       "@type": "FAQPage",
@@ -156,9 +156,8 @@ export default function EEATPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>E-E-A-T, SEO et GEO 2026 : la plateforme des freelances et agences | Crawlers.fr</title>
-        <meta name="description" content="Outil E-E-A-T, SEO technique et GEO pour freelances et agences de référencement naturel. Scoring algorithmique, audits multi-sites, white-label, autopilote IA. Inscription gratuite." />
-        <meta name="keywords" content="EEAT, E-E-A-T, EEAT SEO, freelance SEO, consultant SEO, agence SEO, agence référencement naturel, outil SEO, GEO, citabilité IA, audit SEO" />
+        <title>E-E-A-T, SEO & GEO 2026 — outil freelances et agences | Crawlers.fr</title>
+        <meta name="description" content="Scoring E-E-A-T algorithmique, audits SEO et GEO multi-sites, white-label, autopilote IA pour freelances et agences de référencement. Inscription gratuite." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Crawlers.fr" />
@@ -198,7 +197,7 @@ export default function EEATPage() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-              E-E-A-T, SEO et GEO en 2026 : la plateforme qui industrialise les audits des freelances et agences de référencement naturel
+              E-E-A-T, SEO et GEO 2026 : la plateforme des freelances et agences de référencement
             </h1>
 
             <p className="text-lg text-muted-foreground mb-4">
@@ -264,7 +263,7 @@ export default function EEATPage() {
                     </div>
                     <h3 className="font-bold text-foreground text-lg">Pour les freelances et consultants SEO</h3>
                   </div>
-                  <ul className="space-y-3 mb-6">
+                  <ul className="space-y-3">
                     {freelancePerks.map(p => (
                       <li key={p.title} className="flex gap-3">
                         <CheckCircle2 className="h-4 w-4 text-amber-500 mt-1 shrink-0" />
@@ -275,12 +274,6 @@ export default function EEATPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/auth?mode=signup&source=eeat-freelance">
-                    <Button size="sm" className="w-full gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
-                      Démarrer en freelance
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
 
@@ -292,7 +285,7 @@ export default function EEATPage() {
                     </div>
                     <h3 className="font-bold text-foreground text-lg">Pour les agences SEO et GEO</h3>
                   </div>
-                  <ul className="space-y-3 mb-6">
+                  <ul className="space-y-3">
                     {agencyPerks.map(p => (
                       <li key={p.title} className="flex gap-3">
                         <CheckCircle2 className="h-4 w-4 text-amber-500 mt-1 shrink-0" />
@@ -303,12 +296,6 @@ export default function EEATPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/auth?mode=signup&source=eeat-agence">
-                    <Button size="sm" className="w-full gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
-                      Créer mon compte agence
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
             </div>
@@ -400,177 +387,147 @@ export default function EEATPage() {
           </div>
         </section>
 
-        {/* CTA inscription central */}
-        <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-amber-500/5 to-background">
-          <div className="mx-auto max-w-2xl text-center">
-            <Rocket className="h-10 w-10 text-amber-500 mx-auto mb-4" />
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Rejoignez les 2 000+ freelances et agences SEO qui ont basculé sur Crawlers.fr
-            </h2>
-            <p className="text-muted-foreground mb-8">
-              Plan freemium permanent, inscription en 30 secondes, sans carte bancaire. Premier audit E-E-A-T en moins de 5 minutes.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/auth?mode=signup&source=eeat-cta">
-                <Button size="lg" className="gap-2 w-full sm:w-auto border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
-                  Créer mon compte gratuit
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/tarifs">
-                <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
-                  Voir les tarifs freelance / agence
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
         {/* Méthodologie */}
-        <section className="py-12 sm:py-16 px-4">
-          <div className="mx-auto max-w-4xl space-y-8">
-            <div className="text-center">
-              <Badge variant="outline" className="mb-3 text-xs uppercase">Méthodologie Crawlers.fr</Badge>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                Un scoring E-E-A-T algorithmique, reproductible, défendable devant un client
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Contrairement aux audits basés sur l'évaluation subjective d'un LLM, Crawlers.fr applique un
-                <strong> score pondéré déterministe</strong>. Deux audits du même site donnent le même résultat —
-                indispensable pour défendre vos recommandations en réunion client.
-              </p>
-            </div>
+        <LazyVisible minHeight="500px">
+          <section className="py-12 sm:py-16 px-4">
+            <div className="mx-auto max-w-4xl space-y-8">
+              <div className="text-center">
+                <Badge variant="outline" className="mb-3 text-xs uppercase">Méthodologie Crawlers.fr</Badge>
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                  Un scoring E-E-A-T algorithmique, reproductible, défendable devant un client
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Contrairement aux audits basés sur l'évaluation subjective d'un LLM, Crawlers.fr applique un
+                  <strong> score pondéré déterministe</strong>. Deux audits du même site donnent le même résultat —
+                  indispensable pour défendre vos recommandations en réunion client.
+                </p>
+              </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {pillars.map((p) => (
-                <Card key={p.title} className="text-center">
-                  <CardContent className="p-4">
-                    <p.icon className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground">{p.titleFr}</p>
-                    <p className="text-2xl font-black text-foreground">{p.weight}</p>
+              <Card className="border-destructive/20 bg-destructive/5">
+                <CardContent className="p-5 sm:p-6">
+                  <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    Malus automatiques détectés
+                  </h3>
+                  <div className="space-y-3">
+                    {malus.map((m) => (
+                      <div key={m.condition} className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <m.icon className="h-4 w-4 text-destructive shrink-0" />
+                          <span>{m.condition}</span>
+                        </div>
+                        <Badge variant="destructive" className="text-xs shrink-0">{m.penalty}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    L'ancienneté du domaine est vérifiée via la Carte d'Identité ou par requête à l'API Wayback Machine (CDX) en fallback automatique.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <div className="grid sm:grid-cols-3 gap-3">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Search className="h-6 w-6 text-amber-500 mx-auto mb-2" />
+                    <p className="font-semibold text-foreground text-sm">Audit Expert SEO</p>
+                    <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T intégré avec plan d'action priorisé.</p>
                   </CardContent>
                 </Card>
-              ))}
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Globe className="h-6 w-6 text-amber-500 mx-auto mb-2" />
+                    <p className="font-semibold text-foreground text-sm">GEO + Cocoon 3D</p>
+                    <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T par nœud du graphe sémantique.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <BarChart3 className="h-6 w-6 text-amber-500 mx-auto mb-2" />
+                    <p className="font-semibold text-foreground text-sm">Profondeur LLM</p>
+                    <p className="text-xs text-muted-foreground mt-1">Citabilité ChatGPT, Claude, Perplexity mesurée.</p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-
-            <Card className="border-destructive/20 bg-destructive/5">
-              <CardContent className="p-5 sm:p-6">
-                <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                  Malus automatiques détectés
-                </h3>
-                <div className="space-y-3">
-                  {malus.map((m) => (
-                    <div key={m.condition} className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <m.icon className="h-4 w-4 text-destructive shrink-0" />
-                        <span>{m.condition}</span>
-                      </div>
-                      <Badge variant="destructive" className="text-xs shrink-0">{m.penalty}</Badge>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground mt-4">
-                  L'ancienneté du domaine est vérifiée via la Carte d'Identité ou par requête à l'API Wayback Machine (CDX) en fallback automatique.
-                </p>
-              </CardContent>
-            </Card>
-
-            <div className="grid sm:grid-cols-3 gap-3">
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <Search className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">Audit Expert SEO</p>
-                  <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T intégré avec plan d'action priorisé.</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <Globe className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">GEO + Cocoon 3D</p>
-                  <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T par nœud du graphe sémantique.</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <BarChart3 className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">Profondeur LLM</p>
-                  <p className="text-xs text-muted-foreground mt-1">Citabilité ChatGPT, Claude, Perplexity mesurée.</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
+          </section>
+        </LazyVisible>
 
         {/* Actions concrètes */}
-        <section className="py-12 sm:py-16 px-4 bg-muted/30">
-          <div className="mx-auto max-w-5xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
-              Comment améliorer son référencement naturel : 6 actions E-E-A-T concrètes
-            </h2>
-            <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
-              Ces recommandations sont automatiquement générées dans vos plans d'action après chaque audit Crawlers.fr — priorisées par impact et coût d'exécution.
-            </p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {actions.map((a) => (
-                <Card key={a.title} className="border-border/50">
-                  <CardContent className="p-5">
-                    <a.icon className="h-6 w-6 text-amber-500 mb-3" />
-                    <h3 className="font-bold text-foreground mb-2 text-sm">{a.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{a.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Maillage interne */}
-        <section className="py-12 sm:py-16 px-4">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-              Ressources SEO et GEO complémentaires
-            </h2>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {[
-                { to: '/generative-engine-optimization', label: 'GEO : optimisation pour les moteurs IA', desc: 'Comprendre la citabilité ChatGPT, Claude, Perplexity' },
-                { to: '/lexique', label: 'Lexique SEO &amp; GEO', desc: 'Tous les termes techniques expliqués' },
-                { to: '/audit-expert', label: 'Audit SEO Expert', desc: 'Audit technique complet intégrant le scoring E-E-A-T' },
-                { to: '/tarifs', label: 'Tarifs freelance et agence', desc: 'Plans freemium, consultant, agence et entreprise' },
-                { to: '/guides', label: 'Guides SEO et GEO', desc: 'Tutoriels pratiques pour les consultants' },
-                { to: '/observatoire', label: 'Observatoire sectoriel', desc: 'Benchmarks E-E-A-T par secteur d\'activité' },
-              ].map(l => (
-                <Link key={l.to} to={l.to} className="block">
-                  <Card className="hover:border-amber-500/30 transition-colors">
-                    <CardContent className="p-4">
-                      <p className="font-semibold text-foreground text-sm">{l.label}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{l.desc}</p>
+        <LazyVisible minHeight="400px">
+          <section className="py-12 sm:py-16 px-4 bg-muted/30">
+            <div className="mx-auto max-w-5xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
+                Comment améliorer son référencement naturel : 6 actions E-E-A-T concrètes
+              </h2>
+              <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
+                Ces recommandations sont automatiquement générées dans vos plans d'action après chaque audit Crawlers.fr — priorisées par impact et coût d'exécution.
+              </p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {actions.map((a) => (
+                  <Card key={a.title} className="border-border/50">
+                    <CardContent className="p-5">
+                      <a.icon className="h-6 w-6 text-amber-500 mb-3" />
+                      <h3 className="font-bold text-foreground mb-2 text-sm">{a.title}</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{a.desc}</p>
                     </CardContent>
                   </Card>
-                </Link>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </LazyVisible>
+
+        {/* Maillage interne */}
+        <LazyVisible minHeight="400px">
+          <section className="py-12 sm:py-16 px-4">
+            <div className="mx-auto max-w-4xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
+                Ressources SEO et GEO complémentaires
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { to: '/generative-engine-optimization', label: 'GEO : optimisation pour les moteurs IA', desc: 'Comprendre la citabilité ChatGPT, Claude, Perplexity' },
+                  { to: '/lexique', label: 'Lexique SEO &amp; GEO', desc: 'Tous les termes techniques expliqués' },
+                  { to: '/audit-expert', label: 'Audit SEO Expert', desc: 'Audit technique complet intégrant le scoring E-E-A-T' },
+                  { to: '/tarifs', label: 'Tarifs freelance et agence', desc: 'Plans freemium, consultant, agence et entreprise' },
+                  { to: '/guides', label: 'Guides SEO et GEO', desc: 'Tutoriels pratiques pour les consultants' },
+                  { to: '/observatoire', label: 'Observatoire sectoriel', desc: 'Benchmarks E-E-A-T par secteur d\'activité' },
+                ].map(l => (
+                  <Link key={l.to} to={l.to} className="block">
+                    <Card className="hover:border-amber-500/30 transition-colors">
+                      <CardContent className="p-4">
+                        <p className="font-semibold text-foreground text-sm">{l.label}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{l.desc}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        </LazyVisible>
 
         {/* FAQ */}
-        <section className="py-12 sm:py-16 px-4 bg-muted/30">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
-              Questions fréquentes — E-E-A-T, SEO et choix d'un consultant
-            </h2>
-            <div className="space-y-4">
-              {(structuredData["@graph"].find(g => g["@type"] === "FAQPage") as any)?.mainEntity?.map((faq: any, i: number) => (
-                <Card key={i}>
-                  <CardContent className="p-5">
-                    <h3 className="font-bold text-foreground mb-2 text-sm">{faq.name}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{faq.acceptedAnswer.text}</p>
-                  </CardContent>
-                </Card>
-              ))}
+        <LazyVisible minHeight="600px">
+          <section className="py-12 sm:py-16 px-4 bg-muted/30">
+            <div className="mx-auto max-w-4xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
+                Questions fréquentes — E-E-A-T, SEO et choix d'un consultant
+              </h2>
+              <div className="space-y-4">
+                {(structuredData["@graph"].find(g => g["@type"] === "FAQPage") as any)?.mainEntity?.map((faq: any, i: number) => (
+                  <Card key={i}>
+                    <CardContent className="p-5">
+                      <h3 className="font-bold text-foreground mb-2 text-sm">{faq.name}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{faq.acceptedAnswer.text}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </LazyVisible>
 
         {/* CTA final */}
         <section className="py-12 sm:py-16 px-4">
