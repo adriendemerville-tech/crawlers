@@ -1598,6 +1598,199 @@ async function dfsPost(endpoint: string, body: unknown): Promise<unknown | null>
   }
 }
 
+// ─── Page Targeting Matrix (V2) ───────────────────────────────
+// 8 axes A-H, 8 verdicts. PROTECT_PILLAR > PROTECT_REVENUE > PROTECT_AUTHORITY
+// > PROTECT_TRAFFIC > OPTIMIZE > BOOST > REPURPOSE > ARCHIVE.
+// Poids modulés par business_model. Garde-fous : min 2 axes réels,
+// cooldown 90j (architect_workbench), max 3 REPURPOSE / diagnostic.
+// ───────────────────────────────────────────────────────────────
+
+type PageVerdict =
+  | 'PROTECT_PILLAR' | 'PROTECT_REVENUE' | 'PROTECT_AUTHORITY' | 'PROTECT_TRAFFIC'
+  | 'OPTIMIZE' | 'BOOST' | 'REPURPOSE' | 'ARCHIVE' | 'INSUFFICIENT_DATA';
+
+interface PageSignals {
+  url: string; path: string; title: string | null; h1: string | null;
+  word_count: number; crawl_depth: number; internal_links: number;
+  referring_domains: number; page_authority_internal: number;
+  pageviews_30d: number; bounce_rate: number;
+  is_pillar: boolean; is_cta_page: boolean;
+}
+
+interface AxisWeights { A: number; B: number; C: number; D: number; E: number; F: number; G: number; H: number; }
+
+function getBusinessModelWeights(bm: string | null): AxisWeights {
+  const m = (bm ?? '').toLowerCase();
+  if (m.includes('ecommerce') || m.includes('product') || m.includes('saas_b2c')) {
+    return { A: 15, B: 15, C: 15, D: 5,  E: 35, F: 10, G: 5,  H: 0 };
+  }
+  if (m.includes('media') || m.includes('blog') || m.includes('publisher')) {
+    return { A: 35, B: 20, C: 15, D: 10, E: 5,  F: 10, G: 5,  H: 0 };
+  }
+  if (m.includes('b2b') || m.includes('service') || m.includes('agency')) {
+    return { A: 15, B: 20, C: 15, D: 5,  E: 20, F: 25, G: 0,  H: 0 };
+  }
+  return { A: 20, B: 20, C: 20, D: 10, E: 15, F: 10, G: 5,  H: 0 };
+}
+
+function keywordOverlapScore(text: string | null, keyword: string): number {
+  if (!text || !keyword) return 0;
+  const t = text.toLowerCase();
+  const tokens = keyword.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  if (!tokens.length) return 0;
+  const hits = tokens.filter((tk) => t.includes(tk)).length;
+  return Math.round((hits / tokens.length) * 100);
+}
+
+async function fetchPageSignals(
+  ctx: SkillContext, trackedSiteId: string,
+): Promise<Map<string, PageSignals>> {
+  const map = new Map<string, PageSignals>();
+  const { data: lastCrawl } = await ctx.service
+    .from('site_crawls').select('id')
+    .eq('tracked_site_id', trackedSiteId)
+    .order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!lastCrawl?.id) return map;
+
+  const { data: pages } = await ctx.service
+    .from('crawl_pages')
+    .select('url, path, title, h1, word_count, crawl_depth, internal_links, has_noindex, http_status')
+    .eq('crawl_id', lastCrawl.id).eq('has_noindex', false)
+    .gte('http_status', 200).lt('http_status', 400).limit(500);
+
+  for (const p of pages ?? []) {
+    map.set(p.url, {
+      url: p.url, path: p.path, title: p.title, h1: p.h1,
+      word_count: p.word_count ?? 0, crawl_depth: p.crawl_depth ?? 99,
+      internal_links: p.internal_links ?? 0,
+      referring_domains: 0, page_authority_internal: 0,
+      pageviews_30d: 0, bounce_rate: 0,
+      is_pillar: false,
+      is_cta_page: /\/(contact|devis|tarif|prix|demo|inscription|signup|achat|panier|checkout)/i.test(p.path ?? ''),
+    });
+  }
+
+  const { data: bls } = await ctx.service
+    .from('crawl_page_backlinks')
+    .select('url, referring_domains, page_authority_internal')
+    .eq('crawl_id', lastCrawl.id);
+  for (const bl of bls ?? []) {
+    const s = map.get(bl.url);
+    if (s) {
+      s.referring_domains = bl.referring_domains ?? 0;
+      s.page_authority_internal = Number(bl.page_authority_internal ?? 0);
+    }
+  }
+
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const { data: ga4 } = await ctx.service
+    .from('ga4_top_pages')
+    .select('page_path, pageviews, bounce_rate')
+    .eq('tracked_site_id', trackedSiteId).gte('period_end', since).limit(500);
+  const ga4ByPath = new Map<string, { pv: number; br: number }>();
+  for (const r of ga4 ?? []) {
+    const cur = ga4ByPath.get(r.page_path) ?? { pv: 0, br: 0 };
+    cur.pv += r.pageviews ?? 0;
+    cur.br = Math.max(cur.br, r.bounce_rate ?? 0);
+    ga4ByPath.set(r.page_path, cur);
+  }
+  for (const [, s] of map) {
+    const g = ga4ByPath.get(s.path);
+    if (g) { s.pageviews_30d = g.pv; s.bounce_rate = g.br; }
+  }
+
+  const authorities = [...map.values()].map((s) => s.page_authority_internal).sort((a, b) => b - a);
+  const p5Idx = Math.max(0, Math.floor(authorities.length * 0.05) - 1);
+  const p5 = authorities[p5Idx] ?? 999;
+  for (const [, s] of map) {
+    s.is_pillar = (s.page_authority_internal >= p5 && s.page_authority_internal > 0)
+      || (s.crawl_depth <= 1 && s.word_count >= 1200 && s.internal_links >= 10)
+      || (s.referring_domains >= 5);
+  }
+  return map;
+}
+
+interface PageDecision {
+  url: string; verdict: PageVerdict; score: number; axes_used: number;
+  proposed_keyword: string; volume: number | null;
+  risk_note: string; action: string;
+}
+
+function decidePageVerdict(
+  s: PageSignals, keyword: string, volume: number, w: AxisWeights,
+  globalMaxPV: number, globalMaxRD: number,
+): PageDecision {
+  const A = globalMaxPV > 0 ? Math.min(100, (s.pageviews_30d / globalMaxPV) * 100) : 0;
+  const B = keywordOverlapScore(`${s.title ?? ''} ${s.h1 ?? ''}`, keyword);
+  const C = Math.min(100, (volume / 1000) * 50);
+  const D = Math.max(0, 100 - s.crawl_depth * 15);
+  const E = s.is_cta_page ? 100 : (s.pageviews_30d > 0 && s.bounce_rate < 0.6 ? 40 : 0);
+  const F = globalMaxRD > 0 ? Math.min(100, (s.referring_domains / globalMaxRD) * 100) : 0;
+  const G = s.is_pillar ? 100 : 0;
+  const H = 50;
+
+  const totalW = w.A + w.B + w.C + w.D + w.E + w.F + w.G + w.H;
+  const score = Math.round(
+    (A * w.A + B * w.B + C * w.C + D * w.D + E * w.E + F * w.F + G * w.G + H * w.H) / Math.max(1, totalW),
+  );
+
+  const realAxes = [A > 0, B > 0, s.crawl_depth < 99, E > 0, F > 0].filter(Boolean).length;
+
+  let verdict: PageVerdict; let risk = ''; let action = '';
+
+  if (realAxes < 2) {
+    verdict = 'INSUFFICIENT_DATA';
+    risk = `Données insuffisantes (${realAxes} axes mesurés).`;
+    action = 'Lancer un crawl complet et connecter GA4/GSC avant d\'agir.';
+  } else if (s.is_pillar) {
+    verdict = 'PROTECT_PILLAR';
+    risk = `Page pilier (autorité interne ${s.page_authority_internal}, ${s.referring_domains} domaines référents, profondeur ${s.crawl_depth}). INTOUCHABLE.`;
+    action = `Créer une page neuve dédiée à "${keyword}" plutôt que toucher à ${s.path}.`;
+  } else if (s.is_cta_page) {
+    verdict = 'PROTECT_REVENUE';
+    risk = `Page de conversion (${s.path}). Ne pas détourner son intention business.`;
+    action = `Créer une page TOFU/MOFU ciblant "${keyword}" qui linkera vers ${s.path}.`;
+  } else if (F >= 60) {
+    verdict = 'PROTECT_AUTHORITY';
+    risk = `Backlinks acquis (${s.referring_domains} domaines référents). Détournement casserait l'équité.`;
+    action = `Enrichir sans changer l'angle ; cibler "${keyword}" via une page satellite reliée.`;
+  } else if (A >= 50 && B < 30) {
+    verdict = 'PROTECT_TRAFFIC';
+    risk = `Trafic réel (${s.pageviews_30d} pv/30j) sur un angle différent de "${keyword}". Détournement risqué.`;
+    action = `Créer une page neuve pour "${keyword}" ; conserver l'angle actuel.`;
+  } else if (A >= 30 && B >= 50) {
+    verdict = 'OPTIMIZE';
+    risk = `Page alignée et déjà visitée. Enrichissement à faible risque.`;
+    action = `Optimiser ${s.path} : title/H1 plus précis, FAQ, schema, maillage interne.`;
+  } else if (A < 30 && B >= 50) {
+    verdict = 'BOOST';
+    risk = `Page dormante mais alignée sémantiquement.`;
+    action = `Renforcer maillage interne vers ${s.path} + enrichir contenu (+30% mots).`;
+  } else if (A < 10 && B < 30 && F < 10 && s.crawl_depth >= 3) {
+    verdict = 'ARCHIVE';
+    risk = `Page sans trafic, sans backlinks, sans alignement KW.`;
+    action = `Rediriger 301 ${s.path} vers une page pilier proche, ou 410 si aucun équivalent.`;
+  } else {
+    verdict = 'REPURPOSE';
+    risk = `Faible audience + faible alignement + faible autorité. Détournement OK.`;
+    action = `Réécrire ${s.path} pour cibler "${keyword}" (title, H1, intro, schema, maillage).`;
+  }
+
+  return { url: s.url, verdict, score, axes_used: realAxes,
+    proposed_keyword: keyword, volume, risk_note: risk, action };
+}
+
+async function pickPageForKeyword(
+  signals: Map<string, PageSignals>, keyword: string,
+): Promise<PageSignals | null> {
+  let best: PageSignals | null = null; let bestScore = -1;
+  for (const [, s] of signals) {
+    const ov = keywordOverlapScore(`${s.title ?? ''} ${s.h1 ?? ''} ${s.path}`, keyword);
+    if (ov > bestScore) { bestScore = ov; best = s; }
+  }
+  return best;
+}
+
 const market_diagnosis: SkillDefinition = {
   name: 'market_diagnosis',
   description:
