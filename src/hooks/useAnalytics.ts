@@ -35,7 +35,8 @@ interface TrackEventOptions {
   eventData?: Record<string, unknown>;
 }
 
-// Track event via edge function to capture IP
+// Track event via edge function — non-blocking (keepalive fetch)
+// Avoids blocking page render / navigation while the request is in flight.
 async function trackEventViaEdge(
   eventType: AnalyticsEventType,
   userId: string | null,
@@ -44,21 +45,38 @@ async function trackEventViaEdge(
   try {
     const sessionId = getSessionId();
     const currentUrl = window.location.pathname;
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-analytics`;
+    const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-    await supabase.functions.invoke('track-analytics', {
-      body: {
-        event_type: eventType,
-        session_id: sessionId,
-        url: currentUrl,
-        user_id: userId,
-        event_data: options?.eventData || {},
-        target_url: options?.targetUrl || null,
+    const body = JSON.stringify({
+      event_type: eventType,
+      session_id: sessionId,
+      url: currentUrl,
+      user_id: userId,
+      event_data: options?.eventData || {},
+      target_url: options?.targetUrl || null,
+    });
+
+    // Fire-and-forget: keepalive lets the request survive page unloads,
+    // and we never await it so it doesn't block UI / navigation.
+    void fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey,
+        Authorization: `Bearer ${apikey}`,
       },
+      body,
+      keepalive: true,
+      mode: 'cors',
+    }).catch((error) => {
+      console.error('Failed to track event:', error);
     });
   } catch (error) {
     console.error('Failed to track event:', error);
   }
 }
+
 
 export function useAnalytics() {
   const { user } = useAuth();
