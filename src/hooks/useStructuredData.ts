@@ -71,7 +71,7 @@ export function useStructuredData() {
           "datePublished": "2026-03-18",
           "url": "https://crawlers.fr",
           "creator": { "@id": "https://crawlers.fr/#organization" },
-          "description": "Plateforme SaaS d'audit SEO, GEO et visibilite IA. 7 algorithmes proprietaires, architecture serverless, hebergement europeen, RGPD natif.",
+          "description": "Plateforme SaaS d'audit SEO, GEO et visibilite IA concue par un professionnel du SEO/GEO. Audit technique 200+ points, cocon semantique 3D, autopilote editorial, visibilite LLM (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews), detection de bots IA, SERP benchmark multi-providers, conversion optimizer. Architecture serverless, hebergement europeen, RGPD natif.",
           "offers": [
             {
               "@type": "Offer",
