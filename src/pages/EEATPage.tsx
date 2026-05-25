@@ -156,9 +156,8 @@ export default function EEATPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>E-E-A-T, SEO et GEO 2026 : la plateforme des freelances et agences | Crawlers.fr</title>
-        <meta name="description" content="Outil E-E-A-T, SEO technique et GEO pour freelances et agences de référencement naturel. Scoring algorithmique, audits multi-sites, white-label, autopilote IA. Inscription gratuite." />
-        <meta name="keywords" content="EEAT, E-E-A-T, EEAT SEO, freelance SEO, consultant SEO, agence SEO, agence référencement naturel, outil SEO, GEO, citabilité IA, audit SEO" />
+        <title>E-E-A-T, SEO & GEO 2026 — outil freelances et agences | Crawlers.fr</title>
+        <meta name="description" content="Scoring E-E-A-T algorithmique, audits SEO et GEO multi-sites, white-label, autopilote IA pour freelances et agences de référencement. Inscription gratuite." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Crawlers.fr" />
