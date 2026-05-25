@@ -34,13 +34,19 @@ export function QuickEEATTest() {
     e.preventDefault();
     const trimmed = url.trim();
     if (!trimmed) return;
+    const normalized = normalizeUrl(trimmed);
+    if (!normalized) {
+      toast({ title: 'URL invalide', description: 'Saisissez un domaine (ex. iktracker.fr).', variant: 'destructive' });
+      return;
+    }
+    if (normalized !== trimmed) setUrl(normalized);
     setScanning(true);
     setProgress(0);
     setResult(null);
 
     try {
       const { data: jobData, error: jobError } = await supabase.functions.invoke('check-eeat', {
-        body: { url: trimmed, async: true },
+        body: { url: normalized, async: true },
       });
       if (jobError) throw jobError;
       if (!jobData?.job_id) throw new Error('Aucun job_id retourné');
