@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import heroImage from '@/assets/landing/eeat-hero.webp';
 import { QuickEEATTest } from '@/components/eeat/QuickEEATTest';
+import { LazyVisible } from '@/components/LazyVisible';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
