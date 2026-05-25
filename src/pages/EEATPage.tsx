@@ -387,107 +387,71 @@ export default function EEATPage() {
           </div>
         </section>
 
-        {/* CTA inscription central */}
-        <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-amber-500/5 to-background">
-          <div className="mx-auto max-w-2xl text-center">
-            <Rocket className="h-10 w-10 text-amber-500 mx-auto mb-4" />
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Rejoignez les 2 000+ freelances et agences SEO qui ont basculé sur Crawlers.fr
-            </h2>
-            <p className="text-muted-foreground mb-8">
-              Plan freemium permanent, inscription en 30 secondes, sans carte bancaire. Premier audit E-E-A-T en moins de 5 minutes.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/auth?mode=signup&source=eeat-cta">
-                <Button size="lg" className="gap-2 w-full sm:w-auto border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
-                  Créer mon compte gratuit
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/tarifs">
-                <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
-                  Voir les tarifs freelance / agence
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
         {/* Méthodologie */}
-        <section className="py-12 sm:py-16 px-4">
-          <div className="mx-auto max-w-4xl space-y-8">
-            <div className="text-center">
-              <Badge variant="outline" className="mb-3 text-xs uppercase">Méthodologie Crawlers.fr</Badge>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                Un scoring E-E-A-T algorithmique, reproductible, défendable devant un client
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Contrairement aux audits basés sur l'évaluation subjective d'un LLM, Crawlers.fr applique un
-                <strong> score pondéré déterministe</strong>. Deux audits du même site donnent le même résultat —
-                indispensable pour défendre vos recommandations en réunion client.
-              </p>
-            </div>
+        <LazyVisible minHeight="500px">
+          <section className="py-12 sm:py-16 px-4">
+            <div className="mx-auto max-w-4xl space-y-8">
+              <div className="text-center">
+                <Badge variant="outline" className="mb-3 text-xs uppercase">Méthodologie Crawlers.fr</Badge>
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                  Un scoring E-E-A-T algorithmique, reproductible, défendable devant un client
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Contrairement aux audits basés sur l'évaluation subjective d'un LLM, Crawlers.fr applique un
+                  <strong> score pondéré déterministe</strong>. Deux audits du même site donnent le même résultat —
+                  indispensable pour défendre vos recommandations en réunion client.
+                </p>
+              </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {pillars.map((p) => (
-                <Card key={p.title} className="text-center">
-                  <CardContent className="p-4">
-                    <p.icon className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground">{p.titleFr}</p>
-                    <p className="text-2xl font-black text-foreground">{p.weight}</p>
+              <Card className="border-destructive/20 bg-destructive/5">
+                <CardContent className="p-5 sm:p-6">
+                  <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    Malus automatiques détectés
+                  </h3>
+                  <div className="space-y-3">
+                    {malus.map((m) => (
+                      <div key={m.condition} className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <m.icon className="h-4 w-4 text-destructive shrink-0" />
+                          <span>{m.condition}</span>
+                        </div>
+                        <Badge variant="destructive" className="text-xs shrink-0">{m.penalty}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    L'ancienneté du domaine est vérifiée via la Carte d'Identité ou par requête à l'API Wayback Machine (CDX) en fallback automatique.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <div className="grid sm:grid-cols-3 gap-3">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Search className="h-6 w-6 text-amber-500 mx-auto mb-2" />
+                    <p className="font-semibold text-foreground text-sm">Audit Expert SEO</p>
+                    <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T intégré avec plan d'action priorisé.</p>
                   </CardContent>
                 </Card>
-              ))}
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Globe className="h-6 w-6 text-amber-500 mx-auto mb-2" />
+                    <p className="font-semibold text-foreground text-sm">GEO + Cocoon 3D</p>
+                    <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T par nœud du graphe sémantique.</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <BarChart3 className="h-6 w-6 text-amber-500 mx-auto mb-2" />
+                    <p className="font-semibold text-foreground text-sm">Profondeur LLM</p>
+                    <p className="text-xs text-muted-foreground mt-1">Citabilité ChatGPT, Claude, Perplexity mesurée.</p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-
-            <Card className="border-destructive/20 bg-destructive/5">
-              <CardContent className="p-5 sm:p-6">
-                <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                  Malus automatiques détectés
-                </h3>
-                <div className="space-y-3">
-                  {malus.map((m) => (
-                    <div key={m.condition} className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <m.icon className="h-4 w-4 text-destructive shrink-0" />
-                        <span>{m.condition}</span>
-                      </div>
-                      <Badge variant="destructive" className="text-xs shrink-0">{m.penalty}</Badge>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground mt-4">
-                  L'ancienneté du domaine est vérifiée via la Carte d'Identité ou par requête à l'API Wayback Machine (CDX) en fallback automatique.
-                </p>
-              </CardContent>
-            </Card>
-
-            <div className="grid sm:grid-cols-3 gap-3">
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <Search className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">Audit Expert SEO</p>
-                  <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T intégré avec plan d'action priorisé.</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <Globe className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">GEO + Cocoon 3D</p>
-                  <p className="text-xs text-muted-foreground mt-1">Score E-E-A-T par nœud du graphe sémantique.</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <BarChart3 className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">Profondeur LLM</p>
-                  <p className="text-xs text-muted-foreground mt-1">Citabilité ChatGPT, Claude, Perplexity mesurée.</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
+          </section>
+        </LazyVisible>
 
         {/* Actions concrètes */}
         <LazyVisible minHeight="400px">
