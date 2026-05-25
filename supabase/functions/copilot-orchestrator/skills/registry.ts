@@ -1536,6 +1536,197 @@ const live_search: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// MARKET DIAGNOSIS — diagnostic SEO complet via DataForSEO
+// Orchestre 4 appels DataForSEO en parallèle pour produire un
+// rapport type "Semrush" sans connecteur tiers :
+//   1) Domain rank overview (Authority Score, traffic, keywords)
+//   2) Ranked keywords (top positions, volumes)
+//   3) Backlinks summary (refdomains, spam_score, anchors)
+//   4) Keyword suggestions long-tail (KDI < 25) sur seed_keyword
+//
+// Quotas (analytics_events 'copilot_market_diagnosis' / 24h) :
+//   • free            : 1 / jour
+//   • agency_premium  : 3 / jour
+//   • agency_pro      : 10 / jour
+// ═══════════════════════════════════════════════════════════
+
+async function checkMarketDiagnosisQuota(ctx: SkillContext): Promise<LiveSearchQuota> {
+  const { data: prof } = await ctx.service
+    .from('profiles')
+    .select('plan_type, subscription_status')
+    .eq('user_id', ctx.userId)
+    .maybeSingle();
+  const plan = (prof?.plan_type as string) ?? 'free';
+  const isProActive = plan === 'agency_pro' &&
+    (prof?.subscription_status === 'active' || prof?.subscription_status === 'canceling');
+  const limit = isProActive ? 10 : plan === 'agency_premium' ? 3 : 1;
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count } = await ctx.service
+    .from('analytics_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', ctx.userId)
+    .eq('event_type', 'copilot_market_diagnosis')
+    .gte('created_at', since);
+  const used = count ?? 0;
+  return {
+    allowed: used < limit,
+    used, limit, scope: 'daily',
+    reason: used >= limit
+      ? `Quota diagnostic marché atteint (${limit}/24h pour le plan ${plan}). Passez en Pro Agency pour 10/jour.`
+      : undefined,
+  };
+}
+
+async function dfsPost(endpoint: string, body: unknown): Promise<unknown | null> {
+  const login = Deno.env.get('DATAFORSEO_LOGIN');
+  const pass = Deno.env.get('DATAFORSEO_PASSWORD');
+  if (!login || !pass) return null;
+  try {
+    const resp = await fetch(`https://api.dataforseo.com/v3${endpoint}`, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Basic ' + btoa(`${login}:${pass}`),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch (e) {
+    console.error(`[market_diagnosis] DFS ${endpoint} error:`, (e as Error).message);
+    return null;
+  }
+}
+
+const market_diagnosis: SkillDefinition = {
+  name: 'market_diagnosis',
+  description:
+    "Diagnostic SEO marché complet d'un domaine via DataForSEO (Authority Score, top keywords positionnés, profil backlinks, suggestions long-tail). À utiliser quand l'utilisateur demande 'pourquoi mon SEO ne décolle pas', 'analyse mon référencement', 'qui me link', 'quels mots-clés cibler'. Heavy : quota free=1/jour, premium=3/jour, pro=10/jour.",
+  parameters: {
+    type: 'object',
+    properties: {
+      domain: { type: 'string', description: 'Domaine racine à analyser (ex: crawlers.fr).' },
+      seed_keyword: { type: 'string', description: "Mot-clé seed pour suggestions long-tail (optionnel)." },
+      language: { type: 'string', default: 'French', description: 'Langue DataForSEO (French, English, ...).' },
+      country_code: { type: 'string', default: 'fr', description: 'Code pays ISO 2 lettres.' },
+    },
+    required: ['domain'],
+  },
+  handler: async (input, ctx) => {
+    const domain = String(input.domain ?? '').trim().toLowerCase()
+      .replace(/^https?:\/\//, '').replace(/\/.*$/, '').slice(0, 100);
+    if (!domain) return { ok: false, error: 'domain requis' };
+
+    const language = String(input.language ?? 'French');
+    const cc = String(input.country_code ?? 'fr').toLowerCase().slice(0, 2);
+    const location = cc === 'fr' ? 'France' : cc === 'us' ? 'United States' : cc === 'gb' ? 'United Kingdom' : 'France';
+    const seed = String(input.seed_keyword ?? '').trim().slice(0, 80);
+
+    if (!Deno.env.get('DATAFORSEO_LOGIN') || !Deno.env.get('DATAFORSEO_PASSWORD')) {
+      return { ok: false, error: 'DataForSEO non configuré côté serveur.' };
+    }
+
+    const quota = await checkMarketDiagnosisQuota(ctx);
+    if (!quota.allowed) {
+      return { ok: false, error: quota.reason ?? 'Quota atteint.',
+        data: { quota_used: quota.used, quota_limit: quota.limit } };
+    }
+
+    const [overviewRaw, rankedRaw, backlinksRaw, suggestionsRaw] = await Promise.all([
+      dfsPost('/dataforseo_labs/google/domain_rank_overview/live', [{
+        target: domain, location_name: location, language_name: language,
+      }]),
+      dfsPost('/dataforseo_labs/google/ranked_keywords/live', [{
+        target: domain, location_name: location, language_name: language,
+        limit: 20,
+        filters: [['ranked_serp_element.serp_item.rank_absolute', '<=', 50]],
+      }]),
+      dfsPost('/backlinks/summary/live', [{
+        target: domain, internal_list_limit: 10, backlinks_status_type: 'live',
+      }]),
+      seed ? dfsPost('/dataforseo_labs/google/keyword_suggestions/live', [{
+        keyword: seed, location_name: location, language_name: language,
+        limit: 25, include_serp_info: false,
+        filters: [['keyword_data.keyword_info.search_volume', '>', 50],
+                  ['keyword_data.keyword_info.search_volume', '<', 2000]],
+        order_by: ['keyword_data.keyword_info.search_volume,desc'],
+      }]) : Promise.resolve(null),
+    ]);
+
+    const overview = (overviewRaw as { tasks?: Array<{ result?: Array<Record<string, unknown>> }> } | null)
+      ?.tasks?.[0]?.result?.[0] ?? null;
+    const ranked = (rankedRaw as { tasks?: Array<{ result?: Array<{ items?: unknown[]; total_count?: number }> }> } | null)
+      ?.tasks?.[0]?.result?.[0] ?? null;
+    const backlinks = (backlinksRaw as { tasks?: Array<{ result?: Array<Record<string, unknown>> }> } | null)
+      ?.tasks?.[0]?.result?.[0] ?? null;
+    const suggestions = (suggestionsRaw as { tasks?: Array<{ result?: Array<{ items?: unknown[] }> }> } | null)
+      ?.tasks?.[0]?.result?.[0] ?? null;
+
+    const topKeywords = ((ranked as { items?: Array<Record<string, unknown>> } | null)?.items ?? [])
+      .slice(0, 15)
+      .map((it) => {
+        const el = (it as { keyword_data?: { keyword?: string; keyword_info?: { search_volume?: number; cpc?: number } };
+          ranked_serp_element?: { serp_item?: { rank_absolute?: number; url?: string } } });
+        return {
+          keyword: el.keyword_data?.keyword,
+          position: el.ranked_serp_element?.serp_item?.rank_absolute,
+          volume: el.keyword_data?.keyword_info?.search_volume,
+          url: el.ranked_serp_element?.serp_item?.url,
+        };
+      });
+
+    const longTail = ((suggestions as { items?: Array<Record<string, unknown>> } | null)?.items ?? [])
+      .slice(0, 20)
+      .map((it) => {
+        const k = (it as { keyword_data?: { keyword?: string; keyword_info?: { search_volume?: number; competition?: number; cpc?: number } } }).keyword_data;
+        return {
+          keyword: k?.keyword,
+          volume: k?.keyword_info?.search_volume,
+          competition: k?.keyword_info?.competition,
+          cpc: k?.keyword_info?.cpc,
+        };
+      });
+
+    try {
+      await ctx.service.from('analytics_events').insert({
+        user_id: ctx.userId,
+        event_type: 'copilot_market_diagnosis',
+        event_data: {
+          domain, has_seed: !!seed, persona: ctx.persona, session_id: ctx.sessionId,
+          quota_used_after: quota.used + 1, quota_limit: quota.limit,
+        },
+      });
+    } catch (e) {
+      console.warn('[market_diagnosis] analytics insert failed:', (e as Error).message);
+    }
+
+    return {
+      ok: true,
+      data: {
+        domain,
+        source: 'DataForSEO',
+        overview: overview ?? { error: 'no_overview_data' },
+        ranked_keywords: {
+          total_in_top_50: (ranked as { total_count?: number } | null)?.total_count ?? topKeywords.length,
+          top: topKeywords,
+        },
+        backlinks: backlinks ? {
+          backlinks_total: (backlinks as { backlinks?: number }).backlinks ?? 0,
+          referring_domains: (backlinks as { referring_domains?: number }).referring_domains ?? 0,
+          referring_main_domains: (backlinks as { referring_main_domains?: number }).referring_main_domains ?? 0,
+          rank: (backlinks as { rank?: number }).rank ?? 0,
+          spam_score: (backlinks as { backlinks_spam_score?: number }).backlinks_spam_score ?? null,
+          anchor_top: ((backlinks as { referring_links_anchors?: Array<{ anchor?: string; count?: number }> }).referring_links_anchors ?? [])
+            .slice(0, 5),
+        } : { error: 'no_backlinks_data' },
+        long_tail_suggestions: seed ? longTail : null,
+        quota: { used: quota.used + 1, limit: quota.limit, scope: 'daily' },
+      },
+    };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // ESCALADE TÉLÉPHONE — Sprint Q5 Bloc 3
 // Skill `approval` qui enregistre un numéro de rappel + expiration 48h
 // dans une sav_conversation "shadow" liée à la session copilot.
