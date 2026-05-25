@@ -50,11 +50,12 @@ export function useStructuredData() {
           "@type": "Person",
           "@id": "https://crawlers.fr/#founder",
           "name": "Adrien de Volontat",
-          "jobTitle": "Fondateur & CTO",
+          "jobTitle": "Professionnel du SEO/GEO, fondateur de Crawlers.fr",
+          "description": "Professionnel du SEO et du GEO (Generative Engine Optimization). A concu Crawlers.fr en 2026 pour repondre aux limites des suites SEO historiques face aux moteurs generatifs (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews) et aux besoins concrets des consultants et agences SEO/GEO en 2026.",
           "url": "https://crawlers.fr/a-propos",
           "worksFor": { "@id": "https://crawlers.fr/#organization" },
-          "knowsAbout": ["SEO", "GEO", "Machine Learning", "TypeScript", "Deno", "React"],
-          "sameAs": ["https://www.linkedin.com/in/adrien-de-volontat/"]
+          "knowsAbout": ["SEO technique", "Generative Engine Optimization (GEO)", "Answer Engine Optimization (AEO)", "Visibilite LLM", "E-E-A-T", "Cocon semantique 3D", "Machine Learning predictif SEO", "Crawl & log analysis", "TypeScript", "Deno", "React"],
+          "sameAs": ["https://www.linkedin.com/in/adriendevolontat/"]
         },
 
         // ─── SoftwareApplication ────────────────────────
