@@ -42,8 +42,9 @@ const ORGANIZATION_JSON_LD = {
     width: 1200,
     height: 630,
   },
-  description: 'Plateforme SEO & GEO tout-en-un : audits, maillage intelligent, autopilote, visibilité IA générative (ChatGPT, Gemini, Perplexity, Claude).',
+  description: 'Plateforme SEO & GEO tout-en-un, conçue par un professionnel du SEO/GEO : audits, maillage intelligent, autopilote, visibilité IA générative (ChatGPT, Gemini, Perplexity, Claude).',
   foundingDate: '2026-03-18',
+  founder: { '@id': `${SITE_URL}/a-propos#adrien-de-volontat` },
   areaServed: ['FR', 'BE', 'CH', 'CA', 'LU', 'MC'],
   knowsAbout: [
     'SEO technique',
