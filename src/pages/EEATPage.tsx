@@ -490,27 +490,29 @@ export default function EEATPage() {
         </section>
 
         {/* Actions concrètes */}
-        <section className="py-12 sm:py-16 px-4 bg-muted/30">
-          <div className="mx-auto max-w-5xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
-              Comment améliorer son référencement naturel : 6 actions E-E-A-T concrètes
-            </h2>
-            <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
-              Ces recommandations sont automatiquement générées dans vos plans d'action après chaque audit Crawlers.fr — priorisées par impact et coût d'exécution.
-            </p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {actions.map((a) => (
-                <Card key={a.title} className="border-border/50">
-                  <CardContent className="p-5">
-                    <a.icon className="h-6 w-6 text-amber-500 mb-3" />
-                    <h3 className="font-bold text-foreground mb-2 text-sm">{a.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{a.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
+        <LazyVisible minHeight="400px">
+          <section className="py-12 sm:py-16 px-4 bg-muted/30">
+            <div className="mx-auto max-w-5xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
+                Comment améliorer son référencement naturel : 6 actions E-E-A-T concrètes
+              </h2>
+              <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
+                Ces recommandations sont automatiquement générées dans vos plans d'action après chaque audit Crawlers.fr — priorisées par impact et coût d'exécution.
+              </p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {actions.map((a) => (
+                  <Card key={a.title} className="border-border/50">
+                    <CardContent className="p-5">
+                      <a.icon className="h-6 w-6 text-amber-500 mb-3" />
+                      <h3 className="font-bold text-foreground mb-2 text-sm">{a.title}</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{a.desc}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </LazyVisible>
 
         {/* Maillage interne */}
         <LazyVisible minHeight="400px">
