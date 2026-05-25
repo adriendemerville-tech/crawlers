@@ -105,7 +105,7 @@ const Index = () => {
     ? 'ChatGPT, Gemini, SGE: ¿tu sitio es citado o ignorado? Auditoría SEO/GEO 168 criterios, Conversion Optimizer, análisis de logs y Content Architect.'
     : language === 'en'
     ? 'ChatGPT, Gemini, SGE: is your site cited or ignored? 168-criteria SEO/GEO audit, Conversion Optimizer, log analysis & Content Architect.'
-    : 'Audit SEO & GEO 168 critères, Conversion Optimizer, analyse de logs serveur, Content Architect IA. Score GEO gratuit en 30 sec.';
+    : 'Audit SEO, GEO & audit IA 168 critères. Score GEO gratuit en 30 sec, Conversion Optimizer, analyse de logs, Content Architect IA. Conçu par un professionnel du SEO/GEO.';
 
   // Auto-redirect subscribed users to console with loading animation
   const { user: authUser } = useAuth();
