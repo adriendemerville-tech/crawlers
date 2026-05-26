@@ -98,6 +98,7 @@ const StrategeCocoon = lazy(() => import("./pages/StrategeCocoon"));
 const MarinaPage = lazy(() => import("./pages/Marina"));
 const MarinaApiDoc = lazy(() => import("./pages/docs/MarinaApiDoc"));
 const ParmenionApiDoc = lazy(() => import("./pages/docs/ParmenionApiDoc"));
+const CrawlersApiDoc = lazy(() => import("./pages/docs/CrawlersApiDoc"));
 const DataFlowDiagram = lazy(() => import("./pages/DataFlowDiagram"));
 const ArchitectureMapPage = lazy(() => import("./pages/ArchitectureMapPage"));
 const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
