@@ -61,8 +61,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const url = new URL(req.url);
-  // path après /functions/v1/crawlers-api
-  const path = url.pathname.replace(/^\/functions\/v1\/crawlers-api/, "").replace(/^\/+/, "/");
+  // Normalise : on garde tout ce qui commence à /v1/ ou /health/ peu importe le préfixe (functions/v1/crawlers-api ou direct)
+  const rawPath = url.pathname;
+  const v1Idx = rawPath.indexOf("/v1/");
+  let path: string;
+  if (v1Idx >= 0) path = rawPath.slice(v1Idx).replace(/\/+$/, "") || "/";
+  else if (rawPath.endsWith("/v1")) path = "/v1";
+  else if (rawPath.includes("/health")) path = "/health";
+  else path = "/";
 
   try {
     // Public — pas d'auth
