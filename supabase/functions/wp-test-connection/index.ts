@@ -221,6 +221,10 @@ async function tryCookieAuth(siteUrl: string, username: string, password: string
 }
 
 function mapErrorMessage(status: number, code?: string, fallback?: string): string {
+  // html_interceptor → fallback contains the specific vendor message
+  if (code === 'html_interceptor' && fallback) {
+    return fallback;
+  }
   if (status === 401 || code === 'rest_not_logged_in' || code === 'incorrect_password' || code === 'invalid_username' || code === 'invalid_email') {
     return "Identifiant ou Application Password incorrect.";
   }
