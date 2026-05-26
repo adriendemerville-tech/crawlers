@@ -36,6 +36,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { handleWPIntegration } from '@/utils/wpIntegration';
 import { cn } from '@/lib/utils';
+import { diagnoseCmsConnectionError } from '@/utils/diagnoseCmsConnectionError';
 
 // Domains routed to the custom_rest Bearer flow (cms-register-api-key edge fn).
 const CUSTOM_REST_PLATFORMS: Array<{ match: (d: string) => boolean; platform: string; label: string; keyPrefix: string; keyHelpUrl?: string }> = [
@@ -99,6 +100,7 @@ export function SmartCmsConnectModal({
   const [savingRest, setSavingRest] = useState(false);
   const [restSuccess, setRestSuccess] = useState(false);
   const [restError, setRestError] = useState<string | null>(null);
+  const [restErrorMeta, setRestErrorMeta] = useState<{ status?: number; code?: string } | null>(null);
   const [showAppPassword, setShowAppPassword] = useState(false);
   const [showBearerKey, setShowBearerKey] = useState(false);
 
@@ -448,6 +450,7 @@ export function SmartCmsConnectModal({
       if (testErr) {
         const msg = testErr.message || t3(lang, 'Erreur de test', 'Test error', 'Error de prueba');
         setRestError(msg);
+        setRestErrorMeta({});
         toast.error(t3(lang, 'Échec du test de connexion', 'Connection test failed', 'Fallo de la prueba de conexión'), { description: msg });
         return;
       }
@@ -457,6 +460,7 @@ export function SmartCmsConnectModal({
         const statusInfo = test?.status ? ` (HTTP ${test.status}${test?.code ? ` · ${test.code}` : ''})` : '';
         const msg = `${detail}${statusInfo}`;
         setRestError(msg);
+        setRestErrorMeta({ status: test?.status, code: test?.code });
         toast.error(t3(lang, 'Connexion WordPress refusée', 'WordPress connection rejected', 'Conexión WordPress rechazada'), { description: msg });
         return;
       }
@@ -1097,11 +1101,32 @@ export function SmartCmsConnectModal({
               <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">
                       {t3(lang, 'Échec de la connexion', 'Connection failed', 'Fallo de conexión')}
                     </div>
                     <div className="mt-1 text-xs opacity-90 break-words">{restError}</div>
+                    <div className="mt-3 text-xs">
+                      <div className="font-medium mb-1">
+                        {t3(lang, 'Causes possibles', 'Possible causes', 'Causas posibles')} :
+                      </div>
+                      <ul className="list-disc pl-4 space-y-1 opacity-90">
+                        {diagnoseCmsConnectionError(
+                          { message: restError, status: restErrorMeta?.status, code: restErrorMeta?.code },
+                          lang as 'fr' | 'en' | 'es',
+                        ).map((cause, i) => (
+                          <li key={i}>{cause}</li>
+                        ))}
+                      </ul>
+                      <div className="mt-2 opacity-75">
+                        {t3(
+                          lang,
+                          'Une erreur de connexion peut avoir plusieurs origines : essayez les pistes ci-dessus une par une.',
+                          'A connection error can have multiple causes: try the suggestions above one by one.',
+                          'Un error de conexión puede tener varias causas: prueba las sugerencias de arriba una por una.',
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
