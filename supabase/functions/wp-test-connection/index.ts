@@ -291,6 +291,9 @@ Deno.serve(async (req) => {
           status: 200,
           message: `Application Password valide (via ${strat.label})`,
           auth_strategy: strat.name,
+          resolved_origin: siteUrl,
+          rest_base: restBase,
+          rest_base_detected: detectedRestBase !== null,
           user,
           attempts: [...attempts, { strategy: strat.name, status: 200 }],
         }),
@@ -315,10 +318,15 @@ Deno.serve(async (req) => {
       status: lastStatus || 0,
       error: message,
       code: lastCode || null,
+      resolved_origin: siteUrl,
+      rest_base: restBase,
+      rest_base_detected: detectedRestBase !== null,
       attempts,
       hint: lastCode === 'rest_not_logged_in'
         ? "Le serveur bloque toutes les méthodes d'authentification REST (Basic header, URL, query string, cookie). Utilisez le plugin Crawlers (lien magique) qui contourne cette restriction."
-        : undefined,
+        : (detectedRestBase === null
+          ? "Aucune route /wp-json détectée à la racine ni dans /blog, /wp, /wordpress, /cms. Vérifiez que WordPress est bien installé et que l'API REST n'est pas désactivée."
+          : undefined),
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );
