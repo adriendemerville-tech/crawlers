@@ -80,6 +80,11 @@ function FooterComponent() {
       href: '/api-integrations',
       description: t3(language, 'Toutes les API disponibles dans Crawlers', 'All APIs available in Crawlers', 'Todas las APIs disponibles en Crawlers')
     },
+    {
+      label: 'Platform API',
+      href: '/developers',
+      description: t3(language, 'Plateforme développeurs : clés API, quotas, webhooks', 'Developer platform: API keys, quotas, webhooks', 'Plataforma de desarrolladores: claves API, cuotas, webhooks')
+    },
   ];
 
   const technicalLinks = [
