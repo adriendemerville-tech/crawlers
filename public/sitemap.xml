@@ -25,6 +25,7 @@
   <url><loc>https://crawlers.fr/api-integrations</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://crawlers.fr/marina</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://crawlers.fr/docs/api/marina</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://crawlers.fr/docs/api/parmenion</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://crawlers.fr/matrice</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://crawlers.fr/observatoire</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>https://crawlers.fr/pro-agency</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>

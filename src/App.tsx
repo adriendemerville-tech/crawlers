@@ -97,6 +97,7 @@ const Aide = lazy(() => import("./pages/Aide"));
 const StrategeCocoon = lazy(() => import("./pages/StrategeCocoon"));
 const MarinaPage = lazy(() => import("./pages/Marina"));
 const MarinaApiDoc = lazy(() => import("./pages/docs/MarinaApiDoc"));
+const ParmenionApiDoc = lazy(() => import("./pages/docs/ParmenionApiDoc"));
 const DataFlowDiagram = lazy(() => import("./pages/DataFlowDiagram"));
 const ArchitectureMapPage = lazy(() => import("./pages/ArchitectureMapPage"));
 const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
@@ -231,6 +232,7 @@ const App = () => (
                           <Route path="/stratege-cocoon" element={<StrategeCocoon />} />
                           <Route path="/marina" element={<MarinaPage />} />
                           <Route path="/docs/api/marina" element={<MarinaApiDoc />} />
+                          <Route path="/docs/api/parmenion" element={<ParmenionApiDoc />} />
                           <Route path="/data-flow-diagram" element={<DataFlowDiagram />} />
                           <Route path="/architecture-map" element={<ArchitectureMapPage />} />
                           <Route path="/sea-seo-bridge" element={<SeaSeoBridge />} />
