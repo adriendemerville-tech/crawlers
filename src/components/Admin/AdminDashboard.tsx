@@ -22,6 +22,7 @@ import { SilentErrorsRegistry } from './SilentErrorsRegistry';
 import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
 import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
+import { AIRoutingControl } from './AIRoutingControl';
 import { FinancesDashboard } from './FinancesDashboard';
 import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
 import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
