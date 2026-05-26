@@ -13,6 +13,7 @@ import { corsHeaders } from '../_shared/cors.ts';
  */
 
 const UA = 'crawlers.fr/wp-test-connection';
+const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const TIMEOUT_MS = 12_000;
 
 interface AuthSuccess {
