@@ -30,6 +30,40 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
   }
 }
 
+// ─── Resolve canonical origin (handles www / https / http redirects) ───
+// Goal: avoid redirect loops + dropped Authorization headers on cross-host redirects.
+async function resolveCanonicalOrigin(rawSiteUrl: string): Promise<string> {
+  try {
+    const res = await fetchWithTimeout(`${rawSiteUrl}/`, {
+      method: 'HEAD',
+      headers: { 'User-Agent': UA },
+    });
+    if (res.url) return new URL(res.url).origin;
+  } catch { /* fall through */ }
+  return new URL(rawSiteUrl).origin;
+}
+
+// ─── Resolve WordPress REST base path (handles subdir installs + rewrite-less perms) ───
+// Returns the path prefix that responds to /wp/v2 (without auth), e.g. "/wp-json" or "/blog/wp-json".
+// Returns null only if NO variant responds — caller then falls back to ?rest_route= strategy.
+async function resolveRestBase(origin: string): Promise<string | null> {
+  const candidates = ['/wp-json', '/blog/wp-json', '/wp/wp-json', '/wordpress/wp-json', '/cms/wp-json'];
+  for (const base of candidates) {
+    try {
+      const res = await fetchWithTimeout(`${origin}${base}/wp/v2`, {
+        method: 'GET',
+        headers: { 'User-Agent': UA, Accept: 'application/json' },
+      });
+      // 200 = open, 401 = auth required (route exists), 403 = WAF allows route but blocks call
+      // Any of these prove the REST base exists at this path.
+      if (res.status === 200 || res.status === 401 || res.status === 403) {
+        return base;
+      }
+    } catch { /* try next */ }
+  }
+  return null;
+}
+
 function parseUserPayload(payload: any): AuthSuccess['user'] | null {
   if (!payload?.id) return null;
   return {
@@ -41,8 +75,8 @@ function parseUserPayload(payload: any): AuthSuccess['user'] | null {
 }
 
 // ─── Strategy 1: Basic Auth header ───
-async function tryBasicHeader(siteUrl: string, username: string, password: string) {
-  const url = `${siteUrl}/wp-json/wp/v2/users/me?context=edit`;
+async function tryBasicHeader(siteUrl: string, restBase: string, username: string, password: string) {
+  const url = `${siteUrl}${restBase}/wp/v2/users/me?context=edit`;
   const basic = btoa(`${username}:${password}`);
   const res = await fetchWithTimeout(url, {
     headers: { Authorization: `Basic ${basic}`, Accept: 'application/json', 'User-Agent': UA },
@@ -53,8 +87,8 @@ async function tryBasicHeader(siteUrl: string, username: string, password: strin
 }
 
 // ─── Strategy 2: URL credentials https://user:pass@site/... ───
-async function tryUrlCredentials(siteUrl: string, username: string, password: string) {
-  const u = new URL(`${siteUrl}/wp-json/wp/v2/users/me?context=edit`);
+async function tryUrlCredentials(siteUrl: string, restBase: string, username: string, password: string) {
+  const u = new URL(`${siteUrl}${restBase}/wp/v2/users/me?context=edit`);
   u.username = encodeURIComponent(username);
   u.password = encodeURIComponent(password);
   const res = await fetchWithTimeout(u.toString(), {
@@ -184,33 +218,40 @@ Deno.serve(async (req) => {
     });
   }
 
-  const siteUrl = (body.site_url || '').trim().replace(/\/+$/, '');
+  const rawSiteUrl = (body.site_url || '').trim().replace(/\/+$/, '');
   const username = (body.username || '').trim();
   const appPassword = (body.app_password || '').trim();
 
-  if (!siteUrl || !username || !appPassword) {
+  if (!rawSiteUrl || !username || !appPassword) {
     return new Response(
       JSON.stringify({ ok: false, error: 'site_url, username, app_password requis' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 
-  if (!/^https?:\/\//i.test(siteUrl)) {
+  if (!/^https?:\/\//i.test(rawSiteUrl)) {
     return new Response(JSON.stringify({ ok: false, error: 'site_url doit commencer par http(s)://' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
+  // ─── Phase 0a : résoudre l'origine canonique (anti redirect-loop / drop Authorization) ───
+  const siteUrl = await resolveCanonicalOrigin(rawSiteUrl);
+
+  // ─── Phase 0b : résoudre le base path WP REST (anti 404 sur installs sous-dossier) ───
+  const detectedRestBase = await resolveRestBase(siteUrl);
+  const restBase = detectedRestBase ?? '/wp-json';
+
   const strategies: Array<{
     name: AuthSuccess['strategy'];
     label: string;
     fn: () => Promise<{ res: Response; payload: any }>;
   }> = [
-    { name: 'basic_header',    label: 'Basic Auth header',           fn: () => tryBasicHeader(siteUrl, username, appPassword) },
-    { name: 'url_credentials', label: 'URL credentials',             fn: () => tryUrlCredentials(siteUrl, username, appPassword) },
-    { name: 'rest_route',      label: '?rest_route= query string',   fn: () => tryRestRoute(siteUrl, username, appPassword) },
-    { name: 'cookie_nonce',    label: 'Cookie auth via wp-login.php', fn: () => tryCookieAuth(siteUrl, username, appPassword) },
+    { name: 'basic_header',    label: `Basic Auth header (${restBase})`, fn: () => tryBasicHeader(siteUrl, restBase, username, appPassword) },
+    { name: 'url_credentials', label: `URL credentials (${restBase})`,   fn: () => tryUrlCredentials(siteUrl, restBase, username, appPassword) },
+    { name: 'rest_route',      label: '?rest_route= query string',       fn: () => tryRestRoute(siteUrl, username, appPassword) },
+    { name: 'cookie_nonce',    label: 'Cookie auth via wp-login.php',    fn: () => tryCookieAuth(siteUrl, username, appPassword) },
   ];
 
   const attempts: Array<{ strategy: string; status?: number; code?: string; error?: string }> = [];
@@ -250,6 +291,9 @@ Deno.serve(async (req) => {
           status: 200,
           message: `Application Password valide (via ${strat.label})`,
           auth_strategy: strat.name,
+          resolved_origin: siteUrl,
+          rest_base: restBase,
+          rest_base_detected: detectedRestBase !== null,
           user,
           attempts: [...attempts, { strategy: strat.name, status: 200 }],
         }),
@@ -274,10 +318,15 @@ Deno.serve(async (req) => {
       status: lastStatus || 0,
       error: message,
       code: lastCode || null,
+      resolved_origin: siteUrl,
+      rest_base: restBase,
+      rest_base_detected: detectedRestBase !== null,
       attempts,
       hint: lastCode === 'rest_not_logged_in'
         ? "Le serveur bloque toutes les méthodes d'authentification REST (Basic header, URL, query string, cookie). Utilisez le plugin Crawlers (lien magique) qui contourne cette restriction."
-        : undefined,
+        : (detectedRestBase === null
+          ? "Aucune route /wp-json détectée à la racine ni dans /blog, /wp, /wordpress, /cms. Vérifiez que WordPress est bien installé et que l'API REST n'est pas désactivée."
+          : undefined),
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );
