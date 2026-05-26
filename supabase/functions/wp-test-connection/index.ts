@@ -20,7 +20,7 @@ interface AuthSuccess {
   strategy: 'basic_header' | 'url_credentials' | 'rest_route' | 'cookie_nonce';
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+async function fetchOnce(url: string, init: RequestInit): Promise<Response> {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -28,6 +28,38 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
   } finally {
     clearTimeout(t);
   }
+}
+
+// ─── Smart fetch: handles 429 (Retry-After) + 502/503/504 (1 retry) transparently ───
+// Returns the final Response. Caller still reads body once.
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  let res = await fetchOnce(url, init);
+
+  // 429 — respect Retry-After (seconds or HTTP-date), max 1 retry, capped at 5s
+  if (res.status === 429) {
+    const ra = res.headers.get('retry-after');
+    let delayMs = 1000;
+    if (ra) {
+      const asInt = parseInt(ra, 10);
+      if (!Number.isNaN(asInt)) delayMs = Math.min(asInt * 1000, 5000);
+      else {
+        const dateMs = Date.parse(ra);
+        if (!Number.isNaN(dateMs)) delayMs = Math.max(0, Math.min(dateMs - Date.now(), 5000));
+      }
+    }
+    await new Promise((r) => setTimeout(r, delayMs));
+    try { await res.body?.cancel(); } catch { /**/ }
+    res = await fetchOnce(url, init);
+  }
+
+  // 502/503/504 — single retry after 800ms (transient gateway hiccups)
+  if (res.status === 502 || res.status === 503 || res.status === 504) {
+    await new Promise((r) => setTimeout(r, 800));
+    try { await res.body?.cancel(); } catch { /**/ }
+    res = await fetchOnce(url, init);
+  }
+
+  return res;
 }
 
 // ─── Resolve canonical origin (handles www / https / http redirects) ───
