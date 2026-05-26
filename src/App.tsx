@@ -232,6 +232,7 @@ const App = () => (
                           <Route path="/stratege-cocoon" element={<StrategeCocoon />} />
                           <Route path="/marina" element={<MarinaPage />} />
                           <Route path="/docs/api/marina" element={<MarinaApiDoc />} />
+                          <Route path="/docs/api/parmenion" element={<ParmenionApiDoc />} />
                           <Route path="/data-flow-diagram" element={<DataFlowDiagram />} />
                           <Route path="/architecture-map" element={<ArchitectureMapPage />} />
                           <Route path="/sea-seo-bridge" element={<SeaSeoBridge />} />
