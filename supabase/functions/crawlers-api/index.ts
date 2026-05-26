@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
     const ctx = await authenticate(req);
     if ("error" in ctx) return json(401, { error: ctx.error, docs: "/docs/api/crawlers#authentication" });
 
-    // POST /v1/jobs — créer un job
+    // POST /v1/jobs — créer un job (débit wallet 0,10 €)
     if (req.method === "POST" && path === "/v1/jobs") {
       let body: any;
       try { body = await req.json(); } catch { return json(400, { error: "invalid_json" }); }
@@ -210,12 +210,31 @@ Deno.serve(async (req) => {
         return json(400, { error: "invalid_input", expected: "object" });
       }
 
+      // Création préalable du job pour avoir un id pour la trace de débit
       const { data: job, error } = await ctx.admin
         .from("crawlers_api_jobs")
         .insert({ user_id: ctx.userId, api_key_id: ctx.keyId, feature, input })
         .select("id, feature, status, created_at")
         .single();
       if (error) return json(500, { error: "db_error", detail: error.message });
+
+      // Débit wallet 10c — si solde insuffisant, on annule le job et renvoie 402
+      const { error: debitErr } = await ctx.admin.rpc("dev_wallet_debit", {
+        _user_id: ctx.userId,
+        _amount_cents: 10,
+        _source_ref: job.id,
+        _description: `Job ${feature}`,
+      });
+      if (debitErr) {
+        await ctx.admin.from("crawlers_api_jobs")
+          .update({ status: "failed", error: { message: "insufficient_balance" }, completed_at: new Date().toISOString() })
+          .eq("id", job.id);
+        return json(402, {
+          error: "insufficient_balance",
+          message: "Recharge ton wallet sur /developers/profil?tab=facturation",
+          job_id: job.id,
+        });
+      }
 
       // Exécution background — le client poll /v1/jobs/{id}
       // @ts-ignore EdgeRuntime is provided by Supabase Edge runtime
@@ -226,6 +245,7 @@ Deno.serve(async (req) => {
         feature: job.feature,
         status: job.status,
         created_at: job.created_at,
+        cost_cents: 10,
         poll_url: `/v1/jobs/${job.id}`,
       }), {
         status: 202,
