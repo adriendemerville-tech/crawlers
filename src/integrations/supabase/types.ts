@@ -8511,6 +8511,9 @@ export type Database = {
           label: string
           max_content_per_period: number
           platform: string
+          pull_token_created_at: string | null
+          pull_token_hash: string | null
+          pull_token_prefix: string | null
           throttle_period: Database["public"]["Enums"]["parmenion_throttle_period"]
           updated_at: string
         }
@@ -8527,6 +8530,9 @@ export type Database = {
           label: string
           max_content_per_period?: number
           platform?: string
+          pull_token_created_at?: string | null
+          pull_token_hash?: string | null
+          pull_token_prefix?: string | null
           throttle_period?: Database["public"]["Enums"]["parmenion_throttle_period"]
           updated_at?: string
         }
@@ -8543,6 +8549,9 @@ export type Database = {
           label?: string
           max_content_per_period?: number
           platform?: string
+          pull_token_created_at?: string | null
+          pull_token_hash?: string | null
+          pull_token_prefix?: string | null
           throttle_period?: Database["public"]["Enums"]["parmenion_throttle_period"]
           updated_at?: string
         }
@@ -13525,9 +13534,25 @@ export type Database = {
           risk_predicted: number
         }[]
       }
+      parmenion_rotate_pull_token: {
+        Args: { _target_id: string }
+        Returns: {
+          prefix: string
+          token: string
+        }[]
+      }
       parmenion_should_skip_phase: {
         Args: { p_domain: string; p_phase: string }
         Returns: Json
+      }
+      parmenion_verify_pull_token: {
+        Args: { _token: string }
+        Returns: {
+          autopilot_enabled: boolean
+          domain: string
+          is_active: boolean
+          target_id: string
+        }[]
       }
       populate_architect_workbench: {
         Args: {
