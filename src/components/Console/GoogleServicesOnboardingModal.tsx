@@ -249,7 +249,7 @@ export function GoogleServicesOnboardingModal({ open, onOpenChange }: Props) {
               onClick={handleConnect}
               disabled={connecting || selected.size === 0}
               variant="outline"
-              className="w-full gap-2 border-white/15 hover:border-white/30 hover:bg-white/[0.04] text-white font-medium shadow-none disabled:opacity-40"
+              className="w-full gap-2 bg-[#2c2c2e] hover:bg-[#3a3a3c] border-white/15 hover:border-white/30 text-white font-medium shadow-none disabled:opacity-40"
             >
               {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {connecting ? t.connecting : selected.size === 0 ? t.connectNone : t.connectN(selected.size)}
