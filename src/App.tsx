@@ -104,6 +104,7 @@ const DevDashboard = lazy(() => import("./pages/developers/DevDashboard"));
 const DevProfile = lazy(() => import("./pages/developers/DevProfile"));
 const DevAuth = lazy(() => import("./pages/developers/DevAuth"));
 const DevDocs = lazy(() => import("./pages/developers/DevDocs"));
+const DevBillingHelp = lazy(() => import("./pages/developers/DevBillingHelp"));
 const DataFlowDiagram = lazy(() => import("./pages/DataFlowDiagram"));
 const ArchitectureMapPage = lazy(() => import("./pages/ArchitectureMapPage"));
 const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
