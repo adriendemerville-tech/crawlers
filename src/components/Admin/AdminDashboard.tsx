@@ -315,6 +315,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'docs': return showDocs ? <BackendDocumentation /> : null;
       case 'functions': return <FunctionsManagement />;
       case 'ai-routing': return <AIRoutingControl />;
+      case 'platform-api': return <PlatformApiDashboard />;
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
       case 'parmenion': return wrap(<ParmenionDashboard />);
