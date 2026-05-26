@@ -38,7 +38,7 @@ export default function DevAuth({ mode }: Props) {
     <DevLayout title={mode === "login" ? "Connexion" : "Inscription"}>
       <div className="max-w-sm mx-auto py-12">
         <h1 className="text-3xl font-light tracking-tight mb-2">
-          {mode === "login" ? "Bon retour." : "Créer un compte."}
+          {mode === "login" ? "Bonjour !" : "Créer un compte."}
         </h1>
         <p className="text-sm text-muted-foreground mb-8">
           {mode === "login" ? "Accède à tes clés API et ta consommation." : "100 jobs/mois offerts, sans carte bancaire."}
