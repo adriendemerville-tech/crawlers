@@ -205,7 +205,12 @@ x-crawlers-key: crw_live_xxxxxxxxxxxxxxxxxxxxxxxx`}</Code>
 
             <article>
               <Endpoint method="POST" path="/v1/jobs" />
-              <p className="mt-2 text-sm text-muted-foreground">Crée un job pour le module choisi. Renvoie <code>202</code> + <code>id</code> + <code>poll_url</code>.</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Crée un job pour le module choisi. Débite <strong>0,10 €</strong> du wallet
+                (atomique : si le solde est insuffisant, le job est marqué <code>failed</code> et aucun débit n'est appliqué).
+              </p>
+
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Requête</p>
               <Code lang="bash">{`curl -X POST ${BASE}/jobs \\
   -H "Authorization: Bearer crw_live_xxx" \\
   -H "Content-Type: application/json" \\
@@ -213,14 +218,70 @@ x-crawlers-key: crw_live_xxxxxxxxxxxxxxxxxxxxxxxx`}</Code>
     "feature": "geo_score",
     "input": { "url": "https://example.com/blog/article" }
   }'`}</Code>
-              <p className="mt-3 text-xs text-muted-foreground">Réponse :</p>
+
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                202 Accepted — job créé, débit effectué
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Header <code>Location: /v1/jobs/&lt;id&gt;</code>. Le client poll <code>poll_url</code>.
+              </p>
               <Code lang="json">{`{
   "id": "5d6e7f12-...-9a0b",
   "feature": "geo_score",
   "status": "queued",
   "created_at": "2026-05-26T10:00:00Z",
+  "cost_cents": 10,
   "poll_url": "/v1/jobs/5d6e7f12-...-9a0b"
 }`}</Code>
+
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                400 Bad Request — payload invalide
+              </p>
+              <Code lang="json">{`// JSON malformé
+{ "error": "invalid_json" }
+
+// feature absent
+{ "error": "missing_field", "field": "feature" }
+
+// feature inconnue
+{ "error": "unknown_feature", "feature": "foo", "see": "/v1/features" }
+
+// input n'est pas un objet
+{ "error": "invalid_input", "expected": "object" }`}</Code>
+
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                401 Unauthorized — authentification
+              </p>
+              <Code lang="json">{`// Aucune clé fournie
+{ "error": "missing_api_key", "docs": "/docs/api/crawlers#authentication" }
+
+// Clé inconnue, révoquée ou mal formée
+{ "error": "invalid_api_key", "docs": "/docs/api/crawlers#authentication" }`}</Code>
+
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                402 Payment Required — solde wallet insuffisant
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Le job est créé puis marqué <code>failed</code> avec <code>error.message = "insufficient_balance"</code>.
+                Aucun débit n'a lieu. Rechargez sur <code>/developers/profil?tab=facturation</code>.
+              </p>
+              <Code lang="json">{`{
+  "error": "insufficient_balance",
+  "message": "Recharge ton wallet sur /developers/profil?tab=facturation",
+  "job_id": "5d6e7f12-...-9a0b"
+}`}</Code>
+
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                500 Internal Server Error — erreur serveur
+              </p>
+              <Code lang="json">{`// Erreur base de données (insert job)
+{ "error": "db_error", "detail": "<message Postgres>" }
+
+// Exception non gérée dans le router
+{ "error": "internal_error", "message": "<message>" }`}</Code>
+              <p className="mt-2 text-xs text-muted-foreground">
+                À retraiter avec backoff exponentiel (1 s, 2 s, 4 s, max 5 tentatives).
+              </p>
             </article>
 
             <article>
@@ -312,6 +373,7 @@ x-crawlers-key: crw_live_xxxxxxxxxxxxxxxxxxxxxxxx`}</Code>
                 <tr className="border-t border-border"><td className="px-4 py-3">400</td><td className="px-4 py-3">invalid_json</td><td className="px-4 py-3 font-sans">Le corps de la requête n'est pas du JSON valide.</td></tr>
                 <tr className="border-t border-border"><td className="px-4 py-3">401</td><td className="px-4 py-3">missing_api_key</td><td className="px-4 py-3 font-sans">Aucune clé fournie dans <code>Authorization</code> ou <code>x-crawlers-key</code>.</td></tr>
                 <tr className="border-t border-border"><td className="px-4 py-3">401</td><td className="px-4 py-3">invalid_api_key</td><td className="px-4 py-3 font-sans">Clé inconnue, mal formée ou révoquée.</td></tr>
+                <tr className="border-t border-border"><td className="px-4 py-3">402</td><td className="px-4 py-3">insufficient_balance</td><td className="px-4 py-3 font-sans">Solde wallet &lt; 0,10 €. Le job est créé puis marqué <code>failed</code> sans débit. Rechargez sur <code>/developers/profil?tab=facturation</code>.</td></tr>
                 <tr className="border-t border-border"><td className="px-4 py-3">404</td><td className="px-4 py-3">job_not_found</td><td className="px-4 py-3 font-sans">Le job n'existe pas, ou ne vous appartient pas.</td></tr>
                 <tr className="border-t border-border"><td className="px-4 py-3">409</td><td className="px-4 py-3">not_cancellable</td><td className="px-4 py-3 font-sans">Le job est déjà terminé (succeeded/failed/cancelled).</td></tr>
                 <tr className="border-t border-border"><td className="px-4 py-3">429</td><td className="px-4 py-3">rate_limited</td><td className="px-4 py-3 font-sans">Quota dépassé. Voir l'en-tête <code>Retry-After</code>.</td></tr>
