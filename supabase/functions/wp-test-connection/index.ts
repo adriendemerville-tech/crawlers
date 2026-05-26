@@ -157,20 +157,40 @@ function applyInterceptorDetection(res: Response, payload: any, rawText: string)
   return detected || payload;
 }
 
+// 403 sans code JSON connu = blocage UA/.htaccess/WAF avant WordPress.
+// Retry avec UA navigateur pour contourner les règles "block bot UA".
+function shouldRetryWithBrowserUa(res: Response, payload: any): boolean {
+  if (res.status !== 403) return false;
+  if (payload?.code === 'html_interceptor') return false; // déjà identifié
+  if (payload?.code?.startsWith('rest_')) return false;   // vraie réponse WP
+  return true;
+}
+
 // ─── Strategy 1: Basic Auth header ───
 async function tryBasicHeader(siteUrl: string, restBase: string, username: string, password: string) {
   const url = `${siteUrl}${restBase}/wp/v2/users/me?context=edit`;
   const basic = btoa(`${username}:${password}`);
-  const res = await fetchWithTimeout(url, {
-    headers: { Authorization: `Basic ${basic}`, Accept: 'application/json', 'User-Agent': UA },
+  const doFetch = (ua: string) => fetchWithTimeout(url, {
+    headers: { Authorization: `Basic ${basic}`, Accept: 'application/json', 'User-Agent': ua },
   });
-  const text = await res.text();
+
+  let res = await doFetch(UA);
+  let text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
   payload = applyInterceptorDetection(res, payload, text);
 
+  // 403 UA-blocking → retry navigateur
+  if (shouldRetryWithBrowserUa(res, payload)) {
+    res = await doFetch(BROWSER_UA);
+    text = await res.text();
+    payload = null; try { payload = JSON.parse(text); } catch { /**/ }
+    payload = applyInterceptorDetection(res, payload, text);
+    if (res.status === 200 && payload?.id) {
+      payload._ua_fallback = true; // pour log/debug
+    }
+  }
+
   // 401 disambiguation — retry WITHOUT context=edit.
-  // If second call returns 200 → creds OK, rôle insuffisant (pas Éditeur+).
-  // If second call still 401 → vrais identifiants invalides.
   if (res.status === 401 && payload?.code !== 'html_interceptor') {
     try {
       const probeUrl = `${siteUrl}${restBase}/wp/v2/users/me`;
@@ -180,7 +200,6 @@ async function tryBasicHeader(siteUrl: string, restBase: string, username: strin
       const probeText = await probeRes.text();
       let probePayload: any = null; try { probePayload = JSON.parse(probeText); } catch { /**/ }
       if (probeRes.status === 200 && probePayload?.id) {
-        // creds valides — rôle insuffisant pour context=edit
         return {
           res: new Response(null, { status: 403 }),
           payload: { code: 'rest_forbidden_context', message: 'Identifiants valides mais rôle insuffisant (Éditeur ou Administrateur requis pour le contexte édition).' },
@@ -197,12 +216,20 @@ async function tryUrlCredentials(siteUrl: string, restBase: string, username: st
   const u = new URL(`${siteUrl}${restBase}/wp/v2/users/me?context=edit`);
   u.username = encodeURIComponent(username);
   u.password = encodeURIComponent(password);
-  const res = await fetchWithTimeout(u.toString(), {
-    headers: { Accept: 'application/json', 'User-Agent': UA },
+  const doFetch = (ua: string) => fetchWithTimeout(u.toString(), {
+    headers: { Accept: 'application/json', 'User-Agent': ua },
   });
-  const text = await res.text();
+  let res = await doFetch(UA);
+  let text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
   payload = applyInterceptorDetection(res, payload, text);
+  if (shouldRetryWithBrowserUa(res, payload)) {
+    res = await doFetch(BROWSER_UA);
+    text = await res.text();
+    payload = null; try { payload = JSON.parse(text); } catch { /**/ }
+    payload = applyInterceptorDetection(res, payload, text);
+    if (res.status === 200 && payload?.id) payload._ua_fallback = true;
+  }
   return { res, payload };
 }
 
@@ -210,12 +237,20 @@ async function tryUrlCredentials(siteUrl: string, restBase: string, username: st
 async function tryRestRoute(siteUrl: string, username: string, password: string) {
   const url = `${siteUrl}/?rest_route=/wp/v2/users/me&context=edit`;
   const basic = btoa(`${username}:${password}`);
-  const res = await fetchWithTimeout(url, {
-    headers: { Authorization: `Basic ${basic}`, Accept: 'application/json', 'User-Agent': UA },
+  const doFetch = (ua: string) => fetchWithTimeout(url, {
+    headers: { Authorization: `Basic ${basic}`, Accept: 'application/json', 'User-Agent': ua },
   });
-  const text = await res.text();
+  let res = await doFetch(UA);
+  let text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
   payload = applyInterceptorDetection(res, payload, text);
+  if (shouldRetryWithBrowserUa(res, payload)) {
+    res = await doFetch(BROWSER_UA);
+    text = await res.text();
+    payload = null; try { payload = JSON.parse(text); } catch { /**/ }
+    payload = applyInterceptorDetection(res, payload, text);
+    if (res.status === 200 && payload?.id) payload._ua_fallback = true;
+  }
   return { res, payload };
 }
 
