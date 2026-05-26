@@ -121,6 +121,7 @@ async function tryBasicHeader(siteUrl: string, restBase: string, username: strin
   });
   const text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
+  payload = applyInterceptorDetection(res, payload, text);
   return { res, payload };
 }
 
@@ -134,6 +135,7 @@ async function tryUrlCredentials(siteUrl: string, restBase: string, username: st
   });
   const text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
+  payload = applyInterceptorDetection(res, payload, text);
   return { res, payload };
 }
 
@@ -146,6 +148,7 @@ async function tryRestRoute(siteUrl: string, username: string, password: string)
   });
   const text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
+  payload = applyInterceptorDetection(res, payload, text);
   return { res, payload };
 }
 
