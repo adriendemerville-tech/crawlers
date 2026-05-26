@@ -68,6 +68,7 @@ export default function DevLayout({ children, requireAuth, title, description }:
         <div className="max-w-6xl mx-auto px-6 py-6 text-xs text-muted-foreground flex justify-between">
           <span>© Crawlers — Plateforme Développeurs</span>
           <div className="flex gap-4">
+            <Link to="/developers/aide-facturation" className="hover:text-foreground">Aide facturation</Link>
             <Link to="/cgvu" className="hover:text-foreground">CGVU</Link>
             <Link to="/politique-confidentialite" className="hover:text-foreground">Confidentialité</Link>
             <a href="mailto:dev@crawlers.fr" className="hover:text-foreground">Support</a>
