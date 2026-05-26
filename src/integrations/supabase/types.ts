@@ -586,6 +586,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_routing_overrides: {
+        Row: {
+          description: string | null
+          enabled: boolean
+          feature: string
+          label: string
+          model: string
+          original_model: string
+          provider: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean
+          feature: string
+          label: string
+          model: string
+          original_model: string
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean
+          feature?: string
+          label?: string
+          model?: string
+          original_model?: string
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
