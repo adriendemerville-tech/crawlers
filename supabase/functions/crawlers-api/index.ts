@@ -154,6 +154,10 @@ Deno.serve(async (req) => {
         .single();
       if (error) return json(500, { error: "db_error", detail: error.message });
 
+      // Exécution background — le client poll /v1/jobs/{id}
+      // @ts-ignore EdgeRuntime is provided by Supabase Edge runtime
+      EdgeRuntime.waitUntil(runFeature(ctx.admin, job.id, ctx.userId, feature, input));
+
       return new Response(JSON.stringify({
         id: job.id,
         feature: job.feature,
