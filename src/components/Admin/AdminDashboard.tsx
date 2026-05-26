@@ -312,6 +312,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'algos': return showAlgos ? wrap(<AlgoTrainingDashboard />) : null;
       case 'docs': return showDocs ? <BackendDocumentation /> : null;
       case 'functions': return <FunctionsManagement />;
+      case 'ai-routing': return <AIRoutingControl />;
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
       case 'parmenion': return wrap(<ParmenionDashboard />);
