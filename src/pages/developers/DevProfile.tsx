@@ -4,10 +4,12 @@ import SettingsTab from "./tabs/SettingsTab";
 import ApiKeysTab from "./tabs/ApiKeysTab";
 import UsageTab from "./tabs/UsageTab";
 import BillingTab from "./tabs/BillingTab";
+import WebhooksTab from "./tabs/WebhooksTab";
 
 const TABS = [
   { id: "cles-api", label: "Clés API" },
   { id: "consommation", label: "Consommation" },
+  { id: "webhooks", label: "Webhooks" },
   { id: "facturation", label: "Facturation" },
   { id: "parametres", label: "Paramètres" },
 ];
