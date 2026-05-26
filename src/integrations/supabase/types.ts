@@ -4299,6 +4299,48 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_webhooks: {
+        Row: {
+          active: boolean
+          api: string
+          created_at: string
+          events: string[]
+          id: string
+          last_ping_at: string | null
+          last_status: number | null
+          secret: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          api: string
+          created_at?: string
+          events?: string[]
+          id?: string
+          last_ping_at?: string | null
+          last_status?: number | null
+          secret?: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          api?: string
+          created_at?: string
+          events?: string[]
+          id?: string
+          last_ping_at?: string | null
+          last_status?: number | null
+          secret?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       domain_data_cache: {
         Row: {
           created_at: string
@@ -12934,6 +12976,59 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_deliveries: {
+        Row: {
+          attempts: number
+          created_at: string
+          delivered_at: string | null
+          error: string | null
+          event: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          status: string
+          user_id: string
+          webhook_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          delivered_at?: string | null
+          error?: string | null
+          event: string
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          status?: string
+          user_id: string
+          webhook_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          delivered_at?: string | null
+          error?: string | null
+          event?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          status?: string
+          user_id?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "developer_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_autosaves: {
         Row: {
           created_at: string
@@ -13112,6 +13207,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      developer_usage_daily: {
+        Row: {
+          api: string | null
+          day: string | null
+          failed: number | null
+          feature: string | null
+          succeeded: number | null
+          total: number | null
+          user_id: string | null
+        }
+        Relationships: []
       }
       editorial_pipeline_status: {
         Row: {
