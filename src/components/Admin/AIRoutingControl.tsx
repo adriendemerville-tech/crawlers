@@ -21,6 +21,7 @@ export function AIRoutingControl() {
   const [rows, setRows] = useState<RoutingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [bulkSaving, setBulkSaving] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -55,6 +56,28 @@ export function AIRoutingControl() {
     setSavingId(null);
   };
 
+  const bulkSetEnabled = async (enabled: boolean) => {
+    setBulkSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from('ai_routing_overrides')
+      .update({ enabled, updated_at: new Date().toISOString(), updated_by: user?.id })
+      .neq('feature', '__never__');
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      setRows((prev) => prev.map((r) => ({ ...r, enabled })));
+      toast({
+        title: enabled ? 'Groq activé partout' : 'Modèles d\'origine restaurés',
+        description: `${rows.length} feature(s) mises à jour.`,
+      });
+    }
+    setBulkSaving(false);
+  };
+
+  const allEnabled = rows.length > 0 && rows.every((r) => r.enabled);
+  const anyEnabled = rows.some((r) => r.enabled);
+
   if (loading) {
     return <div className="flex items-center justify-center p-12"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
@@ -71,6 +94,44 @@ export function AIRoutingControl() {
           Cache 30 s côté edge — la propagation est quasi-immédiate.
         </p>
       </header>
+
+      {/* Master toggle */}
+      <div className="border-2 border-foreground/20 rounded-lg p-4 flex items-start justify-between gap-4 bg-muted/30">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-semibold">Contrôle global</h3>
+            <Badge variant="outline">
+              {rows.filter((r) => r.enabled).length} / {rows.length} sur Groq
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Active Groq sur toutes les features, ou restaure d'un coup l'ensemble des modèles d'origine.
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <Switch
+            checked={allEnabled}
+            disabled={bulkSaving}
+            onCheckedChange={(checked) => bulkSetEnabled(checked)}
+          />
+          {anyEnabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => bulkSetEnabled(false)}
+              disabled={bulkSaving}
+              className="text-xs"
+            >
+              {bulkSaving ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <RotateCcw className="h-3 w-3 mr-1" />
+              )}
+              Tout restaurer
+            </Button>
+          )}
+        </div>
+      </div>
 
       <div className="grid gap-3">
         {rows.map((r) => (
