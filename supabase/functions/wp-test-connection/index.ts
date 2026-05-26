@@ -349,13 +349,17 @@ Deno.serve(async (req) => {
     lastStatus = res.status;
     lastCode = payload?.code;
     lastMessage = payload?.message;
-    attempts.push({ strategy: strat.name, status: res.status, code: payload?.code });
+    const vendorTag = payload?.vendor ? ` [${payload.vendor}]` : '';
+    attempts.push({ strategy: strat.name, status: res.status, code: payload?.code ? `${payload.code}${vendorTag}` : undefined });
 
     // If 403 (auth OK but no rights), stop — escalating won't help
     if (res.status === 403) break;
+    // If an HTML interceptor (WAF / login wall / maintenance) caught us, the other strategies will hit the same wall.
+    if (payload?.code === 'html_interceptor') break;
   }
 
   const message = mapErrorMessage(lastStatus, lastCode, lastMessage);
+  const isInterceptor = lastCode === 'html_interceptor';
 
   return new Response(
     JSON.stringify({
@@ -367,11 +371,13 @@ Deno.serve(async (req) => {
       rest_base: restBase,
       rest_base_detected: detectedRestBase !== null,
       attempts,
-      hint: lastCode === 'rest_not_logged_in'
-        ? "Le serveur bloque toutes les méthodes d'authentification REST (Basic header, URL, query string, cookie). Utilisez le plugin Crawlers (lien magique) qui contourne cette restriction."
-        : (detectedRestBase === null
-          ? "Aucune route /wp-json détectée à la racine ni dans /blog, /wp, /wordpress, /cms. Vérifiez que WordPress est bien installé et que l'API REST n'est pas désactivée."
-          : undefined),
+      hint: isInterceptor
+        ? "Une protection serveur (WAF / plugin sécurité / page maintenance) intercepte les requêtes API avant qu'elles n'atteignent WordPress. Le plugin Crawlers (lien magique) contourne cette restriction sans configuration serveur."
+        : lastCode === 'rest_not_logged_in'
+          ? "Le serveur bloque toutes les méthodes d'authentification REST (Basic header, URL, query string, cookie). Utilisez le plugin Crawlers (lien magique) qui contourne cette restriction."
+          : (detectedRestBase === null
+            ? "Aucune route /wp-json détectée à la racine ni dans /blog, /wp, /wordpress, /cms. Vérifiez que WordPress est bien installé et que l'API REST n'est pas désactivée."
+            : undefined),
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );
