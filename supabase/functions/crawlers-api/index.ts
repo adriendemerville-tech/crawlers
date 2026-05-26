@@ -298,6 +298,23 @@ Deno.serve(async (req) => {
       return json(200, { object: "list", data });
     }
 
+    // GET /v1/wallet/balance — solde wallet + estimation jobs restants
+    if (req.method === "GET" && path === "/v1/wallet/balance") {
+      const { data, error } = await ctx.admin
+        .from("dev_wallets")
+        .select("balance_cents, currency, updated_at")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      if (error) return json(500, { error: "db_error", detail: error.message });
+      const balance_cents = data?.balance_cents ?? 0;
+      return json(200, {
+        balance_cents,
+        currency: data?.currency ?? "EUR",
+        estimated_jobs_remaining: Math.floor(balance_cents / 10),
+        updated_at: data?.updated_at ?? new Date().toISOString(),
+      });
+    }
+
     return json(404, { error: "not_found", path });
   } catch (e) {
     console.error("[crawlers-api] error", e);
