@@ -74,6 +74,44 @@ function parseUserPayload(payload: any): AuthSuccess['user'] | null {
   };
 }
 
+// ─── Detect HTML interceptor (WAF, login wall, maintenance page) ───
+// When the body is HTML instead of JSON, an upstream protection caught the request.
+function detectHtmlInterceptor(text: string, contentType: string | null): { code: string; message: string; vendor?: string } | null {
+  const head = (text || '').slice(0, 4096).toLowerCase();
+  const ct = (contentType || '').toLowerCase();
+  const looksHtml = head.startsWith('<!doctype html') || head.startsWith('<html') || ct.includes('text/html');
+  if (!looksHtml) return null;
+
+  if (head.includes('wordfence')) {
+    return { code: 'html_interceptor', vendor: 'Wordfence', message: "Wordfence intercepte les requêtes API et renvoie une page HTML au lieu du JSON. Whitelistez l'IP du serveur Crawlers ou désactivez la règle bloquante." };
+  }
+  if (head.includes('sucuri') || head.includes('cloudproxy')) {
+    return { code: 'html_interceptor', vendor: 'Sucuri', message: "Sucuri WAF bloque l'accès à l'API REST. Whitelistez l'IP serveur Crawlers dans le tableau de bord Sucuri." };
+  }
+  if (head.includes('cloudflare') && (head.includes('attention required') || head.includes('challenge') || head.includes('cf-error'))) {
+    return { code: 'html_interceptor', vendor: 'Cloudflare', message: "Cloudflare présente un challenge (Bot Fight Mode / Under Attack). Désactivez le challenge pour /wp-json/ ou whitelistez l'IP." };
+  }
+  if (head.includes('mod_security') || head.includes('modsecurity')) {
+    return { code: 'html_interceptor', vendor: 'ModSecurity', message: "ModSecurity (OVH / mutualisé) bloque la requête. Ajoutez une règle .htaccess pour conserver le header Authorization." };
+  }
+  if (head.includes('imunify')) {
+    return { code: 'html_interceptor', vendor: 'Imunify360', message: "Imunify360 bloque l'API REST. Whitelistez l'IP serveur depuis cPanel." };
+  }
+  if (head.includes('maintenance') || head.includes('be right back') || head.includes('briefly unavailable')) {
+    return { code: 'html_interceptor', vendor: 'Maintenance', message: "Le site WordPress est en mode maintenance. Réessayez une fois la maintenance terminée." };
+  }
+  if (head.includes('wp-login') || head.includes('name="log"') || head.includes('id="loginform"')) {
+    return { code: 'html_interceptor', vendor: 'Login wall', message: "Une protection redirige les requêtes API vers la page de login (souvent un plugin de masquage d'admin). Désactivez la protection pour les routes /wp-json/." };
+  }
+  return { code: 'html_interceptor', message: "Le serveur renvoie une page HTML au lieu du JSON attendu. Une protection (WAF, plugin de sécurité, page de maintenance) intercepte les requêtes API." };
+}
+
+function applyInterceptorDetection(res: Response, payload: any, rawText: string): any {
+  if (payload && typeof payload === 'object' && payload.code) return payload;
+  const detected = detectHtmlInterceptor(rawText, res.headers.get('content-type'));
+  return detected || payload;
+}
+
 // ─── Strategy 1: Basic Auth header ───
 async function tryBasicHeader(siteUrl: string, restBase: string, username: string, password: string) {
   const url = `${siteUrl}${restBase}/wp/v2/users/me?context=edit`;
