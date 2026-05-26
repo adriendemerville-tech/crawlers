@@ -450,6 +450,7 @@ export function SmartCmsConnectModal({
       if (testErr) {
         const msg = testErr.message || t3(lang, 'Erreur de test', 'Test error', 'Error de prueba');
         setRestError(msg);
+        setRestErrorMeta({});
         toast.error(t3(lang, 'Échec du test de connexion', 'Connection test failed', 'Fallo de la prueba de conexión'), { description: msg });
         return;
       }
@@ -459,6 +460,7 @@ export function SmartCmsConnectModal({
         const statusInfo = test?.status ? ` (HTTP ${test.status}${test?.code ? ` · ${test.code}` : ''})` : '';
         const msg = `${detail}${statusInfo}`;
         setRestError(msg);
+        setRestErrorMeta({ status: test?.status, code: test?.code });
         toast.error(t3(lang, 'Connexion WordPress refusée', 'WordPress connection rejected', 'Conexión WordPress rechazada'), { description: msg });
         return;
       }
