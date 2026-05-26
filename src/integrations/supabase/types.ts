@@ -4299,6 +4299,66 @@ export type Database = {
         }
         Relationships: []
       }
+      dev_wallet_transactions: {
+        Row: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at: string
+          description: string | null
+          id: string
+          source: string
+          source_ref: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          source: string
+          source_ref?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          balance_after_cents?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          source?: string
+          source_ref?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dev_wallets: {
+        Row: {
+          balance_cents: number
+          created_at: string
+          currency: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance_cents?: number
+          created_at?: string
+          currency?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance_cents?: number
+          created_at?: string
+          currency?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       developer_webhooks: {
         Row: {
           active: boolean
@@ -13621,6 +13681,25 @@ export type Database = {
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
+      }
+      dev_wallet_credit: {
+        Args: {
+          _amount_cents: number
+          _description?: string
+          _source: string
+          _source_ref: string
+          _user_id: string
+        }
+        Returns: number
+      }
+      dev_wallet_debit: {
+        Args: {
+          _amount_cents: number
+          _description?: string
+          _source_ref: string
+          _user_id: string
+        }
+        Returns: number
       }
       downgrade_expired_subscriptions: { Args: never; Returns: number }
       enqueue_email: {
