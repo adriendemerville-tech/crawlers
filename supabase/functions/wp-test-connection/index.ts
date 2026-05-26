@@ -218,33 +218,40 @@ Deno.serve(async (req) => {
     });
   }
 
-  const siteUrl = (body.site_url || '').trim().replace(/\/+$/, '');
+  const rawSiteUrl = (body.site_url || '').trim().replace(/\/+$/, '');
   const username = (body.username || '').trim();
   const appPassword = (body.app_password || '').trim();
 
-  if (!siteUrl || !username || !appPassword) {
+  if (!rawSiteUrl || !username || !appPassword) {
     return new Response(
       JSON.stringify({ ok: false, error: 'site_url, username, app_password requis' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 
-  if (!/^https?:\/\//i.test(siteUrl)) {
+  if (!/^https?:\/\//i.test(rawSiteUrl)) {
     return new Response(JSON.stringify({ ok: false, error: 'site_url doit commencer par http(s)://' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
+  // ─── Phase 0a : résoudre l'origine canonique (anti redirect-loop / drop Authorization) ───
+  const siteUrl = await resolveCanonicalOrigin(rawSiteUrl);
+
+  // ─── Phase 0b : résoudre le base path WP REST (anti 404 sur installs sous-dossier) ───
+  const detectedRestBase = await resolveRestBase(siteUrl);
+  const restBase = detectedRestBase ?? '/wp-json';
+
   const strategies: Array<{
     name: AuthSuccess['strategy'];
     label: string;
     fn: () => Promise<{ res: Response; payload: any }>;
   }> = [
-    { name: 'basic_header',    label: 'Basic Auth header',           fn: () => tryBasicHeader(siteUrl, username, appPassword) },
-    { name: 'url_credentials', label: 'URL credentials',             fn: () => tryUrlCredentials(siteUrl, username, appPassword) },
-    { name: 'rest_route',      label: '?rest_route= query string',   fn: () => tryRestRoute(siteUrl, username, appPassword) },
-    { name: 'cookie_nonce',    label: 'Cookie auth via wp-login.php', fn: () => tryCookieAuth(siteUrl, username, appPassword) },
+    { name: 'basic_header',    label: `Basic Auth header (${restBase})`, fn: () => tryBasicHeader(siteUrl, restBase, username, appPassword) },
+    { name: 'url_credentials', label: `URL credentials (${restBase})`,   fn: () => tryUrlCredentials(siteUrl, restBase, username, appPassword) },
+    { name: 'rest_route',      label: '?rest_route= query string',       fn: () => tryRestRoute(siteUrl, username, appPassword) },
+    { name: 'cookie_nonce',    label: 'Cookie auth via wp-login.php',    fn: () => tryCookieAuth(siteUrl, username, appPassword) },
   ];
 
   const attempts: Array<{ strategy: string; status?: number; code?: string; error?: string }> = [];
