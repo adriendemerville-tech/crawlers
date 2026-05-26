@@ -75,8 +75,8 @@ function parseUserPayload(payload: any): AuthSuccess['user'] | null {
 }
 
 // ─── Strategy 1: Basic Auth header ───
-async function tryBasicHeader(siteUrl: string, username: string, password: string) {
-  const url = `${siteUrl}/wp-json/wp/v2/users/me?context=edit`;
+async function tryBasicHeader(siteUrl: string, restBase: string, username: string, password: string) {
+  const url = `${siteUrl}${restBase}/wp/v2/users/me?context=edit`;
   const basic = btoa(`${username}:${password}`);
   const res = await fetchWithTimeout(url, {
     headers: { Authorization: `Basic ${basic}`, Accept: 'application/json', 'User-Agent': UA },
@@ -87,8 +87,8 @@ async function tryBasicHeader(siteUrl: string, username: string, password: strin
 }
 
 // ─── Strategy 2: URL credentials https://user:pass@site/... ───
-async function tryUrlCredentials(siteUrl: string, username: string, password: string) {
-  const u = new URL(`${siteUrl}/wp-json/wp/v2/users/me?context=edit`);
+async function tryUrlCredentials(siteUrl: string, restBase: string, username: string, password: string) {
+  const u = new URL(`${siteUrl}${restBase}/wp/v2/users/me?context=edit`);
   u.username = encodeURIComponent(username);
   u.password = encodeURIComponent(password);
   const res = await fetchWithTimeout(u.toString(), {
