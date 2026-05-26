@@ -15,6 +15,7 @@ const NAV = [
   { to: "/developers/profile?tab=consommation", label: "Consommation" },
   { to: "/developers/profile?tab=facturation", label: "Facturation" },
   { to: "/developers/docs", label: "Docs" },
+  { to: "/developers/sdks", label: "SDKs" },
 ];
 
 export default function DevLayout({ children, requireAuth, title, description }: Props) {
