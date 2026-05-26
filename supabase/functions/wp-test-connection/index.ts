@@ -294,6 +294,9 @@ function mapErrorMessage(status: number, code?: string, fallback?: string): stri
   if (status === 401 || code === 'rest_not_logged_in' || code === 'incorrect_password' || code === 'invalid_username' || code === 'invalid_email') {
     return "Identifiant ou Application Password incorrect.";
   }
+  if (code === 'rest_forbidden_context') {
+    return "Identifiants valides mais rôle insuffisant : ce compte n'a pas le droit d'édition (rôle Éditeur ou Administrateur requis).";
+  }
   if (status === 403 || code === 'rest_forbidden' || code === 'rest_cannot_view') {
     return "Connexion réussie mais ce compte n'a pas les droits suffisants (rôle Éditeur ou Administrateur requis).";
   }
