@@ -74,6 +74,44 @@ function parseUserPayload(payload: any): AuthSuccess['user'] | null {
   };
 }
 
+// ─── Detect HTML interceptor (WAF, login wall, maintenance page) ───
+// When the body is HTML instead of JSON, an upstream protection caught the request.
+function detectHtmlInterceptor(text: string, contentType: string | null): { code: string; message: string; vendor?: string } | null {
+  const head = (text || '').slice(0, 4096).toLowerCase();
+  const ct = (contentType || '').toLowerCase();
+  const looksHtml = head.startsWith('<!doctype html') || head.startsWith('<html') || ct.includes('text/html');
+  if (!looksHtml) return null;
+
+  if (head.includes('wordfence')) {
+    return { code: 'html_interceptor', vendor: 'Wordfence', message: "Wordfence intercepte les requêtes API et renvoie une page HTML au lieu du JSON. Whitelistez l'IP du serveur Crawlers ou désactivez la règle bloquante." };
+  }
+  if (head.includes('sucuri') || head.includes('cloudproxy')) {
+    return { code: 'html_interceptor', vendor: 'Sucuri', message: "Sucuri WAF bloque l'accès à l'API REST. Whitelistez l'IP serveur Crawlers dans le tableau de bord Sucuri." };
+  }
+  if (head.includes('cloudflare') && (head.includes('attention required') || head.includes('challenge') || head.includes('cf-error'))) {
+    return { code: 'html_interceptor', vendor: 'Cloudflare', message: "Cloudflare présente un challenge (Bot Fight Mode / Under Attack). Désactivez le challenge pour /wp-json/ ou whitelistez l'IP." };
+  }
+  if (head.includes('mod_security') || head.includes('modsecurity')) {
+    return { code: 'html_interceptor', vendor: 'ModSecurity', message: "ModSecurity (OVH / mutualisé) bloque la requête. Ajoutez une règle .htaccess pour conserver le header Authorization." };
+  }
+  if (head.includes('imunify')) {
+    return { code: 'html_interceptor', vendor: 'Imunify360', message: "Imunify360 bloque l'API REST. Whitelistez l'IP serveur depuis cPanel." };
+  }
+  if (head.includes('maintenance') || head.includes('be right back') || head.includes('briefly unavailable')) {
+    return { code: 'html_interceptor', vendor: 'Maintenance', message: "Le site WordPress est en mode maintenance. Réessayez une fois la maintenance terminée." };
+  }
+  if (head.includes('wp-login') || head.includes('name="log"') || head.includes('id="loginform"')) {
+    return { code: 'html_interceptor', vendor: 'Login wall', message: "Une protection redirige les requêtes API vers la page de login (souvent un plugin de masquage d'admin). Désactivez la protection pour les routes /wp-json/." };
+  }
+  return { code: 'html_interceptor', message: "Le serveur renvoie une page HTML au lieu du JSON attendu. Une protection (WAF, plugin de sécurité, page de maintenance) intercepte les requêtes API." };
+}
+
+function applyInterceptorDetection(res: Response, payload: any, rawText: string): any {
+  if (payload && typeof payload === 'object' && payload.code) return payload;
+  const detected = detectHtmlInterceptor(rawText, res.headers.get('content-type'));
+  return detected || payload;
+}
+
 // ─── Strategy 1: Basic Auth header ───
 async function tryBasicHeader(siteUrl: string, restBase: string, username: string, password: string) {
   const url = `${siteUrl}${restBase}/wp/v2/users/me?context=edit`;
@@ -83,6 +121,7 @@ async function tryBasicHeader(siteUrl: string, restBase: string, username: strin
   });
   const text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
+  payload = applyInterceptorDetection(res, payload, text);
   return { res, payload };
 }
 
@@ -96,6 +135,7 @@ async function tryUrlCredentials(siteUrl: string, restBase: string, username: st
   });
   const text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
+  payload = applyInterceptorDetection(res, payload, text);
   return { res, payload };
 }
 
@@ -108,6 +148,7 @@ async function tryRestRoute(siteUrl: string, username: string, password: string)
   });
   const text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
+  payload = applyInterceptorDetection(res, payload, text);
   return { res, payload };
 }
 
@@ -180,6 +221,10 @@ async function tryCookieAuth(siteUrl: string, username: string, password: string
 }
 
 function mapErrorMessage(status: number, code?: string, fallback?: string): string {
+  // html_interceptor → fallback contains the specific vendor message
+  if (code === 'html_interceptor' && fallback) {
+    return fallback;
+  }
   if (status === 401 || code === 'rest_not_logged_in' || code === 'incorrect_password' || code === 'invalid_username' || code === 'invalid_email') {
     return "Identifiant ou Application Password incorrect.";
   }
@@ -304,13 +349,17 @@ Deno.serve(async (req) => {
     lastStatus = res.status;
     lastCode = payload?.code;
     lastMessage = payload?.message;
-    attempts.push({ strategy: strat.name, status: res.status, code: payload?.code });
+    const vendorTag = payload?.vendor ? ` [${payload.vendor}]` : '';
+    attempts.push({ strategy: strat.name, status: res.status, code: payload?.code ? `${payload.code}${vendorTag}` : undefined });
 
     // If 403 (auth OK but no rights), stop — escalating won't help
     if (res.status === 403) break;
+    // If an HTML interceptor (WAF / login wall / maintenance) caught us, the other strategies will hit the same wall.
+    if (payload?.code === 'html_interceptor') break;
   }
 
   const message = mapErrorMessage(lastStatus, lastCode, lastMessage);
+  const isInterceptor = lastCode === 'html_interceptor';
 
   return new Response(
     JSON.stringify({
@@ -322,11 +371,13 @@ Deno.serve(async (req) => {
       rest_base: restBase,
       rest_base_detected: detectedRestBase !== null,
       attempts,
-      hint: lastCode === 'rest_not_logged_in'
-        ? "Le serveur bloque toutes les méthodes d'authentification REST (Basic header, URL, query string, cookie). Utilisez le plugin Crawlers (lien magique) qui contourne cette restriction."
-        : (detectedRestBase === null
-          ? "Aucune route /wp-json détectée à la racine ni dans /blog, /wp, /wordpress, /cms. Vérifiez que WordPress est bien installé et que l'API REST n'est pas désactivée."
-          : undefined),
+      hint: isInterceptor
+        ? "Une protection serveur (WAF / plugin sécurité / page maintenance) intercepte les requêtes API avant qu'elles n'atteignent WordPress. Le plugin Crawlers (lien magique) contourne cette restriction sans configuration serveur."
+        : lastCode === 'rest_not_logged_in'
+          ? "Le serveur bloque toutes les méthodes d'authentification REST (Basic header, URL, query string, cookie). Utilisez le plugin Crawlers (lien magique) qui contourne cette restriction."
+          : (detectedRestBase === null
+            ? "Aucune route /wp-json détectée à la racine ni dans /blog, /wp, /wordpress, /cms. Vérifiez que WordPress est bien installé et que l'API REST n'est pas désactivée."
+            : undefined),
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );
