@@ -42,6 +42,7 @@ export default function DevProfile() {
 
       {active === "cles-api" && <ApiKeysTab />}
       {active === "consommation" && <UsageTab />}
+      {active === "webhooks" && <WebhooksTab />}
       {active === "facturation" && <BillingTab />}
       {active === "parametres" && <SettingsTab />}
     </DevLayout>
