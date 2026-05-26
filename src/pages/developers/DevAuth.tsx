@@ -87,7 +87,9 @@ export default function DevAuth({ mode }: Props) {
         <div className="mt-6 text-xs text-muted-foreground text-center">
           {mode === "login" ? (
             <>
-              Pas de compte ? <Link to="/developers/signup" className="text-foreground border-b border-foreground">S'inscrire</Link>
+              <Link to="/signup" className="text-foreground border-b border-foreground">Créer un compte</Link>
+              {" · "}
+              <Link to="/developers/signup" className="text-foreground border-b border-foreground">Compte développeur</Link>
               {" · "}
               <Link to="/reset-password" className="text-foreground border-b border-foreground">Mot de passe oublié</Link>
             </>
