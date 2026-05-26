@@ -30,6 +30,40 @@ async function fetchWithTimeout(url: string, init: RequestInit): Promise<Respons
   }
 }
 
+// ─── Resolve canonical origin (handles www / https / http redirects) ───
+// Goal: avoid redirect loops + dropped Authorization headers on cross-host redirects.
+async function resolveCanonicalOrigin(rawSiteUrl: string): Promise<string> {
+  try {
+    const res = await fetchWithTimeout(`${rawSiteUrl}/`, {
+      method: 'HEAD',
+      headers: { 'User-Agent': UA },
+    });
+    if (res.url) return new URL(res.url).origin;
+  } catch { /* fall through */ }
+  return new URL(rawSiteUrl).origin;
+}
+
+// ─── Resolve WordPress REST base path (handles subdir installs + rewrite-less perms) ───
+// Returns the path prefix that responds to /wp/v2 (without auth), e.g. "/wp-json" or "/blog/wp-json".
+// Returns null only if NO variant responds — caller then falls back to ?rest_route= strategy.
+async function resolveRestBase(origin: string): Promise<string | null> {
+  const candidates = ['/wp-json', '/blog/wp-json', '/wp/wp-json', '/wordpress/wp-json', '/cms/wp-json'];
+  for (const base of candidates) {
+    try {
+      const res = await fetchWithTimeout(`${origin}${base}/wp/v2`, {
+        method: 'GET',
+        headers: { 'User-Agent': UA, Accept: 'application/json' },
+      });
+      // 200 = open, 401 = auth required (route exists), 403 = WAF allows route but blocks call
+      // Any of these prove the REST base exists at this path.
+      if (res.status === 200 || res.status === 401 || res.status === 403) {
+        return base;
+      }
+    } catch { /* try next */ }
+  }
+  return null;
+}
+
 function parseUserPayload(payload: any): AuthSuccess['user'] | null {
   if (!payload?.id) return null;
   return {
