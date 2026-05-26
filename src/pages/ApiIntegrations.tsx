@@ -29,6 +29,22 @@ interface ApiCard {
 
 const apis: ApiCard[] = [
   {
+    id: 'crawlers',
+    name: 'Crawlers API',
+    icon: <Zap className="w-6 h-6" />,
+    purpose: 'API REST unifiée donnant accès à 18 modules d\'analyse SEO, GEO et IA via une seule clé crw_live_. Modèle asynchrone par polling : POST /v1/jobs → GET /v1/jobs/{id}. Documentation complète : /docs/api/crawlers',
+    dataUsage: [
+      'Audit Expert, Machine Layer, E-E-A-T, Crawl, PageSpeed, Matrice, Sémantique',
+      'Cocoon, Content Architect, Autopilote (statut), Conversion Optimizer, Social Hub',
+      'Score GEO, Visibilité LLM, Bots IA, Observatoire, SERP Ranking, Concurrence',
+      'Aucune donnée stockée hors du job (input + result, supprimables sur demande)',
+    ],
+    interactsWith: ['Toutes les fonctionnalités Crawlers (hors Marina & Parménion qui ont leur API dédiée)'],
+    disconnectable: true,
+    authMethod: 'Clé API personnelle (Authorization: Bearer crw_live_… ou x-crawlers-key)',
+    color: 'text-violet-500',
+  },
+  {
     id: 'gsc',
     name: 'Google Search Console',
     icon: <Search className="w-6 h-6" />,
