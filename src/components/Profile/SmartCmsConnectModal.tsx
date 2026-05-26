@@ -100,6 +100,7 @@ export function SmartCmsConnectModal({
   const [savingRest, setSavingRest] = useState(false);
   const [restSuccess, setRestSuccess] = useState(false);
   const [restError, setRestError] = useState<string | null>(null);
+  const [restErrorMeta, setRestErrorMeta] = useState<{ status?: number; code?: string } | null>(null);
   const [showAppPassword, setShowAppPassword] = useState(false);
   const [showBearerKey, setShowBearerKey] = useState(false);
 
