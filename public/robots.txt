@@ -18,6 +18,7 @@
 User-agent: *
 Disallow: /app/
 Allow: /app/eeat
+Allow: /ranking-serp
 Allow: /
 Crawl-delay: 1
 
