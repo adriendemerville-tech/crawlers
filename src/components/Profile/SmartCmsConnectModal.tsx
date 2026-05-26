@@ -1101,11 +1101,32 @@ export function SmartCmsConnectModal({
               <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">
                       {t3(lang, 'Échec de la connexion', 'Connection failed', 'Fallo de conexión')}
                     </div>
                     <div className="mt-1 text-xs opacity-90 break-words">{restError}</div>
+                    <div className="mt-3 text-xs">
+                      <div className="font-medium mb-1">
+                        {t3(lang, 'Causes possibles', 'Possible causes', 'Causas posibles')} :
+                      </div>
+                      <ul className="list-disc pl-4 space-y-1 opacity-90">
+                        {diagnoseCmsConnectionError(
+                          { message: restError, status: restErrorMeta?.status, code: restErrorMeta?.code },
+                          lang as 'fr' | 'en' | 'es',
+                        ).map((cause, i) => (
+                          <li key={i}>{cause}</li>
+                        ))}
+                      </ul>
+                      <div className="mt-2 opacity-75">
+                        {t3(
+                          lang,
+                          'Une erreur de connexion peut avoir plusieurs origines : essayez les pistes ci-dessus une par une.',
+                          'A connection error can have multiple causes: try the suggestions above one by one.',
+                          'Un error de conexión puede tener varias causas: prueba las sugerencias de arriba una por una.',
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
