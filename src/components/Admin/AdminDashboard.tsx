@@ -24,6 +24,7 @@ import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
 import { AIRoutingControl } from './AIRoutingControl';
 import { FinancesDashboard } from './FinancesDashboard';
+import { PlatformApiDashboard } from './PlatformApiDashboard';
 import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
 import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { BundleManagement } from './BundleManagement';
@@ -267,6 +268,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         ...(showAlgos ? [{ id: 'algos', label: t.algos, icon: Brain, group: 'technical' }] : []),
         { id: 'functions', label: t.functions, icon: Code2, group: 'technical' },
         { id: 'ai-routing', label: 'Routing AI', icon: Zap, group: 'technical' },
+        { id: 'platform-api', label: 'Plateforme API', icon: Plug, group: 'technical' },
       ],
     },
     ...(showDocs
@@ -313,6 +315,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'docs': return showDocs ? <BackendDocumentation /> : null;
       case 'functions': return <FunctionsManagement />;
       case 'ai-routing': return <AIRoutingControl />;
+      case 'platform-api': return <PlatformApiDashboard />;
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
       case 'parmenion': return wrap(<ParmenionDashboard />);
