@@ -156,6 +156,22 @@ const apis: ApiCard[] = [
     authMethod: 'Clé API Marina (x-marina-key)',
     color: 'text-violet-500',
   },
+  {
+    id: 'parmenion',
+    name: 'Parménion Pull API',
+    icon: <RefreshCw className="w-6 h-6" />,
+    purpose: 'API REST en mode pull : votre site interroge Parménion pour récupérer les tâches de contenu SEO planifiées, les publie sur votre CMS interne, puis confirme. Aucun accès sortant requis depuis Crawlers. Documentation complète : /docs/api/parmenion',
+    dataUsage: [
+      'Lecture des tâches planifiées (titre, HTML prêt, meta, slug, tags)',
+      'Ack / published / failed pour fermer le cycle décisionnel',
+      'URL publique transmise en retour pour mesure d\'impact GSC/GA4 à J+30',
+      'Aucune écriture côté Crawlers en dehors du statut de la tâche',
+    ],
+    interactsWith: ['Autopilote Parménion', 'Content Architect', 'GSC / GA4 measurement'],
+    disconnectable: true,
+    authMethod: 'Bearer token par domaine (prm_live_...) — rotation depuis la console',
+    color: 'text-amber-500',
+  },
 ];
 
 const securityPoints = [
