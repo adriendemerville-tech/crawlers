@@ -1,5 +1,79 @@
 import { Link } from "react-router-dom";
 import DevLayout from "./DevLayout";
+import { SEOHead } from "@/components/SEOHead";
+import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
+
+const DEVELOPERS_JSON_LD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
+      { "@type": "ListItem", position: 2, name: "Développeurs", item: "https://crawlers.fr/developers" },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebAPI",
+    name: "Crawlers API Platform",
+    url: "https://crawlers.fr/developers",
+    description:
+      "3 APIs REST async pour automatiser SEO, GEO et visibilité IA : Crawlers API (18 modules), Marina API (audit B2B white-label), Parménion API (publication CMS autopilote).",
+    documentation: "https://crawlers.fr/developers/docs",
+    provider: { "@type": "Organization", name: "Crawlers.fr", url: "https://crawlers.fr" },
+    termsOfService: "https://crawlers.fr/cgvu",
+    audience: { "@type": "Audience", audienceType: "Développeurs, agences SEO, éditeurs SaaS" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "Crawlers API Platform",
+    description: "API REST async SEO/GEO pay-as-you-go avec 100 jobs gratuits par mois.",
+    brand: { "@type": "Brand", name: "Crawlers.fr" },
+    offers: [
+      { "@type": "Offer", name: "Free", price: "0", priceCurrency: "EUR", description: "100 jobs cumulés / mois, sans carte bancaire." },
+      { "@type": "Offer", name: "Pay-as-you-go", price: "0.05", priceCurrency: "EUR", description: "Tarif moyen par job, facturé au volume réel via Stripe." },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Combien coûte l'API Crawlers ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "100 jobs cumulés gratuits chaque mois, sans carte bancaire. Au-delà, pay-as-you-go à ~0,05 € par job en moyenne, facturé au volume réel via Stripe.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Quelles APIs sont disponibles ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Trois APIs REST async : Crawlers API (clé crw_live_, 18 modules SEO/GEO/IA), Marina API (clé mk_live_, audit prospects B2B white-label) et Parménion API (clé prm_live_, publication CMS autopilote).",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Comment authentifier mes requêtes ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Par clé API en en-tête : Authorization: Bearer crw_live_... pour Crawlers et Parménion, x-marina-key: mk_live_... pour Marina.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Les APIs sont-elles synchrones ou asynchrones ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Toutes les APIs sont async : POST /v1/jobs renvoie un job_id, à poller jusqu'à statut completed. Pas de timeout sur les jobs longs (crawl, audit complet).",
+        },
+      },
+    ],
+  },
+];
 
 const APIS = [
   {
