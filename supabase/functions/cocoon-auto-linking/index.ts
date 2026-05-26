@@ -213,49 +213,52 @@ Réponds UNIQUEMENT avec un JSON array:
 [{"target_url":"...","anchor_text":"...","anchor_variants":["v1","v2","v3"],"context_sentence":"...","confidence":0.8}]`;
 
         try {
-          const aiResp = await callLovableAI({
-            system: 'Tu es un expert SEO spécialisé en maillage interne. Réponds uniquement en JSON valide.',
-            user: prompt,
-            tools: [{
-              type: 'function',
-              function: {
-                name: 'suggest_internal_links',
-                description: 'Return internal link suggestions with anchor text',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    links: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          target_url: { type: 'string' },
-                          anchor_text: { type: 'string' },
-                          anchor_variants: {
-                            type: 'array',
-                            items: { type: 'string' },
-                            minItems: 1,
-                            maxItems: 3,
-                          },
-                          context_sentence: { type: 'string' },
-                          confidence: { type: 'number' },
+          const { callRoutedAI } = await import('../_shared/aiRouter.ts');
+          const tools = [{
+            type: 'function',
+            function: {
+              name: 'suggest_internal_links',
+              description: 'Return internal link suggestions with anchor text',
+              parameters: {
+                type: 'object',
+                properties: {
+                  links: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        target_url: { type: 'string' },
+                        anchor_text: { type: 'string' },
+                        anchor_variants: {
+                          type: 'array',
+                          items: { type: 'string' },
+                          minItems: 1,
+                          maxItems: 3,
                         },
-                        required: ['target_url', 'anchor_text', 'anchor_variants', 'context_sentence', 'confidence'],
-                        additionalProperties: false,
+                        context_sentence: { type: 'string' },
+                        confidence: { type: 'number' },
                       },
+                      required: ['target_url', 'anchor_text', 'anchor_variants', 'context_sentence', 'confidence'],
+                      additionalProperties: false,
                     },
                   },
-                  required: ['links'],
-                  additionalProperties: false,
                 },
+                required: ['links'],
+                additionalProperties: false,
               },
-            }],
+            },
+          }];
+          const aiResp = await callRoutedAI('cocoon_anchor_variants', {
+            system: 'Tu es un expert SEO spécialisé en maillage interne. Réponds uniquement en JSON valide.',
+            user: prompt,
+            tools,
             toolChoice: { type: 'function', function: { name: 'suggest_internal_links' } },
+            fallbackModel: 'google/gemini-2.5-flash',
           });
-
-          const toolCall = aiResp.toolCalls?.[0] as any;
-          if (toolCall?.function?.arguments) {
-            const parsed = JSON.parse(toolCall.function.arguments);
+          // Compat : aiResp.tool_calls[0].arguments est déjà un objet
+          const toolCall = aiResp.tool_calls?.[0];
+          if (toolCall?.arguments) {
+            const parsed = typeof toolCall.arguments === 'string' ? JSON.parse(toolCall.arguments) : toolCall.arguments;
             const aiLinks = parsed.links || [];
             
             for (const link of aiLinks.slice(0, remainingSlots)) {
