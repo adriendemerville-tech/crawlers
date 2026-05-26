@@ -588,8 +588,14 @@ CONTENU: ${draft.content}
 
 Réponds en JSON strict avec les mêmes clés (title, content, excerpt).`;
 
-  const response = await callLLM(model, prompt, { jsonMode: true });
-  const parsed = safeJSON(response.content) ?? draft;
+  // Route via aiRouter — admin peut activer Groq pour cette étape (formatage pur, low risk)
+  const { callRoutedAI } = await import('./aiRouter.ts');
+  const routed = await callRoutedAI('editorial_tonalizer', {
+    user: prompt,
+    jsonMode: true,
+    fallbackModel: model,
+  });
+  const parsed = safeJSON(routed.content) ?? draft;
 
   await logStage(supabase, {
     user_id: input.user_id,
@@ -597,15 +603,16 @@ Réponds en JSON strict avec les mêmes clés (title, content, excerpt).`;
     pipeline_run_id,
     content_type: input.content_type,
     stage: "tonalizer",
-    model_used: model,
-    tokens_in: response.tokens_in,
-    tokens_out: response.tokens_out,
+    model_used: routed.model_used,
+    tokens_in: 0,
+    tokens_out: 0,
     latency_ms: Date.now() - t0,
-    cost_usd: response.cost_usd,
+    cost_usd: 0,
     status: "success",
+    metadata: { provider: routed.provider_used },
   });
 
-  return { ...parsed, voice_adjusted: true, model_used: model };
+  return { ...parsed, voice_adjusted: true, model_used: routed.model_used };
 }
 
 // ----------------------------------------------------------------------------
