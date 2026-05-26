@@ -105,25 +105,41 @@ const APIS = [
 ];
 
 export default function DevLanding() {
+  useCanonicalHreflang('/developers');
+
   return (
-    <DevLayout title="API Platform" description="3 APIs REST async pour automatiser le SEO/GEO programmatiquement. Pay-as-you-go, 100 jobs/mois gratuits.">
+    <DevLayout>
+      <SEOHead
+        title="API SEO & GEO pour développeurs — REST async, pay-as-you-go"
+        description="3 APIs REST async (Crawlers, Marina, Parménion) pour automatiser SEO, GEO et visibilité IA. 100 jobs gratuits/mois, auth par clé, sans engagement."
+        path="/developers"
+      >
+        {DEVELOPERS_JSON_LD.map((schema, i) => (
+          <script key={i} type="application/ld+json">{JSON.stringify(schema)}</script>
+        ))}
+      </SEOHead>
+
       <section className="py-12 text-center">
         <h1 className="text-5xl md:text-6xl font-light tracking-tight mb-6">
-          Le SEO/GEO,<br />
+          L'API SEO &amp; GEO,<br />
           <span className="text-[hsl(48_95%_55%)]">en POST.</span>
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          3 APIs REST async. Auth par clé. Pay-as-you-go. 100 jobs gratuits chaque mois.
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
+          3 APIs REST async pour automatiser audit SEO, score GEO et visibilité IA. Auth par clé, pay-as-you-go, 100 jobs gratuits chaque mois.
         </p>
+        <blockquote className="citable-passage max-w-2xl mx-auto mb-8 text-sm text-muted-foreground italic border-l-2 border-foreground/30 pl-4 text-left">
+          Crawlers.fr expose sa plateforme SEO &amp; GEO via trois APIs REST asynchrones : Crawlers API (préfixe <code>crw_live_</code>, 18 modules dont audit expert, score GEO et visibilité LLM), Marina API (<code>mk_live_</code>, audit B2B white-label) et Parménion API (<code>prm_live_</code>, publication CMS pilotée par l'Autopilote).
+        </blockquote>
         <div className="flex gap-3 justify-center">
           <Link to="/developers/signup" className="px-6 py-3 border border-foreground rounded text-sm font-medium hover:bg-foreground hover:text-background transition-colors">
-            Créer un compte
+            Créer un compte développeur
           </Link>
           <Link to="/developers/docs" className="px-6 py-3 border border-border rounded text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
-            Lire les docs
+            Lire la documentation API
           </Link>
         </div>
       </section>
+
 
       <section className="grid md:grid-cols-3 gap-6 mt-16">
         {APIS.map(api => (
