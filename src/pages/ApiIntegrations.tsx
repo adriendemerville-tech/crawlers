@@ -144,7 +144,7 @@ const apis: ApiCard[] = [
     id: 'marina',
     name: 'Marina API',
     icon: <Terminal className="w-6 h-6" />,
-    purpose: 'API asynchrone B2B pour générer des rapports SEO & GEO complets (15+ pages) en marque blanche, intégrable sur n\'importe quel site tiers.',
+    purpose: 'API asynchrone B2B pour générer des rapports SEO & GEO complets (15+ pages) en marque blanche, intégrable sur n\'importe quel site tiers. Documentation complète : /docs/api/marina',
     dataUsage: [
       'Audit complet (technique, stratégique, visibilité IA, cocoon)',
       'Rapports générés dans la langue demandée (fr, en, es)',

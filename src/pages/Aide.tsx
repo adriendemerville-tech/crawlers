@@ -610,6 +610,7 @@ const DOC_SECTIONS: DocSection[] = [
         id: 'marina-api',
         title: 'API Marina Embed — Intégration',
         content: `<p>L'API Marina permet d'intégrer la génération de rapports sur votre propre site (lead magnet).</p>
+<p class="mt-2"><strong>Documentation complète :</strong> <a href="/docs/api/marina" class="text-primary underline">crawlers.fr/docs/api/marina</a> — endpoint, paramètres, exemples curl/TypeScript, webhook, codes d'erreur.</p>
 <p class="mt-2 font-semibold">Endpoint :</p>
 <code class="block px-3 py-2 bg-muted rounded-md text-xs font-mono mt-1">POST /functions/v1/marina</code>
 <p class="mt-3 font-semibold">Paramètres body (JSON) :</p>
