@@ -1,51 +1,61 @@
 /**
- * The 18 features exposed by the Crawlers API.
- * Each costs 0.10 € per job (debited from your wallet).
+ * Catalogue exhaustif des features Crawlers API (cf. /v1/features).
+ * Chaque job coûte 0,10 € débité du wallet.
  */
 export type CrawlersFeature =
-  | 'geo_score'
-  | 'eeat'
-  | 'pagespeed'
   | 'audit_expert'
-  | 'semantic_audit'
-  | 'serp_ranking'
-  | 'serp_scan'
-  | 'audit_matrix'
-  | 'competitors'
-  | 'llm_visibility'
+  | 'machine_layer'
+  | 'eeat'
   | 'site_crawl'
-  | 'fan_out_detection'
-  | 'backlink_audit'
-  | 'keyword_universe'
-  | 'content_brief'
-  | 'cocoon_map'
-  | 'bot_traffic'
-  | 'ai_citations';
+  | 'pagespeed'
+  | 'audit_matrix'
+  | 'semantic_audit'
+  | 'cocoon'
+  | 'content_architect'
+  | 'autopilot_status'
+  | 'conversion_optimizer'
+  | 'social_hub'
+  | 'geo_score'
+  | 'llm_visibility'
+  | 'ai_bots_analysis'
+  | 'observatory'
+  | 'serp_ranking'
+  | 'competitors';
 
-export type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'canceled';
+export type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface FeatureDescriptor {
+  id: CrawlersFeature;
+  status: 'stable' | 'preview' | 'soon';
+  desc: string;
+  input: Record<string, string>;
+}
 
 export interface JobCreateInput {
   feature: CrawlersFeature;
-  url?: string;
-  domain?: string;
-  keyword?: string;
-  /** Free-form options forwarded to the feature handler. */
-  options?: Record<string, unknown>;
-  /** Optional webhook URL — overrides account default. */
-  webhook_url?: string;
+  /** Payload spécifique à la feature (url, domain, keyword, …). */
+  input: Record<string, unknown>;
+}
+
+export interface JobCreated {
+  id: string;
+  feature: CrawlersFeature;
+  status: JobStatus;
+  created_at: string;
+  cost_cents: number;
+  poll_url: string;
 }
 
 export interface Job<T = unknown> {
   id: string;
   feature: CrawlersFeature;
   status: JobStatus;
-  created_at: string;
-  updated_at: string;
-  completed_at: string | null;
-  cost_cents: number;
-  input: JobCreateInput;
+  input: Record<string, unknown>;
   result: T | null;
-  error: { code: string; message: string } | null;
+  error: { message: string } | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
 }
 
 export interface WalletBalance {
@@ -56,21 +66,18 @@ export interface WalletBalance {
 }
 
 export interface ClientOptions {
-  /** Your Crawlers API key — starts with `crw_live_`. */
+  /** Clé API — préfixe `crw_live_`. */
   apiKey: string;
-  /** Override the base URL. Defaults to `https://api.crawlers.fr`. */
+  /** Base URL Crawlers API. Défaut : `https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/crawlers-api`. */
   baseUrl?: string;
-  /** Per-request timeout in ms. Defaults to 30 000. */
+  /** Timeout par requête en ms (défaut 30 000). */
   timeoutMs?: number;
-  /** Custom fetch (e.g. for testing). Defaults to `globalThis.fetch`. */
+  /** Fetch custom (test). */
   fetch?: typeof fetch;
 }
 
 export interface WaitOptions {
-  /** Poll interval in ms. Defaults to 2000. */
   intervalMs?: number;
-  /** Hard timeout in ms. Defaults to 5 minutes. */
   timeoutMs?: number;
-  /** Called on every poll with the latest job snapshot. */
   onProgress?: (job: Job) => void;
 }

@@ -9,13 +9,16 @@ import {
 } from './errors.js';
 import type {
   ClientOptions,
+  FeatureDescriptor,
   Job,
+  JobCreated,
   JobCreateInput,
   WaitOptions,
   WalletBalance,
 } from './types.js';
 
-const DEFAULT_BASE_URL = 'https://api.crawlers.fr';
+const DEFAULT_BASE_URL =
+  'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/crawlers-api';
 const DEFAULT_TIMEOUT = 30_000;
 const SDK_VERSION = '0.1.0';
 
@@ -37,8 +40,6 @@ export class CrawlersClient {
     this.fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
   }
 
-  // ----- HTTP plumbing --------------------------------------------------
-
   private async request<T>(
     method: 'GET' | 'POST',
     path: string,
@@ -46,7 +47,6 @@ export class CrawlersClient {
   ): Promise<T> {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), this.timeoutMs);
-
     let res: Response;
     try {
       res = await this.fetchImpl(`${this.baseUrl}${path}`, {
@@ -70,71 +70,87 @@ export class CrawlersClient {
 
     const text = await res.text();
     let payload: any = null;
-    try {
-      payload = text ? JSON.parse(text) : null;
-    } catch {
-      /* non-JSON response */
-    }
+    try { payload = text ? JSON.parse(text) : null; } catch { /* */ }
 
     if (res.ok) return payload as T;
 
-    const message: string = payload?.error?.message ?? payload?.error ?? res.statusText;
+    const message: string =
+      payload?.error?.message ?? payload?.message ?? payload?.error ?? res.statusText;
 
     switch (res.status) {
       case 401:
       case 403:
         throw new AuthenticationError(message);
       case 402:
-        throw new InsufficientBalanceError(
-          message,
-          payload?.topup_url ?? undefined
-        );
+        throw new InsufficientBalanceError(message);
       case 429: {
         const retryAfter = Number(res.headers.get('retry-after')) || undefined;
         throw new RateLimitError(message, retryAfter);
       }
       case 400:
+      case 404:
+      case 409:
       case 422:
-        throw new ValidationError(message, payload?.details);
+        throw new ValidationError(message, payload);
       default:
         if (res.status >= 500) throw new ApiError(message, res.status);
         throw new CrawlersError(message, 'unknown_error');
     }
   }
 
-  // ----- Jobs -----------------------------------------------------------
+  features = {
+    /** Liste publique du catalogue (no auth required côté backend, on auth quand même). */
+    list: async (): Promise<FeatureDescriptor[]> => {
+      const r = await this.request<{ object: 'list'; data: FeatureDescriptor[] }>(
+        'GET',
+        '/v1/features'
+      );
+      return r.data;
+    },
+  };
 
   jobs = {
-    /** Create a new job. Charges 0.10 € on success (202). */
-    create: <T = unknown>(input: JobCreateInput): Promise<Job<T>> =>
-      this.request<Job<T>>('POST', '/v1/jobs', input),
+    create: async (input: JobCreateInput): Promise<JobCreated> =>
+      this.request<JobCreated>('POST', '/v1/jobs', input),
 
-    /** Get a job by id. */
     get: <T = unknown>(id: string): Promise<Job<T>> =>
       this.request<Job<T>>('GET', `/v1/jobs/${encodeURIComponent(id)}`),
 
-    /** Convenience helper: create + poll until terminal state. */
+    list: async (limit = 20): Promise<Job[]> => {
+      const r = await this.request<{ object: 'list'; data: Job[] }>(
+        'GET',
+        `/v1/jobs?limit=${limit}`
+      );
+      return r.data;
+    },
+
+    cancel: (id: string): Promise<{ id: string; status: 'cancelled' }> =>
+      this.request('POST', `/v1/jobs/${encodeURIComponent(id)}/cancel`),
+
+    /** Create + poll jusqu'à l'état terminal. */
     run: async <T = unknown>(
       input: JobCreateInput,
       wait?: WaitOptions
     ): Promise<Job<T>> => {
-      const created = await this.jobs.create<T>(input);
+      const created = await this.jobs.create(input);
       return this.jobs.wait<T>(created.id, wait);
     },
 
-    /** Poll a job until it completes, fails, or the timeout fires. */
     wait: async <T = unknown>(
       id: string,
       opts: WaitOptions = {}
     ): Promise<Job<T>> => {
       const interval = opts.intervalMs ?? 2000;
       const deadline = Date.now() + (opts.timeoutMs ?? 5 * 60_000);
-
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const job = await this.jobs.get<T>(id);
         opts.onProgress?.(job);
-        if (job.status === 'completed' || job.status === 'failed' || job.status === 'canceled') {
+        if (
+          job.status === 'completed' ||
+          job.status === 'failed' ||
+          job.status === 'cancelled'
+        ) {
           return job;
         }
         if (Date.now() > deadline) {
@@ -145,10 +161,7 @@ export class CrawlersClient {
     },
   };
 
-  // ----- Wallet ---------------------------------------------------------
-
   wallet = {
-    /** Current wallet balance + estimated jobs remaining. */
     balance: (): Promise<WalletBalance> =>
       this.request<WalletBalance>('GET', '/v1/wallet/balance'),
   };
