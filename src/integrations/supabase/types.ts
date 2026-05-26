@@ -4013,6 +4013,95 @@ export type Database = {
           },
         ]
       }
+      crawlers_api_jobs: {
+        Row: {
+          api_key_id: string | null
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          error: Json | null
+          feature: string
+          id: string
+          input: Json
+          result: Json | null
+          started_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          error?: Json | null
+          feature: string
+          id?: string
+          input?: Json
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          error?: Json | null
+          feature?: string
+          id?: string
+          input?: Json
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawlers_api_jobs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "crawlers_api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crawlers_api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          scopes: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       credit_transactions: {
         Row: {
           amount: number
@@ -13404,6 +13493,23 @@ export type Database = {
       compute_ai_traffic_ratio: {
         Args: { p_tracked_site_id: string; p_window_days?: number }
         Returns: Json
+      }
+      crawlers_api_create_key: {
+        Args: { _name?: string }
+        Returns: {
+          api_key: string
+          created_at: string
+          id: string
+          key_prefix: string
+        }[]
+      }
+      crawlers_api_verify_token: {
+        Args: { _token: string }
+        Returns: {
+          key_id: string
+          scopes: string[]
+          user_id: string
+        }[]
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }
