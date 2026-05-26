@@ -112,6 +112,21 @@ function detectHtmlInterceptor(text: string, contentType: string | null): { code
   const head = (text || '').slice(0, 4096).toLowerCase();
   const ct = (contentType || '').toLowerCase();
   const looksHtml = head.startsWith('<!doctype html') || head.startsWith('<html') || ct.includes('text/html');
+
+  // ModSecurity / OVH-style fingerprints — detected even when body isn't HTML
+  // (OVH mutualisé renvoie parfois du texte brut "Not Acceptable" sans <html>)
+  const isModSec =
+    head.includes('mod_security') ||
+    head.includes('modsecurity') ||
+    head.includes('not acceptable') ||
+    head.includes('reference&#32;') ||
+    head.includes('mwp-') ||
+    head.includes('ovhcloud') ||
+    head.includes('access denied') && head.includes('rule');
+  if (isModSec) {
+    return { code: 'html_interceptor', vendor: 'ModSecurity', message: "ModSecurity (souvent OVH mutualisé) bloque la requête API. Ajoutez dans .htaccess : SetEnvIf Authorization \"(.*)\" HTTP_AUTHORIZATION=$1 — ou utilisez le plugin Crawlers (lien magique) qui contourne ModSecurity." };
+  }
+
   if (!looksHtml) return null;
 
   if (head.includes('wordfence')) {
@@ -122,9 +137,6 @@ function detectHtmlInterceptor(text: string, contentType: string | null): { code
   }
   if (head.includes('cloudflare') && (head.includes('attention required') || head.includes('challenge') || head.includes('cf-error'))) {
     return { code: 'html_interceptor', vendor: 'Cloudflare', message: "Cloudflare présente un challenge (Bot Fight Mode / Under Attack). Désactivez le challenge pour /wp-json/ ou whitelistez l'IP." };
-  }
-  if (head.includes('mod_security') || head.includes('modsecurity')) {
-    return { code: 'html_interceptor', vendor: 'ModSecurity', message: "ModSecurity (OVH / mutualisé) bloque la requête. Ajoutez une règle .htaccess pour conserver le header Authorization." };
   }
   if (head.includes('imunify')) {
     return { code: 'html_interceptor', vendor: 'Imunify360', message: "Imunify360 bloque l'API REST. Whitelistez l'IP serveur depuis cPanel." };
@@ -154,6 +166,28 @@ async function tryBasicHeader(siteUrl: string, restBase: string, username: strin
   const text = await res.text();
   let payload: any = null; try { payload = JSON.parse(text); } catch { /**/ }
   payload = applyInterceptorDetection(res, payload, text);
+
+  // 401 disambiguation — retry WITHOUT context=edit.
+  // If second call returns 200 → creds OK, rôle insuffisant (pas Éditeur+).
+  // If second call still 401 → vrais identifiants invalides.
+  if (res.status === 401 && payload?.code !== 'html_interceptor') {
+    try {
+      const probeUrl = `${siteUrl}${restBase}/wp/v2/users/me`;
+      const probeRes = await fetchWithTimeout(probeUrl, {
+        headers: { Authorization: `Basic ${basic}`, Accept: 'application/json', 'User-Agent': UA },
+      });
+      const probeText = await probeRes.text();
+      let probePayload: any = null; try { probePayload = JSON.parse(probeText); } catch { /**/ }
+      if (probeRes.status === 200 && probePayload?.id) {
+        // creds valides — rôle insuffisant pour context=edit
+        return {
+          res: new Response(null, { status: 403 }),
+          payload: { code: 'rest_forbidden_context', message: 'Identifiants valides mais rôle insuffisant (Éditeur ou Administrateur requis pour le contexte édition).' },
+        };
+      }
+    } catch { /* ignore — keep original 401 */ }
+  }
+
   return { res, payload };
 }
 
