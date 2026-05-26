@@ -27,6 +27,8 @@
   <url><loc>https://crawlers.fr/matrice</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://crawlers.fr/observatoire</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>https://crawlers.fr/pro-agency</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://crawlers.fr/ranking-serp</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://crawlers.fr/tracking</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://crawlers.fr/comparatif-crawlers-semrush</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://crawlers.fr/comparatif-claude-vs-crawlers</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://crawlers.fr/comparatif-plateforme-seo-ia</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
