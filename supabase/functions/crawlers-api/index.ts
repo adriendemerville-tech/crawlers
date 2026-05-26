@@ -37,6 +37,61 @@ const FEATURES = [
 ];
 
 const FEATURE_MAP = new Map(FEATURES.map(f => [f.id, f]));
+
+// HMAC SHA-256 signature header — "sha256=<hex>"
+async function hmacSign(secret: string, body: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
+  return "sha256=" + Array.from(new Uint8Array(sig))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function dispatchWebhooks(admin: any, userId: string, event: string, payload: any) {
+  const { data: hooks } = await admin
+    .from("developer_webhooks")
+    .select("id, url, secret, events")
+    .eq("user_id", userId)
+    .eq("api", "crawlers")
+    .eq("active", true);
+  if (!hooks || hooks.length === 0) return;
+
+  const body = JSON.stringify({ event, api: "crawlers", data: payload, sent_at: new Date().toISOString() });
+  await Promise.all(hooks
+    .filter((h: any) => Array.isArray(h.events) && h.events.includes(event))
+    .map(async (h: any) => {
+      const sig = await hmacSign(h.secret, body);
+      let status = 0, responseBody = "", err: string | null = null;
+      try {
+        const r = await fetch(h.url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Crawlers-Event": event,
+            "X-Crawlers-Signature": sig,
+          },
+          body,
+          signal: AbortSignal.timeout(10_000),
+        });
+        status = r.status;
+        responseBody = (await r.text()).slice(0, 1000);
+      } catch (e) {
+        err = (e as Error).message;
+      }
+      await admin.from("webhook_deliveries").insert({
+        webhook_id: h.id, user_id: userId, event, payload: JSON.parse(body),
+        attempts: 1,
+        status: status >= 200 && status < 300 ? "delivered" : "failed",
+        response_status: status || null, response_body: responseBody || null, error: err,
+        delivered_at: status >= 200 && status < 300 ? new Date().toISOString() : null,
+      });
+      await admin.from("developer_webhooks")
+        .update({ last_ping_at: new Date().toISOString(), last_status: status || null })
+        .eq("id", h.id);
+    }));
+}
 const FEATURE_IDS = new Set(FEATURES.map(f => f.id));
 
 // Exécute une feature en background et met à jour le job en DB.
