@@ -99,6 +99,11 @@ const MarinaPage = lazy(() => import("./pages/Marina"));
 const MarinaApiDoc = lazy(() => import("./pages/docs/MarinaApiDoc"));
 const ParmenionApiDoc = lazy(() => import("./pages/docs/ParmenionApiDoc"));
 const CrawlersApiDoc = lazy(() => import("./pages/docs/CrawlersApiDoc"));
+const DevLanding = lazy(() => import("./pages/developers/DevLanding"));
+const DevDashboard = lazy(() => import("./pages/developers/DevDashboard"));
+const DevProfile = lazy(() => import("./pages/developers/DevProfile"));
+const DevAuth = lazy(() => import("./pages/developers/DevAuth"));
+const DevDocs = lazy(() => import("./pages/developers/DevDocs"));
 const DataFlowDiagram = lazy(() => import("./pages/DataFlowDiagram"));
 const ArchitectureMapPage = lazy(() => import("./pages/ArchitectureMapPage"));
 const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
@@ -235,6 +240,12 @@ const App = () => (
                           <Route path="/docs/api/marina" element={<MarinaApiDoc />} />
                           <Route path="/docs/api/parmenion" element={<ParmenionApiDoc />} />
                           <Route path="/docs/api/crawlers" element={<CrawlersApiDoc />} />
+                          <Route path="/developers" element={<DevLanding />} />
+                          <Route path="/developers/login" element={<DevAuth mode="login" />} />
+                          <Route path="/developers/signup" element={<DevAuth mode="signup" />} />
+                          <Route path="/developers/dashboard" element={<DevDashboard />} />
+                          <Route path="/developers/profile" element={<DevProfile />} />
+                          <Route path="/developers/docs" element={<DevDocs />} />
                           <Route path="/data-flow-diagram" element={<DataFlowDiagram />} />
                           <Route path="/architecture-map" element={<ArchitectureMapPage />} />
                           <Route path="/sea-seo-bridge" element={<SeaSeoBridge />} />

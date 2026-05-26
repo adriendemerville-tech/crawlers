@@ -1,48 +1,129 @@
+# Plan : Plateforme Développeurs (api.crawlers.fr)
 
-# Plan — Saturation Intelligence v1 (Breathing Spiral)
-
-## Objectif
-Alimenter le pipeline éditorial avec un signal hebdomadaire sur la **saturation thématique** des clusters prioritaires, pour éviter la redondance et concentrer la production sur les vrais gaps.
-
-## Stack LLM (Option A — économique)
-- **Batch intent extraction** : `google/gemini-3-flash-preview`
-- **Cluster synthesis** : `google/gemini-2.5-pro`
-- Coût ~0,09 €/site/semaine
-- Fallback OpenRouter automatique via `_shared/lovableAI.ts`
+Nouvelle UI dédiée aux 3 APIs (Crawlers / Marina / Parménion), même backend, même `auth.users`. Pas de duplication serveur — uniquement nouvelles routes front + Stripe metered.
 
 ---
 
-## Job 1 — `cron-cocoon-refresh` (dimanche 02:00 UTC) ✅
-- Recalcule le graphe cocoon (`calculate-cocoon-logic`) pour chaque site `weekly_refresh_enabled=true`
-- Skip si `last_cocoon_refresh_at > now()-7d`
-- Budget : 8 min, délai 1.5s entre sites
+## Sprint 1 — Shell + Clés API (≈ 1 jour)
 
-## Job 2 — `cron-cms-content-refresh` (dimanche 03:00 UTC) ✅
-- Rafraîchit le cache contenu CMS (wpsync / iktracker-actions / cms-content-stats)
-- Skip Wix/Webflow (read-only)
-- Budget : 8 min, délai 2s entre connexions
+**Objectif :** un dev peut s'inscrire, générer ses 3 clés, faire son premier appel.
 
-## Job 3 — `cron-saturation-analysis` (dimanche 04:00 UTC) ✅
-- Sélectionne top 5 clusters prioritaires par site (spiral_score ≥ 50 OU maturité < 60%)
-- **Étape 1** Gemini 3 Flash : extraction intent + angle pour chaque page du cluster (batch)
-- **Étape 2** Gemini 2.5 Pro : synthèse `{saturation_score, dominant_angles, angle_gaps, recommendation}`
-- Persistance dans `saturation_snapshots`
+**Routes (front, sous-section `/developers/*` du même app pour MVP, domaine dédié en V2) :**
+- `/developers` — landing dev (3 APIs, code snippets, CTA inscription)
+- `/developers/signup`, `/developers/login`, `/developers/reset-password` — réutilise `AuthContext` existant
+- `/developers/dashboard` — 3 cartes API (statut, jobs 24h, dernière requête)
+- `/developers/profile?tab=parametres` — nom, email, mot de passe, suppression
+- `/developers/profile?tab=cles-api` — générer/révoquer `crw_live_`, `mk_live_`, `prm_live_` (3 sections, copy-to-clipboard, masquage après création)
+- `/developers/docs` — index unifié pointant vers `/docs/api/crawlers`, `/docs/api/marina`, `/docs/api/parmenion` + quickstart commun
 
----
+**Backend :**
+- Aucune nouvelle table — `crawlers_api_keys`, `marina_api_keys`, `parmenion_api_keys` existent déjà
+- Edge functions `*-api-keys-create` / `*-revoke` à factoriser si pas déjà fait
+- RLS : déjà OK (clés filtrées par `auth.uid()`)
 
-## Schéma & intégration ✅
-- Table `saturation_snapshots` (clusters JSONB, global_score, generated_at)
-- Colonnes `tracked_sites` : `last_cocoon_refresh_at`, `last_cms_refresh_at`, `last_saturation_at`, `weekly_refresh_enabled`
-- Pipeline éditorial Stage 0 enrichi : `competitor_gaps` ← angle_gaps + `business_context.saturation_intel` ← snapshot complet
-- Fallback non-bloquant si snapshot absent
+**Design :**
+- Skin minimaliste violet/jaune/noir/blanc, pas de sidebar Cocoon/Autopilot
+- Boutons : bordure + texte (cf. règles projet), pas de fond
 
 ---
 
-## Documentation ✅
-- `mem://tech/autopilot/saturation-intelligence-fr` — mémoire technique
-- Index mémoire mis à jour
-- Landing pages Breathing Spiral & Cocoon : section "Intelligence de saturation hebdomadaire"
+## Sprint 2 — Consommation + Webhooks (≈ 1 jour)
+
+**Objectif :** un dev voit ce qu'il consomme et peut éviter le polling.
+
+**Routes :**
+- `/developers/profile?tab=consommation`
+  - Graphes : jobs/jour × feature × API (30j), barres empilées
+  - Tableau : top 10 features consommées, coût estimé
+  - Filtre par clé API
+- `/developers/profile?tab=webhooks`
+  - Liste des webhooks (URL + secret + events)
+  - Test "ping" depuis l'UI
+
+**Backend :**
+- Vue SQL agrégée `developer_usage_daily` (UNION ALL des 3 tables jobs, group by user_id, day, api, feature)
+- Nouvelle table `developer_webhooks` (user_id, api, url, secret, events[], active)
+- Hook dans `crawlers-api` / `marina-api` / `parmenion-api` : à chaque job completed → POST signé (HMAC SHA-256) vers webhook si configuré
+- Retry exponentiel × 5, table `webhook_deliveries` pour audit
 
 ---
 
-**Statut : déployé. Premier cycle prévu dimanche 04:00 UTC.**
+## Sprint 3 — Facturation Stripe metered (≈ 1.5 jour)
+
+**Objectif :** le dev paie au volume réel sans avoir à recharger.
+
+**Modèle :**
+- Free tier : 100 jobs/mois cumulés (toutes APIs), reset le 1er du mois
+- Au-delà : pay-as-you-go, prix unitaire par feature
+- Option packs prépayés (1k / 10k / 100k crédits, remise dégressive) — V2
+
+**Prix indicatifs (à valider) :**
+- `geo_score`, `eeat`, `pagespeed` : 0.05 €
+- `audit_expert`, `semantic_audit`, `serp_ranking` : 0.20 €
+- `audit_matrix`, `competitors`, `llm_visibility` : 0.50 €
+- `site_crawl` : 0.02 € / page crawlée
+- Marina : 0.30 € / audit prospect
+- Parménion : 2 € / cycle exécuté
+
+**Backend :**
+- Stripe metered billing (subscription items, usage records)
+- Nouvelle table `developer_billing` (user_id, stripe_customer_id, stripe_subscription_id, plan, payment_method_last4)
+- Edge function `report-usage-to-stripe` cron horaire : agrège les jobs `completed` depuis dernier report → `POST /v1/subscription_items/{id}/usage_records`
+- Webhook Stripe : `invoice.paid`, `payment_method.attached`, `customer.subscription.updated`
+
+**Routes :**
+- `/developers/profile?tab=facturation`
+  - Plan actuel + consommation du mois + estimation fin de mois
+  - Méthode de paiement (Stripe Elements)
+  - Historique factures (PDF Stripe)
+  - Limite mensuelle (hard cap, désactive les clés au-delà)
+
+**Provider :** Stripe (built-in Lovable Payments, pas BYOK) — éligibilité à confirmer via `recommend_payment_provider` au début du sprint.
+
+---
+
+## Hors-scope MVP (V2)
+
+- Domaine dédié `api.crawlers.fr` (déploiement séparé, sous-app)
+- Packs prépayés
+- Quotas par clé (vs par user)
+- Page statut publique (`status.crawlers.fr`)
+- SDK officiel TS/Python (auto-généré depuis OpenAPI)
+
+---
+
+## Détails techniques
+
+**Réutilisation maximale :**
+- `AuthContext`, `useAuth`, `Profile` existants
+- Edge functions `crawlers-api` / `marina-api` / `parmenion-api` : aucun changement Sprint 1-2
+- Tables existantes : `crawlers_api_jobs`, `marina_jobs`, `parmenion_tasks`
+
+**Nouveaux fichiers Sprint 1 :**
+```
+src/pages/developers/
+  ├── DevLanding.tsx
+  ├── DevDashboard.tsx
+  ├── DevProfile.tsx          (router des tabs)
+  ├── tabs/
+  │   ├── SettingsTab.tsx
+  │   └── ApiKeysTab.tsx
+  └── DevLayout.tsx           (header minimal violet/noir)
+```
+
+**Sécurité :**
+- Clés API affichées une seule fois à la création (hash bcrypt en DB)
+- Rate limit par clé : 100 req/min (déjà en place)
+- Soft delete des clés (revoked_at) pour audit
+
+---
+
+## Livrable par sprint
+
+| Sprint | Demo |
+|--------|------|
+| 1 | Signup → générer clé → `curl POST /v1/jobs` réussit |
+| 2 | Graphe consommation 7j + webhook reçoit ping signé |
+| 3 | Stripe carte enregistrée + 1ère facture metered générée |
+
+Ordre recommandé : 1 → 2 → 3 (Stripe en dernier pour itérer sur les prix après avoir vu la consommation réelle).
