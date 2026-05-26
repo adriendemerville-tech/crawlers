@@ -35,7 +35,7 @@ export default function UsageTab() {
         .gte("day", since)
         .order("day", { ascending: false })
         .limit(2000);
-      setRows((data as UsageRow[]) || []);
+      setRows(((data as unknown) as UsageRow[]) || []);
       setLoading(false);
     })();
   }, [user]);
