@@ -36,6 +36,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { handleWPIntegration } from '@/utils/wpIntegration';
 import { cn } from '@/lib/utils';
+import { diagnoseCmsConnectionError } from '@/utils/diagnoseCmsConnectionError';
 
 // Domains routed to the custom_rest Bearer flow (cms-register-api-key edge fn).
 const CUSTOM_REST_PLATFORMS: Array<{ match: (d: string) => boolean; platform: string; label: string; keyPrefix: string; keyHelpUrl?: string }> = [
