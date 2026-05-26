@@ -104,6 +104,7 @@ const DevDashboard = lazy(() => import("./pages/developers/DevDashboard"));
 const DevProfile = lazy(() => import("./pages/developers/DevProfile"));
 const DevAuth = lazy(() => import("./pages/developers/DevAuth"));
 const DevDocs = lazy(() => import("./pages/developers/DevDocs"));
+const DevBillingHelp = lazy(() => import("./pages/developers/DevBillingHelp"));
 const DataFlowDiagram = lazy(() => import("./pages/DataFlowDiagram"));
 const ArchitectureMapPage = lazy(() => import("./pages/ArchitectureMapPage"));
 const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
@@ -246,6 +247,7 @@ const App = () => (
                           <Route path="/developers/dashboard" element={<DevDashboard />} />
                           <Route path="/developers/profile" element={<DevProfile />} />
                           <Route path="/developers/docs" element={<DevDocs />} />
+                          <Route path="/developers/aide-facturation" element={<DevBillingHelp />} />
                           <Route path="/data-flow-diagram" element={<DataFlowDiagram />} />
                           <Route path="/architecture-map" element={<ArchitectureMapPage />} />
                           <Route path="/sea-seo-bridge" element={<SeaSeoBridge />} />
