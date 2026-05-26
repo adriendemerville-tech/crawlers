@@ -268,6 +268,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         ...(showAlgos ? [{ id: 'algos', label: t.algos, icon: Brain, group: 'technical' }] : []),
         { id: 'functions', label: t.functions, icon: Code2, group: 'technical' },
         { id: 'ai-routing', label: 'Routing AI', icon: Zap, group: 'technical' },
+        { id: 'platform-api', label: 'Plateforme API', icon: Plug, group: 'technical' },
       ],
     },
     ...(showDocs
