@@ -15,7 +15,7 @@ const crawlers = new CrawlersClient({ apiKey: process.env.CRAWLERS_API_KEY! });
 
 const job = await crawlers.jobs.run({
   feature: 'geo_score',
-  url: 'https://example.com',
+  input: { url: 'https://example.com' },
 });
 
 console.log(job.result);
