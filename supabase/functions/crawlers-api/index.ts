@@ -130,6 +130,10 @@ async function runFeature(admin: any, jobId: string, userId: string, feature: st
     await admin.from("crawlers_api_jobs")
       .update({ status: "completed", result, completed_at: new Date().toISOString() })
       .eq("id", jobId);
+
+    await dispatchWebhooks(admin, userId, "job.completed", {
+      id: jobId, feature, status: "completed", result,
+    }).catch(e => console.error("[crawlers-api] webhook dispatch failed", e));
   } catch (e) {
     console.error(`[crawlers-api] feature ${feature} failed`, e);
     await admin.from("crawlers_api_jobs")
@@ -139,6 +143,10 @@ async function runFeature(admin: any, jobId: string, userId: string, feature: st
         completed_at: new Date().toISOString(),
       })
       .eq("id", jobId);
+
+    await dispatchWebhooks(admin, userId, "job.failed", {
+      id: jobId, feature, status: "failed", error: (e as Error).message,
+    }).catch(err => console.error("[crawlers-api] webhook dispatch failed", err));
   }
 }
 
