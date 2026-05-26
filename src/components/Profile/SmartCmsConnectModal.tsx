@@ -1097,40 +1097,57 @@ export function SmartCmsConnectModal({
                   : t3(lang, 'Tester & enregistrer', 'Test & save', 'Probar y guardar')}
               </Button>
             </div>
-            {restError && (
-              <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">
-                      {t3(lang, 'Échec de la connexion', 'Connection failed', 'Fallo de conexión')}
-                    </div>
-                    <div className="mt-1 text-xs opacity-90 break-words">{restError}</div>
-                    <div className="mt-3 text-xs">
-                      <div className="font-medium mb-1">
-                        {t3(lang, 'Causes possibles', 'Possible causes', 'Causas posibles')} :
+            {restError && (() => {
+              const diag = diagnoseCmsConnectionError(
+                { message: restError, status: restErrorMeta?.status, code: restErrorMeta?.code },
+                lang as 'fr' | 'en' | 'es',
+              );
+              const sideBadgeClass =
+                diag.side === 'cms'
+                  ? 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-300'
+                  : diag.side === 'credentials'
+                  ? 'border-destructive/50 bg-destructive/10 text-destructive'
+                  : diag.side === 'network'
+                  ? 'border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-300'
+                  : 'border-muted-foreground/40 bg-muted/40 text-muted-foreground';
+              return (
+                <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-destructive" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={cn('inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide', sideBadgeClass)}>
+                          {diag.sideLabel}
+                        </span>
+                        <span className="font-semibold text-foreground">{diag.headline}</span>
                       </div>
-                      <ul className="list-disc pl-4 space-y-1 opacity-90">
-                        {diagnoseCmsConnectionError(
-                          { message: restError, status: restErrorMeta?.status, code: restErrorMeta?.code },
-                          lang as 'fr' | 'en' | 'es',
-                        ).map((cause, i) => (
-                          <li key={i}>{cause}</li>
-                        ))}
-                      </ul>
-                      <div className="mt-2 opacity-75">
-                        {t3(
-                          lang,
-                          'Une erreur de connexion peut avoir plusieurs origines : essayez les pistes ci-dessus une par une.',
-                          'A connection error can have multiple causes: try the suggestions above one by one.',
-                          'Un error de conexión puede tener varias causas: prueba las sugerencias de arriba una por una.',
-                        )}
+                      <p className="text-xs text-muted-foreground">{diag.explanation}</p>
+                      <div>
+                        <div className="text-xs font-medium text-foreground mb-1">
+                          {t3(lang, 'Causes probables', 'Likely causes', 'Causas probables')} :
+                        </div>
+                        <ul className="list-disc pl-4 space-y-1 text-xs text-muted-foreground">
+                          {diag.causes.map((c, i) => <li key={i}>{c}</li>)}
+                        </ul>
+                      </div>
+                      {diag.actions.length > 0 && (
+                        <div>
+                          <div className="text-xs font-medium text-foreground mb-1">
+                            {t3(lang, 'À essayer', 'What to try', 'Qué probar')} :
+                          </div>
+                          <ul className="list-disc pl-4 space-y-1 text-xs text-muted-foreground">
+                            {diag.actions.map((a, i) => <li key={i}>{a}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      <div className="text-[11px] text-muted-foreground/70 break-words border-t border-border/50 pt-2">
+                        {t3(lang, 'Message technique', 'Technical message', 'Mensaje técnico')} : {restError}
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
       </DialogContent>
