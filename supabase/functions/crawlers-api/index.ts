@@ -14,29 +14,78 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 // Catalogue des features exposées. status: "stable" | "preview" | "soon"
-// Chaque entrée déclare son schéma d'input attendu (humain, pour la doc côté worker).
+// `fn` = edge function interne wirée (null = pas encore exécutable, le job restera "queued")
 const FEATURES = [
-  { id: "audit_expert",        status: "preview", desc: "Audit Expert 168 critères (technique + sémantique + EEAT)", input: { url: "string" } },
-  { id: "machine_layer",       status: "preview", desc: "Machine Layer Scanner (lisibilité bots IA, JSON-LD, robots, sitemap)", input: { url: "string" } },
-  { id: "eeat",                status: "preview", desc: "Score E-E-A-T détaillé (expertise, autorité, fiabilité)", input: { url: "string" } },
-  { id: "site_crawl",          status: "preview", desc: "Crawl d'un site (BFS depth 3 max)", input: { domain: "string", depth: "number?", limit: "number?" } },
-  { id: "pagespeed",           status: "preview", desc: "PageSpeed Insights (mobile + desktop) + Core Web Vitals", input: { url: "string" } },
-  { id: "audit_matrix",        status: "preview", desc: "Matrice d'audit multi-pages (export CSV-ready)", input: { domain: "string", urls: "string[]?" } },
-  { id: "semantic_audit",      status: "preview", desc: "Audit sémantique (champ lexical, entités, alignement intention)", input: { url: "string", keyword: "string?" } },
-  { id: "cocoon",              status: "preview", desc: "Génération du cocon sémantique 3D (clusters, cannibalisation)", input: { domain: "string" } },
-  { id: "content_architect",   status: "preview", desc: "Recommandation éditoriale (4-étages : brief, stratège, rédacteur, tonalisateur)", input: { domain: "string", topic: "string", target_audience: "string?" } },
-  { id: "autopilot_status",    status: "preview", desc: "Lecture du statut Autopilot (Parménion) pour un domaine", input: { domain: "string" } },
-  { id: "conversion_optimizer",status: "preview", desc: "Audit conversion (CTA, friction, GA4 behavioral metrics)", input: { url: "string" } },
-  { id: "social_hub",          status: "preview", desc: "Génération de variations sociales depuis un article", input: { url: "string", platforms: "string[]?" } },
-  { id: "geo_score",           status: "preview", desc: "Score GEO (Generative Engine Optimization)", input: { url: "string" } },
-  { id: "llm_visibility",      status: "preview", desc: "Visibilité d'une marque dans les réponses LLM (ChatGPT, Perplexity, Gemini)", input: { brand: "string", queries: "string[]" } },
-  { id: "ai_bots_analysis",    status: "preview", desc: "Analyse des hits bots IA (GPTBot, ClaudeBot, PerplexityBot, …) sur 30j", input: { domain: "string" } },
-  { id: "observatory",         status: "preview", desc: "Benchmarks sectoriels (positions moyennes, mix bots, IAS)", input: { sector: "string" } },
-  { id: "serp_ranking",        status: "preview", desc: "Positions SERP multi-providers (DataForSEO + SerpAPI + Serper)", input: { keyword: "string", domain: "string?", location: "string?" } },
-  { id: "competitors",         status: "preview", desc: "Audit concurrentiel (SEO + GEO + SERP delta) sur 1-3 URLs", input: { domain: "string", competitors: "string[]" } },
+  { id: "audit_expert",         status: "stable",  fn: "audit-expert-seo",             desc: "Audit Expert 168 critères (technique + sémantique + EEAT)", input: { url: "string" } },
+  { id: "machine_layer",        status: "stable",  fn: "machine-layer-scan",           desc: "Machine Layer Scanner (lisibilité bots IA, JSON-LD, robots, sitemap)", input: { url: "string" } },
+  { id: "eeat",                 status: "stable",  fn: "check-eeat",                   desc: "Score E-E-A-T détaillé (expertise, autorité, fiabilité)", input: { url: "string" } },
+  { id: "site_crawl",           status: "stable",  fn: "crawl-site",                   desc: "Crawl d'un site (BFS depth 3 max)", input: { domain: "string", depth: "number?", limit: "number?" } },
+  { id: "pagespeed",            status: "stable",  fn: "check-pagespeed",              desc: "PageSpeed Insights (mobile + desktop) + Core Web Vitals", input: { url: "string" } },
+  { id: "audit_matrix",         status: "stable",  fn: "audit-matrice",                desc: "Matrice d'audit multi-pages (export CSV-ready)", input: { domain: "string", urls: "string[]?" } },
+  { id: "semantic_audit",       status: "stable",  fn: "cocoon-diag-semantic",         desc: "Audit sémantique (champ lexical, entités, alignement intention)", input: { url: "string", keyword: "string?" } },
+  { id: "cocoon",               status: "stable",  fn: "calculate-cocoon-logic",       desc: "Génération du cocon sémantique 3D (clusters, cannibalisation)", input: { domain: "string" } },
+  { id: "content_architect",    status: "stable",  fn: "content-architecture-advisor", desc: "Recommandation éditoriale (4-étages : brief, stratège, rédacteur, tonalisateur)", input: { domain: "string", topic: "string", target_audience: "string?" } },
+  { id: "autopilot_status",     status: "stable",  fn: "__autopilot_status",           desc: "Lecture du statut Autopilot (Parménion) pour un domaine", input: { domain: "string" } },
+  { id: "conversion_optimizer", status: "preview", fn: null,                           desc: "Audit conversion (CTA, friction, GA4 behavioral metrics)", input: { url: "string" } },
+  { id: "social_hub",           status: "stable",  fn: "generate-social-content",      desc: "Génération de variations sociales depuis un article", input: { url: "string", platforms: "string[]?" } },
+  { id: "geo_score",            status: "stable",  fn: "check-geo",                    desc: "Score GEO (Generative Engine Optimization)", input: { url: "string" } },
+  { id: "llm_visibility",       status: "stable",  fn: "calculate-llm-visibility",     desc: "Visibilité d'une marque dans les réponses LLM (ChatGPT, Perplexity, Gemini)", input: { brand: "string", queries: "string[]" } },
+  { id: "ai_bots_analysis",     status: "stable",  fn: "geo-attribution-summary",      desc: "Analyse des hits bots IA (GPTBot, ClaudeBot, PerplexityBot, …) sur 30j", input: { domain: "string" } },
+  { id: "observatory",          status: "stable",  fn: "aggregate-observatory",        desc: "Benchmarks sectoriels (positions moyennes, mix bots, IAS)", input: { sector: "string" } },
+  { id: "serp_ranking",         status: "stable",  fn: "serp-benchmark",               desc: "Positions SERP multi-providers (DataForSEO + SerpAPI + Serper)", input: { keyword: "string", domain: "string?", location: "string?" } },
+  { id: "competitors",          status: "stable",  fn: "audit-competitor-url",         desc: "Audit concurrentiel (SEO + GEO + SERP delta) sur 1-3 URLs", input: { domain: "string", competitors: "string[]" } },
 ];
 
+const FEATURE_MAP = new Map(FEATURES.map(f => [f.id, f]));
 const FEATURE_IDS = new Set(FEATURES.map(f => f.id));
+
+// Exécute une feature en background et met à jour le job en DB.
+async function runFeature(admin: any, jobId: string, userId: string, feature: string, input: any) {
+  const f = FEATURE_MAP.get(feature);
+  try {
+    await admin.from("crawlers_api_jobs")
+      .update({ status: "running", started_at: new Date().toISOString() })
+      .eq("id", jobId);
+
+    if (!f?.fn) {
+      throw new Error(`feature "${feature}" not yet wired (status=${f?.status ?? "unknown"})`);
+    }
+
+    let result: any;
+
+    if (f.fn === "__autopilot_status") {
+      const domain = String(input?.domain || "");
+      if (!domain) throw new Error("missing field: domain");
+      const { data, error } = await admin
+        .from("parmenion_targets")
+        .select("domain, status, last_cycle_at, next_cycle_at, paused_reason")
+        .eq("user_id", userId)
+        .eq("domain", domain)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      result = data || { domain, status: "not_configured" };
+    } else {
+      const { data, error } = await admin.functions.invoke(f.fn, {
+        body: { ...input, user_id: userId, _called_from: "crawlers-api", _job_id: jobId },
+      });
+      if (error) throw new Error(error.message || String(error));
+      result = data;
+    }
+
+    await admin.from("crawlers_api_jobs")
+      .update({ status: "completed", result, completed_at: new Date().toISOString() })
+      .eq("id", jobId);
+  } catch (e) {
+    console.error(`[crawlers-api] feature ${feature} failed`, e);
+    await admin.from("crawlers_api_jobs")
+      .update({
+        status: "failed",
+        error: { message: (e as Error).message },
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", jobId);
+  }
+}
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -104,6 +153,10 @@ Deno.serve(async (req) => {
         .select("id, feature, status, created_at")
         .single();
       if (error) return json(500, { error: "db_error", detail: error.message });
+
+      // Exécution background — le client poll /v1/jobs/{id}
+      // @ts-ignore EdgeRuntime is provided by Supabase Edge runtime
+      EdgeRuntime.waitUntil(runFeature(ctx.admin, job.id, ctx.userId, feature, input));
 
       return new Response(JSON.stringify({
         id: job.id,
