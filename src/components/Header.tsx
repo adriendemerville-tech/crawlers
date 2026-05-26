@@ -293,6 +293,11 @@ export function Header() {
                 <span className="text-sm font-thin">SERPs</span>
               </Button>
             </Link>
+            <Link to={user ? "/developers" : "/developers/login"}>
+              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
+                <span className="text-sm font-thin">Platform API</span>
+              </Button>
+            </Link>
           </div>
         )}
         {!isProfilePage && !isHomePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
