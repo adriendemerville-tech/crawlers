@@ -36,6 +36,7 @@
 
   <!-- E-E-A-T -->
   <url><loc>https://crawlers.fr/a-propos</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://crawlers.fr/auteur/adrien-de-volontat</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://crawlers.fr/methodologie</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://crawlers.fr/faq</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
 
