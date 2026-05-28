@@ -522,6 +522,14 @@ export default function GoogleBusinessPage() {
       })}} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr/" },
+          { "@type": "ListItem", "position": 2, "name": "Google Business", "item": "https://crawlers.fr/google-business" }
+        ]
+      })}} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Crawlers.fr — Google Business Optimizer",
         "applicationCategory": "BusinessApplication",
