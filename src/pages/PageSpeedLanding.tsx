@@ -9,10 +9,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { LeadMagnetAudit } from '@/components/LeadMagnetAudit';
 import { Badge } from '@/components/ui/badge';
 import {
-import { ClusterMesh } from '@/components/seo/ClusterMesh';
   ArrowRight, Gauge, Zap, Clock, Eye, Smartphone,
   BarChart3, CheckCircle2, TrendingUp, Monitor, Server, Image
 } from 'lucide-react';
+import { ClusterMesh } from '@/components/seo/ClusterMesh';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
