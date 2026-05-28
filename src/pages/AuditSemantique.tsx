@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Search, Layers, Brain, Target, CheckCircle2, FileText, BarChart3 } from 'lucide-react';
 import { useEffect, lazy, Suspense} from 'react';
+import { ClusterMesh } from '@/components/seo/ClusterMesh';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -249,6 +250,13 @@ export default function AuditSemantique() {
             </Button>
           </Link>
         </section>
+      
+      <ClusterMesh
+        currentPath="/audit-semantique"
+        currentLabel="Audit sémantique"
+        pillar={{"href":"/audit-seo-gratuit","label":"Audit SEO gratuit","description":"Pilier : 200 points techniques + GEO en 60 secondes."}}
+        sisters={[{"href":"/audit-expert","label":"Audit expert","description":"168 critères + plan d'action correctif."},{"href":"/pagespeed","label":"PageSpeed Insights","description":"Core Web Vitals & performance."},{"href":"/eeat","label":"E-E-A-T","description":"Signaux d'expertise & autorité."},{"href":"/guide-audit-seo","label":"Guide audit SEO","description":"Méthodologie pas à pas."}]}
+      />
       </main>
 
       <Suspense fallback={null}><Footer /></Suspense>

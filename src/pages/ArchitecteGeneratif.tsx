@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { t3 } from '@/utils/i18n';
 import { useEffect, lazy, Suspense} from 'react';
+import { ClusterMesh } from '@/components/seo/ClusterMesh';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -505,7 +506,14 @@ export default function ArchitecteGeneratif() {
             </div>
           </section>
 
-        </main>
+        
+      <ClusterMesh
+        currentPath="/architecte-generatif"
+        currentLabel="Architecte génératif"
+        pillar={{"href":"/score-geo","label":"Score GEO","description":"Pilier : mesurez votre visibilité ChatGPT, Claude, Perplexity."}}
+        sisters={[{"href":"/analyse-bots-ia","label":"Analyse bots IA","description":"GPTBot, ClaudeBot, PerplexityBot."},{"href":"/comparatif-claude-vs-crawlers","label":"Claude vs Crawlers","description":"Comparatif GEO."},{"href":"/comparatif-crawlers-semrush","label":"Crawlers vs Semrush","description":"Comparatif outils SEO."}]}
+      />
+      </main>
         <Suspense fallback={null}><Footer /></Suspense>
       </div>
     </>

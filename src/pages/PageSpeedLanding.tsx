@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { LeadMagnetAudit } from '@/components/LeadMagnetAudit';
 import { Badge } from '@/components/ui/badge';
 import {
+import { ClusterMesh } from '@/components/seo/ClusterMesh';
   ArrowRight, Gauge, Zap, Clock, Eye, Smartphone,
   BarChart3, CheckCircle2, TrendingUp, Monitor, Server, Image
 } from 'lucide-react';
@@ -196,6 +197,13 @@ const PageSpeedLanding = () => {
             </Button>
           </div>
         </section>
+      
+      <ClusterMesh
+        currentPath="/pagespeed"
+        currentLabel="PageSpeed"
+        pillar={{"href":"/audit-seo-gratuit","label":"Audit SEO gratuit","description":"Pilier : 200 points techniques + GEO en 60 secondes."}}
+        sisters={[{"href":"/audit-expert","label":"Audit expert","description":"168 critères + plan d'action correctif."},{"href":"/audit-semantique","label":"Audit sémantique","description":"Densité lexicale, entités, lacunes."},{"href":"/eeat","label":"E-E-A-T","description":"Signaux d'expertise & autorité."},{"href":"/guide-audit-seo","label":"Guide audit SEO","description":"Méthodologie pas à pas."}]}
+      />
       </main>
 
       <Suspense fallback={null}><Footer /></Suspense>
