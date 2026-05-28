@@ -41,6 +41,12 @@ function ArticleLayoutComponent({
     { year: 'numeric', month: 'long', day: 'numeric' }
   );
 
+  // Map author display name → page slug. Default founder = Adrien de Volontat.
+  const authorSlug = author.toLowerCase().includes('adrien')
+    ? 'adrien-de-volontat'
+    : author.toLowerCase().replace(/\s+/g, '-');
+  const authorUrl = `${SITE_URL}/auteur/${authorSlug}`;
+
   // Canonical URL — ALWAYS point to the clean URL without ?lang= to avoid duplicate content
   const canonicalUrl = slug 
     ? `${SITE_URL}/blog/${slug}`
