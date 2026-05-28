@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { LeadMagnetAudit } from '@/components/LeadMagnetAudit';
 import { Badge } from '@/components/ui/badge';
 import {
+import { ClusterMesh } from '@/components/seo/ClusterMesh';
   ArrowRight, Bot, Shield, CheckCircle2, Search, AlertTriangle,
   Eye, FileText, Zap, Globe, Brain, Target, BarChart3,
   Users, GitBranch, Fingerprint, Activity, Clock, TrendingUp
@@ -294,6 +295,13 @@ const AnalyseBotsIA = () => {
             </Button>
           </div>
         </section>
+      
+      <ClusterMesh
+        currentPath="/analyse-bots-ia"
+        currentLabel="Analyse bots IA"
+        pillar={{"href":"/score-geo","label":"Score GEO","description":"Pilier : mesurez votre visibilité ChatGPT, Claude, Perplexity."}}
+        sisters={[{"href":"/architecte-generatif","label":"Architecte génératif","description":"Structure pour citations LLM."},{"href":"/comparatif-claude-vs-crawlers","label":"Claude vs Crawlers","description":"Comparatif GEO."},{"href":"/comparatif-crawlers-semrush","label":"Crawlers vs Semrush","description":"Comparatif outils SEO."}]}
+      />
       </main>
 
       <Suspense fallback={null}><Footer /></Suspense>
