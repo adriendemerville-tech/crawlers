@@ -39,6 +39,7 @@ export default function FeaturesConsole() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Console SEO & GEO Crawlers — cockpit unifié 16 modules</title>
         <meta
           name="description"

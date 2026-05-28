@@ -159,6 +159,7 @@ export default function StrategeCocoon() {
   return (
     <>
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Stratège Cocoon — Consultant IA SEO Senior | Crawlers.fr</title>
         <meta name="description" content="Stratège Cocoon est un consultant IA senior qui analyse votre cocon sémantique, prescrit des actions concrètes et mesure l'impact réel sur votre SEO. Réservé aux abonnés Pro Agency." />
       </Helmet>

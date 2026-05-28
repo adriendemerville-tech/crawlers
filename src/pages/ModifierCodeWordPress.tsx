@@ -152,6 +152,7 @@ const ModifierCodeWordPress = () => {
   return (
     <>
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>{SEO_META.title}</title>
         <meta name="description" content={SEO_META.description} />
         <meta property="og:title" content={SEO_META.ogTitle} />

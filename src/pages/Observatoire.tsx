@@ -372,6 +372,7 @@ const Observatoire = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>{metaTitle}</title>
         <meta name="description" content={metaDesc} />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />

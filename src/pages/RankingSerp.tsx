@@ -432,6 +432,7 @@ const RankingSerp = memo(() => {
   return (
     <>
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>{t3(language,
           'Benchmark Rank SERP — Classement Google multi-providers gratuit | Crawlers.fr',
           'SERP Rank Benchmark — Free multi-provider Google ranking | Crawlers.fr',

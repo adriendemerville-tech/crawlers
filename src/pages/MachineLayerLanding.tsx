@@ -15,6 +15,7 @@ export default function MachineLayerLanding() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Couche machine : parler aux robots avant les humains — Crawlers.fr</title>
         <meta name="description" content="L'inversion est en cours : les pages doivent désormais parler aux robots et aux IA d'abord. Découvrez la couche machine et scannez gratuitement la vôtre." />
         <meta property="og:title" content="Couche machine : parler aux robots avant les humains" />

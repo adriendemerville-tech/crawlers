@@ -74,6 +74,7 @@ export default function IndiceAlignementStrategique() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>{title}</title>
         <meta name="description" content={metaDesc} />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
