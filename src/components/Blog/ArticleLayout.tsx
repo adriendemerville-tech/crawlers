@@ -66,8 +66,8 @@ function ArticleLayoutComponent({
     image: heroImage,
     author: {
       '@type': 'Person',
-      name: author,
-      url: `${SITE_URL}/auteur/${author.toLowerCase()}`,
+      name: author === 'Adrien' ? 'Adrien de Volontat' : author,
+      url: authorUrl,
     },
     publisher: {
       '@type': 'Organization',
