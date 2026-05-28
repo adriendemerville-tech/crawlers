@@ -60,6 +60,7 @@ const AnalyseSiteWebGratuit = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Analyse de site web gratuite 2026 — SEO & visibilité IA</title>
         <meta name="description" content="Analyser un site web gratuitement : SEO technique, Core Web Vitals, visibilité LLM et JSON-LD. Guide complet et outil 2026." />
         <meta property="og:title" content="Analyse de Site Web — Guide Complet 2026" />

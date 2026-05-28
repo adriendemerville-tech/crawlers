@@ -1304,6 +1304,7 @@ const AuditCompare = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Audit Comparé SEO & GEO vs Concurrents | Crawlers.fr</title>
         <meta name="description" content="Benchmark SEO et GEO vs 3 concurrents. Radar Chart, analyse différentielle, score IAS comparé. Disponible en crédits." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />

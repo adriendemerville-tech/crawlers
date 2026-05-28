@@ -80,6 +80,7 @@ export default function IntegrationGTM() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <html lang={language} />
         <title>{t3(language,
           'Brancher votre site — API, WordPress, GTM | Crawlers.fr',

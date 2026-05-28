@@ -510,6 +510,7 @@ const ContentArchitectPage = memo(() => {
   return (
     <>
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>{tr.meta.title}</title>
         <meta name="description" content={tr.meta.description} />
         <meta property="og:title" content={tr.meta.title} />

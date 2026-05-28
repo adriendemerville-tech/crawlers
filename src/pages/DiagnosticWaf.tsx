@@ -129,6 +129,7 @@ export default function DiagnosticWaf() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Diagnostic WAF — Pourquoi mon site est-il bloqué ? | Crawlers.fr</title>
         <meta name="description" content="Outil de diagnostic gratuit pour comprendre pourquoi un scan échoue : codes HTTP, redirections, robots.txt, headers et User-Agent." />
       </Helmet>

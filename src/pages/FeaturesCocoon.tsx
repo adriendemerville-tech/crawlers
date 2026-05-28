@@ -194,6 +194,7 @@ export default function FeaturesCocoon() {
   return (
     <>
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>{t.title}</title>
         <meta name="description" content={t.metaDesc} />
       </Helmet>

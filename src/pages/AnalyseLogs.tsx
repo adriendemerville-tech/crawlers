@@ -100,6 +100,7 @@ const AnalyseLogs = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Analyse de Logs Serveur — Comprenez le crawl de Google et des IA | Crawlers</title>
         <meta name="description" content="Analysez vos logs serveur pour comprendre comment Googlebot et les bots IA explorent votre site. Détectez le budget crawl gaspillé, les pages orphelines et optimisez votre indexation." />
         <meta name="robots" content="index, follow" />

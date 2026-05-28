@@ -239,6 +239,7 @@ export default function Features() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>{t.metaTitle}</title>
         <meta name="description" content={t.metaDesc} />
       </Helmet>

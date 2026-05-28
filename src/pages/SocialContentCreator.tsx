@@ -95,6 +95,7 @@ const SocialContentCreator = memo(() => {
   return (
     <>
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Social Content Hub — Publication Sociale SEO/GEO | Crawlers.fr</title>
         <meta name="description" content="Créez, planifiez et publiez du contenu social optimisé SEO/GEO sur LinkedIn, Facebook et Instagram. Smart Linking, génération IA et analytics intégrés." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />

@@ -167,6 +167,7 @@ export default function MachineLayerScanner() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Machine Layer Scanner — Crawlers.fr | Audit signaux SEO/GEO</title>
         <meta name="description" content="Scannez gratuitement la couche machine de votre site : meta, OpenGraph, JSON-LD, robots.txt, llms.txt, headers HTTP. Recommandations rédigées prêtes à coller." />
         <meta name="robots" content="index, follow, max-image-preview:large" />

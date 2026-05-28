@@ -78,6 +78,7 @@ const ConversionOptimizerLanding = memo(() => {
   return (
     <>
       <Helmet>
+        <meta name="robots" content="noindex,follow" />
         <title>Conversion Optimizer : audit CRO & taux de conversion IA</title>
         <meta name="description" content="Optimisation du taux de conversion par IA : analyse ton, CTAs, lisibilité et potentiel CRO de chaque page selon votre contexte business." />
         <meta property="og:title" content="Conversion Optimizer — Audit UX/CRO contextuel par IA | Crawlers.fr" />
