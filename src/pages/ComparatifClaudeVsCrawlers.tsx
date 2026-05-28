@@ -399,6 +399,16 @@ export default function ComparatifClaudeVsCrawlers() {
               </motion.div>
             </div>
           </section>
+          <ClusterMesh
+            currentPath="/comparatif-claude-vs-crawlers"
+            currentLabel="Claude vs Crawlers"
+            pillar={{ href: '/score-geo', label: 'Score GEO', description: 'Pilier : visibilité dans les moteurs IA.' }}
+            sisters={[
+              { href: '/comparatif-crawlers-semrush', label: 'Crawlers vs Semrush', description: 'Comparatif SEO traditionnel vs GEO.' },
+              { href: '/analyse-bots-ia', label: 'Analyse bots IA', description: 'Trafic GPTBot, ClaudeBot, PerplexityBot.' },
+              { href: '/architecte-generatif', label: 'Architecte génératif', description: 'Optimisation contenu pour les LLM.' },
+            ]}
+          />
         </main>
 
         <Suspense fallback={null}>
