@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { ClusterMesh } from '@/components/seo/ClusterMesh';
 import { t3 } from '@/utils/i18n';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
