@@ -581,6 +581,16 @@ const ComparatifCrawlersSemrush = () => {
               </p>
             </div>
           </section>
+          <ClusterMesh
+            currentPath="/comparatif-crawlers-semrush"
+            currentLabel="Crawlers vs Semrush"
+            pillar={{ href: '/audit-seo-gratuit', label: 'Audit SEO gratuit', description: 'Pilier : 200 points techniques + GEO en 60 secondes.' }}
+            sisters={[
+              { href: '/comparatif-claude-vs-crawlers', label: 'Claude vs Crawlers', description: 'Comparatif IA générative vs plateforme SEO.' },
+              { href: '/audit-expert', label: 'Audit expert', description: '168 critères + plan d\'action correctif.' },
+              { href: '/score-geo', label: 'Score GEO', description: 'Visibilité dans les moteurs IA.' },
+            ]}
+          />
         </main>
 
         <Suspense fallback={null}><Footer /></Suspense>
