@@ -41,6 +41,12 @@ function ArticleLayoutComponent({
     { year: 'numeric', month: 'long', day: 'numeric' }
   );
 
+  // Map author display name → page slug. Default founder = Adrien de Volontat.
+  const authorSlug = author.toLowerCase().includes('adrien')
+    ? 'adrien-de-volontat'
+    : author.toLowerCase().replace(/\s+/g, '-');
+  const authorUrl = `${SITE_URL}/auteur/${authorSlug}`;
+
   // Canonical URL — ALWAYS point to the clean URL without ?lang= to avoid duplicate content
   const canonicalUrl = slug 
     ? `${SITE_URL}/blog/${slug}`
@@ -60,8 +66,8 @@ function ArticleLayoutComponent({
     image: heroImage,
     author: {
       '@type': 'Person',
-      name: author,
-      url: `${SITE_URL}/auteur/${author.toLowerCase()}`,
+      name: author === 'Adrien' ? 'Adrien de Volontat' : author,
+      url: authorUrl,
     },
     publisher: {
       '@type': 'Organization',
@@ -217,7 +223,9 @@ function ArticleLayoutComponent({
                 {title}
               </h1>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">{author}</span>
+                <Link to={authorUrl.replace(SITE_URL, '')} rel="author" className="font-medium text-foreground hover:text-primary transition-colors">
+                  {author === 'Adrien' ? 'Adrien de Volontat' : author}
+                </Link>
                 <span className="text-muted-foreground/50">•</span>
                 <time dateTime={date}>{formattedDate}</time>
               </div>
