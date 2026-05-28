@@ -223,7 +223,9 @@ function ArticleLayoutComponent({
                 {title}
               </h1>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">{author}</span>
+                <Link to={authorUrl.replace(SITE_URL, '')} rel="author" className="font-medium text-foreground hover:text-primary transition-colors">
+                  {author === 'Adrien' ? 'Adrien de Volontat' : author}
+                </Link>
                 <span className="text-muted-foreground/50">•</span>
                 <time dateTime={date}>{formattedDate}</time>
               </div>
