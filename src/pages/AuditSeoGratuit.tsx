@@ -81,7 +81,8 @@ const AuditSeoGratuit = () => {
             { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
             { "@type": "ListItem", "position": 2, "name": "Audit SEO Gratuit", "item": "https://crawlers.fr/audit-seo-gratuit" }
           ]
-        }
+        },
+        "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".citable-passage"] }
       },
       {
         "@type": "SoftwareApplication",

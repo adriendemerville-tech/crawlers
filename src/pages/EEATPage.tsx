@@ -35,7 +35,8 @@ const structuredData = {
       "datePublished": publishDate,
       "dateModified": modifiedDate,
       "url": "https://crawlers.fr/eeat",
-      "mainEntityOfPage": "https://crawlers.fr/eeat"
+      "mainEntityOfPage": "https://crawlers.fr/eeat",
+      "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".citable-passage"] }
     },
     {
       "@type": "BreadcrumbList",
