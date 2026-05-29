@@ -30,7 +30,8 @@ const ScoreGEO = () => {
         "datePublished": "2026-04-08",
         "dateModified": "2026-04-08",
         "url": "https://crawlers.fr/score-geo",
-        "mainEntityOfPage": "https://crawlers.fr/score-geo"
+        "mainEntityOfPage": "https://crawlers.fr/score-geo",
+        "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".citable-passage"] }
       },
       {
         "@type": "BreadcrumbList",
