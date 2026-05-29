@@ -16,6 +16,8 @@ import heroImage from '@/assets/landing/audit-seo-gratuit-hero.webp';
 import { supabase } from '@/integrations/supabase/client';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { PageSpeedDashboard } from '@/components/PageSpeedDashboard';
+import { PillarRelatedArticles } from '@/components/seo/PillarRelatedArticles';
+
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 

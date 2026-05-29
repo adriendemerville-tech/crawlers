@@ -16,6 +16,8 @@ import heroImage from '@/assets/landing/eeat-hero.webp';
 import { QuickEEATTest } from '@/components/eeat/QuickEEATTest';
 import { LazyVisible } from '@/components/LazyVisible';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
+import { PillarRelatedArticles } from '@/components/seo/PillarRelatedArticles';
+
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
