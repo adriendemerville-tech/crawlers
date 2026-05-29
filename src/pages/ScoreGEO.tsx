@@ -11,6 +11,8 @@ import {
   ArrowRight, Globe, Brain, Search, Target, Zap,
   BarChart3, CheckCircle2, TrendingUp, FileText, Shield, Eye
 } from 'lucide-react';
+import { PillarRelatedArticles } from '@/components/seo/PillarRelatedArticles';
+
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -187,7 +189,12 @@ const ScoreGEO = () => {
             </Button>
           </div>
         </section>
+
+        <PillarRelatedArticles
+          slugs={['comprendre-geo-vs-seo', 'tableau-comparatif-seo-geo-2026', 'bloquer-autoriser-gptbot']}
+        />
       </main>
+
 
       <Suspense fallback={null}><Footer /></Suspense>
     </div>
