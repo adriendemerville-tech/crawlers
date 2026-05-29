@@ -51,6 +51,16 @@ const personJsonLd = {
   sameAs: FOUNDER.sameAs,
 };
 
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
+    { "@type": "ListItem", position: 2, name: "Auteurs", item: "https://crawlers.fr/auteur" },
+    { "@type": "ListItem", position: 3, name: FOUNDER.name, item: FOUNDER.url },
+  ],
+};
+
 export default function AuthorPage() {
   return (
     <>
@@ -66,6 +76,7 @@ export default function AuthorPage() {
         <meta property="og:description" content={FOUNDER.bio} />
         <meta property="og:image" content={adrienPhoto} />
         <script type="application/ld+json">{JSON.stringify(personJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
       </Helmet>
 
       <main className="min-h-screen bg-background text-foreground">
