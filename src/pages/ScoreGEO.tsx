@@ -187,7 +187,12 @@ const ScoreGEO = () => {
             </Button>
           </div>
         </section>
+
+        <PillarRelatedArticles
+          slugs={['comprendre-geo-vs-seo', 'tableau-comparatif-seo-geo-2026', 'bloquer-autoriser-gptbot']}
+        />
       </main>
+
 
       <Suspense fallback={null}><Footer /></Suspense>
     </div>

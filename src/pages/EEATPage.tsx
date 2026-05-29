@@ -555,7 +555,12 @@ export default function EEATPage() {
         pillar={{"href":"/audit-seo-gratuit","label":"Audit SEO gratuit","description":"Pilier : 200 points techniques + GEO en 60 secondes."}}
         sisters={[{"href":"/audit-expert","label":"Audit expert","description":"168 critères + plan d'action correctif."},{"href":"/audit-semantique","label":"Audit sémantique","description":"Densité lexicale, entités, lacunes."},{"href":"/pagespeed","label":"PageSpeed Insights","description":"Core Web Vitals & performance."},{"href":"/guide-audit-seo","label":"Guide audit SEO","description":"Méthodologie pas à pas."}]}
       />
+
+      <PillarRelatedArticles
+        slugs={['json-ld-snippet-autorite', 'guide-visibilite-technique-ia', 'tableau-comparatif-seo-geo-2026']}
+      />
       </main>
+
 
       <Suspense fallback={null}>
         <Footer />

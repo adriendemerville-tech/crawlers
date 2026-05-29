@@ -345,7 +345,12 @@ const AuditSeoGratuit = () => {
             </Button>
           </div>
         </section>
+
+        <PillarRelatedArticles
+          slugs={['guide-visibilite-technique-ia', 'comprendre-geo-vs-seo', 'json-ld-snippet-autorite']}
+        />
       </main>
+
 
       <Suspense fallback={null}>
         <Footer />
