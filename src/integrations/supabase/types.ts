@@ -8727,8 +8727,10 @@ export type Database = {
       parmenion_targets: {
         Row: {
           api_key_name: string | null
+          author_aliases: Json
           autopilot_enabled: boolean
           backlog_guard_paused: boolean
+          consecutive_crawl_skips: number
           created_at: string
           created_by_user_id: string | null
           domain: string
@@ -8736,6 +8738,7 @@ export type Database = {
           id: string
           is_active: boolean
           label: string
+          last_crawl_skip_at: string | null
           max_content_per_period: number
           platform: string
           pull_token_created_at: string | null
@@ -8746,8 +8749,10 @@ export type Database = {
         }
         Insert: {
           api_key_name?: string | null
+          author_aliases?: Json
           autopilot_enabled?: boolean
           backlog_guard_paused?: boolean
+          consecutive_crawl_skips?: number
           created_at?: string
           created_by_user_id?: string | null
           domain: string
@@ -8755,6 +8760,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           label: string
+          last_crawl_skip_at?: string | null
           max_content_per_period?: number
           platform?: string
           pull_token_created_at?: string | null
@@ -8765,8 +8771,10 @@ export type Database = {
         }
         Update: {
           api_key_name?: string | null
+          author_aliases?: Json
           autopilot_enabled?: boolean
           backlog_guard_paused?: boolean
+          consecutive_crawl_skips?: number
           created_at?: string
           created_by_user_id?: string | null
           domain?: string
@@ -8774,6 +8782,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           label?: string
+          last_crawl_skip_at?: string | null
           max_content_per_period?: number
           platform?: string
           pull_token_created_at?: string | null
@@ -13762,6 +13771,10 @@ export type Database = {
       }
       get_database_size: { Args: never; Returns: Json }
       get_max_sessions: { Args: { p_user_id: string }; Returns: number }
+      get_parmenion_author_aliases: {
+        Args: { p_domain: string }
+        Returns: Json
+      }
       get_parmenion_target_api_key: {
         Args: { p_domain: string }
         Returns: string

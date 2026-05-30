@@ -28,32 +28,58 @@ export function getIktrackerApiKey(): string | undefined {
 }
 
 /**
- * Get Dictadevi API key.
+ * Get Dictadevi API key avec traçabilité explicite (Fix 10.5).
  *
- * Priorité (DB d'abord pour que toute MAJ via Admin > Parménion > Intégrations
- * prenne effet immédiatement, sans rotation de secret) :
+ * Priorité (DB d'abord) :
  *   1. parmenion_targets.api_key_name (RPC SECURITY DEFINER) — source de vérité
  *   2. Deno.env.get('DICTADEVI_API_KEY') — fallback bootstrap / dev
  *
- * Inversion vs. comportement précédent : si la priorité env était conservée,
- * une rotation côté UI était silencieusement ignorée tant que le secret env
- * n'était pas mis à jour manuellement.
+ * Chaque résolution log : domaine, source utilisée, présence ou non d'une
+ * entrée DB. Émet un WARNING explicite si on tombe sur env alors qu'une
+ * entrée DB existe (= désynchronisation potentielle).
  */
 export async function getDictadeviApiKey(supabase?: {
   rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>
 }): Promise<string | undefined> {
+  const domain = 'dictadevi.io';
+  let dbKey: string | undefined;
+  let dbHasEntry = false; // true si la row existe (même si la clé est vide)
+
   if (supabase) {
     try {
-      const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: 'dictadevi.io' });
-      if (!error && typeof data === 'string' && data.trim().length > 0) {
-        return data.trim();
+      const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: domain });
+      if (!error) {
+        dbHasEntry = data !== null && data !== undefined;
+        if (typeof data === 'string' && data.trim().length > 0) {
+          dbKey = data.trim();
+        }
+      } else {
+        console.warn(`[dictadevi-key] domain=${domain} source=db_error error=${JSON.stringify(error)}`);
       }
-    } catch (_) {
-      // fallback env
+    } catch (e) {
+      console.warn(`[dictadevi-key] domain=${domain} source=db_exception error=${(e as Error).message}`);
     }
   }
-  const envKey = Deno.env.get('DICTADEVI_API_KEY');
-  return envKey && envKey.trim().length > 0 ? envKey.trim() : undefined;
+
+  const envKeyRaw = Deno.env.get('DICTADEVI_API_KEY');
+  const envKey = envKeyRaw && envKeyRaw.trim().length > 0 ? envKeyRaw.trim() : undefined;
+
+  if (dbKey) {
+    console.log(`[dictadevi-key] domain=${domain} source=db key_prefix=${dbKey.slice(0, 6)}*** db_entry=true env_present=${!!envKey}`);
+    return dbKey;
+  }
+
+  if (envKey) {
+    if (dbHasEntry) {
+      console.warn(`[dictadevi-key] domain=${domain} source=env DESYNC_WARNING db_entry=true (existe mais vide) — vérifier Admin > Parménion > Intégrations`);
+    } else {
+      console.log(`[dictadevi-key] domain=${domain} source=env db_entry=false key_prefix=${envKey.slice(0, 6)}***`);
+    }
+    return envKey;
+  }
+
+  console.error(`[dictadevi-key] domain=${domain} source=NONE db_entry=${dbHasEntry} env_present=false`);
+  return undefined;
 }
 
 /** Check if domain belongs to IKtracker */

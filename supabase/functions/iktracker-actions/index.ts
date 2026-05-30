@@ -2,12 +2,21 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
+import { checkEditorialGuard as checkEditorialGuardShared } from '../_shared/parmenionEditorialGuard.ts';
 import {
   isBlocked as slugMemoryIsBlocked,
   shouldUsePut as slugMemoryShouldUsePut,
   hashContent as slugMemoryHashContent,
   recordResult as slugMemoryRecordResult,
 } from '../_shared/iktracker/slugMemory.ts';
+
+const IKTRACKER_DOMAIN = 'iktracker.fr';
+// Client service partagé (lazy) pour la garde éditoriale DB-driven
+let _supabaseForGuard: ReturnType<typeof getServiceClient> | null = null;
+function getGuardSupabase() {
+  if (!_supabaseForGuard) _supabaseForGuard = getServiceClient();
+  return _supabaseForGuard;
+}
 
 /**
  * iktracker-actions
@@ -67,38 +76,11 @@ async function testConnection(apiKey: string) {
   }
 }
 
-// ── Editorial Guard ──
-// Parménion cannot modify content it authored.
-// Parménion can modify content by other authors only if < 6 months old.
-const PARMENION_AUTHOR_PATTERNS = ['parménion', 'parmenion', 'crawlers autopilot']
-const EDITORIAL_AGE_LIMIT_MONTHS = 6
-
-interface EditorialGuardResult {
-  allowed: boolean
-  reason?: string
-}
-
-function checkEditorialGuard(postOrPage: Record<string, unknown>): EditorialGuardResult {
-  const author = ((postOrPage.author_name || postOrPage.author || '') as string).toLowerCase().trim()
-
-  // Rule 1: Parménion cannot modify its own content
-  const isParmenionAuthor = PARMENION_AUTHOR_PATTERNS.some(p => author.includes(p))
-  if (isParmenionAuthor) {
-    return { allowed: false, reason: `Parménion ne peut pas modifier un contenu dont il est l'auteur (author: "${author}")` }
-  }
-
-  // Rule 2: Cannot modify content older than 6 months
-  const dateStr = (postOrPage.published_at || postOrPage.created_at || '') as string
-  if (dateStr) {
-    const publishedDate = new Date(dateStr)
-    const sixMonthsAgo = new Date()
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - EDITORIAL_AGE_LIMIT_MONTHS)
-    if (publishedDate < sixMonthsAgo) {
-      return { allowed: false, reason: `Contenu trop ancien (${dateStr}) — limite de ${EDITORIAL_AGE_LIMIT_MONTHS} mois dépassée` }
-    }
-  }
-
-  return { allowed: true }
+// ── Editorial Guard (Fix 10.7 — DB-driven aliases avec fallback statique) ──
+// Wrapper async qui délègue au module partagé. Garde la même signature appelable
+// que l'ancienne version sync mais retourne désormais une Promise.
+async function checkEditorialGuard(postOrPage: Record<string, unknown>) {
+  return checkEditorialGuardShared(postOrPage, IKTRACKER_DOMAIN, getGuardSupabase())
 }
 
 async function listPages(apiKey: string) {
@@ -113,7 +95,7 @@ async function updatePage(apiKey: string, pageKey: string, updates: Record<strin
   // Editorial guard: fetch existing page first
   const existing = await callIktracker('GET', `/pages/${pageKey}`, apiKey)
   if (existing.status === 200 && existing.data) {
-    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    const guard = await checkEditorialGuard(existing.data as Record<string, unknown>)
     if (!guard.allowed) {
       console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED update-page "${pageKey}": ${guard.reason}`)
       return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
@@ -375,7 +357,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
       const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
       if (existing && existing.status === 200 && existing.data) {
         // Editorial guard on upsert
-        const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+        const guard = await checkEditorialGuard(existing.data as Record<string, unknown>)
         if (!guard.allowed) {
           console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED upsert "${slug}": ${guard.reason}`)
           return { status: 403, data: null, error: guard.reason, _editorial_guard: true, _original_action: 'create-post' }
@@ -429,7 +411,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Title duplicate detected (jaccard=${sim.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
-            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            const dedupGuard = await checkEditorialGuard(post as Record<string, unknown>)
             if (!dedupGuard.allowed) {
               console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
               return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
@@ -445,7 +427,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Core topic duplicate detected (overlap=${coreOverlap.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
-            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            const dedupGuard = await checkEditorialGuard(post as Record<string, unknown>)
             if (!dedupGuard.allowed) {
               console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
               return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
@@ -461,7 +443,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Synonym duplicate detected (synOverlap=${synOverlap.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
-            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            const dedupGuard = await checkEditorialGuard(post as Record<string, unknown>)
             if (!dedupGuard.allowed) {
               console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
               return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
@@ -476,7 +458,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const slugSim = slugSimilarity(slug, post.slug)
           if (slugSim >= 0.70) {
             console.log(`[iktracker-actions] Slug duplicate detected (slugSim=${slugSim.toFixed(2)}): "${slug}" ≈ "${post.slug}" → updating`)
-            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            const dedupGuard = await checkEditorialGuard(post as Record<string, unknown>)
             if (!dedupGuard.allowed) {
               console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${post.slug}": ${dedupGuard.reason}`)
               return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: post.slug }
@@ -514,7 +496,7 @@ async function updatePost(apiKey: string, slug: string, updates: Record<string, 
   // Editorial guard: fetch existing post first
   const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
   if (existing.status === 200 && existing.data) {
-    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    const guard = await checkEditorialGuard(existing.data as Record<string, unknown>)
     if (!guard.allowed) {
       console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED update-post "${slug}": ${guard.reason}`)
       return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
