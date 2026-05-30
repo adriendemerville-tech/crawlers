@@ -2,12 +2,21 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
+import { checkEditorialGuard as checkEditorialGuardShared } from '../_shared/parmenionEditorialGuard.ts';
 import {
   isBlocked as slugMemoryIsBlocked,
   shouldUsePut as slugMemoryShouldUsePut,
   hashContent as slugMemoryHashContent,
   recordResult as slugMemoryRecordResult,
 } from '../_shared/iktracker/slugMemory.ts';
+
+const IKTRACKER_DOMAIN = 'iktracker.fr';
+// Client service partagé (lazy) pour la garde éditoriale DB-driven
+let _supabaseForGuard: ReturnType<typeof getServiceClient> | null = null;
+function getGuardSupabase() {
+  if (!_supabaseForGuard) _supabaseForGuard = getServiceClient();
+  return _supabaseForGuard;
+}
 
 /**
  * iktracker-actions
