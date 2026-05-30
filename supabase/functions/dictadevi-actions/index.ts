@@ -1,30 +1,61 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
 import { DICTADEVI_BASE_URL, DICTADEVI_PUBLIC_RESOURCES, getDictadeviApiKey } from '../_shared/domainUtils.ts'
+import { checkEditorialGuard } from '../_shared/parmenionEditorialGuard.ts'
 import { marked } from 'https://esm.sh/marked@12.0.2'
 
-// ── Markdown → HTML guard ──
-// Dictadevi attend du HTML rendu. Parménion / pipeline éditorial peuvent
-// produire spontanément du Markdown. On convertit défensivement avant push.
-const CONTENT_FIELDS = ['content', 'body', 'excerpt'] as const
-const MD_SIGNALS = /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|>\s|\d+\.\s|```)|(\*\*[^*\n]+\*\*)|(__[^_\n]+__)|(\[[^\]]+\]\([^)]+\))/
+const DICTADEVI_DOMAIN = 'dictadevi.io'
 
-function looksLikeHtml(s: string): boolean {
-  // Considère HTML dès qu'on voit un tag de structure éditoriale connu.
-  return /<\s*(p|h[1-6]|ul|ol|li|blockquote|section|article|div|figure|table|br|strong|em|a)\b/i.test(s)
+// ── Markdown → HTML guard (Fix 10.6 — détection stricte par ratio) ──
+// Dictadevi attend du HTML rendu. Le pipeline éditorial peut produire du
+// Markdown. On convertit défensivement avant push, mais on n'utilise plus
+// un simple match regex (faux positifs sur `**texte**` cité dans du HTML
+// éditorial). On compare le score MD vs HTML et on ne convertit que si
+// les signaux MD dominent ET qu'il n'y a pas de bloc HTML structurel.
+const CONTENT_FIELDS = ['content', 'body', 'excerpt'] as const
+
+const HTML_BLOCK_RE = /<\s*(p|h[1-6]|ul|ol|li|blockquote|section|article|div|figure|table|pre)\b/gi
+const HTML_INLINE_RE = /<\s*(strong|em|a|br|span|code)\b/gi
+
+// Signaux Markdown : ATX heading, listes, blockquote, code fences, liens MD
+const MD_HEADING_RE = /(^|\n)\s{0,3}#{1,6}\s+\S/g
+const MD_LIST_RE = /(^|\n)\s{0,3}[-*+]\s+\S/g
+const MD_BLOCKQUOTE_RE = /(^|\n)\s{0,3}>\s+\S/g
+const MD_CODEFENCE_RE = /```/g
+const MD_LINK_RE = /\[[^\]]+\]\([^)]+\)/g
+
+interface ContentSignals { html_blocks: number; html_inline: number; md_strong: number }
+
+function scoreContent(s: string): { mdScore: number; htmlScore: number; signals: ContentSignals } {
+  const htmlBlocks = (s.match(HTML_BLOCK_RE) || []).length
+  const htmlInline = (s.match(HTML_INLINE_RE) || []).length
+  const mdHeadings = (s.match(MD_HEADING_RE) || []).length
+  const mdLists = (s.match(MD_LIST_RE) || []).length
+  const mdBlockquotes = (s.match(MD_BLOCKQUOTE_RE) || []).length
+  const mdCodeFences = (s.match(MD_CODEFENCE_RE) || []).length / 2 // paires
+  const mdLinks = (s.match(MD_LINK_RE) || []).length
+
+  // Signaux MD structurels (poids fort) — `**bold**` exclu car trop ambigu
+  const mdScore = mdHeadings * 3 + mdLists * 2 + mdBlockquotes * 2 + mdCodeFences * 3 + mdLinks
+  const htmlScore = htmlBlocks * 3 + htmlInline
+
+  return { mdScore, htmlScore, signals: { html_blocks: htmlBlocks, html_inline: htmlInline, md_strong: mdHeadings + mdLists + mdBlockquotes + mdCodeFences } }
 }
 
-function looksLikeMarkdown(s: string): boolean {
-  if (!s || typeof s !== 'string') return false
-  if (looksLikeHtml(s)) return false
-  return MD_SIGNALS.test(s)
+function shouldConvertMarkdown(s: string): { convert: boolean; reason: string } {
+  if (!s || typeof s !== 'string' || s.length < 20) return { convert: false, reason: 'too_short' }
+  const { mdScore, htmlScore, signals } = scoreContent(s)
+  // Si présence d'au moins 1 bloc HTML structurel → on suppose HTML déjà
+  if (signals.html_blocks >= 1 && mdScore < htmlScore) return { convert: false, reason: `html_dominant(html=${htmlScore},md=${mdScore})` }
+  // Sinon, convertir si signaux MD structurels présents
+  if (signals.md_strong >= 1 && mdScore > htmlScore) return { convert: true, reason: `md_dominant(md=${mdScore},html=${htmlScore})` }
+  return { convert: false, reason: `ambiguous(md=${mdScore},html=${htmlScore})` }
 }
 
 function convertMarkdownToHtml(md: string): string {
   try {
     marked.setOptions({ gfm: true, breaks: false })
-    const html = marked.parse(md, { async: false }) as string
-    return html.trim()
+    return (marked.parse(md, { async: false }) as string).trim()
   } catch (e) {
     console.warn('[dictadevi-actions] marked.parse failed, returning original:', (e as Error).message)
     return md
@@ -36,10 +67,13 @@ function ensureHtmlContent(body: Record<string, unknown>, ctx: string): void {
   for (const field of CONTENT_FIELDS) {
     const val = body[field]
     if (typeof val !== 'string' || !val.trim()) continue
-    if (looksLikeMarkdown(val)) {
+    const decision = shouldConvertMarkdown(val)
+    if (decision.convert) {
       const html = convertMarkdownToHtml(val)
-      console.log(`[dictadevi-actions] ${ctx}: champ "${field}" converti Markdown→HTML (${val.length} → ${html.length} chars)`)
+      console.log(`[dictadevi-actions] ${ctx}: "${field}" Markdown→HTML (${val.length}→${html.length}, ${decision.reason})`)
       body[field] = html
+    } else {
+      console.log(`[dictadevi-actions] ${ctx}: "${field}" no-convert (${decision.reason})`)
     }
   }
 }
