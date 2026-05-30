@@ -107,28 +107,8 @@ function ensureHtmlContent(body: Record<string, unknown>, ctx: string): void {
  *   - Refus si published_at > 6 mois
  */
 
-// ── Editorial Guard ──
-const PARMENION_AUTHOR_PATTERNS = ['parménion', 'parmenion', 'crawlers autopilot']
-const EDITORIAL_AGE_LIMIT_MONTHS = 6
-
-interface EditorialGuardResult { allowed: boolean; reason?: string }
-
-function checkEditorialGuard(content: Record<string, unknown>): EditorialGuardResult {
-  const author = ((content.author_name || content.author || '') as string).toLowerCase().trim()
-  if (PARMENION_AUTHOR_PATTERNS.some(p => author.includes(p))) {
-    return { allowed: false, reason: `Parménion ne peut pas modifier un contenu dont il est l'auteur (author: "${author}")` }
-  }
-  const dateStr = (content.published_at || content.created_at || '') as string
-  if (dateStr) {
-    const publishedDate = new Date(dateStr)
-    const sixMonthsAgo = new Date()
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - EDITORIAL_AGE_LIMIT_MONTHS)
-    if (publishedDate < sixMonthsAgo) {
-      return { allowed: false, reason: `Contenu trop ancien (${dateStr}) — limite de ${EDITORIAL_AGE_LIMIT_MONTHS} mois dépassée` }
-    }
-  }
-  return { allowed: true }
-}
+// ── Editorial Guard (Fix 10.7 — aliases DB-driven via _shared/parmenionEditorialGuard) ──
+// Import en haut du fichier ; voir checkEditorialGuard(content, domain, supabase)
 
 // ── HTTP helper ──
 async function callDictadevi(
