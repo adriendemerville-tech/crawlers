@@ -259,8 +259,8 @@ Deno.serve(handleRequest(async (req: Request) => {
       // Posts
       case 'list-posts':      result = await listPosts(apiKey!, params); break
       case 'get-post':        result = await getPost(apiKey!, String(params.slug || '')); break
-      case 'create-post':     result = await createPost(apiKey!, params); break
-      case 'update-post':     result = await updatePost(apiKey!, String(params.slug || ''), params); break
+      case 'create-post':     result = await createPost(apiKey!, params, supabase); break
+      case 'update-post':     result = await updatePost(apiKey!, String(params.slug || ''), params, supabase); break
       case 'delete-post':     result = await deletePost(apiKey!, String(params.slug || '')); break
       // Pages (read-only)
       case 'get-page':        result = await getPage(apiKey!, String(params.page_key || params.key || '')); break
