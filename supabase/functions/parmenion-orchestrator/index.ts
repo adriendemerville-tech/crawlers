@@ -85,9 +85,10 @@ try {
       ? (forced_phase as PipelinePhase) 
       : getNextPhase(lastPhase);
 
-    // ═══ PHASE 0bis: garde minimale crawl-in-flight ═══
+    // ═══ PHASE 0bis: garde minimale crawl-in-flight + compteur d'alerting (Fix 10.3) ═══
     // La planification des crawls (full 15j / targeted 5j) est gérée par `cron-crawl-scheduler`.
-    // Ici on se contente de reporter le cycle si un crawl est en cours pour éviter audits sur données incomplètes.
+    // Ici on se contente de reporter le cycle si un crawl est en cours.
+    // On incrémente `parmenion_targets.consecutive_crawl_skips` pour détecter les crawls bloqués.
     if (currentPhase === 'audit' || currentPhase === 'diagnose') {
       const { data: inFlight } = await supabase
         .from('site_crawls')
@@ -99,9 +100,41 @@ try {
         .maybeSingle();
 
       if (inFlight) {
-        console.log(`[Parménion] ⏳ Crawl ${inFlight.status} en cours pour ${domain} — cycle reporté`);
-        return jsonOk({ success: true, skipped: true, reason: 'crawl_in_flight', phase: currentPhase });
+        // Incrémente le compteur + récupère la nouvelle valeur pour alerting
+        const { data: target } = await supabase
+          .from('parmenion_targets')
+          .select('consecutive_crawl_skips')
+          .ilike('domain', domain)
+          .maybeSingle();
+        const newCount = ((target?.consecutive_crawl_skips as number) || 0) + 1;
+        await supabase
+          .from('parmenion_targets')
+          .update({ consecutive_crawl_skips: newCount, last_crawl_skip_at: new Date().toISOString() })
+          .ilike('domain', domain);
+
+        const level = newCount >= 5 ? 'ALERT' : 'INFO';
+        console.log(`[Parménion] ⏳ [${level}] Crawl ${inFlight.status} en cours pour ${domain} — cycle reporté (consecutive_skips=${newCount})`);
+        if (newCount >= 5) {
+          console.error(`[Parménion] 🚨 ALERTING crawl stuck ${domain}: ${newCount} cycles consécutifs reportés. Vérifier crawl-site / cron-crawl-scheduler.`);
+          // Trace dans parmenion_decision_log pour observabilité
+          await supabase.from('parmenion_decision_log').insert({
+            tracked_site_id, domain, cycle_number,
+            pipeline_phase: currentPhase, action_type: 'crawl_stuck_alert',
+            status: 'degraded',
+            goal_type: 'alerting',
+            goal_description: `Crawl bloqué ${newCount} cycles consécutifs`,
+            action_payload: { consecutive_skips: newCount, crawl_id: inFlight.id, crawl_status: inFlight.status },
+          });
+        }
+        return jsonOk({ success: true, skipped: true, reason: 'crawl_in_flight', phase: currentPhase, consecutive_skips: newCount });
       }
+
+      // Crawl frais → reset du compteur (le cycle va s'exécuter)
+      await supabase
+        .from('parmenion_targets')
+        .update({ consecutive_crawl_skips: 0 })
+        .ilike('domain', domain)
+        .gt('consecutive_crawl_skips', 0);
     }
 
 
