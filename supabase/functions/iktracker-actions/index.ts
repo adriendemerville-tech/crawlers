@@ -76,38 +76,11 @@ async function testConnection(apiKey: string) {
   }
 }
 
-// ── Editorial Guard ──
-// Parménion cannot modify content it authored.
-// Parménion can modify content by other authors only if < 6 months old.
-const PARMENION_AUTHOR_PATTERNS = ['parménion', 'parmenion', 'crawlers autopilot']
-const EDITORIAL_AGE_LIMIT_MONTHS = 6
-
-interface EditorialGuardResult {
-  allowed: boolean
-  reason?: string
-}
-
-function checkEditorialGuard(postOrPage: Record<string, unknown>): EditorialGuardResult {
-  const author = ((postOrPage.author_name || postOrPage.author || '') as string).toLowerCase().trim()
-
-  // Rule 1: Parménion cannot modify its own content
-  const isParmenionAuthor = PARMENION_AUTHOR_PATTERNS.some(p => author.includes(p))
-  if (isParmenionAuthor) {
-    return { allowed: false, reason: `Parménion ne peut pas modifier un contenu dont il est l'auteur (author: "${author}")` }
-  }
-
-  // Rule 2: Cannot modify content older than 6 months
-  const dateStr = (postOrPage.published_at || postOrPage.created_at || '') as string
-  if (dateStr) {
-    const publishedDate = new Date(dateStr)
-    const sixMonthsAgo = new Date()
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - EDITORIAL_AGE_LIMIT_MONTHS)
-    if (publishedDate < sixMonthsAgo) {
-      return { allowed: false, reason: `Contenu trop ancien (${dateStr}) — limite de ${EDITORIAL_AGE_LIMIT_MONTHS} mois dépassée` }
-    }
-  }
-
-  return { allowed: true }
+// ── Editorial Guard (Fix 10.7 — DB-driven aliases avec fallback statique) ──
+// Wrapper async qui délègue au module partagé. Garde la même signature appelable
+// que l'ancienne version sync mais retourne désormais une Promise.
+async function checkEditorialGuard(postOrPage: Record<string, unknown>) {
+  return checkEditorialGuardShared(postOrPage, IKTRACKER_DOMAIN, getGuardSupabase())
 }
 
 async function listPages(apiKey: string) {
