@@ -95,7 +95,7 @@ async function updatePage(apiKey: string, pageKey: string, updates: Record<strin
   // Editorial guard: fetch existing page first
   const existing = await callIktracker('GET', `/pages/${pageKey}`, apiKey)
   if (existing.status === 200 && existing.data) {
-    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    const guard = await checkEditorialGuard(existing.data as Record<string, unknown>)
     if (!guard.allowed) {
       console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED update-page "${pageKey}": ${guard.reason}`)
       return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
@@ -357,7 +357,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
       const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
       if (existing && existing.status === 200 && existing.data) {
         // Editorial guard on upsert
-        const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+        const guard = await checkEditorialGuard(existing.data as Record<string, unknown>)
         if (!guard.allowed) {
           console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED upsert "${slug}": ${guard.reason}`)
           return { status: 403, data: null, error: guard.reason, _editorial_guard: true, _original_action: 'create-post' }
@@ -411,7 +411,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Title duplicate detected (jaccard=${sim.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
-            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            const dedupGuard = await checkEditorialGuard(post as Record<string, unknown>)
             if (!dedupGuard.allowed) {
               console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
               return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
@@ -427,7 +427,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Core topic duplicate detected (overlap=${coreOverlap.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
-            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            const dedupGuard = await checkEditorialGuard(post as Record<string, unknown>)
             if (!dedupGuard.allowed) {
               console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
               return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
@@ -443,7 +443,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const existingSlug = post.slug || ''
           console.log(`[iktracker-actions] Synonym duplicate detected (synOverlap=${synOverlap.toFixed(2)}): "${title}" ≈ "${post.title}" → updating slug "${existingSlug}"`)
           if (existingSlug) {
-            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            const dedupGuard = await checkEditorialGuard(post as Record<string, unknown>)
             if (!dedupGuard.allowed) {
               console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${existingSlug}": ${dedupGuard.reason}`)
               return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: existingSlug }
@@ -458,7 +458,7 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
           const slugSim = slugSimilarity(slug, post.slug)
           if (slugSim >= 0.70) {
             console.log(`[iktracker-actions] Slug duplicate detected (slugSim=${slugSim.toFixed(2)}): "${slug}" ≈ "${post.slug}" → updating`)
-            const dedupGuard = checkEditorialGuard(post as Record<string, unknown>)
+            const dedupGuard = await checkEditorialGuard(post as Record<string, unknown>)
             if (!dedupGuard.allowed) {
               console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED dedup-upsert "${post.slug}": ${dedupGuard.reason}`)
               return { status: 403, data: null, error: dedupGuard.reason, _editorial_guard: true, _original_action: 'create-post', _duplicate_of: post.slug }
@@ -496,7 +496,7 @@ async function updatePost(apiKey: string, slug: string, updates: Record<string, 
   // Editorial guard: fetch existing post first
   const existing = await callIktracker('GET', `/posts/${slug}`, apiKey)
   if (existing.status === 200 && existing.data) {
-    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    const guard = await checkEditorialGuard(existing.data as Record<string, unknown>)
     if (!guard.allowed) {
       console.warn(`[iktracker-actions] EDITORIAL GUARD BLOCKED update-post "${slug}": ${guard.reason}`)
       return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
