@@ -166,14 +166,13 @@ async function listPosts(apiKey: string, params: Record<string, unknown>) {
 
 const getPost = (apiKey: string, slug: string) => callDictadevi('GET', `/posts/${slug}`, apiKey)
 
-async function createPost(apiKey: string, body: Record<string, unknown>) {
+async function createPost(apiKey: string, body: Record<string, unknown>, supabase: any) {
   ensureHtmlContent(body, `create-post:${(body.slug as string) || '(no-slug)'}`)
   const slug = (body.slug as string) || ''
-  // Upsert behaviour: if slug already exists, switch to update (with guard).
   if (slug) {
     const existing = await callDictadevi('GET', `/posts/${slug}`, apiKey)
     if (existing.status === 200 && existing.data) {
-      const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+      const guard = await checkEditorialGuard(existing.data as Record<string, unknown>, DICTADEVI_DOMAIN, supabase)
       if (!guard.allowed) {
         console.warn(`[dictadevi-actions] EDITORIAL GUARD BLOCKED upsert "${slug}": ${guard.reason}`)
         return { status: 403, data: null, error: guard.reason, _editorial_guard: true, _original_action: 'create-post' }
@@ -186,12 +185,13 @@ async function createPost(apiKey: string, body: Record<string, unknown>) {
   return callDictadevi('POST', '/posts', apiKey, body)
 }
 
-async function updatePost(apiKey: string, slug: string, updates: Record<string, unknown>) {
+async function updatePost(apiKey: string, slug: string, updates: Record<string, unknown>, supabase: any) {
   ensureHtmlContent(updates, `update-post:${slug}`)
   const existing = await callDictadevi('GET', `/posts/${slug}`, apiKey)
   if (existing.status === 200 && existing.data) {
-    const guard = checkEditorialGuard(existing.data as Record<string, unknown>)
+    const guard = await checkEditorialGuard(existing.data as Record<string, unknown>, DICTADEVI_DOMAIN, supabase)
     if (!guard.allowed) {
+      console.warn(`[dictadevi-actions] EDITORIAL GUARD BLOCKED update "${slug}": ${guard.reason}`)
       return { status: 403, data: null, error: guard.reason, _editorial_guard: true }
     }
   }
