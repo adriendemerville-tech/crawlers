@@ -38,7 +38,7 @@ RESPONSE=$(curl -sS -X PUT "$API" \
   -F "metadata=${METADATA};type=application/json" \
   -F "worker.js=@${WORKER_FILE};type=application/javascript+module;filename=worker.js")
 
-SUCCESS=$(echo "$RESPONSE" | grep -o '"success":[a-z]*' | head -1 | cut -d: -f2)
+SUCCESS=$(echo "$RESPONSE" | grep -oE '"success"[[:space:]]*:[[:space:]]*(true|false)' | head -1 | grep -oE '(true|false)')
 
 if [[ "$SUCCESS" != "true" ]]; then
   echo "❌ Échec du déploiement :" >&2
