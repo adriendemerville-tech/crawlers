@@ -36,7 +36,7 @@ METADATA='{"main_module":"worker.js","compatibility_date":"2024-09-01"}'
 RESPONSE=$(curl -sS -X PUT "$API" \
   -H "Authorization: Bearer ${CF_API_TOKEN}" \
   -F "metadata=${METADATA};type=application/json" \
-  -F "worker.js=@${WORKER_FILE};type=application/javascript+module")
+  -F "worker.js=@${WORKER_FILE};type=application/javascript+module;filename=worker.js")
 
 SUCCESS=$(echo "$RESPONSE" | grep -o '"success":[a-z]*' | head -1 | cut -d: -f2)
 
