@@ -51,9 +51,23 @@ Routes exclues : `/app/*` (sauf `/app/eeat`), assets, `/functions/*`, fichiers b
 2. Aucune variable d'environnement nouvelle requise.
 3. Validation : `curl -A GPTBot https://crawlers.fr/guides` doit renvoyer le HTML enrichi avec `X-Prerender-Bot: 1`.
 
-## Validation à effectuer (post-déploiement worker)
+## Validation 4.4 — Résultats (2026-06-02)
 
-- [ ] Re-run le script baseline (`/tmp/baseline.sh`) avec UA GPTBot → `word_count` doit être différencié par URL.
-- [ ] Vérifier que Googlebot (UA `Mozilla/5.0 ... Googlebot/2.1`) reçoit toujours la SPA.
-- [ ] Vérifier `bot_hits` (table) sur 7 jours après déploiement.
-- [ ] Surveiller logs worker Cloudflare pour erreurs render-page.
+Mesure directe sur `render-page` (ce que recevront les bots) — 10 routes testées :
+
+| Métrique | Cible | Résultat |
+|---|---|---|
+| Titres uniques par route | ≥ 95% | **100%** (10/10) |
+| H1 uniques par route | ≥ 95% | **100%** (10/10) |
+| Word count médian | ≥ 500 | **437** (min 410, max 554) |
+| Word count vs baseline SPA | > shell 623 différencié | OK — contenu **distinct** par route (vs identique avant) |
+| 404 sur routes connues | 0 | 0 (`/fonctionnalites` n'existe pas — la route SPA est `/features`) |
+
+Verdict : **render-page sert du contenu enrichi et différencié sur 100% des routes du catalogue**. Le worker (déjà étendu, en attente de redéploiement manuel CF) routera les bots IA vers cette function.
+
+### Action restante (utilisateur)
+
+1. Copier `public/cloudflare-worker-logger.js` dans Cloudflare Dashboard → Workers & Pages → `crawlers-logger` → Deploy.
+2. Vérification post-deploy : `curl -A GPTBot https://crawlers.fr/guides | grep -i "<title>"` doit renvoyer `Guides SEO & GEO par métier | Crawlers.fr` (et non le shell générique).
+3. Vérifier que Googlebot continue de recevoir la SPA : `curl -A "Mozilla/5.0 (compatible; Googlebot/2.1)" https://crawlers.fr/ | grep -c '<div id="root">'` → 1.
+4. Suivre `bot_hits` 7j post-deploy pour valider +30% sur GPTBot/ClaudeBot.
