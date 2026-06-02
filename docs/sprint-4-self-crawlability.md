@@ -71,3 +71,12 @@ Verdict : **render-page sert du contenu enrichi et différencié sur 100% des ro
 2. Vérification post-deploy : `curl -A GPTBot https://crawlers.fr/guides | grep -i "<title>"` doit renvoyer `Guides SEO & GEO par métier | Crawlers.fr` (et non le shell générique).
 3. Vérifier que Googlebot continue de recevoir la SPA : `curl -A "Mozilla/5.0 (compatible; Googlebot/2.1)" https://crawlers.fr/ | grep -c '<div id="root">'` → 1.
 4. Suivre `bot_hits` 7j post-deploy pour valider +30% sur GPTBot/ClaudeBot.
+
+## Hotfix bugs (2026-06-02)
+
+- **Bug 2** : `/app/eeat` retiré de l'exception (route inexistante dans `PUBLIC_ROUTES` côté SPA — `/app/*` reste 100% privé).
+- **Bug 3** : worker accepte désormais `HEAD` en plus de `GET` (GPTBot/ClaudeBot envoient parfois HEAD en pré-check).
+- **Bug 4** : `flushTimeout` correctement annulé quand `BATCH_SIZE` déclenche un flush, évite un flush vide ultérieur.
+- **Bug 1 (deferred)** : `/lexique/:slug` non couvert par `render-page` (données dans `src/data/expertTerms` côté SPA only). Sprint dédié requis pour exposer ce catalogue côté edge function.
+
+Action utilisateur identique : redéployer `public/cloudflare-worker-logger.js` dans CF Dashboard.
