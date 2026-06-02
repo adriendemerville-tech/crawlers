@@ -29,6 +29,22 @@ const FLUSH_INTERVAL_MS = 5000; // 5 secondes
 // Permet à https://crawlers.fr/sitemap.xml de servir le XML généré dynamiquement
 const SITEMAP_CDN_URL = "https://tutlimtasnjabdfhpewu.supabase.co/storage/v1/object/public/public-assets/sitemap.xml";
 
+// ── Sprint 4 — Self-Crawlability ─────────────────────────────────
+// Les bots IA (GPTBot, ClaudeBot, Perplexity, CCBot…) ne rendent PAS
+// le JavaScript. On leur sert le HTML pré-rendu par l'edge function
+// `render-page` (titre, h1, meta, JSON-LD, citable-passage), cache CF 24h.
+// Googlebot rend le JS et reçoit la SPA normalement (pas de cloaking).
+const RENDER_PAGE_URL = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page";
+const AI_BOT_UA_REGEX = /(GPTBot|ChatGPT-User|CCBot|ClaudeBot|anthropic-ai|Claude-Web|PerplexityBot|Perplexity-User|Applebot-Extended|YouBot|Bytespider|DiffBot|FacebookBot|cohere-ai|Omgilibot|DataForSeoBot)/i;
+
+function isPrerenderableRoute(pathname) {
+  if (pathname.startsWith("/app/") && pathname !== "/app/eeat") return false;
+  if (pathname.startsWith("/assets/")) return false;
+  if (pathname.startsWith("/functions/")) return false;
+  if (/\.(js|css|png|jpe?g|webp|avif|svg|ico|woff2?|map|xml|txt|json|webmanifest)$/i.test(pathname)) return false;
+  return true;
+}
+
 // Buffer en mémoire du Worker (partagé entre requêtes sur le même isolate)
 let buffer = [];
 let flushTimeout = null;
