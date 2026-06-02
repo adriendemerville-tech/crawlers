@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
     const r = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/workers/routes`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pattern, script: 'crawlers-bot-router' }),
+      body: JSON.stringify({ pattern, script: 'crawlers-logger' }),
     });
     return { pattern, status: r.status, body: await r.json() };
   }));
