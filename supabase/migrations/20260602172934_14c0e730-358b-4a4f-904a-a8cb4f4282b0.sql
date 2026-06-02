@@ -1,0 +1,1 @@
+UPDATE public.log_connectors SET api_key_hash='8c8674851b1b53ce54c28fde413667929b52146d35a3feef10806be3e9773961', status='active', updated_at=now() WHERE id='3dcdad80-2ca9-4b88-ae79-270e1e0d1ae9';
