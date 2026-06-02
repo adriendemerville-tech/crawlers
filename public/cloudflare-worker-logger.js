@@ -97,7 +97,7 @@ export default {
     const isAIBot = AI_BOT_UA_REGEX.test(ua);
     let response;
 
-    if (isAIBot && request.method === "GET" && isPrerenderableRoute(url.pathname)) {
+    if (isAIBot && (request.method === "GET" || request.method === "HEAD") && isPrerenderableRoute(url.pathname)) {
       const prerenderUrl = `${RENDER_PAGE_URL}?route=${encodeURIComponent(url.pathname)}`;
       try {
         const prerendered = await fetch(prerenderUrl, {
