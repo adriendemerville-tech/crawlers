@@ -124,20 +124,6 @@ export default {
       // Humain ou Googlebot : SPA normale (rend le JS)
       response = await fetch(request);
     }
-        cf: { cacheTtl: 3600, cacheEverything: true },
-      });
-      return new Response(cdnRes.body, {
-        status: cdnRes.status,
-        headers: {
-          "Content-Type": "application/xml; charset=utf-8",
-          "Cache-Control": "public, max-age=3600, s-maxage=86400",
-          "X-Proxied-From": "supabase-cdn",
-        },
-      });
-    }
-
-    // Laisser passer la requête immédiatement (zero latence ajoutée)
-    const response = await fetch(request);
 
     // Collecter les métadonnées APRÈS la réponse
     const entry = {
