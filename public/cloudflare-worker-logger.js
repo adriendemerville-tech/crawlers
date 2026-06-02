@@ -147,8 +147,9 @@ export default {
 
     buffer.push(entry);
 
-    // Flush si le buffer est plein
+    // Flush si le buffer est plein → annule le timer en cours pour éviter un flush vide
     if (buffer.length >= BATCH_SIZE) {
+      if (flushTimeout) { clearTimeout(flushTimeout); flushTimeout = null; }
       ctx.waitUntil(flushBuffer(secret));
     } else if (!flushTimeout) {
       // Sinon flush dans 5 secondes
