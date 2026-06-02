@@ -38,7 +38,8 @@ const RENDER_PAGE_URL = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/r
 const AI_BOT_UA_REGEX = /(GPTBot|ChatGPT-User|CCBot|ClaudeBot|anthropic-ai|Claude-Web|PerplexityBot|Perplexity-User|Applebot-Extended|YouBot|Bytespider|DiffBot|FacebookBot|cohere-ai|Omgilibot|DataForSeoBot)/i;
 
 function isPrerenderableRoute(pathname) {
-  if (pathname.startsWith("/app/") && pathname !== "/app/eeat") return false;
+  // /app/* est privé (dashboard authentifié) → pas de prerender
+  if (pathname.startsWith("/app/")) return false;
   if (pathname.startsWith("/assets/")) return false;
   if (pathname.startsWith("/functions/")) return false;
   if (/\.(js|css|png|jpe?g|webp|avif|svg|ico|woff2?|map|xml|txt|json|webmanifest)$/i.test(pathname)) return false;
