@@ -124,6 +124,8 @@ export default {
     } else {
       // Humain ou Googlebot : SPA normale (rend le JS)
       response = await fetch(request);
+      response = new Response(response.body, response);
+      response.headers.set('X-CF-Worker', 'crawlers-logger-v2');
     }
 
     // Collecter les métadonnées APRÈS la réponse
