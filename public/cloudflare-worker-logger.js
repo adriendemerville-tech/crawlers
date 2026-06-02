@@ -91,6 +91,51 @@ export default {
       });
     }
 
+    // ── Sprint 4 — Bot AI → render-page (prerender) ────────────
+    const ua = request.headers.get("User-Agent") || "";
+    const isAIBot = AI_BOT_UA_REGEX.test(ua);
+    let response;
+
+    if (isAIBot && request.method === "GET" && isPrerenderableRoute(url.pathname)) {
+      const prerenderUrl = `${RENDER_PAGE_URL}?route=${encodeURIComponent(url.pathname)}`;
+      try {
+        const prerendered = await fetch(prerenderUrl, {
+          cf: { cacheTtl: 86400, cacheEverything: true },
+          headers: { "X-Original-UA": ua },
+        });
+        if (prerendered.ok) {
+          response = new Response(prerendered.body, {
+            status: 200,
+            headers: {
+              "Content-Type": "text/html; charset=utf-8",
+              "Cache-Control": "public, max-age=86400, s-maxage=86400",
+              "X-Prerender-Bot": "1",
+              "X-Prerender-UA": ua.slice(0, 60),
+            },
+          });
+        } else {
+          // Fallback : SPA classique si render-page échoue
+          response = await fetch(request);
+        }
+      } catch (e) {
+        response = await fetch(request);
+      }
+    } else {
+      // Humain ou Googlebot : SPA normale (rend le JS)
+      response = await fetch(request);
+    }
+        cf: { cacheTtl: 3600, cacheEverything: true },
+      });
+      return new Response(cdnRes.body, {
+        status: cdnRes.status,
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          "Cache-Control": "public, max-age=3600, s-maxage=86400",
+          "X-Proxied-From": "supabase-cdn",
+        },
+      });
+    }
+
     // Laisser passer la requête immédiatement (zero latence ajoutée)
     const response = await fetch(request);
 
