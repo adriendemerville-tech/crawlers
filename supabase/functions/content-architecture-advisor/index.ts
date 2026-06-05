@@ -337,14 +337,14 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     if (resolvedSiteId) {
       const { data: conns } = await serviceClient
         .from('cms_connections')
-        .select('platform, status, auth_method, auth_scheme, capabilities')
+        .select('platform, status, auth_method, capabilities, managed_by')
         .eq('tracked_site_id', resolvedSiteId)
         .eq('status', 'active')
       const conn = (conns || [])[0]
       if (conn) {
         const caps = (conn.capabilities as Record<string, any>) || {}
         const writableAuth = ['oauth2', 'api_key'].includes(conn.auth_method as string)
-          || (conn.auth_method === 'internal' && (conn as any).auth_scheme === 'edge_secret')
+          || (conn.auth_method === 'internal' && caps.auth_scheme === 'edge_secret')
         cmsConnection = {
           platform: conn.platform,
           hasWriteAccess: caps.write_content === true || caps.write_meta === true || writableAuth,
