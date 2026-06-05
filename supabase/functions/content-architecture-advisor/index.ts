@@ -335,17 +335,19 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     let cmsConnection: { platform: string; hasWriteAccess: boolean; capabilities: any } | null = null
     const resolvedSiteId = tracked_site_id || (siteContext as any)?.id
     if (resolvedSiteId) {
-      const { data: conn } = await serviceClient
+      const { data: conns } = await serviceClient
         .from('cms_connections')
-        .select('platform, status, auth_method, capabilities')
+        .select('platform, status, auth_method, auth_scheme, capabilities')
         .eq('tracked_site_id', resolvedSiteId)
         .eq('status', 'active')
-        .maybeSingle()
+      const conn = (conns || [])[0]
       if (conn) {
         const caps = (conn.capabilities as Record<string, any>) || {}
+        const writableAuth = ['oauth2', 'api_key'].includes(conn.auth_method as string)
+          || (conn.auth_method === 'internal' && (conn as any).auth_scheme === 'edge_secret')
         cmsConnection = {
           platform: conn.platform,
-          hasWriteAccess: caps.write_content === true || caps.write_meta === true || conn.auth_method === 'oauth2' || conn.auth_method === 'api_key',
+          hasWriteAccess: caps.write_content === true || caps.write_meta === true || writableAuth,
           capabilities: caps,
         }
         console.log(`[content-advisor] CMS detected: ${conn.platform} (write: ${cmsConnection.hasWriteAccess})`)
