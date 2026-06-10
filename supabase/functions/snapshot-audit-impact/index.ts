@@ -400,4 +400,4 @@ try {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-})
+}))
