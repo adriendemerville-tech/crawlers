@@ -229,7 +229,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
 
   // Disconnect confirmation dialog state
   const [disconnectTarget, setDisconnectTarget] = useState<{ id: string; name: string } | null>(null);
-  const [disconnectStep, setDisconnectStep] = useState<'ask' | 'confirm'>('ask');
+  const [disconnectStep, setDisconnectStep] = useState<'ask' | 'confirm' | 'done'>('ask');
   const [disconnecting, setDisconnecting] = useState(false);
 
   // Matomo state
