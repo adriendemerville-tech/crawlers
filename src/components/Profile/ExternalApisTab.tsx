@@ -229,7 +229,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
 
   // Disconnect confirmation dialog state
   const [disconnectTarget, setDisconnectTarget] = useState<{ id: string; name: string } | null>(null);
-  const [disconnectStep, setDisconnectStep] = useState<'ask' | 'confirm'>('ask');
+  const [disconnectStep, setDisconnectStep] = useState<'ask' | 'confirm' | 'done'>('ask');
   const [disconnecting, setDisconnecting] = useState(false);
 
   // Matomo state
@@ -788,7 +788,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         language === 'es' ? `${disconnectTarget.name} desconectado` :
         `${disconnectTarget.name} disconnected`
       );
-      setDisconnectTarget(null);
+      setDisconnectStep('done');
     } catch (err) {
       console.error('[ExternalApis] Disconnect error:', err);
       toast.error(language === 'fr' ? 'Erreur de déconnexion' : 'Disconnect error');
@@ -1358,16 +1358,29 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-foreground">
-              <AlertTriangle className="h-5 w-5 text-muted-foreground" />
-              {language === 'fr' ? `Êtes-vous sûr de vouloir déconnecter l'API ${disconnectTarget?.name} ?` :
-               language === 'es' ? `¿Está seguro de querer desconectar la API ${disconnectTarget?.name}?` :
-               `Are you sure you want to disconnect the ${disconnectTarget?.name} API?`}
+              {disconnectStep === 'done' ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
+                  {language === 'fr' ? `Vous êtes déconnecté de ${disconnectTarget?.name}` :
+                   language === 'es' ? `Está desconectado de ${disconnectTarget?.name}` :
+                   `You are disconnected from ${disconnectTarget?.name}`}
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+                  {language === 'fr' ? `Êtes-vous sûr de vouloir déconnecter l'API ${disconnectTarget?.name} ?` :
+                   language === 'es' ? `¿Está seguro de querer desconectar la API ${disconnectTarget?.name}?` :
+                   `Are you sure you want to disconnect the ${disconnectTarget?.name} API?`}
+                </>
+              )}
             </DialogTitle>
-            <DialogDescription className="pt-2">
-              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
-                {disconnectTarget && getDisconnectWarning(disconnectTarget.id)}
-              </div>
-            </DialogDescription>
+            {disconnectStep !== 'done' && (
+              <DialogDescription className="pt-2">
+                <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
+                  {disconnectTarget && getDisconnectWarning(disconnectTarget.id)}
+                </div>
+              </DialogDescription>
+            )}
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
             {disconnectStep === 'ask' ? (
@@ -1379,7 +1392,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
                   {language === 'fr' ? 'Oui, déconnecter' : language === 'es' ? 'Sí, desconectar' : 'Yes, disconnect'}
                 </Button>
               </>
-            ) : (
+            ) : disconnectStep === 'confirm' ? (
               <Button
                 variant="outline"
                 onClick={handleDisconnectConfirm}
@@ -1388,6 +1401,14 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
               >
                 {disconnecting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 {language === 'fr' ? 'Confirmer la déconnexion' : language === 'es' ? 'Confirmar desconexión' : 'Confirm disconnect'}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => { setDisconnectTarget(null); setDisconnectStep('ask'); }}
+                className="w-full"
+              >
+                {language === 'fr' ? 'Fermer' : language === 'es' ? 'Cerrar' : 'Close'}
               </Button>
             )}
           </DialogFooter>
