@@ -788,7 +788,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
         language === 'es' ? `${disconnectTarget.name} desconectado` :
         `${disconnectTarget.name} disconnected`
       );
-      setDisconnectTarget(null);
+      setDisconnectStep('done');
     } catch (err) {
       console.error('[ExternalApis] Disconnect error:', err);
       toast.error(language === 'fr' ? 'Erreur de déconnexion' : 'Disconnect error');
