@@ -5,7 +5,11 @@
  * Plan: Cloud 10 concurrent sessions → cap at 7 to leave headroom.
  */
 
-const MAX_CONCURRENT = 7;
+// NOTE: this semaphore is module-level (per isolate). With multiple isolates
+// running the worker in parallel, the real ceiling is MAX_CONCURRENT × #isolates.
+// Cap kept low (1 per isolate) to stay under the Browserless plan cap of 10
+// even with ~10 concurrent isolates.
+const MAX_CONCURRENT = 1;
 const WAIT_TIMEOUT_MS = 30_000; // max wait before giving up
 const POLL_INTERVAL_MS = 500;
 
