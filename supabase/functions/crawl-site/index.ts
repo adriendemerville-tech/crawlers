@@ -459,7 +459,13 @@ Deno.serve(handleRequest(async (req) => {
     // Validate urlFilter regex
     if (urlFilter) {
       try {
-        new RegExp(urlFilter);
+        const filterRegex = new RegExp(urlFilter);
+        // Apply filter BEFORE slice so we don't lose targeted pages
+        const before = urls.length;
+        urls = urls.filter(u => {
+          try { return filterRegex.test(new URL(u).pathname); } catch { return false; }
+        });
+        console.log(`[${domain}] urlFilter "${urlFilter}": ${before} → ${urls.length} URLs`);
       } catch {
         return new Response(JSON.stringify({ success: false, error: 'Regex de filtre URL invalide' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -467,7 +473,7 @@ Deno.serve(handleRequest(async (req) => {
       }
     }
 
-    // Apply pageLimit to discovered URLs
+    // Apply pageLimit AFTER filter
     urls = urls.slice(0, pageLimit);
 
     // Create site_crawls row

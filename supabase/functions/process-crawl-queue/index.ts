@@ -267,6 +267,31 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     const elapsed = Math.round((Date.now() - startTime) / 1000);
+
+    // ── Auto re-trigger: if jobs still pending, fire another worker invocation ──
+    // (fire-and-forget, no await) so a 300-page crawl doesn't sit idle waiting for cron.
+    try {
+      const { count: stillPending } = await supabase
+        .from('crawl_jobs')
+        .select('id', { count: 'exact', head: true })
+        .in('status', ['pending', 'processing']);
+      if ((stillPending || 0) > 0) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        fetch(`${supabaseUrl}/functions/v1/process-crawl-queue`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${serviceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ trigger: 'self-relay' }),
+        }).catch(() => {});
+        console.log(`[Worker] 🔁 Self-relay fired (${stillPending} jobs still pending)`);
+      }
+    } catch (e) {
+      console.warn('[Worker] Self-relay check failed:', e);
+    }
+
     return jsonOk({
       success: true,
       processed: globalPagesProcessed,

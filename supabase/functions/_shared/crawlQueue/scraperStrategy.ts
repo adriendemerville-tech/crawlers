@@ -60,6 +60,7 @@ export async function scrapePage(
     let redirectUrl: string | null = null;
 
     try {
+      const renderStart = Date.now();
       const { fetchAndRenderPage } = await import('../renderPage.ts');
       const renderResult = await fetchAndRenderPage(pageUrl, {
         timeout: 10000,
@@ -68,8 +69,12 @@ export async function scrapePage(
 
       if (renderResult.html.length > 500) {
         html = renderResult.html;
+        responseTime = Date.now() - renderStart;
+        if (typeof (renderResult as any).statusCode === 'number') {
+          statusCode = (renderResult as any).statusCode;
+        }
         console.log(
-          `[Worker] ${renderResult.usedRendering ? 'rendered' : 'fetched'} ${pageUrl} (${renderResult.html.length} chars${renderResult.framework ? `, ${renderResult.framework}` : ''})`
+          `[Worker] ${renderResult.usedRendering ? 'rendered' : 'fetched'} ${pageUrl} (${renderResult.html.length} chars${renderResult.framework ? `, ${renderResult.framework}` : ''}) ${responseTime}ms`
         );
       }
     } catch (renderErr) {
@@ -89,6 +94,7 @@ export async function scrapePage(
             method: 'POST',
             headers: { 'Authorization': `Bearer ${spiderKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: pageUrl, limit: 1, return_format: 'raw', request: 'http' }),
+            signal: AbortSignal.timeout(30_000),
           });
           responseTime = Date.now() - fetchStart2;
           if (spiderRes.ok) {
@@ -104,29 +110,34 @@ export async function scrapePage(
             }
           }
         } catch (e) {
-          console.warn(`[Worker] Spider.cloud failed for ${pageUrl}:`, e);
+          console.warn(`[Worker] Spider.cloud failed for ${pageUrl}:`, e instanceof Error ? e.message : e);
         }
       }
 
       if (!spiderOk) {
-        console.log(`[Worker] Falling back to Firecrawl for ${pageUrl}...`);
-        const fetchStart3 = Date.now();
-        const res = await fetch(`${FIRECRAWL_API}/scrape`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
-        });
-        responseTime = Date.now() - fetchStart3;
-        const data = await res.json();
-        html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
-        statusCode = data?.data?.metadata?.statusCode || 200;
+        try {
+          console.log(`[Worker] Falling back to Firecrawl for ${pageUrl}...`);
+          const fetchStart3 = Date.now();
+          const res = await fetch(`${FIRECRAWL_API}/scrape`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
+            signal: AbortSignal.timeout(45_000),
+          });
+          responseTime = Date.now() - fetchStart3;
+          const data = await res.json();
+          html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
+          statusCode = data?.data?.metadata?.statusCode || 200;
 
-        const sourceUrl = data?.data?.metadata?.sourceURL;
-        if (sourceUrl && sourceUrl !== pageUrl) {
-          redirectUrl = sourceUrl;
+          const sourceUrl = data?.data?.metadata?.sourceURL;
+          if (sourceUrl && sourceUrl !== pageUrl) {
+            redirectUrl = sourceUrl;
+          }
+
+          await trackPaidApiCall('process-crawl-queue', 'firecrawl', '/scrape', pageUrl).catch(() => {});
+        } catch (e) {
+          console.warn(`[Worker] Firecrawl failed for ${pageUrl}:`, e instanceof Error ? e.message : e);
         }
-
-        await trackPaidApiCall('process-crawl-queue', 'firecrawl', '/scrape', pageUrl).catch(() => {});
       }
     }
 

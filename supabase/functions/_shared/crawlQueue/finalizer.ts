@@ -25,21 +25,28 @@ export async function finalizeJob(
 
   const pages = allPages || [];
 
-  // ── BFS Depth Recalculation (real link graph) ──
+  // ── BFS Depth Recalculation (real link graph) — batched parallel ──
   if (pages.length > 1) {
     const bfsDepths = computeBFSDepths(pages as PageAnalysis[], job.url);
     const normalize = (u: string) => {
       try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; }
     };
+    const depthUpdates: Promise<any>[] = [];
     for (const page of pages) {
       const path = normalize(page.url);
       const newDepth = bfsDepths.get(path) ?? page.crawl_depth ?? 0;
       if (newDepth !== page.crawl_depth) {
-        await supabase.from('crawl_pages').update({ crawl_depth: newDepth }).eq('id', page.id);
+        depthUpdates.push(
+          supabase.from('crawl_pages').update({ crawl_depth: newDepth }).eq('id', page.id)
+        );
         page.crawl_depth = newDepth;
       }
     }
-    console.log(`[Worker] BFS depth recalculated for ${pages.length} pages`);
+    // Run in chunks of 20 to avoid overwhelming the connection pool
+    for (let i = 0; i < depthUpdates.length; i += 20) {
+      await Promise.all(depthUpdates.slice(i, i + 20));
+    }
+    console.log(`[Worker] BFS depth recalculated for ${pages.length} pages (${depthUpdates.length} updates)`);
   }
 
   const avgScore = pages.length > 0
@@ -60,9 +67,10 @@ export async function finalizeJob(
     }
   }
 
-  // ── Page intent classification (heuristic, deterministic, no LLM) ──
+  // ── Page intent classification (heuristic, deterministic, no LLM) — batched ──
   let intentDistribution: ReturnType<typeof aggregateIntents> | null = null;
   if (pages.length > 0) {
+    const intentUpdates: Promise<any>[] = [];
     for (const page of pages) {
       const sig = classifyPageIntent({
         url: page.url, path: page.path, title: page.title, h1: page.h1,
@@ -72,9 +80,14 @@ export async function finalizeJob(
       });
       page.page_intent = sig.intent;
       page.intent_confidence = sig.confidence;
-      await supabase.from('crawl_pages')
-        .update({ page_intent: sig.intent, intent_confidence: sig.confidence })
-        .eq('id', page.id);
+      intentUpdates.push(
+        supabase.from('crawl_pages')
+          .update({ page_intent: sig.intent, intent_confidence: sig.confidence })
+          .eq('id', page.id)
+      );
+    }
+    for (let i = 0; i < intentUpdates.length; i += 20) {
+      await Promise.all(intentUpdates.slice(i, i + 20));
     }
     intentDistribution = aggregateIntents(pages);
     console.log(`[Worker] 🎯 Intent distribution:`, intentDistribution.by_intent);
