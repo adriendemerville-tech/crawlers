@@ -1492,8 +1492,8 @@ RÈGLES:
       }
       
       // Compute spiral phase from workbench items to allow R2 during contraction
-      const avgSpiralScore = scoredWorkbenchItems.length > 0
-        ? Math.round(scoredWorkbenchItems.reduce((s: number, it: any) => s + (it.spiral_score || 0), 0) / scoredWorkbenchItems.length)
+      const avgSpiralScore = items.length > 0
+        ? Math.round(items.reduce((s: number, it: any) => s + (it.spiral_score || 0), 0) / items.length)
         : 0;
       const currentSpiralPhase: 'contraction' | 'expansion' | 'neutral' = 
         avgSpiralScore >= 50 ? 'contraction' : avgSpiralScore >= 25 ? 'neutral' : 'expansion';
@@ -1620,13 +1620,13 @@ RÈGLES:
         brief_tone: contentBrief.tone,
         brief_angle: contentBrief.angle,
         brief_length_target: contentBrief.target_length,
-        brief_h2_count: contentBrief.h2_count.max,
-        brief_h3_count: contentBrief.h3_count.max,
-        brief_cta_count: contentBrief.cta.length,
-        brief_internal_links_count: contentBrief.internal_links.length,
-        brief_schema_types: contentBrief.schema_types,
-        brief_eeat_signals: contentBrief.eeat_signals,
-        brief_geo_passages: contentBrief.geo_citable_passages,
+        brief_h2_count: contentBrief?.h2_count?.max ?? null,
+        brief_h3_count: (contentBrief as any)?.h3_count?.max ?? (contentBrief as any)?.h3_per_h2?.max ?? null,
+        brief_cta_count: contentBrief?.cta?.length ?? 0,
+        brief_internal_links_count: contentBrief?.internal_links?.length ?? 0,
+        brief_schema_types: contentBrief?.schema_types ?? [],
+        brief_eeat_signals: contentBrief?.eeat_signals ?? [],
+        brief_geo_passages: (contentBrief as any)?.geo_citable_passages ?? null,
         preset_id: null, // TODO: link when preset is loaded
         source: 'parmenion',
       });
