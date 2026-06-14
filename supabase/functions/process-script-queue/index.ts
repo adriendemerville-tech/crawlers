@@ -416,7 +416,7 @@ async function generateHTMLPayload(
         ],
         temperature: 0.6,
       }),
-    }));
+    });
 
     if (!response.ok) throw new Error(`AI API error: ${response.status}`);
     const data = await response.json();
