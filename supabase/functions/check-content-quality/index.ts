@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
@@ -41,7 +42,7 @@ Deno.serve(handleRequest(async (req) => {
       return new Response(JSON.stringify({ success: false, error: 'LOVABLE_API_KEY not configured', score: 0 }), { status: 500, headers: HEADERS });
     }
 
-    const llmResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const llmResp = await aiGatewayFetch( {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { getUserClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
@@ -2745,7 +2746,7 @@ CARTE D'IDENTITÉ DU SITE (source: base de données utilisateur — à VÉRIFIER
     if (LOVABLE_API_KEY) {
       try {
         console.log('Generating narrative introduction...');
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const aiResponse = await aiGatewayFetch( {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${LOVABLE_API_KEY}`,

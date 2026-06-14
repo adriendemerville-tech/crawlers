@@ -8,6 +8,7 @@
  * Uses Perplexity via OpenRouter for grounded web search results.
  * Falls back to Lovable AI for trend analysis if OpenRouter unavailable.
  */
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage } from '../_shared/logAIUsage.ts'
@@ -94,7 +95,7 @@ Réponds UNIQUEMENT en JSON valide : { "news": [...] }`
   // Fallback: Lovable AI (no grounded search, but still useful for trend analysis)
   if (lovableKey) {
     try {
-      const resp = await fetch(LOVABLE_AI_URL, {
+      const resp = await aiGatewayFetch( {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${lovableKey}`,

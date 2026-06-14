@@ -3,6 +3,7 @@
  * All domain logic lives in _shared/strategicAudit/*. This file handles
  * HTTP routing, async jobs, parallelisation, LLM calls, and post-processing.
  */
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { trackTokenUsage, trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
@@ -320,7 +321,7 @@ Deno.serve(handleRequest(async (req) => {
     async function callLLMWithModel(model: string, timeoutMs: number, systemPrompt: string, userPromptText: string, label: string = ''): Promise<string | null> {
       console.log(`🤖 [${label}] Calling ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)...`);
       try {
-        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const response = await aiGatewayFetch( {
           method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 8192 }),
           signal: AbortSignal.timeout(timeoutMs),
@@ -584,7 +585,7 @@ Pour chaque cible, évalue:
 Réponds en JSON STRICT:
 {"primary":{"distance":0,"qualifier":"...","terms_causing_distance":["..."],"confidence":0.0},"secondary":{...},"untapped":{...},"tone_consistency":0.0,"tone_assertive_ratio":0.0}`;
 
-        const jargonResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const jargonResp = await aiGatewayFetch( {
           method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages: [{ role: 'user', content: jargonPrompt }], temperature: 0.3 }),
         });

@@ -5,6 +5,7 @@
  *   1. "cron" — Weekly scan: finds uncovered sectors in tracked_sites, generates events via LLM
  *   2. "on-demand" — Triggered when a new sector is detected, enriches for that sector only
  */
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
@@ -61,7 +62,7 @@ Ne génère PAS les événements trop génériques (Noël, Black Friday) sauf s'
 Réponds UNIQUEMENT en JSON valide : { "events": [...] }`
 
   try {
-    const resp = await fetch(LOVABLE_AI_URL, {
+    const resp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableKey}`,

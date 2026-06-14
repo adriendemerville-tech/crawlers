@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
@@ -210,7 +211,7 @@ Critères d'évaluation GEO :
 
 Réponds UNIQUEMENT avec un JSON: {"score": <0-100>, "justification": "<string courte>", "signals": {"mentioned": <bool>, "structured": <bool>, "authoritative": <bool>}}`
 
-    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const resp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -341,7 +342,7 @@ IMPORTANT: Pour chaque champ de la grille, utilise UNIQUEMENT les valeurs autori
       return { score: cited ? 50 : 0, raw: { engine_response_preview: engineResponse.substring(0, 500), model, gateway: useOpenRouter ? 'openrouter' : 'lovable', scoring_skipped: true }, citation_found: cited, citation_rank: null, citation_context: '' }
     }
 
-    const scoringResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const scoringResp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

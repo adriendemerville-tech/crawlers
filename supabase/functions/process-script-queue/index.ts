@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackTokenUsage } from '../_shared/tokenTracker.ts';
@@ -260,7 +261,7 @@ async function generateFAQPayload(
 
   try {
     const section = urlPattern.replace('/*', '').replace('GLOBAL', '/');
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -395,7 +396,7 @@ async function generateHTMLPayload(
       navigational: `Génère un bloc HTML orienté NAVIGATION : présentation claire de l'entité, coordonnées, liens structurels, identité de marque.`,
     };
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
