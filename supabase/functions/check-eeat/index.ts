@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { preCrawlForAudit, formatPreCrawlForPrompt } from '../_shared/preCrawlForAudit.ts';
@@ -518,7 +519,7 @@ ${ga4Warning}`;
 ${gbpData.recentReviews?.length ? `- Derniers avis: ${gbpData.recentReviews.map((r: any) => `★${r.rating} "${r.comment?.substring(0, 80)}..."`).join(' | ')}` : ''}
 IMPORTANT: Utilise ces avis RÉELS pour scorer Experience et Trustworthiness.` : '';
 
-  const llmResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const llmResp = await aiGatewayFetch( {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({

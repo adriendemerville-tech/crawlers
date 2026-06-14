@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
@@ -534,7 +535,7 @@ function sanitizeJsonResponse(content: string): string {
 }
 
 async function callAI(systemPrompt: string, userPrompt: string): Promise<string> {
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await aiGatewayFetch( {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${LOVABLE_API_KEY}`,

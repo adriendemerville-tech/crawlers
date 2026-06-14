@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { DOMParser, Element, HTMLDocument } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts"
 import { stealthFetch } from '../_shared/stealthFetch.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
@@ -1955,7 +1956,7 @@ async function generateNarrativeIntroduction(
   try {
     console.log('[AI] Génération introduction narrative...');
     
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

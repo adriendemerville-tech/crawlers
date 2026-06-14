@@ -12,6 +12,7 @@
  *  Step C3 — synthesis LLM (gemini-2.5-pro) writes saturation_score + angle_gaps
  *  Step D  — upsert into saturation_snapshots
  */
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -305,7 +306,7 @@ async function callLLM(
   prompt: string,
   opts: { responseFormat?: { type: string }; maxTokens?: number; temperature?: number },
 ): Promise<{ content: string; cost_usd: number }> {
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const resp = await aiGatewayFetch( {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({

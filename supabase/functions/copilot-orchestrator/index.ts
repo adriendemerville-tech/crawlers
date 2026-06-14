@@ -30,6 +30,7 @@
  *   #8 vérif persona stricte sur approval/reject
  */
 
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import {
@@ -902,7 +903,7 @@ async function callLLM(
 
   // P2 #13 — timeout 45s + AbortController pour libérer la connexion
   const r = await withAbortableTimeout(
-    (signal) => fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    (signal) => aiGatewayFetch( {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify({

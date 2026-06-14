@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { corsHeaders } from '../_shared/cors.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
@@ -55,7 +56,7 @@ Tu dois fournir DEUX scores :
 Réponds UNIQUEMENT avec un JSON:
 {"seo_score": <0-100>, "geo_score": <0-100>, "justification": "<string courte>"}`
 
-    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const resp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

@@ -1,3 +1,4 @@
+import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
 import { corsHeaders } from '../_shared/cors.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
@@ -206,7 +207,7 @@ ${prompt}
 
 Réponds avec le JSON (${expectedFormat}):`
 
-    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const resp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

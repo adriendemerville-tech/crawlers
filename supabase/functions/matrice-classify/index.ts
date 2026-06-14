@@ -121,7 +121,7 @@ Réponds STRICTEMENT via l'outil classify_criteria, sans texte libre.`;
       },
     };
 
-    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
