@@ -145,7 +145,7 @@ const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));
 
 // ══════════════════════════════════════════════════════════════
 // AI PAYLOAD GENERATION PER RULE TYPE
