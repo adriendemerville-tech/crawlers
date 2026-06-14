@@ -1,9 +1,11 @@
 /**
- * Centralized Lovable AI Gateway wrapper with automatic OpenRouter fallback.
- * When Lovable AI returns 402 (credits exhausted) or 429 (rate limit),
- * requests are automatically retried via OpenRouter if OPENROUTER_API_KEY is set.
+ * Centralized AI Gateway wrapper.
+ * PRIMARY: OpenRouter (if OPENROUTER_API_KEY is set).
+ * FALLBACK: Lovable AI Gateway (on 402/429/5xx/timeout, or when OpenRouter key absent).
+ *
+ * Conforms to project rule: OpenRouter primary, Lovable AI fallback.
  * All calls are logged to ai_gateway_usage for cost tracking.
- * 
+ *
  * Usage:
  *   import { callLovableAI, callLovableAIJson } from '../_shared/lovableAI.ts';
  *   const text = await callLovableAI({ system: '...', user: '...' });
