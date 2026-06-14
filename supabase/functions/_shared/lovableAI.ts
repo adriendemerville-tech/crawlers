@@ -1,9 +1,11 @@
 /**
- * Centralized Lovable AI Gateway wrapper with automatic OpenRouter fallback.
- * When Lovable AI returns 402 (credits exhausted) or 429 (rate limit),
- * requests are automatically retried via OpenRouter if OPENROUTER_API_KEY is set.
+ * Centralized AI Gateway wrapper.
+ * PRIMARY: OpenRouter (if OPENROUTER_API_KEY is set).
+ * FALLBACK: Lovable AI Gateway (on 402/429/5xx/timeout, or when OpenRouter key absent).
+ *
+ * Conforms to project rule: OpenRouter primary, Lovable AI fallback.
  * All calls are logged to ai_gateway_usage for cost tracking.
- * 
+ *
  * Usage:
  *   import { callLovableAI, callLovableAIJson } from '../_shared/lovableAI.ts';
  *   const text = await callLovableAI({ system: '...', user: '...' });
@@ -190,17 +192,55 @@ async function callGateway(
  * Call Lovable AI Gateway with automatic OpenRouter fallback and usage tracking.
  */
 export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIResponse> {
-  const apiKey = getApiKey();
   const model = opts.model ?? DEFAULT_MODEL;
+  const openRouterKey = getOpenRouterKey();
+  const allowFallback = !opts.noFallback;
 
-  // --- Primary: Lovable AI Gateway ---
+  // --- PRIMARY: OpenRouter (if key configured) ---
+  if (openRouterKey) {
+    const orModel = mapModelToOpenRouter(model);
+    try {
+      const response = await callGateway(
+        OPENROUTER_URL, openRouterKey, orModel, opts,
+        { 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers.fr' },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const choice = data.choices?.[0];
+        logUsage('openrouter', orModel, data.usage, false, opts.callerFunction);
+        return {
+          content: choice?.message?.content || '',
+          usage: data.usage,
+          toolCalls: choice?.message?.tool_calls,
+          raw: data,
+          gateway: 'openrouter',
+        };
+      }
+
+      // Non-OK: fallback if allowed, else throw
+      const errText = await response.text().catch(() => '');
+      console.warn(`[lovableAI] OpenRouter ${response.status}: ${errText.slice(0, 200)}`);
+      if (!allowFallback) {
+        throw new AIGatewayError(`OpenRouter error: ${response.status}`, response.status, 'GATEWAY_ERROR');
+      }
+      logFallbackEvent(model, 'openrouter', 'lovable', response.status);
+    } catch (e) {
+      if (e instanceof AIGatewayError) throw e;
+      console.warn(`[lovableAI] OpenRouter failed: ${(e as Error).message} — falling back to Lovable`);
+      if (!allowFallback) throw e;
+      logFallbackEvent(model, 'openrouter', 'lovable', 0);
+    }
+  }
+
+  // --- FALLBACK (or primary if no OpenRouter key): Lovable AI Gateway ---
+  const apiKey = getApiKey();
   const response = await callGateway(GATEWAY_URL, apiKey, model, opts);
 
   if (response.ok) {
     const data = await response.json();
     const choice = data.choices?.[0];
-    // Fire-and-forget usage logging
-    logUsage('lovable', model, data.usage, false, opts.callerFunction);
+    logUsage('lovable', model, data.usage, !!openRouterKey, opts.callerFunction);
     return {
       content: choice?.message?.content || '',
       usage: data.usage,
@@ -210,44 +250,11 @@ export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIRe
     };
   }
 
-  // --- Fallback logic ---
-  const shouldFallback = (response.status === 402 || response.status === 429) && !opts.noFallback;
-  const openRouterKey = getOpenRouterKey();
-
-  if (!shouldFallback || !openRouterKey) {
-    const errorText = await response.text();
-    console.error(`[lovableAI] Gateway error ${response.status}:`, errorText.slice(0, 200));
-    if (response.status === 429) throw new AIGatewayError('Rate limited by AI gateway', 429, 'RATE_LIMIT');
-    if (response.status === 402) throw new AIGatewayError('AI credits exhausted', 402, 'CREDITS_EXHAUSTED');
-    throw new AIGatewayError(`AI gateway error: ${response.status}`, response.status, 'GATEWAY_ERROR');
-  }
-
-  // --- Secondary: OpenRouter ---
-  const fallbackModel = mapModelToOpenRouter(model);
-  console.warn(`[lovableAI] ⚡ Fallback ${response.status}: ${model} → OpenRouter/${fallbackModel}`);
-  logFallbackEvent(model, 'lovable', 'openrouter', response.status);
-
-  const fallbackResp = await callGateway(
-    OPENROUTER_URL, openRouterKey, fallbackModel, opts,
-    { 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers.fr' },
-  );
-
-  if (!fallbackResp.ok) {
-    const errText = await fallbackResp.text();
-    console.error(`[lovableAI] OpenRouter fallback also failed ${fallbackResp.status}:`, errText.slice(0, 200));
-    throw new AIGatewayError(`Both gateways failed. OpenRouter: ${fallbackResp.status}`, fallbackResp.status, 'GATEWAY_ERROR');
-  }
-
-  const data = await fallbackResp.json();
-  const choice = data.choices?.[0];
-  logUsage('openrouter', fallbackModel, data.usage, true, opts.callerFunction);
-  return {
-    content: choice?.message?.content || '',
-    usage: data.usage,
-    toolCalls: choice?.message?.tool_calls,
-    raw: data,
-    gateway: 'openrouter',
-  };
+  const errorText = await response.text();
+  console.error(`[lovableAI] Lovable gateway error ${response.status}:`, errorText.slice(0, 200));
+  if (response.status === 429) throw new AIGatewayError('Rate limited by AI gateway', 429, 'RATE_LIMIT');
+  if (response.status === 402) throw new AIGatewayError('AI credits exhausted', 402, 'CREDITS_EXHAUSTED');
+  throw new AIGatewayError(`AI gateway error: ${response.status}`, response.status, 'GATEWAY_ERROR');
 }
 
 /**
