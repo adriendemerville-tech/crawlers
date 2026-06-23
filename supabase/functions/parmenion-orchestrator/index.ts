@@ -548,12 +548,12 @@ try {
 
         const prescribePayload: any = lastPrescribe?.action_payload || null;
         let hasV3Plan = prescribePayload && prescribePayload._prescribe_v3 === true && prescribePayload.strategist_task;
+        const v2CmsActions: any[] = Array.isArray(prescribePayload?.cms_actions) ? prescribePayload.cms_actions : [];
+        const v2Fixes: any[] = Array.isArray(prescribePayload?.fixes) ? prescribePayload.fixes : [];
+        let hasV2Plan = !hasV3Plan && prescribePayload && (v2CmsActions.length > 0 || v2Fixes.length > 0);
 
-        // ─── Anti double-execute guard ───
-        // Si un execute antérieur référence déjà ce prescribe via _from_prescribe_decision_id
-        // avec un statut succès (completed/partial/degraded), on ne le rejoue pas.
-        // Bascule en fallback LLM execute (qui pourra skipper ou choisir une autre voie).
-        if (hasV3Plan && lastPrescribe) {
+        // ─── Anti double-execute guard (V2 + V3) ───
+        if ((hasV3Plan || hasV2Plan) && lastPrescribe) {
           const { data: priorExecute } = await supabase
             .from('parmenion_decision_log')
             .select('id, status, created_at')
@@ -566,6 +566,7 @@ try {
           if (priorExecute) {
             console.log(`[Parménion] 🛡️ EXECUTE déterministe SKIP: prescribe ${lastPrescribe.id} déjà consommé par execute ${priorExecute.id} (${priorExecute.status})`);
             hasV3Plan = false;
+            hasV2Plan = false;
           }
         }
 
@@ -575,11 +576,9 @@ try {
             || (isIktracker ? 'iktracker-actions' : 'wpsync');
           const isContentTask = (lastPrescribe?.goal_type === 'content_creation' || lastPrescribe?.goal_type === 'content_gap')
             || (typeof task.action_type === 'string' && (task.action_type.includes('content') || task.action_type === 'publish_draft'));
-          // Pour les tâches contenu sur CMS custom REST, on force la fonction d'exécution
-          // sur le bridge approprié pour que l'adapter V3→cms se déclenche dans autopilot-engine.
           const finalExecutorFn = isContentTask && isIktracker ? 'iktracker-actions' : executorFn;
 
-          console.log(`[Parménion] 🔁 EXECUTE déterministe: réutilise plan prescribe ${lastPrescribe.id} → task "${task.title}" via ${finalExecutorFn}`);
+          console.log(`[Parménion] 🔁 EXECUTE déterministe V3: réutilise plan prescribe ${lastPrescribe.id} → task "${task.title}" via ${finalExecutorFn}`);
 
           decision = {
             goal: {
@@ -614,8 +613,50 @@ try {
             summary: `Execute déterministe V3 → ${finalExecutorFn} | "${task.title}" (plan ${lastPrescribe.id})`,
           };
           deterministicExecute = true;
+        } else if (hasV2Plan) {
+          // ═══ EXECUTE déterministe V2 : rejoue cms_actions/fixes du dernier prescribe ═══
+          const isContentTask = v2CmsActions.length > 0;
+          const functions: string[] = [];
+          if (v2CmsActions.length > 0) functions.push(isIktracker ? 'iktracker-actions' : 'cms-push-draft');
+          if (v2Fixes.length > 0 && !isIktracker) functions.push('cms-push-code');
+
+          console.log(`[Parménion] 🔁 EXECUTE déterministe V2: réutilise prescribe ${lastPrescribe!.id} → ${v2CmsActions.length} cms_actions + ${v2Fixes.length} fixes via [${functions.join(', ')}]`);
+
+          decision = {
+            goal: {
+              type: lastPrescribe?.goal_type || (isContentTask ? 'content_creation' : 'technical_fix'),
+              description: `[Execute V2 — déterministe] Rejoue ${v2CmsActions.length} cms_actions + ${v2Fixes.length} fixes du prescribe ${lastPrescribe!.id}`,
+            },
+            tactic: {
+              initial_scope: { from_prescribe: lastPrescribe!.id, cms_actions: v2CmsActions.length, fixes: v2Fixes.length },
+              final_scope: { functions, content_task: isContentTask },
+              scope_reductions: 0,
+              estimated_tokens: 0,
+              target_url: v2CmsActions[0]?.body?.url || v2CmsActions[0]?.target_url || `https://${domain}`,
+            },
+            prudence: {
+              impact_level: 'modéré',
+              risk_score: 1,
+              iterations: 0,
+              goal_changed: false,
+              reasoning: `Exécution déterministe du plan PRESCRIBE V2 ${lastPrescribe!.id}. Pas d'appel LLM execute.`,
+            },
+            action: {
+              type: isContentTask ? 'cms' : 'mixed',
+              payload: {
+                _prescribe_v2: true,
+                _execute_deterministic: true,
+                cms_actions: v2CmsActions,
+                fixes: v2Fixes,
+                _from_prescribe_decision_id: lastPrescribe!.id,
+              },
+              functions: functions.length > 0 ? functions : [isIktracker ? 'iktracker-actions' : 'wpsync'],
+            },
+            summary: `Execute déterministe V2 → ${v2CmsActions.length} cms_actions + ${v2Fixes.length} fixes (plan ${lastPrescribe!.id})`,
+          };
+          deterministicExecute = true;
         } else {
-          console.log(`[Parménion] ⚠️ EXECUTE: aucun plan PRESCRIBE V3 trouvé pour ${domain} → fallback LLM execute`);
+          console.log(`[Parménion] ⚠️ EXECUTE: aucun plan PRESCRIBE V2/V3 trouvé pour ${domain} → fallback LLM execute`);
         }
       }
 
