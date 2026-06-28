@@ -91,12 +91,12 @@ async function generateSeedsWithAI(url: string, ctx: string, brandName: string, 
   try {
     const resp = await aiGatewayFetch( {
       method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'google/gemini-2.5-flash-lite', messages: [{ role: 'user', content: prompt }], temperature: 0.5 }),
+      body: JSON.stringify({ model: 'google/gemini-3.1-flash-lite', messages: [{ role: 'user', content: prompt }], temperature: 0.5 }),
       signal: AbortSignal.timeout(15000),
     });
     if (!resp.ok) { await resp.text(); return []; }
     const data = await resp.json(); const content = data.choices?.[0]?.message?.content || '';
-    trackTokenUsage('strategic-market', 'google/gemini-2.5-flash-lite', data.usage, url);
+    trackTokenUsage('strategic-market', 'google/gemini-3.1-flash-lite', data.usage, url);
     let seeds: string[] = [];
     try {
       let j = content; if (content.includes('```json')) j = content.split('```json')[1].split('```')[0].trim(); else if (content.includes('```')) j = content.split('```')[1].split('```')[0].trim();

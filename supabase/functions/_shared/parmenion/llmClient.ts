@@ -26,7 +26,7 @@ export async function callLLMWithTools(
   _apiKey: string,
   prompt: string,
   tools: any[],
-  model = 'google/gemini-2.5-flash',
+  model = 'google/gemini-3-flash-preview',
 ): Promise<any[]> {
   const gateways = getGateways();
   if (gateways.length === 0) {
@@ -41,7 +41,7 @@ export async function callLLMWithTools(
     ];
     if (model !== 'google/gemini-3-flash-preview') {
       attempts.push({ model: 'google/gemini-3-flash-preview', toolChoice: 'required', temp: 0.3 });
-      attempts.push({ model: 'google/gemini-2.5-flash', toolChoice: 'required', temp: 0.3 });
+      attempts.push({ model: 'google/gemini-3-flash-preview', toolChoice: 'required', temp: 0.3 });
     }
 
     let gatewayFailed = false;

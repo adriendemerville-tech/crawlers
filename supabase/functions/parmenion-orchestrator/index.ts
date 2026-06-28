@@ -1781,7 +1781,7 @@ ${context.force_iktracker_article ? `\n⚠️ OBLIGATION ABSOLUE : Tu DOIS appel
 ${presetBlock}
 ${templateBlock}`;
 
-    promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS, 'google/gemini-2.5-pro'));
+    promises.push(callLLMWithTools(LOVABLE_API_KEY, contentPrompt, CONTENT_TOOLS, 'google/gemini-3.1-pro-preview'));
   } else {
     promises.push(Promise.resolve([]));
   }
@@ -2110,7 +2110,7 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
             ...(gw.label === 'OpenRouter' ? { 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers Parmenion' } : {}),
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'google/gemini-3-flash-preview',
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },

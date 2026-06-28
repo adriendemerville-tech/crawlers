@@ -106,21 +106,24 @@ const CONTENT_TYPE_BASE_TIER: Record<ContentType, ModelTier> = {
   landing_page: "premium",
 };
 
+// Allocation iso ~$615/mois, primaires 2026 + Claude 4.5 sur writer (plan A+B+C)
+// fast/balanced = B2C → Claude Haiku 4.5 cached
+// premium = B2B → Claude Sonnet 4.5 cached
 const TIER_TO_MODEL: Record<"strategist" | "writer" | "tonalizer", Record<ModelTier, string>> = {
   strategist: {
-    fast: "google/gemini-2.5-flash",
-    balanced: "openai/gpt-5-mini",
-    premium: "openai/gpt-5",
+    fast: "google/gemini-3.5-flash",
+    balanced: "google/gemini-3.5-flash",
+    premium: "google/gemini-3.1-pro-preview",
   },
   writer: {
-    fast: "google/gemini-2.5-flash-lite",
-    balanced: "google/gemini-2.5-flash",
-    premium: "openai/gpt-5-mini",
+    fast: "anthropic/claude-haiku-4.5",
+    balanced: "anthropic/claude-haiku-4.5",
+    premium: "anthropic/claude-sonnet-4.5",
   },
   tonalizer: {
-    fast: "google/gemini-2.5-flash-lite",
-    balanced: "google/gemini-2.5-flash-lite",
-    premium: "google/gemini-2.5-flash",
+    fast: "google/gemini-3.1-flash-lite",
+    balanced: "google/gemini-3-flash-preview",
+    premium: "google/gemini-3-flash-preview",
   },
 };
 
@@ -706,14 +709,24 @@ async function logStage(
 // CONSTANTS EXPORTED FOR UI
 // ----------------------------------------------------------------------------
 export const AVAILABLE_MODELS = [
-  { value: "google/gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite", tier: "fast" },
-  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", tier: "balanced" },
-  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", tier: "premium" },
-  { value: "openai/gpt-5-nano", label: "GPT-5 Nano", tier: "fast" },
-  { value: "openai/gpt-5-mini", label: "GPT-5 Mini", tier: "balanced" },
-  { value: "openai/gpt-5", label: "GPT-5", tier: "premium" },
-  { value: "openai/gpt-5.2", label: "GPT-5.2", tier: "premium" },
-  { value: "mistralai/mistral-large-latest", label: "Mistral Large", tier: "balanced" },
+  // 2026 primaires
+  { value: "google/gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite", tier: "fast" },
+  { value: "google/gemini-3-flash-preview", label: "Gemini 3 Flash Preview", tier: "balanced" },
+  { value: "google/gemini-3.5-flash", label: "Gemini 3.5 Flash", tier: "balanced" },
+  { value: "google/gemini-3.1-pro-preview", label: "Gemini 3.1 Pro Preview", tier: "premium" },
+  { value: "openai/gpt-5.4-nano", label: "GPT-5.4 Nano", tier: "fast" },
+  { value: "openai/gpt-5.4-mini", label: "GPT-5.4 Mini", tier: "balanced" },
+  { value: "openai/gpt-5.4", label: "GPT-5.4", tier: "premium" },
+  { value: "openai/gpt-5.5", label: "GPT-5.5", tier: "premium" },
+  // Claude 4.5 exception (writer + chat agents)
+  { value: "anthropic/claude-haiku-4.5", label: "Claude Haiku 4.5", tier: "balanced" },
+  { value: "anthropic/claude-sonnet-4.5", label: "Claude Sonnet 4.5", tier: "premium" },
+  // Fallbacks autorisés
+  { value: "mistralai/mistral-small-3.2", label: "Mistral Small 3.2", tier: "fast" },
+  { value: "mistralai/mistral-large-2411", label: "Mistral Large 2411", tier: "balanced" },
+  { value: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B", tier: "balanced" },
+  { value: "qwen/qwen-2.5-72b-instruct", label: "Qwen 2.5 72B", tier: "fast" },
+  { value: "moonshotai/kimi-k2", label: "Kimi K2 (long ctx)", tier: "balanced" },
 ] as const;
 
 export const CONTENT_TYPES: { value: ContentType; label: string }[] = [

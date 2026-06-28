@@ -49,7 +49,7 @@ Règles :
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -76,7 +76,7 @@ Règles :
 
     // Track token usage for admin dashboard
     const usage = data.usage;
-    trackTokenUsage("summarize-report", "google/gemini-2.5-flash", usage).catch(() => {});
+    trackTokenUsage("summarize-report", "google/gemini-3-flash-preview", usage).catch(() => {});
 
     // Parse JSON from response, handling potential markdown wrapping
     let summaries: Record<string, string>;

@@ -102,7 +102,7 @@ Réponds UNIQUEMENT en JSON valide : { "news": [...] }`
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'google/gemini-3-flash-preview',
           messages: [
             { role: 'system', content: 'Tu es un analyste SEO. Réponds uniquement en JSON valide.' },
             { role: 'user', content: prompt },
@@ -115,7 +115,7 @@ Réponds UNIQUEMENT en JSON valide : { "news": [...] }`
 
       if (resp.ok) {
         const data = await resp.json()
-        trackTokenUsage('ingest-seasonal-news', 'google/gemini-2.5-flash', data.usage)
+        trackTokenUsage('ingest-seasonal-news', 'google/gemini-3-flash-preview', data.usage)
         const raw = data.choices?.[0]?.message?.content || ''
         const jsonStr = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
         const parsed = JSON.parse(jsonStr)

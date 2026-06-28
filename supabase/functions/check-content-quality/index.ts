@@ -46,7 +46,7 @@ Deno.serve(handleRequest(async (req) => {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-3.1-flash-lite',
         messages: [{
           role: 'user',
           content: `Analyse la qualité rédactionnelle de ce contenu web. Évalue sur 100 chaque axe.

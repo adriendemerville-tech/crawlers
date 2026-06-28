@@ -9,7 +9,7 @@
  *   import { callRoutedAI } from '../_shared/aiRouter.ts';
  *   const { content } = await callRoutedAI('editorial_tonalizer', {
  *     system: '...', user: '...', jsonMode: true,
- *     fallbackModel: 'google/gemini-2.5-flash',
+ *     fallbackModel: 'google/gemini-3-flash-preview',
  *   });
  *
  * Comportement :
@@ -115,7 +115,7 @@ export async function callRoutedAI(
     }
   }
 
-  const model = routing?.original_model || opts.fallbackModel || 'google/gemini-2.5-flash';
+  const model = routing?.original_model || opts.fallbackModel || 'google/gemini-3-flash-preview';
   return await callLovable(model, messages, opts);
 }
 

@@ -510,7 +510,7 @@ Réponds UNIQUEMENT en JSON strict :
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite",
+            model: "google/gemini-3.1-flash-lite",
             messages: [{ role: "user", content: routingPrompt }],
             stream: false,
             max_tokens: 300,
@@ -519,7 +519,7 @@ Réponds UNIQUEMENT en JSON strict :
 
         if (routingResp.ok) {
           const routingData = await routingResp.json();
-          logAIUsageFromResponse(sb, "google/gemini-2.5-flash-lite", "sav-agent", routingData.usage);
+          logAIUsageFromResponse(sb, "google/gemini-3.1-flash-lite", "sav-agent", routingData.usage);
           const routingText = routingData.choices?.[0]?.message?.content || "";
           const jsonMatch = routingText.match(/\{[\s\S]*\}/);
           
@@ -639,7 +639,7 @@ Paramètres disponibles et valeurs possibles :
 - greeting_style: skip | warm
 - user_level_detection: true | false
 - proactive_suggestions: true | false
-- model: google/gemini-2.5-flash | google/gemini-2.5-pro | openai/gpt-5-mini | openai/gpt-5
+- model: google/gemini-3-flash-preview | google/gemini-3.1-pro-preview | openai/gpt-5-mini | openai/gpt-5
 - confidentiality_strict: true | false
 
 Valeurs actuelles :
@@ -654,7 +654,7 @@ Si aucun changement détecté, retourne : { "changes": [], "summary": "Aucun cha
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash-lite",
+              model: "google/gemini-3.1-flash-lite",
               messages: [{ role: "user", content: configExtractionPrompt }],
               stream: false,
               max_tokens: 300,
@@ -802,7 +802,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: "google/gemini-3-flash-preview",
               messages: aiMessages,
               stream: false,
               max_tokens: 2500,
@@ -811,7 +811,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
 
           if (aiResp.ok) {
             const aiData = await aiResp.json();
-            logAIUsageFromResponse(sb, "google/gemini-2.5-flash", "sav-agent", aiData.usage);
+            logAIUsageFromResponse(sb, "google/gemini-3-flash-preview", "sav-agent", aiData.usage);
             let reply = aiData.choices?.[0]?.message?.content || "Je n'ai pas pu récupérer l'état de Parménion.";
             if (reply.length > 3000) reply = reply.substring(0, 2997) + "...";
 
@@ -1684,7 +1684,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: "google/gemini-3-flash-preview",
               messages: aiMessages,
               stream: false,
               max_tokens: 2500,
@@ -1693,7 +1693,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
 
           if (aiResp.ok) {
             const aiData = await aiResp.json();
-            logAIUsageFromResponse(sb, "google/gemini-2.5-flash", "sav-agent", aiData.usage);
+            logAIUsageFromResponse(sb, "google/gemini-3-flash-preview", "sav-agent", aiData.usage);
             let reply = aiData.choices?.[0]?.message?.content || "Je n'ai pas pu récupérer ces informations.";
             if (reply.length > 3000) reply = reply.substring(0, 2997) + "...";
 
@@ -2693,7 +2693,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
       ...messages.slice(-20),
     ];
 
-    const felixModel = felixConfig.model || "google/gemini-2.5-flash";
+    const felixModel = felixConfig.model || "anthropic/claude-haiku-4.5";
     const felixMaxTokens = isCreator
       ? parseInt(felixConfig.max_tokens_creator || '2000', 10)
       : screenHint ? 1200 : parseInt(felixConfig.max_tokens || '600', 10);

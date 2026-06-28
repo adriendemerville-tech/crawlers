@@ -5,9 +5,9 @@
 
 /** Estimated cost per 1M tokens (USD) */
 const MODEL_COST: Record<string, { input: number; output: number }> = {
-  'google/gemini-2.5-flash': { input: 0.15, output: 0.60 },
-  'google/gemini-2.5-flash-lite': { input: 0.075, output: 0.30 },
-  'google/gemini-2.5-pro': { input: 1.25, output: 5.00 },
+  'google/gemini-3-flash-preview': { input: 0.15, output: 0.60 },
+  'google/gemini-3.1-flash-lite': { input: 0.075, output: 0.30 },
+  'google/gemini-3.1-pro-preview': { input: 1.25, output: 5.00 },
   'google/gemini-3-flash-preview': { input: 0.15, output: 0.60 },
   'google/gemini-3.1-pro-preview': { input: 1.25, output: 5.00 },
   'openai/gpt-5': { input: 5.00, output: 15.00 },

@@ -1,129 +1,110 @@
-# Plan : Plateforme Développeurs (api.crawlers.fr)
+## Contexte budget et contrainte modèles
 
-Nouvelle UI dédiée aux 3 APIs (Crawlers / Marina / Parménion), même backend, même `auth.users`. Pas de duplication serveur — uniquement nouvelles routes front + Stripe metered.
+- **Cible budget** : ~$615/mois sur AI Gateway (combo A+B+C = chat agents Claude Haiku + writer Parménion B2C Claude Haiku + writer B2B Claude Sonnet).
+- **Contrainte primaires** : modèles sortis en 2026, **avec exception Claude 4.5** (Haiku/Sonnet) tolérée en primaire sur les paths à fort impact éditorial/conversationnel uniquement.
+- **Modèles 2026 éligibles en primaire** :
+  - Google : `gemini-3-flash-preview`, `gemini-3.1-flash-lite`, `gemini-3.5-flash`, `gemini-3.1-pro-preview`
+  - OpenAI : `gpt-5.2`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`, `gpt-5.5`, `gpt-5.5-pro`
+- **Exception primaire (2025)** : `claude-haiku-4.5`, `claude-sonnet-4.5` — uniquement chat agents + writer Parménion.
+- **Fallbacks autorisés (≤2025)** : tous les modèles ci-dessus + GPT-5/mini/nano, Mistral Large 2411, Mistral Small 3.2, Llama 3.3 70B, Qwen 2.5 72B, Kimi K2, Perplexity Sonar.
 
----
+## Allocation cible
 
-## Sprint 1 — Shell + Clés API (≈ 1 jour)
+| Usage | Primaire | Fallback 1 | Fallback 2 |
+|---|---|---|---|
+| Tier 1 simple | `gemini-3.1-flash-lite` | `gpt-5-nano` | `mistral-small-3.2` |
+| Tier 2 reasoning sans tools | `gemini-3-flash-preview` | `claude-haiku-4.5` | `gpt-5-mini` |
+| Tier 2 tools / orchestration | `gemini-3.5-flash` | `gpt-5.4-mini` | `claude-haiku-4.5` |
+| Tier 2 long contexte | `gemini-3-flash-preview` | `gpt-5-mini` | `kimi-k2` |
+| **Chat agents (Cocoon/Copilot/SAV)** | **`claude-haiku-4.5` + cache** | `gpt-5.4-mini` | `gemini-3-flash-preview` |
+| Tier 4 audits experts SEO | `gemini-3.1-pro-preview` | `gpt-5.4` | `claude-sonnet-4.5` |
+| Tier 4 code (corrective/validation) | `gpt-5.4` | `claude-sonnet-4.5` | `gemini-3.1-pro-preview` |
+| Tier 4 raisonnement premium | `gpt-5.5` | `gemini-3.1-pro-preview` | `claude-sonnet-4.5` |
+| Parménion brief/stratège | `gemini-3.5-flash` | `gpt-5.4-mini` | `claude-haiku-4.5` |
+| **Parménion writer B2C** | **`claude-haiku-4.5` + cache** | `gpt-5.4-mini` | `gemini-3-flash-preview` |
+| **Parménion writer B2B** | **`claude-sonnet-4.5` + cache** | `gpt-5.4` | `gemini-3.1-pro-preview` |
+| Parménion tonalizer | `gemini-3-flash-preview` | `gpt-5-mini` | `mistral-small-3.2` |
+| Parménion validation anti-hallu | `gemini-3.1-flash-lite` | `gpt-5-nano` | `qwen-2.5-72b` |
+| GEO pool (mesure visibilité) | pool 9 : `gemini-3.1-pro-preview` · `gpt-5.4` · `gpt-5.5` · `claude-sonnet-4.5` · `mistral-large-2411` · `qwen-2.5-72b` · `llama-3.3-70b` · `kimi-k2` · `perplexity-sonar` | — | — |
 
-**Objectif :** un dev peut s'inscrire, générer ses 3 clés, faire son premier appel.
+## Lots d'implémentation
 
-**Routes (front, sous-section `/developers/*` du même app pour MVP, domaine dédié en V2) :**
-- `/developers` — landing dev (3 APIs, code snippets, CTA inscription)
-- `/developers/signup`, `/developers/login`, `/developers/reset-password` — réutilise `AuthContext` existant
-- `/developers/dashboard` — 3 cartes API (statut, jobs 24h, dernière requête)
-- `/developers/profile?tab=parametres` — nom, email, mot de passe, suppression
-- `/developers/profile?tab=cles-api` — générer/révoquer `crw_live_`, `mk_live_`, `prm_live_` (3 sections, copy-to-clipboard, masquage après création)
-- `/developers/docs` — index unifié pointant vers `/docs/api/crawlers`, `/docs/api/marina`, `/docs/api/parmenion` + quickstart commun
+### Lot 1 — Socle (prérequis)
 
-**Backend :**
-- Aucune nouvelle table — `crawlers_api_keys`, `marina_api_keys`, `parmenion_api_keys` existent déjà
-- Edge functions `*-api-keys-create` / `*-revoke` à factoriser si pas déjà fait
-- RLS : déjà OK (clés filtrées par `auth.uid()`)
+1. Étendre `supabase/functions/_shared/aiGatewayFetch.ts` pour accepter 2 niveaux de fallback : `aiGatewayFetch({ primary, fallback1, fallback2?, cache?, body, timeoutMs? })`.
+2. Implémenter cascade : si primary renvoie 5xx/429/timeout >8s, bascule fallback1 puis fallback2.
+3. Ajouter helper `withAnthropicCache(systemPrompt)` qui injecte `cache_control: { type: "ephemeral" }` sur les blocs Claude (obligatoire pour rentabilité).
+4. Mettre à jour `AVAILABLE_MODELS` allowlist : ajouter les 11 modèles 2026 + Claude 4.5 (Haiku/Sonnet) + 7 autres fallbacks autorisés ; supprimer tous IDs Gemini 2.x et GPT-4o.
+5. Discriminant TypeScript `PrimaryModelAllowed = Models2026 | "claude-haiku-4.5" | "claude-sonnet-4.5"` pour bloquer à la compile les primaires non autorisés.
 
-**Design :**
-- Skin minimaliste violet/jaune/noir/blanc, pas de sidebar Cocoon/Autopilot
-- Boutons : bordure + texte (cf. règles projet), pas de fond
+### Lot 2 — Parménion (impact qualité éditoriale)
 
----
+6. `_shared/editorialPipeline.ts` : router writer selon `audience.b2b` (true → `claude-sonnet-4.5` cached, false → `claude-haiku-4.5` cached).
+7. Stabiliser le system prompt writer en constante (pré-requis cache Anthropic effectif).
+8. `cocoon-strategist` et brief : `gemini-3.5-flash` (tool-friendly).
+9. `autopilot-engine` tonalizer : `gemini-3-flash-preview`.
+10. `parmenion-orchestrator` : `gemini-3.5-flash` primary, `gpt-5.4-mini` fallback.
+11. Ajouter étape validation anti-hallucination `gemini-3.1-flash-lite` après writer, sur articles >800 mots.
 
-## Sprint 2 — Consommation + Webhooks (≈ 1 jour)
+### Lot 3 — Chat agents (Claude Haiku cached primary)
 
-**Objectif :** un dev voit ce qu'il consomme et peut éviter le polling.
+12. `cocoon-chat`, `sav-agent`, `copilot-orchestrator` : primary `claude-haiku-4.5` + cache, fallback `gpt-5.4-mini` puis `gemini-3-flash-preview`.
+13. Extraire system prompts agents en constantes stables (pré-requis cache).
+14. Mesurer cache hit rate sur 7j post-déploiement ; si <70%, retravailler system prompts.
 
-**Routes :**
-- `/developers/profile?tab=consommation`
-  - Graphes : jobs/jour × feature × API (30j), barres empilées
-  - Tableau : top 10 features consommées, coût estimé
-  - Filtre par clé API
-- `/developers/profile?tab=webhooks`
-  - Liste des webhooks (URL + secret + events)
-  - Test "ping" depuis l'UI
+### Lot 4 — Audits experts
 
-**Backend :**
-- Vue SQL agrégée `developer_usage_daily` (UNION ALL des 3 tables jobs, group by user_id, day, api, feature)
-- Nouvelle table `developer_webhooks` (user_id, api, url, secret, events[], active)
-- Hook dans `crawlers-api` / `marina-api` / `parmenion-api` : à chaque job completed → POST signé (HMAC SHA-256) vers webhook si configuré
-- Retry exponentiel × 5, table `webhook_deliveries` pour audit
+15. `audit-expert-seo`, `content-architecture-advisor`, `expert-audit` : primary `gemini-3.1-pro-preview`, fallback `gpt-5.4` puis `claude-sonnet-4.5`.
+16. `audit-matrice` : `gpt-5.4` primary, fallback Claude Sonnet 4.5.
+17. `generate-corrective-code`, `validate-injection-code` : primary `gpt-5.4`, fallback Claude Sonnet 4.5.
 
----
+### Lot 5 — Socle Tier 1/2 (volume)
 
-## Sprint 3 — Facturation Stripe metered (≈ 1.5 jour)
+18. Migrer les ~30 fonctions Tier 1/2 par sed ciblé fichier par fichier : Gemini 2.x → 3.x (Tier 1 → `flash-lite`, Tier 2 → `flash-preview` ou `3.5-flash` si tool-calling).
+19. Vérification automatisée : `rg "gemini-2\.|gpt-4|gpt-3\.5"` sur `supabase/functions/` doit retourner 0.
 
-**Objectif :** le dev paie au volume réel sans avoir à recharger.
+### Lot 6 — GEO pool
 
-**Modèle :**
-- Free tier : 100 jobs/mois cumulés (toutes APIs), reset le 1er du mois
-- Au-delà : pay-as-you-go, prix unitaire par feature
-- Option packs prépayés (1k / 10k / 100k crédits, remise dégressive) — V2
+20. `snapshot-geo-visibility` : étendre pool 5 → 9 modèles (ajouter `gpt-5.5`, `qwen-2.5-72b`, `llama-3.3-70b`, `kimi-k2`).
+21. Conserver `mistral-large-2411` (extraction) et `perplexity-sonar` (search).
 
-**Prix indicatifs (à valider) :**
-- `geo_score`, `eeat`, `pagespeed` : 0.05 €
-- `audit_expert`, `semantic_audit`, `serp_ranking` : 0.20 €
-- `audit_matrix`, `competitors`, `llm_visibility` : 0.50 €
-- `site_crawl` : 0.02 € / page crawlée
-- Marina : 0.30 € / audit prospect
-- Parménion : 2 € / cycle exécuté
+### Lot 7 — Vérification et garde-fous
 
-**Backend :**
-- Stripe metered billing (subscription items, usage records)
-- Nouvelle table `developer_billing` (user_id, stripe_customer_id, stripe_subscription_id, plan, payment_method_last4)
-- Edge function `report-usage-to-stripe` cron horaire : agrège les jobs `completed` depuis dernier report → `POST /v1/subscription_items/{id}/usage_records`
-- Webhook Stripe : `invoice.paid`, `payment_method.attached`, `customer.subscription.updated`
+22. Déployer par batchs de 10 fonctions.
+23. Surveillance 14 jours via `ai_gateway_logs--list_ai_gateway_requests` ; alerte si crédits/jour > 25 (rythme >$750/mois).
+24. Kill switch DB `ai_routing_overrides.disable_premium = true` : force tous Claude/GPT-5.4-5.5 → Gemini 3 Flash si dérive.
+25. Dashboard admin : compteur live "crédits AI Gateway 7 derniers jours" dans `AdminDashboard > Routing AI`, avec breakdown par modèle.
+26. Alerte spécifique cache Anthropic : si hit rate <60% sur Claude primary, notification admin.
 
-**Routes :**
-- `/developers/profile?tab=facturation`
-  - Plan actuel + consommation du mois + estimation fin de mois
-  - Méthode de paiement (Stripe Elements)
-  - Historique factures (PDF Stripe)
-  - Limite mensuelle (hard cap, désactive les clés au-delà)
+## Estimation coût après migration
 
-**Provider :** Stripe (built-in Lovable Payments, pas BYOK) — éligibilité à confirmer via `recommend_payment_provider` au début du sprint.
+Hypothèses volumes prod actuels appliqués à la nouvelle allocation :
 
----
+| Poste | Modèle primaire | Volume/mois (in/out) | Coût estimé |
+|---|---|---|---|
+| Parménion writer B2C (~120 art) | `claude-haiku-4.5` + cache (70% hit) | ~360k / 240k | ~$135 |
+| Parménion writer B2B (~30 art) | `claude-sonnet-4.5` + cache (70% hit) | ~90k / 60k | ~$160 |
+| Parménion brief+stratège+tonalizer | `gemini-3-flash` + `3.5-flash` | ~600k / 300k | ~$30 |
+| Chat agents (Cocoon/Copilot/SAV) | `claude-haiku-4.5` + cache (80% hit) | ~800k / 400k | ~$85 |
+| Audits experts SEO (~800/mois) | `gemini-3.1-pro-preview` | ~2M / 800k | ~$110 |
+| Audits standard Tier 2 | `gemini-3-flash-preview` | ~5M / 2M | ~$40 |
+| Code corrective/validation | `gpt-5.4` | ~200k / 100k | ~$15 |
+| Tier 1 socle (classif, gates) | `gemini-3.1-flash-lite` | ~10M / 3M | ~$10 |
+| GEO pool (50 mesures × 9 modèles) | mix | ~675k / 360k | ~$25 |
+| Marge / pics | — | — | ~$15 |
+| **Total estimé** | | | **~$625/mois** |
 
-## Hors-scope MVP (V2)
+Estimation à valider sur 30j via logs réels. Le lot 7 ajuste si dérive.
 
-- Domaine dédié `api.crawlers.fr` (déploiement séparé, sous-app)
-- Packs prépayés
-- Quotas par clé (vs par user)
-- Page statut publique (`status.crawlers.fr`)
-- SDK officiel TS/Python (auto-généré depuis OpenAPI)
+## Garde-fous
 
----
+- Aucun primary non autorisé (vérification compile via type discriminant).
+- Cache Anthropic obligatoire sur tout primary Claude (sinon ×3 coût writer).
+- Timeout primary 8s avant bascule fallback.
+- Kill switch global si crédits/jour > 25.
 
-## Détails techniques
+## Risques
 
-**Réutilisation maximale :**
-- `AuthContext`, `useAuth`, `Profile` existants
-- Edge functions `crawlers-api` / `marina-api` / `parmenion-api` : aucun changement Sprint 1-2
-- Tables existantes : `crawlers_api_jobs`, `marina_jobs`, `parmenion_tasks`
-
-**Nouveaux fichiers Sprint 1 :**
-```
-src/pages/developers/
-  ├── DevLanding.tsx
-  ├── DevDashboard.tsx
-  ├── DevProfile.tsx          (router des tabs)
-  ├── tabs/
-  │   ├── SettingsTab.tsx
-  │   └── ApiKeysTab.tsx
-  └── DevLayout.tsx           (header minimal violet/noir)
-```
-
-**Sécurité :**
-- Clés API affichées une seule fois à la création (hash bcrypt en DB)
-- Rate limit par clé : 100 req/min (déjà en place)
-- Soft delete des clés (revoked_at) pour audit
-
----
-
-## Livrable par sprint
-
-| Sprint | Demo |
-|--------|------|
-| 1 | Signup → générer clé → `curl POST /v1/jobs` réussit |
-| 2 | Graphe consommation 7j + webhook reçoit ping signé |
-| 3 | Stripe carte enregistrée + 1ère facture metered générée |
-
-Ordre recommandé : 1 → 2 → 3 (Stripe en dernier pour itérer sur les prix après avoir vu la consommation réelle).
+- **Volume Parménion réel inconnu** : si >300 articles/mois, basculer writer B2C sur `gpt-5.4-mini` primary (économie ~$60/mois).
+- **Cache Anthropic ineffectif** si system prompts dynamiques : audit obligatoire des 3 chat agents + 2 writers avant déploiement.
+- **Latence Claude** plus élevée que Gemini : si p95 chat agents >4s, repasser sur GPT-5.4-mini primary.

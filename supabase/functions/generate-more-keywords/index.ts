@@ -138,13 +138,13 @@ JSON uniquement: {"seeds": ["mot clé 1", ...]}`;
   try {
     const resp = await callLovableAI({
       user: prompt,
-      model: 'google/gemini-2.5-flash-lite',
+      model: 'google/gemini-3.1-flash-lite',
       temperature: 0.5,
       signal: AbortSignal.timeout(12000),
     });
 
     const content = resp.content;
-    trackTokenUsage('generate-more-keywords-seeds', 'google/gemini-2.5-flash-lite', resp.usage, domain);
+    trackTokenUsage('generate-more-keywords-seeds', 'google/gemini-3.1-flash-lite', resp.usage, domain);
 
     let seeds: string[] = [];
     try {
@@ -197,12 +197,12 @@ Pour chaque mot-clé, fournis une analyse stratégique. Réponds en JSON:
   try {
     const resp = await callLovableAI({
       user: prompt,
-      model: 'google/gemini-2.5-flash-lite',
+      model: 'google/gemini-3.1-flash-lite',
       signal: AbortSignal.timeout(15000),
     });
 
     const content = resp.content;
-    trackTokenUsage('generate-more-keywords-synthesis', 'google/gemini-2.5-flash-lite', resp.usage, domain);
+    trackTokenUsage('generate-more-keywords-synthesis', 'google/gemini-3.1-flash-lite', resp.usage, domain);
 
     let analyses: any[] = [];
     try {

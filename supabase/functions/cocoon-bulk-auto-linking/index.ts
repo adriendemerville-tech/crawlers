@@ -294,7 +294,7 @@ async function processAutoLinking(
 
         try {
           const aiResp = await callLovableAI({
-            model: 'google/gemini-2.5-flash',
+            model: 'google/gemini-3-flash-preview',
             system: 'Tu es un expert SEO en maillage interne. Réponds uniquement via l\'outil fourni.',
             user: `Analyse ce contenu et identifie les meilleurs emplacements pour des liens internes.
 

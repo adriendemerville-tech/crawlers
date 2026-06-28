@@ -9,7 +9,7 @@
  *           (n-grams, type distribution, ring distribution)
  *  Step C1 — embeddings (text-embedding-004) for cosine similarity grouping
  *  Step C2 — batch LLM (gemini-3-flash-preview) extracts intent + angle + audience
- *  Step C3 — synthesis LLM (gemini-2.5-pro) writes saturation_score + angle_gaps
+ *  Step C3 — synthesis LLM (gemini-3.1-pro-preview) writes saturation_score + angle_gaps
  *  Step D  — upsert into saturation_snapshots
  */
 import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
@@ -26,7 +26,7 @@ const MAX_ARTICLES_PER_CLUSTER = 15;
 const MAX_ARTICLES_TOTAL_LLM = 75;
 
 const BATCH_MODEL = "google/gemini-3-flash-preview";
-const SYNTHESIS_MODEL = "google/gemini-2.5-pro";
+const SYNTHESIS_MODEL = "google/gemini-3.1-pro-preview";
 
 interface PriorityCluster {
   cluster_id: string;
@@ -207,7 +207,7 @@ ${articlesForLLM.map((a, i) => `${i + 1}. ${a.title}`).join("\n")}`,
     }
   }
 
-  // ─── Step C3 — Synthesis per cluster (gemini-2.5-pro)
+  // ─── Step C3 — Synthesis per cluster (gemini-3.1-pro-preview)
   const semanticAnalysis: any[] = [];
   for (const cluster of candidates) {
     const clusterArticles = articlesList.filter((a) => a.cluster_id === cluster.cluster_id);
@@ -325,7 +325,7 @@ async function callLLM(
   // Approximate cost (per 1M tokens)
   const rates: Record<string, { in: number; out: number }> = {
     "google/gemini-3-flash-preview": { in: 0.15, out: 0.60 },
-    "google/gemini-2.5-pro": { in: 1.25, out: 5.00 },
+    "google/gemini-3.1-pro-preview": { in: 1.25, out: 5.00 },
   };
   const r = rates[model] ?? { in: 0.50, out: 2.00 };
   const cost_usd = (pt * r.in + ct * r.out) / 1_000_000;

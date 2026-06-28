@@ -121,7 +121,7 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: manualPrompt },
@@ -165,7 +165,7 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
     }
 
     const aiData = await aiResp.json();
-    logAIUsageFromResponse(getServiceClient(), 'google/gemini-2.5-flash', 'analyze-ux-context-manual', aiData.usage);
+    logAIUsageFromResponse(getServiceClient(), 'google/gemini-3-flash-preview', 'analyze-ux-context-manual', aiData.usage);
 
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {

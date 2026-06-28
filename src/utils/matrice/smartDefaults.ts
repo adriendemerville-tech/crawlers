@@ -68,7 +68,7 @@ export function getSmartDefaults(type: MatriceType, scoringMethodId?: ScoringMet
     seuil_bon: bon,
     seuil_moyen: moyen,
     seuil_mauvais: scoring.thresholds.mauvais,
-    llm_name: type === 'benchmark' ? '' : 'google/gemini-2.5-flash',
+    llm_name: type === 'benchmark' ? '' : 'google/gemini-3-flash-preview',
     scoring,
     labels: scoring.labels,
     helpText: scoring.helpText,

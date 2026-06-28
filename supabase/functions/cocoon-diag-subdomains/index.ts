@@ -138,7 +138,7 @@ Réponds UNIQUEMENT avec le JSON, sans commentaire.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: 'Tu es un expert SEO. Réponds uniquement en JSON valide.' },
           { role: 'user', content: aiPrompt },

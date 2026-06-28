@@ -361,7 +361,7 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: 'You are a GEO (Generative Engine Optimization) expert. Always return valid JSON only.' },
           { role: 'user', content: prompt },
@@ -393,7 +393,7 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
     const content = aiData.choices?.[0]?.message?.content;
 
     // Track token usage
-    trackTokenUsage('generate-target-queries', 'google/gemini-2.5-flash', aiData.usage, domain);
+    trackTokenUsage('generate-target-queries', 'google/gemini-3-flash-preview', aiData.usage, domain);
 
     if (!content) {
       throw new Error('No content in AI response');
@@ -437,7 +437,7 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'google/gemini-3-flash-preview',
             messages: [
               { role: 'system', content: 'You are a quality control expert for GEO queries. Always return valid JSON only. Be strict about coherence.' },
               { role: 'user', content: validationPrompt },

@@ -193,7 +193,7 @@ async function evaluateGeo(
   if (!LOVABLE_API_KEY) return { score: 50, raw: { error: 'No API key' } }
 
   // ── Gemini Pro for GEO evaluation (high quality) ──
-  const GEO_MODEL = 'google/gemini-2.5-pro'
+  const GEO_MODEL = 'google/gemini-3.1-pro-preview'
   const MAX_RETRIES = 2
   const RETRY_DELAYS = [2000, 5000]
 
@@ -268,24 +268,24 @@ async function evaluateBenchmark(
 
   // ── Map engine name to real OpenRouter model for authentic responses ──
   const ENGINE_TO_REAL_MODEL: Record<string, string> = {
-    chatgpt: 'openai/gpt-4o',
-    gpt: 'openai/gpt-4o',
-    gemini: 'google/gemini-2.5-pro',
+    chatgpt: 'openai/gpt-5.4',
+    gpt: 'openai/gpt-5.4',
+    gemini: 'google/gemini-3.1-pro-preview',
     perplexity: 'perplexity/sonar-pro',
-    copilot: 'openai/gpt-4o',
+    copilot: 'openai/gpt-5.4',
     claude: 'anthropic/claude-3.5-sonnet',
     mistral: 'mistralai/mistral-large-latest',
   }
 
   const engineLower = engine.toLowerCase()
-  const realModel = Object.entries(ENGINE_TO_REAL_MODEL).find(([k]) => engineLower.includes(k))?.[1] || 'openai/gpt-4o'
+  const realModel = Object.entries(ENGINE_TO_REAL_MODEL).find(([k]) => engineLower.includes(k))?.[1] || 'openai/gpt-5.4'
 
   try {
     // ── Step 1: Send prompt to the REAL LLM via OpenRouter ──
     const useOpenRouter = !!OPENROUTER_API_KEY
     const apiUrl = useOpenRouter ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://ai.gateway.lovable.dev/v1/chat/completions'
     const apiKey = useOpenRouter ? OPENROUTER_API_KEY! : LOVABLE_API_KEY!
-    const model = useOpenRouter ? realModel : (llmName || 'google/gemini-2.5-flash')
+    const model = useOpenRouter ? realModel : (llmName || 'google/gemini-3-flash-preview')
     const extraHeaders: Record<string, string> = useOpenRouter
       ? { 'HTTP-Referer': 'https://crawlers.fr', 'X-Title': 'Crawlers.fr' }
       : {}
@@ -324,7 +324,7 @@ async function evaluateBenchmark(
     trackTokenUsage('parse-matrix-geo', model, data.usage, brandUrl)
 
     // ── Step 2: Analyze citation & score with Gemini Pro (high quality scoring) ──
-    const SCORING_MODEL = 'google/gemini-2.5-pro'
+    const SCORING_MODEL = 'google/gemini-3.1-pro-preview'
     const rubricInstructions = buildScoringRubric(scoringRubric);
     const dynamicJsonSchema = buildScoringJsonSchema(scoringRubric);
 
@@ -549,7 +549,7 @@ Deno.serve(handleRequest(async (req) => {
           const batchResults = await Promise.all(
             batch.map(async (item): Promise<BenchmarkResult> => {
               const { score, raw, citation_found, citation_rank, citation_context } = await evaluateBenchmark(
-                item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-2.5-flash',
+                item.prompt, normalizedUrl, item.engine, item.llm_name || 'google/gemini-3-flash-preview',
                 engine_notes, scoring_rubric
               )
               const result: BenchmarkResult = {
@@ -696,7 +696,7 @@ Deno.serve(handleRequest(async (req) => {
       const batchResults = await Promise.all(
         batch.map(async (item): Promise<GeoResult> => {
           const { score, raw } = await evaluateGeo(
-            item.prompt, normalizedUrl, item.llm_name || 'google/gemini-2.5-flash'
+            item.prompt, normalizedUrl, item.llm_name || 'google/gemini-3-flash-preview'
           )
           return {
             id: item.id, prompt: item.prompt, axe: item.axe, poids: item.poids,

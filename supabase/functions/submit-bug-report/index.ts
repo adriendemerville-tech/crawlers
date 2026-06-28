@@ -57,7 +57,7 @@ Traduis son message en description technique exploitable pour un développeur CT
 Classe le signalement dans une catégorie: bug_ui, bug_data, bug_function, feature_request, question.
 Réponds UNIQUEMENT en JSON: {"translated": "...", "category": "..."}`,
           user: `Route: ${route || 'inconnue'}\nMessage utilisateur: ${raw_message}\nContexte: ${JSON.stringify(context_data || {})}`,
-          model: 'google/gemini-2.5-flash-lite',
+          model: 'google/gemini-3.1-flash-lite',
           tools: [{
             type: 'function',
             function: {

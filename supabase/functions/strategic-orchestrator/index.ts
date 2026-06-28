@@ -69,7 +69,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       try {
         const sb = getServiceClient();
         const { data: cfg } = await sb.from('system_config').select('value').eq('key', 'strategic_geo_flash_mode').single();
-        if (cfg?.value === true) modelOverride = 'google/gemini-2.5-flash';
+        if (cfg?.value === true) modelOverride = 'google/gemini-3-flash-preview';
       } catch { /* ignore, default to pro */ }
     }
 

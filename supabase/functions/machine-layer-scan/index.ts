@@ -592,7 +592,7 @@ Réponds UNIQUEMENT avec un tableau JSON [{...}, {...}].`;
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: 'Tu réponds uniquement par du JSON valide, sans markdown.' },
           { role: 'user', content: prompt },

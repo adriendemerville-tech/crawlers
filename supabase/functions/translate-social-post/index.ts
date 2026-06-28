@@ -22,7 +22,7 @@ const LANG_NAMES: Record<string, string> = {
   pt: 'Portuguese',
 };
 
-const MODEL = 'google/gemini-2.5-flash-lite';
+const MODEL = 'google/gemini-3.1-flash-lite';
 
 Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });

@@ -268,7 +268,7 @@ async function generateFAQPayload(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           {
             role: 'system',
@@ -285,7 +285,7 @@ async function generateFAQPayload(
 
     if (!response.ok) throw new Error(`AI API error: ${response.status}`);
     const data = await response.json();
-    trackTokenUsage('process-script-queue', 'google/gemini-2.5-flash', data.usage);
+    trackTokenUsage('process-script-queue', 'google/gemini-3-flash-preview', data.usage);
 
     let content = data.choices?.[0]?.message?.content || '';
     if (content.includes('```')) {
@@ -403,7 +403,7 @@ async function generateHTMLPayload(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           {
             role: 'system',
@@ -420,7 +420,7 @@ async function generateHTMLPayload(
 
     if (!response.ok) throw new Error(`AI API error: ${response.status}`);
     const data = await response.json();
-    trackTokenUsage('process-script-queue', 'google/gemini-2.5-flash', data.usage);
+    trackTokenUsage('process-script-queue', 'google/gemini-3-flash-preview', data.usage);
 
     let html = data.choices?.[0]?.message?.content || '';
     if (html.includes('```')) {

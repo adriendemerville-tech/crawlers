@@ -34,9 +34,9 @@ async function queryLlmVisibility(
 ): Promise<{ providers: ProviderResult[]; prompts: string[] }> {
   // Lightweight subset of providers for periodic snapshots (cost control)
   const SNAPSHOT_PROVIDERS = [
-    { id: 'gpt4o', name: 'GPT-4o', company: 'OpenAI', model: 'openai/gpt-4o' },
+    { id: 'gpt4o', name: 'GPT-4o', company: 'OpenAI', model: 'openai/gpt-5.4' },
     { id: 'claude35', name: 'Claude 3.5 Sonnet', company: 'Anthropic', model: 'anthropic/claude-3.5-sonnet' },
-    { id: 'gemini2', name: 'Gemini 2.0 Flash', company: 'Google', model: 'google/gemini-2.0-flash-001' },
+    { id: 'gemini2', name: 'Gemini 2.0 Flash', company: 'Google', model: 'google/gemini-3-flash-preview' },
     { id: 'perplexity', name: 'Perplexity Sonar', company: 'Perplexity', model: 'perplexity/sonar' },
   ]
 

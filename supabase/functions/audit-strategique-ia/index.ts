@@ -334,11 +334,11 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     async function callWithFallback(systemPrompt: string, userPromptText: string, label: string, timeoutMs: number): Promise<any | null> {
-      const primaryModel = body._modelOverride || 'google/gemini-2.5-flash';
-      const model = label === 'A-identity' ? (body._modelOverride || 'google/gemini-2.5-pro') : primaryModel;
+      const primaryModel = body._modelOverride || 'google/gemini-3-flash-preview';
+      const model = label === 'A-identity' ? (body._modelOverride || 'google/gemini-3.1-pro-preview') : primaryModel;
       const callTimeout = Math.min(timeoutMs, label === 'A-identity' ? 120_000 : 90_000);
       let raw = await callLLMWithModel(model, callTimeout, systemPrompt, userPromptText, label);
-      if (!raw && model !== 'google/gemini-2.5-flash') { console.log(`🔄 ${label}: Retrying with Flash...`); raw = await callLLMWithModel('google/gemini-2.5-flash', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label); }
+      if (!raw && model !== 'google/gemini-3-flash-preview') { console.log(`🔄 ${label}: Retrying with Flash...`); raw = await callLLMWithModel('google/gemini-3-flash-preview', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label); }
       if (!raw) return null;
       const parsed = parseLLMJson(raw);
       if (!parsed) console.warn(`⚠️ ${label}: JSON parse failed`);
@@ -368,11 +368,11 @@ Deno.serve(handleRequest(async (req) => {
       const factualCitationMono = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
       userPrompt = userPrompt + '\n' + factualCitationMono.factual_summary;
       const systemPromptForPage = getSystemPromptForPageType(pageType);
-      const primaryModel = body._modelOverride || 'google/gemini-2.5-pro';
+      const primaryModel = body._modelOverride || 'google/gemini-3.1-pro-preview';
       let llmResult = await callLLMWithModel(primaryModel, Math.min(remainingMs, 150_000), systemPromptForPage, userPrompt, 'monolithic');
-      if (!llmResult && primaryModel !== 'google/gemini-2.5-flash') {
+      if (!llmResult && primaryModel !== 'google/gemini-3-flash-preview') {
         const flashTimeout = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 10_000);
-        llmResult = await callLLMWithModel('google/gemini-2.5-flash', Math.min(flashTimeout, 120_000), systemPromptForPage, userPrompt, 'monolithic-flash');
+        llmResult = await callLLMWithModel('google/gemini-3-flash-preview', Math.min(flashTimeout, 120_000), systemPromptForPage, userPrompt, 'monolithic-flash');
       }
       if (!llmResult) { const fb = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut); saveToCache(domain, url, fb).catch(() => {}); return json(fb); }
       parsedAnalysis = parseLLMJson(llmResult);
@@ -587,7 +587,7 @@ Réponds en JSON STRICT:
 
         const jargonResp = await aiGatewayFetch( {
           method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages: [{ role: 'user', content: jargonPrompt }], temperature: 0.3 }),
+          body: JSON.stringify({ model: 'google/gemini-3-flash-preview', messages: [{ role: 'user', content: jargonPrompt }], temperature: 0.3 }),
         });
 
         if (jargonResp.ok) {

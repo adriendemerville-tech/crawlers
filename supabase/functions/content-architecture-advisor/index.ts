@@ -1148,10 +1148,10 @@ FRAÎCHEUR & DÉNOMINATION:
 
     // Route: ≤4 → flash (simple), 5-8 → flash-preview (standard), ≥9 → pro (complex)
     const modelTiers: string[] = complexityScore >= 9
-      ? ['google/gemini-2.5-pro', 'google/gemini-2.5-flash']
+      ? ['google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview']
       : complexityScore >= 5
-        ? ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash']
-        : ['google/gemini-2.5-flash'];
+        ? ['google/gemini-3-flash-preview', 'google/gemini-3-flash-preview']
+        : ['google/gemini-3-flash-preview'];
 
     // 90s leaves 60s headroom under the 150s edge-function CPU wall-time,
     // so a timeout fires *inside* the function and the catch block can mark
