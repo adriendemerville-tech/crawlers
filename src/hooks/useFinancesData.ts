@@ -6,15 +6,30 @@ import { fr } from 'date-fns/locale';
 
 // Coûts estimés par million de tokens (input/output) en USD
 export const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
-  'google/gemini-2.5-pro': { input: 1.25, output: 10.0, label: 'Gemini 2.5 Pro' },
-  'google/gemini-3-pro-preview': { input: 1.25, output: 10.0, label: 'Gemini 3 Pro' },
-  'google/gemini-3-flash-preview': { input: 0.15, output: 0.60, label: 'Gemini 3 Flash' },
-  'google/gemini-2.5-flash': { input: 0.15, output: 0.60, label: 'Gemini 2.5 Flash' },
-  'google/gemini-2.5-flash-lite': { input: 0.075, output: 0.30, label: 'Gemini 2.5 Flash Lite' },
-  'openai/gpt-5': { input: 10.0, output: 30.0, label: 'GPT-5' },
-  'openai/gpt-5-mini': { input: 1.10, output: 4.40, label: 'GPT-5 Mini' },
-  'openai/gpt-5-nano': { input: 0.10, output: 0.40, label: 'GPT-5 Nano' },
-  'openai/gpt-5.2': { input: 10.0, output: 30.0, label: 'GPT-5.2' },
+  // Google 2026
+  'google/gemini-3.1-flash-lite': { input: 0.075, output: 0.30, label: 'Gemini 3.1 Flash Lite' },
+  'google/gemini-3-flash-preview': { input: 0.15, output: 0.60, label: 'Gemini 3 Flash Preview' },
+  'google/gemini-3.5-flash': { input: 0.20, output: 0.80, label: 'Gemini 3.5 Flash' },
+  'google/gemini-3.1-pro-preview': { input: 1.25, output: 10.0, label: 'Gemini 3.1 Pro Preview' },
+  // OpenAI 2026
+  'openai/gpt-5.4-nano': { input: 0.05, output: 0.40, label: 'GPT-5.4 Nano' },
+  'openai/gpt-5.4-mini': { input: 0.25, output: 2.00, label: 'GPT-5.4 Mini' },
+  'openai/gpt-5.4': { input: 1.25, output: 10.0, label: 'GPT-5.4' },
+  'openai/gpt-5.5': { input: 2.50, output: 15.0, label: 'GPT-5.5' },
+  // Anthropic (exception primaire)
+  'anthropic/claude-haiku-4.5': { input: 1.00, output: 5.00, label: 'Claude Haiku 4.5' },
+  'anthropic/claude-sonnet-4.5': { input: 3.00, output: 15.0, label: 'Claude Sonnet 4.5' },
+  // Fallbacks
+  'openai/gpt-5': { input: 1.25, output: 10.0, label: 'GPT-5' },
+  'openai/gpt-5-mini': { input: 0.25, output: 2.00, label: 'GPT-5 Mini' },
+  'openai/gpt-5-nano': { input: 0.05, output: 0.40, label: 'GPT-5 Nano' },
+  'mistralai/mistral-small-3.2': { input: 0.10, output: 0.30, label: 'Mistral Small 3.2' },
+  'mistralai/mistral-large-2411': { input: 2.00, output: 6.00, label: 'Mistral Large 2411' },
+  'meta-llama/llama-3.3-70b-instruct': { input: 0.13, output: 0.40, label: 'Llama 3.3 70B' },
+  'qwen/qwen-2.5-72b-instruct': { input: 0.12, output: 0.39, label: 'Qwen 2.5 72B' },
+  'moonshotai/kimi-k2': { input: 0.14, output: 2.49, label: 'Kimi K2' },
+  'perplexity/sonar': { input: 1.00, output: 1.00, label: 'Perplexity Sonar' },
+};
 };
 
 const API_COST_ESTIMATES: Record<string, number> = {
