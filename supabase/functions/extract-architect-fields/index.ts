@@ -148,7 +148,7 @@ ${p.outro}`;
       draftData = await callLovableAIJson<Record<string, any>>({
         system: lang === 'en' ? "You are a structured data extractor. Respond only in valid JSON. All text must be in English." : lang === 'es' ? "Eres un extractor de datos estructurados. Responde solo en JSON válido. Todo el texto debe estar en español." : "Tu es un extracteur de données structurées. Réponds uniquement en JSON valide. Tout le texte doit être en français.",
         user: extractionPrompt,
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-3.1-flash-lite',
       });
     } catch (e) {
       console.error("[extract-architect-fields] Failed to parse AI response:", e);

@@ -110,7 +110,7 @@ Réponds UNIQUEMENT avec un JSON: {"core_business": "description courte", "seeds
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'google/gemini-2.5-flash-lite', messages: [{ role: 'user', content: prompt }], temperature: 0.5 }),
+      body: JSON.stringify({ model: 'google/gemini-3.1-flash-lite', messages: [{ role: 'user', content: prompt }], temperature: 0.5 }),
       signal: AbortSignal.timeout(15000),
     });
 
@@ -118,7 +118,7 @@ Réponds UNIQUEMENT avec un JSON: {"core_business": "description courte", "seeds
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
-    trackTokenUsage('generate-seeds', 'google/gemini-2.5-flash-lite', data.usage, url);
+    trackTokenUsage('generate-seeds', 'google/gemini-3.1-flash-lite', data.usage, url);
 
     let seeds: string[] = [];
     try {

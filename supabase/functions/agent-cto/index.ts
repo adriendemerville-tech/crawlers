@@ -154,7 +154,7 @@ async function getChampionPrompt(supabase: any, functionName: string, promptKey 
 }
 
 // ─── LLM call ────────────────────────────────────────────────────────
-const CTO_LLM_MODEL = 'google/gemini-2.5-flash';
+const CTO_LLM_MODEL = 'google/gemini-3-flash-preview';
 
 async function callLLM(systemPrompt: string, userPrompt: string, costAcc?: CostAccumulator): Promise<{ content: string; tokens: { input: number; output: number } }> {
   const resp = await callOpenRouter({

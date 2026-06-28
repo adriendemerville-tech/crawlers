@@ -164,7 +164,7 @@ Si tu ne connais pas un champ, mets une valeur générique raisonnable. Ne laiss
         'Authorization': `Bearer ${lovableKey}`,
         'Content-Type': 'application/json',
       },
-      model: 'google/gemini-2.5-flash',
+      model: 'google/gemini-3-flash-preview',
     })
   }
 
@@ -177,7 +177,7 @@ Si tu ne connais pas un champ, mets une valeur générique raisonnable. Ne laiss
         'HTTP-Referer': 'https://crawlers.fr',
         'X-Title': 'Crawlers.fr - Site Enrichment',
       },
-      model: 'google/gemini-2.5-flash',
+      model: 'google/gemini-3-flash-preview',
     })
   }
 

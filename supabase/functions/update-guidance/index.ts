@@ -44,7 +44,7 @@ async function callLLM(payload: Record<string, unknown>, lovableApiKey: string):
       },
       signal: ctrl.signal,
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         temperature: 0.2,
         max_tokens: 2400,
         messages: [

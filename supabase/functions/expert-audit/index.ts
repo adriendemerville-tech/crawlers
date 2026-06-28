@@ -2753,7 +2753,7 @@ CARTE D'IDENTITÉ DU SITE (source: base de données utilisateur — à VÉRIFIER
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'google/gemini-3-flash-preview',
             messages: [
               { 
                 role: 'system', 
@@ -2790,7 +2790,7 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
           const content = aiData.choices?.[0]?.message?.content;
 
           // Track token usage
-          trackTokenUsage('expert-audit', 'google/gemini-2.5-flash', aiData.usage, normalizedUrl);
+          trackTokenUsage('expert-audit', 'google/gemini-3-flash-preview', aiData.usage, normalizedUrl);
 
           if (content) {
             let jsonContent = content;

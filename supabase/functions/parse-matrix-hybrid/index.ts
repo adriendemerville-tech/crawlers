@@ -63,7 +63,7 @@ Réponds UNIQUEMENT avec un JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: llmName || 'google/gemini-2.5-flash',
+        model: llmName || 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `URL: ${url}\n\nEXTRAIT HTML:\n${htmlSummary.substring(0, 4000)}\n\nCRITÈRE:\n${prompt}` },
@@ -85,7 +85,7 @@ Réponds UNIQUEMENT avec un JSON:
 
     const data = await resp.json()
     const content = data.choices?.[0]?.message?.content || ''
-    trackTokenUsage('parse-matrix-hybrid', llmName || 'google/gemini-2.5-flash', data.usage, url)
+    trackTokenUsage('parse-matrix-hybrid', llmName || 'google/gemini-3-flash-preview', data.usage, url)
 
     let jsonContent = content
     if (content.includes('```json')) jsonContent = content.split('```json')[1].split('```')[0].trim()
@@ -214,7 +214,7 @@ const clientIp = getClientIp(req)
       // LLM hybrid evaluation
       promises.push((async () => {
         const { seoScore, geoScore, raw } = await evaluateHybrid(
-          item.prompt, normalizedUrl, htmlSummary, item.llm_name || 'google/gemini-2.5-flash'
+          item.prompt, normalizedUrl, htmlSummary, item.llm_name || 'google/gemini-3-flash-preview'
         )
         // Blend: engine SEO score (60%) + LLM SEO (40%) for crawlers_score
         const blendedSeo = htmlData ? Math.round(seoEngineScore * 0.6 + seoScore * 0.4) : seoScore

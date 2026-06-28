@@ -426,7 +426,7 @@ async function analyzeWithLLM(
   return await callLovableAIJson<LLMResult>({
     system,
     user,
-    model: 'google/gemini-2.5-pro',
+    model: 'google/gemini-3.1-pro-preview',
     temperature: 0.2,
     maxTokens: 4000,
     callerFunction: 'analyze-serp-intents',

@@ -645,7 +645,7 @@ Deno.serve(handleRequest(async (req) => {
 
           const pageResp = await callLovableAI({
             messages: [{ role: 'user', content: pagePrompt }],
-            model: 'google/gemini-2.5-flash',
+            model: 'google/gemini-3-flash-preview',
             temperature: 0.7,
             max_tokens: 8000,
           });
@@ -708,14 +708,14 @@ Deno.serve(handleRequest(async (req) => {
       seo_score_after: estimatedScoreAfter,
       confidence_score: confidence,
       status: 'pending_review',
-      model_used: 'google/gemini-2.5-flash',
+      model_used: 'google/gemini-3-flash-preview',
       tokens_used: tokens,
     };
 
     const { error: logError } = await supabase.from('seo_agent_logs').insert(logEntry);
     if (logError) console.error('[AGENT-SEO] Log error:', logError);
 
-    await trackTokenUsage('agent-seo', 'google/gemini-2.5-flash', { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {});
+    await trackTokenUsage('agent-seo', 'google/gemini-3-flash-preview', { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {});
 
     console.log(`[AGENT-SEO] ✅ ${target.slug} — score ${scoreBefore.overall} → ${estimatedScoreAfter} (confiance: ${confidence}%) | ${parsedImprovements?.improvements?.length || 0} améliorations | ${scoreBefore.issues.length} problèmes`);
 

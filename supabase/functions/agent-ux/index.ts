@@ -45,7 +45,7 @@ interface UxAnalysisResult {
 }
 
 // ─── LLM call ────────────────────────────────────────────────────────
-const LLM_MODEL = 'google/gemini-2.5-flash';
+const LLM_MODEL = 'google/gemini-3-flash-preview';
 
 async function callLLM(system: string, user: string, costAcc?: CostAccumulator): Promise<string> {
   const resp = await callOpenRouter({

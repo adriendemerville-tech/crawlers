@@ -13,12 +13,12 @@ const USD_TO_EUR = 0.92
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'anthropic/claude-3.5-sonnet': { input: 3.0, output: 15.0 },
   'anthropic/claude-3-haiku': { input: 0.25, output: 1.25 },
-  'google/gemini-2.5-flash': { input: 0.15, output: 0.6 },
-  'google/gemini-2.5-flash-lite': { input: 0.075, output: 0.3 },
-  'google/gemini-2.5-pro': { input: 1.25, output: 10.0 },
+  'google/gemini-3-flash-preview': { input: 0.15, output: 0.6 },
+  'google/gemini-3.1-flash-lite': { input: 0.075, output: 0.3 },
+  'google/gemini-3.1-pro-preview': { input: 1.25, output: 10.0 },
   'mistral/mistral-large-latest': { input: 2.0, output: 6.0 },
-  'openai/gpt-4o': { input: 2.5, output: 10.0 },
-  'openai/gpt-4o-mini': { input: 0.15, output: 0.6 },
+  'openai/gpt-5.4': { input: 2.5, output: 10.0 },
+  'openai/gpt-5.4-mini': { input: 0.15, output: 0.6 },
 }
 
 export interface LLMCost {

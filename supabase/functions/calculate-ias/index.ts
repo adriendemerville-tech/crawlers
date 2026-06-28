@@ -108,7 +108,7 @@ async function classifyWithLLM(site: any): Promise<{ brandName: string; category
       system: `You extract a brand name and classify a website into exactly one category. Return ONLY valid JSON: {"brand_name":"...", "category_id": N}
 Categories: 1=E-commerce, 2=Media/Blog, 3=Lead Gen B2B, 4=SaaS, 5=Local, 6=Luxury Brand`,
       user: `Domain: ${site.domain}\nSite name: ${site.site_name || ""}\nSector: ${site.market_sector || ""}\nProducts: ${site.products_services || ""}`,
-      model: 'google/gemini-2.5-flash-lite',
+      model: 'google/gemini-3.1-flash-lite',
       maxTokens: 80,
     });
     const catId = Number(parsed.category_id);

@@ -138,11 +138,11 @@ function mapEngineName(engine: string): string | undefined {
   if (!engine) return undefined;
   const lower = engine.toLowerCase();
   if (/chatgpt|gpt/i.test(lower)) return 'openai/gpt-5-mini';
-  if (/gemini/i.test(lower)) return 'google/gemini-2.5-flash';
-  if (/perplexity/i.test(lower)) return 'google/gemini-2.5-flash'; // proxy via Gemini
+  if (/gemini/i.test(lower)) return 'google/gemini-3-flash-preview';
+  if (/perplexity/i.test(lower)) return 'google/gemini-3-flash-preview'; // proxy via Gemini
   if (/copilot/i.test(lower)) return 'openai/gpt-5-mini'; // proxy via GPT
-  if (/claude/i.test(lower)) return 'google/gemini-2.5-flash';
-  if (/mistral/i.test(lower)) return 'google/gemini-2.5-flash-lite';
+  if (/claude/i.test(lower)) return 'google/gemini-3-flash-preview';
+  if (/mistral/i.test(lower)) return 'google/gemini-3.1-flash-lite';
   return undefined;
 }
 

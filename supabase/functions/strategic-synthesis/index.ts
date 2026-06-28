@@ -197,12 +197,12 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     }
 
     async function callWithFallback(systemPrompt: string, userPromptText: string, label: string, timeoutMs: number): Promise<any | null> {
-      const model = label === 'A-identity' ? (body.modelOverride || 'google/gemini-2.5-pro') : (body.modelOverride || 'google/gemini-2.5-flash');
+      const model = label === 'A-identity' ? (body.modelOverride || 'google/gemini-3.1-pro-preview') : (body.modelOverride || 'google/gemini-3-flash-preview');
       const callTimeout = Math.min(timeoutMs, label === 'A-identity' ? 120_000 : 90_000);
       let raw = await callLLM(model, callTimeout, systemPrompt, userPromptText, label);
-      if (!raw && model !== 'google/gemini-2.5-flash') {
+      if (!raw && model !== 'google/gemini-3-flash-preview') {
         console.log(`🔄 ${label}: Retrying with Flash...`);
-        raw = await callLLM('google/gemini-2.5-flash', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label);
+        raw = await callLLM('google/gemini-3-flash-preview', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label);
       }
       if (!raw) return null;
       const parsed = parseLLMJson(raw);
@@ -216,9 +216,9 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       // ═══ CONTENT MODE: Single call (simpler JSON) ═══
       console.log(`🤖 [strategic-synthesis] Content mode (${pageType}) — single LLM call`);
       const userPrompt = baseContext + `\n\nGÉNÈRE un JSON complet avec: introduction, brand_authority, social_signals, market_intelligence, competitive_landscape, geo_citability, llm_visibility, conversational_intent, zero_click_risk, priority_content, keyword_positioning, market_data_summary, executive_roadmap (MIN 6), client_targets, executive_summary, overallScore, quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team.\nRÈGLES: main_keywords MIN 5, executive_roadmap MIN 6, pas d'auto-citation, JSON pur.`;
-      let raw = await callLLM(body.modelOverride || 'google/gemini-2.5-pro', 150_000, CONTENT_FULL_PROMPT, userPrompt, 'content');
+      let raw = await callLLM(body.modelOverride || 'google/gemini-3.1-pro-preview', 150_000, CONTENT_FULL_PROMPT, userPrompt, 'content');
       if (!raw) {
-        raw = await callLLM('google/gemini-2.5-flash', 120_000, CONTENT_FULL_PROMPT, userPrompt, 'content-flash');
+        raw = await callLLM('google/gemini-3-flash-preview', 120_000, CONTENT_FULL_PROMPT, userPrompt, 'content-flash');
       }
       if (raw) parsedAnalysis = parseLLMJson(raw);
 
@@ -318,12 +318,12 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
         const jPrompt = `Analyse la DISTANCE SÉMANTIQUE entre ce contenu et les cibles.\n${pageContentContext}\nPRIMAIRE: ${JSON.stringify(ct.primary?.[0] || 'Non détecté')}\nSECONDAIRE: ${JSON.stringify(ct.secondary?.[0] || 'Non détecté')}\nPOTENTIELLE: ${JSON.stringify(ct.untapped?.[0] || 'Non détecté')}\n\nJSON: {"primary":{"distance":0,"qualifier":"...","terms_causing_distance":[...],"confidence":0.0},"secondary":{...},"untapped":{...},"tone_consistency":0.0,"tone_assertive_ratio":0.0}`;
         const jr = await aiGatewayFetch( {
           method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages: [{ role: 'user', content: jPrompt }], temperature: 0.3 }),
+          body: JSON.stringify({ model: 'google/gemini-3-flash-preview', messages: [{ role: 'user', content: jPrompt }], temperature: 0.3 }),
           signal: AbortSignal.timeout(15000),
         });
         if (jr.ok) {
           const jd = await jr.json(); const jt = jd.choices?.[0]?.message?.content || '';
-          trackTokenUsage('strategic-synthesis', 'google/gemini-2.5-flash', jd.usage, url);
+          trackTokenUsage('strategic-synthesis', 'google/gemini-3-flash-preview', jd.usage, url);
           try {
             const jp = JSON.parse(jt.replace(/```json\s*/g, '').replace(/```/g, '').trim());
             const cta = ctaSeoSignals || {};

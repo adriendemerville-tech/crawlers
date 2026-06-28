@@ -400,7 +400,7 @@ const clientIp = getClientIp(req)
     for (const item of detectedTypes) {
       const llmPromise = evaluateWithLlm(
         item.prompt, normalizedUrl, htmlSummary,
-        item.llm_name || 'google/gemini-2.5-flash',
+        item.llm_name || 'google/gemini-3-flash-preview',
         scoring_rubric
       )
 

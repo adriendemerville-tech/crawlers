@@ -276,7 +276,7 @@ try {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                model: 'google/gemini-2.5-flash-lite',
+                model: 'google/gemini-3.1-flash-lite',
                 messages: [
                   {
                     role: 'system',
@@ -321,7 +321,7 @@ try {
 
             if (resp.ok) {
               const data = await resp.json()
-              trackTokenUsage('fetch-serp-kpis', 'google/gemini-2.5-flash-lite', data.usage, domain)
+              trackTokenUsage('fetch-serp-kpis', 'google/gemini-3.1-flash-lite', data.usage, domain)
               
               const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
               if (toolCall?.function?.arguments) {

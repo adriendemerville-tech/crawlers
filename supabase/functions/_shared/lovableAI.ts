@@ -14,34 +14,34 @@
 
 const GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const DEFAULT_MODEL = 'google/gemini-2.5-flash';
+const DEFAULT_MODEL = 'google/gemini-3-flash-preview';
 const DEFAULT_MAX_TOKENS = 4000;
 const DEFAULT_TEMPERATURE = 0.3;
 
 /** Map Lovable AI model IDs to OpenRouter equivalents */
 const MODEL_FALLBACK_MAP: Record<string, string> = {
-  'google/gemini-2.5-flash': 'google/gemini-2.5-flash',
-  'google/gemini-2.5-flash-lite': 'google/gemini-2.5-flash-lite-preview',
-  'google/gemini-2.5-pro': 'google/gemini-2.5-pro',
-  'google/gemini-3-flash-preview': 'google/gemini-2.5-flash',
-  'google/gemini-3.1-pro-preview': 'google/gemini-2.5-pro',
-  'openai/gpt-5': 'openai/gpt-4o',
-  'openai/gpt-5-mini': 'openai/gpt-4o-mini',
-  'openai/gpt-5-nano': 'openai/gpt-4o-mini',
+  'google/gemini-3-flash-preview': 'google/gemini-3-flash-preview',
+  'google/gemini-3.1-flash-lite': 'google/gemini-3.1-flash-lite',
+  'google/gemini-3.1-pro-preview': 'google/gemini-3.1-pro-preview',
+  'google/gemini-3-flash-preview': 'google/gemini-3-flash-preview',
+  'google/gemini-3.1-pro-preview': 'google/gemini-3.1-pro-preview',
+  'openai/gpt-5': 'openai/gpt-5.4',
+  'openai/gpt-5-mini': 'openai/gpt-5.4-mini',
+  'openai/gpt-5-nano': 'openai/gpt-5.4-mini',
 };
 
 /** Estimated cost per 1M tokens (USD) */
 const MODEL_COST: Record<string, { input: number; output: number }> = {
-  'google/gemini-2.5-flash': { input: 0.15, output: 0.60 },
-  'google/gemini-2.5-flash-lite': { input: 0.075, output: 0.30 },
-  'google/gemini-2.5-pro': { input: 1.25, output: 5.00 },
+  'google/gemini-3-flash-preview': { input: 0.15, output: 0.60 },
+  'google/gemini-3.1-flash-lite': { input: 0.075, output: 0.30 },
+  'google/gemini-3.1-pro-preview': { input: 1.25, output: 5.00 },
   'google/gemini-3-flash-preview': { input: 0.15, output: 0.60 },
   'google/gemini-3.1-pro-preview': { input: 1.25, output: 5.00 },
   'openai/gpt-5': { input: 5.00, output: 15.00 },
   'openai/gpt-5-mini': { input: 0.40, output: 1.60 },
   'openai/gpt-5-nano': { input: 0.10, output: 0.40 },
-  'openai/gpt-4o': { input: 2.50, output: 10.00 },
-  'openai/gpt-4o-mini': { input: 0.15, output: 0.60 },
+  'openai/gpt-5.4': { input: 2.50, output: 10.00 },
+  'openai/gpt-5.4-mini': { input: 0.15, output: 0.60 },
 };
 
 function estimateCostUsd(model: string, promptTokens: number, completionTokens: number): number {
@@ -54,7 +54,7 @@ export interface LovableAIOptions {
   system?: string;
   /** User prompt */
   user: string;
-  /** Model identifier (default: google/gemini-2.5-flash) */
+  /** Model identifier (default: google/gemini-3-flash-preview) */
   model?: string;
   /** Temperature (default: 0.3) */
   temperature?: number;
@@ -107,7 +107,7 @@ function getOpenRouterKey(): string | null {
 }
 
 function mapModelToOpenRouter(model: string): string {
-  return MODEL_FALLBACK_MAP[model] || 'google/gemini-2.5-flash';
+  return MODEL_FALLBACK_MAP[model] || 'google/gemini-3-flash-preview';
 }
 
 /** Log usage to ai_gateway_usage (fire-and-forget) */

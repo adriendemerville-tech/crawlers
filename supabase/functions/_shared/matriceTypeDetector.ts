@@ -67,7 +67,7 @@ const TYPE_KEYWORDS: Record<ItemType, [string, number][]> = {
 export function detectItemType(prompt: string, llmName?: string): ItemType {
   const lower = prompt.toLowerCase().trim()
 
-  if (llmName && llmName !== 'google/gemini-2.5-flash') {
+  if (llmName && llmName !== 'google/gemini-3-flash-preview') {
     if (lower.length > 30 || lower.includes('?') || lower.includes('analyse') || lower.includes('évalue')) {
       return 'prompt'
     }

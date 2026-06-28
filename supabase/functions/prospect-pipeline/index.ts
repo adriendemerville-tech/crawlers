@@ -188,7 +188,7 @@ Réponds UNIQUEMENT avec le message.`,
 
   try {
     const result = await callLovableAIText(prompt, {
-      model: 'google/gemini-2.5-flash',
+      model: 'google/gemini-3-flash-preview',
       maxTokens: 400,
     });
     return result.text || `Salut ${firstName} !`;

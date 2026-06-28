@@ -129,7 +129,7 @@ Réponds STRICTEMENT via l'outil classify_criteria, sans texte libre.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-3.1-flash-lite',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -186,7 +186,7 @@ Réponds STRICTEMENT via l'outil classify_criteria, sans texte libre.`;
     return new Response(
       JSON.stringify({
         results: completed,
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-3.1-flash-lite',
         count: completed.length,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

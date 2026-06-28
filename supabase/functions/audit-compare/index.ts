@@ -344,7 +344,7 @@ async function generateSeedsWithAI(url: string, context: string, domain: string,
       method: 'POST',
       headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-3.1-flash-lite',
         messages: [{ role: 'user', content: `Analyse cette page:\nURL: ${url}\n${context}\n\nGénère 10 mots-clés SPÉCIFIQUES à ce site (${excludeBrands}) que des clients de CE site précisément taperaient. Les mots-clés doivent refléter l'activité PROPRE de ${domain}, pas des termes génériques du secteur. Expressions de 2-4 mots, intention commerciale ou informationnelle.\n${opponentDomain ? `IMPORTANT: Ce site est comparé à ${opponentDomain}. Les mots-clés doivent être DIFFÉRENCIANTS pour ${domain}, pas des termes communs aux deux.` : ''}\nRéponds UNIQUEMENT JSON: {"seeds":["mot clé 1","mot clé 2",...]}` }],
         temperature: 0.5,
       }),
@@ -354,7 +354,7 @@ async function generateSeedsWithAI(url: string, context: string, domain: string,
     if (!response.ok) { await response.text(); return []; }
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
-    trackTokenUsage('audit-compare-seeds', 'google/gemini-2.5-flash-lite', data.usage, url);
+    trackTokenUsage('audit-compare-seeds', 'google/gemini-3.1-flash-lite', data.usage, url);
     
     let jsonStr = content;
     if (content.includes('```json')) jsonStr = content.split('```json')[1].split('```')[0].trim();
@@ -737,7 +737,7 @@ async function analyzeSite(
       method: 'POST',
       headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [{ role: 'system', content: SITE_ANALYSIS_PROMPT + `\n\nLANGUE DE RÉDACTION: ${langLabel}. Rédige TOUTES les analyses en ${langLabel}.` }, { role: 'user', content: prompt }],
         temperature: 0.3,
       }),
@@ -745,7 +745,7 @@ async function analyzeSite(
     });
     if (resp.ok) {
       const data = await resp.json();
-      trackTokenUsage('audit-compare', 'google/gemini-2.5-flash', data.usage, url);
+      trackTokenUsage('audit-compare', 'google/gemini-3-flash-preview', data.usage, url);
       analysis = parseAIResponse(data.choices?.[0]?.message?.content || null);
     } else { await resp.text(); }
   } catch (e) {
@@ -769,7 +769,7 @@ async function runCrossComparison(
       method: 'POST',
       headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3-flash-preview',
         messages: [{ role: 'system', content: CROSS_COMPARE_SYSTEM + `\n\nLANGUE DE RÉDACTION: ${langLabel}. Rédige TOUTES les analyses en ${langLabel}.` }, { role: 'user', content: prompt }],
         temperature: 0.2,
       }),
@@ -777,7 +777,7 @@ async function runCrossComparison(
     });
     if (!resp.ok) { await resp.text(); return null; }
     const data = await resp.json();
-    trackTokenUsage('audit-compare-cross', 'google/gemini-2.5-flash', data.usage, `${site1.domain} vs ${site2.domain}`);
+    trackTokenUsage('audit-compare-cross', 'google/gemini-3-flash-preview', data.usage, `${site1.domain} vs ${site2.domain}`);
     return parseAIResponse(data.choices?.[0]?.message?.content || null);
   } catch (e) {
     console.warn('Cross-comparison failed:', e instanceof Error ? e.message : e);

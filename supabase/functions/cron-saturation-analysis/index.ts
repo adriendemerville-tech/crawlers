@@ -26,7 +26,7 @@ const MAX_ARTICLES_PER_CLUSTER = 15;
 const MAX_ARTICLES_TOTAL_LLM = 75;
 
 const BATCH_MODEL = "google/gemini-3-flash-preview";
-const SYNTHESIS_MODEL = "google/gemini-2.5-pro";
+const SYNTHESIS_MODEL = "google/gemini-3.1-pro-preview";
 
 interface PriorityCluster {
   cluster_id: string;
@@ -325,7 +325,7 @@ async function callLLM(
   // Approximate cost (per 1M tokens)
   const rates: Record<string, { in: number; out: number }> = {
     "google/gemini-3-flash-preview": { in: 0.15, out: 0.60 },
-    "google/gemini-2.5-pro": { in: 1.25, out: 5.00 },
+    "google/gemini-3.1-pro-preview": { in: 1.25, out: 5.00 },
   };
   const r = rates[model] ?? { in: 0.50, out: 2.00 };
   const cost_usd = (pt * r.in + ct * r.out) / 1_000_000;

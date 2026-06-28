@@ -496,12 +496,12 @@ Content: ${article.content}`;
       callLovableAI({
         system: "Professional translator. Return only valid JSON.",
         user: translationPrompt("en", "English"),
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-3.1-flash-lite',
       }),
       callLovableAI({
         system: "Professional translator. Return only valid JSON.",
         user: translationPrompt("es", "Spanish"),
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-3.1-flash-lite',
       }),
     ]);
 
@@ -549,7 +549,7 @@ Content: ${article.content}`;
     }
 
     // Track tokens
-    await trackTokenUsage('generate-blog-from-news', 'google/gemini-2.5-flash', genData.usage).catch(() => {});
+    await trackTokenUsage('generate-blog-from-news', 'google/gemini-3-flash-preview', genData.usage).catch(() => {});
 
     console.log(`[blog-gen v2] ✅ Published: ${inserted.slug} (${contentLength} chars, quality: ${qualityScore.overall}/100, EN: ${!!enArticle}, ES: ${!!esArticle})`);
 

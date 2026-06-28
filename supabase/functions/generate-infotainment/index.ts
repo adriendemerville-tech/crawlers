@@ -27,7 +27,7 @@ Retourne un résumé structuré des 5-8 informations les plus importantes et ré
         Authorization: `Bearer ${lovableApiKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [{ role: "user", content: searchPrompt }],
         temperature: 0.3,
       }),
@@ -73,7 +73,7 @@ Retourne UNIQUEMENT un JSON array (pas de markdown) :
         Authorization: `Bearer ${lovableApiKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [{ role: "user", content: generationPrompt }],
         temperature: 0.7,
       }),

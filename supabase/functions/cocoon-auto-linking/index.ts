@@ -253,7 +253,7 @@ Réponds UNIQUEMENT avec un JSON array:
             user: prompt,
             tools,
             toolChoice: { type: 'function', function: { name: 'suggest_internal_links' } },
-            fallbackModel: 'google/gemini-2.5-flash',
+            fallbackModel: 'google/gemini-3-flash-preview',
           });
           // Compat : aiResp.tool_calls[0].arguments est déjà un objet
           const toolCall = aiResp.tool_calls?.[0];

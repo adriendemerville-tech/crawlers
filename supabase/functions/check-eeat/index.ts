@@ -523,7 +523,7 @@ IMPORTANT: Utilise ces avis RÉELS pour scorer Experience et Trustworthiness.` :
     method: 'POST',
     headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'google/gemini-3-flash-preview',
       messages: [{
         role: 'user',
         content: `Tu es un expert E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) selon les Quality Rater Guidelines de Google.
@@ -634,8 +634,8 @@ Réponds UNIQUEMENT en JSON valide :
   const content = llmData.choices?.[0]?.message?.content || '';
 
   // Track LLM cost (both analytics_events and ai_gateway_usage)
-  trackTokenUsage('check-eeat', 'google/gemini-2.5-flash', llmData.usage, targetUrl).catch(() => {});
-  logAIUsageFromResponse(getServiceClient(), 'google/gemini-2.5-flash', 'check-eeat', llmData.usage);
+  trackTokenUsage('check-eeat', 'google/gemini-3-flash-preview', llmData.usage, targetUrl).catch(() => {});
+  logAIUsageFromResponse(getServiceClient(), 'google/gemini-3-flash-preview', 'check-eeat', llmData.usage);
 
   let analysis: any = {};
   try {
