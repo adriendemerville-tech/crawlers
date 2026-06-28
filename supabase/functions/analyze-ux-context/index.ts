@@ -1,4 +1,5 @@
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
 import { trackPaidApiCall, trackTokenUsage } from '../_shared/tokenTracker.ts';
@@ -113,7 +114,7 @@ ${annotationDescriptions}
 Génère exactement ${manualAnnotations.length} suggestion(s), une par annotation. Chaque suggestion doit avoir le même axe et la même priorité que l'annotation correspondante.
 Propose un current_text probable et un suggested_text amélioré quand c'est applicable.`;
 
-    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -361,7 +362,7 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
   const ga4Context = { pageMetrics, siteAvg };
   const prompt = buildPrompt(pageData, businessContext, topKeywords, imageFormatsForPrompt, croMatrix || [], chunkabilityData, ga4Context);
 
-  const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const aiResp = await aiGatewayFetch( {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,

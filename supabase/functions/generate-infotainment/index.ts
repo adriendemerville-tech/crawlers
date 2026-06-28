@@ -1,4 +1,5 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
@@ -19,7 +20,7 @@ try {
 
 Retourne un résumé structuré des 5-8 informations les plus importantes et récentes, avec pour chacune : le sujet, la source probable, et la date approximative. Format texte brut.`;
 
-    const searchRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const searchRes = await aiGatewayFetch( {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -65,7 +66,7 @@ Retourne UNIQUEMENT un JSON array (pas de markdown) :
   {"type": "hack", "content": "...", "category": "eeat|crawlability|structured-data|geo|llm"}
 ]`;
 
-    const genRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const genRes = await aiGatewayFetch( {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

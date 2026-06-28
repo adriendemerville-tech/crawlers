@@ -1,4 +1,5 @@
 import { getAuthenticatedUser } from '../_shared/auth.ts';
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType, computeArticleDistribution, determineSemanticRing, buildDiversityPromptBlock, detectArticleType, type ArticleDistribution, type SemanticRing } from '../_shared/contentBrief.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';

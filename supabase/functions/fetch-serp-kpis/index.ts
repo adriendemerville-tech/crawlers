@@ -1,4 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
@@ -268,7 +269,7 @@ try {
               .map((kw: any, i: number) => `${i + 1}. "${kw.keyword}"`)
               .join('\n')
 
-            const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            const resp = await aiGatewayFetch( {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${LOVABLE_API_KEY}`,

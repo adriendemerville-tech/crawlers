@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getServiceClient, getUserClient } from "../_shared/supabaseClient.ts";
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -179,7 +180,7 @@ serve(async (req) => {
     }
 
     // Step 1: Generate SQL query from natural language
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResp = await aiGatewayFetch( {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({

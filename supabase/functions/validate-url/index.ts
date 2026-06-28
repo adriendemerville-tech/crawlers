@@ -1,4 +1,5 @@
 import { stealthFetch } from '../_shared/stealthFetch.ts';
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 async function checkUrl(url: string): Promise<{ ok: boolean; status: number; finalUrl: string; contentLength: number }> {
@@ -45,7 +46,7 @@ async function searchBrandDomain(query: string): Promise<string | null> {
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 8000);
 
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const res = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
