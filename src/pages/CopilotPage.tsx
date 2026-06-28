@@ -7,6 +7,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import type { CopilotPersona } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,10 @@ export default function CopilotPage() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col gap-4 p-4">
+      <Helmet>
+        <title>Copilot — Félix & Stratège | Crawlers.fr</title>
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Copilot</h1>
         <p className="text-sm text-muted-foreground">

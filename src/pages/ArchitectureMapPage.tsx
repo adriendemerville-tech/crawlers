@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 import ArchitectureMap from "@/components/admin/ArchitectureMap";
@@ -27,6 +28,10 @@ const ArchitectureMapPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0B0F19] p-4 md:p-8">
+      <Helmet>
+        <title>Architecture Map — Admin Crawlers.fr</title>
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
       <ArchitectureMap />
     </div>
   );
