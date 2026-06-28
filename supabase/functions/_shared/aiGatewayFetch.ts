@@ -1,88 +1,222 @@
 /**
- * Drop-in remplacement de `fetch('https://ai.gateway.lovable.dev/v1/chat/completions', init)`.
- * PRIMARY: OpenRouter (si OPENROUTER_API_KEY est défini)
- * FALLBACK: Lovable AI Gateway (sur 402/429/5xx/timeout ou si OpenRouter absent)
+ * Multi-provider AI gateway wrapper avec cascade primary → fallback1 → fallback2.
  *
- * Conforme à la règle projet (knowledge: llm-provider-priority-fr).
+ * ROUTING par préfixe de modèle:
+ *   - google/*, openai/*           → Lovable AI Gateway
+ *   - anthropic/*                  → OpenRouter (Lovable AI ne supporte pas Claude)
+ *   - mistralai/*, qwen/*,
+ *     meta-llama/*, moonshotai/*,
+ *     perplexity/*                 → OpenRouter
  *
- * Usage:
- *   import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
- *   const resp = await aiGatewayFetch(init); // init = même chose que pour fetch
- *   // resp est un Response standard.
+ * Le routage Lovable-first reste possible si OPENROUTER_API_KEY absent
+ * (les modèles non-Google/OpenAI sont alors ignorés).
+ *
+ * Plan: budget cible ~$615/mois, primaires 2026 uniquement (Gemini 3.x, GPT-5.4/5.5)
+ * avec exception Claude 4.5 sur chat agents + writer Parménion.
+ *
+ * Cache Anthropic: passer `cache: 'anthropic'` injecte cache_control sur le system prompt.
+ *
+ * API:
+ *   // Drop-in compat (1 modèle, body parsé):
+ *   await aiGatewayFetch({ method: 'POST', body: JSON.stringify({ model, messages }) });
+ *
+ *   // Multi-fallback (recommandé):
+ *   await aiGatewayCall({
+ *     primary: 'google/gemini-3-flash-preview',
+ *     fallback1: 'claude-haiku-4.5',
+ *     fallback2: 'gpt-5-mini',
+ *     cache: 'anthropic',
+ *     body: { messages, temperature: 0.7 },
+ *     timeoutMs: 8000,
+ *   });
  */
 
 const LOVABLE_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-const MODEL_MAP: Record<string, string> = {
-  'google/gemini-2.5-flash': 'google/gemini-2.5-flash',
-  'google/gemini-2.5-flash-lite': 'google/gemini-2.5-flash-lite-preview',
-  'google/gemini-2.5-pro': 'google/gemini-2.5-pro',
-  'google/gemini-3-flash-preview': 'google/gemini-2.5-flash',
-  'google/gemini-3.1-pro-preview': 'google/gemini-2.5-pro',
-  'openai/gpt-5': 'openai/gpt-4o',
-  'openai/gpt-5-mini': 'openai/gpt-4o-mini',
-  'openai/gpt-5-nano': 'openai/gpt-4o-mini',
-};
+const DEFAULT_TIMEOUT_MS = 8000;
 
-function mapModel(m?: string): string {
-  if (!m) return 'google/gemini-2.5-flash';
-  return MODEL_MAP[m] || m;
+// Modèles allowlist - sortis en 2026 + exception Claude 4.5
+const PRIMARY_ALLOWED_2026 = new Set<string>([
+  'google/gemini-3-flash-preview',
+  'google/gemini-3.1-flash-lite',
+  'google/gemini-3.5-flash',
+  'google/gemini-3.1-pro-preview',
+  'openai/gpt-5.2',
+  'openai/gpt-5.4',
+  'openai/gpt-5.4-mini',
+  'openai/gpt-5.4-nano',
+  'openai/gpt-5.4-pro',
+  'openai/gpt-5.5',
+  'openai/gpt-5.5-pro',
+]);
+
+const PRIMARY_ALLOWED_CLAUDE_EXCEPTION = new Set<string>([
+  'anthropic/claude-haiku-4.5',
+  'anthropic/claude-sonnet-4.5',
+]);
+
+// Tous fallbacks autorisés (≤2025)
+const FALLBACK_ALLOWED = new Set<string>([
+  ...PRIMARY_ALLOWED_2026,
+  ...PRIMARY_ALLOWED_CLAUDE_EXCEPTION,
+  'openai/gpt-5',
+  'openai/gpt-5-mini',
+  'openai/gpt-5-nano',
+  'mistralai/mistral-large-2411',
+  'mistralai/mistral-small-3.2',
+  'meta-llama/llama-3.3-70b-instruct',
+  'qwen/qwen-2.5-72b-instruct',
+  'moonshotai/kimi-k2',
+  'perplexity/sonar',
+]);
+
+function providerFor(model: string): 'lovable' | 'openrouter' {
+  if (model.startsWith('google/') || model.startsWith('openai/')) return 'lovable';
+  return 'openrouter';
 }
 
 function shouldFallback(status: number): boolean {
-  return status === 402 || status === 429 || status >= 500;
+  return status === 402 || status === 408 || status === 429 || status >= 500;
+}
+
+interface AICallOptions {
+  primary: string;
+  fallback1?: string;
+  fallback2?: string;
+  cache?: 'anthropic' | 'none';
+  body: Record<string, unknown>;
+  timeoutMs?: number;
+  headers?: Record<string, string>;
 }
 
 /**
- * Drop-in: prend les mêmes RequestInit qu'un appel fetch direct au Lovable gateway
- * et route automatiquement OpenRouter -> Lovable.
+ * Injecte cache_control: ephemeral sur le premier message system (Anthropic prompt caching).
+ * No-op pour les autres providers.
  */
-export async function aiGatewayFetch(init: RequestInit): Promise<Response> {
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  const lovableKey = Deno.env.get('LOVABLE_API_KEY');
+function applyAnthropicCache(model: string, body: Record<string, unknown>): Record<string, unknown> {
+  if (!model.startsWith('anthropic/')) return body;
+  const messages = body.messages as Array<{ role: string; content: unknown }> | undefined;
+  if (!Array.isArray(messages) || messages.length === 0) return body;
 
-  // Parse le body pour pouvoir remapper le model côté OpenRouter
-  let bodyObj: Record<string, unknown> | null = null;
-  if (typeof init.body === 'string') {
-    try { bodyObj = JSON.parse(init.body); } catch { /* keep null */ }
+  const newMessages = messages.map((m, i) => {
+    if (i !== 0 || m.role !== 'system') return m;
+    if (typeof m.content === 'string') {
+      return {
+        role: 'system',
+        content: [{ type: 'text', text: m.content, cache_control: { type: 'ephemeral' } }],
+      };
+    }
+    if (Array.isArray(m.content)) {
+      const blocks = m.content.map((b, bi) =>
+        bi === 0 && typeof b === 'object' && b !== null
+          ? { ...(b as Record<string, unknown>), cache_control: { type: 'ephemeral' } }
+          : b,
+      );
+      return { role: 'system', content: blocks };
+    }
+    return m;
+  });
+  return { ...body, messages: newMessages };
+}
+
+async function callOnce(
+  model: string,
+  body: Record<string, unknown>,
+  cache: 'anthropic' | 'none',
+  timeoutMs: number,
+  extraHeaders: Record<string, string>,
+): Promise<Response> {
+  const provider = providerFor(model);
+  const url = provider === 'lovable' ? LOVABLE_URL : OPENROUTER_URL;
+
+  const key = provider === 'lovable'
+    ? Deno.env.get('LOVABLE_API_KEY')
+    : Deno.env.get('OPENROUTER_API_KEY');
+
+  if (!key) {
+    return new Response(
+      JSON.stringify({ error: `${provider.toUpperCase()}_API_KEY not configured for model ${model}` }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } },
+    );
   }
 
-  // --- PRIMARY: OpenRouter ---
-  if (openRouterKey && bodyObj) {
-    const orBody = { ...bodyObj, model: mapModel(bodyObj.model as string | undefined) };
+  const finalBody = cache === 'anthropic' ? applyAnthropicCache(model, { ...body, model }) : { ...body, model };
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${key}`,
+    ...extraHeaders,
+  };
+  if (provider === 'openrouter') {
+    headers['HTTP-Referer'] = 'https://crawlers.fr';
+    headers['X-Title'] = 'Crawlers.fr';
+  }
+
+  return await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(finalBody),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+}
+
+/**
+ * API recommandée: cascade primary → fallback1 → fallback2 avec allowlist.
+ */
+export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
+  const { primary, fallback1, fallback2, cache = 'none', body, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {} } = opts;
+
+  // Validation allowlist primary
+  if (!PRIMARY_ALLOWED_2026.has(primary) && !PRIMARY_ALLOWED_CLAUDE_EXCEPTION.has(primary)) {
+    console.warn(`[aiGatewayCall] Primary "${primary}" not in allowlist - proceeding anyway`);
+  }
+
+  const chain = [primary, fallback1, fallback2].filter((m): m is string => !!m);
+
+  let lastResp: Response | null = null;
+  for (let i = 0; i < chain.length; i++) {
+    const model = chain[i];
+    const isLast = i === chain.length - 1;
     try {
-      const resp = await fetch(OPENROUTER_URL, {
-        ...init,
-        headers: {
-          ...(init.headers as Record<string, string> || {}),
-          'Authorization': `Bearer ${openRouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.fr',
-          'X-Title': 'Crawlers.fr',
-        },
-        body: JSON.stringify(orBody),
-      });
-      if (resp.ok) return resp;
-      if (!shouldFallback(resp.status)) return resp; // erreur "métier" => on remonte
-      console.warn(`[aiGatewayFetch] OpenRouter ${resp.status}, fallback Lovable`);
+      const resp = await callOnce(model, body, cache, timeoutMs, headers);
+      if (resp.ok) {
+        if (i > 0) console.info(`[aiGatewayCall] Fallback success: ${model} (level ${i})`);
+        return resp;
+      }
+      if (!shouldFallback(resp.status) || isLast) return resp;
+      console.warn(`[aiGatewayCall] ${model} ${resp.status} → fallback`);
+      lastResp = resp;
     } catch (e) {
-      console.warn(`[aiGatewayFetch] OpenRouter failed: ${(e as Error).message}, fallback Lovable`);
+      const msg = (e as Error).message;
+      console.warn(`[aiGatewayCall] ${model} threw: ${msg}${isLast ? '' : ' → fallback'}`);
+      if (isLast) throw e;
     }
   }
 
-  // --- FALLBACK: Lovable AI Gateway ---
-  if (!lovableKey) {
-    return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }), {
-      status: 500, headers: { 'Content-Type': 'application/json' },
-    });
+  return lastResp ?? new Response(
+    JSON.stringify({ error: 'All models failed' }),
+    { status: 503, headers: { 'Content-Type': 'application/json' } },
+  );
+}
+
+/**
+ * RÉTRO-COMPAT: API drop-in fetch existante.
+ * Parse le body, route selon le model, pas de fallback configurable.
+ */
+export async function aiGatewayFetch(init: RequestInit): Promise<Response> {
+  let bodyObj: Record<string, unknown> = {};
+  if (typeof init.body === 'string') {
+    try { bodyObj = JSON.parse(init.body); } catch { bodyObj = {}; }
   }
-  return fetch(LOVABLE_URL, {
-    ...init,
-    headers: {
-      ...(init.headers as Record<string, string> || {}),
-      'Authorization': `Bearer ${lovableKey}`,
-      'Content-Type': 'application/json',
-    },
+  const model = (bodyObj.model as string) || 'google/gemini-3-flash-preview';
+  delete bodyObj.model;
+
+  return await aiGatewayCall({
+    primary: model,
+    body: bodyObj,
+    headers: (init.headers as Record<string, string>) || {},
   });
 }
+
+export { PRIMARY_ALLOWED_2026, PRIMARY_ALLOWED_CLAUDE_EXCEPTION, FALLBACK_ALLOWED };
