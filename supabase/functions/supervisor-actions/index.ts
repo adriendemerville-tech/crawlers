@@ -238,27 +238,25 @@ ${operationalContext || ''}
 Audite chaque correction : logique, impact, régressions. Note chaque correction en vert/orange.
 Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.`
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${Deno.env.get('OPENROUTER_API_KEY')}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://crawlers.fr',
-      'X-Title': 'Crawlers Supervisor',
-    },
-    body: JSON.stringify({
-      model: 'anthropic/claude-3.5-sonnet',
+  const response = await aiGatewayCall({
+    primary: SUPERVISOR_MODEL,
+    fallback1: SUPERVISOR_FALLBACK_1,
+    fallback2: SUPERVISOR_FALLBACK_2,
+    cache: 'anthropic',
+    timeoutMs: 60000,
+    body: {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.15,
       max_tokens: 6000,
-    }),
+    },
+    headers: { 'X-Title': 'Crawlers Supervisor' },
   })
 
   const data = await response.json()
-  if (costAcc) costAcc.add('anthropic/claude-3.5-sonnet', data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0)
+  if (costAcc) costAcc.add(SUPERVISOR_MODEL, data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0)
   const content = data.choices?.[0]?.message?.content || ''
 
   try {
