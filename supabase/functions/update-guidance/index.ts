@@ -1,5 +1,4 @@
 /**
-import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * update-guidance — Sprint 2 du Pipeline Update
  *
  * Skill atomique #4 : synthétise les artefacts précédents (`extracted`, `claims`,
@@ -9,6 +8,7 @@ import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * Inputs : { slug, target_intent? }
  * Output : { artifact_id, guidance: { angle, must_keep, must_add, must_fix, sections[] } }
  */
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { authAndGate, getExtractedArtifact, upsertArtifact, corsHeaders, jsonResp } from '../_shared/updatePipelineGuards.ts';
 
 const GUIDANCE_PROMPT = `Tu es un stratège éditorial SEO/GEO. À partir des données fournies sur une page existante (extraction + claims audités + gaps thématiques vs concurrents), produis un BRIEF DE REFONTE structuré, déterministe et JSON pur.

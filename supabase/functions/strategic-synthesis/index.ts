@@ -1,8 +1,8 @@
 /**
-import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * strategic-synthesis — Micro-function #4 (v2: parallel split)
  * Takes aggregated data from crawl/market/competitors/llm and runs 3 parallel LLM calls.
  */
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'

@@ -1,11 +1,11 @@
 /**
-import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * gmb-review-reply — Generate automated, contextual replies to Google reviews using Lovable AI.
  *
  * Actions:
  *   - generate-reply: Generate a draft reply for a single review
  *   - generate-batch: Generate draft replies for multiple reviews
  */
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
