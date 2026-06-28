@@ -1,17 +1,20 @@
 ---
 name: LLM Provider Priority
-description: Ordre par défaut des providers LLM — OpenRouter en primaire, Lovable AI en fallback
+description: Ordre par défaut des providers LLM — OpenRouter primaire 100%, Lovable AI filet de secours
 type: preference
 ---
-**Règle globale** : tous les appels LLM doivent utiliser **OpenRouter en provider primaire** et **Lovable AI Gateway en fallback** (sur 402/429/5xx/timeout).
+**Règle globale** : 100% des appels chat completions passent par **OpenRouter en provider primaire**. **Lovable AI Gateway** sert de **filet de secours automatique** pour les modèles `google/*` et `openai/*` uniquement, déclenché sur 402/408/429/5xx ou exception réseau/timeout côté OpenRouter.
 
 **Exceptions** :
-- Routing admin via `ai_routing_overrides` (cf. groq-routing-override) : si une feature force Groq, Groq d'abord puis fallback Lovable.
-- Embeddings et image generation : Lovable AI direct (OpenRouter ne couvre pas ces endpoints de manière équivalente).
+- **Embeddings** (`_shared/embeddings.ts`) : Lovable AI direct (`google/text-embedding-004`). OpenRouter ne couvre pas cet endpoint.
+- **Image generation** : Lovable AI direct (`google/gemini-3-pro-image`, etc.).
+- **Routing admin** via `ai_routing_overrides` (cf. groq-routing-override) : peut forcer Groq pour certaines features, fallback Lovable inchangé.
+- **Parménion tool-calling** (`_shared/parmenion/llmClient.ts`) : OpenRouter primaire, Lovable AI fallback (déjà conforme).
 
 **Implémentation** :
-- Backend : utiliser `_shared/parmenion/llmClient.ts` (`getGateways()` déjà ordonné OpenRouter → Lovable) comme référence, ou `_shared/aiRouter.ts` étendu pour respecter cet ordre par défaut.
-- Variables requises : `OPENROUTER_API_KEY` (primaire) + `LOVABLE_API_KEY` (fallback auto, déjà managé).
-- Headers OpenRouter : `HTTP-Referer` et `X-Title` obligatoires.
+- Backend chat : tout passe par `_shared/aiGatewayFetch.ts` (`aiGatewayCall` ou `aiGatewayFetch`). Le helper route systématiquement vers OpenRouter et bascule sur Lovable AI automatiquement pour les modèles Google/OpenAI.
+- Modèles Claude/Mistral/Qwen/Llama/Moonshot/Perplexity : OpenRouter uniquement, pas de rescue Lovable (non servi).
+- Variables requises : `OPENROUTER_API_KEY` (primaire) + `LOVABLE_API_KEY` (rescue + embeddings + images).
+- Headers OpenRouter : `HTTP-Referer: https://crawlers.fr` et `X-Title: Crawlers.fr` injectés automatiquement.
 
-**Pourquoi** : OpenRouter offre un catalogue de modèles plus large et un meilleur contrôle des coûts ; Lovable AI reste un filet de sécurité fiable sans config.
+**Pourquoi** : OpenRouter offre un catalogue plus large (Claude, Mistral, Llama, etc.) et une observabilité unifiée. Lovable AI reste branché en rescue pour absorber les pannes OpenRouter sans rupture de service sur le trafic Gemini/GPT (~60% du volume).

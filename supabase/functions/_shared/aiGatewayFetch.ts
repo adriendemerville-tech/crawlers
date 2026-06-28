@@ -1,15 +1,15 @@
 /**
  * Multi-provider AI gateway wrapper avec cascade primary → fallback1 → fallback2.
  *
- * ROUTING par préfixe de modèle:
- *   - google/*, openai/*           → Lovable AI Gateway
- *   - anthropic/*                  → OpenRouter (Lovable AI ne supporte pas Claude)
- *   - mistralai/*, qwen/*,
- *     meta-llama/*, moonshotai/*,
- *     perplexity/*                 → OpenRouter
+ * ROUTING (règle llm-provider-priority-fr):
+ *   - 100% des appels chat completions → OpenRouter en primaire
+ *   - google/* et openai/* : Lovable AI Gateway sert de filet de secours
+ *     automatique si OpenRouter renvoie 402/408/429/5xx ou throw.
+ *   - anthropic/*, mistralai/*, qwen/*, meta-llama/*, moonshotai/*, perplexity/* :
+ *     OpenRouter uniquement (Lovable AI ne sert pas ces modèles).
  *
- * Le routage Lovable-first reste possible si OPENROUTER_API_KEY absent
- * (les modèles non-Google/OpenAI sont alors ignorés).
+ * Embeddings (`_shared/embeddings.ts`) et image generation restent sur Lovable AI
+ * direct — OpenRouter ne couvre pas ces endpoints de manière équivalente.
  *
  * Plan: budget cible ~$615/mois, primaires 2026 uniquement (Gemini 3.x, GPT-5.4/5.5)
  * avec exception Claude 4.5 sur chat agents + writer Parménion.
@@ -106,9 +106,18 @@ async function isPremiumDisabled(): Promise<boolean> {
   return active;
 }
 
-function providerFor(model: string): 'lovable' | 'openrouter' {
-  if (model.startsWith('google/') || model.startsWith('openai/')) return 'lovable';
+/**
+ * Provider primaire = OpenRouter pour TOUS les modèles chat (règle llm-provider-priority-fr).
+ * Lovable AI reste fallback automatique pour google/* et openai/* via `aiGatewayCall`.
+ * Embeddings + image gen restent câblés directement sur Lovable AI dans leurs helpers dédiés.
+ */
+function providerFor(_model: string): 'lovable' | 'openrouter' {
   return 'openrouter';
+}
+
+/** Modèles que Lovable AI sert nativement et qui peuvent servir de filet en cas de panne OpenRouter. */
+function lovableCanServe(model: string): boolean {
+  return model.startsWith('google/') || model.startsWith('openai/');
 }
 
 function shouldFallback(status: number): boolean {
@@ -161,8 +170,9 @@ async function callOnce(
   cache: 'anthropic' | 'none',
   timeoutMs: number,
   extraHeaders: Record<string, string>,
+  providerOverride?: 'lovable' | 'openrouter',
 ): Promise<Response> {
-  const provider = providerFor(model);
+  const provider = providerOverride ?? providerFor(model);
   const url = provider === 'lovable' ? LOVABLE_URL : OPENROUTER_URL;
 
   const key = provider === 'lovable'
@@ -226,17 +236,52 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
     const model = chain[i];
     const isLast = i === chain.length - 1;
     try {
+      // Tentative primaire: OpenRouter pour tous les modèles.
       const resp = await callOnce(model, body, cache, timeoutMs, headers);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCall] Fallback success: ${model} (level ${i})`);
         return resp;
       }
+
+      // Filet de sécurité Lovable AI pour google/* et openai/* si OpenRouter échoue.
+      if (shouldFallback(resp.status) && lovableCanServe(model)) {
+        console.warn(`[aiGatewayCall] OpenRouter ${model} ${resp.status} → retry via Lovable AI`);
+        try {
+          const lov = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
+          if (lov.ok) {
+            console.info(`[aiGatewayCall] Lovable AI rescue success: ${model}`);
+            return lov;
+          }
+          if (!shouldFallback(lov.status) || isLast) return lov;
+          lastResp = lov;
+        } catch (e) {
+          console.warn(`[aiGatewayCall] Lovable rescue ${model} threw: ${(e as Error).message}`);
+          if (isLast) throw e;
+        }
+        continue;
+      }
+
       if (!shouldFallback(resp.status) || isLast) return resp;
       console.warn(`[aiGatewayCall] ${model} ${resp.status} → fallback`);
       lastResp = resp;
     } catch (e) {
       const msg = (e as Error).message;
-      console.warn(`[aiGatewayCall] ${model} threw: ${msg}${isLast ? '' : ' → fallback'}`);
+      console.warn(`[aiGatewayCall] OpenRouter ${model} threw: ${msg}`);
+      // Filet Lovable aussi sur exception réseau/timeout
+      if (lovableCanServe(model)) {
+        try {
+          const lov = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
+          if (lov.ok) {
+            console.info(`[aiGatewayCall] Lovable AI rescue success after throw: ${model}`);
+            return lov;
+          }
+          if (!shouldFallback(lov.status) || isLast) return lov;
+          lastResp = lov;
+          continue;
+        } catch (e2) {
+          console.warn(`[aiGatewayCall] Lovable rescue ${model} threw: ${(e2 as Error).message}`);
+        }
+      }
       if (isLast) throw e;
     }
   }
