@@ -649,7 +649,7 @@ RAPPEL: JSON valide uniquement, pas de markdown.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'openai/gpt-5.4',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -2133,7 +2133,7 @@ IMPORTANT:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'openai/gpt-5.4',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
