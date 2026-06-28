@@ -236,17 +236,52 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
     const model = chain[i];
     const isLast = i === chain.length - 1;
     try {
+      // Tentative primaire: OpenRouter pour tous les modèles.
       const resp = await callOnce(model, body, cache, timeoutMs, headers);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCall] Fallback success: ${model} (level ${i})`);
         return resp;
       }
+
+      // Filet de sécurité Lovable AI pour google/* et openai/* si OpenRouter échoue.
+      if (shouldFallback(resp.status) && lovableCanServe(model)) {
+        console.warn(`[aiGatewayCall] OpenRouter ${model} ${resp.status} → retry via Lovable AI`);
+        try {
+          const lov = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
+          if (lov.ok) {
+            console.info(`[aiGatewayCall] Lovable AI rescue success: ${model}`);
+            return lov;
+          }
+          if (!shouldFallback(lov.status) || isLast) return lov;
+          lastResp = lov;
+        } catch (e) {
+          console.warn(`[aiGatewayCall] Lovable rescue ${model} threw: ${(e as Error).message}`);
+          if (isLast) throw e;
+        }
+        continue;
+      }
+
       if (!shouldFallback(resp.status) || isLast) return resp;
       console.warn(`[aiGatewayCall] ${model} ${resp.status} → fallback`);
       lastResp = resp;
     } catch (e) {
       const msg = (e as Error).message;
-      console.warn(`[aiGatewayCall] ${model} threw: ${msg}${isLast ? '' : ' → fallback'}`);
+      console.warn(`[aiGatewayCall] OpenRouter ${model} threw: ${msg}`);
+      // Filet Lovable aussi sur exception réseau/timeout
+      if (lovableCanServe(model)) {
+        try {
+          const lov = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
+          if (lov.ok) {
+            console.info(`[aiGatewayCall] Lovable AI rescue success after throw: ${model}`);
+            return lov;
+          }
+          if (!shouldFallback(lov.status) || isLast) return lov;
+          lastResp = lov;
+          continue;
+        } catch (e2) {
+          console.warn(`[aiGatewayCall] Lovable rescue ${model} threw: ${(e2 as Error).message}`);
+        }
+      }
       if (isLast) throw e;
     }
   }
