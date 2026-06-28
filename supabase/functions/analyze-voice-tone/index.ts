@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
@@ -75,7 +76,7 @@ Contenu (extrait): ${text}`;
       }).join('\n\n');
 
       try {
-        const llmRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const llmRes = await aiGatewayFetch( {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({

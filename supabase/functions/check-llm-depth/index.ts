@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts'
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'

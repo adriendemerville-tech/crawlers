@@ -1,4 +1,5 @@
 // Machine Layer Scanner — analyse complète des signaux techniques destinés
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 // aux moteurs et aux IA (HTML head, robots.txt, sitemap, llms.txt, ai.txt,
 // /.well-known/*, headers HTTP, OpenGraph, JSON-LD, Twitter Cards, hreflang…).
 //
@@ -587,7 +588,7 @@ Pour CHAQUE défaut, retourne UN objet JSON avec :
 Réponds UNIQUEMENT avec un tableau JSON [{...}, {...}].`;
 
   try {
-    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResp = await aiGatewayFetch( {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({

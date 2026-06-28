@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
@@ -130,7 +131,7 @@ ANALYSE DEMANDÉE (format JSON strict):
 
 Réponds UNIQUEMENT avec le JSON, sans commentaire.`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

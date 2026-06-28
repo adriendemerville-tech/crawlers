@@ -1,4 +1,5 @@
 /**
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * gmb-review-reply — Generate automated, contextual replies to Google reviews using Lovable AI.
  *
  * Actions:

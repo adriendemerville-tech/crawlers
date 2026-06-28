@@ -1,4 +1,5 @@
 /**
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * strategic-synthesis — Micro-function #4 (v2: parallel split)
  * Takes aggregated data from crawl/market/competitors/llm and runs 3 parallel LLM calls.
  */
@@ -174,7 +175,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       const logLabel = `[strategic-synthesis:${label}]`;
       try {
         console.log(`🤖 ${logLabel} ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)`);
-        const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const resp = await aiGatewayFetch( {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ model, messages: [{ role: 'system', content: `${strictLanguageInstruction}\n\n${systemPrompt}` }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 16384 }),
@@ -315,7 +316,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       try {
         const ct = parsedAnalysis.client_targets;
         const jPrompt = `Analyse la DISTANCE SÉMANTIQUE entre ce contenu et les cibles.\n${pageContentContext}\nPRIMAIRE: ${JSON.stringify(ct.primary?.[0] || 'Non détecté')}\nSECONDAIRE: ${JSON.stringify(ct.secondary?.[0] || 'Non détecté')}\nPOTENTIELLE: ${JSON.stringify(ct.untapped?.[0] || 'Non détecté')}\n\nJSON: {"primary":{"distance":0,"qualifier":"...","terms_causing_distance":[...],"confidence":0.0},"secondary":{...},"untapped":{...},"tone_consistency":0.0,"tone_assertive_ratio":0.0}`;
-        const jr = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const jr = await aiGatewayFetch( {
           method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages: [{ role: 'user', content: jPrompt }], temperature: 0.3 }),
           signal: AbortSignal.timeout(15000),

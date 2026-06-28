@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { writeIdentity } from '../_shared/identityGateway.ts'
 
 const corsHeaders = {
@@ -22,7 +23,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured')
 
     // Step 1: Transcribe audio using Gemini (multimodal)
-    const transcriptionResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const transcriptionResp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -72,7 +73,7 @@ serve(async (req) => {
     console.log(`[voice-identity] Transcript for ${domain}: "${transcript.slice(0, 100)}..."`)
 
     // Step 2: Extract taxonomy from transcript
-    const extractionResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const extractionResp = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

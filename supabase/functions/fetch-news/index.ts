@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 interface RSSItem {
@@ -204,7 +205,7 @@ async function batchTranslate(texts: string[], targetLang: string): Promise<stri
     // Build a numbered list for batch translation
     const numberedInput = texts.map((t, i) => `[${i}] ${t}`).join('\n');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

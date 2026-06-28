@@ -1,4 +1,5 @@
 import { trackTokenUsage } from "../_shared/tokenTracker.ts";
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 Deno.serve(handleRequest(async (req) => {
@@ -41,7 +42,7 @@ Règles :
 
     const userPrompt = `Résume chacune de ces sections de rapport pour qu'elles tiennent dans un PDF de 6 pages maximum. Sois très concis, va à l'essentiel :\n\n${textsBlock}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await aiGatewayFetch( {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,

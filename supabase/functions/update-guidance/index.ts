@@ -1,4 +1,5 @@
 /**
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * update-guidance — Sprint 2 du Pipeline Update
  *
  * Skill atomique #4 : synthétise les artefacts précédents (`extracted`, `claims`,
@@ -35,7 +36,7 @@ async function callLLM(payload: Record<string, unknown>, lovableApiKey: string):
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 30_000);
   try {
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const res = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

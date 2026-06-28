@@ -1,4 +1,5 @@
 /**
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * strategic-market — Micro-function #2
  * Fetches DataForSEO keyword data, rankings, and market volume.
  * Cached for 24h via audit_cache.
@@ -88,7 +89,7 @@ async function generateSeedsWithAI(url: string, ctx: string, brandName: string, 
   };
   const prompt = `Tu es un Senior SEO Strategist spécialisé en recherche de mots-clés à forte intention.\nURL: ${url}\n${ctx}\n\nRÈGLE: NE CITE JAMAIS "${brandName}". Mots-clés 100% GÉNÉRIQUES.\nMODE: ${mode.toUpperCase()}\n${modeInstructions[mode] || ''}\n${feedback ? `FEEDBACK: ${feedback}` : ''}\n\nGénère 15 mots-clés (2-5 mots, forte intention). JSON: {"core_business": "...", "seeds": [...]}`;
   try {
-    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const resp = await aiGatewayFetch( {
       method: 'POST', headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'google/gemini-2.5-flash-lite', messages: [{ role: 'user', content: prompt }], temperature: 0.5 }),
       signal: AbortSignal.timeout(15000),
