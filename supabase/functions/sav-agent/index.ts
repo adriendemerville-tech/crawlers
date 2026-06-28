@@ -2693,7 +2693,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
       ...messages.slice(-20),
     ];
 
-    const felixModel = felixConfig.model || "google/gemini-2.5-flash";
+    const felixModel = felixConfig.model || "anthropic/claude-haiku-4.5";
     const felixMaxTokens = isCreator
       ? parseInt(felixConfig.max_tokens_creator || '2000', 10)
       : screenHint ? 1200 : parseInt(felixConfig.max_tokens || '600', 10);
