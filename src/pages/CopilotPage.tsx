@@ -7,6 +7,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import type { CopilotPersona } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';
