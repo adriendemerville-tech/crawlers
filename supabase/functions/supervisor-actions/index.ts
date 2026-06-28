@@ -4,6 +4,11 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
 import { CostAccumulator } from '../_shared/llmCostCalculator.ts';
 import { checkDailyCostCap } from '../_shared/dailyCostGuard.ts';
+import { aiGatewayCall } from '../_shared/aiGatewayFetch.ts';
+
+const SUPERVISOR_MODEL = 'anthropic/claude-sonnet-4.5';
+const SUPERVISOR_FALLBACK_1 = 'openai/gpt-5.4';
+const SUPERVISOR_FALLBACK_2 = 'google/gemini-3.5-flash';
 
 // ─── Kill switch check ───────────────────────────────────────────────
 async function isSupervisorEnabled(): Promise<boolean> {
