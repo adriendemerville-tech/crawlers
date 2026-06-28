@@ -639,27 +639,25 @@ Réponds en JSON strict :
   "supervisor_confidence": <0-100>
 }`
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.fr',
-          'X-Title': 'Crawlers Supervisor',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3.5-sonnet',
+      const response = await aiGatewayCall({
+        primary: SUPERVISOR_MODEL,
+        fallback1: SUPERVISOR_FALLBACK_1,
+        fallback2: SUPERVISOR_FALLBACK_2,
+        cache: 'anthropic',
+        timeoutMs: 90000,
+        body: {
           messages: [
             { role: 'system', content: 'Tu es le Supervisor de Crawlers. Tu audites et corriges le code produit par l\'agent CTO. Tu es rigoureux, conservateur et factuel.' },
             { role: 'user', content: reviewPrompt },
           ],
           temperature: 0.1,
           max_tokens: 8000,
-        }),
+        },
+        headers: { 'X-Title': 'Crawlers Supervisor' },
       })
 
       const llmData = await response.json()
-      costAcc.add('anthropic/claude-3.5-sonnet', llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
+      costAcc.add(SUPERVISOR_MODEL, llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
       const content = llmData.choices?.[0]?.message?.content || ''
 
       let review: any = null
