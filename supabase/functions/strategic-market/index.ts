@@ -1,9 +1,9 @@
 /**
-import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
  * strategic-market — Micro-function #2
  * Fetches DataForSEO keyword data, rankings, and market volume.
  * Cached for 24h via audit_cache.
  */
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'

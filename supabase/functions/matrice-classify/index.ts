@@ -9,6 +9,7 @@
  * Uses Lovable AI Gateway (Gemini Flash) via tool-calling for strict schema.
  * No streaming — single response, called once per "Analyser la structure" click.
  */
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
