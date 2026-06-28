@@ -207,7 +207,19 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
     console.warn(`[aiGatewayCall] Primary "${primary}" not in allowlist - proceeding anyway`);
   }
 
-  const chain = [primary, fallback1, fallback2].filter((m): m is string => !!m);
+  let chain = [primary, fallback1, fallback2].filter((m): m is string => !!m);
+
+  // Kill switch: si admin a coupé le premium, saute les modèles tagués PREMIUM_MODELS,
+  // sauf si tous les modèles de la chaîne sont premium (alors on garde le moins cher).
+  if (await isPremiumDisabled()) {
+    const downgraded = chain.filter((m) => !PREMIUM_MODELS.has(m));
+    if (downgraded.length > 0) {
+      if (downgraded.length !== chain.length) {
+        console.info(`[aiGatewayCall] kill switch: downgraded chain ${chain.join('→')} ⇒ ${downgraded.join('→')}`);
+      }
+      chain = downgraded;
+    }
+  }
 
   let lastResp: Response | null = null;
   for (let i = 0; i < chain.length; i++) {
