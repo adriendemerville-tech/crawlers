@@ -1,3 +1,4 @@
+// redeploy bump 2026-06-28
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates } from '../_shared/siteMemory.ts';
