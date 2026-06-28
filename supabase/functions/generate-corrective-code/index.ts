@@ -1,4 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { trackTokenUsage, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
@@ -450,7 +451,7 @@ async function adaptSolutionWithAI(
   if (!LOVABLE_API_KEY) return null;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -641,7 +642,7 @@ Génère le JSON suivant:
 RAPPEL: JSON valide uniquement, pas de markdown.`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -2125,7 +2126,7 @@ IMPORTANT:
 - Les strings dans le code JS doivent utiliser des guillemets simples`;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await aiGatewayFetch( {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

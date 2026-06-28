@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
@@ -544,7 +545,7 @@ LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).`
 
     const systemPrompt = basePrompt + LEXIQUE_PROMPT_BLOCK + analysisPrompt + subdomainPrompt;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await aiGatewayFetch( {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,

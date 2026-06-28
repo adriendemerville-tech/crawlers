@@ -1,4 +1,5 @@
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { corsHeaders } from '../_shared/cors.ts'
 import { getSiteContext, extractDomain } from '../_shared/getSiteContext.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
@@ -1166,7 +1167,7 @@ FRAÎCHEUR & DÉNOMINATION:
         }
         console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${model} (brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
         try {
-          const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          const resp = await aiGatewayFetch( {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${LOVABLE_API_KEY}`,

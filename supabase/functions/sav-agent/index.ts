@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getServiceClient } from "../_shared/supabaseClient.ts";
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates, getMemoryExtractionPrompt, parseMemoryExtraction, getPendingSuggestions } from "../_shared/siteMemory.ts";
 import { FELIX_PERSONA, getAutonomyBlock, INTENTIONALITY_PROMPT } from "../_shared/agentPersonas.ts";
@@ -505,7 +506,7 @@ Réponds UNIQUEMENT en JSON strict :
   "priority": "critical"
 }`;
 
-        const routingResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        const routingResp = await aiGatewayFetch( {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -649,7 +650,7 @@ Message du creator : "${lastUserMsg}"
 Réponds UNIQUEMENT en JSON : { "changes": [{"key": "...", "value": "..."}], "summary": "résumé en français des changements" }
 Si aucun changement détecté, retourne : { "changes": [], "summary": "Aucun changement détecté" }`;
 
-          const configResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const configResp = await aiGatewayFetch( {
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -794,7 +795,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             ...messages.slice(-20),
           ];
 
-          const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const aiResp = await aiGatewayFetch( {
             method: "POST",
             headers: {
               Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -1676,7 +1677,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
             ...messages.slice(-20),
           ];
 
-          const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const aiResp = await aiGatewayFetch( {
             method: "POST",
             headers: {
               Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -2697,7 +2698,7 @@ IMPORTANT : Termine OBLIGATOIREMENT ta réponse par la balise <!--NAV_ACTION--> 
       ? parseInt(felixConfig.max_tokens_creator || '2000', 10)
       : screenHint ? 1200 : parseInt(felixConfig.max_tokens || '600', 10);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await aiGatewayFetch( {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
