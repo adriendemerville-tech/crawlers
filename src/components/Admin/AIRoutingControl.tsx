@@ -143,6 +143,59 @@ export function AIRoutingControl() {
         </p>
       </header>
 
+      {/* Kill switch premium (Combo ABC) */}
+      <div className={`rounded-lg p-4 flex items-start justify-between gap-4 border-2 ${killSwitch ? 'border-yellow-500 bg-yellow-500/5' : 'border-foreground/20 bg-muted/30'}`}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <ShieldOff className="h-4 w-4" />
+            <h3 className="font-semibold">Kill switch — désactiver les modèles premium</h3>
+            {killSwitch && (
+              <Badge variant="outline" className="border-yellow-500 text-yellow-600 dark:text-yellow-400">
+                ACTIF
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Bascule instantanément Claude Sonnet 4.5, GPT-5.4/5.5 et Gemini 3.1 Pro vers leurs fallbacks moins chers
+            (Haiku, GPT-5.4-mini, Gemini 3.5 Flash). Propagation &lt; 60 s. À armer si pic de coûts ou incident.
+          </p>
+        </div>
+        <Switch
+          checked={killSwitch}
+          disabled={killSwitchSaving}
+          onCheckedChange={(v) => toggleKillSwitch(v)}
+        />
+      </div>
+
+      {/* Dashboard usage 7j */}
+      <div className="rounded-lg p-4 border border-border space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <h3 className="font-semibold">Crédits LLM — 7 derniers jours</h3>
+          </div>
+          <Badge variant="outline" className="font-mono">
+            ${totalUsd.toFixed(2)} · {usage7d.length} appels
+          </Badge>
+        </div>
+        {topModels.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucun appel logué sur 7j.</p>
+        ) : (
+          <div className="space-y-1">
+            {topModels.map(([model, s]) => (
+              <div key={model} className="flex items-center justify-between text-xs font-mono gap-2">
+                <span className="truncate">{model}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {s.calls} appels · ${s.cost.toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+
+
       {/* Master toggle */}
       <div className="border-2 border-foreground/20 rounded-lg p-4 flex items-start justify-between gap-4 bg-muted/30">
         <div className="flex-1 min-w-0">
