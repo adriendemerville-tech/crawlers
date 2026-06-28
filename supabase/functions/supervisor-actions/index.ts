@@ -451,7 +451,6 @@ try {
       const highRiskActions = decisions.filter((d: any) => (d.risk_predicted || 0) >= 4)
 
       // Build LLM audit prompt
-      const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
       const parmenionPrompt = `Tu es le SUPERVISOR. Tu audites les décisions de l'intelligence Parménion (pilote automatique SEO).
 
 STATISTIQUES :
