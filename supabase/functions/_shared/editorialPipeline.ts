@@ -12,6 +12,7 @@
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { toFrenchSentenceCase, normalizeHtmlHeadings } from "./sentenceCase.ts";
 import { isDictadeviDomain } from "./domainUtils.ts";
+import { aiGatewayCall } from "./aiGatewayFetch.ts";
 import {
   fetchDictadeviContext,
   renderDictadeviContextBlock,
@@ -668,22 +669,24 @@ async function callLLM(
   prompt: string,
   opts: { jsonMode?: boolean } = {},
 ): Promise<{ content: string; tokens_in: number; tokens_out: number; cost_usd: number }> {
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
-
   const body: Record<string, unknown> = {
-    model,
     messages: [{ role: "user", content: prompt }],
   };
   if (opts.jsonMode) body.response_format = { type: "json_object" };
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+  // Fallback chain: si Claude primaire, retombe sur Gemini 3.5 Flash puis 3.1 Flash Lite.
+  // Sinon, retombe sur Gemini 3.5 Flash puis Haiku.
+  const isClaude = model.startsWith("anthropic/");
+  const fallback1 = isClaude ? "google/gemini-3.5-flash" : "google/gemini-3.5-flash";
+  const fallback2 = isClaude ? "google/gemini-3.1-flash-lite" : "anthropic/claude-haiku-4.5";
+
+  const res = await aiGatewayCall({
+    primary: model,
+    fallback1,
+    fallback2,
+    cache: isClaude ? "anthropic" : "none",
+    body,
+    timeoutMs: 30_000,
   });
 
   if (!res.ok) {
