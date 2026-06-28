@@ -651,7 +651,7 @@ try {
                 fixes: v2Fixes,
                 _from_prescribe_decision_id: lastPrescribe!.id,
               },
-              functions: functions.length > 0 ? functions : [isIktracker ? 'iktracker-actions' : 'wpsync'],
+              functions: functions.length > 0 ? functions : [isIktracker ? (isDictadevi ? 'dictadevi-actions' : 'iktracker-actions') : 'wpsync'],
             },
             summary: `Execute déterministe V2 → ${v2CmsActions.length} cms_actions + ${v2Fixes.length} fixes (plan ${lastPrescribe!.id})`,
           };
