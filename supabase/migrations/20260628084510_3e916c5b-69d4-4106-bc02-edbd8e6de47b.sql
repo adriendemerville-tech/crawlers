@@ -1,0 +1,1 @@
+UPDATE public.autopilot_configs SET status = 'idle', updated_at = now() WHERE status = 'error';
