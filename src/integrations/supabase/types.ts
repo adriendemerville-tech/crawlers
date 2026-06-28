@@ -549,6 +549,8 @@ export type Database = {
       }
       ai_gateway_usage: {
         Row: {
+          cache_creation_tokens: number | null
+          cache_read_tokens: number | null
           completion_tokens: number | null
           created_at: string
           edge_function: string | null
@@ -561,6 +563,8 @@ export type Database = {
           total_tokens: number | null
         }
         Insert: {
+          cache_creation_tokens?: number | null
+          cache_read_tokens?: number | null
           completion_tokens?: number | null
           created_at?: string
           edge_function?: string | null
@@ -573,6 +577,8 @@ export type Database = {
           total_tokens?: number | null
         }
         Update: {
+          cache_creation_tokens?: number | null
+          cache_read_tokens?: number | null
           completion_tokens?: number | null
           created_at?: string
           edge_function?: string | null
