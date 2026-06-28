@@ -542,6 +542,48 @@ Réponds en JSON strict :
     }
   }
 
+  // ── Anti-hallucination guard (Lot 2 #11) ────────────────────────────────────
+  // Pour les contenus longs (>800 mots), passe le draft à gemini-3.1-flash-lite
+  // pour repérer les claims non sourcés / chiffres inventés. Non-bloquant : on
+  // logue les findings dans metadata pour audit a posteriori.
+  try {
+    const plain = typeof parsed.content === 'string'
+      ? parsed.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      : '';
+    const wordCount = plain ? plain.split(' ').length : 0;
+    if (wordCount > 800) {
+      const validationPrompt = `Tu es un fact-checker. Analyse ce contenu et identifie UNIQUEMENT les affirmations factuelles douteuses (chiffres précis, citations, normes, dates) qui pourraient être inventées.
+
+CONTENU (${wordCount} mots) :
+${plain.slice(0, 6000)}
+
+Réponds en JSON strict :
+{
+  "risk_level": "low|medium|high",
+  "suspicious_claims": ["claim 1 textuel", "claim 2 textuel"],
+  "recommendation": "publish|review|rewrite"
+}`;
+      const validation = await callLLM('google/gemini-3.1-flash-lite', validationPrompt, { jsonMode: true });
+      const findings = safeJSON<{ risk_level?: string; suspicious_claims?: string[]; recommendation?: string }>(validation.content);
+      await logStage(supabase, {
+        user_id: input.user_id,
+        domain: input.domain,
+        pipeline_run_id,
+        content_type: input.content_type,
+        stage: 'anti_hallucination',
+        model_used: 'google/gemini-3.1-flash-lite',
+        tokens_in: validation.tokens_in,
+        tokens_out: validation.tokens_out,
+        latency_ms: 0,
+        cost_usd: 0,
+        status: findings?.risk_level === 'high' ? 'warning' : 'success',
+        metadata: { word_count: wordCount, ...findings },
+      });
+    }
+  } catch (e) {
+    console.warn('[editorialPipeline] anti-hallucination guard failed (non-blocking):', (e as Error).message);
+  }
+
   await logStage(supabase, {
     user_id: input.user_id,
     domain: input.domain,
