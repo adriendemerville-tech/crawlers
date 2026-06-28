@@ -59,7 +59,7 @@ const DEFAULTS = {
   seuil_bon: 70,
   seuil_moyen: 40,
   seuil_mauvais: 0,
-  llm_name: 'google/gemini-2.5-flash',
+  llm_name: 'google/gemini-3-flash-preview',
 };
 
 /* ------------------------------------------------------------------ */
