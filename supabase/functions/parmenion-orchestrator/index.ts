@@ -618,7 +618,7 @@ try {
           // ═══ EXECUTE déterministe V2 : rejoue cms_actions/fixes du dernier prescribe ═══
           const isContentTask = v2CmsActions.length > 0;
           const functions: string[] = [];
-          if (v2CmsActions.length > 0) functions.push(isIktracker ? 'iktracker-actions' : 'cms-push-draft');
+          if (v2CmsActions.length > 0) functions.push(isIktracker ? (isDictadevi ? 'dictadevi-actions' : 'iktracker-actions') : 'cms-push-draft');
           if (v2Fixes.length > 0 && !isIktracker) functions.push('cms-push-code');
 
           console.log(`[Parménion] 🔁 EXECUTE déterministe V2: réutilise prescribe ${lastPrescribe!.id} → ${v2CmsActions.length} cms_actions + ${v2Fixes.length} fixes via [${functions.join(', ')}]`);
@@ -651,7 +651,7 @@ try {
                 fixes: v2Fixes,
                 _from_prescribe_decision_id: lastPrescribe!.id,
               },
-              functions: functions.length > 0 ? functions : [isIktracker ? 'iktracker-actions' : 'wpsync'],
+              functions: functions.length > 0 ? functions : [isIktracker ? (isDictadevi ? 'dictadevi-actions' : 'iktracker-actions') : 'wpsync'],
             },
             summary: `Execute déterministe V2 → ${v2CmsActions.length} cms_actions + ${v2Fixes.length} fixes (plan ${lastPrescribe!.id})`,
           };
@@ -747,7 +747,7 @@ try {
         // V3: prescribe is handled by cocoon-strategist, fallback to its output
         validatedFunctions.push('cocoon-strategist');
       }
-      else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? 'iktracker-actions' : 'wpsync');
+      else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? (isDictadevi ? 'dictadevi-actions' : 'iktracker-actions') : 'wpsync');
       else if (currentPhase === 'validate') validatedFunctions.push('audit-expert-seo');
     }
     decision.action.functions = validatedFunctions;
