@@ -43,6 +43,7 @@ import { routeCmsActions } from '../_shared/autopilot/cmsActionRouter.ts';
 import { trackAnalyticsEvent, pushIktrackerEvent } from '../_shared/autopilot/iktrackerBridge.ts';
 import { runPostAudit, runPostDiagnose } from '../_shared/autopilot/postDiagnose.ts';
 import { checkSemanticGate } from '../_shared/autopilot/semanticGate.ts';
+import { buildOriginalImageBrief } from '../_shared/parmenion/imageOriginality.ts';
 import { markDeployedItems } from '../_shared/autopilot/postExecute.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
 
@@ -772,7 +773,7 @@ async function executeIktrackerActions(
       // Image generation after successful create-post
       let imageGenerated = false;
       if (funcResponse.ok && inferredAction === 'create-post' && cmsAction.body && !cmsAction.body.image_url) {
-        imageGenerated = await generateAndAttachImage(cmsAction, funcResult, site, supabase);
+        imageGenerated = await generateAndAttachImage(cmsAction, funcResult, site, supabase, config.tracked_site_id);
       }
       
       executionResults.push({
@@ -797,18 +798,26 @@ async function executeIktrackerActions(
   }
 }
 
-async function generateAndAttachImage(cmsAction: any, funcResult: any, site: SiteInfo, supabase: any): Promise<boolean> {
+async function generateAndAttachImage(cmsAction: any, funcResult: any, site: SiteInfo, supabase: any, trackedSiteId?: string | null): Promise<boolean> {
   try {
     const articleTitle = cmsAction.body.title || '';
     const articleExcerpt = cmsAction.body.excerpt || cmsAction.body.meta_description || '';
-    const imagePrompt = `Evocative visual illustration for a blog article about: ${articleTitle}. Context: ${articleExcerpt}. Do NOT include any text, title or lettering.`.slice(0, 500);
-    
-    console.log(`[AutopilotEngine] Generating image for article: "${articleTitle}" (post-dedup)`);
-    
+    const articleSlug = cmsAction.body.slug || funcResult?.result?.slug || articleTitle;
+
+    const brief = await buildOriginalImageBrief({
+      supabase,
+      trackedSiteId,
+      slug: articleSlug,
+      title: articleTitle,
+      excerpt: articleExcerpt,
+    });
+
+    console.log(`[AutopilotEngine] Generating image for "${articleTitle}" — style=${brief.style} persona=${brief.persona_key ?? 'generic'} angle="${brief.angle.slice(0, 60)}…"`);
+
     const imgResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: imagePrompt, style: 'cinematic' }),
+      body: JSON.stringify({ prompt: brief.prompt, style: brief.style }),
       signal: AbortSignal.timeout(30000),
     });
 
