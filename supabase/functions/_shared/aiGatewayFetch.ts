@@ -71,6 +71,41 @@ const FALLBACK_ALLOWED = new Set<string>([
   'perplexity/sonar',
 ]);
 
+// Kill switch admin: tags des modèles "premium" que `disable_premium=true` saute.
+const PREMIUM_MODELS = new Set<string>([
+  'anthropic/claude-sonnet-4.5',
+  'openai/gpt-5.4',
+  'openai/gpt-5.4-pro',
+  'openai/gpt-5.5',
+  'openai/gpt-5.5-pro',
+  'openai/gpt-5.2',
+  'google/gemini-3.1-pro-preview',
+]);
+
+// Cache process-local du flag global (TTL 60s), lecture lazy via fetch REST anon.
+let killSwitchCache: { active: boolean; expiresAt: number } | null = null;
+async function isPremiumDisabled(): Promise<boolean> {
+  const now = Date.now();
+  if (killSwitchCache && killSwitchCache.expiresAt > now) return killSwitchCache.active;
+  let active = false;
+  try {
+    const url = Deno.env.get('SUPABASE_URL');
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
+    if (url && key) {
+      const r = await fetch(`${url}/rest/v1/ai_routing_global_flags?key=eq.disable_premium&select=enabled`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` },
+        signal: AbortSignal.timeout(2000),
+      });
+      if (r.ok) {
+        const rows = await r.json();
+        active = Array.isArray(rows) && rows[0]?.enabled === true;
+      }
+    }
+  } catch { /* silent: défaut = pas de kill switch */ }
+  killSwitchCache = { active, expiresAt: now + 60_000 };
+  return active;
+}
+
 function providerFor(model: string): 'lovable' | 'openrouter' {
   if (model.startsWith('google/') || model.startsWith('openai/')) return 'lovable';
   return 'openrouter';
