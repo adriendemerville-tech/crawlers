@@ -30,7 +30,6 @@ export const MODEL_PRICING: Record<string, { input: number; output: number; labe
   'moonshotai/kimi-k2': { input: 0.14, output: 2.49, label: 'Kimi K2' },
   'perplexity/sonar': { input: 1.00, output: 1.00, label: 'Perplexity Sonar' },
 };
-};
 
 const API_COST_ESTIMATES: Record<string, number> = {
   dataforseo: 0.01,
