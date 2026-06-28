@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RotateCcw, Zap, ShieldOff, Activity } from 'lucide-react';
+import { Loader2, RotateCcw, Zap, ShieldOff, Activity, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface RoutingRow {
