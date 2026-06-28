@@ -595,7 +595,6 @@ Réponds en JSON :
       const currentSource = await readFunctionSource(supabase, proposal.target_function)
 
       // 3. Build Claude prompt for code review + patch
-      const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
       const reviewPrompt = `Tu es le SUPERVISOR, un architecte logiciel senior chargé d'auditer le code produit par l'agent CTO.
 
 CONTEXTE :
