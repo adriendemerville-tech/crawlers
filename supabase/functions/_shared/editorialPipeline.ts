@@ -106,21 +106,24 @@ const CONTENT_TYPE_BASE_TIER: Record<ContentType, ModelTier> = {
   landing_page: "premium",
 };
 
+// Allocation iso ~$615/mois, primaires 2026 + Claude 4.5 sur writer (plan A+B+C)
+// fast/balanced = B2C → Claude Haiku 4.5 cached
+// premium = B2B → Claude Sonnet 4.5 cached
 const TIER_TO_MODEL: Record<"strategist" | "writer" | "tonalizer", Record<ModelTier, string>> = {
   strategist: {
-    fast: "google/gemini-2.5-flash",
-    balanced: "openai/gpt-5-mini",
-    premium: "openai/gpt-5",
+    fast: "google/gemini-3.5-flash",
+    balanced: "google/gemini-3.5-flash",
+    premium: "google/gemini-3.1-pro-preview",
   },
   writer: {
-    fast: "google/gemini-2.5-flash-lite",
-    balanced: "google/gemini-2.5-flash",
-    premium: "openai/gpt-5-mini",
+    fast: "anthropic/claude-haiku-4.5",
+    balanced: "anthropic/claude-haiku-4.5",
+    premium: "anthropic/claude-sonnet-4.5",
   },
   tonalizer: {
-    fast: "google/gemini-2.5-flash-lite",
-    balanced: "google/gemini-2.5-flash-lite",
-    premium: "google/gemini-2.5-flash",
+    fast: "google/gemini-3.1-flash-lite",
+    balanced: "google/gemini-3-flash-preview",
+    premium: "google/gemini-3-flash-preview",
   },
 };
 
