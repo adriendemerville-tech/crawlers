@@ -552,7 +552,7 @@ LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).`
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "anthropic/claude-haiku-4.5",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
