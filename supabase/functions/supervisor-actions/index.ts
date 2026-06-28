@@ -4,6 +4,11 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
 import { CostAccumulator } from '../_shared/llmCostCalculator.ts';
 import { checkDailyCostCap } from '../_shared/dailyCostGuard.ts';
+import { aiGatewayCall } from '../_shared/aiGatewayFetch.ts';
+
+const SUPERVISOR_MODEL = 'anthropic/claude-sonnet-4.5';
+const SUPERVISOR_FALLBACK_1 = 'openai/gpt-5.4';
+const SUPERVISOR_FALLBACK_2 = 'google/gemini-3.5-flash';
 
 // ─── Kill switch check ───────────────────────────────────────────────
 async function isSupervisorEnabled(): Promise<boolean> {
@@ -233,27 +238,25 @@ ${operationalContext || ''}
 Audite chaque correction : logique, impact, régressions. Note chaque correction en vert/orange.
 Rappel : JAMAIS de rouge — propose un correctif intermédiaire si nécessaire.`
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${Deno.env.get('OPENROUTER_API_KEY')}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://crawlers.fr',
-      'X-Title': 'Crawlers Supervisor',
-    },
-    body: JSON.stringify({
-      model: 'anthropic/claude-3.5-sonnet',
+  const response = await aiGatewayCall({
+    primary: SUPERVISOR_MODEL,
+    fallback1: SUPERVISOR_FALLBACK_1,
+    fallback2: SUPERVISOR_FALLBACK_2,
+    cache: 'anthropic',
+    timeoutMs: 60000,
+    body: {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.15,
       max_tokens: 6000,
-    }),
+    },
+    headers: { 'X-Title': 'Crawlers Supervisor' },
   })
 
   const data = await response.json()
-  if (costAcc) costAcc.add('anthropic/claude-3.5-sonnet', data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0)
+  if (costAcc) costAcc.add(SUPERVISOR_MODEL, data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0)
   const content = data.choices?.[0]?.message?.content || ''
 
   try {
@@ -448,7 +451,6 @@ try {
       const highRiskActions = decisions.filter((d: any) => (d.risk_predicted || 0) >= 4)
 
       // Build LLM audit prompt
-      const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
       const parmenionPrompt = `Tu es le SUPERVISOR. Tu audites les décisions de l'intelligence Parménion (pilote automatique SEO).
 
 STATISTIQUES :
@@ -494,27 +496,25 @@ Réponds en JSON :
   "severity": "healthy|needs_attention|critical"
 }`
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.fr',
-          'X-Title': 'Crawlers Supervisor',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3.5-sonnet',
+      const response = await aiGatewayCall({
+        primary: SUPERVISOR_MODEL,
+        fallback1: SUPERVISOR_FALLBACK_1,
+        fallback2: SUPERVISOR_FALLBACK_2,
+        cache: 'anthropic',
+        timeoutMs: 60000,
+        body: {
           messages: [
             { role: 'system', content: 'Tu es le Supervisor de Crawlers. Tu audites la qualité des décisions de l\'intelligence Parménion.' },
             { role: 'user', content: parmenionPrompt },
           ],
           temperature: 0.15,
           max_tokens: 4000,
-        }),
+        },
+        headers: { 'X-Title': 'Crawlers Supervisor' },
       })
 
       const llmData = await response.json()
-      costAcc.add('anthropic/claude-3.5-sonnet', llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
+      costAcc.add(SUPERVISOR_MODEL, llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
       const content = llmData.choices?.[0]?.message?.content || ''
 
       let analysis: any = null
@@ -595,7 +595,6 @@ Réponds en JSON :
       const currentSource = await readFunctionSource(supabase, proposal.target_function)
 
       // 3. Build Claude prompt for code review + patch
-      const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
       const reviewPrompt = `Tu es le SUPERVISOR, un architecte logiciel senior chargé d'auditer le code produit par l'agent CTO.
 
 CONTEXTE :
@@ -638,27 +637,25 @@ Réponds en JSON strict :
   "supervisor_confidence": <0-100>
 }`
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.fr',
-          'X-Title': 'Crawlers Supervisor',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3.5-sonnet',
+      const response = await aiGatewayCall({
+        primary: SUPERVISOR_MODEL,
+        fallback1: SUPERVISOR_FALLBACK_1,
+        fallback2: SUPERVISOR_FALLBACK_2,
+        cache: 'anthropic',
+        timeoutMs: 90000,
+        body: {
           messages: [
             { role: 'system', content: 'Tu es le Supervisor de Crawlers. Tu audites et corriges le code produit par l\'agent CTO. Tu es rigoureux, conservateur et factuel.' },
             { role: 'user', content: reviewPrompt },
           ],
           temperature: 0.1,
           max_tokens: 8000,
-        }),
+        },
+        headers: { 'X-Title': 'Crawlers Supervisor' },
       })
 
       const llmData = await response.json()
-      costAcc.add('anthropic/claude-3.5-sonnet', llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
+      costAcc.add(SUPERVISOR_MODEL, llmData.usage?.prompt_tokens || 0, llmData.usage?.completion_tokens || 0)
       const content = llmData.choices?.[0]?.message?.content || ''
 
       let review: any = null
