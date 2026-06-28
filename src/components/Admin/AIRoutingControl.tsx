@@ -56,6 +56,15 @@ export function AIRoutingControl() {
     () => usage7d.reduce((s, r) => s + (Number(r.estimated_cost_usd) || 0), 0),
     [usage7d],
   );
+  const todayUsd = useMemo(() => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    return usage7d
+      .filter((r) => new Date(r.created_at) >= start)
+      .reduce((s, r) => s + (Number(r.estimated_cost_usd) || 0), 0);
+  }, [usage7d]);
+  // Seuil : $25/jour ≈ rythme $750/mois (au-dessus du budget Combo ABC $615)
+  const DAILY_BUDGET_USD = 25;
+  const overBudget = todayUsd > DAILY_BUDGET_USD;
   const topModels = useMemo(() => {
     const m = new Map<string, { calls: number; cost: number }>();
     for (const r of usage7d) {
