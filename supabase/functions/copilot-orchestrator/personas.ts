@@ -31,7 +31,7 @@ export const FELIX_CONFIG: PersonaConfig = {
   id: 'felix',
   displayName: 'Félix',
   systemPrompt: FELIX_PERSONA.styleGuide,
-  model: 'google/gemini-3-flash-preview',
+  model: 'anthropic/claude-haiku-4.5',
   maxOutputTokens: 800,
   skillPolicies: {
     // Lecture libre
