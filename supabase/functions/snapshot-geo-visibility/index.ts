@@ -32,12 +32,18 @@ async function queryLlmVisibility(
   domain: string,
   marketSector: string | null,
 ): Promise<{ providers: ProviderResult[]; prompts: string[] }> {
-  // Lightweight subset of providers for periodic snapshots (cost control)
+  // Pool GEO étendu (Combo ABC) : 9 modèles pour mesurer la visibilité réelle de la marque
+  // face aux générateurs LLM les plus utilisés en 2026.
   const SNAPSHOT_PROVIDERS = [
-    { id: 'gpt4o', name: 'GPT-4o', company: 'OpenAI', model: 'openai/gpt-5.4' },
-    { id: 'claude35', name: 'Claude 3.5 Sonnet', company: 'Anthropic', model: 'anthropic/claude-3.5-sonnet' },
-    { id: 'gemini2', name: 'Gemini 2.0 Flash', company: 'Google', model: 'google/gemini-3-flash-preview' },
-    { id: 'perplexity', name: 'Perplexity Sonar', company: 'Perplexity', model: 'perplexity/sonar' },
+    { id: 'gpt54',        name: 'GPT-5.4',             company: 'OpenAI',     model: 'openai/gpt-5.4' },
+    { id: 'gpt55',        name: 'GPT-5.5',             company: 'OpenAI',     model: 'openai/gpt-5.5' },
+    { id: 'sonnet45',     name: 'Claude Sonnet 4.5',   company: 'Anthropic',  model: 'anthropic/claude-sonnet-4.5' },
+    { id: 'haiku45',      name: 'Claude Haiku 4.5',    company: 'Anthropic',  model: 'anthropic/claude-haiku-4.5' },
+    { id: 'gemini3pro',   name: 'Gemini 3.1 Pro',      company: 'Google',     model: 'google/gemini-3.1-pro-preview' },
+    { id: 'gemini35flash',name: 'Gemini 3.5 Flash',    company: 'Google',     model: 'google/gemini-3.5-flash' },
+    { id: 'perplexity',   name: 'Perplexity Sonar',    company: 'Perplexity', model: 'perplexity/sonar' },
+    { id: 'llama33',      name: 'Llama 3.3 70B',       company: 'Meta',       model: 'meta-llama/llama-3.3-70b-instruct' },
+    { id: 'mistralL',     name: 'Mistral Large 2411',  company: 'Mistral',    model: 'mistralai/mistral-large-2411' },
   ]
 
   const sectorCtx = marketSector ? ` dans le secteur ${marketSector}` : ''
