@@ -183,10 +183,27 @@ export function AIRoutingControl() {
             <Activity className="h-4 w-4" />
             <h3 className="font-semibold">Crédits LLM — 7 derniers jours</h3>
           </div>
-          <Badge variant="outline" className="font-mono">
-            ${totalUsd.toFixed(2)} · {usage7d.length} appels
-          </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className={`font-mono ${overBudget ? 'border-yellow-500 text-yellow-600 dark:text-yellow-400' : ''}`}>
+              Aujourd'hui : ${todayUsd.toFixed(2)} / ${DAILY_BUDGET_USD}
+            </Badge>
+            <Badge variant="outline" className="font-mono">
+              7j : ${totalUsd.toFixed(2)} · {usage7d.length} appels
+            </Badge>
+          </div>
         </div>
+        {overBudget && (
+          <div className="flex items-start gap-2 rounded-md border-2 border-yellow-500 bg-yellow-500/10 p-3 text-sm">
+            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Dépassement budget journalier</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Rythme actuel &gt; ${DAILY_BUDGET_USD}/jour (≈ ${(DAILY_BUDGET_USD * 30).toFixed(0)}/mois, au-dessus du budget Combo ABC $615).
+                Active le kill switch ci-dessus pour basculer immédiatement sur les fallbacks moins chers.
+              </p>
+            </div>
+          </div>
+        )}
         {topModels.length === 0 ? (
           <p className="text-xs text-muted-foreground">Aucun appel logué sur 7j.</p>
         ) : (
