@@ -1,15 +1,15 @@
 /**
  * Multi-provider AI gateway wrapper avec cascade primary → fallback1 → fallback2.
  *
- * ROUTING par préfixe de modèle:
- *   - google/*, openai/*           → Lovable AI Gateway
- *   - anthropic/*                  → OpenRouter (Lovable AI ne supporte pas Claude)
- *   - mistralai/*, qwen/*,
- *     meta-llama/*, moonshotai/*,
- *     perplexity/*                 → OpenRouter
+ * ROUTING (règle llm-provider-priority-fr):
+ *   - 100% des appels chat completions → OpenRouter en primaire
+ *   - google/* et openai/* : Lovable AI Gateway sert de filet de secours
+ *     automatique si OpenRouter renvoie 402/408/429/5xx ou throw.
+ *   - anthropic/*, mistralai/*, qwen/*, meta-llama/*, moonshotai/*, perplexity/* :
+ *     OpenRouter uniquement (Lovable AI ne sert pas ces modèles).
  *
- * Le routage Lovable-first reste possible si OPENROUTER_API_KEY absent
- * (les modèles non-Google/OpenAI sont alors ignorés).
+ * Embeddings (`_shared/embeddings.ts`) et image generation restent sur Lovable AI
+ * direct — OpenRouter ne couvre pas ces endpoints de manière équivalente.
  *
  * Plan: budget cible ~$615/mois, primaires 2026 uniquement (Gemini 3.x, GPT-5.4/5.5)
  * avec exception Claude 4.5 sur chat agents + writer Parménion.
