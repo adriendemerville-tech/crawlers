@@ -572,11 +572,12 @@ try {
 
         if (hasV3Plan) {
           const task = prescribePayload.strategist_task;
+          const cmsBridge = isDictadevi ? 'dictadevi-actions' : 'iktracker-actions';
           const executorFn = task.executor_function
-            || (isIktracker ? 'iktracker-actions' : 'wpsync');
+            || (isIktracker ? cmsBridge : 'wpsync');
           const isContentTask = (lastPrescribe?.goal_type === 'content_creation' || lastPrescribe?.goal_type === 'content_gap')
             || (typeof task.action_type === 'string' && (task.action_type.includes('content') || task.action_type === 'publish_draft'));
-          const finalExecutorFn = isContentTask && isIktracker ? 'iktracker-actions' : executorFn;
+          const finalExecutorFn = isContentTask && isIktracker ? cmsBridge : executorFn;
 
           console.log(`[Parménion] 🔁 EXECUTE déterministe V3: réutilise plan prescribe ${lastPrescribe.id} → task "${task.title}" via ${finalExecutorFn}`);
 
