@@ -21,28 +21,41 @@ function estimateCost(model: string, pt: number, ct: number): number {
 
 /**
  * Log usage from a non-streaming response (has usage in body).
+ * Anthropic cache fields (cache_creation_input_tokens / cache_read_input_tokens),
+ * quand présents, sont persistés pour mesurer le hit rate.
  */
 export function logAIUsageFromResponse(
   supabase: any,
   model: string,
   edgeFunction: string,
-  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number },
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    cache_creation_input_tokens?: number;
+    cache_read_input_tokens?: number;
+  },
 ): void {
   try {
     const pt = usage?.prompt_tokens || 0;
     const ct = usage?.completion_tokens || 0;
+    const cacheCreate = usage?.cache_creation_input_tokens || 0;
+    const cacheRead = usage?.cache_read_input_tokens || 0;
     supabase.from('ai_gateway_usage').insert({
-      gateway: 'lovable',
+      gateway: model.startsWith('anthropic/') ? 'openrouter' : 'lovable',
       model,
       edge_function: edgeFunction,
       prompt_tokens: pt,
       completion_tokens: ct,
       total_tokens: usage?.total_tokens || (pt + ct),
       estimated_cost_usd: estimateCost(model, pt, ct),
+      cache_creation_tokens: cacheCreate,
+      cache_read_tokens: cacheRead,
       is_fallback: false,
     }).then(() => {}).catch(() => {});
   } catch { /* silent */ }
 }
+
 
 /**
  * Log estimated usage for streaming responses (no usage object available).
