@@ -747,7 +747,7 @@ try {
         // V3: prescribe is handled by cocoon-strategist, fallback to its output
         validatedFunctions.push('cocoon-strategist');
       }
-      else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? 'iktracker-actions' : 'wpsync');
+      else if (currentPhase === 'execute') validatedFunctions.push(isIktracker ? (isDictadevi ? 'dictadevi-actions' : 'iktracker-actions') : 'wpsync');
       else if (currentPhase === 'validate') validatedFunctions.push('audit-expert-seo');
     }
     decision.action.functions = validatedFunctions;
