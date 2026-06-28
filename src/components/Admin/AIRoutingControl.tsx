@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RotateCcw, Zap } from 'lucide-react';
+import { Loader2, RotateCcw, Zap, ShieldOff, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface RoutingRow {
@@ -17,28 +17,76 @@ interface RoutingRow {
   updated_at: string;
 }
 
+type UsageRow = { model: string; estimated_cost_usd: number | null; created_at: string };
+
 export function AIRoutingControl() {
   const [rows, setRows] = useState<RoutingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [killSwitch, setKillSwitch] = useState<boolean>(false);
+  const [killSwitchSaving, setKillSwitchSaving] = useState(false);
+  const [usage7d, setUsage7d] = useState<UsageRow[]>([]);
   const { toast } = useToast();
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('ai_routing_overrides')
-      .select('*')
-      .order('feature');
-    if (error) {
-      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const [rRouting, rFlag, rUsage] = await Promise.all([
+      supabase.from('ai_routing_overrides').select('*').order('feature'),
+      supabase.from('ai_routing_global_flags').select('enabled').eq('key', 'disable_premium').maybeSingle(),
+      supabase.from('ai_gateway_usage')
+        .select('model, estimated_cost_usd, created_at')
+        .gte('created_at', sinceIso)
+        .limit(5000),
+    ]);
+    if (rRouting.error) {
+      toast({ title: 'Erreur', description: rRouting.error.message, variant: 'destructive' });
     } else {
-      setRows((data ?? []) as RoutingRow[]);
+      setRows((rRouting.data ?? []) as RoutingRow[]);
     }
+    setKillSwitch(rFlag.data?.enabled === true);
+    setUsage7d((rUsage.data ?? []) as UsageRow[]);
     setLoading(false);
   };
 
   useEffect(() => { void load(); }, []);
+
+  const totalUsd = useMemo(
+    () => usage7d.reduce((s, r) => s + (Number(r.estimated_cost_usd) || 0), 0),
+    [usage7d],
+  );
+  const topModels = useMemo(() => {
+    const m = new Map<string, { calls: number; cost: number }>();
+    for (const r of usage7d) {
+      const e = m.get(r.model) ?? { calls: 0, cost: 0 };
+      e.calls += 1;
+      e.cost += Number(r.estimated_cost_usd) || 0;
+      m.set(r.model, e);
+    }
+    return [...m.entries()].sort((a, b) => b[1].cost - a[1].cost).slice(0, 5);
+  }, [usage7d]);
+
+  const toggleKillSwitch = async (next: boolean) => {
+    setKillSwitchSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from('ai_routing_global_flags')
+      .update({ enabled: next, updated_at: new Date().toISOString(), updated_by: user?.id })
+      .eq('key', 'disable_premium');
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      setKillSwitch(next);
+      toast({
+        title: next ? 'Kill switch ACTIVÉ' : 'Kill switch désactivé',
+        description: next
+          ? 'Les modèles premium sont sautés (Claude Sonnet, GPT-5.4+, Gemini Pro). Propagation < 60s.'
+          : 'Allocation Combo ABC restaurée.',
+      });
+    }
+    setKillSwitchSaving(false);
+  };
 
   const updateRow = async (feature: string, patch: Partial<RoutingRow>) => {
     setSavingId(feature);
@@ -94,6 +142,59 @@ export function AIRoutingControl() {
           Cache 30 s côté edge — la propagation est quasi-immédiate.
         </p>
       </header>
+
+      {/* Kill switch premium (Combo ABC) */}
+      <div className={`rounded-lg p-4 flex items-start justify-between gap-4 border-2 ${killSwitch ? 'border-yellow-500 bg-yellow-500/5' : 'border-foreground/20 bg-muted/30'}`}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <ShieldOff className="h-4 w-4" />
+            <h3 className="font-semibold">Kill switch — désactiver les modèles premium</h3>
+            {killSwitch && (
+              <Badge variant="outline" className="border-yellow-500 text-yellow-600 dark:text-yellow-400">
+                ACTIF
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Bascule instantanément Claude Sonnet 4.5, GPT-5.4/5.5 et Gemini 3.1 Pro vers leurs fallbacks moins chers
+            (Haiku, GPT-5.4-mini, Gemini 3.5 Flash). Propagation &lt; 60 s. À armer si pic de coûts ou incident.
+          </p>
+        </div>
+        <Switch
+          checked={killSwitch}
+          disabled={killSwitchSaving}
+          onCheckedChange={(v) => toggleKillSwitch(v)}
+        />
+      </div>
+
+      {/* Dashboard usage 7j */}
+      <div className="rounded-lg p-4 border border-border space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <h3 className="font-semibold">Crédits LLM — 7 derniers jours</h3>
+          </div>
+          <Badge variant="outline" className="font-mono">
+            ${totalUsd.toFixed(2)} · {usage7d.length} appels
+          </Badge>
+        </div>
+        {topModels.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucun appel logué sur 7j.</p>
+        ) : (
+          <div className="space-y-1">
+            {topModels.map(([model, s]) => (
+              <div key={model} className="flex items-center justify-between text-xs font-mono gap-2">
+                <span className="truncate">{model}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {s.calls} appels · ${s.cost.toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+
 
       {/* Master toggle */}
       <div className="border-2 border-foreground/20 rounded-lg p-4 flex items-start justify-between gap-4 bg-muted/30">

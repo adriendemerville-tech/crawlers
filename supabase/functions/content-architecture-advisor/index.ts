@@ -1146,12 +1146,12 @@ FRAÎCHEUR & DÉNOMINATION:
       return score;
     })();
 
-    // Route: ≤4 → flash (simple), 5-8 → flash-preview (standard), ≥9 → pro (complex)
+    // Route: ≤4 → flash-lite (simple brief), 5-8 → flash (standard), ≥9 → Sonnet 4.5 + Gemini Pro fallback (complex)
     const modelTiers: string[] = complexityScore >= 9
-      ? ['google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview']
+      ? ['anthropic/claude-sonnet-4.5', 'google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview']
       : complexityScore >= 5
-        ? ['google/gemini-3-flash-preview', 'google/gemini-3-flash-preview']
-        : ['google/gemini-3-flash-preview'];
+        ? ['google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite']
+        : ['google/gemini-3.1-flash-lite'];
 
     // 90s leaves 60s headroom under the 150s edge-function CPU wall-time,
     // so a timeout fires *inside* the function and the catch block can mark
