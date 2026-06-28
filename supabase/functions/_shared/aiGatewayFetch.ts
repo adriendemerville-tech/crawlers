@@ -170,8 +170,9 @@ async function callOnce(
   cache: 'anthropic' | 'none',
   timeoutMs: number,
   extraHeaders: Record<string, string>,
+  providerOverride?: 'lovable' | 'openrouter',
 ): Promise<Response> {
-  const provider = providerFor(model);
+  const provider = providerOverride ?? providerFor(model);
   const url = provider === 'lovable' ? LOVABLE_URL : OPENROUTER_URL;
 
   const key = provider === 'lovable'
