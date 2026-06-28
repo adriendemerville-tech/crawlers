@@ -106,9 +106,18 @@ async function isPremiumDisabled(): Promise<boolean> {
   return active;
 }
 
-function providerFor(model: string): 'lovable' | 'openrouter' {
-  if (model.startsWith('google/') || model.startsWith('openai/')) return 'lovable';
+/**
+ * Provider primaire = OpenRouter pour TOUS les modèles chat (règle llm-provider-priority-fr).
+ * Lovable AI reste fallback automatique pour google/* et openai/* via `aiGatewayCall`.
+ * Embeddings + image gen restent câblés directement sur Lovable AI dans leurs helpers dédiés.
+ */
+function providerFor(_model: string): 'lovable' | 'openrouter' {
   return 'openrouter';
+}
+
+/** Modèles que Lovable AI sert nativement et qui peuvent servir de filet en cas de panne OpenRouter. */
+function lovableCanServe(model: string): boolean {
+  return model.startsWith('google/') || model.startsWith('openai/');
 }
 
 function shouldFallback(status: number): boolean {
