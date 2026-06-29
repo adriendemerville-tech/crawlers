@@ -1073,4 +1073,24 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/mentions-legales?lang=es" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/mentions-legales" />
   </url>
+  <url>
+    <loc>https://crawlers.fr/extension</loc>
+    <lastmod>2026-06-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/extension" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/extension?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/extension?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/extension" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/features</loc>
+    <lastmod>2026-06-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/features" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/features?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/features?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/features" />
+  </url>
 </urlset>
