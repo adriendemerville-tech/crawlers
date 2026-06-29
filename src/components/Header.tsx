@@ -532,7 +532,7 @@ export function Header() {
                       aria-label={t.profile}
                     >
                       <Avatar className="h-9 w-9">
-                        <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                        <AvatarImage src={profile?.avatar_url || undefined} alt="User profile picture" />
                         <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
                           {getInitials()}
                         </AvatarFallback>
@@ -558,7 +558,7 @@ export function Header() {
                     {/* Profile card (non-clickable) */}
                     <div className="flex w-full items-center justify-start gap-3 p-3">
                       <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                        <AvatarImage src={profile?.avatar_url || undefined} alt="User profile picture" />
                         <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
                           {getInitials()}
                         </AvatarFallback>
