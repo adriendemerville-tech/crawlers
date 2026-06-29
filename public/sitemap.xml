@@ -1,47 +1,1076 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Home -->
-  <url><loc>https://crawlers.fr/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<!-- Crawlers.fr Sitemap - Generated 2026-06-02T04:00:04.304Z from sitemap_entries -->
 
-  <!-- PILIERS (pages pilotes — priorité max) -->
-  <url><loc>https://crawlers.fr/audit-seo-gratuit</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://crawlers.fr/score-geo</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://crawlers.fr/google-business</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-
-  <!-- Cluster Audit SEO -->
-  <url><loc>https://crawlers.fr/audit-expert</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://crawlers.fr/audit-semantique</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://crawlers.fr/pagespeed</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://crawlers.fr/eeat</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://crawlers.fr/guide-audit-seo</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-
-  <!-- Cluster GEO / IA -->
-  <url><loc>https://crawlers.fr/generative-engine-optimization</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://crawlers.fr/analyse-bots-ia</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://crawlers.fr/architecte-generatif</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://crawlers.fr/comparatif-claude-vs-crawlers</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://crawlers.fr/comparatif-crawlers-semrush</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-
-  <!-- Offres / produit -->
-  <url><loc>https://crawlers.fr/tarifs</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://crawlers.fr/pro-agency</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://crawlers.fr/marina</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://crawlers.fr/developers</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://crawlers.fr/docs/api/crawlers</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-
-  <!-- Contenu éditorial -->
-  <url><loc>https://crawlers.fr/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://crawlers.fr/guides</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://crawlers.fr/lexique</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
-
-  <!-- E-E-A-T -->
-  <url><loc>https://crawlers.fr/a-propos</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://crawlers.fr/auteur/adrien-de-volontat</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://crawlers.fr/methodologie</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://crawlers.fr/faq</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-
-  <!-- Légal (gardé pour confiance) -->
-  <url><loc>https://crawlers.fr/mentions-legales</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://crawlers.fr/politique-confidentialite</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://crawlers.fr/cgvu</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url>
+    <loc>https://crawlers.fr</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/audit-expert</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/audit-expert" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/audit-expert?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/audit-expert?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/audit-expert" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/analyse-site-web-gratuit</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/analyse-site-web-gratuit" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/analyse-site-web-gratuit?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/analyse-site-web-gratuit?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/analyse-site-web-gratuit" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/audit-seo-gratuit</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/audit-seo-gratuit" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/audit-seo-gratuit?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/audit-seo-gratuit?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/audit-seo-gratuit" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/tarifs</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/tarifs" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/tarifs?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/tarifs?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/tarifs" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/audit-compare</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/audit-compare" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/audit-compare?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/audit-compare?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/audit-compare" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/site-crawl</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/site-crawl" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/site-crawl?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/site-crawl?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/site-crawl" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/generative-engine-optimization</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/generative-engine-optimization" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/generative-engine-optimization?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/generative-engine-optimization?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/generative-engine-optimization" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guides</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guides" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guides?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guides?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guides" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/stratege-cocoon</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/stratege-cocoon" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/stratege-cocoon?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/stratege-cocoon?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/stratege-cocoon" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/pro-agency</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/pro-agency" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/pro-agency?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/pro-agency?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/pro-agency" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/observatoire</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/observatoire" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/observatoire?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/observatoire?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/observatoire" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/content-architect</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/content-architect" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/content-architect?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/content-architect?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/content-architect" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/matrice</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/matrice" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/matrice?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/matrice?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/matrice" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/sea-seo-bridge</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/sea-seo-bridge" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/sea-seo-bridge?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/sea-seo-bridge?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/sea-seo-bridge" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/comprendre-geo-vs-seo</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/comprendre-geo-vs-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/comprendre-geo-vs-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/comprendre-geo-vs-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/comprendre-geo-vs-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/google-sge-seo-preparation</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/google-sge-seo-preparation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/google-sge-seo-preparation?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/google-sge-seo-preparation?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/google-sge-seo-preparation" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/site-invisible-chatgpt-solutions</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/site-invisible-chatgpt-solutions" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/site-invisible-chatgpt-solutions?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/site-invisible-chatgpt-solutions?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/site-invisible-chatgpt-solutions" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/bloquer-autoriser-gptbot</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/bloquer-autoriser-gptbot" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/bloquer-autoriser-gptbot?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/bloquer-autoriser-gptbot?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/bloquer-autoriser-gptbot" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/json-ld-snippet-autorite</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/json-ld-snippet-autorite" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/json-ld-snippet-autorite?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/json-ld-snippet-autorite?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/json-ld-snippet-autorite" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/vendre-audit-ia-clients</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/vendre-audit-ia-clients" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/vendre-audit-ia-clients?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/vendre-audit-ia-clients?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/vendre-audit-ia-clients" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/tableau-comparatif-seo-geo-2026</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/tableau-comparatif-seo-geo-2026" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/tableau-comparatif-seo-geo-2026?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/tableau-comparatif-seo-geo-2026?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/tableau-comparatif-seo-geo-2026" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/core-update-2026-google-finalise-mise-a-jour" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/google-core-update-2024-2026-chronologie-impact-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/eeat-expertise-algorithme</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/eeat-expertise-algorithme" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/eeat-expertise-algorithme?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/eeat-expertise-algorithme?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/eeat-expertise-algorithme" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/seo-ia-ai-overviews-contenu-humain-google" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/crawler-definition-seo-geo</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/crawler-definition-seo-geo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/crawler-definition-seo-geo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/crawler-definition-seo-geo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/crawler-definition-seo-geo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/mission-mise-aux-normes-ia</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/mission-mise-aux-normes-ia" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/mission-mise-aux-normes-ia?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/mission-mise-aux-normes-ia?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/mission-mise-aux-normes-ia" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/liste-user-agents-ia-2026</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/liste-user-agents-ia-2026" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/liste-user-agents-ia-2026?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/liste-user-agents-ia-2026?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/liste-user-agents-ia-2026" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/audit-seo-gratuit-vs-semrush</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/audit-seo-gratuit-vs-semrush" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/audit-seo-gratuit-vs-semrush?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/audit-seo-gratuit-vs-semrush?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/audit-seo-gratuit-vs-semrush" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/perplexity-seo-citation</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/perplexity-seo-citation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/perplexity-seo-citation?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/perplexity-seo-citation?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/perplexity-seo-citation" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/artisan-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/artisan-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/artisan-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/artisan-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/artisan-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/btp-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/btp-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/btp-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/btp-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/btp-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/restaurant-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/restaurant-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/restaurant-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/restaurant-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/restaurant-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/avocat-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/avocat-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/avocat-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/avocat-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/avocat-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/medecin-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/medecin-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/medecin-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/medecin-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/medecin-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/immobilier-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/immobilier-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/immobilier-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/immobilier-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/immobilier-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/ecommerce-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/ecommerce-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/ecommerce-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/ecommerce-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/ecommerce-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/coach-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/coach-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/coach-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/coach-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/coach-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/photographe-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/photographe-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/photographe-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/photographe-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/photographe-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/pme-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/pme-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/pme-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/pme-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/pme-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/agence-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/agence-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/agence-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/agence-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/agence-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/consultant-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/consultant-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/consultant-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/consultant-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/consultant-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/saas-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/saas-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/saas-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/saas-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/saas-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/startup-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/startup-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/startup-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/startup-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/startup-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/freelance-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/freelance-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/freelance-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/freelance-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/freelance-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide/marketplace-seo</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide/marketplace-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide/marketplace-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide/marketplace-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide/marketplace-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/comparatif-claude-vs-crawlers</loc>
+    <lastmod>2026-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/comparatif-claude-vs-crawlers" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/comparatif-claude-vs-crawlers?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/comparatif-claude-vs-crawlers?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/comparatif-claude-vs-crawlers" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/paradoxe-google-geo-2026</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/paradoxe-google-geo-2026" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/paradoxe-google-geo-2026?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/paradoxe-google-geo-2026?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/paradoxe-google-geo-2026" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/claude-cowork-code-vs-crawlers-seo-geo</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/claude-cowork-code-vs-crawlers-seo-geo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/claude-cowork-code-vs-crawlers-seo-geo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/claude-cowork-code-vs-crawlers-seo-geo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/claude-cowork-code-vs-crawlers-seo-geo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/share-of-voice-llm-illusion</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/share-of-voice-llm-illusion" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/share-of-voice-llm-illusion?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/share-of-voice-llm-illusion?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/share-of-voice-llm-illusion" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/audit-semantique</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/audit-semantique" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/audit-semantique?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/audit-semantique?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/audit-semantique" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/google-business</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/google-business" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/google-business?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/google-business?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/google-business" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/guide-audit-seo</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/guide-audit-seo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/guide-audit-seo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/guide-audit-seo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/guide-audit-seo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/comparatif-crawlers-semrush</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/comparatif-crawlers-semrush" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/comparatif-crawlers-semrush?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/comparatif-crawlers-semrush?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/comparatif-crawlers-semrush" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/architecte-generatif</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/architecte-generatif" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/architecte-generatif?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/architecte-generatif?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/architecte-generatif" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/indice-alignement-strategique</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/indice-alignement-strategique" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/indice-alignement-strategique?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/indice-alignement-strategique?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/indice-alignement-strategique" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/cocoon</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/cocoon" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/cocoon?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/cocoon?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/cocoon" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/features/cocoon</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/features/cocoon" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/features/cocoon?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/features/cocoon?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/features/cocoon" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/analyse-logs</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/analyse-logs" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/analyse-logs?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/analyse-logs?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/analyse-logs" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/conversion-optimizer</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/conversion-optimizer" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/conversion-optimizer?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/conversion-optimizer?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/conversion-optimizer" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/eeat</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/eeat" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/eeat?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/eeat?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/eeat" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/analyse-bots-ia</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/analyse-bots-ia" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/analyse-bots-ia?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/analyse-bots-ia?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/analyse-bots-ia" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/score-geo</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/score-geo" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/score-geo?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/score-geo?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/score-geo" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/visibilite-llm</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/visibilite-llm" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/visibilite-llm?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/visibilite-llm?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/visibilite-llm" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/pagespeed</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/pagespeed" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/pagespeed?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/pagespeed?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/pagespeed" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/comparatif-claude-code-vs-crawlers</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/comparatif-claude-code-vs-crawlers" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/comparatif-claude-code-vs-crawlers?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/comparatif-claude-code-vs-crawlers?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/comparatif-claude-code-vs-crawlers" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog/guide-visibilite-technique-ia</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/guide-visibilite-technique-ia" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/guide-visibilite-technique-ia?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/guide-visibilite-technique-ia?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/guide-visibilite-technique-ia" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/modifier-code-wordpress</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/modifier-code-wordpress" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/modifier-code-wordpress?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/modifier-code-wordpress?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/modifier-code-wordpress" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/marina</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/marina" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/marina?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/marina?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/marina" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/api-integrations</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/api-integrations" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/api-integrations?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/api-integrations?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/api-integrations" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/cf-shield</loc>
+    <lastmod>2026-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/cf-shield" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/cf-shield?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/cf-shield?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/cf-shield" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/integration-gtm</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/integration-gtm" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/integration-gtm?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/integration-gtm?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/integration-gtm" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/methodologie</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/methodologie" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/methodologie?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/methodologie?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/methodologie" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/aide</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/aide" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/aide?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/aide?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/aide" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/a-propos</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/a-propos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/a-propos?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/a-propos?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/a-propos" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/contact</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/contact" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/contact?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/contact?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/contact" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/faq</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/faq" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/faq?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/faq?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/faq" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/data-normalization</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/data-normalization" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/data-normalization?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/data-normalization?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/data-normalization" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/schema-org-extraction</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/schema-org-extraction" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/schema-org-extraction?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/schema-org-extraction?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/schema-org-extraction" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/rag</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/rag" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/rag?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/rag?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/rag" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/llm-based-parsing</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/llm-based-parsing" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/llm-based-parsing?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/llm-based-parsing?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/llm-based-parsing" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/self-healing-scrapers</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/self-healing-scrapers" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/self-healing-scrapers?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/self-healing-scrapers?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/self-healing-scrapers" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/crawl-budget</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/crawl-budget" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/crawl-budget?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/crawl-budget?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/crawl-budget" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/concurrency-control</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/concurrency-control" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/concurrency-control?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/concurrency-control?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/concurrency-control" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/ethical-scraping</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/ethical-scraping" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/ethical-scraping?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/ethical-scraping?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/ethical-scraping" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/robots-txt-interpretation</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/robots-txt-interpretation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/robots-txt-interpretation?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/robots-txt-interpretation?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/robots-txt-interpretation" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/aeo-answer-engine-optimization</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/aeo-answer-engine-optimization" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/aeo-answer-engine-optimization?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/aeo-answer-engine-optimization?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/aeo-answer-engine-optimization" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/headless-browsing</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/headless-browsing" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/headless-browsing?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/headless-browsing?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/headless-browsing" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/dom-parsing</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/dom-parsing" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/dom-parsing?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/dom-parsing?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/dom-parsing" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/shadow-dom</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/shadow-dom" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/shadow-dom?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/shadow-dom?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/shadow-dom" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/ssr-vs-csr</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/ssr-vs-csr" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/ssr-vs-csr?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/ssr-vs-csr?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/ssr-vs-csr" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/http2-http3</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/http2-http3" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/http2-http3?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/http2-http3?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/http2-http3" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/tls-fingerprinting</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/tls-fingerprinting" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/tls-fingerprinting?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/tls-fingerprinting?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/tls-fingerprinting" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/ja3-ja3s</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/ja3-ja3s" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/ja3-ja3s?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/ja3-ja3s?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/ja3-ja3s" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/behavioral-analysis</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/behavioral-analysis" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/behavioral-analysis?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/behavioral-analysis?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/behavioral-analysis" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/ip-rotation-proxies</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/ip-rotation-proxies" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/ip-rotation-proxies?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/ip-rotation-proxies?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/ip-rotation-proxies" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/canvas-fingerprinting</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/canvas-fingerprinting" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/canvas-fingerprinting?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/canvas-fingerprinting?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/canvas-fingerprinting" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/lexique/user-agent-spoofing</loc>
+    <lastmod>2025-06-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/lexique/user-agent-spoofing" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/lexique/user-agent-spoofing?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/lexique/user-agent-spoofing?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique/user-agent-spoofing" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/cgvu</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/cgvu" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/cgvu?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/cgvu?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/cgvu" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/rgpd</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/rgpd" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/rgpd?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/rgpd?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/rgpd" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/conditions-utilisation</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/conditions-utilisation" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/conditions-utilisation?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/conditions-utilisation?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/conditions-utilisation" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/politique-confidentialite</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/politique-confidentialite" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/politique-confidentialite?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/politique-confidentialite?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/politique-confidentialite" />
+  </url>
+  <url>
+    <loc>https://crawlers.fr/mentions-legales</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/mentions-legales" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/mentions-legales?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/mentions-legales?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/mentions-legales" />
+  </url>
 </urlset>
