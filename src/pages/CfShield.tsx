@@ -243,6 +243,14 @@ export default function CfShield() {
         <StepBadge n={3} label="Vérification" active={step === 'verify'} done={false} />
       </div>
 
+      <Alert className="mb-6">
+        <AlertTitle>Prérequis : compte Cloudflare</AlertTitle>
+        <AlertDescription className="text-xs">
+          Pour que le Worker s'exécute sur un domaine proxied (nuage orange), vous devez activer le plan Workers Paid à 5 $/mois sur Cloudflare.
+          <a href="/aide#article-cloudflare-workers-paid" className="ml-1 underline underline-offset-2 text-primary">Guide pas-à-pas</a>
+        </AlertDescription>
+      </Alert>
+
       {/* STEP 1 — Site */}
       {step === 'site' && (
         <Card>
