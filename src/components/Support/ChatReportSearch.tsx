@@ -28,7 +28,7 @@ const TYPE_CONFIG: Record<string, { icon: typeof FileText; color: string; label:
   cocoon: { icon: Network, color: 'text-teal-500', label: 'Cocoon' },
   marina: { icon: FileText, color: 'text-indigo-500', label: 'Marina' },
   eeat: { icon: Shield, color: 'text-orange-500', label: 'E-E-A-T' },
-  technical: { icon: FileText, color: 'text-gray-500', label: 'Technique' },
+  technical: { icon: FileText, color: 'text-muted-foreground', label: 'Technique' },
 };
 
 export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
