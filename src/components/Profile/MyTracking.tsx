@@ -262,7 +262,7 @@ const sentimentColor = (s: string | null) => {
   const map: Record<string, string> = {
     positive: 'text-green-700 dark:text-green-300',
     mostly_positive: 'text-teal-700 dark:text-teal-300',
-    neutral: 'text-gray-600 dark:text-gray-400',
+    neutral: 'text-gray-600 dark:text-gray-300',
     mixed: 'text-orange-700 dark:text-orange-400',
     negative: 'text-red-700 dark:text-red-400',
   };

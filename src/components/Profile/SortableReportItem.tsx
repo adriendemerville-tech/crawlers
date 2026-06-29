@@ -63,7 +63,7 @@ export function SortableReportItem({ report, onDelete, translations: t, isProUse
       case 'pagespeed':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
       case 'crawlers':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
       default:
         return 'bg-muted text-muted-foreground';
     }

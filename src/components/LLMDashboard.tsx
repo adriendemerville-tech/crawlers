@@ -162,7 +162,7 @@ function SentimentBadge({ sentiment, language }: { sentiment: SentimentType; lan
     neutral: { 
       icon: Minus, 
       label: st.neutral, 
-      className: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700' 
+      className: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700' 
     },
     mixed: { 
       icon: Scale, 
@@ -860,7 +860,7 @@ export function LLMDashboard({ result, isLoading, onCorrection }: LLMDashboardPr
               {' • '}
               <span className="text-teal-600 dark:text-teal-400">plutôt positif.</span>
               {' • '}
-              <span className="text-gray-600 dark:text-gray-400">Neutre</span>
+              <span className="text-gray-600 dark:text-gray-300">Neutre</span>
               {' • '}
               <span className="text-orange-600 dark:text-orange-400">Mitigé</span>
               {' • '}
