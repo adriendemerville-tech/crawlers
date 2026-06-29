@@ -509,11 +509,10 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Compatible avec WordPress ?',
         content: `Oui. Crawlers.fr propose trois niveaux d'intégration WordPress : (1) l'API CMS via Lien Magique pour une connexion directe automatique, (2) le plugin .zip classique avec synchronisation toutes les 6h, et (3) le snippet GTM/Script universel. Les codes correctifs générés par l'Architecte Génératif sont compatibles avec les principaux thèmes WordPress (Elementor, Divi, Astra, GeneratePress).`,
       },
-    ],
-    {
-      id: 'cloudflare-workers-paid',
-      title: 'Activer Cloudflare Workers Paid (5 $/mois)',
-      content: `<ol class="list-decimal pl-6 space-y-2">
+      {
+        id: 'cloudflare-workers-paid',
+        title: 'Activer Cloudflare Workers Paid (5 $/mois)',
+        content: `<ol class="list-decimal pl-6 space-y-2">
 <li>Connectez-vous a <a href="https://dash.cloudflare.com" target="_blank" rel="noreferrer" class="text-primary underline">dash.cloudflare.com</a>.</li>
 <li>Dans le menu lateral, cliquez sur <strong>Workers &amp; Pages</strong> (icone nuage). <strong>Ne cliquez pas sur "Upgrade plan" dans l'onglet Overview de votre domaine</strong>.</li>
 <li>Une banniere ou un bouton <strong>"Upgrade to Workers Paid"</strong> apparait en haut de la page. Cliquez dessus.</li>
@@ -522,7 +521,8 @@ const DOC_SECTIONS: DocSection[] = [
 <li>Saisissez votre moyen de paiement et confirmez.</li>
 </ol>
 <p class="mt-3 text-sm text-muted-foreground">Une fois Workers Paid active, vos Workers s'executeront immediatement sur vos domaines proxied (nuage orange). Vous pouvez verifier l'activation depuis <strong>Workers &amp; Pages &gt; Manage &gt; Account details</strong>.</p>`,
-    },
+      },
+    ],
   },
   {
     id: 'api-integrations',
