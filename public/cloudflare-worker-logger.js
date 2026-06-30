@@ -143,17 +143,18 @@ export default {
           });
         } else {
           // Fallback : SPA classique si render-page échoue
-          response = await fetch(request);
+          response = await fetchLovableOrigin(request);
         }
       } catch (e) {
-        response = await fetch(request);
+        response = await fetchLovableOrigin(request);
       }
     } else {
-      // Humain ou Googlebot : SPA normale (rend le JS)
-      response = await fetch(request);
-      response = new Response(response.body, response);
-      response.headers.set('X-CF-Worker', 'crawlers-logger-v2');
+      // Humain ou Googlebot : proxy vers l'origine Lovable (rend le JS)
+      const originRes = await fetchLovableOrigin(request);
+      response = new Response(originRes.body, originRes);
+      response.headers.set('X-CF-Worker', 'crawlers-logger-v3');
     }
+
 
     // Collecter les métadonnées APRÈS la réponse
     const entry = {
