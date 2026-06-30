@@ -37,6 +37,11 @@ const SITEMAP_CDN_URL = "https://tutlimtasnjabdfhpewu.supabase.co/storage/v1/obj
 const RENDER_PAGE_URL = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page";
 const AI_BOT_UA_REGEX = /(GPTBot|ChatGPT-User|CCBot|ClaudeBot|anthropic-ai|Claude-Web|PerplexityBot|Perplexity-User|Applebot-Extended|YouBot|Bytespider|DiffBot|FacebookBot|cohere-ai|Omgilibot|DataForSeoBot)/i;
 
+// Lovable origin (utilisé quand le Worker est attaché en Custom Domain
+// — le Worker devient le point d'entrée, plus de route SSL for SaaS de Lovable
+// donc on doit proxy explicitement vers le hostname Lovable de l'app).
+const LOVABLE_ORIGIN_HOST = "crawlers.lovable.app";
+
 function isPrerenderableRoute(pathname) {
   // /app/* est privé (dashboard authentifié) → pas de prerender
   if (pathname.startsWith("/app/")) return false;
@@ -45,6 +50,28 @@ function isPrerenderableRoute(pathname) {
   if (/\.(js|css|png|jpe?g|webp|avif|svg|ico|woff2?|map|xml|txt|json|webmanifest)$/i.test(pathname)) return false;
   return true;
 }
+
+// Reconstruit la requête vers l'origine Lovable en réécrivant le Host.
+async function fetchLovableOrigin(request) {
+  const url = new URL(request.url);
+  url.hostname = LOVABLE_ORIGIN_HOST;
+  url.protocol = "https:";
+  url.port = "";
+  const headers = new Headers(request.headers);
+  headers.set("Host", LOVABLE_ORIGIN_HOST);
+  headers.set("X-Forwarded-Host", new URL(request.url).hostname);
+  headers.set("X-Forwarded-Proto", "https");
+  const init = {
+    method: request.method,
+    headers,
+    redirect: "manual",
+  };
+  if (!["GET", "HEAD"].includes(request.method)) {
+    init.body = request.body;
+  }
+  return fetch(url.toString(), init);
+}
+
 
 // Buffer en mémoire du Worker (partagé entre requêtes sur le même isolate)
 let buffer = [];
@@ -116,17 +143,18 @@ export default {
           });
         } else {
           // Fallback : SPA classique si render-page échoue
-          response = await fetch(request);
+          response = await fetchLovableOrigin(request);
         }
       } catch (e) {
-        response = await fetch(request);
+        response = await fetchLovableOrigin(request);
       }
     } else {
-      // Humain ou Googlebot : SPA normale (rend le JS)
-      response = await fetch(request);
-      response = new Response(response.body, response);
-      response.headers.set('X-CF-Worker', 'crawlers-logger-v2');
+      // Humain ou Googlebot : proxy vers l'origine Lovable (rend le JS)
+      const originRes = await fetchLovableOrigin(request);
+      response = new Response(originRes.body, originRes);
+      response.headers.set('X-CF-Worker', 'crawlers-logger-v3');
     }
+
 
     // Collecter les métadonnées APRÈS la réponse
     const entry = {
