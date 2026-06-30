@@ -2,3 +2,6 @@ project_id = "tutlimtasnjabdfhpewu"
 
 [functions.wp-test-connection]
 verify_jwt = false
+
+[functions.bot-prerender-check]
+verify_jwt = false
