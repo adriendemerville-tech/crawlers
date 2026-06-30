@@ -33,6 +33,7 @@ import {
   PlayCircle,
   ExternalLink,
 } from 'lucide-react';
+import { BotPrerenderCheck } from '@/components/CfShield/BotPrerenderCheck';
 
 interface TrackedSite {
   id: string;
@@ -233,6 +234,11 @@ export default function CfShield() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Test rapide multi-bots */}
+      <BotPrerenderCheck defaultUrl={currentSite ? `https://${currentSite.domain}/` : ''} />
+
+
 
       {/* Stepper */}
       <div className="mb-6 flex items-center justify-between gap-2 text-sm">
