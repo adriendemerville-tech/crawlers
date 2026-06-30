@@ -103,6 +103,258 @@ export default {
     const secret = env.CRAWLERS_SECRET;
     const url = new URL(request.url);
 
+    // ── Proxy /robots.txt → inline project robots.txt ─────────
+    if (url.pathname === "/robots.txt") {
+      const robotsTxt = `# ============================================
+# Robots.txt — Crawlers.fr (2026)
+# Plateforme SaaS d'audit SEO/GEO, correction automatique,
+# création de contenu IA, connexion CMS directe (WP, Shopify,
+# Wix, Drupal, Odoo, PrestaShop), Google My Business,
+# Autopilote Parménion (ML prédictif), Cocoon 3D, MCP Server.
+#
+# Politique de crawl :
+#   • Pages publiques (/, /blog, /guides, /lexique, /app/eeat) → ouvertes à tous
+#   • Application authentifiée (/app/*) → bloquée pour les moteurs de recherche
+#     classiques et outils SEO, mais OUVERTE aux moteurs génératifs (LLM)
+#     pour maximiser la visibilité GEO sur ChatGPT, Claude, Perplexity, etc.
+# ============================================
+
+# --------------------------------------------
+# Règle par défaut (tous bots non listés)
+# --------------------------------------------
+User-agent: *
+Disallow: /app/
+Allow: /app/eeat
+Allow: /ranking-serp
+Allow: /conversion-optimizer
+Allow: /
+Crawl-delay: 1
+
+# --------------------------------------------
+# Moteurs de recherche classiques → /app/ bloqué
+# --------------------------------------------
+User-agent: Googlebot
+Disallow: /app/
+Allow: /app/eeat
+Allow: /
+
+User-agent: Googlebot-Image
+Disallow: /app/
+Allow: /
+
+User-agent: Googlebot-News
+Disallow: /app/
+Allow: /
+
+User-agent: Googlebot-Video
+Disallow: /app/
+Allow: /
+
+User-agent: AdsBot-Google
+Disallow: /app/
+Allow: /
+
+User-agent: Bingbot
+Disallow: /app/
+Allow: /app/eeat
+Allow: /
+
+User-agent: Yandex
+Disallow: /app/
+Allow: /
+
+User-agent: DuckDuckBot
+Disallow: /app/
+Allow: /
+
+User-agent: Baiduspider
+Disallow: /app/
+Allow: /
+
+User-agent: Sogou
+Disallow: /app/
+Allow: /
+
+User-agent: Qwantify
+Disallow: /app/
+Allow: /
+
+# --------------------------------------------
+# Réseaux sociaux (preview links) → tout ouvert
+# --------------------------------------------
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Pinterest
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+# --------------------------------------------
+# Bots IA / Moteurs génératifs (GEO) → ACCÈS TOTAL
+# y compris /app/* — visibilité maximale dans ChatGPT,
+# Claude, Perplexity, Gemini, Grok, etc.
+# --------------------------------------------
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: cohere-training-data-crawler
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: MistralAI-User
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: xAI-Bot
+Allow: /
+
+User-agent: DeepSeekBot
+Allow: /
+
+# --------------------------------------------
+# Outils SEO concurrents → /app/ bloqué (zone privée
+# de pilotage produit, pas pertinente pour leur index)
+# --------------------------------------------
+User-agent: AhrefsBot
+Disallow: /app/
+Allow: /
+
+User-agent: SemrushBot
+Disallow: /app/
+Allow: /
+
+User-agent: MJ12bot
+Disallow: /app/
+Allow: /
+
+User-agent: DotBot
+Disallow: /app/
+Allow: /
+
+User-agent: Screaming Frog SEO Spider
+Disallow: /app/
+Allow: /
+
+# --------------------------------------------
+# Ressources
+# --------------------------------------------
+Sitemap: https://crawlers.fr/sitemap.xml
+
+# Documentation LLM dédiée :
+#   https://crawlers.fr/llms.txt
+#   https://crawlers.fr/llms-full.txt
+# Pré-rendu HTML pour bots sans JS :
+#   https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page?route=/
+
+# --------------------------------------------
+# Pages clés (aide à la découvrabilité pour bots IA)
+# --------------------------------------------
+# Accueil               : https://crawlers.fr/
+# Tarifs                : https://crawlers.fr/tarifs
+# Audit Expert SEO      : https://crawlers.fr/audit-expert
+# Audit SEO gratuit     : https://crawlers.fr/audit-seo-gratuit
+# Score GEO             : https://crawlers.fr/score-geo
+# Visibilité LLM        : https://crawlers.fr/visibilite-llm
+# Analyse Bots IA       : https://crawlers.fr/analyse-bots-ia
+# PageSpeed             : https://crawlers.fr/pagespeed
+# E-E-A-T               : https://crawlers.fr/eeat
+# GEO                   : https://crawlers.fr/generative-engine-optimization
+# IAS                   : https://crawlers.fr/indice-alignement-strategique
+# Architecte Génératif  : https://crawlers.fr/architecte-generatif
+# Content Architect     : https://crawlers.fr/content-architect
+# Conversion Optimizer  : https://crawlers.fr/conversion-optimizer
+# Google Business       : https://crawlers.fr/google-business
+# Intégration GTM       : https://crawlers.fr/integration-gtm
+# API & Intégrations    : https://crawlers.fr/api-integrations
+# Marina                : https://crawlers.fr/marina
+# Matrice d'audit       : https://crawlers.fr/matrice
+# Observatoire          : https://crawlers.fr/observatoire
+# Pro Agency            : https://crawlers.fr/pro-agency
+# Stratège Cocoon       : https://crawlers.fr/stratege-cocoon
+# Social Content Hub    : https://crawlers.fr/social-content-creator
+# Guides                : https://crawlers.fr/guides
+# Guide audit SEO       : https://crawlers.fr/guide-audit-seo
+# Blog                  : https://crawlers.fr/blog
+# Lexique               : https://crawlers.fr/lexique
+# FAQ                   : https://crawlers.fr/faq
+# Méthodologie          : https://crawlers.fr/methodologie
+# À propos              : https://crawlers.fr/a-propos
+# Aide                  : https://crawlers.fr/aide
+
+`;
+      return new Response(robotsTxt, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "public, max-age=3600, s-maxage=86400",
+          "X-Proxied-From": "worker-inline",
+        },
+      });
+    }
+
     // ── Proxy /sitemap.xml → CDN Supabase ──────────────────────
     // Sert le sitemap dynamique sans exposer l'URL Storage publique
     if (url.pathname === "/sitemap.xml") {
