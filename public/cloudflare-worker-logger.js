@@ -35,7 +35,7 @@ const SITEMAP_CDN_URL = "https://tutlimtasnjabdfhpewu.supabase.co/storage/v1/obj
 // `render-page` (titre, h1, meta, JSON-LD, citable-passage), cache CF 24h.
 // Googlebot rend le JS et reçoit la SPA normalement (pas de cloaking).
 const RENDER_PAGE_URL = "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/render-page";
-const AI_BOT_UA_REGEX = /(GPTBot|ChatGPT-User|CCBot|ClaudeBot|anthropic-ai|Claude-Web|PerplexityBot|Perplexity-User|Applebot-Extended|YouBot|Bytespider|DiffBot|FacebookBot|cohere-ai|Omgilibot|DataForSeoBot)/i;
+const AI_BOT_UA_REGEX = /(GPTBot|ChatGPT-User|OAI-SearchBot|CCBot|ClaudeBot|anthropic-ai|Claude-Web|PerplexityBot|Perplexity-User|Applebot-Extended|Google-Extended|YouBot|Bytespider|DiffBot|FacebookBot|Meta-ExternalAgent|cohere-ai|Omgilibot|DataForSeoBot|Amazonbot|Timpibot|MistralAI-User)/i;
 
 // Lovable origin (utilisé quand le Worker est attaché en Custom Domain
 // — le Worker devient le point d'entrée, plus de route SSL for SaaS de Lovable
