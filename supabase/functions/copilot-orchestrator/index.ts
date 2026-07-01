@@ -54,7 +54,7 @@ import {
   wrapToolResult,
 } from '../_shared/promptSafety.ts';
 import { embedText, toPgVector } from '../_shared/embeddings.ts';
-import { classifyIntentBucket, shouldRecallMemory } from './intentBucket.ts';
+import { classifyIntentBucket, shouldRecallMemory, preClassifyIntent, maxTokensForBucket } from './intentBucket.ts';
 
 interface OrchestratorBody {
   persona: string;
