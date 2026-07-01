@@ -294,10 +294,21 @@ Deno.serve(async (req) => {
       initialUserMessage: { role: 'user', content: userMessage },
     });
 
-    // Persiste le message utilisateur + réponse finale comme paire conversation
+    // Sprint 1 S1.4 — classification post-hoc de l'intent + télémétrie cache LLM
+    const intentBucket = classifyIntentBucket({
+      userMessage: body.message,
+      executedActions: loopResult.executedActions,
+      iterations: loopResult.iterations,
+    });
+    const replyMetadata = {
+      intent_bucket: intentBucket,
+      iterations: loopResult.iterations,
+      llm_usage: loopResult.llmUsage,
+      duration_ms_total: Date.now() - t0,
+    };
     await service.from('copilot_actions').insert([
       { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: body.message }, status: 'success', duration_ms: 0, action_category: 'system' },
-      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
+      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system', metadata: replyMetadata },
     ]);
 
     // Sprint Q5 Bloc 3 — scoring qualité (best-effort, n'arrête jamais le flux)
