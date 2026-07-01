@@ -92,7 +92,7 @@ export function AgentChatShell({
     }
   };
 
-  const { sessionId, messages, sending, error, sendMessage, approve, reject, reset } = useCopilot({
+  const { sessionId, messages, sending, error, sendMessageStream, approve, reject, reset } = useCopilot({
     persona,
     getContext,
     onActions: handleActions,
@@ -100,6 +100,8 @@ export function AgentChatShell({
     seedMessages,
     initialSessionId,
   });
+  // Sprint 1 S1.1 — adoption SSE streaming en remplacement de sendMessage JSON.
+  const sendMessage = sendMessageStream;
 
   // Auto-scroll en bas à chaque nouveau message
   useEffect(() => {
