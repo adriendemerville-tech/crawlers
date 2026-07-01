@@ -28,6 +28,7 @@ export function AIRoutingControl() {
   const [killSwitch, setKillSwitch] = useState<boolean>(false);
   const [killSwitchSaving, setKillSwitchSaving] = useState(false);
   const [usage7d, setUsage7d] = useState<UsageRow[]>([]);
+  const [intents14d, setIntents14d] = useState<IntentRow[]>([]);
   const { toast } = useToast();
 
   const load = async () => {
