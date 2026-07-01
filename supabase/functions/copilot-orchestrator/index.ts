@@ -1214,69 +1214,143 @@ async function runAgentLoopStreaming(args: {
       break;
     }
 
-    let stopForApproval = false;
-    for (const call of llmResp.tool_calls) {
+    // ─────────────────────────────────────────────────────────────
+    // Sprint 3 S3.1 — Fusion tool-use : batch parallèle pour skills
+    // AUTO read/navigate (safe), sequentiel pour approval/write/destructive.
+    // Les résultats sont poussés dans `messages` dans l'ordre original des
+    // tool_calls (chaque `tool` message est lié par tool_call_id).
+    // ─────────────────────────────────────────────────────────────
+    type PreparedCall = {
+      idx: number;
+      call: typeof llmResp.tool_calls[number];
+      skillName: string;
+      parsedArgs: Record<string, unknown>;
+      effectivePolicy: 'auto' | 'approval' | 'forbidden';
+      isInviolable: boolean;
+      category: ReturnType<typeof categorizeAction>;
+    };
+
+    const prepared: PreparedCall[] = llmResp.tool_calls.map((call, idx) => {
       const skillName = call.function.name;
       const basePolicy = resolveSkillPolicy(persona, skillName);
       const isInviolable = FORBIDDEN_EVEN_IN_CREATOR.has(skillName);
       const policy = (isCreatorMode && getSkill(skillName) && !isInviolable) ? 'auto' : basePolicy;
-
       let parsedArgs: Record<string, unknown> = {};
       try { parsedArgs = JSON.parse(call.function.arguments || '{}'); } catch { parsedArgs = {}; }
+      return { idx, call, skillName, parsedArgs, effectivePolicy: policy, isInviolable, category: categorizeAction(skillName) };
+    });
 
-      sse.write('tool_call', { skill: skillName, input: parsedArgs });
+    // Émet les tool_call SSE dans l'ordre du batch (visibilité UI)
+    for (const p of prepared) sse.write('tool_call', { skill: p.skillName, input: p.parsedArgs });
 
-      if (policy === 'forbidden' || !getSkill(skillName) || isInviolable) {
-        const errMsg = isInviolable
-          ? `Skill '${skillName}' inviolable — interdite même en mode créateur.`
-          : 'Skill non autorisé pour cette persona';
-        await logAction(service, sessionId, userId, persona.id, skillName, parsedArgs, null, 'rejected', errMsg, 0);
-        messages.push({ role: 'tool', tool_call_id: call.id, name: skillName, content: wrapToolResult(skillName, { ok: false, error: errMsg }) });
-        executedActions.push({ skill: skillName, status: 'rejected', error: isInviolable ? 'inviolable' : 'forbidden' });
-        sse.write('tool_result', { skill: skillName, status: 'rejected', error: errMsg });
-        continue;
-      }
+    // Résultats indexés par idx pour reconstruire l'ordre à la fin
+    const results: Array<{ toolMessage: unknown; execAction: typeof executedActions[number]; stopForApproval?: boolean } | null> = new Array(prepared.length).fill(null);
 
-      const effectivePolicy = stopForApproval ? 'approval' : policy;
+    // Groupe 1 : parallélisable = AUTO + (read | navigate), non-forbidden, non-inviolable
+    const parallelizable = prepared.filter(p =>
+      p.effectivePolicy === 'auto' &&
+      !p.isInviolable &&
+      getSkill(p.skillName) &&
+      (p.category === 'read' || p.category === 'navigate')
+    );
+    // Groupe 2 : sequentiel = tout le reste, dans l'ordre original
+    const sequential = prepared.filter(p => !parallelizable.includes(p));
 
-      if (effectivePolicy === 'approval') {
-        const { data: approvalAction } = await service.from('copilot_actions').insert({
-          session_id: sessionId, user_id: userId, persona: persona.id,
-          skill: skillName, input: parsedArgs, status: 'awaiting_approval',
-          action_category: categorizeAction(skillName),
-        }).select('id').single();
-        awaitingApprovals.push({ action_id: approvalAction?.id ?? '', skill: skillName, input: parsedArgs });
-        executedActions.push({ skill: skillName, status: 'awaiting_approval', action_id: approvalAction?.id });
-        messages.push({
-          role: 'tool', tool_call_id: call.id, name: skillName,
-          content: wrapToolResult(skillName, {
-            ok: false, awaiting_approval: true, action_id: approvalAction?.id,
-            note: stopForApproval ? 'Auto-skill mise en attente : approbation précédente requise.' : undefined,
-          }),
-        });
-        sse.write('awaiting_approval', { action_id: approvalAction?.id, skill: skillName, input: parsedArgs });
-        stopForApproval = true;
-      } else {
+    // Exécute le batch parallèle
+    if (parallelizable.length > 0) {
+      await Promise.all(parallelizable.map(async (p) => {
         const tStart = Date.now();
-        const skill = getSkill(skillName)!;
+        const skill = getSkill(p.skillName)!;
         let result: { ok: boolean; data?: unknown; error?: string };
         try {
-          result = await withTimeout(skill.handler(parsedArgs, ctx), SKILL_TIMEOUT_MS, `skill ${skillName}`);
+          result = await withTimeout(skill.handler(p.parsedArgs, ctx), SKILL_TIMEOUT_MS, `skill ${p.skillName}`);
         } catch (e) { result = { ok: false, error: (e as Error).message }; }
         const dur = Date.now() - tStart;
         const { data: insertedAction } = await service.from('copilot_actions').insert({
           session_id: sessionId, user_id: userId, persona: persona.id,
-          skill: skillName, input: parsedArgs,
+          skill: p.skillName, input: p.parsedArgs,
           output: result.data ?? null,
           status: result.ok ? 'success' : 'error',
           error_message: result.ok ? null : result.error,
           duration_ms: dur,
-          action_category: categorizeAction(skillName),
+          action_category: p.category,
         }).select('id').single();
-        executedActions.push({ skill: skillName, status: result.ok ? 'success' : 'error', output: result.data, error: result.error, action_id: insertedAction?.id });
-        messages.push({ role: 'tool', tool_call_id: call.id, name: skillName, content: wrapToolResult(skillName, result) });
-        sse.write('tool_result', { skill: skillName, status: result.ok ? 'success' : 'error', action_id: insertedAction?.id, error: result.error });
+        results[p.idx] = {
+          toolMessage: { role: 'tool', tool_call_id: p.call.id, name: p.skillName, content: wrapToolResult(p.skillName, result) },
+          execAction: { skill: p.skillName, status: result.ok ? 'success' : 'error', output: result.data, error: result.error, action_id: insertedAction?.id },
+        };
+        sse.write('tool_result', { skill: p.skillName, status: result.ok ? 'success' : 'error', action_id: insertedAction?.id, error: result.error });
+      }));
+    }
+
+    // Exécute le batch séquentiel avec la même sémantique stopForApproval
+    let stopForApproval = false;
+    for (const p of sequential) {
+      // FORBIDDEN
+      if (p.effectivePolicy === 'forbidden' || !getSkill(p.skillName) || p.isInviolable) {
+        const errMsg = p.isInviolable
+          ? `Skill '${p.skillName}' inviolable — interdite même en mode créateur.`
+          : 'Skill non autorisé pour cette persona';
+        await logAction(service, sessionId, userId, persona.id, p.skillName, p.parsedArgs, null, 'rejected', errMsg, 0);
+        results[p.idx] = {
+          toolMessage: { role: 'tool', tool_call_id: p.call.id, name: p.skillName, content: wrapToolResult(p.skillName, { ok: false, error: errMsg }) },
+          execAction: { skill: p.skillName, status: 'rejected', error: p.isInviolable ? 'inviolable' : 'forbidden' },
+        };
+        sse.write('tool_result', { skill: p.skillName, status: 'rejected', error: errMsg });
+        continue;
       }
+
+      const effective = stopForApproval ? 'approval' : p.effectivePolicy;
+
+      if (effective === 'approval') {
+        const { data: approvalAction } = await service.from('copilot_actions').insert({
+          session_id: sessionId, user_id: userId, persona: persona.id,
+          skill: p.skillName, input: p.parsedArgs, status: 'awaiting_approval',
+          action_category: p.category,
+        }).select('id').single();
+        awaitingApprovals.push({ action_id: approvalAction?.id ?? '', skill: p.skillName, input: p.parsedArgs });
+        results[p.idx] = {
+          toolMessage: {
+            role: 'tool', tool_call_id: p.call.id, name: p.skillName,
+            content: wrapToolResult(p.skillName, {
+              ok: false, awaiting_approval: true, action_id: approvalAction?.id,
+              note: stopForApproval ? 'Auto-skill mise en attente : approbation précédente requise.' : undefined,
+            }),
+          },
+          execAction: { skill: p.skillName, status: 'awaiting_approval', action_id: approvalAction?.id },
+        };
+        sse.write('awaiting_approval', { action_id: approvalAction?.id, skill: p.skillName, input: p.parsedArgs });
+        stopForApproval = true;
+      } else {
+        const tStart = Date.now();
+        const skill = getSkill(p.skillName)!;
+        let result: { ok: boolean; data?: unknown; error?: string };
+        try {
+          result = await withTimeout(skill.handler(p.parsedArgs, ctx), SKILL_TIMEOUT_MS, `skill ${p.skillName}`);
+        } catch (e) { result = { ok: false, error: (e as Error).message }; }
+        const dur = Date.now() - tStart;
+        const { data: insertedAction } = await service.from('copilot_actions').insert({
+          session_id: sessionId, user_id: userId, persona: persona.id,
+          skill: p.skillName, input: p.parsedArgs,
+          output: result.data ?? null,
+          status: result.ok ? 'success' : 'error',
+          error_message: result.ok ? null : result.error,
+          duration_ms: dur,
+          action_category: p.category,
+        }).select('id').single();
+        results[p.idx] = {
+          toolMessage: { role: 'tool', tool_call_id: p.call.id, name: p.skillName, content: wrapToolResult(p.skillName, result) },
+          execAction: { skill: p.skillName, status: result.ok ? 'success' : 'error', output: result.data, error: result.error, action_id: insertedAction?.id },
+        };
+        sse.write('tool_result', { skill: p.skillName, status: result.ok ? 'success' : 'error', action_id: insertedAction?.id, error: result.error });
+      }
+    }
+
+    // Pousse les résultats dans l'ordre original des tool_calls
+    for (const r of results) {
+      if (!r) continue;
+      messages.push(r.toolMessage as never);
+      executedActions.push(r.execAction);
     }
 
     if (stopForApproval) {
@@ -1284,6 +1358,7 @@ async function runAgentLoopStreaming(args: {
       break;
     }
   }
+
 
   if (iterations >= MAX_ITERATIONS && !finalReply) {
     finalReply = "Désolé, je n'ai pas pu finaliser cette demande après plusieurs essais. Reformule ou précise ce que tu veux faire.";
