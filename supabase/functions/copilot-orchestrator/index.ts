@@ -808,9 +808,14 @@ async function handleRejection(args: {
       .eq('id', action.session_id).eq('user_id', userId);
   }
 
+  const rejectIntent = classifyIntentBucket({
+    userMessage: userReject,
+    executedActions: loopResult.executedActions,
+    iterations: loopResult.iterations,
+  });
   await service.from('copilot_actions').insert([
     { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userReject, _synthetic: true, _trigger: 'rejection', rejected_action_id: rejected?.id }, status: 'success', duration_ms: 0, action_category: 'system' },
-    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system', metadata: { intent_bucket: rejectIntent, iterations: loopResult.iterations, llm_usage: loopResult.llmUsage, duration_ms_total: Date.now() - t0, _trigger: 'rejection' } },
   ]);
 
   return jsonOk({
