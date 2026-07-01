@@ -440,6 +440,7 @@ export function useCopilot(options: UseCopilotOptions) {
     sending,
     error,
     sendMessage,
+    sendMessageStream,
     approve,
     reject,
     reset,
