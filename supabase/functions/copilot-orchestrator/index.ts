@@ -54,6 +54,7 @@ import {
   wrapToolResult,
 } from '../_shared/promptSafety.ts';
 import { embedText, toPgVector } from '../_shared/embeddings.ts';
+import { classifyIntentBucket, shouldRecallMemory } from './intentBucket.ts';
 
 interface OrchestratorBody {
   persona: string;
@@ -293,10 +294,21 @@ Deno.serve(async (req) => {
       initialUserMessage: { role: 'user', content: userMessage },
     });
 
-    // Persiste le message utilisateur + réponse finale comme paire conversation
+    // Sprint 1 S1.4 — classification post-hoc de l'intent + télémétrie cache LLM
+    const intentBucket = classifyIntentBucket({
+      userMessage: body.message,
+      executedActions: loopResult.executedActions,
+      iterations: loopResult.iterations,
+    });
+    const replyMetadata = {
+      intent_bucket: intentBucket,
+      iterations: loopResult.iterations,
+      llm_usage: loopResult.llmUsage,
+      duration_ms_total: Date.now() - t0,
+    };
     await service.from('copilot_actions').insert([
       { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: body.message }, status: 'success', duration_ms: 0, action_category: 'system' },
-      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
+      { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system', metadata: replyMetadata },
     ]);
 
     // Sprint Q5 Bloc 3 — scoring qualité (best-effort, n'arrête jamais le flux)
@@ -348,6 +360,7 @@ interface AgentLoopResult {
   executedActions: Array<{ skill: string; status: string; output?: unknown; error?: string; action_id?: string }>;
   awaitingApprovals: Array<{ action_id: string; skill: string; input: unknown }>;
   iterations: number;
+  llmUsage: { prompt_tokens: number; completion_tokens: number; cache_read_input_tokens: number; cache_creation_input_tokens: number };
 }
 
 async function runAgentLoop(args: {
@@ -385,32 +398,32 @@ async function runAgentLoop(args: {
   ];
   if (args.primingMessages) messages.push(...args.primingMessages);
 
-  // ── Mémoire vectorielle hybride (cross-sessions) ──────
-  // On récupère les K tours sémantiquement les plus proches du message courant
-  // dans les AUTRES sessions du même user (même persona). Injecté comme tool_result
-  // wrappé via wrapToolResult — le LLM le voit comme une donnée, pas une instruction.
-  // RÈGLE : on n'embed et ne recherche QUE les messages utilisateur (anti auto-renforcement).
+  // ── Mémoire vectorielle hybride (cross-sessions) — Sprint 1 S1.3 : gate conditionnel ──
+  // Skip l'embed+RPC si le message ne le justifie pas (chit_chat/navigate purs).
+  // Économie ~1 embed + 1 RPC par tour trivial. Voir intentBucket.shouldRecallMemory.
   if (args.initialUserMessage?.role === 'user' && typeof args.initialUserMessage.content === 'string') {
-    const recallText = await recallMemoryContext(
-      service,
-      args.userId,
-      persona.id,
-      args.initialUserMessage.content,
-      sessionId,
-    );
-    if (recallText) {
-      const tcId = `mem_${Math.random().toString(36).slice(2, 12)}`;
-      messages.push({
-        role: 'assistant',
-        content: null,
-        tool_calls: [{ id: tcId, type: 'function', function: { name: 'memory_recall', arguments: '{}' } }],
-      });
-      messages.push({
-        role: 'tool',
-        tool_call_id: tcId,
-        name: 'memory_recall',
-        content: wrapToolResult('memory_recall', { ok: true, recalled_turns: recallText }),
-      });
+    if (shouldRecallMemory(args.initialUserMessage.content)) {
+      const recallText = await recallMemoryContext(
+        service,
+        args.userId,
+        persona.id,
+        args.initialUserMessage.content,
+        sessionId,
+      );
+      if (recallText) {
+        const tcId = `mem_${Math.random().toString(36).slice(2, 12)}`;
+        messages.push({
+          role: 'assistant',
+          content: null,
+          tool_calls: [{ id: tcId, type: 'function', function: { name: 'memory_recall', arguments: '{}' } }],
+        });
+        messages.push({
+          role: 'tool',
+          tool_call_id: tcId,
+          name: 'memory_recall',
+          content: wrapToolResult('memory_recall', { ok: true, recalled_turns: recallText }),
+        });
+      }
     }
   }
 
@@ -436,6 +449,7 @@ async function runAgentLoop(args: {
   const ctx: SkillContext = { userId, sessionId, persona: persona.id, supabase: userClient, service };
   const executedActions: AgentLoopResult['executedActions'] = [];
   const awaitingApprovals: AgentLoopResult['awaitingApprovals'] = [];
+  const llmUsage = { prompt_tokens: 0, completion_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
 
   let finalReply = '';
   let iterations = 0;
@@ -443,6 +457,12 @@ async function runAgentLoop(args: {
   while (iterations < MAX_ITERATIONS) {
     iterations++;
     const llmResp = await callLLM(persona, messages, tools);
+    if (llmResp.usage) {
+      llmUsage.prompt_tokens += llmResp.usage.prompt_tokens ?? 0;
+      llmUsage.completion_tokens += llmResp.usage.completion_tokens ?? 0;
+      llmUsage.cache_read_input_tokens += llmResp.usage.cache_read_input_tokens ?? 0;
+      llmUsage.cache_creation_input_tokens += llmResp.usage.cache_creation_input_tokens ?? 0;
+    }
 
     messages.push({
       role: 'assistant',
@@ -575,7 +595,7 @@ async function runAgentLoop(args: {
     finalReply = "Désolé, je n'ai pas pu finaliser cette demande après plusieurs essais. Reformule ou précise ce que tu veux faire.";
   }
 
-  return { finalReply, executedActions, awaitingApprovals, iterations };
+  return { finalReply, executedActions, awaitingApprovals, iterations, llmUsage };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -686,10 +706,15 @@ async function handleApproval(args: {
       .eq('id', action.session_id).eq('user_id', userId);
   }
 
-  // Persiste la paire user_message (synthétique) + assistant_reply
+  // Persiste la paire user_message (synthétique) + assistant_reply (+ télémétrie Sprint 1)
+  const approvalIntent = classifyIntentBucket({
+    userMessage: userConfirm,
+    executedActions: loopResult.executedActions,
+    iterations: loopResult.iterations,
+  });
   await service.from('copilot_actions').insert([
     { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userConfirm, _synthetic: true, _trigger: 'approval', completed_action_id: completed?.id }, status: 'success', duration_ms: 0, action_category: 'system' },
-    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system', metadata: { intent_bucket: approvalIntent, iterations: loopResult.iterations, llm_usage: loopResult.llmUsage, duration_ms_total: Date.now() - t0, _trigger: 'approval' } },
   ]);
 
   return jsonOk({
@@ -783,9 +808,14 @@ async function handleRejection(args: {
       .eq('id', action.session_id).eq('user_id', userId);
   }
 
+  const rejectIntent = classifyIntentBucket({
+    userMessage: userReject,
+    executedActions: loopResult.executedActions,
+    iterations: loopResult.iterations,
+  });
   await service.from('copilot_actions').insert([
     { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userReject, _synthetic: true, _trigger: 'rejection', rejected_action_id: rejected?.id }, status: 'success', duration_ms: 0, action_category: 'system' },
-    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system', metadata: { intent_bucket: rejectIntent, iterations: loopResult.iterations, llm_usage: loopResult.llmUsage, duration_ms_total: Date.now() - t0, _trigger: 'rejection' } },
   ]);
 
   return jsonOk({
@@ -897,7 +927,12 @@ async function callLLM(
   persona: PersonaConfig,
   messages: ChatMessage[],
   tools: unknown[],
-): Promise<{ content: string | null; tool_calls?: ChatMessage['tool_calls']; finish_reason?: string }> {
+): Promise<{
+  content: string | null;
+  tool_calls?: ChatMessage['tool_calls'];
+  finish_reason?: string;
+  usage?: { prompt_tokens?: number; completion_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number };
+}> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) throw new Error('LOVABLE_API_KEY manquante');
 
@@ -924,10 +959,26 @@ async function callLLM(
 
   const data = await r.json();
   const choice = data?.choices?.[0];
+  // Sprint 1 S1.2 — remonte les stats cache Anthropic (prompt_tokens_details.cached_tokens
+  // sur OpenAI-compat OpenRouter, cache_read_input_tokens / cache_creation_input_tokens
+  // sur Anthropic natif). On normalise vers un shape unique.
+  const usage = data?.usage ?? {};
+  const cachedIn = usage.cache_read_input_tokens
+    ?? usage.prompt_tokens_details?.cached_tokens
+    ?? 0;
+  const cacheCreate = usage.cache_creation_input_tokens
+    ?? usage.prompt_tokens_details?.cache_creation_tokens
+    ?? 0;
   return {
     content: choice?.message?.content ?? null,
     tool_calls: choice?.message?.tool_calls,
     finish_reason: choice?.finish_reason,
+    usage: {
+      prompt_tokens: usage.prompt_tokens,
+      completion_tokens: usage.completion_tokens,
+      cache_read_input_tokens: cachedIn,
+      cache_creation_input_tokens: cacheCreate,
+    },
   };
 }
 

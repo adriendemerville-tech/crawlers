@@ -1,0 +1,2 @@
+ALTER TABLE public.copilot_actions ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'::jsonb;
+CREATE INDEX IF NOT EXISTS copilot_actions_metadata_intent_idx ON public.copilot_actions ((metadata->>'intent_bucket')) WHERE metadata ? 'intent_bucket';
