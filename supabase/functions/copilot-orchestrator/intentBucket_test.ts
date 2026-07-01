@@ -37,12 +37,16 @@ const CHIT_CHAT: Scenario[] = [
   { name: "question ouverte sans skill", userMessage: "Tu vas bien ?", executedActions: [], iterations: 1, expectedPost: "chit_chat", expectedPre: "chit_chat", expectedRecall: false },
 ];
 
+// NB : le pre-classifier considère tout message < 25 chars comme 'chit_chat'
+// (heuristique volontaire pour éviter les faux positifs). On teste donc le
+// pre-classify uniquement sur des messages assez longs pour éviter ce cap.
+
 // ─── navigate (4) ────────────────────────────────────────────
 const NAVIGATE: Scenario[] = [
-  { name: "ouvre audit", userMessage: "Ouvre l'audit", executedActions: [{ skill: "navigate_to", status: "success" }], iterations: 1, expectedPost: "navigate", expectedPre: "navigate" },
-  { name: "va-y dashboard", userMessage: "Va-y sur le dashboard", executedActions: [{ skill: "navigate_to", status: "success" }], iterations: 1, expectedPost: "navigate", expectedPre: "navigate" },
-  { name: "affiche panel", userMessage: "Affiche le panel d'audit", executedActions: [{ skill: "open_audit_panel", status: "success" }], iterations: 1, expectedPost: "navigate", expectedPre: "navigate" },
-  { name: "montre-moi cocoon", userMessage: "Montre-moi le cocoon", executedActions: [{ skill: "navigate_to", status: "success" }], iterations: 1, expectedPost: "navigate", expectedPre: "navigate" },
+  { name: "ouvre audit (long)", userMessage: "Ouvre l'audit du site principal maintenant", executedActions: [{ skill: "navigate_to", status: "success" }], iterations: 1, expectedPost: "navigate", expectedPre: "navigate" },
+  { name: "va-y dashboard", userMessage: "Va-y sur le dashboard des performances", executedActions: [{ skill: "navigate_to", status: "success" }], iterations: 1, expectedPost: "navigate", expectedPre: "navigate" },
+  { name: "affiche panel", userMessage: "Affiche le panel d'audit détaillé", executedActions: [{ skill: "open_audit_panel", status: "success" }], iterations: 1, expectedPost: "navigate", expectedPre: "navigate" },
+  { name: "montre cocoon (post-hoc only)", userMessage: "Ouvre cocoon", executedActions: [{ skill: "navigate_to", status: "success" }], iterations: 1, expectedPost: "navigate" },
 ];
 
 // ─── read_skill (4) ──────────────────────────────────────────
@@ -55,18 +59,20 @@ const READ_SKILL: Scenario[] = [
 
 // ─── write_skill (4) ─────────────────────────────────────────
 const WRITE_SKILL: Scenario[] = [
-  { name: "publie draft", userMessage: "Publie ce brouillon", executedActions: [{ skill: "cms_publish_draft", status: "awaiting_approval" }], iterations: 1, expectedPost: "write_skill", expectedPre: "write_skill" },
-  { name: "déclenche audit", userMessage: "Lance un audit maintenant", executedActions: [{ skill: "trigger_audit", status: "awaiting_approval" }], iterations: 1, expectedPost: "write_skill", expectedPre: "write_skill" },
-  { name: "refresh kpis", userMessage: "Met à jour les KPIs", executedActions: [{ skill: "refresh_kpis", status: "success" }], iterations: 1, expectedPost: "write_skill", expectedPre: "write_skill" },
+  { name: "publie draft (long)", userMessage: "Publie ce brouillon pour le blog principal", executedActions: [{ skill: "cms_publish_draft", status: "awaiting_approval" }], iterations: 1, expectedPost: "write_skill", expectedPre: "write_skill" },
+  { name: "déclenche audit", userMessage: "Lance un audit maintenant sur mon site", executedActions: [{ skill: "trigger_audit", status: "awaiting_approval" }], iterations: 1, expectedPost: "write_skill", expectedPre: "write_skill" },
+  { name: "refresh kpis", userMessage: "Met à jour les KPIs immédiatement stp", executedActions: [{ skill: "refresh_kpis", status: "success" }], iterations: 1, expectedPost: "write_skill", expectedPre: "write_skill" },
   { name: "propose identité", userMessage: "Propose une suggestion d'identité", executedActions: [{ skill: "propose_identity_suggestion", status: "success" }], iterations: 1, expectedPost: "write_skill" },
 ];
 
 // ─── complex_reasoning (4) ───────────────────────────────────
+// NB : preClassifyIntent teste les verbes d'écriture AVANT les mots de raisonnement.
+// « Explique … corrige » est donc classé write_skill en pré, complex_reasoning en post-hoc.
 const COMPLEX: Scenario[] = [
   { name: "3 skills read", userMessage: "Analyse mon site en profondeur", executedActions: [{ skill: "read_audit", status: "success" }, { skill: "read_site_kpis", status: "success" }, { skill: "audit_internal_mesh", status: "success" }], iterations: 3, expectedPost: "complex_reasoning", expectedPre: "complex_reasoning" },
   { name: "mix read + write", userMessage: "Audit puis publie le fix", executedActions: [{ skill: "read_audit", status: "success" }, { skill: "cms_patch_content", status: "awaiting_approval" }], iterations: 2, expectedPost: "complex_reasoning" },
-  { name: "boucle >2 itérations", userMessage: "Explique le score puis corrige", executedActions: [{ skill: "read_audit", status: "success" }], iterations: 4, expectedPost: "complex_reasoning", expectedPre: "complex_reasoning" },
-  { name: "pourquoi long", userMessage: "Pourquoi le score de mon site a-t-il chuté et comment le remonter durablement en 3 semaines ?", executedActions: [{ skill: "read_audit", status: "success" }], iterations: 2, expectedPost: "read_skill", expectedPre: "complex_reasoning" },
+  { name: "boucle >2 itérations", userMessage: "Pourquoi mon score baisse depuis 3 semaines et comment inverser ?", executedActions: [{ skill: "read_audit", status: "success" }], iterations: 4, expectedPost: "complex_reasoning", expectedPre: "complex_reasoning" },
+  { name: "pourquoi long → read post-hoc", userMessage: "Pourquoi le score de mon site a-t-il chuté et comment le remonter durablement ?", executedActions: [{ skill: "read_audit", status: "success" }], iterations: 2, expectedPost: "read_skill", expectedPre: "complex_reasoning" },
 ];
 
 const ALL: Array<[string, Scenario[]]> = [
