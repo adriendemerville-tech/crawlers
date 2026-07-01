@@ -121,18 +121,33 @@ async function callDictadevi(
   const url = `${DICTADEVI_BASE_URL}${path}`
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`
-  const init: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) }
-  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) init.body = JSON.stringify(body)
 
-  console.log(`[dictadevi-actions] ${method} ${url}`)
-  try {
-    const resp = await fetch(url, init)
-    const data = await resp.json().catch(() => null)
-    return { status: resp.status, data }
-  } catch (e) {
-    console.error(`[dictadevi-actions] Network error on ${method} ${url}:`, e)
-    return { status: 0, data: { error: e instanceof Error ? e.message : String(e) } }
+  // Backoff exponentiel sur 429 (rate limit 60/min doc Dictadevi) : 3 tentatives max
+  const maxAttempts = 3
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const init: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) }
+    if (body && ['POST', 'PUT', 'PATCH'].includes(method)) init.body = JSON.stringify(body)
+
+    console.log(`[dictadevi-actions] ${method} ${url}${attempt > 1 ? ` (retry ${attempt}/${maxAttempts})` : ''}`)
+    try {
+      const resp = await fetch(url, init)
+      if (resp.status === 429 && attempt < maxAttempts) {
+        const retryAfter = Number(resp.headers.get('retry-after')) || Math.pow(2, attempt)
+        const waitMs = Math.min(retryAfter * 1000, 15000)
+        console.warn(`[dictadevi-actions] 429 rate-limited, waiting ${waitMs}ms before retry`)
+        await new Promise((r) => setTimeout(r, waitMs))
+        continue
+      }
+      const data = await resp.json().catch(() => null)
+      return { status: resp.status, data }
+    } catch (e) {
+      if (attempt >= maxAttempts) {
+        console.error(`[dictadevi-actions] Network error on ${method} ${url}:`, e)
+        return { status: 0, data: { error: e instanceof Error ? e.message : String(e) } }
+      }
+    }
   }
+  return { status: 0, data: { error: 'exhausted retries' } }
 }
 
 // ── Action handlers ──
@@ -168,6 +183,9 @@ const getPost = (apiKey: string, slug: string) => callDictadevi('GET', `/posts/$
 
 async function createPost(apiKey: string, body: Record<string, unknown>, supabase: any) {
   ensureHtmlContent(body, `create-post:${(body.slug as string) || '(no-slug)'}`)
+  // Sécurité conforme doc Dictadevi : par défaut, les articles Parménion arrivent en brouillon.
+  // Le prescripteur peut forcer 'published' explicitement via params.status.
+  if (!body.status) body.status = 'draft'
   const slug = (body.slug as string) || ''
   if (slug) {
     const existing = await callDictadevi('GET', `/posts/${slug}`, apiKey)
