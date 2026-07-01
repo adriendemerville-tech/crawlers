@@ -311,4 +311,87 @@ export async function aiGatewayFetch(init: RequestInit): Promise<Response> {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Streaming — Sprint 1 S1.1 (SSE token-by-token pour copilot-orchestrator)
+// ═══════════════════════════════════════════════════════════════════
+/**
+ * Streaming variant: same primary→fallback logic but returns a raw Response
+ * whose body is an OpenAI-compatible SSE stream (data: {...}\n\n frames).
+ *
+ * Fallback behaviour:
+ *   - If primary opens the stream (HTTP 200), we return it as-is.
+ *   - If primary fails with a status in shouldFallback(), we try the next model.
+ *   - As last resort we run a non-streaming aiGatewayCall and synthesize a
+ *     single-chunk SSE stream so the caller's parser stays uniform.
+ */
+export async function aiGatewayCallStream(opts: AICallOptions): Promise<Response> {
+  const { primary, fallback1, fallback2, cache = 'none', body, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {} } = opts;
+
+  let chain = [primary, fallback1, fallback2].filter((m): m is string => !!m);
+  if (await isPremiumDisabled()) {
+    const downgraded = chain.filter((m) => !PREMIUM_MODELS.has(m));
+    if (downgraded.length > 0) chain = downgraded;
+  }
+
+  const streamBody = { ...body, stream: true };
+
+  for (let i = 0; i < chain.length; i++) {
+    const model = chain[i];
+    const isLast = i === chain.length - 1;
+    try {
+      const resp = await callOnce(model, streamBody, cache, timeoutMs, headers);
+      if (resp.ok) {
+        if (i > 0) console.info(`[aiGatewayCallStream] Fallback success: ${model} (level ${i})`);
+        return resp;
+      }
+      if (shouldFallback(resp.status) && lovableCanServe(model)) {
+        try {
+          const lov = await callOnce(model, streamBody, cache, timeoutMs, headers, 'lovable');
+          if (lov.ok) return lov;
+        } catch { /* fall through */ }
+      }
+      if (!shouldFallback(resp.status) || isLast) return resp;
+      try { await resp.body?.cancel(); } catch { /* noop */ }
+    } catch (e) {
+      console.warn(`[aiGatewayCallStream] ${model} threw: ${(e as Error).message}`);
+      if (isLast) {
+        const nonStream = await aiGatewayCall({ primary, fallback1, fallback2, cache, body, timeoutMs, headers });
+        return synthesizeSseFromJson(nonStream);
+      }
+    }
+  }
+
+  const nonStream = await aiGatewayCall({ primary, fallback1, fallback2, cache, body, timeoutMs, headers });
+  return synthesizeSseFromJson(nonStream);
+}
+
+/** Convertit une Response JSON classique en flux SSE monobloc (parseur OpenAI uniforme). */
+async function synthesizeSseFromJson(resp: Response): Promise<Response> {
+  if (!resp.ok) return resp;
+  const data = await resp.json().catch(() => null) as {
+    choices?: Array<{ message?: { content?: string | null; tool_calls?: unknown }; finish_reason?: string }>;
+    usage?: Record<string, unknown>;
+  } | null;
+  const choice = data?.choices?.[0];
+  const content = choice?.message?.content ?? '';
+  const tool_calls = choice?.message?.tool_calls;
+  const finish = choice?.finish_reason ?? (tool_calls ? 'tool_calls' : 'stop');
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      const push = (obj: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+      if (content) push({ choices: [{ index: 0, delta: { content } }] });
+      if (tool_calls) push({ choices: [{ index: 0, delta: { tool_calls } }] });
+      push({ choices: [{ index: 0, delta: {}, finish_reason: finish }], usage: data?.usage });
+      controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    status: 200,
+    headers: { 'Content-Type': 'text/event-stream; charset=utf-8' },
+  });
+}
+
 export { PRIMARY_ALLOWED_2026, PRIMARY_ALLOWED_CLAUDE_EXCEPTION, FALLBACK_ALLOWED };
