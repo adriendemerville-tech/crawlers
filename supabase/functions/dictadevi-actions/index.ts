@@ -183,6 +183,9 @@ const getPost = (apiKey: string, slug: string) => callDictadevi('GET', `/posts/$
 
 async function createPost(apiKey: string, body: Record<string, unknown>, supabase: any) {
   ensureHtmlContent(body, `create-post:${(body.slug as string) || '(no-slug)'}`)
+  // Sécurité conforme doc Dictadevi : par défaut, les articles Parménion arrivent en brouillon.
+  // Le prescripteur peut forcer 'published' explicitement via params.status.
+  if (!body.status) body.status = 'draft'
   const slug = (body.slug as string) || ''
   if (slug) {
     const existing = await callDictadevi('GET', `/posts/${slug}`, apiKey)
