@@ -280,7 +280,17 @@ Deno.serve(async (req) => {
         .eq('user_id', userId);
     }
 
-    // ── Lance la boucle agent ────────────────────────────
+    // Sprint 1 S1.1 — branche SSE streaming (opt-in via body.stream === true)
+    if ((body as Record<string, unknown>).stream === true) {
+      return await handleStreamingTurn({
+        persona, sessionId, userId, userMessage,
+        runtimeContext: body.context, isCreatorMode,
+        userClient, service, t0,
+        rawUserMessage: body.message,
+      });
+    }
+
+    // ── Lance la boucle agent (mode JSON classique) ───────
     const loopResult = await runAgentLoop({
       persona,
       sessionId,
