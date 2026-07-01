@@ -1141,6 +1141,8 @@ async function runAgentLoopStreaming(args: {
   const { persona, sessionId, userId, runtimeContext, isCreatorMode, userClient, service, sse } = args;
 
   const history = await loadHistory(service, sessionId, userId);
+  args.sse.write('phase', { name: 'thinking' });
+
   const contextStr = runtimeContext && Object.keys(runtimeContext).length > 0
     ? `\n\nContexte courant :\n${JSON.stringify(runtimeContext, null, 2)}`
     : '';
@@ -1387,10 +1389,17 @@ function handleStreamingTurn(args: {
   const { persona, sessionId, userId, service, t0, rawUserMessage } = args;
   const sse = createSseWriter();
 
+  // Sprint 3 S3.2 — intro-streaming : ack immédiat (flush du 1er byte SSE)
+  // pour ouvrir la connexion côté client et afficher le statut "réflexion".
+  // Coût ~0 ms, gain TTFB perçu significatif (avant loadHistory + LLM).
+  sse.write('ack', { session_id: sessionId, persona: persona.id, ts: Date.now() });
+
   // Le loop tourne en arrière-plan pendant qu'on renvoie le stream au client.
   (async () => {
     try {
+      sse.write('phase', { name: 'loading_context' });
       const loopResult = await runAgentLoopStreaming({ ...args, sse });
+
 
       const intentBucket = classifyIntentBucket({
         userMessage: rawUserMessage,
