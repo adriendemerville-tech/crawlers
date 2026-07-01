@@ -927,27 +927,37 @@ async function callLLM(
   persona: PersonaConfig,
   messages: ChatMessage[],
   tools: unknown[],
+  maxTokens?: number,
 ): Promise<{
   content: string | null;
   tool_calls?: ChatMessage['tool_calls'];
   finish_reason?: string;
   usage?: { prompt_tokens?: number; completion_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number };
 }> {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY');
-  if (!apiKey) throw new Error('LOVABLE_API_KEY manquante');
+  // Sprint 1 S1.2 — Anthropic prompt caching + fallback chain via aiGatewayCall.
+  // Cache 'anthropic' injecte cache_control: ephemeral sur le system prompt (L1),
+  // ce qui économise ~90% de tokens système à partir du 2e appel du même tour.
+  const isAnthropic = persona.model.startsWith('anthropic/');
+  const fallbackChain = isAnthropic
+    ? { fallback1: 'google/gemini-3.5-flash', fallback2: 'openai/gpt-5.4-mini' }
+    : { fallback1: 'anthropic/claude-haiku-4.5', fallback2: 'openai/gpt-5.4-mini' };
 
-  // P2 #13 — timeout 45s + AbortController pour libérer la connexion
   const r = await withAbortableTimeout(
-    (signal) => aiGatewayFetch( {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: persona.model,
-        max_tokens: persona.maxOutputTokens,
+    (signal) => aiGatewayCall({
+      primary: persona.model,
+      fallback1: fallbackChain.fallback1,
+      fallback2: fallbackChain.fallback2,
+      cache: isAnthropic ? 'anthropic' : 'none',
+      body: {
+        max_tokens: maxTokens ?? persona.maxOutputTokens,
         messages,
         tools: tools.length > 0 ? tools : undefined,
-      }),
-      signal,
+      },
+      timeoutMs: LLM_TIMEOUT_MS,
+      headers: { 'X-Abort-Signal': 'orchestrator' },
+    }).then((resp) => {
+      if (signal.aborted) throw new Error('aborted');
+      return resp;
     }),
     LLM_TIMEOUT_MS,
     'LLM Gateway',
@@ -959,9 +969,7 @@ async function callLLM(
 
   const data = await r.json();
   const choice = data?.choices?.[0];
-  // Sprint 1 S1.2 — remonte les stats cache Anthropic (prompt_tokens_details.cached_tokens
-  // sur OpenAI-compat OpenRouter, cache_read_input_tokens / cache_creation_input_tokens
-  // sur Anthropic natif). On normalise vers un shape unique.
+  // S1.2 — cache stats normalisées (OpenAI-compat OpenRouter ou Anthropic natif)
   const usage = data?.usage ?? {};
   const cachedIn = usage.cache_read_input_tokens
     ?? usage.prompt_tokens_details?.cached_tokens
