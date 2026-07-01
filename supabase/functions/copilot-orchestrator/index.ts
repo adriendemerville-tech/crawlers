@@ -706,10 +706,15 @@ async function handleApproval(args: {
       .eq('id', action.session_id).eq('user_id', userId);
   }
 
-  // Persiste la paire user_message (synthétique) + assistant_reply
+  // Persiste la paire user_message (synthétique) + assistant_reply (+ télémétrie Sprint 1)
+  const approvalIntent = classifyIntentBucket({
+    userMessage: userConfirm,
+    executedActions: loopResult.executedActions,
+    iterations: loopResult.iterations,
+  });
   await service.from('copilot_actions').insert([
     { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: userConfirm, _synthetic: true, _trigger: 'approval', completed_action_id: completed?.id }, status: 'success', duration_ms: 0, action_category: 'system' },
-    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system' },
+    { session_id: action.session_id, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system', metadata: { intent_bucket: approvalIntent, iterations: loopResult.iterations, llm_usage: loopResult.llmUsage, duration_ms_total: Date.now() - t0, _trigger: 'approval' } },
   ]);
 
   return jsonOk({
