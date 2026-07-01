@@ -584,7 +584,7 @@ async function runAgentLoop(args: {
     finalReply = "Désolé, je n'ai pas pu finaliser cette demande après plusieurs essais. Reformule ou précise ce que tu veux faire.";
   }
 
-  return { finalReply, executedActions, awaitingApprovals, iterations };
+  return { finalReply, executedActions, awaitingApprovals, iterations, llmUsage };
 }
 
 // ═══════════════════════════════════════════════════════════
