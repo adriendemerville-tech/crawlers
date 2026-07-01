@@ -34,12 +34,19 @@ export function AIRoutingControl() {
   const load = async () => {
     setLoading(true);
     const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const [rRouting, rFlag, rUsage] = await Promise.all([
+    const since14dIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    const [rRouting, rFlag, rUsage, rIntents] = await Promise.all([
       supabase.from('ai_routing_overrides').select('*').order('feature'),
       supabase.from('ai_routing_global_flags').select('enabled').eq('key', 'disable_premium').maybeSingle(),
       supabase.from('ai_gateway_usage')
         .select('model, estimated_cost_usd, created_at')
         .gte('created_at', sinceIso)
+        .limit(5000),
+      supabase.from('copilot_actions')
+        .select('metadata')
+        .eq('skill', '_assistant_reply')
+        .gte('created_at', since14dIso)
+        .not('metadata', 'is', null)
         .limit(5000),
     ]);
     if (rRouting.error) {
@@ -49,6 +56,13 @@ export function AIRoutingControl() {
     }
     setKillSwitch(rFlag.data?.enabled === true);
     setUsage7d((rUsage.data ?? []) as UsageRow[]);
+    // Agrège les buckets
+    const bucketMap = new Map<string, number>();
+    for (const row of (rIntents.data ?? []) as Array<{ metadata: { intent_bucket?: string } | null }>) {
+      const b = row.metadata?.intent_bucket ?? 'unknown';
+      bucketMap.set(b, (bucketMap.get(b) ?? 0) + 1);
+    }
+    setIntents14d([...bucketMap.entries()].map(([bucket, count]) => ({ bucket, count })).sort((a, b) => b.count - a.count));
     setLoading(false);
   };
 
