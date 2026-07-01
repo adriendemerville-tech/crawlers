@@ -1141,6 +1141,8 @@ async function runAgentLoopStreaming(args: {
   const { persona, sessionId, userId, runtimeContext, isCreatorMode, userClient, service, sse } = args;
 
   const history = await loadHistory(service, sessionId, userId);
+  args.sse.write('phase', { name: 'thinking' });
+
   const contextStr = runtimeContext && Object.keys(runtimeContext).length > 0
     ? `\n\nContexte courant :\n${JSON.stringify(runtimeContext, null, 2)}`
     : '';
