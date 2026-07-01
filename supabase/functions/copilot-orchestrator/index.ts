@@ -438,6 +438,7 @@ async function runAgentLoop(args: {
   const ctx: SkillContext = { userId, sessionId, persona: persona.id, supabase: userClient, service };
   const executedActions: AgentLoopResult['executedActions'] = [];
   const awaitingApprovals: AgentLoopResult['awaitingApprovals'] = [];
+  const llmUsage = { prompt_tokens: 0, completion_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
 
   let finalReply = '';
   let iterations = 0;
@@ -445,6 +446,12 @@ async function runAgentLoop(args: {
   while (iterations < MAX_ITERATIONS) {
     iterations++;
     const llmResp = await callLLM(persona, messages, tools);
+    if (llmResp.usage) {
+      llmUsage.prompt_tokens += llmResp.usage.prompt_tokens ?? 0;
+      llmUsage.completion_tokens += llmResp.usage.completion_tokens ?? 0;
+      llmUsage.cache_read_input_tokens += llmResp.usage.cache_read_input_tokens ?? 0;
+      llmUsage.cache_creation_input_tokens += llmResp.usage.cache_creation_input_tokens ?? 0;
+    }
 
     messages.push({
       role: 'assistant',
