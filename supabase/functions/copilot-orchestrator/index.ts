@@ -454,9 +454,13 @@ async function runAgentLoop(args: {
   let finalReply = '';
   let iterations = 0;
 
+  // Sprint 1 S1.5 — pré-classification pour dimensionner maxOutputTokens
+  const preBucket = preClassifyIntent(args.userMessage);
+  const dynamicMaxTokens = maxTokensForBucket(preBucket, persona.maxOutputTokens);
+
   while (iterations < MAX_ITERATIONS) {
     iterations++;
-    const llmResp = await callLLM(persona, messages, tools);
+    const llmResp = await callLLM(persona, messages, tools, dynamicMaxTokens);
     if (llmResp.usage) {
       llmUsage.prompt_tokens += llmResp.usage.prompt_tokens ?? 0;
       llmUsage.completion_tokens += llmResp.usage.completion_tokens ?? 0;
