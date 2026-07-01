@@ -30,7 +30,8 @@
  *   #8 vérif persona stricte sur approval/reject
  */
 
-import { aiGatewayCall } from '../_shared/aiGatewayFetch.ts';
+import { aiGatewayCall, aiGatewayCallStream } from '../_shared/aiGatewayFetch.ts';
+import { parseSseStream, createStreamAggregator, createSseWriter } from './streaming.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import {
