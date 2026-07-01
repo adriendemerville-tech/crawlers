@@ -906,7 +906,12 @@ async function callLLM(
   persona: PersonaConfig,
   messages: ChatMessage[],
   tools: unknown[],
-): Promise<{ content: string | null; tool_calls?: ChatMessage['tool_calls']; finish_reason?: string }> {
+): Promise<{
+  content: string | null;
+  tool_calls?: ChatMessage['tool_calls'];
+  finish_reason?: string;
+  usage?: { prompt_tokens?: number; completion_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number };
+}> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) throw new Error('LOVABLE_API_KEY manquante');
 
@@ -933,10 +938,26 @@ async function callLLM(
 
   const data = await r.json();
   const choice = data?.choices?.[0];
+  // Sprint 1 S1.2 — remonte les stats cache Anthropic (prompt_tokens_details.cached_tokens
+  // sur OpenAI-compat OpenRouter, cache_read_input_tokens / cache_creation_input_tokens
+  // sur Anthropic natif). On normalise vers un shape unique.
+  const usage = data?.usage ?? {};
+  const cachedIn = usage.cache_read_input_tokens
+    ?? usage.prompt_tokens_details?.cached_tokens
+    ?? 0;
+  const cacheCreate = usage.cache_creation_input_tokens
+    ?? usage.prompt_tokens_details?.cache_creation_tokens
+    ?? 0;
   return {
     content: choice?.message?.content ?? null,
     tool_calls: choice?.message?.tool_calls,
     finish_reason: choice?.finish_reason,
+    usage: {
+      prompt_tokens: usage.prompt_tokens,
+      completion_tokens: usage.completion_tokens,
+      cache_read_input_tokens: cachedIn,
+      cache_creation_input_tokens: cacheCreate,
+    },
   };
 }
 
