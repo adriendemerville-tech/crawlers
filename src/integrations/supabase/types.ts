@@ -3658,6 +3658,7 @@ export type Database = {
           id: string
           input: Json
           llm_cost_usd: number | null
+          metadata: Json
           output: Json | null
           persona: string
           session_id: string
@@ -3675,6 +3676,7 @@ export type Database = {
           id?: string
           input?: Json
           llm_cost_usd?: number | null
+          metadata?: Json
           output?: Json | null
           persona: string
           session_id: string
@@ -3692,6 +3694,7 @@ export type Database = {
           id?: string
           input?: Json
           llm_cost_usd?: number | null
+          metadata?: Json
           output?: Json | null
           persona?: string
           session_id?: string
