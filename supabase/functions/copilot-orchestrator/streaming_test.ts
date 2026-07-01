@@ -125,11 +125,13 @@ function partitionBatch(calls: FakeToolCall[]): { parallel: FakeToolCall[]; sequ
   return { parallel, sequential };
 }
 
-Deno.test("batch S3.1: 3 read auto → tous parallèles", () => {
+Deno.test("batch S3.1: 3 read/navigate auto → tous parallèles", () => {
+  // NB : `audit_internal_mesh` est catégorisé 'other' par categorizeAction (préfixe audit_
+  // non listé comme read). On utilise donc des skills strictement 'read_*' et 'navigate_to'.
   const { parallel, sequential } = partitionBatch([
     { skill: "read_audit", policy: "auto" },
     { skill: "read_site_kpis", policy: "auto" },
-    { skill: "audit_internal_mesh", policy: "auto" },
+    { skill: "navigate_to", policy: "auto" },
   ]);
   assertEquals(parallel.length, 3);
   assertEquals(sequential.length, 0);
