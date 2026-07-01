@@ -236,6 +236,60 @@ export function AIRoutingControl() {
         )}
       </div>
 
+      {/* Sprint 1 S1.4 — Distribution des intents Copilot (14j) */}
+      <div className="rounded-lg p-4 border border-border space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <h3 className="font-semibold">Distribution intents Copilot — 14 derniers jours</h3>
+          </div>
+          <Badge variant="outline" className="font-mono">
+            {intents14d.reduce((s, r) => s + r.count, 0)} tours
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Gate S2 : si <code>chit_chat + navigate ≥ 20%</code>, le routeur d'intent (Gemini Lite) devient rentable.
+          Sinon on saute le sprint.
+        </p>
+        {intents14d.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucun tour logué avec metadata (déploie la mise à jour puis attends quelques échanges).</p>
+        ) : (() => {
+          const total = intents14d.reduce((s, r) => s + r.count, 0);
+          const trivial = intents14d
+            .filter((r) => r.bucket === 'chit_chat' || r.bucket === 'navigate')
+            .reduce((s, r) => s + r.count, 0);
+          const trivialPct = total > 0 ? (trivial / total) * 100 : 0;
+          const gateOk = trivialPct >= 20;
+          return (
+            <>
+              <div className="space-y-1">
+                {intents14d.map((r) => {
+                  const pct = total > 0 ? (r.count / total) * 100 : 0;
+                  return (
+                    <div key={r.bucket} className="flex items-center justify-between text-xs font-mono gap-2">
+                      <span className="truncate">{r.bucket}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="w-24 h-1.5 bg-muted rounded overflow-hidden">
+                          <div className="h-full bg-foreground/60" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-muted-foreground w-24 text-right">
+                          {r.count} · {pct.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className={`text-xs font-mono border-t border-border pt-2 ${gateOk ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'}`}>
+                Gate S2 : trivial (chit_chat + navigate) = {trivialPct.toFixed(1)}% → {gateOk ? 'GO (routeur rentable)' : 'NO-GO (< 20%)'}
+              </div>
+            </>
+          );
+        })()}
+      </div>
+
+
+
 
 
       {/* Master toggle */}
