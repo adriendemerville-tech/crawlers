@@ -129,8 +129,8 @@ Deno.test("shouldRecallMemory: message vide/court → false", () => {
   assertEquals(shouldRecallMemory("hey"), false);
 });
 
-Deno.test("shouldRecallMemory: pronom référentiel court → true", () => {
-  assert(shouldRecallMemory("Explique-moi ça"));
+Deno.test("shouldRecallMemory: mot mémoire explicite → true", () => {
+  assert(shouldRecallMemory("Rappelle-toi le site"));
 });
 
 Deno.test("shouldRecallMemory: entité métier → true", () => {
