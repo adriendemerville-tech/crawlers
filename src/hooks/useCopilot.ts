@@ -195,6 +195,141 @@ export function useCopilot(options: UseCopilotOptions) {
     [persona, sending, getContext, onActions, callOrchestrator],
   );
 
+  /**
+   * Sprint 1 S1.1 — Variante streaming SSE (token-by-token).
+   * Utilise fetch direct car supabase.functions.invoke ne supporte pas les Response streamées.
+   * Fallback automatique vers sendMessage() classique si le stream échoue à l'ouverture.
+   *
+   * Événements SSE consommés :
+   *   token             → append au content de la bulle placeholder
+   *   tool_call         → (métadata, UX facultatif)
+   *   tool_result       → (métadata, UX facultatif)
+   *   awaiting_approval → collecté pour le final
+   *   final             → { session_id, reply, actions, awaiting_approvals, iterations }
+   *   error             → propage le message d'erreur
+   */
+  const sendMessageStream = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || sending) return;
+
+      const userMsg: CopilotMessage = {
+        id: uid(), role: 'user', content: trimmed, createdAt: Date.now(),
+      };
+      const placeholderId = uid();
+      const placeholder: CopilotMessage = {
+        id: placeholderId, role: 'assistant', content: '', pending: true, createdAt: Date.now() + 1,
+      };
+      setMessages((prev) => [...prev, userMsg, placeholder]);
+      setSending(true);
+      setError(null);
+
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+        if (!accessToken) throw new Error('Non authentifié');
+
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/copilot-orchestrator`;
+        const ctx = getContext?.();
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
+          },
+          body: JSON.stringify({
+            persona,
+            session_id: sessionRef.current ?? undefined,
+            message: trimmed,
+            context: ctx,
+            stream: true,
+          }),
+        });
+
+        if (!resp.ok || !resp.body || !resp.headers.get('content-type')?.includes('text/event-stream')) {
+          // Fallback JSON classique
+          const fallbackText = await resp.text().catch(() => '');
+          throw new Error(fallbackText || `HTTP ${resp.status}`);
+        }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let accumulated = '';
+        let finalPayload: { session_id?: string; reply?: string; actions?: CopilotAction[]; awaiting_approvals?: PendingApproval[] } | null = null;
+        let streamErr: string | null = null;
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let idx: number;
+          while ((idx = buffer.indexOf('\n\n')) !== -1) {
+            const frame = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 2);
+            let evt = 'message';
+            let dataLine = '';
+            for (const line of frame.split('\n')) {
+              if (line.startsWith('event:')) evt = line.slice(6).trim();
+              else if (line.startsWith('data:')) dataLine += line.slice(5).trim();
+            }
+            if (!dataLine) continue;
+            let payload: unknown;
+            try { payload = JSON.parse(dataLine); } catch { continue; }
+
+            if (evt === 'token') {
+              const t = (payload as { text?: string })?.text ?? '';
+              if (t) {
+                accumulated += t;
+                setMessages((prev) => prev.map((m) => m.id === placeholderId ? { ...m, content: accumulated } : m));
+              }
+            } else if (evt === 'final') {
+              finalPayload = payload as typeof finalPayload;
+            } else if (evt === 'error') {
+              streamErr = (payload as { message?: string })?.message ?? 'Erreur stream';
+            }
+            // tool_call / tool_result / awaiting_approval / iteration : réservés à évolutions UX ultérieures
+          }
+        }
+
+        if (streamErr) throw new Error(streamErr);
+
+        const finalReply = finalPayload?.reply ?? accumulated;
+        if (finalPayload?.session_id) {
+          sessionRef.current = finalPayload.session_id;
+          setSessionId(finalPayload.session_id);
+        }
+        setMessages((prev) => prev.map((m) => m.id === placeholderId ? {
+          ...m,
+          pending: false,
+          content: finalReply,
+          actions: finalPayload?.actions,
+          awaiting_approvals: finalPayload?.awaiting_approvals,
+        } : m));
+
+        if (finalPayload?.actions?.length && onActions) onActions(finalPayload.actions);
+        if (finalReply && onAssistantReplyRef.current) {
+          try {
+            onAssistantReplyRef.current(finalReply, {
+              sessionId: sessionRef.current,
+              userMessage: trimmed,
+            });
+          } catch (err) {
+            console.warn('[useCopilot] onAssistantReply threw:', err);
+          }
+        }
+      } catch (e) {
+        const msg = (e as Error).message || 'Erreur inconnue';
+        setError(msg);
+        setMessages((prev) => prev.map((m) => m.id === placeholderId ? { ...m, pending: false, content: `*Erreur : ${msg}*` } : m));
+      } finally {
+        setSending(false);
+      }
+    },
+    [persona, sending, getContext, onActions],
+  );
+
   const approve = useCallback(
     async (actionId: string) => {
       if (sending) return;
