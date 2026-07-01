@@ -1060,6 +1060,325 @@ function jsonError(message: string, status = 400) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// Sprint 1 S1.1 — Streaming SSE (token-by-token + tool events)
+// ═══════════════════════════════════════════════════════════
+
+async function callLLMStream(
+  persona: PersonaConfig,
+  messages: ChatMessage[],
+  tools: unknown[],
+  maxTokens: number | undefined,
+  onTextDelta: (t: string) => void,
+): Promise<{
+  content: string | null;
+  tool_calls?: ChatMessage['tool_calls'];
+  finish_reason?: string;
+  usage?: { prompt_tokens?: number; completion_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number };
+}> {
+  const isAnthropic = persona.model.startsWith('anthropic/');
+  const fallbackChain = isAnthropic
+    ? { fallback1: 'google/gemini-3.5-flash', fallback2: 'openai/gpt-5.4-mini' }
+    : { fallback1: 'anthropic/claude-haiku-4.5', fallback2: 'openai/gpt-5.4-mini' };
+
+  const resp = await aiGatewayCallStream({
+    primary: persona.model,
+    fallback1: fallbackChain.fallback1,
+    fallback2: fallbackChain.fallback2,
+    cache: isAnthropic ? 'anthropic' : 'none',
+    body: {
+      max_tokens: maxTokens ?? persona.maxOutputTokens,
+      messages,
+      tools: tools.length > 0 ? tools : undefined,
+    },
+    timeoutMs: LLM_TIMEOUT_MS,
+  });
+
+  if (resp.status === 429) throw new Error('LLM rate-limit (429). Réessaie dans quelques secondes.');
+  if (resp.status === 402) throw new Error('Crédits LLM épuisés (402). Recharge le workspace.');
+  if (!resp.ok) throw new Error(`LLM Gateway ${resp.status} : ${(await resp.text()).slice(0, 300)}`);
+
+  const agg = createStreamAggregator(onTextDelta);
+  for await (const chunk of parseSseStream(resp)) agg.ingest(chunk);
+  const final = agg.finalize();
+
+  const usage = final.usage ?? {};
+  const cachedIn = (usage as { cache_read_input_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } })
+    .cache_read_input_tokens ?? usage.prompt_tokens_details?.cached_tokens ?? 0;
+  const cacheCreate = (usage as { cache_creation_input_tokens?: number; prompt_tokens_details?: { cache_creation_tokens?: number } })
+    .cache_creation_input_tokens ?? usage.prompt_tokens_details?.cache_creation_tokens ?? 0;
+
+  return {
+    content: final.content,
+    tool_calls: final.tool_calls,
+    finish_reason: final.finish_reason,
+    usage: {
+      prompt_tokens: usage.prompt_tokens,
+      completion_tokens: usage.completion_tokens,
+      cache_read_input_tokens: cachedIn,
+      cache_creation_input_tokens: cacheCreate,
+    },
+  };
+}
+
+/**
+ * Variante streaming de runAgentLoop. Émet les événements SSE au fur et à mesure,
+ * puis renvoie le même AgentLoopResult pour que le caller persiste la télémétrie.
+ * Réutilise la logique du loop non-streaming (voir runAgentLoop) — les deux
+ * chemins doivent rester en phase.
+ */
+async function runAgentLoopStreaming(args: {
+  persona: PersonaConfig;
+  sessionId: string;
+  userId: string;
+  userMessage: string;
+  runtimeContext?: Record<string, unknown>;
+  isCreatorMode: boolean;
+  userClient: ReturnType<typeof getUserClient>;
+  service: ReturnType<typeof getServiceClient>;
+  t0: number;
+  sse: ReturnType<typeof createSseWriter>;
+}): Promise<AgentLoopResult> {
+  const { persona, sessionId, userId, runtimeContext, isCreatorMode, userClient, service, sse } = args;
+
+  const history = await loadHistory(service, sessionId, userId);
+  const contextStr = runtimeContext && Object.keys(runtimeContext).length > 0
+    ? `\n\nContexte courant :\n${JSON.stringify(runtimeContext, null, 2)}`
+    : '';
+  const creatorBanner = isCreatorMode
+    ? `\n\n## MODE CRÉATEUR ACTIF\nL'administrateur créateur t'a invoqué. Toutes les skills sont débloquées sauf les inviolables.\n`
+    : '';
+
+  const messages: ChatMessage[] = [
+    { role: 'system', content: PROMPT_SAFETY_PREAMBLE + persona.systemPrompt + creatorBanner + contextStr },
+    ...history,
+  ];
+
+  // Mémoire vectorielle (identique à runAgentLoop, gate S1.3)
+  if (shouldRecallMemory(args.userMessage)) {
+    const recallText = await recallMemoryContext(service, userId, persona.id, args.userMessage, sessionId);
+    if (recallText) {
+      const tcId = `mem_${Math.random().toString(36).slice(2, 12)}`;
+      messages.push({ role: 'assistant', content: null, tool_calls: [{ id: tcId, type: 'function', function: { name: 'memory_recall', arguments: '{}' } }] });
+      messages.push({ role: 'tool', tool_call_id: tcId, name: 'memory_recall', content: wrapToolResult('memory_recall', { ok: true, recalled_turns: recallText }) });
+    }
+  }
+
+  messages.push({ role: 'user', content: wrapUserContent(args.userMessage) });
+
+  const allowedSkills = isCreatorMode
+    ? Array.from(new Set([...Object.keys(persona.skillPolicies), ...listSkills()]))
+        .filter((s) => !FORBIDDEN_EVEN_IN_CREATOR.has(s))
+    : Object.keys(persona.skillPolicies).filter((s) => persona.skillPolicies[s] !== 'forbidden');
+  const tools = buildToolDefinitions(allowedSkills);
+
+  const ctx: SkillContext = { userId, sessionId, persona: persona.id, supabase: userClient, service };
+  const executedActions: AgentLoopResult['executedActions'] = [];
+  const awaitingApprovals: AgentLoopResult['awaitingApprovals'] = [];
+  const llmUsage = { prompt_tokens: 0, completion_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+
+  let finalReply = '';
+  let iterations = 0;
+
+  const preBucket = preClassifyIntent(args.userMessage);
+  const dynamicMaxTokens = maxTokensForBucket(preBucket, persona.maxOutputTokens);
+
+  while (iterations < MAX_ITERATIONS) {
+    iterations++;
+    sse.write('iteration', { n: iterations });
+
+    const llmResp = await callLLMStream(
+      persona, messages, tools, dynamicMaxTokens,
+      (delta) => sse.write('token', { text: delta }),
+    );
+
+    if (llmResp.usage) {
+      llmUsage.prompt_tokens += llmResp.usage.prompt_tokens ?? 0;
+      llmUsage.completion_tokens += llmResp.usage.completion_tokens ?? 0;
+      llmUsage.cache_read_input_tokens += llmResp.usage.cache_read_input_tokens ?? 0;
+      llmUsage.cache_creation_input_tokens += llmResp.usage.cache_creation_input_tokens ?? 0;
+    }
+
+    messages.push({ role: 'assistant', content: llmResp.content, tool_calls: llmResp.tool_calls });
+
+    if (llmResp.tool_calls && llmResp.tool_calls.length > 0 && llmResp.content && llmResp.content.trim().length > 0) {
+      await service.from('copilot_actions').insert({
+        session_id: sessionId, user_id: userId, persona: persona.id,
+        skill: '_assistant_intermediate', input: {},
+        output: { content: llmResp.content, iteration: iterations },
+        status: 'success', duration_ms: 0, action_category: 'system',
+      });
+    }
+
+    if (!llmResp.tool_calls || llmResp.tool_calls.length === 0) {
+      finalReply = llmResp.content ?? '';
+      break;
+    }
+
+    let stopForApproval = false;
+    for (const call of llmResp.tool_calls) {
+      const skillName = call.function.name;
+      const basePolicy = resolveSkillPolicy(persona, skillName);
+      const isInviolable = FORBIDDEN_EVEN_IN_CREATOR.has(skillName);
+      const policy = (isCreatorMode && getSkill(skillName) && !isInviolable) ? 'auto' : basePolicy;
+
+      let parsedArgs: Record<string, unknown> = {};
+      try { parsedArgs = JSON.parse(call.function.arguments || '{}'); } catch { parsedArgs = {}; }
+
+      sse.write('tool_call', { skill: skillName, input: parsedArgs });
+
+      if (policy === 'forbidden' || !getSkill(skillName) || isInviolable) {
+        const errMsg = isInviolable
+          ? `Skill '${skillName}' inviolable — interdite même en mode créateur.`
+          : 'Skill non autorisé pour cette persona';
+        await logAction(service, sessionId, userId, persona.id, skillName, parsedArgs, null, 'rejected', errMsg, 0);
+        messages.push({ role: 'tool', tool_call_id: call.id, name: skillName, content: wrapToolResult(skillName, { ok: false, error: errMsg }) });
+        executedActions.push({ skill: skillName, status: 'rejected', error: isInviolable ? 'inviolable' : 'forbidden' });
+        sse.write('tool_result', { skill: skillName, status: 'rejected', error: errMsg });
+        continue;
+      }
+
+      const effectivePolicy = stopForApproval ? 'approval' : policy;
+
+      if (effectivePolicy === 'approval') {
+        const { data: approvalAction } = await service.from('copilot_actions').insert({
+          session_id: sessionId, user_id: userId, persona: persona.id,
+          skill: skillName, input: parsedArgs, status: 'awaiting_approval',
+          action_category: categorizeAction(skillName),
+        }).select('id').single();
+        awaitingApprovals.push({ action_id: approvalAction?.id ?? '', skill: skillName, input: parsedArgs });
+        executedActions.push({ skill: skillName, status: 'awaiting_approval', action_id: approvalAction?.id });
+        messages.push({
+          role: 'tool', tool_call_id: call.id, name: skillName,
+          content: wrapToolResult(skillName, {
+            ok: false, awaiting_approval: true, action_id: approvalAction?.id,
+            note: stopForApproval ? 'Auto-skill mise en attente : approbation précédente requise.' : undefined,
+          }),
+        });
+        sse.write('awaiting_approval', { action_id: approvalAction?.id, skill: skillName, input: parsedArgs });
+        stopForApproval = true;
+      } else {
+        const tStart = Date.now();
+        const skill = getSkill(skillName)!;
+        let result: { ok: boolean; data?: unknown; error?: string };
+        try {
+          result = await withTimeout(skill.handler(parsedArgs, ctx), SKILL_TIMEOUT_MS, `skill ${skillName}`);
+        } catch (e) { result = { ok: false, error: (e as Error).message }; }
+        const dur = Date.now() - tStart;
+        const { data: insertedAction } = await service.from('copilot_actions').insert({
+          session_id: sessionId, user_id: userId, persona: persona.id,
+          skill: skillName, input: parsedArgs,
+          output: result.data ?? null,
+          status: result.ok ? 'success' : 'error',
+          error_message: result.ok ? null : result.error,
+          duration_ms: dur,
+          action_category: categorizeAction(skillName),
+        }).select('id').single();
+        executedActions.push({ skill: skillName, status: result.ok ? 'success' : 'error', output: result.data, error: result.error, action_id: insertedAction?.id });
+        messages.push({ role: 'tool', tool_call_id: call.id, name: skillName, content: wrapToolResult(skillName, result) });
+        sse.write('tool_result', { skill: skillName, status: result.ok ? 'success' : 'error', action_id: insertedAction?.id, error: result.error });
+      }
+    }
+
+    if (stopForApproval) {
+      finalReply = buildApprovalPromptText(awaitingApprovals);
+      break;
+    }
+  }
+
+  if (iterations >= MAX_ITERATIONS && !finalReply) {
+    finalReply = "Désolé, je n'ai pas pu finaliser cette demande après plusieurs essais. Reformule ou précise ce que tu veux faire.";
+  }
+
+  return { finalReply, executedActions, awaitingApprovals, iterations, llmUsage };
+}
+
+/**
+ * Handler du mode streaming : renvoie immédiatement une Response SSE, puis
+ * exécute le loop en arrière-plan en émettant des événements sur le writer.
+ * Persiste la télémétrie et libère `processing` en fin de flux.
+ */
+function handleStreamingTurn(args: {
+  persona: PersonaConfig;
+  sessionId: string;
+  userId: string;
+  userMessage: string;
+  runtimeContext?: Record<string, unknown>;
+  isCreatorMode: boolean;
+  userClient: ReturnType<typeof getUserClient>;
+  service: ReturnType<typeof getServiceClient>;
+  t0: number;
+  rawUserMessage: string;
+}): Response {
+  const { persona, sessionId, userId, service, t0, rawUserMessage } = args;
+  const sse = createSseWriter();
+
+  // Le loop tourne en arrière-plan pendant qu'on renvoie le stream au client.
+  (async () => {
+    try {
+      const loopResult = await runAgentLoopStreaming({ ...args, sse });
+
+      const intentBucket = classifyIntentBucket({
+        userMessage: rawUserMessage,
+        executedActions: loopResult.executedActions,
+        iterations: loopResult.iterations,
+      });
+      const replyMetadata = {
+        intent_bucket: intentBucket,
+        iterations: loopResult.iterations,
+        llm_usage: loopResult.llmUsage,
+        duration_ms_total: Date.now() - t0,
+        streaming: true,
+      };
+
+      await service.from('copilot_actions').insert([
+        { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_user_message', input: { content: rawUserMessage }, status: 'success', duration_ms: 0, action_category: 'system' },
+        { session_id: sessionId, user_id: userId, persona: persona.id, skill: '_assistant_reply', input: {}, output: { content: loopResult.finalReply }, status: 'success', duration_ms: Date.now() - t0, action_category: 'system', metadata: replyMetadata },
+      ]);
+
+      await recordTurnQualityScore({
+        service, sessionId, userId, persona: persona.id,
+        lastUserMessage: rawUserMessage,
+        assistantReply: loopResult.finalReply,
+        executedActions: loopResult.executedActions.map((a) => ({ skill: a.skill, status: a.status })),
+      });
+
+      await service.from('copilot_sessions')
+        .update({ status: 'active', processing_started_at: null })
+        .eq('id', sessionId).eq('user_id', userId);
+
+      sse.write('final', {
+        session_id: sessionId,
+        reply: loopResult.finalReply,
+        actions: loopResult.executedActions,
+        awaiting_approvals: loopResult.awaitingApprovals,
+        iterations: loopResult.iterations,
+        persona: persona.id,
+      });
+    } catch (e) {
+      console.error('[copilot-orchestrator streaming] Erreur:', e);
+      sse.write('error', { message: (e as Error).message || 'Erreur inconnue' });
+      try {
+        await service.from('copilot_sessions')
+          .update({ status: 'active', processing_started_at: null })
+          .eq('id', sessionId).eq('status', 'processing');
+      } catch { /* best-effort */ }
+    } finally {
+      sse.close();
+    }
+  })();
+
+  return new Response(sse.stream, {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no',
+    },
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
 // recallMemoryContext — récupère les K tours user les plus pertinents
 // (cross-sessions, même persona, même user) via la RPC hybride.
 // Retourne un texte compact prêt à injecter, ou null si rien d'intéressant.
