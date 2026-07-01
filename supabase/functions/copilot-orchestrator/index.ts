@@ -349,6 +349,7 @@ interface AgentLoopResult {
   executedActions: Array<{ skill: string; status: string; output?: unknown; error?: string; action_id?: string }>;
   awaitingApprovals: Array<{ action_id: string; skill: string; input: unknown }>;
   iterations: number;
+  llmUsage: { prompt_tokens: number; completion_tokens: number; cache_read_input_tokens: number; cache_creation_input_tokens: number };
 }
 
 async function runAgentLoop(args: {
