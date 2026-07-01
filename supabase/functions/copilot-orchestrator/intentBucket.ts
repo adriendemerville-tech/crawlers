@@ -117,3 +117,36 @@ export function shouldRecallMemory(userMessage: string): boolean {
   if (trimmed.length > 60) return true;
   return RECALL_TRIGGERS_RE.test(trimmed);
 }
+
+/**
+ * Sprint 1 S1.5 — pré-classification légère (avant tout appel LLM) pour
+ * ajuster `maxOutputTokens`. Purement heuristique regex, ~0 ms.
+ * Peut différer du post-hoc si le LLM appelle finalement des skills ;
+ * n'est utilisé que pour dimensionner la fenêtre de sortie.
+ */
+export function preClassifyIntent(userMessage: string): IntentBucket {
+  const trimmed = (userMessage ?? '').trim();
+  if (trimmed.length === 0) return 'chit_chat';
+  if (CHIT_CHAT_RE.test(trimmed) || trimmed.length < 25) return 'chit_chat';
+  if (/\b(publie|publier|d[ée]ploie|d[ée]ployer|cr[ée]e|cr[ée]er|met[s]?[- ]?[àa][- ]?jour|modifie|supprime|lance|d[ée]clenche|refresh|patch|push|corrige)\b/i.test(trimmed)) {
+    return 'write_skill';
+  }
+  if (/\b(va[- ]y|ouvre|montre[- ]moi|affiche|emm[èe]ne[- ]moi|onglet)\b/i.test(trimmed) && trimmed.length < 100) {
+    return 'navigate';
+  }
+  if (trimmed.length > 200 || /\b(pourquoi|comment|explique|analyse|compare|d[ée]taille|audite?)\b/i.test(trimmed)) {
+    return 'complex_reasoning';
+  }
+  return 'read_skill';
+}
+
+/** Sprint 1 S1.5 — mapping bucket → maxOutputTokens. */
+export function maxTokensForBucket(bucket: IntentBucket, personaDefault: number): number {
+  switch (bucket) {
+    case 'chit_chat': return Math.min(200, personaDefault);
+    case 'navigate': return Math.min(250, personaDefault);
+    case 'read_skill': return Math.min(500, personaDefault);
+    case 'write_skill': return Math.min(600, personaDefault);
+    case 'complex_reasoning': return personaDefault;
+  }
+}

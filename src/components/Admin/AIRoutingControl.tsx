@@ -18,6 +18,7 @@ interface RoutingRow {
 }
 
 type UsageRow = { model: string; estimated_cost_usd: number | null; created_at: string };
+type IntentRow = { bucket: string; count: number };
 
 export function AIRoutingControl() {
   const [rows, setRows] = useState<RoutingRow[]>([]);
@@ -27,17 +28,25 @@ export function AIRoutingControl() {
   const [killSwitch, setKillSwitch] = useState<boolean>(false);
   const [killSwitchSaving, setKillSwitchSaving] = useState(false);
   const [usage7d, setUsage7d] = useState<UsageRow[]>([]);
+  const [intents14d, setIntents14d] = useState<IntentRow[]>([]);
   const { toast } = useToast();
 
   const load = async () => {
     setLoading(true);
     const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const [rRouting, rFlag, rUsage] = await Promise.all([
+    const since14dIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    const [rRouting, rFlag, rUsage, rIntents] = await Promise.all([
       supabase.from('ai_routing_overrides').select('*').order('feature'),
       supabase.from('ai_routing_global_flags').select('enabled').eq('key', 'disable_premium').maybeSingle(),
       supabase.from('ai_gateway_usage')
         .select('model, estimated_cost_usd, created_at')
         .gte('created_at', sinceIso)
+        .limit(5000),
+      supabase.from('copilot_actions')
+        .select('metadata')
+        .eq('skill', '_assistant_reply')
+        .gte('created_at', since14dIso)
+        .not('metadata', 'is', null)
         .limit(5000),
     ]);
     if (rRouting.error) {
@@ -47,6 +56,13 @@ export function AIRoutingControl() {
     }
     setKillSwitch(rFlag.data?.enabled === true);
     setUsage7d((rUsage.data ?? []) as UsageRow[]);
+    // Agrège les buckets
+    const bucketMap = new Map<string, number>();
+    for (const row of (rIntents.data ?? []) as Array<{ metadata: { intent_bucket?: string } | null }>) {
+      const b = row.metadata?.intent_bucket ?? 'unknown';
+      bucketMap.set(b, (bucketMap.get(b) ?? 0) + 1);
+    }
+    setIntents14d([...bucketMap.entries()].map(([bucket, count]) => ({ bucket, count })).sort((a, b) => b.count - a.count));
     setLoading(false);
   };
 
@@ -219,6 +235,60 @@ export function AIRoutingControl() {
           </div>
         )}
       </div>
+
+      {/* Sprint 1 S1.4 — Distribution des intents Copilot (14j) */}
+      <div className="rounded-lg p-4 border border-border space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <h3 className="font-semibold">Distribution intents Copilot — 14 derniers jours</h3>
+          </div>
+          <Badge variant="outline" className="font-mono">
+            {intents14d.reduce((s, r) => s + r.count, 0)} tours
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Gate S2 : si <code>chit_chat + navigate ≥ 20%</code>, le routeur d'intent (Gemini Lite) devient rentable.
+          Sinon on saute le sprint.
+        </p>
+        {intents14d.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucun tour logué avec metadata (déploie la mise à jour puis attends quelques échanges).</p>
+        ) : (() => {
+          const total = intents14d.reduce((s, r) => s + r.count, 0);
+          const trivial = intents14d
+            .filter((r) => r.bucket === 'chit_chat' || r.bucket === 'navigate')
+            .reduce((s, r) => s + r.count, 0);
+          const trivialPct = total > 0 ? (trivial / total) * 100 : 0;
+          const gateOk = trivialPct >= 20;
+          return (
+            <>
+              <div className="space-y-1">
+                {intents14d.map((r) => {
+                  const pct = total > 0 ? (r.count / total) * 100 : 0;
+                  return (
+                    <div key={r.bucket} className="flex items-center justify-between text-xs font-mono gap-2">
+                      <span className="truncate">{r.bucket}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="w-24 h-1.5 bg-muted rounded overflow-hidden">
+                          <div className="h-full bg-foreground/60" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-muted-foreground w-24 text-right">
+                          {r.count} · {pct.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className={`text-xs font-mono border-t border-border pt-2 ${gateOk ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'}`}>
+                Gate S2 : trivial (chit_chat + navigate) = {trivialPct.toFixed(1)}% → {gateOk ? 'GO (routeur rentable)' : 'NO-GO (< 20%)'}
+              </div>
+            </>
+          );
+        })()}
+      </div>
+
+
 
 
 
