@@ -18,6 +18,7 @@ interface RoutingRow {
 }
 
 type UsageRow = { model: string; estimated_cost_usd: number | null; created_at: string };
+type IntentRow = { bucket: string; count: number };
 
 export function AIRoutingControl() {
   const [rows, setRows] = useState<RoutingRow[]>([]);
