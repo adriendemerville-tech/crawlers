@@ -1049,3 +1049,115 @@ Total : 1 486 l. + table `content_requirements_matrix` référencée par 12 func
 3. **#83 (0.5j)** — Corriger les modèles hors catalogue d'expert-audit + audit-expert-seo → **débloque les introductions narratives** qui échouent probablement en silence aujourd'hui (à vérifier dans logs).
 
 **Ordre de déploiement recommandé** : #83 (fix silencieux) → #77 + #78 (économies max) → #84 (dette structurelle) → reste.
+
+---
+
+# Vague 4 — Workflows critiques (SEO / GEO / Content Architect / Code Architect / Breathing Spiral / Marina)
+
+Briefs : `knowledge/audits/{workflow-audit-seo,workflow-audit-geo,content-architect,code-architect,breathing-spiral,marina}/brief-2026-07-08.md`
+Audits : mêmes dossiers, fichier `audit-2026-07-08.md`.
+Angle transverse : cohérence Copilot orchestrator + skills + vector memory + prompt safety.
+
+## #89 · P0 SÉCU · 1j — Sanitiser HTML côté edge dans `iktracker-actions`
+**Fichier** : `supabase/functions/iktracker-actions/index.ts` (798 l.)
+**Problème** : aucun appel `DOMPurify.sanitize` détecté côté edge alors que la mémoire `code-and-injection-security-v2-fr` l'exige. Si le contrôle est purement client, un client malveillant (ou un skill Copilot compromis) peut pousser du HTML/JS non sanitizé jusqu'à l'injection sur site cible → **XSS on-site vraiment déployé**.
+**Fix** : créer `supabase/functions/_shared/htmlSanitizer.ts` basé sur `npm:isomorphic-dompurify` + `npm:jsdom`, appelé sur TOUT `payload.html`/`payload.script` avant push IKtracker. Ajouter test XSS canary.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 10 | 0 | 5 | **4.3** | 1j |
+
+## #90 · P0 · 0.5j — `detect-fan-out` : 3 appels OpenRouter directs à migrer sur gateway
+**Fichier** : `supabase/functions/detect-fan-out/index.ts` (lignes 49, 81, 106)
+**Problème** : 3 `fetch("https://openrouter.ai/api/v1/chat/completions")` bypass total du gateway → 0 trace dans `ai_gateway_usage`, pas de kill switch admin `disable_premium`, pas de fallback. Même problème pattern que #77 sur audit-compare, non résolu ici.
+**Fix** : remplacer par `aiGatewayFetch` (`_shared/aiGatewayFetch.ts`), mapper les 3 modèles vers ids catalogue.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 2 | 6 | 8 | 9 | **6.6** | 0.5j |
+
+## #91 · P0 · 3j — Marina : découpe + typage + migration gateway
+**Fichier** : `supabase/functions/marina/index.ts` (2 984 l., 87 `console.log`, 57 `: any`, `LOVABLE_API_KEY` en fetch direct)
+**Problème** : plus gros edge du projet (dépasse même `expert-audit`), triple risque : dette structurelle (57 `any`), hors observabilité gateway, duplication probable des modules SEO/GEO/Spiral déjà existants.
+**Fix** :
+1. `_shared/marina/{prospectScoring,seoSnapshot,geoSnapshot,spiralSnapshot,outreachLLM,whiteLabel,types}.ts`
+2. Handler `index.ts` ≤ 400 l., orchestrateur pur
+3. Snapshots SEO/GEO/Spiral = **invocation** des edges/modules canoniques (`computeSeoScoreV2`, `spiralClassifier`, `geo-kpis-aggregate`) — jamais de copie locale
+4. Tout LLM via `aiGatewayFetch` (drop `LOVABLE_API_KEY` direct)
+5. Logger structuré + correlation_id par prospect
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 4 | 6 | 7 | 10 | **6.6** | 3j |
+
+## #92 · P0 · 1.5j — Content Architect : typage strict + découpe
+**Fichier** : `content-architecture-advisor/index.ts` (1 642 l., 43 `console.log`, **49 `: any`**)
+**Problème** : pipeline 4 étages (briefing → stratège → rédacteur → tonalisateur) tout `any` → 0 garantie de forme du draft final avant push CMS 7 plateformes = risque de publication cassée en prod.
+**Fix** :
+1. `_shared/contentArchitect/types.ts` (`Briefing`, `StrategyPlan`, `WriterDraft`, `TonalizedDraft`)
+2. Split `_shared/contentArchitect/{briefing,strategist,writer,tonalizer}.ts`
+3. Handler ≤ 300 l., zod validation entre étages
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 3 | 3 | 4 | 10 | **4.7** | 1.5j |
+
+## #93 · P1 · 0.5j — Skills Copilot manquants pour 5 workflows
+**Problème** : aucun des workflows Vague 4 n'expose de skill dans `_shared/skills/registry.ts` → Copilot Félix/Stratège ne peut pas orchestrer, seulement pointer l'UI. Contradiction directe avec mémoire `copilot/architecture-1backend-npersonas`.
+**Fix** : déclarer 5 skills avec policy par persona :
+- `audit_seo` — Félix `auto`, Stratège `approval`
+- `audit_geo` — Félix `auto`, Stratège `approval`
+- `generate_content_architecture` — Stratège `auto`, Félix `forbidden`
+- `inject_code_advanced` — Félix `approval`, Stratège `forbidden`
+- `explain_spiral_phase` — Stratège `auto`, Félix `auto`
+- `run_marina_prospect` — Stratège `approval` uniquement
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 4 | 3 | 8 | **3.7** | 0.5j |
+
+## #94 · P1 · 1j — Breathing Spiral : typage strict compute-spiral-signals + cocoon-strategist
+**Fichiers** : `compute-spiral-signals/index.ts` (660 l., 11 `any`), `cocoon-strategist/index.ts` (1 705 l., 18 `any`)
+**Problème** : algo signature Crawlers mais 6 signaux typés `any` → une modif de pondération peut silencieusement casser la phase computation. Cocoon-strategist est monolithique (1 705 l.) comme content-architect.
+**Fix** : `_shared/spiralTypes.ts` (`SpiralSignal`, `SpiralPhase`, `SpiralScore`) + découpe `_shared/strategist/{planner,prioritizer,executor,rewardLoop}.ts`.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 2 | 2 | 3 | 9 | **3.5** | 1j |
+
+## #95 · P1 · 0.5j — Vector memory : embed résultats audits SEO/GEO/Marina
+**Problème** : la mémoire hybride (`copilot/vector-memory-hybrid-recall`) fonctionne sur `copilot_actions` mais les résultats des audits SEO/GEO/Marina ne sont **jamais wrappés** avec `wrapToolResult('audit_*_result')` → Félix ne peut pas rappeler les findings des 30j précédents pour un utilisateur récurrent.
+**Fix** : dans chaque handler post-audit (SEO, GEO, Marina), après retour succès, insérer une trace `copilot_actions` avec `tool_result` wrappé — worker `embed-copilot-turns` fera le reste.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 3 | 5 | 7 | **3.5** | 0.5j |
+
+## #96 · P2 · 0.5j — Logger structuré partagé (dette console.log Vague 4)
+**Compteur cumulé Vague 4** : 275 `console.*` (audit-expert-seo 71 + expert-audit 53 + content-architect 43 + iktracker 24 + cocoon-strategist 20 + compute-spiral 6 + marina 87 + geo-kpis 2 + fan-out 2 — net des doublons Vague 3).
+**Fix** : `_shared/logger.ts` (`log.info({ correlation_id, feature, step }, ...)`), migration progressive par feature en tâche de fond.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 2 | 0 | 8 | **2.3** | 0.5j |
+
+---
+
+# Résumé Vague 4
+- **P0** = **6j** (#89 sanitize + #90 fan-out gateway + #91 marina + #92 content architect)
+- **P1** = **2j** (#93 skills + #94 spiral typing + #95 vector memory)
+- **P2** = **0.5j** (#96 logger)
+- **Total Vague 4** : **8.5j**
+
+## Top 3 urgences Vague 4 (impact × risque)
+1. **#89 (1j)** — Sanitize HTML côté edge sur iktracker → **fermer un risque XSS potentiel on-site du client** (le plus critique).
+2. **#90 (0.5j)** — Gateway fan-out → dernière function qui bypass encore le gateway, ferme la boucle observabilité GEO.
+3. **#91 (3j)** — Marina découpe/typage/gateway → la plus grosse dette structurelle du projet, bloquera scale outreach B2B.
+
+**Ordre de déploiement recommandé** : #89 (sécu bloquante) → #90 (quick win coût) → #93 (débloque Copilot orchestration) → #92 + #94 (dette structurelle) → #91 (chantier long) → #95 + #96 (finition).
+
+## Cumul projet (Vagues 1 à 4)
+- **P0** = **6.75j (V1-2) + 6.75j (V3) + 6j (V4)** = **19.5j**
+- **P1** = variable (voir résumés par vague)
+- **Total P0+P1+P2 projet** : ≈ **50j-homme** de dette identifiée sur 4 vagues d'audit.
+
