@@ -243,3 +243,74 @@ Regroupé avec l'item 17 (refonte MCP) pour éviter double passage.
 - Lignes `index.ts` (baseline : **1 594**)
 - Skills utilisant `safeServiceCall` sur 26 total (baseline : **5/26 = 19%**)
 - MCP auth mode (baseline : `bearer_supabase_session`, cible : `oauth_2.1_dcr`)
+
+---
+
+# Vague 2 · Parménion (autopilot orchestrator) — 2026-07-08
+
+Brief : [`knowledge/audits/parmenion/brief-2026-07-08.md`](../../parmenion/brief-2026-07-08.md).
+Périmètre : `parmenion-orchestrator` (2 467 l.) + `autopilot-engine` (1 218 l.) + `autopilot-validate-deployed` (308 l.) + `parmenion-feedback` (227 l.) + `parmenion-api` (184 l.) + `_shared/parmenion/**` + `_shared/autopilot/**`.
+
+## Points forts
+
+- **Modularisation shared solide** : `_shared/parmenion/{types,prompts,toolSchemas,llmClient,keywordEnrichment,personaEngine,imageOriginality}` + `_shared/autopilot/{types,cmsActionRouter,iktrackerBridge,postDiagnose,semanticGate,postExecute}` — orchestrator délégué proprement.
+- **Pipeline 5 phases déterministe** avec `getNextPhase`, garde crawl-in-flight, `consecutive_crawl_skips` pour alerting.
+- **Gardes en place** : backlog guard, cluster diversity SQL cap, persona rotation, dedup Jaccard synonym-aware, saturation snapshots — conformes aux mémoires projet.
+- **Route admin-only** : check `getAuthenticatedUser` + `isAdmin` (sauf service_role interne).
+- **`validate-deployed`** : Jaccard + longueur + qualité + marqueurs script → vraie validation post-deploy (rare dans la concurrence).
+- **CMS bridge routing** : `resolveCmsBridge` traite Dictadevi comme IKtracker en orchestrator et ré-aiguille en execute (élégant).
+
+## 20. `parmenion-orchestrator` — 2 fetch LLM directs hors `aiGatewayFetch` (P0)
+**But visé** : ligne 2105 `index.ts` + ligne 58 `_shared/parmenion/llmClient.ts` bypassent `aiGatewayFetch` (fallback maison OpenRouter → Lovable). Résultat : ces cycles Parménion **échappent au tracking `ai_gateway_usage`**, au kill switch admin `disable_premium`, au routage 2026 forcé. Refactor pour tout passer par `aiGatewayFetch` (qui gère déjà cascade + tracking + kill switch).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 2 | 5 | 9 | 8 | **5.5** | 1j |
+
+**Levier** : les cycles Parménion sont fréquents (cron 6h × N sites) — coût aujourd'hui invisible dans le dashboard admin, kill switch inopérant sur cette voie.
+
+## 21. `autopilot-engine` — 15+ fetch manuels vers edge functions avec `SERVICE_ROLE_KEY` inline
+**But visé** : remplacer les `fetch(\`${supabaseUrl}/functions/v1/...\`, { Authorization: Bearer SERVICE_ROLE })` par `supabase.functions.invoke()` sur le client service. Bénéfices : (1) une seule surface `Authorization` gérée par le client SDK, (2) retry/timeout unifiés, (3) plus de risque de leaker service_role dans les logs si un `console.log(headers)` traîne, (4) auto-injection headers CORS/version.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 1 | 6 | 0 | 8 | **3.7** | 1.5j |
+
+## 22. `autopilot-engine` — 34 `console.log` en prod
+**But visé** : cron 6h × N sites → volume énorme de logs bruts non structurés dans `edge_function_logs`. Passer à `console.log(JSON.stringify({ event, ... }))` structuré ou introduire un helper `log()` léger avec niveaux (`info` / `warn` / `error`).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 3 | 1 | 2 | 7 | **2.8** | 0.5j |
+
+## 23. Splitter `parmenion-orchestrator/index.ts` (2 467 lignes)
+**But visé** : le fichier reste monolithique malgré `_shared/parmenion/` — le `Deno.serve` handler mélange phase detection, garde crawl, prescribe, execute-dispatch, feedback. Extraire un `phases/{audit,diagnose,prescribe,execute,validate}.ts` déclenchés par un mini router de phase.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 2 | 2 | 1 | 9 | **3.1** | 2j |
+
+## 24. Ajouter des tests sur le pipeline 5 phases (aucun test dans le périmètre)
+**But visé** : `helpers_test` + `intentBucket_test` existent sur copilot, **rien** sur Parménion. Ajouter au minimum : test `getNextPhase` (transitions valides), test backlog guard (>5 pending), test dedup Jaccard (synonym-aware), test crawl-guard (skip si `processing`).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 3 | 1 | 9 | **2.9** | 1.5j |
+
+**Levier** : Parménion touche à des sites de prod en écriture CMS — une régression silencieuse (backlog guard cassé, phase qui saute) publie du contenu non maîtrisé.
+
+## Synthèse Vague 2 · Parménion
+
+| Priorité | Items | Effort | Gain global moyen |
+|---|---|---|---|
+| **P0-Parménion** | #20 (LLM hors gateway) · #21 (fetch → invoke) | **2.5j** | **4.6 / 10** |
+| **P1-Parménion** | #23 (split orchestrator) · #24 (tests pipeline) · #22 (console.log) | **4j** | **2.9 / 10** |
+
+**Verdict global Parménion** : **pipeline solide et unique sur le marché (validation post-deploy + gardes)**, mais **2 fetch LLM directs sont critiques** — Parménion est un des plus gros consommateurs LLM (cron 6h × N sites × 5 phases) et ces coûts sont invisibles dans le dashboard admin. Fix #20 est prioritaire.
+
+**Baseline à re-mesurer dans 30j** :
+- Appels LLM `parmenion-orchestrator` tracés dans `ai_gateway_usage` (baseline : **incomplet, 2 flux non tracés**)
+- Fetch manuels dans `autopilot-engine` (baseline : **15+**)
+- `console.log` dans `autopilot-engine` (baseline : **34**)
+- Tests unitaires Parménion (baseline : **0**)
+- Lignes `parmenion-orchestrator/index.ts` (baseline : **2 467**)
