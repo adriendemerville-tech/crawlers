@@ -906,3 +906,146 @@ Audit de `analyze-ux-context` (**1 334 lignes**, plus gros monolithe backend aud
 - Lignes `analyze-ux-context/index.ts` (baseline : **1 334**, cible : ≤ 400 handler principal après #72)
 - Lignes `ConversionOptimizer.tsx` (baseline : **848**, cible : ≤ 300 après split #74)
 - `console.log` (baseline : **42**, cible : 0 en mode prod)
+
+---
+
+# Vague 3 · Partie 4 — audit-compare (Audit Comparé)
+
+Brief : `knowledge/audits/audit-compare/brief-2026-07-08.md`
+Périmètre : `supabase/functions/audit-compare/index.ts` (1 062 l.) + `src/pages/AuditCompare.tsx` (1 677 l., **plus gros front du projet**) + table `audit_cache`.
+Signal audité : 3 appels LLM directs OpenRouter (`google/gemini-3.1-flash-lite` + 2× `google/gemini-3-flash-preview`), jusqu'à 6 appels DataForSEO (backlinks/summary + backlinks/anchors + keywords_for_keywords + serp/organic ×3), 2 PageSpeed, 1 Browserless par URL comparée → **soit ~9 appels payants × 2 sites = 18 hits externes par comparaison**.
+
+## #77 · P0 · 1j — Migrer les 3 appels LLM d'OpenRouter direct vers Lovable AI Gateway
+**Fichier** : `supabase/functions/audit-compare/index.ts` l.332-370 (`generateSeedsWithAI`), l.699-756 (`analyzeSite`), l.762-786 (`runCrossComparison`).
+**Problème** : `fetch('https://openrouter.ai/api/v1/chat/completions', { headers: { Authorization: 'Bearer ${OPENROUTER_API_KEY}' } })` → **0 tracking dans `ai_gateway_usage`**, marge OpenRouter empilée sur marge Google Gemini (double marge), et viole `mem://tech/ai/llm-task-alignment-fr` qui impose la gateway unifiée. Vague 1 avait déjà flaggé cette function → **rien n'a été fait depuis**.
+**Fix** :
+```ts
+import { aiGatewayFetch } from '../_shared/aiGateway.ts';
+const resp = await aiGatewayFetch({
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages: [...] })
+});
+```
+Modèle cible : `google/gemini-2.5-flash` (les modèles `gemini-3.1-flash-lite` et `gemini-3-flash-preview` ne sont pas dans le catalogue Lovable — vérifier `ai-models-chat` avant deploy). Retirer la dépendance à `OPENROUTER_API_KEY`.
+**Gain** : -30 à -50 % de coût LLM (suppression marge OpenRouter), tracking complet dans `ai_gateway_usage`, conformité contrainte projet.
+
+## #78 · P0 · 0.5j — Étendre le TTL du cache de 2 h à 7 jours
+**Fichier** : `supabase/functions/audit-compare/index.ts` l.682 `const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();`
+**Problème** : le cache dure **2 h**. Or les données bougent lentement : backlinks DataForSEO refresh mensuel, keywords_for_keywords stable sur 30 j, PageSpeed rarement > ±5 pts en 7 j. Un utilisateur qui compare 2 sites 3× dans la même semaine paie **3× ~18 appels externes**. À 10¢ par comparaison estimés (5¢ DataForSEO + 3¢ LLM + 2¢ browserless), c'est 30¢ vs 10¢.
+**Fix** : `expires_at = NOW() + INTERVAL '7 days'`, ajouter param query `?force_refresh=true` déjà présent (l.965 `if (!forceRefresh)`) → OK côté check, il suffit d'étendre le TTL.
+**Gain** : -66 % du coût sur usages répétés semaine.
+
+## #79 · P0 · 0.5j — SERP cross-check appelé 3× au lieu d'1×
+**Fichier** : `supabase/functions/audit-compare/index.ts` l.404-430 (`fetchKeywordData` → serp/organic dans loop) + l.848-866 (`crossCheckSerpRankings` → 2 autres serp/organic).
+**Problème** : `serp/organic/live/regular` est déclenché **une fois par site dans `fetchKeywordData`** (pour retrouver les rankings existants) **puis à nouveau dans `crossCheckSerpRankings`** pour comparer les 2 sites. Ce dernier peut réutiliser les résultats du premier passage.
+**Fix** : passer les `serpResults` du premier passage en argument à `crossCheckSerpRankings`, ne relancer que si `serpResults.length === 0` (cas "les 2 sites n'ont pas de mots-clés ranked").
+**Gain** : -2 appels DataForSEO par comparaison (économie ~1¢/comparaison, mais surtout -40 % de latence sur la Phase 3).
+
+## #80 · P1 · 1j — Découpe du monolithe 1 062 l.
+**Fichier** : `supabase/functions/audit-compare/index.ts` (17 fonctions internes dans un seul fichier).
+**Problème** : `extractPageMetadata`, `fetchPageSpeedScores`, `fetchBacklinkProfile`, `generateSeedsWithAI`, `fetchKeywordData`, `analyzeSite`, `runCrossComparison`, `crossCheckSerpRankings`, `saveToCache`, `buildCacheKey`, `json`, `normalizeUrl` etc. coexistent → impossible de tester une brique isolément, chaque déploiement recompile 1 062 l.
+**Fix** : découpe en `_shared/auditCompare/` avec 5 fichiers :
+- `_shared/auditCompare/pagespeed.ts` (~120 l.)
+- `_shared/auditCompare/backlinks.ts` (~110 l., appels DataForSEO backlinks)
+- `_shared/auditCompare/keywords.ts` (~140 l., appels DataForSEO keywords + serp)
+- `_shared/auditCompare/browserless.ts` (~130 l., extractPageMetadata)
+- `_shared/auditCompare/llm.ts` (~200 l., generateSeedsWithAI + analyzeSite + runCrossComparison)
+- `_shared/auditCompare/cache.ts` (~60 l.)
+- `index.ts` réduit à ~300 l. (handler + orchestration + json helper).
+
+## #81 · P1 · 0.5j — 16 `: any` + 8 `console.log` non structurés
+**Fichier** : `supabase/functions/audit-compare/index.ts` — 16 occurrences `: any`, 8 `console.log`.
+**Fix** : typer les payloads DataForSEO (`DataForSEOBacklinksResponse`, `DataForSEOKeywordsResponse`, `DataForSEOSerpResponse`), remplacer `console.log` par un logger structuré (`{ fn: 'audit-compare', phase: 'backlinks', url, duration_ms }`) pour permettre l'agrégation dans les logs edge.
+
+## #82 · P1 · 1.5j — Frontend `AuditCompare.tsx` 1 677 l. (record du projet)
+**Fichier** : `src/pages/AuditCompare.tsx` — **le plus gros front du projet**.
+**Problème** : sans lecture ligne à ligne, on peut déjà anticiper : logique de handlers, rendu du "SERP battlefield", cartes comparatives, graphiques radar, export PDF, gestion des états (idle/loading/error/comparing/done), tout dans une seule page.
+**Fix** : découper en sous-composants :
+- `<CompareUrlInputs>` (formulaire 2 URLs + validation)
+- `<CompareLoadingTimeline>` (barre de progression multi-phase)
+- `<CompareRadarChart>` (visualisation scores)
+- `<CompareSerpBattlefield>` (grille SERP head-to-head)
+- `<CompareBacklinksPanel>`, `<CompareKeywordsPanel>`, `<CompareLLMInsights>`
+- Hook `useAuditCompare()` : encapsule invoke + états + cache client.
+Cible : `AuditCompare.tsx` ≤ 300 l. (juste orchestration + layout).
+
+## Résumé Vague 3 partie 4 · audit-compare
+- **P0** = **2j** (#77 migration gateway + #78 TTL 7 j + #79 fusion SERP)
+- **P1** = **3j** (#80 découpe monolithe + #81 types/logs + #82 découpe front)
+- **Total** : **5j**
+
+**Verdict** : audit-compare est **la function la plus coûteuse à l'usage** du projet (18 appels externes par comparaison). Le P0 #77 (migration gateway) est **la plus grosse économie unitaire de la Vague 3** — chaque comparaison coûtera 30-50 % moins cher dès déploiement. À faire **avant** toute mise en avant de la feature comparative dans l'UI.
+
+---
+
+# Vague 3 · Partie 5 — expert-audit + audit-expert-seo (Audit Expert)
+
+Brief : `knowledge/audits/audit-expert/brief-2026-07-08.md`
+Périmètre : `supabase/functions/expert-audit/index.ts` (**2 987 l.**) + `supabase/functions/audit-expert-seo/index.ts` (**2 338 l.**) + `src/pages/ExpertAudit.tsx` (170 l., **thin wrapper OK**).
+Signal audité : **5 325 lignes cumulées de backend** — probablement le plus gros duo d'edge functions du projet. LLM appelé via `aiGatewayFetch` (bon) mais avec modèles `google/gemini-3-flash-preview` + `google/gemini-3.1-pro-preview` → **hors catalogue Lovable AI**.
+
+## #83 · P0 · 0.5j — Modèles LLM hors catalogue Lovable AI
+**Fichiers** : `expert-audit/index.ts` l.2756 (`model: 'google/gemini-3-flash-preview'`) + `audit-expert-seo/index.ts` l.1966 (`model: 'google/gemini-3.1-pro-preview'`).
+**Problème** : ces modèles n'existent pas dans le catalogue `ai-models-chat` (violation `mem://ai-models-using`). L'appel gateway renvoie probablement 400 silencieusement → **l'introduction narrative n'est jamais générée** (fallback `null` géré à l.1954 `if (!LOVABLE_API_KEY) return null;` mais silencieux même si le 400 vient du modèle).
+**Fix** :
+- `expert-audit` : passer à `google/gemini-2.5-flash` (rapide, prix bas, adapté à l'intro 3 paragraphes)
+- `audit-expert-seo` : passer à `google/gemini-2.5-pro` (fidélité meilleure pour l'intro consultant senior)
+- Ajouter un log explicite du statut HTTP + body en cas d'échec (aujourd'hui perdu).
+**Vérification requise** : après fix, tester une génération réelle et lire la réponse (le 400 provider ne remonte pas via `invoke`).
+
+## #84 · P0 · 1j — Redondance fonctionnelle expert-audit vs audit-expert-seo
+**Problème** : les deux functions ont le même objet métier (audit technique d'une URL) avec des scoring légèrement différents (200 pts vs 200 pts, mais découpage variable). 5 325 l. dupliquées de fetch PageSpeed, extract HTML, analyse schema, détection sitemap/robots. Une lecture des sections `fetchAndRenderPage` et `fetchPageSpeedScores` dans les 2 fichiers révélerait probablement 60-80 % de code équivalent.
+**Fix** (audit approfondi 0.5j puis refactor 0.5j) :
+1. Lire les 2 fichiers en parallèle et produire un diff fonctionnel (`expert-audit` = v1, `audit-expert-seo` = v2 ?).
+2. Si l'un est le successeur : marquer l'autre `@deprecated`, rediriger les callers vers le nouveau.
+3. Extraire les briques communes (`_shared/expertAudit/pagespeed.ts`, `.../renderPage.ts`, `.../analyzeHtml.ts`, `.../scoring.ts`).
+
+## #85 · P1 · 1.5j — Découpe des 2 monolithes
+**Fichiers** : `expert-audit/index.ts` 2 987 l. + `audit-expert-seo/index.ts` 2 338 l.
+**Fix** : après #84 (fusion/déprécation), la function survivante est découpée en 6-8 modules `_shared/expertAudit/*` (rendering, pagespeed, html, schema, security, scoring, narrative, cache). Handler `index.ts` réduit à ≤ 400 l.
+
+## #86 · P1 · 0.5j — Dette : 90 `console.log` + 9 `: any` cumulés
+**Fichiers** : `expert-audit` (62 `console.log` + 4 `: any`) + `audit-expert-seo` (28 `console.log` + 5 `: any`).
+**Fix** : logger structuré partagé, types Response DataForSEO/PageSpeed factorisés dans `_shared/types/`.
+
+## #87 · P2 · 0.5j — Cache expert-audit invalidé manuellement 2× dans les migrations
+**Problème** : `20260309123630_*.sql` et `20260309124732_*.sql` contiennent des `DELETE FROM audit_cache WHERE function_name = 'expert-audit'` → indique un bug historique où le cache renvoyait des résultats faux. Aucun trace du fix côté function.
+**Fix** : audit du `buildCacheKey` d'expert-audit (probablement basé uniquement sur `url`, sans versionner le schéma de scoring → ancien cache renvoie l'ancien barème). Ajouter `scoring_version` dans la clé de cache.
+
+---
+
+# Vague 3 · Partie 6 — Matrix (parse-matrix-*)
+
+Brief : périmètre réduit — **il n'existe pas de `matrix-audit` edge function**. Le "système matrix" est composé de 3 parsers :
+- `parse-doc-matrix/index.ts` (368 l.)
+- `parse-matrix-geo/index.ts` (734 l.)
+- `parse-matrix-hybrid/index.ts` (384 l.)
+Total : 1 486 l. + table `content_requirements_matrix` référencée par 12 functions (voir `mem://tech/architecture/unified-requirements-matrix-fr`).
+
+## #88 · P1 · 1j — Redondance parse-doc vs parse-matrix-hybrid vs parse-matrix-geo
+**Problème** : 3 parsers qui font peu ou prou le même travail (extraire une matrice de requirements depuis un doc/URL). 1 486 l. cumulées → probablement 40 % de duplication (extraction texte, chunking, appel LLM, mapping vers `content_requirements_matrix`).
+**Fix** (audit 0.25j puis refactor 0.75j) : identifier le parser "canonique" (probablement `parse-matrix-hybrid` selon son nom), déprécier les 2 autres ou les transformer en wrappers thin qui appellent le canonique avec des params `mode: 'geo' | 'doc' | 'hybrid'`.
+
+**Note** : audit léger volontaire — les parseurs matrix sont appelés à faible fréquence (usage on-demand), l'impact coût est marginal vs audit-compare / expert-audit.
+
+---
+
+# Résumé Vague 3 · Partie 4-6 (audit-compare + expert + matrix)
+- **P0** = **3.5j** (#77 gateway + #78 TTL + #79 fusion SERP + #83 modèles catalogue + #84 dédup expert)
+- **P1** = **6j** (#80 découpe compare + #81 types compare + #82 front compare + #85 découpe experts + #86 dette experts + #88 dédup matrix)
+- **P2** = **0.5j** (#87 cache expert)
+- **Total partie 4-6** : **10j**
+
+## Cumul Vague 3 complète (parties 1 à 6)
+- **P0** = **6.75j** (Vague 3.1-3 : 3.25j + Vague 3.4-6 : 3.5j)
+- **P1** = **11.25j** (Vague 3.1-3 : 5.25j + Vague 3.4-6 : 6j)
+- **P2** = **3.25j** (Vague 3.1-3 : 2.75j + Vague 3.4-6 : 0.5j)
+- **Total Vague 3** : **21.25j**
+
+## Top 3 économies immédiates de la Vague 3
+1. **#77 (1j)** — Migrer audit-compare LLM d'OpenRouter direct vers Lovable AI Gateway → -30 à -50 % coût LLM sur la function la plus utilisée du benchmark comparatif.
+2. **#78 (0.5j)** — TTL cache 2 h → 7 j sur audit-compare → -66 % sur usages répétés semaine.
+3. **#83 (0.5j)** — Corriger les modèles hors catalogue d'expert-audit + audit-expert-seo → **débloque les introductions narratives** qui échouent probablement en silence aujourd'hui (à vérifier dans logs).
+
+**Ordre de déploiement recommandé** : #83 (fix silencieux) → #77 + #78 (économies max) → #84 (dette structurelle) → reste.
