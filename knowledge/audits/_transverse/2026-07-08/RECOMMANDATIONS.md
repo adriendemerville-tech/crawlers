@@ -1161,3 +1161,77 @@ Angle transverse : cohérence Copilot orchestrator + skills + vector memory + pr
 - **P1** = variable (voir résumés par vague)
 - **Total P0+P1+P2 projet** : ≈ **50j-homme** de dette identifiée sur 4 vagues d'audit.
 
+---
+
+# Vague 4-bis — Marina périmètre élargi (2026-07-08)
+Source : `knowledge/audits/marina/audit-2026-07-08-bis.md` · Brief : `brief-2026-07-08-bis.md`
+Périmètre : front public + admin + pipeline outreach + 7 tables + `view-marina-report` + `_shared/marinaWorkbench`.
+
+## #97 · P0 · 1.25j — GRANT + policies sur les 7 tables Marina/outreach (M7+M8+M9)
+**Preuve** : `information_schema.role_table_grants` → seul `sandbox_exec` a des grants ; `authenticated` et `service_role` absents sur les 7 tables. `marina_api_keys` n'a que 2 policies SELECT (aucun INSERT/UPDATE). `marina_prospects` + `prospect_outreach_queue` sont Admin-only ALL → Pro Agency owner ne peut pas lire ses propres prospects.
+**Fix** : migration unique
+```sql
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.marina_api_keys, public.marina_prospects,
+  public.outreach_sequences, public.outreach_daily_quotas, public.outreach_events,
+  public.prospect_outreach_queue TO authenticated;
+GRANT ALL ON <toutes> TO service_role;
+-- marina_training_data reste service_role only.
+-- Policies owner-scoped à ajouter : marina_api_keys (ALL auth.uid), marina_prospects (SELECT/UPDATE owner), prospect_outreach_queue (SELECT via join owner).
+```
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 10 | 0 | 8 | **6.0** | 1.25j |
+
+## #98 · P1 · 0.25j — Prompt safety `prospect-pipeline` (M10)
+**Preuve** : ligne 190 de `prospect-pipeline/index.ts` — `callLovableAIText(prompt)` où `prompt` contient `p.description`/`p.company_name` bruts (données prospect potentiellement adverses).
+**Fix** : `import { wrapUserInput } from '../_shared/promptSafety.ts'` puis wrapper toute variable prospect avant concaténation dans le prompt.
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 7 | 0 | 4 | **3.5** | 0.25j |
+
+## #99 · P1 · 0.5j — Anti-`any` workflow Marina (M11)
+**Preuve grep** : 91 `: any` cumulés sur `marina/index.ts` (57) + `MarinaDashboard` (15) + `prospect-pipeline` (10) + `Marina.tsx` (4) + `ProspectPipelineDashboard` (3) + `marinaWorkbench` (2). Cast révélateur : `.from('marina_prospects' as any)` = types Supabase désynchronisés.
+**Fix** : `npx supabase gen types typescript --linked > src/integrations/supabase/types.ts` puis règle ESLint `no-explicit-any` scoped `**/marina*/**` + `**/prospect*/**`.
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 3 | 0 | 8 | **3.5** | 0.5j |
+
+## #100 · P1 · 0.5j — Télémétrie produit Marina (M12)
+**Preuve SQL** : 0 event `analytics_events` matching marina/prospect/outreach → aucune mesure d'adoption.
+**Fix** : instrumenter `marina_audit_launched`, `marina_export_pdf` (front admin), `marina_report_viewed` (Marina.tsx), `outreach_step_sent` (edge server-side avec `event_source='edge'`).
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 5 | 6 | **2.5** | 0.5j |
+
+## #101 · P1 · 1.5j — Découpe `Marina.tsx` viewer/launcher (M13)
+**Preuve** : `Marina.tsx` = 1 510 l. sans aucun `functions.invoke('marina')` → page publique = viewer démo du dernier `async_jobs`. Divergence claire avec l'intent Pro Agency self-service documenté dans `mem://features/prospecting/marina-module-fr`.
+**Fix** : décomposer en `MarinaHero.tsx` + `MarinaDemoViewer.tsx` + `MarinaLaunchForm.tsx` (< 300 l. chacun), brancher `MarinaLaunchForm` sur edge `marina` avec quota Pro Agency, ou déprécier la page si décision produit "admin-only".
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 3 | 0 | 0 | 8 | **3.0** | 1.5j |
+
+## #102 · P2 · 0.5j — Access control `view-marina-report` (M15)
+**Preuve** : `view-marina-report` sert tout `job_id` UUID sans vérifier `user_id` (leak potentiel par referrer/log).
+**Fix** : signature HMAC courte dans l'URL (`?sig=hmac(job_id||expiry)`), vérif côté edge, ou décision explicite "share by URL" documentée.
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 5 | 0 | 3 | **2.0** | 0.5j |
+
+---
+
+# Résumé Vague 4-bis
+- **P0** : 1.25j (#97)
+- **P1** : 2.75j (#98 + #99 + #100 + #101)
+- **P2** : 0.5j (#102)
+- **Total Vague 4-bis** : **4.5j**
+
+## Top 3 urgences Vague 4-bis
+1. **#97 (1.25j)** — GRANT + policies : débloque tout usage self-service Pro Agency + conformité règle projet.
+2. **#98 (0.25j)** — Prompt safety prospect-pipeline : ferme un vecteur d'injection depuis bio LinkedIn.
+3. **#101 (1.5j)** — Découpe Marina.tsx : aligne le front public avec l'intent produit Pro Agency.
+
+## Cumul projet (Vagues 1 → 4-bis)
+- **P0 cumulé** : 19.5j + 1.25j = **20.75j**
+- **Total dette** : ≈ **54.5j-homme** sur 5 audits (V1, V2, V3, V4, V4-bis).
+
+
