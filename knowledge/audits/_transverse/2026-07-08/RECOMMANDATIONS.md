@@ -615,3 +615,134 @@ Périmètre audité : `audit-matrice` (499 l.), `parse-doc-matrix` (368 l.), `pa
 - `: any` dans `MatricePrompt.tsx` (baseline : **31**)
 - Appels LLM `parse-matrix-geo` hors gateway (baseline : **1 chemin `useOpenRouter=true`**)
 - Erreurs `matrix_errors` traitées (baseline : dashboard inexistant)
+
+---
+
+# Vague 3 — Audit `crawl multi-pages` (2026-07-08)
+
+Brief : `knowledge/audits/crawl-multi-pages/brief-2026-07-08.md`
+Périmètre : `crawl-site` (690 l.) + `process-crawl-queue` (309 l.) + `cron-crawl-scheduler` (264 l.) + `strategic-crawl` (375 l.) + `_shared/crawlQueue/*` (5 modules, 1 155 l.) + front `SiteCrawl.tsx` (1 327 l.) + `useCrawlEngine.ts` (897 l.) + `useSiteCrawl.ts` (735 l.) + tables `site_crawls` / `crawl_pages` / `crawl_jobs` / `site_crawl_schedule`
+
+## Signaux mesurés (choc)
+
+**Volumétrie réelle** :
+- `crawl_pages` : **3 765 lignes** (16 MB)
+- `site_crawls` : **80 lignes** (416 kB) — 4 completed, 1 crawling, 1 stopped sur 30j
+- `crawl_jobs` : **80 lignes** (584 kB)
+
+**Trafic DB cumulé sur les tables crawl** (pg_stat_statements) :
+| Requête | Calls | Total ms | Mean ms |
+|---|---|---|---|
+| UPDATE `crawl_jobs.processed_count` | **16 348 136** | 4 877 980 | 0.30 |
+| UPDATE `site_crawls.crawled_pages` | **16 348 151** | 2 954 920 | 0.18 |
+| INSERT `crawl_pages` (ON CONFLICT DO NOTHING) | 16 347 887 | 2 912 927 | 0.18 |
+| SELECT `crawl_jobs` WHERE status IN(…) | **16 481 646** | 2 064 665 | 0.13 |
+| SELECT `crawl_pages.id` WHERE crawl_id=… | **32 693 802** | 1 795 659 | 0.05 |
+| SELECT `site_crawls.status` WHERE id=… | 16 347 095 | 1 127 977 | 0.07 |
+| SELECT `crawl_jobs.id` WHERE status IN(…) | 16 344 301 | 1 020 151 | 0.06 |
+
+**Ratio dément** : ~**4 300 opérations DB par page effectivement crawlée**. Cumul temps DB sur les tables crawl seules : **~4 heures 40 min**. C'est le tableau de bord Vague 1 (32M updates) qui s'expliquait mais dont personne n'avait tracé la cause.
+
+---
+
+## Findings
+
+### #52 — [P0 · 0.5j] Worker fait 2 UPDATE PAR PAGE crawlée (16.3M writes)
+- **Où** : `process-crawl-queue/index.ts` lignes 73-74, 142-143, **252-253** (le vrai coupable : boucle worker)
+- **Ce qu'il fait** :
+  ```ts
+  await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);
+  await supabase.from('site_crawls').update({ crawled_pages: newProcessedCount }).eq('id', job.crawl_id);
+  ```
+  → **2 UPDATE réseau par page**, à chaque itération de la boucle interne
+- **Impact mesuré** : 16.3M × 2 = **32.6M UPDATE** cumulés, ~130 min DB
+- **Fix immédiat** : batcher les mises à jour toutes les **N=5 pages** OU passer par **1 trigger DB** :
+  ```sql
+  create trigger tg_bump_crawl_counters after insert on crawl_pages
+  for each statement execute function bump_crawl_counters();
+  -- fonction: update site_crawls set crawled_pages=(select count(*) from crawl_pages where crawl_id=NEW.crawl_id) where id=NEW.crawl_id;
+  ```
+  Bénéfice : 1 requête d'insert crawl_pages → 1 déclenchement trigger, plus aucun UPDATE explicite côté worker.
+- **Gain estimé** : -95% writes (32.6M → ~1.6M) + latence worker divisée par ~2
+
+### #53 — [P0 · 0.25j] `useSiteCrawl.ts` (735 l.) = code MORT — copy/paste doublon jamais importé
+- **Où** : `src/hooks/useSiteCrawl.ts`
+- **Preuve** : `rg -rn "useSiteCrawl" src/ | grep -v "hooks/useSiteCrawl.ts"` → **0 résultat**
+- **Vrai hook utilisé** : `useCrawlEngine` (897 l.), importé uniquement dans `SiteCrawl.tsx`
+- **Doublon complet** : les 2 hooks font le même polling `site_crawls`, la même `loadPages`, la même compare — c'est un fork oublié
+- **Fix** : `rm src/hooks/useSiteCrawl.ts`
+- **Bénéfice** : -735 lignes de dette, plus de confusion pour futurs devs
+
+### #54 — [P0 · 0.5j] Polling front 5s `SELECT *` sur `site_crawls` — inclut `ai_summary`+`ai_recommendations` (potentiellement lourds)
+- **Où** : `useCrawlEngine.ts:196-295` (`setInterval(async () => { supabase.from('site_crawls').select('*').eq('id', crawlId).single(); }, 5000)`)
+- **Volume observé** : **16.3M SELECT** sur site_crawls (`SELECT status FROM site_crawls WHERE id=…`) — c'est le polling multiplié par la durée des jobs
+- **Problèmes cumulés** :
+  1. `select('*')` alors que la boucle n'utilise que `status`, `crawled_pages`, `total_pages`, `error_message` — les colonnes `ai_summary` (text long) et `ai_recommendations` (jsonb) sont tirées à chaque tick
+  2. Aucun realtime subscription — polling toutes les 5s pour un état qui pourrait être poussé via `postgres_changes`
+  3. Le polling ne s'arrête que sur `completed` ou `error` — si l'onglet reste ouvert et le crawl foire silencieusement, ça poll pour l'éternité (watchdog 120s existe mais uniquement pour `mapping`/`queued`)
+- **Fix minimal** :
+  - `.select('status, crawled_pages, total_pages, error_message, avg_page_score, ai_summary, ai_recommendations')` + fetch complet uniquement quand `status === 'completed'`
+  - Passer à **Realtime subscription** sur `site_crawls WHERE id=X` (élimine 99% des SELECTs)
+- **Gain estimé** : -90% SELECTs (16.3M → 1.6M) + payload par tick divisée par ~10
+
+### #55 — [P1 · 0.25j] `ActiveCrawlBanner` = 3e polling parallèle (5s + idleCheck 30s)
+- **Où** : `src/components/Profile/ActiveCrawlBanner.tsx:147, 164-172`
+- **Ce qu'il fait** : monté globalement (Profile page), poll `site_crawls WHERE user_id=X AND status IN ('queued','mapping','crawling','analyzing')` toutes les 5s si un crawl actif détecté, sinon idleCheck 30s
+- **Cumul** : si l'utilisateur a la page `/site-crawl` **ET** la sidebar Profile ouverte → **useCrawlEngine (5s) + ActiveCrawlBanner (5s) + finalizer(watchdog)** = 3 pollings simultanés sur les mêmes tables
+- **Fix** : remplacer par une **Realtime subscription unique** partagée via un contexte `<CrawlContext>` — un seul `postgres_changes` listener pour tout l'app
+- **Gain estimé** : -66% SELECTs quand plusieurs vues ouvertes
+
+### #56 — [P1 · 1j] `crawl-site/index.ts` (690 l.) monolithe + 32 `console.log` + 9 `: any`
+- **Où** : `supabase/functions/crawl-site/index.ts`
+- **Contenu** : orchestrateur `detect|analyze` — mélange fetch sitemap, appels Spider.map, cmsContentScanner, découverte hybride, réutilisation pages <12h, création job, dispatch worker
+- **À découper** en 4 modules `_shared/crawlSite/` :
+  - `discovery.ts` (sitemap + Spider.map + cmsContentScanner)
+  - `reuse.ts` (réutilisation pages < 12h)
+  - `jobCreator.ts` (création `crawl_jobs` + estimation crédits)
+  - `dispatcher.ts` (appel `process-crawl-queue`)
+- **Nettoyage** : 32 `console.log` → passer par un logger structuré (déjà utilisé dans finalizer/scraperStrategy) et retirer les debug une fois stables
+- **Gain** : cohérence avec `_shared/crawlQueue/*` déjà modulaire (Phase 5 déjà faite pour le worker, jamais faite pour l'orchestrateur)
+
+### #57 — [P1 · 1j] `useCrawlEngine.ts` (897 l.) monolithe + 16 `: any`
+- **Où** : `src/hooks/useCrawlEngine.ts`
+- **Responsabilités mélangées** : polling status + loadPages + compare 2 crawls + createReport + delete + sitemap tree fetch + serp indexed pages + watchdog
+- **À découper** :
+  - `useCrawlPolling(crawlId)` (poll Realtime)
+  - `useCrawlPages(crawlId)` (loadPages + filtres)
+  - `useCrawlCompare(a, b)` (delta)
+  - `useCrawlActions(crawlId)` (delete, createReport, stop)
+  - `useCrawlDiscovery(url)` (sitemap + serp indexed)
+- **Bénéfice** : composants qui n'ont pas besoin du compare ne payent plus son coût
+
+### #58 — [P2 · 1j] `SiteCrawl.tsx` (1 327 l.) — 2e plus gros front du projet
+- **Où** : `src/pages/SiteCrawl.tsx`
+- **Après** #57 : orchestre les sous-hooks + rendu conditionnel (detect / analyze / results / compare / export sitemap)
+- **À splitter** en `<CrawlDetectPanel>`, `<CrawlAnalyzePanel>`, `<CrawlResults>`, `<CrawlComparePanel>`, `<CrawlExportBar>` — chacun ~200 l.
+
+### #59 — [P2 · 0.25j] 84 `console.log` cumulés dans les fonctions crawl
+- **Répartition** : `crawl-site` 32 + `process-crawl-queue` 17 + `scraperStrategy` 15 + `finalizer` 12 + `strategic-crawl` 8
+- **Fix** : passer les logs de debug (préfixe `[Worker]`) en flag conditionnel `if (Deno.env.get('CRAWL_DEBUG'))` ou logger niveau (info/warn/error) — garder les erreurs, retirer les traces de rendu
+
+### #60 — [P2 · 0.25j] `strategic-crawl` mal documenté comme feature « crawl » alors que c'est une micro-function `strategic-orchestrator`
+- **Où** : `src/data/backendDocumentation.ts:341`, `src/components/admin/architectureKnowledge.ts:89`, `src/components/admin/ArchitectureMap.tsx:15`
+- **Réalité** : `strategic-crawl` = extraction métadonnées + signaux E-E-A-T + CTA/SEO, appelée uniquement par `strategic-orchestrator:154` (audit stratégique 1-URL). PAS un doublon de `crawl-site`.
+- **Fix doc** : sortir `strategic-crawl` de la brique CRAWL dans `ArchitectureMap.tsx` et le rattacher à STRATEGIC. Idem dans `backendDocumentation` et `architectureKnowledge`.
+- **Bénéfice** : évite qu'un futur audit tente de le fusionner à `crawl-site` par erreur
+
+---
+
+## Résumé Vague 3 partie 1 · crawl multi-pages
+- **P0** = **1.25j** (#52 batch/trigger + #53 rm dead code + #54 select+realtime)
+- **P1** = **2.25j** (#55 realtime unique + #56 modulariser crawl-site + #57 splitter useCrawlEngine)
+- **P2** = **1.5j** (#58 splitter SiteCrawl + #59 logs + #60 doc)
+- **Total** : **5j**
+
+**Verdict** : l'architecture cascade renderPage → Spider → Firecrawl → Browserless est **excellente et différenciante** (aucun concurrent grand public ne fait ça), la modularisation `_shared/crawlQueue/*` (Phase 5) est propre. Mais **le worker écrit 2× par page + le front poll toutes les 5s en SELECT* + un hook doublon mort de 735 lignes traîne** → c'est ce qui produit les 32M+ opérations DB observées. Les 3 P0 ci-dessus (**1.25j**) éliminent ~95% du trafic DB inutile. C'est le meilleur ratio ROI/effort de toute la Vague 3.
+
+**Baseline à re-mesurer dans 30j** :
+- `pg_stat_statements` UPDATE `crawl_jobs.processed_count` (baseline : **16 348 136 calls**)
+- `pg_stat_statements` SELECT `site_crawls.status` WHERE id=… (baseline : **16 347 095 calls**)
+- Lignes `useSiteCrawl.ts` (baseline : **735, cible : 0**)
+- Lignes `useCrawlEngine.ts` (baseline : **897, cible : ≤400 après split**)
+- Lignes `SiteCrawl.tsx` (baseline : **1 327, cible : ≤500**)
+- `console.log` cumulés fonctions crawl (baseline : **84**)
