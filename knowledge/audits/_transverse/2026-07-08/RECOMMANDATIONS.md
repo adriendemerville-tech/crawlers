@@ -746,3 +746,82 @@ Périmètre : `crawl-site` (690 l.) + `process-crawl-queue` (309 l.) + `cron-cra
 - Lignes `useCrawlEngine.ts` (baseline : **897, cible : ≤400 après split**)
 - Lignes `SiteCrawl.tsx` (baseline : **1 327, cible : ≤500**)
 - `console.log` cumulés fonctions crawl (baseline : **84**)
+
+---
+
+# VAGUE 3 · Partie 2 — SERP Benchmark multi-providers
+
+## Contexte
+Audit de `serp-benchmark` (446 l.) et de son écosystème SERP (`serpapi-actions` 217 l., `fetch-serp-kpis` 416 l., `analyze-serp-intents` 555 l., `refresh-serp-all` 516 l.). Baseline SQL : **11 benchmarks / 9 requêtes distinctes / 0 sur 30 derniers jours**, `serpapi_cache` **0 lignes**.
+
+## #61 — [P0 · 0.25j] `serp-benchmark` n'utilise PAS `serpapi_cache` → chaque call = 3 fetch providers payants
+- **Où** : `supabase/functions/serp-benchmark/index.ts:289-299`
+- **Constat** : `fetchDataForSEO`/`fetchSerpApi`/`fetchSerper` appelés en `Promise.all` sans consultation du cache. Le cache `serpapi_cache` (16 col, 4 pol, TTL 24h) existe mais n'est câblé que sur `serpapi-actions` (qui n'est appelée que par `GmbKeywordsTab`).
+- **Impact coût** : à la re-frappe d'une même query (débogage, démo, lead magnet anonyme), on repaye **3 appels externes** systématiquement.
+- **Fix** : lookup `serpapi_cache` (clé = `sha256(query|location|language|country|providers.sort)`) **avant** `Promise.all`, TTL 24h. `user_id` = utiliser un `system_user_id` déterministe pour anonymes ou clé cache dédiée `provider_cache` sans `user_id`.
+- **Gain** : -60 à -90% coût SERP externes selon taux de répétition.
+
+## #62 — [P0 · 0.25j] Aucun `trackPaidApiCall` dans `serp-benchmark` → coûts SERP invisibles
+- **Où** : `supabase/functions/serp-benchmark/index.ts` — aucun import de `../_shared/tokenTracker.ts`
+- **Constat** : `fetch-serp-kpis`, `analyze-serp-intents`, `refresh-serp-all` tracent DataForSEO/SerpApi/Serper via `trackPaidApiCall`. **`serp-benchmark` ne trace rien**, alors qu'il fait 3 appels payants en //.
+- **Impact** : la table `paid_api_calls` sous-estime le coût réel SerpApi/DataForSEO/Serper (aucune ligne provenant de `serp-benchmark`), le dashboard admin coût est faussé.
+- **Fix** : ajouter `await trackPaidApiCall('serp-benchmark', 'dataforseo', 'serp/organic/live')` etc. dans chaque `fetchXxx` **après** un succès HTTP (avant retour).
+
+## #63 — [P0 · 0.25j] Anonyme sans rate-limit sur `action='benchmark'` (lead magnet) → drain risque
+- **Où** : `supabase/functions/serp-benchmark/index.ts:258-274`
+- **Constat** : `authHeader` optionnel, `benchmark` autorisé sans user. Aucun `rate_limit_tokens` check, aucun IP throttling. Un bot peut déclencher **N × 3 appels providers payants** gratuitement.
+- **Fix** : pour user null → check `rate_limit_tokens` par IP (fingerprint), plafond 3/jour/IP + réduire à 2 providers (SerpApi seul, le moins cher) en mode anonyme.
+
+## #64 — [P1 · 0.25j] `Promise.all` fragile → 1 provider en erreur = tout casse
+- **Où** : `supabase/functions/serp-benchmark/index.ts:299`
+- **Constat** : les fetchers **catch déjà** leurs erreurs et retournent `{ error: '...' }`, donc `Promise.all` ne rejette pas en pratique. Mais toute regression future qui laisserait un `throw` non catchée bloquerait toute la comparaison.
+- **Fix défensif** : remplacer par `Promise.allSettled` + normalisation → aligné avec `analyze-serp-intents:297` qui utilise déjà `allSettled`.
+
+## #65 — [P1 · 0.5j] `serpapi-actions` (217 l.) sous-utilisée (1 seul appelant `GmbKeywordsTab`) → à fusionner dans `serp-benchmark`
+- **Où** : `supabase/functions/serpapi-actions/index.ts` — appelé uniquement par `src/components/Profile/GmbKeywordsTab.tsx:123` et référencé (non-code) par `update-claims-audit`
+- **Constat** : la function router (`search`, `search-news`, `search-images`, `search-local`) implémente elle-même cache + tracking, mais duplique la logique SerpApi de `serp-benchmark`. Une seule feature UI la consomme réellement.
+- **Fix** : ajouter action `serpapi_raw` dans `serp-benchmark` (avec cache #61 + tracking #62 mutualisés) puis retirer `serpapi-actions`. `GmbKeywordsTab` bascule sur `serp-benchmark { action: 'serpapi_raw', tbm: 'lcl' }`.
+- **Bénéfice** : -217 lignes edge, un seul chemin SERP, un seul cache, un seul tracker.
+
+## #66 — [P1 · 0.5j] `SerpBenchmark.tsx` (498 l.) — polling ou re-fetch non contrôlé
+- **Où** : `src/components/Console/SerpBenchmark.tsx:105` et `:172` (2 invocations `serp-benchmark`)
+- **À vérifier lors du fix** : que la 2e invocation (auto-refresh ou action utilisateur ?) n'est pas déclenchée involontairement lors du render. Si feature effectivement à 0 usage/30j en prod, alors non-critique — mais si activée à demain, chaque re-render pourrait triple-facturer.
+- **Fix** : audit des `useEffect` deps + `useCallback` sur les 2 handlers, plus splitter le composant en 3 : `<BenchmarkForm>`, `<BenchmarkResultsTable>`, `<BenchmarkHistoryList>`.
+
+## #67 — [P2 · 0.25j] Périmètre SERP fragmenté : 5 edge functions × 5 responsabilités qui se recoupent
+- **Constat** :
+  - `serp-benchmark` — multi-provider agrégé + workbench drift
+  - `fetch-serp-kpis` — DataForSEO `ranked_keywords` + `serp/organic` (indexation) — appelé par `useSiteCrawl`, `useCrawlEngine`, `useMyTracking`, `ExpertAuditDashboard`, `MyTracking`
+  - `analyze-serp-intents` — DataForSEO `serp/advanced` + Serper + LLM intent extraction
+  - `refresh-serp-all` — cron batch multi-sites (DataForSEO backlinks/anchors + GA4)
+  - `serpapi-actions` — SerpApi raw pass-through
+- **Chevauchement** : DataForSEO organique appelé dans **3** functions distinctes, aucun cache partagé.
+- **Fix ciblé** : après #61-#65, extraire `_shared/serp/providers.ts` qui exporte `fetchDataForSEO`/`fetchSerpApi`/`fetchSerper` avec cache+tracking intégrés. Les 4 functions restantes deviennent de simples orchestrateurs.
+- **Gain long terme** : point d'entrée unique pour changer de provider ou renégocier un contrat.
+
+## #68 — [P2 · 0.25j] `analyze-serp-intents` (555 l.) + `refresh-serp-all` (516 l.) monolithes
+- Découpe similaire à #56 : `intentExtractor.ts`, `competitorsCrawler.ts`, `resultsPersister.ts` pour analyze — `batchRunner.ts`, `providerRefresher.ts`, `siteScheduler.ts` pour refresh.
+- **À faire uniquement après stabilisation #61-#67** — sinon refactor prématuré.
+
+---
+
+## Résumé Vague 3 partie 2 · serp-benchmark
+- **P0** = **0.75j** (#61 cache + #62 tracking + #63 rate-limit anonyme)
+- **P1** = **1.25j** (#64 allSettled + #65 fusion serpapi-actions + #66 SerpBenchmark front)
+- **P2** = **0.5j** (#67 `_shared/serp/providers.ts` + #68 découpe analyze/refresh)
+- **Total** : **2.5j**
+
+**Verdict** : l'idée du **benchmark multi-providers avec pénalité single-hit** est réellement **différenciante** (aucun Semrush/Ahrefs/AccuRanker ne le fait — tous mono-source). Mais l'implémentation actuelle est **une passoire à coûts** :
+1. cache existant non branché (`serpapi_cache` 0 lignes)
+2. tracking coût manquant (`paid_api_calls` sous-estime)
+3. anonyme sans rate-limit (drain lead magnet)
+4. code SerpApi dupliqué entre 2 functions
+
+Les 3 P0 (**0.75j**) suffisent à sécuriser l'ouverture publique de la feature. #65 (fusion) réduit la surface de -217 lignes edge à effort modéré.
+
+**Baseline à re-mesurer dans 30j** :
+- `serpapi_cache` count (baseline : **0 lignes** ; cible : > 100 hits/mois si feature activée)
+- `paid_api_calls` filtrées `edge_function='serp-benchmark'` (baseline : **0**, cible : 100% des benchmark tracés)
+- `serp_benchmark_results` count / 30j (baseline : **0** actuels ; à surveiller si feature devient discoverable)
+- Lignes `serpapi-actions/index.ts` (baseline : **217**, cible : **0** après #65)
+- Lignes `SerpBenchmark.tsx` (baseline : **498**, cible : ≤200 par composant après split)
