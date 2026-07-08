@@ -1235,3 +1235,148 @@ GRANT ALL ON <toutes> TO service_role;
 - **Total dette** : ≈ **54.5j-homme** sur 5 audits (V1, V2, V3, V4, V4-bis).
 
 
+
+---
+
+# Vague 6 — 5 features (crawl-multi-pages, render-page, cocoon, serp-benchmark, conversion-optimizer)
+
+## #103 · P0 · 0.5j — Credit cost crawl figé à 1 crédit (C1)
+Preuve `crawl-site/index.ts:431-433` → 1 crédit constant vs grille brief 5-40. Sous-facturation 40× sur crawl 500p.
+Fix : `_shared/crawlCreditCost.ts` (5≤50p / 10≤100p / 15≤200p / 25≤350p / 40>350p).
+
+## #104 · P0 · 0.25j — Plan Premium crawl traité comme Free (C2)
+`crawl-site/index.ts:382,405` : seul agency_pro/premium dépasse 50p. Fix : branches `premium/pro → 150p`.
+
+## #105 · P0 · 0.25j — `crawl_pages` sans policy UPDATE/DELETE (C3)
+Bypass service_role silencieux. Fix : policies UPDATE service_role + DELETE authenticated via join `site_crawls`.
+
+## #106 · P0 · 0.25j — XSS stocké dans `markdownToHtml` render-page (R1)
+`render-page` L108 : href `$2` + inline injectés sans `escapeHtml()`. Exécution JS depuis `blog_articles.content`.
+Fix : `escapeHtml` sur href/text + sanitize serveur.
+
+## #107 · P0 · 0.5j — SSRF `bot-prerender-check` (R2)
+Toute URL HTTP(S) acceptée sans blocklist IP/CIDR (IMDS 169.254.169.254, localhost, RFC1918).
+Fix : DNS resolve + blocklist CIDR + validation scheme.
+
+## #108 · P0 · 0.25j — Cache landing jamais relu render-page (R3)
+Bloc cache-check absent handler `/landing/<slug>` (L617-733). Toujours fresh, coûts SSR ×N.
+Fix : recopier pattern blog L558 sur landing.
+
+## #109 · P0 · 0.5j — Cocoon INSERT policies manquantes
+Tables `cocoon_strategy_plans` + `cocoon_diagnostic_results` : pas de policy INSERT authenticated. Bypass service_role masque le trou.
+Fix : policies INSERT `auth.uid() = user_id`.
+
+## #110 · P0 · 0.25j — SERP `refresh-serp-all` : `ReferenceError` silencieux
+`supabaseUrl`/`serviceKey` jamais déclarés → cron cassé depuis le début, SERP batch 100% down.
+Fix : ajouter les 2 déclarations en tête de handler.
+
+## #111 · P0 · 0.5j — SERP lead magnet anonyme sans rate-limit
+3 providers payants appelables à volonté → drain coût immédiat.
+Fix : rate-limit IP (10/j) + captcha turnstile + quota anonyme dailyCostGuard.
+
+## #112 · P1 · 0.5j — Télémétrie crawl absente (C4)
+5 events `crawl_launched/_detect/_analyze/_export/_compare` via `track-analytics`.
+
+## #113 · P1 · 0.5j — 31 `: any` `finalizer.ts` crawl (C5)
+`_shared/crawlQueue/dbTypes.ts` avec interfaces dérivées schema.
+
+## #114 · P1 · 1j — Découpe `useCrawlEngine`/`useSiteCrawl` (C6, 1632 LOC total)
+`useCrawlPolling/Compare/Detect/Stats` (< 250 l. chacun).
+
+## #115 · P1 · 0.5j — `strategic-crawl` code mort 375 l. (C7)
+Décision : intégrer E-E-A-T dans `htmlAnalyzer.ts` shared + archiver standalone.
+
+## #116 · P1 · 0.25j — Gemini `-preview` sans fallback (C8, C9-cocoon, C-marina)
+Remplacer `gemini-3-flash-preview` → `google/gemini-flash-1.5` + retry `gemini-pro`. Applicable finalizer crawl + analyze-ux-context + cocoon.
+
+## #117 · P1 · 0.25j — Voice-tone trigger ANON_KEY (C9)
+`finalizer.ts:403` → `SERVICE_ROLE_KEY`.
+
+## #118 · P1 · 0.5j — IKtracker hardcodé `crawl-site` (C10)
+Extraire `_shared/tenantOverrides/iktracker.ts`.
+
+## #119 · P1 · 0.5j — ETag/304 absent render-page (R4)
+Bots re-téléchargent HTML complet. Fix : hash SHA-256 du body + If-None-Match handler.
+
+## #120 · P1 · 0.25j — `content_hash=""` hardcodé landing/guide render-page (R5)
+Invalidation conditionnelle inopérante 2/3 types. Fix : SHA-256 sur payload rendu.
+
+## #121 · P1 · 0.25j — `isBot` détecté jamais exploité (R6)
+Actuellement `console.log` only. Fix : incrémenter `bot_hits` + priorisation cache.
+
+## #122 · P1 · 0.5j — Invalidation cache render-page absente (R7)
+Pas de trigger DB à la publication. Fix : trigger AFTER UPDATE `blog_articles/seo_page_drafts` → DELETE `prerender_cache`.
+
+## #123 · P1 · 0.5j — Cocoon prompt injection `domainDataBlock` non wrappé
+Données crawlées injectées brutes dans LLM stratège.
+Fix : `wrapUserInput('domain_data', ...)` + préambule sécurité.
+
+## #124 · P1 · 1j — Cocoon Three.js chargé statiquement (~520 KB bundle)
+Bloque LCP home même sans ouvrir Cocoon.
+Fix : `React.lazy` + `Suspense` sur composants 3D + code-split route.
+
+## #125 · P1 · 0.5j — SERP zéro `trackPaidApiCall` (P1-1)
+3 API calls/benchmark invisibles dans `paid_api_calls`. `dailyCostGuard` aveugle.
+Fix : wrapper `trackPaidApiCall` sur les 3 providers.
+
+## #126 · P1 · 0.5j — SERP `serpapi_cache` jamais lue (P1-2)
+0% cache hit, gaspillage 100% sur queries récurrentes.
+Fix : lookup `serpapi_cache` avant call, TTL 24h.
+
+## #127 · P1 · 0.25j — SERP `Promise.all` vs `allSettled` (P1-3)
+Un throw non attrapé fait exploser le benchmark entier. Fix : `Promise.allSettled`.
+
+## #128 · P1 · 0.5j — SERP dup `fetchSerpApi` verbatim (P1-4)
+Dupliqué entre `serp-benchmark` et `serpapi-actions` (sans cache/tracking).
+Fix : `_shared/serpapi/fetch.ts` unifié.
+
+## #129 · P2 · 0.5j — Thundering herd crawl self-relay (C11)
+Worker + cron + `crawl-site` peuvent lancer N instances/job.
+Fix : `pg_try_advisory_xact_lock(job.id)`.
+
+## #130 · P2 · 0.5j — `discoverDirectories` query non-aggregée (C12)
+300k rows/run cron. Fix : RPC `get_crawl_directories` avec `GROUP BY`.
+
+## #131 · P2 · 0.25j — `site_crawl_schedule` service_role only (C13)
+Pro Agency ne peut consulter/modifier planning. Fix : policies SELECT+UPDATE `auth.uid()=user_id`.
+
+## #132 · P2 · 0.5j — Bloat render-page 43 liens nav + hardcoded prices (R8/R9/R10)
+Fix : nav minimale statique + prix depuis `plans_config` + resync ROUTE_LABELS vs PUBLIC_ROUTES.
+
+## #133 · P2 · 0.5j — Cocoon 23 emojis violant design system Crawlers
+Fix : remplacer par icônes lucide-react (palette violet/or/noir/blanc).
+
+## #134 · P2 · 0.25j — SERP prompt LLM non wrappé + `: any` × 20 + `bg-blue-500` interdit
+Fix : `wrapToolResult` + typage + tokens design system.
+
+## #135 · P2 · 1j — Conversion-optimizer P0 : sémaphore non branché + modèle LLM inexistant + timeout 45s
+`analyze-ux-context/index.ts` : `gemini-3-flash-preview` (idem #116), sémaphore déclaré mais jamais acquire/release, timeout 45s cause failures. Fix : brancher sémaphore, modèle stable, timeout 90s + streaming.
+
+## #136 · P1 · 0.5j — Conversion-optimizer bucket `ux-screenshots` public (fuite RGPD)
+Screenshots UX indexables par n'importe qui via URL prédictible.
+Fix : bucket privé + signed URLs 15min.
+
+## #137 · P1 · 0.5j — Conversion-optimizer RLS UPDATE `ux_context_analyses` manquante + cache absent + double-tracking LLM + monolithe 1334 l.
+Fix combo : policy UPDATE, cache hash payload, dédup `trackAiCall`, découpe en 3 modules `_shared/uxContext/`.
+
+## #138 · P2 · 0.5j — Conversion-optimizer 34 `any` + 8 `console.log` + XSS HTML inline rapport + page 848 l. + `agent-ux` orphelin
+Fix combo : typage, logger structuré, `escapeHtml`, découpe UI, archivage `agent-ux`.
+
+---
+
+# Résumé Vague 6
+- **P0** : 3.25j (#103-#111, 9 items)
+- **P1** : 8.75j (#112-#128, 17 items)
+- **P2** : 4j (#129-#138, 10 items)
+- **Total Vague 6** : **~16j** sur 36 findings
+
+## Top 5 urgences Vague 6
+1. **#110 (0.25j)** — `refresh-serp-all` ReferenceError : cron SERP cassé depuis le début.
+2. **#111 (0.5j)** — SERP lead magnet sans rate-limit : drain coût immédiat.
+3. **#106 (0.25j) + #107 (0.5j)** — XSS render-page + SSRF bot-prerender.
+4. **#103 (0.5j) + #104 (0.25j)** — Revenus crawl : sous-facturation 40× + Premium=Free.
+5. **#109 (0.5j)** — Cocoon INSERT policies : bypass service_role masqué.
+
+## Cumul projet (Vagues 1 → 6)
+- **P0 cumulé** : 20.75j + 3.25j = **24j**
+- **Total dette** : ~54.5j + 16j = **~70.5j-homme** sur 10 features auditées
