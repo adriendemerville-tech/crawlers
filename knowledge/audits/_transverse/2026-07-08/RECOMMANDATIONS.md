@@ -398,3 +398,88 @@ Périmètre : **11 edge functions** cocoon-* (5 967 l. backend) + **34 composant
 - Hardcoded colors Cocoon (baseline : **~400**)
 - Emojis composants Cocoon (baseline : **10+ fichiers**)
 - FPS `CocoonForceGraph3D` sur 100 nodes (baseline : **à mesurer**)
+
+---
+
+# Vague 2 · render-page + SSR SEO
+
+Audit `supabase/functions/render-page/index.ts` (942 l., 4 types de routes : static / blog / landing / guide), `bot-prerender-check` (81 l.), `prerender_cache` (10 col.).
+
+## 31. `PUBLIC_ROUTES` hardcodé (43 entrées) → migrer en DB
+**But visé** : chaque nouvelle landing SEO nécessite un **redeploy edge function**. Migrer vers `site_taxonomy` ou une table `seo_static_routes(route, title, description, updated_at)` avec RLS read `to anon`. Bénéfice : ajout de routes SEO sans deploy, cohérence avec `sitemap.xml`, admin UI de gestion.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | 8 | **2.3** | 1.5j |
+
+## 32. 3 blocs cache lookup + upsert dupliqués — factoriser
+**But visé** : les patterns `select prerender_cache … eq route … gt expires_at` puis `upsert prerender_cache` sont copiés 3 fois (blog, guide, static — landing n'a MÊME PAS de cache lookup en lecture, bug latent). Factoriser en `withPrerenderCache(route, ttlMs, generator)`. Inclure landing dans le cache lookup.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 3 | 0 | 1 | 8 | **3.1** | 1j |
+
+## 33. `content_hash = ""` sur landing + guide upserts
+**But visé** : le champ `content_hash` sert à détecter les régénérations sans changement (économie de re-crawl bots). Blog le calcule (SHA-256), landing et guide écrivent `""`. Corriger : calculer le hash sur les 3 chemins, et court-circuiter le upsert si `hash inchangé && expires_at prolongeable`.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 4 | 0 | 2 | 5 | **2.7** | 0.5j |
+
+## 34. Pas d'ETag / Last-Modified sur les réponses HTML
+**But visé** : les bots (GPTBot, Googlebot, ClaudeBot) re-téléchargent inutilement les pages inchangées. Ajouter `ETag: "<content_hash>"` + `Last-Modified: <rendered_at>` + gérer `If-None-Match` / `If-Modified-Since` → renvoyer **304 Not Modified**. Économie bande passante + budget crawl.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 7 | 0 | 4 | 4 | **4.4** | 1j |
+
+## 35. TTL cache fixe 24h sans invalidation sur update
+**But visé** : quand un article blog est mis à jour, le cache prerender reste servi jusqu'à 24h. Aucun trigger `on update blog_articles / seo_page_drafts → delete from prerender_cache where route = …`. Ajouter un trigger DB pour invalidation immédiate.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 2 | 0 | 0 | 6 | **1.8** | 0.5j |
+
+## 36. 404 rendus en JSON — soft-404 risk Google
+**But visé** : les routes inconnues répondent `{"error": "Route not found"}` avec `Content-Type: application/json` et status 404. Googlebot peut interpréter cela comme un **soft-404** au lieu d'un vrai 404. Renvoyer un HTML minimal 404 avec `<title>404</title>` et `<meta name="robots" content="noindex">`.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 2 | 0 | 3 | **1.1** | 0.25j |
+
+## 37. `markdownToHtml` maison — pas d'échappement dans les blocs contenu
+**But visé** : le convertisseur maison échappe les `<td>` / titres mais **pas** le contenu des paragraphes (`<p>${trimmed}</p>` avec `trimmed` non-escapé). Si un article contient `<script>` dans son markdown source, il est injecté brut. Actuellement mitigé (blog_articles admin-only), mais si `seo_page_drafts` accepte du user-generated content un jour → **XSS SSR**. Remplacer par `marked` + `DOMPurify` (comme `dictadevi-actions`).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 7 | 0 | 5 | **3.2** | 0.5j |
+
+## 38. `isBot` détecté puis inutilisé (log-only)
+**But visé** : `BOT_UA_RE` teste 30+ user-agents mais ne branche rien — tous les visiteurs reçoivent le HTML rendu (correct pour SSR universel). Alors : soit **retirer la détection** (dead code + log noise), soit **l'utiliser pour analytics** (upsert `bot_hits` avec route + timestamp → alimente le dashboard GEO bot mix).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | 4 | **1.1** | 0.5j (option analytics) |
+
+## 39. Aucun test unitaire sur les 4 générateurs HTML
+**But visé** : `generateStaticHTML` / `generateBlogArticleHTML` / landing / guide contiennent la logique SEO critique (JSON-LD, canonical, hreflang, breadcrumb). Un regexp mal placé casse **toute la SEO du site sans que ça se voie**. Ajouter tests snapshot + assertions (`<title>` non vide, `<link rel=canonical>` présent, JSON-LD parsable, breadcrumb valid).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | 8 | **2.3** | 1j |
+
+## Synthèse Vague 2 · render-page
+
+| Priorité | Items | Effort | Gain global moyen |
+|---|---|---|---|
+| **P0-render** | #34 (ETag/304) · #37 (XSS markdown) | **1.5j** | **3.8 / 10** |
+| **P1-render** | #31 (routes en DB) · #32 (factoriser cache) · #33 (content_hash) · #39 (tests) | **4j** | **2.6 / 10** |
+| **P2-render** | #35 (TTL invalidation) · #36 (404 HTML) · #38 (isBot) | **1.25j** | **1.3 / 10** |
+
+**Verdict global render-page** : function **fonctionnelle et bien pensée SEO** (JSON-LD complets, hreflang, breadcrumb, FAQ extraction, sections informationnelles neutres avec liens autoritaires), mais dette architecturale : **routes hardcodées** (bloque scaling contenu), **cache sans invalidation** (contenu périmé 24h), **absence ETag** (coût bande passante bots élevé), et **1 risque XSS latent** si `seo_page_drafts` s'ouvre au UGC. Les 2 P0 (ETag + XSS) sont livrables en 1.5j et débloquent budget crawl + sécurité.
+
+**Baseline à re-mesurer dans 30j** :
+- Nombre de routes hardcodées (baseline : **43**)
+- Cache hit ratio `prerender_cache` (baseline : à mesurer via headers `X-Prerender`)
+- Coût bande passante bots (baseline : logs edge — actuellement 0 réponses 304)
+- Taux XSS potentiel sur `seo_page_drafts.content` (baseline : **1 chemin non-échappé**)
