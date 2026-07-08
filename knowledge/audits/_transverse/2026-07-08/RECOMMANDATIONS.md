@@ -825,3 +825,84 @@ Les 3 P0 (**0.75j**) suffisent à sécuriser l'ouverture publique de la feature.
 - `serp_benchmark_results` count / 30j (baseline : **0** actuels ; à surveiller si feature devient discoverable)
 - Lignes `serpapi-actions/index.ts` (baseline : **217**, cible : **0** après #65)
 - Lignes `SerpBenchmark.tsx` (baseline : **498**, cible : ≤200 par composant après split)
+
+---
+
+# VAGUE 3 · Partie 3 — Conversion Optimizer
+
+## Contexte
+Audit de `analyze-ux-context` (**1 334 lignes**, plus gros monolithe backend audité) + front `ConversionOptimizer.tsx` (848 l.) + `AnnotatedPageView.tsx` (478 l.). Baseline SQL : **10 analyses total, dernière le 2026-05-08, score moyen 74/100 → feature à adoption quasi-nulle depuis 60 jours**. `agent-ux` (307 l., admin `UxAgentDashboard`) confirmé hors scope (feature indépendante Design System pour `cto_code_proposals`).
+
+## #69 — [P0 · 0.5j] 2 appels Browserless séquentiels par analyse → double coût + double timeout
+- **Où** : `supabase/functions/analyze-ux-context/index.ts:354` (`captureScreenshotWithAnnotations`) puis `:498` (`findTextPositions`)
+- **Constat** : le 1er script Browserless (`captureScreenshotWithAnnotations`) fait `page.goto` + scroll + extraction images + chunkability + screenshot pleine page. Le 2e (`findTextPositions`) **re-navigue vers la MÊME URL** (`page.goto ${JSON.stringify(pageUrl)}`) juste pour extraire les bounding boxes de textes → 2× fetch réseau, 2× `waitUntil: networkidle2`, 2× `setTimeout 3000-4000ms`, 2× `trackPaidApiCall('browserless')`.
+- **Impact** : ~30-60s ajoutées par analyse + double crédit Browserless.
+- **Fix** : fusionner l'extraction texte-position dans le même script Puppeteer que le screenshot. Le 1er script a déjà la page chargée → ajouter un bloc `page.evaluate((targets) => { /* text positions */ }, ...)` juste avant `page.screenshot()`. Retirer `findTextPositions` sauf pour le mode `annotations-only` (rétro-analyse ancien screenshot).
+- **Gain** : **-50% latence, -50% coût Browserless** sur le mode `default` (le mode dominant).
+
+## #70 — [P0 · 0.25j] Timeout Browserless 45 000ms viole la contrainte mémoire (30s cap)
+- **Où** : `supabase/functions/analyze-ux-context/index.ts:674` et `:874` — `page.goto(..., { waitUntil: 'networkidle2', timeout: 45000 })`
+- **Constat** : mem://tech/browserless/timeout-and-semaphore-fix-fr impose **30 000ms** (fix précédent : 135s→30s + sémaphore 7 slots). Ici 2 endroits à 45 000ms + `networkidle2` (attend 2 requêtes < 500ms) + `setTimeout 4000` + scroll ~4s + `setTimeout 2500` → **worst case > 50s par appel Browserless**, donc >100s pour l'analyse totale (cf. #69).
+- **Fix** : `timeout: 30000` + `waitUntil: 'domcontentloaded'` (comme `renderPage`) + réduire `setTimeout 4000→1500` et `setTimeout 2500→1000`. Le scroll progressif reste utile pour lazy-loading.
+- **Gain** : conformité + -30% latence.
+
+## #71 — [P0 · 0.5j] Aucun cache d'analyse → chaque re-clic = re-payer LLM + 2× Browserless
+- **Où** : `analyze-ux-context/index.ts:501-516` — insert `ux_context_analyses` mais aucune lecture préalable pour détecter une analyse récente sur la même URL/même contenu.
+- **Constat** : `ux_context_analyses` a un champ `screenshot_url` unique par appel (`${trackedSiteId}/${Date.now()}.jpg`), aucun cache-hit. Sur une feature à faible adoption (10 analyses/60j) l'impact est faible, mais toute activation marketing (lead magnet, ProAgency onboarding) exploserait le coût.
+- **Fix** : avant `captureScreenshotWithAnnotations`, chercher `ux_context_analyses WHERE tracked_site_id=X AND page_url=Y AND created_at > NOW() - 7 days` → si trouvé ET `crawl_pages.updated_at < ux.created_at` (contenu inchangé), retourner l'analyse en cache. Ajouter `force_refresh: boolean` dans le body pour bypass.
+- **Gain** : à échelle marketing, jusqu'à -80% coût LLM+Browserless.
+
+## #72 — [P1 · 1j] Monolithe 1 334 lignes — 3 modes dans un seul handler + 42 `console.log` + 20 `: any`
+- **Où** : `supabase/functions/analyze-ux-context/index.ts`
+- **Structure actuelle** : `Deno.serve` (32-618, **587 l.**) + `captureScreenshotWithAnnotations` (660-860, **200 l.**) + `findTextPositions` (862-1088, **226 l.**) + `SYSTEM_PROMPT` + `buildPrompt` (1172-1334, **162 l.**)
+- **Découpe recommandée** en `_shared/uxContext/` :
+  - `modes/defaultAnalysis.ts` (mode principal — 587 l. actuelles)
+  - `modes/annotationsOnly.ts` (mode réhydratation historique)
+  - `modes/manualSuggestions.ts` (mode Premium+ zones dessinées)
+  - `browserless/captureAndPositions.ts` (fusion #69)
+  - `prompts/systemPrompt.ts` + `prompts/buildPrompt.ts` + `prompts/gaSection.ts` + `prompts/identityGaps.ts`
+  - `persistence/insertAnalysis.ts` + `persistence/workbenchInjector.ts`
+- **Nettoyage** : 42 `console.log` → logger structuré niveau (debug/info/warn/error), 20 `: any` → typer les payloads AI (`AxisScores`, `Suggestion`, `ImageAnalysis`)
+- **Gain** : lisibilité, testabilité par mode, taille bundle réduit pour cold-start Deno.
+
+## #73 — [P1 · 0.25j] `logAIUsageFromResponse` sans `await` → potentiel logging perdu
+- **Où** : `analyze-ux-context/index.ts:474` — `logAIUsageFromResponse(getServiceClient(), ...)` (pas de `await`, pas de `.catch()`)
+- **Constat** : `trackTokenUsage` juste au-dessus utilise `.catch(() => {})` (fire-and-forget explicite). `logAIUsageFromResponse` n'a ni await ni catch → si la promesse rejette, erreur non capturée qui peut faire tomber la function (Deno unhandled rejection warning). Aussi : Deno peut tuer la function avant que l'insert finisse.
+- **Fix** : `logAIUsageFromResponse(...).catch((e) => console.warn('[analyze-ux-context] log failed', e.message))` OU `await logAIUsageFromResponse(...)` si l'insert doit être garanti.
+
+## #74 — [P1 · 0.5j] `ConversionOptimizer.tsx` (848 l.) — 3 handlers `invoke` dupliqués + composant à splitter
+- **Où** : `src/pages/ConversionOptimizer.tsx:244-268` (`handleAnalyze`), `:271-304` (`handleRecalculate`), `:306-350` (`hydrateSavedAnalysisAnnotations`)
+- **Constat** : 3 appels `supabase.functions.invoke('analyze-ux-context', ...)` avec pattern identique (invoke → check error/success → toast → setState). Zéro abstraction, chaque handler duplique la gestion d'erreur.
+- **Fix** :
+  - extraire `useAnalyzeUxContext()` hook exposant `{ analyze, recalculate, hydrateAnnotations, isAnalyzing, isRecalculating, isBackfilling }`
+  - splitter en `<SiteAndPageSelector>`, `<AnalysisScoreBoard>`, `<SuggestionsList>`, `<AnnotatedScreenshot>`, `<HistoryPanel>`
+  - `hydrateSavedAnalysisAnnotations` est aujourd'hui un mécanisme silencieux au click sur un ancien audit → à documenter comme "migration progressive des vieux screenshots"
+
+## #75 — [P2 · 0.25j] `AnnotatedPageView.tsx` (478 l.) et `ManualAnnotationOverlay.tsx` (264 l.) — canvas overlay non memoïsé
+- **Où** : `src/components/ConversionOptimizer/AnnotatedPageView.tsx` (478 l.), `ManualAnnotationOverlay.tsx` (264 l.), `CROReportPreviewModal.tsx` (370 l.)
+- **À vérifier** : les annotations (jusqu'à 20 bulles + zones dessinées) sont re-rendues à chaque scroll/resize ? `useMemo` sur les positions ? Debounce sur le drawing mode ?
+- **Fix** : audit dédié après #69-#71, viser < 300 l./composant.
+
+## #76 — [P2 · 0.5j] Mémoire `mem://tech/conversion-optimizer/comprehensive-v3-fr` manquante malgré référence dans l'index
+- **Où** : `mem://index.md` référence `[Conversion Optimizer](mem://tech/conversion-optimizer/comprehensive-v3-fr) — Conversion optimizer UI & GA4 metrics` mais le fichier `knowledge/tech/conversion-optimizer/comprehensive-v3-fr.md` **n'existe pas**.
+- **Fix** : créer le fichier avec l'état réel post-audit (8 axes, 3 modes, dépendance Browserless, cache #71 ajouté, contraintes de plan).
+
+---
+
+## Résumé Vague 3 partie 3 · conversion-optimizer
+- **P0** = **1.25j** (#69 fusion 2 Browserless + #70 timeout 30s + #71 cache 7 jours)
+- **P1** = **1.75j** (#72 découpe monolithe + #73 await log + #74 splitter ConversionOptimizer.tsx)
+- **P2** = **0.75j** (#75 audit canvas overlay + #76 créer mémoire manquante)
+- **Total** : **3.75j**
+
+**Verdict** : le concept **screenshot pleine page + bulles ancrées aux suggestions IA + intégration GA4 behavioral + voice_dna + auto-enrichissement identité** est **techniquement unique sur le marché** (Hotjar = data brute, Fibr.ai = reco sans ancrage visuel, VWO = A/B lourd). Le rendu final est probablement bluffant. Mais **le moteur double-appelle Browserless pour la même URL** (#69), **dépasse le cap timeout mémoire** (#70) et **n'a aucun cache** (#71) → 3 défauts structurels qui rendent la feature **trop chère pour être ouverte largement**.
+
+**Bonne nouvelle** : à 10 usages/60j, aucun dégât en production actuel. Les 1.25j de P0 doivent être bookés **AVANT** toute campagne d'activation de la feature (ProAgency onboarding, lead magnet public).
+
+**Baseline à re-mesurer dans 30j** :
+- `ux_context_analyses` count / 30j (baseline : **~0**, cible : > 100 si feature promue)
+- `paid_api_calls` filtrées `edge_function='analyze-ux-context' AND provider='browserless'` — ratio calls/analyses (baseline : **2** ; cible : **1** après #69)
+- `ai_gateway_usage.cost_credits` moyen par analyse (baseline à établir dès #71 déployé — cible < 2¢)
+- Lignes `analyze-ux-context/index.ts` (baseline : **1 334**, cible : ≤ 400 handler principal après #72)
+- Lignes `ConversionOptimizer.tsx` (baseline : **848**, cible : ≤ 300 après split #74)
+- `console.log` (baseline : **42**, cible : 0 en mode prod)
