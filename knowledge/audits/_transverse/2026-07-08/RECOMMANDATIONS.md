@@ -314,3 +314,87 @@ Périmètre : `parmenion-orchestrator` (2 467 l.) + `autopilot-engine` (1 218 l.
 - `console.log` dans `autopilot-engine` (baseline : **34**)
 - Tests unitaires Parménion (baseline : **0**)
 - Lignes `parmenion-orchestrator/index.ts` (baseline : **2 467**)
+
+---
+
+# Vague 2 · Cocoon — 2026-07-08
+
+Brief : [`knowledge/audits/cocoon/brief-2026-07-08.md`](../../cocoon/brief-2026-07-08.md).
+Périmètre : **11 edge functions** cocoon-* (5 967 l. backend) + **34 composants** frontend Cocoon (~13 600 l.) + `Cocoon.tsx` (1 346 l.) + `FeaturesCocoon.tsx` (422 l.).
+
+## Points forts
+
+- **Backend LLM 100% propre** : `cocoon-chat` et `cocoon-diag-subdomains` utilisent `aiGatewayFetch`, tous les autres (`cocoon-strategist`, `calculate-cocoon-logic`, `cocoon-diag-{authority,content,semantic,structure}`) sont déterministes → coût LLM Cocoon **maîtrisé**.
+- **Modularisation backend** : 11 functions séparées par domaine (diag, linking, deploy, chat, strategist) — pas de monolithe.
+- **3 modes de visualisation** (2D force, 3D three.js, radial) → offre unique sur le marché.
+- **Content Architect** avec cache markdown TTL 30j + RPC partagée → économie LLM sur recommandations similaires cross-users.
+- **Persist session** dédiée (`persist-cocoon-session`) → reprise séance intacte.
+
+## 25. Frontend Cocoon — dette de composants monstres (P0-Maint)
+**But visé** : 5 composants dépassent 1 000 lignes et concentrent la majeure partie de la dette. Découper en sous-composants et hooks métier.
+
+| Fichier | Lignes | Action |
+|---|---|---|
+| `CocoonAIChat.tsx` | **2 143** | Extraire `useCocoonChat` hook, `<ChatHeader>`, `<ChatMessages>`, `<ChatInput>`, `<StrategistSidebar>` |
+| `CocoonForceGraph3D.tsx` | 1 213 | Extraire `useGraphData`, `<NodeMesh>`, `<LinkLine>`, `<GraphControls>` |
+| `CocoonForceGraph.tsx` | 1 148 | Idem 2D, factoriser avec 3D via `useCocoonGraph` |
+| `CocoonRadialGraph.tsx` | 1 083 | Idem |
+| `Cocoon.tsx` (page) | 1 346 | Extraire tabs, orchestration, modaux en sous-pages |
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 4 | 1 | 1 | 10 | **3.7** | 5j |
+
+**Levier** : les 3 graphes dupliquent probablement 60% de logique (nodes/links/filters/tooltips). Un `useCocoonGraph()` partagé + `GraphRenderer` par techno diviserait le code par ~2.
+
+## 26. Supprimer le shim `CocoonAIChatUnified.tsx` (dead-code)
+**But visé** : ce fichier est un re-export 9 lignes de l'ancien `CocoonAIChat`. Confusant, laisse croire à un nouveau chat. Migrer les 3 imports vers `CocoonAIChat` direct puis supprimer le shim.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | 5 | **1.1** | 0.25j |
+
+## 27. Hardcoded colors Cocoon (~400 occurrences, P1 — contrainte projet)
+**But visé** : remplacer `bg-white`, `bg-black`, `text-white`, `bg-[#...]`, `border-[#...]` par tokens sémantiques `bg-background`, `text-foreground`, `border-border`, etc. Concentré sur `CocoonAIChat` (67), `CocoonNodePanel` (63), `Cocoon.tsx` (54), `ContentArchitectPreview` (50), `FeaturesCocoon` (49), `ImageStylePicker` (48), `ContentArchitectStructurePanel` (38). Prérequis : dark mode fonctionnel + charte violet/or/noir/blanc respectée.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | 8 | **1.7** | 2j |
+
+## 28. Retirer les emojis Cocoon (P1 — contrainte projet)
+**But visé** : `CocoonAIChat.tsx` (67), `CocoonNodePanel.tsx` (63), et 8+ autres. Remplacer par icônes `lucide-react` neutres cohérentes avec la charte.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | 7 | **1.5** | 1j |
+
+## 29. Réduire les `: any` (top offenders Cocoon)
+**But visé** : 24 dans `CocoonAIChat`, 23 dans `CocoonContentArchitectModal`, 19 dans `Cocoon.tsx`. Typer les payloads chat (SSE events, tool calls) et les drafts architect (structure H1-H3, tasks, JSON-LD).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 2 | 0 | 6 | **1.7** | 1.5j |
+
+## 30. Audit qualité UX 3D — Profiler + FPS sur >100 nodes
+**But visé** : `CocoonForceGraph3D` utilise `@react-three/fiber` + `three.js`. Sur des sites >100 pages, risque FPS < 30. Mesurer avec React Profiler + Chrome DevTools Performance, ajouter `useMemo` / `<Instances>` / LOD si besoin.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 7 | 0 | 0 | 4 | **2.3** | 1j (audit) + 1-3j fix conditionnel |
+
+## Synthèse Vague 2 · Cocoon
+
+| Priorité | Items | Effort | Gain global moyen |
+|---|---|---|---|
+| **P0-Cocoon** | #25 (split composants monstres) | **5j** | **3.7 / 10** |
+| **P1-Cocoon** | #27 (colors) · #28 (emojis) · #30 (FPS 3D) | **4j** | **1.8 / 10** |
+| **P2-Cocoon** | #26 (shim) · #29 (any) | **1.75j** | **1.4 / 10** |
+
+**Verdict global Cocoon** : **backend excellent (LLM maîtrisé, 11 functions modulaires, 3 modes visualisation uniques au monde)** — **le problème est 100% frontend**. Cocoon concentre à lui seul ~40% de la dette design system Crawlers (hardcoded colors + emojis) et 5 composants dépassent 1 000 lignes. C'est le chantier front prioritaire du projet.
+
+**Baseline à re-mesurer dans 30j** :
+- Lignes `CocoonAIChat.tsx` (baseline : **2 143**)
+- Lignes cumulées top 5 composants Cocoon (baseline : **~6 933**)
+- Hardcoded colors Cocoon (baseline : **~400**)
+- Emojis composants Cocoon (baseline : **10+ fichiers**)
+- FPS `CocoonForceGraph3D` sur 100 nodes (baseline : **à mesurer**)
