@@ -1380,3 +1380,170 @@ Fix combo : typage, logger structuré, `escapeHtml`, découpe UI, archivage `age
 ## Cumul projet (Vagues 1 → 6)
 - **P0 cumulé** : 20.75j + 3.25j = **24j**
 - **Total dette** : ~54.5j + 16j = **~70.5j-homme** sur 10 features auditées
+
+---
+
+# Vague 5 — Audits expert-seo · audit-compare · copilot-orchestrator · parmenion · matrix
+
+## #139 · P0 · 2j — Expert-SEO : bypass total RLS sur tables audits
+Policies "Service role full access" sur `audits`, `audit_cache`, `audit_raw_data` avec `USING (true)` sans `TO service_role` → n'importe quel `authenticated` voit/modifie les audits d'autrui.
+Fix : Ajouter `TO service_role` ou `USING (auth.role() = 'service_role')` via migration corrective.
+
+## #140 · P0 · 1j — Expert-SEO : appel LLM hors Gateway dans audit-compare
+`audit-compare/index.ts:343` appelle directement `openrouter.ai` (gemini-3.1-flash-lite) sans `aiGatewayFetch` → aucun tracking coûts/quotas.
+Fix : Router via `aiGatewayFetch`.
+
+## #141 · P1 · 5j — Expert-SEO : duplication massive audit-expert-seo vs expert-audit
+Deux fonctions ~2500 l. chacune font PSI/Safe Browsing/HTML analysis quasi-identiques.
+Fix : Fusionner sur `audit-expert-seo`, migrer spécificités EEAT/CMS, déprécier `expert-audit`.
+
+## #142 · P1 · 2j — Expert-SEO : safeServiceCall absent pour vérif propriété
+Edge functions SEO accèdent aux données par domaine sans valider `tracked_site_id` via `safeServiceCall` → collision multi-users trackant même domaine.
+Fix : Wrapper `safeServiceCall` sur audits.
+
+## #143 · P1 · 1j — Expert-SEO : GRANTs manquants pour authenticated
+`audit_raw_data`, `audit_impact_snapshots` sans `GRANT SELECT, INSERT TO authenticated` → casse dès correctif #139.
+Fix : Migration GRANTs explicites.
+
+## #144 · P2 · 1j — Expert-SEO : DS non conforme + console.log
+`ExpertAuditDashboard.tsx` : `bg-violet-500/10`, `bg-[hsl(263,70%,38%)]` hardcodés + console.log prod.
+Fix : Variables thème CSS, retirer logs.
+
+## #145 · P2 · 1j — Expert-SEO : risque timeout edge 60s
+Appels synchrones Browserless + PSI + DataForSEO avec timeouts 30s+ cumulés.
+Fix : Réduire timeouts individuels, garantir `Promise.all`.
+
+## #149 · P0 · 2j — Audit-compare : fuite coûts LLM et Gateway bypass
+`generateSeedsWithAI`, `analyzeSite`, `runCrossComparison` utilisent `fetch` direct vers OpenRouter au lieu d'`aiGatewayFetch`.
+Fix : Migrer les 3 handlers vers `aiGatewayFetch`.
+
+## #150 · P1 · 1j — Audit-compare : absence rate-limit IP (lead magnet drain)
+Appels payants DataForSEO déclenchables par anonymes sans restriction IP.
+Fix : `ipRateLimiter` en tête du handler avant tout appel payant.
+
+## #151 · P1 · 1.5j — Audit-compare : monolithe frontend 1677 l.
+`AuditCompare.tsx` mélange logique/types/i18n/composants non mémoïsés → re-renders massifs.
+Fix : Split `features/audit-compare/components/` (CompareForm, RadarBattle, …).
+
+## #152 · P1 · 1j — Audit-compare : SSRF sur extractPageMetadata
+`extractPageMetadata` fetch URLs utilisateurs sans validation.
+Fix : `assertSafeUrl` (_shared/ssrf.ts) + `stealthFetch`.
+
+## #153 · P2 · 0.5j — Audit-compare : TTL cache 2h inadapté
+Backlinks/keywords sont stables → 2h gaspille les appels.
+Fix : TTL 24h min, 7j idéal pour domaines non-frais.
+
+## #154 · P2 · 1j — Audit-compare : monolithe backend 1062 l.
+Logique métier non mutualisée dans `index.ts`.
+Fix : Déporter dans `_shared/audit-compare/`.
+
+## #155 · P2 · 0.5j — Audit-compare : détection SPA inefficace
+Fallback Browserless sur simple check longueur texte.
+Fix : Utiliser `isSpaDetected` shared basé sur signatures frameworks.
+
+## #159 · P0 · 1j — Copilot : recall vectoriel hybride tombé en fallback JS
+`recallMemoryContext` échoue sur la RPC (`auth.uid()` null avec service role, `p_user_id` non passé) → fallback cosine JS 50 lignes, recall cross-session inopérant.
+Fix : Passer `p_user_id` explicite à `search_copilot_turns_hybrid` (SECURITY DEFINER + filtrage interne).
+
+## #160 · P1 · 1j — Copilot : violation charte "pas de bleu IA" sur Félix
+`AgentChatShell.tsx:188` utilise `border-primary bg-primary` (bleu IA) pour bulles Félix.
+Fix : Bascule gris anthracite/noir Crawlers, Stratège garde accent safran.
+
+## #161 · P1 · 1j — Copilot : Anthropic cache breakpoints manquants sur historique
+`callLLM` active cache uniquement sur system prompt, pas de `cache_control` sur messages historique → re-lecture payante chaque itération.
+Fix : Injecter `cache_control: { type: 'ephemeral' }` sur dernier message user précédent dans `loadHistory`.
+
+## #162 · P2 · 0.5j — Copilot : skill trigger_audit autorisée pour Félix
+Félix (SAV gratuit) peut proposer action payante en approval → friction UX.
+Fix : `trigger_audit: 'forbidden'` pour Félix dans `personas.ts`.
+
+## #163 · P2 · 1j — Copilot : séquençage navigation inefficace
+Skills `navigate_to`/`open_audit_panel` traitées en séquentiel alors que sans effet de bord serveur.
+Fix : Déplacer catégorie `navigate` dans batch `parallelizable` (baisse TTFB).
+
+## #164 · P1 · 1.5j — Copilot : safeServiceCall manquant sur cms_publish_draft (blog)
+`registry.ts:404` écrit `blog_articles` via service role avec vérif admin uniquement, sans validation périmètre.
+Fix : Wrapper CMS vérification granulaire propriété/permission même pour admins.
+
+## #169 · P1 · 2j — Parmenion : propagation aveugle après skip Audit
+Orchestrateur continue Diagnose/Prescribe sur données obsolètes si Audit skipped (crawl en cours).
+Fix : Interrompre le cycle si phase critique retourne `skipped`.
+
+## #170 · P0 · 3j — Parmenion : race condition Execute→Validate
+Validate lancée immédiatement après Execute dans le même thread → cache CMS + latence workers empêchent la détection déploiement.
+Fix : Découpler Validate avec délai min 30min ou cycle t+1.
+
+## #171 · P1 · 1j — Parmenion : évaporation Tasks 2-8 du plan stratège
+Stratège génère plan 8 tâches mais orchestrateur n'exécute que la 1ère.
+Fix : Persister plan complet dans `strategist_recommendations`, Execute traite backlog avant re-prescription.
+
+## #172 · P2 · 0.5j — Parmenion : collision config multi-target sur domaine
+`ilike('domain')` sans filtrage strict `tracked_site_id` → mauvaise config si staging/prod partagent domaine.
+Fix : Filtrage exact tuple `(domain, tracked_site_id)`.
+
+## #173 · P2 · 2j — Parmenion : risque timeout Lambda sur cycles Sonnet 4.5
+5 phases séquentielles avec LLM lents peuvent dépasser 300s edge timeout.
+Fix : File d'attente async (Edge HTTP) ou augmenter timeout par phase.
+
+## #174 · P1 · 1j — Parmenion : backlog guard inopérant sur Execute bloquée
+Guard stoppe prescription si backlog >5 mais ne gère pas tâches en échec boucle.
+Fix : `retry_count` sur décisions, bascule `failed` définitif après 3 tentatives.
+
+## #175 · P2 · 1j — Parmenion : instabilité persona par rotation multi-phase
+Round-robin peut changer persona entre Audit et Execute du même cycle.
+Fix : Fixer persona au niveau `autopilot-engine` pour tout le cycle.
+
+## #176 · P1 · 1j — Parmenion : faiblesse isolation site_id vs domaine
+Orchestrateur fait confiance aux paramètres domain/tracked_site_id sans vérifier corrélation DB.
+Fix : Guard intégrité au démarrage vérifiant appartenance domaine↔tracked_site_id↔user.
+
+## #179 · P0 · 0.5j — Matrix : modèle LLM inexistant 'gpt-5'
+Orchestrateur utilise `openai/gpt-5` (inexistant) pour scoring → échecs systématiques.
+Fix : Basculer `openai/gpt-4o` ou `gpt-4-turbo`.
+
+## #180 · P0 · 1j — Matrix : timeout 504 parallélisation non bornée
+`audit-matrice` lance tous appels LLM en `Promise.all` sans throttle → 429 provider ou >60s edge sur matrices 20+ critères.
+Fix : Pool concurrence bornée (p-limit) + backoff.
+
+## #181 · P1 · 3j — Matrix : redondance schéma 7+ tables
+`audit_matrix_sessions`, `matrix_audits`, `prompt_matrix_items`… quasi-identiques → incohérence + RLS complexe.
+Fix : Unifier autour de `matrix_audits` + `matrix_audit_results`.
+
+## #182 · P1 · 1j — Matrix : scoring brittle (fieldValueToNumeric)
+Conversion labels ('Oui/Non') via regex hardcodées, échoue sur synonymes/variations.
+Fix : Scoring piloté par métadonnées JSON ou prompts de normalisation.
+
+## #183 · P1 · 2j — Matrix : dette technique MatricePrompt.tsx 1639 l.
+31 `: any` dépassent seuil maintenabilité.
+Fix : Split PromptManager/MatrixGrid/ResultSummary, typage strict imports.
+
+## #184 · P2 · 1j — Matrix : fragmentation logique de parsing
+`parse-doc-matrix`, `parse-matrix-hybrid`, `parse-matrix-geo` dupliquent 60% extraction XLSX/CSV.
+Fix : Fonction unique paramétrable dans `_shared`.
+
+## #185 · P2 · 0.5j — Matrix : latence artificielle orchestrateur front
+`matrixOrchestrator.ts` impose 300ms fixe entre appels LLM sans nécessité (rate limit géré côté edge).
+Fix : Supprimer ou passer à file d'attente priorité.
+
+## #186 · P2 · 0.5j — Matrix : mapping incohérent moteurs IA
+Import XLSX mappe Perplexity → Gemini-3-Flash-Preview au lieu de Sonar/GPT.
+Fix : Harmoniser `mapEngineName` avec capacités réelles gateway.
+
+---
+
+# Résumé Vague 5
+- **P0** : 9.5j (#139, #140, #149, #159, #170, #179, #180 — 7 items)
+- **P1** : 20.5j (#141, #142, #143, #150, #151, #152, #160, #161, #164, #169, #171, #174, #176, #181, #182, #183 — 16 items)
+- **P2** : 10j (#144, #145, #153, #154, #155, #162, #163, #172, #173, #175, #184, #185, #186 — 13 items)
+- **Total Vague 5** : **~40j** sur 36 findings (5 features)
+
+## Top 5 urgences Vague 5
+1. **#139 (2j)** — Expert-SEO RLS bypass total sur audits (fuite cross-user).
+2. **#170 (3j)** — Parmenion race condition Validate (validation cassée).
+3. **#179 (0.5j) + #180 (1j)** — Matrix modèle inexistant + timeout.
+4. **#149 (2j) + #140 (1j)** — Bypass AI Gateway (audit-compare + audit-expert-seo).
+5. **#159 (1j)** — Copilot recall vectoriel dégradé (mémoire cross-session cassée).
+
+## Cumul projet (Vagues 1 → 6)
+- **P0 cumulé** : 24j + 9.5j = **33.5j**
+- **Total dette** : ~70.5j + 40j = **~110.5j-homme** sur 15 features auditées
