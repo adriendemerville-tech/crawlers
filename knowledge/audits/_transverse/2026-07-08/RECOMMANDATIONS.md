@@ -155,3 +155,91 @@ Fichiers : `audit-compare`, `calculate-llm-visibility`, `detect-fan-out`, `crawl
 | **P2 (opportuniste)** | 3 | ~continu | **1.6 / 10** |
 
 **Recommandation** : enchaîner P0 (1 semaine dev) → lancer Vague 2 (audit `copilot-orchestrator`) en parallèle du P1 traité en fond de tâche.
+
+---
+
+# Vague 2 · Copilot Orchestrator — 2026-07-08
+
+Brief : [`knowledge/audits/copilot-orchestrator/brief-2026-07-08.md`](../../copilot-orchestrator/brief-2026-07-08.md).
+Périmètre audité : `supabase/functions/copilot-orchestrator/**` (5 328 lignes) + `src/hooks/useCopilot.ts` + `src/components/Copilot/**` + `supabase/functions/mcp-server/`.
+
+## Points forts (baseline solide)
+
+- Appels LLM **100% via `aiGatewayCall` / `aiGatewayCallStream`** — 0 bypass gateway. Conforme `combo-abc-allocation-fr`.
+- `safeServiceCall` (anti-bypass RLS) présent sur les skills write sensibles (cms_publish, cms_patch).
+- **Prompt safety complète** : `PROMPT_SAFETY_PREAMBLE` + `wrapUserContent` + `wrapToolResult` sur user_input, tool_result et memory_recall.
+- **Intent bucket + `shouldRecallMemory`** gate l'embed+RPC vectoriel sur chit-chat/navigate (économie ~1 embed + 1 RPC par tour trivial).
+- **`FORBIDDEN_EVEN_IN_CREATOR`** : 5 skills inviolables (`delete_site`, `delete_user`, `rotate_keys`, `escalate_to_human`, `mass_delete`) même en mode créateur admin.
+- **Prompt caching Anthropic** actif + `maxOutputTokens` dynamique par bucket → coûts optimisés Claude.
+- **Stop batch sur première approval** (P0 #2) — pas d'exécution en cascade non consentie.
+- **Tests présents** : `helpers_test.ts`, `streaming_test.ts`, `intentBucket_test.ts`.
+- **Hygiène code** : 0 `console.log`, 1 `: any` sur 5 328 lignes back.
+- **MCP server exposé** (`supabase/functions/mcp-server/index.ts`, manifest live) — gating Pro Agency + rate limit 30/h.
+
+## 14. Splitter `skills/registry.ts` (2 567 lignes, 26 skills en 1 fichier)
+**But visé** : rendre le registry maintenable (aujourd'hui : PR conflicts systématiques, cold-start bundle lourd, revue impossible). Découper par domaine : `skills/read/`, `skills/cms/`, `skills/admin/`, `skills/cocoon/`, `skills/live/`, `skills/memory/`, `skills/sav/`, avec un `registry.ts` de 100 lignes qui agrège.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 2 | 3 | 1 | 10 | **3.5** | 2j |
+
+**Levier** : dette de maintenabilité massive levée, onboarding contributeur x3.
+
+## 15. Splitter `copilot-orchestrator/index.ts` (1 594 lignes)
+**But visé** : séparer `Deno.serve` handler / agent loop / gestion approval-reject / cleanup / historique. Extraire `agentLoop.ts`, `session.ts`, `handlers/approve.ts`, `handlers/reject.ts`, `handlers/close.ts`. Améliore aussi le cold-start si tree-shaking.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 3 | 3 | 1 | 9 | **3.5** | 1.5j |
+
+## 16. Étendre `safeServiceCall` aux skills read (5/26 aujourd'hui)
+**But visé** : aujourd'hui `read_audit`, `read_site_kpis`, `read_cocoon_graph`, `read_site_memory`, `admin_lookup_user` s'appuient sur le `SkillContext.userClient` (RLS active) mais dès qu'un skill lit via `service` sans passer par `safeServiceCall`, l'appartenance `tracked_site` n'est pas vérifiée. Auditer les 21 skills restantes et forcer `safeServiceCall` pour tout accès `service` scoped à un `tracked_site_id` fourni par le LLM.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 9 | 0 | 5 | **3.9** | 1j |
+
+**Levier** : ferme la classe entière de bugs "le LLM invente un tracked_site_id d'un autre user et le service_role obéit".
+
+## 17. Refondre `mcp-server` avec `@lovable.dev/mcp-js` + OAuth 2.1
+**But visé** : le MCP actuel (101 lignes codées main, bearer Supabase brut, emojis interdits dans les error messages 🔒⚠️⏳❌) doit passer à `@lovable.dev/mcp-js` — `defineTool` par outil, `defineMcp` central, OAuth 2.1 avec consentement page (`/.lovable/oauth/consent`) au lieu du bearer session copié. Aligne Crawlers sur le standard Rank.ai / Screaming Frog MCP et débloque la connexion depuis ChatGPT / Claude / Cursor sans copier-coller de JWT.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 2 | 8 | 0 | 8 | **4.9** | 3j |
+
+**Levier stratégique** : gap concurrentiel (mars 2026 = Screaming Frog MCP) refermé, exposition Crawlers → écosystème agents externes.
+
+## 18. `MAX_ITERATIONS = 6` trop bas pour workflow multi-skills
+**But visé** : la doc `ai-sdk-agent-patterns` recommande `stepCountIs(50)` pour agents. Ici 6 tours = coupe prématurément un workflow "audit maillage → propose fix → cms_patch" qui peut prendre 8-10 tool_calls. Passer à 12 par défaut, 20 en mode créateur.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 1 | 0 | -2 | 5 | **1.1** | 0.25j |
+
+**Attention** : léger surcoût LLM (score coût négatif). À combiner avec un `iteration_budget` par persona pour cap sécu.
+
+## 19. Retirer les emojis de `mcp-server/index.ts` (contrainte projet)
+**But visé** : conformité règle "emojis interdits". Remplacer par messages texte neutres.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | 6 | **1.3** | 0.1j |
+
+Regroupé avec l'item 17 (refonte MCP) pour éviter double passage.
+
+## Synthèse Vague 2 · Copilot
+
+| Priorité | Items | Effort | Gain global moyen |
+|---|---|---|---|
+| **P0-Copilot** | #16 (safeServiceCall read skills) · #17 (MCP OAuth) | **4j** | **4.4 / 10** |
+| **P1-Copilot** | #14 (split registry) · #15 (split index) · #18 (MAX_ITER) | **3.75j** | **2.7 / 10** |
+| **P2-Copilot** | #19 (emojis MCP) | **0.1j** (dans #17) | **1.3 / 10** |
+
+**Verdict global copilot** : **architecture solide, dette de refactor + un gap MCP stratégique**. Le copilote est parmi les plus mûrs du projet — priorité = #17 (positionnement concurrentiel MCP) + #16 (fermer trou RLS potentiel).
+
+**Baseline à re-mesurer dans 30j** :
+- Lignes `skills/registry.ts` (baseline : **2 567**)
+- Lignes `index.ts` (baseline : **1 594**)
+- Skills utilisant `safeServiceCall` sur 26 total (baseline : **5/26 = 19%**)
+- MCP auth mode (baseline : `bearer_supabase_session`, cible : `oauth_2.1_dcr`)
