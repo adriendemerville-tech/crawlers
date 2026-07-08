@@ -483,3 +483,135 @@ Audit `supabase/functions/render-page/index.ts` (942 l., 4 types de routes : sta
 - Cache hit ratio `prerender_cache` (baseline : à mesurer via headers `X-Prerender`)
 - Coût bande passante bots (baseline : logs edge — actuellement 0 réponses 304)
 - Taux XSS potentiel sur `seo_page_drafts.content` (baseline : **1 chemin non-échappé**)
+
+---
+
+# Vague 2 · Feature 5 — audit-expert-seo (+ expert-audit)
+
+Brief : [`knowledge/audits/expert-seo/brief-2026-07-08.md`](../../expert-seo/brief-2026-07-08.md)
+
+Périmètre audité : `audit-expert-seo` (2 338 l.), `expert-audit` (2 987 l., legacy), `audit-compare` (1 062 l.), `measure-audit-impact` (486 l.), `snapshot-audit-impact` (402 l.), `save-audit` (172 l.), front `ExpertAudit/*` (~40 cards, `ExpertAuditDashboard` 1 671 l.).
+
+## 40. Duplication massive `audit-expert-seo` ↔ `expert-audit` (P0)
+**But visé** : les deux functions partagent `normalizeUrl`, `extractDomain`, `analyzeHtml`/`analyzeHtmlWithDOM`, `checkRobotsTxt`, `checkSitemap`, `tryBrowserless`, `smartFetch`, `checkLlmsTxt` — **~1 500 lignes de code dupliqué**. Toute correction (ex: parser JSON-LD) doit être faite 2× ou drift silencieux. Statuer : `expert-audit` = legacy à retirer, ou fusion en `audit-expert-seo` + wrapper de compat ? Extraire d'abord tous les utilitaires partagés dans `_shared/htmlAnalysis.ts` + `_shared/sitemapRobots.ts`.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 3 | 4 | **10** | **4.6** | 4j |
+
+## 41. `audit-compare` : 3 fetch OpenRouter directs hors gateway (P0, déjà flaggé Vague 1)
+**But visé** : lignes 343, 736, 768 — bypass `aiGatewayCall`. Aucun tracking `ai_gateway_usage` → **coûts audit-compare invisibles**, pas de fallback, pas de kill switch. Réécrire les 3 appels via `aiGatewayFetch` avec `edge_function='audit-compare'`.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 4 | **9** | 6 | **4.4** | 1j |
+
+## 42. Cache `audit_cache` non utilisé par `audit-expert-seo` ni `expert-audit`
+**But visé** : la table `audit_cache` (6 colonnes) existe mais aucune des deux functions n'y lit ni n'y écrit (grep vide). Chaque audit relance PageSpeed + Browserless + DataForSEO + LLM = **5-8¢ à chaque appel**, même sur URL déjà auditée dans les 10 minutes. Brancher cache 30 min sur `normalize(url) + user_plan` → économie estimée x2-x5 sur re-clics.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 6 | 0 | **8** | 5 | **4.4** | 1.5j |
+
+## 43. `ExpertAuditDashboard.tsx` (1 671 l.) monolithique + 17 `console.log`
+**But visé** : le dashboard rend 20+ cards, fetch data, gère loading/error/email gate — tout dans 1 fichier. Split en `<ExpertAuditDataProvider>` (fetch + normalisation) + `<ExpertAuditCards>` (rendu grille) + `<ExpertAuditGating>` (email gate). Retirer les 17 `console.log` (top offender front avec `scriptGenerator.ts`).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 3 | 1 | 0 | 8 | **2.9** | 3j |
+
+## 44. `WorkflowCarousel.tsx` (675 l.) — dette framer-motion + runtime error
+**But visé** : le composant provoque un runtime error récurrent (`Failed to fetch dynamically imported module: framer-motion`) visible dans les logs preview. Auditer les imports dynamiques + `TestimonialsCarousel` (même erreur). Passer en import statique ou lazy safe (`React.lazy` + `Suspense` fallback).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 4 | 0 | 0 | 6 | **2.3** | 0.5j |
+
+## 45. Cards trop grosses (5 fichiers > 500 l.)
+**But visé** : `KeywordPositioningCard` 819, `StrategicInsights` 652, `InlineAuthForm` 579, `HallucinationCorrectionModal` 517, `MaillageIPRCard` 505. Une card = un fait diagnostic + une action — au-delà de 300 l. il y a mélange data/rendu/interaction. Split systématique en hook `useXxxData` + composant présentation.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 1 | 0 | 0 | 7 | **2.3** | 3j |
+
+## Synthèse Vague 2 · expert-seo
+
+| Priorité | Items | Effort | Gain global moyen |
+|---|---|---|---|
+| **P0-expert** | #40 (dedup 2 functions) · #41 (audit-compare LLM gateway) · #42 (audit_cache) | **6.5j** | **4.5 / 10** |
+| **P1-expert** | #43 (split dashboard) · #45 (split 5 cards) | **6j** | **2.6 / 10** |
+| **P2-expert** | #44 (framer-motion lazy fix) | **0.5j** | **2.3 / 10** |
+
+**Verdict global expert-seo** : porte d'entrée conversion critique, **audit produit riche** (20+ cards, GEO+SEO+GMB+hallucinations unifiés = différenciateur réel vs Ahrefs/Semrush), mais **dette technique lourde** : ~1 500 l. dupliquées entre 2 functions, cache inutilisé (coût LLM 2-5× ce qu'il pourrait être), dashboard 1 671 l. monolithique. P0 = 6.5j pour diviser coût LLM par ~3 et retirer la duplication silencieuse.
+
+---
+
+# Vague 2 · Feature 6 — audit-matrice (+ parse-matrix-* + MatricePrompt)
+
+Brief : [`knowledge/audits/matrix/brief-2026-07-08.md`](../../matrix/brief-2026-07-08.md)
+
+Périmètre audité : `audit-matrice` (499 l.), `parse-doc-matrix` (368 l.), `parse-matrix-hybrid` (384 l.), `parse-matrix-geo` (734 l.), `MatricePrompt.tsx` (1 639 l. — **plus gros fichier front du projet**), `Matrice/*` (14 composants).
+
+## 46. Redondance schéma : 5 tables `matrix_*` / `audit_matrix_*` pour 2 modèles data (P0)
+**But visé** : la DB porte simultanément :
+- `audit_matrix_sessions` + `audit_matrix_results` (scoring **par critère**, colonnes `criterion_id`, `parsed_score`, `crawlers_score`, `source_function`)
+- `matrix_audit_sessions` + `matrix_audit_results` (scoring **par prompt**, colonnes `prompt_item_id`, `axe`, `poids`, `csv_weighted_score`, `verdict`)
+- `matrix_audits` (métadonnées site/label/status — 3e forme)
+
+= **5 tables** pour ce qui devrait être 2 (sessions + results) avec discriminant `mode: 'criterion' | 'prompt'`. Impact : requêtes front doivent joindre 2 systèmes, RLS × 5, migrations divergentes. Statuer legacy (probablement `matrix_audits` + `matrix_audit_*` = ancien, `audit_matrix_*` = nouveau) et proposer plan de migration.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 2 | 3 | 0 | **10** | **3.9** | 5j (migration) |
+
+## 47. 3 parsers `parse-matrix-*` très proches — factoriser (P1)
+**But visé** : `parse-doc-matrix` (368 l., DOCX), `parse-matrix-hybrid` (384 l., DOCX+CSV+prompt), `parse-matrix-geo` (734 l., matrice GEO spécialisée). Les 3 partagent : appel LLM structured output, normalisation criteria, insert `audit_matrix_*`. Extraire `_shared/matrixParser.ts` (schema Zod + LLM call + normalize) et laisser chaque function ne porter que sa spécialisation (extraction DOCX vs CSV vs GEO scoring).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 1 | 3 | 8 | **2.9** | 3j |
+
+## 48. `parse-matrix-geo` : dual gateway OpenRouter/Lovable incohérent (P1)
+**But visé** : lignes 286-448 — la function bascule entre `aiGatewayFetch` (l. 214, 345) et `fetch` direct sur `openrouter.ai/api/v1` (l. 286-319) selon `useOpenRouter`. Résultat : **certains appels tracés dans `ai_gateway_usage`, d'autres non**, kill switch admin partiellement respecté. Router **tout** via `aiGatewayFetch` (le gateway supporte déjà OpenRouter en fallback).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 2 | 6 | 5 | **3.0** | 0.75j |
+
+## 49. `MatricePrompt.tsx` 1 639 l. + 31 `: any` (top offender projet) (P1)
+**But visé** : plus gros fichier front, plus mauvais typage projet (31 `any` sur payloads LLM). Split minimum en 4 : `<MatricePromptWizard>` (steps), `<MatricePromptEditor>` (édition prompt + preview), `<MatricePromptRunner>` (exécution + progress) + hook `useMatriceSession`. Typer les payloads LLM avec les Zod schemas déjà utilisés côté edge (`parse-matrix-*`).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 3 | 2 | 0 | **9** | **3.5** | 4j |
+
+## 50. `ImportStepper.tsx` (720 l.) + 11 `console.log`
+**But visé** : le stepper d'import DOCX/CSV mélange upload, preview canvas, détection type, orchestration. Split en 3 étapes composants (`<StepUpload>`, `<StepPreview>`, `<StepConfirm>`) + retrait des `console.log`. Bonus : externaliser la logique `MatriceTypeDetector` (55 l.) et `columnCleaner`/`typeDetector` (déjà dans `utils/matrice/*`) qui sont bien isolés mais peu réutilisés.
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 1 | 1 | 0 | 6 | **2.2** | 2j |
+
+## 51. Table `matrix_errors` remplie mais aucun dashboard admin
+**But visé** : `matrix_errors` (15 colonnes, 3 policies) accumule les erreurs de parsing sans surface admin pour les traiter. Résultat : erreurs récurrentes silencieuses, pas de boucle d'amélioration parsers. Ajouter un onglet AdminDashboard "Erreurs matrice" (top 20 par `error_type` + `count(*)` + exemple payload).
+
+| Perf | Sécu | Coût | Maint | **Global** | Effort |
+|---|---|---|---|---|---|
+| 0 | 0 | 2 | 5 | **1.7** | 1j |
+
+## Synthèse Vague 2 · matrix
+
+| Priorité | Items | Effort | Gain global moyen |
+|---|---|---|---|
+| **P0-matrix** | #46 (dedup 5 tables) | **5j** | **3.9 / 10** |
+| **P1-matrix** | #47 (dedup 3 parsers) · #48 (gateway unifié) · #49 (split MatricePrompt + typage) | **7.75j** | **3.1 / 10** |
+| **P2-matrix** | #50 (split ImportStepper) · #51 (dashboard erreurs) | **3j** | **2.0 / 10** |
+
+**Verdict global matrix** : **différenciateur unique** sur le marché (N×M libre + cube 3D pivotable, vs Content Gap 2D fermé) mais **schéma DB explosé en 5 tables redondantes** (dette lourde à réduire avant d'ajouter des features) et **top offender projet en typage** (31 `any` sur `MatricePrompt`). P0 seul (dedup tables) débloque migrations futures et RLS cohérent.
+
+**Baseline à re-mesurer dans 30j** :
+- Nombre de tables `matrix_*` + `audit_matrix_*` (baseline : **5 tables**)
+- Nombre de parsers `parse-matrix-*` (baseline : **3 functions, 1 486 l. cumulées**)
+- `: any` dans `MatricePrompt.tsx` (baseline : **31**)
+- Appels LLM `parse-matrix-geo` hors gateway (baseline : **1 chemin `useOpenRouter=true`**)
+- Erreurs `matrix_errors` traitées (baseline : dashboard inexistant)
