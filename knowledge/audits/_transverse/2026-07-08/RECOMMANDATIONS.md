@@ -1547,3 +1547,193 @@ Fix : Harmoniser `mapEngineName` avec capacités réelles gateway.
 ## Cumul projet (Vagues 1 → 6)
 - **P0 cumulé** : 24j + 9.5j = **33.5j**
 - **Total dette** : ~70.5j + 40j = **~110.5j-homme** sur 15 features auditées
+
+---
+
+# Vague 7 — CMS push · Refresh pipeline · Analytics ingest · Copilot skills récents
+
+**4 features · 49 findings · ~59j-homme**
+
+## Feature 1 — CMS push multi-plateformes (findings #187-#195)
+
+## #187 · P1 · 2j — SSRF sur `site_url` dans cms-register-api-key
+Valider hostname contre denylist RFC-1918 + vérifier correspondance domaine `tracked_site` prouvé.
+
+## #188 · P1 · 1j — SSRF sur `target_url` dans cms-patch-content (avec redirect: follow)
+Denylist IP privées + `redirect: 'error'` + assertion domaine == tracked_site.
+
+## #189 · P1 · 2j — api_key / oauth_tokens stockés en clair dans cms_connections
+Chiffrer via `pgsodium.crypto_aead_det_encrypt` ou Supabase Vault ; prévoir migration rétro-chiffrement.
+
+## #190 · P1 · 1j — XSS stocké : sortie `marked` sans sanitisation dans dictadevi-actions
+Passer la sortie de `marked` à `DOMPurify` (linkedom) ou `rehype-sanitize` avec allowlist stricte.
+
+## #191 · P1 · 1j — cms_page_content en lecture publique totale (USING true)
+Remplacer par `auth.uid() = user_id` ou ajouter `is_public boolean default false` scopé.
+
+## #192 · P2 · 1j — Absence de rate-limit sur cms-register-api-key
+Sliding window 10 req/min/user via Upstash Redis ou compteur base `(user_id, last_probe_at)`.
+
+## #193 · P2 · 0.5j — Credentials CMS persistés en clair dans localStorage
+Ne stocker qu'un booléen `credsSaved` ; passer à `sessionStorage` si persistance requise.
+
+## #194 · P2 · 1j — `corrective_script` non échappé dans le plugin PHP
+Signer via HMAC-SHA256 côté Crawlers et vérifier signature côté plugin avant `echo` ; afficher hash dans UI.
+
+## #195 · P3 · 1j — Prolifération de `any` dans cmsContentScanner.ts
+Déclarer interfaces `WpPostRaw`, `ShopifyArticleRaw`, `DictadeviPostRaw` + try/catch par plateforme.
+
+---
+
+## Feature 2 — Refresh / Update pipeline (findings #200-#209)
+
+## #200 · P1 · 1j — Coût LLM invisible : 5/6 skills refresh hors aiGatewayFetch
+Wrapper `editorial-pipeline-run` + `trackPaidApiCall` sur SerpAPI dans update-claims-audit.
+
+## #201 · P1 · 1j — Orchestration 100% séquentielle : claims/topic_gaps/mentions parallélisables
+Créer `update-orchestrate` exécutant les 3 skills en `Promise.all` après `extracted`.
+
+## #202 · P1 · 2j — Anti-hallucination gates absents avant cms-patch-content
+Bloquer draft-consolidate si `claims.contradicted > 0` (HTTP 412) + appeler `diagnose-hallucination` avant publish.
+
+## #203 · P2 · 0.5j — update-extract-content : monolithe standalone hors updatePipelineGuards
+Remplacer 60 lignes inline par `import { authAndGate }` + test unitaire d'égalité `PREMIUM_PLANS`.
+
+## #204 · P2 · 1j — update-market-trends : données de marché simulées en production
+Ajouter `data_source: 'simulated'` + bannière UI jusqu'à intégration SimilarWeb/StatCounter.
+
+## #205 · P2 · 0.5j — patch_effectiveness : GRANT admin-only, inaccessible au pipeline
+Ajouter `user_id UUID` + policy INSERT `user_id = auth.uid() OR admin`.
+
+## #206 · P2 · 0.5j — content_monitor_log : policy INSERT absente pour authenticated
+`CREATE POLICY "Users insert own monitor logs" FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid())`.
+
+## #207 · P2 · 1j — cms-patch-content : accumulation timeouts CMS, garde 60s manquante
+AbortController global 55s + persistance `in_progress` dans content_monitor_log pour reprise idempotente.
+
+## #208 · P3 · 0.5j — update-guidance : slug `google/gemini-3-flash-preview` inexistant
+Corriger en `google/gemini-flash-1.5` + fallback `openai/gpt-4o-mini`.
+
+## #209 · P3 · 0.5j — update_artifacts : expires_at non enforced, aucune purge
+`cron.schedule` weekly DELETE + tâche `purge_expired_artifacts` fallback.
+
+---
+
+## Feature 3 — Analytics ingest GA4/GSC/BigQuery (findings #216-#230)
+
+## #216 · P0 · 0.5j — Cron-mode `body.all=true` non restreint au service-role
+Ajouter `if (body.all && !auth.isAdmin) return 403` dans fetch-gsc-daily — sinon n'importe quel user drainne les quotas GSC globaux.
+
+## #217 · P1 · 0.5j — Credentials OAuth divergents dans fetch-gsc-daily
+Unifier sur `GOOGLE_GSC_CLIENT_ID/SECRET` ou déléguer à `ensureFreshToken` de resolveGoogleToken.
+
+## #218 · P1 · 1j — Circuit breaker global (pas par connexion utilisateur)
+Convertir en `Map<connectionId, CircuitState>` ; ne pas décompter 400/401 dans le compteur.
+
+## #219 · P1 · 0.5j — State OAuth sans nonce CSRF — IDOR sur callback
+Nonce cryptographique serveur + table `oauth_states` avec TTL 10min ; valider avant traitement token.
+
+## #220 · P1 · 0.5j — profiles.gsc_refresh_token non révoqué au niveau colonne
+`REVOKE SELECT (gsc_access_token, gsc_refresh_token) ON profiles FROM authenticated, anon` + déprécier legacy path.
+
+## #221 · P1 · 1j — Zéro gestion 429/quota dans fetch-gsc-daily
+Backoff exponentiel + respect `Retry-After` + compteur quota KV partagé + `trackEdgeFunctionError`.
+
+## #222 · P2 · 1j — Coûts BigQuery non tracés dans ai_gateway_usage
+`trackPaidApiCall('gsc-bigquery-query', 'bigquery', kind, bytes_processed)` + colonne `bytes_billed`.
+
+## #223 · P2 · 0.5j — gsc_bigquery_cache lu en service_role — isolation dégradée
+Ajouter `user_id` dans clé lookup ou passer par userClient (RLS enforce ownership).
+
+## #224 · P2 · 0.5j — Disconnect Ads révoque tous les scopes OAuth sans avertissement
+Révoquer `refresh_token` (plus définitif) + modale d'avertissement UI + re-check GSC/GA4.
+
+## #225 · P2 · 1j — First GA4 pull : N fetches fire-and-forget sans throttle
+Sérialiser avec délai 200ms inter-requêtes ; limiter à 5 sites max ; ou déléguer à pg_cron queue.
+
+## #226 · P2 · 1j — autoLinkConnection : appel GSC live à chaque resolve manqué
+Restreindre à one-shot post-OAuth + flag `link_attempted_at` sur tracked_sites (cooldown 24h).
+
+## #227 · P3 · 0.5j — ga4_traffic_sources_cache : user_id absent de la clé unique
+Ajouter `user_id` à UNIQUE constraint et clause `onConflict` de l'upsert.
+
+## #228 · P2 · 0.5j — google_ads_history_log : INSERT policy ouverte aux clients
+Remplacer `TO authenticated` par `TO service_role` ; auditer toutes les tables `*_history_log`.
+
+## #229 · P1 · 2j — refresh_token stocké en clair — pas de chiffrement applicatif
+Chiffrer via `pgsodium` / Supabase Vault ; stocker UUID secret, déchiffrer edge-side seulement.
+
+## #230 · P3 · 0.5j — resolveGoogleToken : SELECT * ramène tous les tokens en mémoire
+Remplacer par colonnes explicites ; après #229, ne sélectionner que UUID Vault.
+
+---
+
+## Feature 4 — Copilot skills récents (findings #231-#245)
+
+## #231 · P1 · 3j — DataForSEO + SerpAPI appelés directement hors gateway
+Router via edge `data-router` avec AbortController + compteur dépense journalière ; migrer credentials vers Vault.
+
+## #232 · P2 · 5j — Absence totale de cache SERP (serpapi_cache non implémenté)
+Créer table `serpapi_cache (query_hash, source, results, expires_at)` + lookup avant appel (TTL 4h SERP, 24h Places).
+
+## #233 · P1 · 2j — Race condition TOCTOU sur quota Pro live_search (20/jour)
+RPC atomique `increment_and_check_quota(user_id, event_type, limit, window)` avant appel API, pas après.
+
+## #234 · P2 · 2j — bumpSessionCounter non-atomique (Free/Premium)
+RPC `increment_session_counter` avec `jsonb_set` atomique ; supprimer read-modify-write TypeScript.
+
+## #235 · P2 · 1j — market_diagnosis_page_targeting_v2 absent du registry comme skill autonome
+Extraire `fetchPageSignals` + `decidePageVerdict` en SkillDefinition dédié + entrée dans skillPolicies.
+
+## #236 · P3 · 1j — Axe H hardcodé à 50, pondération nulle dans tous les profils
+Affecter H à signal réel (schema_org, canonical) OU supprimer axe et documenter matrice 7×8.
+
+## #237 · P2 · 1j — Lookup tracked_site dans market_diagnosis via ilike ambigu
+Remplacer par `.eq('domain', domain)` strict + fallback ilike uniquement si null.
+
+## #238 · P2 · 3j — Numéro téléphone stocké en clair dans sav_conversations (RGPD)
+Chiffrer via `pgp_sym_encrypt` + trigger d'effacement post `phone_callback_expires_at`.
+
+## #239 · P1 · 2j — Race condition TOCTOU identique sur quota Pro market_diagnosis
+Même RPC atomique que #233 avec `event_type = 'copilot_market_diagnosis'` avant les 4 appels DFS.
+
+## #240 · P3 · 1j — Plan 'starter' non géré dans les fonctions quota
+Cas explicite `plan === 'starter'` OU commentaire assertant `starter === free` intentionnel.
+
+## #241 · P2 · 3j — Aucun timeout sur les 4 appels DFS parallèles dans market_diagnosis
+Wrapper `dfsPost` avec Promise.race timeout 8s + Promise.race global 25s + log timeout dans copilot_actions.
+
+## #242 · P3 · 2j — escalate_to_phone sans deduplication inter-sessions
+Check `phone_callback` actif existant avant INSERT + index `(user_id, phone_callback_expires_at)`.
+
+## #243 · P2 · 2j — Workbench insert sans contrainte d'unicité (doublons verdicts)
+UNIQUE `(user_id, domain, target_url, source_function)` + `ON CONFLICT DO UPDATE`.
+
+## #244 · P2 · 1j — Fenêtre quota 24h calculée côté TypeScript (drift horloge)
+Déplacer calcul `now() - interval '24 hours'` dans RPC Postgres du #233/#239.
+
+## #245 · P3 · 1j — Personas : market_diagnosis_page_targeting_v2 absent des skillPolicies
+Après #235, ajouter explicitement dans skillPolicies + documenter défaut fermé.
+
+---
+
+# Résumé Vague 7
+
+- **P0** : 0.5j (#216 — 1 item)
+- **P1** : 22j (#187, #188, #189, #190, #191, #200, #201, #202, #217, #218, #219, #220, #221, #229, #231, #233, #239 — 17 items)
+- **P2** : 27.5j (#192, #193, #194, #203, #204, #205, #206, #207, #222, #223, #224, #225, #226, #228, #232, #234, #235, #237, #238, #241, #243, #244 — 22 items)
+- **P3** : 9j (#195, #208, #209, #227, #230, #236, #240, #242, #245 — 9 items)
+- **Total Vague 7** : **~59j** sur 49 findings (4 features)
+
+## Top 5 urgences Vague 7
+1. **#216 (0.5j)** — Cron-mode `all=true` accessible à tout user authentifié (drain quotas GSC globaux).
+2. **#189 + #229 (4j)** — Tokens (CMS + Google refresh) stockés en clair : blast radius maximum en cas de dump DB.
+3. **#187 + #188 (3j)** — Double SSRF (cms-register-api-key + cms-patch-content) exploitable par user authentifié.
+4. **#233 + #239 (4j)** — TOCTOU quotas Pro live_search + market_diagnosis (dépassement coût mesurable).
+5. **#190 + #191 (2j)** — XSS stocké dictadevi (Markdown non sanitisé) + cms_page_content lecture publique totale (exfiltration corpus).
+
+## Cumul projet (Vagues 1 → 7)
+- **Features auditées** : **20** (16 précédentes + 4 Vague 7)
+- **P0 cumulé** : 33.5j + 0.5j = **34j**
+- **Total dette** : ~110.5j + 59j = **~169.5j-homme** sur 20 features
+
