@@ -217,6 +217,27 @@ function ArticleLayoutComponent({
 
           {/* Content Container */}
           <div className="max-w-3xl mx-auto px-4 sm:px-6 -mt-32 relative z-10">
+            {/* Breadcrumb visible */}
+            <nav aria-label="Fil d'Ariane" className="mb-6 text-sm">
+              <ol className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                <li>
+                  <Link to="/" className="hover:text-foreground transition-colors">
+                    {language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home'}
+                  </Link>
+                </li>
+                <li aria-hidden="true" className="text-muted-foreground/50">/</li>
+                <li>
+                  <Link to="/blog" className="hover:text-foreground transition-colors">
+                    Blog
+                  </Link>
+                </li>
+                <li aria-hidden="true" className="text-muted-foreground/50">/</li>
+                <li aria-current="page" className="text-foreground truncate max-w-[60vw]">
+                  {title}
+                </li>
+              </ol>
+            </nav>
+
             {/* Header */}
             <header className="mb-8">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4">
@@ -230,6 +251,7 @@ function ArticleLayoutComponent({
                 <time dateTime={date}>{formattedDate}</time>
               </div>
             </header>
+
 
             {/* Article Content */}
             <div className="prose prose-lg prose-slate dark:prose-invert max-w-none
