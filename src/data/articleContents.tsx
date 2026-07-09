@@ -1,5 +1,7 @@
+import { Helmet } from 'react-helmet-async';
 import { SummaryBox, RichLink, GeoTable, SgeSummaryBox, AuthorCard, RichLinkCard } from '@/components/Blog';
 import type { GeoTableRow } from '@/components/Blog';
+
 
 // Tableaux de données GEO réutilisables
 const geoVsSeoTableRows: GeoTableRow[] = [
