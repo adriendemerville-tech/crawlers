@@ -3224,7 +3224,23 @@ Allow: /`}</pre>
   'reddit-tromper-bots-ia-seo-geo': {
     fr: (
       <>
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              { '@type': 'Question', name: 'Reddit est-il vraiment le meilleur outil SEO GEO en 2026 ?', acceptedAnswer: { '@type': 'Answer', text: "Pour la visibilité dans les moteurs de réponse IA (ChatGPT, Perplexity, Gemini, Google AI Overviews), oui. Reddit est cité dans 62% des sources sur requêtes commerciales et 78% sur les requêtes 'best X for Y' selon nos mesures Crawlers sur 500 prompts (2026). Pour le SEO classique Google, il reste un canal secondaire — la majorité des liens sont en nofollow ugc." } },
+              { '@type': 'Question', name: 'Faut-il un compte Reddit avec beaucoup de karma pour être efficace ?', acceptedAnswer: { '@type': 'Answer', text: "Oui : minimum 6 mois d'ancienneté et 500 de karma cumulé post+comment. En dessous, AutoModerator filtre vos réponses et les LLMs pondèrent votre commentaire à zéro. L'index Crawlers Reddit-GEO montre qu'un compte <100 karma ne génère aucune citation IA mesurable." } },
+              { '@type': 'Question', name: "Poster un lien vers son site sur Reddit aide-t-il le référencement ?", acceptedAnswer: { '@type': 'Answer', text: "Non — la plupart des liens Reddit sont nofollow ugc, donc pas de jus SEO direct. Pire : un lien brut déclenche AutoModerator, bans modérateurs et downvotes qui plombent la citation IA. La mention textuelle du nom de marque est 4 à 6 fois plus efficace pour être repris par les LLMs." } },
+              { '@type': 'Question', name: 'Combien de mentions Reddit faut-il pour apparaître dans ChatGPT ?', acceptedAnswer: { '@type': 'Answer', text: "Ordre de grandeur observé sur des cas Crawlers en 2026 : 10 à 20 mentions qualitatives sur 3 mois font apparaître la marque en long-tail. 30 à 50 mentions sur 6 mois font entrer la marque dans le top 3 des outils cités par ChatGPT et Perplexity pour la catégorie." } },
+              { '@type': 'Question', name: 'Quels subreddits nourrissent le plus les LLMs pour le marketing ?', acceptedAnswer: { '@type': 'Answer', text: "En 2026 : r/SEO (320k), r/bigseo (90k, très forte qualité éditoriale), r/marketing (1,4M), r/DigitalMarketing (350k) et r/SaaS (250k) pour les outils B2B. r/entrepreneur (4,5M) est bruité et les LLMs le pondèrent à la baisse." } },
+              { '@type': 'Question', name: "L'astroturfing Reddit est-il détectable par Reddit et les IA ?", acceptedAnswer: { '@type': 'Answer', text: "Oui, depuis 2025 Reddit déploie des modèles ML anti-astroturfing qui détectent le fingerprint d'écriture, la coordination temporelle (upvotes groupés < 10 min) et les patterns de recommandation systématique. Les LLMs modernes appliquent en plus un filtre de cohérence : un compte qui recommande toujours le même outil sans nuance est déclassé dans les corpus d'entraînement." } },
+            ],
+          })}</script>
+        </Helmet>
         <AuthorCard name="Adrien de Volontat" position="top" />
+
+
 
         <SgeSummaryBox
           points={[
