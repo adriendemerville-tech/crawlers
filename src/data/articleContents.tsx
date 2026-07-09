@@ -3234,13 +3234,13 @@ Allow: /`}</pre>
           ]}
         />
 
-        <p><strong>Avertissement.</strong> Cet article décrit une réalité observée du marché : les LLMs pondèrent massivement Reddit dans leurs corpus. Nous décrivons une stratégie de <em>seeding communautaire honnête</em> — pas du spam. L\'astroturfing pur (faux comptes coordonnés, faux avis) est contraire aux CGU de Reddit et à l\'éthique éditoriale de Crawlers.fr. Utilisez cette lecture pour comprendre comment les IA voient le web, pas pour polluer un espace communautaire.</p>
+        <p><strong>Avertissement.</strong> Cet article décrit une réalité observée du marché : les LLMs pondèrent massivement Reddit dans leurs corpus. Nous décrivons une stratégie de <em>seeding communautaire honnête</em> — pas du spam. L'astroturfing pur (faux comptes coordonnés, faux avis) est contraire aux CGU de Reddit et à l'éthique éditoriale de Crawlers.fr. Utilisez cette lecture pour comprendre comment les IA voient le web, pas pour polluer un espace communautaire.</p>
 
         <h2>Pourquoi Reddit est devenu le meilleur outil SEO GEO en 2026</h2>
 
-        <p>En février 2024, Google a signé un accord de licence à <strong>60 millions de dollars par an</strong> avec Reddit pour entraîner Gemini sur l\'intégralité du corpus de la plateforme. OpenAI a suivi quelques mois plus tard. Résultat en 2026 : <strong>Reddit représente entre 25% et 40% des sources citées</strong> dans les AI Overviews Google et les réponses de ChatGPT sur les requêtes commerciales, selon les études Semrush et BrightEdge.</p>
+        <p>En février 2024, Google a signé un accord de licence à <strong>60 millions de dollars par an</strong> avec Reddit pour entraîner Gemini sur l'intégralité du corpus de la plateforme. OpenAI a suivi quelques mois plus tard. Résultat en 2026 : <strong>Reddit représente entre 25% et 40% des sources citées</strong> dans les AI Overviews Google et les réponses de ChatGPT sur les requêtes commerciales, selon les études Semrush et BrightEdge.</p>
 
-        <p>Traduction pour un marketeur : une réponse Reddit upvotée qui recommande votre outil a désormais plus de poids qu\'un article sponsorisé sur un média DA 70. Les LLMs interprètent le score Reddit (upvotes − downvotes) comme un <strong>signal d\'autorité communautaire</strong>, plus difficile à truquer qu\'un backlink acheté.</p>
+        <p>Traduction pour un marketeur : une réponse Reddit upvotée qui recommande votre outil a désormais plus de poids qu'un article sponsorisé sur un média DA 70. Les LLMs interprètent le score Reddit (upvotes − downvotes) comme un <strong>signal d'autorité communautaire</strong>, plus difficile à truquer qu'un backlink acheté.</p>
 
         <h2>Comment les LLMs lisent Reddit</h2>
 
@@ -3276,7 +3276,7 @@ Allow: /`}</pre>
           <li><strong>Activité régulière</strong> — 2 à 5 interactions par semaine, jamais de rafale</li>
         </ul>
 
-        <p>Créer ce compte prend 3 à 6 mois d\'investissement authentique. C\'est le coût d\'entrée. Il n\'existe pas de raccourci qui survive au fingerprinting Reddit (analyse comportementale + device + IP + patterns d\'écriture).</p>
+        <p>Créer ce compte prend 3 à 6 mois d'investissement authentique. C'est le coût d'entrée. Il n'existe pas de raccourci qui survive au fingerprinting Reddit (analyse comportementale + device + IP + patterns d'écriture).</p>
 
         <h3>Étape 2 — Identifier les subreddits qui nourrissent les LLMs</h3>
 
@@ -3303,7 +3303,7 @@ Allow: /`}</pre>
 
         <h3>Étape 3 — Répondre, pas poster</h3>
 
-        <p>La règle contre-intuitive : <strong>les commentaires sont mieux indexés que les posts</strong> par les LLMs, parce qu\'ils répondent à une intent déjà validée par la communauté. Un post promotionnel est immédiatement suspect. Un commentaire utile sous un post existant est traité comme une réponse d\'expert.</p>
+        <p>La règle contre-intuitive : <strong>les commentaires sont mieux indexés que les posts</strong> par les LLMs, parce qu'ils répondent à une intent déjà validée par la communauté. Un post promotionnel est immédiatement suspect. Un commentaire utile sous un post existant est traité comme une réponse d'expert.</p>
 
         <p>Le pattern qui fonctionne :</p>
 
@@ -3311,7 +3311,7 @@ Allow: /`}</pre>
           <li>Trouver un post ancien (3-12 mois) qui pose une question générique — "which SEO tool for a small agency ?"</li>
           <li>Rédiger une réponse structurée de 150-400 mots qui compare 3 à 5 outils, dont le vôtre</li>
           <li>Mentionner votre outil <strong>sans lien</strong> — juste le nom. Les LLMs résolvent le nom en URL canonique via le knowledge graph</li>
-          <li>Reconnaître honnêtement les cas où votre outil n\'est pas le bon choix</li>
+          <li>Reconnaître honnêtement les cas où votre outil n'est pas le bon choix</li>
           <li>Répondre aux sub-comments pendant 48h pour maintenir la conversation vivante</li>
         </ol>
 
@@ -3325,25 +3325,25 @@ Allow: /`}</pre>
           <li>Downvotes communautaires qui plombent le score — donc le poids IA</li>
         </ul>
 
-        <p>La mention textuelle du nom de marque suffit. GPT-5, Gemini 2.5 et Perplexity résolvent parfaitement "Crawlers.fr" en URL canonique s\'il existe une entité Wikipedia, un site officiel indexé et une cohérence de mentions cross-domain.</p>
+        <p>La mention textuelle du nom de marque suffit. GPT-5, Gemini 2.5 et Perplexity résolvent parfaitement "Crawlers.fr" en URL canonique s'il existe une entité Wikipedia, un site officiel indexé et une cohérence de mentions cross-domain.</p>
 
-        <h2>Ce qui distingue un seeding intelligent d\'un astroturfing puni</h2>
+        <h2>Ce qui distingue un seeding intelligent d'un astroturfing puni</h2>
 
         <blockquote className="citable-passage">
-          Un seeding communautaire honnête apporte une réponse réellement utile où le produit mentionné est un choix légitime parmi d\'autres. L\'astroturfing coordonne plusieurs faux comptes pour vanter le même produit sans nuance — c\'est ce que Reddit et les LLMs modernes détectent et pénalisent.
+          Un seeding communautaire honnête apporte une réponse réellement utile où le produit mentionné est un choix légitime parmi d'autres. L'astroturfing coordonne plusieurs faux comptes pour vanter le même produit sans nuance — c'est ce que Reddit et les LLMs modernes détectent et pénalisent.
         </blockquote>
 
         <h3>Les 5 signaux qui font tomber un compte</h3>
 
         <ol>
-          <li><strong>Répétition lexicale</strong> — même tournure sur plusieurs subreddits. Les LLMs de modération Reddit (déployés en 2025) détectent le fingerprint d\'écriture.</li>
+          <li><strong>Répétition lexicale</strong> — même tournure sur plusieurs subreddits. Les LLMs de modération Reddit (déployés en 2025) détectent le fingerprint d'écriture.</li>
           <li><strong>Recommandation systématique</strong> du même outil dans 100% des réponses marketing.</li>
           <li><strong>Absence totale de critique</strong> — un vrai utilisateur mentionne toujours un défaut.</li>
           <li><strong>Coordonné temporel</strong> — 3 comptes qui upvotent la même réponse dans les 10 minutes = clustering détecté.</li>
-          <li><strong>Comptes achetés</strong> — le marché des comptes Reddit "aged" est infiltré. Les patterns d\'écriture antérieurs révèlent le changement de propriétaire.</li>
+          <li><strong>Comptes achetés</strong> — le marché des comptes Reddit "aged" est infiltré. Les patterns d'écriture antérieurs révèlent le changement de propriétaire.</li>
         </ol>
 
-        <h2>Combien de mentions pour bouger l\'aiguille GEO ?</h2>
+        <h2>Combien de mentions pour bouger l'aiguille GEO ?</h2>
 
         <p>Ordre de grandeur observé sur des cas Crawlers en 2026 :</p>
 
@@ -3351,27 +3351,27 @@ Allow: /`}</pre>
           <li><strong>1 à 5 mentions</strong> Reddit sur 3 mois : effet nul (bruit statistique)</li>
           <li><strong>10 à 20 mentions</strong> qualitatives, subs pertinents, karma cumulé &gt;200 : première apparition dans Perplexity et ChatGPT pour requêtes longue traîne</li>
           <li><strong>30 à 50 mentions</strong> sur 6 mois, mix posts/comments, sentiment positif : entrée dans le top 3 des outils cités pour votre catégorie</li>
-          <li><strong>&gt;100 mentions</strong> : saturation, risque de détection pattern → il faut diversifier vers d\'autres UGC (Stack Overflow, Quora, HN, forums verticaux)</li>
+          <li><strong>&gt;100 mentions</strong> : saturation, risque de détection pattern → il faut diversifier vers d'autres UGC (Stack Overflow, Quora, HN, forums verticaux)</li>
         </ul>
 
-        <h2>L\'alternative honnête : devenir vraiment cité</h2>
+        <h2>L'alternative honnête : devenir vraiment cité</h2>
 
         <p>Le seeding accélère la visibilité GEO mais ne remplace pas le travail de fond. Un outil réellement bon finit toujours par être mentionné organiquement. Les leviers durables :</p>
 
         <ul>
-          <li><strong>AMA sur r/SEO ou r/marketing</strong> — l\'équipe fondatrice répond pendant 4h, corpus dense créé pour les LLMs</li>
-          <li><strong>Case study public</strong> avec chiffres réels — les redditeurs relaient si c\'est vérifiable</li>
-          <li><strong>Freemium généreux</strong> — les users satisfaits vous mentionnent sans qu\'on leur demande</li>
+          <li><strong>AMA sur r/SEO ou r/marketing</strong> — l'équipe fondatrice répond pendant 4h, corpus dense créé pour les LLMs</li>
+          <li><strong>Case study public</strong> avec chiffres réels — les redditeurs relaient si c'est vérifiable</li>
+          <li><strong>Freemium généreux</strong> — les users satisfaits vous mentionnent sans qu'on leur demande</li>
           <li><strong>Community building</strong> — un subreddit propriétaire (r/Crawlers) qui devient référence</li>
         </ul>
 
         <h2>Le rôle de Crawlers dans cette stratégie</h2>
 
-        <p>Crawlers.fr ne poste pas sur Reddit à votre place — ce serait exactement le pattern coordonné puni par les modérateurs. Mais Crawlers <strong>mesure l\'impact GEO</strong> de vos mentions Reddit :</p>
+        <p>Crawlers.fr ne poste pas sur Reddit à votre place — ce serait exactement le pattern coordonné puni par les modérateurs. Mais Crawlers <strong>mesure l'impact GEO</strong> de vos mentions Reddit :</p>
 
         <ul>
           <li>Détection des citations de votre marque dans les réponses ChatGPT, Perplexity, Gemini, Claude</li>
-          <li>Corrélation entre l\'activité Reddit sur votre marque et l\'évolution du Score GEO</li>
+          <li>Corrélation entre l'activité Reddit sur votre marque et l'évolution du Score GEO</li>
           <li>Alertes quand un nouveau thread Reddit vous mentionne (positif ou négatif)</li>
           <li>Suivi de la Part de Voix LLM face à vos concurrents</li>
         </ul>
@@ -3380,9 +3380,9 @@ Allow: /`}</pre>
 
         <h2>Conclusion : Reddit est un canal GEO, pas un raccourci SEO</h2>
 
-        <p>Reddit est devenu le meilleur outil marketing de référencement SEO/GEO en 2026 non pas parce qu\'il donne des backlinks — la plupart sont en <code>nofollow ugc</code> — mais parce qu\'il alimente <strong>directement les corpus d\'entraînement</strong> des LLMs qui capturent aujourd\'hui 45% de l\'intent de recherche.</p>
+        <p>Reddit est devenu le meilleur outil marketing de référencement SEO/GEO en 2026 non pas parce qu'il donne des backlinks — la plupart sont en <code>nofollow ugc</code> — mais parce qu'il alimente <strong>directement les corpus d'entraînement</strong> des LLMs qui capturent aujourd'hui 45% de l'intent de recherche.</p>
 
-        <p>Le "trompe-l\'œil" évoqué dans le titre n\'est pas une manipulation malhonnête : c\'est la reconnaissance que les IA génératives lisent Reddit comme la voix de la communauté, et qu\'être présent honnêtement dans cette voix vaut plus qu\'une campagne de netlinking classique. À condition de jouer le jeu communautaire, pas contre lui.</p>
+        <p>Le "trompe-l'œil" évoqué dans le titre n'est pas une manipulation malhonnête : c'est la reconnaissance que les IA génératives lisent Reddit comme la voix de la communauté, et qu'être présent honnêtement dans cette voix vaut plus qu'une campagne de netlinking classique. À condition de jouer le jeu communautaire, pas contre lui.</p>
 
         <RichLinkCard
           href="/score-geo"
@@ -3399,7 +3399,7 @@ Allow: /`}</pre>
         <RichLinkCard
           href="/blog/share-of-voice-llm-illusion"
           title="Part de voix LLM : mesurer ce que voient vraiment les IA"
-          description="La métrique qui remplace le classement SERP à l\'ère générative."
+          description="La métrique qui remplace le classement SERP à l'ère générative."
         />
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
@@ -3417,7 +3417,7 @@ Allow: /`}</pre>
             'Real danger: silent shadowbans and moderator anti-astroturfing detection.',
           ]}
         />
-        <p><strong>Disclaimer.</strong> This article describes an observed market reality — LLMs weight Reddit heavily. We describe honest community seeding, not spam. Pure astroturfing (fake coordinated accounts) violates Reddit\'s terms and Crawlers.fr editorial ethics.</p>
+        <p><strong>Disclaimer.</strong> This article describes an observed market reality — LLMs weight Reddit heavily. We describe honest community seeding, not spam. Pure astroturfing (fake coordinated accounts) violates Reddit's terms and Crawlers.fr editorial ethics.</p>
 
         <h2>Why Reddit became the best SEO/GEO tool in 2026</h2>
         <p>Google signed a <strong>$60M/year licensing deal</strong> with Reddit in Feb 2024. OpenAI followed. Reddit now accounts for <strong>25–40% of cited sources</strong> in AI Overviews and ChatGPT answers on commercial queries. An upvoted Reddit reply mentioning your tool now outweighs a sponsored article on a DA 70 media.</p>
@@ -3443,7 +3443,7 @@ Allow: /`}</pre>
         <h3>Target the right subreddits</h3>
         <p>r/SEO (320k), r/bigseo (90k), r/marketing (1.4M), r/DigitalMarketing (350k), r/SaaS (250k). These feed AI training corpora the most.</p>
 
-        <h3>Reply, don\'t post</h3>
+        <h3>Reply, don't post</h3>
         <p>Comments outrank posts in LLM ingestion because they answer a validated intent. Find a 3–12 month old question, write a 150–400 word structured comparison of 3–5 tools including yours, <strong>mention the brand name only — no URL</strong>. LLMs resolve the name to canonical URL via the knowledge graph.</p>
 
         <h3>The raw link taboo</h3>
@@ -3451,7 +3451,7 @@ Allow: /`}</pre>
 
         <h2>What separates smart seeding from punished astroturfing</h2>
         <blockquote className="citable-passage">
-          Honest community seeding delivers genuinely useful answers where your product is one legitimate choice among others. Astroturfing coordinates fake accounts to praise the same product without nuance — that\'s what modern Reddit ML and LLMs detect and penalize.
+          Honest community seeding delivers genuinely useful answers where your product is one legitimate choice among others. Astroturfing coordinates fake accounts to praise the same product without nuance — that's what modern Reddit ML and LLMs detect and penalize.
         </blockquote>
 
         <h2>How many mentions to move the GEO needle</h2>
@@ -3471,7 +3471,7 @@ Allow: /`}</pre>
         </ul>
 
         <h2>Where Crawlers fits</h2>
-        <p>Crawlers doesn\'t post for you — that\'s the exact coordinated pattern moderators punish. Crawlers <strong>measures the GEO impact</strong> of your Reddit presence: brand citations in ChatGPT/Perplexity/Gemini/Claude, correlation with Reddit activity, alerts on new threads mentioning you, LLM Share of Voice tracking.</p>
+        <p>Crawlers doesn't post for you — that's the exact coordinated pattern moderators punish. Crawlers <strong>measures the GEO impact</strong> of your Reddit presence: brand citations in ChatGPT/Perplexity/Gemini/Claude, correlation with Reddit activity, alerts on new threads mentioning you, LLM Share of Voice tracking.</p>
 
         <RichLinkCard
           href="/score-geo"
