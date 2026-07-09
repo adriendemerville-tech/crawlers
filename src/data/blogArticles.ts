@@ -844,7 +844,59 @@ export const blogArticles: BlogArticle[] = [
       { title: 'Crawlers.fr — Indice d\'Alignement Stratégique', url: 'https://crawlers.fr/indice-alignement-strategique' },
     ],
   },
+  // --- ARTICLE REDDIT & BOTS IA ---
+  {
+    slug: 'reddit-tromper-bots-ia-seo-geo',
+    type: 'pillar',
+    title: {
+      fr: 'Meilleur outil marketing référencement SEO GEO : Reddit pour tromper les bots des IA',
+      en: 'Best SEO GEO marketing tool: Reddit to trick the AI bots',
+      es: 'Mejor herramienta marketing SEO GEO: Reddit para engañar a los bots de las IA',
+    },
+    description: {
+      fr: 'Reddit est devenu la source n°1 citée par ChatGPT, Perplexity et Google AI Overviews. Méthode complète pour manipuler intelligemment les bots des IA via Reddit — sans se faire bannir.',
+      en: 'Reddit is now the #1 source cited by ChatGPT, Perplexity and Google AI Overviews. Complete method to intelligently game AI bots via Reddit — without getting banned.',
+      es: 'Reddit se ha convertido en la fuente n°1 citada por ChatGPT, Perplexity y Google AI Overviews. Método completo para manipular inteligentemente los bots de las IA vía Reddit — sin ser baneado.',
+    },
+    heroImage: redditBotsIaHero,
+    heroAlt: {
+      fr: 'Illustration de Reddit manipulant les bots des IA génératives comme ChatGPT et Perplexity',
+      en: 'Illustration of Reddit manipulating generative AI bots like ChatGPT and Perplexity',
+      es: 'Ilustración de Reddit manipulando los bots de IA generativas como ChatGPT y Perplexity',
+    },
+    author: 'Adrien de Volontat',
+    date: new Date().toISOString().split('T')[0],
+    summaryPoints: {
+      fr: [
+        'Reddit représente jusqu\'à 40% des citations dans les réponses de ChatGPT et Google AI Overviews depuis l\'accord Google-Reddit de 60M$/an.',
+        'Les LLMs traitent une réponse Reddit upvotée comme un signal d\'autorité communautaire — plus fort qu\'un backlink classique.',
+        'La méthode : semer des recommandations naturelles, jamais des liens bruts, avec un compte à karma authentique >500.',
+        'Les 6 subreddits marketing/SEO qui alimentent le plus les corpus d\'entraînement IA en 2026.',
+        'Le vrai risque : le shadowban Reddit et le fingerprinting anti-astroturfing des modérateurs.',
+      ],
+      en: [
+        'Reddit accounts for up to 40% of citations in ChatGPT and Google AI Overviews since the $60M/year Google-Reddit deal.',
+        'LLMs treat an upvoted Reddit reply as a community authority signal — stronger than a classic backlink.',
+        'Method: seed natural recommendations, never raw links, with an authentic >500 karma account.',
+        'The 6 marketing/SEO subreddits feeding AI training corpora the most in 2026.',
+        'Real risk: Reddit shadowban and moderator anti-astroturfing fingerprinting.',
+      ],
+      es: [
+        'Reddit representa hasta el 40% de las citaciones en ChatGPT y Google AI Overviews desde el acuerdo Google-Reddit de 60M$/año.',
+        'Los LLMs tratan una respuesta Reddit con upvotes como señal de autoridad comunitaria — más fuerte que un backlink clásico.',
+        'El método: sembrar recomendaciones naturales, nunca enlaces brutos, con una cuenta de karma auténtico >500.',
+        'Los 6 subreddits marketing/SEO que más alimentan los corpus de entrenamiento IA en 2026.',
+        'Riesgo real: shadowban de Reddit y fingerprinting anti-astroturfing de los moderadores.',
+      ],
+    },
+    sources: [
+      { title: 'Google-Reddit content licensing deal', url: 'https://www.reuters.com/technology/reddit-ai-content-licensing-deal-with-google-sources-say-2024-02-22/' },
+      { title: 'Semrush — AI Overviews citation study', url: 'https://www.semrush.com/blog/' },
+      { title: 'Reddit Content Policy', url: 'https://www.redditinc.com/policies/content-policy' },
+    ],
+  },
 ];
+
 
 // Fonction helper pour récupérer un article par son slug
 export function getArticleBySlug(slug: string): BlogArticle | undefined {
