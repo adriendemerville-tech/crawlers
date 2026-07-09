@@ -1737,3 +1737,245 @@ Après #235, ajouter explicitement dans skillPolicies + documenter défaut ferm�
 - **P0 cumulé** : 33.5j + 0.5j = **34j**
 - **Total dette** : ~110.5j + 59j = **~169.5j-homme** sur 20 features
 
+
+---
+
+# Vague 8 — Firehose · Social Hub · GMB Dashboard · Machine Layer · Drop Detector
+
+**5 features · 65 findings · ~63j-homme**
+
+## Feature 1 — Firehose SSE ingest (findings #246-#255)
+
+## #246 · P0 · 1j — tap_token_encrypted stocké en clair (nom trompeur, aucun chiffrement)
+Chiffrer via `pgcrypto.pgp_sym_encrypt` avec secret `TOKEN_ENCRYPTION_KEY` ; déchiffrer dans `getTapToken()`.
+
+## #247 · P1 · 2j — Absence de déduplication événements (kafka_offset)
+Contrainte UNIQUE `(tap_id, kafka_offset)` + `upsert ignoreDuplicates: true`.
+
+## #248 · P1 · 1j — Absence de TTL/purge sur firehose_events
+Ajouter `expires_at` DEFAULT 30j + `pg_cron` daily DELETE.
+
+## #249 · P1 · 0.5j — INSERT policies incohérentes (firehose_events / firehose_taps)
+Bloquer INSERT direct sur firehose_events (`WITH CHECK false`) ; supprimer policy INSERT sur firehose_taps.
+
+## #250 · P2 · 1j — N+1 INSERTs séquentiels dans listRules()
+Remplacer boucle par `upsert(newRules)` + trigger AFTER INSERT pour rules_count.
+
+## #251 · P2 · 1j — Aucun rate-limit sur poll_stream
+Check `last_used_at` : rejeter 429 avec `Retry-After: 10` si < 10s.
+
+## #252 · P2 · 0.5j — diff_chunks JSONB non borné (risque payload MB)
+Tronquer à 20 chunks + contrainte SQL `octet_length < 102400`.
+
+## #253 · P2 · 0.5j — Index composite (tap_id, matched_at DESC) manquant
+`CREATE INDEX idx_firehose_events_tap_matched ON firehose_events(tap_id, matched_at DESC)`.
+
+## #254 · P3 · 1j — Cast `any` systématique sans validation payload upstream
+Interfaces TypeScript strictes + garde NaN sur parseInt kafka_offset.
+
+## #255 · P3 · 0.5j — console.error expose messages DB bruts au client
+Wrapper `safeLog` qui masque patterns SQL sensibles + réponse générique 500.
+
+---
+
+## Feature 2 — Social Hub (findings #256-#270)
+
+## #256 · P1 · 1j — Canva OAuth state CSRF non vérifié (base64 forgeable)
+Utiliser `social_oauth_states` avec validation `state = $1 AND user_id = $2` avant échange code.
+
+## #257 · P1 · 0.5j — TOCTOU DELETE avant vérification expiry sur social_oauth_states
+Remplacer par `DELETE ... WHERE expires_at > now() RETURNING *` atomique.
+
+## #258 · P1 · 1j — access_token/refresh_token en clair (social_accounts, canva_connections)
+Chiffrer via `pgp_sym_encrypt` ou Supabase Vault ; déchiffrer dans edges seulement.
+
+## #259 · P2 · 0.5j — Vues social_accounts_public / canva_connections_public inexistantes
+Créer les vues excluant tokens, `security_invoker = true`.
+
+## #260 · P1 · 1j — Race condition double publication (SELECT + UPDATE non atomiques)
+`UPDATE ... SET status='publishing' WHERE status IN ('scheduled','draft') RETURNING *` + index partiel.
+
+## #261 · P2 · 0.5j — Aucun rate-limit sur publish-to-social (spam)
+Appeler `check_rate_limit` RPC (10 pub/60min) + retour 429.
+
+## #262 · P1 · 0.5j — SSRF sur image_url (Instagram/Facebook lisent l'URL côté serveur)
+Importer `assertSafeUrl` de `_shared/ssrf.ts` avant appels publishTo*.
+
+## #263 · P2 · 0.5j — Incrément quota social_posts_this_month non atomique
+`UPDATE profiles SET social_posts_this_month = social_posts_this_month + 1` (SQL atomique).
+
+## #264 · P2 · 1j — Absence de sanitisation captions avant publication
+`sanitizeCaption()` : strip \x00-\x1F + longueur max par plateforme + regex mentions.
+
+## #265 · P2 · 1j — Quotas API LinkedIn/Meta non trackés
+Table `social_api_quotas(platform, date, count)` incrémentée + check pré-publication.
+
+## #266 · P1 · 0.5j — code_verifier PKCE stocké dans le champ refresh_token
+Dédier colonne `pkce_verifier` dans social_oauth_states avec TTL 10min.
+
+## #267 · P2 · 0.5j — social_oauth_states : pas de cron cleanup
+`cron.schedule('cleanup-oauth-states', '0 * * * *', ...)` + policy explicite anon/authenticated.
+
+## #268 · P2 · 0.5j — Meta long-lived token : fallback silencieux short-lived (1-2h)
+Logger échec + metadata token_type + status 'degraded' avec alerte front.
+
+## #269 · P2 · 1j — Refresh token Canva non atomique (double-refresh race)
+`UPDATE ... SET status='refreshing' RETURNING *` avant appel Canva ; relire si concurrent.
+
+## #270 · P3 · 0.5j — safeServiceCall absent dans publish-to-social (chaîne ownership incomplète)
+Vérification explicite `tracked_site_id → user_id` avant publication.
+
+---
+
+## Feature 3 — GMB Dashboard (findings #271-#285)
+
+## #271 · P1 · 3j — RLS sans dimension tenant : isolation client-à-client absente Pro Agency
+Ajouter `agency_user_id UUID` + refonte policies `USING (user_id = auth.uid() OR agency_user_id = auth.uid())`.
+
+## #272 · P1 · 1j — founderGmb.ts : query gmb_locations cross-tenant sans filtre user_id
+Passer `userId` en paramètre + `.eq('user_id', userId)` avant le `.or()`.
+
+## #273 · P2 · 1j — gmb_power_snapshots : policy INSERT `TO authenticated` alors que service_role écrit
+Passer en `TO service_role` ; policy INSERT authenticated avec check tracked_site ownership.
+
+## #274 · P2 · 0.5j — gmb_local_competitors : pas de policy INSERT authenticated
+Ajouter policy INSERT `WITH CHECK (user_id = auth.uid() AND gmb_location_id owned)`.
+
+## #275 · P2 · 1j — Refresh token GBP partagé avec credentials GSC : couplage sans alerting
+Dédier `GOOGLE_GBP_CLIENT_ID/SECRET` + `last_refresh_error` + email si 2 échecs.
+
+## #276 · P2 · 1j — gbpFetch() : aucun retry sur 429, quota GBP épuisable en quelques syncs
+Wrapper retry 3× sur 429 avec `Retry-After` + log `api:gbp:quota_exceeded`.
+
+## #277 · P2 · 0.5j — gmb-places-autocomplete : aucune authentification, coût Places API exposé
+`getAuthenticatedUser(req)` obligatoire + rate-limit par user_id sur 1h.
+
+## #278 · P3 · 1j — gmb_tracked_keywords : absence FK vers gmb_locations (orphelins)
+Ajouter `gmb_location_id UUID REFERENCES gmb_locations(id) ON DELETE SET NULL` + job cleanup.
+
+## #279 · P2 · 2j — gbp-auth action=login : user_id accepté du body sans validation JWT
+Exiger JWT valide ou `state` HMAC signé pour action=login ; rejeter sans Authorization.
+
+## #280 · P3 · 1j — console.log() production avec accountId/locationId/tokens (RGPD)
+Logs structurés niveau debug désactivé en prod ; extraits 4 derniers caractères seulement.
+
+## #281 · P3 · 1j — gbp-auth/status : pas de cache, N+1 appels Google à chaque poll
+Ajouter `locations_discovered_at` + relance discovery seulement si > 1h.
+
+## #282 · P2 · 1j — Coûts DataForSEO trackés après appel + SerpAPI non tracé (circuit-breaker absent)
+Déplacer `trackPaidApiCall` avant appel (intent) + check budget via RPC + tracer SerpAPI.
+
+## #283 · P3 · 2j — `any` TypeScript massif dans gmb-actions (15+ occurrences)
+Types stricts `Account`, `Location`, `TimeSeries`, `Review` dans `types/gbp-api.ts`.
+
+## #284 · P3 · 0.5j — list-locations : boucle do/while sans limite (timeout/OOM)
+Compteur MAX_PAGES=20 + pagination lazy `has_more` côté client.
+
+## #285 · P3 · 0.5j — GRANT explicites absents sur gmb_reviews/posts/performance
+`GRANT SELECT, INSERT, UPDATE, DELETE ON public.gmb_* TO authenticated` + service_role.
+
+---
+
+## Feature 4 — Machine Layer (findings #286-#295)
+
+## #286 · P2 · 1j — SSRF : DNS rebinding non couvert par assertSafeUrl, redirects sans re-check
+`Deno.resolveDns` avant fetch + `redirect: 'error'` avec re-check manuel par hop.
+
+## #287 · P2 · 0.5j — Timeout cascade SPA : 165s cumulables sans cap global
+`AbortSignal.timeout(45_000)` partagé entre Spider + Browserless + Fly + LLM.
+
+## #288 · P2 · 1j — Coût LLM : tokens non plafonnés, pas de budget guard par scan
+`max_tokens: 2048` + limiter `issues.slice(0, 10)` pour prompt LLM.
+
+## #289 · P1 · 2j — Gating plan absent : scan LLM gratuit, quota illimité
+Check plan Stripe (ou compteur anonyme KV) avant LLM ; anonymes = fallback déterministe seulement.
+
+## #290 · P2 · 0.5j — RLS SELECT : scans anonymes lisibles par tout user authentifié
+Retirer clause `user_id IS NULL` ou restreindre à `auth.role() = 'anon'` uniquement.
+
+## #291 · P1 · 1j — XSS potentiel : ready_to_paste LLM non sanitisé stocké et renvoyé
+Sanitizer (DOMPurify-compatible Deno) côté edge + `textContent` seulement côté front.
+
+## #292 · P3 · 1j — Absence cache et dedup scans récents (relance LLM à chaque hit)
+Check scan `created_at > now() - 1h` en début de handler + `Cache-Control: private, max-age=3600`.
+
+## #293 · P2 · 0.5j — Doublons : absence contrainte UNIQUE (user_id, url)
+`CREATE UNIQUE INDEX ON machine_layer_scans (user_id, url) WHERE user_id IS NOT NULL` + `ON CONFLICT DO UPDATE`.
+
+## #294 · P1 · 1j — Turnstile fail-open + bypass littéral 'TURNSTILE_UNAVAILABLE'
+Supprimer bypass ou secret env dédié ; fail-closed 503 si Cloudflare KO.
+
+## #295 · P3 · 0.5j — noindex sur landing marketing + CTAs outline + any cast
+`index,follow` sur landing + CTA primaire violet + typage strict Insert.
+
+---
+
+## Feature 5 — Drop Detector (findings #296-#310)
+
+## #296 · P1 · 3j — Absence de cron pg_cron câblé (le détecteur ne tourne pas en production)
+`SELECT cron.schedule('drop-detector-daily', '0 6 * * *', ...)` référençant run_frequency.
+
+## #297 · P1 · 2j — Aucun gating plan : tous les sites GSC scannés (Free = Premium)
+Join `profiles.plan_tier`, limiter aux plans >= 'pro' + débiter cost_credits via RPC.
+
+## #298 · P2 · 1j — Dedup anomaly_alerts : delete+insert non-atomique (race condition)
+Upsert sur UNIQUE `(tracked_site_id, metric_name, metric_source)`.
+
+## #299 · P2 · 2j — Aucune politique de rétention sur tables de logs (croissance illimitée)
+`cleanup_drop_logs()` : logs > 90j, alertes dismissed > 60j, diagnostics FIFO 52/site.
+
+## #300 · P2 · 1j — Seuil predictDrop 10% hardcodé, ignore drop_threshold configuré
+Passer `dropThreshold` en paramètre : `dropTarget = currentAvg * (1 - dropThreshold/100)`.
+
+## #301 · P2 · 1j — Table predictions décorrelée du drop-detector (périmètre fantôme)
+FK `drop_diagnostic_id` sur predictions OU documenter drop_probability comme SSOT.
+
+## #302 · P2 · 1j — Aucune corrélation avec content_monitor_log
+Requêter content_monitor_log dans crossAnalyze + axe `content_change` dans verdict_details.
+
+## #303 · P2 · 2j — crossAnalyze 100% heuristique, aucun LLM ni gateway
+Câbler diagnostic LLM via gateway derrière flag `config.llm_diagnose_enabled`.
+
+## #304 · P2 · 1j — detect-anomalies : mode all=true accessible à tout user authentifié
+`if (body.all && !isAdmin) return 403` via `has_role(auth.uid(), 'admin')`.
+
+## #305 · P3 · 1j — Absence safeServiceCall sur appels Supabase par site
+Wrapper `assertData(result, 'context')` qui lève si error non-null + log explicite.
+
+## #306 · P3 · 1j — Slow-drop non détecté : glissement cumulatif < seuil hebdo invisible
+Métrique `slopeSignificance` : pente négative 8sem + R² > 0.7 → `gradual_decline`.
+
+## #307 · P3 · 0.5j — Variance collapse : stddev=0 supprime tous signaux
+Si `stddev === 0 && current !== mean` retourner `z: ±3` pour rupture stationnarité.
+
+## #308 · P3 · 0.5j — drop_diagnostics : policies UPDATE/DELETE utilisateur absentes
+`CREATE POLICY "Users can update own drop diagnostics" FOR UPDATE TO authenticated`.
+
+## #309 · P3 · 1j — Dedup email : granularité domain+jour insuffisante, incohérence guard
+Aligner guard sur `(recipient_email, template_name, domain)` : 1 email/domaine/jour.
+
+## #310 · P3 · 0.5j — drop_detector_logs : aucun index temporel, croissance sans borne
+`CREATE INDEX idx_drop_detector_logs_created ON drop_detector_logs(created_at DESC)`.
+
+---
+
+# Résumé Vague 8
+
+- **P0** : 1j (#246 — 1 item)
+- **P1** : 22j (#247, #248, #249, #256, #257, #258, #260, #262, #266, #271, #272, #289, #291, #294, #296, #297 — 16 items)
+- **P2** : 26.5j (#250, #251, #252, #253, #259, #261, #263, #264, #265, #267, #268, #269, #273, #274, #275, #276, #277, #279, #282, #286, #287, #288, #290, #293, #298, #299, #300, #301, #302, #303, #304 — 31 items)
+- **P3** : 13.5j (#254, #255, #270, #278, #280, #281, #283, #284, #285, #292, #295, #305, #306, #307, #308, #309, #310 — 17 items)
+- **Total Vague 8** : **~63j** sur 65 findings (5 features)
+
+## Top 5 urgences Vague 8
+1. **#246 (1j)** — Firehose tokens en clair (nom `tap_token_encrypted` trompeur, blast radius maximum).
+2. **#271 + #272 (4j)** — GMB Pro Agency : isolation multi-tenant inexistante + cross-tenant leak `founderGmb`.
+3. **#296 + #297 (5j)** — Drop Detector : le détecteur ne tourne pas en production (pas de cron) + aucun gating plan.
+4. **#256 + #257 + #258 + #260 + #262 + #266 (4.5j)** — Social Hub : 6 P1 (CSRF Canva, TOCTOU, tokens en clair, double publication, SSRF image_url, PKCE mal stocké).
+5. **#289 + #291 + #294 (4j)** — Machine Layer : LLM gratuit sans gating + XSS ready_to_paste + Turnstile fail-open.
+
+## Cumul projet (Vagues 1 → 8)
+- **Features auditées** : **25** (20 précédentes + 5 Vague 8)
+- **P0 cumulé** : 34j + 1j = **35j**
+- **Total dette** : ~169.5j + 63j = **~232.5j-homme** sur 25 features
+
