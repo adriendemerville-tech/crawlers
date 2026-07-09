@@ -849,7 +849,7 @@ export const blogArticles: BlogArticle[] = [
     slug: 'reddit-tromper-bots-ia-seo-geo',
     type: 'pillar',
     title: {
-      fr: 'Meilleur outil marketing référencement SEO GEO : Reddit pour tromper les bots des IA',
+      fr: 'Meilleur outil marketing référencement SEO GEO - Reddit',
       en: 'Best SEO GEO marketing tool: Reddit to trick the AI bots',
       es: 'Mejor herramienta marketing SEO GEO: Reddit para engañar a los bots de las IA',
     },
