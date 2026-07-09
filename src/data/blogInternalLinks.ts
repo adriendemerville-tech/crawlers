@@ -587,7 +587,72 @@ export const articleInternalLinks: Record<string, ArticleLinks> = {
       },
     ],
   },
+
+  'reddit-tromper-bots-ia-seo-geo': {
+    relatedArticles: [
+      {
+        slug: 'paradoxe-google-geo-2026',
+        title: {
+          fr: 'Le paradoxe Google : 96% de part de marché, 45% de clics en moins',
+          en: 'The Google Paradox: 96% Market Share, 45% Fewer Clicks',
+          es: 'La paradoja Google: 96% cuota de mercado, 45% menos clics',
+        },
+        description: {
+          fr: "Pourquoi le GEO capte l'intent de recherche que Google perd en 2026",
+          en: 'Why GEO captures the search intent Google is losing in 2026',
+          es: 'Por qué el GEO capta el intent de búsqueda que Google pierde en 2026',
+        },
+      },
+      {
+        slug: 'share-of-voice-llm-illusion',
+        title: {
+          fr: 'Share of Voice LLM : mesurer ce que voient vraiment les IA',
+          en: 'LLM Share of Voice: measuring what AIs actually see',
+          es: 'Share of Voice LLM: medir lo que ven realmente las IA',
+        },
+        description: {
+          fr: 'La métrique qui remplace le classement SERP à l\'ère générative',
+          en: 'The metric replacing SERP ranking in the generative era',
+          es: 'La métrica que reemplaza el ranking SERP en la era generativa',
+        },
+      },
+      {
+        slug: 'comprendre-geo-vs-seo',
+        title: {
+          fr: 'GEO vs SEO : comprendre le Generative Engine Optimization',
+          en: 'GEO vs SEO: understanding Generative Engine Optimization',
+          es: 'GEO vs SEO: entender el Generative Engine Optimization',
+        },
+        description: {
+          fr: 'Le SEO consistait à être trouvé, le GEO à être cité',
+          en: 'SEO was about being found, GEO is about being cited',
+          es: 'El SEO era ser encontrado, el GEO es ser citado',
+        },
+      },
+    ],
+    lexiqueTerms: [
+      {
+        term: 'GEO',
+        anchor: 'geo',
+        description: {
+          fr: 'Generative Engine Optimization — l\'art d\'être cité par les IA',
+          en: 'Generative Engine Optimization — the art of being cited by AIs',
+          es: 'Generative Engine Optimization — el arte de ser citado por las IA',
+        },
+      },
+      {
+        term: 'E-E-A-T',
+        anchor: 'eeat',
+        description: {
+          fr: 'Experience, Expertise, Authoritativeness, Trustworthiness — le socle GEO',
+          en: 'Experience, Expertise, Authoritativeness, Trustworthiness — the GEO foundation',
+          es: 'Experience, Expertise, Authoritativeness, Trustworthiness — la base GEO',
+        },
+      },
+    ],
+  },
 };
+
 
 // Fonction helper pour obtenir les liens d'un article
 export function getArticleLinks(slug: string): ArticleLinks | undefined {
