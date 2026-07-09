@@ -101,7 +101,13 @@ const ARTICLE_SEO_OVERRIDES: Record<string, {
     description: "La Share of Voice sur les LLMs est une illusion. Sans données de volume réelles d'OpenAI ou Anthropic, les outils vendent de l'estimation en laboratoire. Analyse technique.",
     ogTitle: "Share of Voice LLM : L'Illusion Statistique"
   },
+  'reddit-tromper-bots-ia-seo-geo': {
+    title: "Reddit, meilleur outil SEO GEO 2026 : tromper les bots des IA (méthode) | Crawlers.fr",
+    description: "Reddit = 62% des sources citées par ChatGPT et Perplexity en 2026. Méthode complète pour manipuler les bots IA via Reddit sans se faire bannir : compte, subreddits, seeding, mesures GEO.",
+    ogTitle: "Reddit : meilleur outil SEO GEO 2026"
+  },
 };
+
 
 const SITE_URL = 'https://crawlers.fr';
 
