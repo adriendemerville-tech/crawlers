@@ -289,6 +289,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'prospects', label: 'Prospection', icon: Users, group: 'automation' },
         { id: 'social-hub', label: 'Social Hub', icon: Share2, group: 'automation' },
         { id: 'linkedin-auto', label: 'LinkedIn Auto', icon: Linkedin, group: 'automation' },
+        { id: 'wavespeed', label: 'WaveSpeed', icon: Zap, group: 'automation' },
       ],
     },
   ];
