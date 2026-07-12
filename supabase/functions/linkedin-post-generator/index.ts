@@ -17,6 +17,48 @@ const BodySchema = z.object({
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const LINKEDIN_API_KEY = Deno.env.get('LINKEDIN_API_KEY');
+const LINKEDIN_GATEWAY = 'https://connector-gateway.lovable.dev/linkedin';
+
+// Récupère jusqu'à N derniers posts LinkedIn de l'auteur connecté pour extraire son style.
+// Retourne [] silencieusement si l'API échoue (connector absent, scope manquant, etc.).
+async function fetchRecentLinkedInPosts(limit = 8): Promise<string[]> {
+  if (!LOVABLE_API_KEY || !LINKEDIN_API_KEY) return [];
+  const headers = {
+    Authorization: `Bearer ${LOVABLE_API_KEY}`,
+    'X-Connection-Api-Key': LINKEDIN_API_KEY,
+  };
+  try {
+    const meRes = await fetch(`${LINKEDIN_GATEWAY}/v2/userinfo`, { headers });
+    if (!meRes.ok) {
+      console.warn('LinkedIn userinfo failed', meRes.status, await meRes.text());
+      return [];
+    }
+    const me = await meRes.json();
+    const sub = me?.sub;
+    if (!sub) return [];
+    const authorUrn = `urn:li:person:${sub}`;
+    const url = `${LINKEDIN_GATEWAY}/v2/ugcPosts?q=authors&authors=List(${encodeURIComponent(authorUrn)})&count=${limit}&sortBy=LAST_MODIFIED`;
+    const postsRes = await fetch(url, { headers });
+    if (!postsRes.ok) {
+      console.warn('LinkedIn ugcPosts failed', postsRes.status, await postsRes.text());
+      return [];
+    }
+    const json = await postsRes.json();
+    const elements = Array.isArray(json?.elements) ? json.elements : [];
+    const texts: string[] = [];
+    for (const el of elements) {
+      const t = el?.specificContent?.['com.linkedin.ugc.ShareContent']?.shareCommentary?.text;
+      if (typeof t === 'string' && t.trim().length > 80) texts.push(t.trim().slice(0, 900));
+      if (texts.length >= limit) break;
+    }
+    return texts;
+  } catch (e) {
+    console.warn('LinkedIn fetch style error', e);
+    return [];
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -72,12 +114,25 @@ Deno.serve(async (req) => {
     const weekNum = getIsoWeek(new Date());
     const mediaType = overrideMedia ?? (weekNum % 2 === 0 ? 'carousel' : 'video');
 
+    // Récupère des exemples de posts passés pour caler le style de l'auteur
+    const styleSamples = await fetchRecentLinkedInPosts(8);
+    const styleBlock = styleSamples.length
+      ? `\n\nVOICI DES EXEMPLES DE POSTS PASSÉS DE L'AUTEUR — imite son rythme, son vocabulaire, sa manière d'ouvrir et de couper les phrases. N'imite PAS le contenu, seulement le style :\n---\n${styleSamples.map((t, i) => `[Exemple ${i + 1}]\n${t}`).join('\n---\n')}\n---\n`
+      : '';
+
     // Prompt LLM
     const systemPrompt = `Tu es le community manager de Crawlers.fr (SaaS SEO/GEO français).
-Ton style : direct, expert, sans jargon inutile, sans emoji, sans anglicisme gratuit.
 Tu écris pour des fondateurs, CMO, consultants SEO francophones.
 Tu ne mens pas, tu ne survends pas, tu montres la valeur concrète.
-INTERDIT : emoji, "🚀", "✨", couleur bleue IA générique, expressions creuses type "révolutionner", "game-changer", "unlock".`;
+
+GARDE-FOUS ANTI-IA (strict) :
+- INTERDIT : tirets cadratins (—), tirets demi-cadratins (–) et tirets ( - ) utilisés comme ponctuation. Utilise des points, des virgules, des retours à la ligne.
+- INTERDIT : emoji, "🚀", "✨", couleur bleue IA générique.
+- INTERDIT : formules creuses et tics LLM : "révolutionner", "game-changer", "unlock", "dans un monde où", "à l'ère de", "il est important de noter", "en résumé", "en conclusion", "pour conclure", "in fine".
+- INTERDIT : listes à puces sur-formatées, gras markdown, titres.
+- INTERDIT : conclusion / chute / phrase de synthèse finale. Le post s'arrête sur le CTA soft, puis les hashtags. Pas de "TL;DR", pas de résumé.
+- OBLIGATOIRE : un hook fort en toute première ligne (constat, chiffre, question, contre-pied).
+- Phrases courtes. Rythme cassé. Ton direct, humain, un peu sec.`;
 
     const userPrompt = `Rédige un post LinkedIn qui valorise la fonctionnalité suivante de Crawlers :
 
@@ -86,19 +141,20 @@ Description : ${feature.short_description}
 Angle marketing : ${feature.marketing_angle}
 Cible : ${feature.target_audience || 'professionnels SEO/GEO'}
 Format média associé : ${mediaType === 'carousel' ? 'carrousel 6 images' : mediaType === 'video' ? 'vidéo screencast 20-30s' : 'texte seul'}
-${tone_hint ? `Indication de ton : ${tone_hint}` : ''}
+${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${styleBlock}
 
 Structure attendue :
-1. Hook (1-2 lignes) — accroche forte, question ou constat contre-intuitif
-2. Corps (3-5 paragraphes courts) — le problème, la solution Crawlers, un chiffre ou preuve si pertinent
-3. CTA soft (1 ligne) — invite à tester ou à échanger, sans lien direct
-4. 4 à 6 hashtags pertinents (SEO, GEO, IA, SaaS français)
+1. Hook (1 à 2 lignes) — accroche forte, question ou constat contre-intuitif. C'est la ligne la plus importante.
+2. Corps (3 à 5 paragraphes courts) — le problème, la solution Crawlers, un chiffre ou une preuve si pertinent.
+3. CTA soft (1 ligne) — invite à tester ou à échanger, sans lien direct.
+4. 4 à 6 hashtags pertinents (SEO, GEO, IA, SaaS français) sur une seule ligne finale.
+
+PAS de chute, PAS de phrase de conclusion après le CTA. Le CTA est la dernière phrase avant les hashtags.
 
 Contraintes :
 - 1200 à 1600 caractères total (hashtags inclus)
-- Aucun emoji
+- Aucun emoji, aucun tiret comme ponctuation
 - Aucune formule creuse
-- Ton concret, chiffres si possible
 - Termine par les hashtags sur une seule ligne
 
 Retourne UNIQUEMENT un JSON strict :
@@ -133,9 +189,14 @@ Retourne UNIQUEMENT un JSON strict :
       return json({ error: 'Generated text too short', text }, 500);
     }
 
-    // Sanity check : pas d'emoji (approximatif)
-    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
-    const cleanText = text.replace(emojiRegex, '').replace(/\s+/g, ' ').trim();
+    // Sanity : retire emojis + neutralise tirets cadratins/demi-cadratins (garde-fou anti-IA)
+    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
+    let cleanText = text.replace(emojiRegex, '');
+    // Remplace — et – par des points quand utilisés comme ponctuation
+    cleanText = cleanText.replace(/\s*[—–]\s*/g, '. ');
+    // Retire les tirets simples entourés d'espaces ( - ) utilisés comme incise
+    cleanText = cleanText.replace(/\s+-\s+/g, '. ');
+    cleanText = cleanText.replace(/\.\s*\./g, '.').replace(/[ \t]+/g, ' ').trim();
 
     // Insert draft
     const { data: post, error: insertErr } = await admin
@@ -168,7 +229,12 @@ Retourne UNIQUEMENT un JSON strict :
       })
       .eq('id', feature.id);
 
-    return json({ success: true, post, feature: { id: feature.id, title: feature.title } });
+    return json({
+      success: true,
+      post,
+      feature: { id: feature.id, title: feature.title },
+      style_samples_used: styleSamples.length,
+    });
   } catch (e) {
     console.error('Unexpected error', e);
     return json({ error: String((e as Error).message ?? e) }, 500);
