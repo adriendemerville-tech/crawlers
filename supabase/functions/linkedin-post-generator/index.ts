@@ -12,6 +12,7 @@ const BodySchema = z.object({
   feature_id: z.string().uuid().optional(),
   media_type: z.enum(['carousel', 'video', 'text_only']).optional(),
   tone_hint: z.string().max(500).optional(),
+  style_sample_count: z.number().int().min(3).max(20).optional(),
 });
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
