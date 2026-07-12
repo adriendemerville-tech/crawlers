@@ -344,6 +344,7 @@ Retourne UNIQUEMENT un JSON strict :
       post,
       feature: { id: feature.id, title: feature.title },
       style_samples_used: styleSamples.length,
+      style_stats: styleStats,
     });
   } catch (e) {
     console.error('Unexpected error', e);
