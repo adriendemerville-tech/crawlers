@@ -12,6 +12,7 @@ const BodySchema = z.object({
   feature_id: z.string().uuid().optional(),
   media_type: z.enum(['carousel', 'video', 'text_only']).optional(),
   tone_hint: z.string().max(500).optional(),
+  style_sample_count: z.number().int().min(3).max(20).optional(),
 });
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
@@ -57,7 +58,116 @@ async function fetchRecentLinkedInPosts(limit = 8): Promise<string[]> {
   } catch (e) {
     console.warn('LinkedIn fetch style error', e);
     return [];
+}
+
+// Mots-outils français à ignorer pour extraire le vocabulaire signature de l'auteur.
+const STOPWORDS_FR = new Set([
+  'le','la','les','un','une','des','de','du','d','l','et','ou','mais','donc','or','ni','car',
+  'à','au','aux','en','dans','sur','sous','par','pour','avec','sans','vers','chez','entre',
+  'ce','cet','cette','ces','son','sa','ses','mon','ma','mes','ton','ta','tes','notre','nos','votre','vos','leur','leurs',
+  'je','tu','il','elle','on','nous','vous','ils','elles','me','te','se','y',
+  'que','qui','quoi','dont','où','quand','comment','pourquoi','si',
+  'est','sont','être','était','étaient','a','ai','as','ont','avoir','avait','avaient','fait','faire','va','vais','vas','vont',
+  'pas','plus','moins','très','trop','aussi','encore','déjà','bien','mal','peu','beaucoup','tout','tous','toute','toutes',
+  'c','n','s','t','m','j','qu','jusqu','lorsqu','puisqu','quelqu',
+  'the','and','of','to','for','with','you','your','our','we','is','are','be','it','this','that','on','in','at','a','an',
+]);
+
+interface StyleStats {
+  post_count: number;
+  avg_chars: number;
+  avg_words: number;
+  avg_sentence_words: number;
+  short_sentence_ratio: number; // % phrases <= 8 mots
+  question_ratio: number;
+  line_break_density: number; // sauts de ligne / 100 mots
+  opening_lines: string[]; // 1ères lignes distinctes
+  closing_lines: string[]; // dernières lignes non-hashtag
+  signature_words: string[]; // top mots non-communs
+}
+
+function analyzeStyle(posts: string[]): StyleStats | null {
+  if (!posts.length) return null;
+  let totalChars = 0;
+  let totalWords = 0;
+  let sentenceLens: number[] = [];
+  let questions = 0;
+  let sentences = 0;
+  let totalBreaks = 0;
+  const openings: string[] = [];
+  const closings: string[] = [];
+  const wordFreq = new Map<string, number>();
+
+  for (const p of posts) {
+    const chars = p.length;
+    const words = p.split(/\s+/).filter(Boolean);
+    totalChars += chars;
+    totalWords += words.length;
+    totalBreaks += (p.match(/\n/g) || []).length;
+
+    const sents = p.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter((s) => s.length > 2);
+    for (const s of sents) {
+      const w = s.split(/\s+/).filter(Boolean);
+      sentenceLens.push(w.length);
+      sentences++;
+      if (s.includes('?')) questions++;
+    }
+
+    const lines = p.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    if (lines[0]) openings.push(lines[0].slice(0, 140));
+    // dernière ligne non-hashtag
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (!/^#\w/.test(lines[i]) && !/^#/.test(lines[i].split(' ')[0])) {
+        closings.push(lines[i].slice(0, 140));
+        break;
+      }
+    }
+
+    for (const raw of words) {
+      const w = raw.toLowerCase().replace(/[^\p{L}\p{N}'-]/gu, '');
+      if (w.length < 4 || STOPWORDS_FR.has(w)) continue;
+      wordFreq.set(w, (wordFreq.get(w) || 0) + 1);
+    }
   }
+
+  const shortSent = sentenceLens.filter((n) => n <= 8).length;
+  const signature = [...wordFreq.entries()]
+    .filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([w]) => w);
+
+  return {
+    post_count: posts.length,
+    avg_chars: Math.round(totalChars / posts.length),
+    avg_words: Math.round(totalWords / posts.length),
+    avg_sentence_words: sentences ? Math.round((sentenceLens.reduce((a, b) => a + b, 0) / sentences) * 10) / 10 : 0,
+    short_sentence_ratio: sentences ? Math.round((shortSent / sentences) * 100) : 0,
+    question_ratio: sentences ? Math.round((questions / sentences) * 100) : 0,
+    line_break_density: totalWords ? Math.round((totalBreaks / totalWords) * 1000) / 10 : 0,
+    opening_lines: openings.slice(0, 5),
+    closing_lines: closings.slice(0, 5),
+    signature_words: signature,
+  };
+}
+
+function buildStyleBriefing(stats: StyleStats | null, samples: string[]): string {
+  if (!stats) return '';
+  const bullets = [
+    `- Longueur cible : ~${stats.avg_chars} caractères / ~${stats.avg_words} mots (calé sur ${stats.post_count} posts de l'auteur).`,
+    `- Rythme : phrases de ~${stats.avg_sentence_words} mots en moyenne, ${stats.short_sentence_ratio}% de phrases courtes (<=8 mots). Reproduis cette cadence.`,
+    `- Sauts de ligne : ${stats.line_break_density} saut(s) pour 100 mots. Aère de la même façon.`,
+    `- Questions : ${stats.question_ratio}% des phrases. ${stats.question_ratio >= 10 ? 'Ose une ou deux questions.' : "Reste plutôt affirmatif."}`,
+    stats.signature_words.length ? `- Vocabulaire signature récurrent (à réutiliser si naturel, sans forcer) : ${stats.signature_words.join(', ')}.` : '',
+    stats.opening_lines.length ? `- Manière typique d'ouvrir : \n   • ${stats.opening_lines.join('\n   • ')}` : '',
+    stats.closing_lines.length ? `- Manière typique de finir (avant hashtags) : \n   • ${stats.closing_lines.join('\n   • ')}` : '',
+  ].filter(Boolean).join('\n');
+
+  const raw = samples.length
+    ? `\n\nExtraits bruts pour caler l'oreille (imite le rythme, PAS le contenu) :\n---\n${samples.slice(0, 5).map((t, i) => `[Exemple ${i + 1}]\n${t}`).join('\n---\n')}\n---`
+    : '';
+
+  return `\n\nPROFIL DE STYLE DE L'AUTEUR (mesuré sur ses posts passés) :\n${bullets}${raw}\n`;
 }
 
 Deno.serve(async (req) => {
@@ -87,7 +197,7 @@ Deno.serve(async (req) => {
 
     const parsed = BodySchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-    const { feature_id, media_type: overrideMedia, tone_hint } = parsed.data;
+    const { feature_id, media_type: overrideMedia, tone_hint, style_sample_count } = parsed.data;
 
     // Sélection feature : celle demandée OU rotation (moins récemment utilisée, active, priorité DESC)
     let feature: any;
@@ -114,11 +224,11 @@ Deno.serve(async (req) => {
     const weekNum = getIsoWeek(new Date());
     const mediaType = overrideMedia ?? (weekNum % 2 === 0 ? 'carousel' : 'video');
 
-    // Récupère des exemples de posts passés pour caler le style de l'auteur
-    const styleSamples = await fetchRecentLinkedInPosts(8);
-    const styleBlock = styleSamples.length
-      ? `\n\nVOICI DES EXEMPLES DE POSTS PASSÉS DE L'AUTEUR — imite son rythme, son vocabulaire, sa manière d'ouvrir et de couper les phrases. N'imite PAS le contenu, seulement le style :\n---\n${styleSamples.map((t, i) => `[Exemple ${i + 1}]\n${t}`).join('\n---\n')}\n---\n`
-      : '';
+    // Récupère les X derniers posts + calcule un profil de style mesuré (longueurs, rythme, vocabulaire, ouvertures).
+    const sampleCount = style_sample_count ?? 12;
+    const styleSamples = await fetchRecentLinkedInPosts(sampleCount);
+    const styleStats = analyzeStyle(styleSamples);
+    const styleBlock = buildStyleBriefing(styleStats, styleSamples);
 
     // Prompt LLM
     const systemPrompt = `Tu es le community manager de Crawlers.fr (SaaS SEO/GEO français).
@@ -234,6 +344,7 @@ Retourne UNIQUEMENT un JSON strict :
       post,
       feature: { id: feature.id, title: feature.title },
       style_samples_used: styleSamples.length,
+      style_stats: styleStats,
     });
   } catch (e) {
     console.error('Unexpected error', e);
