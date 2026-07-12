@@ -1,104 +1,80 @@
-# Plan de tâches — Optimisation workflow Félix
+# Automatisation LinkedIn hebdomadaire — Crawlers
 
-Basé sur `knowledge/tech/copilot/felix-workflow-optimized-plan-fr.md` (version corrigée 10 points). Cible globale : **−65% coût, −45% latence** vs baseline (~6,2s / ~7,4 crédits/tour).
+## Objectif
+Chaque lundi matin, générer automatiquement un post LinkedIn valorisant une feature Crawlers (rotation), avec en alternance un **carrousel 6 images** et une **vidéo screencast MP4**. Le post est préparé en brouillon dans une UI admin ; publication en un clic après relecture/édition.
 
----
+## Architecture
 
-## Sprint 1 — Fondations (semaines 1-2)
+### 1. Base de données
+- `linkedin_features_catalog` — catalogue des features Crawlers à valoriser (title, slug, description, url_screenshot_hint, angle_marketing, active). Seed initial avec ~15 features (Autopilot Parménion, Cocoon 3D, Strategic Audit v5, GEO Bot Attribution, Content Architect, SERP Benchmark, Copilot Market Diagnosis, Drop Detector, Breathing Spiral, SEA→SEO Bridge, etc.).
+- `linkedin_scheduled_posts` — draft/pending_review/approved/published/failed, media_type ('carousel'|'video'), scheduled_for, feature_id, generated_text, media_urls[], linkedin_post_urn, error.
+- `linkedin_media_assets` — assets uploadés (bucket Storage `linkedin-media`), lien vers post.
 
-**Objectif** : streaming + cache Anthropic + recall conditionnel + télémétrie `intent_bucket`. Sans S1, S2 est impossible à décider.
+### 2. Génération du contenu (edge function `linkedin-post-generator`)
+- Sélectionne la prochaine feature (rotation round-robin sur `last_used_at`).
+- Alterne carrousel/vidéo selon la parité du numéro de semaine.
+- Rédige le post via Lovable AI (`openai/gpt-5.5`) : hook, corps, CTA soft vers crawlers.fr, 3-5 hashtags SEO/GEO.
+- Cache Markdown pour éviter regénération.
 
-### S1.1 — Streaming Claude 4.5 dans `copilot-orchestrator`
-- Activer `stream: true` sur les 2 appels LLM (LLM #1 tool-planning, LLM #2 synthèse).
-- Adapter `useCopilot` côté front pour consommer SSE (chunks progressifs).
-- Fallback non-stream si `ReadableStream` indisponible.
-- **Métrique cible** : TTFB `chit_chat` 1,8s → 0,6s.
+### 3. Génération des médias
+**Carrousel (6 slides PNG 1200×1200) :**
+- Rendu HTML/CSS aux couleurs Crawlers (violet #7C3AED, jaune d'or #F59E0B, noir, blanc — pas de bleu IA).
+- Screenshot Playwright headless dans l'edge function (déjà utilisé pour Browserless).
+- Slides : 1 cover, 2-4 slides pédagogiques sur la feature, 1 slide résultat/preuve, 1 slide CTA.
 
-### S1.2 — Prompt caching Anthropic (L1 + L2)
-- Stabiliser le system prompt Félix en constante immuable (`FELIX_PERSONA.styleGuide` → figé, pas d'interpolation dynamique dans le bloc caché).
-- Vérifier que `applyAnthropicCache` s'applique bien sur **les 2 appels** de l'agent loop (LLM #1 et LLM #2 partagent le même `messages[0]`).
-- Ajouter log `cache_read_input_tokens` vs `cache_creation_input_tokens` dans `copilot_actions.metadata`.
-- **Métrique cible** : cache hit ≥70% après 7j → −5,2 crédits/tour.
+**Vidéo screencast (MP4 720p, 20-30s) :**
+- Playwright enregistre une navigation scriptée sur la feature ciblée (ex: `/console`, `/mes-sites`, `/autopilot`) en mode démo auth-injecté.
+- ffmpeg (déjà présent) encode en MP4 H.264 muet + overlay logo/légendes.
+- Upload sur Storage → URL signée.
 
-### S1.3 — Recall vectoriel conditionnel
-- Ne déclencher `search_copilot_turns_hybrid` que si la question contient un pronom référentiel ou un mot-clé mémoire (regex simple côté orchestrator).
-- Sinon, skip → économie ~1 appel embedding + 1 RPC par tour.
-- **Métrique cible** : −20% latence sur tours `chit_chat` / `navigate`.
+### 4. Publication LinkedIn (gateway `w_member_social`)
+- Register upload → PUT binaire → `POST /v2/ugcPosts` (multi-image ou video).
+- Enregistre `linkedin_post_urn` + timestamp.
 
-### S1.4 — Logger `intent_bucket` (**gate S2**)
-- Classifier chaque tour post-hoc en 5 buckets : `chit_chat`, `navigate`, `read_skill`, `write_skill`, `complex_reasoning`.
-- Stocker dans `copilot_actions.metadata.intent_bucket`.
-- Dashboard admin `AdminDashboard > Routing AI` : histogramme distribution 14j.
-- **Décision Go/No-Go S2** : si `chit_chat + navigate ≥ 20%` → S2 rentable, sinon skip S2.
+### 5. UI admin (`/admin/linkedin`)
+- Liste des posts en `pending_review` avec preview média + texte éditable.
+- Boutons : **Régénérer texte**, **Régénérer médias**, **Approuver & publier maintenant**, **Programmer**, **Rejeter**.
+- Historique des posts publiés + lien vers LinkedIn.
+- Toggle actif/pause du cron.
+- Respecte la charte : boutons bordure + texte (pas de fond coloré), pas d'emoji, pas de bleu IA.
 
-### S1.5 — `maxOutputTokens` par bucket (déjà partiellement en place)
-- Ajuster `personas.ts` FELIX_CONFIG : `maxOutputTokens` variable selon intent détecté (200 chit_chat, 400 navigate, 800 read_skill, 1500 complex).
-- Passer via `body.max_tokens` dans `aiGatewayCall`.
+### 6. Cron (`pg_cron`)
+- Chaque lundi 07:00 UTC : appelle `linkedin-post-generator` → crée un draft en `pending_review`.
+- Notif email/in-app à Adrien pour valider avant midi.
+- Si non validé après 48h : status `expired`, on ne publie pas (safety).
 
----
+## Sécurité & garde-fous
+- RLS strict : seul l'admin (has_role `admin`) accède aux tables.
+- Anti-spam : max 1 post publié / 7 jours (contrainte DB).
+- Validation Zod côté edge function.
+- Fallback : si génération vidéo échoue (Playwright timeout), bascule automatiquement en carrousel.
+- Budget LLM : cap à ~2000 tokens par post (rédaction + reformulations).
 
-## Sprint 2 — Intent router (semaines 3-4) — **conditionnel S1.4**
+## Livrables techniques
+```text
+supabase/migrations/
+  ├── xxx_linkedin_automation.sql   (3 tables + RLS + cron)
+supabase/functions/
+  ├── linkedin-post-generator/      (texte + orchestration médias)
+  ├── linkedin-carousel-renderer/   (Playwright → 6 PNG)
+  ├── linkedin-video-renderer/      (Playwright + ffmpeg → MP4)
+  └── linkedin-publisher/           (upload + UGC post via gateway)
+src/pages/admin/
+  └── LinkedInAutomation.tsx        (UI review/publish)
+src/components/admin/linkedin/
+  ├── PostDraftCard.tsx
+  ├── MediaPreview.tsx
+  └── FeatureCatalogEditor.tsx
+```
 
-**Prérequis** : distribution S1.4 valide le ROI. Sinon → saut direct à S3.
+## Limites connues (déjà validées avec toi)
+- Pas de "vrai" carrousel PDF LinkedIn (endpoint `documents` fermé aux apps standard) → carrousel multi-images natif à la place, tout aussi performant.
+- Vidéo ≤ 200 Mo / 10 min (largement suffisant).
+- Le token LinkedIn du connecteur expire ; le gateway rafraîchit automatiquement.
 
-### S2.1 — Router `gemini-3.1-flash-lite` en amont
-- Nouveau helper `_shared/intentRouter.ts` : 1 appel Gemini Lite (~50 tokens out) qui classifie le message en bucket.
-- Si `chit_chat` ou `navigate` : réponse générée directement par Gemini Lite (skip Claude Haiku).
-- Si `read_skill` / `write_skill` / `complex` : passe à l'agent loop Claude normal.
+## Phasage suggéré
+1. **Sprint 1** — Schéma DB + catalogue features + générateur texte + UI admin (draft manuel, sans média).
+2. **Sprint 2** — Renderer carrousel + publisher LinkedIn (test bout-en-bout avec 1 post manuel).
+3. **Sprint 3** — Renderer vidéo screencast + cron hebdo + alternance.
 
-### S2.2 — Décision intro-streaming (Option A vs B)
-- **Option A** (défaut recommandé) : garder TTFB 2,3s sur `read_skill`, pas d'intro-streaming.
-- **Option B** : Gemini Lite streame une intro pendant que Claude prépare le tool_call → TTFB 0,8s mais +1 appel LLM.
-- **Décision** : trancher après mesure S1 sur perception UX (feedback beta users).
-
-### S2.3 — Fallback intent router
-- Si Gemini Lite timeout >2s → route direct Claude Haiku (comportement actuel).
-
----
-
-## Sprint 3 — Native Tool-use fusion (semaines 5-6)
-
-### S3.1 — Fusion LLM #1 + LLM #2 via tool_choice natif
-- Passer de la boucle 2-appels à un unique appel Claude avec `tool_choice: "auto"` + streaming.
-- Claude streame la synthèse directement après exécution du tool côté serveur (pattern natif Anthropic).
-- Refonte `copilot-orchestrator` : boucle unique au lieu de la double `chat.completions.create`.
-
-### S3.2 — Corrections TTFB `read_skill`
-- Cible : TTFB 2,3s → 1,2s grâce à la fusion + streaming intro post-tool.
-
-### S3.3 — Tests de régression
-- Suite Playwright sur 20 scénarios types (5 par bucket).
-- Vérifier qu'aucun skill `approval` n'est déclenché automatiquement (garde-fou sécurité).
-
----
-
-## Livrables transverses
-
-| Livrable | Sprint | Fichier |
-|---|---|---|
-| Streaming SSE | S1 | `supabase/functions/copilot-orchestrator/index.ts`, `src/hooks/useCopilot.ts` |
-| Cache stable + logs | S1 | `_shared/agentPersonas.ts`, `_shared/aiGatewayFetch.ts` |
-| Recall conditionnel | S1 | `copilot-orchestrator/skills/registry.ts` |
-| Logger intent_bucket | S1 | `copilot-orchestrator/index.ts`, `AdminDashboard/AIRoutingControl.tsx` |
-| Intent router | S2 | `_shared/intentRouter.ts` (nouveau) |
-| Fusion tool-use | S3 | `copilot-orchestrator/index.ts` refonte |
-
-## Métriques de suivi (dashboard)
-
-- Coût moyen crédits/tour par bucket (7j glissants)
-- TTFB médian par bucket
-- Cache hit rate Anthropic (`cache_read` / `cache_creation`)
-- Distribution `intent_bucket` (histogramme)
-- Taux d'échec fallback (OpenRouter → Lovable)
-
-## Garde-fous
-
-- Kill switch `ai_routing_global_flags.disable_premium` toujours actif.
-- Alerte si crédits/jour > 25 (ligne existante).
-- Rollback par sprint via feature flag `felix_optim_sprint_{1,2,3}` dans `admin_dashboard_config`.
-
-## Risques
-
-- **S1.2** : si system prompt Félix contient interpolation dynamique (date, user_id), cache hit s'effondre → refactor obligatoire avant activation.
-- **S2** : si distribution S1.4 montre <20% chit_chat/navigate, S2 est coûteux pour rien → skip et passer à S3.
-- **S3** : refonte agent loop = risque régression skills `approval` → tests Playwright obligatoires avant merge.
+Confirme le phasage (ou attaque direct Sprint 1+2 en une passe) et je démarre.

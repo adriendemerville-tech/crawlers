@@ -7313,6 +7313,131 @@ export type Database = {
           },
         ]
       }
+      linkedin_features_catalog: {
+        Row: {
+          created_at: string
+          demo_url: string | null
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          marketing_angle: string
+          priority: number
+          short_description: string
+          slug: string
+          target_audience: string | null
+          title: string
+          updated_at: string
+          use_count: number
+        }
+        Insert: {
+          created_at?: string
+          demo_url?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          marketing_angle: string
+          priority?: number
+          short_description: string
+          slug: string
+          target_audience?: string | null
+          title: string
+          updated_at?: string
+          use_count?: number
+        }
+        Update: {
+          created_at?: string
+          demo_url?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          marketing_angle?: string
+          priority?: number
+          short_description?: string
+          slug?: string
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+          use_count?: number
+        }
+        Relationships: []
+      }
+      linkedin_scheduled_posts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          edited_text: string | null
+          feature_id: string | null
+          generated_text: string
+          hashtags: string[]
+          id: string
+          linkedin_post_url: string | null
+          linkedin_post_urn: string | null
+          llm_model: string | null
+          llm_tokens_used: number | null
+          media_error: string | null
+          media_generation_status: string
+          media_type: string
+          media_urls: string[]
+          publish_error: string | null
+          published_at: string | null
+          scheduled_for: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          edited_text?: string | null
+          feature_id?: string | null
+          generated_text: string
+          hashtags?: string[]
+          id?: string
+          linkedin_post_url?: string | null
+          linkedin_post_urn?: string | null
+          llm_model?: string | null
+          llm_tokens_used?: number | null
+          media_error?: string | null
+          media_generation_status?: string
+          media_type?: string
+          media_urls?: string[]
+          publish_error?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          edited_text?: string | null
+          feature_id?: string | null
+          generated_text?: string
+          hashtags?: string[]
+          id?: string
+          linkedin_post_url?: string | null
+          linkedin_post_urn?: string | null
+          llm_model?: string | null
+          llm_tokens_used?: number | null
+          media_error?: string | null
+          media_generation_status?: string
+          media_type?: string
+          media_urls?: string[]
+          publish_error?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "linkedin_scheduled_posts_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "linkedin_features_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       llm_depth_conversations: {
         Row: {
           created_at: string
