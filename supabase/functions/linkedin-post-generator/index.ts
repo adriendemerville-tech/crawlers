@@ -146,8 +146,8 @@ Retourne UNIQUEMENT un JSON strict :
         media_type: mediaType,
         generated_text: cleanText,
         hashtags,
-        llm_tokens_used: llmJson.usage?.total_tokens ?? null,
-        llm_model: 'openai/gpt-5.5',
+        llm_tokens_used: tokensUsed,
+        llm_model: TEXT_MODEL,
         created_by: userData.user.id,
         media_generation_status: mediaType === 'text_only' ? 'ready' : 'not_started',
       })
