@@ -139,20 +139,30 @@ export default function APropos() {
   const t = translations[language as keyof typeof translations] || translations.fr;
   useCanonicalHreflang('/a-propos');
 
-  // Inject Person JSON-LD
+  // Inject Person JSON-LD (canonical entity = /auteur/adrien-de-volontat)
   useEffect(() => {
     const personSchema = {
       "@context": "https://schema.org",
       "@type": "Person",
+      "@id": "https://crawlers.fr/auteur/adrien-de-volontat#person",
       "name": "Adrien de Volontat",
       "jobTitle": "Fondateur & CTO de Crawlers.fr",
-      "url": "https://crawlers.fr/a-propos",
+      "url": "https://crawlers.fr/auteur/adrien-de-volontat",
+      "image": `https://crawlers.fr${adrienPhoto}`,
       "worksFor": {
         "@type": "Organization",
         "name": "Crawlers.fr",
         "url": "https://crawlers.fr"
       },
-      "knowsAbout": ["SEO", "GEO", "Generative Engine Optimization", "Architecture serverless", "Intelligence artificielle"],
+      "knowsAbout": [
+        "SEO technique",
+        "Generative Engine Optimization",
+        "Answer Engine Optimization",
+        "Architecture serverless",
+        "Intelligence artificielle appliquée au référencement",
+        "Cocon sémantique",
+        "E-E-A-T"
+      ],
       "sameAs": [
         "https://www.linkedin.com/in/adrien-de-volontat/"
       ]
