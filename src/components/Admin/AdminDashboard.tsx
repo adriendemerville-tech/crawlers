@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award, Plug, MessageSquare, Share2, Map, Zap } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award, Plug, MessageSquare, Share2, Map, Zap, Linkedin } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -35,6 +35,7 @@ import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { MarinaDashboard } from './MarinaDashboard';
 import { ProspectPipelineDashboard } from './ProspectPipelineDashboard';
 import { SocialContentDashboard } from './SocialContentDashboard';
+import { LinkedInAutomationDashboard } from './LinkedInAutomationDashboard';
 import { SitemapMonitorWidget } from './SitemapMonitorWidget';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 const CocoonContentArchitectModal = lazy(() =>
@@ -286,6 +287,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
         { id: 'prospects', label: 'Prospection', icon: Users, group: 'automation' },
         { id: 'social-hub', label: 'Social Hub', icon: Share2, group: 'automation' },
+        { id: 'linkedin-auto', label: 'LinkedIn Auto', icon: Linkedin, group: 'automation' },
       ],
     },
   ];
@@ -324,6 +326,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'marina': return wrap(<MarinaDashboard />);
       case 'prospects': return wrap(<ProspectPipelineDashboard />);
       case 'social-hub': return wrap(<SocialContentDashboard simulatedDataEnabled={simulatedDataEnabled} />);
+      case 'linkedin-auto': return wrap(<LinkedInAutomationDashboard />);
       case 'sitemap': return <SitemapMonitorWidget />;
       default: return <AnalyticsDashboard />;
     }
