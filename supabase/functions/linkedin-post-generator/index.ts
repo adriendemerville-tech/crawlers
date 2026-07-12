@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
 
     const parsed = BodySchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-    const { feature_id, media_type: overrideMedia, tone_hint } = parsed.data;
+    const { feature_id, media_type: overrideMedia, tone_hint, style_sample_count } = parsed.data;
 
     // Sélection feature : celle demandée OU rotation (moins récemment utilisée, active, priorité DESC)
     let feature: any;
@@ -224,11 +224,11 @@ Deno.serve(async (req) => {
     const weekNum = getIsoWeek(new Date());
     const mediaType = overrideMedia ?? (weekNum % 2 === 0 ? 'carousel' : 'video');
 
-    // Récupère des exemples de posts passés pour caler le style de l'auteur
-    const styleSamples = await fetchRecentLinkedInPosts(8);
-    const styleBlock = styleSamples.length
-      ? `\n\nVOICI DES EXEMPLES DE POSTS PASSÉS DE L'AUTEUR — imite son rythme, son vocabulaire, sa manière d'ouvrir et de couper les phrases. N'imite PAS le contenu, seulement le style :\n---\n${styleSamples.map((t, i) => `[Exemple ${i + 1}]\n${t}`).join('\n---\n')}\n---\n`
-      : '';
+    // Récupère les X derniers posts + calcule un profil de style mesuré (longueurs, rythme, vocabulaire, ouvertures).
+    const sampleCount = style_sample_count ?? 12;
+    const styleSamples = await fetchRecentLinkedInPosts(sampleCount);
+    const styleStats = analyzeStyle(styleSamples);
+    const styleBlock = buildStyleBriefing(styleStats, styleSamples);
 
     // Prompt LLM
     const systemPrompt = `Tu es le community manager de Crawlers.fr (SaaS SEO/GEO français).
