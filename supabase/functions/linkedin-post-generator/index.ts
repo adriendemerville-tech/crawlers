@@ -107,35 +107,21 @@ Retourne UNIQUEMENT un JSON strict :
   "hashtags": ["#SEO", "#GEO", ...]
 }`;
 
-    const llmRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Lovable-API-Key': LOVABLE_API_KEY,
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-5.5',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        response_format: { type: 'json_object' },
-      }),
-    });
-
-    if (!llmRes.ok) {
-      const body = await llmRes.text();
-      console.error('LLM error', llmRes.status, body);
-      return json({ error: 'LLM failed', status: llmRes.status, details: body }, llmRes.status);
-    }
-
-    const llmJson = await llmRes.json();
-    const raw = llmJson.choices?.[0]?.message?.content ?? '{}';
     let parsedContent: { text: string; hashtags: string[] };
+    let tokensUsed: number | null = null;
     try {
-      parsedContent = JSON.parse(raw);
-    } catch {
-      return json({ error: 'Invalid LLM JSON', raw }, 500);
+      const { parsed, usage } = await callOpenRouterJson<{ text: string; hashtags: string[] }>({
+        model: TEXT_MODEL,
+        system: systemPrompt,
+        user: userPrompt,
+        temperature: 0.6,
+        maxTokens: 1200,
+      });
+      parsedContent = parsed;
+      tokensUsed = usage?.total_tokens ?? null;
+    } catch (e) {
+      console.error('LLM (OpenRouter/Mistral) error', e);
+      return json({ error: 'LLM failed', details: String((e as Error).message ?? e) }, 500);
     }
 
     const text = String(parsedContent.text || '').trim();
