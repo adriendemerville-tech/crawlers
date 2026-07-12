@@ -71,7 +71,7 @@ src/pages/admin/
 3. **Sprint 3** — Mode vidéo WaveSpeed + publisher LinkedIn + cron.
 
 ## Planning hebdo (fixé)
-- **Jeudi 07:00 (Europe/Paris)** : `pg_cron` déclenche `linkedin-post-generator` → nouveau draft `pending_review` + notif admin.
-- **Fenêtre de review** : jeudi → mardi soir (6 jours pour relire, éditer, régénérer texte/média).
-- **Mercredi 08:00 (Europe/Paris)** : `pg_cron` déclenche `linkedin-publisher` sur le draft `approved` le plus récent. Si aucun draft approuvé → skip + alerte, aucun post publié (safety).
+- **Mercredi 07:00 (Europe/Paris)** : `pg_cron` déclenche `linkedin-post-generator` → nouveau draft `pending_review` + notif admin.
+- **Fenêtre de review** : mercredi 07:00 → jeudi 06:55 (~24 h pour relire, éditer, régénérer texte/média).
+- **Jeudi 07:00 (Europe/Paris)** : `pg_cron` déclenche `linkedin-publisher` sur le draft `approved` le plus récent. Si aucun draft approuvé → skip + alerte, aucun post publié (safety).
 - Anti-spam : garde DB `max 1 post publié / 7 jours` inchangée.
