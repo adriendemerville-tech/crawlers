@@ -65,7 +65,13 @@ src/pages/admin/
 2. **Sprint 2** — `linkedin-media-generator` (WaveSpeed image → carrousel 6 slides), preview dans l'UI.
 3. **Sprint 3** — Mode vidéo WaveSpeed + publisher LinkedIn + cron lundi 07:00.
 
-## Points à confirmer
-- OK pour `mistralai/mistral-large-latest` en défaut texte ? (alternatives : `mistral-medium-latest` moins cher, `mistral-small-latest` très rapide)
-- OK pour `bytedance/seedream-4` (image) et `bytedance/seedance-v1-pro-t2v-480p` (vidéo) comme défauts WaveSpeed, modifiables dans l'UI admin ?
-- OK pour attaquer Sprint 1 immédiatement ?
+## Phasage proposé
+1. **Sprint 1 (rapide)** — MAJ `linkedin-post-generator` pour utiliser Mistral via `openRouterAI`, + UI admin de validation des drafts texte seul.
+2. **Sprint 2** — `linkedin-media-generator` (WaveSpeed image → carrousel 6 slides), preview dans l'UI.
+3. **Sprint 3** — Mode vidéo WaveSpeed + publisher LinkedIn + cron.
+
+## Planning hebdo (fixé)
+- **Jeudi 07:00 (Europe/Paris)** : `pg_cron` déclenche `linkedin-post-generator` → nouveau draft `pending_review` + notif admin.
+- **Fenêtre de review** : jeudi → mardi soir (6 jours pour relire, éditer, régénérer texte/média).
+- **Mercredi 08:00 (Europe/Paris)** : `pg_cron` déclenche `linkedin-publisher` sur le draft `approved` le plus récent. Si aucun draft approuvé → skip + alerte, aucun post publié (safety).
+- Anti-spam : garde DB `max 1 post publié / 7 jours` inchangée.
