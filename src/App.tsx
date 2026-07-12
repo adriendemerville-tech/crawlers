@@ -79,6 +79,7 @@ const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngine
 const GuideAuditSeo = lazy(() => import("./pages/GuideAuditSeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthorPage = lazy(() => import("./pages/AuthorPage"));
+const AuthorsIndex = lazy(() => import("./pages/AuthorsIndex"));
 const ExtensionDownload = lazy(() => import("./pages/ExtensionDownload"));
 const IntegrationGTM = lazy(() => import("./pages/IntegrationGTM"));
 const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
