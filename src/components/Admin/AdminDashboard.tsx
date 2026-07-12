@@ -36,6 +36,7 @@ import { MarinaDashboard } from './MarinaDashboard';
 import { ProspectPipelineDashboard } from './ProspectPipelineDashboard';
 import { SocialContentDashboard } from './SocialContentDashboard';
 import { LinkedInAutomationDashboard } from './LinkedInAutomationDashboard';
+import { WaveSpeedPlayground } from './WaveSpeedPlayground';
 import { SitemapMonitorWidget } from './SitemapMonitorWidget';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 const CocoonContentArchitectModal = lazy(() =>
@@ -288,6 +289,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'prospects', label: 'Prospection', icon: Users, group: 'automation' },
         { id: 'social-hub', label: 'Social Hub', icon: Share2, group: 'automation' },
         { id: 'linkedin-auto', label: 'LinkedIn Auto', icon: Linkedin, group: 'automation' },
+        { id: 'wavespeed', label: 'WaveSpeed', icon: Zap, group: 'automation' },
       ],
     },
   ];
@@ -327,6 +329,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'prospects': return wrap(<ProspectPipelineDashboard />);
       case 'social-hub': return wrap(<SocialContentDashboard simulatedDataEnabled={simulatedDataEnabled} />);
       case 'linkedin-auto': return wrap(<LinkedInAutomationDashboard />);
+      case 'wavespeed': return wrap(<WaveSpeedPlayground />);
       case 'sitemap': return <SitemapMonitorWidget />;
       default: return <AnalyticsDashboard />;
     }
