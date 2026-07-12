@@ -7,11 +7,12 @@ const OG_IMAGE = `${SITE_URL}/og-image.png`;
 const PERSON_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'Person',
-  '@id': `${SITE_URL}/a-propos#adrien-de-volontat`,
+  '@id': `${SITE_URL}/auteur/adrien-de-volontat#person`,
   name: 'Adrien de Volontat',
   jobTitle: 'Professionnel du SEO/GEO, fondateur de Crawlers.fr',
   description: "Professionnel du SEO et du GEO (Generative Engine Optimization). A conçu Crawlers.fr en 2026 pour répondre aux limites des suites SEO historiques face aux moteurs génératifs (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews).",
-  url: `${SITE_URL}/a-propos`,
+  url: `${SITE_URL}/auteur/adrien-de-volontat`,
+  image: `${SITE_URL}/adrien-de-volontat.jpg`,
   worksFor: { '@id': `${SITE_URL}/#organization` },
   knowsAbout: [
     'SEO technique',
@@ -25,7 +26,7 @@ const PERSON_JSON_LD = {
     'Schema.org',
   ],
   sameAs: [
-    'https://www.linkedin.com/in/adriendevolontat/',
+    'https://www.linkedin.com/in/adrien-de-volontat/',
   ],
 };
 
