@@ -93,7 +93,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Futuristic crawler robot exploring a digital data network',
       es: 'Robot crawler futurista explorando una red de datos digitales',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: new Date().toISOString().split('T')[0],
     summaryPoints: {
       fr: [
@@ -200,7 +200,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Technical diagram of a crawler analyzing JSON-LD code',
       es: 'Diagrama técnico de un crawler analizando código JSON-LD',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -243,7 +243,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Visual comparison between SEO and GEO with charts',
       es: 'Comparación visual entre SEO y GEO con gráficos',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -286,7 +286,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Consultant presenting an SEO audit on tablet',
       es: 'Consultor presentando una auditoría SEO en tableta',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -330,7 +330,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Computer code showing User-Agents',
       es: 'Código informático mostrando User-Agents',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -373,7 +373,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Magnifying glass analyzing code for debugging',
       es: 'Lupa analizando código para depurar',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -416,7 +416,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Futuristic Google SGE interface',
       es: 'Interfaz futurista de Google SGE',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -459,7 +459,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Business tech handshake',
       es: 'Apretón de manos business tech',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -502,7 +502,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'JSON data visualization',
       es: 'Visualización de datos JSON',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -545,7 +545,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Perplexity interface with citations',
       es: 'Interfaz de Perplexity con citas',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -588,7 +588,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Tools comparison chart',
       es: 'Gráfico comparativo de herramientas',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -631,7 +631,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'SEO vs GEO table',
       es: 'Tabla SEO vs GEO',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -674,7 +674,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Matrix style bot list',
       es: 'Lista de bots estilo Matrix',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [
@@ -717,7 +717,7 @@ export const blogArticles: BlogArticle[] = [
       en: 'Digital expertise certificate',
       es: 'Certificado de experiencia digital',
     },
-    author: 'Adrien',
+    author: 'Adrien de Volontat',
     date: today,
     summaryPoints: {
       fr: [

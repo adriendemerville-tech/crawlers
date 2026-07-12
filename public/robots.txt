@@ -235,5 +235,6 @@ Sitemap: https://crawlers.fr/sitemap.xml
 # FAQ                   : https://crawlers.fr/faq
 # Méthodologie          : https://crawlers.fr/methodologie
 # À propos              : https://crawlers.fr/a-propos
+# Auteurs               : https://crawlers.fr/auteur
 # Aide                  : https://crawlers.fr/aide
 

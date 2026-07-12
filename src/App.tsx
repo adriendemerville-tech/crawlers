@@ -79,6 +79,7 @@ const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngine
 const GuideAuditSeo = lazy(() => import("./pages/GuideAuditSeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthorPage = lazy(() => import("./pages/AuthorPage"));
+const AuthorsIndex = lazy(() => import("./pages/AuthorsIndex"));
 const ExtensionDownload = lazy(() => import("./pages/ExtensionDownload"));
 const IntegrationGTM = lazy(() => import("./pages/IntegrationGTM"));
 const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
@@ -197,6 +198,7 @@ const App = () => (
                           <Route path="/landing/:slug" element={<LandingPage />} />
                           <Route path="/guides" element={<GuidesHub />} />
                           <Route path="/guide/:slug" element={<GuideLandingPage />} />
+                          <Route path="/auteur" element={<AuthorsIndex />} />
                           <Route path="/auteur/adrien-de-volontat" element={<AuthorPage />} />
                           <Route path="/auteur/adrien" element={<Navigate to="/auteur/adrien-de-volontat" replace />} />
                           <Route path="/breathing-spiral" element={<BreathingSpiral />} />

@@ -6,6 +6,7 @@ import { useEffect, lazy, Suspense} from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Target, Brain, Shield, Zap, Code2, BarChart3, Globe } from 'lucide-react';
+import adrienPhoto from '@/assets/adrien-de-volontat.jpg';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -138,20 +139,30 @@ export default function APropos() {
   const t = translations[language as keyof typeof translations] || translations.fr;
   useCanonicalHreflang('/a-propos');
 
-  // Inject Person JSON-LD
+  // Inject Person JSON-LD (canonical entity = /auteur/adrien-de-volontat)
   useEffect(() => {
     const personSchema = {
       "@context": "https://schema.org",
       "@type": "Person",
+      "@id": "https://crawlers.fr/auteur/adrien-de-volontat#person",
       "name": "Adrien de Volontat",
       "jobTitle": "Fondateur & CTO de Crawlers.fr",
-      "url": "https://crawlers.fr/a-propos",
+      "url": "https://crawlers.fr/auteur/adrien-de-volontat",
+      "image": `https://crawlers.fr${adrienPhoto}`,
       "worksFor": {
         "@type": "Organization",
         "name": "Crawlers.fr",
         "url": "https://crawlers.fr"
       },
-      "knowsAbout": ["SEO", "GEO", "Generative Engine Optimization", "Architecture serverless", "Intelligence artificielle"],
+      "knowsAbout": [
+        "SEO technique",
+        "Generative Engine Optimization",
+        "Answer Engine Optimization",
+        "Architecture serverless",
+        "Intelligence artificielle appliquée au référencement",
+        "Cocon sémantique",
+        "E-E-A-T"
+      ],
       "sameAs": [
         "https://www.linkedin.com/in/adrien-de-volontat/"
       ]
@@ -208,13 +219,30 @@ export default function APropos() {
         <section className="rounded-2xl border border-border bg-card p-8 space-y-4">
           <h2 className="text-2xl font-bold text-foreground">{t.founderTitle}</h2>
           <div className="flex flex-col sm:flex-row gap-6">
-            <div className="shrink-0 w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-3xl font-bold text-primary">
-              AV
-            </div>
+            <Link to="/auteur/adrien-de-volontat" className="shrink-0">
+              <img
+                src={adrienPhoto}
+                alt={`${t.founderName}, ${t.founderRole}`}
+                width={96}
+                height={96}
+                className="w-24 h-24 rounded-2xl object-cover ring-2 ring-primary/20 hover:ring-primary/50 transition-all"
+                loading="lazy"
+              />
+            </Link>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-foreground">{t.founderName}</h3>
+              <h3 className="text-xl font-semibold text-foreground">
+                <Link to="/auteur/adrien-de-volontat" className="hover:text-primary transition-colors">
+                  {t.founderName}
+                </Link>
+              </h3>
               <p className="text-sm text-primary font-medium">{t.founderRole}</p>
               <p className="text-muted-foreground leading-relaxed">{t.founderBio}</p>
+              <Link
+                to="/auteur/adrien-de-volontat"
+                className="inline-flex items-center text-sm font-medium text-primary hover:underline"
+              >
+                {language === 'en' ? 'View full profile' : language === 'es' ? 'Ver perfil completo' : 'Voir le profil complet'}
+              </Link>
             </div>
           </div>
         </section>

@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { Linkedin, Globe, MapPin, Mail } from "lucide-react";
+import { Linkedin, Globe, MapPin, Mail, ArrowRight, Target, FileSearch, Cpu, Users } from "lucide-react";
 import adrienPhoto from "@/assets/adrien-de-volontat.jpg";
 
 const FOUNDER = {
@@ -27,11 +27,35 @@ const FOUNDER = {
     "Architecture de cocon sémantique",
     "Crawl, logs serveur & détection bots IA",
   ],
+  methodology: [
+    {
+      icon: FileSearch,
+      title: "Audit-first",
+      desc: "Chaque diagnostic part d'un crawl temps réel et de données tierces vérifiées (DataForSEO, Google APIs) avant toute recommandation.",
+    },
+    {
+      icon: Cpu,
+      title: "Multi-modèles IA",
+      desc: "Les audits sont testés contre 8 LLMs pour mesurer la citabilité réelle et identifier les angles faibles du contenu.",
+    },
+    {
+      icon: Target,
+      title: "Actionnable",
+      desc: "Pas de rapport inerte : chaque finding est accompagné d'un correctif déployable (CMS, code, schema, maillage interne).",
+    },
+  ],
+  audiences: [
+    "Agences SEO / GEO cherchant un outil d'audit white-label",
+    "PME et e-commerçants qui veulent auditer sans recruter",
+    "Éditeurs de contenu visant la citabilité LLM",
+    "Consultants freelance voulant produire des rapports experts",
+  ],
 };
 
 const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
+  "@id": `${FOUNDER.url}#person`,
   name: FOUNDER.name,
   url: FOUNDER.url,
   image: `https://crawlers.fr${adrienPhoto}`,
@@ -134,6 +158,36 @@ export default function AuthorPage() {
                   className="border border-border rounded-md px-3 py-2 text-sm text-foreground"
                 >
                   {item}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold mb-4">Méthodologie</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {FOUNDER.methodology.map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-xl border border-border bg-card p-5 space-y-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <item.icon className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">{item.title}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold mb-4">Pour qui</h2>
+            <ul className="space-y-3 text-muted-foreground">
+              {FOUNDER.audiences.map((audience) => (
+                <li key={audience} className="flex items-start gap-3">
+                  <Users className="h-4 w-4 text-primary mt-1 shrink-0" />
+                  <span>{audience}</span>
                 </li>
               ))}
             </ul>
