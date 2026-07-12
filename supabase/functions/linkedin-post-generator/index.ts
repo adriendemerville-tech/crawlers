@@ -17,6 +17,48 @@ const BodySchema = z.object({
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const LINKEDIN_API_KEY = Deno.env.get('LINKEDIN_API_KEY');
+const LINKEDIN_GATEWAY = 'https://connector-gateway.lovable.dev/linkedin';
+
+// Récupère jusqu'à N derniers posts LinkedIn de l'auteur connecté pour extraire son style.
+// Retourne [] silencieusement si l'API échoue (connector absent, scope manquant, etc.).
+async function fetchRecentLinkedInPosts(limit = 8): Promise<string[]> {
+  if (!LOVABLE_API_KEY || !LINKEDIN_API_KEY) return [];
+  const headers = {
+    Authorization: `Bearer ${LOVABLE_API_KEY}`,
+    'X-Connection-Api-Key': LINKEDIN_API_KEY,
+  };
+  try {
+    const meRes = await fetch(`${LINKEDIN_GATEWAY}/v2/userinfo`, { headers });
+    if (!meRes.ok) {
+      console.warn('LinkedIn userinfo failed', meRes.status, await meRes.text());
+      return [];
+    }
+    const me = await meRes.json();
+    const sub = me?.sub;
+    if (!sub) return [];
+    const authorUrn = `urn:li:person:${sub}`;
+    const url = `${LINKEDIN_GATEWAY}/v2/ugcPosts?q=authors&authors=List(${encodeURIComponent(authorUrn)})&count=${limit}&sortBy=LAST_MODIFIED`;
+    const postsRes = await fetch(url, { headers });
+    if (!postsRes.ok) {
+      console.warn('LinkedIn ugcPosts failed', postsRes.status, await postsRes.text());
+      return [];
+    }
+    const json = await postsRes.json();
+    const elements = Array.isArray(json?.elements) ? json.elements : [];
+    const texts: string[] = [];
+    for (const el of elements) {
+      const t = el?.specificContent?.['com.linkedin.ugc.ShareContent']?.shareCommentary?.text;
+      if (typeof t === 'string' && t.trim().length > 80) texts.push(t.trim().slice(0, 900));
+      if (texts.length >= limit) break;
+    }
+    return texts;
+  } catch (e) {
+    console.warn('LinkedIn fetch style error', e);
+    return [];
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
