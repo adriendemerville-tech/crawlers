@@ -1,80 +1,71 @@
-# Automatisation LinkedIn hebdomadaire — Crawlers
+# Automatisation LinkedIn hebdomadaire — v2
 
-## Objectif
-Chaque lundi matin, générer automatiquement un post LinkedIn valorisant une feature Crawlers (rotation), avec en alternance un **carrousel 6 images** et une **vidéo screencast MP4**. Le post est préparé en brouillon dans une UI admin ; publication en un clic après relecture/édition.
+Mise à jour du plan initial pour intégrer :
+- **Texte** : Mistral via **OpenRouter** (clé `OPENROUTER_API_KEY` déjà utilisée par `_shared/openRouterAI.ts`).
+- **Médias** : **WaveSpeed.ai** via le proxy admin déjà déployé (`wavespeed-proxy`, clé `WAVESPEED_API_KEY` OK).
 
-## Architecture
+Le reste de l'architecture (catalogue de features, rotation, UI admin de validation, cron lundi 07:00, publisher LinkedIn) reste identique au plan initial.
 
-### 1. Base de données
-- `linkedin_features_catalog` — catalogue des features Crawlers à valoriser (title, slug, description, url_screenshot_hint, angle_marketing, active). Seed initial avec ~15 features (Autopilot Parménion, Cocoon 3D, Strategic Audit v5, GEO Bot Attribution, Content Architect, SERP Benchmark, Copilot Market Diagnosis, Drop Detector, Breathing Spiral, SEA→SEO Bridge, etc.).
-- `linkedin_scheduled_posts` — draft/pending_review/approved/published/failed, media_type ('carousel'|'video'), scheduled_for, feature_id, generated_text, media_urls[], linkedin_post_urn, error.
-- `linkedin_media_assets` — assets uploadés (bucket Storage `linkedin-media`), lien vers post.
+---
 
-### 2. Génération du contenu (edge function `linkedin-post-generator`)
-- Sélectionne la prochaine feature (rotation round-robin sur `last_used_at`).
-- Alterne carrousel/vidéo selon la parité du numéro de semaine.
-- Rédige le post via Lovable AI (`openai/gpt-5.5`) : hook, corps, CTA soft vers crawlers.fr, 3-5 hashtags SEO/GEO.
-- Cache Markdown pour éviter regénération.
+## Ce qui change
 
-### 3. Génération des médias
-**Carrousel (6 slides PNG 1200×1200) :**
-- Rendu HTML/CSS aux couleurs Crawlers (violet #7C3AED, jaune d'or #F59E0B, noir, blanc — pas de bleu IA).
-- Screenshot Playwright headless dans l'edge function (déjà utilisé pour Browserless).
-- Slides : 1 cover, 2-4 slides pédagogiques sur la feature, 1 slide résultat/preuve, 1 slide CTA.
+### 1. Rédaction du texte — Mistral / OpenRouter
+- Modèle par défaut : `mistralai/mistral-large-latest` (rédactionnel FR de qualité, coût raisonnable).
+- Appel via le wrapper existant `supabase/functions/_shared/openRouterAI.ts` (`callOpenRouterJson`) → réponse JSON strict `{ text, hashtags[] }`.
+- Prompt système/utilisateur inchangé (ton Crawlers : direct, expert, sans emoji, sans bleu IA, 1200-1600 caractères).
+- On remplace donc l'appel `ai.gateway.lovable.dev` actuellement présent dans `linkedin-post-generator/index.ts`.
 
-**Vidéo screencast (MP4 720p, 20-30s) :**
-- Playwright enregistre une navigation scriptée sur la feature ciblée (ex: `/console`, `/mes-sites`, `/autopilot`) en mode démo auth-injecté.
-- ffmpeg (déjà présent) encode en MP4 H.264 muet + overlay logo/légendes.
-- Upload sur Storage → URL signée.
+### 2. Génération des médias — WaveSpeed
+Deux modes en alternance selon la parité du numéro de semaine ISO :
 
-### 4. Publication LinkedIn (gateway `w_member_social`)
-- Register upload → PUT binaire → `POST /v2/ugcPosts` (multi-image ou video).
-- Enregistre `linkedin_post_urn` + timestamp.
+**Image (carrousel 6 slides)**
+- Modèle : `bytedance/seedream-4` (ou équivalent T2I catalogue WaveSpeed) — 1200×1200, style plat/éditorial, palette Crawlers (violet #7C3AED, or #F59E0B, noir, blanc).
+- 6 appels séquentiels avec prompts dérivés du texte du post : cover, 3 slides pédagogiques (angle marketing feature), 1 slide preuve/chiffre, 1 slide CTA.
+- Contrainte NO_TEXT_GUARD respectée (aucun texte dans l'image, le texte reste dans la légende LinkedIn).
 
-### 5. UI admin (`/admin/linkedin`)
-- Liste des posts en `pending_review` avec preview média + texte éditable.
-- Boutons : **Régénérer texte**, **Régénérer médias**, **Approuver & publier maintenant**, **Programmer**, **Rejeter**.
-- Historique des posts publiés + lien vers LinkedIn.
-- Toggle actif/pause du cron.
-- Respecte la charte : boutons bordure + texte (pas de fond coloré), pas d'emoji, pas de bleu IA.
+**Vidéo (screencast marketing 5-10s)**
+- Modèle : `bytedance/seedance-v1-pro-t2v-480p` (ou 720p si dispo dans la formule) — 5s, 16:9 ou 1:1.
+- Prompt dérivé automatiquement de la feature (`marketing_angle`).
 
-### 6. Cron (`pg_cron`)
-- Chaque lundi 07:00 UTC : appelle `linkedin-post-generator` → crée un draft en `pending_review`.
-- Notif email/in-app à Adrien pour valider avant midi.
-- Si non validé après 48h : status `expired`, on ne publie pas (safety).
+**Orchestration WaveSpeed (async)**
+- `wavespeed-proxy action=submit` → renvoie `prediction_id`.
+- Polling toutes les 3s côté edge function `linkedin-media-generator` jusqu'à `status=succeeded` (max 120s).
+- Téléchargement des URLs de sortie → upload sur bucket Storage `linkedin-media` → URLs signées enregistrées dans `linkedin_scheduled_posts.media_urls[]`.
 
-## Sécurité & garde-fous
-- RLS strict : seul l'admin (has_role `admin`) accède aux tables.
-- Anti-spam : max 1 post publié / 7 jours (contrainte DB).
-- Validation Zod côté edge function.
-- Fallback : si génération vidéo échoue (Playwright timeout), bascule automatiquement en carrousel.
-- Budget LLM : cap à ~2000 tokens par post (rédaction + reformulations).
+### 3. Nouvelle edge function `linkedin-media-generator`
+Remplace `linkedin-carousel-renderer` + `linkedin-video-renderer` du plan initial (plus besoin de Playwright/ffmpeg côté edge).
 
-## Livrables techniques
+Entrée : `{ post_id }` → lit le draft, appelle WaveSpeed selon `media_type`, met à jour `media_urls[]` et `media_generation_status`.
+
+### 4. UI admin (`/admin/linkedin`)
+Inchangée sur le principe, avec en plus :
+- Sélecteur du modèle WaveSpeed (image / vidéo) avec valeur par défaut, pour permettre à Adrien de tester d'autres modèles depuis le playground existant.
+- Bouton **Régénérer médias** → relance `linkedin-media-generator`.
+
+---
+
+## Livrables mis à jour
+
 ```text
-supabase/migrations/
-  ├── xxx_linkedin_automation.sql   (3 tables + RLS + cron)
 supabase/functions/
-  ├── linkedin-post-generator/      (texte + orchestration médias)
-  ├── linkedin-carousel-renderer/   (Playwright → 6 PNG)
-  ├── linkedin-video-renderer/      (Playwright + ffmpeg → MP4)
-  └── linkedin-publisher/           (upload + UGC post via gateway)
+  ├── linkedin-post-generator/      (MAJ : appelle openRouterAI + Mistral)
+  ├── linkedin-media-generator/     (NOUVEAU : appelle wavespeed-proxy submit + poll)
+  └── linkedin-publisher/           (inchangé — upload + UGC via gateway LinkedIn)
+
+supabase/migrations/
+  └── xxx_linkedin_media_fields.sql (ajoute media_provider, wavespeed_prediction_ids[])
+
 src/pages/admin/
-  └── LinkedInAutomation.tsx        (UI review/publish)
-src/components/admin/linkedin/
-  ├── PostDraftCard.tsx
-  ├── MediaPreview.tsx
-  └── FeatureCatalogEditor.tsx
+  └── LinkedInAutomation.tsx        (UI review/publish, boutons régénérer texte/média)
 ```
 
-## Limites connues (déjà validées avec toi)
-- Pas de "vrai" carrousel PDF LinkedIn (endpoint `documents` fermé aux apps standard) → carrousel multi-images natif à la place, tout aussi performant.
-- Vidéo ≤ 200 Mo / 10 min (largement suffisant).
-- Le token LinkedIn du connecteur expire ; le gateway rafraîchit automatiquement.
+## Phasage proposé
+1. **Sprint 1 (rapide)** — MAJ `linkedin-post-generator` pour utiliser Mistral via `openRouterAI`, + UI admin de validation des drafts texte seul.
+2. **Sprint 2** — `linkedin-media-generator` (WaveSpeed image → carrousel 6 slides), preview dans l'UI.
+3. **Sprint 3** — Mode vidéo WaveSpeed + publisher LinkedIn + cron lundi 07:00.
 
-## Phasage suggéré
-1. **Sprint 1** — Schéma DB + catalogue features + générateur texte + UI admin (draft manuel, sans média).
-2. **Sprint 2** — Renderer carrousel + publisher LinkedIn (test bout-en-bout avec 1 post manuel).
-3. **Sprint 3** — Renderer vidéo screencast + cron hebdo + alternance.
-
-Confirme le phasage (ou attaque direct Sprint 1+2 en une passe) et je démarre.
+## Points à confirmer
+- OK pour `mistralai/mistral-large-latest` en défaut texte ? (alternatives : `mistral-medium-latest` moins cher, `mistral-small-latest` très rapide)
+- OK pour `bytedance/seedream-4` (image) et `bytedance/seedance-v1-pro-t2v-480p` (vidéo) comme défauts WaveSpeed, modifiables dans l'UI admin ?
+- OK pour attaquer Sprint 1 immédiatement ?

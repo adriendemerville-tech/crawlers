@@ -4,6 +4,9 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
+import { callOpenRouterJson } from '../_shared/openRouterAI.ts';
+
+const TEXT_MODEL = 'mistralai/mistral-large-latest';
 
 const BodySchema = z.object({
   feature_id: z.string().uuid().optional(),
@@ -11,7 +14,7 @@ const BodySchema = z.object({
   tone_hint: z.string().max(500).optional(),
 });
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -19,8 +22,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    if (!LOVABLE_API_KEY) {
-      return json({ error: 'LOVABLE_API_KEY missing' }, 500);
+    if (!OPENROUTER_API_KEY) {
+      return json({ error: 'OPENROUTER_API_KEY missing' }, 500);
     }
 
     // Auth : réservé aux admins
@@ -104,35 +107,21 @@ Retourne UNIQUEMENT un JSON strict :
   "hashtags": ["#SEO", "#GEO", ...]
 }`;
 
-    const llmRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Lovable-API-Key': LOVABLE_API_KEY,
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-5.5',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        response_format: { type: 'json_object' },
-      }),
-    });
-
-    if (!llmRes.ok) {
-      const body = await llmRes.text();
-      console.error('LLM error', llmRes.status, body);
-      return json({ error: 'LLM failed', status: llmRes.status, details: body }, llmRes.status);
-    }
-
-    const llmJson = await llmRes.json();
-    const raw = llmJson.choices?.[0]?.message?.content ?? '{}';
     let parsedContent: { text: string; hashtags: string[] };
+    let tokensUsed: number | null = null;
     try {
-      parsedContent = JSON.parse(raw);
-    } catch {
-      return json({ error: 'Invalid LLM JSON', raw }, 500);
+      const { parsed, usage } = await callOpenRouterJson<{ text: string; hashtags: string[] }>({
+        model: TEXT_MODEL,
+        system: systemPrompt,
+        user: userPrompt,
+        temperature: 0.6,
+        maxTokens: 1200,
+      });
+      parsedContent = parsed;
+      tokensUsed = usage?.total_tokens ?? null;
+    } catch (e) {
+      console.error('LLM (OpenRouter/Mistral) error', e);
+      return json({ error: 'LLM failed', details: String((e as Error).message ?? e) }, 500);
     }
 
     const text = String(parsedContent.text || '').trim();
@@ -157,8 +146,8 @@ Retourne UNIQUEMENT un JSON strict :
         media_type: mediaType,
         generated_text: cleanText,
         hashtags,
-        llm_tokens_used: llmJson.usage?.total_tokens ?? null,
-        llm_model: 'openai/gpt-5.5',
+        llm_tokens_used: tokensUsed,
+        llm_model: TEXT_MODEL,
         created_by: userData.user.id,
         media_generation_status: mediaType === 'text_only' ? 'ready' : 'not_started',
       })

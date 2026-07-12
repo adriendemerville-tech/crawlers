@@ -7383,6 +7383,7 @@ export type Database = {
           scheduled_for: string | null
           status: string
           updated_at: string
+          wavespeed_prediction_ids: string[] | null
         }
         Insert: {
           created_at?: string
@@ -7405,6 +7406,7 @@ export type Database = {
           scheduled_for?: string | null
           status?: string
           updated_at?: string
+          wavespeed_prediction_ids?: string[] | null
         }
         Update: {
           created_at?: string
@@ -7427,6 +7429,7 @@ export type Database = {
           scheduled_for?: string | null
           status?: string
           updated_at?: string
+          wavespeed_prediction_ids?: string[] | null
         }
         Relationships: [
           {
