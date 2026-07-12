@@ -1,8 +1,10 @@
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/contexts/LanguageContext';
+import adrienPhoto from '@/assets/adrien-de-volontat.jpg';
 
 const SITE_URL = 'https://crawlers.fr';
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
+const FOUNDER_PHOTO_URL = `${SITE_URL}${adrienPhoto}`;
 
 const PERSON_JSON_LD = {
   '@context': 'https://schema.org',
