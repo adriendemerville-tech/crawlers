@@ -198,6 +198,7 @@ const App = () => (
                           <Route path="/landing/:slug" element={<LandingPage />} />
                           <Route path="/guides" element={<GuidesHub />} />
                           <Route path="/guide/:slug" element={<GuideLandingPage />} />
+                          <Route path="/auteur" element={<AuthorsIndex />} />
                           <Route path="/auteur/adrien-de-volontat" element={<AuthorPage />} />
                           <Route path="/auteur/adrien" element={<Navigate to="/auteur/adrien-de-volontat" replace />} />
                           <Route path="/breathing-spiral" element={<BreathingSpiral />} />
