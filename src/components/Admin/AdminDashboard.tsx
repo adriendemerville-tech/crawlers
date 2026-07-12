@@ -329,6 +329,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'prospects': return wrap(<ProspectPipelineDashboard />);
       case 'social-hub': return wrap(<SocialContentDashboard simulatedDataEnabled={simulatedDataEnabled} />);
       case 'linkedin-auto': return wrap(<LinkedInAutomationDashboard />);
+      case 'wavespeed': return wrap(<WaveSpeedPlayground />);
       case 'sitemap': return <SitemapMonitorWidget />;
       default: return <AnalyticsDashboard />;
     }
