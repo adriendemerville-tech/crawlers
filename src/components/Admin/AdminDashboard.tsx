@@ -36,6 +36,7 @@ import { MarinaDashboard } from './MarinaDashboard';
 import { ProspectPipelineDashboard } from './ProspectPipelineDashboard';
 import { SocialContentDashboard } from './SocialContentDashboard';
 import { LinkedInAutomationDashboard } from './LinkedInAutomationDashboard';
+import { WaveSpeedPlayground } from './WaveSpeedPlayground';
 import { SitemapMonitorWidget } from './SitemapMonitorWidget';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 const CocoonContentArchitectModal = lazy(() =>
