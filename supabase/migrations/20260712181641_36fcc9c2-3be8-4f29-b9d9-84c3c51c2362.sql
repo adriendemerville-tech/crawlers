@@ -1,0 +1,1 @@
+ALTER TABLE public.linkedin_scheduled_posts ADD COLUMN IF NOT EXISTS wavespeed_prediction_ids text[] DEFAULT '{}';
