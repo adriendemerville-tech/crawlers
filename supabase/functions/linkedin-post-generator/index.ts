@@ -14,7 +14,7 @@ const BodySchema = z.object({
   tone_hint: z.string().max(500).optional(),
 });
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -22,8 +22,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    if (!LOVABLE_API_KEY) {
-      return json({ error: 'LOVABLE_API_KEY missing' }, 500);
+    if (!OPENROUTER_API_KEY) {
+      return json({ error: 'OPENROUTER_API_KEY missing' }, 500);
     }
 
     // Auth : réservé aux admins
