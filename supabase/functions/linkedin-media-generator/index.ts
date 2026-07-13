@@ -16,6 +16,9 @@ const DEFAULT_IMAGE_MODEL = 'bytedance/seedream-4';
 const DEFAULT_VIDEO_MODEL = 'bytedance/seedance-v1-pro-t2v-480p';
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLL_MS = 120_000;
+const MEDIA_BUCKET = 'linkedin-media';
+const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 jours (couvre la fenêtre pré-publication)
+
 
 const BodySchema = z.object({
   post_id: z.string().uuid(),
