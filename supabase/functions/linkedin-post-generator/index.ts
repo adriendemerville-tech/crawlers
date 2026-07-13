@@ -181,11 +181,10 @@ Deno.serve(async (req) => {
       return json({ error: 'OPENROUTER_API_KEY missing' }, 500);
     }
 
-    // Auth : admin OU cron secret
+    // Auth : admin OU appel cron (LINKEDIN_CRON_SECRET)
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const CRON_SECRET = Deno.env.get('CRON_SECRET');
-    const cronHeader = req.headers.get('x-cron-secret');
-    const isCron = !!CRON_SECRET && cronHeader === CRON_SECRET;
+    const CRON_SECRET = Deno.env.get('LINKEDIN_CRON_SECRET');
+    const isCron = !!CRON_SECRET && req.headers.get('x-cron-secret') === CRON_SECRET;
 
     let userId: string | null = null;
     if (!isCron) {

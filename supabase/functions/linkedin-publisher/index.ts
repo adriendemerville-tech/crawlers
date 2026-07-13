@@ -5,7 +5,7 @@
 //
 // Déclenchable :
 //  * manuellement par un admin authentifié avec { post_id? } (sinon prend le dernier approved)
-//  * par pg_cron (jeudi 07:00 Europe/Paris) avec header "x-cron-secret: <CRON_SECRET>"
+//  * par pg_cron (jeudi 07:00 Europe/Paris) via pg_net avec la service role key
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -13,7 +13,6 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const LINKEDIN_API_KEY = Deno.env.get('LINKEDIN_API_KEY');
-const CRON_SECRET = Deno.env.get('CRON_SECRET');
 const LINKEDIN_GATEWAY = 'https://connector-gateway.lovable.dev/linkedin';
 
 function json(payload: unknown, status = 200) {
@@ -83,13 +82,12 @@ Deno.serve(async (req) => {
       return json({ error: 'LinkedIn connector missing (LOVABLE_API_KEY / LINKEDIN_API_KEY)' }, 500);
     }
 
-    // Auth : soit admin, soit cron secret
-    const cronHeader = req.headers.get('x-cron-secret');
-    const isCron = !!CRON_SECRET && cronHeader === CRON_SECRET;
+    // Auth : admin OU appel cron (LINKEDIN_CRON_SECRET dans header x-cron-secret)
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const CRON_SECRET = Deno.env.get('LINKEDIN_CRON_SECRET');
+    const isCron = !!CRON_SECRET && req.headers.get('x-cron-secret') === CRON_SECRET;
 
     let triggeredBy: string | null = null;
-
     if (!isCron) {
       const authHeader = req.headers.get('Authorization');
       if (!authHeader) return json({ error: 'Unauthorized' }, 401);
