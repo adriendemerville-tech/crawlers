@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
     if (isVideo) {
       // ─── Nouvelle Videos REST API (init chunké + finalize + /rest/posts) ───
       try {
-        const { postUrn } = await publishVideoViaRest(authorUrn, mediaUrls[0], fullText);
+        const { postUrn } = await publishVideoViaRest(admin, authorUrn, mediaUrls[0], fullText);
         urn = postUrn;
         url = urn ? `https://www.linkedin.com/feed/update/${urn}/` : null;
       } catch (e) {
@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
       if (mediaUrls.length > 0) {
         try {
           const assets = await Promise.all(
-            mediaUrls.slice(0, 20).map((u) => registerAndUploadImage(authorUrn, u)),
+            mediaUrls.slice(0, 20).map((u) => registerAndUploadImage(admin, authorUrn, u)),
           );
           media = assets.map((a) => ({ status: 'READY', media: a }));
           shareMediaCategory = 'IMAGE';
