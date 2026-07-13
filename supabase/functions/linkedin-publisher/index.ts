@@ -37,23 +37,15 @@ async function getAuthorUrn(): Promise<string> {
   return `urn:li:person:${j.sub}`;
 }
 
-// Enregistre un asset (image ou vidéo) sur LinkedIn et upload le binaire.
-// Retourne l'URN de l'asset (à utiliser dans ugcPosts.media[].media).
-async function registerAndUploadAsset(
-  authorUrn: string,
-  mediaUrl: string,
-  kind: 'image' | 'video',
-): Promise<string> {
-  const recipe =
-    kind === 'video'
-      ? 'urn:li:digitalmediaRecipe:feedshare-video'
-      : 'urn:li:digitalmediaRecipe:feedshare-image';
+// Legacy Assets API — utilisée uniquement pour les IMAGES (fiable).
+// La vidéo passe par la nouvelle Videos REST API (voir plus bas).
+async function registerAndUploadImage(authorUrn: string, mediaUrl: string): Promise<string> {
   const reg = await fetch(`${LINKEDIN_GATEWAY}/v2/assets?action=registerUpload`, {
     method: 'POST',
     headers: { ...liHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({
       registerUploadRequest: {
-        recipes: [recipe],
+        recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
         owner: authorUrn,
         serviceRelationships: [
           { relationshipType: 'OWNER', identifier: 'urn:li:userGeneratedContent' },
@@ -78,12 +70,107 @@ async function registerAndUploadAsset(
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       'X-Connection-Api-Key': LINKEDIN_API_KEY!,
-      'Content-Type': kind === 'video' ? 'video/mp4' : 'application/octet-stream',
+      'Content-Type': 'application/octet-stream',
     },
     body: bytes,
   });
-  if (!up.ok) throw new Error(`upload asset ${up.status}: ${await up.text().catch(() => '')}`);
+  if (!up.ok) throw new Error(`upload image ${up.status}: ${await up.text().catch(() => '')}`);
   return asset as string;
+}
+
+// ─── Videos REST API (init chunké + finalize + /rest/posts) ───
+const REST_HEADERS = {
+  'Content-Type': 'application/json',
+  'LinkedIn-Version': '202506',
+  'X-Restli-Protocol-Version': '2.0.0',
+};
+
+async function publishVideoViaRest(
+  authorUrn: string,
+  mediaUrl: string,
+  caption: string,
+): Promise<{ postUrn: string; videoUrn: string }> {
+  // 1) fetch bytes
+  const bin = await fetch(mediaUrl);
+  if (!bin.ok) throw new Error(`fetch video ${mediaUrl} ${bin.status}`);
+  const bytes = new Uint8Array(await bin.arrayBuffer());
+
+  // 2) initializeUpload
+  const initRes = await fetch(`${LINKEDIN_GATEWAY}/rest/videos?action=initializeUpload`, {
+    method: 'POST',
+    headers: { ...liHeaders(), ...REST_HEADERS },
+    body: JSON.stringify({
+      initializeUploadRequest: {
+        owner: authorUrn,
+        fileSizeBytes: bytes.byteLength,
+        uploadCaptions: false,
+        uploadThumbnail: false,
+      },
+    }),
+  });
+  if (!initRes.ok) {
+    throw new Error(`video initializeUpload ${initRes.status}: ${(await initRes.text()).slice(0, 500)}`);
+  }
+  const initJson = await initRes.json();
+  const videoUrn: string = initJson?.value?.video;
+  const uploadInstructions: Array<{ uploadUrl: string; firstByte: number; lastByte: number }> =
+    initJson?.value?.uploadInstructions ?? [];
+  const uploadToken: string = initJson?.value?.uploadToken ?? '';
+  if (!videoUrn || uploadInstructions.length === 0) {
+    throw new Error('video initializeUpload payload invalide');
+  }
+
+  // 3) upload chunks + collect ETags
+  const uploadedPartIds: string[] = [];
+  for (const inst of uploadInstructions) {
+    const chunk = bytes.slice(inst.firstByte, inst.lastByte + 1);
+    const putRes = await fetch(inst.uploadUrl, { method: 'PUT', body: chunk });
+    if (!putRes.ok) {
+      throw new Error(`video PUT chunk ${putRes.status}: ${(await putRes.text()).slice(0, 300)}`);
+    }
+    const etag = putRes.headers.get('etag') || putRes.headers.get('ETag');
+    if (!etag) throw new Error('video PUT: ETag manquant');
+    uploadedPartIds.push(etag.replace(/^"|"$/g, ''));
+  }
+
+  // 4) finalizeUpload
+  const finRes = await fetch(`${LINKEDIN_GATEWAY}/rest/videos?action=finalizeUpload`, {
+    method: 'POST',
+    headers: { ...liHeaders(), ...REST_HEADERS },
+    body: JSON.stringify({
+      finalizeUploadRequest: { video: videoUrn, uploadToken, uploadedPartIds },
+    }),
+  });
+  if (!finRes.ok) {
+    throw new Error(`video finalizeUpload ${finRes.status}: ${(await finRes.text()).slice(0, 500)}`);
+  }
+
+  // 5) publish via /rest/posts (nouveau format)
+  const postRes = await fetch(`${LINKEDIN_GATEWAY}/rest/posts`, {
+    method: 'POST',
+    headers: { ...liHeaders(), ...REST_HEADERS },
+    body: JSON.stringify({
+      author: authorUrn,
+      commentary: caption,
+      visibility: 'PUBLIC',
+      distribution: {
+        feedDistribution: 'MAIN_FEED',
+        targetEntities: [],
+        thirdPartyDistributionChannels: [],
+      },
+      content: { media: { id: videoUrn } },
+      lifecycleState: 'PUBLISHED',
+      isReshareDisabledByAuthor: false,
+    }),
+  });
+  if (!postRes.ok) {
+    throw new Error(`rest/posts ${postRes.status}: ${(await postRes.text()).slice(0, 500)}`);
+  }
+  const postUrn =
+    postRes.headers.get('x-restli-id') ||
+    postRes.headers.get('x-linkedin-id') ||
+    '';
+  return { postUrn, videoUrn };
 }
 
 Deno.serve(async (req) => {
