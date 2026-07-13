@@ -146,6 +146,42 @@ function buildCarouselPrompts(title: string, angle: string, count: number): stri
   return beats.slice(0, count);
 }
 
+// Télécharge chaque asset WaveSpeed et le persiste dans le bucket linkedin-media.
+// Retourne des signed URLs (30j) stables pour la publication LinkedIn.
+async function persistMedia(
+  admin: ReturnType<typeof createClient>,
+  postId: string,
+  urls: string[],
+  mediaType: string,
+): Promise<string[]> {
+  const ext = mediaType === 'video' ? 'mp4' : 'jpg';
+  const contentType = mediaType === 'video' ? 'video/mp4' : 'image/jpeg';
+  const results = await Promise.all(
+    urls.map(async (u, i) => {
+      try {
+        const res = await fetch(u);
+        if (!res.ok) throw new Error(`fetch ${res.status}`);
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        const path = `${postId}/${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await admin.storage
+          .from(MEDIA_BUCKET)
+          .upload(path, bytes, { contentType, upsert: true });
+        if (upErr) throw upErr;
+        const { data: signed, error: signErr } = await admin.storage
+          .from(MEDIA_BUCKET)
+          .createSignedUrl(path, SIGNED_URL_TTL);
+        if (signErr || !signed?.signedUrl) throw signErr ?? new Error('sign failed');
+        return signed.signedUrl;
+      } catch (e) {
+        console.warn('[persistMedia] fallback to raw URL', e);
+        return u; // fallback : conserve l'URL WaveSpeed si l'upload échoue
+      }
+    }),
+  );
+  return results;
+}
+
+
 async function runWavespeed(
   modelId: string,
   payload: Record<string, unknown>,
