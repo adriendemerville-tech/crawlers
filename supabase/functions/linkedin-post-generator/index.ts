@@ -328,7 +328,7 @@ Retourne UNIQUEMENT un JSON strict :
         hashtags,
         llm_tokens_used: tokensUsed,
         llm_model: TEXT_MODEL,
-        created_by: userData.user.id,
+        created_by: userId,
         media_generation_status: mediaType === 'text_only' ? 'ready' : 'not_started',
       })
       .select('*')
