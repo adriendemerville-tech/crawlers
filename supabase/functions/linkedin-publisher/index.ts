@@ -154,19 +154,29 @@ Deno.serve(async (req) => {
     const mediaUrls: string[] = Array.isArray(post.media_urls) ? post.media_urls.filter(Boolean) : [];
     const authorUrn = await getAuthorUrn();
 
-    // Upload médias (image / carrousel) — vidéo non gérée dans cette itération
+    // Upload médias : image / carrousel / vidéo
     let media: Array<{ status: string; media: string }> = [];
-    let shareMediaCategory: 'NONE' | 'IMAGE' = 'NONE';
-    if (post.media_type !== 'video' && mediaUrls.length > 0) {
+    let shareMediaCategory: 'NONE' | 'IMAGE' | 'VIDEO' = 'NONE';
+    if (mediaUrls.length > 0) {
+      const isVideo = post.media_type === 'video';
       try {
-        const assets = await Promise.all(mediaUrls.slice(0, 20).map((u) => registerAndUploadImage(authorUrn, u)));
-        media = assets.map((a) => ({ status: 'READY', media: a }));
-        shareMediaCategory = 'IMAGE';
+        if (isVideo) {
+          const asset = await registerAndUploadAsset(authorUrn, mediaUrls[0], 'video');
+          media = [{ status: 'READY', media: asset }];
+          shareMediaCategory = 'VIDEO';
+        } else {
+          const assets = await Promise.all(
+            mediaUrls.slice(0, 20).map((u) => registerAndUploadAsset(authorUrn, u, 'image')),
+          );
+          media = assets.map((a) => ({ status: 'READY', media: a }));
+          shareMediaCategory = 'IMAGE';
+        }
       } catch (e) {
         console.error('LinkedIn media upload failed', e);
         // On continue en text-only plutôt que bloquer la publication
       }
     }
+
 
     const ugcBody: any = {
       author: authorUrn,
