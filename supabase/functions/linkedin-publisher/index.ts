@@ -37,15 +37,23 @@ async function getAuthorUrn(): Promise<string> {
   return `urn:li:person:${j.sub}`;
 }
 
-// Enregistre un asset image sur LinkedIn et upload le binaire.
+// Enregistre un asset (image ou vidéo) sur LinkedIn et upload le binaire.
 // Retourne l'URN de l'asset (à utiliser dans ugcPosts.media[].media).
-async function registerAndUploadImage(authorUrn: string, imageUrl: string): Promise<string> {
+async function registerAndUploadAsset(
+  authorUrn: string,
+  mediaUrl: string,
+  kind: 'image' | 'video',
+): Promise<string> {
+  const recipe =
+    kind === 'video'
+      ? 'urn:li:digitalmediaRecipe:feedshare-video'
+      : 'urn:li:digitalmediaRecipe:feedshare-image';
   const reg = await fetch(`${LINKEDIN_GATEWAY}/v2/assets?action=registerUpload`, {
     method: 'POST',
     headers: { ...liHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({
       registerUploadRequest: {
-        recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+        recipes: [recipe],
         owner: authorUrn,
         serviceRelationships: [
           { relationshipType: 'OWNER', identifier: 'urn:li:userGeneratedContent' },
@@ -61,13 +69,17 @@ async function registerAndUploadImage(authorUrn: string, imageUrl: string): Prom
   const asset = regJson?.value?.asset;
   if (!uploadUrl || !asset) throw new Error('registerUpload payload invalide');
 
-  const bin = await fetch(imageUrl);
-  if (!bin.ok) throw new Error(`fetch media ${imageUrl} ${bin.status}`);
+  const bin = await fetch(mediaUrl);
+  if (!bin.ok) throw new Error(`fetch media ${mediaUrl} ${bin.status}`);
   const bytes = new Uint8Array(await bin.arrayBuffer());
 
   const up = await fetch(uploadUrl, {
     method: 'PUT',
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'X-Connection-Api-Key': LINKEDIN_API_KEY! },
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      'X-Connection-Api-Key': LINKEDIN_API_KEY!,
+      'Content-Type': kind === 'video' ? 'video/mp4' : 'application/octet-stream',
+    },
     body: bytes,
   });
   if (!up.ok) throw new Error(`upload asset ${up.status}: ${await up.text().catch(() => '')}`);
