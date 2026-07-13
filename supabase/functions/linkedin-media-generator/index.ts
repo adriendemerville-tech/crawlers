@@ -35,20 +35,25 @@ Deno.serve(async (req) => {
   try {
     if (!WAVESPEED_API_KEY) return json({ error: 'WAVESPEED_API_KEY missing' }, 500);
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return json({ error: 'Unauthorized' }, 401);
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData } = await userClient.auth.getUser();
-    if (!userData?.user) return json({ error: 'Unauthorized' }, 401);
-
+    // Auth : admin OU appel cron (LINKEDIN_CRON_SECRET dans header x-cron-secret)
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const { data: isAdmin } = await admin.rpc('has_role', {
-      _user_id: userData.user.id,
-      _role: 'admin',
-    });
-    if (!isAdmin) return json({ error: 'Admin only' }, 403);
+    const CRON_SECRET = Deno.env.get('LINKEDIN_CRON_SECRET');
+    const isCron = !!CRON_SECRET && req.headers.get('x-cron-secret') === CRON_SECRET;
+
+    if (!isCron) {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) return json({ error: 'Unauthorized' }, 401);
+      const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData } = await userClient.auth.getUser();
+      if (!userData?.user) return json({ error: 'Unauthorized' }, 401);
+      const { data: isAdmin } = await admin.rpc('has_role', {
+        _user_id: userData.user.id,
+        _role: 'admin',
+      });
+      if (!isAdmin) return json({ error: 'Admin only' }, 403);
+    }
 
     const parsed = BodySchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
