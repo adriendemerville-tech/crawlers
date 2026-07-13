@@ -29,6 +29,26 @@ function liHeaders() {
   };
 }
 
+// Récupère les bytes d'un média, en supportant les URLs http(s) et le préfixe
+// `storage://<bucket>/<path>` (fetch via service key, bucket privé OK).
+async function fetchMediaBytes(
+  admin: ReturnType<typeof createClient>,
+  mediaUrl: string,
+): Promise<Uint8Array> {
+  if (mediaUrl.startsWith('storage://')) {
+    const rest = mediaUrl.slice('storage://'.length);
+    const slash = rest.indexOf('/');
+    const bucket = rest.slice(0, slash);
+    const path = rest.slice(slash + 1);
+    const { data, error } = await admin.storage.from(bucket).download(path);
+    if (error || !data) throw new Error(`storage download ${bucket}/${path}: ${error?.message}`);
+    return new Uint8Array(await data.arrayBuffer());
+  }
+  const r = await fetch(mediaUrl);
+  if (!r.ok) throw new Error(`fetch media ${mediaUrl} ${r.status}`);
+  return new Uint8Array(await r.arrayBuffer());
+}
+
 async function getAuthorUrn(): Promise<string> {
   const r = await fetch(`${LINKEDIN_GATEWAY}/v2/userinfo`, { headers: liHeaders() });
   if (!r.ok) throw new Error(`userinfo ${r.status}: ${await r.text()}`);
