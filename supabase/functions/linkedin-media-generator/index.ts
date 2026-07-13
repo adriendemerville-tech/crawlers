@@ -16,6 +16,9 @@ const DEFAULT_IMAGE_MODEL = 'bytedance/seedream-4';
 const DEFAULT_VIDEO_MODEL = 'bytedance/seedance-v1-pro-t2v-480p';
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLL_MS = 120_000;
+const MEDIA_BUCKET = 'linkedin-media';
+const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 jours (couvre la fenêtre pré-publication)
+
 
 const BodySchema = z.object({
   post_id: z.string().uuid(),
@@ -72,19 +75,19 @@ Deno.serve(async (req) => {
     const title = String(feature.title ?? 'Crawlers feature');
 
     try {
-      const mediaUrls: string[] = [];
+      const rawMediaUrls: string[] = [];
       const predictionIds: string[] = [];
 
       if (post.media_type === 'carousel') {
         const model = image_model || DEFAULT_IMAGE_MODEL;
         const prompts = buildCarouselPrompts(title, angle, slide_count);
-        for (const p of prompts) {
-          const { url, predictionId } = await runWavespeed(model, {
-            prompt: p,
-            size: '1200*1200',
-          });
-          mediaUrls.push(url);
-          predictionIds.push(predictionId);
+        // Parallélise les 6 slides : ~5x plus rapide, évite le timeout Supabase 60s
+        const results = await Promise.all(
+          prompts.map((p) => runWavespeed(model, { prompt: p, size: '1200*1200' })),
+        );
+        for (const r of results) {
+          rawMediaUrls.push(r.url);
+          predictionIds.push(r.predictionId);
         }
       } else if (post.media_type === 'video') {
         const model = video_model || DEFAULT_VIDEO_MODEL;
@@ -94,11 +97,16 @@ Deno.serve(async (req) => {
           duration: 5,
           aspect_ratio: '16:9',
         });
-        mediaUrls.push(url);
+        rawMediaUrls.push(url);
         predictionIds.push(predictionId);
       } else {
         return json({ error: `Unsupported media_type: ${post.media_type}` }, 400);
       }
+
+      // Persiste dans Storage pour éviter que les URLs WaveSpeed expirent avant la publication.
+      const mediaUrls = await persistMedia(admin, post_id, rawMediaUrls, post.media_type);
+
+
 
       await admin
         .from('linkedin_scheduled_posts')
@@ -137,6 +145,42 @@ function buildCarouselPrompts(title: string, angle: string, count: number): stri
   ];
   return beats.slice(0, count);
 }
+
+// Télécharge chaque asset WaveSpeed et le persiste dans le bucket linkedin-media.
+// Retourne des signed URLs (30j) stables pour la publication LinkedIn.
+async function persistMedia(
+  admin: ReturnType<typeof createClient>,
+  postId: string,
+  urls: string[],
+  mediaType: string,
+): Promise<string[]> {
+  const ext = mediaType === 'video' ? 'mp4' : 'jpg';
+  const contentType = mediaType === 'video' ? 'video/mp4' : 'image/jpeg';
+  const results = await Promise.all(
+    urls.map(async (u, i) => {
+      try {
+        const res = await fetch(u);
+        if (!res.ok) throw new Error(`fetch ${res.status}`);
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        const path = `${postId}/${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await admin.storage
+          .from(MEDIA_BUCKET)
+          .upload(path, bytes, { contentType, upsert: true });
+        if (upErr) throw upErr;
+        const { data: signed, error: signErr } = await admin.storage
+          .from(MEDIA_BUCKET)
+          .createSignedUrl(path, SIGNED_URL_TTL);
+        if (signErr || !signed?.signedUrl) throw signErr ?? new Error('sign failed');
+        return signed.signedUrl;
+      } catch (e) {
+        console.warn('[persistMedia] fallback to raw URL', e);
+        return u; // fallback : conserve l'URL WaveSpeed si l'upload échoue
+      }
+    }),
+  );
+  return results;
+}
+
 
 async function runWavespeed(
   modelId: string,
