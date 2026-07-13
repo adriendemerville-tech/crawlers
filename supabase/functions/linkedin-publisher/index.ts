@@ -253,11 +253,17 @@ Deno.serve(async (req) => {
     const fullText = hashtags.length ? `${finalText}\n\n${hashtags.join(' ')}` : finalText;
 
     // ─── Standards LinkedIn Crawlers (règles projet) ───
-    // Longueur minimale 1500 caractères (hashtags exclus).
-    if (!finalText || finalText.length < 1500) {
+    // Longueur entre 1000 et 1500 caractères (hashtags exclus).
+    if (!finalText || finalText.length < 1000) {
       return json({
         error: 'Post trop court',
-        details: `Longueur ${finalText.length} < 1500 caractères requis (hashtags exclus).`,
+        details: `Longueur ${finalText.length} < 1000 caractères requis (hashtags exclus).`,
+      }, 400);
+    }
+    if (finalText.length > 1500) {
+      return json({
+        error: 'Post trop long',
+        details: `Longueur ${finalText.length} > 1500 caractères autorisés (hashtags exclus).`,
       }, 400);
     }
     // Mention obligatoire de la page LinkedIn Crawlers.
