@@ -58,7 +58,10 @@ async function fetchRecentLinkedInPosts(limit = 8): Promise<string[]> {
   } catch (e) {
     console.warn('LinkedIn fetch style error', e);
     return [];
+  }
 }
+
+
 
 // Mots-outils français à ignorer pour extraire le vocabulaire signature de l'auteur.
 const STOPWORDS_FR = new Set([
