@@ -1,0 +1,1 @@
+create policy "public read linkedin-media tests" on storage.objects for select to anon, authenticated using (bucket_id = 'linkedin-media' and (storage.foldername(name))[1] = 'tests');
