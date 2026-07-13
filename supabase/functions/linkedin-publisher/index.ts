@@ -234,9 +234,23 @@ Deno.serve(async (req) => {
     const finalText = String(post.edited_text || post.generated_text || '').trim();
     const hashtags: string[] = Array.isArray(post.hashtags) ? post.hashtags : [];
     const fullText = hashtags.length ? `${finalText}\n\n${hashtags.join(' ')}` : finalText;
-    if (!fullText || fullText.length < 50) {
-      return json({ error: 'Post vide ou trop court' }, 400);
+
+    // ─── Standards LinkedIn Crawlers (règles projet) ───
+    // Longueur minimale 1500 caractères (hashtags exclus).
+    if (!finalText || finalText.length < 1500) {
+      return json({
+        error: 'Post trop court',
+        details: `Longueur ${finalText.length} < 1500 caractères requis (hashtags exclus).`,
+      }, 400);
     }
+    // Mention obligatoire de la page LinkedIn Crawlers.
+    if (!/@crawlers\.fr/i.test(finalText)) {
+      return json({
+        error: 'Mention @crawlers.fr manquante',
+        details: 'Tout post LinkedIn Crawlers doit identifier la page société via @crawlers.fr.',
+      }, 400);
+    }
+
 
     const mediaUrls: string[] = Array.isArray(post.media_urls) ? post.media_urls.filter(Boolean) : [];
     const authorUrn = await getAuthorUrn();
