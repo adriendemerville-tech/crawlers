@@ -181,15 +181,15 @@ Deno.serve(async (req) => {
       return json({ error: 'OPENROUTER_API_KEY missing' }, 500);
     }
 
-    // Auth : admin OU cron secret
+    // Auth : admin OU appel cron (service role key)
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const CRON_SECRET = Deno.env.get('CRON_SECRET');
-    const cronHeader = req.headers.get('x-cron-secret');
-    const isCron = !!CRON_SECRET && cronHeader === CRON_SECRET;
+    const apikey = req.headers.get('apikey') || '';
+    const authHeader = req.headers.get('Authorization') || '';
+    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    const isCron = apikey === SUPABASE_SERVICE_KEY || bearer === SUPABASE_SERVICE_KEY;
 
     let userId: string | null = null;
     if (!isCron) {
-      const authHeader = req.headers.get('Authorization');
       if (!authHeader) return json({ error: 'Unauthorized' }, 401);
       const userClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
         global: { headers: { Authorization: authHeader } },
