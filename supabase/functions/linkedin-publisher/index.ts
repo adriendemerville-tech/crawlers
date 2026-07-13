@@ -83,15 +83,15 @@ Deno.serve(async (req) => {
       return json({ error: 'LinkedIn connector missing (LOVABLE_API_KEY / LINKEDIN_API_KEY)' }, 500);
     }
 
-    // Auth : soit admin, soit cron secret
-    const cronHeader = req.headers.get('x-cron-secret');
-    const isCron = !!CRON_SECRET && cronHeader === CRON_SECRET;
+    // Auth : admin OU appel cron (service role key en apikey/Authorization)
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const apikey = req.headers.get('apikey') || '';
+    const authHeader = req.headers.get('Authorization') || '';
+    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    const isCron = apikey === SUPABASE_SERVICE_KEY || bearer === SUPABASE_SERVICE_KEY;
 
     let triggeredBy: string | null = null;
-
     if (!isCron) {
-      const authHeader = req.headers.get('Authorization');
       if (!authHeader) return json({ error: 'Unauthorized' }, 401);
       const userClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
         global: { headers: { Authorization: authHeader } },
