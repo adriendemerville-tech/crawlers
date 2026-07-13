@@ -29,6 +29,26 @@ function liHeaders() {
   };
 }
 
+// Récupère les bytes d'un média, en supportant les URLs http(s) et le préfixe
+// `storage://<bucket>/<path>` (fetch via service key, bucket privé OK).
+async function fetchMediaBytes(
+  admin: ReturnType<typeof createClient>,
+  mediaUrl: string,
+): Promise<Uint8Array> {
+  if (mediaUrl.startsWith('storage://')) {
+    const rest = mediaUrl.slice('storage://'.length);
+    const slash = rest.indexOf('/');
+    const bucket = rest.slice(0, slash);
+    const path = rest.slice(slash + 1);
+    const { data, error } = await admin.storage.from(bucket).download(path);
+    if (error || !data) throw new Error(`storage download ${bucket}/${path}: ${error?.message}`);
+    return new Uint8Array(await data.arrayBuffer());
+  }
+  const r = await fetch(mediaUrl);
+  if (!r.ok) throw new Error(`fetch media ${mediaUrl} ${r.status}`);
+  return new Uint8Array(await r.arrayBuffer());
+}
+
 async function getAuthorUrn(): Promise<string> {
   const r = await fetch(`${LINKEDIN_GATEWAY}/v2/userinfo`, { headers: liHeaders() });
   if (!r.ok) throw new Error(`userinfo ${r.status}: ${await r.text()}`);
@@ -39,7 +59,7 @@ async function getAuthorUrn(): Promise<string> {
 
 // Legacy Assets API — utilisée uniquement pour les IMAGES (fiable).
 // La vidéo passe par la nouvelle Videos REST API (voir plus bas).
-async function registerAndUploadImage(authorUrn: string, mediaUrl: string): Promise<string> {
+async function registerAndUploadImage(admin: ReturnType<typeof createClient>, authorUrn: string, mediaUrl: string): Promise<string> {
   const reg = await fetch(`${LINKEDIN_GATEWAY}/v2/assets?action=registerUpload`, {
     method: 'POST',
     headers: { ...liHeaders(), 'Content-Type': 'application/json' },
@@ -61,9 +81,7 @@ async function registerAndUploadImage(authorUrn: string, mediaUrl: string): Prom
   const asset = regJson?.value?.asset;
   if (!uploadUrl || !asset) throw new Error('registerUpload payload invalide');
 
-  const bin = await fetch(mediaUrl);
-  if (!bin.ok) throw new Error(`fetch media ${mediaUrl} ${bin.status}`);
-  const bytes = new Uint8Array(await bin.arrayBuffer());
+  const bytes = await fetchMediaBytes(admin, mediaUrl);
 
   const up = await fetch(uploadUrl, {
     method: 'PUT',
@@ -86,14 +104,13 @@ const REST_HEADERS = {
 };
 
 async function publishVideoViaRest(
+  admin: ReturnType<typeof createClient>,
   authorUrn: string,
   mediaUrl: string,
   caption: string,
 ): Promise<{ postUrn: string; videoUrn: string }> {
-  // 1) fetch bytes
-  const bin = await fetch(mediaUrl);
-  if (!bin.ok) throw new Error(`fetch video ${mediaUrl} ${bin.status}`);
-  const bytes = new Uint8Array(await bin.arrayBuffer());
+  // 1) fetch bytes (http(s) ou storage://)
+  const bytes = await fetchMediaBytes(admin, mediaUrl);
 
   // 2) initializeUpload
   const initRes = await fetch(`${LINKEDIN_GATEWAY}/rest/videos?action=initializeUpload`, {
@@ -262,7 +279,7 @@ Deno.serve(async (req) => {
     if (isVideo) {
       // ─── Nouvelle Videos REST API (init chunké + finalize + /rest/posts) ───
       try {
-        const { postUrn } = await publishVideoViaRest(authorUrn, mediaUrls[0], fullText);
+        const { postUrn } = await publishVideoViaRest(admin, authorUrn, mediaUrls[0], fullText);
         urn = postUrn;
         url = urn ? `https://www.linkedin.com/feed/update/${urn}/` : null;
       } catch (e) {
@@ -281,7 +298,7 @@ Deno.serve(async (req) => {
       if (mediaUrls.length > 0) {
         try {
           const assets = await Promise.all(
-            mediaUrls.slice(0, 20).map((u) => registerAndUploadImage(authorUrn, u)),
+            mediaUrls.slice(0, 20).map((u) => registerAndUploadImage(admin, authorUrn, u)),
           );
           media = assets.map((a) => ({ status: 'READY', media: a }));
           shareMediaCategory = 'IMAGE';
