@@ -5,7 +5,7 @@
 //
 // Déclenchable :
 //  * manuellement par un admin authentifié avec { post_id? } (sinon prend le dernier approved)
-//  * par pg_cron (jeudi 07:00 Europe/Paris) avec header "x-cron-secret: <CRON_SECRET>"
+//  * par pg_cron (jeudi 07:00 Europe/Paris) via pg_net avec la service role key
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -13,7 +13,6 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const LINKEDIN_API_KEY = Deno.env.get('LINKEDIN_API_KEY');
-const CRON_SECRET = Deno.env.get('CRON_SECRET');
 const LINKEDIN_GATEWAY = 'https://connector-gateway.lovable.dev/linkedin';
 
 function json(payload: unknown, status = 200) {
