@@ -240,60 +240,73 @@ Deno.serve(async (req) => {
 
     const mediaUrls: string[] = Array.isArray(post.media_urls) ? post.media_urls.filter(Boolean) : [];
     const authorUrn = await getAuthorUrn();
+    const isVideo = post.media_type === 'video' && mediaUrls.length > 0;
 
-    // Upload médias : image / carrousel / vidéo
-    let media: Array<{ status: string; media: string }> = [];
-    let shareMediaCategory: 'NONE' | 'IMAGE' | 'VIDEO' = 'NONE';
-    if (mediaUrls.length > 0) {
-      const isVideo = post.media_type === 'video';
+    let urn = '';
+    let url: string | null = null;
+
+    if (isVideo) {
+      // ─── Nouvelle Videos REST API (init chunké + finalize + /rest/posts) ───
       try {
-        if (isVideo) {
-          const asset = await registerAndUploadAsset(authorUrn, mediaUrls[0], 'video');
-          media = [{ status: 'READY', media: asset }];
-          shareMediaCategory = 'VIDEO';
-        } else {
+        const { postUrn } = await publishVideoViaRest(authorUrn, mediaUrls[0], fullText);
+        urn = postUrn;
+        url = urn ? `https://www.linkedin.com/feed/update/${urn}/` : null;
+      } catch (e) {
+        const msg = String((e as Error).message ?? e);
+        console.error('LinkedIn video publish failed', msg);
+        await admin
+          .from('linkedin_scheduled_posts')
+          .update({ status: 'failed', publish_error: msg.slice(0, 500) })
+          .eq('id', post.id);
+        return json({ error: 'LinkedIn video publish failed', details: msg }, 502);
+      }
+    } else {
+      // ─── Text-only ou image/carrousel via legacy ugcPosts ───
+      let media: Array<{ status: string; media: string }> = [];
+      let shareMediaCategory: 'NONE' | 'IMAGE' = 'NONE';
+      if (mediaUrls.length > 0) {
+        try {
           const assets = await Promise.all(
-            mediaUrls.slice(0, 20).map((u) => registerAndUploadAsset(authorUrn, u, 'image')),
+            mediaUrls.slice(0, 20).map((u) => registerAndUploadImage(authorUrn, u)),
           );
           media = assets.map((a) => ({ status: 'READY', media: a }));
           shareMediaCategory = 'IMAGE';
+        } catch (e) {
+          console.error('LinkedIn image upload failed', e);
+          // On tombe en text-only si image ne passe pas.
         }
-      } catch (e) {
-        console.error('LinkedIn media upload failed', e);
-        // On continue en text-only plutôt que bloquer la publication
       }
-    }
 
-
-    const ugcBody: any = {
-      author: authorUrn,
-      lifecycleState: 'PUBLISHED',
-      specificContent: {
-        'com.linkedin.ugc.ShareContent': {
-          shareCommentary: { text: fullText },
-          shareMediaCategory,
-          ...(media.length ? { media } : {}),
+      const ugcBody: any = {
+        author: authorUrn,
+        lifecycleState: 'PUBLISHED',
+        specificContent: {
+          'com.linkedin.ugc.ShareContent': {
+            shareCommentary: { text: fullText },
+            shareMediaCategory,
+            ...(media.length ? { media } : {}),
+          },
         },
-      },
-      visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
-    };
+        visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
+      };
 
-    const pub = await fetch(`${LINKEDIN_GATEWAY}/v2/ugcPosts`, {
-      method: 'POST',
-      headers: { ...liHeaders(), 'Content-Type': 'application/json', 'X-Restli-Protocol-Version': '2.0.0' },
-      body: JSON.stringify(ugcBody),
-    });
-    if (!pub.ok) {
-      const errText = await pub.text();
-      console.error('ugcPosts failed', pub.status, errText);
-      await admin
-        .from('linkedin_scheduled_posts')
-        .update({ status: 'failed', publish_error: `${pub.status}: ${errText.slice(0, 500)}` })
-        .eq('id', post.id);
-      return json({ error: 'LinkedIn publish failed', status: pub.status, details: errText }, 502);
+      const pub = await fetch(`${LINKEDIN_GATEWAY}/v2/ugcPosts`, {
+        method: 'POST',
+        headers: { ...liHeaders(), 'Content-Type': 'application/json', 'X-Restli-Protocol-Version': '2.0.0' },
+        body: JSON.stringify(ugcBody),
+      });
+      if (!pub.ok) {
+        const errText = await pub.text();
+        console.error('ugcPosts failed', pub.status, errText);
+        await admin
+          .from('linkedin_scheduled_posts')
+          .update({ status: 'failed', publish_error: `${pub.status}: ${errText.slice(0, 500)}` })
+          .eq('id', post.id);
+        return json({ error: 'LinkedIn publish failed', status: pub.status, details: errText }, 502);
+      }
+      urn = pub.headers.get('x-restli-id') || pub.headers.get('x-linkedin-id') || '';
+      url = urn ? `https://www.linkedin.com/feed/update/${urn}/` : null;
     }
-    const urn = pub.headers.get('x-restli-id') || pub.headers.get('x-linkedin-id') || '';
-    const url = urn ? `https://www.linkedin.com/feed/update/${urn}/` : null;
 
     await admin
       .from('linkedin_scheduled_posts')
