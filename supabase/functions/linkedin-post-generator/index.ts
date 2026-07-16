@@ -321,7 +321,7 @@ Retourne UNIQUEMENT un JSON strict :
       .from('linkedin_scheduled_posts')
       .insert({
         feature_id: feature.id,
-        status: 'pending_review',
+        status: 'approved',
         media_type: mediaType,
         generated_text: cleanText,
         hashtags,
