@@ -321,7 +321,7 @@ Retourne UNIQUEMENT un JSON strict :
       .from('linkedin_scheduled_posts')
       .insert({
         feature_id: feature.id,
-        status: 'pending_review',
+        status: 'approved',
         media_type: mediaType,
         generated_text: cleanText,
         hashtags,
@@ -346,6 +346,18 @@ Retourne UNIQUEMENT un JSON strict :
         use_count: (feature.use_count ?? 0) + 1,
       })
       .eq('id', feature.id);
+
+    // Déclenche la génération média en arrière-plan (carousel/video)
+    if (mediaType !== 'text_only') {
+      fetch(`${SUPABASE_URL}/functions/v1/linkedin-media-generator`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ post_id: post.id }),
+      }).catch((err) => console.warn('media-generator trigger failed', err));
+    }
 
     return json({
       success: true,
