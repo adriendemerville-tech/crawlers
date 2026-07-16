@@ -347,6 +347,18 @@ Retourne UNIQUEMENT un JSON strict :
       })
       .eq('id', feature.id);
 
+    // Déclenche la génération média en arrière-plan (carousel/video)
+    if (mediaType !== 'text_only') {
+      fetch(`${SUPABASE_URL}/functions/v1/linkedin-media-generator`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ post_id: post.id }),
+      }).catch((err) => console.warn('media-generator trigger failed', err));
+    }
+
     return json({
       success: true,
       post,
