@@ -99,7 +99,7 @@ async function registerAndUploadImage(admin: ReturnType<typeof createClient>, au
 // ─── Videos REST API (init chunké + finalize + /rest/posts) ───
 const REST_HEADERS = {
   'Content-Type': 'application/json',
-  'LinkedIn-Version': '202506',
+  'LinkedIn-Version': '202510',
   'X-Restli-Protocol-Version': '2.0.0',
 };
 
