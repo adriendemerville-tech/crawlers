@@ -29,6 +29,15 @@ function liHeaders() {
   };
 }
 
+// LinkedIn "Little Text Format" (utilisé par /rest/posts) : les caractères
+// suivants sont réservés et DOIVENT être échappés avec un antislash, sinon
+// le rendu du commentaire est tronqué au premier caractère non échappé.
+// Ref: https://learn.microsoft.com/linkedin/marketing/community-management/shares/posts-api#text-formatting
+function escapeLittleText(text: string): string {
+  // \ doit être échappé en premier pour ne pas doubler les échappements suivants.
+  return text.replace(/[\\|{}@\[\]()<>#*_~]/g, (c) => `\\${c}`);
+}
+
 // Récupère les bytes d'un média, en supportant les URLs http(s) et le préfixe
 // `storage://<bucket>/<path>` (fetch via service key, bucket privé OK).
 async function fetchMediaBytes(
