@@ -222,17 +222,21 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({} as any));
     const requestedId: string | undefined = body?.post_id;
+    const force: boolean = body?.force === true;
 
-    // Safety : max 1 publication / 7 jours
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-    const { count: recentCount } = await admin
-      .from('linkedin_scheduled_posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'published')
-      .gte('published_at', sevenDaysAgo);
-    if ((recentCount ?? 0) > 0) {
-      return json({ skipped: true, reason: 'anti-spam: 1 post publié dans les 7 derniers jours' }, 200);
+    // Safety : max 1 publication / 7 jours (bypassable via { force: true } en admin manuel)
+    if (!force) {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+      const { count: recentCount } = await admin
+        .from('linkedin_scheduled_posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'published')
+        .gte('published_at', sevenDaysAgo);
+      if ((recentCount ?? 0) > 0) {
+        return json({ skipped: true, reason: 'anti-spam: 1 post publié dans les 7 derniers jours (utiliser force:true pour bypasser)' }, 200);
+      }
     }
+
 
     // Draft à publier
     let query = admin.from('linkedin_scheduled_posts').select('*');
