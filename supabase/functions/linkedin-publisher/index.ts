@@ -163,12 +163,16 @@ async function publishVideoViaRest(
   }
 
   // 5) publish via /rest/posts (nouveau format)
+  // ⚠️ LinkedIn "Little Text Format" : échapper les caractères réservés,
+  // sinon le rendu du commentaire est coupé au 1er caractère non échappé
+  // (ex: parenthèse, @, crochet, etc.).
+  const escapedCaption = escapeLittleText(caption);
   const postRes = await fetch(`${LINKEDIN_GATEWAY}/rest/posts`, {
     method: 'POST',
     headers: { ...liHeaders(), ...REST_HEADERS },
     body: JSON.stringify({
       author: authorUrn,
-      commentary: caption,
+      commentary: escapedCaption,
       visibility: 'PUBLIC',
       distribution: {
         feedDistribution: 'MAIN_FEED',
