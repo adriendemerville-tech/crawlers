@@ -317,6 +317,15 @@ Retourne UNIQUEMENT un JSON strict :
     cleanText = cleanText.replace(/\s+-\s+/g, '. ');
     cleanText = cleanText.replace(/\.\s*\./g, '.').replace(/[ \t]+/g, ' ').trim();
 
+    // Retire les caractères réservés LinkedIn (Little Text Format) qui cassent
+    // le rendu vidéo via /rest/posts. On préserve la mention obligatoire
+    // "@crawlers.fr" (seule occurrence légitime de "@").
+    const CRAWLERS_MENTION_PLACEHOLDER = '\u0000CRAWLERS_MENTION\u0000';
+    cleanText = cleanText.replace(/@crawlers\.fr/gi, CRAWLERS_MENTION_PLACEHOLDER);
+    cleanText = cleanText.replace(/[()\[\]{}<>\\*_~|@]/g, '');
+    cleanText = cleanText.replace(new RegExp(CRAWLERS_MENTION_PLACEHOLDER, 'g'), '@crawlers.fr');
+    cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/ +\n/g, '\n').trim();
+
     // Insert draft
     const { data: post, error: insertErr } = await admin
       .from('linkedin_scheduled_posts')
