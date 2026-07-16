@@ -248,6 +248,7 @@ GARDE-FOUS ANTI-IA (strict) :
 - INTERDIT : emoji, "🚀", "✨", couleur bleue IA générique.
 - INTERDIT : formules creuses et tics LLM : "révolutionner", "game-changer", "unlock", "dans un monde où", "à l'ère de", "il est important de noter", "en résumé", "en conclusion", "pour conclure", "in fine".
 - INTERDIT : listes à puces sur-formatées, gras markdown, titres.
+- INTERDIT : caractères réservés LinkedIn qui cassent le rendu vidéo/REST : ( ) [ ] { } < > \\ * _ ~ | . Utilise virgules, points, deux-points ou retours à la ligne à la place. Seule exception : la mention obligatoire "@crawlers.fr" (le @ n'est autorisé QUE dans cette mention).
 - INTERDIT : conclusion / chute / phrase de synthèse finale. Le post s'arrête sur le CTA soft, puis les hashtags. Pas de "TL;DR", pas de résumé.
 - OBLIGATOIRE : un hook fort en toute première ligne (constat, chiffre, question, contre-pied).
 - Phrases courtes. Rythme cassé. Ton direct, humain, un peu sec.`;
