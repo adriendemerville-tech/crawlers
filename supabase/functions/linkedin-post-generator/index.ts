@@ -248,6 +248,7 @@ GARDE-FOUS ANTI-IA (strict) :
 - INTERDIT : emoji, "🚀", "✨", couleur bleue IA générique.
 - INTERDIT : formules creuses et tics LLM : "révolutionner", "game-changer", "unlock", "dans un monde où", "à l'ère de", "il est important de noter", "en résumé", "en conclusion", "pour conclure", "in fine".
 - INTERDIT : listes à puces sur-formatées, gras markdown, titres.
+- INTERDIT : caractères réservés LinkedIn qui cassent le rendu vidéo/REST : ( ) [ ] { } < > \\ * _ ~ | . Utilise virgules, points, deux-points ou retours à la ligne à la place. Seule exception : la mention obligatoire "@crawlers.fr" (le @ n'est autorisé QUE dans cette mention).
 - INTERDIT : conclusion / chute / phrase de synthèse finale. Le post s'arrête sur le CTA soft, puis les hashtags. Pas de "TL;DR", pas de résumé.
 - OBLIGATOIRE : un hook fort en toute première ligne (constat, chiffre, question, contre-pied).
 - Phrases courtes. Rythme cassé. Ton direct, humain, un peu sec.`;
@@ -315,6 +316,15 @@ Retourne UNIQUEMENT un JSON strict :
     // Retire les tirets simples entourés d'espaces ( - ) utilisés comme incise
     cleanText = cleanText.replace(/\s+-\s+/g, '. ');
     cleanText = cleanText.replace(/\.\s*\./g, '.').replace(/[ \t]+/g, ' ').trim();
+
+    // Retire les caractères réservés LinkedIn (Little Text Format) qui cassent
+    // le rendu vidéo via /rest/posts. On préserve la mention obligatoire
+    // "@crawlers.fr" (seule occurrence légitime de "@").
+    const CRAWLERS_MENTION_PLACEHOLDER = '\u0000CRAWLERS_MENTION\u0000';
+    cleanText = cleanText.replace(/@crawlers\.fr/gi, CRAWLERS_MENTION_PLACEHOLDER);
+    cleanText = cleanText.replace(/[()\[\]{}<>\\*_~|@]/g, '');
+    cleanText = cleanText.replace(new RegExp(CRAWLERS_MENTION_PLACEHOLDER, 'g'), '@crawlers.fr');
+    cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/ +\n/g, '\n').trim();
 
     // Insert draft
     const { data: post, error: insertErr } = await admin
