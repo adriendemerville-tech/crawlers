@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://tutlimtasnjabdfhpewu.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "crawlers-mcp",
+      "version": "0.1.0",
+      "title": "Crawlers — Agent Intégrations"
+    },
+    "tools": [
+      {
+        "name": "whoami",
+        "title": "Qui suis-je",
+        "description": "Retourne l'identité de l'utilisateur Crawlers connecté (id, email, client OAuth).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_sites",
+        "title": "Lister mes sites",
+        "description": "Liste les sites Crawlers suivis par l'utilisateur connecté (domaine, dernier audit, score EEAT).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_site_audit",
+        "title": "Dernier audit d'un site",
+        "description": "Renvoie le dernier audit SEO/GEO d'un site suivi par l'utilisateur, à partir de son domaine.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "minLength": 3,
+              "description": "Nom de domaine du site (ex: crawlers.fr)"
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
