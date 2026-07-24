@@ -112,6 +112,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(), 
     mode === "development" && componentTagger(),
+    mcpPlugin(),
     asyncCssPlugin(),
     modulePreloadPlugin(),
     headersPlugin(),
