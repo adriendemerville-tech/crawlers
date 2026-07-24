@@ -52,10 +52,6 @@ function ArticleLayoutComponent({
     ? `${SITE_URL}/blog/${slug}`
     : `${SITE_URL}/blog`;
 
-  // Hreflang alternates
-  const hreflangFr = slug ? `${SITE_URL}/blog/${slug}` : `${SITE_URL}/blog`;
-  const hreflangEn = slug ? `${SITE_URL}/blog/${slug}?lang=en` : `${SITE_URL}/blog?lang=en`;
-  const hreflangEs = slug ? `${SITE_URL}/blog/${slug}?lang=es` : `${SITE_URL}/blog?lang=es`;
 
   // JSON-LD Article schema
   const articleSchema = {
