@@ -132,18 +132,7 @@ function forceMetaTags(slug: string, title: string, description: string, ogTitle
     document.head.appendChild(metaDesc);
   }
   
-  // 3. FORCE canonical - CRITIQUE pour éviter le duplicate content
-  let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-  if (canonical) {
-    canonical.href = canonicalUrl;
-  } else {
-    canonical = document.createElement('link');
-    canonical.rel = 'canonical';
-    canonical.href = canonicalUrl;
-    document.head.appendChild(canonical);
-  }
-  
-  // 4. FORCE Open Graph title
+  // 3. FORCE Open Graph title
   let ogTitleMeta = document.querySelector('meta[property="og:title"]') as HTMLMetaElement;
   if (ogTitleMeta) {
     ogTitleMeta.content = ogTitle || title;
