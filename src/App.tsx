@@ -203,6 +203,9 @@ const App = () => (
                           <Route path="/auteur" element={<AuthorsIndex />} />
                           <Route path="/auteur/adrien-de-volontat" element={<AuthorPage />} />
                           <Route path="/auteur/adrien" element={<Navigate to="/auteur/adrien-de-volontat" replace />} />
+                          <Route path="/blog/geo-vs-seo" element={<Navigate to="/blog/comprendre-geo-vs-seo" replace />} />
+                          <Route path="/guides/geo-vs-seo" element={<Navigate to="/generative-engine-optimization" replace />} />
+                          <Route path="/geo-vs-seo" element={<Navigate to="/generative-engine-optimization" replace />} />
                           <Route path="/breathing-spiral" element={<BreathingSpiral />} />
                           
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
