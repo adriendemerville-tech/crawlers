@@ -160,6 +160,10 @@ export default function Auth() {
     }
   };
 
+  // Preserve ?next= (used by OAuth consent to return to the authorization page after login/signup)
+  const rawNext = searchParams.get('next');
+  const nextPath = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null;
+
   // Accept invitation after login
   useEffect(() => {
     if (user && inviteToken) {
@@ -171,12 +175,16 @@ export default function Auth() {
         } else {
           toast.success(language === 'fr' ? 'Invitation acceptée !' : 'Invitation accepted!');
         }
-        navigate('/app/console');
+        navigate(nextPath ?? '/app/console');
       });
       return;
     }
 
     if (user) {
+      if (nextPath) {
+        navigate(nextPath);
+        return;
+      }
       const returnPath = sessionStorage.getItem('audit_return_path');
       const downloadReturnPath = sessionStorage.getItem('download_return_path');
       if (returnPath) {
@@ -193,7 +201,7 @@ export default function Auth() {
         }
       }
     }
-  }, [user, navigate, inviteToken]);
+  }, [user, navigate, inviteToken, nextPath]);
 
   const loginSchema = z.object({
     email: z.string().min(1, t.emailRequired).email(t.emailInvalid),
@@ -313,7 +321,11 @@ export default function Auth() {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    const { error } = await signInWithGoogle();
+    // If we have a ?next=, pass it explicitly so Google returns via /auth?next=... after OAuth
+    const customRedirect = nextPath
+      ? `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`
+      : undefined;
+    const { error } = await signInWithGoogle(customRedirect);
     if (error) {
       toast.error(t.loginError);
       setIsLoading(false);
