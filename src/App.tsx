@@ -7,6 +7,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { SessionHeartbeatManager } from "@/components/SessionHeartbeatManager";
 import { Breadcrumb as BreadcrumbGlobal } from "@/components/SEO/Breadcrumb";
+import { CanonicalHreflangGlobal } from "@/components/SEO/CanonicalHreflangGlobal";
 
 // Lazy load providers not needed for first paint
 const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ default: m.AuthProvider })));
@@ -164,6 +165,7 @@ const App = () => (
                       <Sonner />
                     </Suspense>
                     <BrowserRouter>
+                      <CanonicalHreflangGlobal />
                       <ScrollToTop />
                       <Suspense fallback={null}>
                         <PageViewTracker />

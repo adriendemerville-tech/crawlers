@@ -94,7 +94,7 @@ export default function AuthorPage() {
           name="description"
           content="Adrien de Volontat, fondateur de Crawlers.fr. Journaliste devenu expert SEO et GEO (Generative Engine Optimization), spécialiste de la visibilité dans ChatGPT, Perplexity et Claude."
         />
-        <link rel="canonical" href={FOUNDER.url} />
+        
         <meta property="og:type" content="profile" />
         <meta property="og:title" content="Adrien de Volontat — Fondateur Crawlers.fr" />
         <meta property="og:description" content={FOUNDER.bio} />

@@ -52,10 +52,6 @@ function ArticleLayoutComponent({
     ? `${SITE_URL}/blog/${slug}`
     : `${SITE_URL}/blog`;
 
-  // Hreflang alternates
-  const hreflangFr = slug ? `${SITE_URL}/blog/${slug}` : `${SITE_URL}/blog`;
-  const hreflangEn = slug ? `${SITE_URL}/blog/${slug}?lang=en` : `${SITE_URL}/blog?lang=en`;
-  const hreflangEs = slug ? `${SITE_URL}/blog/${slug}?lang=es` : `${SITE_URL}/blog?lang=es`;
 
   // JSON-LD Article schema
   const articleSchema = {
@@ -130,12 +126,8 @@ function ArticleLayoutComponent({
         <title>{title} | Crawlers AI</title>
         <meta name="description" content={description} />
 
-        {/* Canonical & Hreflang */}
-        <link rel="canonical" href={canonicalUrl} />
-        <link rel="alternate" hrefLang="fr" href={hreflangFr} />
-        <link rel="alternate" hrefLang="en" href={hreflangEn} />
-        <link rel="alternate" hrefLang="es" href={hreflangEs} />
-        <link rel="alternate" hrefLang="x-default" href={hreflangFr} />
+        {/* Canonical & hreflang are managed globally by useCanonicalHreflang */}
+
 
         {/* Robots */}
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />

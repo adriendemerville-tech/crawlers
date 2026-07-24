@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const SITE_URL = 'https://crawlers.fr';
@@ -8,14 +9,20 @@ const SITE_URL = 'https://crawlers.fr';
  * Each language variant gets its own canonical URL so Google indexes EN/ES pages
  * instead of treating them as duplicates of the FR version.
  *
- * @param path - The path without query params, e.g. '/' or '/audit-expert'
+ * @param path - Optional explicit canonical path (e.g. '/' or '/audit-expert').
+ *               When omitted, the current browser location.pathname is used,
+ *               ensuring every route gets a canonical tag even if a page
+ *               forgets to call this hook explicitly.
  */
-export function useCanonicalHreflang(path: string = '/') {
+export function useCanonicalHreflang(path?: string) {
   const { language } = useLanguage();
+  const location = useLocation();
+
+  const resolvedPath = path ?? location.pathname;
 
   useEffect(() => {
-    const basePath = path === '/' ? '' : path;
-    
+    const basePath = resolvedPath === '/' ? '' : resolvedPath;
+
     // Strip any ?tab= or other non-lang query params — only ?lang= is canonical
     const canonicalUrl = language === 'fr'
       ? `${SITE_URL}${basePath || '/'}`
@@ -69,5 +76,5 @@ export function useCanonicalHreflang(path: string = '/') {
     return () => {
       document.querySelectorAll('link[data-hreflang-managed]').forEach(el => el.remove());
     };
-  }, [language, path]);
+  }, [language, resolvedPath]);
 }

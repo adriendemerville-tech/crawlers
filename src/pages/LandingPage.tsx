@@ -67,7 +67,7 @@ function LandingPageComponent() {
       <Helmet>
         <title>{landing.meta_title || landing.title}</title>
         <meta name="description" content={landing.meta_description || ''} />
-        <link rel="canonical" href={canonicalUrl} />
+        
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content={landing.meta_title || landing.title} />
         <meta property="og:description" content={landing.meta_description || ''} />
