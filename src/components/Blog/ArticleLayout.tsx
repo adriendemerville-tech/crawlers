@@ -130,12 +130,8 @@ function ArticleLayoutComponent({
         <title>{title} | Crawlers AI</title>
         <meta name="description" content={description} />
 
-        {/* Canonical & Hreflang */}
-        <link rel="canonical" href={canonicalUrl} />
-        <link rel="alternate" hrefLang="fr" href={hreflangFr} />
-        <link rel="alternate" hrefLang="en" href={hreflangEn} />
-        <link rel="alternate" hrefLang="es" href={hreflangEs} />
-        <link rel="alternate" hrefLang="x-default" href={hreflangFr} />
+        {/* Canonical & hreflang are managed globally by useCanonicalHreflang */}
+
 
         {/* Robots */}
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />

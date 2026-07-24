@@ -178,7 +178,7 @@ function GuideTemplateComponent({ guide }: GuideTemplateProps) {
       <Helmet>
         <title>{guide.metaTitle}</title>
         <meta name="description" content={guide.metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
+        
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content={guide.metaTitle} />
         <meta property="og:description" content={guide.metaDescription} />

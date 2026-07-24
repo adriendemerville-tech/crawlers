@@ -260,7 +260,7 @@ function BreathingSpiralPage() {
         <meta name="robots" content="noindex,follow" />
         <title>Breathing Spiral : Le SEO Adaptatif Piloté par l'IA | Crawlers.fr</title>
         <meta name="description" content="La Breathing Spiral est un système homéostatique de pilotage SEO. 9 signaux temps réel pilotent l'oscillation entre consolidation et expansion pour une croissance organique durable." />
-        <link rel="canonical" href={canonicalUrl} />
+        
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
         <meta property="og:type" content="article" />
         <meta property="og:title" content="Breathing Spiral : Le SEO qui respire avec votre site" />

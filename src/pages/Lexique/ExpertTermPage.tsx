@@ -67,7 +67,7 @@ export default function ExpertTermPage() {
       <Helmet>
         <title>{term.term} - Définition Expert | Crawlers.fr</title>
         <meta name="description" content={term.fullDefinition.slice(0, 155)} />
-        <link rel="canonical" href={`https://crawlers.fr/lexique/${term.slug}`} />
+        
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
       </Helmet>
