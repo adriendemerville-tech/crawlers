@@ -41,6 +41,7 @@ const PolitiqueConfidentialite = lazy(() => import("./pages/PolitiqueConfidentia
 const ConditionsUtilisation = lazy(() => import("./pages/ConditionsUtilisation"));
 const RGPD = lazy(() => import("./pages/RGPD"));
 const Auth = lazy(() => import("./pages/Auth"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const SignupPage = lazy(() => import("./pages/Signup"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ReportViewer = lazy(() => import("./pages/ReportViewer"));
@@ -182,7 +183,8 @@ const App = () => (
                           <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
                           <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
                           <Route path="/rgpd" element={<RGPD />} />
-                          <Route path="/auth" element={<Auth />} />
+                         <Route path="/auth" element={<Auth />} />
+                         <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                           <Route path="/signup" element={<SignupPage />} />
                           <Route path="/app/console" element={<Profile />} />
                           <Route path="/app/profil" element={<Profile />} /> {/* Legacy redirect */}
