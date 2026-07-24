@@ -8,6 +8,16 @@
       gtag('js', new Date());
       gtag('config', 'G-0S0D56VSWQ', { send_page_view: false });
     </script>
+    <!-- Domain canonicalization: force branded domain for published duplicates -->
+    <script>
+      (function() {
+        var host = window.location.hostname;
+        if (host === 'crawlers.lovable.app' || host === 'www.crawlers.fr') {
+          var target = 'https://crawlers.fr' + window.location.pathname + window.location.search + window.location.hash;
+          window.location.replace(target);
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
     
