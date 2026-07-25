@@ -16,7 +16,8 @@ const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.
  * Routed via /:slug where slug is one of the keys in KEYWORD_PILLARS.
  */
 export default function KeywordPillarPage() {
-  const { slug = '' } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const slug = location.pathname.replace(/^\/+/, '').split('/')[0];
   const data = KEYWORD_PILLARS[slug];
   useCanonicalHreflang(`/${slug}`);
 
