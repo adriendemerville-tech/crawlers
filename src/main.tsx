@@ -44,9 +44,11 @@ const dedupeStaticHead = () => {
     }
   } catch { /* ignore */ }
 };
-// Run after Helmet has had a chance to mount its tags on first paint.
+// Run repeatedly during first seconds (Helmet may mount after lazy Suspense).
+const observer = new MutationObserver(dedupeStaticHead);
+observer.observe(document.head, { childList: true, subtree: true, attributes: true });
+setTimeout(() => observer.disconnect(), 10000);
 setTimeout(dedupeStaticHead, 50);
-setTimeout(dedupeStaticHead, 500);
 
 // Load non-critical display fonts after first paint (via <link> to avoid Vite render-blocking CSS chunk)
 const loadDeferredFonts = () => {
