@@ -1,0 +1,19 @@
+# Fichier disavow pour crawlers.fr
+# Depot : Google Search Console > Outil de désaveu
+# https://search.google.com/search-console/disavow-links
+# Genere le 2026-07-25 sur la base du profil de backlinks Semrush
+
+# --- Domaine PBN majeur (124 liens depuis 1 seul domaine, AS 5) ---
+domain:photoshop-school.org
+
+# --- Domaines spam / repertoires de faible qualite ---
+domain:wibngiftliken.blogspot.com
+domain:factmags.com
+domain:allwebsitesdirectory.com
+domain:australianwebdirectory.shop
+domain:bestwebstats.com
+domain:domain.com.lc
+domain:domainanalysis.org
+
+# --- Ancres commerciales toxiques reperees ("buy backlinks", "premium PBN") ---
+# A completer apres export complet Semrush des 102 referring domains
