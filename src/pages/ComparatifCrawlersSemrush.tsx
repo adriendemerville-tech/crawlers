@@ -281,6 +281,49 @@ const ComparatifCrawlersSemrush = () => {
                   </div>
                 </div>
 
+                {/* ═══ H2 : Crawl Semrush vs Crawl Crawlers.fr ═══ */}
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <Gauge className="h-5 w-5 text-primary" />
+                  Crawl Semrush vs crawl Crawlers.fr : deux moteurs, deux philosophies
+                </h2>
+                <p>
+                  Le <strong>crawl Semrush</strong> (Site Audit) parcourt jusqu'à 100 000 pages par projet et remonte plus de 140 vérifications techniques : balises, statuts HTTP, sitemap, hreflang, JavaScript, Core Web Vitals. C'est un moteur SEO robuste, orienté <em>Googlebot</em>, avec un rapport clair et exportable.
+                </p>
+                <p>
+                  Le <strong>crawl Crawlers.fr</strong> pousse la logique plus loin : il émule <strong>simultanément Googlebot, GPTBot, ClaudeBot, PerplexityBot et Applebot-Extended</strong>, mesure la parité de rendu entre humains et bots IA, et remonte pour chaque page un <Link to="/geo-score" className="text-primary hover:underline font-medium">Score GEO</Link> individuel. Là où Semrush s'arrête au diagnostic, Crawlers.fr génère le <strong>patch de code</strong> (JSON-LD, meta, hreflang, canonical) et peut le pousser via <Link to="/connexion-cms" className="text-primary hover:underline font-medium">connecteurs CMS</Link>.
+                </p>
+
+                <h3 className="text-lg font-semibold text-primary">Différences mesurables entre les deux crawls</h3>
+                <div className="overflow-x-auto rounded-lg border border-border bg-card my-4 not-prose">
+                  <table className="w-full text-xs sm:text-sm" aria-label="Différences crawl Semrush vs Crawlers.fr">
+                    <thead>
+                      <tr className="bg-muted/50 border-b border-border">
+                        <th className="text-left p-3 font-semibold text-foreground">Dimension du crawl</th>
+                        <th className="text-left p-3 font-semibold text-foreground">Semrush Site Audit</th>
+                        <th className="text-left p-3 font-semibold text-foreground bg-primary/5">Crawlers.fr</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">User-agents émulés</td><td className="p-3">Googlebot (desktop/mobile)</td><td className="p-3 bg-primary/5">Googlebot + 5 bots IA (GPTBot, ClaudeBot, PerplexityBot, Applebot-Extended, CCBot)</td></tr>
+                      <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Volume mensuel</td><td className="p-3">Jusqu'à 100 000 pages (Guru+)</td><td className="p-3 bg-primary/5">Jusqu'à 50 000 pages (Pro Agency+) — crawl priorisé par PageRank interne</td></tr>
+                      <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Fréquence par défaut</td><td className="p-3">Hebdomadaire</td><td className="p-3 bg-primary/5">Quotidienne sur les pages actives, hebdo sur les stales (scheduler pondéré)</td></tr>
+                      <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Sortie du diagnostic</td><td className="p-3">Rapport HTML + CSV</td><td className="p-3 bg-primary/5">Rapport + patch de code injectable + plan Autopilot Parménion</td></tr>
+                      <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Parité SPA / bots IA</td><td className="p-3">Non mesurée</td><td className="p-3 bg-primary/5">Oui — comparaison word_count JS vs no-JS, H1 unique, cloaking check</td></tr>
+                      <tr><td className="p-3 font-medium text-foreground">Analyse des logs serveur</td><td className="p-3">Add-on payant</td><td className="p-3 bg-primary/5">Inclus dans Pro Agency+ (visites GPTBot, ClaudeBot, PerplexityBot vérifiées rDNS/ASN)</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3 className="text-lg font-semibold text-primary">Quand choisir le crawl Semrush ?</h3>
+                <p>
+                  Choisissez Semrush pour un audit purement SEO à destination des équipes marketing habituées à l'écosystème (Site Audit, Position Tracking, Keyword Magic Tool couplés). Le rapport est mature, exportable et compris de tous les référenceurs.
+                </p>
+
+                <h3 className="text-lg font-semibold text-primary">Quand choisir le crawl Crawlers.fr ?</h3>
+                <p>
+                  Choisissez Crawlers.fr si votre priorité est la <strong>visibilité dans les moteurs IA</strong>, si vous voulez sortir de l'audit avec le patch prêt à déployer, ou si vous avez besoin d'un crawl multi-bots pour valider votre <Link to="/blog/crawler-definition-seo-geo" className="text-primary hover:underline font-medium">stratégie GEO</Link>. La complémentarité avec Semrush reste possible — beaucoup d'utilisateurs Pro combinent les deux.
+                </p>
+
                 {/* ═══ H2 : Tarifs ═══ */}
                 <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
                   <Wallet className="h-5 w-5 text-primary" />
