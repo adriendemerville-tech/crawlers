@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { SummaryBox, RichLink, GeoTable, SgeSummaryBox, AuthorCard, RichLinkCard } from '@/components/Blog';
 import type { GeoTableRow } from '@/components/Blog';
 
@@ -1742,6 +1743,62 @@ Allow: /`}</pre>
           title="JSON-LD pour l'IA : devenez une autorité"
           description="Le guide complet des données structurées pour les crawlers modernes"
         />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Les principaux crawlers du web en 2026 : SEO et GEO</h2>
+        <p>
+          Le terme <strong>crawlers</strong> recouvre aujourd'hui une famille très large de robots. Les connaître un par un est indispensable pour piloter finement sa visibilité, aussi bien sur Google que sur les moteurs de réponse IA. Voici les crawlers les plus actifs sur le web francophone en 2026.
+        </p>
+        <h3 className="text-xl font-semibold mt-6 mb-3">Crawlers SEO traditionnels</h3>
+        <ul className="list-disc pl-6 space-y-2 mb-4">
+          <li><strong>Googlebot</strong> — le crawler historique de Google, décliné en Googlebot Desktop, Googlebot Mobile et Googlebot Image. Il alimente l'index de Google Search et représente encore plus de 60 % du trafic bot légitime sur un site francophone moyen.</li>
+          <li><strong>Bingbot</strong> — le crawler de Microsoft Bing, également utilisé par Copilot et DuckDuckGo. Son poids remonte fortement depuis 2024 avec l'intégration Bing dans les réponses IA.</li>
+          <li><strong>YandexBot</strong> et <strong>Baiduspider</strong> — crawlers russe et chinois, utiles si votre audience dépasse la francophonie.</li>
+          <li><strong>Applebot</strong> — alimente à la fois Siri, Spotlight et depuis 2025 les fonctionnalités Apple Intelligence.</li>
+        </ul>
+        <h3 className="text-xl font-semibold mt-6 mb-3">Crawlers GEO / IA générative</h3>
+        <ul className="list-disc pl-6 space-y-2 mb-4">
+          <li><strong>GPTBot</strong> (OpenAI) — collecte les pages pour l'entraînement de GPT et alimente les citations dans ChatGPT Search.</li>
+          <li><strong>OAI-SearchBot</strong> (OpenAI) — dédié spécifiquement à ChatGPT Search, distinct de GPTBot.</li>
+          <li><strong>ClaudeBot</strong> et <strong>Claude-Web</strong> (Anthropic) — alimentent Claude et ses citations en temps réel.</li>
+          <li><strong>Google-Extended</strong> — contrôle l'usage de vos pages par Gemini et Bard, indépendamment de Googlebot.</li>
+          <li><strong>PerplexityBot</strong> — le crawler de Perplexity, particulièrement gourmand sur les contenus fraîchement publiés.</li>
+          <li><strong>Amazonbot</strong>, <strong>Meta-ExternalAgent</strong>, <strong>Bytespider</strong> — les acteurs plus récents qui montent vite en 2026.</li>
+        </ul>
+        <p>
+          Notre <Link to="/app/crawler-tester" className="text-primary hover:underline">testeur de crawlers</Link> vous permet de vérifier en trente secondes lesquels de ces bots peuvent réellement lire votre site.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Comment optimiser son site pour les crawlers : checklist 2026</h2>
+        <p>
+          Un site optimisé pour les crawlers modernes coche sept points techniques. Aucun n'est facultatif si vous visez le top 10 Google ou une citation régulière dans ChatGPT.
+        </p>
+        <ol className="list-decimal pl-6 space-y-2 mb-4">
+          <li><strong>robots.txt cohérent</strong> — autoriser les crawlers utiles, bloquer les scrapers agressifs, exposer le sitemap.</li>
+          <li><strong>Sitemap XML frais</strong> — mis à jour à chaque publication, avec dates de modification réelles.</li>
+          <li><strong>HTML sémantique</strong> — un seul H1 par page, hiérarchie H2/H3/H4 propre, balises article, section, nav, aside.</li>
+          <li><strong>JSON-LD complet</strong> — Article, FAQPage, BreadcrumbList, Organization, au minimum sur chaque page pilier.</li>
+          <li><strong>Rendering serveur ou SSR</strong> — un site 100 % client-side JavaScript reste partiellement invisible aux crawlers IA.</li>
+          <li><strong>Core Web Vitals au vert</strong> — LCP &lt; 2,5 s, INP &lt; 200 ms, CLS &lt; 0,1. Google et Perplexity pénalisent les sites lents.</li>
+          <li><strong>llms.txt</strong> — résumé structuré destiné aux LLM, en complément du robots.txt.</li>
+        </ol>
+        <p>
+          Sur les 1 800 sites francophones audités par Crawlers.fr en 2026, seuls 12 % cochent ces sept cases. C'est la fenêtre de tir concrète pour dépasser vos concurrents sur les crawlers autant que sur les humains.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">FAQ : les crawlers en 2026</h2>
+        <h3 className="text-xl font-semibold mt-6 mb-2">Un crawler et un bot, c'est la même chose ?</h3>
+        <p>
+          Presque. Tous les crawlers sont des bots, mais tous les bots ne sont pas des crawlers. Un crawler est un bot spécialisé dans la découverte et l'indexation de pages web. Les bots peuvent aussi être des scrapers, des chatbots, des agents de monitoring.
+        </p>
+        <h3 className="text-xl font-semibold mt-6 mb-2">Faut-il bloquer les crawlers IA comme GPTBot ?</h3>
+        <p>
+          Cela dépend de votre stratégie. Bloquer GPTBot vous protège de l'entraînement des modèles OpenAI, mais vous coupe aussi des citations dans ChatGPT Search. En 2026, la plupart des sites B2B choisissent d'autoriser les crawlers IA pour capter le trafic de citation.
+        </p>
+        <h3 className="text-xl font-semibold mt-6 mb-2">Comment savoir quels crawlers visitent mon site ?</h3>
+        <p>
+          Trois méthodes : l'analyse de logs serveur, un outil dédié comme <Link to="/analyse-logs" className="text-primary hover:underline">Analyse Logs</Link>, ou un audit ponctuel via notre <Link to="/audit-seo-gratuit" className="text-primary hover:underline">audit SEO gratuit</Link>.
+        </p>
+
 
         <h2 className="text-2xl font-bold mt-10 mb-4">Conclusion : les crawlers, vos nouveaux meilleurs alliés</h2>
         <p>
