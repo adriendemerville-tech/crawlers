@@ -114,6 +114,7 @@ const DataFlowDiagram = lazy(() => import("./pages/DataFlowDiagram"));
 const ArchitectureMapPage = lazy(() => import("./pages/ArchitectureMapPage"));
 const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
 const KeywordPillarPage = lazy(() => import("./pages/KeywordPillarPage"));
+const CoutChatGPTvsGoogleAds = lazy(() => import("./pages/etudes/CoutChatGPTvsGoogleAds"));
 const APropos = lazy(() => import("./pages/APropos"));
 const AuditSemantique = lazy(() => import("./pages/AuditSemantique"));
 const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
