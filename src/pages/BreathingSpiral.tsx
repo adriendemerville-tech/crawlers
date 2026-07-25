@@ -257,18 +257,16 @@ function BreathingSpiralPage() {
   return (
     <>
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Breathing Spiral : Le SEO Adaptatif Piloté par l'IA | Crawlers.fr</title>
-        <meta name="description" content="La Breathing Spiral est un système homéostatique de pilotage SEO. 9 signaux temps réel pilotent l'oscillation entre consolidation et expansion pour une croissance organique durable." />
-        
+        <title>Breathing Spiral — pilotage SEO adaptatif par IA</title>
+        <meta name="description" content="Breathing Spiral : pilotage SEO homéostatique piloté par 9 signaux temps réel. Oscillation entre consolidation et expansion pour une croissance organique durable." />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content="Breathing Spiral : Le SEO qui respire avec votre site" />
-        <meta property="og:description" content="Un système homéostatique de pilotage SEO piloté par 9 signaux temps réel. Consolidation quand il faut, expansion quand c'est possible." />
+        <meta property="og:title" content="Breathing Spiral — pilotage SEO adaptatif par IA" />
+        <meta property="og:description" content="Système homéostatique de pilotage SEO piloté par 9 signaux temps réel. Consolidation quand il faut, expansion quand c'est possible." />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:site_name" content="Crawlers.fr" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Breathing Spiral : Le SEO Adaptatif" />
+        <meta name="twitter:title" content="Breathing Spiral — SEO adaptatif" />
         <meta name="twitter:description" content="9 signaux. 3 anneaux. 1 spirale qui respire. Découvrez le pilotage SEO homéostatique." />
         <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
@@ -300,12 +298,12 @@ function BreathingSpiralPage() {
 
                   <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
                     Breathing Spiral
-                    <span className="block text-primary mt-2">Le SEO qui respire avec votre site</span>
+                    <span className="block text-primary mt-2">Pilotage SEO adaptatif piloté par IA</span>
                   </h1>
                   <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-xl">
-                    Un système <strong>homéostatique</strong> de pilotage SEO qui oscille dynamiquement entre
-                    consolidation et expansion — piloté par <strong>9 signaux temps réel</strong> issus de
-                    Google Search Console, GA4 et de l'analyse concurrentielle.
+                    La <strong>Breathing Spiral</strong> est un moteur de <strong>pilotage SEO homéostatique</strong> qui
+                    oscille dynamiquement entre consolidation et expansion — piloté par <strong>9 signaux temps réel</strong> issus
+                    de Google Search Console, GA4 et de l'analyse concurrentielle pour une croissance organique durable.
                   </p>
                   <div className="flex flex-wrap gap-3">
                     <Button asChild size="lg" variant="hero">

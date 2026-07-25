@@ -135,8 +135,8 @@ export default function ArchitecteGeneratif() {
   return (
     <>
       <Helmet>
-        <title>Code Architect — correctifs SEO/GEO multi-pages</title>
-        <meta name="description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
+        <title>Architecte Génératif — correctifs SEO/GEO multi-pages</title>
+        <meta name="description" content="Architecte Génératif : générez des correctifs SEO/GEO différents par page — JSON-LD, Open Graph, balises, maillage. Intégration GTM, WordPress ou SDK." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crawlers.fr" />
@@ -169,10 +169,10 @@ export default function ArchitecteGeneratif() {
               </Badge>
               <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-balance">
                 {language === 'es'
-                  ? <>Una corrección <span className="text-primary">diferente</span> para cada página de su sitio</>
+                  ? <>Architecte Génératif — una corrección <span className="text-primary">diferente</span> para cada página</>
                   : language === 'en'
-                    ? <>A <span className="text-primary">different</span> fix for each page of your site</>
-                    : <>Un correctif <span className="text-primary">différent</span> pour chaque page de votre site</>
+                    ? <>Architecte Génératif — a <span className="text-primary">different</span> fix for each page</>
+                    : <>Architecte Génératif — un correctif <span className="text-primary">différent</span> pour chaque page</>
                 }
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
