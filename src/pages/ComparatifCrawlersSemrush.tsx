@@ -31,7 +31,7 @@ const articleSD = {
   "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": SITE_URL },
   "datePublished": "2026-02-03",
   "dateModified": "2026-04-06",
-  "wordCount": 3200,
+  "wordCount": 3600,
   "mainEntityOfPage": { "@type": "WebPage", "@id": `${SITE_URL}/comparatif-crawlers-semrush` },
 };
 
