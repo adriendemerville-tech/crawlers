@@ -169,10 +169,10 @@ export default function ArchitecteGeneratif() {
               </Badge>
               <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-balance">
                 {language === 'es'
-                  ? <>Una corrección <span className="text-primary">diferente</span> para cada página de su sitio</>
+                  ? <>Architecte Génératif — una corrección <span className="text-primary">diferente</span> para cada página</>
                   : language === 'en'
-                    ? <>A <span className="text-primary">different</span> fix for each page of your site</>
-                    : <>Un correctif <span className="text-primary">différent</span> pour chaque page de votre site</>
+                    ? <>Architecte Génératif — a <span className="text-primary">different</span> fix for each page</>
+                    : <>Architecte Génératif — un correctif <span className="text-primary">différent</span> pour chaque page</>
                 }
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
