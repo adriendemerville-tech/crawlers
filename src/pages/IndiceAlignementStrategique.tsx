@@ -21,9 +21,9 @@ export default function IndiceAlignementStrategique() {
   useCanonicalHreflang('/indice-alignement-strategique');
 
   const title = t3(language,
-    'IAS — Indice d\'Alignement Stratégique : pilotez votre SEO et GEO en 2026 | Crawlers.fr',
-    'SAI — Strategic Alignment Index: Drive Your SEO & GEO in 2026 | Crawlers.fr',
-    'IAS — Índice de Alineamiento Estratégico: pilote su SEO y GEO en 2026 | Crawlers.fr'
+    'IAS — Indice d\'Alignement Stratégique SEO & GEO 2026',
+    'SAI — Strategic Alignment Index for SEO & GEO 2026',
+    'IAS — Índice de Alineamiento Estratégico SEO & GEO 2026'
   );
   const metaDesc = t3(language,
     'L\'Indice d\'Alignement Stratégique (IAS) de Crawlers.fr transforme vos données Google Search Console en un diagnostic multidimensionnel. 4 sous-scores, détection automatique de l\'âge du site, diagnostic IA. Affinez votre stratégie marketing, SEO, SEA et réseaux sociaux.',

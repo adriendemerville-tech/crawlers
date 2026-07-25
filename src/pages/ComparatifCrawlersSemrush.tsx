@@ -201,7 +201,7 @@ const ComparatifCrawlersSemrush = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-card rounded-xl border border-border p-5">
                   <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <img src="https://www.semrush.com/favicon.ico" alt="" className="h-4 w-4" />
+                    <img src="https://www.semrush.com/favicon.ico" alt="Logo Semrush" className="h-4 w-4" />
                     Les forces de Semrush
                   </h3>
                   <ul className="space-y-2 text-sm text-muted-foreground">
@@ -214,7 +214,7 @@ const ComparatifCrawlersSemrush = () => {
                 </div>
                 <div className="bg-card rounded-xl border border-primary/30 p-5">
                   <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <img src="/favicon.svg" alt="" className="h-5 w-5" />
+                    <img src="/favicon.svg" alt="Logo Crawlers.fr" className="h-5 w-5" />
                     Les forces de Crawlers.fr
                   </h3>
                   <ul className="space-y-2 text-sm text-muted-foreground">
@@ -452,12 +452,12 @@ const ComparatifCrawlersSemrush = () => {
                       <th className="text-left p-3 font-semibold text-foreground min-w-[160px] border-r border-border">Critère</th>
                       <th className="text-center p-3 font-semibold min-w-[180px] border-r border-border bg-primary/5">
                         <span className="inline-flex items-center gap-1.5">
-                          <img src="/favicon.svg" alt="" className="h-4 w-4" /> Crawlers.fr
+                          <img src="/favicon.svg" alt="Logo Crawlers.fr" className="h-4 w-4" /> Crawlers.fr
                         </span>
                       </th>
                       <th className="text-center p-3 font-semibold min-w-[180px]">
                         <span className="inline-flex items-center gap-1.5">
-                          <img src="https://www.semrush.com/favicon.ico" alt="" className="h-3.5 w-3.5" /> Semrush
+                          <img src="https://www.semrush.com/favicon.ico" alt="Logo Semrush" className="h-3.5 w-3.5" /> Semrush
                         </span>
                       </th>
                     </tr>

@@ -28,7 +28,7 @@ const CreditTopUpModal = lazy(() => import('@/components/CreditTopUpModal').then
 const t = {
   fr: {
     meta: {
-      title: 'Content Architect — Création de contenu SEO & GEO automatisée | Crawlers.fr',
+      title: 'Content Architect — contenu SEO & GEO automatisé',
       description: 'Générez des pages SEO optimisées en 30 secondes. Publication sur 7 CMS. Images IA multi-moteurs, schema.org, brouillons, 5 crédits/page ou illimité en Pro Agency.',
     },
     hero: {
