@@ -14,6 +14,36 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr" />
   </url>
   <url>
+    <loc>https://crawlers.fr/audit-seo-geo</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crawlers.fr/outil-geo-ia</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crawlers.fr/optimisation-llm-seo</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crawlers.fr/crawler-ia</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crawlers.fr/monitoring-gptbot-perplexity</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://crawlers.fr/audit-expert</loc>
     <lastmod>2025-06-01</lastmod>
     <changefreq>weekly</changefreq>
