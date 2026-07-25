@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { SummaryBox, RichLink, GeoTable, SgeSummaryBox, AuthorCard, RichLinkCard } from '@/components/Blog';
 import type { GeoTableRow } from '@/components/Blog';
 
