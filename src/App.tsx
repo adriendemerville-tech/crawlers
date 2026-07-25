@@ -269,6 +269,11 @@ const App = () => (
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="/a-propos" element={<APropos />} />
                           <Route path="/audit-semantique" element={<AuditSemantique />} />
+                          <Route path="/audit-seo-geo" element={<KeywordPillarPage />} />
+                          <Route path="/outil-geo-ia" element={<KeywordPillarPage />} />
+                          <Route path="/optimisation-llm-seo" element={<KeywordPillarPage />} />
+                          <Route path="/crawler-ia" element={<KeywordPillarPage />} />
+                          <Route path="/monitoring-gptbot-perplexity" element={<KeywordPillarPage />} />
                           <Route path="/google-business" element={<GoogleBusinessPage />} />
                           <Route path="/api-integrations" element={<ApiIntegrations />} />
                           <Route path="/cf-shield" element={<CfShield />} />
