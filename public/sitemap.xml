@@ -1143,4 +1143,10 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/features?lang=es" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/features" />
   </url>
+  <url>
+    <loc>https://crawlers.fr/etudes/cout-reponse-chatgpt-vs-google-ads</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
