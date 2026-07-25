@@ -1,77 +1,83 @@
-# Automatisation LinkedIn hebdomadaire — v2
+# Plan d'action SEO/GEO crawlers.fr
 
-Mise à jour du plan initial pour intégrer :
-- **Texte** : Mistral via **OpenRouter** (clé `OPENROUTER_API_KEY` déjà utilisée par `_shared/openRouterAI.ts`).
-- **Médias** : **WaveSpeed.ai** via le proxy admin déjà déployé (`wavespeed-proxy`, clé `WAVESPEED_API_KEY` OK).
+Basé sur le diagnostic Semrush (AS 6/100, 8 mots-clés FR, profil de liens partiellement toxique). Priorisé par ROI : quick wins de ranking d'abord, assainissement en parallèle, contenu de fond ensuite.
 
-Le reste de l'architecture (catalogue de features, rotation, UI admin de validation, cron lundi 07:00, publisher LinkedIn) reste identique au plan initial.
+## Lot 1 — Assainissement du profil de liens (P0, en parallèle)
 
----
+Objectif : stopper le signal négatif Google avant d'accélérer.
 
-## Ce qui change
+1. **Générer le fichier `disavow.txt`** avec les domaines toxiques identifiés :
+   - `photoshop-school.org` (124 liens depuis 1 domaine à AS 5)
+   - Domaines PBN/spam repérés dans les ancres "buy backlinks", "premium PBN"
+   - `wibngiftliken.blogspot.com`, `factmags.com`, `allwebsitesdirectory.com`, `australianwebdirectory.shop`, `bestwebstats.com`, `domain.com.lc`, `domainanalysis.org`
+2. **Étendre la liste** via un audit complet des 102 referring domains (via connecteur Semrush si besoin d'export bulk).
+3. **Fournir un guide de dépôt** dans Google Search Console (fichier + procédure).
 
-### 1. Rédaction du texte — Mistral / OpenRouter
-- Modèle par défaut : `mistralai/mistral-large-latest` (rédactionnel FR de qualité, coût raisonnable).
-- Appel via le wrapper existant `supabase/functions/_shared/openRouterAI.ts` (`callOpenRouterJson`) → réponse JSON strict `{ text, hashtags[] }`.
-- Prompt système/utilisateur inchangé (ton Crawlers : direct, expert, sans emoji, sans bleu IA, 1200-1600 caractères).
-- On remplace donc l'appel `ai.gateway.lovable.dev` actuellement présent dans `linkedin-post-generator/index.ts`.
+## Lot 2 — Quick wins : faire passer les pages presque en top
 
-### 2. Génération des médias — WaveSpeed
-Deux modes en alternance selon la parité du numéro de semaine ISO :
+Cibles identifiées par Semrush, à 1-2 positions du top 3.
 
-**Image (carrousel 6 slides)**
-- Modèle : `bytedance/seedream-4` (ou équivalent T2I catalogue WaveSpeed) — 1200×1200, style plat/éditorial, palette Crawlers (violet #7C3AED, or #F59E0B, noir, blanc).
-- 6 appels séquentiels avec prompts dérivés du texte du post : cover, 3 slides pédagogiques (angle marketing feature), 1 slide preuve/chiffre, 1 slide CTA.
-- Contrainte NO_TEXT_GUARD respectée (aucun texte dans l'image, le texte reste dans la légende LinkedIn).
+### 2.1 `/comparatif-crawlers-semrush` — "crawl semrush" (pos 5 → top 3)
+- Étoffer le comparatif : tableau détaillé fonctionnalités × prix × cas d'usage.
+- Ajouter section "Quand choisir Semrush vs Crawlers" (intent commercial).
+- JSON-LD `ComparisonTable` + FAQ (5 questions transactionnelles).
+- Ajout de 2-3 captures annotées (alt SEO).
 
-**Vidéo (screencast marketing 5-10s)**
-- Modèle : `bytedance/seedance-v1-pro-t2v-480p` (ou 720p si dispo dans la formule) — 5s, 16:9 ou 1:1.
-- Prompt dérivé automatiquement de la feature (`marketing_angle`).
+### 2.2 `/blog/crawler-definition-seo-geo` — "crawlers" / "crawler seo" (pos 10 → page 1)
+- Passer de définition courte à guide long-form (≥ 1500 mots).
+- H2/H3 dédiés : "crawler SEO", "crawler GEO", "types de crawlers", "outils".
+- Ajouter table des matières + JSON-LD `Article` + `FAQPage`.
+- Lien interne fort depuis la home + `/comparatif-crawlers-semrush`.
 
-**Orchestration WaveSpeed (async)**
-- `wavespeed-proxy action=submit` → renvoie `prediction_id`.
-- Polling toutes les 3s côté edge function `linkedin-media-generator` jusqu'à `status=succeeded` (max 120s).
-- Téléchargement des URLs de sortie → upload sur bucket Storage `linkedin-media` → URLs signées enregistrées dans `linkedin_scheduled_posts.media_urls[]`.
+### 2.3 `/blog/json-ld-snippet-autorite` — "json ld" (pos 16 → page 1)
+- Enrichir avec exemples concrets (Article, FAQ, Product, HowTo).
+- Blocs code copiables + validateur intégré si possible.
+- Cibler aussi "schema.org exemple", "structured data".
 
-### 3. Nouvelle edge function `linkedin-media-generator`
-Remplace `linkedin-carousel-renderer` + `linkedin-video-renderer` du plan initial (plus besoin de Playwright/ffmpeg côté edge).
+## Lot 3 — Alignement Slug / H1 / mots-clés cibles
 
-Entrée : `{ post_id }` → lit le draft, appelle WaveSpeed selon `media_type`, met à jour `media_urls[]` et `media_generation_status`.
+Pages piliers avec désalignement identifié à l'audit précédent :
 
-### 4. UI admin (`/admin/linkedin`)
-Inchangée sur le principe, avec en plus :
-- Sélecteur du modèle WaveSpeed (image / vidéo) avec valeur par défaut, pour permettre à Adrien de tester d'autres modèles depuis le playground existant.
-- Bouton **Régénérer médias** → relance `linkedin-media-generator`.
+- `/architecte-generatif` : réaligner H1 + contenu FR complet (traduction).
+- `/breathing-spiral` : idem, contenu encore trop anglais.
+- Vérifier densité mot-clé cible (2-3 %) sur chaque page produit.
 
----
+## Lot 4 — Élargir l'empreinte lexicale (8 → 50+ mots-clés)
 
-## Livrables mis à jour
+Créer/enrichir 5 pages autour de requêtes à intent clair :
+- "audit SEO GEO"
+- "outil GEO IA"
+- "optimisation LLM SEO"
+- "crawler IA"
+- "monitoring GPTBot / Perplexity"
 
-```text
-supabase/functions/
-  ├── linkedin-post-generator/      (MAJ : appelle openRouterAI + Mistral)
-  ├── linkedin-media-generator/     (NOUVEAU : appelle wavespeed-proxy submit + poll)
-  └── linkedin-publisher/           (inchangé — upload + UGC via gateway LinkedIn)
+Chaque page : 1200+ mots, JSON-LD, breadcrumbs, 3 liens internes minimum.
 
-supabase/migrations/
-  └── xxx_linkedin_media_fields.sql (ajoute media_provider, wavespeed_prediction_ids[])
+## Lot 5 — Autorité (long terme)
 
-src/pages/admin/
-  └── LinkedInAutomation.tsx        (UI review/publish, boutons régénérer texte/média)
-```
+- Digital PR : 3-5 études de données propriétaires publiables (ex. "% de sites bloquant GPTBot en France").
+- Backlinks propres via mentions presse SEO/IA.
+- Guest posts sur 2-3 blogs SEO FR à AS > 40.
 
-## Phasage proposé
-1. **Sprint 1 (rapide)** — MAJ `linkedin-post-generator` pour utiliser Mistral via `openRouterAI`, + UI admin de validation des drafts texte seul.
-2. **Sprint 2** — `linkedin-media-generator` (WaveSpeed image → carrousel 6 slides), preview dans l'UI.
-3. **Sprint 3** — Mode vidéo WaveSpeed + publisher LinkedIn + cron lundi 07:00.
+## Détails techniques
 
-## Phasage proposé
-1. **Sprint 1 (rapide)** — MAJ `linkedin-post-generator` pour utiliser Mistral via `openRouterAI`, + UI admin de validation des drafts texte seul.
-2. **Sprint 2** — `linkedin-media-generator` (WaveSpeed image → carrousel 6 slides), preview dans l'UI.
-3. **Sprint 3** — Mode vidéo WaveSpeed + publisher LinkedIn + cron.
+- Disavow : format standard Google, un domaine par ligne préfixé `domain:`.
+- Enrichissement piliers : édition dans `src/pages/*` ou `src/data/blogArticles.ts` selon la route.
+- JSON-LD : via `react-helmet-async` comme les articles existants.
+- Densité mot-clé : viser 2-3 % sur le kw principal, plus variantes sémantiques.
 
-## Planning hebdo (fixé)
-- **Mercredi 07:00 (Europe/Paris)** : `pg_cron` déclenche `linkedin-post-generator` → nouveau draft `pending_review` + notif admin.
-- **Fenêtre de review** : mercredi 07:00 → jeudi 06:55 (~24 h pour relire, éditer, régénérer texte/média).
-- **Jeudi 07:00 (Europe/Paris)** : `pg_cron` déclenche `linkedin-publisher` sur le draft `approved` le plus récent. Si aucun draft approuvé → skip + alerte, aucun post publié (safety).
-- Anti-spam : garde DB `max 1 post publié / 7 jours` inchangée.
+## Ordre d'exécution recommandé
+
+1. Lot 1 (disavow) — immédiat, effet en 2-4 semaines.
+2. Lot 2.1 + 2.2 en priorité (66 % + 22 % du trafic actuel).
+3. Lot 3 en parallèle (dette technique).
+4. Lot 2.3 puis Lot 4.
+5. Lot 5 en fond continu.
+
+## Hors périmètre
+
+- Refonte design / UX.
+- Modification du modèle de facturation ou features produit.
+- Migration de domaine (crawlers.fr reste primaire).
+
+Dis-moi par quel lot j'attaque — je recommande de démarrer par le **Lot 1 (disavow)** en parallèle du **Lot 2.1 (page comparatif Semrush)** pour un impact rapide.
