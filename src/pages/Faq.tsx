@@ -89,6 +89,14 @@ export default function Faq() {
       </Helmet>
       <Header />
       <main className="flex-1 pt-20">
+        <header className="container mx-auto max-w-4xl px-4 pt-8 pb-4">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+            FAQ Crawlers.fr — questions fréquentes SEO &amp; GEO
+          </h1>
+          <p className="mt-3 text-muted-foreground max-w-2xl">
+            Toutes les réponses sur l'audit SEO, le GEO Score, la visibilité LLM, les crédits, le plan Pro Agency et l'intégration technique de Crawlers.fr.
+          </p>
+        </header>
         <FAQSection />
         <GEOFAQSection />
       </main>
