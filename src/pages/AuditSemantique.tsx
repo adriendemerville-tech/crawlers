@@ -89,7 +89,7 @@ export default function AuditSemantique() {
       { q: '¿Verifica la visibilidad IA?', a: 'Sí. Crawlers.fr prueba si su contenido es citado por ChatGPT, Gemini, Claude y Perplexity.' },
     ],
   } : {
-    title: 'Audit Sémantique SEO — Analysez la Profondeur de Votre Contenu | Crawlers.fr',
+    title: 'Audit sémantique SEO — profondeur de contenu | Crawlers',
     metaDesc: 'Réalisez un audit sémantique gratuit de votre site. Évaluez la profondeur de contenu, la couverture de mots-clés, les gaps thématiques et les signaux E-E-A-T avec Crawlers.fr.',
     h1: 'Audit Sémantique SEO : Analysez la Profondeur de Votre Contenu',
     intro: 'Un audit sémantique va au-delà du SEO technique. Il évalue si votre contenu couvre réellement les sujets recherchés par votre audience — et si les moteurs de réponse IA comme ChatGPT et Gemini peuvent comprendre et citer vos pages.',

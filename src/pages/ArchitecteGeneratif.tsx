@@ -135,7 +135,7 @@ export default function ArchitecteGeneratif() {
   return (
     <>
       <Helmet>
-        <title>Code Architect — Correctifs Multi-Pages SEO/GEO | Crawlers.fr</title>
+        <title>Code Architect — correctifs SEO/GEO multi-pages</title>
         <meta name="description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta property="og:type" content="website" />

@@ -289,10 +289,10 @@ const Observatoire = () => {
   useCanonicalHreflang('/observatoire');
 
   const metaTitle = language === 'fr'
-    ? "Observatoire SEO & GEO du Web Français – Statistiques Temps Réel 2026"
+    ? "Observatoire SEO & GEO du web français — 2026"
     : language === 'es'
-    ? "Observatorio SEO & GEO del Web Francés – Estadísticas 2026"
-    : "French Web SEO & GEO Observatory – Real-Time Statistics 2026";
+    ? "Observatorio SEO & GEO del web francés — 2026"
+    : "French Web SEO & GEO Observatory — 2026";
 
   const metaDesc = language === 'fr'
     ? "Tableau de bord open-data des statistiques SEO et GEO du web français : adoption JSON-LD, Core Web Vitals, HTTPS, compatibilité mobile. Données anonymisées en temps réel issues de milliers d'audits Crawlers.fr."
