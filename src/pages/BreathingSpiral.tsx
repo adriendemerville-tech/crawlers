@@ -298,12 +298,12 @@ function BreathingSpiralPage() {
 
                   <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
                     Breathing Spiral
-                    <span className="block text-primary mt-2">Le SEO qui respire avec votre site</span>
+                    <span className="block text-primary mt-2">Pilotage SEO adaptatif piloté par IA</span>
                   </h1>
                   <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-xl">
-                    Un système <strong>homéostatique</strong> de pilotage SEO qui oscille dynamiquement entre
-                    consolidation et expansion — piloté par <strong>9 signaux temps réel</strong> issus de
-                    Google Search Console, GA4 et de l'analyse concurrentielle.
+                    La <strong>Breathing Spiral</strong> est un moteur de <strong>pilotage SEO homéostatique</strong> qui
+                    oscille dynamiquement entre consolidation et expansion — piloté par <strong>9 signaux temps réel</strong> issus
+                    de Google Search Console, GA4 et de l'analyse concurrentielle pour une croissance organique durable.
                   </p>
                   <div className="flex flex-wrap gap-3">
                     <Button asChild size="lg" variant="hero">
