@@ -31,6 +31,8 @@ interface SidebarItem {
   beta?: boolean;
   /** When true, hidden in simplified (non-advanced) view. */
   advancedOnly?: boolean;
+  /** Override href — when set, item navigates to this route instead of switching tab. */
+  href?: string;
 }
 
 const translations = {
