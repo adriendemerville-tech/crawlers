@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +8,20 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Link2, ExternalLink } from "lucide-react";
+import { Loader2, Link2, ExternalLink, Search, X, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+const PROVIDERS = [
+  { slug: "accesslink", label: "Accesslink.ai" },
+  { slug: "rocketlinks", label: "Rocketlinks" },
+  { slug: "getfluence", label: "Getfluence" },
+] as const;
+
+type ProviderSlug = (typeof PROVIDERS)[number]["slug"];
+
 type Offer = {
-  provider_slug: string;
+  provider_slug: ProviderSlug;
   provider_offer_id: string;
   publisher_domain: string;
   language: string;
@@ -25,17 +34,76 @@ type Offer = {
   turnaround_days?: number;
 };
 
-const eur = (cents: number) => (cents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const eur = (cents: number) =>
+  (cents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+
+function statusBadgeVariant(status: string) {
+  switch (status) {
+    case "live":
+      return "secondary";
+    case "pending":
+    case "in_progress":
+      return "outline";
+    case "rejected":
+    case "lost":
+    case "cancelled":
+      return "destructive";
+    case "refunded":
+      return "outline";
+    default:
+      return "outline";
+  }
+}
+
+function statusLabel(status: string) {
+  const map: Record<string, string> = {
+    draft: "Brouillon",
+    pending: "En attente",
+    in_progress: "En cours",
+    live: "En ligne",
+    rejected: "Refusé",
+    lost: "Lien perdu",
+    cancelled: "Annulé",
+    refunded: "Remboursé",
+  };
+  return map[status] ?? status;
+}
 
 export default function Netlinking() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [topic, setTopic] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
   const [anchor, setAnchor] = useState("");
   const [minDr, setMinDr] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
+  const [selectedProviders, setSelectedProviders] = useState<ProviderSlug[]>([
+    "accesslink",
+    "rocketlinks",
+    "getfluence",
+  ]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
+
+  // Pre-fill from query params (e.g. deep-link from Stratège Cocoon)
+  useEffect(() => {
+    const urlTopic = searchParams.get("topic");
+    const urlTarget = searchParams.get("target_url");
+    const urlAnchor = searchParams.get("anchor");
+    const urlProviders = searchParams.get("providers");
+
+    if (urlTopic) setTopic(urlTopic);
+    if (urlTarget) setTargetUrl(urlTarget);
+    if (urlAnchor) setAnchor(urlAnchor);
+    if (urlProviders) {
+      const parsed = urlProviders
+        .split(",")
+        .map((p) => p.trim())
+        .filter((p): p is ProviderSlug => PROVIDERS.some((x) => x.slug === p));
+      if (parsed.length) setSelectedProviders(parsed);
+    }
+  }, [searchParams]);
 
   const ordersQuery = useQuery({
     queryKey: ["netlinking-orders"],
@@ -64,12 +132,16 @@ export default function Netlinking() {
           min_dr: minDr ? Number(minDr) : undefined,
           budget_max_cents: budgetMax ? Number(budgetMax) * 100 : undefined,
           language: "fr",
+          providers: selectedProviders,
         },
       });
       if (error) throw error;
       setOffers(data?.offers ?? []);
       if (!data?.offers?.length) {
-        toast({ title: "Aucune offre trouvée", description: "Ajuste les critères ou vérifie que les clés provider sont configurées." });
+        toast({
+          title: "Aucune offre trouvée",
+          description: "Ajuste les critères ou vérifie que les clés provider sont configurées.",
+        });
       }
     } catch (err: any) {
       toast({ title: "Erreur recherche", description: err.message, variant: "destructive" });
@@ -110,64 +182,159 @@ export default function Netlinking() {
     },
   });
 
+  const clearFilters = () => {
+    setTopic("");
+    setTargetUrl("");
+    setAnchor("");
+    setMinDr("");
+    setBudgetMax("");
+    setSelectedProviders(["accesslink", "rocketlinks", "getfluence"]);
+    setOffers([]);
+    setSearchParams({}, { replace: true });
+  };
+
+  const hasActiveFilters = useMemo(
+    () => topic || targetUrl || anchor || minDr || budgetMax || offers.length > 0,
+    [topic, targetUrl, anchor, minDr, budgetMax, offers.length]
+  );
+
+  const toggleProvider = (slug: ProviderSlug) => {
+    setSelectedProviders((prev) =>
+      prev.includes(slug) ? prev.filter((p) => p !== slug) : [...prev, slug]
+    );
+  };
+
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4">
       <Helmet>
         <title>Netlinking multi-provider — Crawlers</title>
-        <meta name="description" content="Recherche et commande de backlinks via Accesslink.ai, Rocketlinks et Getfluence. Commission Crawlers de 10%." />
+        <meta
+          name="description"
+          content="Recherche et commande de backlinks via Accesslink.ai, Rocketlinks et Getfluence. Commission Crawlers de 10%."
+        />
       </Helmet>
 
       <div className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Link2 className="h-8 w-8 text-primary" />
+          <Link2 className="h-8 w-8 text-[hsl(262,83%,58%)]" />
           Netlinking
         </h1>
-        <p className="text-muted-foreground mt-2">
-          Renforce l'autorité de tes pages via 3 marketplaces de backlinks. Commission Crawlers de 10% sur chaque commande, débitée du wallet développeur.
+        <p className="text-muted-foreground mt-2 max-w-3xl">
+          Renforce l'autorité de tes pages via 3 marketplaces de backlinks.
+          Commission Crawlers de 10% sur chaque commande, débitée du wallet développeur.
         </p>
       </div>
 
       <Tabs defaultValue="search">
-        <TabsList>
+        <TabsList className="mb-6">
           <TabsTrigger value="search">Recherche d'opportunités</TabsTrigger>
           <TabsTrigger value="orders">Mes commandes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="search" className="space-y-6">
-          <Card className="p-6 space-y-4">
+          <Card className="p-6 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="topic">Sujet / thématique *</Label>
-                <Input id="topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ex. audit SEO IA" />
+                <Input
+                  id="topic"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="Ex. audit SEO IA"
+                />
               </div>
               <div>
                 <Label htmlFor="target">URL cible *</Label>
-                <Input id="target" value={targetUrl} onChange={(e) => setTargetUrl(e.target.value)} placeholder="https://crawlers.fr/…" />
+                <Input
+                  id="target"
+                  value={targetUrl}
+                  onChange={(e) => setTargetUrl(e.target.value)}
+                  placeholder="https://crawlers.fr/…"
+                />
               </div>
               <div>
                 <Label htmlFor="anchor">Ancre du lien *</Label>
-                <Input id="anchor" value={anchor} onChange={(e) => setAnchor(e.target.value)} placeholder="outil audit SEO GEO" />
+                <Input
+                  id="anchor"
+                  value={anchor}
+                  onChange={(e) => setAnchor(e.target.value)}
+                  placeholder="outil audit SEO GEO"
+                />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label htmlFor="dr">DR min</Label>
-                  <Input id="dr" type="number" value={minDr} onChange={(e) => setMinDr(e.target.value)} placeholder="30" />
+                  <Input
+                    id="dr"
+                    type="number"
+                    value={minDr}
+                    onChange={(e) => setMinDr(e.target.value)}
+                    placeholder="30"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="budget">Budget max (€)</Label>
-                  <Input id="budget" type="number" value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} placeholder="300" />
+                  <Input
+                    id="budget"
+                    type="number"
+                    value={budgetMax}
+                    onChange={(e) => setBudgetMax(e.target.value)}
+                    placeholder="300"
+                  />
                 </div>
               </div>
             </div>
-            <Button onClick={runSearch} disabled={loading} variant="outline">
-              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              Rechercher
-            </Button>
+
+            <div>
+              <Label className="mb-2 block">Providers</Label>
+              <div className="flex flex-wrap gap-2">
+                {PROVIDERS.map((p) => {
+                  const active = selectedProviders.includes(p.slug);
+                  return (
+                    <button
+                      key={p.slug}
+                      type="button"
+                      onClick={() => toggleProvider(p.slug)}
+                      className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                        active
+                          ? "border-[hsl(262,83%,58%)] text-[hsl(262,83%,58%)] bg-[hsl(262,83%,58%)]/10"
+                          : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={runSearch} disabled={loading} variant="outline">
+                {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+                Rechercher
+              </Button>
+              {hasActiveFilters && (
+                <Button onClick={clearFilters} variant="outline" size="sm">
+                  <X className="h-4 w-4 mr-2" />
+                  Réinitialiser
+                </Button>
+              )}
+            </div>
+
+            {selectedProviders.length === 0 && (
+              <div className="flex items-center gap-2 text-xs text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                Sélectionne au moins un provider.
+              </div>
+            )}
           </Card>
 
           {offers.length > 0 && (
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">{offers.length} offre(s) trouvée(s)</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">{offers.length} offre(s) trouvée(s)</h2>
+                <p className="text-xs text-muted-foreground">Prix TTC hors taxes — commission Crawlers incluse</p>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -186,9 +353,13 @@ export default function Netlinking() {
                     {offers.map((o) => (
                       <tr key={`${o.provider_slug}-${o.provider_offer_id}`} className="border-b border-border/50">
                         <td className="p-2 font-medium">{o.publisher_domain}</td>
-                        <td className="p-2"><Badge variant="outline">{o.provider_slug}</Badge></td>
+                        <td className="p-2">
+                          <Badge variant="outline">{o.provider_slug}</Badge>
+                        </td>
                         <td className="p-2">{o.metrics.dr ?? "–"}</td>
-                        <td className="p-2">{o.metrics.monthly_traffic?.toLocaleString("fr-FR") ?? "–"}</td>
+                        <td className="p-2">
+                          {o.metrics.monthly_traffic?.toLocaleString("fr-FR") ?? "–"}
+                        </td>
                         <td className="p-2">{eur(o.cost_ht_cents)}</td>
                         <td className="p-2 text-muted-foreground">{eur(o.commission_cents)}</td>
                         <td className="p-2 font-semibold">{eur(o.total_ht_cents)}</td>
@@ -209,6 +380,19 @@ export default function Netlinking() {
               </div>
             </Card>
           )}
+
+          {offers.length === 0 && !loading && hasActiveFilters && (
+            <Card className="p-10 text-center">
+              <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                <Search className="h-10 w-10 text-[hsl(262,83%,58%)]/60" />
+                <p className="font-medium">Aucune offre ne correspond à tes critères.</p>
+                <p className="text-xs max-w-md">
+                  Essaie d'élargir le sujet, de baisser le DR minimum ou d'augmenter le budget.
+                  Sans clés API provider, le catalogue sera vide.
+                </p>
+              </div>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="orders">
@@ -216,7 +400,11 @@ export default function Netlinking() {
             {ordersQuery.isLoading ? (
               <Loader2 className="h-6 w-6 animate-spin" />
             ) : !ordersQuery.data?.length ? (
-              <p className="text-muted-foreground">Aucune commande pour le moment.</p>
+              <div className="text-center py-10 text-muted-foreground">
+                <Link2 className="h-10 w-10 mx-auto mb-3 text-[hsl(262,83%,58%)]/60" />
+                <p>Aucune commande pour le moment.</p>
+                <p className="text-xs mt-1">Les commandes passées apparaîtront ici avec leur statut et le lien live.</p>
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -237,15 +425,26 @@ export default function Netlinking() {
                         <td className="p-2">{new Date(o.created_at).toLocaleDateString("fr-FR")}</td>
                         <td className="p-2">{o.publisher_domain}</td>
                         <td className="p-2 max-w-[200px] truncate">{o.anchor_text}</td>
-                        <td className="p-2"><Badge variant="outline">{o.provider_slug}</Badge></td>
+                        <td className="p-2">
+                          <Badge variant="outline">{o.provider_slug}</Badge>
+                        </td>
                         <td className="p-2">{eur(o.total_ht_cents)}</td>
-                        <td className="p-2"><Badge>{o.status}</Badge></td>
+                        <td className="p-2">
+                          <Badge variant={statusBadgeVariant(o.status)}>{statusLabel(o.status)}</Badge>
+                        </td>
                         <td className="p-2">
                           {o.live_url ? (
-                            <a href={o.live_url} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-primary hover:underline">
+                            <a
+                              href={o.live_url}
+                              target="_blank"
+                              rel="noopener"
+                              className="inline-flex items-center gap-1 text-[hsl(262,83%,58%)] hover:underline"
+                            >
                               Voir <ExternalLink className="h-3 w-3" />
                             </a>
-                          ) : "–"}
+                          ) : (
+                            "–"
+                          )}
                         </td>
                       </tr>
                     ))}
