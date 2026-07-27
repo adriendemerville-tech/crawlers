@@ -286,6 +286,8 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
           onClick={(e) => {
             // Allow native behavior for modifier-clicks (new tab/window) and middle-click
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+            // Custom href items navigate natively via the anchor
+            if (item.href) return;
             e.preventDefault();
             onTabChange(item.value);
           }}
