@@ -25,6 +25,7 @@ import { backendDocSections, docMetadata, type DocSection } from '@/data/backend
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DocShareLinksDialog } from './DocShareLinksDialog';
 import { cn } from '@/lib/utils';
 
 // ── Icon mapper ──────────────────────────────────────────
@@ -211,10 +212,13 @@ export function BackendDocumentation() {
             </div>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={generatePdf} className="gap-2">
-          <FileDown className="h-4 w-4" />
-          Exporter PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <DocShareLinksDialog />
+          <Button variant="outline" size="sm" onClick={generatePdf} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Exporter PDF
+          </Button>
+        </div>
       </div>
 
       {/* Layout */}
