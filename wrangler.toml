@@ -3,11 +3,23 @@ main = "public/cloudflare-worker-logger.js"
 compatibility_date = "2024-09-01"
 workers_dev = false
 
-# Routes attachées au worker (zone crawlers.fr)
-routes = [
-  { pattern = "crawlers.fr/*", zone_name = "crawlers.fr" },
-  { pattern = "www.crawlers.fr/*", zone_name = "crawlers.fr" },
-]
+# ⚠️  CRITICAL — read before re-attaching routes:
+# This Worker was previously attached to crawlers.fr/* and www.crawlers.fr/*
+# and proxied human/Googlebot traffic to crawlers.lovable.app.
+# Lovable's published app (crawlers.lovable.app) issues a 302 redirect to
+# https://crawlers.fr/ for any request, which caused an infinite redirect loop
+# (ERR_TOO_MANY_REDIRECTS) because the Worker kept forwarding the request
+# back to itself.
+#
+# To restore the site we detached the routes. The Worker code is kept for
+# reference, but it MUST NOT be attached to the main custom domain unless you
+# have a non-redirecting origin endpoint. Use Cloudflare Logpush instead for
+# HTTP logging on a Lovable custom domain.
+#
+# routes = [
+#   { pattern = "crawlers.fr/*", zone_name = "crawlers.fr" },
+#   { pattern = "www.crawlers.fr/*", zone_name = "crawlers.fr" },
+# ]
 
 # Variables d'environnement non secrètes (les secrets se poussent via `wrangler secret put`)
 # [vars]

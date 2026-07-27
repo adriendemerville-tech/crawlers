@@ -52,6 +52,11 @@ function isPrerenderableRoute(pathname) {
 }
 
 // Reconstruit la requête vers l'origine Lovable en réécrivant le Host.
+// ⚠️  DANGER: if LOVABLE_ORIGIN_HOST redirects back to the custom domain,
+// the Worker will create an infinite redirect loop. This happened with
+// crawlers.lovable.app → https://crawlers.fr/ and took the site down.
+// Only re-enable this path if you have verified (e.g. with curl -I) that
+// the origin returns 200, not 302, for the rewritten Host.
 async function fetchLovableOrigin(request) {
   const url = new URL(request.url);
   url.hostname = LOVABLE_ORIGIN_HOST;
@@ -403,6 +408,26 @@ Sitemap: https://crawlers.fr/sitemap.xml
     } else {
       // Humain ou Googlebot : proxy vers l'origine Lovable (rend le JS)
       const originRes = await fetchLovableOrigin(request);
+
+      // Anti-loop guard: if the origin redirects back to the same public host,
+      // do not return the redirect or we create ERR_TOO_MANY_REDIRECTS.
+      if ([301, 302, 307, 308].includes(originRes.status)) {
+        const loc = originRes.headers.get("location") || "";
+        const publicHost = url.hostname;
+        try {
+          const locHost = new URL(loc).hostname;
+          if (locHost === publicHost) {
+            console.error(`[crawlers-worker] origin ${LOVABLE_ORIGIN_HOST} redirects back to ${publicHost} (${loc}). Aborting to avoid redirect loop.`);
+            return new Response(
+              `<!doctype html><html><body><h1>Configuration error</h1><p>The origin configured in this Worker (${LOVABLE_ORIGIN_HOST}) redirects back to ${publicHost}. Detach the Worker routes or fix the origin.</p></body></html>`,
+              { status: 500, headers: { "Content-Type": "text/html; charset=utf-8" } }
+            );
+          }
+        } catch {
+          // location relative ou malformée → on laisse passer
+        }
+      }
+
       response = new Response(originRes.body, originRes);
       response.headers.set('X-CF-Worker', 'crawlers-logger-v3');
     }
