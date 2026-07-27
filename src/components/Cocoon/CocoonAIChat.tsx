@@ -1826,7 +1826,7 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
           )}
 
           {/* Messages */}
-          <div ref={scrollRef} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} className="flex-1 overflow-y-auto px-4 py-3 space-y-3 select-text" style={{ minHeight: '200px', scrollbarGutter: 'stable both-edges', userSelect: 'text', WebkitUserSelect: 'text' }}>
+          <div ref={scrollRef} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} className="flex-1 overflow-y-auto pl-0 pr-4 py-3 space-y-3 select-text" style={{ minHeight: '200px', scrollbarGutter: 'stable both-edges', userSelect: 'text', WebkitUserSelect: 'text' }}>
             {/* Show action buttons when chat is empty OR only has the greeting message */}
             {(() => {
               const isGreetingOnly = messages.length === 1 && messages[0].role === 'assistant' && messages[0].content.includes('👋');
