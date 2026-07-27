@@ -113,11 +113,12 @@ Deno.serve(async (req) => {
           summary.lost++;
           await service.from('anomaly_alerts').insert({
             user_id: order.user_id,
-            alert_type: 'netlinking_link_lost',
+            metric_name: 'netlinking_link_lost',
+            metric_source: 'netlinking',
             severity: 'high',
-            title: `Backlink perdu — ${new URL(urlToCheck).hostname}`,
-            description: `Le lien vers ${order.target_url} n'est plus détecté sur ${urlToCheck}. Contacte le provider ${order.provider_slug} pour recours.`,
-            metadata: { order_id: order.id, provider: order.provider_slug, published_url: urlToCheck, target_url: order.target_url },
+            direction: 'down',
+            description: `Backlink perdu : ${order.target_url} n'est plus détecté sur ${urlToCheck}. Contacte ${order.provider_slug} pour recours.`,
+            domain: (() => { try { return new URL(order.target_url).hostname; } catch { return null; } })(),
           });
         }
       }
