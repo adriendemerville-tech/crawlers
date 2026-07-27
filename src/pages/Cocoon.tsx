@@ -752,8 +752,12 @@ function CocoonContent() {
               </div>
             </div>
 
-            {/* Site selector — centered on desktop, full row on mobile */}
-            <div className="order-last sm:order-none w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            {/* Site selector — centered on desktop only when the AI sidebar is closed; otherwise inline to avoid overlap with right-side controls */}
+            <div className={
+              cocoonExpanded
+                ? "order-last sm:order-none w-full sm:w-auto sm:flex-1 sm:min-w-[160px] sm:max-w-[280px]"
+                : "order-last sm:order-none w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2"
+            }>
               <CocoonSiteSelector
                 userId={user?.id || ""}
                 trackedSites={trackedSites}
