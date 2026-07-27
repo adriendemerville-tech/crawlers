@@ -5,14 +5,16 @@ import { useLanguage } from '@/contexts/LanguageContext';
 const SITE_URL = 'https://crawlers.fr';
 
 /**
- * Dynamically manages canonical and hreflang tags based on the current language.
- * Each language variant gets its own canonical URL so Google indexes EN/ES pages
- * instead of treating them as duplicates of the FR version.
+ * Canonicalizes every route to its FR version and enforces `noindex,nofollow`
+ * on non-FR language variants (?lang=en, ?lang=es).
  *
- * @param path - Optional explicit canonical path (e.g. '/' or '/audit-expert').
- *               When omitted, the current browser location.pathname is used,
- *               ensuring every route gets a canonical tag even if a page
- *               forgets to call this hook explicitly.
+ * Rationale: EN/ES variants have thin/duplicate content and dilute topical
+ * authority. We concentrate crawl budget and signals on the FR version until
+ * a real editorial plan exists for other languages.
+ *
+ * - Canonical always points to the FR URL (no ?lang= parameter).
+ * - hreflang tags are removed entirely (single-language site for SEO).
+ * - `<meta name="robots">` is set to `noindex,nofollow` when language !== 'fr'.
  */
 export function useCanonicalHreflang(path?: string) {
   const { language } = useLanguage();
@@ -22,13 +24,9 @@ export function useCanonicalHreflang(path?: string) {
 
   useEffect(() => {
     const basePath = resolvedPath === '/' ? '' : resolvedPath;
+    const canonicalUrl = `${SITE_URL}${basePath || '/'}`;
 
-    // Strip any ?tab= or other non-lang query params — only ?lang= is canonical
-    const canonicalUrl = language === 'fr'
-      ? `${SITE_URL}${basePath || '/'}`
-      : `${SITE_URL}${basePath || '/'}?lang=${language}`;
-
-    // Update canonical
+    // Canonical → always FR
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement('link');
@@ -37,44 +35,26 @@ export function useCanonicalHreflang(path?: string) {
     }
     canonical.setAttribute('href', canonicalUrl);
 
-    // Build hreflang URLs
-    const hreflangMap: Record<string, string> = {
-      fr: `${SITE_URL}${basePath || '/'}`,
-      en: `${SITE_URL}${basePath || '/'}?lang=en`,
-      es: `${SITE_URL}${basePath || '/'}?lang=es`,
-    };
+    // Purge every hreflang link (managed or static from index.html)
+    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
 
-    // Remove existing hreflang links (managed by this hook)
-    document.querySelectorAll('link[data-hreflang-managed]').forEach(el => el.remove());
-
-    // Also remove the static hreflang links from index.html to avoid duplicates
-    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => {
-      if (!el.hasAttribute('data-hreflang-managed')) {
-        el.remove();
-      }
-    });
-
-    // Inject new hreflang tags
-    const langs = ['fr', 'en', 'es'];
-    langs.forEach(lang => {
-      const link = document.createElement('link');
-      link.setAttribute('rel', 'alternate');
-      link.setAttribute('hreflang', lang);
-      link.setAttribute('href', hreflangMap[lang]);
-      link.setAttribute('data-hreflang-managed', 'true');
-      document.head.appendChild(link);
-    });
-
-    // x-default points to FR version
-    const xDefault = document.createElement('link');
-    xDefault.setAttribute('rel', 'alternate');
-    xDefault.setAttribute('hreflang', 'x-default');
-    xDefault.setAttribute('href', hreflangMap.fr);
-    xDefault.setAttribute('data-hreflang-managed', 'true');
-    document.head.appendChild(xDefault);
+    // Robots directive: noindex on non-FR variants
+    let robots = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (!robots) {
+      robots = document.createElement('meta');
+      robots.setAttribute('name', 'robots');
+      document.head.appendChild(robots);
+    }
+    if (language !== 'fr') {
+      robots.setAttribute('content', 'noindex,nofollow');
+    } else {
+      robots.setAttribute('content', 'index,follow');
+    }
 
     return () => {
-      document.querySelectorAll('link[data-hreflang-managed]').forEach(el => el.remove());
+      // Reset robots to default on unmount so stale directive doesn't leak
+      const r = document.querySelector('meta[name="robots"]');
+      if (r) r.setAttribute('content', 'index,follow');
     };
   }, [language, resolvedPath]);
 }
