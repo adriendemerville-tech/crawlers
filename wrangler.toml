@@ -1,0 +1,14 @@
+name = "crawlers-logger"
+main = "public/cloudflare-worker-logger.js"
+compatibility_date = "2024-09-01"
+workers_dev = false
+
+# Routes attachées au worker (zone crawlers.fr)
+routes = [
+  { pattern = "crawlers.fr/*", zone_name = "crawlers.fr" },
+  { pattern = "www.crawlers.fr/*", zone_name = "crawlers.fr" },
+]
+
+# Variables d'environnement non secrètes (les secrets se poussent via `wrangler secret put`)
+# [vars]
+# EXAMPLE = "value"

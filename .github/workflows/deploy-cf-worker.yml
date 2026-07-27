@@ -1,0 +1,36 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/cloudflare-worker-logger.js"
+      - "wrangler.toml"
+      - ".github/workflows/deploy-cf-worker.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Deploy worker via Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Verify GPTBot response
+        run: |
+          sleep 5
+          TITLE=$(curl -sS -A "Mozilla/5.0 (compatible; GPTBot/1.0)" https://crawlers.fr/guides \
+            | grep -oE '<title>[^<]*</title>' | head -1 || true)
+          echo "Title returned: $TITLE"
+          echo "$TITLE" | grep -qi "guides" || { echo "❌ Worker ne renvoie pas le HTML enrichi"; exit 1; }
+          echo "✅ Worker déployé et opérationnel"
