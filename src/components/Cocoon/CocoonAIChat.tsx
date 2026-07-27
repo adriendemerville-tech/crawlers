@@ -422,6 +422,9 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
+  const [pendingCapture, setPendingCapture] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const captureCountRef = useRef(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1' || localStorage.getItem('cocoon_chat_open') === '1');
   const [selectedSlots, setSelectedSlots] = useState<SelectedNodeSlot[]>([]);
