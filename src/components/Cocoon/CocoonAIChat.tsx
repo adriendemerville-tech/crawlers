@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap, Maximize2, Minimize2, Minus, ExternalLink } from 'lucide-react';
 import { Syringe, Hammer, PenTool, Layers, Zap } from 'lucide-react';
-import { Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw } from 'lucide-react';
+import { Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw, Camera } from 'lucide-react';
 
 /** Logo robot doré du Stratège Cocoon — identique à celui de la Home (AIAgentsSection) */
 function GoldCrawlersLogo({ size = 16, className = '' }: { size?: number; className?: string }) {
@@ -317,7 +317,7 @@ function ThinkingIndicator({ language }: { language: string }) {
   );
 }
 
-type Msg = { role: 'user' | 'assistant'; content: string };
+type Msg = { role: 'user' | 'assistant'; content: string; imageUrl?: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cocoon-chat`;
 
@@ -422,6 +422,9 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
+  const [pendingCapture, setPendingCapture] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const captureCountRef = useRef(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1' || localStorage.getItem('cocoon_chat_open') === '1');
   const [selectedSlots, setSelectedSlots] = useState<SelectedNodeSlot[]>([]);
@@ -925,6 +928,38 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setMessages(prev => [...prev, promptMsg]);
   }, []);
 
+  const captureCanvas = async () => {
+    if (isCapturing || !user) return;
+    if (captureCountRef.current >= 3) {
+      sonnerToast.error('Limite de 3 captures par conversation atteinte.');
+      return;
+    }
+    setIsCapturing(true);
+    try {
+      const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
+      if (!canvas) throw new Error('Aucun graphe visible à capturer.');
+      const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Capture impossible.');
+      if (blob.size > 3 * 1024 * 1024) throw new Error('Capture trop lourde (>3 Mo).');
+      const filename = `capture-${Date.now()}.png`;
+      const path = `cocoon-captures/${user.id}/${filename}`;
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from('user-reports').upload(path, blob, { contentType: 'image/png', upsert: false });
+      if (uploadErr) throw uploadErr;
+      const { data: signed } = await supabase.storage
+        .from('user-reports').createSignedUrl(uploadData.path, 3600);
+      const url = signed?.signedUrl;
+      if (!url) throw new Error('URL signée indisponible.');
+      setPendingCapture(url);
+      captureCountRef.current += 1;
+      if (!input.trim()) setInput('Analyse cette capture du graphe : que vois-tu ?');
+    } catch (e: any) {
+      sonnerToast.error(e?.message || 'Capture échouée.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
   const sendMessage = async (overrideContext?: string, useStrategist = false, useSubdomain = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
@@ -1001,10 +1036,12 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       return;
     }
 
-    const userMsg: Msg = { role: 'user', content: text };
+    const attachedImage = pendingCapture;
+    const userMsg: Msg = { role: 'user', content: text, ...(attachedImage ? { imageUrl: attachedImage } : {}) };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     if (!overrideContext) setInput('');
+    if (attachedImage) setPendingCapture(null);
     setIsLoading(true);
     if (useStrategist) setIsStrategistMode(true);
     setIsLoading(true);
@@ -1019,12 +1056,27 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       });
     };
 
+    // Transform messages for the API: last user message becomes multimodal if it has an image
+    const apiMessages = newMessages.map((m, idx) => {
+      if (idx === newMessages.length - 1 && m.role === 'user' && m.imageUrl) {
+        return {
+          role: 'user',
+          content: [
+            { type: 'text', text: m.content || 'Analyse cette capture d\'écran du graphe Cocoon.' },
+            { type: 'image_url', image_url: { url: m.imageUrl } },
+          ],
+        };
+      }
+      // strip imageUrl for other messages
+      return { role: m.role, content: m.content };
+    });
+
     try {
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
         body: JSON.stringify({
-          messages: newMessages,
+          messages: apiMessages,
           context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
           analysisMode: !!overrideContext && !useStrategist && !useSubdomain,
           strategistMode: useStrategist || isStrategistMode,
@@ -1907,7 +1959,16 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
                           {msg.content}
                         </ReactMarkdown>
                       </div>
-                    ) : displayContent}
+                    ) : (
+                      <>
+                        {msg.imageUrl && (
+                          <a href={msg.imageUrl} target="_blank" rel="noreferrer" className="block mb-2">
+                            <img src={msg.imageUrl} alt="Capture du graphe" className="max-w-full max-h-48 rounded-lg border border-white/10" />
+                          </a>
+                        )}
+                        {displayContent}
+                      </>
+                    )}
                   </div>
                   {/* Copy button below bottom-right corner of the bubble */}
                   {isAssistant && !isLoading && (
@@ -2122,7 +2183,28 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
                 </div>
               );
             })()}
+            {pendingCapture && (
+              <div className="mb-2 flex items-center gap-2 rounded-xl border border-[#fbbf24]/30 bg-[#fbbf24]/5 p-2">
+                <img src={pendingCapture} alt="Capture" className="h-14 w-14 rounded-lg object-cover border border-white/10" />
+                <span className="text-[11px] text-white/70 flex-1">Capture jointe — sera analysée avec ton message.</span>
+                <button
+                  onClick={() => setPendingCapture(null)}
+                  className="h-6 w-6 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10"
+                  aria-label="Retirer la capture"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
             <div className="flex gap-2 items-end">
+              <button
+                onClick={captureCanvas}
+                disabled={isCapturing || isLoading || !!pendingCapture}
+                title="Capturer le graphe pour l'analyser"
+                className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:text-[#fbbf24] hover:border-[#fbbf24]/40 flex items-center justify-center shrink-0 disabled:opacity-30 transition-colors"
+              >
+                {isCapturing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+              </button>
               <Textarea
                 value={input}
                 onChange={(e) => {
