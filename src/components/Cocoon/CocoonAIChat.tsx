@@ -1774,7 +1774,7 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
           )}
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '200px' }}>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '200px', scrollbarGutter: 'stable both-edges' }}>
             {/* Show action buttons when chat is empty OR only has the greeting message */}
             {(() => {
               const isGreetingOnly = messages.length === 1 && messages[0].role === 'assistant' && messages[0].content.includes('👋');
