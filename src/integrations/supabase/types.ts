@@ -4470,6 +4470,48 @@ export type Database = {
         }
         Relationships: []
       }
+      doc_share_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          label: string | null
+          last_viewed_at: string | null
+          max_views: number | null
+          revoked: boolean
+          sections: Json
+          token: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          label?: string | null
+          last_viewed_at?: string | null
+          max_views?: number | null
+          revoked?: boolean
+          sections: Json
+          token: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          label?: string | null
+          last_viewed_at?: string | null
+          max_views?: number | null
+          revoked?: boolean
+          sections?: Json
+          token?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       domain_data_cache: {
         Row: {
           created_at: string

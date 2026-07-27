@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.bot-prerender-check]
 verify_jwt = false
+
+[functions.doc-share]
+verify_jwt = false
