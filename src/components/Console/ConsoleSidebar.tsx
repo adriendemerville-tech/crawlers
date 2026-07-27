@@ -247,7 +247,6 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     const isLocked = item.proOnly && !isProUser;
     const Icon = item.icon;
     const href = item.href ?? `/app/console?tab=${item.value}`;
-    const href = `/app/console?tab=${item.value}`;
 
     const content = (
       <>
