@@ -8509,6 +8509,149 @@ export type Database = {
         }
         Relationships: []
       }
+      netlinking_catalog_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          id: string
+          payload: Json
+          provider_slug: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          payload: Json
+          provider_slug: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json
+          provider_slug?: string
+        }
+        Relationships: []
+      }
+      netlinking_orders: {
+        Row: {
+          anchor_text: string
+          commission_cents: number
+          cost_ht_cents: number
+          created_at: string
+          currency: string
+          id: string
+          live_url: string | null
+          metadata: Json | null
+          provider_offer_id: string | null
+          provider_order_id: string | null
+          provider_slug: string
+          published_at: string | null
+          publisher_domain: string | null
+          publisher_metrics: Json | null
+          refunded_at: string | null
+          status: string
+          target_url: string
+          topic: string | null
+          total_ht_cents: number
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anchor_text: string
+          commission_cents?: number
+          cost_ht_cents?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          live_url?: string | null
+          metadata?: Json | null
+          provider_offer_id?: string | null
+          provider_order_id?: string | null
+          provider_slug: string
+          published_at?: string | null
+          publisher_domain?: string | null
+          publisher_metrics?: Json | null
+          refunded_at?: string | null
+          status?: string
+          target_url: string
+          topic?: string | null
+          total_ht_cents?: number
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anchor_text?: string
+          commission_cents?: number
+          cost_ht_cents?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          live_url?: string | null
+          metadata?: Json | null
+          provider_offer_id?: string | null
+          provider_order_id?: string | null
+          provider_slug?: string
+          published_at?: string | null
+          publisher_domain?: string | null
+          publisher_metrics?: Json | null
+          refunded_at?: string | null
+          status?: string
+          target_url?: string
+          topic?: string | null
+          total_ht_cents?: number
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "netlinking_orders_provider_slug_fkey"
+            columns: ["provider_slug"]
+            isOneToOne: false
+            referencedRelation: "netlinking_providers"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      netlinking_providers: {
+        Row: {
+          created_at: string
+          description: string | null
+          docs_url: string | null
+          name: string
+          slug: string
+          status: string
+          supports_order: boolean
+          supports_search: boolean
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          docs_url?: string | null
+          name: string
+          slug: string
+          status?: string
+          supports_order?: boolean
+          supports_search?: boolean
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          docs_url?: string | null
+          name?: string
+          slug?: string
+          status?: string
+          supports_order?: boolean
+          supports_search?: boolean
+        }
+        Relationships: []
+      }
       observatory_sectors: {
         Row: {
           avg_brand_authority: number | null
