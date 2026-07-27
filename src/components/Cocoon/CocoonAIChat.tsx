@@ -1721,8 +1721,8 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
       {isOpen && (
         <div className={
           isExpanded
-            ? "fixed top-0 left-0 h-full w-[28rem] max-w-[90vw] border-r border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
-            : "fixed bottom-20 left-2 sm:left-4 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
+            ? "fixed top-0 left-0 h-full w-[27rem] max-w-[90vw] border-r border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
+            : "fixed bottom-20 left-0 w-[459px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
         }
           style={isExpanded ? undefined : { maxHeight: 'min(600px, 72vh)' }}
         >
@@ -1826,7 +1826,7 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
           )}
 
           {/* Messages */}
-          <div ref={scrollRef} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} className="flex-1 overflow-y-auto px-4 py-3 space-y-3 select-text" style={{ minHeight: '200px', scrollbarGutter: 'stable both-edges', userSelect: 'text', WebkitUserSelect: 'text' }}>
+          <div ref={scrollRef} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} className="flex-1 overflow-y-auto pl-0 pr-4 py-3 space-y-3 select-text" style={{ minHeight: '200px', scrollbarGutter: 'stable both-edges', userSelect: 'text', WebkitUserSelect: 'text' }}>
             {/* Show action buttons when chat is empty OR only has the greeting message */}
             {(() => {
               const isGreetingOnly = messages.length === 1 && messages[0].role === 'assistant' && messages[0].content.includes('👋');

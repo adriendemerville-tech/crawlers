@@ -1100,9 +1100,9 @@ function CocoonContent() {
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
         {!isFullscreen && (
         <div className="shrink-0 px-3 sm:px-4 md:px-6 py-9 flex items-end gap-2 sm:gap-4 flex-wrap">
-          {/* AI Chat — bottom left, shifted left */}
+          {/* AI Chat — bottom left, flush */}
           {hasAccess && (
-            <div className="relative ml-2 sm:ml-4">
+            <div className="relative">
               <CocoonAIChatUnified
                 nodes={nodes}
                 selectedNodeId={selectedNode?.id}
