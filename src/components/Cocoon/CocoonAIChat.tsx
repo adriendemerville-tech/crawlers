@@ -317,7 +317,7 @@ function ThinkingIndicator({ language }: { language: string }) {
   );
 }
 
-type Msg = { role: 'user' | 'assistant'; content: string };
+type Msg = { role: 'user' | 'assistant'; content: string; imageUrl?: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cocoon-chat`;
 
