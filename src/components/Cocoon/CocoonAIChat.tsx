@@ -1959,7 +1959,16 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
                           {msg.content}
                         </ReactMarkdown>
                       </div>
-                    ) : displayContent}
+                    ) : (
+                      <>
+                        {msg.imageUrl && (
+                          <a href={msg.imageUrl} target="_blank" rel="noreferrer" className="block mb-2">
+                            <img src={msg.imageUrl} alt="Capture du graphe" className="max-w-full max-h-48 rounded-lg border border-white/10" />
+                          </a>
+                        )}
+                        {displayContent}
+                      </>
+                    )}
                   </div>
                   {/* Copy button below bottom-right corner of the bubble */}
                   {isAssistant && !isLoading && (
