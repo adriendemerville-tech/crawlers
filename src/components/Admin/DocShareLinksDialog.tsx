@@ -43,13 +43,29 @@ export function DocShareLinksDialog() {
     backendDocSections.map((s) => s.id),
   );
 
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+  async function authHeaders(): Promise<HeadersInit> {
+    const { data } = await supabase.auth.getSession();
+    return {
+      Authorization: `Bearer ${data.session?.access_token ?? anonKey}`,
+      apikey: anonKey,
+      'Content-Type': 'application/json',
+    };
+  }
+
   async function loadLinks() {
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke('doc-share?list=1', {
-      method: 'GET',
-    });
-    if (error) toast.error('Chargement impossible');
-    else setLinks(((data as { links?: ShareLink[] })?.links) || []);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/doc-share?list=1`, {
+        headers: await authHeaders(),
+      });
+      const json = await res.json();
+      setLinks(json.links || []);
+    } catch {
+      toast.error('Chargement impossible');
+    }
     setLoading(false);
   }
 
