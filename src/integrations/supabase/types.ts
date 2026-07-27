@@ -13794,6 +13794,62 @@ export type Database = {
           },
         ]
       }
+      social_accounts_team_view: {
+        Row: {
+          account_id: string | null
+          account_name: string | null
+          created_at: string | null
+          id: string | null
+          metadata: Json | null
+          page_id: string | null
+          platform: string | null
+          scopes: string[] | null
+          status: string | null
+          token_expires_at: string | null
+          tracked_site_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string | null
+          id?: string | null
+          metadata?: Json | null
+          page_id?: string | null
+          platform?: string | null
+          scopes?: string[] | null
+          status?: string | null
+          token_expires_at?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string | null
+          id?: string | null
+          metadata?: Json | null
+          page_id?: string | null
+          platform?: string | null
+          scopes?: string[] | null
+          status?: string | null
+          token_expires_at?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_accounts_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_ai_attribution_by_source: {
         Row: {
           ai_source: string | null
