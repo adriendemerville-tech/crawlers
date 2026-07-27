@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap, Maximize2, Minimize2, Minus, ExternalLink } from 'lucide-react';
 import { Syringe, Hammer, PenTool, Layers, Zap } from 'lucide-react';
-import { Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw } from 'lucide-react';
+import { Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw, Camera } from 'lucide-react';
 
 /** Logo robot doré du Stratège Cocoon — identique à celui de la Home (AIAgentsSection) */
 function GoldCrawlersLogo({ size = 16, className = '' }: { size?: number; className?: string }) {
