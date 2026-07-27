@@ -928,6 +928,38 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     setMessages(prev => [...prev, promptMsg]);
   }, []);
 
+  const captureCanvas = async () => {
+    if (isCapturing || !user) return;
+    if (captureCountRef.current >= 3) {
+      sonnerToast.error('Limite de 3 captures par conversation atteinte.');
+      return;
+    }
+    setIsCapturing(true);
+    try {
+      const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
+      if (!canvas) throw new Error('Aucun graphe visible à capturer.');
+      const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Capture impossible.');
+      if (blob.size > 3 * 1024 * 1024) throw new Error('Capture trop lourde (>3 Mo).');
+      const filename = `capture-${Date.now()}.png`;
+      const path = `cocoon-captures/${user.id}/${filename}`;
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from('user-reports').upload(path, blob, { contentType: 'image/png', upsert: false });
+      if (uploadErr) throw uploadErr;
+      const { data: signed } = await supabase.storage
+        .from('user-reports').createSignedUrl(uploadData.path, 3600);
+      const url = signed?.signedUrl;
+      if (!url) throw new Error('URL signée indisponible.');
+      setPendingCapture(url);
+      captureCountRef.current += 1;
+      if (!input.trim()) setInput('Analyse cette capture du graphe : que vois-tu ?');
+    } catch (e: any) {
+      sonnerToast.error(e?.message || 'Capture échouée.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
   const sendMessage = async (overrideContext?: string, useStrategist = false, useSubdomain = false) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
