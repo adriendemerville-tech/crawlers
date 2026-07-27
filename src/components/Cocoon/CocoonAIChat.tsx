@@ -1004,10 +1004,12 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       return;
     }
 
-    const userMsg: Msg = { role: 'user', content: text };
+    const attachedImage = pendingCapture;
+    const userMsg: Msg = { role: 'user', content: text, ...(attachedImage ? { imageUrl: attachedImage } : {}) };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     if (!overrideContext) setInput('');
+    if (attachedImage) setPendingCapture(null);
     setIsLoading(true);
     if (useStrategist) setIsStrategistMode(true);
     setIsLoading(true);
@@ -1022,12 +1024,27 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       });
     };
 
+    // Transform messages for the API: last user message becomes multimodal if it has an image
+    const apiMessages = newMessages.map((m, idx) => {
+      if (idx === newMessages.length - 1 && m.role === 'user' && m.imageUrl) {
+        return {
+          role: 'user',
+          content: [
+            { type: 'text', text: m.content || 'Analyse cette capture d\'écran du graphe Cocoon.' },
+            { type: 'image_url', image_url: { url: m.imageUrl } },
+          ],
+        };
+      }
+      // strip imageUrl for other messages
+      return { role: m.role, content: m.content };
+    });
+
     try {
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
         body: JSON.stringify({
-          messages: newMessages,
+          messages: apiMessages,
           context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
           analysisMode: !!overrideContext && !useStrategist && !useSubdomain,
           strategistMode: useStrategist || isStrategistMode,
