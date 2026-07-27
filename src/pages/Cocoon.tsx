@@ -192,7 +192,7 @@ function CocoonContent() {
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();
-  // cocoonExpanded handled by AISidebarPageWrapper (paddingLeft) — no double offset here
+  const { cocoonExpanded } = useAISidebar();
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
