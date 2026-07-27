@@ -7,7 +7,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Compass, Clock, ChevronLeft, Bug, ClipboardList, GraduationCap, Maximize2, Minimize2, Minus, ExternalLink } from 'lucide-react';
-import { Syringe, Hammer, PenTool } from 'lucide-react';
+import { Syringe, Hammer, PenTool, Layers, Zap } from 'lucide-react';
 import { Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check, Network, Globe, RefreshCw } from 'lucide-react';
 
 /** Logo robot doré du Stratège Cocoon — identique à celui de la Home (AIAgentsSection) */
@@ -121,36 +121,75 @@ function detectCocoonHowTo(message: string): boolean {
   return COCOON_HOWTO_KEYWORDS.some(kw => lower.includes(kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '')));
 }
 
+type QuickReply = { label: string };
+
 /**
  * Detect quick-reply options from an assistant message.
  */
-function extractQuickReplies(content: string): string[] {
+function extractQuickReplies(content: string): QuickReply[] {
   if (/\b(oui\s*[/ou]+\s*non)\b/i.test(content)) {
-    return ['Oui', 'Non'];
+    return [{ label: 'Oui' }, { label: 'Non' }];
   }
-  const tail = content.slice(-600);
-  const numberedPattern = /(?:^|\n)\s*(\d+)[.)]\s*\*{0,2}([^*\n]{3,80})\*{0,2}/g;
-  const numbered: string[] = [];
+  const tail = content.slice(-800);
   let m: RegExpExecArray | null;
+
+  // Strategist direction format: "🎯 **Architecture sémantique** : ..."
+  const targetPattern = /(?:^|\n)\s*[🎯]\s*\*{0,2}([^*\n]{3,40})\*{0,2}\s*:/g;
+  const targets: QuickReply[] = [];
+  while ((m = targetPattern.exec(tail)) !== null) {
+    const label = m[1].trim();
+    if (label.length > 2 && label.length < 50) targets.push({ label });
+  }
+  if (targets.length >= 2 && targets.length <= 5) return targets;
+
+  // Numbered format: "1. **Architecture sémantique**"
+  const numberedPattern = /(?:^|\n)\s*(\d+)[.)]\s*\*{0,2}([^*\n]{3,80})\*{0,2}/g;
+  const numbered: QuickReply[] = [];
   while ((m = numberedPattern.exec(tail)) !== null) {
     const label = m[2].trim().replace(/[.:]+$/, '').trim();
-    if (label.length > 2 && label.length < 80) numbered.push(label);
+    if (label.length > 2 && label.length < 80) numbered.push({ label });
   }
   if (numbered.length >= 2 && numbered.length <= 5) return numbered;
+
   const boldSlash = tail.match(/\*\*([^*]{2,50})\*\*\s*[/ou]+\s*\*\*([^*]{2,50})\*\*(?:\s*[/ou]+\s*\*\*([^*]{2,50})\*\*)?/i);
   if (boldSlash) {
-    const opts = [boldSlash[1].trim(), boldSlash[2].trim()];
-    if (boldSlash[3]) opts.push(boldSlash[3].trim());
+    const opts: QuickReply[] = [{ label: boldSlash[1].trim() }, { label: boldSlash[2].trim() }];
+    if (boldSlash[3]) opts.push({ label: boldSlash[3].trim() });
     return opts;
   }
+
   const bulletPattern = /(?:^|\n)\s*[-•]\s*\*{0,2}([^*\n]{3,80})\*{0,2}/g;
-  const bullets: string[] = [];
+  const bullets: QuickReply[] = [];
   while ((m = bulletPattern.exec(tail)) !== null) {
     const label = m[1].trim().replace(/[.:]+$/, '').trim();
-    if (label.length > 2 && label.length < 80) bullets.push(label);
+    if (label.length > 2 && label.length < 80) bullets.push({ label });
   }
   if (bullets.length >= 2 && bullets.length <= 5) return bullets;
   return [];
+}
+
+const STRATEGIST_DIRECTIONS: Record<string, Record<string, { sendText: string; icon: any }>> = {
+  fr: {
+    'architecture sémantique': { sendText: 'Approfondis la direction Architecture sémantique et propose un plan d\'action concret.', icon: Layers },
+    'autorité éditoriale': { sendText: 'Approfondis la direction Autorité éditoriale et propose un plan d\'action concret.', icon: PenTool },
+    'performance technique': { sendText: 'Approfondis la direction Performance technique et propose un plan d\'action concret.', icon: Zap },
+  },
+  en: {
+    'semantic architecture': { sendText: 'Deep-dive into Semantic architecture and propose a concrete action plan.', icon: Layers },
+    'editorial authority': { sendText: 'Deep-dive into Editorial authority and propose a concrete action plan.', icon: PenTool },
+    'technical performance': { sendText: 'Deep-dive into Technical performance and propose a concrete action plan.', icon: Zap },
+  },
+  es: {
+    'arquitectura semántica': { sendText: 'Profundiza en la dirección Arquitectura semántica y propón un plan de acción concreto.', icon: Layers },
+    'autoridad editorial': { sendText: 'Profundiza en la dirección Autoridad editorial y propón un plan de acción concreto.', icon: PenTool },
+    'rendimiento técnico': { sendText: 'Profundiza en la dirección Rendimiento técnico y propón un plan de acción concreto.', icon: Zap },
+  },
+};
+
+function getQuickReplyMeta(label: string, language: string) {
+  const langMap = STRATEGIST_DIRECTIONS[language] || STRATEGIST_DIRECTIONS.fr;
+  const normalized = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, '').trim();
+  return langMap[normalized] || { sendText: `Je choisis : ${label}`, icon: undefined };
 }
 
 // Build regex from terms (longest first to avoid partial matches)
@@ -1368,21 +1407,39 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
 Lance un diagnostic complet de mon site et prescris une stratégie d'optimisation priorisée. 
 Analyse tous les axes : contenu, sémantique, structure, autorité.
 Pour chaque problème détecté, prescris une action concrète avec son niveau de priorité et son canal d'exécution (éditorial, technique, opérationnel).
-Termine par un résumé exécutif et les prochaines étapes.`,
+Termine par un résumé exécutif et les prochaines étapes.
+
+Après le résumé, propose 3 directions stratégiques possibles sous forme de choix EXACTEMENT au format suivant (3 lignes, sans introduction ni conclusion à cette section) :
+
+1. **Architecture sémantique**
+2. **Autorité éditoriale**
+3. **Performance technique**`,
 
       en: `360° STRATEGY
 
 Run a complete diagnosis of my site and prescribe a prioritized optimization strategy.
 Analyze all axes: content, semantic, structure, authority.
 For each detected issue, prescribe a concrete action with its priority level and execution channel (editorial, technical, operational).
-End with an executive summary and next steps.`,
+End with an executive summary and next steps.
+
+After the summary, offer 3 possible strategic directions as choices EXACTLY in the following format (3 lines, no intro or conclusion to this section):
+
+1. **Semantic architecture**
+2. **Editorial authority**
+3. **Technical performance**`,
 
       es: `ESTRATEGIA 360°
 
 Ejecuta un diagnóstico completo de mi sitio y prescribe una estrategia de optimización priorizada.
 Analiza todos los ejes: contenido, semántica, estructura, autoridad.
 Para cada problema detectado, prescribe una acción concreta con su nivel de prioridad y canal de ejecución (editorial, técnico, operacional).
-Termina con un resumen ejecutivo y próximos pasos.`,
+Termina con un resumen ejecutivo y próximos pasos.
+
+Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones EXACTAMENTE en el siguiente formato (3 líneas, sin introducción ni conclusión para esta sección):
+
+1. **Arquitectura semántica**
+2. **Autoridad editorial**
+3. **Rendimiento técnico**`,
     };
 
     sendMessage(prompts[language] || prompts.fr, true);
@@ -1870,18 +1927,23 @@ Termina con un resumen ejecutivo y próximos pasos.`,
               const replies = extractQuickReplies(messages[messages.length - 1].content);
               if (replies.length === 0) return null;
               return (
-                <div className="flex flex-wrap gap-1.5 mt-2 px-1">
-                  {replies.map((label, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        sendMessage(label);
-                      }}
-                      className="px-3 py-1.5 rounded-none border border-white/15 text-white/60 text-[11px] font-medium bg-transparent hover:bg-white/5 hover:text-white/90 hover:border-white/30 transition-all"
-                    >
-                      {label}
-                    </button>
-                  ))}
+                <div className="flex flex-col gap-2 mt-3 px-1">
+                  {replies.map((reply, idx) => {
+                    const meta = getQuickReplyMeta(reply.label, language);
+                    const Icon = meta.icon;
+                    return (
+                      <Button
+                        key={idx}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => sendMessage(meta.sendText)}
+                        className="w-full justify-start gap-2 border-white/20 text-white/80 hover:bg-white/5 hover:text-white hover:border-amber-400/50 bg-transparent rounded-lg text-xs font-medium px-3 py-2 h-auto"
+                      >
+                        {Icon && <Icon className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
+                        <span className="truncate">{reply.label}</span>
+                      </Button>
+                    );
+                  })}
                 </div>
               );
             })()}
