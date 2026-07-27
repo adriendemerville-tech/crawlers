@@ -1062,7 +1062,17 @@ try {
           es: 'Reestructurar el enlazado interno, resolver canibalizaciones, integrar páginas huérfanas y crear páginas pilar.',
         },
       },
-      // Note: backlink/off-site growth removed — the strategist cannot execute off-site actions
+      {
+        id: 'offsite_authority',
+        condition: () => allFindings.some(f => ['low_authority', 'thin_backlinks', 'backlink_target', 'eeat_signals'].includes(f.category)),
+        priority: allFindings.filter(f => ['low_authority', 'thin_backlinks', 'backlink_target'].includes(f.category)).length * 8,
+        label: { fr: 'Autorité off-site (netlinking)', en: 'Off-site Authority (netlinking)', es: 'Autoridad off-site (netlinking)' },
+        description: {
+          fr: 'Acquérir des backlinks thématiques de qualité via les marketplaces intégrées (Accesslink, Rocketlinks, Getfluence) pour renforcer l\'autorité des pages piliers. Recherche et commande dans /app/netlinking.',
+          en: 'Acquire topical high-quality backlinks via integrated marketplaces (Accesslink, Rocketlinks, Getfluence) to strengthen pillar-page authority. Search and order in /app/netlinking.',
+          es: 'Adquirir backlinks temáticos de calidad vía marketplaces integrados (Accesslink, Rocketlinks, Getfluence) para reforzar la autoridad de páginas pilar. Búsqueda y pedido en /app/netlinking.',
+        },
+      },
       {
         id: 'conversion_optimization',
         condition: () => feedbackAnalysis.successful.length > 0 || allFindings.some(f => f.category === 'keyword_mismatch'),
