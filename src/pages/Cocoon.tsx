@@ -6,7 +6,7 @@ import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-// useAISidebar removed: AISidebarPageWrapper handles the layout offset globally
+import { useAISidebar } from "@/contexts/AISidebarContext";
 import { useCocoonTheme } from "@/hooks/useCocoonTheme";
 import { CocoonForceGraph3D } from "@/components/Cocoon/CocoonForceGraph3D";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
@@ -192,7 +192,7 @@ function CocoonContent() {
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();
-  // cocoonExpanded handled by AISidebarPageWrapper (paddingLeft) — no double offset here
+  const { cocoonExpanded } = useAISidebar();
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
@@ -752,8 +752,12 @@ function CocoonContent() {
               </div>
             </div>
 
-            {/* Site selector — centered on desktop, full row on mobile */}
-            <div className="order-last sm:order-none w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            {/* Site selector — centered on desktop only when the AI sidebar is closed; otherwise inline to avoid overlap with right-side controls */}
+            <div className={
+              cocoonExpanded
+                ? "order-last sm:order-none w-full sm:w-auto sm:flex-1 sm:min-w-[160px] sm:max-w-[280px]"
+                : "order-last sm:order-none w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2"
+            }>
               <CocoonSiteSelector
                 userId={user?.id || ""}
                 trackedSites={trackedSites}
