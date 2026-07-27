@@ -2174,7 +2174,28 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
                 </div>
               );
             })()}
+            {pendingCapture && (
+              <div className="mb-2 flex items-center gap-2 rounded-xl border border-[#fbbf24]/30 bg-[#fbbf24]/5 p-2">
+                <img src={pendingCapture} alt="Capture" className="h-14 w-14 rounded-lg object-cover border border-white/10" />
+                <span className="text-[11px] text-white/70 flex-1">Capture jointe — sera analysée avec ton message.</span>
+                <button
+                  onClick={() => setPendingCapture(null)}
+                  className="h-6 w-6 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10"
+                  aria-label="Retirer la capture"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
             <div className="flex gap-2 items-end">
+              <button
+                onClick={captureCanvas}
+                disabled={isCapturing || isLoading || !!pendingCapture}
+                title="Capturer le graphe pour l'analyser"
+                className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:text-[#fbbf24] hover:border-[#fbbf24]/40 flex items-center justify-center shrink-0 disabled:opacity-30 transition-colors"
+              >
+                {isCapturing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+              </button>
               <Textarea
                 value={input}
                 onChange={(e) => {
