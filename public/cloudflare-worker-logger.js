@@ -52,6 +52,11 @@ function isPrerenderableRoute(pathname) {
 }
 
 // Reconstruit la requête vers l'origine Lovable en réécrivant le Host.
+// ⚠️  DANGER: if LOVABLE_ORIGIN_HOST redirects back to the custom domain,
+// the Worker will create an infinite redirect loop. This happened with
+// crawlers.lovable.app → https://crawlers.fr/ and took the site down.
+// Only re-enable this path if you have verified (e.g. with curl -I) that
+// the origin returns 200, not 302, for the rewritten Host.
 async function fetchLovableOrigin(request) {
   const url = new URL(request.url);
   url.hostname = LOVABLE_ORIGIN_HOST;
