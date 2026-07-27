@@ -44,6 +44,10 @@ cron-autopilot-tick  ──► autopilot-engine (par site actif)
 
 Phases exécutées **une par cycle** (pas les 5 d'affilée). `getNextPhase(lastPhase)` (`_shared/parmenion/types.ts`) fait tourner la roue : `audit → diagnose → prescribe → execute → validate → audit ...`. Un site parcourt donc les 5 phases en 5 cycles (≈ 5 jours à cron quotidien).
 
+### 1.1 Diagramme Mermaid (chaîne d'appels complète)
+
+<lov-artifact url="/__l5e/documents/parmenion_call_chain.mmd" mime_type="text/vnd.mermaid"></lov-artifact>
+
 ---
 
 ## 2. Entrée : `autopilot-engine`
