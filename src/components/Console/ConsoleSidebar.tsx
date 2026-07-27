@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
-  Shield, Code2, ChevronDown, Search, Sparkles, Database,
+  Shield, Code2, ChevronDown, Search, Sparkles, Database, Link2,
   Plus, Loader2, Check, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -31,6 +31,8 @@ interface SidebarItem {
   beta?: boolean;
   /** When true, hidden in simplified (non-advanced) view. */
   advancedOnly?: boolean;
+  /** Override href — when set, item navigates to this route instead of switching tab. */
+  href?: string;
 }
 
 const translations = {
@@ -214,6 +216,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     ] : []),
     { value: 'gmb', label: 'GMB', icon: Store },
     { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
+    { value: 'netlinking', label: 'Netlinking', icon: Link2, hideOnMobile: true, advancedOnly: true, href: '/app/netlinking' },
     ...(!isProUser ? [
       { value: 'reports', label: t.reports, icon: FileText, hideOnMobile: true },
     ] : []),
@@ -243,7 +246,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     const isActive = activeTab === item.value;
     const isLocked = item.proOnly && !isProUser;
     const Icon = item.icon;
-    const href = `/app/console?tab=${item.value}`;
+    const href = item.href ?? `/app/console?tab=${item.value}`;
 
     const content = (
       <>
@@ -283,6 +286,8 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
           onClick={(e) => {
             // Allow native behavior for modifier-clicks (new tab/window) and middle-click
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+            // Custom href items navigate natively via the anchor
+            if (item.href) return;
             e.preventDefault();
             onTabChange(item.value);
           }}
