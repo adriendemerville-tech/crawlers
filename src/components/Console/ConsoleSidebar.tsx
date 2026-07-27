@@ -216,6 +216,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     ] : []),
     { value: 'gmb', label: 'GMB', icon: Store },
     { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
+    { value: 'netlinking', label: 'Netlinking', icon: Link2, hideOnMobile: true, advancedOnly: true, href: '/app/netlinking' },
     ...(!isProUser ? [
       { value: 'reports', label: t.reports, icon: FileText, hideOnMobile: true },
     ] : []),
