@@ -333,7 +333,7 @@ function getToolbarHtml(domain: string, lang: string): string {
         s1.crossOrigin = 'anonymous';
         s1.onload = function() {
           var s2 = document.createElement('script');
-          s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js';
+          s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
           s2.crossOrigin = 'anonymous';
           s2.onload = function() { _pdfLibsLoaded = true; _pdfLibsLoading = false; resolve(); };
           s2.onerror = function() { _pdfLibsLoading = false; reject(new Error('Failed to load jsPDF')); };
