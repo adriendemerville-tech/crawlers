@@ -106,17 +106,19 @@ export function DocShareLinksDialog() {
   }
 
   async function revoke(token: string) {
-    const { error } = await supabase.functions.invoke(`doc-share?token=${token}`, {
-      method: 'DELETE',
-    });
-    if (error) toast.error('Révocation impossible');
-    else {
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/doc-share?token=${token}`, {
+        method: 'DELETE',
+        headers: await authHeaders(),
+      });
+      if (!res.ok) throw new Error();
       toast.success('Lien révoqué');
       loadLinks();
+    } catch {
+      toast.error('Révocation impossible');
     }
   }
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
   const buildUrl = (token: string, format?: string) =>
     `${supabaseUrl}/functions/v1/doc-share?token=${token}${format ? `&format=${format}` : ''}`;
 
