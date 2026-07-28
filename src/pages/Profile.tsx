@@ -163,6 +163,7 @@ function ProfileContent() {
       case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />;
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;
+      case 'netlinking': return <Netlinking />;
       case 'admin': return hasAdminAccess ? (
         <AdminDashboard
           readOnly={isReadOnly}
