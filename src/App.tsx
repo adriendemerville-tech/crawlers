@@ -128,7 +128,7 @@ const SocialContentCreator = lazy(() => import("./pages/SocialContentCreator"));
 const BreathingSpiral = lazy(() => import("./pages/BreathingSpiral"));
 const RankingSerp = lazy(() => import("./pages/RankingSerp"));
 const DiagnosticWaf = lazy(() => import("./pages/DiagnosticWaf"));
-const Netlinking = lazy(() => import("./pages/Netlinking"));
+
 
 // Legacy redirect for /rapport/:reportId → /app/rapport/:reportId
 const LegacyRapportRedirect = () => {
