@@ -283,7 +283,7 @@ const App = () => (
                           <Route path="/app/conversion-optimizer" element={<ConversionOptimizer />} />
                           <Route path="/app/bot-activity" element={<BotActivity />} />
                           <Route path="/app/social" element={<SocialHub />} />
-                          <Route path="/app/netlinking" element={<Netlinking />} />
+                          <Route path="/app/netlinking" element={<Navigate to="/app/console?tab=netlinking" replace />} />
                           <Route path="/social-content-creator" element={<SocialContentCreator />} />
                           <Route path="/diagnostic-waf" element={<DiagnosticWaf />} />
                           <Route path="/privacy-google-ads" element={<Navigate to="/api-integrations#google-ads" replace />} />
