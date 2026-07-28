@@ -28,6 +28,7 @@ const IndexationMonitor = lazy(() => import('@/components/Console/IndexationMoni
 const GscBigQueryPanel = lazy(() => import('@/components/Console/GscBigQueryPanel').then(m => ({ default: m.GscBigQueryPanel })));
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
 const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
+const Netlinking = lazy(() => import('@/pages/Netlinking'));
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
