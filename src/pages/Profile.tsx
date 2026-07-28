@@ -28,6 +28,7 @@ const IndexationMonitor = lazy(() => import('@/components/Console/IndexationMoni
 const GscBigQueryPanel = lazy(() => import('@/components/Console/GscBigQueryPanel').then(m => ({ default: m.GscBigQueryPanel })));
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
 const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
+const Netlinking = lazy(() => import('@/pages/Netlinking'));
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
@@ -162,6 +163,7 @@ function ProfileContent() {
       case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />;
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;
+      case 'netlinking': return <Netlinking />;
       case 'admin': return hasAdminAccess ? (
         <AdminDashboard
           readOnly={isReadOnly}
