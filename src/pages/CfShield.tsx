@@ -109,13 +109,13 @@ export default function CfShield() {
     }
     try {
       const { data, error } = await supabase.functions.invoke('cf-deploy-shield', {
-        body: { action: 'init', tracked_site_id: siteId, mode },
+        body: { action: 'init', tracked_site_id: siteId, mode, provider },
       });
       if (error) throw error;
       setInitData(data);
-      // Extract the secret from the worker_script
+      // Secret renvoyé directement, avec repli sur le script Worker
       const match = (data.worker_script || '').match(/SECRET = "(.+?)"/);
-      if (match) setIngestionSecret(match[1]);
+      setIngestionSecret(data.ingestion_secret || (match ? match[1] : ''));
       if (currentSite) {
         setCfWorkerName(`crawlers-shield-${currentSite.domain.replace(/[^a-z0-9-]/gi, '-')}`);
       }
@@ -124,6 +124,24 @@ export default function CfShield() {
       toast.error(`Échec de l'initialisation : ${e instanceof Error ? e.message : String(e)}`);
     }
   };
+
+  const handleRotateSecret = async () => {
+    if (!siteId) return;
+    setRotating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cf-deploy-shield', {
+        body: { action: 'rotate', tracked_site_id: siteId },
+      });
+      if (error) throw error;
+      setIngestionSecret(data.ingestion_secret);
+      toast.success('Secret régénéré. L\'ancien est révoqué immédiatement.');
+    } catch (e) {
+      toast.error(`Rotation impossible : ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setRotating(false);
+    }
+  };
+
 
   const handleAutoDeploy = async () => {
     if (!cfToken || !cfAccountId || !cfZoneId) {
