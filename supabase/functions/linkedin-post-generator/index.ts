@@ -408,7 +408,7 @@ Retourne UNIQUEMENT un JSON strict :
         llm_tokens_used: tokensUsed,
         llm_model: TEXT_MODEL,
         created_by: userId,
-        media_generation_status: mediaType === 'text_only' ? 'ready' : 'not_started',
+        media_generation_status: 'not_started',
       })
       .select('*')
       .single();
