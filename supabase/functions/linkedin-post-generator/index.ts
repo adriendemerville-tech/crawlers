@@ -326,6 +326,18 @@ Retourne UNIQUEMENT un JSON strict :
     cleanText = cleanText.replace(new RegExp(CRAWLERS_MENTION_PLACEHOLDER, 'g'), '@crawlers.fr');
     cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/ +\n/g, '\n').trim();
 
+    // Garde-fou déterministe : la mention "@crawlers.fr" est obligatoire.
+    // Si le LLM l'a omise, on l'insère sans nouvel appel LLM (économie de tokens) :
+    // substitution de la première occurrence isolée de "Crawlers", sinon phrase ajoutée.
+    if (!/@crawlers\.fr/i.test(cleanText)) {
+      if (/\bCrawlers\b/.test(cleanText)) {
+        cleanText = cleanText.replace(/\bCrawlers\b/, '@crawlers.fr');
+      } else {
+        cleanText = `${cleanText}\n\nOn en parle sur @crawlers.fr.`;
+      }
+    }
+
+
     // Insert draft
     const { data: post, error: insertErr } = await admin
       .from('linkedin_scheduled_posts')
