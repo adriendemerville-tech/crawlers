@@ -370,8 +370,101 @@ export default function CfShield() {
         </Card>
       )}
 
+      {/* STEP 2 — Senthor */}
+      {step === 'mode' && provider === 'senthor' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              Relais Senthor pour <span className="font-mono">{currentSite?.domain}</span>
+            </CardTitle>
+            <CardDescription>
+              Senthor collecte au niveau serveur, Crawlers analyse. Trois champs à renseigner
+              dans votre espace Senthor.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertTitle>Prérequis : un connecteur Senthor installé</AlertTitle>
+              <AlertDescription className="text-xs">
+                WordPress, Vercel/Next, Rails, Nginx, Caddy ou Drupal — voir{' '}
+                <a
+                  href="https://www.senthor.io/en/documentation"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  la documentation Senthor
+                  <ExternalLink className="ml-1 inline h-3 w-3" />
+                </a>
+                .
+              </AlertDescription>
+            </Alert>
+
+            <ol className="space-y-3 text-sm">
+              <li className="rounded-md border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">1. URL de destination du webhook</p>
+                  <Button size="sm" variant="outline" onClick={() => copy(initData?.ingest_url || '', 'URL copiée')}>
+                    <Copy className="mr-1 h-3.5 w-3.5" /> Copier
+                  </Button>
+                </div>
+                <code className="mt-2 block break-all rounded bg-muted/40 p-2 text-[11px]">
+                  {initData?.ingest_url}
+                </code>
+              </li>
+              <li className="rounded-md border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">2. Header d'authentification</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => copy(ingestionSecret, 'Secret copié')}>
+                      <Copy className="mr-1 h-3.5 w-3.5" /> Copier
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleRotateSecret} disabled={rotating}>
+                      {rotating ? (
+                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="mr-1 h-3.5 w-3.5" />
+                      )}
+                      Régénérer
+                    </Button>
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  <span className="font-mono">X-Crawlers-Secret</span> =
+                </p>
+                <code className="mt-1 block break-all rounded bg-muted/40 p-2 text-[11px]">
+                  {ingestionSecret}
+                </code>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Variante signée : <span className="font-mono">X-Senthor-Signature: sha256=&lt;hex&gt;</span>{' '}
+                  (HMAC-SHA256 du corps, clé = ce secret) accompagné de{' '}
+                  <span className="font-mono">X-Crawlers-Domain: {currentSite?.domain}</span>.
+                </p>
+              </li>
+              <li className="rounded-md border p-3">
+                <p className="font-medium">3. Format des événements</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Tableau JSON ou NDJSON, 500 événements maximum par lot. Champs exploités :
+                  ts, path, url, user_agent, ip_hash, country, referer, is_bot, bot_name,
+                  bot_category, verification_status, confidence, decision.
+                </p>
+              </li>
+            </ol>
+
+            <div className="flex justify-between">
+              <Button variant="ghost" onClick={() => setStep('site')}>
+                <ArrowLeft className="mr-1 h-4 w-4" /> Retour
+              </Button>
+              <Button onClick={() => setStep('verify')}>
+                J'ai configuré Senthor — vérifier <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* STEP 2 — Mode */}
-      {step === 'mode' && (
+      {step === 'mode' && provider === 'cloudflare' && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
@@ -380,6 +473,7 @@ export default function CfShield() {
             <CardDescription>Choisissez le mode qui correspond à votre niveau d'aisance avec Cloudflare.</CardDescription>
           </CardHeader>
           <CardContent>
+
             <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="auto">
