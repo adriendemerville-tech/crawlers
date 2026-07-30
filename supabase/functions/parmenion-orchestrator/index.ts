@@ -500,6 +500,7 @@ try {
                 type: topTask.execution_mode === 'content_architect' ? 'cms' : topTask.execution_mode === 'code_architect' ? 'code' : 'mixed',
                 payload: {
                   strategist_task: topTask,
+                  strategist_tasks: tasks.slice(0, 8),
                   strategist_plan_id: strategistData?.plan_id,
                   _prescribe_v3: true,
                 },
