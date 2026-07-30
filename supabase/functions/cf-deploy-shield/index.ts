@@ -226,6 +226,7 @@ Deno.serve(handleRequest(async (req) => {
           user_id: userId,
           domain: site.domain,
           deployment_mode: mode,
+          provider,
           status: 'pending',
           human_sample_rate: sampleRate,
         })
@@ -237,16 +238,36 @@ Deno.serve(handleRequest(async (req) => {
     } else {
       await supabase
         .from('cf_shield_configs')
-        .update({ deployment_mode: mode, human_sample_rate: sampleRate })
+        .update({ deployment_mode: mode, provider, human_sample_rate: sampleRate })
         .eq('id', existing.id);
+    }
+
+    if (provider !== 'cloudflare') {
+      return jsonOk({
+        ok: true,
+        config_id: configId,
+        provider,
+        mode: 'manual',
+        sample_rate: sampleRate,
+        ingest_url: senthorIngestUrl,
+        ingestion_secret: ingestionSecret,
+        manual_instructions: {
+          step_1: `Dans Senthor (app.senthor.io) → Webhooks : URL cible ${senthorIngestUrl}`,
+          step_2: `Ajouter le header X-Crawlers-Secret = ${ingestionSecret}`,
+          step_3: 'Format attendu : JSON array ou NDJSON, un objet par événement',
+          step_4: `Alternative signature HMAC-SHA256 : header X-Senthor-Signature: sha256=<hex> + X-Crawlers-Domain: ${site.domain}`,
+        },
+      });
     }
 
     return jsonOk({
       ok: true,
       config_id: configId,
+      provider,
       mode,
       sample_rate: sampleRate,
       ingest_url: ingestUrl,
+      ingestion_secret: ingestionSecret,
       worker_script: buildWorkerScript(ingestUrl).replace('__CRAWLERS_SECRET__', ingestionSecret!),
       manual_instructions: {
         step_1: 'Cloudflare Dashboard → Workers & Pages → Create Worker',
@@ -256,6 +277,7 @@ Deno.serve(handleRequest(async (req) => {
         step_5: 'Deploy',
       },
     });
+
   }
 
   // ── DEPLOY (auto) ─────────────────────────────────────────────────
