@@ -7357,13 +7357,20 @@ export type Database = {
       }
       linkedin_features_catalog: {
         Row: {
+          capture_route: string | null
+          capture_steps: Json
           created_at: string
           demo_url: string | null
+          doc_section_ids: string[]
+          evidence_table: string | null
           id: string
           is_active: boolean
+          last_evidence_at: string | null
+          last_evidence_count: number | null
           last_used_at: string | null
           marketing_angle: string
           priority: number
+          readiness_score: number
           short_description: string
           slug: string
           target_audience: string | null
@@ -7372,13 +7379,20 @@ export type Database = {
           use_count: number
         }
         Insert: {
+          capture_route?: string | null
+          capture_steps?: Json
           created_at?: string
           demo_url?: string | null
+          doc_section_ids?: string[]
+          evidence_table?: string | null
           id?: string
           is_active?: boolean
+          last_evidence_at?: string | null
+          last_evidence_count?: number | null
           last_used_at?: string | null
           marketing_angle: string
           priority?: number
+          readiness_score?: number
           short_description: string
           slug: string
           target_audience?: string | null
@@ -7387,13 +7401,20 @@ export type Database = {
           use_count?: number
         }
         Update: {
+          capture_route?: string | null
+          capture_steps?: Json
           created_at?: string
           demo_url?: string | null
+          doc_section_ids?: string[]
+          evidence_table?: string | null
           id?: string
           is_active?: boolean
+          last_evidence_at?: string | null
+          last_evidence_count?: number | null
           last_used_at?: string | null
           marketing_angle?: string
           priority?: number
+          readiness_score?: number
           short_description?: string
           slug?: string
           target_audience?: string | null
@@ -7412,6 +7433,7 @@ export type Database = {
           audited_at: string | null
           created_at: string
           created_by: string | null
+          doc_sections_used: string[]
           edited_text: string | null
           feature_id: string | null
           generated_text: string
@@ -7440,6 +7462,7 @@ export type Database = {
           audited_at?: string | null
           created_at?: string
           created_by?: string | null
+          doc_sections_used?: string[]
           edited_text?: string | null
           feature_id?: string | null
           generated_text: string
@@ -7468,6 +7491,7 @@ export type Database = {
           audited_at?: string | null
           created_at?: string
           created_by?: string | null
+          doc_sections_used?: string[]
           edited_text?: string | null
           feature_id?: string | null
           generated_text?: string
@@ -14123,6 +14147,7 @@ export type Database = {
         Args: { p_tracked_site_id: string; p_window_days?: number }
         Returns: Json
       }
+      count_table_rows: { Args: { p_table: string }; Returns: number }
       crawlers_api_create_key: {
         Args: { _name?: string }
         Returns: {
