@@ -316,7 +316,7 @@ Description : ${feature.short_description}
 Angle marketing : ${feature.marketing_angle}
 Cible : ${feature.target_audience || 'professionnels SEO/GEO'}
 Format média associé : ${mediaType === 'carousel' ? 'carrousel 6 images' : mediaType === 'video' ? 'vidéo screencast 20-30s' : 'texte seul'}
-${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${styleBlock}
+${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}
 
 Structure attendue :
 1. Hook (1 à 2 lignes) — accroche forte, question ou constat contre-intuitif. C'est la ligne la plus importante.
