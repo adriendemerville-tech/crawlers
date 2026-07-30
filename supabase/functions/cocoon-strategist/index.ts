@@ -1273,7 +1273,11 @@ try {
 function findingToTasks(finding: any, lang: string, counter: number, sector?: string | null, cmsInventory?: CmsContentInventory | null): StrategicTask[] {
   const tasks: StrategicTask[] = [];
   const baseId = `strat_${counter}`;
-  const cat = finding.category || '';
+  // Les diagnostics émettent `category` = module ('content' | 'semantic' | 'structure' |
+  // 'authority') et le type fin dans `id`. Sans cette normalisation, tous les findings
+  // tombaient dans le `default` → fix_technical/code_architect, et aucune tâche
+  // éditoriale n'atteignait le pont CMS.
+  const cat = FINDING_ID_TO_CATEGORY[finding.id] || finding.id || finding.category || '';
   const sev = finding.severity || 'info';
   const urls = finding.affected_urls || [];
   const sourceType = finding.source_type || 'unknown';
