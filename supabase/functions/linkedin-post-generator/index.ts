@@ -402,6 +402,7 @@ Retourne UNIQUEMENT un JSON strict :
         status: 'approved',
         media_type: mediaType,
         generated_text: cleanText,
+        doc_sections_used: usedSections,
         hashtags,
         llm_tokens_used: tokensUsed,
         llm_model: TEXT_MODEL,
