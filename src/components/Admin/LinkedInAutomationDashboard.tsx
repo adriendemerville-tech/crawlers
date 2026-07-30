@@ -64,7 +64,7 @@ export function LinkedInAutomationDashboard() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [selectedFeatureId, setSelectedFeatureId] = useState<string>('auto');
-  const [mediaType, setMediaType] = useState<'auto' | 'carousel' | 'video' | 'text_only'>('auto');
+  const [mediaType, setMediaType] = useState<'auto' | 'carousel' | 'video'>('auto');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [auditingId, setAuditingId] = useState<string | null>(null);
