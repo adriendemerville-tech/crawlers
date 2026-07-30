@@ -96,7 +96,13 @@ Deno.serve(async (req) => {
         }
       } else if (post.media_type === 'video') {
         const model = video_model || DEFAULT_VIDEO_MODEL;
-        const prompt = `${title}. ${angle}. ${BRAND_STYLE}. Smooth subtle camera move, professional B2B SaaS aesthetic.`;
+        // Le plan de capture (route + étapes) documenté dans le catalogue oriente
+        // la vidéo vers l'outil en usage réel, pas vers une landing page.
+        const steps = Array.isArray(feature.capture_steps) ? feature.capture_steps.map(String) : [];
+        const scenario = steps.length
+          ? `Screencast style sequence of a SaaS dashboard in real use: ${steps.join(', then ')}.`
+          : `Screencast style sequence of a SaaS dashboard in real use showing ${angle}.`;
+        const prompt = `${title}. ${scenario} ${BRAND_STYLE}. Smooth subtle camera move, professional B2B SaaS aesthetic.`;
         const { url, predictionId } = await runWavespeed(model, {
           prompt,
           duration: 5,
