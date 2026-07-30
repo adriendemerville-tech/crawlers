@@ -7405,6 +7405,11 @@ export type Database = {
       }
       linkedin_scheduled_posts: {
         Row: {
+          audit_attempts: number
+          audit_report: Json | null
+          audit_score: number | null
+          audit_status: string | null
+          audited_at: string | null
           created_at: string
           created_by: string | null
           edited_text: string | null
@@ -7428,6 +7433,11 @@ export type Database = {
           wavespeed_prediction_ids: string[] | null
         }
         Insert: {
+          audit_attempts?: number
+          audit_report?: Json | null
+          audit_score?: number | null
+          audit_status?: string | null
+          audited_at?: string | null
           created_at?: string
           created_by?: string | null
           edited_text?: string | null
@@ -7451,6 +7461,11 @@ export type Database = {
           wavespeed_prediction_ids?: string[] | null
         }
         Update: {
+          audit_attempts?: number
+          audit_report?: Json | null
+          audit_score?: number | null
+          audit_status?: string | null
+          audited_at?: string | null
           created_at?: string
           created_by?: string | null
           edited_text?: string | null

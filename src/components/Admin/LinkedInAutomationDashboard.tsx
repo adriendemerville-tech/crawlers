@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, RefreshCw, Trash2, Sparkles, ExternalLink, Pencil } from 'lucide-react';
+import { Loader2, RefreshCw, Trash2, Sparkles, ExternalLink, Pencil, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Feature = {
@@ -37,6 +37,10 @@ type Post = {
   publish_error: string | null;
   created_at: string;
   llm_tokens_used: number | null;
+  audit_status: string | null;
+  audit_score: number | null;
+  audited_at: string | null;
+  audit_report: unknown;
 };
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -59,6 +63,7 @@ export function LinkedInAutomationDashboard() {
   const [mediaType, setMediaType] = useState<'auto' | 'carousel' | 'video' | 'text_only'>('auto');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [auditingId, setAuditingId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const loadAll = async () => {
@@ -131,6 +136,34 @@ export function LinkedInAutomationDashboard() {
       setSyncingId(null);
     }
   };
+
+  // Relit le post publié sur LinkedIn et le corrige s'il ne respecte plus les règles.
+  const auditPost = async (p: Post) => {
+    setAuditingId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('linkedin-post-auditor', {
+        body: { post_id: p.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).details || (data as any).error);
+      const r = (data as any)?.results?.[0];
+      const action = r?.action ?? 'none';
+      const labels: Record<string, string> = {
+        none: 'Post conforme, aucune correction nécessaire',
+        patched: `Post corrigé sur LinkedIn (score ${r?.previous_score} → ${r?.score})`,
+        rejected_fix: 'Correction proposée rejetée par les garde-fous',
+        skipped_max_attempts: 'Nombre maximum de corrections atteint',
+        llm_failed: 'Analyse LLM indisponible',
+      };
+      toast.success(labels[action] ?? `Audit terminé : ${action}`);
+      await loadAll();
+    } catch (e: any) {
+      toast.error(`Échec audit : ${e.message}`);
+    } finally {
+      setAuditingId(null);
+    }
+  };
+
 
 
   const updateStatus = async (id: string, status: string) => {
@@ -255,6 +288,15 @@ export function LinkedInAutomationDashboard() {
                       <Badge variant={statusVariant[p.status] || 'outline'}>{p.status}</Badge>
                       <Badge variant="outline">{p.media_type}</Badge>
                       {feature && <span className="text-sm font-medium">{feature.title}</span>}
+                      {p.audit_status && (
+                        <Badge
+                          variant={p.audit_status === 'passed' || p.audit_status === 'patched' ? 'default' : 'outline'}
+                          title={p.audited_at ? `Audité le ${new Date(p.audited_at).toLocaleString('fr-FR')}` : undefined}
+                        >
+                          Audit : {p.audit_status}
+                          {typeof p.audit_score === 'number' ? ` (${p.audit_score}/100)` : ''}
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(p.created_at).toLocaleString('fr-FR')}
@@ -318,6 +360,22 @@ export function LinkedInAutomationDashboard() {
                           <Pencil className="h-4 w-4 mr-2" />
                         )}
                         Modifier sur LinkedIn
+                      </Button>
+                    )}
+                    {p.status === 'published' && p.linkedin_post_urn && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => auditPost(p)}
+                        disabled={auditingId === p.id}
+                        title="Relit le post publié, le note et le corrige si les règles ne sont pas respectées"
+                      >
+                        {auditingId === p.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <ShieldCheck className="h-4 w-4 mr-2" />
+                        )}
+                        Auditer maintenant
                       </Button>
                     )}
                     {p.linkedin_post_url && (
