@@ -33,6 +33,7 @@ type Post = {
   media_generation_status: string;
   media_error: string | null;
   linkedin_post_url: string | null;
+  linkedin_post_urn: string | null;
   publish_error: string | null;
   created_at: string;
   llm_tokens_used: number | null;
