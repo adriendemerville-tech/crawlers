@@ -1116,6 +1116,44 @@ Le marketplace 'Bundle Option' dans la Console permet de s'abonner à des APIs t
 | Shopify | \`webhook-shopify-orders\` | Webhooks commandes, revenus |
 | WooCommerce | \`webhook-woo-orders\` | Webhooks commandes, revenus |
 | IKtracker | \`iktracker-actions\` | CRUD pages/articles via bridge dédié |
+
+## Collecte de hits bots — voies d'ingestion
+
+Une seule config par site (\`cf_shield_configs\`, colonne \`provider\`), quelle que soit la voie retenue.
+
+| Provider | Edge function | Déploiement | Cas d'usage |
+|----------|---------------|-------------|-------------|
+| \`cloudflare\` (défaut) | \`ingest-bot-hits\` | Worker Cloudflare généré par \`cf-deploy-shield\` | Site derrière Cloudflare |
+| \`senthor\` | \`ingest-senthor\` | Webhook sortant Senthor vers notre URL | WordPress mutualisé, Vercel, Nginx/Caddy, Drupal |
+| \`custom\` | \`ingest-bot-hits\` | POST manuel depuis le serveur du client | Stack sur-mesure |
+
+### \`ingest-senthor\` (public, \`verify_jwt = false\`)
+
+| Élément | Détail |
+|---------|--------|
+| **URL** | \`{SUPABASE_URL}/functions/v1/ingest-senthor\` |
+| **Auth A** | Header \`X-Crawlers-Secret: <ingestion_secret>\` |
+| **Auth B** | \`X-Senthor-Signature: sha256=<hex>\` (HMAC-SHA256 du corps brut, clé = \`ingestion_secret\`) + \`X-Crawlers-Domain\` |
+| **Corps** | Tableau JSON, NDJSON, objet unique ou \`{ events: [...] }\` — 500 événements max par lot |
+| **Cible** | Table \`bot_hits\` |
+| **RGPD** | IP jamais stockée en clair : \`ip_hash\` fourni par Senthor, sinon SHA-256 calculé côté edge |
+| **Échantillonnage** | Tous les hits bots conservés ; humains filtrés par \`human_sample_rate\` (défaut 0.001) |
+
+Mapping : Senthor fait foi sur \`is_bot\` / \`bot_category\` / \`verification_status\`, \`detectBot(ua)\` sert de repli.
+\`confidence\` accepté en 0..1 ou 0..100 → normalisé en entier 0..100 dans \`confidence_score\`.
+\`raw_meta = { source: 'senthor', senthor_id, decision }\`.
+
+### Rotation de secret
+
+\`cf-deploy-shield\` action \`rotate\` régénère \`ingestion_secret\` (révocation immédiate de l'ancien) et
+renvoie une consigne adaptée au provider : redéploiement du Worker pour Cloudflare, mise à jour du
+header webhook pour Senthor. Bouton « Régénérer » sur \`/cf-shield\`.
+
+### Écran d'activation \`/cf-shield\`
+
+1. Choix de la voie de collecte (Cloudflare / Senthor) + domaine.
+2. Cloudflare : script Worker à déployer. Senthor : URL d'ingestion, header, format attendu.
+3. Vérification commune : attente du premier hit, passage de \`status\` \`pending\` → \`active\`.
 `,
   },
 
