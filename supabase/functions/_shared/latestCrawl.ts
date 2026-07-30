@@ -33,7 +33,7 @@ export async function getLatestCrawlId(
   let query = supabase
     .from('site_crawls')
     .select('id')
-    .eq('domain', domain);
+    .or(`domain.eq.${domain},domain.eq.www.${domain}`);
 
   if (opts.completedOnly !== false) query = query.eq('status', 'completed');
 
