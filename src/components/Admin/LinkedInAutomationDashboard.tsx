@@ -40,7 +40,7 @@ type Post = {
   audit_status: string | null;
   audit_score: number | null;
   audited_at: string | null;
-  audit_report: Record<string, unknown> | null;
+  audit_report: unknown;
 };
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
