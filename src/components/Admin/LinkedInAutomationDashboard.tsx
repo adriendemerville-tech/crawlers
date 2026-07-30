@@ -58,6 +58,8 @@ export function LinkedInAutomationDashboard() {
   const [selectedFeatureId, setSelectedFeatureId] = useState<string>('auto');
   const [mediaType, setMediaType] = useState<'auto' | 'carousel' | 'video' | 'text_only'>('auto');
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const loadAll = async () => {
     setLoading(true);
