@@ -265,11 +265,16 @@ export function LinkedInAutomationDashboard() {
                 <CardContent className="space-y-3">
                   <Textarea
                     className="min-h-[220px] font-mono text-sm"
-                    defaultValue={currentText}
+                    value={drafts[p.id] ?? currentText}
+                    onChange={(e) => setDrafts((d) => ({ ...d, [p.id]: e.target.value }))}
                     onBlur={(e) => {
                       if (e.target.value !== currentText) saveEdited(p.id, e.target.value);
                     }}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {(drafts[p.id] ?? currentText ?? '').trim().length} caractères (1000–1500 requis, hashtags exclus)
+                  </p>
+
                   {p.hashtags?.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {p.hashtags.map((h) => (
