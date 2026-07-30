@@ -193,10 +193,17 @@ Deno.serve(handleRequest(async (req) => {
   if (!site || site.user_id !== userId) return jsonError('Not your site', 403);
 
   const ingestUrl = `${SUPABASE_URL}/functions/v1/ingest-bot-hits`;
+  const senthorIngestUrl = `${SUPABASE_URL}/functions/v1/ingest-senthor`;
+  const provider = ['senthor', 'custom'].includes(String(body.provider))
+    ? String(body.provider)
+    : 'cloudflare';
 
   // ── INIT : ensure config row, return manual snippet ───────────────
   if (action === 'init') {
-    const mode = (body.mode as string) === 'auto' ? 'auto' : 'manual';
+    const mode = provider === 'cloudflare'
+      ? ((body.mode as string) === 'auto' ? 'auto' : 'manual')
+      : 'manual';
+
 
     // Resolve adaptive sampling rate
     const { data: rateData } = await supabase.rpc('resolve_human_sample_rate', { p_user_id: userId });
