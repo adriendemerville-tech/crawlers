@@ -187,8 +187,11 @@ Deno.serve(handleRequest(async (req) => {
 
     // Senthor est la source de vérité quand elle qualifie l'événement,
     // notre détection UA sert de repli.
-    const isBot = typeof e.is_bot === 'boolean' ? e.is_bot : detection.is_bot;
-    const category = e.bot_category || detection.bot_category || null;
+    const senthorQualified = typeof e.is_bot === 'boolean';
+    const isBot = senthorQualified ? e.is_bot! : detection.is_bot;
+    const category = isBot
+      ? (normalizeCategory(e.bot_category) || detection.bot_category || 'unknown')
+      : null;
     const isAiBot = isBot && category === 'ai_crawler';
     const isHuman = !isBot;
 
@@ -202,6 +205,21 @@ Deno.serve(handleRequest(async (req) => {
     if (e.ip_hash) ipHash = String(e.ip_hash).replace(/^sha256:/, '');
     else if (e.ip && e.ip !== '0.0.0.0') ipHash = await sha256Hex(e.ip);
 
+    const rawStatus = e.status_code ?? e.status;
+    const statusCode = typeof rawStatus === 'number' && Number.isFinite(rawStatus)
+      ? Math.trunc(rawStatus)
+      : (typeof rawStatus === 'string' && /^\d{3}$/.test(rawStatus) ? Number(rawStatus) : null);
+
+    // Taxonomie commune avec ingest-bot-hits : verified | suspect | stealth | unverified
+    const allowedStatus = ['verified', 'suspect', 'stealth', 'unverified'];
+    const verificationStatus = allowedStatus.includes(String(e.verification_status))
+      ? String(e.verification_status)
+      : (isBot ? 'suspect' : 'unverified');
+    const allowedMethod = ['rdns_match', 'asn_range', 'ua_only', 'behavioral', 'none'];
+    const verificationMethod = allowedMethod.includes(String(e.verification_method))
+      ? String(e.verification_method)
+      : (senthorQualified ? 'behavioral' : 'ua_only');
+
     return {
       tracked_site_id: config!.tracked_site_id,
       user_id: config!.user_id,
@@ -214,20 +232,26 @@ Deno.serve(handleRequest(async (req) => {
       bot_name: e.bot_name || detection.bot_name || null,
       is_ai_bot: isAiBot,
       is_human_sample: isHumanSample,
-      status_code: e.status_code ?? e.status ?? null,
-      country: e.country || null,
+      status_code: statusCode,
+      country: e.country ? String(e.country).slice(0, 2).toUpperCase() : null,
       ip_hash: ipHash,
       referer: (e.referer || e.referrer) ? String(e.referer || e.referrer).slice(0, 1000) : null,
       cf_ray: null,
-      verification_status: e.verification_status || (isBot ? 'unverified' : 'human'),
-      verification_method: e.verification_method || (e.is_bot !== undefined ? 'senthor' : 'ua_pattern'),
+      verification_status: verificationStatus,
+      verification_method: verificationMethod,
       // Senthor peut envoyer 0..1 ou 0..100 ; la colonne attend un entier 0..100
-      confidence_score: typeof e.confidence === 'number'
+      confidence_score: typeof e.confidence === 'number' && Number.isFinite(e.confidence)
         ? Math.max(0, Math.min(100, Math.round(e.confidence <= 1 ? e.confidence * 100 : e.confidence)))
         : null,
 
-      raw_meta: { source: 'senthor', senthor_id: e.id ?? null, decision: e.decision ?? null },
+      raw_meta: {
+        source: 'senthor',
+        senthor_id: e.id ?? null,
+        decision: e.decision ?? null,
+        senthor_category: e.bot_category ?? null,
+      },
     };
+
   }));
 
   const validRows = rows.filter(Boolean);
