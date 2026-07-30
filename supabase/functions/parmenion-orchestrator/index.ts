@@ -598,7 +598,7 @@ try {
 
           decision = {
             goal: {
-              type: lastPrescribe?.goal_type || (isContentTask ? 'content_creation' : 'technical_fix'),
+              type: isContentTask ? 'content_creation' : (lastPrescribe?.goal_type || 'technical_fix'),
               description: `[Execute V3 — déterministe] ${task.title || lastPrescribe?.goal_description || 'rejoue plan prescribe'}`,
             },
             tactic: {
