@@ -367,14 +367,27 @@ Deno.serve(handleRequest(async (req) => {
 
   // ── ROTATE secret ────────────────────────────────────────────────
   if (action === 'rotate') {
+    const { data: current } = await supabase
+      .from('cf_shield_configs')
+      .select('provider')
+      .eq('tracked_site_id', trackedSiteId)
+      .maybeSingle();
+    const currentProvider = (current?.provider as string) || 'cloudflare';
+
     const newSecret = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
     const { error: rotErr } = await supabase
       .from('cf_shield_configs')
       .update({ ingestion_secret: newSecret, status: 'pending' })
       .eq('tracked_site_id', trackedSiteId);
     if (rotErr) return jsonError(rotErr.message, 500);
-    return jsonOk({ ok: true, ingestion_secret: newSecret, note: 'Update Worker env CRAWLERS_SECRET with this value.' });
+
+    const note = currentProvider === 'cloudflare'
+      ? 'Mettez à jour la variable CRAWLERS_SECRET du Worker avec cette valeur.'
+      : `Mettez à jour le header X-Crawlers-Secret côté ${currentProvider} avec cette valeur. L'ancien secret est révoqué immédiatement.`;
+
+    return jsonOk({ ok: true, provider: currentProvider, ingestion_secret: newSecret, note });
   }
+
 
   // ── PAUSE / RESUME ───────────────────────────────────────────────
   if (action === 'pause' || action === 'resume') {
