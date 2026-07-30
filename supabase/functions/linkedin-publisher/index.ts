@@ -293,6 +293,13 @@ Deno.serve(async (req) => {
 
 
     const mediaUrls: string[] = Array.isArray(post.media_urls) ? post.media_urls.filter(Boolean) : [];
+    // Garde-fou : aucun post LinkedIn ne doit partir sans visuel.
+    if (mediaUrls.length === 0) {
+      return json({
+        error: 'Visuel manquant',
+        details: `Aucun média attaché (media_type=${post.media_type}, media_generation_status=${post.media_generation_status}). Un post LinkedIn Crawlers ne peut jamais être publié en texte seul : relance la génération média avant de publier.`,
+      }, 400);
+    }
     const authorUrn = await getAuthorUrn();
     const isVideo = post.media_type === 'video' && mediaUrls.length > 0;
 
