@@ -136,6 +136,34 @@ export function LinkedInAutomationDashboard() {
     }
   };
 
+  // Relit le post publié sur LinkedIn et le corrige s'il ne respecte plus les règles.
+  const auditPost = async (p: Post) => {
+    setAuditingId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('linkedin-post-auditor', {
+        body: { post_id: p.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).details || (data as any).error);
+      const r = (data as any)?.results?.[0];
+      const action = r?.action ?? 'none';
+      const labels: Record<string, string> = {
+        none: 'Post conforme, aucune correction nécessaire',
+        patched: `Post corrigé sur LinkedIn (score ${r?.previous_score} → ${r?.score})`,
+        rejected_fix: 'Correction proposée rejetée par les garde-fous',
+        skipped_max_attempts: 'Nombre maximum de corrections atteint',
+        llm_failed: 'Analyse LLM indisponible',
+      };
+      toast.success(labels[action] ?? `Audit terminé : ${action}`);
+      await loadAll();
+    } catch (e: any) {
+      toast.error(`Échec audit : ${e.message}`);
+    } finally {
+      setAuditingId(null);
+    }
+  };
+
+
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
