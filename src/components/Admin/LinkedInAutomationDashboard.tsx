@@ -288,6 +288,15 @@ export function LinkedInAutomationDashboard() {
                       <Badge variant={statusVariant[p.status] || 'outline'}>{p.status}</Badge>
                       <Badge variant="outline">{p.media_type}</Badge>
                       {feature && <span className="text-sm font-medium">{feature.title}</span>}
+                      {p.audit_status && (
+                        <Badge
+                          variant={p.audit_status === 'passed' || p.audit_status === 'patched' ? 'default' : 'outline'}
+                          title={p.audited_at ? `Audité le ${new Date(p.audited_at).toLocaleString('fr-FR')}` : undefined}
+                        >
+                          Audit : {p.audit_status}
+                          {typeof p.audit_score === 'number' ? ` (${p.audit_score}/100)` : ''}
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(p.created_at).toLocaleString('fr-FR')}
