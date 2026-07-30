@@ -23,8 +23,16 @@ const LINKEDIN_GATEWAY = 'https://connector-gateway.lovable.dev/linkedin';
 
 const TEXT_MODEL = 'mistralai/mistral-large-latest';
 const DELAY_MINUTES = 5;
+// Seuil d'entrée : en dessous, on déclenche la boucle de correction.
 const SCORE_THRESHOLD = 75;
-const MAX_FIX_ATTEMPTS = 2;
+// Cible : score à partir duquel on arrête d'itérer (post considéré conforme).
+const TARGET_SCORE = 90;
+// Gain minimum d'une itération pour justifier un nouvel appel LLM.
+const MIN_GAIN = 3;
+// Itérations LLM max par exécution, et budget cumulé par post.
+const MAX_ITERATIONS_PER_RUN = 3;
+const MAX_FIX_ATTEMPTS = 5;
+
 
 function json(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -188,51 +196,93 @@ async function runAudit(admin: ReturnType<typeof createClient>, post: any, dryRu
     return { post_id: post.id, urn, score: det.score, action: 'skipped_max_attempts', report };
   }
 
-  const userPrompt = [
-    `Manquements détectés : ${det.failed.map((c) => c.detail).join(' | ') || 'hook faible'}`,
-    engagement ? `Engagement à ${DELAY_MINUTES} min : ${engagement.likes} likes, ${engagement.comments} commentaires.` : '',
-    '',
-    'Post publié :',
-    '"""',
-    liveBody,
-    '"""',
-  ].filter(Boolean).join('\n');
+  // ── Boucle d'amélioration itérative ──
+  // On itère tant que le score < TARGET_SCORE, que le gain reste significatif
+  // et que le budget d'itérations n'est pas épuisé. Un seul PATCH LinkedIn à la fin.
+  const budget = Math.min(MAX_ITERATIONS_PER_RUN, MAX_FIX_ATTEMPTS - attempts);
+  let bestText = liveBody;
+  let bestScore = det.score;
+  let bestChecks = det;
+  const iterations: Array<Record<string, unknown>> = [];
+  let stopReason = 'budget_exhausted';
+  let llmCalls = 0;
 
-  let parsed: { needs_fix?: boolean; hook_score?: number; fixed_text?: string; reasons?: string[] };
-  try {
-    const res = await callOpenRouterJson<typeof parsed>({
-      model: TEXT_MODEL,
-      system: SYSTEM,
-      user: userPrompt,
-      temperature: 0.4,
-      maxTokens: 1200,
+  for (let i = 0; i < budget; i++) {
+    const userPrompt = [
+      `Itération ${i + 1}/${budget}. Score actuel : ${bestScore}/100 (cible ${TARGET_SCORE}).`,
+      `Manquements détectés : ${bestChecks.failed.map((c) => c.detail).join(' | ') || 'hook faible'}`,
+      engagement ? `Engagement à ${DELAY_MINUTES} min : ${engagement.likes} likes, ${engagement.comments} commentaires.` : '',
+      '',
+      'Post à corriger :',
+      '"""',
+      bestText,
+      '"""',
+    ].filter(Boolean).join('\n');
+
+    let parsed: { needs_fix?: boolean; hook_score?: number; fixed_text?: string; reasons?: string[] };
+    try {
+      const res = await callOpenRouterJson<typeof parsed>({
+        model: TEXT_MODEL,
+        system: SYSTEM,
+        user: userPrompt,
+        temperature: 0.4,
+        maxTokens: 1200,
+      });
+      parsed = res.parsed;
+      llmCalls++;
+    } catch (e) {
+      stopReason = 'llm_failed';
+      iterations.push({ iteration: i + 1, error: String((e as Error).message ?? e) });
+      break;
+    }
+
+    const candidate = String(parsed?.fixed_text ?? '').replace(EMOJI_RE, '').replace(/[—–]/g, ', ').trim();
+    const after = auditText(hashtags.length ? `${candidate}\n\n${hashtags.join(' ')}` : candidate);
+    const valid = !!candidate && after.length >= 1000 && after.length <= 1500 && /@crawlers\.fr/i.test(candidate);
+    const gain = after.score - bestScore;
+
+    iterations.push({
+      iteration: i + 1,
+      candidate_score: after.score,
+      gain,
+      valid,
+      hook_score: parsed?.hook_score ?? null,
+      reasons: parsed?.reasons ?? [],
+      failed_checks: after.failed.map((c) => c.id),
     });
-    parsed = res.parsed;
-  } catch (e) {
-    report.action = 'llm_failed';
-    report.error = String((e as Error).message ?? e);
-    await admin.from('linkedin_scheduled_posts')
-      .update({ audit_status: 'failed', audit_score: det.score, audit_report: report, audited_at: new Date().toISOString() })
-      .eq('id', post.id);
-    return { post_id: post.id, urn, score: det.score, action: 'llm_failed', report };
+
+    if (!valid || gain < MIN_GAIN) {
+      stopReason = !valid ? 'invalid_candidate' : 'plateau';
+      break;
+    }
+
+    bestText = candidate;
+    bestScore = after.score;
+    bestChecks = after;
+
+    if (bestScore >= TARGET_SCORE && after.hookStrong) {
+      stopReason = 'target_reached';
+      break;
+    }
   }
 
-  let fixed = String(parsed?.fixed_text ?? '').replace(EMOJI_RE, '').replace(/[—–]/g, ', ').trim();
-  report.hook_score = parsed?.hook_score ?? null;
-  report.reasons = parsed?.reasons ?? [];
+  report.iterations = iterations;
+  report.llm_calls = llmCalls;
+  report.stop_reason = stopReason;
+  report.target_score = TARGET_SCORE;
 
-  // Garde-fou : on ne remplace que si la correction respecte réellement les règles.
-  const after = auditText(hashtags.length ? `${fixed}\n\n${hashtags.join(' ')}` : fixed);
-  if (!fixed || after.score <= det.score || after.length < 1000 || after.length > 1500 || !/@crawlers\.fr/i.test(fixed)) {
+  const improved = bestScore > det.score && bestText !== liveBody;
+
+  if (!improved) {
     report.action = 'rejected_fix';
-    report.candidate_score = after.score;
+    report.candidate_score = bestScore;
     await admin.from('linkedin_scheduled_posts')
       .update({
         audit_status: 'needs_review',
         audit_score: det.score,
         audit_report: report,
         audited_at: new Date().toISOString(),
-        audit_attempts: attempts + 1,
+        audit_attempts: attempts + Math.max(1, llmCalls),
       })
       .eq('id', post.id);
     return { post_id: post.id, urn, score: det.score, action: 'rejected_fix', report };
@@ -240,30 +290,32 @@ async function runAudit(admin: ReturnType<typeof createClient>, post: any, dryRu
 
   if (dryRun) {
     report.action = 'dry_run';
-    report.candidate_score = after.score;
-    report.candidate_text = fixed;
+    report.candidate_score = bestScore;
+    report.candidate_text = bestText;
     return { post_id: post.id, urn, score: det.score, action: 'dry_run', report };
   }
 
-  const fullFixed = hashtags.length ? `${fixed}\n\n${hashtags.join(' ')}` : fixed;
+  const fullFixed = hashtags.length ? `${bestText}\n\n${hashtags.join(' ')}` : bestText;
   await patchCommentary(urn, fullFixed);
 
   report.action = 'patched';
-  report.new_score = after.score;
+  report.new_score = bestScore;
   await admin.from('linkedin_scheduled_posts')
     .update({
-      edited_text: fixed,
-      audit_status: 'patched',
-      audit_score: after.score,
+      edited_text: bestText,
+      // 'patched' = cible atteinte, 'needs_review' = amélioré mais encore sous la cible
+      audit_status: bestScore >= TARGET_SCORE ? 'patched' : 'needs_review',
+      audit_score: bestScore,
       audit_report: report,
       audited_at: new Date().toISOString(),
-      audit_attempts: attempts + 1,
+      audit_attempts: attempts + llmCalls,
       updated_at: new Date().toISOString(),
     })
     .eq('id', post.id);
 
-  return { post_id: post.id, urn, score: after.score, previous_score: det.score, action: 'patched', report };
+  return { post_id: post.id, urn, score: bestScore, previous_score: det.score, action: 'patched', report };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -307,7 +359,14 @@ Deno.serve(async (req) => {
         .gte('published_at', new Date(Date.now() - 24 * 3600_000).toISOString())
         .order('published_at', { ascending: true })
         .limit(3);
-      if (!force) query = query.is('audited_at', null);
+      // Jamais audité, OU audité mais encore sous la cible avec du budget restant :
+      // le cron relance alors un cycle d'amélioration.
+      if (!force) {
+        query = query.or(
+          `audited_at.is.null,and(audit_score.lt.${TARGET_SCORE},audit_attempts.lt.${MAX_FIX_ATTEMPTS})`,
+        );
+      }
+
     }
 
     const { data: posts, error } = await query;
