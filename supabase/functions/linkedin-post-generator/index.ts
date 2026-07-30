@@ -11,7 +11,8 @@ const TEXT_MODEL = 'mistralai/mistral-large-2512';
 
 const BodySchema = z.object({
   feature_id: z.string().uuid().optional(),
-  media_type: z.enum(['carousel', 'video', 'text_only']).optional(),
+  // text_only est volontairement interdit : tout post LinkedIn doit avoir un visuel.
+  media_type: z.enum(['carousel', 'video']).optional(),
   tone_hint: z.string().max(500).optional(),
   style_sample_count: z.number().int().min(3).max(20).optional(),
 });
@@ -315,7 +316,7 @@ GARDE-FOUS ANTI-IA (strict) :
 Description : ${feature.short_description}
 Angle marketing : ${feature.marketing_angle}
 Cible : ${feature.target_audience || 'professionnels SEO/GEO'}
-Format média associé : ${mediaType === 'carousel' ? 'carrousel 6 images' : mediaType === 'video' ? 'vidéo screencast 20-30s' : 'texte seul'}
+Format média associé : ${mediaType === 'carousel' ? 'carrousel 6 images' : 'vidéo screencast 20-30s'}
 ${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}
 
 Structure attendue :
@@ -407,7 +408,7 @@ Retourne UNIQUEMENT un JSON strict :
         llm_tokens_used: tokensUsed,
         llm_model: TEXT_MODEL,
         created_by: userId,
-        media_generation_status: mediaType === 'text_only' ? 'ready' : 'not_started',
+        media_generation_status: 'not_started',
       })
       .select('*')
       .single();
@@ -426,17 +427,15 @@ Retourne UNIQUEMENT un JSON strict :
       })
       .eq('id', feature.id);
 
-    // Déclenche la génération média en arrière-plan (carousel/video)
-    if (mediaType !== 'text_only') {
-      fetch(`${SUPABASE_URL}/functions/v1/linkedin-media-generator`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
-        },
-        body: JSON.stringify({ post_id: post.id }),
-      }).catch((err) => console.warn('media-generator trigger failed', err));
-    }
+    // Déclenche systématiquement la génération média (carousel/video) : jamais de post sans visuel.
+    fetch(`${SUPABASE_URL}/functions/v1/linkedin-media-generator`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+      },
+      body: JSON.stringify({ post_id: post.id }),
+    }).catch((err) => console.warn('media-generator trigger failed', err));
 
     return json({
       success: true,

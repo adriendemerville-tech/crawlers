@@ -64,7 +64,7 @@ export function LinkedInAutomationDashboard() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [selectedFeatureId, setSelectedFeatureId] = useState<string>('auto');
-  const [mediaType, setMediaType] = useState<'auto' | 'carousel' | 'video' | 'text_only'>('auto');
+  const [mediaType, setMediaType] = useState<'auto' | 'carousel' | 'video'>('auto');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [auditingId, setAuditingId] = useState<string | null>(null);
@@ -257,7 +257,7 @@ export function LinkedInAutomationDashboard() {
                   <SelectItem value="auto">Alternance auto (semaine paire/impaire)</SelectItem>
                   <SelectItem value="carousel">Carrousel 6 images</SelectItem>
                   <SelectItem value="video">Vidéo screencast</SelectItem>
-                  <SelectItem value="text_only">Texte seul</SelectItem>
+                  
                 </SelectContent>
               </Select>
             </div>
