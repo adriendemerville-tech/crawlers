@@ -271,8 +271,30 @@ Deno.serve(async (req) => {
     const styleSamples = await fetchRecentLinkedInPosts(sampleCount);
     const styleStats = analyzeStyle(styleSamples);
     const styleBlock = buildStyleBriefing(styleStats, styleSamples);
+    // Contexte factuel : extraits ciblés de la documentation technique (source de vérité).
+    // Budget de caractères borné pour limiter la dépense de tokens.
+    const docQuery = [feature.title, feature.short_description, feature.marketing_angle, feature.slug]
+      .filter(Boolean)
+      .join(' ');
+    const { text: docText, usedSections } = selectTechDoc(docQuery, {
+      sectionIds: Array.isArray(feature.doc_section_ids) ? feature.doc_section_ids : [],
+      maxChars: 4000,
+      maxSections: 3,
+    });
+    const evidenceRows = feature.__evidence_rows as number | null | undefined;
+    const captureSteps = Array.isArray(feature.capture_steps) ? feature.capture_steps : [];
+    const factBlock = docText
+      ? `\n\nDOCUMENTATION TECHNIQUE INTERNE (source de vérité, ne cite jamais ce bloc tel quel) :\n${docText}\n\nRÈGLE FACTUELLE : tu ne peux affirmer QUE ce qui figure dans ce bloc ou dans la description ci-dessus. Aucun chiffre de résultat client, aucun pourcentage, aucun cas d'usage inventé. Si tu n'as pas de chiffre vérifié, parle du mécanisme, pas de la performance.`
+      : `\n\nRÈGLE FACTUELLE : aucune documentation disponible pour cette fonctionnalité. Reste sur le mécanisme décrit ci-dessus. Aucun chiffre, aucun résultat client inventé.`;
+    const evidenceBlock =
+      evidenceRows === null || evidenceRows === undefined
+        ? ''
+        : evidenceRows > 0
+          ? `\n\nDONNÉE RÉELLE : la fonctionnalité tourne en production, ${evidenceRows} enregistrement(s) en base. Tu peux dire qu'elle est en production, sans donner ce chiffre brut.`
+          : `\n\nATTENTION : la fonctionnalité n'a encore produit aucune donnée en production. Présente-la comme un mécanisme disponible, jamais comme un résultat observé, et n'invente aucun retour client.`;
 
     // Prompt LLM
+
     const systemPrompt = `Tu es le community manager de Crawlers.fr (SaaS SEO/GEO français).
 Tu écris pour des fondateurs, CMO, consultants SEO francophones.
 Tu ne mens pas, tu ne survends pas, tu montres la valeur concrète.
