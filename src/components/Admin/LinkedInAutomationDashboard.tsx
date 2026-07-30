@@ -257,7 +257,7 @@ export function LinkedInAutomationDashboard() {
                   <SelectItem value="auto">Alternance auto (semaine paire/impaire)</SelectItem>
                   <SelectItem value="carousel">Carrousel 6 images</SelectItem>
                   <SelectItem value="video">Vidéo screencast</SelectItem>
-                  <SelectItem value="text_only">Texte seul</SelectItem>
+                  
                 </SelectContent>
               </Select>
             </div>
