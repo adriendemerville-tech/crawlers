@@ -19,6 +19,10 @@ type Feature = {
   is_active: boolean;
   last_used_at: string | null;
   use_count: number;
+  readiness_score?: number | null;
+  last_evidence_count?: number | null;
+  doc_section_ids?: string[] | null;
+  capture_route?: string | null;
 };
 
 type Post = {
