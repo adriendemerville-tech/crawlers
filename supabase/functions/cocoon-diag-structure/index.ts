@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getLatestCrawlId } from '../_shared/latestCrawl.ts';
 
 /**
  * cocoon-diag-structure: Diagnostic Structure
@@ -101,14 +102,9 @@ try {
 
     const supabase = getServiceClient();
 
-    const { data: crawl } = await supabase
-      .from('site_crawls')
-      .select('id')
-      .eq('tracked_site_id', tracked_site_id)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const crawlId = await getLatestCrawlId(supabase, { trackedSiteId: tracked_site_id, domain });
+    const crawl = crawlId ? { id: crawlId } : null;
+    
 
     if (!crawl) {
       return new Response(JSON.stringify({

@@ -1,6 +1,7 @@
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getLatestCrawlId } from '../_shared/latestCrawl.ts';
 
 /**
  * cocoon-diag-authority: Diagnostic Autorité
@@ -103,14 +104,7 @@ try {
         .eq('tracked_site_id', tracked_site_id)
         .order('measured_at', { ascending: false })
         .limit(12),
-      supabase
-        .from('site_crawls')
-        .select('id')
-        .eq('tracked_site_id', tracked_site_id)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+      (async () => { const cid = await getLatestCrawlId(supabase, { trackedSiteId: tracked_site_id, domain }); return { data: cid ? { id: cid } : null }; })(),
       supabase
         .from('cocoon_sessions')
         .select('nodes_snapshot')
