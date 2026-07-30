@@ -274,13 +274,15 @@ export default function CfShield() {
         <StepBadge n={3} label="Vérification" active={step === 'verify'} done={false} />
       </div>
 
-      <Alert className="mb-6">
-        <AlertTitle>Prérequis : compte Cloudflare</AlertTitle>
-        <AlertDescription className="text-xs">
-          Pour que le Worker s'exécute sur un domaine proxied (nuage orange), vous devez activer le plan Workers Paid à 5 $/mois sur Cloudflare.
-          <a href="/aide#article-cloudflare-workers-paid" className="ml-1 underline underline-offset-2 text-primary">Guide pas-à-pas</a>
-        </AlertDescription>
-      </Alert>
+      {provider === 'cloudflare' && (
+        <Alert className="mb-6">
+          <AlertTitle>Prérequis : compte Cloudflare</AlertTitle>
+          <AlertDescription className="text-xs">
+            Pour que le Worker s'exécute sur un domaine proxied (nuage orange), vous devez activer le plan Workers Paid à 5 $/mois sur Cloudflare.
+            <a href="/aide#article-cloudflare-workers-paid" className="ml-1 underline underline-offset-2 text-primary">Guide pas-à-pas</a>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* STEP 1 — Site */}
       {step === 'site' && (
@@ -317,11 +319,53 @@ export default function CfShield() {
                 ))}
               </div>
             )}
+
+            <Separator />
+
+            <div>
+              <p className="text-sm font-medium">Voie de collecte</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Cloudflare si votre domaine est proxied. Senthor si votre site tourne
+                sur WordPress mutualisé, Vercel, Nginx, Caddy, Rails ou Drupal.
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setProvider('cloudflare')}
+                  className={`rounded-md border p-3 text-left transition-colors hover:bg-muted/50 ${
+                    provider === 'cloudflare' ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <ShieldCheck className="h-4 w-4" /> Worker Cloudflare
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    Collecte native, latence nulle. Nécessite un domaine derrière Cloudflare.
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProvider('senthor')}
+                  className={`rounded-md border p-3 text-left transition-colors hover:bg-muted/50 ${
+                    provider === 'senthor' ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Zap className="h-4 w-4" /> Senthor (hors Cloudflare)
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    Connecteur serveur Senthor, les événements sont relayés vers Crawlers.
+                  </span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button onClick={handleStartSetup} disabled={!siteId}>
                 Continuer <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
+
           </CardContent>
         </Card>
       )}
