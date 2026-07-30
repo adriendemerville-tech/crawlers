@@ -251,7 +251,7 @@ export default function CfShield() {
           <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-5 sm:items-center">
             <FlowStep icon={<Globe className="h-4 w-4" />} label="Bot IA / Humain" />
             <FlowArrow />
-            <FlowStep icon={<ShieldCheck className="h-4 w-4" />} label="Worker CF" highlight />
+            <FlowStep icon={<ShieldCheck className="h-4 w-4" />} label={provider === 'senthor' ? 'Connecteur Senthor' : 'Worker CF'} highlight />
             <FlowArrow />
             <FlowStep icon={<Zap className="h-4 w-4" />} label="Crawlers Ingest" />
           </div>
