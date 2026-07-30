@@ -23,8 +23,16 @@ const LINKEDIN_GATEWAY = 'https://connector-gateway.lovable.dev/linkedin';
 
 const TEXT_MODEL = 'mistralai/mistral-large-latest';
 const DELAY_MINUTES = 5;
+// Seuil d'entrée : en dessous, on déclenche la boucle de correction.
 const SCORE_THRESHOLD = 75;
-const MAX_FIX_ATTEMPTS = 2;
+// Cible : score à partir duquel on arrête d'itérer (post considéré conforme).
+const TARGET_SCORE = 90;
+// Gain minimum d'une itération pour justifier un nouvel appel LLM.
+const MIN_GAIN = 3;
+// Itérations LLM max par exécution, et budget cumulé par post.
+const MAX_ITERATIONS_PER_RUN = 3;
+const MAX_FIX_ATTEMPTS = 5;
+
 
 function json(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
