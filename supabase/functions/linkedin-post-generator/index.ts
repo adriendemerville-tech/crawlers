@@ -6,7 +6,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { callOpenRouterJson } from '../_shared/openRouterAI.ts';
 
-const TEXT_MODEL = 'mistralai/mistral-large-latest';
+const TEXT_MODEL = 'mistralai/mistral-large-2512';
 
 const BodySchema = z.object({
   feature_id: z.string().uuid().optional(),
@@ -325,6 +325,18 @@ Retourne UNIQUEMENT un JSON strict :
     cleanText = cleanText.replace(/[()\[\]{}<>\\*_~|@]/g, '');
     cleanText = cleanText.replace(new RegExp(CRAWLERS_MENTION_PLACEHOLDER, 'g'), '@crawlers.fr');
     cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/ +\n/g, '\n').trim();
+
+    // Garde-fou déterministe : la mention "@crawlers.fr" est obligatoire.
+    // Si le LLM l'a omise, on l'insère sans nouvel appel LLM (économie de tokens) :
+    // substitution de la première occurrence isolée de "Crawlers", sinon phrase ajoutée.
+    if (!/@crawlers\.fr/i.test(cleanText)) {
+      if (/\bCrawlers\b/.test(cleanText)) {
+        cleanText = cleanText.replace(/\bCrawlers\b/, '@crawlers.fr');
+      } else {
+        cleanText = `${cleanText}\n\nOn en parle sur @crawlers.fr.`;
+      }
+    }
+
 
     // Insert draft
     const { data: post, error: insertErr } = await admin
