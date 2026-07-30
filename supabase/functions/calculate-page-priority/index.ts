@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getLatestCrawlId } from '../_shared/latestCrawl.ts';
 
 /**
  * calculate-page-priority
@@ -256,14 +257,7 @@ Deno.serve(handleRequest(async (req) => {
       // Crawl pages (latest crawl)
       sb.from('crawl_pages')
         .select('url, word_count, seo_score, crawl_depth, issues, last_modified_header')
-        .eq('crawl_id', (
-          await sb.from('site_crawls')
-            .select('id')
-            .eq('tracked_site_id', tracked_site_id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        ).data?.id || '00000000-0000-0000-0000-000000000000')
+        .eq('crawl_id', (await getLatestCrawlId(sb, { trackedSiteId: tracked_site_id, domain, completedOnly: false })) || '00000000-0000-0000-0000-000000000000')
         .limit(500),
 
       // GSC keyword rankings

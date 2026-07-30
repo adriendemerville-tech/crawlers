@@ -1270,10 +1270,46 @@ try {
 // ═══════════════════════════════════════════════════════════════
 // MAPPING: Finding → Strategic Task(s)
 // ═══════════════════════════════════════════════════════════════
+/** Normalise l'`id` d'un finding diag vers les catégories du mapping ci-dessous. */
+const FINDING_ID_TO_CATEGORY: Record<string, string> = {
+  thin_content: 'thin_content',
+  no_h1: 'missing_h1',
+  title_h1_mismatch: 'missing_h1',
+  no_meta_desc: 'missing_meta',
+  short_meta_desc: 'missing_meta',
+  duplicate_titles: 'missing_meta',
+  duplicate_content: 'duplicate_content',
+  images_no_alt: 'missing_alt',
+  no_images: 'missing_alt',
+  cannibalization: 'cannibalization',
+  keyword_gaps: 'keyword_gaps',
+  orphan_pages: 'orphan_pages',
+  deep_pages: 'deep_pages',
+  redirect_chains: 'redirect_chains',
+  broken_links: 'broken_links',
+  low_domain_rank: 'backlink_health',
+  low_referring_domains: 'backlink_health',
+  losing_backlinks: 'backlink_health',
+  no_backlink_data: 'backlink_health',
+  pillar_pages_no_backlinks: 'backlink_health',
+  anchor_over_optimization: 'anchor_diversity',
+  pagerank_concentration: 'pagerank_distribution',
+  keyword_content_mismatch: 'keyword_mismatch',
+  parent_child_incoherence: 'semantic_drift',
+  missing_semantic_depth: 'semantic_drift',
+  low_heading_diversity: 'semantic_drift',
+  no_clear_keyword: 'semantic_drift',
+  intent_imbalance: 'semantic_drift',
+};
+
 function findingToTasks(finding: any, lang: string, counter: number, sector?: string | null, cmsInventory?: CmsContentInventory | null): StrategicTask[] {
   const tasks: StrategicTask[] = [];
   const baseId = `strat_${counter}`;
-  const cat = finding.category || '';
+  // Les diagnostics émettent `category` = module ('content' | 'semantic' | 'structure' |
+  // 'authority') et le type fin dans `id`. Sans cette normalisation, tous les findings
+  // tombaient dans le `default` → fix_technical/code_architect, et aucune tâche
+  // éditoriale n'atteignait le pont CMS.
+  const cat = FINDING_ID_TO_CATEGORY[finding.id] || finding.id || finding.category || '';
   const sev = finding.severity || 'info';
   const urls = finding.affected_urls || [];
   const sourceType = finding.source_type || 'unknown';

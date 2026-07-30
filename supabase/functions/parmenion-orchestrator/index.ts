@@ -500,6 +500,7 @@ try {
                 type: topTask.execution_mode === 'content_architect' ? 'cms' : topTask.execution_mode === 'code_architect' ? 'code' : 'mixed',
                 payload: {
                   strategist_task: topTask,
+                  strategist_tasks: tasks.slice(0, 8),
                   strategist_plan_id: strategistData?.plan_id,
                   _prescribe_v3: true,
                 },
@@ -572,19 +573,32 @@ try {
         }
 
         if (hasV3Plan) {
-          const task = prescribePayload.strategist_task;
+          // Sélection de la tâche à exécuter : en mode priorité contenu, on prend la
+          // première tâche éditoriale du plan (sinon un fix technique sans payload
+          // `fixes` fait échouer l'execute en "skipped").
+          const planTasks: any[] = Array.isArray(prescribePayload.strategist_tasks)
+            ? prescribePayload.strategist_tasks
+            : [prescribePayload.strategist_task];
+          const isContentishTask = (t: any) => typeof t?.action_type === 'string'
+            && (t.action_type.includes('content') || t.action_type === 'publish_draft' || t.execution_mode === 'content_architect');
+          const contentTask = planTasks.find(isContentishTask);
+          const task = (forceContent && contentTask) ? contentTask : prescribePayload.strategist_task;
+          if (task !== prescribePayload.strategist_task) {
+            console.log(`[Parménion] 🎯 EXECUTE V3: bascule sur la tâche éditoriale "${task.title}" (mode priorité contenu)`);
+          }
           const cmsBridge = isDictadevi ? 'dictadevi-actions' : 'iktracker-actions';
           const executorFn = task.executor_function
             || (isIktracker ? cmsBridge : 'wpsync');
-          const isContentTask = (lastPrescribe?.goal_type === 'content_creation' || lastPrescribe?.goal_type === 'content_gap')
-            || (typeof task.action_type === 'string' && (task.action_type.includes('content') || task.action_type === 'publish_draft'));
+          const isContentTask = isContentishTask(task)
+            || ((task === prescribePayload.strategist_task)
+              && (lastPrescribe?.goal_type === 'content_creation' || lastPrescribe?.goal_type === 'content_gap'));
           const finalExecutorFn = isContentTask && isIktracker ? cmsBridge : executorFn;
 
           console.log(`[Parménion] 🔁 EXECUTE déterministe V3: réutilise plan prescribe ${lastPrescribe.id} → task "${task.title}" via ${finalExecutorFn}`);
 
           decision = {
             goal: {
-              type: lastPrescribe?.goal_type || (isContentTask ? 'content_creation' : 'technical_fix'),
+              type: isContentTask ? 'content_creation' : (lastPrescribe?.goal_type || 'technical_fix'),
               description: `[Execute V3 — déterministe] ${task.title || lastPrescribe?.goal_description || 'rejoue plan prescribe'}`,
             },
             tactic: {
