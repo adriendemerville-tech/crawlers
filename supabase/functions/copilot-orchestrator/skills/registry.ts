@@ -1648,7 +1648,7 @@ async function fetchPageSignals(
   const map = new Map<string, PageSignals>();
   const { data: lastCrawl } = await ctx.service
     .from('site_crawls').select('id')
-    .eq('tracked_site_id', trackedSiteId)
+    .eq('domain', (await ctx.service.from('tracked_sites').select('domain').eq('id', trackedSiteId).maybeSingle()).data?.domain ?? '__none__')
     .order('created_at', { ascending: false }).limit(1).maybeSingle();
   if (!lastCrawl?.id) return map;
 
