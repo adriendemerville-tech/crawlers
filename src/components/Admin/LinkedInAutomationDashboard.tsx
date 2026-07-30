@@ -362,6 +362,22 @@ export function LinkedInAutomationDashboard() {
                         Modifier sur LinkedIn
                       </Button>
                     )}
+                    {p.status === 'published' && p.linkedin_post_urn && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => auditPost(p)}
+                        disabled={auditingId === p.id}
+                        title="Relit le post publié, le note et le corrige si les règles ne sont pas respectées"
+                      >
+                        {auditingId === p.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <ShieldCheck className="h-4 w-4 mr-2" />
+                        )}
+                        Auditer maintenant
+                      </Button>
+                    )}
                     {p.linkedin_post_url && (
                       <Button variant="outline" size="sm" asChild>
                         <a href={p.linkedin_post_url} target="_blank" rel="noreferrer">
