@@ -37,6 +37,10 @@ type Post = {
   publish_error: string | null;
   created_at: string;
   llm_tokens_used: number | null;
+  audit_status: string | null;
+  audit_score: number | null;
+  audited_at: string | null;
+  audit_report: Record<string, unknown> | null;
 };
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
