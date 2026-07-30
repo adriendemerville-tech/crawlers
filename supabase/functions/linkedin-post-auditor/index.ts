@@ -359,7 +359,14 @@ Deno.serve(async (req) => {
         .gte('published_at', new Date(Date.now() - 24 * 3600_000).toISOString())
         .order('published_at', { ascending: true })
         .limit(3);
-      if (!force) query = query.is('audited_at', null);
+      // Jamais audité, OU audité mais encore sous la cible avec du budget restant :
+      // le cron relance alors un cycle d'amélioration.
+      if (!force) {
+        query = query.or(
+          `audited_at.is.null,and(audit_score.lt.${TARGET_SCORE},audit_attempts.lt.${MAX_FIX_ATTEMPTS})`,
+        );
+      }
+
     }
 
     const { data: posts, error } = await query;
