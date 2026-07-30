@@ -426,6 +426,18 @@ export function LinkedInAutomationDashboard() {
                     <span className="font-medium">{f.title}</span>
                     <Badge variant="outline" className="text-xs">Priorité {f.priority}</Badge>
                     <Badge variant="outline" className="text-xs">Utilisé {f.use_count}x</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {f.last_evidence_count === null || f.last_evidence_count === undefined
+                        ? 'Données non vérifiées'
+                        : f.last_evidence_count > 0
+                          ? `En production (${f.last_evidence_count} enreg.)`
+                          : 'Aucune donnée réelle'}
+                    </Badge>
+                    {!!f.doc_section_ids?.length && (
+                      <Badge variant="outline" className="text-xs">
+                        Doc : {f.doc_section_ids.join(', ')}
+                      </Badge>
+                    )}
                     {f.last_used_at && (
                       <span className="text-xs text-muted-foreground">
                         dernière : {new Date(f.last_used_at).toLocaleDateString('fr-FR')}
