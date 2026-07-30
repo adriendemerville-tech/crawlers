@@ -453,6 +453,22 @@ Retourne UNIQUEMENT un JSON strict :
   }
 });
 
+/** Compte les lignes réelles d'une table de preuve (null si table absente ou non déclarée). */
+async function countEvidence(admin: any, table?: string | null): Promise<number | null> {
+  if (!table) return null;
+  try {
+    const { data, error } = await admin.rpc('count_table_rows', { p_table: table });
+    if (error) {
+      console.warn('countEvidence failed', table, error.message);
+      return null;
+    }
+    return typeof data === 'number' ? data : Number(data ?? 0);
+  } catch (e) {
+    console.warn('countEvidence error', table, e);
+    return null;
+  }
+}
+
 function json(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
