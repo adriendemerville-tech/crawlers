@@ -21,7 +21,7 @@ const LINKEDIN_API_KEY = Deno.env.get('LINKEDIN_API_KEY');
 const CRON_SECRET = Deno.env.get('LINKEDIN_CRON_SECRET');
 const LINKEDIN_GATEWAY = 'https://connector-gateway.lovable.dev/linkedin';
 
-const TEXT_MODEL = 'mistralai/mistral-large-latest';
+const TEXT_MODEL = 'mistralai/mistral-large-2512';
 const DELAY_MINUTES = 5;
 // Seuil d'entrée : en dessous, on déclenche la boucle de correction.
 const SCORE_THRESHOLD = 75;
