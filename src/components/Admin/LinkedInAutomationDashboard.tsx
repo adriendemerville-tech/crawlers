@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, RefreshCw, Trash2, Sparkles, ExternalLink } from 'lucide-react';
+import { Loader2, RefreshCw, Trash2, Sparkles, ExternalLink, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Feature = {
@@ -33,6 +33,7 @@ type Post = {
   media_generation_status: string;
   media_error: string | null;
   linkedin_post_url: string | null;
+  linkedin_post_urn: string | null;
   publish_error: string | null;
   created_at: string;
   llm_tokens_used: number | null;
@@ -57,6 +58,8 @@ export function LinkedInAutomationDashboard() {
   const [selectedFeatureId, setSelectedFeatureId] = useState<string>('auto');
   const [mediaType, setMediaType] = useState<'auto' | 'carousel' | 'video' | 'text_only'>('auto');
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const loadAll = async () => {
     setLoading(true);
@@ -109,6 +112,26 @@ export function LinkedInAutomationDashboard() {
     if (error) toast.error(error.message);
     else toast.success('Texte enregistré');
   };
+
+  // Répercute le texte sur le post LinkedIn déjà publié (médias non modifiables).
+  const syncToLinkedIn = async (p: Post) => {
+    const text = (drafts[p.id] ?? p.edited_text ?? p.generated_text ?? '').trim();
+    setSyncingId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('linkedin-edit-post', {
+        body: { post_id: p.id, text },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).details || (data as any).error);
+      toast.success('Post mis à jour sur LinkedIn');
+      await loadAll();
+    } catch (e: any) {
+      toast.error(`Échec modification : ${e.message}`);
+    } finally {
+      setSyncingId(null);
+    }
+  };
+
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
@@ -242,11 +265,16 @@ export function LinkedInAutomationDashboard() {
                 <CardContent className="space-y-3">
                   <Textarea
                     className="min-h-[220px] font-mono text-sm"
-                    defaultValue={currentText}
+                    value={drafts[p.id] ?? currentText}
+                    onChange={(e) => setDrafts((d) => ({ ...d, [p.id]: e.target.value }))}
                     onBlur={(e) => {
                       if (e.target.value !== currentText) saveEdited(p.id, e.target.value);
                     }}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {(drafts[p.id] ?? currentText ?? '').trim().length} caractères (1000–1500 requis, hashtags exclus)
+                  </p>
+
                   {p.hashtags?.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {p.hashtags.map((h) => (
@@ -276,6 +304,22 @@ export function LinkedInAutomationDashboard() {
                         Approuvé — publication automatique (Sprint 2/3 requis pour publier)
                       </Badge>
                     )}
+                    {p.status === 'published' && p.linkedin_post_urn && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => syncToLinkedIn(p)}
+                        disabled={syncingId === p.id}
+                        title="Met à jour le texte du post publié (les médias ne sont pas modifiables)"
+                      >
+                        {syncingId === p.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Pencil className="h-4 w-4 mr-2" />
+                        )}
+                        Modifier sur LinkedIn
+                      </Button>
+                    )}
                     {p.linkedin_post_url && (
                       <Button variant="outline" size="sm" asChild>
                         <a href={p.linkedin_post_url} target="_blank" rel="noreferrer">
@@ -283,6 +327,7 @@ export function LinkedInAutomationDashboard() {
                         </a>
                       </Button>
                     )}
+
                     <Button
                       variant="outline"
                       size="sm"
