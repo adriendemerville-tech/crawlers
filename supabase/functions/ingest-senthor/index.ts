@@ -45,6 +45,23 @@ interface SenthorEvent {
 }
 
 const MAX_BATCH = 500;
+const MAX_BODY_BYTES = 2_000_000; // 2 Mo — garde-fou mémoire
+
+/** Catégories Senthor → taxonomie bot_hits.bot_family (5 valeurs canoniques). */
+const CATEGORY_MAP: Record<string, string> = {
+  ai_crawler: 'ai_crawler', ai: 'ai_crawler', llm: 'ai_crawler', ai_bot: 'ai_crawler',
+  ai_assistant: 'ai_crawler', genai: 'ai_crawler', chatbot: 'ai_crawler',
+  search_engine: 'search_engine', search: 'search_engine', searchengine: 'search_engine',
+  seo_tool: 'seo_tool', seo: 'seo_tool', scraper: 'seo_tool',
+  social: 'social', social_media: 'social',
+  unknown: 'unknown', other: 'unknown',
+};
+
+function normalizeCategory(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const key = String(raw).toLowerCase().replace(/[\s-]+/g, '_');
+  return CATEGORY_MAP[key] || 'unknown';
+}
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
@@ -67,20 +84,29 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+function unwrap(obj: unknown): SenthorEvent[] {
+  if (Array.isArray(obj)) return obj as SenthorEvent[];
+  const o = obj as Record<string, unknown>;
+  if (Array.isArray(o?.events)) return o.events as SenthorEvent[];
+  if (Array.isArray(o?.data)) return o.data as SenthorEvent[];
+  if (Array.isArray(o?.records)) return o.records as SenthorEvent[];
+  return [o as SenthorEvent];
+}
+
 function parseBody(text: string): SenthorEvent[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
-  if (trimmed.startsWith('[')) return JSON.parse(trimmed);
-  if (trimmed.startsWith('{')) {
-    if (trimmed.includes('\n')) {
-      return trimmed.split('\n').filter(Boolean).map(l => JSON.parse(l));
+  // 1) JSON complet (array, objet, objet pretty-printé multi-lignes)
+  try {
+    return unwrap(JSON.parse(trimmed));
+  } catch {
+    // 2) NDJSON : une ligne = un objet
+    const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      return lines.flatMap(l => unwrap(JSON.parse(l)));
     }
-    const obj = JSON.parse(trimmed);
-    if (Array.isArray(obj?.events)) return obj.events;
-    if (Array.isArray(obj?.data)) return obj.data;
-    return [obj];
+    throw new Error('Unsupported body format (attendu : JSON array, objet, ou NDJSON)');
   }
-  throw new Error('Unsupported body format');
 }
 
 function toDate(v: unknown): Date {
@@ -95,6 +121,7 @@ function toDate(v: unknown): Date {
   return new Date();
 }
 
+
 Deno.serve(handleRequest(async (req) => {
   if (req.method !== 'POST') return jsonError('Method not allowed', 405);
 
@@ -104,6 +131,9 @@ Deno.serve(handleRequest(async (req) => {
   );
 
   const bodyText = await req.text();
+  if (bodyText.length > MAX_BODY_BYTES) {
+    return jsonError('Payload too large (max 2 Mo, 500 événements par lot)', 413);
+  }
   const secretHeader = req.headers.get('x-crawlers-secret');
   const signature = (req.headers.get('x-senthor-signature') || req.headers.get('x-crawlers-signature') || '')
     .replace(/^sha256=/, '');
@@ -118,21 +148,24 @@ Deno.serve(handleRequest(async (req) => {
       .from('cf_shield_configs')
       .select(selectCols)
       .eq('ingestion_secret', secretHeader)
-      .maybeSingle();
-    config = data;
+      .limit(1);
+    config = data?.[0] ?? null;
   } else if (signature && domainHeader) {
+    // Un même domaine peut exister chez plusieurs comptes : on teste chaque secret.
     const { data } = await supabase
       .from('cf_shield_configs')
       .select(selectCols)
       .eq('domain', domainHeader)
-      .maybeSingle();
-    if (data?.ingestion_secret) {
-      const expected = await hmacHex(data.ingestion_secret as string, bodyText);
-      if (timingSafeEqual(expected, signature.toLowerCase())) config = data;
+      .limit(10);
+    for (const row of data || []) {
+      if (!row.ingestion_secret) continue;
+      const expected = await hmacHex(row.ingestion_secret as string, bodyText);
+      if (timingSafeEqual(expected, signature.toLowerCase())) { config = row; break; }
     }
   } else {
     return jsonError('Missing X-Crawlers-Secret or X-Senthor-Signature + X-Crawlers-Domain', 401);
   }
+
 
   if (!config) return jsonError('Invalid credentials', 401);
   if (config.status === 'paused') return jsonOk({ ok: true, ignored: 'paused' });
@@ -154,8 +187,11 @@ Deno.serve(handleRequest(async (req) => {
 
     // Senthor est la source de vérité quand elle qualifie l'événement,
     // notre détection UA sert de repli.
-    const isBot = typeof e.is_bot === 'boolean' ? e.is_bot : detection.is_bot;
-    const category = e.bot_category || detection.bot_category || null;
+    const senthorQualified = typeof e.is_bot === 'boolean';
+    const isBot = senthorQualified ? e.is_bot! : detection.is_bot;
+    const category = isBot
+      ? (normalizeCategory(e.bot_category) || detection.bot_category || 'unknown')
+      : null;
     const isAiBot = isBot && category === 'ai_crawler';
     const isHuman = !isBot;
 
@@ -169,6 +205,21 @@ Deno.serve(handleRequest(async (req) => {
     if (e.ip_hash) ipHash = String(e.ip_hash).replace(/^sha256:/, '');
     else if (e.ip && e.ip !== '0.0.0.0') ipHash = await sha256Hex(e.ip);
 
+    const rawStatus = e.status_code ?? e.status;
+    const statusCode = typeof rawStatus === 'number' && Number.isFinite(rawStatus)
+      ? Math.trunc(rawStatus)
+      : (typeof rawStatus === 'string' && /^\d{3}$/.test(rawStatus) ? Number(rawStatus) : null);
+
+    // Taxonomie commune avec ingest-bot-hits : verified | suspect | stealth | unverified
+    const allowedStatus = ['verified', 'suspect', 'stealth', 'unverified'];
+    const verificationStatus = allowedStatus.includes(String(e.verification_status))
+      ? String(e.verification_status)
+      : (isBot ? 'suspect' : 'unverified');
+    const allowedMethod = ['rdns_match', 'asn_range', 'ua_only', 'behavioral', 'none'];
+    const verificationMethod = allowedMethod.includes(String(e.verification_method))
+      ? String(e.verification_method)
+      : (senthorQualified ? 'behavioral' : 'ua_only');
+
     return {
       tracked_site_id: config!.tracked_site_id,
       user_id: config!.user_id,
@@ -181,20 +232,26 @@ Deno.serve(handleRequest(async (req) => {
       bot_name: e.bot_name || detection.bot_name || null,
       is_ai_bot: isAiBot,
       is_human_sample: isHumanSample,
-      status_code: e.status_code ?? e.status ?? null,
-      country: e.country || null,
+      status_code: statusCode,
+      country: e.country ? String(e.country).slice(0, 2).toUpperCase() : null,
       ip_hash: ipHash,
       referer: (e.referer || e.referrer) ? String(e.referer || e.referrer).slice(0, 1000) : null,
       cf_ray: null,
-      verification_status: e.verification_status || (isBot ? 'unverified' : 'human'),
-      verification_method: e.verification_method || (e.is_bot !== undefined ? 'senthor' : 'ua_pattern'),
+      verification_status: verificationStatus,
+      verification_method: verificationMethod,
       // Senthor peut envoyer 0..1 ou 0..100 ; la colonne attend un entier 0..100
-      confidence_score: typeof e.confidence === 'number'
+      confidence_score: typeof e.confidence === 'number' && Number.isFinite(e.confidence)
         ? Math.max(0, Math.min(100, Math.round(e.confidence <= 1 ? e.confidence * 100 : e.confidence)))
         : null,
 
-      raw_meta: { source: 'senthor', senthor_id: e.id ?? null, decision: e.decision ?? null },
+      raw_meta: {
+        source: 'senthor',
+        senthor_id: e.id ?? null,
+        decision: e.decision ?? null,
+        senthor_category: e.bot_category ?? null,
+      },
     };
+
   }));
 
   const validRows = rows.filter(Boolean);
@@ -208,21 +265,24 @@ Deno.serve(handleRequest(async (req) => {
     return jsonError(insErr.message, 500);
   }
 
-  supabase
+  // Mise à jour des compteurs — awaitée : une promesse détachée peut être
+  // annulée par l'isolate dès la réponse renvoyée.
+  const { error: statErr } = await supabase
     .from('cf_shield_configs')
     .update({
       hits_total: (Number(config.hits_total) || 0) + validRows.length,
       last_hit_at: new Date().toISOString(),
       status: config.status === 'pending' ? 'active' : config.status,
     })
-    .eq('id', config.id)
-    .then(() => {})
-    .catch(() => {});
+    .eq('id', config.id);
+  if (statErr) console.error('[ingest-senthor] stats update error', statErr.message);
 
   return jsonOk({
     ok: true,
     processed: validRows.length,
     received: events.length,
+    truncated: events.length > MAX_BATCH,
     sample_rate: sampleRate,
   });
+
 }, 'ingest-senthor'));
