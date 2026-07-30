@@ -304,6 +304,22 @@ export function LinkedInAutomationDashboard() {
                         Approuvé — publication automatique (Sprint 2/3 requis pour publier)
                       </Badge>
                     )}
+                    {p.status === 'published' && p.linkedin_post_urn && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => syncToLinkedIn(p)}
+                        disabled={syncingId === p.id}
+                        title="Met à jour le texte du post publié (les médias ne sont pas modifiables)"
+                      >
+                        {syncingId === p.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Pencil className="h-4 w-4 mr-2" />
+                        )}
+                        Modifier sur LinkedIn
+                      </Button>
+                    )}
                     {p.linkedin_post_url && (
                       <Button variant="outline" size="sm" asChild>
                         <a href={p.linkedin_post_url} target="_blank" rel="noreferrer">
@@ -311,6 +327,7 @@ export function LinkedInAutomationDashboard() {
                         </a>
                       </Button>
                     )}
+
                     <Button
                       variant="outline"
                       size="sm"
