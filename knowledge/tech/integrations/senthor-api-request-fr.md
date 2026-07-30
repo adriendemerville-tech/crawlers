@@ -7,13 +7,13 @@ Canal : LinkedIn message
 
 Salut Tristan,
 
-Je lance un pont technique entre Senthor et Crawlers et je pense que ça peut t'intéresser.
+Désolé pour le retard, je reviens vers toi à propos de ce projet d'intégration.
 
-Contexte rapide : chez Crawlers (crawlers.fr), on mesure le crawl des bots IA sur les sites de nos clients et on corrèle avec le trafic humain issu des IA génératives pour calculer une attribution de visibilité IA.
+Chez Crawlers (crawlers.fr), on mesure le crawl des bots IA sur les sites de nos clients et on corrèle avec le trafic humain issu des IA génératives pour calculer un score de visibilité IA.
 
-Aujourd'hui notre collecte passe par un Worker Cloudflare déployé chez le client. Ça marche bien, mais ça exclut tous les sites qui ne sont pas derrière Cloudflare : WordPress mutualisé, Vercel, Nginx/Caddy, Drupal. Bref, exactement les périmètres que tes connecteurs couvrent proprement.
+Aujourd'hui notre collecte passe par un Worker Cloudflare déployé chez le client. Ça marche bien, mais ça exclut tous les sites qui ne sont pas derrière Cloudflare : WordPress mutualisé, Vercel, Nginx/Caddy, Drupal. Exactement les périmètres que tes connecteurs couvrent proprement.
 
-On n'est pas concurrents : toi tu détectes/contrôles au niveau serveur, nous on exploite le signal en aval (attribution, priorisation éditoriale, reco SEO/GEO). L'intégration idéale : Senthor collecte, Crawlers analyse.
+On n'est pas concurrents : toi tu détectes / contrôles au niveau serveur, nous on exploite le signal en aval (attribution, priorisation éditoriale, reco SEO/GEO). L'idée : Senthor collecte, Crawlers analyse.
 
 ## Ce qu'on cherche
 
@@ -51,9 +51,9 @@ réponse : `{ events: [...], next_cursor: string|null }`. On interrogerait toute
 }
 ```
 
-Les champs décisifs pour nous :
+Les champs qui comptent vraiment pour nous :
 - **`referer`** → distingue attribution déterministe (chatgpt.com, perplexity.ai…) de corrélation temporelle.
-- **`ip_hash`** → on veut pas l'IP en clair, un SHA-256 suffit pour rapprocher bot ↔ humain (RGPD-friendly).
+- **`ip_hash`** → pas besoin de l'IP en clair, un SHA-256 suffit pour rapprocher bot ↔ humain (RGPD-friendly).
 - **`verification_status` / `confidence`** → est-ce que tu arrives à distinguer un vrai GPTBot d'un scraper qui usurpe l'UA ?
 - **trafic humain** — même échantillonné à 1/1000 — nécessaire pour faire la corrélation.
 - **`decision`** (allow / block / challenge / paywall) → utile pour expliquer au client pourquoi une page n'a pas été indexée.
@@ -88,4 +88,3 @@ demandé ci-dessus : `hit_at`, `path`, `user_agent`, `bot_family`, `bot_name`, `
   futur `ingest-senthor` soit un simple mapping, sans migration.
 - Si Senthor ne fournit ni webhook ni API, repli : leur proposer que leurs connecteurs
   poussent en double vers notre endpoint public `ingest-bot-hits` avec le secret par site.
-
