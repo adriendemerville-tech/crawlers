@@ -443,6 +443,8 @@ Retourne UNIQUEMENT un JSON strict :
       post,
       feature: { id: feature.id, title: feature.title },
       style_samples_used: styleSamples.length,
+      doc_sections_used: usedSections,
+      evidence_rows: evidenceRows ?? null,
       style_stats: styleStats,
     });
   } catch (e) {
