@@ -45,6 +45,23 @@ interface SenthorEvent {
 }
 
 const MAX_BATCH = 500;
+const MAX_BODY_BYTES = 2_000_000; // 2 Mo — garde-fou mémoire
+
+/** Catégories Senthor → taxonomie bot_hits.bot_family (5 valeurs canoniques). */
+const CATEGORY_MAP: Record<string, string> = {
+  ai_crawler: 'ai_crawler', ai: 'ai_crawler', llm: 'ai_crawler', ai_bot: 'ai_crawler',
+  ai_assistant: 'ai_crawler', genai: 'ai_crawler', chatbot: 'ai_crawler',
+  search_engine: 'search_engine', search: 'search_engine', searchengine: 'search_engine',
+  seo_tool: 'seo_tool', seo: 'seo_tool', scraper: 'seo_tool',
+  social: 'social', social_media: 'social',
+  unknown: 'unknown', other: 'unknown',
+};
+
+function normalizeCategory(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const key = String(raw).toLowerCase().replace(/[\s-]+/g, '_');
+  return CATEGORY_MAP[key] || 'unknown';
+}
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
@@ -67,20 +84,29 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+function unwrap(obj: unknown): SenthorEvent[] {
+  if (Array.isArray(obj)) return obj as SenthorEvent[];
+  const o = obj as Record<string, unknown>;
+  if (Array.isArray(o?.events)) return o.events as SenthorEvent[];
+  if (Array.isArray(o?.data)) return o.data as SenthorEvent[];
+  if (Array.isArray(o?.records)) return o.records as SenthorEvent[];
+  return [o as SenthorEvent];
+}
+
 function parseBody(text: string): SenthorEvent[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
-  if (trimmed.startsWith('[')) return JSON.parse(trimmed);
-  if (trimmed.startsWith('{')) {
-    if (trimmed.includes('\n')) {
-      return trimmed.split('\n').filter(Boolean).map(l => JSON.parse(l));
+  // 1) JSON complet (array, objet, objet pretty-printé multi-lignes)
+  try {
+    return unwrap(JSON.parse(trimmed));
+  } catch {
+    // 2) NDJSON : une ligne = un objet
+    const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      return lines.flatMap(l => unwrap(JSON.parse(l)));
     }
-    const obj = JSON.parse(trimmed);
-    if (Array.isArray(obj?.events)) return obj.events;
-    if (Array.isArray(obj?.data)) return obj.data;
-    return [obj];
+    throw new Error('Unsupported body format (attendu : JSON array, objet, ou NDJSON)');
   }
-  throw new Error('Unsupported body format');
 }
 
 function toDate(v: unknown): Date {
@@ -94,6 +120,7 @@ function toDate(v: unknown): Date {
   }
   return new Date();
 }
+
 
 Deno.serve(handleRequest(async (req) => {
   if (req.method !== 'POST') return jsonError('Method not allowed', 405);
