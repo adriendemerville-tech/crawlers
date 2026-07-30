@@ -208,7 +208,9 @@ Deno.serve(async (req) => {
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
     const { feature_id, media_type: overrideMedia, tone_hint, style_sample_count } = parsed.data;
 
-    // Sélection feature : celle demandée OU rotation (moins récemment utilisée, active, priorité DESC)
+    // Sélection feature : celle demandée OU rotation priorisée par "readiness"
+    // (une feature qui produit réellement de la donnée passe avant une feature
+    // seulement codée, pour éviter de raconter une fonctionnalité fantôme).
     let feature: any;
     if (feature_id) {
       const { data } = await admin
@@ -218,16 +220,47 @@ Deno.serve(async (req) => {
         .maybeSingle();
       feature = data;
     } else {
-      const { data } = await admin
+      const { data: candidates } = await admin
         .from('linkedin_features_catalog')
         .select('*')
         .eq('is_active', true)
         .order('last_used_at', { ascending: true, nullsFirst: true })
         .order('priority', { ascending: false })
-        .limit(1);
-      feature = data?.[0];
+        .limit(6);
+
+      const scored: Array<{ f: any; score: number; rows: number | null }> = [];
+      for (const [idx, f] of (candidates ?? []).entries()) {
+        const rows = await countEvidence(admin, f.evidence_table);
+        // rotation (moins récemment utilisée = meilleur rang) + preuve de données + capture possible
+        let score = (6 - idx) * 10 + Math.min(Number(f.priority ?? 0), 100) / 10;
+        if (rows === null) score -= 5; // pas de table de preuve déclarée
+        else if (rows === 0) score -= 60; // fonctionnalité sans donnée réelle : à éviter
+        else score += Math.min(30, Math.log10(rows + 1) * 12);
+        if (f.capture_route) score += 5;
+        scored.push({ f, score, rows });
+      }
+      scored.sort((a, b) => b.score - a.score);
+      feature = scored[0]?.f;
+      if (feature) {
+        feature.__evidence_rows = scored[0].rows;
+      }
     }
     if (!feature) return json({ error: 'No feature available' }, 404);
+
+    // Preuve de données pour la feature explicitement demandée
+    if (feature.__evidence_rows === undefined) {
+      feature.__evidence_rows = await countEvidence(admin, feature.evidence_table);
+    }
+    if (feature.evidence_table) {
+      await admin
+        .from('linkedin_features_catalog')
+        .update({
+          last_evidence_count: feature.__evidence_rows,
+          last_evidence_at: new Date().toISOString(),
+          readiness_score: feature.__evidence_rows ? Math.min(100, 40 + Math.round(Math.log10(feature.__evidence_rows + 1) * 25)) : 0,
+        })
+        .eq('id', feature.id);
+    }
 
     // Alternance carrousel/vidéo selon numéro de semaine ISO
     const weekNum = getIsoWeek(new Date());
