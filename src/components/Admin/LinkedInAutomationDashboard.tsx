@@ -113,6 +113,26 @@ export function LinkedInAutomationDashboard() {
     else toast.success('Texte enregistré');
   };
 
+  // Répercute le texte sur le post LinkedIn déjà publié (médias non modifiables).
+  const syncToLinkedIn = async (p: Post) => {
+    const text = (drafts[p.id] ?? p.edited_text ?? p.generated_text ?? '').trim();
+    setSyncingId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('linkedin-edit-post', {
+        body: { post_id: p.id, text },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).details || (data as any).error);
+      toast.success('Post mis à jour sur LinkedIn');
+      await loadAll();
+    } catch (e: any) {
+      toast.error(`Échec modification : ${e.message}`);
+    } finally {
+      setSyncingId(null);
+    }
+  };
+
+
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
       .from('linkedin_scheduled_posts')
