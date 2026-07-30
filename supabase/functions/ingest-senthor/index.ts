@@ -188,7 +188,11 @@ Deno.serve(handleRequest(async (req) => {
       cf_ray: null,
       verification_status: e.verification_status || (isBot ? 'unverified' : 'human'),
       verification_method: e.verification_method || (e.is_bot !== undefined ? 'senthor' : 'ua_pattern'),
-      confidence_score: typeof e.confidence === 'number' ? e.confidence : null,
+      // Senthor peut envoyer 0..1 ou 0..100 ; la colonne attend un entier 0..100
+      confidence_score: typeof e.confidence === 'number'
+        ? Math.max(0, Math.min(100, Math.round(e.confidence <= 1 ? e.confidence * 100 : e.confidence)))
+        : null,
+
       raw_meta: { source: 'senthor', senthor_id: e.id ?? null, decision: e.decision ?? null },
     };
   }));
