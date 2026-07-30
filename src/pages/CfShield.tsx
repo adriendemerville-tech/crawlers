@@ -42,6 +42,7 @@ interface TrackedSite {
 
 type Step = 'site' | 'mode' | 'verify';
 type Mode = 'auto' | 'manual';
+type Provider = 'cloudflare' | 'senthor';
 
 export default function CfShield() {
   const { user, loading: authLoading } = useAuth();
@@ -52,6 +53,9 @@ export default function CfShield() {
   const [siteId, setSiteId] = useState<string>(params.get('site') || '');
   const [step, setStep] = useState<Step>('site');
   const [mode, setMode] = useState<Mode>('auto');
+  const [provider, setProvider] = useState<Provider>(
+    params.get('provider') === 'senthor' ? 'senthor' : 'cloudflare',
+  );
   const [loading, setLoading] = useState(true);
 
   // init payload
@@ -60,8 +64,10 @@ export default function CfShield() {
     ingest_url?: string;
     worker_script?: string;
     sample_rate?: number;
+    ingestion_secret?: string;
   } | null>(null);
   const [ingestionSecret, setIngestionSecret] = useState('');
+  const [rotating, setRotating] = useState(false);
 
   // Auto mode credentials
   const [cfToken, setCfToken] = useState('');
@@ -73,6 +79,7 @@ export default function CfShield() {
   // Verification
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<{ verified: boolean; hits: number } | null>(null);
+
 
   const currentSite = useMemo(() => sites.find(s => s.id === siteId), [sites, siteId]);
 
