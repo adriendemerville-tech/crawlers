@@ -1994,6 +1994,7 @@ export type Database = {
           last_error: string | null
           last_hit_at: string | null
           last_verified_at: string | null
+          provider: string
           status: string
           tracked_site_id: string
           updated_at: string
@@ -2017,6 +2018,7 @@ export type Database = {
           last_error?: string | null
           last_hit_at?: string | null
           last_verified_at?: string | null
+          provider?: string
           status?: string
           tracked_site_id: string
           updated_at?: string
@@ -2040,6 +2042,7 @@ export type Database = {
           last_error?: string | null
           last_hit_at?: string | null
           last_verified_at?: string | null
+          provider?: string
           status?: string
           tracked_site_id?: string
           updated_at?: string

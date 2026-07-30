@@ -32,6 +32,8 @@ import {
   Hand,
   PlayCircle,
   ExternalLink,
+  RefreshCw,
+
 } from 'lucide-react';
 import { BotPrerenderCheck } from '@/components/CfShield/BotPrerenderCheck';
 
@@ -42,6 +44,7 @@ interface TrackedSite {
 
 type Step = 'site' | 'mode' | 'verify';
 type Mode = 'auto' | 'manual';
+type Provider = 'cloudflare' | 'senthor';
 
 export default function CfShield() {
   const { user, loading: authLoading } = useAuth();
@@ -52,6 +55,9 @@ export default function CfShield() {
   const [siteId, setSiteId] = useState<string>(params.get('site') || '');
   const [step, setStep] = useState<Step>('site');
   const [mode, setMode] = useState<Mode>('auto');
+  const [provider, setProvider] = useState<Provider>(
+    params.get('provider') === 'senthor' ? 'senthor' : 'cloudflare',
+  );
   const [loading, setLoading] = useState(true);
 
   // init payload
@@ -60,8 +66,10 @@ export default function CfShield() {
     ingest_url?: string;
     worker_script?: string;
     sample_rate?: number;
+    ingestion_secret?: string;
   } | null>(null);
   const [ingestionSecret, setIngestionSecret] = useState('');
+  const [rotating, setRotating] = useState(false);
 
   // Auto mode credentials
   const [cfToken, setCfToken] = useState('');
@@ -73,6 +81,7 @@ export default function CfShield() {
   // Verification
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<{ verified: boolean; hits: number } | null>(null);
+
 
   const currentSite = useMemo(() => sites.find(s => s.id === siteId), [sites, siteId]);
 
@@ -102,13 +111,13 @@ export default function CfShield() {
     }
     try {
       const { data, error } = await supabase.functions.invoke('cf-deploy-shield', {
-        body: { action: 'init', tracked_site_id: siteId, mode },
+        body: { action: 'init', tracked_site_id: siteId, mode, provider },
       });
       if (error) throw error;
       setInitData(data);
-      // Extract the secret from the worker_script
+      // Secret renvoyé directement, avec repli sur le script Worker
       const match = (data.worker_script || '').match(/SECRET = "(.+?)"/);
-      if (match) setIngestionSecret(match[1]);
+      setIngestionSecret(data.ingestion_secret || (match ? match[1] : ''));
       if (currentSite) {
         setCfWorkerName(`crawlers-shield-${currentSite.domain.replace(/[^a-z0-9-]/gi, '-')}`);
       }
@@ -117,6 +126,24 @@ export default function CfShield() {
       toast.error(`Échec de l'initialisation : ${e instanceof Error ? e.message : String(e)}`);
     }
   };
+
+  const handleRotateSecret = async () => {
+    if (!siteId) return;
+    setRotating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cf-deploy-shield', {
+        body: { action: 'rotate', tracked_site_id: siteId },
+      });
+      if (error) throw error;
+      setIngestionSecret(data.ingestion_secret);
+      toast.success('Secret régénéré. L\'ancien est révoqué immédiatement.');
+    } catch (e) {
+      toast.error(`Rotation impossible : ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setRotating(false);
+    }
+  };
+
 
   const handleAutoDeploy = async () => {
     if (!cfToken || !cfAccountId || !cfZoneId) {
@@ -224,7 +251,7 @@ export default function CfShield() {
           <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-5 sm:items-center">
             <FlowStep icon={<Globe className="h-4 w-4" />} label="Bot IA / Humain" />
             <FlowArrow />
-            <FlowStep icon={<ShieldCheck className="h-4 w-4" />} label="Worker CF" highlight />
+            <FlowStep icon={<ShieldCheck className="h-4 w-4" />} label={provider === 'senthor' ? 'Connecteur Senthor' : 'Worker CF'} highlight />
             <FlowArrow />
             <FlowStep icon={<Zap className="h-4 w-4" />} label="Crawlers Ingest" />
           </div>
@@ -249,13 +276,15 @@ export default function CfShield() {
         <StepBadge n={3} label="Vérification" active={step === 'verify'} done={false} />
       </div>
 
-      <Alert className="mb-6">
-        <AlertTitle>Prérequis : compte Cloudflare</AlertTitle>
-        <AlertDescription className="text-xs">
-          Pour que le Worker s'exécute sur un domaine proxied (nuage orange), vous devez activer le plan Workers Paid à 5 $/mois sur Cloudflare.
-          <a href="/aide#article-cloudflare-workers-paid" className="ml-1 underline underline-offset-2 text-primary">Guide pas-à-pas</a>
-        </AlertDescription>
-      </Alert>
+      {provider === 'cloudflare' && (
+        <Alert className="mb-6">
+          <AlertTitle>Prérequis : compte Cloudflare</AlertTitle>
+          <AlertDescription className="text-xs">
+            Pour que le Worker s'exécute sur un domaine proxied (nuage orange), vous devez activer le plan Workers Paid à 5 $/mois sur Cloudflare.
+            <a href="/aide#article-cloudflare-workers-paid" className="ml-1 underline underline-offset-2 text-primary">Guide pas-à-pas</a>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* STEP 1 — Site */}
       {step === 'site' && (
@@ -292,9 +321,144 @@ export default function CfShield() {
                 ))}
               </div>
             )}
+
+            <Separator />
+
+            <div>
+              <p className="text-sm font-medium">Voie de collecte</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Cloudflare si votre domaine est proxied. Senthor si votre site tourne
+                sur WordPress mutualisé, Vercel, Nginx, Caddy, Rails ou Drupal.
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setProvider('cloudflare')}
+                  className={`rounded-md border p-3 text-left transition-colors hover:bg-muted/50 ${
+                    provider === 'cloudflare' ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <ShieldCheck className="h-4 w-4" /> Worker Cloudflare
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    Collecte native, latence nulle. Nécessite un domaine derrière Cloudflare.
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProvider('senthor')}
+                  className={`rounded-md border p-3 text-left transition-colors hover:bg-muted/50 ${
+                    provider === 'senthor' ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Zap className="h-4 w-4" /> Senthor (hors Cloudflare)
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    Connecteur serveur Senthor, les événements sont relayés vers Crawlers.
+                  </span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button onClick={handleStartSetup} disabled={!siteId}>
                 Continuer <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+
+          </CardContent>
+        </Card>
+      )}
+
+      {/* STEP 2 — Senthor */}
+      {step === 'mode' && provider === 'senthor' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              Relais Senthor pour <span className="font-mono">{currentSite?.domain}</span>
+            </CardTitle>
+            <CardDescription>
+              Senthor collecte au niveau serveur, Crawlers analyse. Trois champs à renseigner
+              dans votre espace Senthor.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertTitle>Prérequis : un connecteur Senthor installé</AlertTitle>
+              <AlertDescription className="text-xs">
+                WordPress, Vercel/Next, Rails, Nginx, Caddy ou Drupal — voir{' '}
+                <a
+                  href="https://www.senthor.io/en/documentation"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  la documentation Senthor
+                  <ExternalLink className="ml-1 inline h-3 w-3" />
+                </a>
+                .
+              </AlertDescription>
+            </Alert>
+
+            <ol className="space-y-3 text-sm">
+              <li className="rounded-md border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">1. URL de destination du webhook</p>
+                  <Button size="sm" variant="outline" onClick={() => copy(initData?.ingest_url || '', 'URL copiée')}>
+                    <Copy className="mr-1 h-3.5 w-3.5" /> Copier
+                  </Button>
+                </div>
+                <code className="mt-2 block break-all rounded bg-muted/40 p-2 text-[11px]">
+                  {initData?.ingest_url}
+                </code>
+              </li>
+              <li className="rounded-md border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">2. Header d'authentification</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => copy(ingestionSecret, 'Secret copié')}>
+                      <Copy className="mr-1 h-3.5 w-3.5" /> Copier
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleRotateSecret} disabled={rotating}>
+                      {rotating ? (
+                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="mr-1 h-3.5 w-3.5" />
+                      )}
+                      Régénérer
+                    </Button>
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  <span className="font-mono">X-Crawlers-Secret</span> =
+                </p>
+                <code className="mt-1 block break-all rounded bg-muted/40 p-2 text-[11px]">
+                  {ingestionSecret}
+                </code>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Variante signée : <span className="font-mono">X-Senthor-Signature: sha256=&lt;hex&gt;</span>{' '}
+                  (HMAC-SHA256 du corps, clé = ce secret) accompagné de{' '}
+                  <span className="font-mono">X-Crawlers-Domain: {currentSite?.domain}</span>.
+                </p>
+              </li>
+              <li className="rounded-md border p-3">
+                <p className="font-medium">3. Format des événements</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Tableau JSON ou NDJSON, 500 événements maximum par lot. Champs exploités :
+                  ts, path, url, user_agent, ip_hash, country, referer, is_bot, bot_name,
+                  bot_category, verification_status, confidence, decision.
+                </p>
+              </li>
+            </ol>
+
+            <div className="flex justify-between">
+              <Button variant="ghost" onClick={() => setStep('site')}>
+                <ArrowLeft className="mr-1 h-4 w-4" /> Retour
+              </Button>
+              <Button onClick={() => setStep('verify')}>
+                J'ai configuré Senthor — vérifier <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </CardContent>
@@ -302,7 +466,7 @@ export default function CfShield() {
       )}
 
       {/* STEP 2 — Mode */}
-      {step === 'mode' && (
+      {step === 'mode' && provider === 'cloudflare' && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
@@ -311,6 +475,7 @@ export default function CfShield() {
             <CardDescription>Choisissez le mode qui correspond à votre niveau d'aisance avec Cloudflare.</CardDescription>
           </CardHeader>
           <CardContent>
+
             <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="auto">

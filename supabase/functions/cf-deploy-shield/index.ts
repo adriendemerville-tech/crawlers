@@ -193,10 +193,17 @@ Deno.serve(handleRequest(async (req) => {
   if (!site || site.user_id !== userId) return jsonError('Not your site', 403);
 
   const ingestUrl = `${SUPABASE_URL}/functions/v1/ingest-bot-hits`;
+  const senthorIngestUrl = `${SUPABASE_URL}/functions/v1/ingest-senthor`;
+  const provider = ['senthor', 'custom'].includes(String(body.provider))
+    ? String(body.provider)
+    : 'cloudflare';
 
   // ── INIT : ensure config row, return manual snippet ───────────────
   if (action === 'init') {
-    const mode = (body.mode as string) === 'auto' ? 'auto' : 'manual';
+    const mode = provider === 'cloudflare'
+      ? ((body.mode as string) === 'auto' ? 'auto' : 'manual')
+      : 'manual';
+
 
     // Resolve adaptive sampling rate
     const { data: rateData } = await supabase.rpc('resolve_human_sample_rate', { p_user_id: userId });
@@ -219,6 +226,7 @@ Deno.serve(handleRequest(async (req) => {
           user_id: userId,
           domain: site.domain,
           deployment_mode: mode,
+          provider,
           status: 'pending',
           human_sample_rate: sampleRate,
         })
@@ -230,16 +238,36 @@ Deno.serve(handleRequest(async (req) => {
     } else {
       await supabase
         .from('cf_shield_configs')
-        .update({ deployment_mode: mode, human_sample_rate: sampleRate })
+        .update({ deployment_mode: mode, provider, human_sample_rate: sampleRate })
         .eq('id', existing.id);
+    }
+
+    if (provider !== 'cloudflare') {
+      return jsonOk({
+        ok: true,
+        config_id: configId,
+        provider,
+        mode: 'manual',
+        sample_rate: sampleRate,
+        ingest_url: senthorIngestUrl,
+        ingestion_secret: ingestionSecret,
+        manual_instructions: {
+          step_1: `Dans Senthor (app.senthor.io) → Webhooks : URL cible ${senthorIngestUrl}`,
+          step_2: `Ajouter le header X-Crawlers-Secret = ${ingestionSecret}`,
+          step_3: 'Format attendu : JSON array ou NDJSON, un objet par événement',
+          step_4: `Alternative signature HMAC-SHA256 : header X-Senthor-Signature: sha256=<hex> + X-Crawlers-Domain: ${site.domain}`,
+        },
+      });
     }
 
     return jsonOk({
       ok: true,
       config_id: configId,
+      provider,
       mode,
       sample_rate: sampleRate,
       ingest_url: ingestUrl,
+      ingestion_secret: ingestionSecret,
       worker_script: buildWorkerScript(ingestUrl).replace('__CRAWLERS_SECRET__', ingestionSecret!),
       manual_instructions: {
         step_1: 'Cloudflare Dashboard → Workers & Pages → Create Worker',
@@ -249,6 +277,7 @@ Deno.serve(handleRequest(async (req) => {
         step_5: 'Deploy',
       },
     });
+
   }
 
   // ── DEPLOY (auto) ─────────────────────────────────────────────────
@@ -338,14 +367,27 @@ Deno.serve(handleRequest(async (req) => {
 
   // ── ROTATE secret ────────────────────────────────────────────────
   if (action === 'rotate') {
+    const { data: current } = await supabase
+      .from('cf_shield_configs')
+      .select('provider')
+      .eq('tracked_site_id', trackedSiteId)
+      .maybeSingle();
+    const currentProvider = (current?.provider as string) || 'cloudflare';
+
     const newSecret = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
     const { error: rotErr } = await supabase
       .from('cf_shield_configs')
       .update({ ingestion_secret: newSecret, status: 'pending' })
       .eq('tracked_site_id', trackedSiteId);
     if (rotErr) return jsonError(rotErr.message, 500);
-    return jsonOk({ ok: true, ingestion_secret: newSecret, note: 'Update Worker env CRAWLERS_SECRET with this value.' });
+
+    const note = currentProvider === 'cloudflare'
+      ? 'Mettez à jour la variable CRAWLERS_SECRET du Worker avec cette valeur.'
+      : `Mettez à jour le header X-Crawlers-Secret côté ${currentProvider} avec cette valeur. L'ancien secret est révoqué immédiatement.`;
+
+    return jsonOk({ ok: true, provider: currentProvider, ingestion_secret: newSecret, note });
   }
+
 
   // ── PAUSE / RESUME ───────────────────────────────────────────────
   if (action === 'pause' || action === 'resume') {
