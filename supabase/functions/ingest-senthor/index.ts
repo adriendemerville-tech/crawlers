@@ -265,21 +265,24 @@ Deno.serve(handleRequest(async (req) => {
     return jsonError(insErr.message, 500);
   }
 
-  supabase
+  // Mise à jour des compteurs — awaitée : une promesse détachée peut être
+  // annulée par l'isolate dès la réponse renvoyée.
+  const { error: statErr } = await supabase
     .from('cf_shield_configs')
     .update({
       hits_total: (Number(config.hits_total) || 0) + validRows.length,
       last_hit_at: new Date().toISOString(),
       status: config.status === 'pending' ? 'active' : config.status,
     })
-    .eq('id', config.id)
-    .then(() => {})
-    .catch(() => {});
+    .eq('id', config.id);
+  if (statErr) console.error('[ingest-senthor] stats update error', statErr.message);
 
   return jsonOk({
     ok: true,
     processed: validRows.length,
     received: events.length,
+    truncated: events.length > MAX_BATCH,
     sample_rate: sampleRate,
   });
+
 }, 'ingest-senthor'));
