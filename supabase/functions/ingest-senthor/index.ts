@@ -131,6 +131,9 @@ Deno.serve(handleRequest(async (req) => {
   );
 
   const bodyText = await req.text();
+  if (bodyText.length > MAX_BODY_BYTES) {
+    return jsonError('Payload too large (max 2 Mo, 500 événements par lot)', 413);
+  }
   const secretHeader = req.headers.get('x-crawlers-secret');
   const signature = (req.headers.get('x-senthor-signature') || req.headers.get('x-crawlers-signature') || '')
     .replace(/^sha256=/, '');
@@ -145,21 +148,24 @@ Deno.serve(handleRequest(async (req) => {
       .from('cf_shield_configs')
       .select(selectCols)
       .eq('ingestion_secret', secretHeader)
-      .maybeSingle();
-    config = data;
+      .limit(1);
+    config = data?.[0] ?? null;
   } else if (signature && domainHeader) {
+    // Un même domaine peut exister chez plusieurs comptes : on teste chaque secret.
     const { data } = await supabase
       .from('cf_shield_configs')
       .select(selectCols)
       .eq('domain', domainHeader)
-      .maybeSingle();
-    if (data?.ingestion_secret) {
-      const expected = await hmacHex(data.ingestion_secret as string, bodyText);
-      if (timingSafeEqual(expected, signature.toLowerCase())) config = data;
+      .limit(10);
+    for (const row of data || []) {
+      if (!row.ingestion_secret) continue;
+      const expected = await hmacHex(row.ingestion_secret as string, bodyText);
+      if (timingSafeEqual(expected, signature.toLowerCase())) { config = row; break; }
     }
   } else {
     return jsonError('Missing X-Crawlers-Secret or X-Senthor-Signature + X-Crawlers-Domain', 401);
   }
+
 
   if (!config) return jsonError('Invalid credentials', 401);
   if (config.status === 'paused') return jsonOk({ ok: true, ignored: 'paused' });
