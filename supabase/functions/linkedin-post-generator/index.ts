@@ -5,6 +5,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { callOpenRouterJson } from '../_shared/openRouterAI.ts';
+import { selectTechDoc } from '../_shared/techDocIndex.ts';
 
 const TEXT_MODEL = 'mistralai/mistral-large-2512';
 
