@@ -1,16 +1,20 @@
-// Génère les médias d'un post LinkedIn draft via WaveSpeed.ai (async + polling).
-// - media_type = 'carousel' : 6 images 1200x1200 (bytedance/seedream-4 par défaut)
-// - media_type = 'video'    : 1 vidéo 5s (bytedance/seedance-v1-pro-t2v-480p)
+// Génère les médias d'un post LinkedIn draft.
+// - media_type = 'carousel' : 6 images 1200x1200 via WaveSpeed (bytedance/seedream-4)
+// - media_type = 'video'    : screencast RÉEL de l'outil via Pagebolt (/api/v1/video),
+//   avec fallback WaveSpeed (vidéo générative) si Pagebolt échoue.
 // Réservé aux admins.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 
 const WAVESPEED_API_KEY = Deno.env.get('WAVESPEED_API_KEY');
+const PAGEBOLT_API_KEY = Deno.env.get('PAGEBOLT_API_KEY');
+const PAGEBOLT_DEMO_EMAIL = Deno.env.get('PAGEBOLT_DEMO_EMAIL');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const BASE = 'https://api.wavespeed.ai/api/v3';
+const PAGEBOLT_VIDEO_URL = 'https://pagebolt.dev/api/v1/video';
 
 const DEFAULT_IMAGE_MODEL = 'bytedance/seedream-4';
 const DEFAULT_VIDEO_MODEL = 'bytedance/seedance-v1-pro-t2v-480p';
@@ -18,6 +22,8 @@ const POLL_INTERVAL_MS = 3000;
 const MAX_POLL_MS = 120_000;
 const MEDIA_BUCKET = 'linkedin-media';
 const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 jours (couvre la fenêtre pré-publication)
+const PAGEBOLT_TIMEOUT_MS = 170_000;
+const MAX_PAGEBOLT_STEPS = 8;
 
 
 const BodySchema = z.object({
@@ -25,7 +31,10 @@ const BodySchema = z.object({
   image_model: z.string().max(200).optional(),
   video_model: z.string().max(200).optional(),
   slide_count: z.number().int().min(1).max(10).default(6),
+  // 'pagebolt' (défaut) = screencast réel ; 'ai' = vidéo générative WaveSpeed.
+  video_source: z.enum(['pagebolt', 'ai']).default('pagebolt'),
 });
+
 
 const BRAND_STYLE =
   'flat editorial illustration, brand colors purple #7C3AED, gold #F59E0B, black, white. No text, no letters, no typography, no watermark. Clean minimal composition, 1:1 square.';
@@ -33,7 +42,10 @@ const BRAND_STYLE =
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
-    if (!WAVESPEED_API_KEY) return json({ error: 'WAVESPEED_API_KEY missing' }, 500);
+    if (!WAVESPEED_API_KEY && !PAGEBOLT_API_KEY) {
+      return json({ error: 'WAVESPEED_API_KEY / PAGEBOLT_API_KEY missing' }, 500);
+    }
+
 
     // Auth : admin OU appel cron (LINKEDIN_CRON_SECRET dans header x-cron-secret)
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -57,7 +69,7 @@ Deno.serve(async (req) => {
 
     const parsed = BodySchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
-    const { post_id, image_model, video_model, slide_count } = parsed.data;
+    const { post_id, image_model, video_model, slide_count, video_source } = parsed.data;
 
     // Charge le post + feature
     const { data: post, error: postErr } = await admin
@@ -82,6 +94,8 @@ Deno.serve(async (req) => {
     try {
       const rawMediaUrls: string[] = [];
       const predictionIds: string[] = [];
+      const readyUrls: string[] = [];
+      let mediaEngine = 'wavespeed';
 
       if (post.media_type === 'carousel') {
         const model = image_model || DEFAULT_IMAGE_MODEL;
@@ -95,27 +109,47 @@ Deno.serve(async (req) => {
           predictionIds.push(r.predictionId);
         }
       } else if (post.media_type === 'video') {
-        const model = video_model || DEFAULT_VIDEO_MODEL;
-        // Le plan de capture (route + étapes) documenté dans le catalogue oriente
-        // la vidéo vers l'outil en usage réel, pas vers une landing page.
         const steps = Array.isArray(feature.capture_steps) ? feature.capture_steps.map(String) : [];
-        const scenario = steps.length
-          ? `Screencast style sequence of a SaaS dashboard in real use: ${steps.join(', then ')}.`
-          : `Screencast style sequence of a SaaS dashboard in real use showing ${angle}.`;
-        const prompt = `${title}. ${scenario} ${BRAND_STYLE}. Smooth subtle camera move, professional B2B SaaS aesthetic.`;
-        const { url, predictionId } = await runWavespeed(model, {
-          prompt,
-          duration: 5,
-          aspect_ratio: '16:9',
-        });
-        rawMediaUrls.push(url);
-        predictionIds.push(predictionId);
+
+        // 1) Screencast RÉEL de l'outil via Pagebolt (priorité).
+        if (video_source === 'pagebolt' && PAGEBOLT_API_KEY && feature.capture_route) {
+          try {
+            const authState = await buildAuthState(admin);
+            const bytes = await runPagebolt(String(feature.capture_route), title, steps, authState);
+            const url = await uploadBytes(admin, post_id, bytes, 'mp4', 'video/mp4', 0);
+            readyUrls.push(url);
+            mediaEngine = 'pagebolt';
+          } catch (e) {
+            console.warn('[linkedin-media-generator] pagebolt failed, fallback AI video', String(e));
+          }
+        }
+
+        // 2) Fallback : vidéo générative WaveSpeed.
+        if (!readyUrls.length) {
+          if (!WAVESPEED_API_KEY) throw new Error('Pagebolt failed and WAVESPEED_API_KEY missing');
+          const model = video_model || DEFAULT_VIDEO_MODEL;
+          const scenario = steps.length
+            ? `Screencast style sequence of a SaaS dashboard in real use: ${steps.join(', then ')}.`
+            : `Screencast style sequence of a SaaS dashboard in real use showing ${angle}.`;
+          const prompt = `${title}. ${scenario} ${BRAND_STYLE}. Smooth subtle camera move, professional B2B SaaS aesthetic.`;
+          const { url, predictionId } = await runWavespeed(model, {
+            prompt,
+            duration: 5,
+            aspect_ratio: '16:9',
+          });
+          rawMediaUrls.push(url);
+          predictionIds.push(predictionId);
+        }
       } else {
         return json({ error: `Unsupported media_type: ${post.media_type}` }, 400);
       }
 
       // Persiste dans Storage pour éviter que les URLs WaveSpeed expirent avant la publication.
-      const mediaUrls = await persistMedia(admin, post_id, rawMediaUrls, post.media_type);
+      const mediaUrls = readyUrls.length
+        ? readyUrls
+        : await persistMedia(admin, post_id, rawMediaUrls, post.media_type);
+      console.log('[linkedin-media-generator] engine', mediaEngine, 'assets', mediaUrls.length);
+
 
 
 
@@ -156,6 +190,129 @@ function buildCarouselPrompts(title: string, angle: string, count: number): stri
   ];
   return beats.slice(0, count);
 }
+
+// ---------------------------------------------------------------------------
+// Pagebolt : screencast réel de l'outil (pas de génération IA).
+// ---------------------------------------------------------------------------
+
+type AuthState = Record<string, unknown> | null;
+
+// Injecte une vraie session Supabase dans le navigateur Pagebolt pour filmer
+// l'outil connecté. Nécessite le secret PAGEBOLT_DEMO_EMAIL (compte de démo).
+async function buildAuthState(admin: ReturnType<typeof createClient>): Promise<AuthState> {
+  if (!PAGEBOLT_DEMO_EMAIL) return null;
+  try {
+    const { data: link, error } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: PAGEBOLT_DEMO_EMAIL,
+    });
+    const hashed = (link as any)?.properties?.hashed_token;
+    if (error || !hashed) throw error ?? new Error('no hashed_token');
+    const anon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: verified, error: vErr } = await anon.auth.verifyOtp({
+      type: 'magiclink',
+      token_hash: hashed,
+    });
+    if (vErr || !verified?.session) throw vErr ?? new Error('no session');
+    const ref = new URL(SUPABASE_URL).hostname.split('.')[0];
+    return {
+      localStorage: [
+        {
+          origin: 'https://crawlers.fr',
+          items: [{ name: `sb-${ref}-auth-token`, value: JSON.stringify(verified.session) }],
+        },
+      ],
+    };
+  } catch (e) {
+    console.warn('[buildAuthState] session demo indisponible, capture anonyme', String(e));
+    return null;
+  }
+}
+
+function buildPageboltSteps(route: string, title: string, captureSteps: string[]) {
+  const steps: Record<string, unknown>[] = [
+    { action: 'navigate', url: route, note: title.slice(0, 200) },
+    { action: 'wait', ms: 3500, live: true },
+  ];
+  const notes = captureSteps.slice(0, MAX_PAGEBOLT_STEPS - 2);
+  notes.forEach((n, i) => {
+    steps.push({ action: 'scroll', y: 420 * (i + 1), note: String(n).slice(0, 200) });
+    steps.push({ action: 'wait', ms: 1800, live: true });
+  });
+  if (notes.length === 0) steps.push({ action: 'scroll', y: 800 }, { action: 'wait', ms: 2000 });
+  return steps.slice(0, MAX_PAGEBOLT_STEPS);
+}
+
+async function runPagebolt(
+  route: string,
+  title: string,
+  captureSteps: string[],
+  authState: AuthState,
+): Promise<Uint8Array> {
+  const body: Record<string, unknown> = {
+    steps: buildPageboltSteps(route, title, captureSteps),
+    viewport: { width: 1280, height: 720 },
+    format: 'mp4',
+    framerate: 30,
+    darkMode: true,
+    blockBanners: true,
+    pace: 'normal',
+    // Charte Crawlers : violet / or / noir / blanc.
+    cursor: { style: 'classic', color: '#7C3AED', persist: true, size: 22 },
+    clickEffect: { enabled: true, style: 'ripple', color: '#F59E0B' },
+    frame: { enabled: true, style: 'macos', theme: 'dark', showUrl: true },
+    background: {
+      enabled: true,
+      type: 'custom',
+      colors: ['#0B0B0F', '#2E1065'],
+      padding: 80,
+      borderRadius: 16,
+    },
+  };
+  if (authState) body.authState = authState;
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), PAGEBOLT_TIMEOUT_MS);
+  try {
+    const res = await fetch(PAGEBOLT_VIDEO_URL, {
+      method: 'POST',
+      headers: { 'x-api-key': PAGEBOLT_API_KEY!, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`Pagebolt ${res.status}: ${t.slice(0, 300)}`);
+    }
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    if (bytes.byteLength < 10_000) throw new Error(`Pagebolt video too small (${bytes.byteLength}B)`);
+    return bytes;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Upload direct d'un buffer (Pagebolt renvoie le mp4 en binaire).
+async function uploadBytes(
+  admin: ReturnType<typeof createClient>,
+  postId: string,
+  bytes: Uint8Array,
+  ext: string,
+  contentType: string,
+  index: number,
+): Promise<string> {
+  const path = `${postId}/${Date.now()}-${index}.${ext}`;
+  const { error: upErr } = await admin.storage
+    .from(MEDIA_BUCKET)
+    .upload(path, bytes, { contentType, upsert: true });
+  if (upErr) throw upErr;
+  const { data: signed, error: signErr } = await admin.storage
+    .from(MEDIA_BUCKET)
+    .createSignedUrl(path, SIGNED_URL_TTL);
+  if (signErr || !signed?.signedUrl) throw signErr ?? new Error('sign failed');
+  return signed.signedUrl;
+}
+
 
 // Télécharge chaque asset WaveSpeed et le persiste dans le bucket linkedin-media.
 // Retourne des signed URLs (30j) stables pour la publication LinkedIn.
