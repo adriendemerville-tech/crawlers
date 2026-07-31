@@ -7412,6 +7412,9 @@ export type Database = {
       linkedin_features_catalog: {
         Row: {
           capture_route: string | null
+          capture_scenario: Json | null
+          capture_scenario_source: string | null
+          capture_scenario_updated_at: string | null
           capture_steps: Json
           created_at: string
           demo_url: string | null
@@ -7434,6 +7437,9 @@ export type Database = {
         }
         Insert: {
           capture_route?: string | null
+          capture_scenario?: Json | null
+          capture_scenario_source?: string | null
+          capture_scenario_updated_at?: string | null
           capture_steps?: Json
           created_at?: string
           demo_url?: string | null
@@ -7456,6 +7462,9 @@ export type Database = {
         }
         Update: {
           capture_route?: string | null
+          capture_scenario?: Json | null
+          capture_scenario_source?: string | null
+          capture_scenario_updated_at?: string | null
           capture_steps?: Json
           created_at?: string
           demo_url?: string | null
