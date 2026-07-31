@@ -35,7 +35,10 @@ export type ScenarioStep = {
   note?: string;
   fullPage?: boolean;
   live?: boolean;
+  /** Zoom cinématique Pagebolt (clics uniquement) : { enabled, level 1.0–2.0 }. */
+  zoom?: { enabled: boolean; level: number };
 };
+
 
 export type InspectedElement = {
   tag?: string;
@@ -87,6 +90,12 @@ export function sanitizeScenario(raw: unknown, fallbackUrl: string): ScenarioSte
     if (typeof s.ms === 'number') step.ms = Math.min(Math.max(s.ms, 200), 10_000);
     if (typeof s.timeout === 'number') step.timeout = Math.min(Math.max(s.timeout, 500), 15_000);
     if (s.note) step.note = String(s.note).slice(0, 200);
+    if (s.zoom && typeof s.zoom === 'object' && action === 'click') {
+      const z = s.zoom as Record<string, unknown>;
+      const level = Math.min(Math.max(Number(z.level ?? 1.5) || 1.5, 1.1), 2);
+      step.zoom = { enabled: z.enabled !== false, level: Number(level.toFixed(2)) };
+    }
+
 
     if (action === 'navigate' && !step.url) continue;
     if (['click', 'hover', 'wait_for', 'fill', 'select'].includes(action) && !step.selector) continue;
@@ -216,26 +225,45 @@ export function fallbackScenario(url: string): ScenarioStep[] {
   ];
 }
 
-/** Étapes pour /v1/video : les screenshots ne sont pas supportés, on les remplace par une pause filmée. */
+/**
+ * Étapes pour /v1/video : les screenshots ne sont pas supportés (remplacés par une pause filmée)
+ * et chaque clic reçoit un zoom cinématique si le scénario n'en fournit pas.
+ * Niveaux alternés 1.4 / 1.6 / 1.5 pour éviter l'effet monotone, dernier clic à 1.7 (punchline).
+ */
+const ZOOM_CYCLE = [1.4, 1.6, 1.5];
+
 export function toVideoSteps(scenario: ScenarioStep[]): ScenarioStep[] {
   const out: ScenarioStep[] = [];
+  let clickIndex = 0;
+  const totalClicks = scenario.filter((s) => s.action === 'click').length;
+
   for (const s of scenario) {
     if (s.action === 'screenshot') {
       out.push({ action: 'wait', ms: 1600, live: true, note: s.note ?? s.name });
       continue;
     }
-    out.push(s.action === 'wait' ? { ...s, live: true } : s);
+    if (s.action === 'wait') {
+      out.push({ ...s, live: true });
+    } else if (s.action === 'click') {
+      const isLast = clickIndex === totalClicks - 1;
+      const level = s.zoom?.level ?? (isLast ? 1.7 : ZOOM_CYCLE[clickIndex % ZOOM_CYCLE.length]);
+      out.push({ ...s, zoom: { enabled: s.zoom?.enabled !== false, level } });
+      clickIndex++;
+    } else {
+      out.push(s);
+    }
     if (out.length >= MAX_STEPS) break;
   }
   return out.slice(0, MAX_STEPS);
 }
 
-/** Étapes pour /v1/sequence : garantit au moins une capture. */
+/** Étapes pour /v1/sequence : garantit au moins une capture (pas de zoom : non supporté). */
 export function toSequenceSteps(scenario: ScenarioStep[]): ScenarioStep[] {
   const steps = scenario.map((s) => {
-    const { live: _live, ...rest } = s;
+    const { live: _live, zoom: _zoom, ...rest } = s;
     return rest;
   });
+
   if (!steps.some((s) => s.action === 'screenshot')) {
     steps.push({ action: 'screenshot', name: 'vue-ensemble' });
   }
