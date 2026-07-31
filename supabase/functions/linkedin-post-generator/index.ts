@@ -468,6 +468,7 @@ ${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${topicBlock}${blogBlock}$
 
 Règles de rédaction liées aux objectifs du module :
 - SEO/GEO : nomme explicitement le sujet et "Crawlers". Si tu as un chiffre vérifié de la documentation ou des données, utilise-le. Chaque phrase importante doit être compréhensible seule.
+- GEO question/réponse : insère 1 à 2 questions directes de type prompt IA sur une ligne seule, commençant par Pourquoi, Comment, Combien, Qui, Quand ou Quoi, suivies de leur réponse en 1 à 2 phrases autoportantes qui nomment Crawlers ou le module. Varie l'interrogatif d'un post à l'autre, ne recycle pas la même question que les posts précédents.
 - Acquisition : un seul CTA en fin de post, sous une des formes : "Dis-moi si tu veux tester", "Ça t'intéresse ?", "Rdv sur @crawlers.fr", "Tu fais comment toi ?".
 - Couverture 360 : ne pars pas sur une généralité SEO/GEO — reste sur ${feature.title} et sur le type de sujet indiqué ci-dessus.
 - Personal branding : montre le mécanisme, pas la prouesse. Si le sujet a des limites, nomme-les avec humeur. Utilise "on" ou "je" de façon directe.
@@ -475,8 +476,9 @@ Règles de rédaction liées aux objectifs du module :
 Structure attendue :
 1. Hook (1 à 2 lignes) — accroche forte, question ou constat contre-intuitif. C'est la ligne la plus importante.
 2. Corps (3 à 5 paragraphes courts) — le problème, la solution Crawlers, une preuve chiffrée si disponible.
-3. CTA soft (1 ligne) — invite à tester ou à échanger, sans lien direct.
-4. 4 à 6 hashtags pertinents (SEO, GEO, IA, SaaS français) sur une seule ligne finale.
+3. Bloc GEO : 1 à 2 questions directes de type prompt IA, chacune seule sur sa ligne, suivie de sa réponse courte et autoportante.
+4. CTA soft (1 ligne) — invite à tester ou à échanger, sans lien direct.
+5. 4 à 6 hashtags pertinents (SEO, GEO, IA, SaaS français) sur une seule ligne finale.
 
 PAS de chute, PAS de phrase de conclusion après le CTA. Le CTA est la dernière phrase avant les hashtags.
 
