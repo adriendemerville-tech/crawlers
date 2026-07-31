@@ -90,6 +90,12 @@ export function sanitizeScenario(raw: unknown, fallbackUrl: string): ScenarioSte
     if (typeof s.ms === 'number') step.ms = Math.min(Math.max(s.ms, 200), 10_000);
     if (typeof s.timeout === 'number') step.timeout = Math.min(Math.max(s.timeout, 500), 15_000);
     if (s.note) step.note = String(s.note).slice(0, 200);
+    if (s.zoom && typeof s.zoom === 'object' && action === 'click') {
+      const z = s.zoom as Record<string, unknown>;
+      const level = Math.min(Math.max(Number(z.level ?? 1.5) || 1.5, 1.1), 2);
+      step.zoom = { enabled: z.enabled !== false, level: Number(level.toFixed(2)) };
+    }
+
 
     if (action === 'navigate' && !step.url) continue;
     if (['click', 'hover', 'wait_for', 'fill', 'select'].includes(action) && !step.selector) continue;
