@@ -11,6 +11,7 @@ Tout post LinkedIn publié pour Crawlers (générateur `linkedin-post-generator`
 4. Les captions vidéo/image/carrousel partagent les mêmes règles — pas d'exception pour les posts média.
 5. **Aucun emoji, aucun tiret cadratin** dans le corps du post — nettoyage déterministe côté code.
 6. La conformité n'est plus déléguée au prompt : elle est appliquée par `_shared/linkedinCompliance.ts` (`enforceCaptionCompliance`), puis contrôlée par `scoreCaption` (seuil 80 avant publication, cible 90 en audit).
+7. **Publication uniquement en tant que membre** (Adrien de Volontat). Commentaires et lectures sociales bloqués par LinkedIn (Community Management API non accordé) : ne pas implémenter de « premier commentaire » automatique.
 
 Impacts code :
 - `supabase/functions/_shared/linkedinCompliance.ts` : source de vérité déterministe (longueur, mention, emojis, ponctuation).

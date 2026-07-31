@@ -25,3 +25,11 @@ Dans `linkedin-post-generator` : si `scoreCaption < 80`, jusqu'à **2 réécritu
 
 ## 4. Statuts
 Aucun statut `draft` : les posts générés sont `approved` par défaut (automatisation complète, correction a posteriori si besoin).
+
+## 5. Périmètre du connector LinkedIn (vérifié le 31/07/2026)
+Connexion « Adrien's LinkedIn » (OAuth2), liée au projet, gateway actif. Secrets `LINKEDIN_API_KEY` + `LOVABLE_API_KEY` disponibles côté edge functions.
+- Scopes accordés : `openid`, `profile`, `email`, `w_member_social`. `available_scopes = none` côté connector : aucun scope supplémentaire n'est ajoutable via reconnect.
+- Identité de publication : `urn:li:person:VrEGWTsHXv` (Adrien de Volontat). Publication **en tant que page Crawlers impossible** (`w_organization_social` absent) — d'où la mention obligatoire `@crawlers.fr` dans le corps du post.
+- **Commentaires impossibles** : `POST /v2/socialActions/{urn}/comments` → 404 (domain authorization), `POST /rest/socialActions/{urn}/comments` (LinkedIn-Version 202510) → 403 `ACCESS_DENIED` sur `partnerApiSocialActions.CREATE`. Ces endpoints relèvent du produit **Community Management API**, non activé sur l'app LinkedIn.
+- Conséquence : la tactique du « premier commentaire porteur du lien sortant » n'est pas automatisable. Le lien reste dans le post ou est posté manuellement. Ne pas re-tenter l'implémentation tant que Community Management API n'est pas accordé.
+- Lecture des commentaires également bloquée (`r_member_social` / `r_organization_social` absents) : pas de modération ni de réponse automatique.
