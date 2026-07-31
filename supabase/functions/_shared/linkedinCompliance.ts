@@ -5,7 +5,8 @@
 // linkedin-post-auditor, pour que les deux boucles partagent exactement les mêmes règles.
 //
 // Principe : ce qui peut être garanti par du code ne doit jamais dépendre du prompt.
-//  - caractères interdits (emoji, tirets cadratins, réservés Little Text Format)
+//  - caractères interdits (tirets cadratins, réservés Little Text Format). Les emoji sont AUTORISÉS
+//    sur LinkedIn (exception à la charte Crawlers), mais bornés à MAX_EMOJI par post.
 //  - mention obligatoire @crawlers.fr
 //  - bornage 1000-1500 signes hors hashtags, coupé sur frontière de phrase
 //  - bloc hashtags normalisé en fin de post
@@ -13,6 +14,8 @@
 export const MENTION = '@crawlers.fr';
 export const MIN_BODY_CHARS = 1000;
 export const MAX_BODY_CHARS = 1500;
+/** Emoji autorisés sur LinkedIn, mais en nombre borné (au-delà : ton "IA générique"). */
+export const MAX_EMOJI = 4;
 
 export const EMOJI_RE =
   /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu;
@@ -54,9 +57,12 @@ export function normalizeHashtags(tags: unknown): string[] {
   return out;
 }
 
-/** Retire emoji, tirets de ponctuation et caractères réservés, en préservant la mention. */
+/** Retire tirets de ponctuation et caractères réservés, en préservant la mention et les emoji. */
 function stripForbiddenChars(input: string): string {
-  let t = input.replace(EMOJI_RE, '');
+  let t = input;
+  // Emoji conservés, mais plafonnés : au-delà de MAX_EMOJI, les suivants sont retirés.
+  let emojiSeen = 0;
+  t = t.replace(EMOJI_RE, (m) => (++emojiSeen <= MAX_EMOJI ? m : ''));
   // Tirets cadratins / demi-cadratins utilisés comme ponctuation
   t = t.replace(/\s*[—–]\s*/g, '. ');
   // Tiret simple en incise ( - )
@@ -220,7 +226,7 @@ export function scoreCaption(fullText: string): CaptionScore {
     { id: 'data_signal', ok: DATA_RE.test(body), weight: 20, detail: 'Preuve chiffrée ou métrique propre' },
   ];
   const styleChecks: Check[] = [
-    { id: 'no_emoji', ok: !EMOJI_RE.test(text), weight: 20, detail: 'Aucun emoji' },
+    { id: 'emoji_moderate', ok: (text.match(EMOJI_RE) || []).length <= MAX_EMOJI, weight: 20, detail: `Emoji autorisés, ${(text.match(EMOJI_RE) || []).length}/${MAX_EMOJI} utilisés` },
     { id: 'no_emdash', ok: !/[—–]/.test(text), weight: 15, detail: 'Aucun tiret cadratin' },
     { id: 'no_reserved', ok: !/[()[\]{}<>\\*_~|]/.test(body), weight: 10, detail: 'Aucun caractère réservé LinkedIn' },
     { id: 'no_cliche', ok: cliches.length === 0, weight: 15, detail: cliches.length ? `Tics LLM : ${cliches.join(', ')}` : 'Aucun tic LLM' },
