@@ -57,3 +57,11 @@ Exception explicite à la charte Crawlers (« emoji interdits ») **pour les pos
 `linkedin-post-generator` lit les **10 derniers posts** de `linkedin_scheduled_posts` (embed `linkedin_features_catalog(title)`) via `fetchPostHistory` :
 - **Rotation des features** : une feature traitée dans les 4 derniers posts est pénalisée de 80 à 35 points dans le score de sélection (dégressif selon l'ancienneté).
 - **Bloc prompt `buildHistoryBriefing`** : date, feature, hook et angle des 8 derniers posts + hashtags saturés. Règles imposées : ne pas reprendre un hook proche, changer de type d'accroche vs les 2 derniers posts, traiter un autre cas d'usage si la feature revient, varier au moins 3 hashtags, ne pas recycler les mêmes exemples.
+
+## 8. Scope éditorial élargi — `topic_type` (31/07/2026)
+`linkedin_features_catalog.topic_type` (NOT NULL, défaut `feature`) contraint à 6 valeurs : `feature`, `workflow`, `problem`, `blog_article`, `pricing`, `lead_magnet`. Le module ne parle donc plus uniquement de fonctionnalités.
+- **Sélection** : pool élargi à 12 candidats. Score = rotation + priorité + preuve de données + capture. La preuve de données (`evidence_table`) n'est exigée que pour `feature` et `workflow` ; `pricing` / `lead_magnet` / `blog_article` ne sont plus pénalisés faute de table.
+- **Diversité de type** : un `topic_type` présent dans les 3 derniers posts est pénalisé de 30 à 10 points. La rotation alterne donc les registres.
+- **Briefings par type** (`TOPIC_BRIEFS` + `buildTopicBlock`) : chaque type impose une structure rédactionnelle distincte (ex. `problem` = deux tiers du post sur la douleur, Crawlers en fin ; `pricing` = transparence sans urgence artificielle ; `lead_magnet` = gratuité explicite, un seul CTA vers la ressource).
+- **Sujet dynamique blog** : `resolveBlogArticle` prend le dernier `blog_articles` publié non traité dans les 6 derniers posts, injecte titre, extrait et URL ; le CTA pointe vers l'article.
+- L'historique anti-redondance transporte désormais le `topic_type` de chaque post passé.
