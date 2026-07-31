@@ -185,6 +185,11 @@ const CTA_RE = /\?\s*$|dis-moi|réponds|commente|teste|essaie|essayer|échange|r
 const HUMBLE_RE = /limite|biais|attention|ne garantit pas|pas magique|ne règle pas|encore perfectible|parfois|souvent/i;
 const PEDAGOGUE_RE = /en fait|pourquoi|comment|mécanisme|étape|d'abord|ensuite|enfin|ça signifie/i;
 const DATA_RE = /\d{2,}|\d+%|\d+\s*(€|euros?|jours?|mois|visites?|clics?|pages?|mots?)/i;
+// GEO : questions interrogatives directes, formulées comme un prompt utilisateur d'IA.
+// Une ligne qui commence par un interrogatif et se termine par un point d'interrogation
+// est un bloc question/réponse citable par les moteurs génératifs.
+const GEO_QUESTION_RE =
+  /^\s*(pourquoi|comment|combien|qui|quand|quoi|que|qu'est-ce que|à quoi|est-ce que)\b[^\n?]{5,160}\?/im;
 
 function dim(checks: Check[]): number {
   const total = checks.reduce((s, c) => s + c.weight, 0);
@@ -235,9 +240,10 @@ export function scoreCaption(fullText: string): CaptionScore {
     { id: 'pedagogue_tone', ok: PEDAGOGUE_RE.test(body), weight: 10, detail: 'Explication du mécanisme' },
   ];
   const objectivesChecks: Check[] = [
-    { id: 'seo_named_entities', ok: /Crawlers|@(crawlers\.fr|Crawlers)/i.test(body), weight: 40, detail: 'Entité Crawlers explicitement nommée pour SEO/GEO' },
-    { id: 'seo_quotable', ok: DATA_RE.test(body) || /\d/.test(hook), weight: 30, detail: 'Phrase chiffrée autoportante pour les bots IA' },
-    { id: 'acquisition_signal', ok: CTA_RE.test(body.slice(-300)), weight: 30, detail: 'Signal d acquisition clair en fin de post' },
+    { id: 'seo_named_entities', ok: /Crawlers|@(crawlers\.fr|Crawlers)/i.test(body), weight: 30, detail: 'Entité Crawlers explicitement nommée pour SEO/GEO' },
+    { id: 'seo_quotable', ok: DATA_RE.test(body) || /\d/.test(hook), weight: 25, detail: 'Phrase chiffrée autoportante pour les bots IA' },
+    { id: 'geo_question', ok: GEO_QUESTION_RE.test(body), weight: 20, detail: 'Au moins une question directe de type prompt IA (pourquoi, comment, combien, qui, quand, quoi) suivie de sa réponse' },
+    { id: 'acquisition_signal', ok: CTA_RE.test(body.slice(-300)), weight: 25, detail: 'Signal d acquisition clair en fin de post' },
   ];
 
   const dimensions = {

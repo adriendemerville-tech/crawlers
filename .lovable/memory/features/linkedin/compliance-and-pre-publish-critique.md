@@ -17,7 +17,8 @@ Ces objectifs alimentent directement le générateur et le scoring :
 - Ils sont injectés dans le `systemPrompt` de `linkedin-post-generator` (mission du post, ordre de priorité).
 - Ils apparaissent dans le `userPrompt` sous forme de checklist de rédaction.
 - Ils guident la `CRITIQUE_SYSTEM` (max 2 réécritures si score < 80).
-- Le barème `scoreCaption` contient une 5e dimension `objectives` (poids 0.10) + des checks SEO (entités nommées, phrase chiffrée), acquisition (CTA unique) et ton (marqueurs humble/pédagogue).
+- Le barème `scoreCaption` contient une 5e dimension `objectives` (poids 0.10) + des checks SEO (entités nommées 30, phrase chiffrée 25, `geo_question` 20), acquisition (CTA unique 25) et ton (marqueurs humble/pédagogue).
+- **Bloc GEO question/réponse (obligatoire)** : chaque post contient 1 à 2 questions directes rédigées comme un prompt d'utilisateur d'IA (Pourquoi, Comment, Combien, Qui, Quand, Quoi), seules sur leur ligne, suivies immédiatement d'une réponse autoportante de 1 à 2 phrases nommant Crawlers ou le module. Vérifié en déterministe par `GEO_QUESTION_RE` (check `geo_question`), exigé dans le `systemPrompt`, le `userPrompt` (étape 3 de la structure) et la `CRITIQUE_SYSTEM`. L'interrogatif doit varier d'un post à l'autre.
 
 ## 1. Couche de conformité déterministe — `supabase/functions/_shared/linkedinCompliance.ts`
 `enforceCaptionCompliance(text)` : 100 % code, aucune dépendance LLM.
