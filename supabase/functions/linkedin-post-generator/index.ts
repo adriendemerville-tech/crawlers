@@ -449,7 +449,10 @@ Retourne UNIQUEMENT un JSON strict :
         media_type: mediaType,
         generated_text: cleanText,
         doc_sections_used: usedSections,
-        hashtags,
+        hashtags: finalHashtags,
+        pre_publish_score: critique.score,
+        pre_publish_report: prePublishReport,
+
         llm_tokens_used: tokensUsed,
         llm_model: TEXT_MODEL,
         created_by: userId,
