@@ -58,9 +58,7 @@ function slug(value: string): string {
 
 async function pageboltScreenshot(
   apiKey: string,
-  url: string,
-  viewport: { width: number; height: number },
-  fullPage: boolean,
+  payload: Record<string, unknown>,
   timeoutMs: number,
 ): Promise<Uint8Array | null> {
   const ctrl = new AbortController();
@@ -69,14 +67,7 @@ async function pageboltScreenshot(
     const res = await fetch(`${PAGEBOLT_BASE}/screenshot`, {
       method: 'POST',
       headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url,
-        viewport,
-        full_page: fullPage,
-        format: 'jpeg',
-        quality: 72,
-        wait_until: 'networkidle',
-      }),
+      body: JSON.stringify(payload),
       signal: ctrl.signal,
     });
     if (!res.ok) {
@@ -86,11 +77,11 @@ async function pageboltScreenshot(
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
       const json = await res.json();
-      const b64 = json?.screenshot || json?.image || json?.data?.screenshot || json?.data?.image;
+      const b64 = json?.screenshot?.base64 ?? json?.screenshot ?? json?.image ?? json?.data?.screenshot;
       if (typeof b64 === 'string' && b64.length > 100) {
-        return b64ToBytes(b64.replace(/^data:image\/\w+;base64,/, ''));
+        return b64ToBytes(b64.replace(/^data:[^,]+,/, ''));
       }
-      const remote = json?.url || json?.data?.url;
+      const remote = json?.url ?? json?.data?.url;
       if (typeof remote === 'string') {
         const bin = await fetch(remote);
         if (bin.ok) return new Uint8Array(await bin.arrayBuffer());
@@ -154,9 +145,27 @@ export async function captureSiteVisual(opts: CaptureOptions): Promise<VisualCap
   const base = `${pathPrefix.replace(/\/+$/, '')}/${slug(domain)}-${stamp}`;
 
   const [desktopBytes, mobileBytes] = await Promise.all([
-    pageboltScreenshot(apiKey, url, DESKTOP_VIEWPORT, true, timeoutMs),
+    pageboltScreenshot(apiKey, {
+      url,
+      format: 'jpeg',
+      quality: 72,
+      fullPage: true,
+      blockAds: true,
+      blockTrackers: true,
+      delay: 1200,
+    }, timeoutMs),
     includeMobile
-      ? pageboltScreenshot(apiKey, url, MOBILE_VIEWPORT, false, timeoutMs)
+      ? pageboltScreenshot(apiKey, {
+          url,
+          viewportDevice: 'iphone_14_pro',
+          viewportMobile: true,
+          format: 'jpeg',
+          quality: 72,
+          fullPage: false,
+          blockAds: true,
+          blockTrackers: true,
+          delay: 1200,
+        }, timeoutMs)
       : Promise.resolve(null),
   ]);
 
