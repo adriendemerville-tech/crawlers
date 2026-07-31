@@ -1018,12 +1018,14 @@ async function executeContentArchitect(
     }
 
   } else {
-    executionResults.push({ function: 'content-architecture-advisor', status: funcResponse.ok ? 'success' : 'error', http_status: funcResponse.status, keyword: funcBody.keyword, result: funcResult });
-    if (!funcResponse.ok) {
-      phaseErrors.push({ phase, function: 'content-architecture-advisor', severity: 'degraded', message: `content-architecture-advisor sync failed: HTTP ${funcResponse.status}`, retryable: true });
+    const ok = funcResponse?.ok ?? false;
+    executionResults.push({ function: 'content-architecture-advisor', status: ok ? 'success' : 'error', http_status: funcResponse?.status ?? 0, keyword: funcBody.keyword, result: funcResult });
+    if (!ok) {
+      phaseErrors.push({ phase, function: 'content-architecture-advisor', severity: 'degraded', message: `content-architecture-advisor sync failed: HTTP ${funcResponse?.status ?? 0}`, retryable: true });
       setSuccess(false);
     }
   }
+
 }
 
 async function executeCmsPushDraft(
