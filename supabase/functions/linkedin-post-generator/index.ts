@@ -413,15 +413,27 @@ Deno.serve(async (req) => {
     });
     const evidenceRows = feature.__evidence_rows as number | null | undefined;
     const captureSteps = Array.isArray(feature.capture_steps) ? feature.capture_steps : [];
+    const topicType = feature.topic_type ?? 'feature';
+    const topicBlock = buildTopicBlock(topicType);
+
+    // Sujet dynamique pour les articles de blog : on injecte l'article réellement publié.
+    let blogBlock = '';
+    if (topicType === 'blog_article') {
+      const article = await resolveBlogArticle(admin, history);
+      if (article) {
+        feature = { ...feature, title: article.title };
+        blogBlock = `\n\nARTICLE À METTRE EN AVANT :\nTitre : ${article.title}\nRésumé : ${article.excerpt || 'non disponible'}\nURL : ${article.url}\nLe CTA doit renvoyer vers cette URL.`;
+      }
+    }
     const factBlock = docText
       ? `\n\nDOCUMENTATION TECHNIQUE INTERNE (source de vérité, ne cite jamais ce bloc tel quel) :\n${docText}\n\nRÈGLE FACTUELLE : tu ne peux affirmer QUE ce qui figure dans ce bloc ou dans la description ci-dessus. Aucun chiffre de résultat client, aucun pourcentage, aucun cas d'usage inventé. Si tu n'as pas de chiffre vérifié, parle du mécanisme, pas de la performance.`
-      : `\n\nRÈGLE FACTUELLE : aucune documentation disponible pour cette fonctionnalité. Reste sur le mécanisme décrit ci-dessus. Aucun chiffre, aucun résultat client inventé.`;
+      : `\n\nRÈGLE FACTUELLE : aucune documentation disponible pour ce sujet. Reste sur le mécanisme décrit ci-dessus. Aucun chiffre, aucun résultat client inventé.`;
     const evidenceBlock =
       evidenceRows === null || evidenceRows === undefined
         ? ''
         : evidenceRows > 0
-          ? `\n\nDONNÉE RÉELLE : la fonctionnalité tourne en production, ${evidenceRows} enregistrement(s) en base. Tu peux dire qu'elle est en production, sans donner ce chiffre brut.`
-          : `\n\nATTENTION : la fonctionnalité n'a encore produit aucune donnée en production. Présente-la comme un mécanisme disponible, jamais comme un résultat observé, et n'invente aucun retour client.`;
+          ? `\n\nDONNÉE RÉELLE : le module tourne en production, ${evidenceRows} enregistrement(s) en base. Tu peux dire qu'il est en production, sans donner ce chiffre brut.`
+          : `\n\nATTENTION : le module n'a encore produit aucune donnée en production. Présente-le comme un mécanisme disponible, jamais comme un résultat observé, et n'invente aucun retour client.`;
 
     // Prompt LLM
 
