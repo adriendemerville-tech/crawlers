@@ -35,7 +35,10 @@ export type ScenarioStep = {
   note?: string;
   fullPage?: boolean;
   live?: boolean;
+  /** Zoom cinématique Pagebolt (clics uniquement) : { enabled, level 1.0–2.0 }. */
+  zoom?: { enabled: boolean; level: number };
 };
+
 
 export type InspectedElement = {
   tag?: string;
