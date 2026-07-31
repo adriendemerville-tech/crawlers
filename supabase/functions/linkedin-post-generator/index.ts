@@ -240,13 +240,48 @@ function buildHistoryBriefing(history: PastPost[]): string {
     .slice(0, 8)
     .map((h, i) => {
       const d = h.created_at ? new Date(h.created_at).toISOString().slice(0, 10) : '';
-      return `${i + 1}. ${d} | feature: ${h.feature_title ?? 'inconnue'}\n   hook: ${h.hook}\n   angle: ${h.angle}`;
+      return `${i + 1}. ${d} | type: ${h.topic_type ?? 'feature'} | sujet: ${h.feature_title ?? 'inconnu'}\n   hook: ${h.hook}\n   angle: ${h.angle}`;
     })
     .join('\n');
   const tags = [...new Set(history.flatMap((h) => h.hashtags))].slice(0, 15);
   return `\n\nHISTORIQUE DES DERNIERS POSTS (anti-redondance, obligation absolue) :\n${items}\n${
     tags.length ? `Hashtags déjà très utilisés : ${tags.join(' ')}\n` : ''
-  }RÈGLES ANTI-REDONDANCE :\n- N'ouvre pas avec une formulation proche de l'un des hooks ci-dessus. Change de type d'accroche (chiffre, question, contre-pied, anecdote) par rapport aux deux derniers posts.\n- Ne reprends pas l'angle déjà utilisé pour la même feature : si elle a déjà été traitée, aborde une autre étape du parcours, un autre cas d'usage ou une autre limite.\n- Varie au moins 3 hashtags par rapport à la liste ci-dessus.\n- Ne recycle pas les mêmes exemples ni les mêmes chiffres illustratifs.\n`;
+  }RÈGLES ANTI-REDONDANCE :\n- N'ouvre pas avec une formulation proche de l'un des hooks ci-dessus. Change de type d'accroche (chiffre, question, contre-pied, anecdote) par rapport aux deux derniers posts.\n- Ne reprends pas l'angle déjà utilisé pour le même sujet : s'il a déjà été traité, aborde une autre étape du parcours, un autre cas d'usage ou une autre limite.\n- Change de type de sujet par rapport aux deux derniers posts (fonctionnalité, workflow transversal, problème visé, article de blog, tarifs, lead magnet).\n- Varie au moins 3 hashtags par rapport à la liste ci-dessus.\n- Ne recycle pas les mêmes exemples ni les mêmes chiffres illustratifs.\n`;
+}
+
+// Briefing éditorial spécifique au type de sujet. Le scope du module ne se limite
+// pas aux fonctionnalités : workflows transversaux, problèmes visés, articles de
+// blog, tarifs et lead magnets font partie de la rotation.
+const TOPIC_BRIEFS: Record<string, string> = {
+  feature: "TYPE DE SUJET : FONCTIONNALITÉ. Montre le mécanisme précis du module, ce qu'il calcule et ce qu'il affiche. Une fonctionnalité, un usage concret, pas un catalogue.",
+  workflow: "TYPE DE SUJET : WORKFLOW TRANSVERSAL. Le sujet n'est pas un module mais un enchaînement de modules. Raconte la chaîne étape par étape, nomme chaque brique traversée, et explique pourquoi l'enchaînement vaut plus que la somme des outils.",
+  problem: "TYPE DE SUJET : PROBLÈME VISÉ. Pars de la douleur, pas de l'outil. Deux tiers du post décrivent le symptôme, le mauvais diagnostic habituel et le vrai mécanisme en cause. Crawlers n'apparaît qu'en fin de post, comme réponse, sans démonstration produit.",
+  blog_article: "TYPE DE SUJET : ARTICLE DE BLOG. Le post est une porte d'entrée vers un article publié sur crawlers.fr. Donne la thèse de l'article et une idée forte qu'il contient, sans le résumer entièrement. Le CTA renvoie explicitement à l'article.",
+  pricing: "TYPE DE SUJET : TARIFS. Parle prix sans gêne et sans agressivité commerciale : ce que couvre chaque palier, à qui il s'adresse, ce qu'il ne fait pas. Aucun rabais, aucune urgence artificielle. La transparence est l'argument.",
+  lead_magnet: "TYPE DE SUJET : LEAD MAGNET. Met en avant une ressource gratuite et immédiatement utilisable. Explique ce qu'elle apporte en 5 minutes, dis clairement que c'est gratuit et sans contrepartie cachée. Un seul CTA, vers la ressource.",
+};
+
+function buildTopicBlock(topicType: string): string {
+  return `\n\n${TOPIC_BRIEFS[topicType] ?? TOPIC_BRIEFS.feature}\n`;
+}
+
+// Sujet dynamique : pour topic_type='blog_article', on remplace le contenu du
+// catalogue par un article réellement publié, non encore traité récemment.
+async function resolveBlogArticle(admin: any, history: PastPost[]): Promise<{ title: string; excerpt: string; url: string } | null> {
+  const { data, error } = await admin
+    .from('blog_articles')
+    .select('title, excerpt, slug, published_at')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+    .limit(8);
+  if (error || !data?.length) return null;
+  const recentTitles = history.slice(0, 6).map((h) => (h.feature_title ?? '').toLowerCase());
+  const pick = data.find((a: any) => !recentTitles.includes(String(a.title).toLowerCase())) ?? data[0];
+  return {
+    title: pick.title,
+    excerpt: String(pick.excerpt ?? '').slice(0, 600),
+    url: `https://crawlers.fr/blog/${pick.slug}`,
+  };
 }
 
 Deno.serve(async (req) => {
