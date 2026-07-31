@@ -42,7 +42,10 @@ const BRAND_STYLE =
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
-    if (!WAVESPEED_API_KEY) return json({ error: 'WAVESPEED_API_KEY missing' }, 500);
+    if (!WAVESPEED_API_KEY && !PAGEBOLT_API_KEY) {
+      return json({ error: 'WAVESPEED_API_KEY / PAGEBOLT_API_KEY missing' }, 500);
+    }
+
 
     // Auth : admin OU appel cron (LINKEDIN_CRON_SECRET dans header x-cron-secret)
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
