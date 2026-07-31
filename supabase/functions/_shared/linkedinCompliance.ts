@@ -175,6 +175,10 @@ const GENERIC_HOOK_RE =
   /^(dans cet article|aujourd'?hui,? je|je suis (ravi|heureux)|petit (post|retour)|bonjour à tous|nouvelle semaine|nous sommes fiers)/i;
 const TENSION_RE =
   /\d|%|jamais|personne|arrêt|stop|erreur|mythe|pourquoi|combien|invisible|ignor|aucun|zéro|faux/i;
+const CTA_RE = /\?\s*$|dis-moi|réponds|commente|teste|essaie|essayer|échange|rdv|retrouve|découvre/i;
+const HUMBLE_RE = /limite|biais|attention|ne garantit pas|pas magique|ne règle pas|encore perfectible|parfois|souvent/i;
+const PEDAGOGUE_RE = /en fait|pourquoi|comment|mécanisme|étape|d'abord|ensuite|enfin|ça signifie/i;
+const DATA_RE = /\d{2,}|\d+%|\d+\s*(€|euros?|jours?|mois|visites?|clics?|pages?|mots?)/i;
 
 function dim(checks: Check[]): number {
   const total = checks.reduce((s, c) => s + c.weight, 0);
