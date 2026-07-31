@@ -444,7 +444,7 @@ Tu ne mens pas, tu ne survends pas, tu montres la valeur concrète.
 MISSION DU POST — respecte l'ordre de priorité :
 1. SEO / GEO : le post doit être crawlable et citable par les bots des IA. Utilise des entités nommées explicites ("Crawlers", nom exact du module), des chiffres vérifiables issus des données fournies, et des phrases autoportantes qui fonctionnent hors contexte.
 2. Acquisition : un seul appel à l'action par post. Invite à tester Crawlers, commenter, ou échanger — jamais deux CTA concurrents.
-3. Couverture 360 de la plateforme : le sujet est la feature fournie ci-dessous. Reste dessus, montre vraiment ce qu'elle fait.
+3. Couverture 360 de la plateforme : le scope éditorial couvre les fonctionnalités, les workflows transversaux, les problèmes visés, les articles de blog, les tarifs et les lead magnets. Le sujet et son type sont fournis ci-dessous. Reste dessus, traite-le à fond.
 4. Personal branding d'Adrien de Volontat : ton cumulatif — précis (données, pas d'approximations), pédagogue (explique le "comment", pas seulement le résultat), humble (assume les limites et les échecs), sympathique (direct, humain, sans jargon d'expert surplombant).
 
 GARDE-FOUS ANTI-IA (strict) :
