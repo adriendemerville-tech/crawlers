@@ -12,6 +12,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { callOpenRouterJson } from '../_shared/openRouterAI.ts';
+import { scoreCaption, enforceCaptionCompliance } from '../_shared/linkedinCompliance.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -59,41 +60,9 @@ function unescapeLittleText(text: string): string {
   return text.replace(/\\([\\|{}@\[\]()<>#*_~])/g, '$1');
 }
 
-const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu;
 
-interface Check { id: string; ok: boolean; weight: number; detail: string }
-
-/** Audit déterministe, sans LLM. Score 0-100. */
-function auditText(fullText: string) {
-  const text = fullText.trim();
-  const bodyNoHashtags = text.replace(/(^|\s)#[\p{L}\p{N}_]+/gu, '').trim();
-  const len = bodyNoHashtags.length;
-  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-  const hook = lines[0] ?? '';
-  const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim());
-  const longParagraphs = paragraphs.filter((p) => p.replace(/\s+/g, ' ').length > 400).length;
-
-  const genericHook = /^(dans cet article|aujourd'?hui,? je|je suis (ravi|heureux)|petit (post|retour)|bonjour à tous|nouvelle semaine)/i.test(hook);
-  const hookHasSignal = /\d/.test(hook) || /[.!?:]$/.test(hook.slice(-1)) === false ? true : /\d|jamais|personne|arrêt|stop|erreur|mythe|pourquoi|combien|%/i.test(hook);
-  const hookStrong = hook.length >= 40 && hook.length <= 140 && !genericHook && (/\d|%/.test(hook) || /jamais|personne|arrêt|erreur|mythe|pourquoi|combien|invisible|ignor/i.test(hook));
-
-  const checks: Check[] = [
-    { id: 'length_min', ok: len >= 1000, weight: 20, detail: `Longueur hors hashtags : ${len} (min 1000)` },
-    { id: 'length_max', ok: len <= 1500, weight: 15, detail: `Longueur hors hashtags : ${len} (max 1500)` },
-    { id: 'mention_crawlers', ok: /@crawlers\.fr/i.test(text), weight: 15, detail: 'Mention @crawlers.fr' },
-    { id: 'no_emoji', ok: !EMOJI_RE.test(text), weight: 10, detail: 'Aucun emoji' },
-    { id: 'no_emdash', ok: !/[—–]/.test(text), weight: 5, detail: 'Aucun tiret cadratin' },
-    { id: 'hook_length', ok: hook.length >= 40 && hook.length <= 140, weight: 10, detail: `Hook de ${hook.length} signes (40-140 pour survivre au "voir plus")` },
-    { id: 'hook_not_generic', ok: !genericHook, weight: 10, detail: 'Hook non générique' },
-    { id: 'hook_signal', ok: hookStrong || hookHasSignal, weight: 5, detail: 'Hook porteur de tension/chiffre' },
-    { id: 'readability', ok: longParagraphs === 0 && paragraphs.length >= 4, weight: 5, detail: `${paragraphs.length} paragraphes, ${longParagraphs} trop longs (>400 signes)` },
-    { id: 'cta', ok: /\?\s*$|commentaire|dis-moi|réponds|teste|essaie|lien en commentaire/i.test(text.slice(-350)), weight: 5, detail: 'CTA en fin de post' },
-  ];
-
-  const score = checks.reduce((s, c) => s + (c.ok ? c.weight : 0), 0);
-  const failed = checks.filter((c) => !c.ok);
-  return { score, checks, failed, hook, length: len, hookStrong };
-}
+/** Audit déterministe partagé avec le générateur (même barème pondéré). */
+const auditText = scoreCaption;
 
 async function fetchPublishedText(urn: string): Promise<string | null> {
   try {
@@ -236,9 +205,12 @@ async function runAudit(admin: ReturnType<typeof createClient>, post: any, dryRu
       break;
     }
 
-    const candidate = String(parsed?.fixed_text ?? '').replace(EMOJI_RE, '').replace(/[—–]/g, ', ').trim();
-    const after = auditText(hashtags.length ? `${candidate}\n\n${hashtags.join(' ')}` : candidate);
-    const valid = !!candidate && after.length >= 1000 && after.length <= 1500 && /@crawlers\.fr/i.test(candidate);
+    // Couche déterministe partagée avant toute évaluation du candidat.
+    const enforced = enforceCaptionCompliance(String(parsed?.fixed_text ?? ''), { hashtags });
+    const candidate = enforced.body;
+    const after = auditText(enforced.fullText);
+    const valid = !!candidate && !enforced.tooShort && after.length <= 1500;
+
     const gain = after.score - bestScore;
 
     iterations.push({

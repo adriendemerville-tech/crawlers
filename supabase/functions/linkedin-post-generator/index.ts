@@ -6,8 +6,21 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { callOpenRouterJson } from '../_shared/openRouterAI.ts';
 import { selectTechDoc } from '../_shared/techDocIndex.ts';
+import { enforceCaptionCompliance, scoreCaption } from '../_shared/linkedinCompliance.ts';
 
 const TEXT_MODEL = 'mistralai/mistral-large-2512';
+// Critique pré-publication : seuil d'acceptation et budget de réécritures ciblées.
+const CRITIQUE_THRESHOLD = 80;
+const MAX_REWRITES = 2;
+const CRITIQUE_SYSTEM = `Tu es éditeur LinkedIn senior pour Crawlers (SEO/GEO, B2B français).
+Tu corriges un post AVANT publication, uniquement sur les manquements listés.
+Tu gardes le fond, les faits, les chiffres et la structure du post d'origine.
+Interdits absolus : emoji, tirets cadratins, caractères ( ) [ ] { } < > * _ ~ |, formules creuses ("révolutionner", "game-changer", "en conclusion").
+Première ligne = hook de 40 à 140 signes, autoportant, avec une tension ou un chiffre.
+Corps de 1000 à 1500 signes hashtags exclus, paragraphes courts, une idée par bloc.
+Le post se termine sur un CTA simple, sans phrase de conclusion.
+Réponds en JSON strict : {"text": "post corrigé complet sans hashtags"}`;
+
 
 const BodySchema = z.object({
   feature_id: z.string().uuid().optional(),
@@ -365,34 +378,79 @@ Retourne UNIQUEMENT un JSON strict :
       return json({ error: 'Generated text too short', text }, 500);
     }
 
-    // Sanity : retire emojis + neutralise tirets cadratins/demi-cadratins (garde-fou anti-IA)
-    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
-    let cleanText = text.replace(emojiRegex, '');
-    // Remplace — et – par des points quand utilisés comme ponctuation
-    cleanText = cleanText.replace(/\s*[—–]\s*/g, '. ');
-    // Retire les tirets simples entourés d'espaces ( - ) utilisés comme incise
-    cleanText = cleanText.replace(/\s+-\s+/g, '. ');
-    cleanText = cleanText.replace(/\.\s*\./g, '.').replace(/[ \t]+/g, ' ').trim();
+    // ── 1. Couche de conformité déterministe (zéro token) ──
+    let compliance = enforceCaptionCompliance(text, { hashtags });
+    let cleanText = compliance.body;
+    let finalHashtags = compliance.hashtags;
+    let critique = scoreCaption(compliance.fullText);
 
-    // Retire les caractères réservés LinkedIn (Little Text Format) qui cassent
-    // le rendu vidéo via /rest/posts. On préserve la mention obligatoire
-    // "@crawlers.fr" (seule occurrence légitime de "@").
-    const CRAWLERS_MENTION_PLACEHOLDER = '\u0000CRAWLERS_MENTION\u0000';
-    cleanText = cleanText.replace(/@crawlers\.fr/gi, CRAWLERS_MENTION_PLACEHOLDER);
-    cleanText = cleanText.replace(/[()\[\]{}<>\\*_~|@]/g, '');
-    cleanText = cleanText.replace(new RegExp(CRAWLERS_MENTION_PLACEHOLDER, 'g'), '@crawlers.fr');
-    cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/ +\n/g, '\n').trim();
-
-    // Garde-fou déterministe : la mention "@crawlers.fr" est obligatoire.
-    // Si le LLM l'a omise, on l'insère sans nouvel appel LLM (économie de tokens) :
-    // substitution de la première occurrence isolée de "Crawlers", sinon phrase ajoutée.
-    if (!/@crawlers\.fr/i.test(cleanText)) {
-      if (/\bCrawlers\b/.test(cleanText)) {
-        cleanText = cleanText.replace(/\bCrawlers\b/, '@crawlers.fr');
-      } else {
-        cleanText = `${cleanText}\n\nOn en parle sur @crawlers.fr.`;
+    // ── 2. Critique AVANT publication : réécritures ciblées tant que le score < seuil ──
+    const critiqueLog: Array<Record<string, unknown>> = [
+      { stage: 'initial', score: critique.score, dimensions: critique.dimensions, changes: compliance.changes },
+    ];
+    let rewrites = 0;
+    while (critique.score < CRITIQUE_THRESHOLD && rewrites < MAX_REWRITES) {
+      rewrites++;
+      const gaps = critique.failed.map((c) => c.detail).join(' | ');
+      let candidate = '';
+      try {
+        const { parsed, usage } = await callOpenRouterJson<{ text: string }>({
+          model: TEXT_MODEL,
+          system: CRITIQUE_SYSTEM,
+          user: [
+            `Score actuel ${critique.score}/100 (seuil ${CRITIQUE_THRESHOLD}).`,
+            `Dimensions : hook ${critique.dimensions.hook}, produit ${critique.dimensions.product}, précision ${critique.dimensions.precision}, style ${critique.dimensions.style}.`,
+            `Manquements à corriger, et uniquement ceux-là : ${gaps || 'hook trop faible'}`,
+            '',
+            'Post à corriger :',
+            '"""',
+            cleanText,
+            '"""',
+            '',
+            'Retourne UNIQUEMENT {"text": "post corrigé complet sans hashtags"}.',
+          ].join('\n'),
+          temperature: 0.4,
+          maxTokens: 1200,
+        });
+        candidate = String(parsed?.text ?? '').trim();
+        tokensUsed = (tokensUsed ?? 0) + (usage?.total_tokens ?? 0);
+      } catch (e) {
+        critiqueLog.push({ stage: `rewrite_${rewrites}`, error: String((e as Error).message ?? e) });
+        break;
       }
+
+      if (!candidate || candidate.length < 200) {
+        critiqueLog.push({ stage: `rewrite_${rewrites}`, rejected: 'too_short' });
+        break;
+      }
+      const nextCompliance = enforceCaptionCompliance(candidate, { hashtags: finalHashtags });
+      const nextScore = scoreCaption(nextCompliance.fullText);
+      critiqueLog.push({
+        stage: `rewrite_${rewrites}`,
+        score: nextScore.score,
+        gain: nextScore.score - critique.score,
+        dimensions: nextScore.dimensions,
+        changes: nextCompliance.changes,
+      });
+      if (nextScore.score <= critique.score) break; // plateau : on garde la meilleure version
+
+      compliance = nextCompliance;
+      cleanText = nextCompliance.body;
+      finalHashtags = nextCompliance.hashtags;
+      critique = nextScore;
     }
+
+    const prePublishReport = {
+      score: critique.score,
+      dimensions: critique.dimensions,
+      threshold: CRITIQUE_THRESHOLD,
+      rewrites,
+      too_short: compliance.tooShort,
+      failed_checks: critique.failed.map((c) => ({ id: c.id, detail: c.detail })),
+      iterations: critiqueLog,
+    };
+
+
 
 
     // Insert draft
@@ -404,7 +462,10 @@ Retourne UNIQUEMENT un JSON strict :
         media_type: mediaType,
         generated_text: cleanText,
         doc_sections_used: usedSections,
-        hashtags,
+        hashtags: finalHashtags,
+        pre_publish_score: critique.score,
+        pre_publish_report: prePublishReport,
+
         llm_tokens_used: tokensUsed,
         llm_model: TEXT_MODEL,
         created_by: userId,

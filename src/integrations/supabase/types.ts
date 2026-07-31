@@ -7510,6 +7510,8 @@ export type Database = {
           media_generation_status: string
           media_type: string
           media_urls: string[]
+          pre_publish_report: Json | null
+          pre_publish_score: number | null
           publish_error: string | null
           published_at: string | null
           scheduled_for: string | null
@@ -7539,6 +7541,8 @@ export type Database = {
           media_generation_status?: string
           media_type?: string
           media_urls?: string[]
+          pre_publish_report?: Json | null
+          pre_publish_score?: number | null
           publish_error?: string | null
           published_at?: string | null
           scheduled_for?: string | null
@@ -7568,6 +7572,8 @@ export type Database = {
           media_generation_status?: string
           media_type?: string
           media_urls?: string[]
+          pre_publish_report?: Json | null
+          pre_publish_score?: number | null
           publish_error?: string | null
           published_at?: string | null
           scheduled_for?: string | null
