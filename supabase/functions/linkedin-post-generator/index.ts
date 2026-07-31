@@ -317,6 +317,12 @@ Deno.serve(async (req) => {
 Tu écris pour des fondateurs, CMO, consultants SEO francophones.
 Tu ne mens pas, tu ne survends pas, tu montres la valeur concrète.
 
+MISSION DU POST — respecte l'ordre de priorité :
+1. SEO / GEO : le post doit être crawlable et citable par les bots des IA. Utilise des entités nommées explicites ("Crawlers", nom exact du module), des chiffres vérifiables issus des données fournies, et des phrases autoportantes qui fonctionnent hors contexte.
+2. Acquisition : un seul appel à l'action par post. Invite à tester Crawlers, commenter, ou échanger — jamais deux CTA concurrents.
+3. Couverture 360 de la plateforme : le sujet est la feature fournie ci-dessous. Reste dessus, montre vraiment ce qu'elle fait.
+4. Personal branding d'Adrien de Volontat : ton cumulatif — précis (données, pas d'approximations), pédagogue (explique le "comment", pas seulement le résultat), humble (assume les limites et les échecs), sympathique (direct, humain, sans jargon d'expert surplombant).
+
 GARDE-FOUS ANTI-IA (strict) :
 - INTERDIT : tirets cadratins (—), tirets demi-cadratins (–) et tirets ( - ) utilisés comme ponctuation. Utilise des points, des virgules, des retours à la ligne.
 - INTERDIT : emoji, "🚀", "✨", couleur bleue IA générique.
@@ -336,9 +342,15 @@ Cible : ${feature.target_audience || 'professionnels SEO/GEO'}
 Format média associé : ${mediaType === 'carousel' ? 'carrousel 6 images' : 'vidéo screencast 20-30s'}
 ${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}
 
+Règles de rédaction liées aux objectifs du module :
+- SEO/GEO : nomme explicitement la feature et "Crawlers". Si tu as un chiffre vérifié de la documentation ou des données, utilise-le. Chaque phrase importante doit être compréhensible seule.
+- Acquisition : un seul CTA en fin de post, sous une des formes : "Dis-moi si tu veux tester", "Ça t'intéresse ?", "Rdv sur @crawlers.fr", "Tu fais comment toi ?".
+- Couverture 360 : ne pars pas sur une généralité SEO/GEO — reste sur la mécanique de ${feature.title}.
+- Personal branding : montre le mécanisme, pas la prouesse. Si la feature a des limites, nomme-les avec humeur. Utilise "on" ou "je" de façon directe.
+
 Structure attendue :
 1. Hook (1 à 2 lignes) — accroche forte, question ou constat contre-intuitif. C'est la ligne la plus importante.
-2. Corps (3 à 5 paragraphes courts) — le problème, la solution Crawlers, un chiffre ou une preuve si pertinent.
+2. Corps (3 à 5 paragraphes courts) — le problème, la solution Crawlers, une preuve chiffrée si disponible.
 3. CTA soft (1 ligne) — invite à tester ou à échanger, sans lien direct.
 4. 4 à 6 hashtags pertinents (SEO, GEO, IA, SaaS français) sur une seule ligne finale.
 
