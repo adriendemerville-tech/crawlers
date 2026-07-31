@@ -6,8 +6,21 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { callOpenRouterJson } from '../_shared/openRouterAI.ts';
 import { selectTechDoc } from '../_shared/techDocIndex.ts';
+import { enforceCaptionCompliance, scoreCaption } from '../_shared/linkedinCompliance.ts';
 
 const TEXT_MODEL = 'mistralai/mistral-large-2512';
+// Critique pré-publication : seuil d'acceptation et budget de réécritures ciblées.
+const CRITIQUE_THRESHOLD = 80;
+const MAX_REWRITES = 2;
+const CRITIQUE_SYSTEM = `Tu es éditeur LinkedIn senior pour Crawlers (SEO/GEO, B2B français).
+Tu corriges un post AVANT publication, uniquement sur les manquements listés.
+Tu gardes le fond, les faits, les chiffres et la structure du post d'origine.
+Interdits absolus : emoji, tirets cadratins, caractères ( ) [ ] { } < > * _ ~ |, formules creuses ("révolutionner", "game-changer", "en conclusion").
+Première ligne = hook de 40 à 140 signes, autoportant, avec une tension ou un chiffre.
+Corps de 1000 à 1500 signes hashtags exclus, paragraphes courts, une idée par bloc.
+Le post se termine sur un CTA simple, sans phrase de conclusion.
+Réponds en JSON strict : {"text": "post corrigé complet sans hashtags"}`;
+
 
 const BodySchema = z.object({
   feature_id: z.string().uuid().optional(),
