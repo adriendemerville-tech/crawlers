@@ -468,7 +468,7 @@ async function generateSiteCrawlPDF(result: SiteCrawlReportData, language: strin
     },
   });
 
-  await addVisualEvidencePage(doc, result.url || `https://${result.domain}`, language);
+  await addVisualEvidencePage(doc, `https://${result.domain}`, language);
 
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
