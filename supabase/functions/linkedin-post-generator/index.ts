@@ -457,20 +457,20 @@ GARDE-FOUS ANTI-IA (strict) :
 - OBLIGATOIRE : un hook fort en toute première ligne (constat, chiffre, question, contre-pied).
 - Phrases courtes. Rythme cassé. Ton direct, humain, un peu sec.`;
 
-    const userPrompt = `Rédige un post LinkedIn qui valorise la fonctionnalité suivante de Crawlers :
+    const userPrompt = `Rédige un post LinkedIn sur le sujet Crawlers suivant :
 
 **${feature.title}**
 Description : ${feature.short_description}
 Angle marketing : ${feature.marketing_angle}
 Cible : ${feature.target_audience || 'professionnels SEO/GEO'}
 Format média associé : ${mediaType === 'carousel' ? 'carrousel 6 images' : 'vidéo screencast 20-30s'}
-${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}${historyBlock}
+${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${topicBlock}${blogBlock}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}${historyBlock}
 
 Règles de rédaction liées aux objectifs du module :
-- SEO/GEO : nomme explicitement la feature et "Crawlers". Si tu as un chiffre vérifié de la documentation ou des données, utilise-le. Chaque phrase importante doit être compréhensible seule.
+- SEO/GEO : nomme explicitement le sujet et "Crawlers". Si tu as un chiffre vérifié de la documentation ou des données, utilise-le. Chaque phrase importante doit être compréhensible seule.
 - Acquisition : un seul CTA en fin de post, sous une des formes : "Dis-moi si tu veux tester", "Ça t'intéresse ?", "Rdv sur @crawlers.fr", "Tu fais comment toi ?".
-- Couverture 360 : ne pars pas sur une généralité SEO/GEO — reste sur la mécanique de ${feature.title}.
-- Personal branding : montre le mécanisme, pas la prouesse. Si la feature a des limites, nomme-les avec humeur. Utilise "on" ou "je" de façon directe.
+- Couverture 360 : ne pars pas sur une généralité SEO/GEO — reste sur ${feature.title} et sur le type de sujet indiqué ci-dessus.
+- Personal branding : montre le mécanisme, pas la prouesse. Si le sujet a des limites, nomme-les avec humeur. Utilise "on" ou "je" de façon directe.
 
 Structure attendue :
 1. Hook (1 à 2 lignes) — accroche forte, question ou constat contre-intuitif. C'est la ligne la plus importante.
