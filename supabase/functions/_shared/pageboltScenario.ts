@@ -225,26 +225,45 @@ export function fallbackScenario(url: string): ScenarioStep[] {
   ];
 }
 
-/** Étapes pour /v1/video : les screenshots ne sont pas supportés, on les remplace par une pause filmée. */
+/**
+ * Étapes pour /v1/video : les screenshots ne sont pas supportés (remplacés par une pause filmée)
+ * et chaque clic reçoit un zoom cinématique si le scénario n'en fournit pas.
+ * Niveaux alternés 1.4 / 1.6 / 1.5 pour éviter l'effet monotone, dernier clic à 1.7 (punchline).
+ */
+const ZOOM_CYCLE = [1.4, 1.6, 1.5];
+
 export function toVideoSteps(scenario: ScenarioStep[]): ScenarioStep[] {
   const out: ScenarioStep[] = [];
+  let clickIndex = 0;
+  const totalClicks = scenario.filter((s) => s.action === 'click').length;
+
   for (const s of scenario) {
     if (s.action === 'screenshot') {
       out.push({ action: 'wait', ms: 1600, live: true, note: s.note ?? s.name });
       continue;
     }
-    out.push(s.action === 'wait' ? { ...s, live: true } : s);
+    if (s.action === 'wait') {
+      out.push({ ...s, live: true });
+    } else if (s.action === 'click') {
+      const isLast = clickIndex === totalClicks - 1;
+      const level = s.zoom?.level ?? (isLast ? 1.7 : ZOOM_CYCLE[clickIndex % ZOOM_CYCLE.length]);
+      out.push({ ...s, zoom: { enabled: s.zoom?.enabled !== false, level } });
+      clickIndex++;
+    } else {
+      out.push(s);
+    }
     if (out.length >= MAX_STEPS) break;
   }
   return out.slice(0, MAX_STEPS);
 }
 
-/** Étapes pour /v1/sequence : garantit au moins une capture. */
+/** Étapes pour /v1/sequence : garantit au moins une capture (pas de zoom : non supporté). */
 export function toSequenceSteps(scenario: ScenarioStep[]): ScenarioStep[] {
   const steps = scenario.map((s) => {
-    const { live: _live, ...rest } = s;
+    const { live: _live, zoom: _zoom, ...rest } = s;
     return rest;
   });
+
   if (!steps.some((s) => s.action === 'screenshot')) {
     steps.push({ action: 'screenshot', name: 'vue-ensemble' });
   }
