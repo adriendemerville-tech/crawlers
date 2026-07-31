@@ -14,6 +14,7 @@ import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '../_shared/pageboltCapture.ts';
 
 /**
  * Edge Function: Marina
@@ -1358,7 +1359,7 @@ interface MarinaBranding {
 
 // ─── Compile multiple section HTMLs into one final report ───
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string },
   lang: string,
   domain: string,
   url: string,
@@ -1428,6 +1429,8 @@ function compileMarinaReport(
     </div>
 
     ${introHtml}
+
+    ${sectionHTMLs.visual || ''}
 
     <!-- Table of Contents -->
     <div class="toc">
@@ -2384,6 +2387,25 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         }
       }
 
+      // ─── Step 3bis: Preuve visuelle du site prospect (Pagebolt, non bloquant) ───
+      let visualCapture: VisualCapture | null = null;
+      try {
+        visualCapture = await captureSiteVisual({
+          url,
+          service: sb,
+          bucket: 'site-captures',
+          pathPrefix: `marina/${jobId}`,
+          signedTtl: 7 * 24 * 60 * 60,
+        });
+        if (visualCapture.errors.length > 0) {
+          console.warn('[Marina] Visual capture partielle:', visualCapture.errors.join(' | '));
+        }
+        if (!visualCapture.desktop_url && !visualCapture.mobile_url) visualCapture = null;
+      } catch (capErr) {
+        console.warn('[Marina] Visual capture failed (non-fatal):', capErr);
+        visualCapture = null;
+      }
+
       // ─── Step 4: Generate HTML reports ───
       let html: string;
       
@@ -2512,7 +2534,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         await updateProgress(90, 'generating_report');
 
         html = compileMarinaReport(
-          { crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML, indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML },
+          {
+            crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML,
+            indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML,
+            visual: buildVisualEvidenceHtml(visualCapture, detectedLang),
+          },
           detectedLang, domain, url, marinaBranding,
         );
 
@@ -2571,6 +2597,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         strategic_score: strategicData?.overallScore || null,
         cocoon_nodes: cocoonResult?.stats?.nodes_count || null,
         cocoon_clusters: cocoonResult?.stats?.clusters_count || null,
+        visual_capture: visualCapture,
         generated_at: new Date().toISOString(),
       };
 

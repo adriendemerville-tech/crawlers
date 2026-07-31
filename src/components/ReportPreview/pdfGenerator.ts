@@ -5,6 +5,7 @@ import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { SiteCrawlReportData } from './reportHtmlGenerator';
+import { addVisualEvidencePage } from '@/utils/pdfVisualCapture';
 
 type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'site_crawl';
 
@@ -300,6 +301,8 @@ async function generateCrawlersPDF(result: CrawlResult, language: string) {
     styles: { fontSize: 9 },
   });
 
+  await addVisualEvidencePage(doc, result.url, language);
+
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
   doc.save(getReportFilename(result.url, 'crawl', 'pdf'));
@@ -335,6 +338,8 @@ async function generateGeoPDF(result: GeoResult, language: string) {
     styles: { fontSize: 9 },
     columnStyles: { 1: { cellWidth: 60 } },
   });
+
+  await addVisualEvidencePage(doc, result.url, language);
 
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
@@ -462,6 +467,8 @@ async function generateSiteCrawlPDF(result: SiteCrawlReportData, language: strin
       4: { cellWidth: 55 },
     },
   });
+
+  await addVisualEvidencePage(doc, `https://${result.domain}`, language);
 
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
