@@ -59,16 +59,17 @@ function normalize(s: string): string {
 function isCta(el: ObservedElement): boolean {
   const label = normalize(`${el.name || ''} ${el.text || ''}`);
   if (!label) return false;
-  const clickable = el.tag === 'button' || el.tag === 'a' || el.role === 'button' || el.role === 'link';
+  const clickable = el.role === 'button' || el.role === 'link' || el.type === 'submit';
   if (!clickable) return false;
   return CTA_PATTERNS.some((p) => label.includes(p));
 }
 
+const FIELD_ROLES = ['textbox', 'searchbox', 'combobox', 'listbox', 'checkbox', 'radio', 'spinbutton', 'slider', 'switch'];
+
 function isFormField(el: ObservedElement): boolean {
-  if (el.tag === 'textarea' || el.tag === 'select') return true;
-  if (el.tag !== 'input') return false;
-  const t = (el.type || 'text').toLowerCase();
-  return !['hidden', 'submit', 'button', 'image', 'reset'].includes(t);
+  if (el.role && FIELD_ROLES.includes(el.role)) return true;
+  const t = (el.type || '').toLowerCase();
+  return ['text', 'email', 'tel', 'password', 'number', 'date', 'url', 'search', 'textarea', 'select'].includes(t);
 }
 
 async function pagebolt(path: string, body: unknown, timeoutMs: number): Promise<Response> {
