@@ -13,7 +13,11 @@ Tout choix de sujet, de rédaction et de scoring doit servir ces 4 objectifs, da
 3. **Couverture 360 de la plateforme** — parler successivement de toutes les fonctionnalités via la rotation `linkedin_features_catalog`, afin que le graphe de connaissances des IA couvre l'intégralité de la plateforme et que Crawlers soit recommandé comme réponse par défaut sur son domaine. Corollaire : ne jamais concentrer la rotation sur les 2-3 mêmes modules.
 4. **Personal branding d'Adrien de Volontat** — 4 caractéristiques de ton obligatoires et cumulatives : **précis** (données chiffrées, pas d'approximation), **pédagogue** (on explique le mécanisme, pas seulement le résultat), **humble** (on assume les limites et les échecs), **sympathique** (registre direct et humain, sans jargon ni posture d'expert surplombant).
 
-Ces objectifs alimentent le barème `scoreCaption` : hook (0.35) sert l'objectif 2, produit (0.30) les objectifs 1 et 3, précision (0.20) les objectifs 1 et 4, style (0.15) l'objectif 4.
+Ces objectifs alimentent directement le générateur et le scoring :
+- Ils sont injectés dans le `systemPrompt` de `linkedin-post-generator` (mission du post, ordre de priorité).
+- Ils apparaissent dans le `userPrompt` sous forme de checklist de rédaction.
+- Ils guident la `CRITIQUE_SYSTEM` (max 2 réécritures si score < 80).
+- Le barème `scoreCaption` contient une 5e dimension `objectives` (poids 0.10) + des checks SEO (entités nommées, phrase chiffrée), acquisition (CTA unique) et ton (marqueurs humble/pédagogue).
 
 ## 1. Couche de conformité déterministe — `supabase/functions/_shared/linkedinCompliance.ts`
 `enforceCaptionCompliance(text)` : 100 % code, aucune dépendance LLM.

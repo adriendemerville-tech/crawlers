@@ -163,7 +163,7 @@ export interface Check { id: string; ok: boolean; weight: number; detail: string
 
 export interface CaptionScore {
   score: number;
-  dimensions: { hook: number; product: number; precision: number; style: number };
+  dimensions: { hook: number; product: number; precision: number; style: number; objectives: number };
   checks: Check[];
   failed: Check[];
   hook: string;
@@ -175,6 +175,10 @@ const GENERIC_HOOK_RE =
   /^(dans cet article|aujourd'?hui,? je|je suis (ravi|heureux)|petit (post|retour)|bonjour à tous|nouvelle semaine|nous sommes fiers)/i;
 const TENSION_RE =
   /\d|%|jamais|personne|arrêt|stop|erreur|mythe|pourquoi|combien|invisible|ignor|aucun|zéro|faux/i;
+const CTA_RE = /\?\s*$|dis-moi|réponds|commente|teste|essaie|essayer|échange|rdv|retrouve|découvre/i;
+const HUMBLE_RE = /limite|biais|attention|ne garantit pas|pas magique|ne règle pas|encore perfectible|parfois|souvent/i;
+const PEDAGOGUE_RE = /en fait|pourquoi|comment|mécanisme|étape|d'abord|ensuite|enfin|ça signifie/i;
+const DATA_RE = /\d{2,}|\d+%|\d+\s*(€|euros?|jours?|mois|visites?|clics?|pages?|mots?)/i;
 
 function dim(checks: Check[]): number {
   const total = checks.reduce((s, c) => s + c.weight, 0);
@@ -204,21 +208,30 @@ export function scoreCaption(fullText: string): CaptionScore {
     { id: 'hook_signal', ok: TENSION_RE.test(hook), weight: 25, detail: 'Hook porteur de tension ou de chiffre' },
   ];
   const productChecks: Check[] = [
-    { id: 'mention_crawlers', ok: new RegExp(MENTION.replace('.', '\\.'), 'i').test(text), weight: 45, detail: `Mention ${MENTION}` },
+    { id: 'mention_crawlers', ok: new RegExp(MENTION.replace('.', '\\.'), 'i').test(text), weight: 35, detail: `Mention ${MENTION}` },
     { id: 'product_named', ok: /crawlers/i.test(body), weight: 25, detail: 'Produit nommé dans le corps' },
-    { id: 'cta', ok: /\?\s*$|commentaire|dis-moi|réponds|teste|essaie|essayer|échange/i.test(body.slice(-350)), weight: 30, detail: 'CTA en fin de post' },
+    { id: 'cta', ok: CTA_RE.test(body.slice(-350)), weight: 25, detail: 'CTA en fin de post' },
+    { id: 'single_cta', ok: (body.match(CTA_RE) || []).length <= 2, weight: 15, detail: 'Un seul appel à l action' },
   ];
   const precisionChecks: Check[] = [
-    { id: 'length_min', ok: len >= MIN_BODY_CHARS, weight: 45, detail: `Longueur hors hashtags : ${len} (min ${MIN_BODY_CHARS})` },
-    { id: 'length_max', ok: len <= MAX_BODY_CHARS, weight: 30, detail: `Longueur hors hashtags : ${len} (max ${MAX_BODY_CHARS})` },
-    { id: 'hashtags', ok: splitHashtags(text).hashtags.length >= 3, weight: 25, detail: 'Au moins 3 hashtags' },
+    { id: 'length_min', ok: len >= MIN_BODY_CHARS, weight: 35, detail: `Longueur hors hashtags : ${len} (min ${MIN_BODY_CHARS})` },
+    { id: 'length_max', ok: len <= MAX_BODY_CHARS, weight: 25, detail: `Longueur hors hashtags : ${len} (max ${MAX_BODY_CHARS})` },
+    { id: 'hashtags', ok: splitHashtags(text).hashtags.length >= 3, weight: 20, detail: 'Au moins 3 hashtags' },
+    { id: 'data_signal', ok: DATA_RE.test(body), weight: 20, detail: 'Preuve chiffrée ou métrique propre' },
   ];
   const styleChecks: Check[] = [
-    { id: 'no_emoji', ok: !EMOJI_RE.test(text), weight: 25, detail: 'Aucun emoji' },
-    { id: 'no_emdash', ok: !/[—–]/.test(text), weight: 20, detail: 'Aucun tiret cadratin' },
-    { id: 'no_reserved', ok: !/[()[\]{}<>\\*_~|]/.test(body), weight: 15, detail: 'Aucun caractère réservé LinkedIn' },
-    { id: 'no_cliche', ok: cliches.length === 0, weight: 20, detail: cliches.length ? `Tics LLM : ${cliches.join(', ')}` : 'Aucun tic LLM' },
+    { id: 'no_emoji', ok: !EMOJI_RE.test(text), weight: 20, detail: 'Aucun emoji' },
+    { id: 'no_emdash', ok: !/[—–]/.test(text), weight: 15, detail: 'Aucun tiret cadratin' },
+    { id: 'no_reserved', ok: !/[()[\]{}<>\\*_~|]/.test(body), weight: 10, detail: 'Aucun caractère réservé LinkedIn' },
+    { id: 'no_cliche', ok: cliches.length === 0, weight: 15, detail: cliches.length ? `Tics LLM : ${cliches.join(', ')}` : 'Aucun tic LLM' },
     { id: 'readability', ok: longParagraphs === 0 && paragraphs.length >= 4, weight: 20, detail: `${paragraphs.length} paragraphes, ${longParagraphs} trop longs` },
+    { id: 'humble_tone', ok: HUMBLE_RE.test(body), weight: 10, detail: 'Limites ou nuances assumées' },
+    { id: 'pedagogue_tone', ok: PEDAGOGUE_RE.test(body), weight: 10, detail: 'Explication du mécanisme' },
+  ];
+  const objectivesChecks: Check[] = [
+    { id: 'seo_named_entities', ok: /Crawlers|@(crawlers\.fr|Crawlers)/i.test(body), weight: 40, detail: 'Entité Crawlers explicitement nommée pour SEO/GEO' },
+    { id: 'seo_quotable', ok: DATA_RE.test(body) || /\d/.test(hook), weight: 30, detail: 'Phrase chiffrée autoportante pour les bots IA' },
+    { id: 'acquisition_signal', ok: CTA_RE.test(body.slice(-300)), weight: 30, detail: 'Signal d acquisition clair en fin de post' },
   ];
 
   const dimensions = {
@@ -226,12 +239,13 @@ export function scoreCaption(fullText: string): CaptionScore {
     product: dim(productChecks),
     precision: dim(precisionChecks),
     style: dim(styleChecks),
+    objectives: dim(objectivesChecks),
   };
   const score = Math.round(
-    0.35 * dimensions.hook + 0.3 * dimensions.product + 0.2 * dimensions.precision + 0.15 * dimensions.style,
+    0.3 * dimensions.hook + 0.25 * dimensions.product + 0.2 * dimensions.precision + 0.15 * dimensions.style + 0.1 * dimensions.objectives,
   );
 
-  const checks = [...hookChecks, ...productChecks, ...precisionChecks, ...styleChecks];
+  const checks = [...hookChecks, ...productChecks, ...precisionChecks, ...styleChecks, ...objectivesChecks];
   return {
     score,
     dimensions,
