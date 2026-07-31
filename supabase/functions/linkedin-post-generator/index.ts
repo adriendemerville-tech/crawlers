@@ -365,34 +365,79 @@ Retourne UNIQUEMENT un JSON strict :
       return json({ error: 'Generated text too short', text }, 500);
     }
 
-    // Sanity : retire emojis + neutralise tirets cadratins/demi-cadratins (garde-fou anti-IA)
-    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
-    let cleanText = text.replace(emojiRegex, '');
-    // Remplace — et – par des points quand utilisés comme ponctuation
-    cleanText = cleanText.replace(/\s*[—–]\s*/g, '. ');
-    // Retire les tirets simples entourés d'espaces ( - ) utilisés comme incise
-    cleanText = cleanText.replace(/\s+-\s+/g, '. ');
-    cleanText = cleanText.replace(/\.\s*\./g, '.').replace(/[ \t]+/g, ' ').trim();
+    // ── 1. Couche de conformité déterministe (zéro token) ──
+    let compliance = enforceCaptionCompliance(text, { hashtags });
+    let cleanText = compliance.body;
+    let finalHashtags = compliance.hashtags;
+    let critique = scoreCaption(compliance.fullText);
 
-    // Retire les caractères réservés LinkedIn (Little Text Format) qui cassent
-    // le rendu vidéo via /rest/posts. On préserve la mention obligatoire
-    // "@crawlers.fr" (seule occurrence légitime de "@").
-    const CRAWLERS_MENTION_PLACEHOLDER = '\u0000CRAWLERS_MENTION\u0000';
-    cleanText = cleanText.replace(/@crawlers\.fr/gi, CRAWLERS_MENTION_PLACEHOLDER);
-    cleanText = cleanText.replace(/[()\[\]{}<>\\*_~|@]/g, '');
-    cleanText = cleanText.replace(new RegExp(CRAWLERS_MENTION_PLACEHOLDER, 'g'), '@crawlers.fr');
-    cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/ +\n/g, '\n').trim();
-
-    // Garde-fou déterministe : la mention "@crawlers.fr" est obligatoire.
-    // Si le LLM l'a omise, on l'insère sans nouvel appel LLM (économie de tokens) :
-    // substitution de la première occurrence isolée de "Crawlers", sinon phrase ajoutée.
-    if (!/@crawlers\.fr/i.test(cleanText)) {
-      if (/\bCrawlers\b/.test(cleanText)) {
-        cleanText = cleanText.replace(/\bCrawlers\b/, '@crawlers.fr');
-      } else {
-        cleanText = `${cleanText}\n\nOn en parle sur @crawlers.fr.`;
+    // ── 2. Critique AVANT publication : réécritures ciblées tant que le score < seuil ──
+    const critiqueLog: Array<Record<string, unknown>> = [
+      { stage: 'initial', score: critique.score, dimensions: critique.dimensions, changes: compliance.changes },
+    ];
+    let rewrites = 0;
+    while (critique.score < CRITIQUE_THRESHOLD && rewrites < MAX_REWRITES) {
+      rewrites++;
+      const gaps = critique.failed.map((c) => c.detail).join(' | ');
+      let candidate = '';
+      try {
+        const { parsed, usage } = await callOpenRouterJson<{ text: string }>({
+          model: TEXT_MODEL,
+          system: CRITIQUE_SYSTEM,
+          user: [
+            `Score actuel ${critique.score}/100 (seuil ${CRITIQUE_THRESHOLD}).`,
+            `Dimensions : hook ${critique.dimensions.hook}, produit ${critique.dimensions.product}, précision ${critique.dimensions.precision}, style ${critique.dimensions.style}.`,
+            `Manquements à corriger, et uniquement ceux-là : ${gaps || 'hook trop faible'}`,
+            '',
+            'Post à corriger :',
+            '"""',
+            cleanText,
+            '"""',
+            '',
+            'Retourne UNIQUEMENT {"text": "post corrigé complet sans hashtags"}.',
+          ].join('\n'),
+          temperature: 0.4,
+          maxTokens: 1200,
+        });
+        candidate = String(parsed?.text ?? '').trim();
+        tokensUsed = (tokensUsed ?? 0) + (usage?.total_tokens ?? 0);
+      } catch (e) {
+        critiqueLog.push({ stage: `rewrite_${rewrites}`, error: String((e as Error).message ?? e) });
+        break;
       }
+
+      if (!candidate || candidate.length < 200) {
+        critiqueLog.push({ stage: `rewrite_${rewrites}`, rejected: 'too_short' });
+        break;
+      }
+      const nextCompliance = enforceCaptionCompliance(candidate, { hashtags: finalHashtags });
+      const nextScore = scoreCaption(nextCompliance.fullText);
+      critiqueLog.push({
+        stage: `rewrite_${rewrites}`,
+        score: nextScore.score,
+        gain: nextScore.score - critique.score,
+        dimensions: nextScore.dimensions,
+        changes: nextCompliance.changes,
+      });
+      if (nextScore.score <= critique.score) break; // plateau : on garde la meilleure version
+
+      compliance = nextCompliance;
+      cleanText = nextCompliance.body;
+      finalHashtags = nextCompliance.hashtags;
+      critique = nextScore;
     }
+
+    const prePublishReport = {
+      score: critique.score,
+      dimensions: critique.dimensions,
+      threshold: CRITIQUE_THRESHOLD,
+      rewrites,
+      too_short: compliance.tooShort,
+      failed_checks: critique.failed.map((c) => ({ id: c.id, detail: c.detail })),
+      iterations: critiqueLog,
+    };
+
+
 
 
     // Insert draft
