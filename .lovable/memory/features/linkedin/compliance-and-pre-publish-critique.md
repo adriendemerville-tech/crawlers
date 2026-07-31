@@ -47,3 +47,13 @@ Connexion « Adrien's LinkedIn » (OAuth2), liée au projet, gateway actif. Secr
 - **Commentaires impossibles** : `POST /v2/socialActions/{urn}/comments` → 404 (domain authorization), `POST /rest/socialActions/{urn}/comments` (LinkedIn-Version 202510) → 403 `ACCESS_DENIED` sur `partnerApiSocialActions.CREATE`. Ces endpoints relèvent du produit **Community Management API**, non activé sur l'app LinkedIn.
 - Conséquence : la tactique du « premier commentaire porteur du lien sortant » n'est pas automatisable. Le lien reste dans le post ou est posté manuellement. Ne pas re-tenter l'implémentation tant que Community Management API n'est pas accordé.
 - Lecture des commentaires également bloquée (`r_member_social` / `r_organization_social` absents) : pas de modération ni de réponse automatique.
+
+## 6. Emoji autorisés (31/07/2026)
+Exception explicite à la charte Crawlers (« emoji interdits ») **pour les posts LinkedIn uniquement**.
+- `_shared/linkedinCompliance.ts` : `MAX_EMOJI = 4`. `stripForbiddenChars` conserve les emoji et ne supprime que ceux au-delà du plafond. Check `no_emoji` remplacé par `emoji_moderate` (dimension style, poids 20).
+- Prompts alignés : génération, critique pré-publication (`CRITIQUE_SYSTEM`) et `linkedin-post-auditor` demandent 2 à 4 emoji maximum, jamais décoratifs.
+
+## 7. Anti-redondance éditoriale (31/07/2026)
+`linkedin-post-generator` lit les **10 derniers posts** de `linkedin_scheduled_posts` (embed `linkedin_features_catalog(title)`) via `fetchPostHistory` :
+- **Rotation des features** : une feature traitée dans les 4 derniers posts est pénalisée de 80 à 35 points dans le score de sélection (dégressif selon l'ancienneté).
+- **Bloc prompt `buildHistoryBriefing`** : date, feature, hook et angle des 8 derniers posts + hashtags saturés. Règles imposées : ne pas reprendre un hook proche, changer de type d'accroche vs les 2 derniers posts, traiter un autre cas d'usage si la feature revient, varier au moins 3 hashtags, ne pas recycler les mêmes exemples.
