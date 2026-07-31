@@ -312,7 +312,6 @@ Deno.serve(handleRequest(async (req) => {
     maxElements: 150,
     includeRects: true,
     viewportDevice: 'iphone_14_pro',
-    viewportMobile: true,
     blockAds: true,
     blockTrackers: true,
   }, 60_000);
