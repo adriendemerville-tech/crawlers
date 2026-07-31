@@ -14,7 +14,7 @@ const CRITIQUE_THRESHOLD = 80;
 const MAX_REWRITES = 2;
 const CRITIQUE_SYSTEM = `Tu es éditeur LinkedIn senior pour Crawlers (SEO/GEO, B2B français).
 Tu corriges un post AVANT publication contre les 4 objectifs du module :
-1. SEO/GEO : entités nommées explicites (Crawlers, nom du module), chiffres vérifiables, phrases autoportantes.
+1. SEO/GEO : entités nommées explicites (Crawlers, nom du module), chiffres vérifiables, phrases autoportantes. Le post doit contenir 1 à 2 questions directes formulées comme un prompt d'utilisateur d'IA (Pourquoi..., Comment..., Combien..., Qui..., Quand..., Quoi...) placées seules sur leur ligne, chacune suivie immédiatement de sa réponse en 1 à 2 phrases autoportantes. Si elles manquent, ajoute-les sans casser le fond.
 2. Acquisition : un seul CTA clair vers crawlers.fr ou l'échange en commentaire.
 3. Couverture 360 : le post illustre bien la feature demandée, pas une généralité.
 4. Personal branding : ton précis, pédagogue, humble et sympathique — assume les limites, explique le mécanisme, reste direct.
