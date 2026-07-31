@@ -163,7 +163,7 @@ export interface Check { id: string; ok: boolean; weight: number; detail: string
 
 export interface CaptionScore {
   score: number;
-  dimensions: { hook: number; product: number; precision: number; style: number };
+  dimensions: { hook: number; product: number; precision: number; style: number; objectives: number };
   checks: Check[];
   failed: Check[];
   hook: string;
