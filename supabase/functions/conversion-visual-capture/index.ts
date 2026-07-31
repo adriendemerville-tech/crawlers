@@ -264,8 +264,6 @@ Deno.serve(handleRequest(async (req) => {
     includeRects: true,
     includeScreenshot: true,
     screenshotFormat: 'webp',
-    width: DESKTOP_VIEWPORT.width,
-    height: DESKTOP_VIEWPORT.height,
     blockChats: false,
     blockAds: true,
     blockTrackers: true,
@@ -281,7 +279,8 @@ Deno.serve(handleRequest(async (req) => {
   const desktopElements: ObservedElement[] = Array.isArray(observed.elements) ? observed.elements : [];
 
   let desktopUrl: string | null = null;
-  const desktopB64: string | undefined = observed.screenshot || observed.screenshot_base64 || observed.image;
+  const desktopB64: string | undefined =
+    observed.screenshot?.base64 ?? (typeof observed.screenshot === 'string' ? observed.screenshot : undefined);
   if (typeof desktopB64 === 'string' && desktopB64.length > 100) {
     desktopUrl = await uploadBytes(service, `${prefix}/desktop.webp`, b64ToBytes(desktopB64.replace(/^data:[^,]+,/, '')), 'image/webp');
   }
