@@ -205,9 +205,12 @@ async function runAudit(admin: ReturnType<typeof createClient>, post: any, dryRu
       break;
     }
 
-    const candidate = String(parsed?.fixed_text ?? '').replace(EMOJI_RE, '').replace(/[—–]/g, ', ').trim();
-    const after = auditText(hashtags.length ? `${candidate}\n\n${hashtags.join(' ')}` : candidate);
-    const valid = !!candidate && after.length >= 1000 && after.length <= 1500 && /@crawlers\.fr/i.test(candidate);
+    // Couche déterministe partagée avant toute évaluation du candidat.
+    const enforced = enforceCaptionCompliance(String(parsed?.fixed_text ?? ''), { hashtags });
+    const candidate = enforced.body;
+    const after = auditText(enforced.fullText);
+    const valid = !!candidate && !enforced.tooShort && after.length <= 1500;
+
     const gain = after.score - bestScore;
 
     iterations.push({
