@@ -339,6 +339,8 @@ async function generateGeoPDF(result: GeoResult, language: string) {
     columnStyles: { 1: { cellWidth: 60 } },
   });
 
+  await addVisualEvidencePage(doc, result.url, language);
+
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
   doc.save(getReportFilename(result.url, 'geo', 'pdf'));
