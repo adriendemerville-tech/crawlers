@@ -20,7 +20,7 @@ const PAGEBOLT_BASE = 'https://pagebolt.dev/api/v1';
 const BUCKET = 'conversion-captures';
 const SIGNED_TTL = 60 * 60 * 24 * 30; // 30 jours
 
-const DESKTOP_VIEWPORT = { width: 1440, height: 900 };
+const DESKTOP_VIEWPORT = { width: 1280, height: 720 }; // défaut /v1/observe
 const MOBILE_VIEWPORT = { width: 390, height: 844 };
 const MIN_TAP_TARGET = 44; // px — seuil tactile WCAG/Apple
 
