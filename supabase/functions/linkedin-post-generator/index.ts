@@ -206,12 +206,13 @@ interface PastPost {
   angle: string;
   hashtags: string[];
   created_at: string;
+  topic_type: string | null;
 }
 
 async function fetchPostHistory(admin: any, limit = 10): Promise<PastPost[]> {
   const { data, error } = await admin
     .from('linkedin_scheduled_posts')
-    .select('feature_id, generated_text, edited_text, hashtags, created_at, linkedin_features_catalog(title)')
+    .select('feature_id, generated_text, edited_text, hashtags, created_at, linkedin_features_catalog(title, topic_type)')
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) {
@@ -224,6 +225,7 @@ async function fetchPostHistory(admin: any, limit = 10): Promise<PastPost[]> {
     return {
       feature_id: row.feature_id ?? null,
       feature_title: row.linkedin_features_catalog?.title ?? null,
+      topic_type: row.linkedin_features_catalog?.topic_type ?? null,
       hook: (lines[0] ?? '').slice(0, 160),
       angle: lines.slice(1, 3).join(' ').slice(0, 200),
       hashtags: Array.isArray(row.hashtags) ? row.hashtags : [],
