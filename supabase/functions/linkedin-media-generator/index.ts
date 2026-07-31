@@ -91,6 +91,8 @@ Deno.serve(async (req) => {
     try {
       const rawMediaUrls: string[] = [];
       const predictionIds: string[] = [];
+      const readyUrls: string[] = [];
+      let mediaEngine = 'wavespeed';
 
       if (post.media_type === 'carousel') {
         const model = image_model || DEFAULT_IMAGE_MODEL;
@@ -104,27 +106,47 @@ Deno.serve(async (req) => {
           predictionIds.push(r.predictionId);
         }
       } else if (post.media_type === 'video') {
-        const model = video_model || DEFAULT_VIDEO_MODEL;
-        // Le plan de capture (route + étapes) documenté dans le catalogue oriente
-        // la vidéo vers l'outil en usage réel, pas vers une landing page.
         const steps = Array.isArray(feature.capture_steps) ? feature.capture_steps.map(String) : [];
-        const scenario = steps.length
-          ? `Screencast style sequence of a SaaS dashboard in real use: ${steps.join(', then ')}.`
-          : `Screencast style sequence of a SaaS dashboard in real use showing ${angle}.`;
-        const prompt = `${title}. ${scenario} ${BRAND_STYLE}. Smooth subtle camera move, professional B2B SaaS aesthetic.`;
-        const { url, predictionId } = await runWavespeed(model, {
-          prompt,
-          duration: 5,
-          aspect_ratio: '16:9',
-        });
-        rawMediaUrls.push(url);
-        predictionIds.push(predictionId);
+
+        // 1) Screencast RÉEL de l'outil via Pagebolt (priorité).
+        if (video_source === 'pagebolt' && PAGEBOLT_API_KEY && feature.capture_route) {
+          try {
+            const authState = await buildAuthState(admin);
+            const bytes = await runPagebolt(String(feature.capture_route), title, steps, authState);
+            const url = await uploadBytes(admin, post_id, bytes, 'mp4', 'video/mp4', 0);
+            readyUrls.push(url);
+            mediaEngine = 'pagebolt';
+          } catch (e) {
+            console.warn('[linkedin-media-generator] pagebolt failed, fallback AI video', String(e));
+          }
+        }
+
+        // 2) Fallback : vidéo générative WaveSpeed.
+        if (!readyUrls.length) {
+          if (!WAVESPEED_API_KEY) throw new Error('Pagebolt failed and WAVESPEED_API_KEY missing');
+          const model = video_model || DEFAULT_VIDEO_MODEL;
+          const scenario = steps.length
+            ? `Screencast style sequence of a SaaS dashboard in real use: ${steps.join(', then ')}.`
+            : `Screencast style sequence of a SaaS dashboard in real use showing ${angle}.`;
+          const prompt = `${title}. ${scenario} ${BRAND_STYLE}. Smooth subtle camera move, professional B2B SaaS aesthetic.`;
+          const { url, predictionId } = await runWavespeed(model, {
+            prompt,
+            duration: 5,
+            aspect_ratio: '16:9',
+          });
+          rawMediaUrls.push(url);
+          predictionIds.push(predictionId);
+        }
       } else {
         return json({ error: `Unsupported media_type: ${post.media_type}` }, 400);
       }
 
       // Persiste dans Storage pour éviter que les URLs WaveSpeed expirent avant la publication.
-      const mediaUrls = await persistMedia(admin, post_id, rawMediaUrls, post.media_type);
+      const mediaUrls = readyUrls.length
+        ? readyUrls
+        : await persistMedia(admin, post_id, rawMediaUrls, post.media_type);
+      console.log('[linkedin-media-generator] engine', mediaEngine, 'assets', mediaUrls.length);
+
 
 
 
