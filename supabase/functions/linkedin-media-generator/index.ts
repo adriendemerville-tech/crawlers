@@ -8,8 +8,6 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import {
   sanitizeScenario,
-  inspectRoute,
-  buildScenarioFromInspection,
   fallbackScenario,
   toVideoSteps,
   toSequenceSteps,
@@ -114,7 +112,7 @@ Deno.serve(async (req) => {
         if (media_source !== 'ai' && PAGEBOLT_API_KEY && feature.capture_route) {
           try {
             const authState = await buildAuthState(admin);
-            const scenario = await resolveScenario(admin, feature, `${title} ${angle}`, authState);
+            const scenario = await resolveScenario(admin, feature, `${title} ${angle}`);
             const { outputs } = await runSequence(
               PAGEBOLT_API_KEY,
               toSequenceSteps(scenario).slice(0, 20),
@@ -153,7 +151,7 @@ Deno.serve(async (req) => {
         if (video_source === 'pagebolt' && PAGEBOLT_API_KEY && feature.capture_route) {
           try {
             const authState = await buildAuthState(admin);
-            const scenario = await resolveScenario(admin, feature, `${title} ${angle}`, authState);
+            const scenario = await resolveScenario(admin, feature, `${title} ${angle}`);
             const bytes = await runPagebolt(toVideoSteps(scenario), authState);
             const url = await uploadBytes(admin, post_id, bytes, 'mp4', 'video/mp4', 0);
             readyUrls.push(url);
@@ -269,46 +267,32 @@ async function buildAuthState(admin: ReturnType<typeof createClient>): Promise<A
 }
 
 /**
- * Résout le scénario déterministe à exécuter pour cette feature :
- *  1. `capture_scenario` du catalogue (rédigé à la main dans l'admin) ;
- *  2. découverte automatique via /v1/inspect, pondérée par le sujet du post,
- *     puis mise en cache dans le catalogue (source = 'auto') ;
- *  3. repli générique (navigate + scrolls) si l'inspection échoue.
+ * Résout le scénario déterministe via la function dédiée `linkedin-scenario-builder`
+ * (inspection Pagebolt + LLM contraint + cache 14 j, persisté dans le catalogue).
+ * En cas d'indisponibilité, repli local : scénario du catalogue, sinon scénario générique.
  */
 async function resolveScenario(
   admin: ReturnType<typeof createClient>,
   feature: Record<string, unknown>,
   subject: string,
-  authState: AuthState,
 ): Promise<ScenarioStep[]> {
   const route = String(feature.capture_route ?? '');
-
-  const manual = feature.capture_scenario;
-  if (Array.isArray(manual) && manual.length > 0) {
-    const scenario = sanitizeScenario(manual, route);
-    console.log('[linkedin-media-generator] scénario manuel', scenario.length, 'étapes');
-    return scenario;
-  }
-
   try {
-    const elements = await inspectRoute(PAGEBOLT_API_KEY!, route, authState);
-    const scenario = buildScenarioFromInspection(route, subject, elements);
-    console.log('[linkedin-media-generator] scénario auto', scenario.length, 'étapes /', elements.length, 'éléments');
-    if (feature.id) {
-      await admin
-        .from('linkedin_features_catalog')
-        .update({
-          capture_scenario: scenario,
-          capture_scenario_source: 'auto',
-          capture_scenario_updated_at: new Date().toISOString(),
-        })
-        .eq('id', feature.id as string);
+    const { data, error } = await admin.functions.invoke('linkedin-scenario-builder', {
+      body: { feature_id: feature.id, subject, max_shots: 4 },
+    });
+    if (error) throw error;
+    const scenario = sanitizeScenario((data as Record<string, unknown>)?.scenario, route);
+    if (scenario.length >= 2) {
+      console.log('[linkedin-media-generator] scénario', (data as any)?.source, scenario.length, 'étapes');
+      return scenario;
     }
-    return scenario;
   } catch (e) {
-    console.warn('[linkedin-media-generator] inspection impossible, scénario de repli', String(e));
-    return sanitizeScenario(fallbackScenario(route), route);
+    console.warn('[linkedin-media-generator] scenario-builder indisponible', String(e));
   }
+  const cached = feature.capture_scenario;
+  if (Array.isArray(cached) && cached.length) return sanitizeScenario(cached, route);
+  return sanitizeScenario(fallbackScenario(route), route);
 }
 
 async function runPagebolt(steps: ScenarioStep[], authState: AuthState): Promise<Uint8Array> {
