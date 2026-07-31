@@ -48,13 +48,13 @@ Deno.serve(handleRequest(async (req) => {
   if (!force) {
     const { data: cached } = await service
       .from('audit_cache')
-      .select('cache_key, data, created_at')
+      .select('cache_key, result_data, expires_at')
       .eq('cache_key', cacheKey)
       .maybeSingle();
 
-    const createdAt = cached?.created_at ? new Date(cached.created_at).getTime() : 0;
-    if (cached?.data && Date.now() - createdAt < CACHE_TTL_MS) {
-      return jsonOk({ capture: cached.data as VisualCapture, cached: true });
+    const expiresAt = cached?.expires_at ? new Date(cached.expires_at).getTime() : 0;
+    if (cached?.result_data && expiresAt > Date.now()) {
+      return jsonOk({ capture: cached.result_data as VisualCapture, cached: true });
     }
   }
 
@@ -73,7 +73,13 @@ Deno.serve(handleRequest(async (req) => {
 
   const { error: cacheErr } = await service
     .from('audit_cache')
-    .upsert({ cache_key: cacheKey, data: capture, created_at: new Date().toISOString() }, { onConflict: 'cache_key' });
+    .upsert({
+      cache_key: cacheKey,
+      function_name: 'site-visual-capture',
+      result_data: capture,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + CACHE_TTL_MS).toISOString(),
+    }, { onConflict: 'cache_key' });
   if (cacheErr) console.warn('[site-visual-capture] cache write failed:', cacheErr.message);
 
   return jsonOk({ capture, cached: false });
