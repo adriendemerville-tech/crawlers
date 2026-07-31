@@ -19,7 +19,8 @@ Tu corriges un post AVANT publication contre les 4 objectifs du module :
 3. Couverture 360 : le post illustre bien la feature demandée, pas une généralité.
 4. Personal branding : ton précis, pédagogue, humble et sympathique — assume les limites, explique le mécanisme, reste direct.
 Tu gardes le fond, les faits, les chiffres et la structure du post d'origine.
-Interdits absolus : emoji, tirets cadratins, caractères ( ) [ ] { } < > * _ ~ |, formules creuses ("révolutionner", "game-changer", "en conclusion").
+Les emoji sont autorisés, 4 maximum sur tout le post.
+Interdits absolus : tirets cadratins, caractères ( ) [ ] { } < > * _ ~ |, formules creuses ("révolutionner", "game-changer", "en conclusion").
 Première ligne = hook de 40 à 140 signes, autoportant, avec une tension ou un chiffre.
 Corps de 1000 à 1500 signes hashtags exclus, paragraphes courts, une idée par bloc.
 Le post se termine sur un CTA simple, sans phrase de conclusion.
@@ -192,6 +193,60 @@ function buildStyleBriefing(stats: StyleStats | null, samples: string[]): string
   return `\n\nPROFIL DE STYLE DE L'AUTEUR (mesuré sur ses posts passés) :\n${bullets}${raw}\n`;
 }
 
+/**
+ * Historique éditorial : derniers posts publiés/planifiés en base, avec la feature
+ * associée, le hook et les hashtags. Sert à deux choses :
+ *  - pénaliser les features déjà traitées récemment (rotation thématique)
+ *  - interdire au LLM de reprendre les mêmes angles, hooks et formulations
+ */
+interface PastPost {
+  feature_id: string | null;
+  feature_title: string | null;
+  hook: string;
+  angle: string;
+  hashtags: string[];
+  created_at: string;
+}
+
+async function fetchPostHistory(admin: any, limit = 10): Promise<PastPost[]> {
+  const { data, error } = await admin
+    .from('linkedin_scheduled_posts')
+    .select('feature_id, generated_text, edited_text, hashtags, created_at, linkedin_features_catalog(title)')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn('history fetch failed', error.message);
+    return [];
+  }
+  return (data ?? []).map((row: any) => {
+    const body = String(row.edited_text || row.generated_text || '').trim();
+    const lines = body.split(/\n+/).map((l: string) => l.trim()).filter(Boolean);
+    return {
+      feature_id: row.feature_id ?? null,
+      feature_title: row.linkedin_features_catalog?.title ?? null,
+      hook: (lines[0] ?? '').slice(0, 160),
+      angle: lines.slice(1, 3).join(' ').slice(0, 200),
+      hashtags: Array.isArray(row.hashtags) ? row.hashtags : [],
+      created_at: row.created_at,
+    };
+  });
+}
+
+function buildHistoryBriefing(history: PastPost[]): string {
+  if (!history.length) return '';
+  const items = history
+    .slice(0, 8)
+    .map((h, i) => {
+      const d = h.created_at ? new Date(h.created_at).toISOString().slice(0, 10) : '';
+      return `${i + 1}. ${d} | feature: ${h.feature_title ?? 'inconnue'}\n   hook: ${h.hook}\n   angle: ${h.angle}`;
+    })
+    .join('\n');
+  const tags = [...new Set(history.flatMap((h) => h.hashtags))].slice(0, 15);
+  return `\n\nHISTORIQUE DES DERNIERS POSTS (anti-redondance, obligation absolue) :\n${items}\n${
+    tags.length ? `Hashtags déjà très utilisés : ${tags.join(' ')}\n` : ''
+  }RÈGLES ANTI-REDONDANCE :\n- N'ouvre pas avec une formulation proche de l'un des hooks ci-dessus. Change de type d'accroche (chiffre, question, contre-pied, anecdote) par rapport aux deux derniers posts.\n- Ne reprends pas l'angle déjà utilisé pour la même feature : si elle a déjà été traitée, aborde une autre étape du parcours, un autre cas d'usage ou une autre limite.\n- Varie au moins 3 hashtags par rapport à la liste ci-dessus.\n- Ne recycle pas les mêmes exemples ni les mêmes chiffres illustratifs.\n`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -226,6 +281,11 @@ Deno.serve(async (req) => {
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
     const { feature_id, media_type: overrideMedia, tone_hint, style_sample_count } = parsed.data;
 
+    // Historique éditorial (sert à la rotation ET au prompt anti-redondance)
+    const history = await fetchPostHistory(admin, 10);
+    // Une feature traitée dans les 4 derniers posts est fortement pénalisée.
+    const recentFeatureIds = history.slice(0, 4).map((h) => h.feature_id).filter(Boolean) as string[];
+
     // Sélection feature : celle demandée OU rotation priorisée par "readiness"
     // (une feature qui produit réellement de la donnée passe avant une feature
     // seulement codée, pour éviter de raconter une fonctionnalité fantôme).
@@ -255,6 +315,9 @@ Deno.serve(async (req) => {
         else if (rows === 0) score -= 60; // fonctionnalité sans donnée réelle : à éviter
         else score += Math.min(30, Math.log10(rows + 1) * 12);
         if (f.capture_route) score += 5;
+        // Anti-redondance thématique : plus la feature a été traitée récemment, plus elle recule.
+        const recentIdx = recentFeatureIds.indexOf(f.id);
+        if (recentIdx >= 0) score -= 80 - recentIdx * 15;
         scored.push({ f, score, rows });
       }
       scored.sort((a, b) => b.score - a.score);
@@ -289,6 +352,7 @@ Deno.serve(async (req) => {
     const styleSamples = await fetchRecentLinkedInPosts(sampleCount);
     const styleStats = analyzeStyle(styleSamples);
     const styleBlock = buildStyleBriefing(styleStats, styleSamples);
+    const historyBlock = buildHistoryBriefing(history);
     // Contexte factuel : extraits ciblés de la documentation technique (source de vérité).
     // Budget de caractères borné pour limiter la dépense de tokens.
     const docQuery = [feature.title, feature.short_description, feature.marketing_angle, feature.slug]
@@ -325,7 +389,7 @@ MISSION DU POST — respecte l'ordre de priorité :
 
 GARDE-FOUS ANTI-IA (strict) :
 - INTERDIT : tirets cadratins (—), tirets demi-cadratins (–) et tirets ( - ) utilisés comme ponctuation. Utilise des points, des virgules, des retours à la ligne.
-- INTERDIT : emoji, "🚀", "✨", couleur bleue IA générique.
+- EMOJI : autorisés mais rares, 2 à 4 maximum sur tout le post, jamais deux à la suite, jamais en début de ligne systématique. Ils servent à aérer, pas à décorer. Évite les emoji clichés d'IA marketing.
 - INTERDIT : formules creuses et tics LLM : "révolutionner", "game-changer", "unlock", "dans un monde où", "à l'ère de", "il est important de noter", "en résumé", "en conclusion", "pour conclure", "in fine".
 - INTERDIT : listes à puces sur-formatées, gras markdown, titres.
 - INTERDIT : caractères réservés LinkedIn qui cassent le rendu vidéo/REST : ( ) [ ] { } < > \\ * _ ~ | . Utilise virgules, points, deux-points ou retours à la ligne à la place. Seule exception : la mention obligatoire "@crawlers.fr" (le @ n'est autorisé QUE dans cette mention).
@@ -340,7 +404,7 @@ Description : ${feature.short_description}
 Angle marketing : ${feature.marketing_angle}
 Cible : ${feature.target_audience || 'professionnels SEO/GEO'}
 Format média associé : ${mediaType === 'carousel' ? 'carrousel 6 images' : 'vidéo screencast 20-30s'}
-${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}
+${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}${historyBlock}
 
 Règles de rédaction liées aux objectifs du module :
 - SEO/GEO : nomme explicitement la feature et "Crawlers". Si tu as un chiffre vérifié de la documentation ou des données, utilise-le. Chaque phrase importante doit être compréhensible seule.
@@ -358,7 +422,7 @@ PAS de chute, PAS de phrase de conclusion après le CTA. Le CTA est la dernière
 
 Contraintes :
 - 1200 à 1600 caractères total (hashtags inclus)
-- Aucun emoji, aucun tiret comme ponctuation
+- 2 à 4 emoji maximum, bien placés. Aucun tiret comme ponctuation
 - Aucune formule creuse
 - Termine par les hashtags sur une seule ligne
 
