@@ -6,6 +6,17 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
+import {
+  sanitizeScenario,
+  inspectRoute,
+  buildScenarioFromInspection,
+  fallbackScenario,
+  toVideoSteps,
+  toSequenceSteps,
+  runSequence,
+  b64ToBytes,
+  type ScenarioStep,
+} from '../_shared/pageboltScenario.ts';
 
 const WAVESPEED_API_KEY = Deno.env.get('WAVESPEED_API_KEY');
 const PAGEBOLT_API_KEY = Deno.env.get('PAGEBOLT_API_KEY');
@@ -23,7 +34,6 @@ const MAX_POLL_MS = 120_000;
 const MEDIA_BUCKET = 'linkedin-media';
 const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 jours (couvre la fenêtre pré-publication)
 const PAGEBOLT_TIMEOUT_MS = 170_000;
-const MAX_PAGEBOLT_STEPS = 8;
 
 
 const BodySchema = z.object({
@@ -33,6 +43,8 @@ const BodySchema = z.object({
   slide_count: z.number().int().min(1).max(10).default(6),
   // 'pagebolt' (défaut) = screencast réel ; 'ai' = vidéo générative WaveSpeed.
   video_source: z.enum(['pagebolt', 'ai']).default('pagebolt'),
+  // Source des slides du carrousel : 'pagebolt' (captures réelles) ou 'ai' (WaveSpeed).
+  media_source: z.enum(['pagebolt', 'ai']).default('pagebolt'),
 });
 
 
@@ -69,7 +81,7 @@ Deno.serve(async (req) => {
 
     const parsed = BodySchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
-    const { post_id, image_model, video_model, slide_count, video_source } = parsed.data;
+    const { post_id, image_model, video_model, slide_count, video_source, media_source } = parsed.data;
 
     // Charge le post + feature
     const { data: post, error: postErr } = await admin
@@ -98,15 +110,41 @@ Deno.serve(async (req) => {
       let mediaEngine = 'wavespeed';
 
       if (post.media_type === 'carousel') {
+        // 1) Carrousel de captures RÉELLES via /v1/sequence (scénario déterministe).
+        if (media_source !== 'ai' && PAGEBOLT_API_KEY && feature.capture_route) {
+          try {
+            const authState = await buildAuthState(admin);
+            const scenario = await resolveScenario(admin, feature, `${title} ${angle}`, authState);
+            const { outputs } = await runSequence(
+              PAGEBOLT_API_KEY,
+              toSequenceSteps(scenario).slice(0, 20),
+              authState,
+            );
+            for (const [i, o] of outputs.slice(0, slide_count).entries()) {
+              const ext = (o.format || 'png').toLowerCase() === 'jpeg' ? 'jpg' : (o.format || 'png').toLowerCase();
+              const url = await uploadBytes(
+                admin, post_id, b64ToBytes(o.data), ext, `image/${ext === 'jpg' ? 'jpeg' : ext}`, i,
+              );
+              readyUrls.push(url);
+            }
+            if (readyUrls.length) mediaEngine = 'pagebolt-sequence';
+          } catch (e) {
+            console.warn('[linkedin-media-generator] sequence failed, fallback AI carousel', String(e));
+          }
+        }
+
         const model = image_model || DEFAULT_IMAGE_MODEL;
-        const prompts = buildCarouselPrompts(title, angle, slide_count);
-        // Parallélise les 6 slides : ~5x plus rapide, évite le timeout Supabase 60s
-        const results = await Promise.all(
-          prompts.map((p) => runWavespeed(model, { prompt: p, size: '1200*1200' })),
-        );
-        for (const r of results) {
-          rawMediaUrls.push(r.url);
-          predictionIds.push(r.predictionId);
+        if (!readyUrls.length) {
+          if (!WAVESPEED_API_KEY) throw new Error('Pagebolt sequence failed and WAVESPEED_API_KEY missing');
+          const prompts = buildCarouselPrompts(title, angle, slide_count);
+          // Parallélise les slides : ~5x plus rapide, évite le timeout Supabase 60s
+          const results = await Promise.all(
+            prompts.map((p) => runWavespeed(model, { prompt: p, size: '1200*1200' })),
+          );
+          for (const r of results) {
+            rawMediaUrls.push(r.url);
+            predictionIds.push(r.predictionId);
+          }
         }
       } else if (post.media_type === 'video') {
         const steps = Array.isArray(feature.capture_steps) ? feature.capture_steps.map(String) : [];
@@ -115,7 +153,8 @@ Deno.serve(async (req) => {
         if (video_source === 'pagebolt' && PAGEBOLT_API_KEY && feature.capture_route) {
           try {
             const authState = await buildAuthState(admin);
-            const bytes = await runPagebolt(String(feature.capture_route), title, steps, authState);
+            const scenario = await resolveScenario(admin, feature, `${title} ${angle}`, authState);
+            const bytes = await runPagebolt(toVideoSteps(scenario), authState);
             const url = await uploadBytes(admin, post_id, bytes, 'mp4', 'video/mp4', 0);
             readyUrls.push(url);
             mediaEngine = 'pagebolt';
@@ -229,28 +268,52 @@ async function buildAuthState(admin: ReturnType<typeof createClient>): Promise<A
   }
 }
 
-function buildPageboltSteps(route: string, title: string, captureSteps: string[]) {
-  const steps: Record<string, unknown>[] = [
-    { action: 'navigate', url: route, note: title.slice(0, 200) },
-    { action: 'wait', ms: 3500, live: true },
-  ];
-  const notes = captureSteps.slice(0, MAX_PAGEBOLT_STEPS - 2);
-  notes.forEach((n, i) => {
-    steps.push({ action: 'scroll', y: 420 * (i + 1), note: String(n).slice(0, 200) });
-    steps.push({ action: 'wait', ms: 1800, live: true });
-  });
-  if (notes.length === 0) steps.push({ action: 'scroll', y: 800 }, { action: 'wait', ms: 2000 });
-  return steps.slice(0, MAX_PAGEBOLT_STEPS);
+/**
+ * Résout le scénario déterministe à exécuter pour cette feature :
+ *  1. `capture_scenario` du catalogue (rédigé à la main dans l'admin) ;
+ *  2. découverte automatique via /v1/inspect, pondérée par le sujet du post,
+ *     puis mise en cache dans le catalogue (source = 'auto') ;
+ *  3. repli générique (navigate + scrolls) si l'inspection échoue.
+ */
+async function resolveScenario(
+  admin: ReturnType<typeof createClient>,
+  feature: Record<string, unknown>,
+  subject: string,
+  authState: AuthState,
+): Promise<ScenarioStep[]> {
+  const route = String(feature.capture_route ?? '');
+
+  const manual = feature.capture_scenario;
+  if (Array.isArray(manual) && manual.length > 0) {
+    const scenario = sanitizeScenario(manual, route);
+    console.log('[linkedin-media-generator] scénario manuel', scenario.length, 'étapes');
+    return scenario;
+  }
+
+  try {
+    const elements = await inspectRoute(PAGEBOLT_API_KEY!, route, authState);
+    const scenario = buildScenarioFromInspection(route, subject, elements);
+    console.log('[linkedin-media-generator] scénario auto', scenario.length, 'étapes /', elements.length, 'éléments');
+    if (feature.id) {
+      await admin
+        .from('linkedin_features_catalog')
+        .update({
+          capture_scenario: scenario,
+          capture_scenario_source: 'auto',
+          capture_scenario_updated_at: new Date().toISOString(),
+        })
+        .eq('id', feature.id as string);
+    }
+    return scenario;
+  } catch (e) {
+    console.warn('[linkedin-media-generator] inspection impossible, scénario de repli', String(e));
+    return sanitizeScenario(fallbackScenario(route), route);
+  }
 }
 
-async function runPagebolt(
-  route: string,
-  title: string,
-  captureSteps: string[],
-  authState: AuthState,
-): Promise<Uint8Array> {
+async function runPagebolt(steps: ScenarioStep[], authState: AuthState): Promise<Uint8Array> {
   const body: Record<string, unknown> = {
-    steps: buildPageboltSteps(route, title, captureSteps),
+    steps,
     viewport: { width: 1280, height: 720 },
     format: 'mp4',
     framerate: 30,
