@@ -34,7 +34,6 @@ const MAX_POLL_MS = 120_000;
 const MEDIA_BUCKET = 'linkedin-media';
 const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 jours (couvre la fenêtre pré-publication)
 const PAGEBOLT_TIMEOUT_MS = 170_000;
-const MAX_PAGEBOLT_STEPS = 8;
 
 
 const BodySchema = z.object({
