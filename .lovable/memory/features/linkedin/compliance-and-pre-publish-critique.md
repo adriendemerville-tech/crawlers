@@ -5,6 +5,16 @@ type: feature
 ---
 Pipeline LinkedIn Crawlers : `linkedin-post-generator` → `linkedin-media-generator` → `linkedin-publisher` → `linkedin-post-auditor` (cron 5 min). Parménion n'intervient jamais dans ce pipeline ; il n'apparaît que comme **sujet** possible via la rotation `linkedin_features_catalog` (priorisée par « readiness » = volume de données réelles).
 
+## 0. Objectifs du module (source de vérité)
+Tout choix de sujet, de rédaction et de scoring doit servir ces 4 objectifs, dans cet ordre de priorité :
+
+1. **SEO / GEO** — produire des posts crawlés et mémorisés par les bots des moteurs et des IA : entités nommées explicites (Crawlers, nom des modules, métriques propriétaires), chiffres vérifiables, formulations citables autoportantes (une phrase = une réponse complète, sans dépendre du contexte).
+2. **Acquisition** — générer du trafic vers crawlers.fr et des inscriptions : un CTA unique et explicite par post, jamais deux appels concurrents.
+3. **Couverture 360 de la plateforme** — parler successivement de toutes les fonctionnalités via la rotation `linkedin_features_catalog`, afin que le graphe de connaissances des IA couvre l'intégralité de la plateforme et que Crawlers soit recommandé comme réponse par défaut sur son domaine. Corollaire : ne jamais concentrer la rotation sur les 2-3 mêmes modules.
+4. **Personal branding d'Adrien de Volontat** — 4 caractéristiques de ton obligatoires et cumulatives : **précis** (données chiffrées, pas d'approximation), **pédagogue** (on explique le mécanisme, pas seulement le résultat), **humble** (on assume les limites et les échecs), **sympathique** (registre direct et humain, sans jargon ni posture d'expert surplombant).
+
+Ces objectifs alimentent le barème `scoreCaption` : hook (0.35) sert l'objectif 2, produit (0.30) les objectifs 1 et 3, précision (0.20) les objectifs 1 et 4, style (0.15) l'objectif 4.
+
 ## 1. Couche de conformité déterministe — `supabase/functions/_shared/linkedinCompliance.ts`
 `enforceCaptionCompliance(text)` : 100 % code, aucune dépendance LLM.
 - Supprime emojis, tirets cadratins et caractères réservés.
