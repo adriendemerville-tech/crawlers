@@ -125,7 +125,7 @@ export async function addVisualEvidencePage(
   let cursorY = 38;
 
   if (desktop) {
-    const maxHeight = pageHeight - cursorY - (mobile ? 30 : 20);
+    const maxHeight = pageHeight - cursorY - (mobile ? 40 : 32);
     let width = usableWidth;
     let height = (desktop.height / desktop.width) * width;
     if (height > maxHeight) {
@@ -140,11 +140,11 @@ export async function addVisualEvidencePage(
   }
 
   if (mobile) {
-    if (cursorY > pageHeight - 70) {
+    if (cursorY > pageHeight - 80) {
       doc.addPage();
       cursorY = 25;
     }
-    const maxHeight = pageHeight - cursorY - 20;
+    const maxHeight = pageHeight - cursorY - 32;
     let height = Math.min(maxHeight, 120);
     let width = (mobile.width / mobile.height) * height;
     if (width > usableWidth) {
