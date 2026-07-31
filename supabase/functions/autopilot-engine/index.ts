@@ -917,23 +917,59 @@ async function executeContentArchitect(
     ...(payload.silo_context && { silo_context: payload.silo_context }),
   };
 
-  console.log(`[AutopilotEngine] Calling content-architecture-advisor (ASYNC) for ${site.domain}, keyword: ${funcBody.keyword}`);
+  // ─── Reprise : un job différé du cycle précédent existe-t-il pour ce site ? ───
+  // Évite de relancer un pipeline LLM coûteux à chaque cycle et récupère le résultat
+  // du job lancé au cycle précédent (fix timeout : plus jamais de poll bloquant long).
+  let jobId: string | null = null;
+  try {
+    const { data: existing } = await supabase
+      .from('async_jobs')
+      .select('id, status, result_data, error_message, created_at')
+      .eq('function_name', 'content-architecture-advisor')
+      .eq('user_id', config.user_id)
+      .in('status', ['pending', 'processing', 'completed'])
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-  const funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(funcBody),
-  });
+    const resumable = (existing ?? []).find((j: any) =>
+      (j.input_payload?.tracked_site_id ?? config.tracked_site_id) === config.tracked_site_id);
 
-  const funcResult = await funcResponse.json().catch(() => ({}));
-  
-  if (funcResponse.status === 202 && funcResult.job_id) {
-    const jobId = funcResult.job_id;
-    console.log(`[AutopilotEngine] content-architecture-advisor job queued: ${jobId}, polling...`);
-    // Budget de polling élargi + backoff progressif (5s les 60 premières secondes, puis 10s)
-    const POLL_BUDGET_MS = 240 * 1000;
+    if (resumable?.status === 'completed') {
+      console.log(`[AutopilotEngine] Reprise job advisor terminé ${resumable.id} pour ${site.domain}`);
+      executionResults.push({ function: 'content-architecture-advisor', status: 'success', http_status: 200, keyword: funcBody.keyword, job_id: resumable.id, result: { data: resumable.result_data, resumed: true } });
+      return;
+    }
+    if (resumable && resumable.status !== 'completed') {
+      jobId = resumable.id;
+      console.log(`[AutopilotEngine] Job advisor déjà en cours (${jobId}) — pas de relance pour ${site.domain}`);
+    }
+  } catch (e) {
+    console.warn('[AutopilotEngine] Lookup job advisor échoué:', e);
+  }
+
+  let funcResponse: Response | null = null;
+  let funcResult: any = {};
+
+  if (!jobId) {
+    console.log(`[AutopilotEngine] Calling content-architecture-advisor (ASYNC) for ${site.domain}, keyword: ${funcBody.keyword}`);
+    funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(funcBody),
+    });
+    funcResult = await funcResponse.json().catch(() => ({}));
+    if (funcResponse.status === 202 && funcResult.job_id) jobId = funcResult.job_id;
+  }
+
+  if (jobId) {
+    console.log(`[AutopilotEngine] content-architecture-advisor job ${jobId}, polling court...`);
+    // Fenêtre de polling COURTE (45s) : le job persiste ses artefacts lui-même et
+    // sera récupéré au cycle suivant. Un poll long tuait l'invocation edge (timeout).
+    const POLL_BUDGET_MS = 45 * 1000;
     const startedAt = Date.now();
     const pollDeadline = startedAt + POLL_BUDGET_MS;
+
     let jobResult: any = null;
     let jobStatus = 'pending';
 
