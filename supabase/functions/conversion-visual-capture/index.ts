@@ -392,30 +392,41 @@ Deno.serve(handleRequest(async (req) => {
   if (insertErr) console.error('[conversion-visual-capture] insert error:', insertErr.message);
 
   // ── 6. Injection des frictions critiques dans le workbench Architect ──
-  const workbenchItems = frictions
-    .filter((f) => f.severity === 'critical' || f.severity === 'high')
-    .map((f) => ({
-      domain: site.domain,
-      tracked_site_id: trackedSiteId,
-      user_id: user.id,
-      source_type: 'conversion_visual',
-      source_function: 'conversion-visual-capture',
-      source_record_id: `cvc_${trackedSiteId}_${pageUrl}_${f.code}_${f.device}`,
-      finding_category: 'ux_optimization',
-      severity: f.severity,
-      title: `Conversion (${f.device}) : ${f.title}`,
-      description: f.detail,
-      target_url: pageUrl,
-      target_selector: 'cta',
-      target_operation: 'replace',
-      payload: { friction_code: f.code, device: f.device, rect: f.rect ?? null, friction_score: frictionScore },
-    }));
-
-  if (workbenchItems.length > 0) {
-    const { error: wbErr } = await service
+  const criticalFrictions = frictions.filter((f) => f.severity === 'critical' || f.severity === 'high');
+  if (criticalFrictions.length > 0) {
+    const recordIds = criticalFrictions.map(
+      (f) => `cvc_${trackedSiteId}_${f.code}_${f.device}_${parsedUrl.pathname}`,
+    );
+    // Index unique partiel (source_type, source_record_id) : dédup manuelle plutôt qu'upsert
+    const { data: existing } = await service
       .from('architect_workbench')
-      .upsert(workbenchItems, { onConflict: 'source_type,source_record_id' });
-    if (wbErr) console.error('[conversion-visual-capture] workbench error:', wbErr.message);
+      .select('source_record_id')
+      .eq('source_type', 'ux_context')
+      .in('source_record_id', recordIds);
+    const known = new Set((existing ?? []).map((r) => r.source_record_id));
+
+    const workbenchItems = criticalFrictions
+      .map((f, i) => ({ f, id: recordIds[i] }))
+      .filter(({ id }) => !known.has(id))
+      .map(({ f, id }) => ({
+        domain: site.domain,
+        tracked_site_id: trackedSiteId,
+        user_id: user.id,
+        source_type: 'ux_context',
+        source_function: 'conversion-visual-capture',
+        source_record_id: id,
+        finding_category: 'conversion_visual',
+        severity: f.severity,
+        title: `Conversion (${f.device}) : ${f.title}`,
+        description: f.detail,
+        target_url: pageUrl,
+        payload: { friction_code: f.code, device: f.device, rect: f.rect ?? null, friction_score: frictionScore },
+      }));
+
+    if (workbenchItems.length > 0) {
+      const { error: wbErr } = await service.from('architect_workbench').insert(workbenchItems);
+      if (wbErr) console.error('[conversion-visual-capture] workbench error:', wbErr.message);
+    }
   }
 
   return jsonOk({
