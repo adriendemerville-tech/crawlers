@@ -167,7 +167,7 @@ function detectFrictions(
   }
 
   const atfLinks = elements.filter(
-    (e) => (e.tag === 'a' || e.role === 'link') && e.rect && (e.rect.y + e.rect.h) <= fold,
+    (e) => e.role === 'link' && e.rect && (e.rect.y + e.rect.h) <= fold,
   );
   if (atfLinks.length > 30) {
     frictions.push({
