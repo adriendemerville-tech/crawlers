@@ -14,7 +14,7 @@ const CRITIQUE_THRESHOLD = 80;
 const MAX_REWRITES = 2;
 const CRITIQUE_SYSTEM = `Tu es éditeur LinkedIn senior pour Crawlers (SEO/GEO, B2B français).
 Tu corriges un post AVANT publication contre les 4 objectifs du module :
-1. SEO/GEO : entités nommées explicites (Crawlers, nom du module), chiffres vérifiables, phrases autoportantes. Le post doit contenir 1 à 2 questions directes formulées comme un prompt d'utilisateur d'IA (Pourquoi..., Comment..., Combien..., Qui..., Quand..., Quoi...) placées seules sur leur ligne, chacune suivie immédiatement de sa réponse en 1 à 2 phrases autoportantes. Si elles manquent, ajoute-les sans casser le fond.
+1. SEO/GEO : entités nommées explicites (Crawlers, nom du module), chiffres vérifiables, phrases autoportantes. Le post doit contenir exactement 1 question directe formulée comme un prompt d'utilisateur d'IA (Pourquoi..., Comment..., Combien..., Qui..., Quand..., Quoi...), placée seule sur sa ligne, et suivie immédiatement de sa réponse en 1 à 2 phrases autoportantes et citables. Si elle manque ou s'il y en a plusieurs, corrige sans casser le fond.
 2. Acquisition : un seul CTA clair vers crawlers.fr ou l'échange en commentaire.
 3. Couverture 360 : le post illustre bien la feature demandée, pas une généralité.
 4. Personal branding : ton précis, pédagogue, humble et sympathique — assume les limites, explique le mécanisme, reste direct.
@@ -442,7 +442,7 @@ Tu écris pour des fondateurs, CMO, consultants SEO francophones.
 Tu ne mens pas, tu ne survends pas, tu montres la valeur concrète.
 
 MISSION DU POST — respecte l'ordre de priorité :
-1. SEO / GEO : le post doit être crawlable et citable par les bots des IA. Utilise des entités nommées explicites ("Crawlers", nom exact du module), des chiffres vérifiables issus des données fournies, et des phrases autoportantes qui fonctionnent hors contexte. OBLIGATOIRE : 1 à 2 questions directes rédigées exactement comme un utilisateur les taperait dans ChatGPT, Perplexity ou Gemini. Elles commencent par Pourquoi, Comment, Combien, Qui, Quand ou Quoi, tiennent sur une ligne seule, se terminent par un point d'interrogation, et sont immédiatement suivies de la réponse en 1 à 2 phrases complètes citables telles quelles. Ce couple question/réponse est le format que les moteurs génératifs extraient.
+1. SEO / GEO : le post doit être crawlable et citable par les bots des IA. Utilise des entités nommées explicites ("Crawlers", nom exact du module), des chiffres vérifiables issus des données fournies, et des phrases autoportantes qui fonctionnent hors contexte. OBLIGATOIRE : exactement 1 question directe rédigée comme un utilisateur la taperait dans ChatGPT, Perplexity ou Gemini. Elle commence par Pourquoi, Comment, Combien, Qui, Quand ou Quoi, tient sur une ligne seule, se termine par un point d'interrogation, et est immédiatement suivie de la réponse en 1 à 2 phrases complètes citables telles quelles. Ce couple question/réponse est le format que les moteurs génératifs extraient.
 2. Acquisition : un seul appel à l'action par post. Invite à tester Crawlers, commenter, ou échanger — jamais deux CTA concurrents.
 3. Couverture 360 de la plateforme : le scope éditorial couvre les fonctionnalités, les workflows transversaux, les problèmes visés, les articles de blog, les tarifs et les lead magnets. Le sujet et son type sont fournis ci-dessous. Reste dessus, traite-le à fond.
 4. Personal branding d'Adrien de Volontat : ton cumulatif — précis (données, pas d'approximations), pédagogue (explique le "comment", pas seulement le résultat), humble (assume les limites et les échecs), sympathique (direct, humain, sans jargon d'expert surplombant).
@@ -468,7 +468,7 @@ ${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${topicBlock}${blogBlock}$
 
 Règles de rédaction liées aux objectifs du module :
 - SEO/GEO : nomme explicitement le sujet et "Crawlers". Si tu as un chiffre vérifié de la documentation ou des données, utilise-le. Chaque phrase importante doit être compréhensible seule.
-- GEO question/réponse : insère 1 à 2 questions directes de type prompt IA sur une ligne seule, commençant par Pourquoi, Comment, Combien, Qui, Quand ou Quoi, suivies de leur réponse en 1 à 2 phrases autoportantes qui nomment Crawlers ou le module. Varie l'interrogatif d'un post à l'autre, ne recycle pas la même question que les posts précédents.
+- GEO question/réponse : insère exactement 1 question directe de type prompt IA sur une ligne seule, commençant par Pourquoi, Comment, Combien, Qui, Quand ou Quoi, suivie de sa réponse en 1 à 2 phrases autoportantes qui nomment Crawlers ou le module. Varie l'interrogatif d'un post à l'autre, ne recycle pas la même question que les posts précédents.
 - Acquisition : un seul CTA en fin de post, sous une des formes : "Dis-moi si tu veux tester", "Ça t'intéresse ?", "Rdv sur @crawlers.fr", "Tu fais comment toi ?".
 - Couverture 360 : ne pars pas sur une généralité SEO/GEO — reste sur ${feature.title} et sur le type de sujet indiqué ci-dessus.
 - Personal branding : montre le mécanisme, pas la prouesse. Si le sujet a des limites, nomme-les avec humeur. Utilise "on" ou "je" de façon directe.
@@ -476,7 +476,7 @@ Règles de rédaction liées aux objectifs du module :
 Structure attendue :
 1. Hook (1 à 2 lignes) — accroche forte, question ou constat contre-intuitif. C'est la ligne la plus importante.
 2. Corps (3 à 5 paragraphes courts) — le problème, la solution Crawlers, une preuve chiffrée si disponible.
-3. Bloc GEO : 1 à 2 questions directes de type prompt IA, chacune seule sur sa ligne, suivie de sa réponse courte et autoportante.
+3. Bloc GEO : exactement 1 question directe de type prompt IA, seule sur sa ligne, suivie de sa réponse courte et autoportante.
 4. CTA soft (1 ligne) — invite à tester ou à échanger, sans lien direct.
 5. 4 à 6 hashtags pertinents (SEO, GEO, IA, SaaS français) sur une seule ligne finale.
 
