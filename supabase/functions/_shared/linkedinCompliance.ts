@@ -242,7 +242,7 @@ export function scoreCaption(fullText: string): CaptionScore {
   const objectivesChecks: Check[] = [
     { id: 'seo_named_entities', ok: /Crawlers|@(crawlers\.fr|Crawlers)/i.test(body), weight: 30, detail: 'Entité Crawlers explicitement nommée pour SEO/GEO' },
     { id: 'seo_quotable', ok: DATA_RE.test(body) || /\d/.test(hook), weight: 25, detail: 'Phrase chiffrée autoportante pour les bots IA' },
-    { id: 'geo_question', ok: GEO_QUESTION_RE.test(body), weight: 20, detail: 'Au moins une question directe de type prompt IA (pourquoi, comment, combien, qui, quand, quoi) suivie de sa réponse' },
+    { id: 'geo_question', ok: (body.match(GEO_QUESTION_RE) || []).length === 1, weight: 20, detail: 'Exactement une question directe de type prompt IA (pourquoi, comment, combien, qui, quand, quoi) suivie de sa réponse' },
     { id: 'acquisition_signal', ok: CTA_RE.test(body.slice(-300)), weight: 25, detail: 'Signal d acquisition clair en fin de post' },
   ];
 
