@@ -224,7 +224,23 @@ try {
           .maybeSingle();
         const backlogGuardDisabled = (targetGuard as any)?.backlog_guard_paused === true;
 
+        // ─── Réconciliation : une décision restée 'planned' > 2h correspond à un cycle
+        // interrompu (timeout edge). On la clôture en 'skipped_stale' pour ne pas
+        // saturer artificiellement le backlog guard.
+        const staleCutoff = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const { data: reconciled } = await supabase
+          .from('parmenion_decision_log')
+          .update({ status: 'skipped_stale', execution_error: 'Cycle interrompu (timeout) — décision réconciliée', updated_at: new Date().toISOString() })
+          .eq('tracked_site_id', config.tracked_site_id)
+          .eq('status', 'planned')
+          .lt('created_at', staleCutoff)
+          .select('id');
+        if (reconciled && reconciled.length > 0) {
+          console.log(`[AutopilotEngine] ♻️ ${reconciled.length} décisions 'planned' périmées réconciliées pour ${siteInfo.domain}`);
+        }
+
         const graceCutoff = new Date(Date.now() - BACKLOG_GRACE_MINUTES * 60 * 1000).toISOString();
+
         const { count: plannedBacklog } = await supabase
           .from('parmenion_decision_log')
           .select('id', { count: 'exact', head: true })
