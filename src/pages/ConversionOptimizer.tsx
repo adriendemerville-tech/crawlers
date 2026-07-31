@@ -511,6 +511,12 @@ export default function ConversionOptimizer() {
           </CardContent>
         </Card>
 
+        {selectedSiteId && selectedPageUrl && (
+          <VisualCaptureCard trackedSiteId={selectedSiteId} pageUrl={selectedPageUrl} />
+        )}
+
+
+
         {result && (
            <div className="space-y-4">
             {result.indexation_status && result.indexation_status.warnings.length > 0 && (
