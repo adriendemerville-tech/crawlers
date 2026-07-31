@@ -191,6 +191,129 @@ function buildCarouselPrompts(title: string, angle: string, count: number): stri
   return beats.slice(0, count);
 }
 
+// ---------------------------------------------------------------------------
+// Pagebolt : screencast réel de l'outil (pas de génération IA).
+// ---------------------------------------------------------------------------
+
+type AuthState = Record<string, unknown> | null;
+
+// Injecte une vraie session Supabase dans le navigateur Pagebolt pour filmer
+// l'outil connecté. Nécessite le secret PAGEBOLT_DEMO_EMAIL (compte de démo).
+async function buildAuthState(admin: ReturnType<typeof createClient>): Promise<AuthState> {
+  if (!PAGEBOLT_DEMO_EMAIL) return null;
+  try {
+    const { data: link, error } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: PAGEBOLT_DEMO_EMAIL,
+    });
+    const hashed = (link as any)?.properties?.hashed_token;
+    if (error || !hashed) throw error ?? new Error('no hashed_token');
+    const anon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: verified, error: vErr } = await anon.auth.verifyOtp({
+      type: 'magiclink',
+      token_hash: hashed,
+    });
+    if (vErr || !verified?.session) throw vErr ?? new Error('no session');
+    const ref = new URL(SUPABASE_URL).hostname.split('.')[0];
+    return {
+      localStorage: [
+        {
+          origin: 'https://crawlers.fr',
+          items: [{ name: `sb-${ref}-auth-token`, value: JSON.stringify(verified.session) }],
+        },
+      ],
+    };
+  } catch (e) {
+    console.warn('[buildAuthState] session demo indisponible, capture anonyme', String(e));
+    return null;
+  }
+}
+
+function buildPageboltSteps(route: string, title: string, captureSteps: string[]) {
+  const steps: Record<string, unknown>[] = [
+    { action: 'navigate', url: route, note: title.slice(0, 200) },
+    { action: 'wait', ms: 3500, live: true },
+  ];
+  const notes = captureSteps.slice(0, MAX_PAGEBOLT_STEPS - 2);
+  notes.forEach((n, i) => {
+    steps.push({ action: 'scroll', y: 420 * (i + 1), note: String(n).slice(0, 200) });
+    steps.push({ action: 'wait', ms: 1800, live: true });
+  });
+  if (notes.length === 0) steps.push({ action: 'scroll', y: 800 }, { action: 'wait', ms: 2000 });
+  return steps.slice(0, MAX_PAGEBOLT_STEPS);
+}
+
+async function runPagebolt(
+  route: string,
+  title: string,
+  captureSteps: string[],
+  authState: AuthState,
+): Promise<Uint8Array> {
+  const body: Record<string, unknown> = {
+    steps: buildPageboltSteps(route, title, captureSteps),
+    viewport: { width: 1280, height: 720 },
+    format: 'mp4',
+    framerate: 30,
+    darkMode: true,
+    blockBanners: true,
+    pace: 'normal',
+    // Charte Crawlers : violet / or / noir / blanc.
+    cursor: { style: 'classic', color: '#7C3AED', persist: true, size: 22 },
+    clickEffect: { enabled: true, style: 'ripple', color: '#F59E0B' },
+    frame: { enabled: true, style: 'macos', theme: 'dark', showUrl: true },
+    background: {
+      enabled: true,
+      type: 'custom',
+      colors: ['#0B0B0F', '#2E1065'],
+      padding: 80,
+      borderRadius: 16,
+    },
+  };
+  if (authState) body.authState = authState;
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), PAGEBOLT_TIMEOUT_MS);
+  try {
+    const res = await fetch(PAGEBOLT_VIDEO_URL, {
+      method: 'POST',
+      headers: { 'x-api-key': PAGEBOLT_API_KEY!, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`Pagebolt ${res.status}: ${t.slice(0, 300)}`);
+    }
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    if (bytes.byteLength < 10_000) throw new Error(`Pagebolt video too small (${bytes.byteLength}B)`);
+    return bytes;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Upload direct d'un buffer (Pagebolt renvoie le mp4 en binaire).
+async function uploadBytes(
+  admin: ReturnType<typeof createClient>,
+  postId: string,
+  bytes: Uint8Array,
+  ext: string,
+  contentType: string,
+  index: number,
+): Promise<string> {
+  const path = `${postId}/${Date.now()}-${index}.${ext}`;
+  const { error: upErr } = await admin.storage
+    .from(MEDIA_BUCKET)
+    .upload(path, bytes, { contentType, upsert: true });
+  if (upErr) throw upErr;
+  const { data: signed, error: signErr } = await admin.storage
+    .from(MEDIA_BUCKET)
+    .createSignedUrl(path, SIGNED_URL_TTL);
+  if (signErr || !signed?.signedUrl) throw signErr ?? new Error('sign failed');
+  return signed.signedUrl;
+}
+
+
 // Télécharge chaque asset WaveSpeed et le persiste dans le bucket linkedin-media.
 // Retourne des signed URLs (30j) stables pour la publication LinkedIn.
 async function persistMedia(
