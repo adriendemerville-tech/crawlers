@@ -930,12 +930,16 @@ async function executeContentArchitect(
   if (funcResponse.status === 202 && funcResult.job_id) {
     const jobId = funcResult.job_id;
     console.log(`[AutopilotEngine] content-architecture-advisor job queued: ${jobId}, polling...`);
-    const pollDeadline = Date.now() + 180 * 1000;
+    // Budget de polling élargi + backoff progressif (5s les 60 premières secondes, puis 10s)
+    const POLL_BUDGET_MS = 240 * 1000;
+    const startedAt = Date.now();
+    const pollDeadline = startedAt + POLL_BUDGET_MS;
     let jobResult: any = null;
     let jobStatus = 'pending';
-    
+
     while (Date.now() < pollDeadline) {
-      await new Promise(r => setTimeout(r, 5000));
+      const elapsed = Date.now() - startedAt;
+      await new Promise(r => setTimeout(r, elapsed < 60_000 ? 5000 : 10_000));
       try {
         const pollResp = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor?job_id=${jobId}`, {
           method: 'GET', headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}` },
@@ -948,14 +952,35 @@ async function executeContentArchitect(
         console.warn(`[AutopilotEngine] Poll error for job ${jobId}:`, pollErr);
       }
     }
-    
+
+    // Dernière lecture directe en base avant de conclure
+    if (jobStatus === 'pending') {
+      const { data: finalJob } = await supabase
+        .from('async_jobs')
+        .select('status, result_data, error_message')
+        .eq('id', jobId)
+        .maybeSingle();
+      if (finalJob?.status === 'completed') { jobStatus = 'completed'; jobResult = finalJob.result_data; }
+      else if (finalJob?.status === 'failed') { jobStatus = 'failed'; jobResult = { error: finalJob.error_message || 'Job failed' }; }
+    }
+
     if (jobStatus === 'completed') {
       executionResults.push({ function: 'content-architecture-advisor', status: 'success', http_status: 200, keyword: funcBody.keyword, result: { data: jobResult } });
-    } else {
-      executionResults.push({ function: 'content-architecture-advisor', status: 'error', http_status: jobStatus === 'failed' ? 500 : 408, keyword: funcBody.keyword, result: jobResult || { error: 'Job timed out after 180s' } });
-      phaseErrors.push({ phase, function: 'content-architecture-advisor', severity: 'degraded', message: `content-architecture-advisor ${jobStatus === 'failed' ? 'failed' : 'timed out after 180s'}`, retryable: true });
+    } else if (jobStatus === 'failed') {
+      executionResults.push({ function: 'content-architecture-advisor', status: 'error', http_status: 500, keyword: funcBody.keyword, result: jobResult });
+      phaseErrors.push({ phase, function: 'content-architecture-advisor', severity: 'degraded', message: 'content-architecture-advisor failed', retryable: true });
       setSuccess(false);
+    } else {
+      // Le job continue côté serveur et persiste lui-même ses artefacts :
+      // un dépassement du budget de polling n'est PAS un échec de cycle.
+      console.log(`[AutopilotEngine] Job ${jobId} toujours en cours après ${POLL_BUDGET_MS / 1000}s — différé (cycle non dégradé)`);
+      executionResults.push({
+        function: 'content-architecture-advisor', status: 'deferred', http_status: 202,
+        keyword: funcBody.keyword, job_id: jobId,
+        result: { message: `Job ${jobId} toujours en cours après ${POLL_BUDGET_MS / 1000}s — résultats persistés de façon asynchrone` },
+      });
     }
+
   } else {
     executionResults.push({ function: 'content-architecture-advisor', status: funcResponse.ok ? 'success' : 'error', http_status: funcResponse.status, keyword: funcBody.keyword, result: funcResult });
     if (!funcResponse.ok) {
