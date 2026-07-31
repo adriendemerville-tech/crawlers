@@ -1,16 +1,20 @@
-// Génère les médias d'un post LinkedIn draft via WaveSpeed.ai (async + polling).
-// - media_type = 'carousel' : 6 images 1200x1200 (bytedance/seedream-4 par défaut)
-// - media_type = 'video'    : 1 vidéo 5s (bytedance/seedance-v1-pro-t2v-480p)
+// Génère les médias d'un post LinkedIn draft.
+// - media_type = 'carousel' : 6 images 1200x1200 via WaveSpeed (bytedance/seedream-4)
+// - media_type = 'video'    : screencast RÉEL de l'outil via Pagebolt (/api/v1/video),
+//   avec fallback WaveSpeed (vidéo générative) si Pagebolt échoue.
 // Réservé aux admins.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 
 const WAVESPEED_API_KEY = Deno.env.get('WAVESPEED_API_KEY');
+const PAGEBOLT_API_KEY = Deno.env.get('PAGEBOLT_API_KEY');
+const PAGEBOLT_DEMO_EMAIL = Deno.env.get('PAGEBOLT_DEMO_EMAIL');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const BASE = 'https://api.wavespeed.ai/api/v3';
+const PAGEBOLT_VIDEO_URL = 'https://pagebolt.dev/api/v1/video';
 
 const DEFAULT_IMAGE_MODEL = 'bytedance/seedream-4';
 const DEFAULT_VIDEO_MODEL = 'bytedance/seedance-v1-pro-t2v-480p';
@@ -18,6 +22,8 @@ const POLL_INTERVAL_MS = 3000;
 const MAX_POLL_MS = 120_000;
 const MEDIA_BUCKET = 'linkedin-media';
 const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 jours (couvre la fenêtre pré-publication)
+const PAGEBOLT_TIMEOUT_MS = 170_000;
+const MAX_PAGEBOLT_STEPS = 8;
 
 
 const BodySchema = z.object({
@@ -25,7 +31,10 @@ const BodySchema = z.object({
   image_model: z.string().max(200).optional(),
   video_model: z.string().max(200).optional(),
   slide_count: z.number().int().min(1).max(10).default(6),
+  // 'pagebolt' (défaut) = screencast réel ; 'ai' = vidéo générative WaveSpeed.
+  video_source: z.enum(['pagebolt', 'ai']).default('pagebolt'),
 });
+
 
 const BRAND_STYLE =
   'flat editorial illustration, brand colors purple #7C3AED, gold #F59E0B, black, white. No text, no letters, no typography, no watermark. Clean minimal composition, 1:1 square.';
