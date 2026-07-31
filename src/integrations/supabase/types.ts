@@ -3651,6 +3651,57 @@ export type Database = {
         }
         Relationships: []
       }
+      conversion_visual_captures: {
+        Row: {
+          analysis_id: string | null
+          created_at: string
+          desktop_screenshot_url: string | null
+          error_message: string | null
+          friction_score: number | null
+          frictions: Json
+          id: string
+          mobile_screenshot_url: string | null
+          observed_elements: Json
+          page_url: string
+          status: string
+          tracked_site_id: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          analysis_id?: string | null
+          created_at?: string
+          desktop_screenshot_url?: string | null
+          error_message?: string | null
+          friction_score?: number | null
+          frictions?: Json
+          id?: string
+          mobile_screenshot_url?: string | null
+          observed_elements?: Json
+          page_url: string
+          status?: string
+          tracked_site_id: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          analysis_id?: string | null
+          created_at?: string
+          desktop_screenshot_url?: string | null
+          error_message?: string | null
+          friction_score?: number | null
+          frictions?: Json
+          id?: string
+          mobile_screenshot_url?: string | null
+          observed_elements?: Json
+          page_url?: string
+          status?: string
+          tracked_site_id?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       copilot_actions: {
         Row: {
           action_category: string | null

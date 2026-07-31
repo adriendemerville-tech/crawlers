@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPageView';
+import { VisualCaptureCard } from '@/components/ConversionOptimizer/VisualCaptureCard';
 import { ProAccessGate } from '@/components/ProAccessGate';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -510,6 +511,12 @@ export default function ConversionOptimizer() {
             </div>
           </CardContent>
         </Card>
+
+        {selectedSiteId && selectedPageUrl && (
+          <VisualCaptureCard trackedSiteId={selectedSiteId} pageUrl={selectedPageUrl} />
+        )}
+
+
 
         {result && (
            <div className="space-y-4">
