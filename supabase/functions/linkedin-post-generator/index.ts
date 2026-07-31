@@ -320,12 +320,15 @@ Deno.serve(async (req) => {
 
     // Historique éditorial (sert à la rotation ET au prompt anti-redondance)
     const history = await fetchPostHistory(admin, 10);
-    // Une feature traitée dans les 4 derniers posts est fortement pénalisée.
+    // Un sujet traité dans les 4 derniers posts est fortement pénalisé.
     const recentFeatureIds = history.slice(0, 4).map((h) => h.feature_id).filter(Boolean) as string[];
+    // Les types de sujet des 3 derniers posts sont pénalisés : la rotation doit
+    // alterner fonctionnalité, workflow, problème, article, tarifs, lead magnet.
+    const recentTypes = history.slice(0, 3).map((h) => h.topic_type ?? 'feature');
 
-    // Sélection feature : celle demandée OU rotation priorisée par "readiness"
-    // (une feature qui produit réellement de la donnée passe avant une feature
-    // seulement codée, pour éviter de raconter une fonctionnalité fantôme).
+    // Sélection du sujet : celui demandé OU rotation priorisée par "readiness"
+    // (un sujet qui produit réellement de la donnée passe avant un sujet
+    // seulement codé, pour éviter de raconter une fonctionnalité fantôme).
     let feature: any;
     if (feature_id) {
       const { data } = await admin
@@ -341,20 +344,28 @@ Deno.serve(async (req) => {
         .eq('is_active', true)
         .order('last_used_at', { ascending: true, nullsFirst: true })
         .order('priority', { ascending: false })
-        .limit(6);
+        .limit(12);
 
       const scored: Array<{ f: any; score: number; rows: number | null }> = [];
       for (const [idx, f] of (candidates ?? []).entries()) {
-        const rows = await countEvidence(admin, f.evidence_table);
-        // rotation (moins récemment utilisée = meilleur rang) + preuve de données + capture possible
-        let score = (6 - idx) * 10 + Math.min(Number(f.priority ?? 0), 100) / 10;
-        if (rows === null) score -= 5; // pas de table de preuve déclarée
-        else if (rows === 0) score -= 60; // fonctionnalité sans donnée réelle : à éviter
-        else score += Math.min(30, Math.log10(rows + 1) * 12);
+        const type = f.topic_type ?? 'feature';
+        // La preuve de données ne concerne que les sujets produit (feature/workflow).
+        const needsEvidence = type === 'feature' || type === 'workflow';
+        const rows = needsEvidence ? await countEvidence(admin, f.evidence_table) : null;
+        // rotation (moins récemment utilisé = meilleur rang) + preuve de données + capture possible
+        let score = (12 - idx) * 6 + Math.min(Number(f.priority ?? 0), 100) / 10;
+        if (needsEvidence) {
+          if (rows === null) score -= 5; // pas de table de preuve déclarée
+          else if (rows === 0) score -= 60; // fonctionnalité sans donnée réelle : à éviter
+          else score += Math.min(30, Math.log10(rows + 1) * 12);
+        }
         if (f.capture_route) score += 5;
-        // Anti-redondance thématique : plus la feature a été traitée récemment, plus elle recule.
+        // Anti-redondance thématique : plus le sujet a été traité récemment, plus il recule.
         const recentIdx = recentFeatureIds.indexOf(f.id);
         if (recentIdx >= 0) score -= 80 - recentIdx * 15;
+        // Diversité de type : un type déjà utilisé dans les 3 derniers posts recule.
+        const typeIdx = recentTypes.indexOf(type);
+        if (typeIdx >= 0) score -= 30 - typeIdx * 10;
         scored.push({ f, score, rows });
       }
       scored.sort((a, b) => b.score - a.score);
