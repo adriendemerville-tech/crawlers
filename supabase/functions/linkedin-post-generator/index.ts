@@ -415,7 +415,7 @@ Retourne UNIQUEMENT un JSON strict :
           system: CRITIQUE_SYSTEM,
           user: [
             `Score actuel ${critique.score}/100 (seuil ${CRITIQUE_THRESHOLD}).`,
-            `Dimensions : hook ${critique.dimensions.hook}, produit ${critique.dimensions.product}, précision ${critique.dimensions.precision}, style ${critique.dimensions.style}.`,
+            `Dimensions : hook ${critique.dimensions.hook}, produit ${critique.dimensions.product}, précision ${critique.dimensions.precision}, style ${critique.dimensions.style}, objectifs ${critique.dimensions.objectives}.`,
             `Manquements à corriger, et uniquement ceux-là : ${gaps || 'hook trop faible'}`,
             '',
             'Post à corriger :',
