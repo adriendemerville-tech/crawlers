@@ -206,12 +206,13 @@ interface PastPost {
   angle: string;
   hashtags: string[];
   created_at: string;
+  topic_type: string | null;
 }
 
 async function fetchPostHistory(admin: any, limit = 10): Promise<PastPost[]> {
   const { data, error } = await admin
     .from('linkedin_scheduled_posts')
-    .select('feature_id, generated_text, edited_text, hashtags, created_at, linkedin_features_catalog(title)')
+    .select('feature_id, generated_text, edited_text, hashtags, created_at, linkedin_features_catalog(title, topic_type)')
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) {
@@ -224,6 +225,7 @@ async function fetchPostHistory(admin: any, limit = 10): Promise<PastPost[]> {
     return {
       feature_id: row.feature_id ?? null,
       feature_title: row.linkedin_features_catalog?.title ?? null,
+      topic_type: row.linkedin_features_catalog?.topic_type ?? null,
       hook: (lines[0] ?? '').slice(0, 160),
       angle: lines.slice(1, 3).join(' ').slice(0, 200),
       hashtags: Array.isArray(row.hashtags) ? row.hashtags : [],
@@ -238,13 +240,48 @@ function buildHistoryBriefing(history: PastPost[]): string {
     .slice(0, 8)
     .map((h, i) => {
       const d = h.created_at ? new Date(h.created_at).toISOString().slice(0, 10) : '';
-      return `${i + 1}. ${d} | feature: ${h.feature_title ?? 'inconnue'}\n   hook: ${h.hook}\n   angle: ${h.angle}`;
+      return `${i + 1}. ${d} | type: ${h.topic_type ?? 'feature'} | sujet: ${h.feature_title ?? 'inconnu'}\n   hook: ${h.hook}\n   angle: ${h.angle}`;
     })
     .join('\n');
   const tags = [...new Set(history.flatMap((h) => h.hashtags))].slice(0, 15);
   return `\n\nHISTORIQUE DES DERNIERS POSTS (anti-redondance, obligation absolue) :\n${items}\n${
     tags.length ? `Hashtags déjà très utilisés : ${tags.join(' ')}\n` : ''
-  }RÈGLES ANTI-REDONDANCE :\n- N'ouvre pas avec une formulation proche de l'un des hooks ci-dessus. Change de type d'accroche (chiffre, question, contre-pied, anecdote) par rapport aux deux derniers posts.\n- Ne reprends pas l'angle déjà utilisé pour la même feature : si elle a déjà été traitée, aborde une autre étape du parcours, un autre cas d'usage ou une autre limite.\n- Varie au moins 3 hashtags par rapport à la liste ci-dessus.\n- Ne recycle pas les mêmes exemples ni les mêmes chiffres illustratifs.\n`;
+  }RÈGLES ANTI-REDONDANCE :\n- N'ouvre pas avec une formulation proche de l'un des hooks ci-dessus. Change de type d'accroche (chiffre, question, contre-pied, anecdote) par rapport aux deux derniers posts.\n- Ne reprends pas l'angle déjà utilisé pour le même sujet : s'il a déjà été traité, aborde une autre étape du parcours, un autre cas d'usage ou une autre limite.\n- Change de type de sujet par rapport aux deux derniers posts (fonctionnalité, workflow transversal, problème visé, article de blog, tarifs, lead magnet).\n- Varie au moins 3 hashtags par rapport à la liste ci-dessus.\n- Ne recycle pas les mêmes exemples ni les mêmes chiffres illustratifs.\n`;
+}
+
+// Briefing éditorial spécifique au type de sujet. Le scope du module ne se limite
+// pas aux fonctionnalités : workflows transversaux, problèmes visés, articles de
+// blog, tarifs et lead magnets font partie de la rotation.
+const TOPIC_BRIEFS: Record<string, string> = {
+  feature: "TYPE DE SUJET : FONCTIONNALITÉ. Montre le mécanisme précis du module, ce qu'il calcule et ce qu'il affiche. Une fonctionnalité, un usage concret, pas un catalogue.",
+  workflow: "TYPE DE SUJET : WORKFLOW TRANSVERSAL. Le sujet n'est pas un module mais un enchaînement de modules. Raconte la chaîne étape par étape, nomme chaque brique traversée, et explique pourquoi l'enchaînement vaut plus que la somme des outils.",
+  problem: "TYPE DE SUJET : PROBLÈME VISÉ. Pars de la douleur, pas de l'outil. Deux tiers du post décrivent le symptôme, le mauvais diagnostic habituel et le vrai mécanisme en cause. Crawlers n'apparaît qu'en fin de post, comme réponse, sans démonstration produit.",
+  blog_article: "TYPE DE SUJET : ARTICLE DE BLOG. Le post est une porte d'entrée vers un article publié sur crawlers.fr. Donne la thèse de l'article et une idée forte qu'il contient, sans le résumer entièrement. Le CTA renvoie explicitement à l'article.",
+  pricing: "TYPE DE SUJET : TARIFS. Parle prix sans gêne et sans agressivité commerciale : ce que couvre chaque palier, à qui il s'adresse, ce qu'il ne fait pas. Aucun rabais, aucune urgence artificielle. La transparence est l'argument.",
+  lead_magnet: "TYPE DE SUJET : LEAD MAGNET. Met en avant une ressource gratuite et immédiatement utilisable. Explique ce qu'elle apporte en 5 minutes, dis clairement que c'est gratuit et sans contrepartie cachée. Un seul CTA, vers la ressource.",
+};
+
+function buildTopicBlock(topicType: string): string {
+  return `\n\n${TOPIC_BRIEFS[topicType] ?? TOPIC_BRIEFS.feature}\n`;
+}
+
+// Sujet dynamique : pour topic_type='blog_article', on remplace le contenu du
+// catalogue par un article réellement publié, non encore traité récemment.
+async function resolveBlogArticle(admin: any, history: PastPost[]): Promise<{ title: string; excerpt: string; url: string } | null> {
+  const { data, error } = await admin
+    .from('blog_articles')
+    .select('title, excerpt, slug, published_at')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+    .limit(8);
+  if (error || !data?.length) return null;
+  const recentTitles = history.slice(0, 6).map((h) => (h.feature_title ?? '').toLowerCase());
+  const pick = data.find((a: any) => !recentTitles.includes(String(a.title).toLowerCase())) ?? data[0];
+  return {
+    title: pick.title,
+    excerpt: String(pick.excerpt ?? '').slice(0, 600),
+    url: `https://crawlers.fr/blog/${pick.slug}`,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -283,12 +320,15 @@ Deno.serve(async (req) => {
 
     // Historique éditorial (sert à la rotation ET au prompt anti-redondance)
     const history = await fetchPostHistory(admin, 10);
-    // Une feature traitée dans les 4 derniers posts est fortement pénalisée.
+    // Un sujet traité dans les 4 derniers posts est fortement pénalisé.
     const recentFeatureIds = history.slice(0, 4).map((h) => h.feature_id).filter(Boolean) as string[];
+    // Les types de sujet des 3 derniers posts sont pénalisés : la rotation doit
+    // alterner fonctionnalité, workflow, problème, article, tarifs, lead magnet.
+    const recentTypes = history.slice(0, 3).map((h) => h.topic_type ?? 'feature');
 
-    // Sélection feature : celle demandée OU rotation priorisée par "readiness"
-    // (une feature qui produit réellement de la donnée passe avant une feature
-    // seulement codée, pour éviter de raconter une fonctionnalité fantôme).
+    // Sélection du sujet : celui demandé OU rotation priorisée par "readiness"
+    // (un sujet qui produit réellement de la donnée passe avant un sujet
+    // seulement codé, pour éviter de raconter une fonctionnalité fantôme).
     let feature: any;
     if (feature_id) {
       const { data } = await admin
@@ -304,20 +344,28 @@ Deno.serve(async (req) => {
         .eq('is_active', true)
         .order('last_used_at', { ascending: true, nullsFirst: true })
         .order('priority', { ascending: false })
-        .limit(6);
+        .limit(12);
 
       const scored: Array<{ f: any; score: number; rows: number | null }> = [];
       for (const [idx, f] of (candidates ?? []).entries()) {
-        const rows = await countEvidence(admin, f.evidence_table);
-        // rotation (moins récemment utilisée = meilleur rang) + preuve de données + capture possible
-        let score = (6 - idx) * 10 + Math.min(Number(f.priority ?? 0), 100) / 10;
-        if (rows === null) score -= 5; // pas de table de preuve déclarée
-        else if (rows === 0) score -= 60; // fonctionnalité sans donnée réelle : à éviter
-        else score += Math.min(30, Math.log10(rows + 1) * 12);
+        const type = f.topic_type ?? 'feature';
+        // La preuve de données ne concerne que les sujets produit (feature/workflow).
+        const needsEvidence = type === 'feature' || type === 'workflow';
+        const rows = needsEvidence ? await countEvidence(admin, f.evidence_table) : null;
+        // rotation (moins récemment utilisé = meilleur rang) + preuve de données + capture possible
+        let score = (12 - idx) * 6 + Math.min(Number(f.priority ?? 0), 100) / 10;
+        if (needsEvidence) {
+          if (rows === null) score -= 5; // pas de table de preuve déclarée
+          else if (rows === 0) score -= 60; // fonctionnalité sans donnée réelle : à éviter
+          else score += Math.min(30, Math.log10(rows + 1) * 12);
+        }
         if (f.capture_route) score += 5;
-        // Anti-redondance thématique : plus la feature a été traitée récemment, plus elle recule.
+        // Anti-redondance thématique : plus le sujet a été traité récemment, plus il recule.
         const recentIdx = recentFeatureIds.indexOf(f.id);
         if (recentIdx >= 0) score -= 80 - recentIdx * 15;
+        // Diversité de type : un type déjà utilisé dans les 3 derniers posts recule.
+        const typeIdx = recentTypes.indexOf(type);
+        if (typeIdx >= 0) score -= 30 - typeIdx * 10;
         scored.push({ f, score, rows });
       }
       scored.sort((a, b) => b.score - a.score);
@@ -365,15 +413,27 @@ Deno.serve(async (req) => {
     });
     const evidenceRows = feature.__evidence_rows as number | null | undefined;
     const captureSteps = Array.isArray(feature.capture_steps) ? feature.capture_steps : [];
+    const topicType = feature.topic_type ?? 'feature';
+    const topicBlock = buildTopicBlock(topicType);
+
+    // Sujet dynamique pour les articles de blog : on injecte l'article réellement publié.
+    let blogBlock = '';
+    if (topicType === 'blog_article') {
+      const article = await resolveBlogArticle(admin, history);
+      if (article) {
+        feature = { ...feature, title: article.title };
+        blogBlock = `\n\nARTICLE À METTRE EN AVANT :\nTitre : ${article.title}\nRésumé : ${article.excerpt || 'non disponible'}\nURL : ${article.url}\nLe CTA doit renvoyer vers cette URL.`;
+      }
+    }
     const factBlock = docText
       ? `\n\nDOCUMENTATION TECHNIQUE INTERNE (source de vérité, ne cite jamais ce bloc tel quel) :\n${docText}\n\nRÈGLE FACTUELLE : tu ne peux affirmer QUE ce qui figure dans ce bloc ou dans la description ci-dessus. Aucun chiffre de résultat client, aucun pourcentage, aucun cas d'usage inventé. Si tu n'as pas de chiffre vérifié, parle du mécanisme, pas de la performance.`
-      : `\n\nRÈGLE FACTUELLE : aucune documentation disponible pour cette fonctionnalité. Reste sur le mécanisme décrit ci-dessus. Aucun chiffre, aucun résultat client inventé.`;
+      : `\n\nRÈGLE FACTUELLE : aucune documentation disponible pour ce sujet. Reste sur le mécanisme décrit ci-dessus. Aucun chiffre, aucun résultat client inventé.`;
     const evidenceBlock =
       evidenceRows === null || evidenceRows === undefined
         ? ''
         : evidenceRows > 0
-          ? `\n\nDONNÉE RÉELLE : la fonctionnalité tourne en production, ${evidenceRows} enregistrement(s) en base. Tu peux dire qu'elle est en production, sans donner ce chiffre brut.`
-          : `\n\nATTENTION : la fonctionnalité n'a encore produit aucune donnée en production. Présente-la comme un mécanisme disponible, jamais comme un résultat observé, et n'invente aucun retour client.`;
+          ? `\n\nDONNÉE RÉELLE : le module tourne en production, ${evidenceRows} enregistrement(s) en base. Tu peux dire qu'il est en production, sans donner ce chiffre brut.`
+          : `\n\nATTENTION : le module n'a encore produit aucune donnée en production. Présente-le comme un mécanisme disponible, jamais comme un résultat observé, et n'invente aucun retour client.`;
 
     // Prompt LLM
 
@@ -384,7 +444,7 @@ Tu ne mens pas, tu ne survends pas, tu montres la valeur concrète.
 MISSION DU POST — respecte l'ordre de priorité :
 1. SEO / GEO : le post doit être crawlable et citable par les bots des IA. Utilise des entités nommées explicites ("Crawlers", nom exact du module), des chiffres vérifiables issus des données fournies, et des phrases autoportantes qui fonctionnent hors contexte.
 2. Acquisition : un seul appel à l'action par post. Invite à tester Crawlers, commenter, ou échanger — jamais deux CTA concurrents.
-3. Couverture 360 de la plateforme : le sujet est la feature fournie ci-dessous. Reste dessus, montre vraiment ce qu'elle fait.
+3. Couverture 360 de la plateforme : le scope éditorial couvre les fonctionnalités, les workflows transversaux, les problèmes visés, les articles de blog, les tarifs et les lead magnets. Le sujet et son type sont fournis ci-dessous. Reste dessus, traite-le à fond.
 4. Personal branding d'Adrien de Volontat : ton cumulatif — précis (données, pas d'approximations), pédagogue (explique le "comment", pas seulement le résultat), humble (assume les limites et les échecs), sympathique (direct, humain, sans jargon d'expert surplombant).
 
 GARDE-FOUS ANTI-IA (strict) :
@@ -397,20 +457,20 @@ GARDE-FOUS ANTI-IA (strict) :
 - OBLIGATOIRE : un hook fort en toute première ligne (constat, chiffre, question, contre-pied).
 - Phrases courtes. Rythme cassé. Ton direct, humain, un peu sec.`;
 
-    const userPrompt = `Rédige un post LinkedIn qui valorise la fonctionnalité suivante de Crawlers :
+    const userPrompt = `Rédige un post LinkedIn sur le sujet Crawlers suivant :
 
 **${feature.title}**
 Description : ${feature.short_description}
 Angle marketing : ${feature.marketing_angle}
 Cible : ${feature.target_audience || 'professionnels SEO/GEO'}
 Format média associé : ${mediaType === 'carousel' ? 'carrousel 6 images' : 'vidéo screencast 20-30s'}
-${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}${historyBlock}
+${tone_hint ? `Indication de ton : ${tone_hint}` : ''}${topicBlock}${blogBlock}${captureSteps.length ? `\nCe qui sera montré en vidéo : ${captureSteps.join(' puis ')}. Le texte doit coller à ce parcours.` : ''}${factBlock}${evidenceBlock}${styleBlock}${historyBlock}
 
 Règles de rédaction liées aux objectifs du module :
-- SEO/GEO : nomme explicitement la feature et "Crawlers". Si tu as un chiffre vérifié de la documentation ou des données, utilise-le. Chaque phrase importante doit être compréhensible seule.
+- SEO/GEO : nomme explicitement le sujet et "Crawlers". Si tu as un chiffre vérifié de la documentation ou des données, utilise-le. Chaque phrase importante doit être compréhensible seule.
 - Acquisition : un seul CTA en fin de post, sous une des formes : "Dis-moi si tu veux tester", "Ça t'intéresse ?", "Rdv sur @crawlers.fr", "Tu fais comment toi ?".
-- Couverture 360 : ne pars pas sur une généralité SEO/GEO — reste sur la mécanique de ${feature.title}.
-- Personal branding : montre le mécanisme, pas la prouesse. Si la feature a des limites, nomme-les avec humeur. Utilise "on" ou "je" de façon directe.
+- Couverture 360 : ne pars pas sur une généralité SEO/GEO — reste sur ${feature.title} et sur le type de sujet indiqué ci-dessus.
+- Personal branding : montre le mécanisme, pas la prouesse. Si le sujet a des limites, nomme-les avec humeur. Utilise "on" ou "je" de façon directe.
 
 Structure attendue :
 1. Hook (1 à 2 lignes) — accroche forte, question ou constat contre-intuitif. C'est la ligne la plus importante.
