@@ -924,7 +924,7 @@ async function executeContentArchitect(
   try {
     const { data: existing } = await supabase
       .from('async_jobs')
-      .select('id, status, result_data, error_message, created_at')
+      .select('id, status, result_data, error_message, created_at, input_payload')
       .eq('function_name', 'content-architecture-advisor')
       .eq('user_id', config.user_id)
       .in('status', ['pending', 'processing', 'completed'])
