@@ -7432,6 +7432,7 @@ export type Database = {
           slug: string
           target_audience: string | null
           title: string
+          topic_type: string
           updated_at: string
           use_count: number
         }
@@ -7457,6 +7458,7 @@ export type Database = {
           slug: string
           target_audience?: string | null
           title: string
+          topic_type?: string
           updated_at?: string
           use_count?: number
         }
@@ -7482,6 +7484,7 @@ export type Database = {
           slug?: string
           target_audience?: string | null
           title?: string
+          topic_type?: string
           updated_at?: string
           use_count?: number
         }
