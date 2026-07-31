@@ -16,7 +16,7 @@ Tout post LinkedIn publié pour Crawlers (générateur `linkedin-post-generator`
 7. **Publication uniquement en tant que membre** (Adrien de Volontat). Commentaires et lectures sociales bloqués par LinkedIn (Community Management API non accordé) : ne pas implémenter de « premier commentaire » automatique.
 
 Impacts code :
-- `supabase/functions/_shared/linkedinCompliance.ts` : source de vérité déterministe (longueur, mention, emojis, ponctuation) + scoring pondéré (hook, produit, précision, style, **objectives**) incluant checks SEO/GEO (entité Crawlers, phrase chiffrée), acquisition (CTA unique) et ton (humble/pédagogue).
+- `supabase/functions/_shared/linkedinCompliance.ts` : source de vérité déterministe (longueur, mention, emojis, ponctuation) + scoring pondéré (hook, produit, précision, style, **objectives**) incluant checks SEO/GEO (entité Crawlers, phrase chiffrée, **exactement 1 bloc question/réponse GEO**), acquisition (CTA unique) et ton (humble/pédagogue).
 - `supabase/functions/linkedin-post-generator/index.ts` : génération + critique pré-publication (max 2 réécritures), avec les 4 objectifs injectés dans le system prompt et le user prompt. Stockage `pre_publish_score` / `pre_publish_report`.
 - `supabase/functions/linkedin-publisher/index.ts` : double check longueur (≥1000 ET ≤1500 hors hashtags) + présence de "@crawlers.fr".
 - Détails complets : mem://features/linkedin/compliance-and-pre-publish-critique
