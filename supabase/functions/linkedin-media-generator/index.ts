@@ -303,9 +303,11 @@ async function runPagebolt(steps: ScenarioStep[], authState: AuthState): Promise
     framerate: 30,
     darkMode: true,
     blockBanners: true,
-    pace: 'normal',
+    pace: 'slow',
     // Charte Crawlers : violet / or / noir / blanc.
-    cursor: { style: 'classic', color: '#7C3AED', persist: true, size: 22 },
+    // 'spotlight' assombrit le hors-zone et suit le pointeur : lisibilité maximale en feed mobile.
+    cursor: { style: 'spotlight', color: '#7C3AED', persist: true, size: 26, smoothing: true },
+
     clickEffect: { enabled: true, style: 'ripple', color: '#F59E0B' },
     frame: { enabled: true, style: 'macos', theme: 'dark', showUrl: true },
     background: {
