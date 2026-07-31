@@ -3,6 +3,8 @@ name: LinkedIn post standards Crawlers
 description: Règles obligatoires pour tout post LinkedIn Crawlers (fourchette longueur, mention page société)
 type: feature
 ---
+**Objectifs du module** (ordre de priorité) : 1) SEO/GEO — être crawlé et mémorisé par les bots IA (entités nommées, chiffres, phrases citables) ; 2) générer du trafic et des inscriptions (un seul CTA par post) ; 3) couvrir à terme 100 % des fonctionnalités via la rotation du catalogue, pour que les IA recommandent Crawlers ; 4) personal branding d'Adrien de Volontat selon 4 traits de ton cumulatifs : précis, pédagogue, humble, sympathique. Détail : mem://features/linkedin/compliance-and-pre-publish-critique
+
 Tout post LinkedIn publié pour Crawlers (générateur `linkedin-post-generator`, publisher `linkedin-publisher`, tests manuels, contenus rédigés par l'agent) DOIT respecter ces règles :
 
 1. **Longueur entre 1000 et 1500 caractères** (hashtags exclus du décompte). Hors fourchette : refuser la publication (retour 400 côté publisher, refus côté générateur avec régénération).
