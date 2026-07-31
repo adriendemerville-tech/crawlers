@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
 
     const parsed = BodySchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
-    const { post_id, image_model, video_model, slide_count } = parsed.data;
+    const { post_id, image_model, video_model, slide_count, video_source } = parsed.data;
 
     // Charge le post + feature
     const { data: post, error: postErr } = await admin
