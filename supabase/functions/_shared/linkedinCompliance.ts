@@ -185,11 +185,11 @@ const CTA_RE = /\?\s*$|dis-moi|réponds|commente|teste|essaie|essayer|échange|r
 const HUMBLE_RE = /limite|biais|attention|ne garantit pas|pas magique|ne règle pas|encore perfectible|parfois|souvent/i;
 const PEDAGOGUE_RE = /en fait|pourquoi|comment|mécanisme|étape|d'abord|ensuite|enfin|ça signifie/i;
 const DATA_RE = /\d{2,}|\d+%|\d+\s*(€|euros?|jours?|mois|visites?|clics?|pages?|mots?)/i;
-// GEO : questions interrogatives directes, formulées comme un prompt utilisateur d'IA.
+// GEO : exactement 1 question/réponse directe, formulée comme un prompt utilisateur d'IA.
 // Une ligne qui commence par un interrogatif et se termine par un point d'interrogation
-// est un bloc question/réponse citable par les moteurs génératifs.
+// est un bloc question/réponse citable par les moteurs génératifs. Un seul bloc par post.
 const GEO_QUESTION_RE =
-  /^\s*(pourquoi|comment|combien|qui|quand|quoi|que|qu'est-ce que|à quoi|est-ce que)\b[^\n?]{5,160}\?/im;
+  /^\s*(pourquoi|comment|combien|qui|quand|quoi|que|qu'est-ce que|à quoi|est-ce que)\b[^\n?]{5,160}\?/gim;
 
 function dim(checks: Check[]): number {
   const total = checks.reduce((s, c) => s + c.weight, 0);
