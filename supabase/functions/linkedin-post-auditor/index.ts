@@ -2,7 +2,7 @@
 //
 // Rôle : ~5 min après publication, relire le post RÉELLEMENT publié sur LinkedIn,
 // le confronter aux règles de création (hook, longueur 1000-1500, mention @crawlers.fr,
-// zéro emoji, structure lisible = potentiel d'impressions), et le corriger via
+// emoji rares et maîtrisés, structure lisible = potentiel d'impressions), et le corriger via
 // PARTIAL_UPDATE si le score est insuffisant.
 //
 // Économie de tokens : audit déterministe d'abord (gratuit). Un seul appel LLM,
@@ -122,7 +122,7 @@ Objectifs à conforter dans tout post corrigé :
 Règles impératives du post final :
 - Entre 1000 et 1500 caractères hashtags exclus.
 - Contient au moins une fois "@crawlers.fr" en langue naturelle.
-- Aucun emoji, aucun tiret cadratin (— ou –).
+- Emoji autorisés mais rares (4 maximum). Aucun tiret cadratin (— ou –).
 - Première ligne = hook de 40 à 140 signes, autoportant, avec une tension ou un chiffre concret, lisible avant le "voir plus" de LinkedIn.
 - Paragraphes courts (max 3 lignes), sauts de ligne, une idée par bloc.
 - Termine par un CTA simple (question ou invitation à tester).
