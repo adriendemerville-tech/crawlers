@@ -138,8 +138,15 @@ async function callDictadevi(
         await new Promise((r) => setTimeout(r, waitMs))
         continue
       }
-      const data = await resp.json().catch(() => null)
+      const raw = await resp.text()
+      const data = (() => { try { return JSON.parse(raw) } catch { return raw || null } })()
+      if (resp.status >= 400) {
+        // Sans ce log, un 400 amont remontait comme « dictadevi-actions failed: HTTP 400 »
+        // sans aucune indication du champ refusé.
+        console.error(`[dictadevi-actions] ${resp.status} on ${method} ${path} — upstream: ${raw.slice(0, 800)}`)
+      }
       return { status: resp.status, data }
+
     } catch (e) {
       if (attempt >= maxAttempts) {
         console.error(`[dictadevi-actions] Network error on ${method} ${url}:`, e)
@@ -244,7 +251,19 @@ Deno.serve(handleRequest(async (req: Request) => {
   try { payload = await req.json() } catch { return jsonError('Invalid JSON body', 400) }
 
   const action = (payload.action || '').toString().trim()
-  const params = payload.params || {}
+  const rawParams = payload.params || {}
+  // autopilot-engine envoie { action, params: { body: {title, content, ...} } }
+  // (forme iktracker-actions adaptée) : on aplatit `body`/`updates` sinon
+  // Dictadevi reçoit un objet sans title → HTTP 400 "title is required".
+  const nested = (rawParams as Record<string, unknown>).body ?? (rawParams as Record<string, unknown>).updates
+  const params: Record<string, unknown> = (nested && typeof nested === 'object' && !Array.isArray(nested))
+    ? { ...(rawParams as Record<string, unknown>), ...(nested as Record<string, unknown>), body: undefined, updates: undefined }
+    : (rawParams as Record<string, unknown>)
+  if (nested && typeof nested === 'object') {
+    delete params.body
+    delete params.updates
+  }
+
   if (!action) return jsonError('action is required', 400)
 
   // Public actions (no API key required)
