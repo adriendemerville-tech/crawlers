@@ -1307,7 +1307,6 @@ FRAÎCHEUR & DÉNOMINATION:
               }],
               tool_choice: { type: 'function', function: { name: 'content_architecture_recommendation' } },
             }),
-            signal: AbortSignal.timeout(attemptTimeoutMs),
           });
           // If we got a response (even error), return it — only retry on timeout
           return resp;
@@ -1331,6 +1330,12 @@ FRAÎCHEUR & DÉNOMINATION:
       const errText = await aiResponse.text()
       console.error('[content-advisor] AI error:', aiResponse.status, errText)
 
+      // En mode async, on doit throw : un `return` laisserait le job bloqué
+      // à progress 65 jusqu'au reaper (faux positif "CPU wall-time exceeded").
+      if (jobSb && jobId) {
+        throw new Error(`AI synthesis failed (${aiResponse.status}): ${errText.slice(0, 300)}`)
+      }
+
       if (aiResponse.status === 429) {
         return jsonError('AI rate limited, please try again later', 429)
       }
@@ -1340,6 +1345,7 @@ FRAÎCHEUR & DÉNOMINATION:
 
       return jsonError('AI synthesis failed', 500)
     }
+
 
     const aiJson = await aiResponse.json()
     let recommendation: any = null
