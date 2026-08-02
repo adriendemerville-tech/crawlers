@@ -558,15 +558,17 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
         if (result.status === 'fulfilled' && result.value.ok) {
           try {
             const json = await result.value.json()
-            const md = json?.data?.markdown || json?.markdown || ''
-            // Simple word frequency analysis
+            const rawMd: string = json?.data?.markdown || json?.markdown || ''
+            // Garde CPU : on n'analyse que le début du contenu principal
+            const md = rawMd.length > MAX_COMPETITOR_MD_CHARS ? rawMd.slice(0, MAX_COMPETITOR_MD_CHARS) : rawMd
             const words = md.toLowerCase().replace(/[^a-zà-ÿ\s-]/g, '').split(/\s+/).filter((w: string) => w.length > 3)
-            const freq: Record<string, number> = {}
-            for (const w of words) { freq[w] = (freq[w] || 0) + 1 }
-            const topTerms = Object.entries(freq).sort(([, a], [, b]) => (b as number) - (a as number)).slice(0, 30)
+            const freq = new Map<string, number>()
+            for (const w of words) freq.set(w, (freq.get(w) || 0) + 1)
+            const topTerms = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15)
             competitorInsights.push({
               url: topUrls[idx],
               word_count: words.length,
+              truncated: rawMd.length > MAX_COMPETITOR_MD_CHARS,
               top_terms: topTerms.map(([term, count]) => ({ term, count })),
             })
           } catch { /* skip */ }
