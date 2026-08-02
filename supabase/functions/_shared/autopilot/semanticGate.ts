@@ -51,8 +51,12 @@ export function checkSemanticGate(
     return { passed: true, identityOverlap: 1, matchedTerms: [], totalTerms: identityTerms };
   }
 
-  const matchedTerms = identityTerms.filter(term => contentText.includes(term));
+  // Stemming léger FR : tolère singulier/pluriel et variantes de terminaison
+  // (« indemnités » ↔ « indemnité », « kilométriques » ↔ « kilométrique »).
+  const stem = (t: string) => t.replace(/(aux|ales|eaux|ies|es|s|x)$/u, '');
+  const matchedTerms = identityTerms.filter(term => contentText.includes(term) || contentText.includes(stem(term)));
   const identityOverlap = matchedTerms.length / identityTerms.length;
+
 
   return {
     passed: identityOverlap >= threshold,
