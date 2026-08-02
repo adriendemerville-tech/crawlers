@@ -1180,8 +1180,9 @@ FRAÎCHEUR & DÉNOMINATION:
     // Budget global : la fonction est tuée au-delà de ~150s de wall-time.
     // On garde 25s de marge pour le post-traitement (parsing, guardrails, writes).
     const TOTAL_BUDGET_MS = 125_000;
-    const MIN_ATTEMPT_MS = 35_000;   // en dessous, inutile de lancer un modèle
-    const MAX_ATTEMPT_MS = 75_000;
+    const MIN_ATTEMPT_MS = 30_000;   // en dessous, inutile de lancer un modèle
+    const MAX_ATTEMPT_MS = 90_000;
+    const FIRST_ATTEMPT_MAX_MS = 55_000; // laisse une fenêtre réelle au fallback
 
     // Si la collecte de données a déjà consommé le budget, on abandonne les modèles
     // lents (Sonnet/Pro) au profit d'un flash qui a une chance de finir avant le kill.
