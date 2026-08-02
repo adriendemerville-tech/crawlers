@@ -1210,10 +1210,7 @@ FRAÎCHEUR & DÉNOMINATION:
         try {
           const resp = await aiGatewayFetch( {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
+            timeoutMs: attemptTimeoutMs,
             body: JSON.stringify({
               model,
               messages: [
