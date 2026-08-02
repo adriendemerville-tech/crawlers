@@ -108,7 +108,7 @@ async function buildV3CmsActionsForIktracker(
       body: {
         title: finalTitle,
         slug,
-        status: 'draft',
+        status: config.implementation_mode === 'auto' ? 'published' : 'draft',
         content: finalContent,
         excerpt: result?.final?.excerpt || null,
         meta_title: result?.final?.meta_title || finalTitle,
