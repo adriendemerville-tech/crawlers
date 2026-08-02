@@ -39,6 +39,23 @@ const PAGE_TYPE_TO_CONTENT_TYPE: Record<string, ContentType> = {
 
 const PAGE_TYPES = ['homepage', 'product', 'article', 'faq', 'landing', 'category'] as const
 
+// ── Gardes CPU (évite "Edge function killed: CPU wall-time exceeded") ──
+const MAX_HTML_CHARS = 400_000        // HTML brut analysé (regex O(n) × ~40 passes)
+const MAX_COMPETITOR_MD_CHARS = 25_000 // markdown concurrent pour le TF-IDF
+const MAX_PROMPT_BLOCK_CHARS = 4_000   // taille max d'un bloc JSON injecté au prompt
+
+/**
+ * Sérialisation compacte + tronquée pour les blocs de contexte du prompt.
+ * Remplace JSON.stringify(x, null, 2) : moins de CPU et moins de tokens.
+ */
+function promptJson(value: unknown, fallback: string, maxChars = MAX_PROMPT_BLOCK_CHARS): string {
+  if (value === null || value === undefined) return fallback
+  let s: string
+  try { s = JSON.stringify(value) } catch { return fallback }
+  if (!s || s === '{}' || s === '[]') return fallback
+  return s.length > maxChars ? `${s.slice(0, maxChars)}…(tronqué)` : s
+}
+
 interface StrategicObjective {
   type: 'content_gap' | 'eeat_improvement' | 'new_keyword' | 'internal_linking' | 'silo_rebalance' | 'cannibalization_fix' | 'topical_authority' | 'geo_visibility'
   description: string
