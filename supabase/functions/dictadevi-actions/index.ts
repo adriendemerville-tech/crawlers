@@ -138,8 +138,15 @@ async function callDictadevi(
         await new Promise((r) => setTimeout(r, waitMs))
         continue
       }
-      const data = await resp.json().catch(() => null)
+      const raw = await resp.text()
+      const data = (() => { try { return JSON.parse(raw) } catch { return raw || null } })()
+      if (resp.status >= 400) {
+        // Sans ce log, un 400 amont remontait comme « dictadevi-actions failed: HTTP 400 »
+        // sans aucune indication du champ refusé.
+        console.error(`[dictadevi-actions] ${resp.status} on ${method} ${path} — upstream: ${raw.slice(0, 800)}`)
+      }
       return { status: resp.status, data }
+
     } catch (e) {
       if (attempt >= maxAttempts) {
         console.error(`[dictadevi-actions] Network error on ${method} ${url}:`, e)
