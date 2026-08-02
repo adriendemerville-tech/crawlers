@@ -3,6 +3,9 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { isIktrackerDomain, isDictadeviDomain, normalizePageKey } from '../_shared/domainUtils.ts';
 
+/** All known CMS bridge edge functions (payload shape { action, ... }). */
+const CMS_BRIDGES = ['iktracker-actions', 'dictadevi-actions'];
+
 /** Resolve the right CMS bridge function for a given domain (IKtracker / Dictadevi). */
 function resolveCmsBridge(domain: string): string {
   if (isDictadeviDomain(domain)) return 'dictadevi-actions';
@@ -647,8 +650,13 @@ async function prepareExecuteActions(
     }
 
     const finalHasCms = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
-    if (finalHasCms && !decision.action.functions.includes('iktracker-actions')) {
-      decision.action.functions.push('iktracker-actions');
+    const bridge = resolveCmsBridge(site.domain);
+    // Normalise : on retire tout autre pont CMS mal routé puis on ajoute le bon.
+    decision.action.functions = decision.action.functions.filter(
+      (f: string) => !CMS_BRIDGES.includes(f) || f === bridge,
+    );
+    if (finalHasCms && !decision.action.functions.includes(bridge)) {
+      decision.action.functions.push(bridge);
     }
   } else if (routedCmsActions && routedCmsActions.all.length > 0) {
     // Non-IKtracker sites
@@ -661,7 +669,7 @@ async function prepareExecuteActions(
     const patchActions = routedCmsActions.all.filter((a: any) => a.action === 'update-page' || a.action === 'patch-content' || a.action === 'update-h1' || a.action === 'update-faq' || a.action === 'update-meta');
     const redirectActions = routedCmsActions.all.filter((a: any) => a.action === 'create-redirect' || a.action === 'delete-redirect');
     
-    decision.action.functions = decision.action.functions.filter((f: string) => f !== 'iktracker-actions');
+    decision.action.functions = decision.action.functions.filter((f: string) => !CMS_BRIDGES.includes(f));
     if (createActions.length > 0 && !decision.action.functions.includes('cms-push-draft')) decision.action.functions.push('cms-push-draft');
     if (patchActions.length > 0 && !decision.action.functions.includes('cms-patch-content')) {
       decision.action.functions.push('cms-patch-content');
@@ -689,10 +697,10 @@ async function executeFunctions(
         continue;
       }
 
-      if (funcName === 'iktracker-actions' && Array.isArray(decision.action.payload?.cms_actions)) {
-        await executeIktrackerActions(decision, site, config, phase, cycleNumber, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
-      } else if (funcName === 'iktracker-actions') {
-        await executeIktrackerReroute(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+      if (CMS_BRIDGES.includes(funcName) && Array.isArray(decision.action.payload?.cms_actions)) {
+        await executeCmsBridgeActions(decision, site, config, phase, cycleNumber, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+      } else if (CMS_BRIDGES.includes(funcName)) {
+        await executeCmsBridgeReroute(funcName, decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
       } else if (funcName === 'content-architecture-advisor') {
         await executeContentArchitect(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
       } else if (funcName === 'cms-push-draft' && Array.isArray(decision.action.payload?.cms_actions)) {
@@ -718,7 +726,7 @@ async function executeFunctions(
 
 // ═══ Individual function executors ═══
 
-async function executeIktrackerActions(
+async function executeCmsBridgeActions(
   decision: any, site: SiteInfo, config: AutopilotConfig,
   phase: string, cycleNumber: number,
   supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
@@ -728,7 +736,8 @@ async function executeIktrackerActions(
     console.warn(`[AutopilotEngine] Truncating ${decision.action.payload.cms_actions.length} CMS actions to ${MAX_CMS_ACTIONS_PER_CYCLE} for ${site.domain}`);
     decision.action.payload.cms_actions = decision.action.payload.cms_actions.slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
   }
-  console.log(`[AutopilotEngine] Executing ${decision.action.payload.cms_actions.length} CMS actions on IKtracker for ${site.domain}`);
+  const bridgeName = resolveCmsBridge(site.domain);
+  console.log(`[AutopilotEngine] Executing ${decision.action.payload.cms_actions.length} CMS actions via ${bridgeName} for ${site.domain}`);
   
   for (const cmsAction of decision.action.payload.cms_actions) {
     try {
@@ -754,8 +763,7 @@ async function executeIktrackerActions(
         ...(cmsAction.body ? { body: cmsAction.body } : {}),
       };
 
-      const bridge = resolveCmsBridge(site.domain);
-      console.log(`[AutopilotEngine] ${bridge} CMS action: ${cmsAction.action}`, JSON.stringify(actionBody).slice(0, 500));
+      console.log(`[AutopilotEngine] ${bridgeName} CMS action: ${cmsAction.action}`, JSON.stringify(actionBody).slice(0, 500));
 
       const funcResponse = await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, actionBody);
 
@@ -780,7 +788,7 @@ async function executeIktrackerActions(
             console.log(`[AutopilotEngine] 🗑️ Deleted hallucinated post: ${slugToDelete}`);
           }
           executionResults.push({
-            function: 'iktracker-actions', cms_action: 'create-post', target: slugToDelete || 'unknown',
+            function: bridgeName, cms_action: 'create-post', target: slugToDelete || 'unknown',
             status: 'rejected', reason: `Semantic gate: ${Math.round(gate.identityOverlap * 100)}% identity overlap (min 15%)`,
           });
           continue;
@@ -795,22 +803,22 @@ async function executeIktrackerActions(
       }
       
       executionResults.push({
-        function: 'iktracker-actions', cms_action: cmsAction.action,
+        function: bridgeName, cms_action: cmsAction.action,
         target: cmsAction.slug || cmsAction.page_key || 'new',
         status: funcResponse.ok ? 'success' : 'error', http_status: funcResponse.status,
         result: funcResult, image_generated: imageGenerated,
       });
       if (!funcResponse.ok) {
-        phaseErrors.push({ phase, function: 'iktracker-actions', severity: 'degraded', message: `CMS action ${cmsAction.action} failed: HTTP ${funcResponse.status}`, retryable: true });
+        phaseErrors.push({ phase, function: bridgeName, severity: 'degraded', message: `CMS action ${cmsAction.action} failed: HTTP ${funcResponse.status}`, retryable: true });
         setSuccess(false);
       }
     } catch (actionErr) {
       executionResults.push({
-        function: 'iktracker-actions', cms_action: cmsAction.action,
+        function: bridgeName, cms_action: cmsAction.action,
         target: cmsAction.slug || cmsAction.page_key || 'new', status: 'error',
         error: actionErr instanceof Error ? actionErr.message : 'unknown',
       });
-      phaseErrors.push({ phase, function: 'iktracker-actions', severity: 'degraded', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: true });
+      phaseErrors.push({ phase, function: bridgeName, severity: 'degraded', message: actionErr instanceof Error ? actionErr.message : 'unknown', retryable: true });
       setSuccess(false);
     }
   }
@@ -873,8 +881,8 @@ async function generateAndAttachImage(cmsAction: any, funcResult: any, site: Sit
   return false;
 }
 
-async function executeIktrackerReroute(
-  decision: any, site: SiteInfo, config: AutopilotConfig, phase: string,
+async function executeCmsBridgeReroute(
+  funcName: string, decision: any, site: SiteInfo, config: AutopilotConfig, phase: string,
   supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
   setSuccess: (v: boolean) => void,
 ) {
@@ -883,7 +891,7 @@ async function executeIktrackerReroute(
   const hasRecommendations = Array.isArray(payload.recommendations) && payload.recommendations.length > 0;
 
   if (hasFixes || hasRecommendations) {
-    console.log(`[AutopilotEngine] Rerouting iktracker-actions → generate-corrective-code for ${site.domain}`);
+    console.log(`[AutopilotEngine] Rerouting ${funcName} → generate-corrective-code for ${site.domain}`);
     const fixes = hasFixes ? payload.fixes : payload.recommendations;
     const normalizedFixes = fixes.map((f: any, i: number) => ({
       id: f.id || `rerouted-fix-${i}`, label: f.label || f.title || f.description || `Fix ${i + 1}`,
@@ -904,7 +912,7 @@ async function executeIktrackerReroute(
 
     const rerouteResult = await rerouteResponse.json().catch(() => ({}));
     executionResults.push({
-      function: 'generate-corrective-code', rerouted_from: 'iktracker-actions',
+      function: 'generate-corrective-code', rerouted_from: funcName,
       status: rerouteResponse.ok ? 'success' : 'error', http_status: rerouteResponse.status,
       fixes_count: normalizedFixes.length, result: rerouteResult,
     });
@@ -913,8 +921,8 @@ async function executeIktrackerReroute(
       setSuccess(false);
     }
   } else {
-    console.warn(`[AutopilotEngine] iktracker-actions called without cms_actions or fixes for ${site.domain}, skipping`);
-    executionResults.push({ function: 'iktracker-actions', status: 'skipped', detail: 'No cms_actions and no JS fixes in payload' });
+    console.warn(`[AutopilotEngine] ${funcName} called without cms_actions or fixes for ${site.domain}, skipping`);
+    executionResults.push({ function: funcName, status: 'skipped', detail: 'No cms_actions and no JS fixes in payload' });
   }
 }
 
@@ -1180,6 +1188,14 @@ async function executeGenericFunction(
   supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
   setSuccess: (v: boolean) => void,
 ) {
+  // Garde défensive : un pont CMS ne doit JAMAIS partir par le tuyau générique
+  // (payload sans `action` → HTTP 400 "action is required" → cycle degraded).
+  if (CMS_BRIDGES.includes(funcName)) {
+    console.warn(`[AutopilotEngine] Blocked generic call to CMS bridge ${funcName} for ${site.domain} (no action field)`);
+    executionResults.push({ function: funcName, status: 'skipped', detail: 'CMS bridge requires cms_actions; generic call blocked' });
+    return;
+  }
+
   let funcBody: Record<string, unknown> = {
     tracked_site_id: config.tracked_site_id, domain: site.domain,
     url: `https://${site.domain}`, user_id: config.user_id,
