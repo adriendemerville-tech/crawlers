@@ -1170,9 +1170,12 @@ FRAÎCHEUR & DÉNOMINATION:
       return score;
     })();
 
-    // Route: ≤4 → flash-lite (simple brief), 5-8 → flash (standard), ≥9 → Sonnet 4.5 + Gemini Pro fallback (complex)
+    // Route: ≤4 → flash-lite, 5-8 → flash, ≥9 → flash puis pro en secours.
+    // Sonnet 4.5 est écarté ici : sur un tool-call de ~2 200 mots il dépasse
+    // systématiquement les 55-75s disponibles avant le kill de l'edge function
+    // (le signal coupait la lecture du body → "Signal timed out").
     const baseTiers: string[] = complexityScore >= 9
-      ? ['anthropic/claude-sonnet-4.5', 'google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview']
+      ? ['google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite']
       : complexityScore >= 5
         ? ['google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite']
         : ['google/gemini-3.1-flash-lite'];
@@ -1180,8 +1183,9 @@ FRAÎCHEUR & DÉNOMINATION:
     // Budget global : la fonction est tuée au-delà de ~150s de wall-time.
     // On garde 25s de marge pour le post-traitement (parsing, guardrails, writes).
     const TOTAL_BUDGET_MS = 125_000;
-    const MIN_ATTEMPT_MS = 35_000;   // en dessous, inutile de lancer un modèle
-    const MAX_ATTEMPT_MS = 75_000;
+    const MIN_ATTEMPT_MS = 30_000;   // en dessous, inutile de lancer un modèle
+    const MAX_ATTEMPT_MS = 90_000;
+    const FIRST_ATTEMPT_MAX_MS = 55_000; // laisse une fenêtre réelle au fallback
 
     // Si la collecte de données a déjà consommé le budget, on abandonne les modèles
     // lents (Sonnet/Pro) au profit d'un flash qui a une chance de finir avant le kill.
@@ -1201,7 +1205,12 @@ FRAÎCHEUR & DÉNOMINATION:
         if (remaining < MIN_ATTEMPT_MS) {
           throw new Error(`LLM budget exhausted (${Math.round(remaining / 1000)}s restants) — abandon avant kill CPU`);
         }
-        const attemptTimeoutMs = Math.min(MAX_ATTEMPT_MS, remaining - 5_000);
+        // Le dernier tier a droit à tout le budget restant ; les précédents sont
+        // plafonnés pour laisser une vraie fenêtre au fallback plus rapide.
+        const isLastTier = attempt === modelTiers.length - 1;
+        const attemptTimeoutMs = isLastTier
+          ? Math.min(MAX_ATTEMPT_MS, remaining - 5_000)
+          : Math.min(FIRST_ATTEMPT_MAX_MS, Math.max(MIN_ATTEMPT_MS, remaining - MIN_ATTEMPT_MS - 5_000));
         const isRetry = attempt > 0;
         if (isRetry) {
           console.log(`[content-advisor] ⚡ Retry with faster model: ${model} (attempt ${attempt + 1}, budget ${Math.round(attemptTimeoutMs / 1000)}s)`);
@@ -1311,7 +1320,11 @@ FRAÎCHEUR & DÉNOMINATION:
           // If we got a response (even error), return it — only retry on timeout
           return resp;
         } catch (err) {
-          const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+          // Deno lève DOMException('TimeoutError') sur AbortSignal.timeout,
+          // et AbortError sur un abort manuel : les deux doivent basculer.
+          const name = (err as { name?: string })?.name || '';
+          const msg = err instanceof Error ? err.message : String(err);
+          const isTimeout = name === 'TimeoutError' || name === 'AbortError' || /timed out|timeout/i.test(msg);
           const isLastAttempt = attempt === modelTiers.length - 1;
           const budgetLeft = TOTAL_BUDGET_MS - (Date.now() - startTime);
           if (isTimeout && !isLastAttempt && budgetLeft >= MIN_ATTEMPT_MS) {

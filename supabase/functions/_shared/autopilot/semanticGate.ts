@@ -26,14 +26,26 @@ export function checkSemanticGate(
     return { passed: true, identityOverlap: 1, matchedTerms: [], totalTerms: [] };
   }
 
-  const contentText = `${content.title || ''} ${content.excerpt || ''} ${(content.body || '').slice(0, 500)}`.toLowerCase();
-  
-  const identityTerms = [
-    site.market_sector,
-    site.products_services,
-    site.target_audience,
-    site.site_name,
-  ].filter(Boolean).join(' ').toLowerCase().split(/[\s,;]+/).filter(t => t.length > 3);
+  // On analyse le corps réel (et pas seulement 500 caractères) : un article de
+  // 2 000 mots place ses termes d'identité bien après l'introduction.
+  const contentText = `${content.title || ''} ${content.excerpt || ''} ${(content.body || '').slice(0, 20000)}`
+    .toLowerCase()
+    .replace(/<[^>]+>/g, ' ');
+
+  const STOPWORDS = new Set([
+    'pour', 'avec', 'dans', 'sans', 'plus', 'mais', 'donc', 'leur', 'leurs',
+    'cette', 'ceux', 'celle', 'elles', 'nous', 'vous', 'être', 'etre', 'avoir',
+    'tout', 'tous', 'toute', 'toutes', 'chez', 'entre', 'autre', 'autres',
+  ]);
+
+  const identityTerms = Array.from(new Set(
+    [site.market_sector, site.products_services, site.target_audience, site.site_name]
+      .filter(Boolean).join(' ').toLowerCase()
+      .split(/[\s,;]+/)
+      // retire les élisions type "d'indemnités" → "indemnités"
+      .map(t => t.replace(/^[a-z]['’]/, '').replace(/[^\p{L}\p{N}-]/gu, ''))
+      .filter(t => t.length > 3 && !STOPWORDS.has(t)),
+  ));
 
   if (identityTerms.length === 0) {
     return { passed: true, identityOverlap: 1, matchedTerms: [], totalTerms: identityTerms };

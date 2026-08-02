@@ -980,9 +980,10 @@ async function executeContentArchitect(
 
   if (jobId) {
     console.log(`[AutopilotEngine] content-architecture-advisor job ${jobId}, polling court...`);
-    // Fenêtre de polling COURTE (45s) : le job persiste ses artefacts lui-même et
-    // sera récupéré au cycle suivant. Un poll long tuait l'invocation edge (timeout).
-    const POLL_BUDGET_MS = 45 * 1000;
+    // Fenêtre de polling (90s) : l'advisor termine en ~60-75s depuis le passage
+    // en Gemini flash, donc le même cycle peut consommer le résultat et pousser
+    // au CMS. Au-delà, le job persiste ses artefacts et est repris au cycle suivant.
+    const POLL_BUDGET_MS = 90 * 1000;
     const startedAt = Date.now();
     const pollDeadline = startedAt + POLL_BUDGET_MS;
 
