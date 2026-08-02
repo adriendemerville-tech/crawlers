@@ -955,16 +955,16 @@ RÈGLE: Le contenu doit renforcer ce silo thématique. Il doit lier vers les pag
 ${keywordCloudBlock}
 
 **Identité du site:**
-${siteIdentity ? JSON.stringify(siteIdentity, null, 2) : 'Non disponible — recommandations génériques'}
+${promptJson(siteIdentity, 'Non disponible — recommandations génériques', 2500)}
 
 **Données mots-clés DataForSEO:**
-${keywordData ? JSON.stringify(keywordData, null, 2) : 'Non disponibles'}
+${promptJson(keywordData, 'Non disponibles', 3000)}
 
 **Analyse SERP (top 5):**
-${serpData ? JSON.stringify(serpData, null, 2) : 'Non disponible'}
+${promptJson(serpData, 'Non disponible', 3000)}
 
 **TF-IDF concurrents (top termes des 3 premiers résultats):**
-${competitorInsights.length > 0 ? JSON.stringify(competitorInsights, null, 2) : 'Non disponible'}
+${competitorInsights.length > 0 ? promptJson(competitorInsights, 'Non disponible', 2500) : 'Non disponible'}
 
 **Données audit existant:**
 ${existingAuditData ? `Type: ${existingAuditData.type}` : 'Aucun audit récent'}
@@ -1030,13 +1030,13 @@ ${workbenchContentGaps.map((cg: any) => `- "${cg.payload?.keyword || cg.title}" 
 ` : ''}
 
 **Données Cocoon (maillage):**
-${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}
+${promptJson(cocoonData, 'Pas de données de maillage', 2500)}
 
 **Score GEO actuel:**
 ${geoScore !== null ? `${geoScore}/100` : 'Non mesuré'}
 
 **Visibilité LLM (ChatGPT, Perplexity, etc.):**
-${llmVisibilityData ? JSON.stringify(llmVisibilityData, null, 2) : 'Non mesurée'}
+${promptJson(llmVisibilityData, 'Non mesurée', 1500)}
 
 **Backlinks & Autorité:**
 ${backlinkData ? `Referring domains: ${backlinkData.referring_domains || 0}, Total backlinks: ${backlinkData.backlinks_total || 0}, Domain rank: ${backlinkData.domain_rank || 'N/A'}` : 'Non mesuré'}
@@ -1130,7 +1130,7 @@ DIRECTIVES DE TON:
 ${contentTemplate.tone_guidelines}
 
 EXEMPLES DE RÉFÉRENCE:
-${JSON.stringify(contentTemplate.examples, null, 2)}
+${promptJson(contentTemplate.examples, 'Aucun exemple', 2000)}
 
 FRAÎCHEUR & DÉNOMINATION:
 - N'utilise PAS automatiquement "Guide" dans le recommended_h1, les H2/H3, les FAQ, les tableaux, les résumés ou les sections.
