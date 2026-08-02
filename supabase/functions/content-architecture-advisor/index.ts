@@ -1299,18 +1299,19 @@ FRAÎCHEUR & DÉNOMINATION:
               }],
               tool_choice: { type: 'function', function: { name: 'content_architecture_recommendation' } },
             }),
-            signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+            signal: AbortSignal.timeout(attemptTimeoutMs),
           });
           // If we got a response (even error), return it — only retry on timeout
           return resp;
         } catch (err) {
           const isTimeout = err instanceof DOMException && err.name === 'AbortError';
           const isLastAttempt = attempt === modelTiers.length - 1;
-          if (isTimeout && !isLastAttempt) {
-            console.warn(`[content-advisor] ⏱️ Model ${model} timed out after ${LLM_TIMEOUT_MS / 1000}s, falling back...`);
+          const budgetLeft = TOTAL_BUDGET_MS - (Date.now() - startTime);
+          if (isTimeout && !isLastAttempt && budgetLeft >= MIN_ATTEMPT_MS) {
+            console.warn(`[content-advisor] ⏱️ Model ${model} timed out after ${Math.round(attemptTimeoutMs / 1000)}s, fallback (${Math.round(budgetLeft / 1000)}s restants)...`);
             continue;
           }
-          throw err; // Re-throw if not timeout or last attempt
+          throw err; // Re-throw if not timeout, last attempt, or budget exhausted
         }
       }
       throw new Error('All model tiers exhausted');
