@@ -39,6 +39,23 @@ const PAGE_TYPE_TO_CONTENT_TYPE: Record<string, ContentType> = {
 
 const PAGE_TYPES = ['homepage', 'product', 'article', 'faq', 'landing', 'category'] as const
 
+// ── Gardes CPU (évite "Edge function killed: CPU wall-time exceeded") ──
+const MAX_HTML_CHARS = 400_000        // HTML brut analysé (regex O(n) × ~40 passes)
+const MAX_COMPETITOR_MD_CHARS = 25_000 // markdown concurrent pour le TF-IDF
+const MAX_PROMPT_BLOCK_CHARS = 4_000   // taille max d'un bloc JSON injecté au prompt
+
+/**
+ * Sérialisation compacte + tronquée pour les blocs de contexte du prompt.
+ * Remplace JSON.stringify(x, null, 2) : moins de CPU et moins de tokens.
+ */
+function promptJson(value: unknown, fallback: string, maxChars = MAX_PROMPT_BLOCK_CHARS): string {
+  if (value === null || value === undefined) return fallback
+  let s: string
+  try { s = JSON.stringify(value) } catch { return fallback }
+  if (!s || s === '{}' || s === '[]') return fallback
+  return s.length > maxChars ? `${s.slice(0, maxChars)}…(tronqué)` : s
+}
+
 interface StrategicObjective {
   type: 'content_gap' | 'eeat_improvement' | 'new_keyword' | 'internal_linking' | 'silo_rebalance' | 'cannibalization_fix' | 'topical_authority' | 'geo_visibility'
   description: string
@@ -366,7 +383,12 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
         redirect: 'follow',
       })
       if (htmlResp.ok) {
-        existingPageHtmlRaw = await htmlResp.text()
+        const fullHtml = await htmlResp.text()
+        // Garde CPU : au-delà de 400k chars les ~40 passes regex explosent le CPU budget
+        existingPageHtmlRaw = fullHtml.length > MAX_HTML_CHARS ? fullHtml.slice(0, MAX_HTML_CHARS) : fullHtml
+        if (fullHtml.length > MAX_HTML_CHARS) {
+          console.log(`[content-advisor] ⚠️ HTML tronqué ${fullHtml.length} → ${MAX_HTML_CHARS} chars (garde CPU)`)
+        }
         existingPageHtml = analyzeHtmlFull(existingPageHtmlRaw, url)
         console.log(`[content-advisor] ✅ HTML scan: title="${existingPageHtml.titleContent}" h1=${existingPageHtml.h1Count} h2=${existingPageHtml.h2Count} words=${existingPageHtml.wordCount} schema=${existingPageHtml.schemaTypes.join(',')} images=${existingPageHtml.imagesTotal}`)
       } else {
@@ -536,15 +558,17 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
         if (result.status === 'fulfilled' && result.value.ok) {
           try {
             const json = await result.value.json()
-            const md = json?.data?.markdown || json?.markdown || ''
-            // Simple word frequency analysis
+            const rawMd: string = json?.data?.markdown || json?.markdown || ''
+            // Garde CPU : on n'analyse que le début du contenu principal
+            const md = rawMd.length > MAX_COMPETITOR_MD_CHARS ? rawMd.slice(0, MAX_COMPETITOR_MD_CHARS) : rawMd
             const words = md.toLowerCase().replace(/[^a-zà-ÿ\s-]/g, '').split(/\s+/).filter((w: string) => w.length > 3)
-            const freq: Record<string, number> = {}
-            for (const w of words) { freq[w] = (freq[w] || 0) + 1 }
-            const topTerms = Object.entries(freq).sort(([, a], [, b]) => (b as number) - (a as number)).slice(0, 30)
+            const freq = new Map<string, number>()
+            for (const w of words) freq.set(w, (freq.get(w) || 0) + 1)
+            const topTerms = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15)
             competitorInsights.push({
               url: topUrls[idx],
               word_count: words.length,
+              truncated: rawMd.length > MAX_COMPETITOR_MD_CHARS,
               top_terms: topTerms.map(([term, count]) => ({ term, count })),
             })
           } catch { /* skip */ }
@@ -931,16 +955,16 @@ RÈGLE: Le contenu doit renforcer ce silo thématique. Il doit lier vers les pag
 ${keywordCloudBlock}
 
 **Identité du site:**
-${siteIdentity ? JSON.stringify(siteIdentity, null, 2) : 'Non disponible — recommandations génériques'}
+${promptJson(siteIdentity, 'Non disponible — recommandations génériques', 2500)}
 
 **Données mots-clés DataForSEO:**
-${keywordData ? JSON.stringify(keywordData, null, 2) : 'Non disponibles'}
+${promptJson(keywordData, 'Non disponibles', 3000)}
 
 **Analyse SERP (top 5):**
-${serpData ? JSON.stringify(serpData, null, 2) : 'Non disponible'}
+${promptJson(serpData, 'Non disponible', 3000)}
 
 **TF-IDF concurrents (top termes des 3 premiers résultats):**
-${competitorInsights.length > 0 ? JSON.stringify(competitorInsights, null, 2) : 'Non disponible'}
+${competitorInsights.length > 0 ? promptJson(competitorInsights, 'Non disponible', 2500) : 'Non disponible'}
 
 **Données audit existant:**
 ${existingAuditData ? `Type: ${existingAuditData.type}` : 'Aucun audit récent'}
@@ -1006,13 +1030,13 @@ ${workbenchContentGaps.map((cg: any) => `- "${cg.payload?.keyword || cg.title}" 
 ` : ''}
 
 **Données Cocoon (maillage):**
-${cocoonData ? JSON.stringify(cocoonData, null, 2) : 'Pas de données de maillage'}
+${promptJson(cocoonData, 'Pas de données de maillage', 2500)}
 
 **Score GEO actuel:**
 ${geoScore !== null ? `${geoScore}/100` : 'Non mesuré'}
 
 **Visibilité LLM (ChatGPT, Perplexity, etc.):**
-${llmVisibilityData ? JSON.stringify(llmVisibilityData, null, 2) : 'Non mesurée'}
+${promptJson(llmVisibilityData, 'Non mesurée', 1500)}
 
 **Backlinks & Autorité:**
 ${backlinkData ? `Referring domains: ${backlinkData.referring_domains || 0}, Total backlinks: ${backlinkData.backlinks_total || 0}, Domain rank: ${backlinkData.domain_rank || 'N/A'}` : 'Non mesuré'}
@@ -1106,7 +1130,7 @@ DIRECTIVES DE TON:
 ${contentTemplate.tone_guidelines}
 
 EXEMPLES DE RÉFÉRENCE:
-${JSON.stringify(contentTemplate.examples, null, 2)}
+${promptJson(contentTemplate.examples, 'Aucun exemple', 2000)}
 
 FRAÎCHEUR & DÉNOMINATION:
 - N'utilise PAS automatiquement "Guide" dans le recommended_h1, les H2/H3, les FAQ, les tableaux, les résumés ou les sections.
@@ -1147,32 +1171,46 @@ FRAÎCHEUR & DÉNOMINATION:
     })();
 
     // Route: ≤4 → flash-lite (simple brief), 5-8 → flash (standard), ≥9 → Sonnet 4.5 + Gemini Pro fallback (complex)
-    const modelTiers: string[] = complexityScore >= 9
+    const baseTiers: string[] = complexityScore >= 9
       ? ['anthropic/claude-sonnet-4.5', 'google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview']
       : complexityScore >= 5
         ? ['google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite']
         : ['google/gemini-3.1-flash-lite'];
 
-    // 90s leaves 60s headroom under the 150s edge-function CPU wall-time,
-    // so a timeout fires *inside* the function and the catch block can mark
-    // the async job as 'failed' instead of leaving it stuck in 'processing'.
-    const LLM_TIMEOUT_MS = 90000;
+    // Budget global : la fonction est tuée au-delà de ~150s de wall-time.
+    // On garde 25s de marge pour le post-traitement (parsing, guardrails, writes).
+    const TOTAL_BUDGET_MS = 125_000;
+    const MIN_ATTEMPT_MS = 35_000;   // en dessous, inutile de lancer un modèle
+    const MAX_ATTEMPT_MS = 75_000;
+
+    // Si la collecte de données a déjà consommé le budget, on abandonne les modèles
+    // lents (Sonnet/Pro) au profit d'un flash qui a une chance de finir avant le kill.
+    const elapsedBeforeLLM = Date.now() - startTime;
+    const modelTiers: string[] = elapsedBeforeLLM > 45_000 && baseTiers.length > 1
+      ? baseTiers.slice(-2)
+      : baseTiers;
+    if (modelTiers !== baseTiers) {
+      console.warn(`[content-advisor] ⏱️ ${Math.round(elapsedBeforeLLM / 1000)}s déjà consommés → tiers réduits à ${modelTiers.join(', ')}`);
+    }
+
 
     async function callLLMWithRetry(): Promise<Response> {
       for (let attempt = 0; attempt < modelTiers.length; attempt++) {
         const model = modelTiers[attempt];
+        const remaining = TOTAL_BUDGET_MS - (Date.now() - startTime);
+        if (remaining < MIN_ATTEMPT_MS) {
+          throw new Error(`LLM budget exhausted (${Math.round(remaining / 1000)}s restants) — abandon avant kill CPU`);
+        }
+        const attemptTimeoutMs = Math.min(MAX_ATTEMPT_MS, remaining - 5_000);
         const isRetry = attempt > 0;
         if (isRetry) {
-          console.log(`[content-advisor] ⚡ Retry with faster model: ${model} (attempt ${attempt + 1})`);
+          console.log(`[content-advisor] ⚡ Retry with faster model: ${model} (attempt ${attempt + 1}, budget ${Math.round(attemptTimeoutMs / 1000)}s)`);
         }
-        console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${model} (brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
+        console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${model} (timeout ${Math.round(attemptTimeoutMs / 1000)}s, brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
         try {
           const resp = await aiGatewayFetch( {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
+            timeoutMs: attemptTimeoutMs,
             body: JSON.stringify({
               model,
               messages: [
@@ -1269,18 +1307,18 @@ FRAÎCHEUR & DÉNOMINATION:
               }],
               tool_choice: { type: 'function', function: { name: 'content_architecture_recommendation' } },
             }),
-            signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
           });
           // If we got a response (even error), return it — only retry on timeout
           return resp;
         } catch (err) {
           const isTimeout = err instanceof DOMException && err.name === 'AbortError';
           const isLastAttempt = attempt === modelTiers.length - 1;
-          if (isTimeout && !isLastAttempt) {
-            console.warn(`[content-advisor] ⏱️ Model ${model} timed out after ${LLM_TIMEOUT_MS / 1000}s, falling back...`);
+          const budgetLeft = TOTAL_BUDGET_MS - (Date.now() - startTime);
+          if (isTimeout && !isLastAttempt && budgetLeft >= MIN_ATTEMPT_MS) {
+            console.warn(`[content-advisor] ⏱️ Model ${model} timed out after ${Math.round(attemptTimeoutMs / 1000)}s, fallback (${Math.round(budgetLeft / 1000)}s restants)...`);
             continue;
           }
-          throw err; // Re-throw if not timeout or last attempt
+          throw err; // Re-throw if not timeout, last attempt, or budget exhausted
         }
       }
       throw new Error('All model tiers exhausted');
@@ -1292,6 +1330,12 @@ FRAÎCHEUR & DÉNOMINATION:
       const errText = await aiResponse.text()
       console.error('[content-advisor] AI error:', aiResponse.status, errText)
 
+      // En mode async, on doit throw : un `return` laisserait le job bloqué
+      // à progress 65 jusqu'au reaper (faux positif "CPU wall-time exceeded").
+      if (jobSb && jobId) {
+        throw new Error(`AI synthesis failed (${aiResponse.status}): ${errText.slice(0, 300)}`)
+      }
+
       if (aiResponse.status === 429) {
         return jsonError('AI rate limited, please try again later', 429)
       }
@@ -1301,6 +1345,7 @@ FRAÎCHEUR & DÉNOMINATION:
 
       return jsonError('AI synthesis failed', 500)
     }
+
 
     const aiJson = await aiResponse.json()
     let recommendation: any = null

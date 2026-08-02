@@ -188,11 +188,21 @@ async function callOnce(
 
   const finalBody = cache === 'anthropic' ? applyAnthropicCache(model, { ...body, model }) : { ...body, model };
 
+  // Les en-têtes d'auth de l'appelant sont ignorés : seule la clé du provider
+  // résolu ici est valide (sinon une clé Lovable partait vers OpenRouter → 401).
+  const safeExtra: Record<string, string> = {};
+  for (const [k, v] of Object.entries(extraHeaders || {})) {
+    const kl = k.toLowerCase();
+    if (kl === 'authorization' || kl === 'apikey' || kl === 'content-type') continue;
+    safeExtra[k] = v;
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${key}`,
-    ...extraHeaders,
+    ...safeExtra,
   };
+
   if (provider === 'openrouter') {
     headers['HTTP-Referer'] = 'https://crawlers.fr';
     headers['X-Title'] = 'Crawlers.fr';
@@ -295,8 +305,10 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
 /**
  * RÉTRO-COMPAT: API drop-in fetch existante.
  * Parse le body, route selon le model, pas de fallback configurable.
+ * `timeoutMs` (champ optionnel de init) permet aux générations longues
+ * (rédaction complète) de dépasser le défaut de 8s.
  */
-export async function aiGatewayFetch(init: RequestInit): Promise<Response> {
+export async function aiGatewayFetch(init: RequestInit & { timeoutMs?: number }): Promise<Response> {
   let bodyObj: Record<string, unknown> = {};
   if (typeof init.body === 'string') {
     try { bodyObj = JSON.parse(init.body); } catch { bodyObj = {}; }
@@ -307,6 +319,7 @@ export async function aiGatewayFetch(init: RequestInit): Promise<Response> {
   return await aiGatewayCall({
     primary: model,
     body: bodyObj,
+    timeoutMs: init.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     headers: (init.headers as Record<string, string>) || {},
   });
 }
