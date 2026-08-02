@@ -188,11 +188,21 @@ async function callOnce(
 
   const finalBody = cache === 'anthropic' ? applyAnthropicCache(model, { ...body, model }) : { ...body, model };
 
+  // Les en-têtes d'auth de l'appelant sont ignorés : seule la clé du provider
+  // résolu ici est valide (sinon une clé Lovable partait vers OpenRouter → 401).
+  const safeExtra: Record<string, string> = {};
+  for (const [k, v] of Object.entries(extraHeaders || {})) {
+    const kl = k.toLowerCase();
+    if (kl === 'authorization' || kl === 'apikey' || kl === 'content-type') continue;
+    safeExtra[k] = v;
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${key}`,
-    ...extraHeaders,
+    ...safeExtra,
   };
+
   if (provider === 'openrouter') {
     headers['HTTP-Referer'] = 'https://crawlers.fr';
     headers['X-Title'] = 'Crawlers.fr';
