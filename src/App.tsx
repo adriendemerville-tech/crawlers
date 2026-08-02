@@ -277,6 +277,7 @@ const App = () => (
                           <Route path="/optimisation-llm-seo" element={<KeywordPillarPage />} />
                           <Route path="/crawler-ia" element={<KeywordPillarPage />} />
                           <Route path="/monitoring-gptbot-perplexity" element={<KeywordPillarPage />} />
+                          <Route path="/etudes/cout-reponse-chatgpt-vs-google-ads" element={<CoutChatGPTvsGoogleAds />} />
                           <Route path="/etudes/autopilot-parmenion-iktracker" element={<AutopilotIktracker />} />
                           <Route path="/google-business" element={<GoogleBusinessPage />} />
                           <Route path="/api-integrations" element={<ApiIntegrations />} />
