@@ -305,8 +305,10 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
 /**
  * RÉTRO-COMPAT: API drop-in fetch existante.
  * Parse le body, route selon le model, pas de fallback configurable.
+ * `timeoutMs` (champ optionnel de init) permet aux générations longues
+ * (rédaction complète) de dépasser le défaut de 8s.
  */
-export async function aiGatewayFetch(init: RequestInit): Promise<Response> {
+export async function aiGatewayFetch(init: RequestInit & { timeoutMs?: number }): Promise<Response> {
   let bodyObj: Record<string, unknown> = {};
   if (typeof init.body === 'string') {
     try { bodyObj = JSON.parse(init.body); } catch { bodyObj = {}; }
@@ -317,6 +319,7 @@ export async function aiGatewayFetch(init: RequestInit): Promise<Response> {
   return await aiGatewayCall({
     primary: model,
     body: bodyObj,
+    timeoutMs: init.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     headers: (init.headers as Record<string, string>) || {},
   });
 }
