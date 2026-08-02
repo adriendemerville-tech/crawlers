@@ -62,7 +62,7 @@ function slugifyFr(s: string): string {
  * V3 produces { strategist_task, _prescribe_v3 } but no cms_actions; iktracker-actions
  * needs an explicit create-post payload. We pick the first missing_page (or task title),
  * run the editorial pipeline (briefing → strategist → writer → tonalizer) and emit one
- * create-post action in DRAFT status.
+ * create-post action. Status follows implementation_mode: 'auto' → published, otherwise draft.
  */
 async function buildV3CmsActionsForIktracker(
   decision: any, site: SiteInfo, supabase: any, config: AutopilotConfig,
@@ -108,7 +108,7 @@ async function buildV3CmsActionsForIktracker(
       body: {
         title: finalTitle,
         slug,
-        status: 'draft',
+        status: config.implementation_mode === 'auto' ? 'published' : 'draft',
         content: finalContent,
         excerpt: result?.final?.excerpt || null,
         meta_title: result?.final?.meta_title || finalTitle,
