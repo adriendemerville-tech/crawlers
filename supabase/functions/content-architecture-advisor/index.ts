@@ -1170,9 +1170,12 @@ FRAÎCHEUR & DÉNOMINATION:
       return score;
     })();
 
-    // Route: ≤4 → flash-lite (simple brief), 5-8 → flash (standard), ≥9 → Sonnet 4.5 + Gemini Pro fallback (complex)
+    // Route: ≤4 → flash-lite, 5-8 → flash, ≥9 → flash puis pro en secours.
+    // Sonnet 4.5 est écarté ici : sur un tool-call de ~2 200 mots il dépasse
+    // systématiquement les 55-75s disponibles avant le kill de l'edge function
+    // (le signal coupait la lecture du body → "Signal timed out").
     const baseTiers: string[] = complexityScore >= 9
-      ? ['anthropic/claude-sonnet-4.5', 'google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview']
+      ? ['google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite']
       : complexityScore >= 5
         ? ['google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite']
         : ['google/gemini-3.1-flash-lite'];
