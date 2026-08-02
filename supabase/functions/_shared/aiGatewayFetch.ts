@@ -366,14 +366,14 @@ export async function aiGatewayCallStream(opts: AICallOptions): Promise<Response
     const model = chain[i];
     const isLast = i === chain.length - 1;
     try {
-      const resp = await callOnce(model, streamBody, cache, timeoutMs, headers);
+      const resp = await callOnce(model, streamBody, cache, timeoutMs, headers, undefined, true);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCallStream] Fallback success: ${model} (level ${i})`);
         return resp;
       }
       if (shouldFallback(resp.status) && lovableCanServe(model)) {
         try {
-          const lov = await callOnce(model, streamBody, cache, timeoutMs, headers, 'lovable');
+          const lov = await callOnce(model, streamBody, cache, timeoutMs, headers, 'lovable', true);
           if (lov.ok) return lov;
         } catch { /* fall through */ }
       }
