@@ -766,7 +766,9 @@ async function executeIktrackerActions(
         const gate = checkSemanticGate({
           title: cmsAction.body.title,
           excerpt: cmsAction.body.excerpt || cmsAction.body.meta_description,
-          body: cmsAction.body.body,
+          // Le pipeline éditorial écrit le corps dans `content` (et non `body`) :
+          // lire les deux évite un gate title-only qui rejetait à tort.
+          body: cmsAction.body.content || cmsAction.body.body,
         }, site);
 
         if (!gate.passed) {
