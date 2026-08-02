@@ -1201,7 +1201,12 @@ FRAÎCHEUR & DÉNOMINATION:
         if (remaining < MIN_ATTEMPT_MS) {
           throw new Error(`LLM budget exhausted (${Math.round(remaining / 1000)}s restants) — abandon avant kill CPU`);
         }
-        const attemptTimeoutMs = Math.min(MAX_ATTEMPT_MS, remaining - 5_000);
+        // Le dernier tier a droit à tout le budget restant ; les précédents sont
+        // plafonnés pour laisser une vraie fenêtre au fallback plus rapide.
+        const isLastTier = attempt === modelTiers.length - 1;
+        const attemptTimeoutMs = isLastTier
+          ? Math.min(MAX_ATTEMPT_MS, remaining - 5_000)
+          : Math.min(FIRST_ATTEMPT_MAX_MS, Math.max(MIN_ATTEMPT_MS, remaining - MIN_ATTEMPT_MS - 5_000));
         const isRetry = attempt > 0;
         if (isRetry) {
           console.log(`[content-advisor] ⚡ Retry with faster model: ${model} (attempt ${attempt + 1}, budget ${Math.round(attemptTimeoutMs / 1000)}s)`);
