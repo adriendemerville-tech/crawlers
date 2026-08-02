@@ -1317,7 +1317,11 @@ FRAÎCHEUR & DÉNOMINATION:
           // If we got a response (even error), return it — only retry on timeout
           return resp;
         } catch (err) {
-          const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+          // Deno lève DOMException('TimeoutError') sur AbortSignal.timeout,
+          // et AbortError sur un abort manuel : les deux doivent basculer.
+          const name = (err as { name?: string })?.name || '';
+          const msg = err instanceof Error ? err.message : String(err);
+          const isTimeout = name === 'TimeoutError' || name === 'AbortError' || /timed out|timeout/i.test(msg);
           const isLastAttempt = attempt === modelTiers.length - 1;
           const budgetLeft = TOTAL_BUDGET_MS - (Date.now() - startTime);
           if (isTimeout && !isLastAttempt && budgetLeft >= MIN_ATTEMPT_MS) {
