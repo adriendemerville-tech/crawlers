@@ -1177,19 +1177,25 @@ FRAÎCHEUR & DÉNOMINATION:
         ? ['google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite']
         : ['google/gemini-3.1-flash-lite'];
 
-    // 90s leaves 60s headroom under the 150s edge-function CPU wall-time,
-    // so a timeout fires *inside* the function and the catch block can mark
-    // the async job as 'failed' instead of leaving it stuck in 'processing'.
-    const LLM_TIMEOUT_MS = 90000;
+    // Budget global : la fonction est tuée au-delà de ~150s de wall-time.
+    // On garde 25s de marge pour le post-traitement (parsing, guardrails, writes).
+    const TOTAL_BUDGET_MS = 125_000;
+    const MIN_ATTEMPT_MS = 35_000;   // en dessous, inutile de lancer un modèle
+    const MAX_ATTEMPT_MS = 75_000;
 
     async function callLLMWithRetry(): Promise<Response> {
       for (let attempt = 0; attempt < modelTiers.length; attempt++) {
         const model = modelTiers[attempt];
+        const remaining = TOTAL_BUDGET_MS - (Date.now() - startTime);
+        if (remaining < MIN_ATTEMPT_MS) {
+          throw new Error(`LLM budget exhausted (${Math.round(remaining / 1000)}s restants) — abandon avant kill CPU`);
+        }
+        const attemptTimeoutMs = Math.min(MAX_ATTEMPT_MS, remaining - 5_000);
         const isRetry = attempt > 0;
         if (isRetry) {
-          console.log(`[content-advisor] ⚡ Retry with faster model: ${model} (attempt ${attempt + 1})`);
+          console.log(`[content-advisor] ⚡ Retry with faster model: ${model} (attempt ${attempt + 1}, budget ${Math.round(attemptTimeoutMs / 1000)}s)`);
         }
-        console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${model} (brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
+        console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${model} (timeout ${Math.round(attemptTimeoutMs / 1000)}s, brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
         try {
           const resp = await aiGatewayFetch( {
             method: 'POST',
