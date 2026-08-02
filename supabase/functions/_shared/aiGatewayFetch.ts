@@ -171,6 +171,7 @@ async function callOnce(
   timeoutMs: number,
   extraHeaders: Record<string, string>,
   providerOverride?: 'lovable' | 'openrouter',
+  streaming = false,
 ): Promise<Response> {
   const provider = providerOverride ?? providerFor(model);
   const url = provider === 'lovable' ? LOVABLE_URL : OPENROUTER_URL;
@@ -208,13 +209,26 @@ async function callOnce(
     headers['X-Title'] = 'Crawlers.fr';
   }
 
-  return await fetch(url, {
+  const resp = await fetch(url, {
     method: 'POST',
     headers,
     body: JSON.stringify(finalBody),
     signal: AbortSignal.timeout(timeoutMs),
   });
+
+  // En non-streaming, on bufferise le corps DANS la portée du signal.
+  // Sinon le signal reste armé pendant la lecture différée côté appelant et
+  // lève un TimeoutError hors de tout try/catch → aucun fallback modèle
+  // (cause racine des jobs bloqués à 65 % "Signal timed out").
+  if (streaming) return resp;
+  const text = await resp.text();
+  return new Response(text, {
+    status: resp.status,
+    statusText: resp.statusText,
+    headers: { 'Content-Type': resp.headers.get('content-type') || 'application/json' },
+  });
 }
+
 
 /**
  * API recommandée: cascade primary → fallback1 → fallback2 avec allowlist.
