@@ -1171,7 +1171,7 @@ FRAÎCHEUR & DÉNOMINATION:
     })();
 
     // Route: ≤4 → flash-lite (simple brief), 5-8 → flash (standard), ≥9 → Sonnet 4.5 + Gemini Pro fallback (complex)
-    const modelTiers: string[] = complexityScore >= 9
+    const baseTiers: string[] = complexityScore >= 9
       ? ['anthropic/claude-sonnet-4.5', 'google/gemini-3.1-pro-preview', 'google/gemini-3-flash-preview']
       : complexityScore >= 5
         ? ['google/gemini-3-flash-preview', 'google/gemini-3.1-flash-lite']
@@ -1182,6 +1182,17 @@ FRAÎCHEUR & DÉNOMINATION:
     const TOTAL_BUDGET_MS = 125_000;
     const MIN_ATTEMPT_MS = 35_000;   // en dessous, inutile de lancer un modèle
     const MAX_ATTEMPT_MS = 75_000;
+
+    // Si la collecte de données a déjà consommé le budget, on abandonne les modèles
+    // lents (Sonnet/Pro) au profit d'un flash qui a une chance de finir avant le kill.
+    const elapsedBeforeLLM = Date.now() - startTime;
+    const modelTiers: string[] = elapsedBeforeLLM > 45_000 && baseTiers.length > 1
+      ? baseTiers.slice(-2)
+      : baseTiers;
+    if (modelTiers !== baseTiers) {
+      console.warn(`[content-advisor] ⏱️ ${Math.round(elapsedBeforeLLM / 1000)}s déjà consommés → tiers réduits à ${modelTiers.join(', ')}`);
+    }
+
 
     async function callLLMWithRetry(): Promise<Response> {
       for (let attempt = 0; attempt < modelTiers.length; attempt++) {
