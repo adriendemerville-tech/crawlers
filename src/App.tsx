@@ -115,6 +115,7 @@ const ArchitectureMapPage = lazy(() => import("./pages/ArchitectureMapPage"));
 const SeaSeoBridge = lazy(() => import("./pages/SeaSeoBridge"));
 const KeywordPillarPage = lazy(() => import("./pages/KeywordPillarPage"));
 const CoutChatGPTvsGoogleAds = lazy(() => import("./pages/etudes/CoutChatGPTvsGoogleAds"));
+const AutopilotIktracker = lazy(() => import("./pages/etudes/AutopilotIktracker"));
 const APropos = lazy(() => import("./pages/APropos"));
 const AuditSemantique = lazy(() => import("./pages/AuditSemantique"));
 const GoogleBusinessPage = lazy(() => import("./pages/GoogleBusinessPage"));
@@ -277,6 +278,7 @@ const App = () => (
                           <Route path="/crawler-ia" element={<KeywordPillarPage />} />
                           <Route path="/monitoring-gptbot-perplexity" element={<KeywordPillarPage />} />
                           <Route path="/etudes/cout-reponse-chatgpt-vs-google-ads" element={<CoutChatGPTvsGoogleAds />} />
+                          <Route path="/etudes/autopilot-parmenion-iktracker" element={<AutopilotIktracker />} />
                           <Route path="/google-business" element={<GoogleBusinessPage />} />
                           <Route path="/api-integrations" element={<ApiIntegrations />} />
                           <Route path="/cf-shield" element={<CfShield />} />
