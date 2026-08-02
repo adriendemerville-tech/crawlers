@@ -1,0 +1,1 @@
+UPDATE public.autopilot_configs SET last_cycle_at = NULL WHERE id = 'c360900d-4003-4205-9728-c77eb2757bcd';
