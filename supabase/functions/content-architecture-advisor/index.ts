@@ -383,7 +383,12 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
         redirect: 'follow',
       })
       if (htmlResp.ok) {
-        existingPageHtmlRaw = await htmlResp.text()
+        const fullHtml = await htmlResp.text()
+        // Garde CPU : au-delà de 400k chars les ~40 passes regex explosent le CPU budget
+        existingPageHtmlRaw = fullHtml.length > MAX_HTML_CHARS ? fullHtml.slice(0, MAX_HTML_CHARS) : fullHtml
+        if (fullHtml.length > MAX_HTML_CHARS) {
+          console.log(`[content-advisor] ⚠️ HTML tronqué ${fullHtml.length} → ${MAX_HTML_CHARS} chars (garde CPU)`)
+        }
         existingPageHtml = analyzeHtmlFull(existingPageHtmlRaw, url)
         console.log(`[content-advisor] ✅ HTML scan: title="${existingPageHtml.titleContent}" h1=${existingPageHtml.h1Count} h2=${existingPageHtml.h2Count} words=${existingPageHtml.wordCount} schema=${existingPageHtml.schemaTypes.join(',')} images=${existingPageHtml.imagesTotal}`)
       } else {
