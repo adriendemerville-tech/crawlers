@@ -235,7 +235,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
 
   const styleConfig = getStyleConfig(req.style);
 
-  const submitResponse = await fetch('https://api.bfl.ml/v1/flux-pro-1.1', {
+  const submitResponse = await fetch(`${BFL_BASE}/v1/flux-pro-1.1`, {
     method: 'POST',
     headers: {
       'X-Key': apiKey,
