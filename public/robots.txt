@@ -77,24 +77,31 @@ Allow: /
 # --------------------------------------------
 User-agent: Twitterbot
 Allow: /
+Disallow:
 
 User-agent: facebookexternalhit
 Allow: /
+Disallow:
 
 User-agent: LinkedInBot
 Allow: /
+Disallow:
 
 User-agent: Pinterest
 Allow: /
+Disallow:
 
 User-agent: Slackbot
 Allow: /
+Disallow:
 
 User-agent: WhatsApp
 Allow: /
+Disallow:
 
 User-agent: TelegramBot
 Allow: /
+Disallow:
 
 # --------------------------------------------
 # Bots IA / Moteurs génératifs (GEO) → ACCÈS TOTAL
@@ -103,69 +110,95 @@ Allow: /
 # --------------------------------------------
 User-agent: GPTBot
 Allow: /
+Disallow:
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow:
 
 User-agent: OAI-SearchBot
 Allow: /
+Disallow:
 
 User-agent: ClaudeBot
 Allow: /
+Disallow:
 
 User-agent: Claude-User
 Allow: /
+Disallow:
 
 User-agent: Anthropic-AI
 Allow: /
+Disallow:
 
 User-agent: Google-Extended
 Allow: /
+Disallow:
 
 User-agent: PerplexityBot
 Allow: /
+Disallow:
 
 User-agent: Perplexity-User
 Allow: /
+Disallow:
 
 User-agent: cohere-ai
 Allow: /
+Disallow:
 
 User-agent: cohere-training-data-crawler
 Allow: /
+Disallow:
 
 User-agent: YouBot
 Allow: /
+Disallow:
 
 User-agent: CCBot
 Allow: /
+Disallow:
 
 User-agent: Applebot
 Allow: /
+Disallow:
 
 User-agent: Applebot-Extended
 Allow: /
+Disallow:
 
 User-agent: Meta-ExternalAgent
 Allow: /
+Disallow:
+
+User-agent: Meta-ExternalFetcher
+Allow: /
+Disallow:
 
 User-agent: FacebookBot
 Allow: /
+Disallow:
 
 User-agent: Bytespider
 Allow: /
+Disallow:
 
 User-agent: MistralAI-User
 Allow: /
+Disallow:
 
 User-agent: Amazonbot
 Allow: /
+Disallow:
 
 User-agent: xAI-Bot
 Allow: /
+Disallow:
 
 User-agent: DeepSeekBot
 Allow: /
+Disallow:
 
 # --------------------------------------------
 # Outils SEO concurrents → /app/ bloqué (zone privée
