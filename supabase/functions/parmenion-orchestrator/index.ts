@@ -526,25 +526,30 @@ try {
                 console.log(`[Parménion] 🛑 Saturation guard: ${saturationNote}`);
               }
               if (effectiveTasks.length === 0 && pruningCandidate) {
+                // Plafond dur : 4 consolidations réelles par cycle (fusion + 301 + suppression).
+                const PRUNING_MAX_PER_CYCLE = 4;
+                const prunedDuplicates = pruningCandidate.duplicates.slice(0, PRUNING_MAX_PER_CYCLE);
                 effectiveTasks = [{
                   id: `pruning-${pruningCandidate.pilier.path}`,
                   action_type: 'fix_cannibalization',
                   title: `Consolider le cluster « ${pruningCandidate.theme} » (${pruningCandidate.size} pages) vers ${pruningCandidate.pilier.path}`,
                   urgency: 'high',
                   estimated_impact: 'high',
-                  execution_mode: 'content_architect',
-                  executor_function: 'content-architecture-advisor',
-                  affected_urls: [pruningCandidate.pilier.url, ...pruningCandidate.duplicates.map((d) => d.url)],
-                  is_destructive: false,
+                  execution_mode: 'pruning',
+                  executor_function: 'content-pruning-executor',
+                  affected_urls: [pruningCandidate.pilier.url, ...prunedDuplicates.map((d) => d.url)],
+                  is_destructive: true,
                   pruning: {
                     theme: pruningCandidate.theme,
                     pilier: pruningCandidate.pilier,
-                    duplicates: pruningCandidate.duplicates,
-                    recommended: 'merge_then_301',
+                    duplicates: prunedDuplicates,
+                    recommended: 'merge_then_301_then_delete',
+                    max_actions: PRUNING_MAX_PER_CYCLE,
                   },
                 }];
-                console.log(`[Parménion] ♻️ Pruning injecté: cluster « ${pruningCandidate.theme} » → ${pruningCandidate.pilier.path} (${pruningCandidate.duplicates.length} doublons)`);
+                console.log(`[Parménion] ♻️ Pruning injecté: cluster « ${pruningCandidate.theme} » → ${pruningCandidate.pilier.path} (${prunedDuplicates.length}/${pruningCandidate.duplicates.length} doublons, cap ${PRUNING_MAX_PER_CYCLE})`);
               }
+
             }
 
             if (effectiveTasks.length === 0) {

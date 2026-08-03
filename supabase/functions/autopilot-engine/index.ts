@@ -488,9 +488,17 @@ try {
           }
 
           // ═══ EXECUTE PHASE: Prepare CMS actions ═══
-          if (phase === 'execute') {
+          // Une tâche de pruning ne passe pas par les ponts CMS génériques :
+          // elle est exécutée telle quelle par content-pruning-executor.
+          const isPruningTask = decision.action?.payload?.strategist_task?.action_type === 'fix_cannibalization'
+            && !!decision.action?.payload?.strategist_task?.pruning;
+          if (phase === 'execute' && !isPruningTask) {
             await prepareExecuteActions(decision, siteInfo, routedCmsActions, supabase, config);
+          } else if (phase === 'execute' && isPruningTask) {
+            decision.action.functions = ['content-pruning-executor'];
+            console.log(`[AutopilotEngine] ♻️ Pruning task détectée → content-pruning-executor (ponts CMS génériques court-circuités)`);
           }
+
 
           // ═══ Function execution ═══
           // dry_run bloque UNIQUEMENT la phase 'execute' (push CMS).
@@ -809,7 +817,11 @@ async function executeFunctions(
         await executeCmsBridgeActions(decision, site, config, phase, cycleNumber, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
       } else if (CMS_BRIDGES.includes(funcName)) {
         await executeCmsBridgeReroute(funcName, decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+      } else if (funcName === 'content-pruning-executor') {
+        await executeContentPruning(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+        continue;
       } else if (funcName === 'content-architecture-advisor') {
+
         await executeContentArchitect(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
       } else if (funcName === 'cms-push-draft' && Array.isArray(decision.action.payload?.cms_actions)) {
         await executeCmsPushDraft(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
@@ -1313,6 +1325,67 @@ async function executeCmsRedirect(
     }
   }
 }
+
+/**
+ * Pruning réel d'un cluster cannibalisé : fusion vers le pilier, 301, suppression.
+ * Plafond 4 doublons/cycle, snapshot obligatoire (restaurable), dry-run respecté.
+ */
+async function executeContentPruning(
+  decision: any, site: SiteInfo, config: AutopilotConfig, phase: string,
+  supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
+  setSuccess: (v: boolean) => void,
+) {
+  const task = decision.action?.payload?.strategist_task;
+  const pruning = task?.pruning;
+  if (!pruning?.pilier || !Array.isArray(pruning.duplicates) || pruning.duplicates.length === 0) {
+    executionResults.push({ function: 'content-pruning-executor', status: 'skipped', detail: 'payload pruning absent ou vide' });
+    return;
+  }
+
+  const dryRun = (config.implementation_mode || 'dry_run') !== 'auto';
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/content-pruning-executor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_ROLE_KEY}` },
+      body: JSON.stringify({
+        action: 'prune',
+        domain: site.domain,
+        tracked_site_id: config.tracked_site_id,
+        user_id: config.user_id,
+        decision_id: decision.decision_id || null,
+        dry_run: dryRun,
+        max_actions: Math.min(4, Number(pruning.max_actions) || 4),
+        pruning: { theme: pruning.theme, pilier: pruning.pilier, duplicates: pruning.duplicates },
+      }),
+      signal: AbortSignal.timeout(120000),
+    });
+
+    const result = await response.json().catch(() => ({}));
+    const ok = response.ok && result?.success !== false;
+    executionResults.push({
+      function: 'content-pruning-executor',
+      status: ok ? 'success' : 'error',
+      dry_run: dryRun,
+      deleted: result?.deleted ?? 0,
+      blocked: result?.blocked ?? 0,
+      detail: result?.summary || result?.error || `HTTP ${response.status}`,
+      results: result?.results || null,
+    });
+    if (!ok) {
+      phaseErrors.push({
+        phase, function: 'content-pruning-executor', severity: 'degraded',
+        message: result?.error || `HTTP ${response.status}`, retryable: true,
+      });
+      setSuccess(false);
+    }
+  } catch (err) {
+    executionResults.push({ function: 'content-pruning-executor', status: 'error', detail: err instanceof Error ? err.message : String(err) });
+    phaseErrors.push({ phase, function: 'content-pruning-executor', severity: 'degraded', message: err instanceof Error ? err.message : 'unknown', retryable: true });
+    setSuccess(false);
+  }
+}
+
 
 async function executeGenericFunction(
   funcName: string, decision: any, site: SiteInfo, config: AutopilotConfig,
