@@ -40,6 +40,7 @@ export const FELIX_CONFIG: PersonaConfig = {
     read_user_profile: 'auto',
     read_documentation: 'auto',
     audit_internal_mesh: 'auto',
+    detect_content_cannibalization: 'auto',
     // Mémoire persistante & carte d'identité (Sprint Q5 — Bloc Mémoire & Identité)
     read_site_memory: 'auto',
     write_site_memory: 'auto',
@@ -91,6 +92,7 @@ export const STRATEGIST_CONFIG: PersonaConfig = {
     analyze_cocoon: 'auto',
     plan_editorial: 'auto',
     audit_internal_mesh: 'auto',
+    detect_content_cannibalization: 'auto',
     // Navigation OK
     navigate_to: 'auto',
     open_audit_panel: 'auto',
