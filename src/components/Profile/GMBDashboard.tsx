@@ -1175,7 +1175,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
                   onClick={handleGbpDisconnect} 
                   disabled={gbpDisconnecting} 
                   variant="outline" 
-                  className="gap-2 rounded-xs text-destructive border-destructive/40 hover:bg-destructive/5"
+                  className="gap-2 rounded-sm text-destructive border-destructive/40 hover:bg-destructive/5"
                 >
                   {gbpDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
                   {language === 'fr' ? 'Déconnecter' : 'Disconnect'}
@@ -1184,7 +1184,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
                   onClick={handleGbpConnect} 
                   disabled={gbpLoading} 
                   variant="outline" 
-                  className="gap-2 rounded-xs border-foreground/60 text-foreground bg-transparent hover:bg-foreground/5"
+                  className="gap-2 rounded-sm border-foreground/60 text-foreground bg-transparent hover:bg-foreground/5"
                 >
                   {gbpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
                   {language === 'fr' ? 'Reconnecter avec un autre compte' : 'Reconnect with another account'}
@@ -1211,7 +1211,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
                   : 'Connect your Google Business Profile account to manage your locations.'}
               </p>
             </div>
-            <Button onClick={handleGbpConnect} disabled={gbpLoading} variant="outline" className="gap-2 rounded-xs border-foreground/60 text-foreground bg-transparent hover:bg-foreground/5">
+            <Button onClick={handleGbpConnect} disabled={gbpLoading} variant="outline" className="gap-2 rounded-sm border-foreground/60 text-foreground bg-transparent hover:bg-foreground/5">
               {gbpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
               {language === 'fr' ? 'Connecter Google Business' : 'Connect Google Business'}
             </Button>

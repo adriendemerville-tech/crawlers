@@ -19,7 +19,7 @@ const Code = ({ children, lang = 'bash' }: { children: string; lang?: string }) 
 
 const Endpoint = ({ method, path }: { method: string; path: string }) => (
   <div className="flex flex-wrap items-center gap-2 font-mono text-sm">
-    <Badge variant="outline" className="rounded-xs border-2 px-2 py-0.5 text-xs">{method}</Badge>
+    <Badge variant="outline" className="rounded-sm border-2 px-2 py-0.5 text-xs">{method}</Badge>
     <span className="break-all">{path}</span>
   </div>
 );

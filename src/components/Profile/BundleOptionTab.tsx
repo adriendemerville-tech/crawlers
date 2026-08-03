@@ -23,7 +23,7 @@ function ApiFavicon({ url, className = '' }: { url: string; className?: string }
       <img
         src={`https://www.google.com/s2/favicons?domain=${host}&sz=32`}
         alt=""
-        className={`inline-block h-4 w-4 rounded-xs shrink-0 ${className}`}
+        className={`inline-block h-4 w-4 rounded-sm shrink-0 ${className}`}
         loading="lazy"
         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
       />

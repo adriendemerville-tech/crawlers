@@ -1087,7 +1087,7 @@ function CocoonContent() {
                   <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Families:' : 'Familles :'}</span>
                   {fanBeamLegend.map(item => (
                     <div key={item.id} className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-xs" style={{ backgroundColor: item.color, opacity: 0.6 }} />
+                      <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color, opacity: 0.6 }} />
                       <span className="text-[10px] text-white/50">{item.name} ({item.nodeCount})</span>
                     </div>
                   ))}

@@ -339,7 +339,7 @@ export function MatriceCube3D({
         {[0, 1, 2, 3, 4].map(b => (
           <div key={b} className="flex items-center gap-1">
             <span
-              className="inline-block w-3 h-3 rounded-xs border border-foreground/10"
+              className="inline-block w-3 h-3 rounded-sm border border-foreground/10"
               style={{ backgroundColor: bucketToHsl(b as 0|1|2|3|4) }}
               aria-hidden
             />

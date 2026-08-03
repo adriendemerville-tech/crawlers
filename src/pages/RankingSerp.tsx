@@ -345,7 +345,7 @@ function SerpBenchmarkMini() {
                           <img
                             src={`https://www.google.com/s2/favicons?domain=${r.domain}&sz=16`}
                             alt=""
-                            className="h-4 w-4 rounded-xs"
+                            className="h-4 w-4 rounded-sm"
                             loading="lazy"
                           />
                           <span className="text-xs font-medium truncate max-w-[200px]">{r.domain}</span>

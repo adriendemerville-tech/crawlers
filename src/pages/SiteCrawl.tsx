@@ -350,7 +350,7 @@ export default function SiteCrawl() {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className={`gap-2 rounded-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 shadow-md ${isButtonShaking ? 'animate-shake' : ''}`}
+                      className={`gap-2 rounded-sm bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 shadow-md ${isButtonShaking ? 'animate-shake' : ''}`}
                     >
                       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
                       {isLoading ? t.crawling : t.launchBtn}

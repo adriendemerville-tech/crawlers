@@ -276,7 +276,7 @@ export function PlatformApiDashboard() {
               return (
                 <div
                   key={d.date}
-                  className="flex-1 min-w-[6px] bg-foreground/70 hover:bg-foreground transition-colors rounded-xs"
+                  className="flex-1 min-w-[6px] bg-foreground/70 hover:bg-foreground transition-colors rounded-sm"
                   style={{ height: `${Math.max(h, 2)}%` }}
                   title={`${d.date} · ${d.jobs} jobs · ${fmtEur(d.revenue_cents)}`}
                 />
