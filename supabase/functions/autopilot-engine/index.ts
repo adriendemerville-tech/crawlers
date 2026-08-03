@@ -888,6 +888,98 @@ async function executeFunctions(
 
 // ═══ Individual function executors ═══
 
+/**
+ * crawlers.fr — publication interne dans blog_articles (aucun CMS externe).
+ * Statut : 'published' si implementation_mode === 'auto', sinon 'draft'.
+ * Une image est générée puis attachée (non bloquant).
+ */
+async function executeCrawlersInternalPublish(
+  decision: any, site: SiteInfo, config: AutopilotConfig, phase: string,
+  supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
+  setSuccess: (v: boolean) => void,
+) {
+  const actions = (decision.action.payload?.cms_actions || []).slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
+  console.log(`[AutopilotEngine] crawlers.fr internal publish: ${actions.length} action(s)`);
+
+  for (const cmsAction of actions) {
+    const body = cmsAction.body || {};
+    const title: string = body.title || cmsAction.title || '';
+    const content: string = body.content || body.body || '';
+    const slug: string = body.slug || slugifyFr(title);
+    try {
+      if (!title || content.length < 200) {
+        executionResults.push({ function: 'crawlers-internal-publish', status: 'rejected', target: slug || 'unknown', reason: 'Titre ou contenu insuffisant' });
+        continue;
+      }
+
+      // Garde anti-doublon : un article avec ce slug existe déjà.
+      const { data: existing } = await supabase
+        .from('blog_articles').select('id').eq('slug', slug).maybeSingle();
+
+      const status = config.implementation_mode === 'auto' ? 'published' : 'draft';
+      const row: Record<string, unknown> = {
+        title, slug, content,
+        excerpt: body.excerpt || body.meta_description || null,
+        status,
+        ...(status === 'published' ? { published_at: new Date().toISOString() } : {}),
+      };
+
+      const { data: article, error } = existing
+        ? await supabase.from('blog_articles').update(row).eq('id', existing.id).select('id, slug').single()
+        : await supabase.from('blog_articles').insert(row).select('id, slug').single();
+
+      if (error) throw new Error(error.message);
+
+      // Image (non bloquant)
+      let imageGenerated = false;
+      try {
+        const brief = await buildOriginalImageBrief({
+          supabase, trackedSiteId: config.tracked_site_id, slug,
+          title, excerpt: String(row.excerpt || ''),
+        });
+        const imgResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: brief.prompt, style: brief.style }),
+          signal: AbortSignal.timeout(150000),
+        });
+        const imgResult = imgResponse.ok ? await imgResponse.json().catch(() => null) : null;
+        const base64Match = imgResult?.dataUri?.match(/^data:image\/\w+;base64,(.+)$/);
+        if (base64Match) {
+          const binaryStr = atob(base64Match[1]);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+          const fileName = `parmenion/crawlers.fr/${Date.now()}_${slug.slice(0, 30)}.png`;
+          const { error: upErr } = await supabase.storage.from('image-references')
+            .upload(fileName, bytes, { contentType: 'image/png', upsert: true });
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(fileName);
+            await supabase.from('blog_articles').update({ image_url: urlData.publicUrl }).eq('id', article.id);
+            imageGenerated = true;
+          }
+        }
+      } catch (imgErr) {
+        console.warn('[AutopilotEngine] crawlers.fr image non générée:', imgErr instanceof Error ? imgErr.message : imgErr);
+      }
+
+      executionResults.push({
+        function: 'crawlers-internal-publish', cms_action: existing ? 'update-post' : 'create-post',
+        target: slug, status: 'success', article_id: article.id,
+        published: status === 'published', image_generated: imageGenerated,
+      });
+      console.log(`[AutopilotEngine] crawlers.fr ${existing ? 'mis à jour' : 'créé'} : ${slug} (${status})`);
+    } catch (err) {
+      executionResults.push({
+        function: 'crawlers-internal-publish', target: slug || 'unknown', status: 'error',
+        error: err instanceof Error ? err.message : 'unknown',
+      });
+      phaseErrors.push({ phase, function: 'crawlers-internal-publish', severity: 'degraded', message: err instanceof Error ? err.message : 'unknown', retryable: true });
+      setSuccess(false);
+    }
+  }
+}
+
+
 async function executeCmsBridgeActions(
   decision: any, site: SiteInfo, config: AutopilotConfig,
   phase: string, cycleNumber: number,
