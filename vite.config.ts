@@ -17,13 +17,13 @@ export default defineConfig({
     // Project MCP server (kept from the Classic config; not bundled by the wrapper).
     plugins: [mcpPlugin()],
     resolve: {
-      alias: {
+      alias: [
         // jspdf v4 exports only "node"/"browser" conditions, which the workerd SSR
         // resolver can't match. Point at the explicit ES build (exported via "./dist/*").
-        // It's only ever loaded via dynamic import() from event handlers, so it never
-        // evaluates during SSR.
-        jspdf: "jspdf/dist/jspdf.es.min.js",
-      },
+        // Exact-match regex: a plain string key also rewrites "jspdf/dist/..." imports,
+        // producing a doubled path like jspdf/dist/jspdf.es.min.js/dist/jspdf.es.min.js.
+        { find: /^jspdf$/, replacement: "jspdf/dist/jspdf.es.min.js" },
+      ],
     },
   },
 });
