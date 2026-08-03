@@ -407,6 +407,18 @@ export default function AutopilotIktracker() {
                 certaines semaines à fort volume d'impressions — signe de requêtes captées mais
                 mal servies.
               </li>
+              <li>
+                <strong>L'origine déclarée reste déclarative.</strong> Les 44,6 % attribués à
+                ChatGPT proviennent d'une question posée à l'inscription, avec 31,4 % de non-réponses
+                (72 « skip » sur 229). C'est la meilleure mesure disponible du canal IA, pas une
+                mesure serveur.
+              </li>
+              <li>
+                <strong>Attribution non chaînée.</strong> On ne peut pas relier une inscription
+                précise à un article précis publié par l'Autopilot : le lien entre production
+                éditoriale, citation par un assistant et création de compte reste corrélatif.
+              </li>
+
             </ul>
           </div>
         </section>
