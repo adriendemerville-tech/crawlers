@@ -132,14 +132,25 @@ async function callBridge(
   return { ok: true, data: payload };
 }
 
-function extractPost(bridgeData: any): Record<string, any> | null {
-  if (!bridgeData) return null;
-  const candidates = [bridgeData.data?.data, bridgeData.data, bridgeData.post, bridgeData];
-  for (const c of candidates) {
-    if (c && typeof c === 'object' && !Array.isArray(c) && (c.content || c.content_html || c.body || c.html)) return c;
+/** Les ponts CMS emballent le post à des profondeurs variables ({result:{data:{data:{…}}}}). */
+function extractPost(bridgeData: any, depth = 0): Record<string, any> | null {
+  if (!bridgeData || typeof bridgeData !== 'object' || depth > 6) return null;
+  if (Array.isArray(bridgeData)) {
+    for (const item of bridgeData) {
+      const found = extractPost(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+  const hasHtml = bridgeData.content || bridgeData.content_html || bridgeData.body || bridgeData.html;
+  if (hasHtml && typeof hasHtml === 'string') return bridgeData;
+  for (const key of ['result', 'data', 'post', 'item']) {
+    const found = extractPost(bridgeData[key], depth + 1);
+    if (found) return found;
   }
   return null;
 }
+
 
 function postHtml(post: Record<string, any> | null): string {
   if (!post) return '';
