@@ -243,7 +243,7 @@ export function MyReportsTab() {
       const path: ReportFolder[] = [];
       let id: string | null = currentFolderId;
       while (id) {
-        const { data } = await supabase.from('report_folders').select('*').eq('id', id).single();
+        const { data }: { data: ReportFolder | null } = await supabase.from('report_folders').select('*').eq('id', id).single();
         if (data) { path.unshift(data as ReportFolder); id = data.parent_id; } else break;
       }
       setFolderPath(path);

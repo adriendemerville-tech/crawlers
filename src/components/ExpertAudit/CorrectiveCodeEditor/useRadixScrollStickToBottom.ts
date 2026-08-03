@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 
 type Options = {
   /** A ref to an element that CONTAINS the Radix ScrollArea viewport */
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement | null>;
   /** When true, we force the viewport to stay pinned to bottom */
   enabled: boolean;
 };

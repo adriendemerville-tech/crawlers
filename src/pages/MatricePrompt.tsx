@@ -15,6 +15,7 @@ import { Header } from '@/components/Header';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { mapColumns, transformRows } from '@/utils/matrice/fuzzyColumnMapper';
@@ -608,8 +609,8 @@ export default function MatricePrompt() {
     // Persist to DB if logged in
     const row = rows.find(r => r.id === rowId);
     if (user && row?.dbId) {
-      const updateData: Record<string, any> = { [field]: ['poids', 'seuil_bon', 'seuil_moyen', 'seuil_mauvais'].includes(field) ? Number(editValue) || 0 : editValue };
-      await supabase.from('prompt_matrix_items').update(updateData).eq('id', row.dbId);
+      const updateData = { [field]: ['poids', 'seuil_bon', 'seuil_moyen', 'seuil_mauvais'].includes(field) ? Number(editValue) || 0 : editValue };
+      await supabase.from('prompt_matrix_items').update(updateData as TablesUpdate<'prompt_matrix_items'>).eq('id', row.dbId);
     }
     setEditingCell(null);
   };

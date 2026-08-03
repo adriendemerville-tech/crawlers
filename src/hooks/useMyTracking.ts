@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from '@/lib/router-compat';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCredits } from '@/contexts/CreditsContext';
@@ -800,7 +801,7 @@ export function useMyTracking() {
     try {
       await supabase
         .from('tracked_sites')
-        .update({ current_config: site.previous_config, previous_config: {} } as Record<string, unknown>)
+        .update({ current_config: site.previous_config, previous_config: {} } as TablesUpdate<'tracked_sites'>)
         .eq('id', site.id)
         .eq('user_id', user.id);
       setSites(prev => prev.map(s =>

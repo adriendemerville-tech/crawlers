@@ -266,7 +266,7 @@ export function MyReports() {
     let currentId: string | null = folderId;
 
     while (currentId) {
-      const { data } = await supabase
+      const { data }: { data: Folder | null } = await supabase
         .from('report_folders')
         .select('*')
         .eq('id', currentId)
