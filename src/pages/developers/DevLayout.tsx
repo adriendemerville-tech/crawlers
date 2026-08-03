@@ -33,7 +33,6 @@ export default function DevLayout({ children, requireAuth, title, description }:
     <div className="min-h-screen bg-background text-foreground">
       {title && (
         <Helmet>
-          <title>{title} — Crawlers Developers</title>
           {description && <meta name="description" content={description} />}
         </Helmet>
       )}

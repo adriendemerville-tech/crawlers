@@ -160,23 +160,9 @@ export default function EEATPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>E-E-A-T SEO & GEO 2026 — audit freelances & agences</title>
-        <meta name="description" content="Audit E-E-A-T algorithmique, scoring SEO et GEO multi-sites, white-label et autopilote IA pour freelances et agences de référencement. Plan gratuit." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/eeat" />
-        <meta property="og:title" content="E-E-A-T, SEO et GEO 2026 : la plateforme des freelances et agences" />
-        <meta property="og:description" content="Scoring E-E-A-T algorithmique, audits SEO et GEO multi-sites, white-label. L'outil des consultants et agences de référencement naturel." />
-        <meta property="og:image" content="https://crawlers.fr/og-eeat.webp" />
-        <meta property="og:locale" content="fr_FR" />
         <meta property="article:published_time" content={publishDate} />
         <meta property="article:modified_time" content={modifiedDate} />
         <meta property="article:author" content="Adrien de Volontat" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="E-E-A-T, SEO & GEO 2026 — Crawlers.fr" />
-        <meta name="twitter:description" content="L'outil des freelances et agences SEO pour scorer l'E-E-A-T, le SEO technique et la citabilité IA." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-eeat.webp" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

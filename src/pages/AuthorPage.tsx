@@ -89,16 +89,6 @@ export default function AuthorPage() {
   return (
     <>
       <Helmet>
-        <title>Adrien de Volontat — Fondateur Crawlers.fr | SEO & GEO</title>
-        <meta
-          name="description"
-          content="Adrien de Volontat, fondateur de Crawlers.fr. Journaliste devenu expert SEO et GEO (Generative Engine Optimization), spécialiste de la visibilité dans ChatGPT, Perplexity et Claude."
-        />
-        
-        <meta property="og:type" content="profile" />
-        <meta property="og:title" content="Adrien de Volontat — Fondateur Crawlers.fr" />
-        <meta property="og:description" content={FOUNDER.bio} />
-        <meta property="og:image" content={adrienPhoto} />
         <script type="application/ld+json">{JSON.stringify(personJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
       </Helmet>

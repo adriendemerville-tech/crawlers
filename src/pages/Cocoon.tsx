@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { DesktopOnlyGate } from "@/components/DesktopOnlyGate";
-import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -700,24 +699,6 @@ function CocoonContent() {
 
   return (
     <>
-      <Helmet>
-        <title>Cocon sémantique 3D : architecture SEO & maillage interne</title>
-        <meta name="description" content="Créer un cocon sémantique : visualisez en 3D votre architecture SEO. TF-IDF, clusters thématiques et maillage interne automatique." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/cocoon" />
-        <meta property="og:title" content="Cocon Sémantique 3D — Architecture SEO | Crawlers.fr" />
-        <meta property="og:description" content="Cocon sémantique 3D — visualisez et optimisez l'architecture sémantique de votre site. TF-IDF, clusters thématiques, recommandations de maillage automatiques." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Cocon Sémantique 3D — Architecture SEO | Crawlers.fr" />
-        <meta name="twitter:description" content="Cocon sémantique 3D — visualisez et optimisez l'architecture sémantique de votre site. TF-IDF, clusters thématiques, recommandations de maillage automatiques." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
-      </Helmet>
-
       {/* Access gate overlay for non-subscribers */}
       {hasAccess === false && (
         <div className="fixed inset-0 z-50">

@@ -187,19 +187,6 @@ export default function Methodologie() {
   return (
     <>
       <Helmet>
-        <title>Méthodologie d'audit SEO & GEO — 7 algorithmes | Crawlers.fr</title>
-        <meta name="description" content="Méthodologie Crawlers.fr — 7 algorithmes propriétaires, 150+ points d'audit, architecture multi-fallback, RGPD natif. Comment nous calculons vos scores SEO et GEO." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/methodologie" />
-        <meta property="og:title" content="Méthodologie d'audit SEO & GEO — 7 algorithmes | Crawlers.fr" />
-        <meta property="og:description" content="7 algorithmes propriétaires, 150+ points d'audit, architecture multi-fallback. Comment Crawlers.fr calcule vos scores SEO et GEO." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Méthodologie d'audit SEO & GEO — 7 algorithmes | Crawlers.fr" />
-        <meta name="twitter:description" content="7 algorithmes propriétaires, 150+ points d'audit, architecture multi-fallback." />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
         <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
       </Helmet>

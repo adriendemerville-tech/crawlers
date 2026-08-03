@@ -60,12 +60,6 @@ export default function KeywordPillarPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>{data.title}</title>
-        <meta name="description" content={data.metaDesc} />
-        <meta name="keywords" content={data.primaryKeyword} />
-        <meta property="og:title" content={data.h1} />
-        <meta property="og:description" content={data.metaDesc} />
-        <meta property="og:type" content="article" />
         <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>

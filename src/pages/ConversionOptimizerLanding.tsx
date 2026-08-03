@@ -78,16 +78,6 @@ const ConversionOptimizerLanding = memo(() => {
   return (
     <>
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Conversion Optimizer : audit CRO & taux de conversion IA</title>
-        <meta name="description" content="Optimisation du taux de conversion par IA : analyse ton, CTAs, lisibilité et potentiel CRO de chaque page selon votre contexte business." />
-        <meta property="og:title" content="Conversion Optimizer — Audit UX/CRO contextuel par IA | Crawlers.fr" />
-        <meta property="og:description" content="7 axes d'analyse UX : ton, CTAs, alignement, lisibilité, conversion, mobile, mots-clés. Calibré sur votre business." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://crawlers.fr/conversion-optimizer" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Conversion Optimizer — Audit UX/CRO contextuel | Crawlers.fr" />
-        <meta name="twitter:description" content="Analyse UX/CRO contextuelle sur 7 axes. Suggestions concrètes avec reformulations." />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

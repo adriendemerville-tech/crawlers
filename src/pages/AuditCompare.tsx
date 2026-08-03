@@ -3,7 +3,6 @@ import { useSaveReport } from '@/hooks/useSaveReport';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { CreditCoin } from '@/components/ui/CreditCoin';
-import { Helmet } from 'react-helmet-async';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
@@ -1303,24 +1302,6 @@ const AuditCompare = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Audit Comparé SEO & GEO vs Concurrents | Crawlers.fr</title>
-        <meta name="description" content="Benchmark SEO et GEO vs 3 concurrents. Radar Chart, analyse différentielle, score IAS comparé. Disponible en crédits." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/audit-compare" />
-        <meta property="og:title" content="Audit Comparé SEO & GEO vs Concurrents | Crawlers.fr" />
-        <meta property="og:description" content="Benchmark SEO et GEO vs 3 concurrents. Radar Chart, analyse différentielle, score IAS comparé. Disponible en crédits." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Audit Comparé SEO & GEO vs Concurrents | Crawlers.fr" />
-        <meta name="twitter:description" content="Benchmark SEO et GEO vs 3 concurrents. Radar Chart, analyse différentielle, score IAS comparé. Disponible en crédits." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
-      </Helmet>
       <Header />
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8 max-w-6xl">

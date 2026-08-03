@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo, useRef, useEffect, lazy, Suspense } fro
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, Link } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { Upload, Search, Loader2, ArrowLeft, FileText, FileSpreadsheet, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle, History, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1144,23 +1143,6 @@ export default function MatricePrompt() {
 
   return (
     <>
-      <Helmet>
-        <title>Matrice d'audit SEO & GEO | Crawlers.fr</title>
-        <meta name="description" content="Composez votre grille d'audit sur-mesure : balises, données structurées, performance, sécurité, prompts LLM, métriques combinées. Score pondéré global." />
-        <meta name="robots" content="noindex, nofollow" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/matrice" />
-        <meta property="og:title" content="Matrice d'audit SEO & GEO | Crawlers.fr" />
-        <meta property="og:description" content="Composez votre grille d'audit sur-mesure : balises, données structurées, performance, sécurité, prompts LLM, métriques combinées. Score pondéré global." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Matrice d'audit SEO & GEO | Crawlers.fr" />
-        <meta name="twitter:description" content="Composez votre grille d'audit sur-mesure : balises, données structurées, performance, sécurité, prompts LLM, métriques combinées. Score pondéré global." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
-      </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">

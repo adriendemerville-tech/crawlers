@@ -32,7 +32,6 @@ function safeParseTs(ts: string): Date {
   }
   return d;
 }
-import { Helmet } from 'react-helmet-async';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface BotEntry {
@@ -131,10 +130,6 @@ export default function BotActivityPage() {
 
   return (
     <>
-      <Helmet>
-        <title>Activité des Bots — Crawlers AI</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container max-w-5xl mx-auto py-6 px-4 space-y-6">

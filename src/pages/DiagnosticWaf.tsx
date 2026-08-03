@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Helmet } from 'react-helmet-async';
 import { Loader2, Shield, CheckCircle2, XCircle, AlertTriangle, Globe, ArrowRight, Copy, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,12 +127,6 @@ export default function DiagnosticWaf() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Diagnostic WAF — Pourquoi mon site est-il bloqué ? | Crawlers.fr</title>
-        <meta name="description" content="Outil de diagnostic gratuit pour comprendre pourquoi un scan échoue : codes HTTP, redirections, robots.txt, headers et User-Agent." />
-      </Helmet>
-
       <main className="container max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-10">

@@ -17,21 +17,6 @@ export default function Faq() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>FAQ Crawlers.fr — Questions fréquentes SEO & GEO | Crawlers.fr</title>
-        <meta name="description" content="FAQ Crawlers.fr — toutes les réponses sur l'audit SEO, le GEO Score, la visibilité LLM, les crédits, le plan Pro Agency et l'intégration technique." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/faq" />
-        <meta property="og:title" content="FAQ Crawlers.fr — Questions fréquentes SEO & GEO | Crawlers.fr" />
-        <meta property="og:description" content="FAQ Crawlers.fr — toutes les réponses sur l'audit SEO, le GEO Score, la visibilité LLM, les crédits, le plan Pro Agency et l'intégration technique." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="FAQ Crawlers.fr — Questions fréquentes SEO & GEO | Crawlers.fr" />
-        <meta name="twitter:description" content="FAQ Crawlers.fr — toutes les réponses sur l'audit SEO, le GEO Score, la visibilité LLM, les crédits, le plan Pro Agency et l'intégration technique." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",

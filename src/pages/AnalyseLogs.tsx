@@ -100,14 +100,6 @@ const AnalyseLogs = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Analyse de logs serveur — crawl Google & IA | Crawlers</title>
-        <meta name="description" content="Analysez vos logs serveur pour comprendre comment Googlebot et les bots IA explorent votre site. Détectez le budget crawl gaspillé, les pages orphelines et optimisez votre indexation." />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="Analyse de Logs Serveur — Comprenez le crawl de Google et des bots IA" />
-        <meta property="og:description" content="Détectez 40+ bots dans vos logs, analysez le budget crawl et optimisez votre indexation avec Crawlers." />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://crawlers.fr/analyse-logs" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

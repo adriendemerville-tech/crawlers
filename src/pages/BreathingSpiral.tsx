@@ -257,17 +257,6 @@ function BreathingSpiralPage() {
   return (
     <>
       <Helmet>
-        <title>Breathing Spiral — pilotage SEO adaptatif par IA</title>
-        <meta name="description" content="Breathing Spiral : pilotage SEO homéostatique piloté par 9 signaux temps réel. Oscillation entre consolidation et expansion pour une croissance organique durable." />
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
-        <meta property="og:type" content="article" />
-        <meta property="og:title" content="Breathing Spiral — pilotage SEO adaptatif par IA" />
-        <meta property="og:description" content="Système homéostatique de pilotage SEO piloté par 9 signaux temps réel. Consolidation quand il faut, expansion quand c'est possible." />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Breathing Spiral — SEO adaptatif" />
-        <meta name="twitter:description" content="9 signaux. 3 anneaux. 1 spirale qui respire. Découvrez le pilotage SEO homéostatique." />
         <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>

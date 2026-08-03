@@ -510,16 +510,6 @@ const ContentArchitectPage = memo(() => {
   return (
     <>
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>{tr.meta.title}</title>
-        <meta name="description" content={tr.meta.description} />
-        <meta property="og:title" content={tr.meta.title} />
-        <meta property="og:description" content={tr.meta.description} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://crawlers.fr/content-architect" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={tr.meta.title} />
-        <meta name="twitter:description" content={tr.meta.description} />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",

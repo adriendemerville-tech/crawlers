@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import {
   LayoutDashboard, Search, Sparkles, CheckSquare, Code2, Bug, FileEdit,
@@ -38,15 +37,6 @@ export default function FeaturesConsole() {
   useCanonicalHreflang('/features/console');
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Console SEO & GEO Crawlers — cockpit unifié 16 modules</title>
-        <meta
-          name="description"
-          content="La Console Crawlers réunit SEO, GEO, plans d'action, crawls, content, GMB et reporting dans un cockpit outil SEO unifié pour agences."
-        />
-      </Helmet>
-
       <Header />
 
       <main className="container mx-auto px-4 py-16 sm:py-24 max-w-6xl">

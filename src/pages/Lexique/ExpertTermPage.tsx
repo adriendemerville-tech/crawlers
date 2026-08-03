@@ -65,9 +65,6 @@ export default function ExpertTermPage() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{term.term} - Définition Expert | Crawlers.fr</title>
-        <meta name="description" content={term.fullDefinition.slice(0, 155)} />
-        
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
       </Helmet>

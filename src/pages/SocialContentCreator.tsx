@@ -95,15 +95,6 @@ const SocialContentCreator = memo(() => {
   return (
     <>
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Social Content Hub — publication SEO/GEO | Crawlers</title>
-        <meta name="description" content="Créez, planifiez et publiez du contenu social optimisé SEO/GEO sur LinkedIn, Facebook et Instagram. Smart Linking, génération IA et analytics intégrés." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Social Content Hub — Crawlers.fr" />
-        <meta property="og:description" content="Distribution sociale alimentée par vos données SEO/GEO. Publication directe LinkedIn, Facebook, Instagram." />
-        <meta property="og:url" content="https://crawlers.fr/social-content-creator" />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

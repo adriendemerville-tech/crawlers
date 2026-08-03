@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -238,11 +237,6 @@ export default function Features() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>{t.metaTitle}</title>
-        <meta name="description" content={t.metaDesc} />
-      </Helmet>
       <Header />
 
       <main className="container mx-auto px-4 py-16 sm:py-24">

@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -134,23 +133,6 @@ export default function ArchitecteGeneratif() {
 
   return (
     <>
-      <Helmet>
-        <title>Architecte Génératif — correctifs SEO/GEO multi-pages</title>
-        <meta name="description" content="Architecte Génératif : générez des correctifs SEO/GEO différents par page — JSON-LD, Open Graph, balises, maillage. Intégration GTM, WordPress ou SDK." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/architecte-generatif" />
-        <meta property="og:title" content="Code Architect — Correctifs Multi-Pages SEO/GEO | Crawlers.fr" />
-        <meta property="og:description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Code Architect — Correctifs Multi-Pages SEO/GEO | Crawlers.fr" />
-        <meta name="twitter:description" content="Générez automatiquement des codes correctifs multi-pages (JSON-LD, balises, maillage). Intégration directe WordPress, GTM ou SDK." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
-      </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1">

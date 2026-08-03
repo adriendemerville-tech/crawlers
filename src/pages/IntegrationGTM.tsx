@@ -80,20 +80,7 @@ export default function IntegrationGTM() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
         <html lang={language} />
-        <title>{t3(language,
-          'Brancher votre site — API, WordPress, GTM | Crawlers.fr',
-          'Connect your site — API, WordPress, GTM | Crawlers.fr',
-          'Conectar su sitio — API, WordPress, GTM | Crawlers.fr'
-        )}</title>
-        <meta name="description" content={t3(language,
-          'Connectez votre site à Crawlers via Google Tag Manager, WordPress ou API CMS en 30 s. Injection auto, sandboxing, débranchage instant.',
-          'Connect your site to Crawlers.AI in 30 seconds. 3 methods: CMS API, WordPress plugin, Google Tag Manager. Auto injection, sandboxing, instant disconnect.',
-          'Conecte su sitio a Crawlers.AI en 30 segundos. 3 métodos: API CMS, plugin WordPress, Google Tag Manager. Inyección automática, sandboxing, desconexión instantánea.'
-        )} />
-        <meta property="og:type" content="article" />
-        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

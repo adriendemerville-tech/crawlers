@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Header } from '@/components/Header';
 import { lazy, Suspense, useEffect } from 'react';
@@ -135,14 +134,6 @@ export default function GuideAuditSeo() {
 
   return (
     <>
-      <Helmet>
-        <title>Audit SEO & GEO 2026 : Guide Identity-First Complet</title>
-        <meta name="description" content="Guide exhaustif pour réaliser un audit SEO/GEO en 2026. Méthodologie Identity-First de Crawlers.fr : 168 critères, Score GEO, visibilité LLM, Cocoon 3D." />
-        <meta property="og:title" content="Guide Ultime de l'Audit SEO & GEO en 2026" />
-        <meta property="og:description" content="Méthodologie Identity-First, Score GEO, visibilité LLM et plan d'action pour auditer votre site en 2026." />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://crawlers.fr/guide-audit-seo" />
-      </Helmet>
       <Header />
       <main className="min-h-screen bg-background pt-20">
         <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">

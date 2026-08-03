@@ -87,16 +87,6 @@ export default function CrawlersApiDoc() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>API Crawlers — Documentation REST unifiée (18 modules) | Crawlers.fr</title>
-        <meta
-          name="description"
-          content="Documentation complète de l'API Crawlers : une seule clé crw_live_ pour 18 modules (audit, crawl, cocoon, GEO, LLM, SERP, observatoire). REST asynchrone par polling. Exemples Node, PHP, Python."
-        />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="API Crawlers — Documentation REST unifiée | Crawlers.fr" />
-        <meta property="og:description" content="Une seule clé, 18 modules : audit, crawl, cocoon, GEO, LLM visibility, SERP, observatoire, concurrence. Modèle asynchrone par polling." />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://crawlers.fr/docs/api/crawlers" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 

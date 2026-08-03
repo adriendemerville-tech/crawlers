@@ -67,16 +67,6 @@ export default function ParmenionApiDoc() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>API Parménion — Documentation REST (mode pull) | Crawlers.fr</title>
-        <meta
-          name="description"
-          content="Documentation complète de l'API Parménion : votre site poll les tâches de contenu SEO planifiées, les publie sur votre CMS, et notifie le résultat. Endpoint REST, auth Bearer, codes d'erreur, exemples PHP/Node/Python."
-        />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="API Parménion — Documentation REST (pull) | Crawlers.fr" />
-        <meta property="og:description" content="Référence complète de l'API Parménion pour intégrer la publication automatique de contenu SEO depuis votre propre CMS, sans donner d'accès sortants." />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://crawlers.fr/docs/api/parmenion" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 

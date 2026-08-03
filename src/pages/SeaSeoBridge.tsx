@@ -154,13 +154,6 @@ const SeaSeoBridgePage = memo(() => {
   return (
     <>
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>SEA SEO Bridge — croisement Google Ads & SEO par IA</title>
-        <meta name="description" content="Identifiez les mots-clés SEA convertibles en trafic SEO. L'IA croise Google Ads, Search Console et GA4 pour révéler les opportunités." />
-        <meta property="og:title" content="SEA → SEO Bridge — Croisement Google Ads & SEO par l'IA" />
-        <meta property="og:description" content="Module d'analyse croisée qui identifie les mots-clés payants convertibles en trafic organique grâce à l'intelligence artificielle." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://crawlers.fr/sea-seo-bridge" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>

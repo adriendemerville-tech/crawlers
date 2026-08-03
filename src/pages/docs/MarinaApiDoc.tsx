@@ -66,16 +66,6 @@ export default function MarinaApiDoc() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>API Marina — Documentation REST | Crawlers.fr</title>
-        <meta
-          name="description"
-          content="Documentation complète de l'API Marina : générez des rapports SEO/GEO en marque blanche depuis votre site. Endpoint REST, authentification par clé, webhook callback, multilingue."
-        />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="API Marina — Documentation REST | Crawlers.fr" />
-        <meta property="og:description" content="Référence complète de l'API Marina pour intégrer un audit SEO/GEO automatisé dans votre produit." />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://crawlers.fr/docs/api/marina" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 

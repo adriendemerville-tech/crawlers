@@ -1,6 +1,5 @@
 import { memo, useEffect, useState, lazy, Suspense } from 'react';
 import { useParams, Navigate } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -64,17 +63,6 @@ function LandingPageComponent() {
 
   return (
     <>
-      <Helmet>
-        <title>{landing.meta_title || landing.title}</title>
-        <meta name="description" content={landing.meta_description || ''} />
-        
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content={landing.meta_title || landing.title} />
-        <meta property="og:description" content={landing.meta_description || ''} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-      </Helmet>
-
       <Header />
       <main className="min-h-screen bg-background">
         <article className="max-w-4xl mx-auto px-4 py-12 sm:py-16">

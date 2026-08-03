@@ -117,20 +117,6 @@ export default function ComparatifClaudeVsCrawlers() {
   return (
     <>
       <Helmet>
-        <title>Claude Code & MCP vs Crawlers.fr — comparatif SEO/GEO</title>
-        <meta name="description" content="Claude Cowork, Claude Code et MCP vs Crawlers.fr : 14 critères pour freelances SEO. Pourquoi 29€/mois remplacent votre stack Claude." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:title" content="Claude vs Crawlers.fr — Le vrai comparatif SEO/GEO 2026" />
-        <meta property="og:description" content="14 critères passés au crible. Pourquoi le stack Claude ne remplace pas un outil qui crawle, connecte Google et audite vraiment." />
-        <meta property="og:url" content={`${SITE_URL}/comparatif-claude-vs-crawlers`} />
-        <meta property="og:image" content={`${SITE_URL}/og-image.png`} />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Claude vs Crawlers.fr — Le vrai comparatif SEO/GEO 2026" />
-        <meta name="twitter:description" content="14 critères passés au crible. Pourquoi 29€/mois de Crawlers remplacent votre stack Claude." />
-        <meta name="twitter:image" content={`${SITE_URL}/og-image.png`} />
         <meta name="author" content="Adrien de Volontat" />
         <script type="application/ld+json">{JSON.stringify(articleSD)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSD)}</script>

@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react';
-import { Helmet } from "react-helmet-async";
 import { Link } from "@/lib/router-compat";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -193,12 +192,6 @@ export default function FeaturesCocoon() {
 
   return (
     <>
-      <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>{t.title}</title>
-        <meta name="description" content={t.metaDesc} />
-      </Helmet>
-
       <Header />
 
       <main className="min-h-screen bg-[#0f0a1e]">
