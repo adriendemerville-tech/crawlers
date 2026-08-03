@@ -47,6 +47,36 @@ const QUERY_GAINS = [
   { q: 'barème frais kilométrique 2026', before: 11.3, after: 9.3 },
 ];
 
+// Inscriptions mensuelles réelles (admin iktracker.fr, extraction du 2 août 2026)
+const SIGNUPS = [
+  { m: 'Janvier 2026', n: 26, delta: '—' },
+  { m: 'Février 2026', n: 55, delta: '+111 %' },
+  { m: 'Mars 2026', n: 48, delta: '−13 %' },
+  { m: 'Avril 2026', n: 81, delta: '+69 %' },
+  { m: 'Mai 2026', n: 59, delta: '−27 %' },
+  { m: 'Juin 2026', n: 56, delta: '−5 %' },
+  { m: 'Juillet 2026', n: 27, delta: '−52 %' },
+  { m: 'Août 2026 (2 jours)', n: 7, delta: 'en cours' },
+];
+
+// Origine déclarée à l'inscription (157 réponses exploitables sur 229 collectées)
+const DECLARED_ORIGIN = [
+  { src: 'ChatGPT', n: 70, pct: '44,6 %' },
+  { src: 'Google', n: 65, pct: '41,4 %' },
+  { src: 'Communauté / bouche-à-oreille', n: 16, pct: '10,2 %' },
+  { src: 'Réseaux sociaux', n: 6, pct: '3,8 %' },
+];
+
+const ORIGIN_MONTHLY = [
+  { m: 'Mars 2026', chatgpt: 3, google: 1, share: '75,0 %' },
+  { m: 'Avril 2026', chatgpt: 20, google: 25, share: '36,4 %' },
+  { m: 'Mai 2026', chatgpt: 21, google: 17, share: '50,0 %' },
+  { m: 'Juin 2026', chatgpt: 17, google: 16, share: '44,7 %' },
+  { m: 'Juillet 2026', chatgpt: 7, google: 3, share: '53,8 %' },
+  { m: 'Août 2026 (2 j)', chatgpt: 2, google: 3, share: '40,0 %' },
+];
+
+
 const FAQS = [
   {
     q: "Combien d'articles l'Autopilot a-t-il réellement publiés sur iktracker.fr ?",
