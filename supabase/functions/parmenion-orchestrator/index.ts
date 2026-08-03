@@ -416,6 +416,34 @@ try {
     let decision: ParmenionDecision | null = null;
     
     if (currentPhase === 'prescribe') {
+      // ═══ GARDE DE SATURATION (déterministe, 0 LLM) ═══
+      // Même moteur que le skill Copilot detect_content_cannibalization.
+      // Objectif : interdire un nouvel article dans un cluster déjà surchargé
+      // et fournir au stratège le cluster à consolider (pruning : 301 + fusion).
+      let cannibResult: Awaited<ReturnType<typeof computeCannibalization>> | null = null;
+      try {
+        cannibResult = await computeCannibalization(supabase, { domain, threshold: 0.45 });
+        if (cannibResult.ok) {
+          console.log(`[Parménion] 🧬 Cannibalisation: ${cannibResult.clusters_count} clusters, ${cannibResult.redundant_pages} pages redondantes / ${cannibResult.analyzed_pages}`);
+        } else {
+          console.log(`[Parménion] 🧬 Cannibalisation indisponible: ${cannibResult.error}`);
+        }
+      } catch (e) {
+        console.warn('[Parménion] cannibalisation guard failed (non bloquant):', e);
+      }
+      const cannib = cannibResult?.ok ? cannibResult : null;
+      const saturatedThemes = cannib
+        ? cannib.clusters.filter((c) => c.size >= 3).map((c) => ({
+            theme: c.theme,
+            size: c.size,
+            pilier: c.pilier.path,
+            duplicates: c.duplicates.slice(0, 10).map((d) => d.path),
+          }))
+        : [];
+      const pruningCandidate = cannib
+        ? [...cannib.clusters].sort((a, b) => b.duplicates.length - a.duplicates.length)[0]
+        : undefined;
+
       // ═══ PRESCRIBE V3: Deterministic routing via cocoon-strategist ═══
       // cocoon-strategist has the 360° view (4 diagnostics, conflicts, spiral, EEAT, SERP data).
       // It returns a prioritized plan (max 8 tasks). Parménion executor takes task #1.
@@ -438,8 +466,13 @@ try {
             disable_new_content: contentDisabled,
             is_iktracker: isIktracker,
             caller_user_id: authUserId || bodyUserId || null,
+            saturated_themes: saturatedThemes,
+            cannibalization_summary: cannib
+              ? { clusters: cannib.clusters_count, redundant_pages: cannib.redundant_pages, analyzed_pages: cannib.analyzed_pages }
+              : null,
           }),
         });
+
 
         if (!strategistResp.ok) {
           const errText = await strategistResp.text();
