@@ -704,6 +704,44 @@ export default function AutopilotIktracker() {
           </div>
         </section>
 
+        <section className="mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            Automatisation du référencement : ce que ça change concrètement
+          </h2>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            Ce cas répond à une question posée souvent autrement : à quoi sert réellement un
+            logiciel de référencement automatique ? Sur iktracker.fr, l'automatisation SEO n'a pas
+            remplacé la stratégie — elle a remplacé l'exécution. Le choix des sujets reste piloté
+            par un cocon sémantique et un garde de similarité ; ce qui est automatisé, c'est la
+            rédaction, la mise en forme, l'injection des données structurées, le maillage interne
+            et la publication CMS. Soit environ 4 heures de travail humain par article, appliquées
+            927 fois.
+          </p>
+          <h3 className="text-xl font-semibold mt-6 mb-2">Ce que les outils de référencement automatique font bien</h3>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            La constance. Un humain publie par vagues, un pilote éditorial publie chaque jour au
+            même rythme, ce qui donne à Google et aux moteurs génératifs une fréquence de crawl
+            stable. Sur ce site, la surface indexée passe de 6 995 à 17 455 impressions
+            hebdomadaires : c'est le résultat direct du volume, pas d'une astuce technique.
+          </p>
+          <h3 className="text-xl font-semibold mt-6 mb-2">Ce qu'aucune automatisation SEO ne corrige</h3>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            Un positionnement produit flou, un funnel qui fuit, une rétention à 15,1 %. Le
+            contenu automatisé amplifie ce qui existe déjà ; il ne crée pas de proposition de
+            valeur. C'est la limite honnête de la démarche, et elle est visible dans les chiffres
+            de cette étude.
+          </p>
+          <p className="leading-relaxed text-foreground/85">
+            Pour comprendre le mécanisme sous-jacent :{' '}
+            <Link to="/content-architect" className="underline hover:no-underline">Content Architect</Link>{' '}pour
+            la production,{' '}
+            <Link to="/cocoon" className="underline hover:no-underline">Cocoon 3D</Link>{' '}pour la
+            structure sémantique, et{' '}
+            <Link to="/tarifs" className="underline hover:no-underline">la grille tarifaire</Link>{' '}pour
+            le coût réel d'un tel dispositif.
+          </p>
+        </section>
+
         <section className="mt-16 pt-10 border-t border-border">
           <h2 className="text-2xl md:text-3xl font-bold mb-6">Pour aller plus loin</h2>
           <ul className="grid gap-3 sm:grid-cols-2 list-none p-0">
