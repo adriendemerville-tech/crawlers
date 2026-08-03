@@ -242,6 +242,17 @@ function generateInfoSection(route: string): string {
       <p>Selon <a href="https://www.statista.com/outlook/tmo/digital-advertising/search-advertising/france" rel="noopener">Statista</a>, le search advertising en France pèse 5,2 milliards d'euros en 2026, rendant l'optimisation SEO d'autant plus stratégique.</p>
       <p>Comparatifs tiers : <a href="https://www.blogdumoderateur.com/" rel="noopener">Blog du Modérateur</a> · <a href="https://www.leptidigital.fr/" rel="noopener">Leptidigital</a></p>
     </section>`,
+    "/etudes/autopilot-parmenion-iktracker": `<section aria-label="Étude de cas automatisation SEO">
+      <h2>Automatisation SEO : les chiffres de l'étude de cas iktracker.fr</h2>
+      <p>Entre le 24 mars et le 2 août 2026, l'Autopilot Parménion de Crawlers.fr a exécuté <strong>927 publications CMS</strong> en 289 cycles autonomes sur iktracker.fr, un outil de suivi des indemnités kilométriques. Les données Google Search Console montrent un passage de 84,5 clics hebdomadaires en moyenne sur la baseline (9-30 mars 2026) à 279 clics au pic d'avril 2026, avec des impressions hebdomadaires passant de 6 995 à 17 455 et une position moyenne améliorée de 2,3 places (15,22 → 12,92) sur les 20 requêtes comparables, dont 9 en progression.</p>
+      <h2>Ce qu'un logiciel de référencement automatique change</h2>
+      <p>L'automatisation du référencement ne remplace pas la stratégie : elle remplace l'exécution. Le choix des sujets reste piloté par un cocon sémantique et un garde de similarité sémantique ; ce qui est automatisé, c'est la rédaction, la mise en forme, l'injection des données structurées, le maillage interne et la publication CMS. Ce que l'automatisation SEO ne corrige pas : un positionnement produit flou, un funnel qui fuit, une rétention à 15,1 % de comptes actifs sur 30 jours.</p>
+      <h2>Acquisition : ChatGPT devant Google dans l'origine déclarée</h2>
+      <p>Sur 372 comptes créés, <strong>44,6 % des nouveaux inscrits déclarent avoir découvert le service via ChatGPT</strong>, contre 41,4 % via Google, alors que le referrer HTTP ne mesure que 1,0 % de trafic IA — un écart d'un facteur 45 qui montre que les analytics classiques sous-estiment massivement le canal des moteurs génératifs.</p>
+      <h2>Limites assumées</h2>
+      <p>Aucun contrefactuel : la thématique est fortement saisonnière (campagne de déclaration de revenus), et l'attribution entre un article publié et une inscription reste corrélative, pas causale.</p>
+      <p>Pour approfondir : <a href="${baseUrl}/generative-engine-optimization">Generative Engine Optimization</a> · <a href="${baseUrl}/content-architect">Content Architect</a> · <a href="${baseUrl}/cocoon">Cocoon 3D</a> · <a href="${baseUrl}/tarifs">Tarifs</a> · <a href="${baseUrl}/etudes/cout-reponse-chatgpt-vs-google-ads">Coût ChatGPT vs Google Ads</a></p>
+    </section>`,
   };
 
   // Default informational section for pages not specifically covered
