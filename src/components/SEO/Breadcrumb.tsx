@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-compat';
 import { useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { ChevronRight, Home } from 'lucide-react';

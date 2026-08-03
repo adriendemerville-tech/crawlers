@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { Download, Loader2, Mail, Printer, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

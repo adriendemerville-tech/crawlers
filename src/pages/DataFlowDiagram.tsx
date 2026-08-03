@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { SEOHead } from "@/components/SEOHead";
 import { t3 } from "@/utils/i18n";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import {
   Breadcrumb,
   BreadcrumbList,

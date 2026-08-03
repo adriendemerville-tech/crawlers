@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { FileText, UserPlus, LogIn, X, BarChart3, Compass, Briefcase, BookOpen, Sparkles, Code, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useAuth } from '@/contexts/AuthContext';
 
 const translations = {

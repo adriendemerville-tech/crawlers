@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Search, Zap, BarChart3, Code2, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 
 const translations = {

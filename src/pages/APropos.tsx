@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useEffect, lazy, Suspense} from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Target, Brain, Shield, Zap, Code2, BarChart3, Globe } from 'lucide-react';
 import adrienPhoto from '@/assets/adrien-de-volontat.jpg';

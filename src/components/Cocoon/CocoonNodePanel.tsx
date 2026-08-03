@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { X, TrendingUp, Target, Globe, Zap, Link2, ExternalLink, Layers, FileText, Clock, Search, RefreshCw, Wand2, ShieldOff, ShieldCheck, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Search, Layers, Brain, Target, CheckCircle2, FileText, BarChart3 } from 'lucide-react';
 import { useEffect, lazy, Suspense} from 'react';

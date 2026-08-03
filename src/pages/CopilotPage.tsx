@@ -6,7 +6,7 @@
  * - Stratège : analyse Cocoon + actions CMS sous approbation (Gemini Pro)
  */
 import { useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { AgentChatShell } from '@/components/Copilot/AgentChatShell';
 import type { CopilotPersona } from '@/hooks/useCopilot';

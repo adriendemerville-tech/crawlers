@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { lazy, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { motion } from 'framer-motion';
 import {
   Bot, Globe, Brain, Gauge, Radar, Shield, FileText,

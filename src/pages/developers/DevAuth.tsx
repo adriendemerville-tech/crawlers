@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import DevLayout from "./DevLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";

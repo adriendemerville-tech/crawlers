@@ -13,7 +13,7 @@ import {
   BarChart3, Shield, Bot, FileCode, Network, Gauge, Layers,
   ArrowRight, HelpCircle, Cpu, Globe, FileText, Rocket,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 

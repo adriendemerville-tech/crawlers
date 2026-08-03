@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useDemoMode } from '@/contexts/DemoModeContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { Upload, Search, Loader2, ArrowLeft, FileText, FileSpreadsheet, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle, History, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';

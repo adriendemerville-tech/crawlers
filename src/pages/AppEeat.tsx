@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Search, RefreshCw, Shield, Brain, Eye, Award, Lock, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { EeatReportPreview } from '@/components/Admin/EeatReportPreview';
 import { InlineAuthForm } from '@/components/ExpertAudit/InlineAuthForm';
 

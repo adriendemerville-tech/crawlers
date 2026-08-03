@@ -1,7 +1,7 @@
 import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import {
   BarChart3, Network, Code2, PenTool, Eye, ChevronLeft, ChevronRight
 } from 'lucide-react';

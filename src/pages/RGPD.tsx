@@ -4,7 +4,7 @@ import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { ArrowLeft, Shield, CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 
 import { t3 } from '@/utils/i18n';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));

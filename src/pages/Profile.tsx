@@ -1,6 +1,6 @@
 import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';

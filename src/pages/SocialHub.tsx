@@ -33,7 +33,7 @@ import { SocialSettings } from '@/components/Social/SocialSettings';
 import { SocialConnectModal } from '@/components/Social/SocialConnectModal';
 import { SocialImageLibrary, type LibraryImage } from '@/components/Social/SocialImageLibrary';
 import { createPost, updatePost, publishPost, exportZip, fetchPosts, type SocialPost } from '@/lib/api/socialHub';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 
 const FREE_MONTHLY_LIMIT = 5;
 

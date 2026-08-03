@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { ArrowRight, Terminal, Key, RefreshCw, AlertCircle, FileCode2, Workflow } from 'lucide-react';
 

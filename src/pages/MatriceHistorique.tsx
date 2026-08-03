@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, FolderOpen, GitCompareArrows, Pencil, Trash2, Check, X as XIcon, Loader2, Calendar, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

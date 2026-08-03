@@ -1,4 +1,4 @@
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link } from "@/lib/router-compat";
 import DevLayout from "./DevLayout";
 import SettingsTab from "./tabs/SettingsTab";
 import ApiKeysTab from "./tabs/ApiKeysTab";

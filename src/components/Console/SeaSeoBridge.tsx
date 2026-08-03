@@ -7,7 +7,7 @@ import { Loader2, ArrowRight, Search, Target, Send, Unplug, Link as LinkIcon, In
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { SIMULATED_OPPORTUNITIES, SIMULATED_SUMMARY, type SimulatedOpportunity } from '@/data/seaSeoSimulatedData';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';

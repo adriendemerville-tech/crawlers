@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { fr, es, enUS } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { MyInjectedScripts } from './MyInjectedScripts';
 import { ScriptDebugTool } from './ScriptDebugTool';

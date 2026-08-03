@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { useAISidebar } from "@/contexts/AISidebarContext";
 import { useCocoonTheme } from "@/hooks/useCocoonTheme";
 import { CocoonForceGraph3D } from "@/components/Cocoon/CocoonForceGraph3D";

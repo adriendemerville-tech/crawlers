@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate } from '@/lib/router-compat';
 import { ArticleLayout, HtmlContentRenderer } from '@/components/Blog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getArticleBySlug, blogArticles } from '@/data/blogArticles';

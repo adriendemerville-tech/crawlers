@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { Chrome, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';

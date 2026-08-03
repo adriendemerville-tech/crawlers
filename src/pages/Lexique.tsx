@@ -6,7 +6,7 @@ import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Shar
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense} from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from '@/lib/router-compat';
 // jspdf loaded dynamically on PDF export to avoid 140KB on initial load
 const loadPDFLibraries = async () => {
   const [jspdfModule, autoTableModule] = await Promise.all([

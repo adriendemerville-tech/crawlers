@@ -8,7 +8,7 @@ import { Lock, Activity, ArrowRight, RefreshCw, Loader2, TrendingUp, Search, Tar
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subMonths, parseISO, startOfWeek } from 'date-fns';
 import { fr, es, enUS } from 'date-fns/locale';

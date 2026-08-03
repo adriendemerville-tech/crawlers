@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import {

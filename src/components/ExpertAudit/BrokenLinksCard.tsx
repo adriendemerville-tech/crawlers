@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link2, ExternalLink, AlertTriangle, CheckCircle2, XCircle, Info, ShieldCheck } from 'lucide-react';
 import { BrokenLinksAnalysis } from '@/types/expertAudit';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';

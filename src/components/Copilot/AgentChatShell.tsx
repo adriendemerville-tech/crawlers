@@ -6,7 +6,7 @@
  */
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { MarkdownWithQcm } from './MarkdownWithQcm';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { Check, Copy, Loader2, RotateCcw, Send } from 'lucide-react';
 import { useCopilot, type CopilotPersona, type CopilotAction } from '@/hooks/useCopilot';
 import { cn } from '@/lib/utils';

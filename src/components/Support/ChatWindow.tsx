@@ -5,7 +5,7 @@
  * dans la v2 ou re-modélisés via le copilot-orchestrator.
  */
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from '@/lib/router-compat';
 import { X, Send, Loader2, Phone, ArrowRight, Bug, Shield, Copy, Check, BellOff, Bell, FileText, Code, Maximize2, Minimize2, Minus, ExternalLink, History, ArrowLeft, ClipboardList } from 'lucide-react';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { Button } from '@/components/ui/button';

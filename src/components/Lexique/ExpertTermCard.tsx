@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { ExternalLink } from 'lucide-react';
 import { ExpertTerm, expertCategories } from '@/data/expertTerms';
 import { cn } from '@/lib/utils';

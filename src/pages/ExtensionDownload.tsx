@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { Download, CheckCircle2 } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';

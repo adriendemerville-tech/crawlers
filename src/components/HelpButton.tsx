@@ -1,5 +1,5 @@
 import { HelpCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import {
   Tooltip,
   TooltipContent,

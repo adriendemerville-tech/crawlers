@@ -14,7 +14,7 @@
  * Charte : noir/blanc/violet/jaune d'or, boutons sans fond, pas d'emoji.
  */
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-compat';
 import { Bell, BellOff, History, PanelRightClose, PanelRightOpen, Minus, Type, X } from 'lucide-react';
 import { useAISidebar } from '@/contexts/AISidebarContext';
 import { supabase } from '@/integrations/supabase/client';

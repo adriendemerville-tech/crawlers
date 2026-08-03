@@ -2,7 +2,7 @@ import { Bot, Gauge, Sparkles, Brain, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 
 export type ToolTab = 'crawlers' | 'pagespeed' | 'geo' | 'llm';
 

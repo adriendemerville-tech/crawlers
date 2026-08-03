@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { Download, FileSpreadsheet, Link2, Mail, Printer, Loader2, Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';

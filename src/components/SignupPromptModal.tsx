@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFreemiumMode } from '@/contexts/FreemiumContext';
