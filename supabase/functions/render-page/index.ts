@@ -438,6 +438,7 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
 
   const pricingHtml = ROUTES_WITH_PRICING.includes(route) ? generatePricingTableHtml() : "";
   const infoHtml = generateInfoSection(route);
+  const ogImage = OG_IMAGE_OVERRIDES[route] ? `${baseUrl}${OG_IMAGE_OVERRIDES[route]}` : `${baseUrl}/og-image.png`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
