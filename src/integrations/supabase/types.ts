@@ -3606,6 +3606,81 @@ export type Database = {
         }
         Relationships: []
       }
+      content_pruning_log: {
+        Row: {
+          cluster_theme: string | null
+          created_at: string
+          decision_id: string | null
+          delete_status: string
+          domain: string
+          dry_run: boolean
+          error_message: string | null
+          id: string
+          merge_status: string
+          pilier_slug: string | null
+          pilier_url: string | null
+          pruned_html: string | null
+          pruned_payload: Json
+          pruned_slug: string | null
+          pruned_title: string | null
+          pruned_url: string
+          redirect_status: string
+          redirect_target: string | null
+          restored_at: string | null
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cluster_theme?: string | null
+          created_at?: string
+          decision_id?: string | null
+          delete_status?: string
+          domain: string
+          dry_run?: boolean
+          error_message?: string | null
+          id?: string
+          merge_status?: string
+          pilier_slug?: string | null
+          pilier_url?: string | null
+          pruned_html?: string | null
+          pruned_payload?: Json
+          pruned_slug?: string | null
+          pruned_title?: string | null
+          pruned_url: string
+          redirect_status?: string
+          redirect_target?: string | null
+          restored_at?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cluster_theme?: string | null
+          created_at?: string
+          decision_id?: string | null
+          delete_status?: string
+          domain?: string
+          dry_run?: boolean
+          error_message?: string | null
+          id?: string
+          merge_status?: string
+          pilier_slug?: string | null
+          pilier_url?: string | null
+          pruned_html?: string | null
+          pruned_payload?: Json
+          pruned_slug?: string | null
+          pruned_title?: string | null
+          pruned_url?: string
+          redirect_status?: string
+          redirect_target?: string | null
+          restored_at?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       content_requirements_matrix: {
         Row: {
           consumer: string
