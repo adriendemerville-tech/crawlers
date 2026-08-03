@@ -162,14 +162,16 @@ export default function AutopilotIktracker() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Étude de cas : 927 publications SEO automatisées — Autopilot</title>
-        <meta name="description" content="Chiffres réels : 927 publications automatisées sur iktracker.fr, 9 requêtes sur 20 en progression, 372 comptes créés et 44,6 % des inscrits déclarant venir de ChatGPT." />
-        <meta property="og:title" content="Autopilot : 927 publications, et ChatGPT devant Google à l'acquisition" />
-        <meta property="og:description" content="Étude de cas Crawlers.fr : données Search Console brutes, inscriptions mensuelles, origine d'acquisition déclarée, méthodologie et limites assumées." />
+        <title>Automatisation SEO : étude de cas, 927 publications automatiques</title>
+        <meta name="description" content="Étude de cas d'automatisation du référencement : un logiciel de référencement automatique a publié 927 articles sur iktracker.fr. 9 requêtes sur 20 en progression, 372 comptes créés, 44,6 % des inscrits venus de ChatGPT." />
+        <meta property="og:title" content="Automatisation SEO : étude de cas de 927 publications automatiques" />
+        <meta property="og:description" content="Étude de cas Crawlers.fr sur l'automatisation du référencement : données Search Console brutes, inscriptions mensuelles, origine d'acquisition déclarée, méthodologie et limites assumées." />
 
         <meta property="og:type" content="article" />
         <meta property="og:url" content={CANONICAL} />
+        <meta property="og:image" content="https://crawlers.fr/og-etude-autopilot-iktracker.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://crawlers.fr/og-etude-autopilot-iktracker.jpg" />
         <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(datasetJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
