@@ -47,6 +47,36 @@ const QUERY_GAINS = [
   { q: 'barème frais kilométrique 2026', before: 11.3, after: 9.3 },
 ];
 
+// Inscriptions mensuelles réelles (admin iktracker.fr, extraction du 2 août 2026)
+const SIGNUPS = [
+  { m: 'Janvier 2026', n: 26, delta: '—' },
+  { m: 'Février 2026', n: 55, delta: '+111 %' },
+  { m: 'Mars 2026', n: 48, delta: '−13 %' },
+  { m: 'Avril 2026', n: 81, delta: '+69 %' },
+  { m: 'Mai 2026', n: 59, delta: '−27 %' },
+  { m: 'Juin 2026', n: 56, delta: '−5 %' },
+  { m: 'Juillet 2026', n: 27, delta: '−52 %' },
+  { m: 'Août 2026 (2 jours)', n: 7, delta: 'en cours' },
+];
+
+// Origine déclarée à l'inscription (157 réponses exploitables sur 229 collectées)
+const DECLARED_ORIGIN = [
+  { src: 'ChatGPT', n: 70, pct: '44,6 %' },
+  { src: 'Google', n: 65, pct: '41,4 %' },
+  { src: 'Communauté / bouche-à-oreille', n: 16, pct: '10,2 %' },
+  { src: 'Réseaux sociaux', n: 6, pct: '3,8 %' },
+];
+
+const ORIGIN_MONTHLY = [
+  { m: 'Mars 2026', chatgpt: 3, google: 1, share: '75,0 %' },
+  { m: 'Avril 2026', chatgpt: 20, google: 25, share: '36,4 %' },
+  { m: 'Mai 2026', chatgpt: 21, google: 17, share: '50,0 %' },
+  { m: 'Juin 2026', chatgpt: 17, google: 16, share: '44,7 %' },
+  { m: 'Juillet 2026', chatgpt: 7, google: 3, share: '53,8 %' },
+  { m: 'Août 2026 (2 j)', chatgpt: 2, google: 3, share: '40,0 %' },
+];
+
+
 const FAQS = [
   {
     q: "Combien d'articles l'Autopilot a-t-il réellement publiés sur iktracker.fr ?",
@@ -72,7 +102,20 @@ const FAQS = [
     q: "Peut-on reproduire ce résultat sur n'importe quel site ?",
     a: "Non sans conditions. iktracker.fr disposait déjà d'une propriété Search Console connectée, d'un pont CMS fonctionnel et d'une thématique à intention claire. Sur un site sans historique ni saisonnalité porteuse, l'Autopilot élargit d'abord la surface d'indexation ; les clics suivent plus lentement.",
   },
+  {
+    q: "Quelle part des inscriptions iktracker.fr vient des assistants IA ?",
+    a: "44,6 % des nouveaux inscrits déclarent avoir découvert iktracker.fr via ChatGPT, contre 41,4 % via Google, sur 157 réponses exploitables collectées à l'inscription. ChatGPT est donc la première source d'acquisition déclarée du produit.",
+  },
+  {
+    q: "Pourquoi les statistiques web n'attribuent-elles que 1 % du trafic aux IA ?",
+    a: "Parce que ChatGPT ne transmet pas d'en-tête Referer exploitable : l'utilisateur copie l'URL ou clique depuis une réponse sans référent. Ces visites sont donc comptées en trafic direct, qui représente 70,7 % des sessions. Le 1,0 % mesuré est un artefact de mesure, pas une réalité d'acquisition.",
+  },
+  {
+    q: "Combien d'utilisateurs iktracker.fr compte-t-il et quel est le taux d'activité ?",
+    a: "372 comptes créés au 2 août 2026, dont 359 en 2026. Sur les 30 derniers jours, 56 utilisateurs ont saisi au moins un trajet, soit un taux d'activité de 15,1 %, et 36 sur les 7 derniers jours.",
+  },
 ];
+
 
 const maxClicks = Math.max(...WEEKS.map(w => w.clicks));
 
@@ -80,7 +123,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: "Étude de cas Autopilot : 927 publications automatisées sur iktracker.fr",
-  description: "Étude de cas Crawlers.fr avec chiffres Google Search Console réels : 927 publications automatisées par l'Autopilot Parménion, 9 requêtes en progression sur 20 suivies, +230 % de clics au pic.",
+  description: "Étude de cas Crawlers.fr avec chiffres Google Search Console et données produit réelles : 927 publications automatisées, 9 requêtes en progression sur 20 suivies, 372 comptes créés et 44,6 % des inscrits déclarant venir de ChatGPT.",
   datePublished: PUBLISHED,
   dateModified: PUBLISHED,
   author: { '@type': 'Person', name: 'Adrien de Volontat', url: 'https://crawlers.fr/auteur/adrien-de-volontat' },
@@ -92,14 +135,15 @@ const articleJsonLd = {
 const datasetJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Dataset',
-  name: "Performance Search Console iktracker.fr sous Autopilot — 13 semaines",
-  description: "Clics, impressions, CTR et position moyenne hebdomadaires de iktracker.fr du 9 mars au 1er juin 2026, mis en regard du volume de publications automatisées par l'Autopilot Parménion.",
+  name: "Performance Search Console et acquisition iktracker.fr sous Autopilot",
+  description: "Clics, impressions, CTR et position moyenne hebdomadaires de iktracker.fr du 9 mars au 1er juin 2026, volumes de publications automatisées, inscriptions mensuelles 2026 et origine d'acquisition déclarée par les utilisateurs.",
   creator: { '@type': 'Organization', name: 'Crawlers.fr' },
   datePublished: PUBLISHED,
-  temporalCoverage: '2026-03-09/2026-06-01',
+  temporalCoverage: '2026-01-01/2026-08-02',
   license: 'https://creativecommons.org/licenses/by/4.0/',
   url: CANONICAL,
-  variableMeasured: ['Clics GSC', 'Impressions GSC', 'CTR (%)', 'Position moyenne', 'Publications CMS exécutées'],
+  variableMeasured: ['Clics GSC', 'Impressions GSC', 'CTR (%)', 'Position moyenne', 'Publications CMS exécutées', 'Inscriptions mensuelles', 'Origine d\'acquisition déclarée', 'Utilisateurs actifs 30 jours'],
+
 };
 
 const faqJsonLd = {
@@ -119,9 +163,10 @@ export default function AutopilotIktracker() {
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
         <title>Étude de cas : 927 publications SEO automatisées — Autopilot</title>
-        <meta name="description" content="Chiffres Search Console réels : l'Autopilot Crawlers a exécuté 927 publications sur iktracker.fr, fait progresser 9 requêtes sur 20 et triplé les impressions au pic." />
-        <meta property="og:title" content="Autopilot : 927 publications automatisées, 9 requêtes en progression" />
-        <meta property="og:description" content="Étude de cas Crawlers.fr avec données Google Search Console brutes, méthodologie complète et limites assumées." />
+        <meta name="description" content="Chiffres réels : 927 publications automatisées sur iktracker.fr, 9 requêtes sur 20 en progression, 372 comptes créés et 44,6 % des inscrits déclarant venir de ChatGPT." />
+        <meta property="og:title" content="Autopilot : 927 publications, et ChatGPT devant Google à l'acquisition" />
+        <meta property="og:description" content="Étude de cas Crawlers.fr : données Search Console brutes, inscriptions mensuelles, origine d'acquisition déclarée, méthodologie et limites assumées." />
+
         <meta property="og:type" content="article" />
         <meta property="og:url" content={CANONICAL} />
         <meta name="twitter:card" content="summary_large_image" />
@@ -144,8 +189,11 @@ export default function AutopilotIktracker() {
             de <strong>iktracker.fr</strong> : 289 cycles, 5 742 actions journalisées,
             <strong> 927 publications CMS exécutées</strong>. Sur les 13 semaines couvertes par
             Google Search Console, les impressions hebdomadaires ont été multipliées par 2,5 au pic
-            et 9 des 20 requêtes comparables ont gagné des places. Voici les chiffres bruts, la
-            méthode, et ce que ces données ne prouvent pas.
+            et 9 des 20 requêtes comparables ont gagné des places. Côté produit, le site compte
+            <strong> 372 comptes créés</strong> et, fait le plus intéressant,
+            <strong> 44,6 % des inscrits déclarent avoir découvert le service via ChatGPT</strong>,
+            devant Google. Voici les chiffres bruts, la méthode, et ce que ces données ne prouvent
+            pas.
           </p>
         </header>
 
@@ -154,8 +202,10 @@ export default function AutopilotIktracker() {
           en 289 cycles entre le 24 mars et le 2 août 2026. Les données Google Search Console
           montrent un passage de 84,5 clics hebdomadaires en moyenne sur la baseline à 279 clics
           au pic d'avril 2026, avec une position moyenne améliorée de 2,3 places sur les requêtes
-          comparables.
+          comparables. Sur la même période, 372 comptes ont été créés et 44,6 % des nouveaux
+          inscrits déclarent avoir découvert le service via ChatGPT, contre 41,4 % via Google.
         </blockquote>
+
 
         <section className="mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Les chiffres clés</h2>
@@ -176,7 +226,24 @@ export default function AutopilotIktracker() {
               <div className="text-3xl font-bold">×2,5</div>
               <div className="text-sm text-foreground/70 mt-1">impressions hebdo au pic vs baseline</div>
             </div>
+            <div className="rounded-xl border border-border bg-card/40 p-5">
+              <div className="text-3xl font-bold">372</div>
+              <div className="text-sm text-foreground/70 mt-1">comptes créés sur iktracker.fr</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card/40 p-5">
+              <div className="text-3xl font-bold">44,6 %</div>
+              <div className="text-sm text-foreground/70 mt-1">des inscrits déclarent venir de ChatGPT</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card/40 p-5">
+              <div className="text-3xl font-bold">1,0 %</div>
+              <div className="text-sm text-foreground/70 mt-1">seulement du trafic IA visible au referrer</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card/40 p-5">
+              <div className="text-3xl font-bold">15,1 %</div>
+              <div className="text-sm text-foreground/70 mt-1">de comptes actifs sur 30 jours</div>
+            </div>
           </div>
+
         </section>
 
         <section className="mb-12">
@@ -344,6 +411,152 @@ export default function AutopilotIktracker() {
         </section>
 
         <section className="mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">De la visibilité aux inscriptions réelles</h2>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            Les positions ne paient pas les factures. Voici donc les chiffres produit, extraits de
+            l'administration d'iktracker.fr au 2 août 2026 : <strong>372 comptes créés</strong>,
+            dont 359 sur l'année 2026, et 31 sur les 30 derniers jours. Sur la même fenêtre,
+            <strong> 56 utilisateurs ont saisi au moins un trajet</strong> (36 sur 7 jours), soit un
+            taux d'activité de 15,1 %.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['372', 'comptes créés au total'],
+              ['359', 'inscriptions sur 2026'],
+              ['56', 'utilisateurs actifs sur 30 jours'],
+              ['15,1 %', "taux d'activité des comptes"],
+            ].map(([v, l]) => (
+              <div key={l} className="rounded-xl border border-border bg-card/40 p-5">
+                <div className="text-3xl font-bold">{v}</div>
+                <div className="text-sm text-foreground/70 mt-1">{l}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="text-xl font-semibold mt-8 mb-3">Inscriptions mensuelles</h3>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Nouveaux comptes iktracker.fr par mois en 2026</caption>
+              <thead className="bg-card/60 text-left">
+                <tr>
+                  <th scope="col" className="p-3 font-semibold">Mois</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Nouveaux comptes</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Évolution</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SIGNUPS.map((s) => (
+                  <tr key={s.m} className="border-t border-border">
+                    <td className="p-3 font-medium whitespace-nowrap">{s.m}</td>
+                    <td className="p-3 text-right font-semibold">{s.n}</td>
+                    <td className="p-3 text-right text-foreground/70">{s.delta}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-foreground/60 mt-3">
+            Source : table des comptes iktracker.fr, extraction du 2 août 2026 (UTC). Le pic d'avril
+            (81 inscriptions) suit exactement le pic Search Console, et le repli de juillet
+            (−52 %) suit la fin de la campagne fiscale.
+          </p>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Le résultat le plus contre-intuitif : ChatGPT devant Google</h2>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            À l'inscription, iktracker.fr demande à l'utilisateur comment il a découvert le service.
+            Sur <strong>157 réponses exploitables</strong> (229 collectées, 72 « skip »),
+            <strong> ChatGPT arrive premier avec 44,6 %</strong>, devant Google à 41,4 %.
+          </p>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Origine déclarée par les utilisateurs à l'inscription</caption>
+              <thead className="bg-card/60 text-left">
+                <tr>
+                  <th scope="col" className="p-3 font-semibold">Origine déclarée</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Réponses</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Part</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DECLARED_ORIGIN.map((o) => (
+                  <tr key={o.src} className="border-t border-border">
+                    <td className="p-3 font-medium">{o.src}</td>
+                    <td className="p-3 text-right font-semibold">{o.n}</td>
+                    <td className="p-3 text-right">{o.pct}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h3 className="text-xl font-semibold mt-8 mb-2">Pourquoi les statistiques web affichent 1 %</h3>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            Mesuré au referrer HTTP, le canal « assistants IA » ne pèse que <strong>1,0 %</strong>
+            des sessions (33 sur 3 223), tandis que « direct / interne » en concentre 70,7 %.
+            L'explication est technique : ChatGPT n'envoie pas d'en-tête <code>Referer</code>
+            exploitable — l'utilisateur copie l'URL ou clique depuis une réponse sans référent. Ces
+            visites basculent en trafic direct.
+          </p>
+          <blockquote className="citable-passage mb-4 border-l-2 border-border pl-5 text-base text-foreground/85 italic">
+            Sur iktracker.fr, 44,6 % des nouveaux inscrits déclarent avoir découvert le service via
+            ChatGPT, contre 41,4 % via Google, alors que les statistiques de referrer HTTP
+            n'attribuent que 1,0 % des sessions aux assistants IA. L'écart entre 1 % mesuré et
+            44,6 % déclaré démontre que le trafic issu des assistants est massivement comptabilisé
+            comme trafic direct.
+          </blockquote>
+          <h3 className="text-xl font-semibold mt-8 mb-3">Part de ChatGPT dans les origines déclarées, mois par mois</h3>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Évolution mensuelle ChatGPT vs Google dans les origines déclarées</caption>
+              <thead className="bg-card/60 text-left">
+                <tr>
+                  <th scope="col" className="p-3 font-semibold">Mois</th>
+                  <th scope="col" className="p-3 font-semibold text-right">ChatGPT</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Google</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Part ChatGPT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ORIGIN_MONTHLY.map((o) => (
+                  <tr key={o.m} className="border-t border-border">
+                    <td className="p-3 font-medium whitespace-nowrap">{o.m}</td>
+                    <td className="p-3 text-right font-semibold">{o.chatgpt}</td>
+                    <td className="p-3 text-right">{o.google}</td>
+                    <td className="p-3 text-right">{o.share}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-foreground/60 mt-3">
+            Le canal IA se maintient au-dessus de 40 % depuis mai, et progresse même en juillet
+            (53,8 %) alors que le trafic global baissait. Source : réponses à la question d'origine
+            posée à l'inscription, hors « skip ».
+          </p>
+          <p className="leading-relaxed text-foreground/85 mt-4">
+            C'est la justification opérationnelle du travail GEO mené en parallèle de l'Autopilot :
+            fichier <code>llms.txt</code>, <code>knowledge.json</code>, désambiguïsation d'entité,
+            pré-rendu pour les robots et JSON-LD structuré. Le contenu produit n'a pas seulement
+            servi à ranker sur Google, il a servi de matière citable aux assistants.
+          </p>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Le funnel d'inscription</h2>
+          <p className="leading-relaxed text-foreground/85">
+            Le suivi de la page d'authentification n'a démarré que le 12 juillet 2026. Sur les trois
+            semaines mesurées : <strong>398 vues</strong> de <code>/auth</code> pour 390 sessions
+            uniques, 21 soumissions de formulaire, 24 démarrages OAuth Google et
+            <strong> 19 inscriptions abouties</strong>, soit 4,8 % de conversion vue → compte, avec
+            2 erreurs d'inscription. La page dédiée <code>/signup</code> ajoute 35 vues. Ce taux est
+            à réévaluer sur un mois plein, et sur une période hors creux estival.
+          </p>
+        </section>
+
+
+        <section className="mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Méthodologie</h2>
 
           <h3 className="text-xl font-semibold mt-6 mb-2">1. Volumes de publication</h3>
@@ -368,11 +581,21 @@ export default function AutopilotIktracker() {
             requêtes apparues ou disparues en cours de route ne sont pas comptées comme des gains.
           </p>
 
-          <h3 className="text-xl font-semibold mt-6 mb-2">4. Ce qu'on n'a pas fait</h3>
+          <h3 className="text-xl font-semibold mt-6 mb-2">4. Données produit et acquisition</h3>
           <p className="leading-relaxed text-foreground/85">
-            Pas de groupe témoin, pas de test A/B, pas de désaisonnalisation. Cette étude décrit
-            une trajectoire observée, pas une causalité démontrée.
+            Extraites de l'administration d'iktracker.fr le 2 août 2026 (heure UTC) : comptes créés,
+            trajets saisis pour l'activité, et réponses à la question d'origine posée à l'inscription
+            pour l'acquisition. Les 72 « skip » sont exclus du calcul des parts. Les sessions par
+            referrer proviennent des évènements de pages vues du produit, pas d'un outil tiers.
           </p>
+
+          <h3 className="text-xl font-semibold mt-6 mb-2">5. Ce qu'on n'a pas fait</h3>
+          <p className="leading-relaxed text-foreground/85">
+            Pas de groupe témoin, pas de test A/B, pas de désaisonnalisation, pas de chaînage entre
+            un article publié et une inscription. Cette étude décrit une trajectoire observée, pas
+            une causalité démontrée.
+          </p>
+
         </section>
 
         <section className="mb-12">
@@ -407,6 +630,18 @@ export default function AutopilotIktracker() {
                 certaines semaines à fort volume d'impressions — signe de requêtes captées mais
                 mal servies.
               </li>
+              <li>
+                <strong>L'origine déclarée reste déclarative.</strong> Les 44,6 % attribués à
+                ChatGPT proviennent d'une question posée à l'inscription, avec 31,4 % de non-réponses
+                (72 « skip » sur 229). C'est la meilleure mesure disponible du canal IA, pas une
+                mesure serveur.
+              </li>
+              <li>
+                <strong>Attribution non chaînée.</strong> On ne peut pas relier une inscription
+                précise à un article précis publié par l'Autopilot : le lien entre production
+                éditoriale, citation par un assistant et création de compte reste corrélatif.
+              </li>
+
             </ul>
           </div>
         </section>
@@ -433,6 +668,23 @@ export default function AutopilotIktracker() {
             titres et métadonnées insuffisamment convaincants. C'est le levier suivant, et il ne
             demande pas de nouveau contenu.
           </p>
+
+          <h3 className="text-xl font-semibold mt-6 mb-2">Les statistiques web sous-estiment massivement le canal IA</h3>
+          <p className="leading-relaxed text-foreground/85">
+            C'est l'enseignement le plus transposable de ce cas : entre 1,0 % mesuré au referrer et
+            44,6 % déclaré par les utilisateurs eux-mêmes, l'écart est d'un facteur 45. Toute
+            décision d'investissement prise sur la seule base des rapports d'analytics sous-évalue
+            donc le retour du travail GEO. Poser la question de l'origine à l'inscription coûte une
+            ligne de formulaire et change la lecture complète du canal d'acquisition.
+          </p>
+
+          <h3 className="text-xl font-semibold mt-6 mb-2">La rétention reste le vrai plafond</h3>
+          <p className="leading-relaxed text-foreground/85">
+            15,1 % de comptes actifs sur 30 jours : l'acquisition fonctionne, l'usage suit moins.
+            Aucune quantité de contenu automatisé ne corrige un second trajet jamais saisi. C'est
+            un rappel utile de la frontière du périmètre SEO et GEO.
+          </p>
+
         </section>
 
         <section className="mt-16 pt-10 border-t border-border">
