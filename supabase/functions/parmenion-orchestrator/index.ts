@@ -7,6 +7,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 import { isIktrackerDomain, isDictadeviDomain, normalizePageKey } from '../_shared/domainUtils.ts';
 import { computeSeoScoreV2, extractTextContent, type SeoScoreV2, type BusinessProfile } from '../_shared/seoScoringV2.ts';
+import { computeCannibalization, evaluateTopicSaturation } from '../_shared/cannibalizationClusters.ts';
 
 // ═══ Modular imports ═══
 import {
@@ -416,6 +417,34 @@ try {
     let decision: ParmenionDecision | null = null;
     
     if (currentPhase === 'prescribe') {
+      // ═══ GARDE DE SATURATION (déterministe, 0 LLM) ═══
+      // Même moteur que le skill Copilot detect_content_cannibalization.
+      // Objectif : interdire un nouvel article dans un cluster déjà surchargé
+      // et fournir au stratège le cluster à consolider (pruning : 301 + fusion).
+      let cannibResult: Awaited<ReturnType<typeof computeCannibalization>> | null = null;
+      try {
+        cannibResult = await computeCannibalization(supabase, { domain, threshold: 0.45 });
+        if (cannibResult.ok) {
+          console.log(`[Parménion] 🧬 Cannibalisation: ${cannibResult.clusters_count} clusters, ${cannibResult.redundant_pages} pages redondantes / ${cannibResult.analyzed_pages}`);
+        } else {
+          console.log(`[Parménion] 🧬 Cannibalisation indisponible: ${cannibResult.error}`);
+        }
+      } catch (e) {
+        console.warn('[Parménion] cannibalisation guard failed (non bloquant):', e);
+      }
+      const cannib = cannibResult?.ok ? cannibResult : null;
+      const saturatedThemes = cannib
+        ? cannib.clusters.filter((c) => c.size >= 3).map((c) => ({
+            theme: c.theme,
+            size: c.size,
+            pilier: c.pilier.path,
+            duplicates: c.duplicates.slice(0, 10).map((d) => d.path),
+          }))
+        : [];
+      const pruningCandidate = cannib
+        ? [...cannib.clusters].sort((a, b) => b.duplicates.length - a.duplicates.length)[0]
+        : undefined;
+
       // ═══ PRESCRIBE V3: Deterministic routing via cocoon-strategist ═══
       // cocoon-strategist has the 360° view (4 diagnostics, conflicts, spiral, EEAT, SERP data).
       // It returns a prioritized plan (max 8 tasks). Parménion executor takes task #1.
@@ -438,8 +467,13 @@ try {
             disable_new_content: contentDisabled,
             is_iktracker: isIktracker,
             caller_user_id: authUserId || bodyUserId || null,
+            saturated_themes: saturatedThemes,
+            cannibalization_summary: cannib
+              ? { clusters: cannib.clusters_count, redundant_pages: cannib.redundant_pages, analyzed_pages: cannib.analyzed_pages }
+              : null,
           }),
         });
+
 
         if (!strategistResp.ok) {
           const errText = await strategistResp.text();
@@ -463,11 +497,75 @@ try {
               force_content: forceContent, force_iktracker_article: force_iktracker_article === true,
             });
           } else {
+            // ═══ FILTRE DE SATURATION + PRUNING (déterministe) ═══
+            // 1. On écarte les tâches de création de contenu dont le sujet recouvre
+            //    un cluster déjà saturé (≥3 pages, Jaccard ≥ 0.5).
+            // 2. Si toutes les tâches contenu sont bloquées et qu'un cluster est
+            //    consolidable, on injecte une tâche de pruning (301 vers le pilier).
+            let effectiveTasks: any[] = tasks;
+            let saturationNote = '';
+            if (cannib && saturatedThemes.length > 0) {
+              const isCreation = (t: any) =>
+                String(t.action_type || '').includes('create') || t.action_type === 'create_content';
+              const blocked: string[] = [];
+              effectiveTasks = tasks.filter((t: any) => {
+                if (!isCreation(t)) return true;
+                const verdict = evaluateTopicSaturation(
+                  cannib,
+                  [t.title, t.target_keyword, (t.keywords || []).join(' ')].filter(Boolean).join(' '),
+                  { saturationSize: 3, overlap: 0.5 },
+                );
+                if (verdict.blocked) {
+                  blocked.push(`"${t.title}" ↔ cluster « ${verdict.matched?.theme} » (${verdict.matched?.size} pages, overlap ${verdict.score})`);
+                  return false;
+                }
+                return true;
+              });
+              if (blocked.length > 0) {
+                saturationNote = ` ${blocked.length} tâche(s) contenu bloquée(s) par saturation: ${blocked.join(' ; ')}.`;
+                console.log(`[Parménion] 🛑 Saturation guard: ${saturationNote}`);
+              }
+              if (effectiveTasks.length === 0 && pruningCandidate) {
+                effectiveTasks = [{
+                  id: `pruning-${pruningCandidate.pilier.path}`,
+                  action_type: 'fix_cannibalization',
+                  title: `Consolider le cluster « ${pruningCandidate.theme} » (${pruningCandidate.size} pages) vers ${pruningCandidate.pilier.path}`,
+                  urgency: 'high',
+                  estimated_impact: 'high',
+                  execution_mode: 'content_architect',
+                  executor_function: 'content-architecture-advisor',
+                  affected_urls: [pruningCandidate.pilier.url, ...pruningCandidate.duplicates.map((d) => d.url)],
+                  is_destructive: false,
+                  pruning: {
+                    theme: pruningCandidate.theme,
+                    pilier: pruningCandidate.pilier,
+                    duplicates: pruningCandidate.duplicates,
+                    recommended: 'merge_then_301',
+                  },
+                }];
+                console.log(`[Parménion] ♻️ Pruning injecté: cluster « ${pruningCandidate.theme} » → ${pruningCandidate.pilier.path} (${pruningCandidate.duplicates.length} doublons)`);
+              }
+            }
+
+            if (effectiveTasks.length === 0) {
+              console.warn('[Parménion] Toutes les tâches écartées par le garde de saturation, aucun pruning disponible');
+              return jsonOk({
+                cycle: cycle_number,
+                phase: currentPhase,
+                status: 'skipped',
+                reason: `Saturation thématique: aucune tâche exécutable.${saturationNote}`,
+                domain,
+                cannibalization: { clusters: cannib?.clusters_count ?? 0, redundant_pages: cannib?.redundant_pages ?? 0 },
+              });
+            }
+
             // ═══ BUILD DECISION FROM STRATEGIST PLAN ═══
-            const topTask = tasks[0];
+            const tasksForPlan = effectiveTasks;
+            const topTask = tasksForPlan[0];
             const executorFn = topTask.executor_function || 'content-architecture-advisor';
             
-            console.log(`[Parménion] 🎯 Strategist plan: ${tasks.length} tasks. #1: [${topTask.urgency}] ${topTask.action_type} → ${executorFn} | "${topTask.title}"`);
+            console.log(`[Parménion] 🎯 Strategist plan: ${tasksForPlan.length} tasks. #1: [${topTask.urgency}] ${topTask.action_type} → ${executorFn} | "${topTask.title}"`);
+
             
             decision = {
               goal: {
@@ -476,14 +574,14 @@ try {
                   : topTask.action_type.includes('fix') || topTask.action_type.includes('redirect')
                   ? 'technical_fix'
                   : 'content_gap',
-                description: `[Prescribe V3 — Strategist] ${topTask.title}. Plan: ${tasks.length} tâches, urgence: ${topTask.urgency}.`,
+                description: `[Prescribe V3 — Strategist] ${topTask.title}. Plan: ${tasksForPlan.length} tâches, urgence: ${topTask.urgency}.`,
               },
               tactic: {
-                initial_scope: { strategist_tasks: tasks.length, content_priority_mode: forceContent },
+                initial_scope: { strategist_tasks: tasksForPlan.length, content_priority_mode: forceContent },
                 final_scope: { 
                   selected_task: topTask.id, 
                   executor_function: executorFn,
-                  full_plan: tasks.map((t: any) => ({ id: t.id, action_type: t.action_type, urgency: t.urgency, priority: t.priority_score || t.priority, executor: t.executor_function })),
+                  full_plan: tasksForPlan.map((t: any) => ({ id: t.id, action_type: t.action_type, urgency: t.urgency, priority: t.priority_score || t.priority, executor: t.executor_function })),
                 },
                 scope_reductions: 0,
                 estimated_tokens: 0,
@@ -494,19 +592,19 @@ try {
                 risk_score: topTask.is_destructive ? Math.min(conservativeMode ? MAX_RISK_CONSERVATIVE : MAX_RISK_NORMAL, 2) : 1,
                 iterations: 0,
                 goal_changed: false,
-                reasoning: `Déterministe via cocoon-strategist. Tâche #1/${tasks.length}: "${topTask.title}" (${topTask.urgency}, score ${topTask.priority_score || topTask.priority}). ${strategistData?.conflicts_resolved?.length || 0} conflits résolus.`,
+                reasoning: `Déterministe via cocoon-strategist. Tâche #1/${tasksForPlan.length}: "${topTask.title}" (${topTask.urgency}, score ${topTask.priority_score || topTask.priority}). ${strategistData?.conflicts_resolved?.length || 0} conflits résolus.`,
               },
               action: {
                 type: topTask.execution_mode === 'content_architect' ? 'cms' : topTask.execution_mode === 'code_architect' ? 'code' : 'mixed',
                 payload: {
                   strategist_task: topTask,
-                  strategist_tasks: tasks.slice(0, 8),
+                  strategist_tasks: tasksForPlan.slice(0, 8),
                   strategist_plan_id: strategistData?.plan_id,
                   _prescribe_v3: true,
                 },
                 functions: [executorFn],
               },
-              summary: `Prescribe V3 (strategist): #1/${tasks.length} "${topTask.title}" → ${executorFn}. Urgence: ${topTask.urgency}. ${forceContent ? 'Content priority ON.' : ''}`,
+              summary: `Prescribe V3 (strategist): #1/${tasksForPlan.length} "${topTask.title}" → ${executorFn}. Urgence: ${topTask.urgency}. ${forceContent ? 'Content priority ON.' : ''}`,
             };
           }
         }

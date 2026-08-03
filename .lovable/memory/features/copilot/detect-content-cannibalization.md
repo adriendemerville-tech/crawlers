@@ -1,24 +1,30 @@
 ---
-name: Skill detect_content_cannibalization
-description: Skill Copilot déterministe (0 LLM) qui clusterise les pages cannibalisantes au niveau slug/titre, désigne le pilier et liste les doublons à 301
+name: Cannibalisation — skill Copilot + garde Parménion
+description: Clustering déterministe (0 LLM) partagé dans _shared/cannibalizationClusters.ts, utilisé par le skill detect_content_cannibalization et par le garde de saturation/pruning de Parménion (prescribe)
 type: feature
 ---
 
-## Principe
-Skill lecture seule, disponible en `auto` pour Félix et le Stratège Cocoon.
-Aucun appel LLM : clustering 100% déterministe → coût nul.
+## Source unique
+`supabase/functions/_shared/cannibalizationClusters.ts`
+- `computeCannibalization(supabase, { domain, threshold, pathPrefix })` → clusters, pilier, doublons, `report_markdown`.
+- `evaluateTopicSaturation(result, topicText, { saturationSize, overlap })` → `blocked`, `matched`, `pruning_candidate`.
+- Aucun appel LLM, aucun service role imposé (le client passé porte le RLS).
 
 ## Algorithme
-1. Dernier `site_crawls` `completed` du domaine (RLS user).
-2. `crawl_pages` indexables, filtrables par `path_prefix` (ex. `/blog`).
-3. Tokenisation slug + title + h1 : NFD sans accents, stopwords FR + bruit SEO
-   (`guide`, `complet`, années, `vs`…), tokens ≥ 3 car, dé-pluralisation grossière.
-4. Clustering glouton : ancre = page au vocabulaire le plus riche, membres si
-   Jaccard ≥ `threshold` (défaut 0.45, bornes 0.3–0.8).
-5. Pilier = score `seo_score + min(40, word_count/50) + inbound_links*3 - depth*2`.
-6. Sortie : clusters (thème, pilier, doublons), `redundant_pages`,
-   `report_markdown`, et suggestion d'enchaîner sur `plan_editorial`.
+Tokenisation slug + title + h1 (NFD, stopwords FR + bruit SEO, dé-pluralisation),
+clustering glouton Jaccard ≥ seuil (défaut 0.45), pilier = `seo_score + min(40, word_count/50) + inbound*3 - depth*2`.
+
+## Consommateurs
+1. Skill Copilot `detect_content_cannibalization` — lecture seule, `auto` pour Félix et le Stratège Cocoon.
+2. **Parménion, phase `prescribe`** :
+   - calcule les clusters avant l'appel à `cocoon-strategist` et lui transmet
+     `saturated_themes` + `cannibalization_summary` ;
+   - filtre les tâches de création de contenu dont le sujet recouvre un cluster
+     saturé (≥ 3 pages, Jaccard ≥ 0.5) ;
+   - si toutes les tâches contenu sont bloquées et qu'un cluster est consolidable,
+     injecte une tâche de **pruning** `fix_cannibalization`
+     (`pruning: { pilier, duplicates, recommended: 'merge_then_301' }`) ;
+   - si rien n'est exécutable → cycle `skipped` avec le motif de saturation.
 
 ## Contraintes
-- Jamais de service role : tout passe par `ctx.supabase`.
-- Nécessite un crawl terminé ; sinon message d'erreur explicite.
+- Nécessite un crawl `completed` ; sinon le garde est non bloquant (log + poursuite normale).
