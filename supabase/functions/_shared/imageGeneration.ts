@@ -447,7 +447,7 @@ export async function generateImage(req: ImageGenerationRequest): Promise<ImageG
 /** Check which providers are available based on configured secrets */
 export function getAvailableProviders(): { provider: ImageProvider; available: boolean }[] {
   return [
-    { provider: 'imagen3', available: !!Deno.env.get('LOVABLE_API_KEY') },
+    { provider: 'imagen3', available: !!(Deno.env.get('OPENROUTER_API_KEY') || Deno.env.get('LOVABLE_API_KEY')) },
     { provider: 'flux', available: !!Deno.env.get('BFL_API_KEY') },
     { provider: 'ideogram', available: !!Deno.env.get('IDEOGRAM_API_KEY') },
   ];
