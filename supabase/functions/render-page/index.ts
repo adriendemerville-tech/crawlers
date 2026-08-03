@@ -40,6 +40,7 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   "/pagespeed": { title: "PageSpeed — Core Web Vitals | Crawlers.fr", description: "Analyse Core Web Vitals (LCP, FID, CLS, TTFB) mobile et desktop via Google PageSpeed Insights." },
   "/comparatif-claude-code-vs-crawlers": { title: "Claude Code vs Crawlers — Comparatif SEO | Crawlers.fr", description: "Comparaison Claude Code vs Crawlers.fr pour l'audit et l'optimisation SEO/GEO." },
   "/aide": { title: "Centre d'aide Crawlers.fr — Documentation SEO, GEO & IA", description: "Documentation complète de la plateforme : audits, scores, crédits, intégrations et assistants IA." },
+  "/etudes/autopilot-parmenion-iktracker": { title: "Automatisation SEO : étude de cas, 927 publications automatiques", description: "Étude de cas d'automatisation du référencement : un logiciel de référencement automatique a publié 927 articles sur iktracker.fr. 9 requêtes sur 20 en progression, 372 comptes créés, 44,6 % des inscrits venus de ChatGPT." },
 };
 
 const baseUrl = "https://crawlers.fr";
@@ -241,6 +242,17 @@ function generateInfoSection(route: string): string {
       <p>Selon <a href="https://www.statista.com/outlook/tmo/digital-advertising/search-advertising/france" rel="noopener">Statista</a>, le search advertising en France pèse 5,2 milliards d'euros en 2026, rendant l'optimisation SEO d'autant plus stratégique.</p>
       <p>Comparatifs tiers : <a href="https://www.blogdumoderateur.com/" rel="noopener">Blog du Modérateur</a> · <a href="https://www.leptidigital.fr/" rel="noopener">Leptidigital</a></p>
     </section>`,
+    "/etudes/autopilot-parmenion-iktracker": `<section aria-label="Étude de cas automatisation SEO">
+      <h2>Automatisation SEO : les chiffres de l'étude de cas iktracker.fr</h2>
+      <p>Entre le 24 mars et le 2 août 2026, l'Autopilot Parménion de Crawlers.fr a exécuté <strong>927 publications CMS</strong> en 289 cycles autonomes sur iktracker.fr, un outil de suivi des indemnités kilométriques. Les données Google Search Console montrent un passage de 84,5 clics hebdomadaires en moyenne sur la baseline (9-30 mars 2026) à 279 clics au pic d'avril 2026, avec des impressions hebdomadaires passant de 6 995 à 17 455 et une position moyenne améliorée de 2,3 places (15,22 → 12,92) sur les 20 requêtes comparables, dont 9 en progression.</p>
+      <h2>Ce qu'un logiciel de référencement automatique change</h2>
+      <p>L'automatisation du référencement ne remplace pas la stratégie : elle remplace l'exécution. Le choix des sujets reste piloté par un cocon sémantique et un garde de similarité sémantique ; ce qui est automatisé, c'est la rédaction, la mise en forme, l'injection des données structurées, le maillage interne et la publication CMS. Ce que l'automatisation SEO ne corrige pas : un positionnement produit flou, un funnel qui fuit, une rétention à 15,1 % de comptes actifs sur 30 jours.</p>
+      <h2>Acquisition : ChatGPT devant Google dans l'origine déclarée</h2>
+      <p>Sur 372 comptes créés, <strong>44,6 % des nouveaux inscrits déclarent avoir découvert le service via ChatGPT</strong>, contre 41,4 % via Google, alors que le referrer HTTP ne mesure que 1,0 % de trafic IA — un écart d'un facteur 45 qui montre que les analytics classiques sous-estiment massivement le canal des moteurs génératifs.</p>
+      <h2>Limites assumées</h2>
+      <p>Aucun contrefactuel : la thématique est fortement saisonnière (campagne de déclaration de revenus), et l'attribution entre un article publié et une inscription reste corrélative, pas causale.</p>
+      <p>Pour approfondir : <a href="${baseUrl}/generative-engine-optimization">Generative Engine Optimization</a> · <a href="${baseUrl}/content-architect">Content Architect</a> · <a href="${baseUrl}/cocoon">Cocoon 3D</a> · <a href="${baseUrl}/tarifs">Tarifs</a> · <a href="${baseUrl}/etudes/cout-reponse-chatgpt-vs-google-ads">Coût ChatGPT vs Google Ads</a></p>
+    </section>`,
   };
 
   // Default informational section for pages not specifically covered
@@ -326,6 +338,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/conditions-utilisation": "Conditions d'Utilisation",
   "/rgpd": "RGPD",
   "/cgvu": "CGVU",
+  "/etudes/autopilot-parmenion-iktracker": "Étude de cas Autopilot",
 };
 
 // ── Routes that should include the pricing table ──
@@ -337,6 +350,73 @@ const ROUTES_WITH_PRICING = ["/tarifs", "/pro-agency", "/comparatif-crawlers-sem
 const CANONICAL_OVERRIDES: Record<string, string> = {
   "/features/cocoon": "/cocoon",
   "/app/cocoon": "/cocoon",
+};
+
+const OG_IMAGE_OVERRIDES: Record<string, string> = {
+  "/etudes/autopilot-parmenion-iktracker": "/og-etude-autopilot-iktracker.jpg",
+};
+
+// Route-specific JSON-LD injected in addition to WebPage + BreadcrumbList
+const EXTRA_JSONLD: Record<string, unknown[]> = {
+  "/etudes/autopilot-parmenion-iktracker": [
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Automatisation SEO : 927 publications exécutées sur iktracker.fr et 9 requêtes en progression",
+      "description": "Étude de cas d'automatisation du référencement : 927 publications automatiques, données Google Search Console, inscriptions et origine d'acquisition déclarée.",
+      "mainEntityOfPage": `${baseUrl}/etudes/autopilot-parmenion-iktracker`,
+      "url": `${baseUrl}/etudes/autopilot-parmenion-iktracker`,
+      "image": `${baseUrl}/og-etude-autopilot-iktracker.jpg`,
+      "datePublished": "2026-08-02",
+      "dateModified": "2026-08-03",
+      "author": { "@type": "Person", "name": "Adrien de Volontat", "url": `${baseUrl}/auteur/adrien-de-volontat` },
+      "publisher": PUBLISHER_ORG,
+      "inLanguage": "fr-FR",
+      "isAccessibleForFree": true,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      "name": "Autopilot Parménion sur iktracker.fr — production éditoriale, Search Console et acquisition",
+      "description": "927 publications CMS en 289 cycles, 13 semaines de données Google Search Console (clics, impressions, position moyenne, CTR), 372 comptes créés, origine d'acquisition déclarée par les inscrits.",
+      "url": `${baseUrl}/etudes/autopilot-parmenion-iktracker`,
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "creator": PUBLISHER_ORG,
+      "temporalCoverage": "2026-03-09/2026-08-02",
+      "variableMeasured": [
+        "publications CMS exécutées",
+        "cycles Autopilot",
+        "clics Google Search Console",
+        "impressions Google Search Console",
+        "position moyenne",
+        "CTR",
+        "comptes créés",
+        "origine d'acquisition déclarée",
+        "taux de comptes actifs 30 jours",
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "L'automatisation SEO fonctionne-t-elle vraiment ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Sur iktracker.fr, 927 publications automatisées ont accompagné une hausse des impressions hebdomadaires de 6 995 à 17 455 et l'amélioration de 9 requêtes sur 20. Sans contrefactuel ni correction de la saisonnalité, la relation reste corrélative : l'automatisation a fourni la surface d'indexation nécessaire pour capter une demande existante." },
+        },
+        {
+          "@type": "Question",
+          "name": "Qu'est-ce qu'un logiciel de référencement automatique ne peut pas faire ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Il ne corrige ni un positionnement produit flou, ni un funnel défaillant, ni la rétention — 15,1 % de comptes actifs sur 30 jours dans ce cas. Il amplifie ce qui existe déjà et ne crée pas de proposition de valeur." },
+        },
+        {
+          "@type": "Question",
+          "name": "Pourquoi ChatGPT passe-t-il devant Google dans l'origine déclarée ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "44,6 % des inscrits déclarent venir de ChatGPT contre 41,4 % de Google, alors que le referrer HTTP ne mesure que 1,0 % de trafic IA. Les assistants génératifs transmettent rarement un referrer exploitable : seule la question posée à l'inscription révèle ce canal." },
+        },
+      ],
+    },
+  ],
 };
 
 function generateStaticHTML(route: string, meta: { title: string; description: string }): string {
@@ -362,6 +442,7 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
 
   const pricingHtml = ROUTES_WITH_PRICING.includes(route) ? generatePricingTableHtml() : "";
   const infoHtml = generateInfoSection(route);
+  const ogImage = OG_IMAGE_OVERRIDES[route] ? `${baseUrl}${OG_IMAGE_OVERRIDES[route]}` : `${baseUrl}/og-image.png`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -376,16 +457,17 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
   <meta property="og:url" content="${fullUrl}">
   <meta property="og:title" content="${escapeHtml(meta.title)}">
   <meta property="og:description" content="${escapeHtml(meta.description)}">
-  <meta property="og:image" content="${baseUrl}/og-image.png">
+  <meta property="og:image" content="${ogImage}">
   <meta property="og:locale" content="fr_FR">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(meta.title)}">
   <meta name="twitter:description" content="${escapeHtml(meta.description)}">
-  <meta name="twitter:image" content="${baseUrl}/og-image.png">
+  <meta name="twitter:image" content="${ogImage}">
   <link rel="alternate" hreflang="fr" href="${fullUrl}">
   <link rel="alternate" hreflang="x-default" href="${fullUrl}">
   <script type="application/ld+json">${JSON.stringify(webPage)}</script>
   <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>
+${(EXTRA_JSONLD[route] || []).map((j) => `  <script type="application/ld+json">${JSON.stringify(j)}</script>`).join("\n")}
 </head>
 <body>
   <header><nav>

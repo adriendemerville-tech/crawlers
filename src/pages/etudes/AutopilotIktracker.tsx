@@ -162,14 +162,16 @@ export default function AutopilotIktracker() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Étude de cas : 927 publications SEO automatisées — Autopilot</title>
-        <meta name="description" content="Chiffres réels : 927 publications automatisées sur iktracker.fr, 9 requêtes sur 20 en progression, 372 comptes créés et 44,6 % des inscrits déclarant venir de ChatGPT." />
-        <meta property="og:title" content="Autopilot : 927 publications, et ChatGPT devant Google à l'acquisition" />
-        <meta property="og:description" content="Étude de cas Crawlers.fr : données Search Console brutes, inscriptions mensuelles, origine d'acquisition déclarée, méthodologie et limites assumées." />
+        <title>Automatisation SEO : étude de cas, 927 publications automatiques</title>
+        <meta name="description" content="Étude de cas d'automatisation du référencement : un logiciel de référencement automatique a publié 927 articles sur iktracker.fr. 9 requêtes sur 20 en progression, 372 comptes créés, 44,6 % des inscrits venus de ChatGPT." />
+        <meta property="og:title" content="Automatisation SEO : étude de cas de 927 publications automatiques" />
+        <meta property="og:description" content="Étude de cas Crawlers.fr sur l'automatisation du référencement : données Search Console brutes, inscriptions mensuelles, origine d'acquisition déclarée, méthodologie et limites assumées." />
 
         <meta property="og:type" content="article" />
         <meta property="og:url" content={CANONICAL} />
+        <meta property="og:image" content="https://crawlers.fr/og-etude-autopilot-iktracker.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://crawlers.fr/og-etude-autopilot-iktracker.jpg" />
         <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(datasetJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
@@ -182,7 +184,7 @@ export default function AutopilotIktracker() {
         <header className="mb-10">
           <p className="text-xs uppercase tracking-widest text-foreground/60 mb-3">Étude de cas Crawlers.fr — Août 2026</p>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
-            Comment l'Autopilot a exécuté 927 publications sur iktracker.fr et fait progresser 9 requêtes
+            Automatisation SEO : 927 publications exécutées sur iktracker.fr et 9 requêtes en progression
           </h1>
           <p className="text-lg text-foreground/80 leading-relaxed">
             Entre mars et août 2026, l'Autopilot Parménion a piloté seul la production éditoriale
@@ -700,6 +702,44 @@ export default function AutopilotIktracker() {
               </details>
             ))}
           </div>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            Automatisation du référencement : ce que ça change concrètement
+          </h2>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            Ce cas répond à une question posée souvent autrement : à quoi sert réellement un
+            logiciel de référencement automatique ? Sur iktracker.fr, l'automatisation SEO n'a pas
+            remplacé la stratégie — elle a remplacé l'exécution. Le choix des sujets reste piloté
+            par un cocon sémantique et un garde de similarité ; ce qui est automatisé, c'est la
+            rédaction, la mise en forme, l'injection des données structurées, le maillage interne
+            et la publication CMS. Soit environ 4 heures de travail humain par article, appliquées
+            927 fois.
+          </p>
+          <h3 className="text-xl font-semibold mt-6 mb-2">Ce que les outils de référencement automatique font bien</h3>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            La constance. Un humain publie par vagues, un pilote éditorial publie chaque jour au
+            même rythme, ce qui donne à Google et aux moteurs génératifs une fréquence de crawl
+            stable. Sur ce site, la surface indexée passe de 6 995 à 17 455 impressions
+            hebdomadaires : c'est le résultat direct du volume, pas d'une astuce technique.
+          </p>
+          <h3 className="text-xl font-semibold mt-6 mb-2">Ce qu'aucune automatisation SEO ne corrige</h3>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            Un positionnement produit flou, un funnel qui fuit, une rétention à 15,1 %. Le
+            contenu automatisé amplifie ce qui existe déjà ; il ne crée pas de proposition de
+            valeur. C'est la limite honnête de la démarche, et elle est visible dans les chiffres
+            de cette étude.
+          </p>
+          <p className="leading-relaxed text-foreground/85">
+            Pour comprendre le mécanisme sous-jacent :{' '}
+            <Link to="/content-architect" className="underline hover:no-underline">Content Architect</Link>{' '}pour
+            la production,{' '}
+            <Link to="/cocoon" className="underline hover:no-underline">Cocoon 3D</Link>{' '}pour la
+            structure sémantique, et{' '}
+            <Link to="/tarifs" className="underline hover:no-underline">la grille tarifaire</Link>{' '}pour
+            le coût réel d'un tel dispositif.
+          </p>
         </section>
 
         <section className="mt-16 pt-10 border-t border-border">

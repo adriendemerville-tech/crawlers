@@ -254,6 +254,12 @@ export default function CoutChatGPTvsGoogleAds() {
           <h2 className="text-2xl md:text-3xl font-bold mb-6">Pour aller plus loin</h2>
           <ul className="grid gap-3 sm:grid-cols-2 list-none p-0">
             <li>
+              <Link to="/etudes/autopilot-parmenion-iktracker" className="flex items-center justify-between rounded-lg border border-border bg-card/40 p-4 hover:border-foreground/40 transition-colors">
+                <span className="font-medium">Étude de cas : automatisation SEO, 927 publications</span>
+                <ArrowRight className="h-4 w-4 text-foreground/60" />
+              </Link>
+            </li>
+            <li>
               <Link to="/generative-engine-optimization" className="flex items-center justify-between rounded-lg border border-border bg-card/40 p-4 hover:border-foreground/40 transition-colors">
                 <span className="font-medium">Qu'est-ce que le GEO ?</span>
                 <ArrowRight className="h-4 w-4 text-foreground/60" />
