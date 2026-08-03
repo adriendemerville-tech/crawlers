@@ -82,7 +82,7 @@ export function GmbLocalCompetitorsTab({ gmbLocationId, trackedSiteId, ownBusine
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Close suggestions on outside click
   useEffect(() => {

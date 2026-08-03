@@ -75,7 +75,7 @@ export function AutopilotModificationRegistry({ trackedSiteId }: ModificationReg
             <div className="space-y-1">
               {logs.map(log => {
                 const statusCfg = STATUS_CONFIG[log.status] ?? STATUS_CONFIG.applied;
-                const StatusIcon = statusCfg.icon;
+                const StatusIcon = statusCfg.icon as React.ComponentType<{ className?: string }>;
                 return (
                   <div key={log.id} className="flex items-start gap-2 py-1.5 border-b border-border/50 last:border-0">
                     <StatusIcon className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${statusCfg.color}`} />

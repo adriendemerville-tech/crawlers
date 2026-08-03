@@ -39,7 +39,7 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [panelPos, setPanelPos] = useState<{ bottom: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
