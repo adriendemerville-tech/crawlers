@@ -41,73 +41,12 @@ function ArticleLayoutComponent({
     { year: 'numeric', month: 'long', day: 'numeric' }
   );
 
-  // Map author display name → page slug. Default founder = Adrien de Volontat.
-  const authorSlug = author.toLowerCase().includes('adrien')
-    ? 'adrien-de-volontat'
-    : author.toLowerCase().replace(/\s+/g, '-');
-  const authorUrl = `${SITE_URL}/auteur/${authorSlug}`;
 
   // Canonical URL — ALWAYS point to the clean URL without ?lang= to avoid duplicate content
   const canonicalUrl = slug 
     ? `${SITE_URL}/blog/${slug}`
     : `${SITE_URL}/blog`;
 
-
-  // JSON-LD Article schema
-  const articleSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: title,
-    description: description,
-    image: heroImage,
-    author: {
-      '@type': 'Person',
-      name: author === 'Adrien' ? 'Adrien de Volontat' : author,
-      url: authorUrl,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Crawlers.fr',
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE_URL}/favicon.svg`,
-      },
-    },
-    datePublished: date,
-    dateModified: date,
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': canonicalUrl,
-    },
-    inLanguage: language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
-    keywords: 'SEO, GEO, audit technique, visibilité IA, ChatGPT, Google SGE, JSON-LD, robots.txt',
-  };
-
-  // BreadcrumbList schema
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home',
-        item: SITE_URL,
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Blog',
-        item: `${SITE_URL}/blog`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: title,
-        item: canonicalUrl,
-      },
-    ],
-  };
 
   return (
     <>
