@@ -386,15 +386,23 @@ export async function generateImage(req: ImageGenerationRequest): Promise<ImageG
     provider = 'imagen3';
   }
 
-  const handler = PROVIDER_MAP[provider];
-
   console.log(`[imageGen] Routing style="${req.style}" → provider="${provider}"${req.referenceImageUrl ? ` (with reference, mode=${req.referenceMode})` : ''}`);
 
   const startMs = Date.now();
-  const result = await handler(req);
+  let result: ImageGenerationResult;
+  try {
+    result = await PROVIDER_MAP[provider](req);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[imageGen] provider="${provider}" failed: ${msg}`);
+    if (provider === 'imagen3') throw err;
+    // Repli déterministe sur imagen3 (Lovable AI Gateway, toujours provisionné)
+    console.log(`[imageGen] Falling back ${provider} → imagen3 for style="${req.style}"`);
+    result = await PROVIDER_MAP.imagen3(req);
+  }
   const durationMs = Date.now() - startMs;
 
-  console.log(`[imageGen] ${provider} completed in ${durationMs}ms, image size: ${Math.round(result.imageBase64.length / 1024)}KB`);
+  console.log(`[imageGen] ${result.provider} completed in ${durationMs}ms, image size: ${Math.round(result.imageBase64.length / 1024)}KB`);
 
   return result;
 }
