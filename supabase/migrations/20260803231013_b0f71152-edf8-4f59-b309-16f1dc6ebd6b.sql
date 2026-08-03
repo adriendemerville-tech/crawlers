@@ -1,0 +1,1 @@
+UPDATE public.autopilot_configs SET implementation_mode = 'auto', updated_at = now() WHERE id = '09182002-b104-4784-afe2-8be996f0725e';
