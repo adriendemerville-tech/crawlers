@@ -23,6 +23,24 @@ export type ImageStyle =
 
 export type ImageProvider = 'imagen3' | 'flux' | 'ideogram';
 
+/** Host BFL courant (api.bfl.ml est déprécié et renvoie des erreurs DNS/404). */
+const BFL_BASE = 'https://api.bfl.ai';
+
+/**
+ * Conversion ArrayBuffer → base64 par chunks.
+ * `btoa(String.fromCharCode(...bytes))` dépasse la taille max de la pile
+ * d'appels dès ~100 Ko, ce qui faisait échouer silencieusement flux/ideogram.
+ */
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  const CHUNK = 0x8000;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
 export interface ImageStyleConfig {
   key: ImageStyle;
   label: string;
