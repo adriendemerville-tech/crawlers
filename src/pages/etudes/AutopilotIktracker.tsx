@@ -102,7 +102,20 @@ const FAQS = [
     q: "Peut-on reproduire ce résultat sur n'importe quel site ?",
     a: "Non sans conditions. iktracker.fr disposait déjà d'une propriété Search Console connectée, d'un pont CMS fonctionnel et d'une thématique à intention claire. Sur un site sans historique ni saisonnalité porteuse, l'Autopilot élargit d'abord la surface d'indexation ; les clics suivent plus lentement.",
   },
+  {
+    q: "Quelle part des inscriptions iktracker.fr vient des assistants IA ?",
+    a: "44,6 % des nouveaux inscrits déclarent avoir découvert iktracker.fr via ChatGPT, contre 41,4 % via Google, sur 157 réponses exploitables collectées à l'inscription. ChatGPT est donc la première source d'acquisition déclarée du produit.",
+  },
+  {
+    q: "Pourquoi les statistiques web n'attribuent-elles que 1 % du trafic aux IA ?",
+    a: "Parce que ChatGPT ne transmet pas d'en-tête Referer exploitable : l'utilisateur copie l'URL ou clique depuis une réponse sans référent. Ces visites sont donc comptées en trafic direct, qui représente 70,7 % des sessions. Le 1,0 % mesuré est un artefact de mesure, pas une réalité d'acquisition.",
+  },
+  {
+    q: "Combien d'utilisateurs iktracker.fr compte-t-il et quel est le taux d'activité ?",
+    a: "372 comptes créés au 2 août 2026, dont 359 en 2026. Sur les 30 derniers jours, 56 utilisateurs ont saisi au moins un trajet, soit un taux d'activité de 15,1 %, et 36 sur les 7 derniers jours.",
+  },
 ];
+
 
 const maxClicks = Math.max(...WEEKS.map(w => w.clicks));
 
