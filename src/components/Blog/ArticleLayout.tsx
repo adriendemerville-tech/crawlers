@@ -41,11 +41,10 @@ function ArticleLayoutComponent({
     { year: 'numeric', month: 'long', day: 'numeric' }
   );
 
+  // Title, description, canonical, og/twitter tags and JSON-LD are rendered
+  // server-side by the /blog/$slug route head() — never duplicate them here.
 
-  // Canonical URL — ALWAYS point to the clean URL without ?lang= to avoid duplicate content
-  const canonicalUrl = slug 
-    ? `${SITE_URL}/blog/${slug}`
-    : `${SITE_URL}/blog`;
+
 
 
   return (
