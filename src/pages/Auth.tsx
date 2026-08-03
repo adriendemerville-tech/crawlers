@@ -22,6 +22,7 @@ import { Link } from '@/lib/router-compat';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { useLoginRateLimiter } from '@/hooks/useLoginRateLimiter';
+import { useClientInitialState } from '@/hooks/useClientInitialState';
 
 const translations = {
   fr: {
@@ -128,7 +129,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('remember_me') === 'true');
+  const [rememberMe, setRememberMe] = useClientInitialState(() => localStorage.getItem('remember_me') === 'true', false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');

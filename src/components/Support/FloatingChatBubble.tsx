@@ -9,15 +9,16 @@ import { useAISidebar } from '@/contexts/AISidebarContext';
 import { CrawlersLogo } from './CrawlersLogo';
 import { isOnboardingDone } from '@/utils/felixOnboarding';
 import { playNotificationSound } from '@/utils/notificationSound';
+import { useClientInitialState } from '@/hooks/useClientInitialState';
 
 // Lazy load de l'ancien shell Félix dédié, antérieur à la refactorisation agents.
 const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
 
 export function FloatingChatBubble() {
-  const [isOpen, setIsOpen] = useState(() => {
+  const [isOpen, setIsOpen] = useClientInitialState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('felix') === 'fullpage';
-  });
+  }, false);
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
   const { felixExpanded, cocoonExpanded } = useAISidebar();
@@ -29,7 +30,7 @@ export function FloatingChatBubble() {
   const [showGuestQuizSuggestion, setShowGuestQuizSuggestion] = useState(false);
   const [autoStartCrawlersQuiz, setAutoStartCrawlersQuiz] = useState(false);
   const [autoEnterpriseContact, setAutoEnterpriseContact] = useState(false);
-  const [isMuted, setIsMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
+  const [isMuted, setIsMuted] = useClientInitialState(() => localStorage.getItem('felix_muted') === '1', false);
   const onboardingSoundPlayed = useRef(false);
   const isMobile = useIsMobile();
   const location = useLocation();

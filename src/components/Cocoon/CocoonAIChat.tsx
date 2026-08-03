@@ -45,6 +45,7 @@ import { ChatMicButton } from '@/components/Support/ChatMicButton';
 import { CocoonContentArchitectModal } from './CocoonContentArchitectModal';
 import { useContentArchitectVisibility } from '@/hooks/useContentArchitectVisibility';
 import { SeoQuiz } from '@/components/Support/SeoQuiz';
+import { useClientInitialState } from '@/hooks/useClientInitialState';
 
 // SEO lexicon terms mapping for auto-linking
 const LEXICON_TERMS: Record<string, string> = {
@@ -426,7 +427,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [isCapturing, setIsCapturing] = useState(false);
   const captureCountRef = useRef(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1' || localStorage.getItem('cocoon_chat_open') === '1');
+  const [isOpen, setIsOpen] = useClientInitialState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1' || localStorage.getItem('cocoon_chat_open') === '1', false);
   const [selectedSlots, setSelectedSlots] = useState<SelectedNodeSlot[]>([]);
   const [pickingIndex, setPickingIndex] = useState<number | null>(null);
   const pickingIndexRef = useRef<number | null>(null);
@@ -450,7 +451,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [sessionResumed, setSessionResumed] = useState(false);
   const resumeAttemptedRef = useRef<string | null>(null);
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
-  const [isExpanded, setIsExpanded] = useState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1');
+  const [isExpanded, setIsExpanded] = useClientInitialState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1', false);
   const { setCocoonExpanded } = useAISidebar();
 
   useEffect(() => {

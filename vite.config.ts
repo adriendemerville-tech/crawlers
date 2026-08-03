@@ -16,6 +16,12 @@ export default defineConfig({
   vite: {
     // Project MCP server (kept from the Classic config; not bundled by the wrapper).
     plugins: [mcpPlugin()],
+    ssr: {
+      // react-helmet-async ships CJS as its node "main"; left external, the SSR
+      // module runner can't see its named exports (HelmetProvider). Bundling it
+      // makes Vite use the ESM build ("module" field) instead.
+      noExternal: ["react-helmet-async"],
+    },
     resolve: {
       alias: [
         // jspdf v4 exports only "node"/"browser" conditions, which the workerd SSR

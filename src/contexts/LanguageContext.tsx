@@ -741,6 +741,9 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 function detectDefaultLanguage(): Language {
+  // SSR-safe: browser storage/navigator are only available client-side.
+  // Server renders 'fr' (site default); the client syncs after hydration.
+  if (typeof window === 'undefined') return 'fr';
   const saved = localStorage.getItem('app-language');
   if (saved === 'fr' || saved === 'en' || saved === 'es') return saved;
 
@@ -751,7 +754,14 @@ function detectDefaultLanguage(): Language {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(detectDefaultLanguage);
+  // Start with the SSR default to keep server and client markup identical,
+  // then adopt the user's saved/browser language after hydration.
+  const [language, setLanguageState] = useState<Language>('fr');
+
+  useEffect(() => {
+    const detected = detectDefaultLanguage();
+    setLanguageState((current) => (current === detected ? current : detected));
+  }, []);
 
   const setLanguage = (lang: Language) => {
     localStorage.setItem('app-language', lang);

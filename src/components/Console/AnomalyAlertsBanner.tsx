@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, TrendingDown, AlertTriangle, X, ChevronUp, ChevronDown, Search, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useClientInitialState } from '@/hooks/useClientInitialState';
 
 interface AnomalyAlert {
   id: string;
@@ -37,7 +38,7 @@ type TickerItem = { id: string; icon: any; bg: string; border: string; textColor
 export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnabled }: AnomalyAlertsBannerProps) {
   const [alerts, setAlerts] = useState<AnomalyAlert[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [hidden, setHidden] = useState(() => localStorage.getItem('ticker_hidden_default') === '1');
+  const [hidden, setHidden] = useClientInitialState(() => localStorage.getItem('ticker_hidden_default') === '1', false);
   const [paused, setPaused] = useState(false);
   const [ga4Connected, setGa4Connected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);

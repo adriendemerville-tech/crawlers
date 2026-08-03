@@ -31,6 +31,7 @@ import { QuizValidationNotif } from './QuizValidationNotif';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
 import type { AutonomyResult } from '@/utils/autonomyScore';
 import { createPortal } from 'react-dom';
+import { useClientInitialState } from '@/hooks/useClientInitialState';
 
 const CocoonContentArchitectModal = lazy(() =>
   import('@/components/Cocoon/CocoonContentArchitectModal').then(m => ({ default: m.CocoonContentArchitectModal }))
@@ -218,7 +219,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
   const messagesViewportRef = useRef<HTMLDivElement>(null);
   const chatOpenTimeRef = useRef(Date.now());
   const conversationIdRef = useRef<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(() => localStorage.getItem('felix_sidebar_expanded') === '1');
+  const [isExpanded, setIsExpanded] = useClientInitialState(() => localStorage.getItem('felix_sidebar_expanded') === '1', false);
   const { setFelixExpanded } = useAISidebar();
 
   // Sync sidebar context when expanded state changes
@@ -399,7 +400,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
   // Bug report state
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
-  const [felixMuted, setFelixMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
+  const [felixMuted, setFelixMuted] = useClientInitialState(() => localStorage.getItem('felix_muted') === '1', false);
   const [pendingArchitectAction, setPendingArchitectAction] = useState<any>(null);
   const [showContentArchitectModal, setShowContentArchitectModal] = useState(false);
   const [contentArchitectDiag, setContentArchitectDiag] = useState<any>(null);

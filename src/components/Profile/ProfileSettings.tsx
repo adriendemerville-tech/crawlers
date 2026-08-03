@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCustomPlaylist, parseSpotifyUri } from '@/hooks/useCustomPlaylist';
+import { useClientInitialState } from '@/hooks/useClientInitialState';
 
 const translations = {
   fr: {
@@ -704,7 +705,7 @@ function ThemeSettingsCard() {
 
 function TickerSettingsCard() {
   const { language } = useLanguage();
-  const [tickerHidden, setTickerHidden] = useState(() => localStorage.getItem('ticker_hidden_default') === '1');
+  const [tickerHidden, setTickerHidden] = useClientInitialState(() => localStorage.getItem('ticker_hidden_default') === '1', false);
 
   const labels = {
     fr: { title: 'Bandeau d\'alertes', desc: 'Masquer par défaut le bandeau défilant GA4 / GSC dans la console', hide: 'Masqué par défaut', show: 'Visible par défaut' },
