@@ -47,7 +47,6 @@ export function PlatformApiDashboard() {
     try {
       const { data, error } = await supabase.functions.invoke('admin-platform-api-stats', {
         method: 'GET',
-        // @ts-ignore — query string passé via headers fetch
       });
       // fallback : invoke ne supporte pas query params, on appelle via fetch
       if (error || !data) {
