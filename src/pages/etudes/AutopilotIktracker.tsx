@@ -123,7 +123,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: "Étude de cas Autopilot : 927 publications automatisées sur iktracker.fr",
-  description: "Étude de cas Crawlers.fr avec chiffres Google Search Console réels : 927 publications automatisées par l'Autopilot Parménion, 9 requêtes en progression sur 20 suivies, +230 % de clics au pic.",
+  description: "Étude de cas Crawlers.fr avec chiffres Google Search Console et données produit réelles : 927 publications automatisées, 9 requêtes en progression sur 20 suivies, 372 comptes créés et 44,6 % des inscrits déclarant venir de ChatGPT.",
   datePublished: PUBLISHED,
   dateModified: PUBLISHED,
   author: { '@type': 'Person', name: 'Adrien de Volontat', url: 'https://crawlers.fr/auteur/adrien-de-volontat' },
