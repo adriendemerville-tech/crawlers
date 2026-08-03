@@ -40,6 +40,7 @@ const PUBLIC_ROUTES: Record<string, { title: string; description: string }> = {
   "/pagespeed": { title: "PageSpeed — Core Web Vitals | Crawlers.fr", description: "Analyse Core Web Vitals (LCP, FID, CLS, TTFB) mobile et desktop via Google PageSpeed Insights." },
   "/comparatif-claude-code-vs-crawlers": { title: "Claude Code vs Crawlers — Comparatif SEO | Crawlers.fr", description: "Comparaison Claude Code vs Crawlers.fr pour l'audit et l'optimisation SEO/GEO." },
   "/aide": { title: "Centre d'aide Crawlers.fr — Documentation SEO, GEO & IA", description: "Documentation complète de la plateforme : audits, scores, crédits, intégrations et assistants IA." },
+  "/etudes/autopilot-parmenion-iktracker": { title: "Automatisation SEO : étude de cas, 927 publications automatiques", description: "Étude de cas d'automatisation du référencement : un logiciel de référencement automatique a publié 927 articles sur iktracker.fr. 9 requêtes sur 20 en progression, 372 comptes créés, 44,6 % des inscrits venus de ChatGPT." },
 };
 
 const baseUrl = "https://crawlers.fr";
