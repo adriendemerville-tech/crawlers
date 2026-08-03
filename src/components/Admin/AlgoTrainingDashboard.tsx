@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -429,7 +430,7 @@ export function AlgoTrainingDashboard() {
 }
 
 function AlgoCard({ algo, onToggle }: { algo: AlgoConfig; onToggle: (id: string) => void }) {
-  const Icon = algo.icon;
+  const Icon = algo.icon as LucideIcon;
   const statusInfo = statusLabels[algo.status];
 
   return (

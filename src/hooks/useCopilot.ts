@@ -257,7 +257,8 @@ export function useCopilot(options: UseCopilotOptions) {
         const decoder = new TextDecoder();
         let buffer = '';
         let accumulated = '';
-        let finalPayload: { session_id?: string; reply?: string; actions?: CopilotAction[]; awaiting_approvals?: PendingApproval[] } | null = null;
+        type FinalPayload = { session_id?: string; reply?: string; actions?: CopilotAction[]; awaiting_approvals?: PendingApproval[] };
+        let finalPayload: FinalPayload | null = null;
         let streamErr: string | null = null;
 
         while (true) {
@@ -285,7 +286,7 @@ export function useCopilot(options: UseCopilotOptions) {
                 setMessages((prev) => prev.map((m) => m.id === placeholderId ? { ...m, content: accumulated } : m));
               }
             } else if (evt === 'final') {
-              finalPayload = payload as typeof finalPayload;
+              finalPayload = payload as FinalPayload;
             } else if (evt === 'error') {
               streamErr = (payload as { message?: string })?.message ?? 'Erreur stream';
             }

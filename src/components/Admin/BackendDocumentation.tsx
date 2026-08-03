@@ -29,7 +29,7 @@ import { DocShareLinksDialog } from './DocShareLinksDialog';
 import { cn } from '@/lib/utils';
 
 // ── Icon mapper ──────────────────────────────────────────
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Network, Database, Plug, Bug, Key, Package,
 };
 

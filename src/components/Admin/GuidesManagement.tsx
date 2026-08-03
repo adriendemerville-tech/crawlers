@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,7 +66,7 @@ const INITIAL_FORM: GuideFormData = {
   status: 'draft', guide_category: 'bloc_a', guide_target: '', guide_tools: [], lateral_links: [],
 };
 
-const STATUS_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
+const STATUS_LABELS: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
   draft: { label: 'Brouillon', icon: Clock },
   published: { label: 'Publié', icon: CheckCircle },
   archived: { label: 'Archivé', icon: Archive },
@@ -297,7 +298,7 @@ export function GuidesManagement() {
                 <TableBody>
                   {filtered.map(g => {
                     const st = STATUS_LABELS[g.status] || STATUS_LABELS.draft;
-                    const StIcon = st.icon;
+                    const StIcon = st.icon as LucideIcon;
                     const target = GUIDE_TARGETS.find(t => t.value === g.guide_target);
                     const toolCount = (g.guide_tools || []).length;
 

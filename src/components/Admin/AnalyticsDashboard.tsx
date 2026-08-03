@@ -365,7 +365,7 @@ export function AnalyticsDashboard() {
   }: { 
     title: string; 
     value: number; 
-    icon: React.ElementType; 
+    icon: React.ComponentType<{ className?: string }>; 
     description?: string;
     variant?: 'default' | 'success' | 'warning' | 'error';
   }) => {

@@ -119,7 +119,7 @@ export function EeatScoringAdmin() {
         
         const { data: status } = await supabase.functions.invoke('check-eeat', {
           method: 'GET',
-          body: null,
+          body: undefined,
           headers: {},
         });
         

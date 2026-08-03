@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, useMemo } from 'react';
 import { GuidesManagement } from './GuidesManagement';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +36,7 @@ interface ArticleFormData {
   status: ArticleStatus;
 }
 
-const STATUS_CONFIG: Record<ArticleStatus, { label: string; color: string; icon: React.ElementType }> = {
+const STATUS_CONFIG: Record<ArticleStatus, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
   draft: { label: 'Brouillon', color: 'bg-muted text-muted-foreground', icon: Clock },
   published: { label: 'Publié', color: 'bg-success/10 text-success', icon: CheckCircle },
   unpublished: { label: 'Dépublié', color: 'bg-warning/10 text-warning', icon: EyeOff },
@@ -528,7 +529,7 @@ export function BlogManagement() {
                 <TableBody>
                   {filteredArticles.map((article) => {
                     const statusConfig = STATUS_CONFIG[article.status];
-                    const StatusIcon = statusConfig.icon;
+                    const StatusIcon = statusConfig.icon as LucideIcon;
                     
                     return (
                       <TableRow key={article.id} className="group">
@@ -1070,7 +1071,7 @@ function LandingPagesManagement() {
     return matchSearch && matchStatus;
   });
 
-  const STATUS_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
+  const STATUS_LABELS: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
     draft: { label: 'Brouillon', icon: Clock },
     published: { label: 'Publiée', icon: CheckCircle },
     archived: { label: 'Archivée', icon: Archive },
@@ -1124,7 +1125,7 @@ function LandingPagesManagement() {
                 <TableBody>
                   {filtered.map(l => {
                     const st = STATUS_LABELS[l.status] || STATUS_LABELS.draft;
-                    const StIcon = st.icon;
+                    const StIcon = st.icon as LucideIcon;
                     return (
                       <TableRow key={l.id}>
                         <TableCell>

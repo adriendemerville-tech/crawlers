@@ -415,7 +415,7 @@ export function UserManagement() {
     setDeleteDialogOpen,
     setCreditDialogOpen,
     setStripDialogOpen,
-    openEditDialog,
+    openEditDialog: openEditDialog as (u: any) => void,
     toggleRole,
     setKpiModalOpen,
   });

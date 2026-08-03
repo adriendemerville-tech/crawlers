@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -611,7 +612,7 @@ export function ParmenionTargetPanel({
               <div className="space-y-3">
                 {logs.map((log) => {
                   const config = statusConfig[log.status] || statusConfig.pending;
-                  const StatusIcon = config.icon;
+                  const StatusIcon = config.icon as LucideIcon;
                   return (
                     <div key={log.id} className={cn(
                       "rounded-lg border transition-colors",

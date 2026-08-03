@@ -39,7 +39,7 @@ export function SignupPromptModal() {
   const [visible, setVisible] = useState(false);
   const dismissed = useRef(false);
   const tracked = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const shouldActivate = openMode && !user && !dismissed.current;
 
