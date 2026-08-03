@@ -184,12 +184,12 @@ export function resolveProvider(style: ImageStyle, override?: ImageProvider): Im
   return config.provider;
 }
 
-// ─── Imagen 3 (via Lovable AI Gateway) ───────────────────────────
+// ─── Gemini 3 image (OpenRouter primaire → Lovable AI en secours) ─
+
+/** Modèle image par défaut : Nano Banana 2 (rapide + économe). */
+const GEMINI_IMAGE_MODEL = 'google/gemini-3.1-flash-image';
 
 async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenerationResult> {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY');
-  if (!apiKey) throw new Error('LOVABLE_API_KEY not configured');
-
   const styleConfig = getStyleConfig(req.style);
 
   // Build message content — multimodal if reference image provided
@@ -207,43 +207,80 @@ async function generateImagen3(req: ImageGenerationRequest): Promise<ImageGenera
     content = buildSafePrompt(styleConfig.promptPrefix, req.prompt, req.allowText);
   }
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-3-pro-image-preview',
-      messages: [{ role: 'user', content }],
-      modalities: ['image', 'text'],
-    }),
+  const body = JSON.stringify({
+    model: GEMINI_IMAGE_MODEL,
+    messages: [{ role: 'user', content }],
+    modalities: ['image', 'text'],
   });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error('[imageGen:imagen3] Error:', response.status, errText.slice(0, 200));
-    throw new Error(`Imagen3 error: ${response.status}`);
+  const gateways: Array<{ label: string; url: string; headers: Record<string, string> }> = [];
+  const orKey = Deno.env.get('OPENROUTER_API_KEY');
+  if (orKey) {
+    gateways.push({
+      label: 'OpenRouter',
+      url: 'https://openrouter.ai/api/v1/chat/completions',
+      headers: {
+        'Authorization': `Bearer ${orKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://crawlers.fr',
+        'X-Title': 'Crawlers.fr',
+      },
+    });
+  }
+  const lovKey = Deno.env.get('LOVABLE_API_KEY');
+  if (lovKey) {
+    gateways.push({
+      label: 'Lovable',
+      url: 'https://ai.gateway.lovable.dev/v1/chat/completions',
+      headers: { 'Authorization': `Bearer ${lovKey}`, 'Content-Type': 'application/json' },
+    });
+  }
+  if (gateways.length === 0) throw new Error('OPENROUTER_API_KEY / LOVABLE_API_KEY not configured');
+
+  let lastError = '';
+  for (const gw of gateways) {
+    try {
+      const response = await fetch(gw.url, { method: 'POST', headers: gw.headers, body, signal: AbortSignal.timeout(120_000) });
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '');
+        lastError = `${gw.label} ${response.status}: ${errText.slice(0, 200)}`;
+        console.error(`[imageGen:gemini3] ${lastError}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      if (!imageData) {
+        lastError = `${gw.label}: no image in response`;
+        console.error(`[imageGen:gemini3] ${lastError}`);
+        continue;
+      }
+
+      const match = imageData.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (!match) {
+        lastError = `${gw.label}: unexpected image format`;
+        console.error(`[imageGen:gemini3] ${lastError}`);
+        continue;
+      }
+
+      console.log(`[imageGen:gemini3] ${gw.label} OK (${GEMINI_IMAGE_MODEL})`);
+      return {
+        provider: 'imagen3',
+        style: req.style,
+        imageBase64: match[2],
+        mimeType: match[1],
+        dataUri: imageData,
+      };
+    } catch (e) {
+      lastError = `${gw.label} exception: ${(e as Error).message}`;
+      console.error(`[imageGen:gemini3] ${lastError}`);
+    }
   }
 
-  const data = await response.json();
-  const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-  if (!imageData) {
-    throw new Error('Imagen3: no image in response');
-  }
-
-  const match = imageData.match(/^data:(image\/\w+);base64,(.+)$/);
-  if (!match) throw new Error('Imagen3: unexpected image format');
-
-  return {
-    provider: 'imagen3',
-    style: req.style,
-    imageBase64: match[2],
-    mimeType: match[1],
-    dataUri: imageData,
-  };
+  throw new Error(`Gemini3 image failed — ${lastError}`);
 }
+
 
 // ─── Black Forest Labs FLUX ──────────────────────────────────────
 
