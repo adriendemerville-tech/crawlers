@@ -184,7 +184,7 @@ export default function AutopilotIktracker() {
         <header className="mb-10">
           <p className="text-xs uppercase tracking-widest text-foreground/60 mb-3">Étude de cas Crawlers.fr — Août 2026</p>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
-            Comment l'Autopilot a exécuté 927 publications sur iktracker.fr et fait progresser 9 requêtes
+            Automatisation SEO : 927 publications exécutées sur iktracker.fr et 9 requêtes en progression
           </h1>
           <p className="text-lg text-foreground/80 leading-relaxed">
             Entre mars et août 2026, l'Autopilot Parménion a piloté seul la production éditoriale
