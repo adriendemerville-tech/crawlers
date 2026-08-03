@@ -7,6 +7,7 @@
  */
 
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { computeCannibalization } from '../../_shared/cannibalizationClusters.ts';
 
 export interface SkillContext {
   userId: string;
