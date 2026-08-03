@@ -488,9 +488,17 @@ try {
           }
 
           // ═══ EXECUTE PHASE: Prepare CMS actions ═══
-          if (phase === 'execute') {
+          // Une tâche de pruning ne passe pas par les ponts CMS génériques :
+          // elle est exécutée telle quelle par content-pruning-executor.
+          const isPruningTask = decision.action?.payload?.strategist_task?.action_type === 'fix_cannibalization'
+            && !!decision.action?.payload?.strategist_task?.pruning;
+          if (phase === 'execute' && !isPruningTask) {
             await prepareExecuteActions(decision, siteInfo, routedCmsActions, supabase, config);
+          } else if (phase === 'execute' && isPruningTask) {
+            decision.action.functions = ['content-pruning-executor'];
+            console.log(`[AutopilotEngine] ♻️ Pruning task détectée → content-pruning-executor (ponts CMS génériques court-circuités)`);
           }
+
 
           // ═══ Function execution ═══
           // dry_run bloque UNIQUEMENT la phase 'execute' (push CMS).
