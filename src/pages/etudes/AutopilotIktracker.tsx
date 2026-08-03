@@ -658,6 +658,23 @@ export default function AutopilotIktracker() {
             titres et métadonnées insuffisamment convaincants. C'est le levier suivant, et il ne
             demande pas de nouveau contenu.
           </p>
+
+          <h3 className="text-xl font-semibold mt-6 mb-2">Les statistiques web sous-estiment massivement le canal IA</h3>
+          <p className="leading-relaxed text-foreground/85">
+            C'est l'enseignement le plus transposable de ce cas : entre 1,0 % mesuré au referrer et
+            44,6 % déclaré par les utilisateurs eux-mêmes, l'écart est d'un facteur 45. Toute
+            décision d'investissement prise sur la seule base des rapports d'analytics sous-évalue
+            donc le retour du travail GEO. Poser la question de l'origine à l'inscription coûte une
+            ligne de formulaire et change la lecture complète du canal d'acquisition.
+          </p>
+
+          <h3 className="text-xl font-semibold mt-6 mb-2">La rétention reste le vrai plafond</h3>
+          <p className="leading-relaxed text-foreground/85">
+            15,1 % de comptes actifs sur 30 jours : l'acquisition fonctionne, l'usage suit moins.
+            Aucune quantité de contenu automatisé ne corrige un second trajet jamais saisi. C'est
+            un rappel utile de la frontière du périmètre SEO et GEO.
+          </p>
+
         </section>
 
         <section className="mt-16 pt-10 border-t border-border">
