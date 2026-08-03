@@ -262,7 +262,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(r => setTimeout(r, 2000));
 
-    const pollResponse = await fetch(`https://api.bfl.ml/v1/get_result?id=${taskId}`, {
+    const pollResponse = await fetch(`${BFL_BASE}/v1/get_result?id=${taskId}`, {
       headers: { 'X-Key': apiKey },
     });
 
@@ -273,7 +273,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
     if (result.status === 'Ready' && result.result?.sample) {
       const imgResponse = await fetch(result.result.sample);
       const imgBuffer = await imgResponse.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+      const base64 = arrayBufferToBase64(imgBuffer);
       const mimeType = imgResponse.headers.get('content-type') || 'image/jpeg';
 
       return {
