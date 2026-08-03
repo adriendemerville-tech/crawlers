@@ -7,11 +7,17 @@ import { enqueueJob } from '../_shared/jobQueue.ts';
 /** All known CMS bridge edge functions (payload shape { action, ... }). */
 const CMS_BRIDGES = ['iktracker-actions', 'dictadevi-actions'];
 
+/** crawlers.fr n'a pas de CMS externe : ses articles vivent dans blog_articles. */
+function isCrawlersInternalDomain(domain: string): boolean {
+  return (domain || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase() === 'crawlers.fr';
+}
+
 /** Resolve the right CMS bridge function for a given domain (IKtracker / Dictadevi). */
 function resolveCmsBridge(domain: string): string {
   if (isDictadeviDomain(domain)) return 'dictadevi-actions';
   return 'iktracker-actions'; // default (covers IKtracker + back-compat)
 }
+
 
 /**
  * Call the appropriate CMS bridge for a domain. Adapts the payload shape:
@@ -710,7 +716,39 @@ async function prepareExecuteActions(
   decision: any, site: SiteInfo, routedCmsActions: RoutedActions | null,
   supabase: any, config: AutopilotConfig,
 ) {
+  // ═══ crawlers.fr — CMS interne (blog_articles), pas de pont externe ═══
+  if (isCrawlersInternalDomain(site.domain)) {
+    if (!decision.action.payload) decision.action.payload = {};
+    const hasCms = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
+    if (!hasCms && routedCmsActions && routedCmsActions.all.length > 0) {
+      decision.action.payload.cms_actions = routedCmsActions.all;
+      decision.action.payload._routed = routedCmsActions;
+    } else if (!hasCms && decision.action.payload._prescribe_v3) {
+      const v3Actions = await buildV3CmsActionsForIktracker(decision, site, supabase, config);
+      if (v3Actions && v3Actions.length > 0) {
+        decision.action.payload.cms_actions = v3Actions;
+        decision.action.payload._v3_adapted = true;
+      }
+    }
+    const createActions = (decision.action.payload.cms_actions || []).filter(
+      (a: any) => a.action === 'create-post' || a.action === 'create-page' || !!a.body,
+    );
+    // Aucun pont CMS externe ne doit être appelé pour crawlers.fr.
+    decision.action.functions = (decision.action.functions || []).filter(
+      (f: string) => !CMS_BRIDGES.includes(f) && f !== 'cms-push-draft' && f !== 'wpsync',
+    );
+    if (createActions.length > 0) {
+      decision.action.payload.cms_actions = createActions;
+      if (!decision.action.functions.includes('crawlers-internal-publish')) {
+        decision.action.functions.push('crawlers-internal-publish');
+      }
+      console.log(`[AutopilotEngine] crawlers.fr internal CMS: ${createActions.length} article(s) à publier`);
+    }
+    return;
+  }
+
   if (isIktrackerDomain(site.domain) || isDictadeviDomain(site.domain)) {
+
     if (!decision.action.payload) decision.action.payload = {};
     const hasCmsActions = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
     
@@ -817,9 +855,13 @@ async function executeFunctions(
         await executeCmsBridgeActions(decision, site, config, phase, cycleNumber, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
       } else if (CMS_BRIDGES.includes(funcName)) {
         await executeCmsBridgeReroute(funcName, decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+      } else if (funcName === 'crawlers-internal-publish') {
+        await executeCrawlersInternalPublish(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+        continue;
       } else if (funcName === 'content-pruning-executor') {
         await executeContentPruning(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
         continue;
+
       } else if (funcName === 'content-architecture-advisor') {
 
         await executeContentArchitect(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
@@ -845,6 +887,98 @@ async function executeFunctions(
 }
 
 // ═══ Individual function executors ═══
+
+/**
+ * crawlers.fr — publication interne dans blog_articles (aucun CMS externe).
+ * Statut : 'published' si implementation_mode === 'auto', sinon 'draft'.
+ * Une image est générée puis attachée (non bloquant).
+ */
+async function executeCrawlersInternalPublish(
+  decision: any, site: SiteInfo, config: AutopilotConfig, phase: string,
+  supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
+  setSuccess: (v: boolean) => void,
+) {
+  const actions = (decision.action.payload?.cms_actions || []).slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
+  console.log(`[AutopilotEngine] crawlers.fr internal publish: ${actions.length} action(s)`);
+
+  for (const cmsAction of actions) {
+    const body = cmsAction.body || {};
+    const title: string = body.title || cmsAction.title || '';
+    const content: string = body.content || body.body || '';
+    const slug: string = body.slug || slugifyFr(title);
+    try {
+      if (!title || content.length < 200) {
+        executionResults.push({ function: 'crawlers-internal-publish', status: 'rejected', target: slug || 'unknown', reason: 'Titre ou contenu insuffisant' });
+        continue;
+      }
+
+      // Garde anti-doublon : un article avec ce slug existe déjà.
+      const { data: existing } = await supabase
+        .from('blog_articles').select('id').eq('slug', slug).maybeSingle();
+
+      const status = config.implementation_mode === 'auto' ? 'published' : 'draft';
+      const row: Record<string, unknown> = {
+        title, slug, content,
+        excerpt: body.excerpt || body.meta_description || null,
+        status,
+        ...(status === 'published' ? { published_at: new Date().toISOString() } : {}),
+      };
+
+      const { data: article, error } = existing
+        ? await supabase.from('blog_articles').update(row).eq('id', existing.id).select('id, slug').single()
+        : await supabase.from('blog_articles').insert(row).select('id, slug').single();
+
+      if (error) throw new Error(error.message);
+
+      // Image (non bloquant)
+      let imageGenerated = false;
+      try {
+        const brief = await buildOriginalImageBrief({
+          supabase, trackedSiteId: config.tracked_site_id, slug,
+          title, excerpt: String(row.excerpt || ''),
+        });
+        const imgResponse = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: brief.prompt, style: brief.style }),
+          signal: AbortSignal.timeout(150000),
+        });
+        const imgResult = imgResponse.ok ? await imgResponse.json().catch(() => null) : null;
+        const base64Match = imgResult?.dataUri?.match(/^data:image\/\w+;base64,(.+)$/);
+        if (base64Match) {
+          const binaryStr = atob(base64Match[1]);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+          const fileName = `parmenion/crawlers.fr/${Date.now()}_${slug.slice(0, 30)}.png`;
+          const { error: upErr } = await supabase.storage.from('image-references')
+            .upload(fileName, bytes, { contentType: 'image/png', upsert: true });
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(fileName);
+            await supabase.from('blog_articles').update({ image_url: urlData.publicUrl }).eq('id', article.id);
+            imageGenerated = true;
+          }
+        }
+      } catch (imgErr) {
+        console.warn('[AutopilotEngine] crawlers.fr image non générée:', imgErr instanceof Error ? imgErr.message : imgErr);
+      }
+
+      executionResults.push({
+        function: 'crawlers-internal-publish', cms_action: existing ? 'update-post' : 'create-post',
+        target: slug, status: 'success', article_id: article.id,
+        published: status === 'published', image_generated: imageGenerated,
+      });
+      console.log(`[AutopilotEngine] crawlers.fr ${existing ? 'mis à jour' : 'créé'} : ${slug} (${status})`);
+    } catch (err) {
+      executionResults.push({
+        function: 'crawlers-internal-publish', target: slug || 'unknown', status: 'error',
+        error: err instanceof Error ? err.message : 'unknown',
+      });
+      phaseErrors.push({ phase, function: 'crawlers-internal-publish', severity: 'degraded', message: err instanceof Error ? err.message : 'unknown', retryable: true });
+      setSuccess(false);
+    }
+  }
+}
+
 
 async function executeCmsBridgeActions(
   decision: any, site: SiteInfo, config: AutopilotConfig,
