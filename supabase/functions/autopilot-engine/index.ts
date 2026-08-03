@@ -716,7 +716,39 @@ async function prepareExecuteActions(
   decision: any, site: SiteInfo, routedCmsActions: RoutedActions | null,
   supabase: any, config: AutopilotConfig,
 ) {
+  // ═══ crawlers.fr — CMS interne (blog_articles), pas de pont externe ═══
+  if (isCrawlersInternalDomain(site.domain)) {
+    if (!decision.action.payload) decision.action.payload = {};
+    const hasCms = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
+    if (!hasCms && routedCmsActions && routedCmsActions.all.length > 0) {
+      decision.action.payload.cms_actions = routedCmsActions.all;
+      decision.action.payload._routed = routedCmsActions;
+    } else if (!hasCms && decision.action.payload._prescribe_v3) {
+      const v3Actions = await buildV3CmsActionsForIktracker(decision, site, supabase, config);
+      if (v3Actions && v3Actions.length > 0) {
+        decision.action.payload.cms_actions = v3Actions;
+        decision.action.payload._v3_adapted = true;
+      }
+    }
+    const createActions = (decision.action.payload.cms_actions || []).filter(
+      (a: any) => a.action === 'create-post' || a.action === 'create-page' || !!a.body,
+    );
+    // Aucun pont CMS externe ne doit être appelé pour crawlers.fr.
+    decision.action.functions = (decision.action.functions || []).filter(
+      (f: string) => !CMS_BRIDGES.includes(f) && f !== 'cms-push-draft' && f !== 'wpsync',
+    );
+    if (createActions.length > 0) {
+      decision.action.payload.cms_actions = createActions;
+      if (!decision.action.functions.includes('crawlers-internal-publish')) {
+        decision.action.functions.push('crawlers-internal-publish');
+      }
+      console.log(`[AutopilotEngine] crawlers.fr internal CMS: ${createActions.length} article(s) à publier`);
+    }
+    return;
+  }
+
   if (isIktrackerDomain(site.domain) || isDictadeviDomain(site.domain)) {
+
     if (!decision.action.payload) decision.action.payload = {};
     const hasCmsActions = Array.isArray(decision.action.payload.cms_actions) && decision.action.payload.cms_actions.length > 0;
     
