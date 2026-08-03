@@ -338,6 +338,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/conditions-utilisation": "Conditions d'Utilisation",
   "/rgpd": "RGPD",
   "/cgvu": "CGVU",
+  "/etudes/autopilot-parmenion-iktracker": "Étude de cas Autopilot",
 };
 
 // ── Routes that should include the pricing table ──
