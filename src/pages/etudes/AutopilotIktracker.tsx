@@ -135,14 +135,15 @@ const articleJsonLd = {
 const datasetJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Dataset',
-  name: "Performance Search Console iktracker.fr sous Autopilot — 13 semaines",
-  description: "Clics, impressions, CTR et position moyenne hebdomadaires de iktracker.fr du 9 mars au 1er juin 2026, mis en regard du volume de publications automatisées par l'Autopilot Parménion.",
+  name: "Performance Search Console et acquisition iktracker.fr sous Autopilot",
+  description: "Clics, impressions, CTR et position moyenne hebdomadaires de iktracker.fr du 9 mars au 1er juin 2026, volumes de publications automatisées, inscriptions mensuelles 2026 et origine d'acquisition déclarée par les utilisateurs.",
   creator: { '@type': 'Organization', name: 'Crawlers.fr' },
   datePublished: PUBLISHED,
-  temporalCoverage: '2026-03-09/2026-06-01',
+  temporalCoverage: '2026-01-01/2026-08-02',
   license: 'https://creativecommons.org/licenses/by/4.0/',
   url: CANONICAL,
-  variableMeasured: ['Clics GSC', 'Impressions GSC', 'CTR (%)', 'Position moyenne', 'Publications CMS exécutées'],
+  variableMeasured: ['Clics GSC', 'Impressions GSC', 'CTR (%)', 'Position moyenne', 'Publications CMS exécutées', 'Inscriptions mensuelles', 'Origine d\'acquisition déclarée', 'Utilisateurs actifs 30 jours'],
+
 };
 
 const faqJsonLd = {
