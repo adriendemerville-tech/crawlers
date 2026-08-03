@@ -352,6 +352,69 @@ const CANONICAL_OVERRIDES: Record<string, string> = {
   "/app/cocoon": "/cocoon",
 };
 
+// Route-specific JSON-LD injected in addition to WebPage + BreadcrumbList
+const EXTRA_JSONLD: Record<string, unknown[]> = {
+  "/etudes/autopilot-parmenion-iktracker": [
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Automatisation SEO : 927 publications exécutées sur iktracker.fr et 9 requêtes en progression",
+      "description": "Étude de cas d'automatisation du référencement : 927 publications automatiques, données Google Search Console, inscriptions et origine d'acquisition déclarée.",
+      "mainEntityOfPage": `${baseUrl}/etudes/autopilot-parmenion-iktracker`,
+      "url": `${baseUrl}/etudes/autopilot-parmenion-iktracker`,
+      "image": `${baseUrl}/og-etude-autopilot-iktracker.jpg`,
+      "datePublished": "2026-08-02",
+      "dateModified": "2026-08-03",
+      "author": { "@type": "Person", "name": "Adrien de Volontat", "url": `${baseUrl}/auteur/adrien-de-volontat` },
+      "publisher": PUBLISHER_ORG,
+      "inLanguage": "fr-FR",
+      "isAccessibleForFree": true,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      "name": "Autopilot Parménion sur iktracker.fr — production éditoriale, Search Console et acquisition",
+      "description": "927 publications CMS en 289 cycles, 13 semaines de données Google Search Console (clics, impressions, position moyenne, CTR), 372 comptes créés, origine d'acquisition déclarée par les inscrits.",
+      "url": `${baseUrl}/etudes/autopilot-parmenion-iktracker`,
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "creator": PUBLISHER_ORG,
+      "temporalCoverage": "2026-03-09/2026-08-02",
+      "variableMeasured": [
+        "publications CMS exécutées",
+        "cycles Autopilot",
+        "clics Google Search Console",
+        "impressions Google Search Console",
+        "position moyenne",
+        "CTR",
+        "comptes créés",
+        "origine d'acquisition déclarée",
+        "taux de comptes actifs 30 jours",
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "L'automatisation SEO fonctionne-t-elle vraiment ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Sur iktracker.fr, 927 publications automatisées ont accompagné une hausse des impressions hebdomadaires de 6 995 à 17 455 et l'amélioration de 9 requêtes sur 20. Sans contrefactuel ni correction de la saisonnalité, la relation reste corrélative : l'automatisation a fourni la surface d'indexation nécessaire pour capter une demande existante." },
+        },
+        {
+          "@type": "Question",
+          "name": "Qu'est-ce qu'un logiciel de référencement automatique ne peut pas faire ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Il ne corrige ni un positionnement produit flou, ni un funnel défaillant, ni la rétention — 15,1 % de comptes actifs sur 30 jours dans ce cas. Il amplifie ce qui existe déjà et ne crée pas de proposition de valeur." },
+        },
+        {
+          "@type": "Question",
+          "name": "Pourquoi ChatGPT passe-t-il devant Google dans l'origine déclarée ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "44,6 % des inscrits déclarent venir de ChatGPT contre 41,4 % de Google, alors que le referrer HTTP ne mesure que 1,0 % de trafic IA. Les assistants génératifs transmettent rarement un referrer exploitable : seule la question posée à l'inscription révèle ce canal." },
+        },
+      ],
+    },
+  ],
+};
+
 function generateStaticHTML(route: string, meta: { title: string; description: string }): string {
   const canonicalRoute = CANONICAL_OVERRIDES[route] || route;
   const fullUrl = `${baseUrl}${canonicalRoute}`;
