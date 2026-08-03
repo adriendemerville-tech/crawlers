@@ -11,7 +11,7 @@ import {
   Activity, Server, GitBranch, Workflow, TrendingUp,
   Users, LineChart, Shield, Eye, Repeat, Globe
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { motion } from 'framer-motion';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));

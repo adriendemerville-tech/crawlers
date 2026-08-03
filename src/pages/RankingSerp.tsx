@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, memo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -124,7 +124,7 @@ function SerpBenchmarkMini() {
   const activeProviders = providerSummaries.filter(p => !p.error);
 
   return (
-    <Card className="border-primary/30 bg-card/80 backdrop-blur-sm">
+    <Card className="border-primary/30 bg-card/80 backdrop-blur-xs">
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -160,7 +160,7 @@ function SerpBenchmarkMini() {
                 key={p.id}
                 className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer border transition-all text-sm ${
                   selectedProviders.includes(p.id)
-                    ? `${p.color} ${p.textColor} border-transparent shadow-sm`
+                    ? `${p.color} ${p.textColor} border-transparent shadow-xs`
                     : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
                 }`}
               >

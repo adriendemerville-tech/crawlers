@@ -313,7 +313,7 @@ export function MatriceCube3D({
         {(hovered || internalSelected) && results.length > 0 && (() => {
           const v = hovered ?? internalSelected!;
           return (
-            <div className="absolute top-3 left-3 max-w-[260px] border-2 border-brand-violet bg-background/95 backdrop-blur-sm rounded-md p-3 text-xs space-y-1 pointer-events-none">
+            <div className="absolute top-3 left-3 max-w-[260px] border-2 border-brand-violet bg-background/95 backdrop-blur-xs rounded-md p-3 text-xs space-y-1 pointer-events-none">
               <div className="font-semibold text-foreground">{v.familyLabel}</div>
               <div className="text-muted-foreground font-mono">
                 {v.typeLabel} · {v.weightLabel}

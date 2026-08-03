@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Plus, Trash2, Loader2, ExternalLink, Search, Globe, Brain, RefreshCw, AlertCircle, ChevronDown, FileJson, Quote, Shield, BookOpen, Layers, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 
 interface CompetitorUrl {
   id: string;

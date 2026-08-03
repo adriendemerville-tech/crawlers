@@ -1560,7 +1560,7 @@ export function SmartConfigurator({
 
         {/* Preloading overlay */}
         {isPreloading && (
-          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
+          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center rounded-lg">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
               <span className="text-sm text-muted-foreground">Chargement de Code Architect…</span>
@@ -1971,7 +1971,7 @@ export function SmartConfigurator({
                             setEditableCode(e.target.value);
                             setCodeValidated(false);
                           }}
-                          className="w-full h-[500px] font-mono text-xs bg-zinc-950 text-emerald-400 p-4 rounded-lg border border-zinc-800 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                          className="w-full h-[500px] font-mono text-xs bg-zinc-950 text-emerald-400 p-4 rounded-lg border border-zinc-800 resize-none focus:outline-hidden focus:ring-1 focus:ring-primary"
                           spellCheck={false}
                           placeholder="Le code généré apparaîtra ici. Vous pouvez le modifier librement."
                         />

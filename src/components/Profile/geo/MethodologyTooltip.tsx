@@ -31,7 +31,7 @@ export function MethodologyTooltip({ title, body, className, label }: Methodolog
             // bordure-only, pas de fond, respect de la charte
             'inline-flex items-center gap-1 rounded-md border border-primary/40 px-1.5 py-0.5',
             'text-[10px] font-medium text-foreground/80 hover:text-primary hover:border-primary',
-            'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+            'transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40',
             className,
           )}
         >

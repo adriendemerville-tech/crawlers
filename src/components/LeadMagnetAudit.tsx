@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,7 +109,7 @@ export function LeadMagnetAudit({ type, placeholder = 'https://example.com', cta
 
       {/* Result preview */}
       {result && (
-        <div className="mt-6 p-5 rounded-xl border border-border bg-card/80 backdrop-blur-sm">
+        <div className="mt-6 p-5 rounded-xl border border-border bg-card/80 backdrop-blur-xs">
           <div className="flex items-center gap-2 mb-4">
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             <h3 className="font-semibold text-foreground">{LABELS[type].resultTitle}</h3>

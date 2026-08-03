@@ -1,6 +1,6 @@
 import { useEffect, useState, lazy, Suspense} from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -231,7 +231,7 @@ const BoolCard = ({ field, percent, trend, label }: BoolCardProps) => {
   const Icon = booleanIcons[field] || Code2;
   const good = percent >= 60;
   return (
-    <Card className="shadow-sm border-border/50 bg-card hover:shadow-md transition-shadow">
+    <Card className="shadow-xs border-border/50 bg-card hover:shadow-md transition-shadow">
       <CardContent className="flex items-center gap-3 p-4">
         <div className={`rounded-lg p-2 ${good ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30'}`}>
           <Icon className={`h-4 w-4 ${good ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`} />
@@ -254,7 +254,7 @@ const NumCard = ({ field, avg, trend, label }: NumCardProps) => {
   const unit = numericUnits[field] || '';
   const display = unit === 'ms' && avg >= 1000 ? `${(avg / 1000).toFixed(1)}s` : `${avg}${unit ? ' ' + unit : ''}`;
   return (
-    <Card className="shadow-sm border-border/50 bg-card hover:shadow-md transition-shadow">
+    <Card className="shadow-xs border-border/50 bg-card hover:shadow-md transition-shadow">
       <CardContent className="flex items-center gap-3 p-4">
         <div className="rounded-lg p-2 bg-violet-100 dark:bg-violet-900/30">
           <Icon className="h-4 w-4 text-violet-600 dark:text-violet-400" />
@@ -785,7 +785,7 @@ const Observatoire = () => {
           </div>
           <div className="space-y-6">
             {t.faq.map((item, i) => (
-              <details key={i} className="group rounded-lg border border-border bg-card p-4 hover:shadow-sm transition-shadow">
+              <details key={i} className="group rounded-lg border border-border bg-card p-4 hover:shadow-xs transition-shadow">
                 <summary className="cursor-pointer font-semibold text-foreground list-none flex items-center justify-between gap-2">
                   <span>{item.q}</span>
                   <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90 shrink-0" />

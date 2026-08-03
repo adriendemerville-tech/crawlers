@@ -17,7 +17,7 @@ import { useGeoMetaTags } from '@/hooks/useGeoMetaTags';
 // Lazy reference — avoid static import that bloats critical bundle
 
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@/lib/router-compat';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';

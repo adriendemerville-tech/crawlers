@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -365,7 +365,7 @@ export default function ArchitecteGeneratif() {
                     bg: 'bg-cyan-500/10'
                   },
                 ].map((g, i) => (
-                  <Card key={i} className="border-violet-500/10 bg-card/80 backdrop-blur-sm hover:border-violet-500/30 transition-colors">
+                  <Card key={i} className="border-violet-500/10 bg-card/80 backdrop-blur-xs hover:border-violet-500/30 transition-colors">
                     <CardContent className="p-5 space-y-3">
                       <div className={`p-2.5 rounded-lg ${g.bg} w-fit`}>
                         <g.icon className={`h-5 w-5 ${g.color}`} />

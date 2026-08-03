@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from '@/lib/router-compat';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,7 +17,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { PasswordStrengthBar, isPasswordAcceptable } from '@/components/PasswordStrengthBar';
@@ -462,7 +462,7 @@ export default function Signup() {
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
-          <Card className="border-border/50 shadow-xl backdrop-blur-sm">
+          <Card className="border-border/50 shadow-xl backdrop-blur-xs">
             <CardContent className="pt-8 pb-6 space-y-6">
               <div className="text-center space-y-2">
                 <motion.div
@@ -578,7 +578,7 @@ export default function Signup() {
           <ArrowLeft className="h-4 w-4" />
         </Link>
 
-        <Card className="border-border/50 shadow-xl backdrop-blur-sm">
+        <Card className="border-border/50 shadow-xl backdrop-blur-xs">
           <CardHeader className="text-center pb-1 pt-3 px-5">
             <CardTitle className="text-lg font-bold">{t.signupTitle}</CardTitle>
             <CardDescription className="text-xs">{t.signupDesc}</CardDescription>

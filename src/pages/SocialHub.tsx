@@ -33,7 +33,7 @@ import { SocialSettings } from '@/components/Social/SocialSettings';
 import { SocialConnectModal } from '@/components/Social/SocialConnectModal';
 import { SocialImageLibrary, type LibraryImage } from '@/components/Social/SocialImageLibrary';
 import { createPost, updatePost, publishPost, exportZip, fetchPosts, type SocialPost } from '@/lib/api/socialHub';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 
 const FREE_MONTHLY_LIMIT = 5;
 
@@ -56,7 +56,7 @@ function BlurredDemoOverlay({ monthlyUsage, onUpgrade, onBack }: { monthlyUsage:
   return (
     <div className="relative">
       {/* Blurred simulated content */}
-      <div className="filter blur-sm pointer-events-none select-none opacity-60">
+      <div className="filter blur-xs pointer-events-none select-none opacity-60">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
           {MOCK_POSTS.map((post) => (
             <Card key={post.id} className="border border-border">

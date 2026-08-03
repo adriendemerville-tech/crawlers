@@ -4,7 +4,7 @@ import { Header } from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -544,7 +544,7 @@ export default function ProAgency() {
               {'heroStats' in t && (
                 <div className="mx-auto mb-10 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
                   {(t as any).heroStats.map((stat: { value: string; label: string }, i: number) => (
-                    <div key={i} className="rounded-xl border border-border/50 bg-card/30 backdrop-blur-sm px-4 py-3 text-center">
+                    <div key={i} className="rounded-xl border border-border/50 bg-card/30 backdrop-blur-xs px-4 py-3 text-center">
                       <div className="text-2xl font-extrabold text-foreground sm:text-3xl">{stat.value}</div>
                       <div className="mt-1 text-xs text-muted-foreground">{stat.label}</div>
                     </div>

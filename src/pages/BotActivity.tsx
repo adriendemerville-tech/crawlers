@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Activity, ArrowLeft, Pause, Play, Filter, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { getBotIntent, getIntentLabel, getIntentColor, BotIntent } from '@/components/BotActivity/botIntentMap';
 import { VerificationBadge } from '@/components/BotActivity/VerificationBadge';
 import { ReliabilityWidget } from '@/components/BotActivity/ReliabilityWidget';

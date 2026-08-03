@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {

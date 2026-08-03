@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FileSearch, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@/lib/router-compat';
 import { TrustBadge } from '@/components/TrustBadge';
 
 // Lazy load framer-motion - only needed after hydration for animations

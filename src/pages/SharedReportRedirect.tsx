@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from '@/lib/router-compat';
 import { Download, Loader2, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';

@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { Download, FileSpreadsheet, Link2, Mail, Printer, Loader2, Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -389,7 +389,7 @@ export default function RapportViewer() {
         {/* Report iframe */}
         <main className="flex-1 relative">
           {isSummarizing && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-xs">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>{t.summaryInProgress}</span>

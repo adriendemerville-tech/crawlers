@@ -99,7 +99,7 @@ export function EnterpriseQuiz({ userId, onComplete }: EnterpriseQuizProps) {
             onChange={e => setCurrentValue(e.target.value)}
             placeholder={q.placeholder}
             rows={2}
-            className="flex-1 text-xs rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 resize-none"
+            className="flex-1 text-xs rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-hidden focus:ring-1 focus:ring-emerald-500/50 resize-none"
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleNext(); } }}
             autoFocus
           />
@@ -109,7 +109,7 @@ export function EnterpriseQuiz({ userId, onComplete }: EnterpriseQuizProps) {
             value={currentValue}
             onChange={e => setCurrentValue(e.target.value)}
             placeholder={q.placeholder}
-            className="flex-1 text-xs rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+            className="flex-1 text-xs rounded-lg border border-border/50 bg-background px-3 py-2 focus:outline-hidden focus:ring-1 focus:ring-emerald-500/50"
             onKeyDown={e => { if (e.key === 'Enter') handleNext(); }}
             autoFocus
           />

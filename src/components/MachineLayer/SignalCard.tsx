@@ -53,7 +53,7 @@ export function SignalCard({ family, label, score, max, detected, recommendation
   });
 
   return (
-    <Card className="border-border/60 bg-card/40 backdrop-blur-sm transition-all">
+    <Card className="border-border/60 bg-card/40 backdrop-blur-xs transition-all">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}

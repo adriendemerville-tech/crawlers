@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import DevLayout from "./DevLayout";
 import { SEOHead } from "@/components/SEOHead";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";

@@ -378,7 +378,7 @@ export function EeatReportPreview({ result }: { result: EeatScanResult }) {
     <TooltipProvider>
       <div className="border border-border rounded-xl overflow-hidden bg-card">
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-card/95 backdrop-blur-sm">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-card/95 backdrop-blur-xs">
           <div className="flex items-center gap-2 min-w-0">
             <Badge variant="outline" className="shrink-0">Rapport E-E-A-T</Badge>
             <span className="text-sm text-muted-foreground truncate">{result.url}</span>

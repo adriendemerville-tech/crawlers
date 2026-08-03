@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, Target, Code, Search, Check, Eye, Lock, RotateCcw, GitCompareArrows } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -327,7 +327,7 @@ export function WorkflowCarousel({
                       else if (activeStep === 2) onStartStrategic();
                     }
                   }}
-                  className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
+                  className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-xs"
                   disabled={isLoading || isStrategicLoading}
                 />
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -479,7 +479,7 @@ export function WorkflowCarousel({
                     {/* Glassmorphism Card with shadow */}
                     <Card className={cn(
                       "relative overflow-hidden transition-all duration-500 h-full",
-                      "bg-card/95 backdrop-blur-sm border border-border/40",
+                      "bg-card/95 backdrop-blur-xs border border-border/40",
                       "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
                       isActive && step.id === 1 && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.15)]",
                       !isActive && step.id === 1 && "shadow-[0_8px_25px_rgba(0,0,0,0.12),0_4px_10px_rgba(0,0,0,0.1)]",

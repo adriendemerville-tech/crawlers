@@ -1,5 +1,5 @@
 import { memo, useEffect, useState, lazy, Suspense } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate } from '@/lib/router-compat';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { GuideTemplate, type GuideData, type GuideSection, type GuideFaq } from '@/components/Guide/GuideTemplate';

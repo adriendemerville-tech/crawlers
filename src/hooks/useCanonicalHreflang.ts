@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-compat';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const SITE_URL = 'https://crawlers.fr';

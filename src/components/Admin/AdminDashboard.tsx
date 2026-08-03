@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
 import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award, Plug, MessageSquare, Share2, Map, Zap, Linkedin } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
@@ -360,7 +360,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                       className={cn(
                         "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs whitespace-nowrap transition-colors shrink-0",
                         isActive
-                          ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                          ? "bg-primary text-primary-foreground font-medium shadow-xs"
                           : "bg-muted/60 text-muted-foreground"
                       )}
                     >

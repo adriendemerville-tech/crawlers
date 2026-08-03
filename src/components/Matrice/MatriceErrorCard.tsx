@@ -84,7 +84,7 @@ export function MatriceErrorCard({
             onChange={(e) => setDraft(e.target.value)}
             maxLength={1000}
             rows={3}
-            className="w-full px-3 py-2 text-sm bg-transparent border border-brand-violet rounded-md focus:outline-none focus:border-brand-gold resize-y"
+            className="w-full px-3 py-2 text-sm bg-transparent border border-brand-violet rounded-md focus:outline-hidden focus:border-brand-gold resize-y"
             aria-label="Nouvelle valeur"
             autoFocus
           />

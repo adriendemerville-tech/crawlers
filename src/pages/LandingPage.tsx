@@ -1,5 +1,5 @@
 import { memo, useEffect, useState, lazy, Suspense } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';

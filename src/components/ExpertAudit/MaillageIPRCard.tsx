@@ -271,7 +271,7 @@ export function MaillageIPRCard({ data, onExploreCocoon }: Props) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      <Card className="border-border/50 shadow-sm overflow-hidden">
+      <Card className="border-border/50 shadow-xs overflow-hidden">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-primary/10">

@@ -6,7 +6,7 @@ import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Shar
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense} from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from '@/lib/router-compat';
 // jspdf loaded dynamically on PDF export to avoid 140KB on initial load
 const loadPDFLibraries = async () => {
   const [jspdfModule, autoTableModule] = await Promise.all([
@@ -1039,7 +1039,7 @@ export default function Lexique() {
           {/* Alphabet Navigation */}
           {sortedLetters.length > 0 && (
             <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50" aria-label="Navigation alphabétique">
-              <div className="flex flex-wrap justify-center gap-1 rounded-full bg-card/95 backdrop-blur-sm border border-border px-4 py-2 shadow-lg max-w-[90vw]">
+              <div className="flex flex-wrap justify-center gap-1 rounded-full bg-card/95 backdrop-blur-xs border border-border px-4 py-2 shadow-lg max-w-[90vw]">
                 {sortedLetters.map(letter => (
                   <a
                     key={letter}

@@ -1,0 +1,688 @@
+/* Critical font only — Inter for body text (font-display: swap via fontsource) */
+@import '@fontsource-variable/inter/wght.css';
+
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system — Crawlers (violet / gold / black / white).
+ * Tokens are kept as HSL triplets (legacy convention) and mapped to Tailwind
+ * utilities through @theme inline with hsl(var(--x)) wrappers.
+ */
+
+@theme inline {
+  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-muted: hsl(var(--destructive-muted));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-warning-muted: hsl(var(--warning-muted));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-ring-offset-background: hsl(var(--background));
+
+  --color-brand-violet: hsl(var(--brand-violet));
+  --color-brand-violet-muted: hsl(var(--brand-violet-muted));
+  --color-brand-gold: hsl(var(--brand-gold));
+  --color-brand-gold-muted: hsl(var(--brand-gold-muted));
+
+  --color-heat-0: hsl(var(--heat-0));
+  --color-heat-1: hsl(var(--heat-1));
+  --color-heat-2: hsl(var(--heat-2));
+  --color-heat-3: hsl(var(--heat-3));
+  --color-heat-4: hsl(var(--heat-4));
+
+  --color-linkedin: hsl(201 100% 40%);
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* ── Animations (ported from tailwind.config.ts) ── */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.4s ease-out;
+  --animate-slide-in: slide-in 0.3s ease-out;
+  --animate-shimmer: shimmer 2.5s ease-in-out infinite;
+  --animate-shake: shake 0.4s ease-in-out;
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+  --animate-autopilot-glow: autopilot-glow 4s ease-in-out infinite;
+  --animate-marquee: marquee 30s linear infinite;
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-3px); }
+    40% { transform: translateX(3px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 12px 2px rgba(16,185,129,0.25), 0 0 24px 4px rgba(16,185,129,0.12); }
+    50% { box-shadow: 0 0 20px 4px rgba(16,185,129,0.4), 0 0 40px 8px rgba(16,185,129,0.2); }
+  }
+  @keyframes autopilot-glow {
+    0%, 100% { box-shadow: 0 0 8px 2px rgba(16,185,129,0.2); }
+    50% { box-shadow: 0 0 18px 5px rgba(16,185,129,0.35), 0 0 36px 8px rgba(16,185,129,0.15); }
+  }
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+}
+
+/* v3 container config port: centered, 2rem padding, capped at 1400px on 2xl */
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (min-width: 640px) { max-width: 640px; }
+  @media (min-width: 768px) { max-width: 768px; }
+  @media (min-width: 1024px) { max-width: 1024px; }
+  @media (min-width: 1280px) { max-width: 1280px; }
+  @media (min-width: 1536px) { max-width: 1400px; }
+}
+
+/* Tailwind v4 renamed the bare scales (rounded/shadow/blur → *-sm). The codebase
+   uses the bare forms extensively; pin them to their exact v3 values. */
+@utility rounded {
+  border-radius: 0.25rem;
+}
+@utility shadow {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+@utility blur {
+  filter: blur(8px);
+}
+
+:root {
+  --background: 43 10% 96%;
+  --foreground: 222 47% 11%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --primary: 221 83% 53%;
+  --primary-foreground: 210 40% 98%;
+  --brand-violet: 262 83% 58%;
+  --brand-violet-muted: 262 72% 96%;
+  --brand-gold: 45 93% 47%;
+  --brand-gold-muted: 45 90% 95%;
+  /* Heatmap palette — violet (low) → gold (high), zero IA-blue */
+  --heat-0: 262 60% 92%;
+  --heat-1: 262 70% 78%;
+  --heat-2: 280 65% 62%;
+  --heat-3: 25 88% 58%;
+  --heat-4: 45 93% 50%;
+
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --destructive-muted: 0 70% 95%;
+
+  --success: 142 76% 36%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 0%;
+  --warning-muted: 38 90% 92%;
+
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 221 83% 53%;
+
+  --radius: 0.375rem;
+
+  --sidebar-background: 43 8% 97%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+.dark {
+  --background: 222 47% 6%;
+  --foreground: 210 40% 98%;
+
+  --card: 222 47% 8%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222 47% 8%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 221 83% 53%;
+  --primary-foreground: 210 40% 98%;
+  --brand-violet: 262 90% 72%;
+  --brand-violet-muted: 262 42% 18%;
+  --brand-gold: 45 93% 60%;
+  --brand-gold-muted: 45 50% 18%;
+  --heat-0: 262 35% 22%;
+  --heat-1: 262 60% 45%;
+  --heat-2: 280 70% 58%;
+  --heat-3: 25 85% 60%;
+  --heat-4: 45 93% 60%;
+
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 72%; /* was 65% — bumped for WCAG AA on dark bg */
+
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 70% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --destructive-muted: 0 50% 20%;
+
+  --success: 142 76% 36%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 80% 55%;
+  --warning-foreground: 0 0% 0%;
+  --warning-muted: 38 50% 18%;
+
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --ring: 221 83% 53%;
+
+  --sidebar-background: 240 5.9% 10%;
+  --sidebar-foreground: 240 4.8% 95.9%;
+  --sidebar-primary: 224.3 76.3% 48%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent-foreground: 240 4.8% 95.9%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+    caret-color: transparent;
+  }
+
+  html {
+    font-size: 110%;
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Allow text cursor only in URL search inputs */
+  input[type="text"],
+  input[type="url"],
+  input[type="search"],
+  textarea {
+    caret-color: auto;
+  }
+
+  /* CSS Containment for performance - prevent layout thrashing */
+  [data-radix-scroll-area-viewport],
+  .card,
+  [class*="CardContent"],
+  article {
+    contain: layout style;
+  }
+
+  /* Strict containment only for true modal dialogs.
+     Do not target generic [role="dialog"] because Radix popovers also use it,
+     which collapses their auto-sized content. */
+  [data-radix-dialog-content],
+  [data-radix-alert-dialog-content] {
+    contain: strict;
+  }
+
+  /* Paint containment for scrollable areas */
+  [data-radix-scroll-area-viewport],
+  .overflow-x-auto,
+  .overflow-y-auto,
+  .overflow-auto {
+    contain: paint;
+    will-change: scroll-position;
+  }
+
+  /* Optimize fixed/sticky elements */
+  header,
+  [class*="fixed"],
+  [class*="sticky"] {
+    contain: layout style;
+    will-change: transform;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent;
+  }
+
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .card-shadow-lg {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* News card fade-in animation - CSS only, no JS layout thrashing */
+  @keyframes newsCardFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Carousel word shadow animation */
+  @keyframes carouselShadowPulse {
+    0%, 100% { filter: drop-shadow(0 4px 12px rgba(8, 10, 12, 0.35)); }
+    50% { filter: drop-shadow(0 6px 16px rgba(8, 10, 12, 0.45)); }
+  }
+
+  .animate-carousel-shadow {
+    animation: carouselShadowPulse 3s ease-in-out infinite;
+  }
+
+  .animate-scan {
+    animation: scan 1.5s ease-in-out infinite;
+  }
+
+  /* Felix ping-pong bounce animation */
+  @keyframes felix-pingpong {
+    0%   { transform: translateY(0); }
+    8%   { transform: translateY(-40px); }
+    16%  { transform: translateY(0); }
+    24%  { transform: translateY(-25px); }
+    32%  { transform: translateY(0); }
+    40%  { transform: translateY(-14px); }
+    48%  { transform: translateY(0); }
+    56%  { transform: translateY(-6px); }
+    64%  { transform: translateY(0); }
+    100% { transform: translateY(0); }
+  }
+
+  .animate-felix-bounce {
+    animation: felix-pingpong 2s ease-in-out;
+  }
+
+  @keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(200%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  @keyframes scan {
+    0% { transform: translateY(-100%); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(100%); opacity: 0; }
+  }
+
+  /* CTA glow effect on tab change */
+  @keyframes ctaGlow {
+    0% { box-shadow: 0 0 0 0 hsl(210 100% 70% / 0); }
+    25% { box-shadow: 0 0 15px 4px hsl(210 100% 70% / 0.45), 0 0 30px 8px hsl(210 100% 80% / 0.2); }
+    100% { box-shadow: 0 0 0 0 hsl(210 100% 70% / 0); }
+  }
+
+  .animate-cta-glow {
+    animation: ctaGlow 5s ease-out forwards;
+  }
+
+  /* Lexique category colors with glow effects */
+  .category-seo {
+    @apply bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50;
+    box-shadow: 0 0 12px -3px hsl(221 83% 53% / 0.15);
+  }
+  .category-seo:hover {
+    box-shadow: 0 0 20px -3px hsl(221 83% 53% / 0.25);
+  }
+
+  .category-geo {
+    @apply bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/50;
+    box-shadow: 0 0 12px -3px hsl(270 70% 55% / 0.15);
+  }
+  .category-geo:hover {
+    box-shadow: 0 0 20px -3px hsl(270 70% 55% / 0.25);
+  }
+
+  .category-performance {
+    @apply bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50;
+    box-shadow: 0 0 12px -3px hsl(160 70% 40% / 0.15);
+  }
+  .category-performance:hover {
+    box-shadow: 0 0 20px -3px hsl(160 70% 40% / 0.25);
+  }
+
+  .category-technical {
+    @apply bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50;
+    box-shadow: 0 0 12px -3px hsl(38 92% 50% / 0.15);
+  }
+  .category-technical:hover {
+    box-shadow: 0 0 20px -3px hsl(38 92% 50% / 0.25);
+  }
+
+  .category-ai {
+    @apply bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50;
+    box-shadow: 0 0 12px -3px hsl(350 70% 55% / 0.15);
+  }
+  .category-ai:hover {
+    box-shadow: 0 0 20px -3px hsl(350 70% 55% / 0.25);
+  }
+
+  /* Category badge colors */
+  .badge-seo {
+    @apply bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700;
+  }
+  .badge-geo {
+    @apply bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700;
+  }
+  .badge-performance {
+    @apply bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-700;
+  }
+  .badge-technical {
+    @apply bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-700;
+  }
+  .badge-ai {
+    @apply bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/50 dark:text-rose-300 dark:border-rose-700;
+  }
+}
+
+/* ─── Generated blog article cards ─── */
+.html-content .summary-card,
+.html-content .impact-card {
+  @apply rounded-xl border p-5 my-6;
+}
+
+.html-content .summary-card {
+  @apply bg-primary/5 border-primary/20;
+}
+
+.html-content .summary-card h4 {
+  @apply text-lg font-bold text-foreground mb-3;
+}
+
+.html-content .summary-card ul {
+  @apply space-y-2 list-none pl-0;
+}
+
+.html-content .summary-card li {
+  @apply text-sm text-muted-foreground pl-4 relative;
+}
+
+.html-content .summary-card li::before {
+  content: '•';
+  @apply absolute left-0 text-primary font-bold;
+}
+
+.html-content .impact-card {
+  @apply bg-accent border-accent-foreground/10;
+}
+
+.html-content .impact-card h4 {
+  @apply text-lg font-bold text-foreground mb-3;
+}
+
+.html-content .impact-card table {
+  @apply w-full text-sm;
+}
+
+.html-content .impact-card thead {
+  @apply border-b border-border;
+}
+
+.html-content .impact-card th {
+  @apply text-left font-semibold text-foreground py-2 px-3;
+}
+
+.html-content .impact-card td {
+  @apply py-2 px-3 text-muted-foreground border-b border-border/50;
+}
+
+.html-content h2 {
+  @apply text-2xl font-bold text-foreground mt-8 mb-4;
+}
+
+.html-content h3 {
+  @apply text-xl font-semibold text-foreground mt-6 mb-3;
+}
+
+.html-content p {
+  @apply text-base text-muted-foreground leading-relaxed mb-4;
+}
+
+.html-content a {
+  @apply text-primary underline underline-offset-2 hover:text-primary/80 transition-colors;
+}
+
+.html-content strong {
+  @apply font-semibold text-foreground;
+}
+
+.html-content em {
+  @apply italic;
+}
+
+/* ── Backend Documentation styles ─────────────────────── */
+.doc-content .doc-h1 {
+  @apply text-2xl font-bold text-foreground mt-0 mb-4 pb-2 border-b border-border;
+}
+.doc-content .doc-h2 {
+  @apply text-lg font-semibold text-foreground mt-8 mb-3;
+}
+.doc-content .doc-h3 {
+  @apply text-base font-semibold text-foreground mt-6 mb-2;
+}
+.doc-content .doc-p {
+  @apply text-sm text-muted-foreground leading-relaxed mb-2;
+}
+.doc-content .doc-code-block {
+  @apply bg-muted/80 border border-border rounded-md p-4 my-4 overflow-x-auto text-xs font-mono leading-relaxed;
+}
+.doc-content .doc-code-block code {
+  @apply text-foreground whitespace-pre;
+}
+.doc-content .doc-inline-code {
+  @apply bg-muted text-foreground px-1.5 py-0.5 rounded-sm text-xs font-mono;
+}
+.doc-content .doc-table-wrapper {
+  @apply overflow-x-auto my-4;
+}
+.doc-content .doc-table {
+  @apply w-full text-xs border-collapse;
+}
+.doc-content .doc-table th {
+  @apply text-left px-3 py-2 bg-muted font-medium text-foreground border border-border;
+}
+.doc-content .doc-table td {
+  @apply px-3 py-2 text-muted-foreground border border-border;
+}
+.doc-content .doc-table tr:hover td {
+  @apply bg-muted/50;
+}
+.doc-content .doc-ul,
+.doc-content .doc-ol {
+  @apply pl-5 my-2 space-y-1;
+}
+.doc-content .doc-li {
+  @apply text-sm text-muted-foreground list-disc;
+}
+.doc-content .doc-li-ordered {
+  @apply text-sm text-muted-foreground list-decimal;
+}
+.doc-content .doc-link {
+  @apply text-primary underline underline-offset-2 hover:text-primary/80;
+}
+.doc-content .doc-hr {
+  @apply my-6 border-border;
+}
+
+/* Hide scrollbar for horizontal scroll tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* URL/text inputs: hide caret on mobile, visible on desktop */
+@media (max-width: 767px) {
+  input[type="url"],
+  input[type="text"] {
+    caret-color: transparent;
+  }
+}
+@media (min-width: 768px) {
+  input[type="url"],
+  input[type="text"] {
+    caret-color: currentColor;
+  }
+}
+
+/* Admin read-only mode: disable all interactive elements */
+.admin-readonly button,
+.admin-readonly input,
+.admin-readonly textarea,
+.admin-readonly select,
+.admin-readonly [role="switch"],
+.admin-readonly [role="combobox"],
+.admin-readonly [data-slot="trigger"] {
+  pointer-events: none !important;
+  opacity: 0.5 !important;
+}
+
+.admin-readonly a {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.admin-readonly table,
+.admin-readonly [role="tablist"] {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.admin-readonly [role="tablist"] button {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+/* ─── Mobile Performance: Tap target minimum 48x48px (Task 8) ─── */
+@media (max-width: 767px) {
+  a, button, [role="button"], summary, input[type="submit"],
+  input[type="button"], input[type="reset"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ─── Core Web Vitals: skip rendering off-screen sections ─── */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
+}
+.cv-auto-sm {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 320px;
+}
+.cv-auto-lg {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 900px;
+}
+
+/* Large secondary screens (>1536px): bump root font-size to scale all rem-based
+   typography & spacing. Overridable via [data-text-size] on <html>. */
+@media (min-width: 1536px) {
+  :root { font-size: 17px; }
+  :root[data-text-size="small"] { font-size: 16px; }
+  :root[data-text-size="large"] { font-size: 18.5px; }
+  :root[data-text-size="large"] .space-y-6 > * + * { margin-top: 2rem; }
+}
+@media (min-width: 1920px) {
+  :root { font-size: 17.5px; }
+  :root[data-text-size="small"] { font-size: 16px; }
+  :root[data-text-size="large"] { font-size: 19.5px; }
+}

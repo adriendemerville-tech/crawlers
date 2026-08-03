@@ -11,7 +11,7 @@ import {
   Target, Layers, Lock, Activity, Server, Wallet,
   CheckCircle2, XCircle
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { motion } from 'framer-motion';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
 import { t3 } from '@/utils/i18n';

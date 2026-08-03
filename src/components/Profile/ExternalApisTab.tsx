@@ -1081,7 +1081,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
               <select
                 value={matomoForm.tracked_site_id}
                 onChange={e => setMatomoForm(f => ({ ...f, tracked_site_id: e.target.value }))}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">{language === 'fr' ? 'Sélectionner un site…' : 'Select a site…'}</option>
                 {trackedSites.map(s => (
@@ -1165,7 +1165,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
               <select
                 value={logTrackedSiteId}
                 onChange={e => setLogTrackedSiteId(e.target.value)}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">{language === 'fr' ? 'Sélectionner un site…' : 'Select a site…'}</option>
                 {trackedSites.map(s => (

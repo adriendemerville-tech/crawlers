@@ -16,7 +16,7 @@
  *  - 'wizard-step'   : étape dans onboarding
  *  - 'toast'         : notification post-publication
  */
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { Sparkles, ScanLine, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

@@ -314,7 +314,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
                         value={editingText}
                         onChange={e => setEditingText(e.target.value)}
                         rows={4}
-                        className="w-full bg-slate-700/50 border border-slate-600 rounded text-[10px] text-slate-300 p-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-500/40"
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded text-[10px] text-slate-300 p-1.5 resize-none focus:outline-hidden focus:ring-1 focus:ring-teal-500/40"
                         placeholder="Instructions spécifiques pour ce prompt..."
                       />
                       <Button
@@ -337,7 +337,7 @@ export function ContentArchitectSidebar({ onSelectPreset, selectedSiteId, select
 
               {/* Single preset: click to apply */}
               {presets.length === 1 && (
-                <div className="sticky bottom-0 pt-2 pb-1 bg-[#1e293b]/90 backdrop-blur-sm border-t border-slate-700/40">
+                <div className="sticky bottom-0 pt-2 pb-1 bg-[#1e293b]/90 backdrop-blur-xs border-t border-slate-700/40">
                   <Button
                     size="sm"
                     variant="ghost"

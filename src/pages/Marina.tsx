@@ -11,7 +11,7 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -894,7 +894,7 @@ export default function Marina() {
         </section>
 
         {/* Tabs navigation */}
-        <section id="marina-tabs" className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
+        <section id="marina-tabs" className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-xs">
           <div className="mx-auto max-w-5xl px-4">
             <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="w-full justify-start bg-transparent h-12 p-0 gap-0 rounded-none">

@@ -2,7 +2,7 @@ import { Bot, Gauge, Sparkles, Brain, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 
 export type ToolTab = 'crawlers' | 'pagespeed' | 'geo' | 'llm';
 
@@ -34,7 +34,7 @@ export function ToolTabs({
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
             activeTab === 'crawlers'
-              ? "bg-primary text-primary-foreground shadow-sm"
+              ? "bg-primary text-primary-foreground shadow-xs"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
           aria-current={activeTab === 'crawlers' ? 'page' : undefined}
@@ -48,7 +48,7 @@ export function ToolTabs({
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
             activeTab === 'geo'
-              ? "bg-primary text-primary-foreground shadow-sm"
+              ? "bg-primary text-primary-foreground shadow-xs"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
           aria-current={activeTab === 'geo' ? 'page' : undefined}
@@ -62,7 +62,7 @@ export function ToolTabs({
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
             activeTab === 'llm'
-              ? "bg-primary text-primary-foreground shadow-sm"
+              ? "bg-primary text-primary-foreground shadow-xs"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
           aria-current={activeTab === 'llm' ? 'page' : undefined}
@@ -76,7 +76,7 @@ export function ToolTabs({
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
             activeTab === 'pagespeed'
-              ? "bg-primary text-primary-foreground shadow-sm"
+              ? "bg-primary text-primary-foreground shadow-xs"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
           aria-current={activeTab === 'pagespeed' ? 'page' : undefined}

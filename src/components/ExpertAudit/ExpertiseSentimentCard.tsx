@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, GraduationCap, Lightbulb, CheckCircle2, XCircle, Badge } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import type { ExpertiseSentiment } from '@/types/newAuditMetrics';
 
 interface ExpertiseSentimentCardProps {

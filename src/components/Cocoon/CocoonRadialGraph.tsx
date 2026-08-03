@@ -1043,7 +1043,7 @@ export function CocoonRadialGraph({
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/50 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white/80"
+          className="w-7 h-7 bg-black/50 backdrop-blur-xs border border-white/10 text-white/50 hover:text-white/80"
           onClick={() => zoomToHome(1.3)}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -1051,7 +1051,7 @@ export function CocoonRadialGraph({
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/50 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white/80"
+          className="w-7 h-7 bg-black/50 backdrop-blur-xs border border-white/10 text-white/50 hover:text-white/80"
           onClick={() => zoomToHome(0.7)}
         >
           <Minus className="w-3.5 h-3.5" />
@@ -1059,7 +1059,7 @@ export function CocoonRadialGraph({
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/50 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white/80"
+          className="w-7 h-7 bg-black/50 backdrop-blur-xs border border-white/10 text-white/50 hover:text-white/80"
           onClick={resetView}
         >
           <Maximize2 className="w-3.5 h-3.5" />

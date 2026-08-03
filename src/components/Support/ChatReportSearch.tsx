@@ -264,7 +264,7 @@ export function ChatReportSearch({ userId, onSelect }: ChatReportSearchProps) {
                 value={query}
                 onChange={(e) => handleInputChange(e.target.value)}
                 placeholder="crawl, SEO, GEO, domaine…"
-                className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 outline-none"
+                className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 outline-hidden"
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') {
                     setIsOpen(false);

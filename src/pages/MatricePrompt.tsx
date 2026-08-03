@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useDemoMode } from '@/contexts/DemoModeContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { Upload, Search, Loader2, ArrowLeft, FileText, FileSpreadsheet, Trash2, FileDown, AlertTriangle, Pencil, Check, X as XIcon, HelpCircle, History, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -1240,7 +1240,7 @@ export default function MatricePrompt() {
                 onChange={e => setErrorTitle(e.target.value)}
               />
               <textarea
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px]"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px]"
                 placeholder="Description détaillée (optionnel)"
                 value={errorDesc}
                 onChange={e => setErrorDesc(e.target.value)}
@@ -1270,7 +1270,7 @@ export default function MatricePrompt() {
                   onClick={() => handleBatchChange(b.batch_id)}
                   className={`group relative flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs ${
                     activeBatchId === b.batch_id
-                      ? 'border-primary bg-primary/5 text-foreground shadow-sm'
+                      ? 'border-primary bg-primary/5 text-foreground shadow-xs'
                       : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50'
                   }`}
                 >

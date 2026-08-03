@@ -334,7 +334,7 @@ export function BenchmarkCube3D({ results, themes, engines, className }: Benchma
         )}
 
         {tooltip && results.length > 0 && (
-          <div className="absolute top-3 left-3 max-w-[280px] border-2 border-brand-violet bg-background/95 backdrop-blur-sm rounded-md p-3 text-xs space-y-1 pointer-events-none">
+          <div className="absolute top-3 left-3 max-w-[280px] border-2 border-brand-violet bg-background/95 backdrop-blur-xs rounded-md p-3 text-xs space-y-1 pointer-events-none">
             <div className="font-semibold text-foreground truncate" title={tooltip.themeLabel}>
               {tooltip.themeLabel}
             </div>

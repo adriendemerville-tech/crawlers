@@ -278,7 +278,7 @@ function RecommendationCard({ rec, onAction, onDismiss }: {
         'relative p-3 rounded-lg border transition-colors group',
         isLocked
           ? 'border-muted/40 bg-muted/10 opacity-60'
-          : 'border-primary/20 bg-background hover:border-primary/40 hover:shadow-sm'
+          : 'border-primary/20 bg-background hover:border-primary/40 hover:shadow-xs'
       )}
     >
       {/* Dismiss button */}

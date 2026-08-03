@@ -466,7 +466,7 @@ export const AnnotatedPageView = memo(function AnnotatedPageView({
             )}
 
             {imageLoaded && annotatedSuggestions.length > 0 && annotatedSuggestions.every(s => !s.rect) && (
-              <div className="absolute inset-x-6 top-6 z-20 rounded-lg border border-border bg-background/92 p-3 text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
+              <div className="absolute inset-x-6 top-6 z-20 rounded-lg border border-border bg-background/92 p-3 text-sm text-muted-foreground shadow-xs backdrop-blur-xs">
                 Cet audit n'a pas de coordonnées visuelles enregistrées. Les bulles sont affichées sans lignes de liaison.
               </div>
             )}

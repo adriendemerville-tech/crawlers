@@ -1226,7 +1226,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
       {isGated && (
         <div className="absolute inset-0 z-10 pointer-events-none">
           <div className="sticky top-4 flex justify-center pointer-events-auto">
-            <Badge className="bg-violet-600/90 text-white gap-1.5 px-4 py-1.5 text-sm shadow-lg backdrop-blur-sm">
+            <Badge className="bg-violet-600/90 text-white gap-1.5 px-4 py-1.5 text-sm shadow-lg backdrop-blur-xs">
               <Store className="h-4 w-4" />
               {language === 'fr' ? 'Données simulées — Abonnez-vous pour connecter votre compte Google Business' 
                 : 'Simulated data — Subscribe to connect your Google Business account'}

@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link } from '@/lib/router-compat';
 import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Header } from '@/components/Header';

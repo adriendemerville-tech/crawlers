@@ -97,7 +97,7 @@ export function StrategicResultsSection({
               typewriter={strategicProgressiveReveal}
             />
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex justify-center py-4">
-              <Button onClick={onReportClick} size="default" className="gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white border border-[hsl(263,50%,25%)] shadow-sm transition-all duration-200">
+              <Button onClick={onReportClick} size="default" className="gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-[hsl(263,70%,38%)] hover:bg-[hsl(263,70%,32%)] text-white border border-[hsl(263,50%,25%)] shadow-xs transition-all duration-200">
                 <FileDown className="h-4 w-4" />
                 {t.viewReport}
               </Button>
