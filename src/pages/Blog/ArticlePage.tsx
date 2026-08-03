@@ -3,7 +3,7 @@ import { getRouteApi } from '@tanstack/react-router';
 import { Navigate } from '@/lib/router-compat';
 import { ArticleLayout, HtmlContentRenderer } from '@/components/Blog';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getArticleBySlug, blogArticles } from '@/data/blogArticles';
+import { getArticleBySlug } from '@/data/blogArticles';
 import { articleContent } from '@/data/articleContents';
 
 interface DbArticle {
