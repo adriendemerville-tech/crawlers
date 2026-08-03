@@ -537,6 +537,7 @@ export function CocoonRadialGraph({
 
     // Draw links — filter by juice type visibility
     function drawLinks(node: RadialNode) {
+      if (!ctx) return;
       for (const child of node.children) {
         // Find the original edge to check type
         const origNode = nodes.find(n => n.url === node.url);

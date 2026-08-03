@@ -707,7 +707,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                         if (item.keyword) setKeyword(item.keyword);
                         if (item.url) setUrl(item.url);
                         if (item.pageType) { setPageType(item.pageType); setAutoFilled(prev => new Set(prev).add('pageType_manual')); }
-                        if (item.prompt) setPrompt(prev => prev ? `${prev}\n\n${item.prompt}` : item.prompt);
+                        if (item.prompt) { const ip = item.prompt; setPrompt(prev => prev ? `${prev}\n\n${ip}` : ip); }
                         setActivePanel('structure');
                         toast.success('Quick win appliqué — complétez les champs et injectez');
                       }}

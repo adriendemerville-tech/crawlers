@@ -1683,7 +1683,7 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
       // Also insert into architect_workbench for unified action plan
       const workbenchItems = cocoonTasks.map((ct: any) => ({
         user_id: user.id,
-        domain,
+        domain: domain ?? '',
         title: ct.title,
         description: ct.description || null,
         severity: ct.priority === 'high' ? 'critical' : ct.priority === 'low' ? 'medium' : 'high',
@@ -2107,7 +2107,7 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
               const mentionsStrategy = /stratégi|diagnostic|cannibali|orphelin|profondeur|cluster/i.test(content);
 
               // Build dynamic buttons based on content
-              const buttons: JSX.Element[] = [];
+              const buttons: React.JSX.Element[] = [];
 
               if (mentionsActionPlan && trackedSiteId) {
                 const lastOptContent = lastAiMsg.content;

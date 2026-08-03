@@ -66,7 +66,7 @@ const INITIAL_FORM: GuideFormData = {
   status: 'draft', guide_category: 'bloc_a', guide_target: '', guide_tools: [], lateral_links: [],
 };
 
-const STATUS_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
+const STATUS_LABELS: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
   draft: { label: 'Brouillon', icon: Clock },
   published: { label: 'Publié', icon: CheckCircle },
   archived: { label: 'Archivé', icon: Archive },

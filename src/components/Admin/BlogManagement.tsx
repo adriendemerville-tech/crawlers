@@ -36,7 +36,7 @@ interface ArticleFormData {
   status: ArticleStatus;
 }
 
-const STATUS_CONFIG: Record<ArticleStatus, { label: string; color: string; icon: React.ElementType }> = {
+const STATUS_CONFIG: Record<ArticleStatus, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
   draft: { label: 'Brouillon', color: 'bg-muted text-muted-foreground', icon: Clock },
   published: { label: 'Publié', color: 'bg-success/10 text-success', icon: CheckCircle },
   unpublished: { label: 'Dépublié', color: 'bg-warning/10 text-warning', icon: EyeOff },
@@ -1071,7 +1071,7 @@ function LandingPagesManagement() {
     return matchSearch && matchStatus;
   });
 
-  const STATUS_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
+  const STATUS_LABELS: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
     draft: { label: 'Brouillon', icon: Clock },
     published: { label: 'Publiée', icon: CheckCircle },
     archived: { label: 'Archivée', icon: Archive },

@@ -10,7 +10,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 export function PageViewTracker() {
   const location = useLocation();
   const { trackEvent } = useAnalytics();
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     // Defer tracking to avoid blocking LCP

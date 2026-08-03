@@ -423,7 +423,7 @@ export function SurveyManagement() {
         content_blocks: (d.content_blocks || []) as unknown as ContentBlock[],
         variant_b_content_blocks: d.variant_b_content_blocks as unknown as ContentBlock[] | null,
         variant_b_target_persona: d.variant_b_target_persona as Record<string, any> | null,
-      })));
+      })) as Survey[]);
 
       // Load stats for each survey
       const statsMap: Record<string, SurveyStats> = {};
