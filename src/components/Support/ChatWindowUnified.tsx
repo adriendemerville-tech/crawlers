@@ -38,6 +38,7 @@ import { QuizValidationNotif } from './QuizValidationNotif';
 import { CopilotHistoryPanel } from '@/components/Copilot/CopilotHistoryPanel';
 import { captureScreenContext } from '@/utils/screenContext';
 import { cn } from '@/lib/utils';
+import { useClientInitialState } from '@/hooks/useClientInitialState';
 
 interface ChatWindowUnifiedProps {
   onClose: () => void;
@@ -116,7 +117,7 @@ export function ChatWindowUnified({
   const [minimized, setMinimized] = useState(false);
   const { felixExpanded, setFelixExpanded } = useAISidebar();
   const docked = felixExpanded;
-  const [muted, setMuted] = useState(() => localStorage.getItem('felix_muted') === '1');
+  const [muted, setMuted] = useClientInitialState(() => localStorage.getItem('felix_muted') === '1', false);
 
   // Miroir du flag legacy lu par FloatingChatBubble pour masquer la bulle quand on est ancré.
   useEffect(() => {
