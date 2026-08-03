@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';

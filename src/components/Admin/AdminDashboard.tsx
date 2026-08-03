@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';

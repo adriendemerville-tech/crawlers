@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

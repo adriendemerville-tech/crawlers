@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, useMemo } from 'react';
 import { GuidesManagement } from './GuidesManagement';
 import { supabase } from '@/integrations/supabase/client';

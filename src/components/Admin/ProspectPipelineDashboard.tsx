@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
