@@ -226,7 +226,24 @@ export default function AutopilotIktracker() {
               <div className="text-3xl font-bold">×2,5</div>
               <div className="text-sm text-foreground/70 mt-1">impressions hebdo au pic vs baseline</div>
             </div>
+            <div className="rounded-xl border border-border bg-card/40 p-5">
+              <div className="text-3xl font-bold">372</div>
+              <div className="text-sm text-foreground/70 mt-1">comptes créés sur iktracker.fr</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card/40 p-5">
+              <div className="text-3xl font-bold">44,6 %</div>
+              <div className="text-sm text-foreground/70 mt-1">des inscrits déclarent venir de ChatGPT</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card/40 p-5">
+              <div className="text-3xl font-bold">1,0 %</div>
+              <div className="text-sm text-foreground/70 mt-1">seulement du trafic IA visible au referrer</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card/40 p-5">
+              <div className="text-3xl font-bold">15,1 %</div>
+              <div className="text-sm text-foreground/70 mt-1">de comptes actifs sur 30 jours</div>
+            </div>
           </div>
+
         </section>
 
         <section className="mb-12">
