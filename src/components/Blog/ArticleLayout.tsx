@@ -107,7 +107,7 @@ function ArticleLayoutComponent({
                 {title}
               </h1>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <Link to={authorUrl.replace(SITE_URL, '')} rel="author" className="font-medium text-foreground hover:text-primary transition-colors">
+                <Link to={`/auteur/${author.toLowerCase().includes('adrien') ? 'adrien-de-volontat' : author.toLowerCase().replace(/\s+/g, '-')}`} rel="author" className="font-medium text-foreground hover:text-primary transition-colors">
                   {author === 'Adrien' ? 'Adrien de Volontat' : author}
                 </Link>
                 <span className="text-muted-foreground/50">•</span>
