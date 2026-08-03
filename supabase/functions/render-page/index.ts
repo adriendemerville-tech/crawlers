@@ -462,6 +462,7 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
   <link rel="alternate" hreflang="x-default" href="${fullUrl}">
   <script type="application/ld+json">${JSON.stringify(webPage)}</script>
   <script type="application/ld+json">${JSON.stringify(breadcrumb)}</script>
+${(EXTRA_JSONLD[route] || []).map((j) => `  <script type="application/ld+json">${JSON.stringify(j)}</script>`).join("\n")}
 </head>
 <body>
   <header><nav>
