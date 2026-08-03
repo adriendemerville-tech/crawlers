@@ -7,6 +7,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 import { isIktrackerDomain, isDictadeviDomain, normalizePageKey } from '../_shared/domainUtils.ts';
 import { computeSeoScoreV2, extractTextContent, type SeoScoreV2, type BusinessProfile } from '../_shared/seoScoringV2.ts';
+import { computeCannibalization, evaluateTopicSaturation } from '../_shared/cannibalizationClusters.ts';
 
 // ═══ Modular imports ═══
 import {
