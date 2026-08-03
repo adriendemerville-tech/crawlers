@@ -333,7 +333,7 @@ async function generateIdeogram(req: ImageGenerationRequest): Promise<ImageGener
 
   const imgResponse = await fetch(imageUrl);
   const imgBuffer = await imgResponse.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+  const base64 = arrayBufferToBase64(imgBuffer);
   const mimeType = imgResponse.headers.get('content-type') || 'image/png';
 
   return {
