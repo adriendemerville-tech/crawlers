@@ -352,6 +352,10 @@ const CANONICAL_OVERRIDES: Record<string, string> = {
   "/app/cocoon": "/cocoon",
 };
 
+const OG_IMAGE_OVERRIDES: Record<string, string> = {
+  "/etudes/autopilot-parmenion-iktracker": "/og-etude-autopilot-iktracker.jpg",
+};
+
 // Route-specific JSON-LD injected in addition to WebPage + BreadcrumbList
 const EXTRA_JSONLD: Record<string, unknown[]> = {
   "/etudes/autopilot-parmenion-iktracker": [
@@ -453,12 +457,12 @@ function generateStaticHTML(route: string, meta: { title: string; description: s
   <meta property="og:url" content="${fullUrl}">
   <meta property="og:title" content="${escapeHtml(meta.title)}">
   <meta property="og:description" content="${escapeHtml(meta.description)}">
-  <meta property="og:image" content="${baseUrl}/og-image.png">
+  <meta property="og:image" content="${ogImage}">
   <meta property="og:locale" content="fr_FR">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(meta.title)}">
   <meta name="twitter:description" content="${escapeHtml(meta.description)}">
-  <meta name="twitter:image" content="${baseUrl}/og-image.png">
+  <meta name="twitter:image" content="${ogImage}">
   <link rel="alternate" hreflang="fr" href="${fullUrl}">
   <link rel="alternate" hreflang="x-default" href="${fullUrl}">
   <script type="application/ld+json">${JSON.stringify(webPage)}</script>
