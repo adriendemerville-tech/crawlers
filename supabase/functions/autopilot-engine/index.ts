@@ -855,9 +855,13 @@ async function executeFunctions(
         await executeCmsBridgeActions(decision, site, config, phase, cycleNumber, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
       } else if (CMS_BRIDGES.includes(funcName)) {
         await executeCmsBridgeReroute(funcName, decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+      } else if (funcName === 'crawlers-internal-publish') {
+        await executeCrawlersInternalPublish(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+        continue;
       } else if (funcName === 'content-pruning-executor') {
         await executeContentPruning(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
         continue;
+
       } else if (funcName === 'content-architecture-advisor') {
 
         await executeContentArchitect(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
