@@ -344,6 +344,152 @@ export default function AutopilotIktracker() {
         </section>
 
         <section className="mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">De la visibilité aux inscriptions réelles</h2>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            Les positions ne paient pas les factures. Voici donc les chiffres produit, extraits de
+            l'administration d'iktracker.fr au 2 août 2026 : <strong>372 comptes créés</strong>,
+            dont 359 sur l'année 2026, et 31 sur les 30 derniers jours. Sur la même fenêtre,
+            <strong> 56 utilisateurs ont saisi au moins un trajet</strong> (36 sur 7 jours), soit un
+            taux d'activité de 15,1 %.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['372', 'comptes créés au total'],
+              ['359', 'inscriptions sur 2026'],
+              ['56', 'utilisateurs actifs sur 30 jours'],
+              ['15,1 %', "taux d'activité des comptes"],
+            ].map(([v, l]) => (
+              <div key={l} className="rounded-xl border border-border bg-card/40 p-5">
+                <div className="text-3xl font-bold">{v}</div>
+                <div className="text-sm text-foreground/70 mt-1">{l}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="text-xl font-semibold mt-8 mb-3">Inscriptions mensuelles</h3>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Nouveaux comptes iktracker.fr par mois en 2026</caption>
+              <thead className="bg-card/60 text-left">
+                <tr>
+                  <th scope="col" className="p-3 font-semibold">Mois</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Nouveaux comptes</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Évolution</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SIGNUPS.map((s) => (
+                  <tr key={s.m} className="border-t border-border">
+                    <td className="p-3 font-medium whitespace-nowrap">{s.m}</td>
+                    <td className="p-3 text-right font-semibold">{s.n}</td>
+                    <td className="p-3 text-right text-foreground/70">{s.delta}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-foreground/60 mt-3">
+            Source : table des comptes iktracker.fr, extraction du 2 août 2026 (UTC). Le pic d'avril
+            (81 inscriptions) suit exactement le pic Search Console, et le repli de juillet
+            (−52 %) suit la fin de la campagne fiscale.
+          </p>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Le résultat le plus contre-intuitif : ChatGPT devant Google</h2>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            À l'inscription, iktracker.fr demande à l'utilisateur comment il a découvert le service.
+            Sur <strong>157 réponses exploitables</strong> (229 collectées, 72 « skip »),
+            <strong> ChatGPT arrive premier avec 44,6 %</strong>, devant Google à 41,4 %.
+          </p>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Origine déclarée par les utilisateurs à l'inscription</caption>
+              <thead className="bg-card/60 text-left">
+                <tr>
+                  <th scope="col" className="p-3 font-semibold">Origine déclarée</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Réponses</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Part</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DECLARED_ORIGIN.map((o) => (
+                  <tr key={o.src} className="border-t border-border">
+                    <td className="p-3 font-medium">{o.src}</td>
+                    <td className="p-3 text-right font-semibold">{o.n}</td>
+                    <td className="p-3 text-right">{o.pct}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h3 className="text-xl font-semibold mt-8 mb-2">Pourquoi les statistiques web affichent 1 %</h3>
+          <p className="leading-relaxed text-foreground/85 mb-4">
+            Mesuré au referrer HTTP, le canal « assistants IA » ne pèse que <strong>1,0 %</strong>
+            des sessions (33 sur 3 223), tandis que « direct / interne » en concentre 70,7 %.
+            L'explication est technique : ChatGPT n'envoie pas d'en-tête <code>Referer</code>
+            exploitable — l'utilisateur copie l'URL ou clique depuis une réponse sans référent. Ces
+            visites basculent en trafic direct.
+          </p>
+          <blockquote className="citable-passage mb-4 border-l-2 border-border pl-5 text-base text-foreground/85 italic">
+            Sur iktracker.fr, 44,6 % des nouveaux inscrits déclarent avoir découvert le service via
+            ChatGPT, contre 41,4 % via Google, alors que les statistiques de referrer HTTP
+            n'attribuent que 1,0 % des sessions aux assistants IA. L'écart entre 1 % mesuré et
+            44,6 % déclaré démontre que le trafic issu des assistants est massivement comptabilisé
+            comme trafic direct.
+          </blockquote>
+          <h3 className="text-xl font-semibold mt-8 mb-3">Part de ChatGPT dans les origines déclarées, mois par mois</h3>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Évolution mensuelle ChatGPT vs Google dans les origines déclarées</caption>
+              <thead className="bg-card/60 text-left">
+                <tr>
+                  <th scope="col" className="p-3 font-semibold">Mois</th>
+                  <th scope="col" className="p-3 font-semibold text-right">ChatGPT</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Google</th>
+                  <th scope="col" className="p-3 font-semibold text-right">Part ChatGPT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ORIGIN_MONTHLY.map((o) => (
+                  <tr key={o.m} className="border-t border-border">
+                    <td className="p-3 font-medium whitespace-nowrap">{o.m}</td>
+                    <td className="p-3 text-right font-semibold">{o.chatgpt}</td>
+                    <td className="p-3 text-right">{o.google}</td>
+                    <td className="p-3 text-right">{o.share}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-foreground/60 mt-3">
+            Le canal IA se maintient au-dessus de 40 % depuis mai, et progresse même en juillet
+            (53,8 %) alors que le trafic global baissait. Source : réponses à la question d'origine
+            posée à l'inscription, hors « skip ».
+          </p>
+          <p className="leading-relaxed text-foreground/85 mt-4">
+            C'est la justification opérationnelle du travail GEO mené en parallèle de l'Autopilot :
+            fichier <code>llms.txt</code>, <code>knowledge.json</code>, désambiguïsation d'entité,
+            pré-rendu pour les robots et JSON-LD structuré. Le contenu produit n'a pas seulement
+            servi à ranker sur Google, il a servi de matière citable aux assistants.
+          </p>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Le funnel d'inscription</h2>
+          <p className="leading-relaxed text-foreground/85">
+            Le suivi de la page d'authentification n'a démarré que le 12 juillet 2026. Sur les trois
+            semaines mesurées : <strong>398 vues</strong> de <code>/auth</code> pour 390 sessions
+            uniques, 21 soumissions de formulaire, 24 démarrages OAuth Google et
+            <strong> 19 inscriptions abouties</strong>, soit 4,8 % de conversion vue → compte, avec
+            2 erreurs d'inscription. La page dédiée <code>/signup</code> ajoute 35 vues. Ce taux est
+            à réévaluer sur un mois plein, et sur une période hors creux estival.
+          </p>
+        </section>
+
+
+        <section className="mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Méthodologie</h2>
 
           <h3 className="text-xl font-semibold mt-6 mb-2">1. Volumes de publication</h3>
