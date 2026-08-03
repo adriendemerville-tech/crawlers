@@ -85,7 +85,7 @@ export function SurveyModal() {
 
       // Check delay between impressions
       if (myImpressions.length > 0) {
-        const lastImpression = new Date(myImpressions[myImpressions.length - 1].created_at);
+        const lastImpression = new Date(myImpressions[myImpressions.length - 1].created_at ?? 0);
         const delayHours = s.delay_between_impressions_hours || 24;
         const nextAllowed = new Date(lastImpression.getTime() + delayHours * 60 * 60 * 1000);
         if (now < nextAllowed) continue;

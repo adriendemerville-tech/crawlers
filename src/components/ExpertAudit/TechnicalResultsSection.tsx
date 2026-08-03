@@ -191,7 +191,7 @@ export function TechnicalResultsSection({ result, url, t, onReportClick }: Props
       {/* Image Quality & Page Weight */}
       <div className="grid gap-4 md:grid-cols-2">
         <ImageQualityCard imagesTotal={result.rawData?.htmlAnalysis?.imagesTotal ?? 0} imagesMissingAlt={result.rawData?.htmlAnalysis?.imagesMissingAlt ?? 0} />
-        {(result.rawData?.htmlAnalysis?.htmlSizeBytes > 0 || result.insights?.contentDensity?.htmlSize > 0) && (
+        {((result.rawData?.htmlAnalysis?.htmlSizeBytes ?? 0) > 0 || (result.insights?.contentDensity?.htmlSize ?? 0) > 0) && (
           <PageWeightCard htmlSizeBytes={result.rawData?.htmlAnalysis?.htmlSizeBytes || result.insights?.contentDensity?.htmlSize || 0} />
         )}
       </div>

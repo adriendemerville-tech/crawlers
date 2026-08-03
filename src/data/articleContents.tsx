@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
 import { SummaryBox, RichLink, GeoTable, SgeSummaryBox, AuthorCard, RichLinkCard } from '@/components/Blog';
@@ -220,7 +221,7 @@ const robotsTxtTableRows: GeoTableRow[] = [
 ];
 
 // Contenu des articles - structure par slug
-export const articleContent: Record<string, { fr: JSX.Element; en: JSX.Element; es: JSX.Element }> = {
+export const articleContent: Record<string, { fr: React.JSX.Element; en: React.JSX.Element; es: React.JSX.Element }> = {
   // --- PILIER 1: Guide Visibilité Technique IA ---
   'guide-visibilite-technique-ia': {
     fr: (
