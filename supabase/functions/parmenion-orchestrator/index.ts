@@ -496,11 +496,75 @@ try {
               force_content: forceContent, force_iktracker_article: force_iktracker_article === true,
             });
           } else {
+            // ═══ FILTRE DE SATURATION + PRUNING (déterministe) ═══
+            // 1. On écarte les tâches de création de contenu dont le sujet recouvre
+            //    un cluster déjà saturé (≥3 pages, Jaccard ≥ 0.5).
+            // 2. Si toutes les tâches contenu sont bloquées et qu'un cluster est
+            //    consolidable, on injecte une tâche de pruning (301 vers le pilier).
+            let effectiveTasks: any[] = tasks;
+            let saturationNote = '';
+            if (cannib && saturatedThemes.length > 0) {
+              const isCreation = (t: any) =>
+                String(t.action_type || '').includes('create') || t.action_type === 'create_content';
+              const blocked: string[] = [];
+              effectiveTasks = tasks.filter((t: any) => {
+                if (!isCreation(t)) return true;
+                const verdict = evaluateTopicSaturation(
+                  cannib,
+                  [t.title, t.target_keyword, (t.keywords || []).join(' ')].filter(Boolean).join(' '),
+                  { saturationSize: 3, overlap: 0.5 },
+                );
+                if (verdict.blocked) {
+                  blocked.push(`"${t.title}" ↔ cluster « ${verdict.matched?.theme} » (${verdict.matched?.size} pages, overlap ${verdict.score})`);
+                  return false;
+                }
+                return true;
+              });
+              if (blocked.length > 0) {
+                saturationNote = ` ${blocked.length} tâche(s) contenu bloquée(s) par saturation: ${blocked.join(' ; ')}.`;
+                console.log(`[Parménion] 🛑 Saturation guard: ${saturationNote}`);
+              }
+              if (effectiveTasks.length === 0 && pruningCandidate) {
+                effectiveTasks = [{
+                  id: `pruning-${pruningCandidate.pilier.path}`,
+                  action_type: 'fix_cannibalization',
+                  title: `Consolider le cluster « ${pruningCandidate.theme} » (${pruningCandidate.size} pages) vers ${pruningCandidate.pilier.path}`,
+                  urgency: 'high',
+                  estimated_impact: 'high',
+                  execution_mode: 'content_architect',
+                  executor_function: 'content-architecture-advisor',
+                  affected_urls: [pruningCandidate.pilier.url, ...pruningCandidate.duplicates.map((d) => d.url)],
+                  is_destructive: false,
+                  pruning: {
+                    theme: pruningCandidate.theme,
+                    pilier: pruningCandidate.pilier,
+                    duplicates: pruningCandidate.duplicates,
+                    recommended: 'merge_then_301',
+                  },
+                }];
+                console.log(`[Parménion] ♻️ Pruning injecté: cluster « ${pruningCandidate.theme} » → ${pruningCandidate.pilier.path} (${pruningCandidate.duplicates.length} doublons)`);
+              }
+            }
+
+            if (effectiveTasks.length === 0) {
+              console.warn('[Parménion] Toutes les tâches écartées par le garde de saturation, aucun pruning disponible');
+              return jsonOk({
+                cycle: cycle_number,
+                phase: currentPhase,
+                status: 'skipped',
+                reason: `Saturation thématique: aucune tâche exécutable.${saturationNote}`,
+                domain,
+                cannibalization: { clusters: cannib?.clusters_count ?? 0, redundant_pages: cannib?.redundant_pages ?? 0 },
+              });
+            }
+
             // ═══ BUILD DECISION FROM STRATEGIST PLAN ═══
-            const topTask = tasks[0];
+            const tasksForPlan = effectiveTasks;
+            const topTask = tasksForPlan[0];
             const executorFn = topTask.executor_function || 'content-architecture-advisor';
             
-            console.log(`[Parménion] 🎯 Strategist plan: ${tasks.length} tasks. #1: [${topTask.urgency}] ${topTask.action_type} → ${executorFn} | "${topTask.title}"`);
+            console.log(`[Parménion] 🎯 Strategist plan: ${tasksForPlan.length} tasks. #1: [${topTask.urgency}] ${topTask.action_type} → ${executorFn} | "${topTask.title}"`);
+
             
             decision = {
               goal: {
