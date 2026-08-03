@@ -952,39 +952,63 @@ async function generateAndAttachImage(cmsAction: any, funcResult: any, site: Sit
       method: 'POST',
       headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: brief.prompt, style: brief.style }),
-      signal: AbortSignal.timeout(30000),
+      // 30s était insuffisant : flux poll jusqu'à 120s et Gemini image dépasse
+      // souvent 30s → toutes les générations étaient tuées côté client.
+      signal: AbortSignal.timeout(150000),
     });
 
-    if (imgResponse.ok) {
-      const imgResult = await imgResponse.json().catch(() => null);
-      if (imgResult?.dataUri) {
-        const imgFileName = `parmenion/${site.domain}/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
-        const base64Match = imgResult.dataUri.match(/^data:image\/\w+;base64,(.+)$/);
-        
-        if (base64Match) {
-          const binaryStr = atob(base64Match[1]);
-          const bytes = new Uint8Array(binaryStr.length);
-          for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-          
-          const { error: uploadErr } = await supabase.storage
-            .from('image-references')
-            .upload(imgFileName, bytes, { contentType: 'image/png', upsert: true });
-
-          if (!uploadErr) {
-            const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(imgFileName);
-            const slug = cmsAction.body.slug || funcResult?.result?.slug;
-            if (slug) {
-              await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, { action: 'update-post', slug, updates: { image_url: urlData.publicUrl } })
-                .catch((err) => console.warn('[AutopilotEngine] Image URL update failed:', err));
-            }
-            console.log(`[AutopilotEngine] Image uploaded for "${cmsAction.body.title}": ${urlData.publicUrl}`);
-            return true;
-          }
-        }
-      }
+    if (!imgResponse.ok) {
+      const errText = await imgResponse.text().catch(() => '');
+      console.error(`[AutopilotEngine] generate-image HTTP ${imgResponse.status} for "${articleTitle}": ${errText.slice(0, 300)}`);
+      return false;
     }
+
+    const imgResult = await imgResponse.json().catch(() => null);
+    if (!imgResult?.dataUri) {
+      console.error(`[AutopilotEngine] generate-image returned no dataUri for "${articleTitle}"`);
+      return false;
+    }
+
+    const imgFileName = `parmenion/${site.domain}/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
+    const base64Match = imgResult.dataUri.match(/^data:image\/\w+;base64,(.+)$/);
+    if (!base64Match) {
+      console.error(`[AutopilotEngine] Unexpected dataUri format for "${articleTitle}"`);
+      return false;
+    }
+
+    const binaryStr = atob(base64Match[1]);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+    const { error: uploadErr } = await supabase.storage
+      .from('image-references')
+      .upload(imgFileName, bytes, { contentType: 'image/png', upsert: true });
+
+    if (uploadErr) {
+      console.error(`[AutopilotEngine] Image upload failed for "${articleTitle}":`, uploadErr.message || uploadErr);
+      return false;
+    }
+
+    const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(imgFileName);
+    const slug = cmsAction.body.slug || funcResult?.result?.slug;
+    if (!slug) {
+      console.error(`[AutopilotEngine] No slug available to attach image for "${articleTitle}"`);
+      return false;
+    }
+
+    const attachResponse = await callCmsBridge(site.domain, SUPABASE_URL, SERVICE_ROLE_KEY, {
+      action: 'update-post', slug, updates: { image_url: urlData.publicUrl },
+    });
+    if (!attachResponse.ok) {
+      const attachErr = await attachResponse.text().catch(() => '');
+      console.error(`[AutopilotEngine] Image attach failed (HTTP ${attachResponse.status}) for slug "${slug}": ${attachErr.slice(0, 300)}`);
+      return false;
+    }
+
+    console.log(`[AutopilotEngine] Image attached to "${articleTitle}" (${slug}): ${urlData.publicUrl}`);
+    return true;
   } catch (imgErr) {
-    console.warn(`[AutopilotEngine] Image generation error (non-blocking):`, imgErr);
+    console.error(`[AutopilotEngine] Image generation error (non-blocking) for "${cmsAction?.body?.title ?? 'unknown'}":`, imgErr instanceof Error ? imgErr.message : imgErr);
   }
   return false;
 }

@@ -23,6 +23,24 @@ export type ImageStyle =
 
 export type ImageProvider = 'imagen3' | 'flux' | 'ideogram';
 
+/** Host BFL courant (api.bfl.ml est déprécié et renvoie des erreurs DNS/404). */
+const BFL_BASE = 'https://api.bfl.ai';
+
+/**
+ * Conversion ArrayBuffer → base64 par chunks.
+ * `btoa(String.fromCharCode(...bytes))` dépasse la taille max de la pile
+ * d'appels dès ~100 Ko, ce qui faisait échouer silencieusement flux/ideogram.
+ */
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  const CHUNK = 0x8000;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
 export interface ImageStyleConfig {
   key: ImageStyle;
   label: string;
@@ -235,7 +253,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
 
   const styleConfig = getStyleConfig(req.style);
 
-  const submitResponse = await fetch('https://api.bfl.ml/v1/flux-pro-1.1', {
+  const submitResponse = await fetch(`${BFL_BASE}/v1/flux-pro-1.1`, {
     method: 'POST',
     headers: {
       'X-Key': apiKey,
@@ -262,7 +280,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(r => setTimeout(r, 2000));
 
-    const pollResponse = await fetch(`https://api.bfl.ml/v1/get_result?id=${taskId}`, {
+    const pollResponse = await fetch(`${BFL_BASE}/v1/get_result?id=${taskId}`, {
       headers: { 'X-Key': apiKey },
     });
 
@@ -273,7 +291,7 @@ async function generateFlux(req: ImageGenerationRequest): Promise<ImageGeneratio
     if (result.status === 'Ready' && result.result?.sample) {
       const imgResponse = await fetch(result.result.sample);
       const imgBuffer = await imgResponse.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+      const base64 = arrayBufferToBase64(imgBuffer);
       const mimeType = imgResponse.headers.get('content-type') || 'image/jpeg';
 
       return {
@@ -333,7 +351,7 @@ async function generateIdeogram(req: ImageGenerationRequest): Promise<ImageGener
 
   const imgResponse = await fetch(imageUrl);
   const imgBuffer = await imgResponse.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+  const base64 = arrayBufferToBase64(imgBuffer);
   const mimeType = imgResponse.headers.get('content-type') || 'image/png';
 
   return {
@@ -368,15 +386,23 @@ export async function generateImage(req: ImageGenerationRequest): Promise<ImageG
     provider = 'imagen3';
   }
 
-  const handler = PROVIDER_MAP[provider];
-
   console.log(`[imageGen] Routing style="${req.style}" → provider="${provider}"${req.referenceImageUrl ? ` (with reference, mode=${req.referenceMode})` : ''}`);
 
   const startMs = Date.now();
-  const result = await handler(req);
+  let result: ImageGenerationResult;
+  try {
+    result = await PROVIDER_MAP[provider](req);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[imageGen] provider="${provider}" failed: ${msg}`);
+    if (provider === 'imagen3') throw err;
+    // Repli déterministe sur imagen3 (Lovable AI Gateway, toujours provisionné)
+    console.log(`[imageGen] Falling back ${provider} → imagen3 for style="${req.style}"`);
+    result = await PROVIDER_MAP.imagen3(req);
+  }
   const durationMs = Date.now() - startMs;
 
-  console.log(`[imageGen] ${provider} completed in ${durationMs}ms, image size: ${Math.round(result.imageBase64.length / 1024)}KB`);
+  console.log(`[imageGen] ${result.provider} completed in ${durationMs}ms, image size: ${Math.round(result.imageBase64.length / 1024)}KB`);
 
   return result;
 }
