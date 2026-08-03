@@ -152,13 +152,6 @@ const ModifierCodeWordPress = () => {
   return (
     <>
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>{SEO_META.title}</title>
-        <meta name="description" content={SEO_META.description} />
-        <meta property="og:title" content={SEO_META.ogTitle} />
-        <meta property="og:description" content={SEO_META.description} />
-        <meta property="og:url" content={SEO_META.canonical} />
-        <meta property="og:type" content="article" />
         <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>

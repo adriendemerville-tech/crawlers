@@ -76,13 +76,6 @@ const ScoreGEO = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Score GEO : mesurez votre référencement ChatGPT & Claude</title>
-        <meta name="description" content="Score GEO gratuit : évaluez la capacité de votre site à être cité par ChatGPT, Claude et Perplexity. Référencement GEO et LLM SEO en 2026." />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="Score GEO — Mesurez votre visibilité dans les réponses IA" />
-        <meta property="og:description" content="Votre site est-il optimisé pour ChatGPT, Claude et Perplexity ? Obtenez votre Score GEO gratuit." />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://crawlers.fr/score-geo" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

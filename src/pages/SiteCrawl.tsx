@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, ArrowLeft, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2, FolderTree, Folder, Square } from 'lucide-react';
@@ -190,23 +189,6 @@ export default function SiteCrawl() {
 
   return (
     <>
-      <Helmet>
-        <title>Crawl Multi-Pages SEO — Jusqu'à 5000 pages | Crawlers.fr</title>
-        <meta name="description" content="Crawl multi-pages jusqu'à 5000 pages. Analyse récursive sitemap-first. Détection d'erreurs techniques, maillage, indexation. Pro Agency inclus." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/site-crawl" />
-        <meta property="og:title" content="Crawl Multi-Pages SEO — Jusqu'à 5000 pages | Crawlers.fr" />
-        <meta property="og:description" content="Crawl multi-pages jusqu'à 5000 pages. Analyse récursive sitemap-first. Détection d'erreurs techniques, maillage, indexation. Pro Agency inclus." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Crawl Multi-Pages SEO — Jusqu'à 5000 pages | Crawlers.fr" />
-        <meta name="twitter:description" content="Crawl multi-pages jusqu'à 5000 pages. Analyse récursive sitemap-first. Détection d'erreurs techniques, maillage, indexation. Pro Agency inclus." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
-      </Helmet>
       <Header />
 
       <main className="min-h-screen bg-background pt-20 pb-16 relative">

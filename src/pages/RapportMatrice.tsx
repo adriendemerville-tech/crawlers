@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { Download, FileSpreadsheet, Printer, Loader2, Check, Share2, FileText, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -249,11 +248,6 @@ export default function RapportMatrice() {
 
   return (
     <>
-      <Helmet>
-        <title>Rapport Matrice d'audit — Crawlers.fr</title>
-        <meta name="description" content="Résultats détaillés de votre matrice d'audit : balises, données structurées, performance, sécurité, prompts LLM et score pondéré global." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <div className="min-h-screen bg-background flex flex-col">
         <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">

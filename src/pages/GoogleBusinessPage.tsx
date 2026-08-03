@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -238,23 +237,6 @@ export default function GoogleBusinessPage() {
 
   return (
     <>
-      <Helmet>
-        <title>{t3(language,
-          'Google Business Profile : SEO local & GEO IA — Crawlers',
-          'Google Business Profile — Local SEO & GEO Optimization | Crawlers.fr',
-          'Google Business Profile — Optimización SEO Local & GEO | Crawlers.fr'
-        )}</title>
-        <meta name="description" content={t3(language,
-          'Optimisez votre Google Business Profile pour le SEO local et la visibilité IA (GEO). Score complétude, benchmark concurrent, recos IA.',
-          'Optimize your Google Business Profile for local SEO and AI visibility (GEO). Completeness score, competitive benchmark, AI recommendations. Integrated with Crawlers.fr.',
-          'Optimice su Google Business Profile para SEO local y visibilidad IA (GEO). Score de completitud, benchmark competitivo, recomendaciones IA. Integrado con Crawlers.fr.'
-        )} />
-        <meta property="og:title" content="Google Business Profile — Optimisation SEO Local & GEO | Crawlers.fr" />
-        <meta property="og:description" content="Analysez et optimisez votre fiche Google Business pour le SEO local et les moteurs IA. Score sur 42 critères, benchmark concurrent, recommandations GEO." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://crawlers.fr/google-business" />
-      </Helmet>
-
       <Header />
 
       <main className="min-h-screen bg-background">

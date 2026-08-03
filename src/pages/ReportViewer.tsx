@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { Download, Loader2, Mail, Printer, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -233,12 +232,6 @@ export default function ReportViewer() {
 
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content="Visualisez votre rapport d'audit SEO complet : scores, recommandations et plan d'action correctif." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
-
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">

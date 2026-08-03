@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "@/lib/router-compat";
-import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 
 type ConsentDetails = {
@@ -61,10 +60,6 @@ export default function OAuthConsent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Helmet>
-        <title>Autoriser l'accès — Crawlers</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
       <main className="w-full max-w-md border border-border rounded-lg p-6 space-y-5">
         <header className="space-y-1">
           <h1 className="text-xl font-semibold">Autoriser l'accès</h1>

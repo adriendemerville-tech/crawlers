@@ -74,20 +74,6 @@ export default function IndiceAlignementStrategique() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>{title}</title>
-        <meta name="description" content={metaDesc} />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/indice-alignement-strategique" />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={metaDesc} />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={metaDesc} />
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(techArticleSchema)}</script>
       </Helmet>

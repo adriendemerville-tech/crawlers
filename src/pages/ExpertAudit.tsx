@@ -129,21 +129,6 @@ const ExpertAudit = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>{meta.title}</title>
-        <meta name="description" content={meta.description} />
-        <meta name="robots" content={language === 'fr' ? 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1' : 'noindex, follow'} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/audit-expert" />
-        <meta property="og:title" content={meta.title} />
-        <meta property="og:description" content={meta.description} />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content={meta.title} />
-        <meta name="twitter:description" content={meta.description} />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(webPageSchema)}</script>
       </Helmet>

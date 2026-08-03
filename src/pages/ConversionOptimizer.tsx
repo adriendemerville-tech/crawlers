@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Loader2, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Info, Smartphone, Type, Target, Eye, MousePointerClick, BarChart3, Search, ImageIcon, PenTool, Trash2, FileText, Euro, RefreshCw, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { AnnotatedPageView } from '@/components/ConversionOptimizer/AnnotatedPageView';
 import { VisualCaptureCard } from '@/components/ConversionOptimizer/VisualCaptureCard';
@@ -391,11 +390,6 @@ export default function ConversionOptimizer() {
 
   return (
     <>
-      <Helmet>
-        <title>Conversion Optimizer | Crawlers</title>
-        <meta name="description" content="Analysez l'UX de vos pages en contexte business pour optimiser le ton, les CTA et la conversion." />
-      </Helmet>
-
       {!hasAccess && (
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 backdrop-blur-md bg-background/60" />

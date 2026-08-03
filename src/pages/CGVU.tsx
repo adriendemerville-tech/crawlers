@@ -37,9 +37,6 @@ const CGVU = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <html lang="fr" />
-        <title>Conditions Générales de Vente et d'Utilisation | Crawlers.fr</title>
-        <meta name="description" content="CGVU de Crawlers.fr – Conditions générales de vente et d'utilisation de la plateforme d'audit SEO/GEO et de crédits d'analyse IA." />
-        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Header />
       <main className="flex-1 py-12">

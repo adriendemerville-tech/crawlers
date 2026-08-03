@@ -1,6 +1,5 @@
 import { useLocation, Link } from "@/lib/router-compat";
 import { useEffect, lazy, Suspense } from "react";
-import { Helmet } from "react-helmet-async";
 import { Header } from "@/components/Header";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, Search } from "lucide-react";
@@ -20,11 +19,6 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Helmet>
-        <title>{t3(language, 'Page introuvable | Crawlers.fr', 'Page Not Found | Crawlers.fr', 'Página no encontrada | Crawlers.fr')}</title>
-        <meta name="description" content={t3(language, 'La page demandée n\'existe pas ou a été déplacée.', 'The requested page does not exist or has been moved.', 'La página solicitada no existe o ha sido movida.')} />
-        <meta name="robots" content="noindex, follow" />
-      </Helmet>
       <Header />
       <main className="flex flex-1 items-center justify-center px-4">
         <div className="text-center max-w-md">

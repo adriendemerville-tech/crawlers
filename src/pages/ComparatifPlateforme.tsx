@@ -224,9 +224,6 @@ export default function ComparatifPlateforme() {
   return (
     <>
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Plateforme SEO/GEO vs agents IA généralistes (Claude, GPT)</title>
-        <meta name="description" content="Pourquoi une plateforme SEO/GEO dédiée qui croise vos données surpasse Claude, ChatGPT ou Cowork pour le référencement naturel." />
         <script type="application/ld+json">{JSON.stringify(articleSD)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSD)}</script>
         <script type="application/ld+json">{JSON.stringify(faqSD)}</script>

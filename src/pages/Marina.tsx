@@ -727,15 +727,6 @@ export default function Marina() {
     <>
       <Helmet>
         <html lang={t.meta.lang} />
-        <title>{t.meta.title}</title>
-        <meta name="description" content={t.meta.description} />
-        <meta property="og:title" content={t.meta.ogTitle} />
-        <meta property="og:description" content={t.meta.ogDesc} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://crawlers.fr/marina" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={t.meta.ogTitle} />
-        <meta name="twitter:description" content={t.meta.twitterDesc} />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",

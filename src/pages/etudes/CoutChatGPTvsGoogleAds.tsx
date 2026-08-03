@@ -89,12 +89,6 @@ export default function CoutChatGPTvsGoogleAds() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Coût réponse ChatGPT vs clic Google Ads — Étude FR 2026</title>
-        <meta name="description" content="Étude propriétaire : 1 clic Google Ads coûte jusqu'à 689 fois plus cher qu'une réponse ChatGPT. Comparaison sur 8 secteurs FR." />
-        <meta property="og:title" content="Coût ChatGPT vs Google Ads : le ratio qui change le marketing" />
-        <meta property="og:description" content="Étude Crawlers.fr sur 8 secteurs FR : jusqu'à 689x d'écart entre le CPC Google et le coût d'une réponse ChatGPT." />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={CANONICAL} />
         <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(datasetJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>

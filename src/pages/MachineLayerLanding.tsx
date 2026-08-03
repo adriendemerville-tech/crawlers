@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -14,16 +13,6 @@ export default function MachineLayerLanding() {
   useCanonicalHreflang('/machine-layer-scanner');
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Couche machine : parler aux robots avant les humains — Crawlers.fr</title>
-        <meta name="description" content="L'inversion est en cours : les pages doivent désormais parler aux robots et aux IA d'abord. Découvrez la couche machine et scannez gratuitement la vôtre." />
-        <meta property="og:title" content="Couche machine : parler aux robots avant les humains" />
-        <meta property="og:description" content="L'inversion est en cours. Audit gratuit de la couche machine de votre site." />
-        <meta property="og:url" content="https://crawlers.fr/machine-layer-scanner" />
-        <meta property="og:type" content="website" />
-      </Helmet>
-
       <Header />
 
       <main className="container mx-auto max-w-5xl px-4 py-16 sm:py-24">

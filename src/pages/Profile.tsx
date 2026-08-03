@@ -2,7 +2,6 @@ import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } 
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useSearchParams } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -184,11 +183,6 @@ function ProfileContent() {
   return (
     <>
       <WelcomeBackModal />
-      <Helmet>
-        <title>{t.pageTitle}</title>
-        <meta name="description" content="Gérez votre profil Crawlers.fr : crédits, abonnement, clé API et paramètres de compte." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <FreeTrialBanner />

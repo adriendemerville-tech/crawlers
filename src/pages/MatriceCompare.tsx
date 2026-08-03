@@ -6,7 +6,6 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,11 +47,6 @@ export default function MatriceCompare() {
 
   return (
     <>
-      <Helmet>
-        <title>Comparaison d'audits matriciels — Crawlers.fr</title>
-        <meta name="description" content="Comparez deux audits matriciels et visualisez les progressions et régressions par famille de critères." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <Header />
       <main className="min-h-screen bg-background pt-24 pb-16">
         <div className="mx-auto max-w-6xl px-4">

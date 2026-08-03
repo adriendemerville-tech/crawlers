@@ -7,7 +7,6 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, Link } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, FolderOpen, GitCompareArrows, Pencil, Trash2, Check, X as XIcon, Loader2, Calendar, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -149,11 +148,6 @@ export default function MatriceHistorique() {
 
   return (
     <>
-      <Helmet>
-        <title>Historique des audits matriciels — Crawlers.fr</title>
-        <meta name="description" content="Consultez et comparez vos audits matriciels passés. Suivi de progression, deltas inter-audits, reprise d'audits interrompus." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <Header />
       <main className="min-h-screen bg-background pt-24 pb-16">
         <div className="mx-auto max-w-6xl px-4">

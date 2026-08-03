@@ -432,18 +432,6 @@ const RankingSerp = memo(() => {
   return (
     <>
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>{t3(language,
-          'Benchmark Rank SERP — Classement Google multi-providers gratuit | Crawlers.fr',
-          'SERP Rank Benchmark — Free multi-provider Google ranking | Crawlers.fr',
-          'Benchmark Rank SERP — Ranking Google multi-proveedor gratis | Crawlers.fr'
-        )}</title>
-        <meta name="description" content={t3(language,
-           'Comparez les positions Google de n\'importe quel mot-clé via 4 providers SERP simultanément (DataForSEO, SerpApi, Serper, Bright Data). Outil gratuit, classement croisé fiable.',
-           'Compare Google positions for any keyword via 4 SERP providers simultaneously (DataForSEO, SerpApi, Serper, Bright Data). Free tool, reliable cross-referenced ranking.',
-           'Compara las posiciones de Google para cualquier palabra clave mediante 4 proveedores SERP simultáneamente (DataForSEO, SerpApi, Serper, Bright Data). Herramienta gratuita.'
-        )} />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

@@ -157,15 +157,6 @@ const ComparatifCrawlersSemrush = () => {
   return (
     <>
       <Helmet>
-        <title>Alternative Semrush 2026 : Crawlers.fr — 28 critères</title>
-        <meta name="description" content="Alternative à Semrush : comparatif Crawlers.fr vs Semrush sur 28 critères. Tarifs (gratuit vs 130€/mois), GEO, Cocoon 3D, marque blanche." />
-        <meta property="og:title" content="Crawlers.fr vs Semrush : Comparatif 2026 — 28 Critères" />
-        <meta property="og:description" content="Semrush domine le SEO classique. Crawlers.fr innove en GEO, audit IA et génération de code. Tableau comparatif complet + FAQ." />
-        <meta property="og:url" content={`${SITE_URL}/comparatif-crawlers-semrush`} />
-        <meta property="og:type" content="article" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="robots" content="index, follow" />
         <meta name="author" content="Adrien de Volontat" />
         <script type="application/ld+json">{JSON.stringify(articleSD)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSD)}</script>

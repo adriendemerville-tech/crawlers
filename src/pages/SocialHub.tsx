@@ -7,7 +7,6 @@
  */
 import { memo, useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -265,9 +264,6 @@ const SocialHub = memo(function SocialHub() {
   if (usageLoaded && isOverFreeLimit && user) {
     return (
       <>
-        <Helmet>
-          <title>Social Content Hub — Crawlers.fr</title>
-        </Helmet>
         <Header />
         <main className="min-h-screen bg-background">
           <div className="max-w-7xl mx-auto px-4 py-6">
@@ -292,10 +288,6 @@ const SocialHub = memo(function SocialHub() {
 
   return (
     <>
-      <Helmet>
-        <title>Social Content Hub — Crawlers.fr</title>
-        <meta name="description" content="Créez et publiez du contenu social optimisé SEO/GEO sur LinkedIn, Facebook et Instagram." />
-      </Helmet>
       <Header />
       <main className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 py-6">

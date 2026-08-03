@@ -785,21 +785,6 @@ export default function Aide() {
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <html lang={language} />
-        <title>Centre d'aide Crawlers.fr — Documentation SEO, GEO & visibilité IA</title>
-        <meta name="description" content="Trouvez toutes les réponses sur les audits SEO, le GEO Score, la visibilité LLM, les crédits et le plan Pro Agency. Documentation complète Crawlers.fr." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/aide" />
-        <meta property="og:title" content="Centre d'aide Crawlers.fr — Documentation SEO, GEO & visibilité IA" />
-        <meta property="og:description" content="Trouvez toutes les réponses sur les audits SEO, le GEO Score, la visibilité LLM, les crédits et le plan Pro Agency." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Centre d'aide Crawlers.fr — Documentation SEO, GEO & visibilité IA" />
-        <meta name="twitter:description" content="Trouvez toutes les réponses sur les audits SEO, le GEO Score, la visibilité LLM, les crédits et le plan Pro Agency." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "TechArticle",

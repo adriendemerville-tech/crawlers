@@ -60,16 +60,8 @@ const AnalyseSiteWebGratuit = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Analyse de site web gratuite 2026 — SEO & visibilité IA</title>
-        <meta name="description" content="Analyser un site web gratuitement : SEO technique, Core Web Vitals, visibilité LLM et JSON-LD. Guide complet et outil 2026." />
-        <meta property="og:title" content="Analyse de Site Web — Guide Complet 2026" />
-        <meta property="og:description" content="Le guide complet pour analyser votre site web : SEO technique, Core Web Vitals, visibilité IA et code correctif." />
-        <meta property="og:url" content="https://crawlers.fr/analyse-site-web-gratuit" />
-        <meta property="og:type" content="article" />
         <meta property="article:published_time" content={publishDate} />
         <meta property="article:author" content="Adrien de Volontat" />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

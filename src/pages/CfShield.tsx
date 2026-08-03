@@ -7,7 +7,6 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -206,15 +205,6 @@ export default function CfShield() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-10">
-      <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>Activer le Bouclier Cloudflare AI Bots — Crawlers</title>
-        <meta
-          name="description"
-          content="Déployez le Worker Cloudflare qui alimente vos KPIs GEO en hits bots IA et trafic référent."
-        />
-      </Helmet>
-
       {/* Header */}
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>

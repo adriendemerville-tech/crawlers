@@ -372,31 +372,11 @@ const Observatoire = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDesc} />
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
         <meta name="googlebot" content="index, follow, max-image-preview:large" />
         <meta name="bingbot" content="index, follow" />
 
         {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDesc} />
-        <meta property="og:url" content="https://crawlers.fr/observatoire" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
-
         {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={metaTitle} />
-        <meta name="twitter:description" content={metaDesc} />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
-        <meta name="twitter:site" content="@crawlersfr" />
-
         {/* Author & geo */}
         <meta name="author" content="Crawlers.fr" />
         <meta name="geo.region" content="FR" />

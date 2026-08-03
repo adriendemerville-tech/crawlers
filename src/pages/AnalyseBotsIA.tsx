@@ -86,13 +86,6 @@ const AnalyseBotsIA = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Analyse Bots IA : GPTBot, ClaudeBot, PerplexityBot sur site</title>
-        <meta name="description" content="Vérifiez gratuitement si robots.txt bloque GPTBot, ClaudeBot, PerplexityBot. Optimisez l'accès des crawlers IA pour votre référencement GEO." />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="Analyse Bots IA — Votre site bloque-t-il les crawlers IA ?" />
-        <meta property="og:description" content="Vérifiez si GPTBot, ClaudeBot, PerplexityBot peuvent accéder à votre site. Audit gratuit robots.txt pour l'IA." />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://crawlers.fr/analyse-bots-ia" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

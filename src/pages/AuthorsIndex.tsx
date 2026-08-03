@@ -50,15 +50,6 @@ export default function AuthorsIndex() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Auteurs Crawlers.fr — Experts SEO & GEO</title>
-        <meta
-          name="description"
-          content="Découvrez les auteurs et experts derrière les articles, guides et audits Crawlers.fr."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Auteurs Crawlers.fr — Experts SEO & GEO" />
-        <meta property="og:description" content="Découvrez les auteurs et experts derrière les articles, guides et audits Crawlers.fr." />
-        <meta property="og:url" content={`${SITE_URL}/auteur`} />
         <script type="application/ld+json">{JSON.stringify(collectionJsonLd)}</script>
       </Helmet>
 

@@ -38,23 +38,24 @@ export function useCanonicalHreflang(path?: string) {
     // Purge every hreflang link (managed or static from index.html)
     document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
 
-    // Robots directive: noindex on non-FR variants
-    let robots = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
-    if (!robots) {
-      robots = document.createElement('meta');
-      robots.setAttribute('name', 'robots');
-      document.head.appendChild(robots);
-    }
+    // Robots directive: only force noindex on non-FR variants.
+    // The FR directive is rendered server-side by the route head() and must not
+    // be overwritten here (otherwise noindex pages like /app/* become indexable).
     if (language !== 'fr') {
+      let robots = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+      const previous = robots?.getAttribute('content') ?? null;
+      if (!robots) {
+        robots = document.createElement('meta');
+        robots.setAttribute('name', 'robots');
+        document.head.appendChild(robots);
+      }
       robots.setAttribute('content', 'noindex,nofollow');
-    } else {
-      robots.setAttribute('content', 'index,follow');
-    }
 
-    return () => {
-      // Reset robots to default on unmount so stale directive doesn't leak
-      const r = document.querySelector('meta[name="robots"]');
-      if (r) r.setAttribute('content', 'index,follow');
-    };
+      return () => {
+        const r = document.querySelector('meta[name="robots"]');
+        if (r && previous) r.setAttribute('content', previous);
+      };
+    }
   }, [language, resolvedPath]);
+
 }

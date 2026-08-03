@@ -1,6 +1,5 @@
 import { useState, useEffect, lazy, Suspense} from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -762,25 +761,6 @@ export default function Tarifs() {
 
   return (
     <>
-      <Helmet>
-        <title>Tarifs Crawlers.fr — SEO + GEO à 29€/mois | Crawlers.fr</title>
-        <meta name="description" content="Crawlers.fr à 29€/mois — offre lancement garantie à vie pour les 100 premiers abonnés. SEO + GEO + correctifs actionnables en un seul outil." />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:url" content="https://crawlers.fr/tarifs" />
-        <meta property="og:title" content="Tarifs Crawlers.fr — SEO + GEO à 29€/mois | Crawlers.fr" />
-        <meta property="og:description" content="Crawlers.fr à 29€/mois — offre lancement garantie à vie pour les 100 premiers abonnés. SEO + GEO + correctifs actionnables en un seul outil." />
-        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
-        <meta property="og:locale" content="fr_FR" />
-        <meta property="og:price:amount" content="29.00" />
-        <meta property="og:price:currency" content="EUR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@crawlersfr" />
-        <meta name="twitter:title" content="Tarifs Crawlers.fr — SEO + GEO à 29€/mois | Crawlers.fr" />
-        <meta name="twitter:description" content="Crawlers.fr à 29€/mois — offre lancement garantie à vie pour les 100 premiers abonnés. SEO + GEO + correctifs actionnables en un seul outil." />
-        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
-      </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-12 max-w-5xl">

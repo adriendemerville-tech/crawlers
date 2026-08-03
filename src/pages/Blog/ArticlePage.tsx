@@ -26,7 +26,7 @@ interface DbArticle {
 }
 
 // Métadonnées SEO spécifiques par article (pour override le head)
-const ARTICLE_SEO_OVERRIDES: Record<string, {
+export const ARTICLE_SEO_OVERRIDES: Record<string, {
   title: string;
   description: string;
   ogTitle?: string;

@@ -413,9 +413,6 @@ export default function Signup() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
         <Helmet>
-          <title>{language === 'en' ? 'Sign Up - Crawlers' : language === 'es' ? 'Registrarse - Crawlers' : 'Inscription - Crawlers'}</title>
-          <meta name="description" content={language === 'en' ? 'Create your free Crawlers account. Access SEO, GEO, and AI visibility audits.' : language === 'es' ? 'Crea tu cuenta gratuita en Crawlers. Auditorías SEO, GEO e IA.' : 'Créez votre compte Crawlers gratuit. Accédez aux audits SEO, GEO et de visibilité IA.'} />
-          <meta name="robots" content="noindex, nofollow" />
           <script type="application/ld+json">{JSON.stringify(signupJsonLd)}</script>
         </Helmet>
         <AnimatePresence>
@@ -453,9 +450,6 @@ export default function Signup() {
   if (step === 'verify') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
-        <Helmet>
-          <title>{language === 'en' ? 'Verify Email - Crawlers' : language === 'es' ? 'Verificar Email - Crawlers' : 'Vérification - Crawlers'}</title>
-        </Helmet>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -563,9 +557,6 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
       <Helmet>
-        <title>{language === 'en' ? 'Sign Up - Crawlers' : language === 'es' ? 'Registrarse - Crawlers' : 'Inscription - Crawlers'}</title>
-        <meta name="description" content={language === 'en' ? 'Create your free Crawlers account. Access SEO, GEO, and AI visibility audits.' : language === 'es' ? 'Crea tu cuenta gratuita en Crawlers. Auditorías SEO, GEO e IA.' : 'Créez votre compte Crawlers gratuit. Accédez aux audits SEO, GEO et de visibilité IA.'} />
-        <meta name="robots" content="noindex, nofollow" />
         <script type="application/ld+json">{JSON.stringify(signupJsonLd)}</script>
       </Helmet>
       <motion.div

@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -150,13 +149,6 @@ export default function AuditSemantique() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{t.title}</title>
-        <meta name="description" content={t.metaDesc} />
-        <meta property="og:title" content={t.title} />
-        <meta property="og:description" content={t.metaDesc} />
-        <meta property="og:url" content="https://crawlers.fr/audit-semantique" />
-      </Helmet>
       <Header />
 
       <main className="container mx-auto max-w-4xl px-4 py-16 space-y-16">

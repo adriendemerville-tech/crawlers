@@ -18,12 +18,6 @@ const MentionsLegales = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <html lang={language} />
-        <title>{t3(language, 'Mentions légales | Crawlers.fr', 'Legal Notice | Crawlers.fr', 'Aviso legal | Crawlers.fr')}</title>
-        <meta name="description" content={t3(language, 'Mentions légales de Crawlers.fr — éditeur, hébergement, conditions.', 'Legal notice for Crawlers.fr', 'Aviso legal de Crawlers.fr')} />
-        <meta name="robots" content="noindex, follow" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Crawlers.fr" />
-        <meta property="og:locale" content="fr_FR" />
       </Helmet>
       <Header />
       <main className="flex-1 py-12">

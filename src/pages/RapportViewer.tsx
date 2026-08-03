@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { Download, FileSpreadsheet, Link2, Mail, Printer, Loader2, Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -331,12 +330,6 @@ export default function RapportViewer() {
 
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content="Rapport d'audit SEO & GEO détaillé généré par Crawlers.fr. Performance, technique, sémantique et visibilité IA." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
-
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
         <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
