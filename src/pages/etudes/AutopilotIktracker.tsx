@@ -189,8 +189,11 @@ export default function AutopilotIktracker() {
             de <strong>iktracker.fr</strong> : 289 cycles, 5 742 actions journalisées,
             <strong> 927 publications CMS exécutées</strong>. Sur les 13 semaines couvertes par
             Google Search Console, les impressions hebdomadaires ont été multipliées par 2,5 au pic
-            et 9 des 20 requêtes comparables ont gagné des places. Voici les chiffres bruts, la
-            méthode, et ce que ces données ne prouvent pas.
+            et 9 des 20 requêtes comparables ont gagné des places. Côté produit, le site compte
+            <strong> 372 comptes créés</strong> et, fait le plus intéressant,
+            <strong> 44,6 % des inscrits déclarent avoir découvert le service via ChatGPT</strong>,
+            devant Google. Voici les chiffres bruts, la méthode, et ce que ces données ne prouvent
+            pas.
           </p>
         </header>
 
@@ -199,8 +202,10 @@ export default function AutopilotIktracker() {
           en 289 cycles entre le 24 mars et le 2 août 2026. Les données Google Search Console
           montrent un passage de 84,5 clics hebdomadaires en moyenne sur la baseline à 279 clics
           au pic d'avril 2026, avec une position moyenne améliorée de 2,3 places sur les requêtes
-          comparables.
+          comparables. Sur la même période, 372 comptes ont été créés et 44,6 % des nouveaux
+          inscrits déclarent avoir découvert le service via ChatGPT, contre 41,4 % via Google.
         </blockquote>
+
 
         <section className="mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Les chiffres clés</h2>
