@@ -2673,6 +2673,7 @@ const SKILLS: Record<string, SkillDefinition> = {
   plan_editorial,
   deploy_cocoon_plan,
   audit_internal_mesh,
+  detect_content_cannibalization,
   // Mémoire persistante & enrichissement carte d'identité (Sprint Q5)
   read_site_memory,
   write_site_memory,
