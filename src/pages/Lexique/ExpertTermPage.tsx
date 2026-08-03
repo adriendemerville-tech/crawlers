@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { useParams, Link } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getExpertTermBySlug, expertCategories } from '@/data/expertTerms';
@@ -39,35 +38,8 @@ export default function ExpertTermPage() {
     { year: 'numeric', month: 'long', day: 'numeric' }
   );
 
-  // JSON-LD Schema
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "DefinedTerm",
-    "name": term.term,
-    "description": term.fullDefinition,
-    "inDefinedTermSet": {
-      "@type": "DefinedTermSet",
-      "name": "Crawlers.fr Expert Lexicon",
-      "url": "https://crawlers.fr/lexique"
-    }
-  };
-
-  const breadcrumbLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-      { "@type": "ListItem", "position": 2, "name": "Lexique", "item": "https://crawlers.fr/lexique" },
-      { "@type": "ListItem", "position": 3, "name": term.term, "item": `https://crawlers.fr/lexique/${term.slug}` }
-    ]
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
-      </Helmet>
       <SoftwareApplicationSchema />
 
       <Header />

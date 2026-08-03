@@ -1,11 +1,10 @@
-import { memo, useEffect, useState } from 'react';
-import { useParams, Navigate } from '@/lib/router-compat';
+import { memo } from 'react';
+import { getRouteApi } from '@tanstack/react-router';
+import { Navigate } from '@/lib/router-compat';
 import { ArticleLayout, HtmlContentRenderer } from '@/components/Blog';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getArticleBySlug, blogArticles } from '@/data/blogArticles';
+import { getArticleBySlug } from '@/data/blogArticles';
 import { articleContent } from '@/data/articleContents';
-import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
 
 interface DbArticle {
   id: string;
@@ -109,171 +108,29 @@ export const ARTICLE_SEO_OVERRIDES: Record<string, {
 };
 
 
-const SITE_URL = 'https://crawlers.fr';
-
-/**
- * Force les métadonnées dans le <head> via manipulation directe du DOM
- * Cela garantit que les balises sont correctement mises à jour même si Helmet a des conflits
- */
-function forceMetaTags(slug: string, title: string, description: string, ogTitle?: string) {
-  const canonicalUrl = `${SITE_URL}/blog/${slug}`;
-  
-  // 1. FORCE document.title
-  document.title = title;
-  
-  // 2. FORCE meta description
-  let metaDesc = document.querySelector('meta[name="description"]') as HTMLMetaElement;
-  if (metaDesc) {
-    metaDesc.content = description;
-  } else {
-    metaDesc = document.createElement('meta');
-    metaDesc.name = 'description';
-    metaDesc.content = description;
-    document.head.appendChild(metaDesc);
-  }
-  
-  // 3. FORCE Open Graph title
-  let ogTitleMeta = document.querySelector('meta[property="og:title"]') as HTMLMetaElement;
-  if (ogTitleMeta) {
-    ogTitleMeta.content = ogTitle || title;
-  } else {
-    ogTitleMeta = document.createElement('meta');
-    ogTitleMeta.setAttribute('property', 'og:title');
-    ogTitleMeta.content = ogTitle || title;
-    document.head.appendChild(ogTitleMeta);
-  }
-  
-  // 5. FORCE Open Graph description
-  let ogDescMeta = document.querySelector('meta[property="og:description"]') as HTMLMetaElement;
-  if (ogDescMeta) {
-    ogDescMeta.content = description;
-  } else {
-    ogDescMeta = document.createElement('meta');
-    ogDescMeta.setAttribute('property', 'og:description');
-    ogDescMeta.content = description;
-    document.head.appendChild(ogDescMeta);
-  }
-  
-  // 6. FORCE Open Graph URL
-  let ogUrlMeta = document.querySelector('meta[property="og:url"]') as HTMLMetaElement;
-  if (ogUrlMeta) {
-    ogUrlMeta.content = canonicalUrl;
-  } else {
-    ogUrlMeta = document.createElement('meta');
-    ogUrlMeta.setAttribute('property', 'og:url');
-    ogUrlMeta.content = canonicalUrl;
-    document.head.appendChild(ogUrlMeta);
-  }
-  
-  // 7. FORCE Twitter title
-  let twitterTitle = document.querySelector('meta[name="twitter:title"]') as HTMLMetaElement;
-  if (twitterTitle) {
-    twitterTitle.content = ogTitle || title;
-  } else {
-    twitterTitle = document.createElement('meta');
-    twitterTitle.name = 'twitter:title';
-    twitterTitle.content = ogTitle || title;
-    document.head.appendChild(twitterTitle);
-  }
-  
-  // 8. FORCE Twitter description
-  let twitterDesc = document.querySelector('meta[name="twitter:description"]') as HTMLMetaElement;
-  if (twitterDesc) {
-    twitterDesc.content = description;
-  } else {
-    twitterDesc = document.createElement('meta');
-    twitterDesc.name = 'twitter:description';
-    twitterDesc.content = description;
-    document.head.appendChild(twitterDesc);
-  }
-}
+const routeApi = getRouteApi('/blog/$slug');
 
 function ArticlePageComponent() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug } = routeApi.useParams();
+  const loaderData = routeApi.useLoaderData();
   const { language } = useLanguage();
-  const [dbArticle, setDbArticle] = useState<DbArticle | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [useDbContent, setUseDbContent] = useState(false);
 
-  // Récupérer l'article statique pour les métadonnées
   const staticArticle = getArticleBySlug(slug || '');
-  
-  // useEffect pour forcer les métadonnées au montage
-  useEffect(() => {
-    if (!slug) return;
-    
-    const seoOverride = ARTICLE_SEO_OVERRIDES[slug];
-    
-    if (seoOverride) {
-      forceMetaTags(slug, seoOverride.title, seoOverride.description, seoOverride.ogTitle);
-    } else if (staticArticle) {
-      const title = `${staticArticle.title[language] || staticArticle.title.fr} | Crawlers.fr`;
-      const description = staticArticle.description[language] || staticArticle.description.fr;
-      forceMetaTags(slug, title, description);
-    } else if (dbArticle) {
-      // Articles auto-générés depuis la DB — SEO dynamique
-      const title = `${dbArticle.title} | Crawlers.fr`;
-      const description = dbArticle.excerpt || dbArticle.title;
-      forceMetaTags(slug, title, description);
-    }
-    
-    return () => {};
-  }, [slug, language, staticArticle, dbArticle]);
-
-  useEffect(() => {
-    async function fetchDbArticle() {
-      if (!slug) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('blog_articles')
-          .select('*')
-          .eq('slug', slug)
-          .eq('status', 'published')
-          .single();
-
-        if (data && !error) {
-          setDbArticle(data);
-          // Utiliser le contenu DB UNIQUEMENT si:
-          // 1. Il n'y a pas de contenu statique JSX riche disponible
-          // 2. ET le contenu DB est substantiel (plus de 500 caractères)
-          // Le contenu statique JSX est TOUJOURS prioritaire car il contient les composants riches
-          const hasStaticContent = !!articleContent[slug];
-          if (!hasStaticContent && data.content && data.content.length > 500) {
-            setUseDbContent(true);
-          }
-        }
-      } catch (e) {
-        console.log('Article not found in DB, using static content');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchDbArticle();
-  }, [slug]);
+  const dbArticle = (loaderData?.db as DbArticle | null) ?? null;
 
   if (!slug) {
     return <Navigate to="/blog" replace />;
   }
 
-  const staticContent = articleContent[slug];
-
-  // Si chargement en cours
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Si aucun article trouvé (ni en DB ni en statique)
+  // No static article and nothing published in DB → back to the blog index
   if (!staticArticle && !dbArticle) {
     return <Navigate to="/blog" replace />;
   }
 
-  // Déterminer les données à utiliser (avec traductions)
+  const staticContent = articleContent[slug];
+  // DB body wins only when there is no rich JSX content and the row is substantial
+  const useDbContent = !staticContent && !!dbArticle?.content && dbArticle.content.length > 500;
+
   const getDbTranslated = (field: 'title' | 'excerpt' | 'content') => {
     if (!dbArticle) return null;
     if (language === 'en') return (dbArticle as any)[`${field}_en`] || dbArticle[field];
@@ -289,26 +146,18 @@ function ArticlePageComponent() {
   const heroAlt = staticArticle?.heroAlt[language] || staticArticle?.heroAlt?.fr || title;
   const sources = staticArticle?.sources || [];
 
-  // Déterminer le contenu à afficher
   const renderContent = () => {
     const translatedDbContent = getDbTranslated('content');
-    
-    // Priorité 1: Contenu DB traduit si substantiel et disponible
+
     if (useDbContent && translatedDbContent) {
       return <HtmlContentRenderer html={translatedDbContent} />;
     }
-    
-    // Priorité 2: Contenu statique JSX (riche avec composants)
     if (staticContent) {
       return staticContent[language] || staticContent.fr;
     }
-    
-    // Priorité 3: Contenu DB basique (fallback)
     if (translatedDbContent) {
       return <HtmlContentRenderer html={translatedDbContent} />;
     }
-
-    // Pas de contenu disponible
     return <p>Contenu non disponible</p>;
   };
 
