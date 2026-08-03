@@ -69,7 +69,7 @@ var list_my_sites_default = defineTool2({
 // src/lib/mcp/tools/get_site_audit.ts
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.90.1";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z } from "npm:zod@^3.25.76";
+import { z } from "npm:zod@^3.24.2";
 function supabaseForUser2(ctx) {
   return createClient2(
     process.env.SUPABASE_URL,

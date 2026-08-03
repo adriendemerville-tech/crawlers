@@ -16,5 +16,14 @@ export default defineConfig({
   vite: {
     // Project MCP server (kept from the Classic config; not bundled by the wrapper).
     plugins: [mcpPlugin()],
+    resolve: {
+      alias: {
+        // jspdf v4 exports only "node"/"browser" conditions, which the workerd SSR
+        // resolver can't match. Point at the explicit ES build (exported via "./dist/*").
+        // It's only ever loaded via dynamic import() from event handlers, so it never
+        // evaluates during SSR.
+        jspdf: "jspdf/dist/jspdf.es.min.js",
+      },
+    },
   },
 });
