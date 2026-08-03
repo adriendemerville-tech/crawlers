@@ -7,69 +7,71 @@
 #
 # Politique de crawl :
 #   • Pages publiques (/, /blog, /guides, /lexique, /app/eeat) → ouvertes à tous
-#   • Application authentifiée (/app/*) → bloquée pour les moteurs de recherche
-#     classiques et outils SEO, mais OUVERTE aux moteurs génératifs (LLM)
-#     pour maximiser la visibilité GEO sur ChatGPT, Claude, Perplexity, etc.
+#   • Application authentifiée (/app/*) → crawl AUTORISÉ pour les moteurs de
+#     recherche afin qu'ils lisent le <meta name="robots" content="noindex">
+#     servi en SSR sur chaque route /app/* (un Disallow empêcherait Google de
+#     voir le noindex et laisserait ces URL dans l'index).
+#     Les outils SEO tiers restent bloqués sur /app/*.
+#   • Bots IA / moteurs génératifs → accès total (visibilité GEO).
 # ============================================
 
 # --------------------------------------------
 # Règle par défaut (tous bots non listés)
 # --------------------------------------------
 User-agent: *
-Disallow: /app/
-Allow: /app/eeat
+Allow: /app/
 Allow: /ranking-serp
 Allow: /conversion-optimizer
 Allow: /
+Disallow:
 Crawl-delay: 1
 
 # --------------------------------------------
-# Moteurs de recherche classiques → /app/ bloqué
+# Moteurs de recherche classiques → /app/ crawlable
+# (désindexation pilotée par le noindex SSR, pas par robots.txt)
 # --------------------------------------------
 User-agent: Googlebot
-Disallow: /app/
-Allow: /app/eeat
+Allow: /app/
 Allow: /
 
 User-agent: Googlebot-Image
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Googlebot-News
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Googlebot-Video
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: AdsBot-Google
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Bingbot
-Disallow: /app/
-Allow: /app/eeat
+Allow: /app/
 Allow: /
 
 User-agent: Yandex
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: DuckDuckBot
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Baiduspider
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Sogou
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Qwantify
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 # --------------------------------------------

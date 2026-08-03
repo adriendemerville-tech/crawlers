@@ -128,8 +128,7 @@ export default {
 # Règle par défaut (tous bots non listés)
 # --------------------------------------------
 User-agent: *
-Disallow: /app/
-Allow: /app/eeat
+Allow: /app/
 Allow: /ranking-serp
 Allow: /conversion-optimizer
 Allow: /
@@ -139,49 +138,47 @@ Crawl-delay: 1
 # Moteurs de recherche classiques → /app/ bloqué
 # --------------------------------------------
 User-agent: Googlebot
-Disallow: /app/
-Allow: /app/eeat
+Allow: /app/
 Allow: /
 
 User-agent: Googlebot-Image
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Googlebot-News
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Googlebot-Video
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: AdsBot-Google
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Bingbot
-Disallow: /app/
-Allow: /app/eeat
+Allow: /app/
 Allow: /
 
 User-agent: Yandex
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: DuckDuckBot
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Baiduspider
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Sogou
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 User-agent: Qwantify
-Disallow: /app/
+Allow: /app/
 Allow: /
 
 # --------------------------------------------
