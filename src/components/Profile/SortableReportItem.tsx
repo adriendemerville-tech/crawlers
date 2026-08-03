@@ -123,7 +123,7 @@ export function SortableReportItem({ report, onDelete, translations: t, isProUse
         href={reportHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex-1 min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="flex-1 min-w-0 rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2">

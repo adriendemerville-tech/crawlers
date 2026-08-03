@@ -334,7 +334,7 @@ export function BenchmarkCube3D({ results, themes, engines, className }: Benchma
         )}
 
         {tooltip && results.length > 0 && (
-          <div className="absolute top-3 left-3 max-w-[280px] border-2 border-brand-violet bg-background/95 backdrop-blur-sm rounded-md p-3 text-xs space-y-1 pointer-events-none">
+          <div className="absolute top-3 left-3 max-w-[280px] border-2 border-brand-violet bg-background/95 backdrop-blur-xs rounded-md p-3 text-xs space-y-1 pointer-events-none">
             <div className="font-semibold text-foreground truncate" title={tooltip.themeLabel}>
               {tooltip.themeLabel}
             </div>
@@ -366,7 +366,7 @@ export function BenchmarkCube3D({ results, themes, engines, className }: Benchma
         {[0, 1, 2, 3, 4].map((b) => (
           <div key={b} className="flex items-center gap-1">
             <span
-              className="inline-block w-3 h-3 rounded-sm border border-foreground/10"
+              className="inline-block w-3 h-3 rounded-xs border border-foreground/10"
               style={{ backgroundColor: bucketToHsl(b as 0|1|2|3|4) }}
               aria-hidden
             />
@@ -375,7 +375,7 @@ export function BenchmarkCube3D({ results, themes, engines, className }: Benchma
         ))}
         <span className="font-mono">100</span>
         <span className="ml-3 inline-flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-sm border-2" style={{ borderColor: 'hsl(45 93% 50%)' }} />
+          <span className="inline-block w-3 h-3 rounded-xs border-2" style={{ borderColor: 'hsl(45 93% 50%)' }} />
           <span className="text-muted-foreground">Cité top 3</span>
         </span>
         <span className="ml-auto text-muted-foreground">Glisser · Molette · Clic</span>

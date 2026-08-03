@@ -262,7 +262,7 @@ export default function StrategeCocoon() {
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((f, i) => (
-                <Card key={i} className="border-border/50 bg-card/80 backdrop-blur-sm hover:border-amber-500/30 transition-colors">
+                <Card key={i} className="border-border/50 bg-card/80 backdrop-blur-xs hover:border-amber-500/30 transition-colors">
                   <CardContent className="p-6">
                     <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/20 mb-4">
                       <f.icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -294,7 +294,7 @@ export default function StrategeCocoon() {
 
             <div className="grid gap-5 sm:grid-cols-2">
               {mathConcepts.map((c, i) => (
-                <Card key={i} className="border-border/50 bg-card/80 backdrop-blur-sm group hover:border-amber-500/20 transition-colors">
+                <Card key={i} className="border-border/50 bg-card/80 backdrop-blur-xs group hover:border-amber-500/20 transition-colors">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10 border border-amber-500/20 text-sm font-bold text-amber-600 dark:text-amber-400">
@@ -335,7 +335,7 @@ export default function StrategeCocoon() {
 
             <div className="grid gap-6 sm:grid-cols-2">
               {useCases.map((uc, i) => (
-                <Card key={i} className="border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
+                <Card key={i} className="border-border/50 bg-card/80 backdrop-blur-xs overflow-hidden">
                   <CardContent className="p-0">
                     {/* Header */}
                     <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50">

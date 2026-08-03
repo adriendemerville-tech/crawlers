@@ -308,7 +308,7 @@ export function AgentChatShell({
               placeholder={persona === 'felix' ? 'Une question pour Félix…' : 'Brief stratégique pour le Stratège…'}
               rows={2}
               disabled={sending}
-              className="w-full resize-none rounded-md border border-border bg-transparent py-2 pl-3 pr-10 text-sm text-foreground outline-none transition focus:border-foreground/50 disabled:opacity-50"
+              className="w-full resize-none rounded-md border border-border bg-transparent py-2 pl-3 pr-10 text-sm text-foreground outline-hidden transition focus:border-foreground/50 disabled:opacity-50"
             />
             <div className="absolute bottom-1.5 right-1.5">
               {renderComposerExtras

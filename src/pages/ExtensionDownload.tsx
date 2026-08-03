@@ -68,7 +68,7 @@ export default function ExtensionDownload() {
                   <Link
                     key={item.title}
                     to={item.href}
-                    className="border border-border rounded-md p-3 transition-colors hover:border-[hsl(var(--brand-violet))] hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-violet))]"
+                    className="border border-border rounded-md p-3 transition-colors hover:border-[hsl(var(--brand-violet))] hover:bg-muted/40 focus:outline-hidden focus:ring-2 focus:ring-[hsl(var(--brand-violet))]"
                   >
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-[hsl(var(--brand-violet))]" />

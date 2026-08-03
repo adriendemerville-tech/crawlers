@@ -256,7 +256,7 @@ export const SerpBenchmark = forwardRef<SerpBenchmarkHandle, Props>(function Ser
                 key={p.id}
                 className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer border transition-all text-sm ${
                   selectedProviders.includes(p.id)
-                    ? `${p.color} ${p.textColor} border-transparent shadow-sm`
+                    ? `${p.color} ${p.textColor} border-transparent shadow-xs`
                     : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
                 }`}
               >

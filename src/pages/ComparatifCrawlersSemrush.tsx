@@ -488,7 +488,7 @@ const ComparatifCrawlersSemrush = () => {
                 Données mises à jour avril 2026 • Sources : semrush.com, documentation officielle, tests internes
               </p>
 
-              <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
+              <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
                 <table className="w-full text-xs sm:text-sm min-w-[580px]" role="table" aria-label="Comparaison 28 critères Crawlers.fr vs Semrush">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">

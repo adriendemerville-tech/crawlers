@@ -70,7 +70,7 @@ export function ReportAuthGate({ isOpen, onClose, onAuthenticated, returnPath }:
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xs p-4"
           onClick={onClose}
         >
           <motion.div 

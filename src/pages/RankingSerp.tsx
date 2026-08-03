@@ -124,7 +124,7 @@ function SerpBenchmarkMini() {
   const activeProviders = providerSummaries.filter(p => !p.error);
 
   return (
-    <Card className="border-primary/30 bg-card/80 backdrop-blur-sm">
+    <Card className="border-primary/30 bg-card/80 backdrop-blur-xs">
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -160,7 +160,7 @@ function SerpBenchmarkMini() {
                 key={p.id}
                 className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer border transition-all text-sm ${
                   selectedProviders.includes(p.id)
-                    ? `${p.color} ${p.textColor} border-transparent shadow-sm`
+                    ? `${p.color} ${p.textColor} border-transparent shadow-xs`
                     : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
                 }`}
               >
@@ -345,7 +345,7 @@ function SerpBenchmarkMini() {
                           <img
                             src={`https://www.google.com/s2/favicons?domain=${r.domain}&sz=16`}
                             alt=""
-                            className="h-4 w-4 rounded-sm"
+                            className="h-4 w-4 rounded-xs"
                             loading="lazy"
                           />
                           <span className="text-xs font-medium truncate max-w-[200px]">{r.domain}</span>

@@ -155,7 +155,7 @@ export function StrategicAuditDashboard({ result, isLoading }: StrategicAuditDas
               return (
                 <Card 
                   key={index}
-                  className="border-border/50 bg-card/50 backdrop-blur-sm animate-fade-in"
+                  className="border-border/50 bg-card/50 backdrop-blur-xs animate-fade-in"
                   style={{ animationDelay: step.delay }}
                 >
                   <CardContent className="p-3 flex items-center gap-2">

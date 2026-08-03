@@ -202,7 +202,7 @@ export default function MachineLayerScanner() {
         </section>
 
         {/* Form */}
-        <Card className="p-6 sm:p-8 mb-8 border-border/60 bg-card/40 backdrop-blur-sm">
+        <Card className="p-6 sm:p-8 mb-8 border-border/60 bg-card/40 backdrop-blur-xs">
           <form onSubmit={handleScan} className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
@@ -273,7 +273,7 @@ export default function MachineLayerScanner() {
         {result && (
           <section className="space-y-6 animate-fade-in">
             {/* Score global */}
-            <Card className="p-6 sm:p-8 border-border/60 bg-card/40 backdrop-blur-sm">
+            <Card className="p-6 sm:p-8 border-border/60 bg-card/40 backdrop-blur-xs">
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <GeoScoreGauge score={result.score_global} />
                 <div className="flex-1 text-center sm:text-left">

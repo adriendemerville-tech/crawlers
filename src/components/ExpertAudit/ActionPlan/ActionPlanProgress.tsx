@@ -23,7 +23,7 @@ export function ActionPlanProgress({
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-xl border border-border/50 p-6 shadow-sm"
+      className="bg-card rounded-xl border border-border/50 p-6 shadow-xs"
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <div>

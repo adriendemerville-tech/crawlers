@@ -219,7 +219,7 @@ export function CopilotDashboard() {
               return (
                 <div key={d.date} className="flex-1 flex flex-col items-center gap-1" title={`${d.date} — ${d.actions} actions`}>
                   <div
-                    className="w-full bg-primary/70 rounded-sm"
+                    className="w-full bg-primary/70 rounded-xs"
                     style={{ height: `${h}%` }}
                   />
                   <span className="text-[9px] text-muted-foreground rotate-45 origin-top-left whitespace-nowrap mt-2">

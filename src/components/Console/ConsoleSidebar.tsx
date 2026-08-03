@@ -375,7 +375,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
                         }}
                         placeholder="exemple.com"
                         disabled={adding}
-                        className="flex-1 min-w-0 h-7 px-2 text-xs bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                        className="flex-1 min-w-0 h-7 px-2 text-xs bg-background border border-border rounded focus:outline-hidden focus:ring-1 focus:ring-ring"
                       />
                       <button
                         type="submit"

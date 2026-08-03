@@ -133,7 +133,7 @@ export function UpdatePipelinePanel({ externalDomain }: { externalDomain?: strin
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com/article-a-rafraichir"
             disabled={loading}
-            className="flex-1 px-3 py-2 text-xs bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 px-3 py-2 text-xs bg-background border border-border rounded-md focus:outline-hidden focus:ring-1 focus:ring-ring"
             onKeyDown={(e) => { if (e.key === 'Enter') handleExtract(); }}
           />
           <button
@@ -320,7 +320,7 @@ function PipelineCard({
                   onChange={(e) => setCompetitorInput(e.target.value)}
                   placeholder="https://concurrent1.com/page  https://concurrent2.com/page"
                   disabled={running === 'topic_gaps'}
-                  className="flex-1 px-2 py-1 text-[10px] bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="flex-1 px-2 py-1 text-[10px] bg-background border border-border rounded focus:outline-hidden focus:ring-1 focus:ring-ring"
                 />
                 <button
                   onClick={handleTopicGaps}

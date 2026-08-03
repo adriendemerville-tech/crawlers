@@ -389,7 +389,7 @@ export default function RapportViewer() {
         {/* Report iframe */}
         <main className="flex-1 relative">
           {isSummarizing && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-xs">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>{t.summaryInProgress}</span>

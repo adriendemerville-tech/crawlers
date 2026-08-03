@@ -162,7 +162,7 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
                 data-active={activeEngine === ea.engine}
                 onClick={() => setActiveEngine(ea.engine)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${getEngineColor(ea.engine)} ${
-                  activeEngine === ea.engine ? 'ring-1 ring-primary/50 shadow-sm' : 'opacity-70 hover:opacity-100'
+                  activeEngine === ea.engine ? 'ring-1 ring-primary/50 shadow-xs' : 'opacity-70 hover:opacity-100'
                 }`}
               >
                 <span className="font-semibold">{ea.engine}</span>

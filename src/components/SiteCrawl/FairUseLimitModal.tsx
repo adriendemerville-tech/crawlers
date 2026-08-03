@@ -35,7 +35,7 @@ export function FairUseLimitModal({ language, crawlPagesThisMonth, fairUseLimit,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs" onClick={onClose}>
       <div className="relative w-full max-w-2xl mx-4 rounded-xl border-2 border-amber-500/50 bg-card shadow-2xl shadow-amber-500/10 p-6 space-y-5" onClick={e => e.stopPropagation()}>
         <div className="text-center">
           <div className="mx-auto w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">

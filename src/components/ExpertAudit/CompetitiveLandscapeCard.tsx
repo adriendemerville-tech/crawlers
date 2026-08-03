@@ -125,7 +125,7 @@ export function CompetitiveLandscapeCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsModalOpen(true)}
-                  className="gap-1.5 h-7 px-2.5 text-xs font-medium bg-foreground text-background hover:bg-foreground/90 rounded-md shadow-sm"
+                  className="gap-1.5 h-7 px-2.5 text-xs font-medium bg-foreground text-background hover:bg-foreground/90 rounded-md shadow-xs"
                 >
                   <Pencil className="h-3 w-3" />
                   Corriger

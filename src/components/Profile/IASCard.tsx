@@ -371,7 +371,7 @@ export function IASCard({ trackedSiteId, userId, domain, isPremium, onUpgrade }:
                   if (!active || !payload?.length) return null;
                   const d = payload[0].payload;
                   return (
-                    <div className="rounded-md border bg-background/95 backdrop-blur-sm px-2.5 py-1.5 shadow-lg text-xs">
+                    <div className="rounded-md border bg-background/95 backdrop-blur-xs px-2.5 py-1.5 shadow-lg text-xs">
                       <p className="font-medium">{d.label}</p>
                       <p className={cn("font-bold", getScoreColor(d.score))}>{t.score}: {d.score}/100</p>
                     </div>

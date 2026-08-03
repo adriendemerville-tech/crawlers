@@ -360,7 +360,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                       className={cn(
                         "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs whitespace-nowrap transition-colors shrink-0",
                         isActive
-                          ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                          ? "bg-primary text-primary-foreground font-medium shadow-xs"
                           : "bg-muted/60 text-muted-foreground"
                       )}
                     >

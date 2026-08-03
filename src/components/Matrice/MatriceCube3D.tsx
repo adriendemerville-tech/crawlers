@@ -313,7 +313,7 @@ export function MatriceCube3D({
         {(hovered || internalSelected) && results.length > 0 && (() => {
           const v = hovered ?? internalSelected!;
           return (
-            <div className="absolute top-3 left-3 max-w-[260px] border-2 border-brand-violet bg-background/95 backdrop-blur-sm rounded-md p-3 text-xs space-y-1 pointer-events-none">
+            <div className="absolute top-3 left-3 max-w-[260px] border-2 border-brand-violet bg-background/95 backdrop-blur-xs rounded-md p-3 text-xs space-y-1 pointer-events-none">
               <div className="font-semibold text-foreground">{v.familyLabel}</div>
               <div className="text-muted-foreground font-mono">
                 {v.typeLabel} · {v.weightLabel}
@@ -339,7 +339,7 @@ export function MatriceCube3D({
         {[0, 1, 2, 3, 4].map(b => (
           <div key={b} className="flex items-center gap-1">
             <span
-              className="inline-block w-3 h-3 rounded-sm border border-foreground/10"
+              className="inline-block w-3 h-3 rounded-xs border border-foreground/10"
               style={{ backgroundColor: bucketToHsl(b as 0|1|2|3|4) }}
               aria-hidden
             />

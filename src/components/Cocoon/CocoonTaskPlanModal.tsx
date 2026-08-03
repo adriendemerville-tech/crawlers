@@ -503,7 +503,7 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
                 onChange={e => setNewTitle(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addTask()}
                 placeholder={t.placeholder}
-                className="flex-1 text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-[#a78bfa]/40"
+                className="flex-1 text-xs bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder:text-white/20 focus:outline-hidden focus:border-[#a78bfa]/40"
               />
               <button
                 onClick={addTask}

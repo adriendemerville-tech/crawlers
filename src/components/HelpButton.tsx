@@ -42,7 +42,7 @@ export function HelpButton({ term, className, size = 'sm' }: HelpButtonProps) {
               "inline-flex items-center justify-center rounded-full",
               "text-muted-foreground/50 hover:text-primary hover:bg-primary/10",
               "transition-all duration-200 ease-out",
-              "focus:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+              "focus:outline-hidden focus-visible:ring-1 focus-visible:ring-primary",
               "ml-1 p-0.5",
               className
             )}
@@ -53,7 +53,7 @@ export function HelpButton({ term, className, size = 'sm' }: HelpButtonProps) {
         </TooltipTrigger>
         <TooltipContent 
           side="top" 
-          className="bg-popover/95 backdrop-blur-sm text-xs px-2 py-1"
+          className="bg-popover/95 backdrop-blur-xs text-xs px-2 py-1"
         >
           <p>{t.help.viewInLexicon}</p>
         </TooltipContent>

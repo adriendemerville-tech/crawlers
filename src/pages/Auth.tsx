@@ -351,7 +351,7 @@ export default function Auth() {
           <ArrowLeft className="h-4 w-4" />
         </Link>
 
-        <Card className="border-border/50 shadow-xl backdrop-blur-sm">
+        <Card className="border-border/50 shadow-xl backdrop-blur-xs">
           <CardHeader className="text-center pb-2 pt-4">
             <CardTitle className="text-2xl font-bold">
               {isLogin ? t.loginTitle : t.signupTitle}

@@ -75,7 +75,7 @@ export function BotActivityWidget() {
 
   if (loading) {
     return (
-      <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border border-border/50 bg-card/50 backdrop-blur-xs">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Activity className="h-4 w-4 text-primary animate-pulse" />
@@ -98,7 +98,7 @@ export function BotActivityWidget() {
   }
 
   return (
-    <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
+    <Card className="border border-border/50 bg-card/50 backdrop-blur-xs">
       <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">

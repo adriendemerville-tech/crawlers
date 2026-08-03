@@ -31,7 +31,7 @@ export function CreditCoin({ size = 'md', className }: CreditCoinProps) {
       {/* Metallic shine effect */}
       <span className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent" />
       {/* Bot icon */}
-      <Bot className={cn(sizes.icon, "text-amber-700 relative z-10 drop-shadow-sm")} strokeWidth={2.5} />
+      <Bot className={cn(sizes.icon, "text-amber-700 relative z-10 drop-shadow-xs")} strokeWidth={2.5} />
     </span>
   );
 }

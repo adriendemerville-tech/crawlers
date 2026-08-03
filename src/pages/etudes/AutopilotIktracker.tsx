@@ -361,7 +361,7 @@ export default function AutopilotIktracker() {
                 <li key={w.w} className="flex items-center gap-3 text-xs">
                   <span className="w-12 shrink-0 text-foreground/70">{w.w}</span>
                   <span
-                    className="h-3 rounded-sm border border-foreground/40 bg-foreground/15"
+                    className="h-3 rounded-xs border border-foreground/40 bg-foreground/15"
                     style={{ width: `${(w.clicks / maxClicks) * 100}%` }}
                     aria-hidden="true"
                   />

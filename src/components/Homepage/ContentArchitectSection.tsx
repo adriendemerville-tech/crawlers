@@ -130,7 +130,7 @@ export const ContentArchitectSection = memo(() => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.1 + i * 0.08 }}
-                className="group relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 hover:border-emerald-500/30 hover:bg-emerald-500/[0.03] transition-all duration-300"
+                className="group relative rounded-xl border border-border/50 bg-card/50 backdrop-blur-xs p-5 hover:border-emerald-500/30 hover:bg-emerald-500/[0.03] transition-all duration-300"
               >
                 <div className="flex gap-4">
                   <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/15 transition-colors">

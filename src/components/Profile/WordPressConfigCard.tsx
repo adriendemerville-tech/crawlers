@@ -325,7 +325,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
               key={cms.key}
               className={`flex flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-semibold transition-all border-2 p-1.5 aspect-[1/0.72] ${
                 connectMethod === cms.key
-                  ? 'bg-primary/10 border-primary/50 text-foreground shadow-sm'
+                  ? 'bg-primary/10 border-primary/50 text-foreground shadow-xs'
                   : 'bg-background border-border hover:border-primary/30 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
               }`}
               onClick={() => setConnectMethod(prev => prev === cms.key && cms.key === 'gtm' ? 'wordpress' : cms.key as any)}

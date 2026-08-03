@@ -272,7 +272,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
         {/* HTML Preview */}
         <div className="flex-1 overflow-auto bg-muted/30 relative">
           {isSummarizing && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-xs">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>{language === 'fr' ? 'Résumé IA en cours…' : language === 'es' ? 'Resumen IA en curso…' : 'AI summary in progress…'}</span>

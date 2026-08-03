@@ -121,7 +121,7 @@ function EditableField({ label, value, onSave }: { label: string; value: string 
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSave(); }
               if (e.key === 'Escape') { setEditValue(value || ''); setIsEditing(false); }
             }}
-            className="w-full text-sm text-foreground bg-transparent border border-[hsl(var(--brand-violet))]/40 rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-[hsl(var(--brand-violet))]/50 resize-none overflow-hidden min-h-[28px]"
+            className="w-full text-sm text-foreground bg-transparent border border-[hsl(var(--brand-violet))]/40 rounded-md px-2 py-1 outline-hidden focus:ring-1 focus:ring-[hsl(var(--brand-violet))]/50 resize-none overflow-hidden min-h-[28px]"
             rows={1}
           />
         ) : (
@@ -207,7 +207,7 @@ function EditableKeyword({ value, onChange }: { value: string; onChange: (v: str
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={e => { if (e.key === 'Enter') commit(); }}
-        className="text-xs px-2 py-0.5 rounded-md border border-[hsl(var(--brand-violet))]/40 bg-background text-foreground outline-none focus:ring-1 focus:ring-[hsl(var(--brand-violet))]/50 w-auto min-w-[60px]"
+        className="text-xs px-2 py-0.5 rounded-md border border-[hsl(var(--brand-violet))]/40 bg-background text-foreground outline-hidden focus:ring-1 focus:ring-[hsl(var(--brand-violet))]/50 w-auto min-w-[60px]"
         style={{ width: `${Math.max(draft.length, 4)}ch` }}
       />
     );
@@ -537,7 +537,7 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
         }`}>
           {/* Summary overlay — post-speech keywords */}
           {voiceStep === 'summary' && (
-            <div className="absolute inset-0 z-10 rounded-xl bg-background/95 backdrop-blur-sm flex items-center gap-3 p-4 animate-fade-in">
+            <div className="absolute inset-0 z-10 rounded-xl bg-background/95 backdrop-blur-xs flex items-center gap-3 p-4 animate-fade-in">
               <div className="flex-1 flex flex-wrap gap-1.5 items-center min-w-0">
                 {summaryKeywords.map((kw, i) => (
                   <EditableKeyword
@@ -564,7 +564,7 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
 
           {/* Thank you overlay */}
           {thankYouShown && (
-            <div className="absolute inset-0 z-10 rounded-xl bg-background/95 backdrop-blur-sm flex items-center justify-center animate-fade-in">
+            <div className="absolute inset-0 z-10 rounded-xl bg-background/95 backdrop-blur-xs flex items-center justify-center animate-fade-in">
               <div className="text-center space-y-2">
                 <Sparkles className="h-6 w-6 text-[hsl(var(--brand-violet))] mx-auto" />
                 <p className="text-sm font-medium text-foreground">Merci ! Nous intégrons ces informations.</p>

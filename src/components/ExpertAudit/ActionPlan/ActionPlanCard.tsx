@@ -48,7 +48,7 @@ export function ActionPlanCard({
         <div
           className={cn(
             'bg-card rounded-lg border border-border/50 transition-all duration-300',
-            'shadow-sm hover:shadow-md',
+            'shadow-xs hover:shadow-md',
             isCompleted && 'opacity-50'
           )}
         >

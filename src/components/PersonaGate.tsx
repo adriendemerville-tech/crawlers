@@ -145,7 +145,7 @@ export function PersonaGate({ onSelect }: PersonaGateProps) {
                 <div className="flex items-center gap-4">
                   <div className={`
                     w-10 h-10 rounded-lg flex items-center justify-center shrink-0
-                    bg-gradient-to-br ${p.gradient} shadow-sm
+                    bg-gradient-to-br ${p.gradient} shadow-xs
                   `}>
                     {isSelected ? (
                       <Loader2 className="w-5 h-5 text-white animate-spin" />
@@ -206,9 +206,9 @@ export function PersonaGate({ onSelect }: PersonaGateProps) {
                   maxLength={20}
                   className={`
                     w-full h-10 rounded-lg border-2 bg-card px-3 text-sm text-center font-mono tracking-widest uppercase
-                    outline-none transition-all duration-300
+                    outline-hidden transition-all duration-300
                     ${affiliateStatus === 'valid'
-                      ? 'border-emerald-500 shadow-sm shadow-emerald-500/20'
+                      ? 'border-emerald-500 shadow-xs shadow-emerald-500/20'
                       : affiliateStatus === 'invalid'
                         ? 'border-destructive'
                         : 'border-border/60 focus:border-violet-400'

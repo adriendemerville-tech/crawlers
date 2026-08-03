@@ -1952,7 +1952,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
 
       {/* History Panel Overlay (expanded mode only) */}
       {showHistory && isExpanded && (
-        <div className="absolute inset-0 z-20 bg-background/98 backdrop-blur-sm flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="absolute inset-0 z-20 bg-background/98 backdrop-blur-xs flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-200">
           <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 shrink-0">
             <button onClick={() => setShowHistory(false)} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -2079,7 +2079,7 @@ export function ChatWindow({ onClose, triggerOnboarding, onOnboardingConsumed, a
               placeholder={fantomasMode ? '⚡ Directive Creator...' : bugReportMode === 'waiting' ? 'Décrivez le problème...' : 'Votre question...'}
               disabled={sending}
               className={cn(
-                "w-full min-h-[2rem] max-h-[10rem] resize-none overflow-y-auto rounded-xl border bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 caret-primary transition-colors",
+                "w-full min-h-[2rem] max-h-[10rem] resize-none overflow-y-auto rounded-xl border bg-muted/30 pl-3 pr-9 py-1.5 text-[12px] ring-offset-background placeholder:text-muted-foreground/50 focus-visible:outline-hidden focus-visible:ring-1 caret-primary transition-colors",
                 fantomasMode ? "border-destructive/40 focus-visible:ring-destructive/30" : "border-border/40 focus-visible:ring-ring/30"
               )}
               maxLength={isAdmin ? 2000 : 500}

@@ -77,7 +77,7 @@ export function GA4TrafficSources({ sources, loading }: Props) {
             const pct = total > 0 ? (s.sessions / total) * 100 : 0;
             return (
               <div key={s.channel} className="flex items-center gap-2 text-xs">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: COLORS[i % COLORS.length] }} />
+                <span className="h-2.5 w-2.5 shrink-0 rounded-xs" style={{ background: COLORS[i % COLORS.length] }} />
                 <span className="flex-1 truncate">{s.channel}</span>
                 <span className="tabular-nums text-muted-foreground">{pct.toFixed(0)}%</span>
                 <span className="w-14 text-right font-medium tabular-nums">{s.sessions.toLocaleString('fr-FR')}</span>

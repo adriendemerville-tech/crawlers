@@ -177,7 +177,7 @@ export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
                   }}
                 />
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 h-3.5 w-0.5 bg-foreground/80 rounded-full shadow-sm"
+                  className="absolute top-1/2 -translate-y-1/2 h-3.5 w-0.5 bg-foreground/80 rounded-full shadow-xs"
                   style={{ left: `${jargonRatio}%` }}
                 />
               </div>

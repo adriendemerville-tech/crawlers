@@ -188,7 +188,7 @@ export function MatricePivotView({
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder="Filtrer…"
-              className="pl-7 pr-2 py-1 text-xs bg-transparent border border-brand-violet rounded-md focus:outline-none focus:border-brand-gold w-44"
+              className="pl-7 pr-2 py-1 text-xs bg-transparent border border-brand-violet rounded-md focus:outline-hidden focus:border-brand-gold w-44"
               aria-label="Filtrer la matrice"
             />
           </div>

@@ -451,7 +451,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                                     <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-orange-500" />
                                   </>
                                 )}
-                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                   {tooltipText}
                                 </span>
                               </Button>
@@ -510,7 +510,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                                     </>
                                   )}
                                   <span className="text-xs font-medium">{ctaLabel}</span>
-                                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                     {tooltipText}
                                   </span>
                                 </Button>
@@ -546,7 +546,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                               ) : (
                                 <Activity className="h-3.5 w-3.5" />
                               )}
-                              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                 GA4
                               </span>
                             </Button>
@@ -797,10 +797,10 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                             {/* GSC controls */}
                             <div className="flex items-center gap-2 flex-wrap">
                               <div className="flex rounded-lg border bg-muted p-0.5 text-sm">
-                                <button className={cn("px-3.5 py-2 rounded-md transition-colors flex items-center gap-1.5", h.gscDateMode === 'since' && "bg-background shadow-sm font-medium")} onClick={() => h.setGscDateMode('since')}>
+                                <button className={cn("px-3.5 py-2 rounded-md transition-colors flex items-center gap-1.5", h.gscDateMode === 'since' && "bg-background shadow-xs font-medium")} onClick={() => h.setGscDateMode('since')}>
                                   {h.language === 'fr' ? 'Depuis' : h.language === 'es' ? 'Desde' : 'Since'}
                                 </button>
-                                <button className={cn("px-3.5 py-2 rounded-md transition-colors", h.gscDateMode === 'range' && "bg-background shadow-sm font-medium")} onClick={() => h.setGscDateMode('range')}>
+                                <button className={cn("px-3.5 py-2 rounded-md transition-colors", h.gscDateMode === 'range' && "bg-background shadow-xs font-medium")} onClick={() => h.setGscDateMode('range')}>
                                   {h.language === 'fr' ? 'Entre' : h.language === 'es' ? 'Entre' : 'Between'}
                                 </button>
                               </div>
@@ -822,7 +822,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                               )}
                               <div className="flex rounded-lg border bg-muted p-0.5 text-sm ml-auto">
                                 {(['daily', 'weekly', 'monthly'] as const).map((g) => (
-                                  <button key={g} className={cn("px-3 py-2 rounded-md transition-colors", h.gscGranularity === g && "bg-background shadow-sm font-medium")} onClick={() => h.setGscGranularity(g)}>
+                                  <button key={g} className={cn("px-3 py-2 rounded-md transition-colors", h.gscGranularity === g && "bg-background shadow-xs font-medium")} onClick={() => h.setGscGranularity(g)}>
                                     {g === 'daily' ? (h.language === 'fr' ? 'Jour' : h.language === 'es' ? 'Día' : 'Day')
                                       : g === 'weekly' ? (h.language === 'fr' ? 'Sem.' : h.language === 'es' ? 'Sem.' : 'Week')
                                       : (h.language === 'fr' ? 'Mois' : h.language === 'es' ? 'Mes' : 'Month')}

@@ -387,7 +387,7 @@ const SeaSeoBridgePage = memo(() => {
                         <div className={`rounded-md p-2 ${V.accentBg} text-violet-400`}>{opp.icon}</div>
                         <div>
                           <h3 className="font-bold text-foreground">{opp.title}</h3>
-                          <Badge className={`mt-1 rounded-sm border ${V.border} ${V.accentBg} text-[10px] ${V.accent}`}>{opp.type}</Badge>
+                          <Badge className={`mt-1 rounded-xs border ${V.border} ${V.accentBg} text-[10px] ${V.accent}`}>{opp.type}</Badge>
                         </div>
                       </div>
                       <p className="mb-3 text-sm text-muted-foreground">{opp.desc}</p>

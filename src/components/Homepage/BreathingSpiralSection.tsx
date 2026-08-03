@@ -178,7 +178,7 @@ const SignalPill = ({ icon: Icon, label, delay }: { icon: any; label: string; de
     whileInView={{ opacity: 1, scale: 1 }}
     viewport={{ once: true }}
     transition={{ duration: 0.5, delay }}
-    className="flex items-center gap-2 rounded-full border border-border/50 bg-card/60 backdrop-blur-sm px-3 py-1.5 text-xs font-medium text-muted-foreground"
+    className="flex items-center gap-2 rounded-full border border-border/50 bg-card/60 backdrop-blur-xs px-3 py-1.5 text-xs font-medium text-muted-foreground"
   >
     <Icon className="h-3.5 w-3.5 text-primary" />
     {label}
@@ -213,7 +213,7 @@ export const BreathingSpiralSection = memo(() => {
             {/* Outer glow ring */}
             <div className="absolute inset-[-20px] rounded-full bg-gradient-to-br from-violet-500/10 via-transparent to-cyan-500/10 blur-2xl" />
 
-            <div className="relative w-full h-full rounded-2xl border border-border/30 bg-card/20 backdrop-blur-sm overflow-hidden">
+            <div className="relative w-full h-full rounded-2xl border border-border/30 bg-card/20 backdrop-blur-xs overflow-hidden">
               <SpiralCanvas />
 
               {/* Overlay label */}

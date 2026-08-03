@@ -255,7 +255,7 @@ export function ProfileSettings() {
             <Label htmlFor="email">{t.email}</Label>
             <Input id="email" value={user.email || ''} disabled className="bg-muted" />
           </div>
-          <Button onClick={handleSaveProfile} disabled={isSaving} variant="outline" className="gap-2 bg-transparent border-border rounded-sm">
+          <Button onClick={handleSaveProfile} disabled={isSaving} variant="outline" className="gap-2 bg-transparent border-border rounded-xs">
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {isSaving ? t.saving : t.saveChanges}
           </Button>
@@ -341,7 +341,7 @@ export function ProfileSettings() {
             <Button
               variant="outline"
               size="sm"
-              className="gap-2 shrink-0 bg-transparent border-border rounded-sm"
+              className="gap-2 shrink-0 bg-transparent border-border rounded-xs"
               disabled={gscConnecting}
               onClick={handleUpdateGscConnection}
             >
@@ -489,13 +489,13 @@ export function ProfileSettings() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setLanguage('fr')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'fr' ? 'border-foreground font-semibold' : ''}`}>
+            <Button variant="outline" onClick={() => setLanguage('fr')} className={`gap-2 rounded-xs bg-transparent border-border ${language === 'fr' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇫🇷</span> {t.french}
             </Button>
-            <Button variant="outline" onClick={() => setLanguage('en')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'en' ? 'border-foreground font-semibold' : ''}`}>
+            <Button variant="outline" onClick={() => setLanguage('en')} className={`gap-2 rounded-xs bg-transparent border-border ${language === 'en' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇬🇧</span> {t.english}
             </Button>
-            <Button variant="outline" onClick={() => setLanguage('es')} className={`gap-2 rounded-sm bg-transparent border-border ${language === 'es' ? 'border-foreground font-semibold' : ''}`}>
+            <Button variant="outline" onClick={() => setLanguage('es')} className={`gap-2 rounded-xs bg-transparent border-border ${language === 'es' ? 'border-foreground font-semibold' : ''}`}>
               <span>🇪🇸</span> {t.spanish}
             </Button>
           </div>
@@ -625,7 +625,7 @@ function SocialAccountRow({ label, icon, account, loading, connecting, disconnec
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 shrink-0 bg-transparent border-border rounded-sm text-destructive hover:text-destructive"
+                className="gap-2 shrink-0 bg-transparent border-border rounded-xs text-destructive hover:text-destructive"
                 disabled={disconnecting}
               >
                 {disconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
@@ -640,11 +640,11 @@ function SocialAccountRow({ label, icon, account, loading, connecting, disconnec
                 <AlertDialogDescription>{disconnectWarning}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="bg-transparent border-border rounded-sm">
+                <AlertDialogCancel className="bg-transparent border-border rounded-xs">
                   {language === 'fr' ? 'Annuler' : language === 'es' ? 'Cancelar' : 'Cancel'}
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-sm"
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xs"
                   onClick={onDisconnect}
                 >
                   {language === 'fr' ? 'Déconnecter' : language === 'es' ? 'Desconectar' : 'Disconnect'}
@@ -656,7 +656,7 @@ function SocialAccountRow({ label, icon, account, loading, connecting, disconnec
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 shrink-0 bg-transparent border-border rounded-sm"
+            className="gap-2 shrink-0 bg-transparent border-border rounded-xs"
             disabled={connecting}
             onClick={onConnect}
           >
@@ -690,10 +690,10 @@ function ThemeSettingsCard() {
       </CardHeader>
       <CardContent>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setTheme('light')} className={`gap-2 rounded-sm bg-transparent border-border ${theme !== 'dark' ? 'border-foreground font-semibold' : ''}`}>
+          <Button variant="outline" onClick={() => setTheme('light')} className={`gap-2 rounded-xs bg-transparent border-border ${theme !== 'dark' ? 'border-foreground font-semibold' : ''}`}>
             <Sun className="h-4 w-4" /> {l.light}
           </Button>
-          <Button variant="outline" onClick={() => setTheme('dark')} className={`gap-2 rounded-sm bg-transparent border-border ${theme === 'dark' ? 'border-foreground font-semibold' : ''}`}>
+          <Button variant="outline" onClick={() => setTheme('dark')} className={`gap-2 rounded-xs bg-transparent border-border ${theme === 'dark' ? 'border-foreground font-semibold' : ''}`}>
             <Moon className="h-4 w-4" /> {l.dark}
           </Button>
         </div>
@@ -731,10 +731,10 @@ function TickerSettingsCard() {
       </CardHeader>
       <CardContent>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={toggle} className={`gap-2 rounded-sm bg-transparent border-border ${!tickerHidden ? 'border-foreground font-semibold' : ''}`}>
+          <Button variant="outline" onClick={toggle} className={`gap-2 rounded-xs bg-transparent border-border ${!tickerHidden ? 'border-foreground font-semibold' : ''}`}>
             <Eye className="h-4 w-4" /> {l.show}
           </Button>
-          <Button variant="outline" onClick={toggle} className={`gap-2 rounded-sm bg-transparent border-border ${tickerHidden ? 'border-foreground font-semibold' : ''}`}>
+          <Button variant="outline" onClick={toggle} className={`gap-2 rounded-xs bg-transparent border-border ${tickerHidden ? 'border-foreground font-semibold' : ''}`}>
             <EyeOff className="h-4 w-4" /> {l.hide}
           </Button>
         </div>

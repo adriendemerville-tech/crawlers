@@ -1240,7 +1240,7 @@ export default function MatricePrompt() {
                 onChange={e => setErrorTitle(e.target.value)}
               />
               <textarea
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px]"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px]"
                 placeholder="Description détaillée (optionnel)"
                 value={errorDesc}
                 onChange={e => setErrorDesc(e.target.value)}
@@ -1270,7 +1270,7 @@ export default function MatricePrompt() {
                   onClick={() => handleBatchChange(b.batch_id)}
                   className={`group relative flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs ${
                     activeBatchId === b.batch_id
-                      ? 'border-primary bg-primary/5 text-foreground shadow-sm'
+                      ? 'border-primary bg-primary/5 text-foreground shadow-xs'
                       : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50'
                   }`}
                 >

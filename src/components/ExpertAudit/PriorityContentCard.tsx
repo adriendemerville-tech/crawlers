@@ -170,7 +170,7 @@ export function PriorityContentCard({ domain }: PriorityContentCardProps) {
         {suggestions.map((s, i) => (
           <div
             key={i}
-            className="rounded-lg border bg-card p-4 space-y-2 hover:shadow-sm transition-shadow"
+            className="rounded-lg border bg-card p-4 space-y-2 hover:shadow-xs transition-shadow"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 flex-1 min-w-0">

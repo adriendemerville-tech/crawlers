@@ -436,7 +436,7 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
           className="space-y-6"
         >
           {/* Visual Mock of the page with injections */}
-          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+          <div className="bg-card rounded-xl border shadow-xs overflow-hidden">
             {/* Mock Header */}
             <div className="bg-muted/50 border-b p-4 flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-red-400" />
@@ -508,7 +508,7 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
               {/* Local Business Preview */}
               {hasLocalBusiness && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}>
-                  <div className="bg-card border rounded-lg p-4 shadow-sm max-w-xs">
+                  <div className="bg-card border rounded-lg p-4 shadow-xs max-w-xs">
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                         <MapPin className="w-5 h-5 text-red-500" />

@@ -66,7 +66,7 @@ export function GA4TrafficBanner({ domain, simulatedDataEnabled = false }: GA4Tr
   const doubled = [...alerts, ...alerts];
 
   return (
-    <div className="relative overflow-hidden rounded-lg border bg-card/50 backdrop-blur-sm h-8 flex items-center">
+    <div className="relative overflow-hidden rounded-lg border bg-card/50 backdrop-blur-xs h-8 flex items-center">
       <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-card/50 to-transparent z-10 pointer-events-none" />
       <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-card/50 to-transparent z-10 pointer-events-none" />
       

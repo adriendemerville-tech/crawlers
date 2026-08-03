@@ -140,7 +140,7 @@ export default function BillingTab() {
                 step={1}
                 value={customAmount}
                 onChange={e => setCustomAmount(e.target.value)}
-                className="bg-transparent border border-border rounded px-3 py-2 pr-10 w-32 tabular-nums focus:outline-none focus:border-foreground"
+                className="bg-transparent border border-border rounded px-3 py-2 pr-10 w-32 tabular-nums focus:outline-hidden focus:border-foreground"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">€</span>
             </div>

@@ -104,7 +104,7 @@ export function ContentArchitectPreview() {
               )}
               {/* Meta description */}
               {result.metadata_enrichment?.meta_description && (
-                <p className={`text-sm text-white/50 italic border-l-2 ${t.accentBorderL} pl-3 outline-none ${t.accentFocusRing} rounded`}
+                <p className={`text-sm text-white/50 italic border-l-2 ${t.accentBorderL} pl-3 outline-hidden ${t.accentFocusRing} rounded`}
                   contentEditable suppressContentEditableWarning
                   onBlur={e => { const u = { ...result }; u.metadata_enrichment.meta_description = e.currentTarget.textContent || ''; setResult(u); }}
                 >{result.metadata_enrichment.meta_description}</p>
@@ -113,7 +113,7 @@ export function ContentArchitectPreview() {
               {result.content_structure?.tldr_summary && (
                 <div className={`p-3 rounded-lg ${t.accentBg} border ${t.accentBorder}`}>
                   <p className={`text-xs uppercase tracking-wider mb-1 ${t.accentLabel}`}>TL;DR</p>
-                  <p className={`text-sm text-white/70 outline-none ${t.accentFocusRing} rounded`}
+                  <p className={`text-sm text-white/70 outline-hidden ${t.accentFocusRing} rounded`}
                     contentEditable suppressContentEditableWarning
                     onBlur={e => { const u = { ...result }; u.content_structure.tldr_summary = e.currentTarget.textContent || ''; setResult(u); }}
                   >{result.content_structure.tldr_summary}</p>
@@ -121,7 +121,7 @@ export function ContentArchitectPreview() {
               )}
               {/* Introduction */}
               {result.content_structure?.introduction && (
-                <p className={`text-sm text-white/60 leading-relaxed outline-none ${t.accentFocusRing} rounded border-l-2 border-emerald-500/30 pl-3`}
+                <p className={`text-sm text-white/60 leading-relaxed outline-hidden ${t.accentFocusRing} rounded border-l-2 border-emerald-500/30 pl-3`}
                   contentEditable suppressContentEditableWarning
                   onBlur={e => { const u = { ...result }; u.content_structure.introduction = e.currentTarget.textContent || ''; setResult(u); }}
                 >{result.content_structure.introduction}</p>
@@ -147,7 +147,7 @@ export function ContentArchitectPreview() {
               {(result.content_structure?.sections || []).map((s: any, i: number) => (
                 <div key={i} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h2 className={`text-lg font-semibold text-white/90 outline-none ${t.accentFocusRing} rounded px-1 -mx-1`}
+                    <h2 className={`text-lg font-semibold text-white/90 outline-hidden ${t.accentFocusRing} rounded px-1 -mx-1`}
                       contentEditable suppressContentEditableWarning
                       onBlur={e => { const u = { ...result }; u.content_structure.sections[i].title = e.currentTarget.textContent || ''; setResult(u); }}
                     >{s.title}</h2>
@@ -157,7 +157,7 @@ export function ContentArchitectPreview() {
                     </div>
                   </div>
                   {s.body_text ? (
-                    <div className={`text-sm text-white/60 leading-relaxed whitespace-pre-wrap outline-none ${t.accentFocusRing} rounded pl-2 border-l border-white/5`}
+                    <div className={`text-sm text-white/60 leading-relaxed whitespace-pre-wrap outline-hidden ${t.accentFocusRing} rounded pl-2 border-l border-white/5`}
                       contentEditable suppressContentEditableWarning
                       onBlur={e => { const u = { ...result }; u.content_structure.sections[i].body_text = e.currentTarget.textContent || ''; setResult(u); }}
                     >{s.body_text}</div>
@@ -179,7 +179,7 @@ export function ContentArchitectPreview() {
                 <div className="space-y-2 mt-4">
                   <p className="text-[10px] text-white/30 uppercase tracking-wider">Sous-sections H3</p>
                   {(result.content_structure.hn_hierarchy || []).filter((h: any) => h.level === 'h3').map((hn: any, i: number) => (
-                    <h3 key={i} className={`text-base font-medium text-white/70 ml-4 outline-none ${t.accentFocusRing} rounded px-1 -mx-1`}
+                    <h3 key={i} className={`text-base font-medium text-white/70 ml-4 outline-hidden ${t.accentFocusRing} rounded px-1 -mx-1`}
                       contentEditable suppressContentEditableWarning
                       onBlur={e => { const u = { ...result }; const idx = u.content_structure.hn_hierarchy.indexOf(hn); if (idx >= 0) u.content_structure.hn_hierarchy[idx].text = e.currentTarget.textContent || ''; setResult(u); }}
                     >{hn.text}</h3>

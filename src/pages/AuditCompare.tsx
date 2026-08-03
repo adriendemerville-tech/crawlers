@@ -460,7 +460,7 @@ function ComparisonRow({ children, separator = true }: { children: [React.ReactN
 function BrandDnaCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
   const { analysis } = site;
   return (
-    <Card className="border-border/50 bg-card/80 backdrop-blur-sm h-full">
+    <Card className="border-border/50 bg-card/80 backdrop-blur-xs h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
           <Globe className="h-4 w-4 text-primary" /> Brand DNA
