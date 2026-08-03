@@ -353,7 +353,7 @@ export function ProspectPipelineDashboard() {
         <div className="space-y-2">
           {prospects.map(prospect => {
             const sc = statusConfig[prospect.status] || statusConfig.new;
-            const StatusIcon = sc.icon;
+            const StatusIcon = sc.icon as LucideIcon;
             // Get the latest active outreach item (not advanced/expired)
             const allOutreach = (prospect.prospect_outreach_queue || []) as OutreachItem[];
             const activeOutreach = allOutreach

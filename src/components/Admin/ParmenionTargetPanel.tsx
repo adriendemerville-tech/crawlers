@@ -611,7 +611,7 @@ export function ParmenionTargetPanel({
               <div className="space-y-3">
                 {logs.map((log) => {
                   const config = statusConfig[log.status] || statusConfig.pending;
-                  const StatusIcon = config.icon;
+                  const StatusIcon = config.icon as LucideIcon;
                   return (
                     <div key={log.id} className={cn(
                       "rounded-lg border transition-colors",

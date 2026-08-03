@@ -297,7 +297,7 @@ export function GuidesManagement() {
                 <TableBody>
                   {filtered.map(g => {
                     const st = STATUS_LABELS[g.status] || STATUS_LABELS.draft;
-                    const StIcon = st.icon;
+                    const StIcon = st.icon as LucideIcon;
                     const target = GUIDE_TARGETS.find(t => t.value === g.guide_target);
                     const toolCount = (g.guide_tools || []).length;
 

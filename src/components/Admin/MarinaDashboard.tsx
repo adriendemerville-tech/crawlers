@@ -517,7 +517,7 @@ export function MarinaDashboard() {
               <div className="divide-y divide-border">
                 {jobs.map((job) => {
                   const config = statusConfig[job.status] || statusConfig.pending;
-                  const Icon = config.icon;
+                  const Icon = config.icon as LucideIcon;
                   const payload = job.input_payload || {};
                   const result = job.result_data;
                   const phase = payload?.phase;

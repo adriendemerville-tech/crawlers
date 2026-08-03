@@ -245,7 +245,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
     const isActive = activeTab === item.value;
     const isLocked = item.proOnly && !isProUser;
-    const Icon = item.icon;
+    const Icon = item.icon as LucideIcon;
     const href = item.href ?? `/app/console?tab=${item.value}`;
 
     const content = (
@@ -434,7 +434,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       )}>
         {isMobile ? (
           [...items.filter(i => !i.hideOnMobile), ...bottomItems.filter(i => !i.hideOnMobile)].map(item => {
-            const Icon = item.icon;
+            const Icon = item.icon as LucideIcon;
             const isActive = activeTab === item.value;
             const href = `/app/console?tab=${item.value}`;
             return (

@@ -429,7 +429,7 @@ export function AlgoTrainingDashboard() {
 }
 
 function AlgoCard({ algo, onToggle }: { algo: AlgoConfig; onToggle: (id: string) => void }) {
-  const Icon = algo.icon;
+  const Icon = algo.icon as LucideIcon;
   const statusInfo = statusLabels[algo.status];
 
   return (

@@ -350,7 +350,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
             <div className="overflow-x-auto -mx-2 px-2 pb-2">
               <div className="flex gap-1.5 w-max">
                 {navGroups.flatMap((group) => group.items).map((item) => {
-                  const Icon = item.icon;
+                  const Icon = item.icon as LucideIcon;
                   const isActive = activeTab === item.id;
                   const notifCount = item.notifKey ? notifications[item.notifKey] : 0;
                   return (
@@ -391,7 +391,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
                   </p>
                   <div className="space-y-0.5">
                     {group.items.map((item) => {
-                      const Icon = item.icon;
+                      const Icon = item.icon as LucideIcon;
                       const isActive = activeTab === item.id;
                       const notifCount = item.notifKey ? notifications[item.notifKey] : 0;
                       return (

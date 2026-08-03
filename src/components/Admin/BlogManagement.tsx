@@ -528,7 +528,7 @@ export function BlogManagement() {
                 <TableBody>
                   {filteredArticles.map((article) => {
                     const statusConfig = STATUS_CONFIG[article.status];
-                    const StatusIcon = statusConfig.icon;
+                    const StatusIcon = statusConfig.icon as LucideIcon;
                     
                     return (
                       <TableRow key={article.id} className="group">
@@ -1124,7 +1124,7 @@ function LandingPagesManagement() {
                 <TableBody>
                   {filtered.map(l => {
                     const st = STATUS_LABELS[l.status] || STATUS_LABELS.draft;
-                    const StIcon = st.icon;
+                    const StIcon = st.icon as LucideIcon;
                     return (
                       <TableRow key={l.id}>
                         <TableCell>
