@@ -7,11 +7,17 @@ import { enqueueJob } from '../_shared/jobQueue.ts';
 /** All known CMS bridge edge functions (payload shape { action, ... }). */
 const CMS_BRIDGES = ['iktracker-actions', 'dictadevi-actions'];
 
+/** crawlers.fr n'a pas de CMS externe : ses articles vivent dans blog_articles. */
+function isCrawlersInternalDomain(domain: string): boolean {
+  return (domain || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase() === 'crawlers.fr';
+}
+
 /** Resolve the right CMS bridge function for a given domain (IKtracker / Dictadevi). */
 function resolveCmsBridge(domain: string): string {
   if (isDictadeviDomain(domain)) return 'dictadevi-actions';
   return 'iktracker-actions'; // default (covers IKtracker + back-compat)
 }
+
 
 /**
  * Call the appropriate CMS bridge for a domain. Adapts the payload shape:
