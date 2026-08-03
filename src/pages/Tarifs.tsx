@@ -1110,6 +1110,23 @@ export default function Tarifs() {
             </div>
 
 
+            {/* Proof: case study */}
+            <Card className="border-muted">
+              <CardContent className="pt-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {language === 'fr'
+                    ? 'Ce que produit concrètement un abonnement : 927 publications automatisées, chiffres Search Console et acquisition réels.'
+                    : 'What a subscription actually produces: 927 automated publications, real Search Console and acquisition figures.'}
+                </p>
+                <Link
+                  to="/etudes/autopilot-parmenion-iktracker"
+                  className="mt-3 inline-block text-sm font-medium underline hover:no-underline"
+                >
+                  {language === 'fr' ? "Lire l'étude de cas automatisation SEO" : 'Read the SEO automation case study'}
+                </Link>
+              </CardContent>
+            </Card>
+
             {/* Legal Notice */}
             <Card className="border-muted">
               <CardContent className="pt-6">
