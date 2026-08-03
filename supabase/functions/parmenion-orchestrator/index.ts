@@ -573,14 +573,14 @@ try {
                   : topTask.action_type.includes('fix') || topTask.action_type.includes('redirect')
                   ? 'technical_fix'
                   : 'content_gap',
-                description: `[Prescribe V3 — Strategist] ${topTask.title}. Plan: ${tasks.length} tâches, urgence: ${topTask.urgency}.`,
+                description: `[Prescribe V3 — Strategist] ${topTask.title}. Plan: ${tasksForPlan.length} tâches, urgence: ${topTask.urgency}.`,
               },
               tactic: {
-                initial_scope: { strategist_tasks: tasks.length, content_priority_mode: forceContent },
+                initial_scope: { strategist_tasks: tasksForPlan.length, content_priority_mode: forceContent },
                 final_scope: { 
                   selected_task: topTask.id, 
                   executor_function: executorFn,
-                  full_plan: tasks.map((t: any) => ({ id: t.id, action_type: t.action_type, urgency: t.urgency, priority: t.priority_score || t.priority, executor: t.executor_function })),
+                  full_plan: tasksForPlan.map((t: any) => ({ id: t.id, action_type: t.action_type, urgency: t.urgency, priority: t.priority_score || t.priority, executor: t.executor_function })),
                 },
                 scope_reductions: 0,
                 estimated_tokens: 0,
@@ -591,19 +591,19 @@ try {
                 risk_score: topTask.is_destructive ? Math.min(conservativeMode ? MAX_RISK_CONSERVATIVE : MAX_RISK_NORMAL, 2) : 1,
                 iterations: 0,
                 goal_changed: false,
-                reasoning: `Déterministe via cocoon-strategist. Tâche #1/${tasks.length}: "${topTask.title}" (${topTask.urgency}, score ${topTask.priority_score || topTask.priority}). ${strategistData?.conflicts_resolved?.length || 0} conflits résolus.`,
+                reasoning: `Déterministe via cocoon-strategist. Tâche #1/${tasksForPlan.length}: "${topTask.title}" (${topTask.urgency}, score ${topTask.priority_score || topTask.priority}). ${strategistData?.conflicts_resolved?.length || 0} conflits résolus.`,
               },
               action: {
                 type: topTask.execution_mode === 'content_architect' ? 'cms' : topTask.execution_mode === 'code_architect' ? 'code' : 'mixed',
                 payload: {
                   strategist_task: topTask,
-                  strategist_tasks: tasks.slice(0, 8),
+                  strategist_tasks: tasksForPlan.slice(0, 8),
                   strategist_plan_id: strategistData?.plan_id,
                   _prescribe_v3: true,
                 },
                 functions: [executorFn],
               },
-              summary: `Prescribe V3 (strategist): #1/${tasks.length} "${topTask.title}" → ${executorFn}. Urgence: ${topTask.urgency}. ${forceContent ? 'Content priority ON.' : ''}`,
+              summary: `Prescribe V3 (strategist): #1/${tasksForPlan.length} "${topTask.title}" → ${executorFn}. Urgence: ${topTask.urgency}. ${forceContent ? 'Content priority ON.' : ''}`,
             };
           }
         }
