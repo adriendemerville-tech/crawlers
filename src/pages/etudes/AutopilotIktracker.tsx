@@ -581,11 +581,21 @@ export default function AutopilotIktracker() {
             requêtes apparues ou disparues en cours de route ne sont pas comptées comme des gains.
           </p>
 
-          <h3 className="text-xl font-semibold mt-6 mb-2">4. Ce qu'on n'a pas fait</h3>
+          <h3 className="text-xl font-semibold mt-6 mb-2">4. Données produit et acquisition</h3>
           <p className="leading-relaxed text-foreground/85">
-            Pas de groupe témoin, pas de test A/B, pas de désaisonnalisation. Cette étude décrit
-            une trajectoire observée, pas une causalité démontrée.
+            Extraites de l'administration d'iktracker.fr le 2 août 2026 (heure UTC) : comptes créés,
+            trajets saisis pour l'activité, et réponses à la question d'origine posée à l'inscription
+            pour l'acquisition. Les 72 « skip » sont exclus du calcul des parts. Les sessions par
+            referrer proviennent des évènements de pages vues du produit, pas d'un outil tiers.
           </p>
+
+          <h3 className="text-xl font-semibold mt-6 mb-2">5. Ce qu'on n'a pas fait</h3>
+          <p className="leading-relaxed text-foreground/85">
+            Pas de groupe témoin, pas de test A/B, pas de désaisonnalisation, pas de chaînage entre
+            un article publié et une inscription. Cette étude décrit une trajectoire observée, pas
+            une causalité démontrée.
+          </p>
+
         </section>
 
         <section className="mb-12">
