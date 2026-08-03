@@ -817,7 +817,11 @@ async function executeFunctions(
         await executeCmsBridgeActions(decision, site, config, phase, cycleNumber, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
       } else if (CMS_BRIDGES.includes(funcName)) {
         await executeCmsBridgeReroute(funcName, decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+      } else if (funcName === 'content-pruning-executor') {
+        await executeContentPruning(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
+        continue;
       } else if (funcName === 'content-architecture-advisor') {
+
         await executeContentArchitect(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
       } else if (funcName === 'cms-push-draft' && Array.isArray(decision.action.payload?.cms_actions)) {
         await executeCmsPushDraft(decision, site, config, phase, supabase, executionResults, phaseErrors, (v) => { executionSuccess = v; setExecutionSuccess(v); });
