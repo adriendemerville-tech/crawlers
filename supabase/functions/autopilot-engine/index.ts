@@ -2,6 +2,7 @@ import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { isIktrackerDomain, isDictadeviDomain, normalizePageKey } from '../_shared/domainUtils.ts';
+import { enqueueJob } from '../_shared/jobQueue.ts';
 
 /** All known CMS bridge edge functions (payload shape { action, ... }). */
 const CMS_BRIDGES = ['iktracker-actions', 'dictadevi-actions'];
@@ -153,6 +154,19 @@ try {
     const body = await req.json().catch(() => ({}));
     targetSiteId = body.tracked_site_id || null;
 
+    // ═══ Reprise de cycle (découplage execute / watchdog) ═══
+    // Quand la file d'attente relance ce moteur pour terminer un cycle, elle passe
+    // only_phases: ['execute','validate'] + bypass_cooldown + cycle_number.
+    // Dans ce mode, la phase execute tourne INLINE (budget de temps neuf).
+    const onlyPhases: string[] | null = Array.isArray(body.only_phases) && body.only_phases.length > 0
+      ? body.only_phases.filter((p: unknown) => typeof p === 'string')
+      : null;
+    const bypassCooldown = body.bypass_cooldown === true || !!onlyPhases;
+    const resumeCycleNumber = typeof body.cycle_number === 'number' ? body.cycle_number : null;
+    const configIdFilter = typeof body.config_id === 'string' ? body.config_id : null;
+    // Un run principal diffère execute vers la file ; un run de reprise l'exécute.
+    const deferExecute = !onlyPhases;
+
     if (!isServiceRole) {
       const auth = await getAuthenticatedUser(req);
       if (!auth) {
@@ -170,6 +184,9 @@ try {
 
     if (targetSiteId) {
       query = query.eq('tracked_site_id', targetSiteId);
+    }
+    if (configIdFilter) {
+      query = query.eq('id', configIdFilter);
     }
 
     const { data: configs, error: configError } = await query;
@@ -198,7 +215,7 @@ try {
 
         // ═══ Check cooldown (only after successful macro-cycles) ═══
         const cooldownMs = (config.cooldown_hours || COOLDOWN_HOURS) * 3600 * 1000;
-        if (config.last_cycle_at && config.status !== 'error') {
+        if (!bypassCooldown && config.last_cycle_at && config.status !== 'error') {
           const elapsed = Date.now() - new Date(config.last_cycle_at).getTime();
           if (elapsed < cooldownMs) {
             const hoursLeft = Math.round((cooldownMs - elapsed) / 3600000);
@@ -296,12 +313,13 @@ try {
           .update({ status: 'running', updated_at: new Date().toISOString() })
           .eq('id', config.id);
 
-        const cycleNumber = (config.total_cycles_run || 0) + 1;
+        const cycleNumber = resumeCycleNumber ?? ((config.total_cycles_run || 0) + 1);
         const cycleStartTime = Date.now();
 
         // ═══ FULL PIPELINE ═══
         let cycleSuccess = true;
         let hasCriticalError = false;
+        let deferredToQueue = false;
         const allPhaseErrors: ExecutionError[] = [];
         let lastDecisionId: string | null = null;
         let lastPipelinePhase = 'audit';
@@ -309,7 +327,71 @@ try {
         let routedCmsActions: RoutedActions | null = null;
         const allPhaseResults: Array<{ phase: string; decision_id: string; status: string; executionResults: any[] }> = [];
 
-        for (const phase of PIPELINE_PHASES) {
+        const phasesToRun = onlyPhases
+          ? PIPELINE_PHASES.filter((p) => onlyPhases.includes(p))
+          : [...PIPELINE_PHASES];
+
+        // ═══ Reprise : reconstruire le routage CMS depuis la décision prescribe du cycle ═══
+        // (déterministe, aucun appel LLM) — sinon la phase execute relancée par la file
+        // perdrait les actions CMS calculées par prescribe.
+        if (onlyPhases && !phasesToRun.includes('prescribe')) {
+          const { data: prescribeLog } = await supabase
+            .from('parmenion_decision_log')
+            .select('id, action_payload, functions_called, goal_type, goal_description')
+            .eq('tracked_site_id', config.tracked_site_id)
+            .eq('cycle_number', cycleNumber)
+            .eq('pipeline_phase', 'prescribe')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (prescribeLog?.action_payload) {
+            const rebuilt = {
+              action: {
+                payload: prescribeLog.action_payload,
+                functions: prescribeLog.functions_called || [],
+              },
+              goal: { type: prescribeLog.goal_type, description: prescribeLog.goal_description },
+              tactic: {},
+            };
+            routedCmsActions = handlePrescribeRouting(
+              rebuilt, siteInfo, supabase, config, cycleNumber, prescribeLog.id, allPhaseResults,
+            );
+            console.log(`[AutopilotEngine] ♻️ Routage prescribe restauré pour ${siteInfo.domain} (cycle #${cycleNumber}): ${routedCmsActions?.all.length || 0} actions CMS`);
+          } else {
+            console.warn(`[AutopilotEngine] ⚠️ Aucune décision prescribe trouvée pour ${siteInfo.domain} cycle #${cycleNumber} — execute repart des fallbacks`);
+          }
+        }
+
+
+        for (const phase of phasesToRun) {
+          // ═══ Découplage execute : on met la suite du cycle en file d'attente ═══
+          // La phase execute (push CMS, génération de contenu) dépasse souvent le
+          // watchdog de 8,5 min et faisait périmer les décisions en 'skipped_stale'.
+          // On la relance donc dans une invocation dédiée via job_queue.
+          if (phase === 'execute' && deferExecute && config.implementation_mode !== 'dry_run') {
+            try {
+              await enqueueJob(supabase, {
+                userId: config.user_id,
+                functionName: 'autopilot-engine',
+                priority: 15,
+                maxAttempts: 2,
+                payload: {
+                  config_id: config.id,
+                  tracked_site_id: config.tracked_site_id,
+                  only_phases: ['execute', 'validate'],
+                  bypass_cooldown: true,
+                  cycle_number: cycleNumber,
+                },
+              });
+              deferredToQueue = true;
+              console.log(`[AutopilotEngine] 📮 Phases execute+validate mises en file pour ${siteInfo.domain} (cycle #${cycleNumber})`);
+            } catch (queueErr) {
+              console.error(`[AutopilotEngine] Enqueue execute failed for ${siteInfo.domain}, fallback inline:`, queueErr);
+            }
+            if (deferredToQueue) break;
+          }
+
           // Watchdog
           const elapsed = Date.now() - cycleStartTime;
           if (elapsed > CYCLE_DEADLINE_MS) {
@@ -477,6 +559,32 @@ try {
 
           console.log(`[AutopilotEngine] Phase ${phase} completed for ${siteInfo.domain} (status: ${phaseStatus})`);
         } // end phase loop
+
+        // ═══ Cycle différé : execute+validate reprennent dans une invocation dédiée ═══
+        if (deferredToQueue) {
+          await supabase.from('autopilot_configs').update({
+            status: 'running',
+            total_cycles_run: cycleNumber,
+            last_cycle_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }).eq('id', config.id);
+
+          await supabase.from('autopilot_modification_log').insert({
+            tracked_site_id: config.tracked_site_id, config_id: config.id, user_id: config.user_id,
+            phase: 'implementation', action_type: 'queued', cycle_number: cycleNumber,
+            description: `[QUEUE] Phases execute+validate mises en file (découplage watchdog) — cycle #${cycleNumber}`,
+            status: 'simulated',
+          });
+
+          results.push({
+            site_id: config.tracked_site_id, domain: siteInfo.domain, status: 'queued_execute',
+            decision_id: lastDecisionId || undefined,
+            pipeline_phase: `${allPhaseResults.length} phases + execute en file`,
+          });
+          continue;
+        }
+
+
 
         // ═══ Update config counters ═══
         const finalCycleStatus: CycleStatus = hasCriticalError ? 'failed' : computeCycleStatus(allPhaseErrors);
