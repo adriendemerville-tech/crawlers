@@ -2481,8 +2481,182 @@ const audit_internal_mesh: SkillDefinition = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// detect_content_cannibalization — clustering déterministe (0 LLM)
+// des pages qui visent la même intention (slug + titre + H1).
+// Lecture seule. Sort les clusters, le pilier recommandé et les
+// doublons à consolider (301 vers le pilier).
+// ═══════════════════════════════════════════════════════════
+const FR_STOPWORDS = new Set([
+  'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'da', 'et', 'ou', 'en', 'au', 'aux',
+  'pour', 'par', 'sur', 'sous', 'avec', 'sans', 'dans', 'vers', 'chez', 'que', 'qui', 'quoi',
+  'comment', 'pourquoi', 'quand', 'est', 'ce', 'cet', 'cette', 'ces', 'son', 'sa', 'ses',
+  'mon', 'ma', 'mes', 'votre', 'vos', 'notre', 'nos', 'plus', 'moins', 'tout', 'tous', 'toute',
+  'toutes', 'guide', 'complet', 'blog', 'article', 'page', 'fr', 'html', 'index',
+  '2024', '2025', '2026', '2027', 'vs', 'ne', 'pas', 'a', 'the', 'and', 'of', 'to',
+]);
+
+function cannibTokens(...parts: (string | null | undefined)[]): Set<string> {
+  const raw = parts.filter(Boolean).join(' ')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ');
+  const out = new Set<string>();
+  for (const t of raw.split(' ')) {
+    if (t.length < 3) continue;
+    if (FR_STOPWORDS.has(t)) continue;
+    // dé-pluralisation grossière (déterministe)
+    out.add(t.endsWith('s') && t.length > 4 ? t.slice(0, -1) : t);
+  }
+  return out;
+}
+
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+const detect_content_cannibalization: SkillDefinition = {
+  name: 'detect_content_cannibalization',
+  description: "Détecte la cannibalisation SEO d'un site : regroupe au niveau slug/titre les pages qui visent la même intention, désigne le pilier à conserver et liste les doublons à consolider (301 + maillage). 100% déterministe, lecture seule, aucun coût LLM.",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string', description: 'UUID du site suivi' },
+      domain: { type: 'string', description: 'Domaine du site (fallback si tracked_site_id absent)' },
+      threshold: { type: 'number', description: 'Seuil de recouvrement lexical (0.3–0.8). Défaut 0.45.' },
+      path_prefix: { type: 'string', description: "Restreindre à un répertoire, ex. '/blog'." },
+    },
+    required: [],
+  },
+  handler: async (input, ctx) => {
+    const identifier = String(input.tracked_site_id ?? input.domain ?? '').trim();
+    const site = identifier ? await resolveTrackedSite(ctx, identifier) : null;
+    const domain = (site?.domain ?? String(input.domain ?? '').trim()).replace(/^www\./, '');
+    if (!domain) return { ok: false, error: 'tracked_site_id ou domain requis' };
+
+    const threshold = Math.min(0.8, Math.max(0.3, Number(input.threshold ?? 0.45) || 0.45));
+    const prefix = String(input.path_prefix ?? '').trim();
+
+    const { data: crawls } = await ctx.supabase
+      .from('site_crawls')
+      .select('id, domain, completed_at')
+      .eq('status', 'completed')
+      .or(`domain.eq.${domain},domain.eq.www.${domain}`)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const crawl = crawls?.[0];
+    if (!crawl) return { ok: false, error: `Aucun crawl terminé pour ${domain}. Lance un audit d'abord.` };
+
+    const { data: pages } = await ctx.supabase
+      .from('crawl_pages')
+      .select('url, path, title, h1, word_count, seo_score, crawl_depth, is_indexable, page_intent, anchor_texts')
+      .eq('crawl_id', crawl.id);
+    let list = (pages ?? []) as Record<string, any>[];
+    if (prefix) list = list.filter((p) => String(p.path ?? '').startsWith(prefix));
+    list = list.filter((p) => p.is_indexable !== false);
+    if (list.length < 2) return { ok: false, error: 'Pas assez de pages indexables pour analyser la cannibalisation' };
+
+    // Liens entrants internes → signal d'autorité pour choisir le pilier
+    const norm = (u: string) => { try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; } };
+    const inbound = new Map<string, number>();
+    for (const p of list) inbound.set(norm(p.url), 0);
+    for (const p of list) {
+      for (const link of (p.anchor_texts || [])) {
+        if (link?.type === 'internal' && typeof link.href === 'string') {
+          const target = norm(link.href.startsWith('/') ? `https://x${link.href}` : link.href);
+          if (inbound.has(target)) inbound.set(target, (inbound.get(target) || 0) + 1);
+        }
+      }
+    }
+
+    type Node = { url: string; path: string; title: string; tokens: Set<string>; score: number };
+    const nodes: Node[] = list.map((p) => {
+      const path = String(p.path ?? norm(p.url));
+      const tokens = cannibTokens(path.replace(/\//g, ' '), p.title, p.h1);
+      const score =
+        (Number(p.seo_score) || 0) * 1.0 +
+        Math.min(40, (Number(p.word_count) || 0) / 50) +
+        (inbound.get(norm(p.url)) || 0) * 3 -
+        (Number(p.crawl_depth) || 0) * 2;
+      return { url: String(p.url), path, title: String(p.title ?? p.h1 ?? path), tokens, score };
+    }).filter((n) => n.tokens.size >= 2 && n.path !== '/');
+
+    // Clustering glouton déterministe : ancre = page au vocabulaire le plus riche
+    nodes.sort((a, b) => b.tokens.size - a.tokens.size || a.path.localeCompare(b.path));
+    const used = new Set<string>();
+    const clusters: { anchor: Node; members: Node[]; sharedTokens: string[] }[] = [];
+    for (const anchor of nodes) {
+      if (used.has(anchor.path)) continue;
+      const members: Node[] = [anchor];
+      used.add(anchor.path);
+      for (const cand of nodes) {
+        if (used.has(cand.path)) continue;
+        if (jaccard(anchor.tokens, cand.tokens) >= threshold) {
+          members.push(cand);
+          used.add(cand.path);
+        }
+      }
+      if (members.length < 2) continue;
+      const shared = [...anchor.tokens].filter((t) => members.every((m) => m.tokens.has(t)));
+      clusters.push({ anchor, members, sharedTokens: shared });
+    }
+
+    clusters.sort((a, b) => b.members.length - a.members.length);
+    const detailed = clusters.map((c) => {
+      const ranked = [...c.members].sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
+      const pilier = ranked[0];
+      return {
+        theme: (c.sharedTokens.length ? c.sharedTokens : [...c.anchor.tokens].slice(0, 4)).join(' '),
+        size: ranked.length,
+        pilier: { url: pilier.url, path: pilier.path, title: pilier.title },
+        duplicates: ranked.slice(1).map((m) => ({ url: m.url, path: m.path, title: m.title })),
+      };
+    });
+
+    const redundant = detailed.reduce((s, c) => s + c.duplicates.length, 0);
+    const md: string[] = [
+      `## Cannibalisation — ${crawl.domain}${prefix ? ` (${prefix})` : ''}`,
+      `_Crawl ${new Date(crawl.completed_at).toLocaleDateString('fr-FR')} • ${nodes.length} pages analysées • seuil ${threshold}_`,
+      '',
+      detailed.length === 0
+        ? 'Aucun cluster de cannibalisation détecté à ce seuil.'
+        : `**${detailed.length} clusters** en conflit, **${redundant} pages redondantes** sur ${nodes.length} (${Math.round((redundant / nodes.length) * 100)}%).`,
+      '',
+    ];
+    for (const c of detailed.slice(0, 12)) {
+      md.push(`### Cluster « ${c.theme} » — ${c.size} pages`);
+      md.push(`- Pilier à conserver : **${c.pilier.path}** — ${c.pilier.title}`);
+      md.push(`- À consolider (301 vers le pilier + fusion du contenu utile) :`);
+      for (const d of c.duplicates.slice(0, 12)) md.push(`  - ${d.path}`);
+      md.push('');
+    }
+    if (detailed.length > 12) md.push(`_… ${detailed.length - 12} autres clusters non détaillés._`);
+
+    return {
+      ok: true,
+      data: {
+        crawl_id: crawl.id,
+        domain: crawl.domain,
+        threshold,
+        analyzed_pages: nodes.length,
+        clusters_count: detailed.length,
+        redundant_pages: redundant,
+        clusters: detailed.slice(0, 20),
+        report_markdown: md.join('\n'),
+        next_step: detailed.length > 0
+          ? "Enchaîner sur plan_editorial pour générer le plan de consolidation (301 + maillage vers les piliers)."
+          : undefined,
+      },
+    };
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
 // REGISTRY
 // ═══════════════════════════════════════════════════════════
+
 
 const SKILLS: Record<string, SkillDefinition> = {
   read_audit,
