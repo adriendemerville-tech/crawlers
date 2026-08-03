@@ -163,9 +163,10 @@ export default function AutopilotIktracker() {
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
         <title>Étude de cas : 927 publications SEO automatisées — Autopilot</title>
-        <meta name="description" content="Chiffres Search Console réels : l'Autopilot Crawlers a exécuté 927 publications sur iktracker.fr, fait progresser 9 requêtes sur 20 et triplé les impressions au pic." />
-        <meta property="og:title" content="Autopilot : 927 publications automatisées, 9 requêtes en progression" />
-        <meta property="og:description" content="Étude de cas Crawlers.fr avec données Google Search Console brutes, méthodologie complète et limites assumées." />
+        <meta name="description" content="Chiffres réels : 927 publications automatisées sur iktracker.fr, 9 requêtes sur 20 en progression, 372 comptes créés et 44,6 % des inscrits déclarant venir de ChatGPT." />
+        <meta property="og:title" content="Autopilot : 927 publications, et ChatGPT devant Google à l'acquisition" />
+        <meta property="og:description" content="Étude de cas Crawlers.fr : données Search Console brutes, inscriptions mensuelles, origine d'acquisition déclarée, méthodologie et limites assumées." />
+
         <meta property="og:type" content="article" />
         <meta property="og:url" content={CANONICAL} />
         <meta name="twitter:card" content="summary_large_image" />
