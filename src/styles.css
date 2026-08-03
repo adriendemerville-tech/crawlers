@@ -139,6 +139,18 @@
   @media (min-width: 1536px) { max-width: 1400px; }
 }
 
+/* Tailwind v4 renamed the bare scales (rounded/shadow/blur → *-sm). The codebase
+   uses the bare forms extensively; pin them to their exact v3 values. */
+@utility rounded {
+  border-radius: 0.25rem;
+}
+@utility shadow {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+@utility blur {
+  filter: blur(8px);
+}
+
 :root {
   --background: 43 10% 96%;
   --foreground: 222 47% 11%;
