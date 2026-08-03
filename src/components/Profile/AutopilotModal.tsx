@@ -20,7 +20,7 @@ interface AutopilotModalProps {
 
 type ImplMode = 'dry_run' | 'one_shot' | 'one_shot_feedback' | 'auto';
 
-const IMPL_MODES: { value: ImplMode; label: string; desc: string; icon: React.ElementType }[] = [
+const IMPL_MODES: { value: ImplMode; label: string; desc: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { value: 'dry_run', label: 'Dry-run (simulation)', desc: 'Simule sans modifier le site', icon: Scan },
   { value: 'one_shot', label: 'One shot', desc: 'Exécute une seule fois', icon: Zap },
   { value: 'one_shot_feedback', label: 'One shot + rétroaction', desc: 'Exécute → vérifie → corrige', icon: RotateCcw },
@@ -386,7 +386,7 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
 function CheckOption({ checked, onChange, icon: Icon, label, desc }: {
   checked: boolean;
   onChange: (v: boolean) => void;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   desc: string;
 }) {

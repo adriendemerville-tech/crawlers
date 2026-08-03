@@ -13,7 +13,7 @@ import {
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 interface FeatureCard {
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
   href: string;

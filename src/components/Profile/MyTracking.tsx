@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, ElementType } from 'react';
+import { useState, useCallback, useEffect, type ComponentType } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
 
@@ -165,7 +165,7 @@ function SortableSiteButton({ id, label, isActive, isRefreshing, onClick }: {
 }
 
 // ─── KPI Card ───
-function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip }: { label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void>; tooltip?: string }) {
+function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip }: { label: string; value: string; icon: ComponentType<{ className?: string }>; valueClassName?: string; onRefresh?: () => Promise<void>; tooltip?: string }) {
   const [refreshing, setRefreshing] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -217,7 +217,7 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
 
 // ─── Sortable KPI Grid ───
 function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: {
-  kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string; tooltip?: string }>;
+  kpiDefinitions: Record<string, { label: string; value: string; icon: ComponentType<{ className?: string }>; valueClassName?: string; tooltip?: string }>;
   defaultOrder: string[];
   disabled: boolean;
   onRefresh?: Record<string, () => Promise<void>>;
@@ -648,7 +648,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                     {/* KPI Cards */}
                     {(() => {
                       const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
-                      const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string; tooltip?: string }> = {
+                      const kpiDefinitions: Record<string, { label: string; value: string; icon: ComponentType<{ className?: string }>; valueClassName?: string; tooltip?: string }> = {
                         performanceMobile: { label: t.performanceMobile, value: h.latestPerformance !== null ? `${Math.round(h.latestPerformance)}/100` : '—', icon: Gauge },
                         performanceDesktop: { label: t.performanceDesktop, value: h.latestPerformanceDesktop !== null ? `${Math.round(h.latestPerformanceDesktop)}/100` : '—', icon: Gauge },
                         seoScore: { label: t.seoScore, value: h.latestStats?.seo_score != null ? `${h.latestStats.seo_score}%` : '—', icon: Search },

@@ -15,7 +15,7 @@ interface StrategicTabProps {
   disabled?: boolean;
 }
 
-const strategicIcons: Record<string, React.ElementType> = {
+const strategicIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   inject_faq: FileText,
   inject_blog_section: Newspaper,
   enhance_semantic_meta: Globe,

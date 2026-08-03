@@ -24,7 +24,7 @@ const FlowBox = ({
   subtitle,
   theme,
 }: {
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   subtitle?: string;
   theme: "blue" | "orange";
@@ -64,7 +64,7 @@ const PrincipleCard = ({
   title,
   description,
 }: {
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
 }) => (

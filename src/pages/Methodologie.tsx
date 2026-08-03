@@ -59,7 +59,7 @@ function AnimatedStat({ value, suffix = '', label }: { value: number; suffix?: s
 }
 
 function PipelineStep({ icon: Icon, title, description, step, isLast = false }: {
-  icon: React.ElementType; title: string; description: string; step: number; isLast?: boolean;
+  icon: React.ComponentType<{ className?: string }>; title: string; description: string; step: number; isLast?: boolean;
 }) {
   return (
     <motion.div
@@ -88,7 +88,7 @@ function PipelineStep({ icon: Icon, title, description, step, isLast = false }: 
 
 /* ── Editorial section component ── */
 function EditorialBlock({ icon: Icon, title, children, index = 0 }: {
-  icon: React.ElementType; title: string; children: React.ReactNode; index?: number;
+  icon: React.ComponentType<{ className?: string }>; title: string; children: React.ReactNode; index?: number;
 }) {
   return (
     <motion.div

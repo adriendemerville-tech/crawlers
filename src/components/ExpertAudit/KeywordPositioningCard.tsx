@@ -117,7 +117,7 @@ function ExplorationCard({
   isLoading 
 }: { 
   title: string; 
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   keywords: KeywordItem[]; 
   isLoading: boolean;
 }) {

@@ -26,7 +26,7 @@ function CompetitorCard({
 }: { 
   actor: CompetitorActor; 
   role: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   accentColor: string;
 }) {
   return (

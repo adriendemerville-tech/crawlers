@@ -572,7 +572,7 @@ export default function IntegrationGTM() {
 
 /* ─── Method summary sub-component ─── */
 function MethodSummaryCard({ icon: Icon, title, badge, desc, cms }: {
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   badge?: string;
   desc: string;
@@ -596,7 +596,7 @@ function MethodSummaryCard({ icon: Icon, title, badge, desc, cms }: {
 /* ─── Step card sub-component ─── */
 function StepCard({ step, icon: Icon, title, description, children }: {
   step: number;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
   children?: React.ReactNode;
