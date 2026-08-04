@@ -353,7 +353,39 @@ Marina est un pipeline d'audit automatisé disponible via API publique et dashbo
 - Lancement de jobs, suivi de progression temps réel, suppression persistante
 - Collecte de données d'entraînement ML : scores structurés et signaux techniques bruts
 
+### Autopilot Parménion — publication autonome
+Parménion est l'orchestrateur autonome qui pilote un cycle complet sur vos sites connectés : audit → diagnostic → prescription → exécution → validation.
+
+- **Cadence** : un cycle par site toutes les 48 h maximum, 10 actions CMS par cycle au plus
+- **Modes** : `dry_run` (tout s'exécute sauf la publication CMS), `review` (proposition à valider), `auto` (publication réelle)
+- **Publication** : articles rédigés par le pipeline éditorial en 4 étapes (briefing → stratège → rédacteur → tonalisateur), avec image générée automatiquement et sans texte incrusté
+- **Anti-cannibalisation** : avant chaque prescription, Parménion détecte les clusters saturés (≥ 3 pages proches) et bloque la création d'un contenu redondant
+- **Pruning** : sur les clusters cannibalisés, il peut fusionner le contenu vers la page pilier, créer une redirection 301 et supprimer le doublon (jamais de suppression sans redirection possible)
+- **Breathing Spiral** : la spirale se contracte ou s'étend selon des signaux temps réel (couverture, saturation, autorité, saisonnalité) pour élargir l'empreinte sémantique sans chevauchement de mots-clés
+- **Garde-fous** : refus des contenus de moins de 1500 caractères, refus des titres déjà publiés, contrôle sémantique par rapport à la carte d'identité du site, pause automatique si trop de tâches restent non exécutées
+
+**CMS supportés** : publication complète sur IKtracker, Dictadevi et le CMS interne Crawlers ; partielle sur WordPress et Shopify (brouillon + patch de contenu) ; lecture seule sur Wix et Webflow.
+
+### Netlinking
+Recherche et commande de liens sponsorisés depuis /app/netlinking :
+- Places de marché connectées (dont Whitepress), filtrage par thématique, autorité et budget
+- Commande, suivi du statut et monitoring de la mise en ligne du lien
+- L'axe « autorité hors-site » alimente les prescriptions du stratège Cocoon
+- Commission de 10 % appliquée sur les commandes passées via Crawlers
+
+### Social Hub — LinkedIn automatisé
+Publication hebdomadaire automatisée sur LinkedIn (compte fondateur, page entreprise mentionnée systématiquement) :
+- Rotation éditoriale sur les fonctionnalités, workflows, problèmes visés, articles de blog, tarifs et lead magnets, avec historique des 10 derniers posts pour éviter la redondance
+- Médias : capture vidéo (screencast) de l'outil en usage réel ou carrousel
+- Règles de forme déterministes : minimum 1500 signes, maximum 4 emoji, exactement une question directe suivie de sa réponse (bloc GEO), mention de la page entreprise
+- Critique pré-publication : score pondéré, seuil de 80/100, deux réécritures maximum avant publication
+- Limite connue : LinkedIn n'autorise pas les commentaires ni les repartages automatisés via l'API
+
+### Preuve visuelle des rapports
+Les rapports Marina et les PDF d'audit incluent des captures desktop et mobile de la page analysée (cache de 24 h). Le Conversion Optimizer s'appuie sur les mêmes captures pour illustrer ses recommandations UX/CRO.
+
 ---
+
 
 ## 4. Crédits & Abonnement
 
@@ -512,6 +544,23 @@ Utilisez l'Architecte Génératif pour générer les correctifs JSON-LD adaptés
 - Si le quota est atteint, le bouton de lancement vibre et une modal propose le Pack Ultime (500 crédits / 99€)
 - Les crédits de crawl sont réinitialisés à chaque période de facturation
 - Vous pouvez passer au plan Pro Agency + pour un quota de 50 000 pages/mois
+
+### Parménion n'a rien publié sur mon site
+Plusieurs causes possibles, dans l'ordre de fréquence :
+- Le site est en mode `dry_run` : toutes les phases tournent mais la publication CMS est volontairement bloquée. Passez en mode `auto` depuis Admin → Autopilot.
+- Le cooldown de 48 h n'est pas écoulé depuis le dernier cycle.
+- Le cluster visé est saturé : la garde anti-cannibalisation bloque la création d'un contenu redondant. C'est un comportement attendu.
+- Trop de tâches restent non exécutées sur le site : Parménion se met en pause automatique jusqu'à reprise manuelle.
+- La connexion CMS est expirée : reconnectez le site depuis Console → Mes Sites → CMS.
+
+### Un article a été publié sans image
+L'image est générée après acceptation de l'article puis rattachée dans un second temps. Si la génération échoue, l'article reste publié sans visuel et l'image est réessayée au cycle suivant. Vous pouvez aussi en générer une manuellement depuis Content Architect → Images.
+
+### Parménion peut-il supprimer une de mes pages ?
+Oui, uniquement dans le cadre du pruning d'un cluster cannibalisé (≥ 3 pages très proches), et jamais sans redirection 301 vers la page pilier. Un instantané restaurable est conservé avant toute suppression. Sur les plateformes qui ne gèrent pas les redirections, la suppression est refusée.
+
+### Mon post LinkedIn n'est pas parti
+Vérifiez que la connexion LinkedIn est active dans /app/social (les autorisations expirent périodiquement). Un post est aussi bloqué s'il ne passe pas la critique pré-publication (score minimum 80/100) après deux réécritures — il reste alors en attente dans le Social Hub.
 
 ### Je veux supprimer mon compte
 Tableau de bord > Paramètres > Supprimer mon compte. La suppression est définitive et conforme au RGPD. Vos données sont effacées sous 72 heures.
