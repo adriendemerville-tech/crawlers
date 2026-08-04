@@ -14437,6 +14437,10 @@ export type Database = {
         Returns: undefined
       }
       jsonb_object_keys_count: { Args: { j: Json }; Returns: number }
+      match_workbench_cluster: {
+        Args: { p_text: string; p_tracked_site_id: string }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
