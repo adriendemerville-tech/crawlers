@@ -103,16 +103,59 @@ function mergeIntoPilier(pilierHtml: string, duplicateHtml: string, duplicateTit
 }
 
 type Bridge = {
-  kind: 'dictadevi' | 'iktracker' | 'generic';
+  kind: 'crawlers' | 'dictadevi' | 'iktracker' | 'generic';
   fn: string;
   supportsRedirect: boolean;
 };
 
+function isCrawlersInternalDomain(domain: string): boolean {
+  return (domain || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase() === 'crawlers.fr';
+}
+
 function resolveBridge(domain: string): Bridge {
+  // crawlers.fr n'a pas de CMS externe : les articles vivent dans blog_articles.
+  // Pas de couche de redirection 301 côté app → la suppression reste bloquée,
+  // seule la fusion vers le pilier est appliquée (aucun 404 créé).
+  if (isCrawlersInternalDomain(domain)) return { kind: 'crawlers', fn: 'internal', supportsRedirect: false };
   if (isDictadeviDomain(domain)) return { kind: 'dictadevi', fn: 'dictadevi-actions', supportsRedirect: false };
   if (isIktrackerDomain(domain)) return { kind: 'iktracker', fn: 'iktracker-actions', supportsRedirect: true };
   return { kind: 'generic', fn: 'cms-patch-content', supportsRedirect: true };
 }
+
+/** Lecture d'un post, via pont CMS externe ou directement dans blog_articles (crawlers.fr). */
+async function readPost(
+  supabase: ReturnType<typeof getServiceClient>,
+  bridge: Bridge,
+  slug: string,
+): Promise<{ ok: boolean; post: Record<string, any> | null; error?: string }> {
+  if (bridge.kind === 'crawlers') {
+    const { data, error } = await supabase
+      .from('blog_articles').select('id, slug, title, content, excerpt, status').eq('slug', slug).maybeSingle();
+    if (error) return { ok: false, post: null, error: error.message };
+    if (!data) return { ok: false, post: null, error: 'not found in blog_articles' };
+    return { ok: true, post: data as Record<string, any> };
+  }
+  const res = await callBridge(supabase, bridge.fn, { action: 'get-post', params: { slug } });
+  const post = extractPost(res.data);
+  return { ok: res.ok && !!post, post, error: res.error };
+}
+
+/** Mise à jour du contenu du pilier. */
+async function writePilier(
+  supabase: ReturnType<typeof getServiceClient>,
+  bridge: Bridge,
+  slug: string,
+  content: string,
+  title: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (bridge.kind === 'crawlers') {
+    const { error } = await supabase.from('blog_articles').update({ content }).eq('slug', slug);
+    return error ? { ok: false, error: error.message } : { ok: true };
+  }
+  const res = await callBridge(supabase, bridge.fn, { action: 'update-post', params: { slug, content, title } });
+  return { ok: res.ok, error: res.error };
+}
+
 
 async function callBridge(
   supabase: ReturnType<typeof getServiceClient>,
@@ -223,8 +266,8 @@ Deno.serve(handleRequest(async (req: Request) => {
   if (duplicates.length === 0) return jsonError('no eligible duplicate (pilier excluded)', 422);
 
   // Chargement du pilier
-  const pilierRes = await callBridge(supabase, bridge.fn, { action: 'get-post', params: { slug: pilierSlug } });
-  let pilierPost = extractPost(pilierRes.data);
+  const pilierRes = await readPost(supabase, bridge, pilierSlug);
+  const pilierPost = pilierRes.post;
   if (!pilierRes.ok || !pilierPost) {
     return jsonError(`pilier "${pilierSlug}" unreadable on CMS: ${pilierRes.error || 'not found'}`, 424);
   }
@@ -242,8 +285,8 @@ Deno.serve(handleRequest(async (req: Request) => {
     };
 
     // 1. Snapshot obligatoire
-    const dupRes = await callBridge(supabase, bridge.fn, { action: 'get-post', params: { slug: dupSlug } });
-    const dupPost = extractPost(dupRes.data);
+    const dupRes = await readPost(supabase, bridge, dupSlug);
+    const dupPost = dupRes.post;
     if (!dupRes.ok || !dupPost) {
       step.merge_status = 'aborted';
       step.redirect_status = 'aborted';
@@ -290,10 +333,7 @@ Deno.serve(handleRequest(async (req: Request) => {
     // 2. Fusion vers le pilier
     const merged = mergeIntoPilier(pilierContent, dupHtml, dupTitle, dupUrl);
     if (merged.added > 0) {
-      const upd = await callBridge(supabase, bridge.fn, {
-        action: 'update-post',
-        params: { slug: pilierSlug, content: merged.html, title: pilierPost.title },
-      });
+      const upd = await writePilier(supabase, bridge, pilierSlug, merged.html, String(pilierPost.title || ''));
       if (!upd.ok) {
         step.merge_status = 'failed';
         step.redirect_status = 'aborted';

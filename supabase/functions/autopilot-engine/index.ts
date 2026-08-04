@@ -907,12 +907,28 @@ async function executeCrawlersInternalPublish(
     const content: string = body.content || body.body || '';
     const slug: string = body.slug || slugifyFr(title);
     try {
-      if (!title || content.length < 200) {
-        executionResults.push({ function: 'crawlers-internal-publish', status: 'rejected', target: slug || 'unknown', reason: 'Titre ou contenu insuffisant' });
+      // Garde qualité : un article publié sous 1 500 caractères n'a aucune valeur SEO.
+      const MIN_INTERNAL_CONTENT = 1500;
+      if (!title || content.length < MIN_INTERNAL_CONTENT) {
+        executionResults.push({
+          function: 'crawlers-internal-publish', status: 'rejected', target: slug || 'unknown',
+          reason: `Titre manquant ou contenu trop court (${content.length} < ${MIN_INTERNAL_CONTENT} caractères)`,
+        });
         continue;
       }
 
-      // Garde anti-doublon : un article avec ce slug existe déjà.
+      // Garde anti-doublon de titre (slug différent mais même titre exact) :
+      // l'upsert par slug ne l'aurait pas vu et on aurait créé une cannibalisation.
+      const { data: sameTitle } = await supabase
+        .from('blog_articles').select('id, slug').eq('title', title).neq('slug', slug).maybeSingle();
+      if (sameTitle) {
+        executionResults.push({
+          function: 'crawlers-internal-publish', status: 'rejected', target: slug,
+          reason: `Titre déjà utilisé par /blog/${sameTitle.slug} — doublon évité`,
+        });
+        continue;
+      }
+
       const { data: existing } = await supabase
         .from('blog_articles').select('id').eq('slug', slug).maybeSingle();
 
@@ -924,11 +940,13 @@ async function executeCrawlersInternalPublish(
         ...(status === 'published' ? { published_at: new Date().toISOString() } : {}),
       };
 
-      const { data: article, error } = existing
-        ? await supabase.from('blog_articles').update(row).eq('id', existing.id).select('id, slug').single()
-        : await supabase.from('blog_articles').insert(row).select('id, slug').single();
+      // Upsert atomique sur le slug (index unique blog_articles_slug_key) :
+      // supprime la course entre le SELECT ci-dessus et l'écriture.
+      const { data: article, error } = await supabase
+        .from('blog_articles').upsert(row, { onConflict: 'slug' }).select('id, slug').single();
 
       if (error) throw new Error(error.message);
+
 
       // Image (non bloquant)
       let imageGenerated = false;
@@ -1220,6 +1238,28 @@ async function executeContentArchitect(
     ...(payload.cannibalization_data && { cannibalization_data: payload.cannibalization_data }),
     ...(payload.silo_context && { silo_context: payload.silo_context }),
   };
+
+  // ─── Disjoncteur : 3 échecs advisor en 3 h pour ce site → on saute le cycle ───
+  // Le pipeline advisor a saturé le CPU wall-time sur mots-clés génériques et a
+  // produit 130 jobs failed en boucle. On arrête la boucle au lieu de la subir.
+  try {
+    const { count: recentFailures } = await supabase
+      .from('async_jobs')
+      .select('id', { count: 'exact', head: true })
+      .eq('function_name', 'content-architecture-advisor')
+      .eq('user_id', config.user_id)
+      .eq('status', 'failed')
+      .gte('created_at', new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString());
+    if ((recentFailures ?? 0) >= 3) {
+      const msg = `Disjoncteur advisor: ${recentFailures} échecs en 3 h pour ${site.domain} → cycle sauté`;
+      console.warn(`[AutopilotEngine] ${msg}`);
+      executionResults.push({ function: 'content-architecture-advisor', status: 'skipped', keyword: funcBody.keyword, reason: msg });
+      phaseErrors.push({ phase, function: 'content-architecture-advisor', severity: 'degraded', message: msg, retryable: true });
+      return;
+    }
+  } catch (e) {
+    console.warn('[AutopilotEngine] Disjoncteur advisor indisponible (non bloquant):', e);
+  }
 
   // ─── Reprise : un job différé du cycle précédent existe-t-il pour ce site ? ───
   // Évite de relancer un pipeline LLM coûteux à chaque cycle et récupère le résultat

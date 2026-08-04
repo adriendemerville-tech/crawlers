@@ -25,23 +25,51 @@ const VELOCITY_DECAY_WEEKS = 3
 const VELOCITY_DECAY_THRESHOLD = 3 // positions lost
 const COMPETITOR_GAIN_THRESHOLD = 5
 
+const CRON_MIN_INTERVAL_MIN = 60
+
 Deno.serve(handleRequest(async (req) => {
   const auth = await getAuthenticatedUser(req)
-  if (!auth) return jsonError('Unauthorized', 401)
-
   const body = await req.json().catch(() => ({}))
   const supabase = getServiceClient()
+
+  // Mode cron : le cron pg_net n'a pas de session utilisateur (seule l'anon key est
+  // disponible côté base). On autorise donc `{ all: true }` sans session, avec un
+  // anti-abus temporel : un run complet au maximum toutes les 60 minutes.
+  const cronMode = !auth && body.all === true
+  if (!auth && !cronMode) return jsonError('Unauthorized', 401)
+
+  if (cronMode) {
+    const { data: lastRun } = await supabase
+      .from('system_config').select('value').eq('key', 'spiral_signals_last_run').maybeSingle()
+    const lastTs = lastRun?.value ? Date.parse(String((lastRun.value as any)?.at ?? lastRun.value)) : NaN
+    if (!Number.isNaN(lastTs) && Date.now() - lastTs < CRON_MIN_INTERVAL_MIN * 60_000) {
+      return jsonOk({ skipped: true, reason: `cron throttled (< ${CRON_MIN_INTERVAL_MIN} min)` })
+    }
+    await supabase.from('system_config')
+      .upsert({ key: 'spiral_signals_last_run', value: { at: new Date().toISOString() } }, { onConflict: 'key' })
+  }
 
   // Determine sites to process
   let sites: { id: string; domain: string; user_id: string }[] = []
 
   if (body.all) {
-    const { data } = await supabase
-      .from('tracked_sites')
-      .select('id, domain, user_id')
-      .eq('is_active', true)
-      .limit(MAX_SITES_PER_RUN)
-    sites = data || []
+    // BUG corrigé : `tracked_sites` n'a pas de colonne `is_active` — le filtre
+    // renvoyait une erreur PostgREST silencieuse et 0 site était traité.
+    // On cible désormais exactement les sites qui ont des tâches à scorer.
+    const { data: pending } = await supabase
+      .from('architect_workbench')
+      .select('tracked_site_id')
+      .in('status', ['pending', 'in_progress'])
+      .not('tracked_site_id', 'is', null)
+      .limit(5000)
+    const siteIds = [...new Set((pending || []).map((r: any) => r.tracked_site_id))].slice(0, MAX_SITES_PER_RUN)
+    if (siteIds.length > 0) {
+      const { data } = await supabase
+        .from('tracked_sites')
+        .select('id, domain, user_id')
+        .in('id', siteIds)
+      sites = data || []
+    }
   } else if (body.tracked_site_id) {
     const { data } = await supabase
       .from('tracked_sites')
@@ -53,8 +81,7 @@ Deno.serve(handleRequest(async (req) => {
     const { data } = await supabase
       .from('tracked_sites')
       .select('id, domain, user_id')
-      .eq('user_id', auth.userId)
-      .eq('is_active', true)
+      .eq('user_id', auth!.userId)
     sites = data || []
   }
 
