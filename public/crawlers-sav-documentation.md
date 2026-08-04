@@ -545,6 +545,23 @@ Utilisez l'Architecte Génératif pour générer les correctifs JSON-LD adaptés
 - Les crédits de crawl sont réinitialisés à chaque période de facturation
 - Vous pouvez passer au plan Pro Agency + pour un quota de 50 000 pages/mois
 
+### Parménion n'a rien publié sur mon site
+Plusieurs causes possibles, dans l'ordre de fréquence :
+- Le site est en mode `dry_run` : toutes les phases tournent mais la publication CMS est volontairement bloquée. Passez en mode `auto` depuis Admin → Autopilot.
+- Le cooldown de 48 h n'est pas écoulé depuis le dernier cycle.
+- Le cluster visé est saturé : la garde anti-cannibalisation bloque la création d'un contenu redondant. C'est un comportement attendu.
+- Trop de tâches restent non exécutées sur le site : Parménion se met en pause automatique jusqu'à reprise manuelle.
+- La connexion CMS est expirée : reconnectez le site depuis Console → Mes Sites → CMS.
+
+### Un article a été publié sans image
+L'image est générée après acceptation de l'article puis rattachée dans un second temps. Si la génération échoue, l'article reste publié sans visuel et l'image est réessayée au cycle suivant. Vous pouvez aussi en générer une manuellement depuis Content Architect → Images.
+
+### Parménion peut-il supprimer une de mes pages ?
+Oui, uniquement dans le cadre du pruning d'un cluster cannibalisé (≥ 3 pages très proches), et jamais sans redirection 301 vers la page pilier. Un instantané restaurable est conservé avant toute suppression. Sur les plateformes qui ne gèrent pas les redirections, la suppression est refusée.
+
+### Mon post LinkedIn n'est pas parti
+Vérifiez que la connexion LinkedIn est active dans /app/social (les autorisations expirent périodiquement). Un post est aussi bloqué s'il ne passe pas la critique pré-publication (score minimum 80/100) après deux réécritures — il reste alors en attente dans le Social Hub.
+
 ### Je veux supprimer mon compte
 Tableau de bord > Paramètres > Supprimer mon compte. La suppression est définitive et conforme au RGPD. Vos données sont effacées sous 72 heures.
 
