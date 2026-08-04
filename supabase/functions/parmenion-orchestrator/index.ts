@@ -441,8 +441,12 @@ try {
             duplicates: c.duplicates.slice(0, 10).map((d) => d.path),
           }))
         : [];
+      // Le candidat au pruning doit être un cluster réellement saturé (≥ 3 pages),
+      // sinon on consolidait des clusters sains de 2 pages sans bénéfice SEO.
       const pruningCandidate = cannib
-        ? [...cannib.clusters].sort((a, b) => b.duplicates.length - a.duplicates.length)[0]
+        ? [...cannib.clusters]
+            .filter((c) => c.size >= 3 && c.duplicates.length > 0)
+            .sort((a, b) => b.duplicates.length - a.duplicates.length)[0]
         : undefined;
 
       // ═══ PRESCRIBE V3: Deterministic routing via cocoon-strategist ═══
