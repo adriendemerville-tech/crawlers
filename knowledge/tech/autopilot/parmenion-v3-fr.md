@@ -116,3 +116,54 @@ callLLMWithTools utilise 3 tentatives :
 - **IKtracker** : exécution complète (CRUD articles/pages, meta, code, redirections)
 - **WordPress/Shopify** : partiel (cms-push-draft, cms-patch-content, cms-push-code)
 - **Wix/Webflow** : lecture seule (audit/diagnostic uniquement)
+
+---
+
+## v3.7 — Stabilisation & robustesse (août 2026, lots A/B)
+
+Audit des 24 h précédentes : `dictadevi.io` bloqué en `running`, doublon de config `iktracker.fr`, 130 jobs `content-architecture-advisor` en échec (CPU time), spirale muette, pruning interne KO sur `crawlers.fr`.
+
+### A1 — Circuit breaker Advisor (`autopilot-engine`)
+Si `content-architecture-advisor` échoue **3 fois en 3 h** pour un domaine, le cycle est **skippé** (`status='degraded'`, action_type=`advisor_circuit_open`) au lieu de reboucler et brûler du CPU time. Réarmement automatique après la fenêtre de 3 h.
+
+### A2 — Publication interne atomique (`crawlers-internal-publish`)
+- `upsert` atomique sur `slug` (fin des races entre deux cycles concurrents)
+- Guards qualité : refus si contenu < **1500 caractères** ou titre déjà présent dans `blog_articles`
+- Image générée puis rattachée après acceptation de l'article
+
+### A3 — Nettoyage d'état
+Configs coincées en `running` → `idle`, désactivation du doublon `iktracker.fr`, purge des jobs advisor en échec.
+
+### B1 — Bridge de pruning interne (`content-pruning-executor`)
+`crawlers.fr` est traité en interne (lecture/écriture directes sur `blog_articles`) au lieu du bridge CMS externe — fin des erreurs 424. Les plateformes sans redirection gardent le garde-fou « pas de suppression sans 301 ».
+
+### B2 — Sélection de pruning resserrée (`parmenion-orchestrator`)
+Candidats au pruning limités aux clusters de **≥ 3 pages** : les petits clusters sains ne sont plus consolidés inutilement.
+
+### B3 — Spirale : cron et filtrage
+- `compute-spiral-signals` : auth par `apikey` / `service_role_key` (fin des 401), exécution sans session utilisateur autorisée, throttle **1 run / 60 min**, cron toutes les 6 h avec `{"all": true}`
+- Correction du filtrage sur une colonne inexistante (`tracked_sites.is_active`) → cible désormais les sites ayant des items workbench `pending`
+- Binding cluster : `match_workbench_cluster` + trigger, backfill 54 items / 29 clusters
+
+### Flux consolidé
+
+```mermaid
+flowchart TD
+  CRON[cron autopilot] --> CB{Advisor<br/>circuit ouvert ?}
+  CB -- oui --> SKIP[skip cycle<br/>status=degraded]
+  CB -- non --> AUD[audit] --> DIAG[diagnose]
+  DIAG --> CAN[cannibalisation<br/>clusters saturés]
+  CAN --> PRE[prescribe<br/>cocoon-strategist]
+  PRE --> Q[job_queue]
+  Q --> EXE{domaine interne ?}
+  EXE -- crawlers.fr --> INT[crawlers-internal-publish<br/>upsert slug + guards]
+  EXE -- externe --> BR[iktracker/dictadevi-actions]
+  PRE --> PRU[content-pruning-executor<br/>clusters ≥ 3 pages]
+  INT --> VAL[validate]
+  BR --> VAL
+  SPIR[compute-spiral-signals<br/>cron 6h] --> PRE
+```
+
+### Points de vigilance restants (lot C)
+- Coûts OpenRouter non tracés dans le ledger (génération d'images Gemini 3 Flash)
+- Télémétrie d'erreur encore partielle sur les jobs `queue-worker-every-min`
