@@ -353,7 +353,39 @@ Marina est un pipeline d'audit automatisé disponible via API publique et dashbo
 - Lancement de jobs, suivi de progression temps réel, suppression persistante
 - Collecte de données d'entraînement ML : scores structurés et signaux techniques bruts
 
+### Autopilot Parménion — publication autonome
+Parménion est l'orchestrateur autonome qui pilote un cycle complet sur vos sites connectés : audit → diagnostic → prescription → exécution → validation.
+
+- **Cadence** : un cycle par site toutes les 48 h maximum, 10 actions CMS par cycle au plus
+- **Modes** : `dry_run` (tout s'exécute sauf la publication CMS), `review` (proposition à valider), `auto` (publication réelle)
+- **Publication** : articles rédigés par le pipeline éditorial en 4 étapes (briefing → stratège → rédacteur → tonalisateur), avec image générée automatiquement et sans texte incrusté
+- **Anti-cannibalisation** : avant chaque prescription, Parménion détecte les clusters saturés (≥ 3 pages proches) et bloque la création d'un contenu redondant
+- **Pruning** : sur les clusters cannibalisés, il peut fusionner le contenu vers la page pilier, créer une redirection 301 et supprimer le doublon (jamais de suppression sans redirection possible)
+- **Breathing Spiral** : la spirale se contracte ou s'étend selon des signaux temps réel (couverture, saturation, autorité, saisonnalité) pour élargir l'empreinte sémantique sans chevauchement de mots-clés
+- **Garde-fous** : refus des contenus de moins de 1500 caractères, refus des titres déjà publiés, contrôle sémantique par rapport à la carte d'identité du site, pause automatique si trop de tâches restent non exécutées
+
+**CMS supportés** : publication complète sur IKtracker, Dictadevi et le CMS interne Crawlers ; partielle sur WordPress et Shopify (brouillon + patch de contenu) ; lecture seule sur Wix et Webflow.
+
+### Netlinking
+Recherche et commande de liens sponsorisés depuis /app/netlinking :
+- Places de marché connectées (dont Whitepress), filtrage par thématique, autorité et budget
+- Commande, suivi du statut et monitoring de la mise en ligne du lien
+- L'axe « autorité hors-site » alimente les prescriptions du stratège Cocoon
+- Commission de 10 % appliquée sur les commandes passées via Crawlers
+
+### Social Hub — LinkedIn automatisé
+Publication hebdomadaire automatisée sur LinkedIn (compte fondateur, page entreprise mentionnée systématiquement) :
+- Rotation éditoriale sur les fonctionnalités, workflows, problèmes visés, articles de blog, tarifs et lead magnets, avec historique des 10 derniers posts pour éviter la redondance
+- Médias : capture vidéo (screencast) de l'outil en usage réel ou carrousel
+- Règles de forme déterministes : minimum 1500 signes, maximum 4 emoji, exactement une question directe suivie de sa réponse (bloc GEO), mention de la page entreprise
+- Critique pré-publication : score pondéré, seuil de 80/100, deux réécritures maximum avant publication
+- Limite connue : LinkedIn n'autorise pas les commentaires ni les repartages automatisés via l'API
+
+### Preuve visuelle des rapports
+Les rapports Marina et les PDF d'audit incluent des captures desktop et mobile de la page analysée (cache de 24 h). Le Conversion Optimizer s'appuie sur les mêmes captures pour illustrer ses recommandations UX/CRO.
+
 ---
+
 
 ## 4. Crédits & Abonnement
 
