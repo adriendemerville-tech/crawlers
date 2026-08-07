@@ -2962,7 +2962,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         if (callbackUrl) {
           console.log(`[Marina] 📡 Sending webhook to ${callbackUrl}`);
           const webhookPayload = {
-            event: 'marina.report.completed',
+            event: strategicDegradation.degraded ? 'marina.report.partial' : 'marina.report.completed',
             job_id: jobId,
             ...resultData,
           };
