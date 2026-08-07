@@ -41,17 +41,18 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor (+ génération d'images IA multi-moteurs), générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), Quiz SEO Félix, Benchmark SERP multi-providers (lead magnet), serveur MCP et API N8N :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first**, avec un front **TanStack Start (SSR)** depuis la migration d'août 2026 : assistant Félix (SAV IA), Copilot multi-personas, Content Architecture Advisor (+ génération d'images IA), générateur Scribe, Stratège Cocoon, module Content Integrity (near-duplicate / thin content), confrontation d'audits tiers, autopilote Parménion (cycles complets + file d'attente), pipeline Marina (mono-page et multipages 15 URLs), Netlinking, automatisation LinkedIn, captures Pagebolt, Quiz SEO, Benchmark SERP multi-providers, serveur MCP et API publique Crawlers :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
-│                    CLIENT (React/Vite)                   │
-│  SPA avec lazy-loading, React Query, Supabase JS SDK    │
+│              CLIENT (TanStack Start + React 19)          │
+│  SSR par route, head() natif, React Query, Supabase SDK │
 └────────────────────────┬────────────────────────────────┘
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  190+ fonctions serverless + 37 modules partagés        │
+│  310 fonctions serverless + 97 modules partagés         │
+
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -1598,18 +1599,45 @@ La phase 3 agrège les métriques de **toutes les pages crawlées** (\\\`crawl_p
 | Clusters sémantiques | \\\`semantic_nodes\\\` | Count distinct cluster_id |
 | Liens entrants par nœud | \\\`semantic_nodes.internal_links_in\\\` | Moyenne |
 
+## Audit multipages (max 15 URLs)
+
+Composant \\\`MarinaMultipagePanel\\\` sous la barre d'URL de \\\`/marina\\\`. Deux modes :
+
+| Mode | Fonctionnement |
+|------|----------------|
+| **Coller des URLs** | Une URL par ligne, plafond **15** (au-delà, seules les 15 premières sont retenues) |
+| **Répertoire** | Découverte via \\\`fetch-sitemap-tree\\\`, filtrage sur le préfixe (ex. \\\`/avis/\\\`), sélection manuelle des pages |
+
+- **Exécution séquentielle** : un job \\\`async_jobs\\\` par URL, traités les uns après les autres (~3 min/page).
+- **Persistance** : l'état du batch est conservé (clé \\\`marina_batch_v2\\\`) — l'onglet peut être fermé puis rouvert, la progression est reprise côté serveur.
+- **Livrable** : un **PDF unique** (sommaire + N audits + section « Portée et limites ») généré à la fin du batch.
+- **Cleanup** : les jobs \\\`pending\\\` d'un batch ne sont plus tués par le nettoyage 10 min (correctif d'août 2026) ; seuls les jobs réellement bloqués en \\\`running\\\` sont échoués.
+
+## Enrichissements du rapport
+
+| Bloc | Source | Détail |
+|------|--------|--------|
+| **Preuve visuelle** | \\\`site-visual-capture\\\` (Pagebolt, cache 24h) | Capture desktop/mobile du site prospecté insérée dans le rapport |
+| **Content Integrity** | module SimHash/LSH | Ratio de thin content, clusters near-duplicate, cannibalisation |
+| **Portée et limites** | \\\`src/lib/reports/auditDisclaimer.ts\\\` | Section disclaimer obligatoire : fiabilité méthodologique, maturité du domaine, crawlabilité observée, maturité du marché (Google vs IA) |
+
 ## Gestion des jobs
 
 | Fonctionnalité | Détail |
 |----------------|--------|
 | **Table** | \\\`async_jobs\\\` (function_name = 'marina') |
-| **Auto-cleanup** | Jobs bloqués > 10 min → marqués 'failed' |
+| **Auto-cleanup** | Jobs \\\`running\\\` bloqués > 10 min → 'failed' (les \\\`pending\\\` d'un batch sont préservés) |
 | **Annulation** | Statut 'cancelled' + message 'Interrompu manuellement' |
 | **Suppression** | Admin peut supprimer individuellement ou en masse |
 | **Partage** | Liens temporaires via \\\`share-actions\\\` (\\\`/temporarylink/{shareId}\\\`) |
 | **Coûts** | Compteur temps réel (LLM + APIs) via analytics_events |
+
+## Limite connue
+
+Sur des pages très lourdes, la phase 1/2 peut atteindre le **CPU wall-time** de l'Edge Function. Le découpage du pipeline en phases persistées supplémentaires reste au backlog pour garantir un batch de 15 URLs sans mort CPU.
 `,
   },
+
 
   // ───────────────────────────────────────────────
   // SECTION : AUTOPILOTE
@@ -1712,6 +1740,33 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
 - **Sécurité** : Risque ≥ 4 bloqué. Mode conservateur si erreurs > 20% (segmenté par action_type).
 - **Apprentissage** : Boucle rétroaction T+30 via \`parmenion-feedback\`
 
+### Exécution découplée (file d'attente)
+
+La phase \`execute\` ne s'exécute plus en ligne dans le cycle : elle est **poussée dans \`job_queue\`** et consommée par \`queue-worker\` (cron \`queue-worker-every-min\`, priorités par plan : agency_premium 10 > agency_pro 20 > new_user 30 > registered 40). Objectif : supprimer les morts par CPU/wall-time observées lors des pushs CMS longs.
+
+- **Advisor circuit breaker** : \`content-architecture-advisor\` est appelé en mode asynchrone avec polling ; en cas d'échecs répétés, le breaker coupe l'appel et le cycle continue sans bloquer.
+- **Backlog guard** : si plus de 5 décisions CMS \`planned\` restent non exécutées sur un site, le cycle est sauté et la config passe en \`paused\` (reprise manuelle).
+- **Auto-config** : un trigger DB crée automatiquement une \`autopilot_configs\` (dry_run, idle, toutes phases) à chaque insertion/activation dans \`parmenion_targets\`.
+
+### Garde-fous éditoriaux et sémantiques
+
+| Garde | Effet |
+|-------|-------|
+| **Breathing Spiral v5** | Détermination de phase (expansion / consolidation) + clustering thématique via \`match_workbench_cluster\` |
+| **Cluster diversity** | Cap SQL de 2 items par cluster + carte d'exploration + rotation de personas (round-robin) |
+| **Dedup / synonymes** | Jaccard synonyme-aware (Layer E), saturation guard (Layer D), blocklist de titres |
+| **Saturation guard** | Alimenté par le module Content Integrity (near-duplicate / thin content) : bloque la création si le cluster est saturé |
+| **Content pruning** | Propose fusions, 301 et suppressions au lieu de créer, quand la cannibalisation est confirmée |
+| **Anti-hallucination** | Gates sémantiques sur le brief avant rédaction |
+
+### Publication
+
+- **Statut** : \`published\` quand \`implementation_mode === 'auto'\` (plus de \`draft\` systématique), \`draft\` sinon.
+- **Images** : génération via \`google/gemini-3.1-flash-image\` (OpenRouter) avec repli Lovable AI ; l'image est poussée avec l'article vers le CMS.
+- **HTML** : tous les pushs CMS envoient du HTML (conversion défensive Markdown → HTML via \`marked\` côté bridge).
+- **Autorité off-site** : axe \`offsite_authority\` du stratège branché sur le module Netlinking (\`netlinking-search\` / \`netlinking-order\`, monitoring \`cron-netlinking-monitor\`).
+
+
 ### Cibles multi-tenant (\`parmenion_targets\`)
 
 Parménion gère plusieurs sites cibles via la table \`parmenion_targets\`. Plateformes branchées et opérationnelles :
@@ -1756,9 +1811,13 @@ Actions retournant **HTTP 501 \`_not_supported_by_dictadevi\`** (Dictadevi v1 ne
 | Cron | Fréquence | Fonction |
 |------|-----------|----------|
 | \`autopilot-engine-cycle\` | Quotidien 3h UTC | \`autopilot-engine\` |
+| \`queue-worker-every-min\` | Chaque minute | \`queue-worker\` (exécution découplée) |
+| \`cron-crawl-scheduler\` | Quotidien | full crawl 15j + targeted 5j par répertoire |
+| \`cron-netlinking-monitor\` | Quotidien | suivi des commandes netlinking |
 | \`refresh-serp-all\` | Hebdo | \`refresh-serp-all\` |
 | \`watchdog-scripts\` | 15 min | \`watchdog-scripts\` |
 | \`content-perf-aggregator\` | Hebdo lundi 3h UTC | \`content-perf-aggregator\` |
+
 
 ## Registre des modifications
 
@@ -1773,14 +1832,15 @@ Actions retournant **HTTP 501 \`_not_supported_by_dictadevi\`** (Dictadevi v1 ne
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '11.1.0',
-  lastUpdated: '2026-04-24',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect (crédits + images IA multi-moteurs) + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Quiz SEO + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine + Matrice immersive (SSE + Pivot/Cube 3D + historique)',
-  totalEdgeFunctions: 192,
-  totalSharedModules: 38,
-  totalTables: '150+',
-  totalLinesOfCode: '218 000+',
-  totalMigrations: 247,
-  totalPages: 42,
-  totalComponents: 320,
+  version: '12.0.0',
+  lastUpdated: '2026-08-07',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM sur TanStack Start (SSR) + Stratège Cocoon + Content Integrity (near-duplicate / thin content) + Confrontation d\'audits tiers + Content Architect + Scribe + Copilot multi-personas + SAV Félix + Autopilote Parménion (exécution en file d\'attente) + Marina mono & multipages + Netlinking + Automatisation LinkedIn + Captures Pagebolt + MCP + API publique Crawlers',
+  totalEdgeFunctions: 310,
+  totalSharedModules: 97,
+  totalTables: '190+',
+  totalLinesOfCode: '372 000+',
+  totalMigrations: 482,
+  totalPages: 120,
+  totalComponents: 494,
 };
+
