@@ -812,6 +812,11 @@ export default function SiteCrawl() {
                 </Card>
               )}
 
+              {/* Intégrité du contenu : quasi-doublons + contenus pauvres */}
+              <ContentIntegrityPanel crawlId={viewingCrawlId || crawlResult?.id} />
+
+
+
               {/* Export & Actions bar */}
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={handleSitemapExport} disabled={pages.length === 0} className="gap-1.5 text-xs">
