@@ -1108,7 +1108,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
       ${buildModuleSection('Positionnement Mots-clés', '🔑', keywordPos)}
       ${buildModuleSection('Données Marché', '📈', marketData)}
-      ${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}
+      <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
       ${buildModuleSection('Quotabilité', '💬', quotability)}
       ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
