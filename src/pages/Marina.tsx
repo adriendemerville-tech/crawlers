@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
+import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
@@ -794,6 +795,16 @@ export default function Marina() {
                     <span className="ml-2">{loading ? t.hero.btnAnalyzing : t.hero.btnAnalyze}</span>
                   </Button>
                 </div>
+
+                {/* Audit multipages (max 15 URLs, PDF unique) */}
+                <MarinaMultipagePanel
+                  isAuthenticated={!!user}
+                  credits={credits}
+                  language={language}
+                  useCredit={useCredit}
+                  refreshCredits={refreshCredits}
+                />
+
                 <div className="mt-3 flex items-center justify-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Coins className="w-3.5 h-3.5 text-primary" /> {CREDIT_COST} {t.hero.creditsPerReport}
