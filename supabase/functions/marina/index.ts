@@ -1796,6 +1796,179 @@ async function selfInvokePhase(jobId: string, url: string, lang: string, phase: 
   });
 }
 
+
+// ─── Mutualisation par domaine : cache des analyses "site-scoped" ───
+// Lorsqu'un batch multipages audite N URLs du même domaine, les analyses de
+// niveau site (visibilité LLM, cocon sémantique, capture visuelle) sont
+// identiques d'une URL à l'autre. On les calcule une fois puis on les réutilise
+// pendant 24h → économie de crédits LLM et de temps de génération.
+const SITE_SCOPE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function siteScopeCacheKey(domain: string, userId: string): string {
+  return `marina_site_scope_${domain}_${userId}`;
+}
+
+async function readSiteScopeCache(sb: any, domain: string, userId: string): Promise<any | null> {
+  try {
+    const { data } = await sb
+      .from('audit_cache')
+      .select('result_data, expires_at')
+      .eq('cache_key', siteScopeCacheKey(domain, userId))
+      .maybeSingle();
+    if (!data?.result_data) return null;
+    if (data.expires_at && new Date(data.expires_at).getTime() < Date.now()) return null;
+    return data.result_data;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function writeSiteScopeCache(sb: any, domain: string, userId: string, patch: Record<string, unknown>) {
+  try {
+    const existing = (await readSiteScopeCache(sb, domain, userId)) || {};
+    await sb.from('audit_cache').upsert({
+      cache_key: siteScopeCacheKey(domain, userId),
+      function_name: 'marina',
+      result_data: { ...existing, ...patch, _cached_at: new Date().toISOString() },
+      expires_at: new Date(Date.now() + SITE_SCOPE_TTL_MS).toISOString(),
+    }, { onConflict: 'cache_key' });
+  } catch (e) {
+    console.warn('[Marina] site-scope cache write failed (non-fatal):', e);
+  }
+}
+
+// ─── Section finale : divulgation méthodologique ───
+function buildDisclosureSectionHTML(
+  lang: string,
+  domain: string,
+  ctx: {
+    expertData?: any;
+    strategicData?: any;
+    crawlSnapshot?: any;
+    llmVisibilityData?: any;
+    cocoonResult?: any;
+    reusedFromCache?: string[];
+  },
+): string {
+  const isEn = lang === 'en';
+  const isEs = lang === 'es';
+  const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
+
+  const pagesAnalyzed = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
+  const pagesKnown = ctx.crawlSnapshot?.total_pages || null;
+  const llmCount = Array.isArray(ctx.llmVisibilityData?.scores) ? ctx.llmVisibilityData.scores.length : 0;
+  const competitors =
+    ctx.strategicData?.competitive_landscape?.competitors?.length ||
+    ctx.strategicData?.competitiveLandscape?.competitors?.length ||
+    ctx.strategicData?.competitors?.length ||
+    0;
+  const cocoonNodes = ctx.cocoonResult?.stats?.nodes_count || 0;
+
+  const blockers: string[] = [];
+  const robots = ctx.expertData?.checks?.robots || ctx.expertData?.robots || null;
+  if (robots && robots.blocksAll) blockers.push(t('robots.txt bloque tout ou partie du crawl', 'robots.txt blocks all or part of crawling', 'robots.txt bloquea todo o parte del rastreo'));
+  if (ctx.expertData?.scores?.performance?.lcp && Number(ctx.expertData.scores.performance.lcp) > 4)
+    blockers.push(t('LCP supérieur à 4s : rendu lent, budget de crawl consommé', 'LCP above 4s: slow rendering, crawl budget consumed', 'LCP superior a 4s: renderizado lento'));
+  if (pagesAnalyzed && pagesKnown && pagesAnalyzed < pagesKnown)
+    blockers.push(
+      t(
+        `Crawl partiel : ${pagesAnalyzed} pages explorées sur ${pagesKnown} connues`,
+        `Partial crawl: ${pagesAnalyzed} of ${pagesKnown} known pages explored`,
+        `Rastreo parcial: ${pagesAnalyzed} de ${pagesKnown} páginas conocidas`,
+      ),
+    );
+  if (!pagesAnalyzed)
+    blockers.push(t('Aucun crawl multi-pages exploitable : le périmètre est réduit à la page auditée', 'No usable multi-page crawl: scope limited to the audited page', 'Sin rastreo multipágina utilizable: alcance limitado a la página auditada'));
+
+  const li = (s: string) => `<li style="margin:0 0 6px 0;">${s}</li>`;
+
+  return `
+  <div class="section" data-marina-scope="site" data-marina-block="disclosure" style="page-break-before:always;">
+    <h2 style="font-size:20px;margin:0 0 6px 0;">${t('Divulgation méthodologique : portée, forces, faiblesses et angles morts', 'Methodological disclosure: scope, strengths, weaknesses and blind spots', 'Divulgación metodológica: alcance, fortalezas, debilidades y puntos ciegos')}</h2>
+    <p style="font-size:13px;color:#4b5563;line-height:1.7;margin:0 0 16px 0;">
+      ${t(
+        `Cette section précise comment cet audit de ${domain} a été produit, ce qui est mesuré directement, ce qui est estimé, et ce qu'il ne faut pas conclure. Elle doit être lue avant tout arbitrage budgétaire.`,
+        `This section explains how this audit of ${domain} was produced, what is measured directly, what is estimated, and what must not be concluded. Read it before any budget decision.`,
+        `Esta sección explica cómo se produjo esta auditoría de ${domain}, qué se mide directamente, qué se estima y qué no debe concluirse.`,
+      )}
+    </p>
+
+    <h3 style="font-size:15px;margin:18px 0 8px 0;">${t('1. Forces de la méthode', '1. Strengths of the method', '1. Fortalezas del método')}</h3>
+    <ul style="font-size:13px;color:#374151;line-height:1.7;padding-left:18px;margin:0;">
+      ${li(t('Signaux techniques (HTTP, balises, structure Hn, données structurées, performance) relevés directement sur le HTML servi : reproductibles et vérifiables.', 'Technical signals (HTTP, tags, Hn structure, structured data, performance) read directly from the served HTML: reproducible and verifiable.', 'Señales técnicas leídas directamente del HTML servido: reproducibles y verificables.'))}
+      ${li(pagesAnalyzed ? t(`Analyse sémantique et maillage calculés sur un crawl réel de ${pagesAnalyzed} pages, pas sur un échantillon déclaratif.`, `Semantic and internal-link analysis computed on a real crawl of ${pagesAnalyzed} pages, not a declared sample.`, `Análisis semántico calculado sobre un rastreo real de ${pagesAnalyzed} páginas.`) : t('Analyse page à page, sans extrapolation au reste du site.', 'Page-level analysis, with no extrapolation to the rest of the site.', 'Análisis por página, sin extrapolación al resto del sitio.'))}
+      ${li(llmCount ? t(`Visibilité IA testée sur ${llmCount} moteur(s) de réponse avec des prompts issus du contexte réel du site.`, `AI visibility tested on ${llmCount} answer engine(s) with prompts derived from the site's real context.`, `Visibilidad IA probada en ${llmCount} motor(es) de respuesta.`) : t('Les scores GEO reposent sur des critères de citabilité observables, indépendamment de tout test live.', 'GEO scores rely on observable citability criteria, independent of any live test.', 'Las puntuaciones GEO se basan en criterios de citabilidad observables.'))}
+      ${li(t('Recommandations hiérarchisées par impact attendu et rattachées à une preuve présente dans le rapport.', 'Recommendations ranked by expected impact and tied to evidence present in the report.', 'Recomendaciones priorizadas por impacto esperado y ligadas a pruebas del informe.'))}
+    </ul>
+
+    <h3 style="font-size:15px;margin:18px 0 8px 0;">${t('2. Faiblesses assumées', '2. Acknowledged weaknesses', '2. Debilidades asumidas')}</h3>
+    <ul style="font-size:13px;color:#374151;line-height:1.7;padding-left:18px;margin:0;">
+      ${li(t("Photographie à un instant donné : un site qui déploie souvent peut invalider une partie des constats en quelques jours.", 'Point-in-time snapshot: a frequently deployed site can invalidate part of the findings within days.', 'Fotografía puntual: un sitio con despliegues frecuentes puede invalidar parte de los hallazgos.'))}
+      ${li(t('Les volumes de recherche, difficultés et estimations de trafic proviennent de fournisseurs tiers : ce sont des ordres de grandeur, pas des mesures.', 'Search volumes, difficulty and traffic estimates come from third-party providers: orders of magnitude, not measurements.', 'Los volúmenes de búsqueda y estimaciones provienen de terceros: órdenes de magnitud, no mediciones.'))}
+      ${li(t("Les tests de visibilité IA ne sont pas déterministes : une même question peut donner une réponse différente d'une exécution à l'autre.", 'AI visibility tests are not deterministic: the same question can yield a different answer between runs.', 'Las pruebas de visibilidad IA no son deterministas.'))}
+      ${li(t('Aucun accès aux données propriétaires du site (Search Console, analytics, CRM) : la conversion réelle et le trafic réel ne sont pas mesurés ici.', 'No access to the site\'s proprietary data (Search Console, analytics, CRM): actual traffic and conversion are not measured here.', 'Sin acceso a datos propios del sitio: el tráfico y la conversión reales no se miden aquí.'))}
+    </ul>
+
+    <h3 style="font-size:15px;margin:18px 0 8px 0;">${t('3. Angles morts', '3. Blind spots', '3. Puntos ciegos')}</h3>
+    <ul style="font-size:13px;color:#374151;line-height:1.7;padding-left:18px;margin:0;">
+      ${li(t("Contenus derrière authentification, formulaires ou paywall : non explorés, donc non évalués.", 'Content behind authentication, forms or paywall: not crawled, therefore not assessed.', 'Contenido tras autenticación o muro de pago: no rastreado.'))}
+      ${li(t('Rendu JavaScript tardif et personnalisation par géolocalisation ou cookie : ce que voient certains utilisateurs peut différer de ce qui est analysé.', 'Late JavaScript rendering and geo/cookie personalisation: what some users see may differ from what is analysed.', 'Renderizado JS tardío y personalización: lo que ven algunos usuarios puede diferir.'))}
+      ${li(t("Réputation hors-site (avis, presse, réseaux, mentions de marque) : partiellement approchée, jamais exhaustive.", 'Off-site reputation (reviews, press, social, brand mentions): partially approximated, never exhaustive.', 'Reputación externa: parcialmente aproximada, nunca exhaustiva.'))}
+      ${li(t('Historique de pénalités, migrations passées et changements de nom de domaine : invisibles depuis un audit externe.', 'Penalty history, past migrations and domain changes: invisible from an external audit.', 'Historial de penalizaciones y migraciones: invisible desde una auditoría externa.'))}
+    </ul>
+
+    <h3 style="font-size:15px;margin:18px 0 8px 0;">${t('4. Ce qui dépend du marché du site', '4. What depends on the site\'s market', '4. Lo que depende del mercado del sitio')}</h3>
+    <p style="font-size:13px;color:#374151;line-height:1.7;margin:0;">
+      ${t(
+        "Un même score n'a pas la même valeur selon le secteur. Sur un marché mature et fortement éditorialisé, les gains SEO classiques sont lents et l'écart se joue sur la citabilité par les moteurs de réponse IA. Sur un marché émergent ou local peu travaillé, une page correctement structurée peut être citée en quelques semaines sans autorité forte. Les scores de ce rapport mesurent une aptitude à être trouvé et cité, pas un volume de trafic garanti.",
+        'The same score does not carry the same value across sectors. In a mature, heavily editorialised market, classic SEO gains are slow and the difference is made by citability in AI answer engines. In an emerging or under-worked local market, a well-structured page can be cited within weeks without strong authority. The scores here measure the ability to be found and cited, not guaranteed traffic.',
+        'Una misma puntuación no vale lo mismo según el sector. Las puntuaciones miden la aptitud para ser encontrado y citado, no un volumen de tráfico garantizado.',
+      )}
+    </p>
+
+    <h3 style="font-size:15px;margin:18px 0 8px 0;">${t('5. Maturité du nom de domaine', '5. Domain name maturity', '5. Madurez del dominio')}</h3>
+    <p style="font-size:13px;color:#374151;line-height:1.7;margin:0;">
+      ${t(
+        `L'ancienneté, l'historique de liens et le volume de pages déjà indexées conditionnent la vitesse à laquelle une correction produit un effet. ${pagesKnown ? `Périmètre connu pour ${domain} : environ ${pagesKnown} pages.` : ''} Sur un domaine jeune ou peu lié, attendre 3 à 6 mois avant de juger l'effet d'une refonte sémantique ; sur un domaine installé, les effets d'une correction technique sont souvent visibles en quelques semaines. Aucun de ces délais n'est garanti.`,
+        `Age, link history and the volume of already-indexed pages determine how fast a fix produces an effect. ${pagesKnown ? `Known scope for ${domain}: about ${pagesKnown} pages.` : ''} On a young or weakly linked domain, allow 3 to 6 months before judging a semantic overhaul; on an established domain, technical fixes often show within weeks. None of these timeframes is guaranteed.`,
+        `La antigüedad y el historial de enlaces determinan la velocidad del efecto de una corrección. Ninguno de estos plazos está garantizado.`,
+      )}
+    </p>
+
+    <h3 style="font-size:15px;margin:18px 0 8px 0;">${t('6. Concurrence', '6. Competition', '6. Competencia')}</h3>
+    <p style="font-size:13px;color:#374151;line-height:1.7;margin:0;">
+      ${competitors
+        ? t(
+            `${competitors} concurrent(s) ont été confrontés à ${domain} dans ce rapport. Cet échantillon est indicatif : il reflète les acteurs visibles sur les requêtes retenues, pas l'intégralité du marché. Un concurrent absent du rapport peut être dominant sur d'autres intentions.`,
+            `${competitors} competitor(s) were compared to ${domain} in this report. This sample is indicative: it reflects players visible on the selected queries, not the whole market. A competitor missing from the report may dominate other intents.`,
+            `${competitors} competidor(es) fueron comparados con ${domain}. La muestra es indicativa, no exhaustiva.`,
+          )
+        : t(
+            "Aucun benchmark concurrentiel exploitable n'a pu être constitué pour ce rapport : les écarts constatés ne doivent donc pas être interprétés comme un retard ou une avance relative.",
+            'No usable competitive benchmark could be built for this report: observed gaps must not be read as a relative lag or lead.',
+            'No se pudo construir un benchmark competitivo utilizable para este informe.',
+          )}
+      ${t(" La pression concurrentielle évolue en continu : un avantage constaté aujourd'hui peut être effacé par une refonte adverse.", ' Competitive pressure changes continuously: an advantage observed today can be erased by a competitor overhaul.', ' La presión competitiva cambia continuamente.')}
+    </p>
+
+    ${blockers.length ? `
+    <h3 style="font-size:15px;margin:18px 0 8px 0;">${t('7. Freins de crawlabilité observés', '7. Observed crawlability blockers', '7. Frenos de rastreabilidad observados')}</h3>
+    <ul style="font-size:13px;color:#374151;line-height:1.7;padding-left:18px;margin:0;">
+      ${blockers.map(li).join('')}
+    </ul>` : ''}
+
+    ${ctx.reusedFromCache?.length ? `
+    <p style="font-size:12px;color:#6b7280;line-height:1.6;margin:18px 0 0 0;">
+      ${t('Analyses mutualisées à l\'échelle du domaine (calculées une fois puis réutilisées dans les 24h) :', 'Domain-level analyses mutualised (computed once then reused within 24h):', 'Análisis mutualizados a escala de dominio (calculados una vez y reutilizados en 24h):')}
+      ${ctx.reusedFromCache.join(', ')}${cocoonNodes ? ` — ${cocoonNodes} ${t('nœuds sémantiques', 'semantic nodes', 'nodos semánticos')}` : ''}.
+    </p>` : ''}
+
+    <p style="font-size:12px;color:#6b7280;line-height:1.6;margin:16px 0 0 0;font-style:italic;">
+      ${t("Les recommandations sont classées par impact attendu, pas par certitude de résultat. Aucun positionnement, aucune citation IA et aucun volume de trafic ne sont garantis.", 'Recommendations are ranked by expected impact, not certainty of outcome. No ranking, AI citation or traffic volume is guaranteed.', 'Las recomendaciones se priorizan por impacto esperado. No se garantiza ningún resultado.')}
+    </p>
+  </div>`;
+}
+
 // ─── Worker: runs the full pipeline in phases ───
 // Phase 1 (default): audit + strategic → saves intermediate → self-invokes phase 2
 // Phase 2: crawl + cocoon + LLM visibility + report generation
