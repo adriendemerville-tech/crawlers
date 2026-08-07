@@ -1832,14 +1832,15 @@ Actions retournant **HTTP 501 \`_not_supported_by_dictadevi\`** (Dictadevi v1 ne
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '11.1.0',
-  lastUpdated: '2026-04-24',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Stratège Cocoon + Drop Detector + Recettage + Content Architect (crédits + images IA multi-moteurs) + Scribe + GMB + Anomalies + Bundle + Agents + SAV Félix + Quiz SEO + Autopilote + Parménion + Marina + MCP + N8N + Content Performance Engine + Matrice immersive (SSE + Pivot/Cube 3D + historique)',
-  totalEdgeFunctions: 192,
-  totalSharedModules: 38,
-  totalTables: '150+',
-  totalLinesOfCode: '218 000+',
-  totalMigrations: 247,
-  totalPages: 42,
-  totalComponents: 320,
+  version: '12.0.0',
+  lastUpdated: '2026-08-07',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM sur TanStack Start (SSR) + Stratège Cocoon + Content Integrity (near-duplicate / thin content) + Confrontation d\'audits tiers + Content Architect + Scribe + Copilot multi-personas + SAV Félix + Autopilote Parménion (exécution en file d\'attente) + Marina mono & multipages + Netlinking + Automatisation LinkedIn + Captures Pagebolt + MCP + API publique Crawlers',
+  totalEdgeFunctions: 310,
+  totalSharedModules: 97,
+  totalTables: '190+',
+  totalLinesOfCode: '372 000+',
+  totalMigrations: 482,
+  totalPages: 120,
+  totalComponents: 494,
 };
+
