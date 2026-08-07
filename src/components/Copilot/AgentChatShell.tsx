@@ -117,6 +117,11 @@ export function AgentChatShell({
     setDraft('');
   };
 
+  const sendText = (text: string) => {
+    if (!text.trim() || sending) return;
+    void sendMessage(text);
+  };
+
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     submitDraft();
@@ -296,7 +301,7 @@ export function AgentChatShell({
             <div className="flex flex-col items-center justify-end gap-1 shrink-0">
               {composerLeading}
               {renderComposerExtras
-                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending, slot: 'leading' })
+                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sendText, sending, slot: 'leading' })
                 : null}
             </div>
           )}
@@ -314,7 +319,7 @@ export function AgentChatShell({
             />
             <div className="absolute bottom-1.5 right-1.5">
               {renderComposerExtras
-                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sending, slot: 'inside' })
+                ? renderComposerExtras({ appendToDraft, setDraft, submitDraft, sendText, sending, slot: 'inside' })
                 : composerExtras}
             </div>
           </div>
