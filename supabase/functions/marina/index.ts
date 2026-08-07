@@ -2324,7 +2324,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       try {
         const { data: recentCrawls, error: crawlLookupError } = await sb
           .from('site_crawls' as any)
-          .select('id, crawled_pages, total_pages, avg_score, created_at')
+          .select('id, crawled_pages, total_pages, avg_score, created_at, content_integrity')
           .eq('domain', domain)
           .eq('user_id', parentJob.user_id)
           .eq('status', 'completed')
