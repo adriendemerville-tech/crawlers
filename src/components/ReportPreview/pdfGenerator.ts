@@ -6,6 +6,7 @@ import { LLMAnalysisResult } from '@/types/llm';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { SiteCrawlReportData } from './reportHtmlGenerator';
 import { addVisualEvidencePage } from '@/utils/pdfVisualCapture';
+import { addDisclaimerPage } from '@/lib/reports/auditDisclaimer';
 
 type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'site_crawl';
 
@@ -303,6 +304,7 @@ async function generateCrawlersPDF(result: CrawlResult, language: string) {
 
   await addVisualEvidencePage(doc, result.url, language);
 
+  addDisclaimerPage(doc, { auditType: 'crawlers', target: result.url, language, scope: { singlePage: true, analyzedAt: result.scannedAt }, crawlability: { aiBotsBlocked: result.bots.filter((b) => b.status === 'blocked').length } });
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
   doc.save(getReportFilename(result.url, 'crawl', 'pdf'));
@@ -341,6 +343,7 @@ async function generateGeoPDF(result: GeoResult, language: string) {
 
   await addVisualEvidencePage(doc, result.url, language);
 
+  addDisclaimerPage(doc, { auditType: 'geo', target: result.url, language, scope: { singlePage: true, analyzedAt: result.scannedAt } });
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
   doc.save(getReportFilename(result.url, 'geo', 'pdf'));
@@ -378,6 +381,7 @@ async function generateLLMPDF(result: LLMAnalysisResult, language: string) {
     styles: { fontSize: 9 },
   });
 
+  addDisclaimerPage(doc, { auditType: 'llm', domain: result.domain, target: result.domain, language, scope: { analyzedAt: result.scannedAt } });
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
   doc.save(getReportFilename(result.domain, 'llm', 'pdf'));
@@ -412,6 +416,7 @@ async function generatePageSpeedPDF(result: PageSpeedResult, language: string) {
     styles: { fontSize: 10 },
   });
 
+  addDisclaimerPage(doc, { auditType: 'pagespeed', target: result.url, language, scope: { singlePage: true } });
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
   doc.save(getReportFilename(result.url, 'pagespeed', 'pdf'));
@@ -470,6 +475,7 @@ async function generateSiteCrawlPDF(result: SiteCrawlReportData, language: strin
 
   await addVisualEvidencePage(doc, `https://${result.domain}`, language);
 
+  addDisclaimerPage(doc, { auditType: 'site_crawl', domain: result.domain, target: result.domain, language, scope: { pagesAnalyzed: result.crawledPages, analyzedAt: result.createdAt }, crawlability: { httpErrors: result.pages.filter((p) => (p.http_status ?? 200) >= 400).length } });
   addFooter(doc, t);
   const { getReportFilename } = await import('@/utils/reportFilename');
   doc.save(getReportFilename(result.domain, 'crawl', 'pdf'));
