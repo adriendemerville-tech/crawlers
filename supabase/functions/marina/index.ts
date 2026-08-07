@@ -2425,8 +2425,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         })();
       }
 
+      // Mutualisation : lecture du cache "site-scoped" (24h) partagé par toutes
+      // les URLs d'un même domaine (batch multipages inclus).
+      const siteScope = await readSiteScopeCache(sb, domain, parentJob.user_id);
+      const reusedFromCache: string[] = [];
+
       const llmVisibilityPromise = (async () => {
         if (!trackedSiteId) return;
+        if (siteScope?.llmVisibility) {
+          llmVisibilityData = siteScope.llmVisibility;
+          reusedFromCache.push('visibilité IA');
+          console.log(`[Marina] ♻️ LLM visibility réutilisée depuis le cache domaine (${domain})`);
+          return;
+        }
         try {
           console.log(`[Marina] Phase 3: calculate-llm-visibility for ${domain}`);
           const result = await callFunction('calculate-llm-visibility', {
@@ -2437,6 +2448,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           if (result && !result.error && (result.scores || result.data?.scores)) {
             llmVisibilityData = result;
             console.log(`[Marina] LLM visibility done: ${result.scores?.length || 0} LLMs scored`);
+            await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: result });
           } else {
             console.warn(`[Marina] LLM visibility returned no scores: ${result?.error || 'empty'}`);
           }
