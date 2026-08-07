@@ -1811,9 +1811,13 @@ Actions retournant **HTTP 501 \`_not_supported_by_dictadevi\`** (Dictadevi v1 ne
 | Cron | Fréquence | Fonction |
 |------|-----------|----------|
 | \`autopilot-engine-cycle\` | Quotidien 3h UTC | \`autopilot-engine\` |
+| \`queue-worker-every-min\` | Chaque minute | \`queue-worker\` (exécution découplée) |
+| \`cron-crawl-scheduler\` | Quotidien | full crawl 15j + targeted 5j par répertoire |
+| \`cron-netlinking-monitor\` | Quotidien | suivi des commandes netlinking |
 | \`refresh-serp-all\` | Hebdo | \`refresh-serp-all\` |
 | \`watchdog-scripts\` | 15 min | \`watchdog-scripts\` |
 | \`content-perf-aggregator\` | Hebdo lundi 3h UTC | \`content-perf-aggregator\` |
+
 
 ## Registre des modifications
 
