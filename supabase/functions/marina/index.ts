@@ -3141,8 +3141,14 @@ Deno.serve(handleRequest(async (req) => {
       
       if (!job) return json({ error: 'Job not found' }, 404);
       
-      if (job.status === 'completed') {
-        return json({ success: true, data: job.result_data, status: 'completed' });
+      if (job.status === 'completed' || job.status === 'partial') {
+        // `partial` = rapport livré mais couche stratégique (GEO) indisponible.
+        return json({
+          success: true,
+          data: job.result_data,
+          status: job.status,
+          ...(job.status === 'partial' ? { warning: job.error_message || 'Couche stratégique indisponible' } : {}),
+        });
       }
       if (job.status === 'failed') {
         return json({ success: false, error: job.error_message, status: 'failed' });
