@@ -2743,6 +2743,17 @@ const confront_external_audit: SkillDefinition = {
       snapshot.data_freshness = crawl?.created_at
         ? `Dernier crawl Crawlers : ${crawl.created_at}`
         : "Aucun crawl Crawlers récent — nos données sont absentes, ne conclus pas à une contradiction.";
+      if (!crawl?.created_at) {
+        snapshot.never_audited = true;
+        snapshot.sector_benchmark = await sectorBenchmark(ctx);
+        snapshot.next_step = {
+          label: 'Crawl multi-pages',
+          path: '/app/site-crawl',
+          skill: 'navigate_to',
+          why: "Aucun crawl sur ce site : obtenir une mesure comparable avant tout verdict de contradiction.",
+        };
+      }
+
     } else {
       // Domaine jamais audité : on ne bloque pas l'analyse. On fournit des repères
       // sectoriels issus des sites déjà audités (concurrents directs ou non) pour
