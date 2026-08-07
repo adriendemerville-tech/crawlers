@@ -484,13 +484,14 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
                       {item.status === 'pending' && 'En attente'}
                       {item.status === 'running' && `${item.progress}%`}
                       {item.status === 'completed' && 'Terminé'}
+                      {item.status === 'partial' && 'Partiel — couche stratégique indisponible'}
                       {item.status === 'failed' && (item.error || 'Échec')}
                     </span>
                   </div>
                   <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${item.status === 'failed' ? 'bg-destructive' : 'bg-primary'}`}
-                      style={{ width: `${item.status === 'completed' ? 100 : item.progress}%` }}
+                      style={{ width: `${item.status === 'completed' || item.status === 'partial' ? 100 : item.progress}%` }}
                     />
                   </div>
                 </div>
