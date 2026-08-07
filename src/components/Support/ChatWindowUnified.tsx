@@ -31,6 +31,7 @@ import {
 import { CrawlersLogo } from './CrawlersLogo';
 import { ChatMicButton } from './ChatMicButton';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
+import { importExternalAudit, isAuditImportable, buildConfrontationPrompt } from '@/lib/copilot/externalAuditImport';
 import { ChatReportSearch } from './ChatReportSearch';
 import { SeoQuiz } from './SeoQuiz';
 import { EnterpriseQuiz } from './EnterpriseQuiz';
