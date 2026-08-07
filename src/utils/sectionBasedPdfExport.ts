@@ -76,12 +76,22 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   // Collect sections: prefer [data-pdf-section] for fine-grained control,
   // fall back to direct children of .container
   const container = iframeDoc.querySelector('.container') || iframeDoc.body;
+
+  // Disclaimer obligatoire en dernière section (sauf s'il est déjà dans le HTML source)
+  if (!container.querySelector('[data-pdf-section="disclaimer"]')) {
+    const holder = iframeDoc.createElement('div');
+    holder.innerHTML = renderDisclaimerHTML(disclaimer ?? { auditType: 'generic', language: 'fr' });
+    const node = holder.firstElementChild;
+    if (node) container.appendChild(node);
+  }
+
   let sections = Array.from(container.querySelectorAll('[data-pdf-section]')) as HTMLElement[];
 
   if (sections.length === 0) {
     // Fallback: use direct children
     sections = Array.from(container.children) as HTMLElement[];
   }
+
 
   const pdfWidthMm = 210;
   const pdfHeightMm = 297;
