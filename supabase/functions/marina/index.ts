@@ -2302,6 +2302,13 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       const { expertData, strategicData, domain, detectedLang } = cached.result_data as any;
 
+      // ─── Détection de dégradation de la couche stratégique (GEO) ───
+      // strategic-synthesis renvoie un fallback silencieux (« Analyse interrompue. »,
+      // overallScore 0, roadmap vide) lorsque tous les appels LLM échouent. Sans
+      // détection, le rapport se présente comme complet alors qu'une couche entière
+      // manque : on le signale dans le rapport et on marque le job en `partial`.
+      const strategicDegradation = detectStrategicDegradation(strategicData);
+
       // Cleanup intermediate cache (fire-and-forget)
       sb.from('audit_cache').delete().eq('cache_key', `marina_intermediate_${jobId}`).then(() => {});
 
