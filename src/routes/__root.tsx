@@ -40,9 +40,10 @@ if (typeof window !== "undefined") {
   initGlobalErrorListener();
 }
 
-const SITE_TITLE = "Crawlers.fr — Audit SEO, GEO et visibilité IA";
+const SITE_TITLE = "Audit SEO et GEO : visibilité Google et IA | Crawlers";
 const SITE_DESCRIPTION =
-  "Plateforme d'audit SEO et GEO : correction automatique des pages, contenu IA et connexion CMS directe pour piloter votre visibilité Google et IA.";
+  "Auditez votre site en SEO et GEO, corrigez vos pages automatiquement et suivez votre visibilité dans Google comme dans les réponses des IA.";
+
 
 // ported from index.html — gtag bootstrap (gtag.js itself is loaded by GTM below)
 const GTAG_BOOTSTRAP = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-0S0D56VSWQ', { send_page_view: false });`;
