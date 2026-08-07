@@ -14,7 +14,7 @@ const CREDIT_COST = 5;
 const CONCURRENCY = 2;
 const STORAGE_KEY = 'marina_batch_v2';
 
-type ItemStatus = 'pending' | 'running' | 'completed' | 'failed';
+type ItemStatus = 'pending' | 'running' | 'completed' | 'partial' | 'failed';
 
 interface BatchItem {
   url: string;
