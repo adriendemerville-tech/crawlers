@@ -118,6 +118,7 @@ const SITE_BLOCK_LABELS: Record<string, string> = {
   crawl: 'Crawl multi-pages',
   cocoon: 'Cocon sémantique et maillage interne',
   indexation: "Santé d'indexation",
+  llm: "Visibilité dans les moteurs de réponse IA",
 };
 
 /**
