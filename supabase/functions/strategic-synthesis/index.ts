@@ -179,6 +179,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
           method: 'POST',
           headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ model, messages: [{ role: 'system', content: `${strictLanguageInstruction}\n\n${systemPrompt}` }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 16384 }),
+          timeoutMs,
           signal: AbortSignal.timeout(timeoutMs),
         });
         if (!resp.ok) {
