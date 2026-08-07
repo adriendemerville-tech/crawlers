@@ -107,8 +107,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
   const targets = mode === 'paste' ? parsedFromText.slice(0, MAX_URLS) : selected.slice(0, MAX_URLS);
   const overLimit = (mode === 'paste' ? parsedFromText.length : selected.length) > MAX_URLS;
   const totalCost = targets.length * CREDIT_COST;
-  const completed = items.filter(i => i.status === 'completed');
-  const allDone = items.length > 0 && items.every(i => i.status === 'completed' || i.status === 'failed');
+  const completed = items.filter(i => i.status === 'completed' || i.status === 'partial');
+  const allDone = items.length > 0 && items.every(i => i.status === 'completed' || i.status === 'partial' || i.status === 'failed');
 
   /* ── Découverte d'un répertoire via le sitemap ── */
   const handleDiscover = useCallback(async () => {
