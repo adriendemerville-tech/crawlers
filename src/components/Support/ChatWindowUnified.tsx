@@ -568,20 +568,7 @@ export function ChatWindowUnified({
               initialSessionId={pickedSessionId}
               onAssistantReply={onAssistantReply}
               fontScale={fontScale}
-              composerLeading={
-                <ChatAttachmentPicker
-                  userId={user?.id}
-                  onAttach={(item) => {
-                    pushAssistant(
-                      `_Pièce jointe ajoutée :_ **${item.title}**${item.domain ? ` — ${item.domain}` : ''}`,
-                    );
-                  }}
-                  onImageAttach={(fileName) => {
-                    pushAssistant(`_Fichier joint :_ ${fileName}`);
-                  }}
-                />
-              }
-              renderComposerExtras={({ appendToDraft, slot }) => {
+              renderComposerExtras={({ appendToDraft, sendText, slot }) => {
                 if (slot === 'inside') {
                   return (
                     <ChatMicButton
@@ -590,18 +577,48 @@ export function ChatWindowUnified({
                     />
                   );
                 }
-                // slot === 'leading' : sous le bouton "+", à gauche du textarea
-                return user?.id ? (
-                  <ChatReportSearch
-                    userId={user.id}
-                    onSelect={(report) => {
-                      pushAssistant(
-                        `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
-                      );
-                    }}
-                  />
-                ) : null;
+                // slot === 'leading' : colonne gauche du textarea
+                return (
+                  <>
+                    <ChatAttachmentPicker
+                      userId={user?.id}
+                      onAttach={(item) => {
+                        pushAssistant(
+                          `_Pièce jointe ajoutée :_ **${item.title}**${item.domain ? ` — ${item.domain}` : ''}`,
+                        );
+                      }}
+                      onImageAttach={(fileName, file) => {
+                        if (!file || !isAuditImportable(file)) {
+                          pushAssistant(`_Fichier joint :_ ${fileName}`);
+                          return;
+                        }
+                        pushAssistant(`_Import de l'audit tiers en cours :_ ${fileName}…`);
+                        void importExternalAudit(file, { domain: userDomains?.[0] })
+                          .then((res) => {
+                            pushAssistant(
+                              `_Audit importé :_ **${fileName}** — ${res.char_count.toLocaleString('fr-FR')} caractères extraits${res.truncated ? ' (tronqué)' : ''}.`,
+                            );
+                            sendText(buildConfrontationPrompt(res, fileName, userDomains?.[0]));
+                          })
+                          .catch((e: Error) => {
+                            pushAssistant(`_Import impossible :_ ${e.message}`);
+                          });
+                      }}
+                    />
+                    {user?.id ? (
+                      <ChatReportSearch
+                        userId={user.id}
+                        onSelect={(report) => {
+                          pushAssistant(
+                            `_Rapport sélectionné :_ **${report.label}** — ${report.domain}`,
+                          );
+                        }}
+                      />
+                    ) : null}
+                  </>
+                );
               }}
+
               className="h-full"
             />
           </div>
