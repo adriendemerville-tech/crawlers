@@ -36,6 +36,8 @@ interface AgentChatShellProps {
     appendToDraft: (text: string) => void;
     setDraft: (text: string) => void;
     submitDraft: () => void;
+    /** Envoie immédiatement un message sans passer par le draft (ex: import de fichier). */
+    sendText: (text: string) => void;
     sending: boolean;
     slot: 'inside' | 'leading';
   }) => React.ReactNode;
