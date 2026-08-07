@@ -2531,6 +2531,99 @@ const detect_content_cannibalization: SkillDefinition = {
   },
 };
 
+// ═══════════════════════════════════════════════════════════
+// read_content_integrity — lecture du rapport quasi-doublons /
+// contenu pauvre calculé par le crawl multi-page (0 LLM, lecture seule).
+// ═══════════════════════════════════════════════════════════
+const read_content_integrity: SkillDefinition = {
+  name: 'read_content_integrity',
+  description: "Lit le rapport d'intégrité du contenu du dernier crawl multi-page : groupes de pages quasi identiques (similarité lexicale, verdict cannibalisation / à surveiller / normal selon le secteur) et pages au contenu pauvre avec leur score de minceur. Lecture seule, aucun coût LLM.",
+  parameters: {
+    type: 'object',
+    properties: {
+      tracked_site_id: { type: 'string', description: 'UUID du site suivi' },
+      domain: { type: 'string', description: 'Domaine du site (fallback)' },
+    },
+    required: [],
+  },
+  handler: async (input, ctx) => {
+    const identifier = String(input.tracked_site_id ?? input.domain ?? '').trim();
+    const site = identifier ? await resolveTrackedSite(ctx, identifier) : null;
+    const domain = (site?.domain ?? String(input.domain ?? '').trim()).replace(/^www\./, '');
+    if (!domain) return { ok: false, error: 'tracked_site_id ou domain requis' };
+
+    const { data, error } = await ctx.supabase
+      .from('site_crawls')
+      .select('id, created_at, crawled_pages, content_integrity')
+      .eq('domain', domain)
+      .eq('status', 'completed')
+      .not('content_integrity', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) return { ok: false, error: error.message };
+    const report = (data as any)?.content_integrity;
+    if (!report?.near_duplicate) {
+      return {
+        ok: true,
+        data: {
+          domain,
+          available: false,
+          message: "Aucun rapport d'intégrité disponible : lancer un crawl multi-page (≥ 2 pages) sur ce site.",
+        },
+      };
+    }
+
+    const nd = report.near_duplicate;
+    const thin = report.thin_content || { pages: [], count: 0, avg_thin_score: 0 };
+    return {
+      ok: true,
+      data: {
+        domain,
+        available: true,
+        crawl_id: (data as any).id,
+        computed_at: report.computed_at,
+        analyzed_pages: report.analyzed_pages,
+        similarity_threshold: report.similarity_threshold,
+        sector_tolerance: report.sector_tolerance,
+        near_duplicate: {
+          groups: nd.clusters?.length || 0,
+          cannibalization: nd.cannibalization_clusters || 0,
+          watch: nd.watch_clusters || 0,
+          normal: nd.normal_clusters || 0,
+          pages_affected: nd.pages_affected || 0,
+          clusters: (nd.clusters || []).slice(0, 15).map((c: any) => ({
+            pivot_url: c.pivot_url,
+            urls: (c.pages || []).map((p: any) => p.url),
+            similarity_pct: Math.round((c.avg_similarity || 0) * 100),
+            verdict: c.verdict,
+            verdict_source: c.verdict_source,
+            rationale: c.rationale,
+            recommended_action: c.recommended_action,
+          })),
+        },
+        thin_content: {
+          count: thin.count || 0,
+          avg_thin_score: thin.avg_thin_score || 0,
+          pages: (thin.pages || []).slice(0, 25).map((p: any) => ({
+            url: p.url,
+            thin_score: p.thin_score,
+            useful_words: p.useful_words,
+            kind: p.kind,
+            reasons: p.reasons,
+          })),
+        },
+        next_step: (nd.cannibalization_clusters || 0) > 0
+          ? "Enchaîner sur plan_editorial pour la consolidation (fusion + 301 vers le pivot) ; les pages pauvres sont à enrichir en priorité."
+          : undefined,
+      },
+    };
+  },
+};
+
+
+
 
 // ═══════════════════════════════════════════════════════════
 // REGISTRY
