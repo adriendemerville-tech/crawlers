@@ -1740,6 +1740,33 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
 - **Sécurité** : Risque ≥ 4 bloqué. Mode conservateur si erreurs > 20% (segmenté par action_type).
 - **Apprentissage** : Boucle rétroaction T+30 via \`parmenion-feedback\`
 
+### Exécution découplée (file d'attente)
+
+La phase \`execute\` ne s'exécute plus en ligne dans le cycle : elle est **poussée dans \`job_queue\`** et consommée par \`queue-worker\` (cron \`queue-worker-every-min\`, priorités par plan : agency_premium 10 > agency_pro 20 > new_user 30 > registered 40). Objectif : supprimer les morts par CPU/wall-time observées lors des pushs CMS longs.
+
+- **Advisor circuit breaker** : \`content-architecture-advisor\` est appelé en mode asynchrone avec polling ; en cas d'échecs répétés, le breaker coupe l'appel et le cycle continue sans bloquer.
+- **Backlog guard** : si plus de 5 décisions CMS \`planned\` restent non exécutées sur un site, le cycle est sauté et la config passe en \`paused\` (reprise manuelle).
+- **Auto-config** : un trigger DB crée automatiquement une \`autopilot_configs\` (dry_run, idle, toutes phases) à chaque insertion/activation dans \`parmenion_targets\`.
+
+### Garde-fous éditoriaux et sémantiques
+
+| Garde | Effet |
+|-------|-------|
+| **Breathing Spiral v5** | Détermination de phase (expansion / consolidation) + clustering thématique via \`match_workbench_cluster\` |
+| **Cluster diversity** | Cap SQL de 2 items par cluster + carte d'exploration + rotation de personas (round-robin) |
+| **Dedup / synonymes** | Jaccard synonyme-aware (Layer E), saturation guard (Layer D), blocklist de titres |
+| **Saturation guard** | Alimenté par le module Content Integrity (near-duplicate / thin content) : bloque la création si le cluster est saturé |
+| **Content pruning** | Propose fusions, 301 et suppressions au lieu de créer, quand la cannibalisation est confirmée |
+| **Anti-hallucination** | Gates sémantiques sur le brief avant rédaction |
+
+### Publication
+
+- **Statut** : \`published\` quand \`implementation_mode === 'auto'\` (plus de \`draft\` systématique), \`draft\` sinon.
+- **Images** : génération via \`google/gemini-3.1-flash-image\` (OpenRouter) avec repli Lovable AI ; l'image est poussée avec l'article vers le CMS.
+- **HTML** : tous les pushs CMS envoient du HTML (conversion défensive Markdown → HTML via \`marked\` côté bridge).
+- **Autorité off-site** : axe \`offsite_authority\` du stratège branché sur le module Netlinking (\`netlinking-search\` / \`netlinking-order\`, monitoring \`cron-netlinking-monitor\`).
+
+
 ### Cibles multi-tenant (\`parmenion_targets\`)
 
 Parménion gère plusieurs sites cibles via la table \`parmenion_targets\`. Plateformes branchées et opérationnelles :
