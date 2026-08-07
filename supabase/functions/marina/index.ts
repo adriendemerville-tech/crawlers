@@ -1628,7 +1628,8 @@ function compileMarinaReport(
     .marina-separator { background: linear-gradient(90deg, transparent, ${headerColor}, transparent) !important; }
   ` : '';
 
-  return `<!DOCTYPE html>
+  const compiled = `<!DOCTYPE html>
+
 <html lang="${lang}">
 <head>
   <meta charset="UTF-8">
