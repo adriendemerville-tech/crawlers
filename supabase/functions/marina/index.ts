@@ -1505,6 +1505,12 @@ function compileMarinaReport(
     <!-- Section 4: Cocoon (périmètre site) -->
     <div data-marina-scope="site" data-marina-block="cocoon">${cocoonContent}</div>
 
+    ${llmVisibilityBlock ? `
+    <div class="marina-separator"></div>
+    <!-- Visibilité IA (périmètre site) -->
+    <div data-marina-scope="site" data-marina-block="llm">${llmVisibilityBlock}</div>
+    ` : ''}
+
     ${sectionHTMLs.indexation ? `
     <div class="marina-separator"></div>
     <!-- Section 5: Indexation Health (périmètre site) -->
