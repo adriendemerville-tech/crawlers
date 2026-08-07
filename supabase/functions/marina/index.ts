@@ -1454,8 +1454,125 @@ function injectDegradedBanner(html: string, banner: string): string {
   return html.replace(m[0], `${m[0]}\n${banner}`);
 }
 
+/**
+ * Charte Crawlers : violet, or, noir, blanc. Le bleu « IA » est interdit,
+ * les emoji aussi. Les templates historiques (et les sections produites par
+ * d'autres fonctions) contiennent encore les deux : on normalise le HTML final
+ * de façon déterministe plutôt que de dupliquer la charte à chaque template.
+ */
+const CRAWLERS_COLOR_MAP: Record<string, string> = {
+  '#3b82f6': '#6d28d9', '#2563eb': '#5b21b6', '#1d4ed8': '#4c1d95',
+  '#1e40af': '#4c1d95', '#60a5fa': '#8b5cf6', '#93c5fd': '#c4b5fd',
+  '#bfdbfe': '#ddd6fe', '#dbeafe': '#ede9fe', '#eff6ff': '#f5f3ff',
+  '#0ea5e9': '#7c3aed', '#38bdf8': '#a78bfa', '#0284c7': '#5b21b6',
+};
+
+const EMOJI_RE =
+  /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{20E3}\u{2139}]/gu;
+
+function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): string {
+  let out = html;
+  if (!opts?.keepColors) {
+    for (const [from, to] of Object.entries(CRAWLERS_COLOR_MAP)) {
+      out = out.replaceAll(from, to).replaceAll(from.toUpperCase(), to);
+    }
+  }
+  out = out
+    .replace(/([>\s])\u2705([<\s])/gu, '$1Oui$2')
+    .replace(/([>\s])\u274C([<\s])/gu, '$1Non$2')
+    .replace(EMOJI_RE, '')
+    .replace(/[ \t]{2,}</g, ' <')
+    .replace(/>\s{2,}([A-Za-zÀ-ÿ0-9])/g, '> $1');
+  return out;
+}
+
+/**
+ * Synthèse exécutive : un score global et un verdict en une phrase, en tête de
+ * rapport. 100 % déterministe (aucun appel LLM, donc aucun coût token).
+ */
+function buildExecutiveSummaryHTML(
+  lang: string,
+  domain: string,
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean },
+): string {
+  const isEn = lang === 'en';
+  const isEs = lang === 'es';
+  const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
+
+  const techRaw = Number(ctx.expertData?.totalScore || 0);
+  const techMax = Number(ctx.expertData?.maxScore || 200) || 200;
+  const tech100 = techRaw > 0 ? Math.round((techRaw / techMax) * 100) : null;
+  const geo100 = ctx.strategicData?.overallScore ? Math.round(Number(ctx.strategicData.overallScore)) : null;
+  const pages = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
+
+  const parts = [tech100, geo100].filter((v): v is number => typeof v === 'number' && v > 0);
+  const global = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : null;
+
+  const band = (s: number | null) =>
+    s === null ? 'unknown' : s >= 75 ? 'strong' : s >= 55 ? 'ok' : s >= 35 ? 'weak' : 'critical';
+  const b = band(global);
+
+  const verdict =
+    b === 'unknown'
+      ? t(
+          `Le score global n'a pas pu être consolidé pour ${domain} : lisez les sections une par une avant tout arbitrage.`,
+          `The global score could not be consolidated for ${domain}: read each section before any decision.`,
+          `La puntuación global no pudo consolidarse para ${domain}.`,
+        )
+      : b === 'strong'
+      ? t(
+          `La stratégie de ${domain} est globalement saine (${global}/100) : les gains restants sont d'optimisation, pas de refonte.`,
+          `${domain} is globally sound (${global}/100): remaining gains are optimisation, not rebuild.`,
+          `${domain} es globalmente sólido (${global}/100).`,
+        )
+      : b === 'ok'
+      ? t(
+          `La stratégie de ${domain} est fonctionnelle mais incomplète (${global}/100) : la base technique tient, la couche sémantique et de citabilité IA reste à construire.`,
+          `${domain} is functional but incomplete (${global}/100): the technical base holds, the semantic and AI-citability layer is still missing.`,
+          `${domain} es funcional pero incompleto (${global}/100).`,
+        )
+      : b === 'weak'
+      ? t(
+          `La stratégie de ${domain} est insuffisante en l'état (${global}/100) : les correctifs prioritaires du plan d'action conditionnent tout gain de visibilité.`,
+          `${domain} is insufficient as it stands (${global}/100): the priority fixes in the action plan condition any visibility gain.`,
+          `${domain} es insuficiente en su estado actual (${global}/100).`,
+        )
+      : t(
+          `La stratégie de ${domain} est en défaut critique (${global}/100) : traiter les blocages techniques avant toute production de contenu.`,
+          `${domain} is critically failing (${global}/100): fix technical blockers before producing content.`,
+          `${domain} presenta un fallo crítico (${global}/100).`,
+        );
+
+  const cell = (label: string, value: string) => `
+    <div style="flex:1 1 140px;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#ffffff;">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">${label}</div>
+      <div style="font-size:20px;font-weight:700;color:#111827;">${value}</div>
+    </div>`;
+
+  return `
+  <div class="section" data-marina-scope="page" data-marina-block="summary" style="border-left:6px solid #d4af37;">
+    <h2 style="font-size:20px;margin:0 0 4px 0;">${t('Synthèse exécutive', 'Executive summary', 'Síntesis ejecutiva')}</h2>
+    <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 14px 0;"><strong>${verdict}</strong></p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+      ${cell(t('Score global', 'Global score', 'Puntuación global'), global === null ? 'n/d' : `${global}/100`)}
+      ${cell(t('SEO technique', 'Technical SEO', 'SEO técnico'), tech100 === null ? 'n/d' : `${tech100}/100`)}
+      ${cell(t('GEO / citabilité IA', 'GEO / AI citability', 'GEO / citabilidad IA'), geo100 === null ? 'n/d' : `${geo100}/100`)}
+      ${cell(t('Pages explorées', 'Pages crawled', 'Páginas rastreadas'), pages ? String(pages) : 'n/d')}
+    </div>
+    <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
+      ${t(
+        `Score global = moyenne des scores SEO technique et GEO ramenés sur 100. Il ne remplace pas la lecture détaillée : la portée et les limites de la méthode sont exposées en fin de rapport.`,
+        `Global score = average of technical SEO and GEO scores normalised to 100. It does not replace detailed reading: scope and limits are set out at the end of the report.`,
+        `Puntuación global = media de SEO técnico y GEO sobre 100.`,
+      )}
+      ${ctx.degraded ? ' ' + t('La couche stratégique est indisponible sur ce rapport : le score global est partiel.', 'The strategic layer is unavailable in this report: the global score is partial.', 'La capa estratégica no está disponible: la puntuación global es parcial.') : ''}
+    </p>
+  </div>`;
+}
+
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string },
+
   lang: string,
   domain: string,
   url: string,
