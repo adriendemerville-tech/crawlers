@@ -2878,6 +2878,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         html = generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult, marinaBranding);
       }
 
+      // Bandeau « couche stratégique indisponible » (les deux générateurs).
+      if (strategicDegradation.degraded) {
+        html = injectDegradedBanner(
+          html,
+          buildStrategicDegradedBannerHTML(detectedLang, strategicDegradation.reasons),
+        );
+        console.warn(`[Marina] Strategic layer degraded for ${domain}: ${strategicDegradation.reasons.join(' | ')}`);
+      }
+
       // ─── Step 5: Store in shared-reports bucket ───
       const fileName = `marina/${jobId}.html`;
 
