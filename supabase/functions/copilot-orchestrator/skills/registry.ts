@@ -2778,12 +2778,16 @@ const confront_external_audit: SkillDefinition = {
         crawlers_snapshot: snapshot,
         methodology: methodologyFor(),
         instructions: [
-          "Produis un tableau markdown : | Affirmation de l'audit | Verdict | Notre donnée | Commentaire |.",
-          "Verdicts autorisés uniquement : FIABLE, NON FIABLE, CONFIRMÉ PAR CRAWLERS, CONTRADICTOIRE.",
-          "N'utilise CONTRADICTOIRE que si nous avons une mesure réelle et fraîche sur le même objet ; sinon indique FIABLE ou NON FIABLE avec la raison.",
-          "Si une donnée nous manque, propose explicitement une action et attends l'accord : trigger_audit (crawl réel), market_diagnosis / live_search (vérification SERP), compare_methodology (écart de calcul).",
+          "Commence TOUJOURS par une évaluation de la qualité et de la profondeur de l'audit importé : périmètre (nb de pages, on-site / off-site / technique / contenu / GEO), fraîcheur, sources des chiffres, métriques réellement mesurables vs inventées, seuils utilisés, actionnabilité des recommandations. Donne une note de profondeur sur 10 et dis ce qui manque.",
+          "Produis ensuite un tableau markdown : | Affirmation de l'audit | Verdict | Notre donnée / repère | Commentaire |.",
+          "Verdicts autorisés uniquement : FIABLE, NON FIABLE, CONFIRMÉ PAR CRAWLERS, CONTRADICTOIRE, ÉCART SECTORIEL.",
+          "N'utilise CONFIRMÉ PAR CRAWLERS ou CONTRADICTOIRE que si nous avons une mesure réelle et fraîche sur CE site. Sinon, utilise ÉCART SECTORIEL en t'appuyant sur crawlers_snapshot.sector_benchmark (« ça diffère des moyennes des sites que nous avons audités : ... »), en précisant que c'est un repère de secteur, pas une mesure du site.",
+          "Si crawlers_snapshot.never_audited est vrai : ne refuse jamais l'analyse. Après le tableau, dis explicitement « Tu n'as jamais audité ce nom de domaine : veux-tu commencer par un crawl multi-pages ? » et attends la réponse.",
+          "Si l'utilisateur répond oui : appelle navigate_to avec path '/app/site-crawl' (reason : crawl multi-pages du domaine de l'audit importé), puis, une fois la page chargée, réponds simplement « Démarrons. » en rappelant le domaine à saisir. N'invente aucune mesure avant que le crawl ait tourné.",
+          "Autres vérifications possibles sans crawl, à proposer avec accord : market_diagnosis / live_search (SERP, backlinks), compare_methodology (écart de calcul).",
           "Termine par 3 actions concrètes classées par impact.",
         ],
+
       },
     };
   },
