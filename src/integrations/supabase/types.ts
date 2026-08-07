@@ -5159,6 +5159,59 @@ export type Database = {
         }
         Relationships: []
       }
+      external_audits: {
+        Row: {
+          char_count: number
+          confrontation: Json | null
+          confronted_at: string | null
+          created_at: string
+          domain: string | null
+          filename: string | null
+          id: string
+          mime_type: string | null
+          raw_text: string
+          source_label: string | null
+          tracked_site_id: string | null
+          user_id: string
+        }
+        Insert: {
+          char_count?: number
+          confrontation?: Json | null
+          confronted_at?: string | null
+          created_at?: string
+          domain?: string | null
+          filename?: string | null
+          id?: string
+          mime_type?: string | null
+          raw_text: string
+          source_label?: string | null
+          tracked_site_id?: string | null
+          user_id: string
+        }
+        Update: {
+          char_count?: number
+          confrontation?: Json | null
+          confronted_at?: string | null
+          created_at?: string
+          domain?: string | null
+          filename?: string | null
+          id?: string
+          mime_type?: string | null
+          raw_text?: string
+          source_label?: string | null
+          tracked_site_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_audits_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       false_positive_domains: {
         Row: {
           created_at: string

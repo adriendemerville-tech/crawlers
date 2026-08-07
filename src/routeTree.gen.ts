@@ -71,6 +71,7 @@ import { Route as SocialContentCreatorRouteImport } from './routes/social-conten
 import { Route as StrategeCocoonRouteImport } from './routes/stratege-cocoon'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as VisibiliteLlmRouteImport } from './routes/visibilite-llm'
+import { Route as ApiExternalAuditImportRouteImport } from './routes/api/external-audit-import'
 import { Route as AppAuditCompareRouteImport } from './routes/app/audit-compare'
 import { Route as AppBotActivityRouteImport } from './routes/app/bot-activity'
 import { Route as AppCocoonRouteImport } from './routes/app/cocoon'
@@ -446,6 +447,11 @@ const VisibiliteLlmRoute = VisibiliteLlmRouteImport.update({
   path: '/visibilite-llm',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiExternalAuditImportRoute = ApiExternalAuditImportRouteImport.update({
+  id: '/api/external-audit-import',
+  path: '/api/external-audit-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAuditCompareRoute = AppAuditCompareRouteImport.update({
   id: '/app/audit-compare',
   path: '/app/audit-compare',
@@ -798,6 +804,7 @@ export interface FileRoutesByFullPath {
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
+  '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/app/audit-compare': typeof AppAuditCompareRoute
   '/app/bot-activity': typeof AppBotActivityRoute
   '/app/cocoon': typeof AppCocoonRoute
@@ -919,6 +926,7 @@ export interface FileRoutesByTo {
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
+  '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/app/audit-compare': typeof AppAuditCompareRoute
   '/app/bot-activity': typeof AppBotActivityRoute
   '/app/cocoon': typeof AppCocoonRoute
@@ -1041,6 +1049,7 @@ export interface FileRoutesById {
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
+  '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/app/audit-compare': typeof AppAuditCompareRoute
   '/app/bot-activity': typeof AppBotActivityRoute
   '/app/cocoon': typeof AppCocoonRoute
@@ -1164,6 +1173,7 @@ export interface FileRouteTypes {
     | '/stratege-cocoon'
     | '/tarifs'
     | '/visibilite-llm'
+    | '/api/external-audit-import'
     | '/app/audit-compare'
     | '/app/bot-activity'
     | '/app/cocoon'
@@ -1285,6 +1295,7 @@ export interface FileRouteTypes {
     | '/stratege-cocoon'
     | '/tarifs'
     | '/visibilite-llm'
+    | '/api/external-audit-import'
     | '/app/audit-compare'
     | '/app/bot-activity'
     | '/app/cocoon'
@@ -1406,6 +1417,7 @@ export interface FileRouteTypes {
     | '/stratege-cocoon'
     | '/tarifs'
     | '/visibilite-llm'
+    | '/api/external-audit-import'
     | '/app/audit-compare'
     | '/app/bot-activity'
     | '/app/cocoon'
@@ -1528,6 +1540,7 @@ export interface RootRouteChildren {
   StrategeCocoonRoute: typeof StrategeCocoonRoute
   TarifsRoute: typeof TarifsRoute
   VisibiliteLlmRoute: typeof VisibiliteLlmRoute
+  ApiExternalAuditImportRoute: typeof ApiExternalAuditImportRoute
   AppAuditCompareRoute: typeof AppAuditCompareRoute
   AppBotActivityRoute: typeof AppBotActivityRoute
   AppCocoonRoute: typeof AppCocoonRoute
@@ -2023,6 +2036,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VisibiliteLlmRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/external-audit-import': {
+      id: '/api/external-audit-import'
+      path: '/api/external-audit-import'
+      fullPath: '/api/external-audit-import'
+      preLoaderRoute: typeof ApiExternalAuditImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/audit-compare': {
       id: '/app/audit-compare'
       path: '/app/audit-compare'
@@ -2488,6 +2508,7 @@ const rootRouteChildren: RootRouteChildren = {
   StrategeCocoonRoute: StrategeCocoonRoute,
   TarifsRoute: TarifsRoute,
   VisibiliteLlmRoute: VisibiliteLlmRoute,
+  ApiExternalAuditImportRoute: ApiExternalAuditImportRoute,
   AppAuditCompareRoute: AppAuditCompareRoute,
   AppBotActivityRoute: AppBotActivityRoute,
   AppCocoonRoute: AppCocoonRoute,

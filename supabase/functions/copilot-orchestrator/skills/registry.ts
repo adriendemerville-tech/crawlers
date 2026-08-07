@@ -8,6 +8,7 @@
 
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { computeCannibalization } from '../../_shared/cannibalizationClusters.ts';
+import { methodologyFor } from '../../_shared/auditMethodology.ts';
 
 export interface SkillContext {
   userId: string;
@@ -2623,6 +2624,188 @@ const read_content_integrity: SkillDefinition = {
 };
 
 
+// ═══════════════════════════════════════════════════════════
+// CONFRONTATION D'AUDITS EXTERNES
+// ═══════════════════════════════════════════════════════════
+
+const list_external_audits: SkillDefinition = {
+  name: 'list_external_audits',
+  description: "Liste les audits tiers importés par l'utilisateur (fichier déposé dans le chat) : id, nom de fichier, domaine, taille. À appeler quand l'utilisateur parle d'un audit externe sans préciser lequel.",
+  parameters: {
+    type: 'object',
+    properties: {
+      domain: { type: 'string', description: 'Filtre optionnel sur le domaine' },
+    },
+  },
+  handler: async (input, ctx) => {
+    let q = ctx.supabase
+      .from('external_audits')
+      .select('id, filename, domain, source_label, char_count, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    const domain = input.domain ? normalizeDomainLoose(String(input.domain)) : null;
+    if (domain) q = q.eq('domain', domain);
+    const { data, error } = await q;
+    if (error) return { ok: false, error: error.message };
+    if (!data?.length) return { ok: true, data: { audits: [], message: "Aucun audit tiers importé. L'utilisateur doit déposer le fichier via le trombone du chat." } };
+    return { ok: true, data: { audits: data } };
+  },
+};
+
+const confront_external_audit: SkillDefinition = {
+  name: 'confront_external_audit',
+  description: "Confronte un audit tiers importé aux données réelles Crawlers. Retourne le texte de l'audit + un instantané de nos mesures (KPIs, intégrité de contenu, cocoon, maillage) + la méthodologie de nos scores. À utiliser pour classer chaque affirmation en fiable / non fiable / confirmé par Crawlers / contradictoire.",
+  parameters: {
+    type: 'object',
+    properties: {
+      external_audit_id: { type: 'string', description: "UUID de l'audit importé (cf. list_external_audits). Par défaut : le plus récent." },
+      tracked_site_id: { type: 'string', description: 'UUID ou domaine du site suivi à confronter' },
+    },
+  },
+  handler: async (input, ctx) => {
+    // 1. Audit externe
+    let query = ctx.supabase
+      .from('external_audits')
+      .select('id, filename, domain, source_label, raw_text, char_count, tracked_site_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const auditId = input.external_audit_id ? String(input.external_audit_id) : null;
+    if (auditId) query = ctx.supabase
+      .from('external_audits')
+      .select('id, filename, domain, source_label, raw_text, char_count, tracked_site_id, created_at')
+      .eq('id', auditId)
+      .limit(1);
+    const { data: rows, error } = await query;
+    if (error) return { ok: false, error: error.message };
+    const audit = rows?.[0];
+    if (!audit) {
+      return { ok: false, error: "Aucun audit tiers importé trouvé. Demande à l'utilisateur de déposer le fichier via le trombone du chat." };
+    }
+
+    // 2. Résolution du site
+    const rawSite = String(input.tracked_site_id ?? audit.tracked_site_id ?? audit.domain ?? '');
+    const resolved = rawSite ? await resolveTrackedSite(ctx, rawSite) : null;
+
+    const snapshot: Record<string, unknown> = {};
+    if (resolved) {
+      const { data: site } = await ctx.supabase
+        .from('tracked_sites')
+        .select('id, domain, site_name, market_sector, business_type, eeat_score, last_audit_at')
+        .eq('id', resolved.id)
+        .maybeSingle();
+      snapshot.site = site ?? null;
+
+      const [{ data: crawl }, { data: cocoon }, { data: lastAudit }] = await Promise.all([
+        ctx.supabase
+          .from('site_crawls')
+          .select('id, crawled_pages, content_integrity, created_at')
+          .eq('domain', (resolved.domain ?? '').replace(/^www\./, ''))
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        ctx.supabase
+          .from('cocoon_diagnostic_results')
+          .select('scores, created_at')
+          .eq('tracked_site_id', resolved.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        ctx.supabase
+          .from('audits')
+          .select('id, url, fixes_count, created_at')
+          .eq('domain', resolved.domain ?? '')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const integrity = (crawl?.content_integrity ?? null) as Record<string, any> | null;
+      snapshot.last_crawl = crawl
+        ? {
+            crawled_at: crawl.created_at,
+            crawled_pages: crawl.crawled_pages,
+
+            near_duplicate: integrity?.near_duplicate
+              ? {
+                  cannibalization_clusters: integrity.near_duplicate.cannibalization_clusters ?? 0,
+                  watch_clusters: integrity.near_duplicate.watch_clusters ?? 0,
+                  pages_affected: integrity.near_duplicate.pages_affected ?? 0,
+                }
+              : null,
+            thin_content: integrity?.thin_content
+              ? { count: integrity.thin_content.count ?? 0, avg_thin_score: integrity.thin_content.avg_thin_score ?? 0 }
+              : null,
+          }
+        : null;
+      snapshot.cocoon_scores = cocoon?.scores ?? null;
+      snapshot.last_expert_audit = lastAudit ?? null;
+      snapshot.data_freshness = crawl?.created_at
+        ? `Dernier crawl Crawlers : ${crawl.created_at}`
+        : "Aucun crawl Crawlers récent — nos données sont absentes, ne conclus pas à une contradiction.";
+    } else {
+      snapshot.warning = `Site non résolu ("${rawSite || 'non fourni'}"). Impossible de confronter aux mesures Crawlers : propose d'ajouter le site dans « Mes Sites » puis de lancer un crawl.`;
+    }
+
+    const text = String(audit.raw_text ?? '');
+    const MAX = 30_000;
+
+    return {
+      ok: true,
+      data: {
+        external_audit: {
+          id: audit.id,
+          filename: audit.filename,
+          domain: audit.domain,
+          source_label: audit.source_label,
+          imported_at: audit.created_at,
+          text: text.length > MAX ? `${text.slice(0, MAX)}\n\n[... tronqué ...]` : text,
+          truncated: text.length > MAX,
+        },
+        crawlers_snapshot: snapshot,
+        methodology: methodologyFor(),
+        instructions: [
+          "Produis un tableau markdown : | Affirmation de l'audit | Verdict | Notre donnée | Commentaire |.",
+          "Verdicts autorisés uniquement : FIABLE, NON FIABLE, CONFIRMÉ PAR CRAWLERS, CONTRADICTOIRE.",
+          "N'utilise CONTRADICTOIRE que si nous avons une mesure réelle et fraîche sur le même objet ; sinon indique FIABLE ou NON FIABLE avec la raison.",
+          "Si une donnée nous manque, propose explicitement une action et attends l'accord : trigger_audit (crawl réel), market_diagnosis / live_search (vérification SERP), compare_methodology (écart de calcul).",
+          "Termine par 3 actions concrètes classées par impact.",
+        ],
+      },
+    };
+  },
+};
+
+const compare_methodology: SkillDefinition = {
+  name: 'compare_methodology',
+  description: "Explique comment Crawlers calcule ses scores (SEO v2, GEO, intégrité de contenu, thin content, positions GSC vs estimées) pour justifier un écart avec un audit tiers.",
+  parameters: {
+    type: 'object',
+    properties: {
+      metrics: {
+        type: 'array',
+        items: { type: 'string' },
+        description: "Métriques concernées (ex: ['seo_score_v2','thin_content']). Vide = toutes.",
+      },
+    },
+  },
+  handler: async (input) => {
+    const metrics = Array.isArray(input.metrics) ? input.metrics.map(String) : undefined;
+    const entries = methodologyFor(metrics);
+    if (!entries.length) return { ok: false, error: 'Aucune méthodologie ne correspond à ces métriques.' };
+    return {
+      ok: true,
+      data: {
+        methodology: entries,
+        instructions: "Explique l'écart par la différence de méthode (périmètre, seuils, source de données), sans invalider gratuitement l'audit tiers.",
+      },
+    };
+  },
+};
+
+function normalizeDomainLoose(raw: string): string {
+  return raw.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
+}
 
 
 // ═══════════════════════════════════════════════════════════
@@ -2647,6 +2830,10 @@ const SKILLS: Record<string, SkillDefinition> = {
   audit_internal_mesh,
   detect_content_cannibalization,
   read_content_integrity,
+  // Confrontation d'audits tiers importés
+  list_external_audits,
+  confront_external_audit,
+  compare_methodology,
   // Mémoire persistante & enrichissement carte d'identité (Sprint Q5)
   read_site_memory,
   write_site_memory,
