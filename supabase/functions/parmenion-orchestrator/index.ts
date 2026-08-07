@@ -532,6 +532,8 @@ try {
             cannibalization_summary: cannib
               ? { clusters: cannib.clusters_count, redundant_pages: cannib.redundant_pages, analyzed_pages: cannib.analyzed_pages }
               : null,
+            content_integrity_summary: integritySummary,
+
           }),
         });
 
