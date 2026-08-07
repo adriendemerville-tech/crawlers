@@ -2931,13 +2931,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         cocoon_nodes: cocoonResult?.stats?.nodes_count || null,
         cocoon_clusters: cocoonResult?.stats?.clusters_count || null,
         visual_capture: visualCapture,
+        strategic_layer: strategicDegradation.degraded ? 'unavailable' : 'ok',
+        partial: strategicDegradation.degraded,
+        degraded_reasons: strategicDegradation.degraded ? strategicDegradation.reasons : [],
         generated_at: new Date().toISOString(),
       };
 
       await sb.from('async_jobs').update({
-        status: 'completed',
+        status: strategicDegradation.degraded ? 'partial' : 'completed',
         result_data: resultData,
         progress: 100,
+        error_message: strategicDegradation.degraded
+          ? `Couche stratégique indisponible — ${strategicDegradation.reasons.join(' | ')}`
+          : null,
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
 
