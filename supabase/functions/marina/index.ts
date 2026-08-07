@@ -2985,6 +2985,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML,
             indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML,
             visual: buildVisualEvidenceHtml(visualCapture, detectedLang),
+            summary: buildExecutiveSummaryHTML(detectedLang, domain, {
+              expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
+            }),
             disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
             }),
@@ -2992,7 +2995,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           detectedLang, domain, url, marinaBranding,
         );
 
-        console.log(`[Marina] ✅ Compiled report from 4 sections + consolidated plan`);
+        console.log(`[Marina] Compiled report from 4 sections + consolidated plan`);
 
 
         Promise.allSettled(
@@ -3000,8 +3003,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         ).catch(() => {});
 
       } catch (compileError) {
-        console.warn(`[Marina] ⚠️ Compilation failed, falling back to legacy generator:`, compileError);
-        html = generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult, marinaBranding);
+        console.warn(`[Marina] Compilation failed, falling back to legacy generator:`, compileError);
+        html = sanitizeMarinaHtml(
+          generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult, marinaBranding),
+          { keepColors: Boolean(marinaBranding?.enabled && marinaBranding?.fullWhiteLabel) },
+        );
       }
 
       // Bandeau « couche stratégique indisponible » (les deux générateurs).
@@ -3012,6 +3018,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
         console.warn(`[Marina] Strategic layer degraded for ${domain}: ${strategicDegradation.reasons.join(' | ')}`);
       }
+
 
       // ─── Step 5: Store in shared-reports bucket ───
       const fileName = `marina/${jobId}.html`;
