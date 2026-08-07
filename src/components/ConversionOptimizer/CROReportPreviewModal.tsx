@@ -261,7 +261,9 @@ export function CROReportPreviewModal({ isOpen, onClose, data, domain }: CRORepo
         htmlContent,
         filename: getReportFilename(domain, 'cro' as any, 'pdf'),
         iframeWidth: 900,
+        disclaimer: { auditType: 'cro', domain, target: domain, language: 'fr' },
       });
+
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error('Erreur lors de la génération du PDF');
