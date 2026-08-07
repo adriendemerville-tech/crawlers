@@ -99,6 +99,10 @@ export const STRATEGIST_CONFIG: PersonaConfig = {
     audit_internal_mesh: 'auto',
     detect_content_cannibalization: 'auto',
     read_content_integrity: 'auto',
+    // Confrontation d'audits tiers importés (lecture seule)
+    list_external_audits: 'auto',
+    confront_external_audit: 'auto',
+    compare_methodology: 'auto',
     // Navigation OK
     navigate_to: 'auto',
     open_audit_panel: 'auto',
