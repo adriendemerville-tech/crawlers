@@ -1407,7 +1407,15 @@ function compileMarinaReport(
 
   const crawlContent = extractBodyContent(sectionHTMLs.crawl, { stripHeader: true, stripFooter: true });
   const techContent = extractBodyContent(sectionHTMLs.tech, { stripHeader: true, stripFooter: true });
-  const strategicContent = extractBodyContent(sectionHTMLs.strategic, { stripHeader: true, stripFooter: true });
+  const strategicRaw = extractBodyContent(sectionHTMLs.strategic, { stripHeader: true, stripFooter: true });
+  // La visibilité IA est de périmètre site (identique pour toutes les URLs d'un
+  // domaine) : on la sort de la section stratégique pour pouvoir la mutualiser
+  // dans les rapports multipages.
+  const llmMatch = strategicRaw.match(/<!--MARINA_LLM_START-->([\s\S]*?)<!--MARINA_LLM_END-->/);
+  const llmVisibilityBlock = llmMatch ? llmMatch[1] : '';
+  const strategicContent = llmMatch
+    ? strategicRaw.replace(llmMatch[0], '')
+    : strategicRaw;
   const cocoonContent = extractBodyContent(sectionHTMLs.cocoon, { stripHeader: true, stripFooter: true });
 
   // White-label: determine colors and texts
