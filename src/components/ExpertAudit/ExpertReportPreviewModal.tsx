@@ -118,7 +118,22 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
       const auditType = auditMode === 'technical' ? 'audittechnique' as const : 'auditstrategique' as const;
       const filename = getReportFilename(domain, auditType, 'pdf');
 
-      await generateSectionBasedPDF({ htmlContent, filename });
+      await generateSectionBasedPDF({
+        htmlContent,
+        filename,
+        disclaimer: {
+          auditType: 'expert',
+          target: effectiveResult.url,
+          domain: effectiveResult.domain,
+          language,
+          scope: { singlePage: true, analyzedAt: effectiveResult.scannedAt },
+          crawlability: {
+            robotsRestrictive: effectiveResult.scores?.aiReady?.robotsPermissive === false,
+            jsRendered: effectiveResult.isSPA === true,
+          },
+        },
+      });
+
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error(t.pdfError);

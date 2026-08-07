@@ -26,7 +26,12 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
       const { generateSectionBasedPDF } = await import('@/utils/sectionBasedPdfExport');
       const { getReportFilename } = await import('@/utils/reportFilename');
       const filename = getReportFilename(domain, 'marina' as any, 'pdf');
-      await generateSectionBasedPDF({ htmlContent, filename });
+      await generateSectionBasedPDF({
+        htmlContent,
+        filename,
+        disclaimer: { auditType: 'marina', domain, target: domain, language: 'fr' },
+      });
+
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error('Erreur de génération PDF');

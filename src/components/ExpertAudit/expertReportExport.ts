@@ -1080,7 +1080,20 @@ export async function generateExpertPDF(result: ExpertAuditResult, auditMode: 't
   await generateSectionBasedPDF({
     htmlContent,
     filename: `${domain}-${auditType}.pdf`,
+    disclaimer: {
+      auditType: 'expert',
+      target: result.url,
+      domain: result.domain,
+      language,
+      scope: { singlePage: true, analyzedAt: result.scannedAt },
+      crawlability: {
+        robotsRestrictive: result.scores?.aiReady?.robotsPermissive === false,
+        jsRendered: result.isSPA === true,
+        sitemapFound: result.rawData?.robotsAnalysis?.sitemapFound,
+      },
+    },
   });
+
 }
 
 /**

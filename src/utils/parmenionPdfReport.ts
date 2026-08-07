@@ -142,6 +142,9 @@ export async function generateParmenionReport(events: IkAction[], domain: string
     });
   }
 
+  const { addDisclaimerPage } = await import('@/lib/reports/auditDisclaimer');
+  addDisclaimerPage(doc, { auditType: 'parmenion', domain, target: domain, language: 'fr', scope: { analyzedAt: now } });
+
   // Save
   const filename = `Parmenion_Rapport_24h_${domain}_${now.toISOString().slice(0, 10)}.pdf`;
   doc.save(filename);

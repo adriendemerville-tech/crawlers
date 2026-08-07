@@ -3,7 +3,12 @@
  * Instead of slicing a full-page capture at fixed pixel intervals (which cuts text/scores),
  * this utility captures each `[data-pdf-section]` element individually and places them
  * intelligently on PDF pages, avoiding mid-section page breaks.
+ *
+ * Une section « Portée et limites » est systématiquement ajoutée en fin de document
+ * (voir src/lib/reports/auditDisclaimer.ts) — obligatoire sur tous les PDF exportés.
  */
+
+import { renderDisclaimerHTML, type DisclaimerContext } from '@/lib/reports/auditDisclaimer';
 
 interface SectionPdfOptions {
   /** The HTML string to render */
@@ -24,6 +29,12 @@ interface SectionPdfOptions {
   sectionGap?: number;
   /** Time to wait for HTML rendering in ms (default 1500) */
   renderDelay?: number;
+  /**
+   * Contexte du disclaimer final. Toujours ajouté : si omis, un contexte
+   * générique est utilisé. `false` n'est accepté que si le HTML source
+   * contient déjà [data-pdf-section="disclaimer"].
+   */
+  disclaimer?: DisclaimerContext;
 }
 
 export async function generateSectionBasedPDF(options: SectionPdfOptions): Promise<void> {
@@ -38,7 +49,9 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     marginSide = 10,
     sectionGap = 2,
     renderDelay = 1500,
+    disclaimer,
   } = options;
+
 
   const { default: html2canvas } = await import('html2canvas');
   const { default: jsPDF } = await import('jspdf');
@@ -63,12 +76,28 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   // Collect sections: prefer [data-pdf-section] for fine-grained control,
   // fall back to direct children of .container
   const container = iframeDoc.querySelector('.container') || iframeDoc.body;
+
   let sections = Array.from(container.querySelectorAll('[data-pdf-section]')) as HTMLElement[];
 
   if (sections.length === 0) {
     // Fallback: use direct children
     sections = Array.from(container.children) as HTMLElement[];
   }
+
+  // Disclaimer obligatoire en dernière section (sauf s'il est déjà dans le HTML source).
+  // Ajouté APRÈS la collecte pour ne jamais court-circuiter le fallback ci-dessus.
+  if (!container.querySelector('[data-pdf-section="disclaimer"]')) {
+    const holder = iframeDoc.createElement('div');
+    holder.innerHTML = renderDisclaimerHTML(disclaimer ?? { auditType: 'generic', language: 'fr' });
+    const node = holder.firstElementChild as HTMLElement | null;
+    if (node) {
+      container.appendChild(node);
+      await new Promise((r) => setTimeout(r, 120));
+      sections.push(node);
+    }
+  }
+
+
 
   const pdfWidthMm = 210;
   const pdfHeightMm = 297;
