@@ -2961,22 +2961,39 @@ Deno.serve(handleRequest(async (req) => {
       return json({ success: true });
     }
 
-    // ── Auto-cleanup: mark jobs stuck > 10 min as failed ──
+    // ── Auto-cleanup : ne tue QUE les jobs réellement bloqués en exécution.
+    // Les jobs 'pending' peuvent légitimement attendre longtemps (file d'attente
+    // séquentielle d'un batch multipages) : on ne les échoue que s'il n'y a
+    // aucun job en cours pour les dépiler.
     try {
       const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
       await sb
         .from('async_jobs')
-        .update({ 
-          status: 'failed', 
+        .update({
+          status: 'failed',
           error_message: 'Timeout: job bloqué depuis plus de 10 minutes',
           completed_at: new Date().toISOString(),
         })
         .eq('function_name', 'marina')
-        .in('status', ['pending', 'processing'])
+        .eq('status', 'processing')
         .lt('created_at', tenMinAgo);
+
+      const { data: processingNow } = await sb
+        .from('async_jobs')
+        .select('id')
+        .eq('function_name', 'marina')
+        .eq('status', 'processing')
+        .limit(1);
+
+      if (!processingNow || processingNow.length === 0) {
+        // File orpheline : plus rien ne tourne, on relance le plus ancien pending
+        // au lieu de l'échouer.
+        await triggerNextPendingJob();
+      }
     } catch (e) {
       console.warn('[Marina] Auto-cleanup failed:', e);
     }
+
 
 
     // ── Start new pipeline ──

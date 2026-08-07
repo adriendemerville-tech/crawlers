@@ -434,8 +434,9 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
               {totalCost} crédits ({CREDIT_COST} / page)
             </span>
             <span className="text-muted-foreground">
-              Durée estimée : ~{Math.max(3, Math.ceil((targets.length / CONCURRENCY) * 3))} min
+              Durée estimée : ~{Math.max(3, targets.length * 3)} min (audits exécutés l'un après l'autre)
             </span>
+
           </div>
 
           {overLimit && (
