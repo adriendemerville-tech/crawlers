@@ -634,7 +634,7 @@ export default function Marina() {
             { headers: { Authorization: `Bearer ${session?.access_token}` } }
           );
           const data = await res.json();
-          if (data.status === 'completed') {
+          if (data.status === 'completed' || data.status === 'partial') {
             setReportUrl(data.data?.report_url || null);
             // Auto-load into preview tab
             const viewUrl = data.data?.report_view_url || data.data?.report_url;
@@ -646,6 +646,9 @@ export default function Marina() {
             setLoading(false);
             setProgress(100);
             setPhase(t.phases.done);
+            if (data.status === 'partial') {
+              toast.warning('Rapport partiel : la couche stratégique (audit GEO) n\'a pas pu être produite. Relancez l\'audit pour l\'obtenir.');
+            }
             refreshCredits();
             cancelled = true;
             return;
