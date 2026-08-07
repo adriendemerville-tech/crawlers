@@ -2704,9 +2704,6 @@ const confront_external_audit: SkillDefinition = {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
         ctx.supabase
           .from('cocoon_diagnostic_results')
           .select('scores, created_at')
