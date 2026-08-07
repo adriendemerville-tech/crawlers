@@ -131,14 +131,14 @@ const Index = () => {
     setIsRedirecting(true);
     // Hard safety net: if client-side navigation is blocked for any reason,
     // fall back to a full page load so the spinner never stays forever.
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       try {
         navTo('/app/console?tab=tracking', { replace: true });
       } catch {
         window.location.href = '/app/console?tab=tracking';
       }
     }, 600);
-    const fallback = setTimeout(() => {
+    setTimeout(() => {
       if (window.location.pathname === '/') {
         window.location.href = '/app/console?tab=tracking';
       }
