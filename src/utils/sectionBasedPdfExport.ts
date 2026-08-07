@@ -3,7 +3,12 @@
  * Instead of slicing a full-page capture at fixed pixel intervals (which cuts text/scores),
  * this utility captures each `[data-pdf-section]` element individually and places them
  * intelligently on PDF pages, avoiding mid-section page breaks.
+ *
+ * Une section « Portée et limites » est systématiquement ajoutée en fin de document
+ * (voir src/lib/reports/auditDisclaimer.ts) — obligatoire sur tous les PDF exportés.
  */
+
+import { renderDisclaimerHTML, type DisclaimerContext } from '@/lib/reports/auditDisclaimer';
 
 interface SectionPdfOptions {
   /** The HTML string to render */
@@ -24,6 +29,12 @@ interface SectionPdfOptions {
   sectionGap?: number;
   /** Time to wait for HTML rendering in ms (default 1500) */
   renderDelay?: number;
+  /**
+   * Contexte du disclaimer final. Toujours ajouté : si omis, un contexte
+   * générique est utilisé. `false` n'est accepté que si le HTML source
+   * contient déjà [data-pdf-section="disclaimer"].
+   */
+  disclaimer?: DisclaimerContext;
 }
 
 export async function generateSectionBasedPDF(options: SectionPdfOptions): Promise<void> {
@@ -38,7 +49,9 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     marginSide = 10,
     sectionGap = 2,
     renderDelay = 1500,
+    disclaimer,
   } = options;
+
 
   const { default: html2canvas } = await import('html2canvas');
   const { default: jsPDF } = await import('jspdf');
