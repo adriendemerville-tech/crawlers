@@ -321,7 +321,16 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
  * Parse le body, route selon le model, pas de fallback configurable.
  * `timeoutMs` (champ optionnel de init) permet aux générations longues
  * (rédaction complète) de dépasser le défaut de 8s.
+ *
+ * IMPORTANT: le `signal` d'un appelant (ex. AbortSignal.timeout(150_000)) ne peut
+ * pas être relu pour en extraire son échéance. Historiquement il était donc
+ * silencieusement ignoré et l'appel retombait sur le défaut de 8s — cause racine
+ * des synthèses stratégiques « Analyse interrompue » (prompts longs > 8s).
+ * Désormais, la présence d'un `signal` signifie que l'appelant gère son propre
+ * budget : on applique un plafond long (LONG_CALL_TIMEOUT_MS).
  */
+const LONG_CALL_TIMEOUT_MS = 150_000;
+
 export async function aiGatewayFetch(init: RequestInit & { timeoutMs?: number }): Promise<Response> {
   let bodyObj: Record<string, unknown> = {};
   if (typeof init.body === 'string') {
@@ -330,13 +339,16 @@ export async function aiGatewayFetch(init: RequestInit & { timeoutMs?: number })
   const model = (bodyObj.model as string) || 'google/gemini-3-flash-preview';
   delete bodyObj.model;
 
+  const timeoutMs = init.timeoutMs ?? (init.signal ? LONG_CALL_TIMEOUT_MS : DEFAULT_TIMEOUT_MS);
+
   return await aiGatewayCall({
     primary: model,
     body: bodyObj,
-    timeoutMs: init.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    timeoutMs,
     headers: (init.headers as Record<string, string>) || {},
   });
 }
+
 
 // ═══════════════════════════════════════════════════════════════════
 // Streaming — Sprint 1 S1.1 (SSE token-by-token pour copilot-orchestrator)
