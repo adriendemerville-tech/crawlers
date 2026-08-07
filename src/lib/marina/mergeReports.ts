@@ -149,7 +149,7 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
   const disclosure = siteBlocks.get('disclosure') || '';
   siteBlocks.delete('disclosure');
 
-  const siteOrder = ['crawl', 'cocoon', 'indexation'];
+  const siteOrder = ['crawl', 'cocoon', 'llm', 'indexation'];
   const orderedSiteEntries = [
     ...siteOrder.filter(id => siteBlocks.has(id)).map(id => [id, siteBlocks.get(id)!] as const),
     ...[...siteBlocks.entries()].filter(([id]) => !siteOrder.includes(id)),
