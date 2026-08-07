@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense, memo } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense, memo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
@@ -113,24 +113,41 @@ const Index = () => {
   const { isAdmin: isAdminUser } = useAdmin();
   const navTo = useNavigate();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const redirectStartedRef = useRef(false);
   useEffect(() => {
-    if (authUser && (isSubscribed || isAdminUser)) {
-      // Don't redirect if user navigated here from another page on the site
-      const isInternalNavigation = document.referrer && (() => {
-        try {
-          const ref = new URL(document.referrer);
-          return ref.origin === window.location.origin;
-        } catch { return false; }
-      })();
-      if (isInternalNavigation) return;
+    if (redirectStartedRef.current) return;
+    if (!authUser || !(isSubscribed || isAdminUser)) return;
 
-      setIsRedirecting(true);
-      const timer = setTimeout(() => {
+    // Don't redirect if user navigated here from another page on the site
+    const isInternalNavigation = document.referrer && (() => {
+      try {
+        const ref = new URL(document.referrer);
+        return ref.origin === window.location.origin;
+      } catch { return false; }
+    })();
+    if (isInternalNavigation) return;
+
+    redirectStartedRef.current = true;
+    setIsRedirecting(true);
+    // Hard safety net: if client-side navigation is blocked for any reason,
+    // fall back to a full page load so the spinner never stays forever.
+    setTimeout(() => {
+      try {
         navTo('/app/console?tab=tracking', { replace: true });
-      }, 900);
-      return () => clearTimeout(timer);
-    }
+      } catch {
+        window.location.href = '/app/console?tab=tracking';
+      }
+    }, 600);
+    setTimeout(() => {
+      if (window.location.pathname === '/') {
+        window.location.href = '/app/console?tab=tracking';
+      }
+    }, 3500);
+    // No cleanup: re-renders (credits refresh, admin check) must not cancel
+    // an already-scheduled redirect — that was what froze the spinner.
+
   }, [authUser, isSubscribed, isAdminUser, navTo]);
+
 
   // Fetch hide_home_leadmagnet config — deferred to avoid blocking render
   useEffect(() => {
