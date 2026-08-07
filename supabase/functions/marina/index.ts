@@ -2777,6 +2777,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML,
             indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML,
             visual: buildVisualEvidenceHtml(visualCapture, detectedLang),
+            disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
+              expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
+            }),
           },
           detectedLang, domain, url, marinaBranding,
         );
