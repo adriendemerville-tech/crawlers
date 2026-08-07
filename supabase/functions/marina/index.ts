@@ -9,6 +9,8 @@ import {
   type WorkbenchTask,
 } from '../_shared/topPriorities.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
+import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
+
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
@@ -545,8 +547,43 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     robotsPermissive: scores?.aiReady?.robotsPermissive || false,
     isHttps: scores?.technical?.isHttps || false,
     httpStatus: scores?.technical?.httpStatus || 200,
+    contentIntegrity: summarizeCrawlIntegrity(crawl?.content_integrity),
   };
 }
+
+/** Résumé compact (déterministe, 0 token) de l'intégrité du contenu pour les prompts Marina. */
+function summarizeCrawlIntegrity(report: any) {
+  if (!report || typeof report !== 'object' || !report.near_duplicate) return null;
+  const nd = report.near_duplicate;
+  const thin = report.thin_content || { pages: [], count: 0, avg_thin_score: 0 };
+  return {
+    analyzedPages: report.analyzed_pages || 0,
+    nearDuplicateGroups: nd.clusters?.length || 0,
+    cannibalizationGroups: nd.cannibalization_clusters || 0,
+    watchGroups: nd.watch_clusters || 0,
+    pagesAffected: nd.pages_affected || 0,
+    thinPages: thin.count || 0,
+    avgThinScore: thin.avg_thin_score || 0,
+    topClusters: (nd.clusters || [])
+      .filter((c: any) => c.verdict !== 'normal')
+      .slice(0, 5)
+      .map((c: any) => ({
+        pages: (c.pages || []).map((p: any) => p.url),
+        pivotUrl: c.pivot_url,
+        similarity: Math.round((c.avg_similarity || 0) * 100),
+        verdict: c.verdict,
+        rationale: c.rationale,
+        recommendedAction: c.recommended_action,
+      })),
+    topThinPages: (thin.pages || []).slice(0, 5).map((p: any) => ({
+      url: p.url,
+      thinScore: p.thin_score,
+      usefulWords: p.useful_words,
+      kind: p.kind,
+    })),
+  };
+}
+
 
 function hydrateCocoonReportData(cocoonResult: any, semanticNodes: any[]) {
   if (!cocoonResult || !semanticNodes?.length) return cocoonResult;
@@ -2289,7 +2326,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       try {
         const { data: recentCrawls, error: crawlLookupError } = await sb
           .from('site_crawls' as any)
-          .select('id, crawled_pages, total_pages, avg_score, created_at')
+          .select('id, crawled_pages, total_pages, avg_score, created_at, content_integrity')
           .eq('domain', domain)
           .eq('user_id', parentJob.user_id)
           .eq('status', 'completed')
@@ -2312,6 +2349,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
             crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+            // Constats d'intégrité → Workbench (idempotent, partagé avec le crawl)
+            await writeIntegrityFindingsToWorkbench(sb, (latestCrawl as any).content_integrity || null, {
+              domain,
+              userId: parentJob.user_id,
+              trackedSiteId: trackedSiteId || null,
+              sourceFunction: 'marina',
+            }).catch(() => {});
+
           }
         }
       } catch (crawlSnapshotError) {

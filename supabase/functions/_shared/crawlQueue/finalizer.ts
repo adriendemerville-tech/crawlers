@@ -6,6 +6,15 @@ import { detectDuplicates, computeBFSDepths } from './duplicateDetector.ts';
 import { saveRawAuditData } from '../saveRawAuditData.ts';
 import { classifyAndAssignRings } from '../spiralClassifier.ts';
 import { classifyPageIntent, aggregateIntents } from '../pageIntent.ts';
+import {
+  analyzeContentIntegrity,
+  summarizeIntegrityReport,
+  type ContentIntegrityReport,
+  type SiteIdentity,
+} from '../contentIntegrity/index.ts';
+import { writeIntegrityFindingsToWorkbench } from '../contentIntegrity/workbench.ts';
+
+
 
 export async function finalizeJob(
   supabase: any,
@@ -93,11 +102,21 @@ export async function finalizeJob(
     console.log(`[Worker] 🎯 Intent distribution:`, intentDistribution.by_intent);
   }
 
+  // ── Intégrité du contenu : quasi-doublons + contenu pauvre ──
+  let integrityReport: ContentIntegrityReport | null = null;
+  if (pages.length >= 2) {
+    try {
+      integrityReport = await runContentIntegrity(supabase, job, pages);
+    } catch (e) {
+      console.warn('[Worker] content integrity failed:', (e as Error).message);
+    }
+  }
+
   // ── AI Summary ──
   let aiSummary = '';
   let aiRecommendations: any[] = [];
 
-  const aiResult = await generateAISummary(pages, job, avgScore, duplicateIssues, failedUrls);
+  const aiResult = await generateAISummary(pages, job, avgScore, duplicateIssues, failedUrls, integrityReport);
   aiSummary = aiResult.summary;
   aiRecommendations = aiResult.recommendations;
 
@@ -108,8 +127,10 @@ export async function finalizeJob(
     ai_summary: aiSummary,
     ai_recommendations: aiRecommendations,
     intent_distribution: intentDistribution,
+    content_integrity: integrityReport,
     completed_at: new Date().toISOString(),
   }).eq('id', job.crawl_id);
+
 
   // Save raw crawl data (fire-and-forget)
   saveRawAuditData({
@@ -150,6 +171,95 @@ export async function finalizeJob(
   triggerVoiceToneAnalysis(job.crawl_id);
 }
 
+// ── Intégrité du contenu (near duplicate + thin content) ───
+async function runContentIntegrity(
+  supabase: any,
+  job: any,
+  pages: any[],
+): Promise<ContentIntegrityReport | null> {
+  const domain = (job.domain || '')
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/.*$/, '')
+    .toLowerCase();
+
+  const { data: site } = await supabase
+    .from('tracked_sites')
+    .select('id, site_name, market_sector, business_type, entity_type, commercial_model, target_audience')
+    .eq('domain', domain)
+    .maybeSingle();
+
+  const identity: SiteIdentity = { domain, ...(site || {}) };
+
+
+  const report = await analyzeContentIntegrity(
+    pages.map((p: any) => ({
+      url: p.url,
+      path: p.path,
+      text: p.body_text_truncated || '',
+      html_size_bytes: p.html_size_bytes,
+      seo_score: p.seo_score,
+      h2_count: p.h2_count,
+      h3_count: p.h3_count,
+      internal_links: p.internal_links,
+      crawl_depth: p.crawl_depth,
+      is_indexable: p.is_indexable,
+      schema_org_types: p.schema_org_types,
+      page_intent: p.page_intent,
+    })),
+    identity,
+  );
+
+  // Persistance page par page (groupe de doublons + score de minceur + issues)
+  const updates: Promise<any>[] = [];
+  const groupByUrl = new Map<string, string>();
+  for (const cluster of report.near_duplicate.clusters) {
+    if (cluster.verdict === 'normal') continue;
+    for (const p of cluster.pages) groupByUrl.set(p.url, cluster.id);
+  }
+  const thinByUrl = new Map(report.thin_content.pages.map((p) => [p.url, p]));
+
+  for (const page of pages) {
+    const group = groupByUrl.get(page.url) ?? null;
+    const thin = thinByUrl.get(page.url);
+    if (!group && !thin) continue;
+
+    const issues = new Set<string>((page.issues as string[]) || []);
+    if (group) issues.add('near_duplicate');
+    if (thin) issues.add('thin_content');
+
+    updates.push(
+      supabase
+        .from('crawl_pages')
+        .update({
+          near_duplicate_group: group,
+          thin_score: thin ? thin.thin_score : null,
+          issues: [...issues],
+        })
+        .eq('id', page.id),
+    );
+  }
+  for (let i = 0; i < updates.length; i += 20) {
+    await Promise.all(updates.slice(i, i + 20));
+  }
+
+  // Remontée dans le Workbench (source consommée par Parménion & le Stratège)
+  if (job.user_id) {
+    await writeIntegrityFindingsToWorkbench(supabase, report, {
+      domain,
+      userId: job.user_id,
+      trackedSiteId: (site as any)?.id || null,
+      sourceFunction: 'crawl',
+    }).catch(() => {});
+  }
+
+  console.log(
+    `[Worker] Intégrité contenu: ${report.near_duplicate.clusters.length} groupes (${report.near_duplicate.cannibalization_clusters} cannibalisation), ${report.thin_content.count} pages pauvres, ${report.llm_calls} appels LLM`,
+  );
+  return report;
+
+}
+
 // ── AI Summary generation ──────────────────────────────────
 async function generateAISummary(
   pages: any[],
@@ -157,7 +267,9 @@ async function generateAISummary(
   avgScore: number,
   duplicateIssues: Record<string, string[]>,
   failedUrls: Array<{ url: string; reason: string }>,
+  integrityReport?: ContentIntegrityReport | null,
 ): Promise<{ summary: string; recommendations: any[] }> {
+
   const lovableKey = Deno.env.get('LOVABLE_API_KEY');
   if (!lovableKey || pages.length === 0) {
     return {
@@ -276,8 +388,9 @@ STATS DÉTAILLÉES:
 - Pages nofollow: ${pages.filter((p: any) => p.has_nofollow).length}
 - Titres dupliqués: ${duplicateTitleCount} pages
 - Meta descriptions dupliquées: ${duplicateMetaCount} pages
-- Contenu quasi-dupliqué (hash): ${nearDuplicateCount} pages
-- Contenu fin (<100 mots): ${pages.filter((p: any) => (p.word_count || 0) < 100).length}
+- Contenu strictement dupliqué (hash identique): ${nearDuplicateCount} pages
+${integrityReport ? summarizeIntegrityReport(integrityReport) : `- Contenu fin (<100 mots): ${pages.filter((p: any) => (p.word_count || 0) < 100).length}`}
+
 - Images sans alt: ${pages.reduce((s: number, p: any) => s + (p.images_without_alt || 0), 0)}
 - Pages orphelines (0 liens entrants): ${orphanCount}
 - H1 multiples: ${pages.filter((p: any) => ((p.issues as string[]) || []).includes('multiple_h1')).length}

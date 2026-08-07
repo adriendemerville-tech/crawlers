@@ -4098,6 +4098,7 @@ export type Database = {
           is_indexable: boolean | null
           issues: Json | null
           meta_description: string | null
+          near_duplicate_group: string | null
           page_intent: string | null
           page_type_override: string | null
           path: string
@@ -4106,6 +4107,7 @@ export type Database = {
           schema_org_errors: Json | null
           schema_org_types: Json | null
           seo_score: number | null
+          thin_score: number | null
           title: string | null
           tone_analysis: Json | null
           url: string
@@ -4143,6 +4145,7 @@ export type Database = {
           is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
+          near_duplicate_group?: string | null
           page_intent?: string | null
           page_type_override?: string | null
           path?: string
@@ -4151,6 +4154,7 @@ export type Database = {
           schema_org_errors?: Json | null
           schema_org_types?: Json | null
           seo_score?: number | null
+          thin_score?: number | null
           title?: string | null
           tone_analysis?: Json | null
           url: string
@@ -4188,6 +4192,7 @@ export type Database = {
           is_indexable?: boolean | null
           issues?: Json | null
           meta_description?: string | null
+          near_duplicate_group?: string | null
           page_intent?: string | null
           page_type_override?: string | null
           path?: string
@@ -4196,6 +4201,7 @@ export type Database = {
           schema_org_errors?: Json | null
           schema_org_types?: Json | null
           seo_score?: number | null
+          thin_score?: number | null
           title?: string | null
           tone_analysis?: Json | null
           url?: string
@@ -11579,6 +11585,7 @@ export type Database = {
           ai_summary: string | null
           avg_score: number | null
           completed_at: string | null
+          content_integrity: Json | null
           crawled_pages: number
           created_at: string
           credits_used: number
@@ -11599,6 +11606,7 @@ export type Database = {
           ai_summary?: string | null
           avg_score?: number | null
           completed_at?: string | null
+          content_integrity?: Json | null
           crawled_pages?: number
           created_at?: string
           credits_used?: number
@@ -11619,6 +11627,7 @@ export type Database = {
           ai_summary?: string | null
           avg_score?: number | null
           completed_at?: string | null
+          content_integrity?: Json | null
           crawled_pages?: number
           created_at?: string
           credits_used?: number

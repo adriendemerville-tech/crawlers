@@ -21,6 +21,8 @@ import { StrategicErrorBoundary } from '@/components/ExpertAudit/StrategicErrorB
 import { ProAccessGate } from '@/components/ProAccessGate';
 import { MaillageIPRCard, computeMaillageFromCrawlPages } from '@/components/ExpertAudit/MaillageIPRCard';
 import { FairUseLimitModal } from '@/components/SiteCrawl/FairUseLimitModal';
+import { ContentIntegrityPanel } from '@/components/SiteCrawl/ContentIntegrityPanel';
+
 import { getScoreColor, getScoreBg } from '@/components/SiteCrawl/types';
 import { useCrawlEngine } from '@/hooks/useCrawlEngine';
 import { supabase } from '@/integrations/supabase/client';
@@ -811,6 +813,11 @@ export default function SiteCrawl() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Intégrité du contenu : quasi-doublons + contenus pauvres */}
+              <ContentIntegrityPanel crawlId={viewingCrawlId || crawlResult?.id} />
+
+
 
               {/* Export & Actions bar */}
               <div className="flex flex-wrap items-center gap-2">
