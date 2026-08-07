@@ -794,6 +794,16 @@ export default function Marina() {
                     <span className="ml-2">{loading ? t.hero.btnAnalyzing : t.hero.btnAnalyze}</span>
                   </Button>
                 </div>
+
+                {/* Audit multipages (max 15 URLs, PDF unique) */}
+                <MarinaMultipagePanel
+                  isAuthenticated={!!user}
+                  credits={credits}
+                  language={language}
+                  useCredit={useCredit}
+                  refreshCredits={refreshCredits}
+                />
+
                 <div className="mt-3 flex items-center justify-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Coins className="w-3.5 h-3.5 text-primary" /> {CREDIT_COST} {t.hero.creditsPerReport}
