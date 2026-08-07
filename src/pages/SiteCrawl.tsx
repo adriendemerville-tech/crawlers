@@ -21,6 +21,8 @@ import { StrategicErrorBoundary } from '@/components/ExpertAudit/StrategicErrorB
 import { ProAccessGate } from '@/components/ProAccessGate';
 import { MaillageIPRCard, computeMaillageFromCrawlPages } from '@/components/ExpertAudit/MaillageIPRCard';
 import { FairUseLimitModal } from '@/components/SiteCrawl/FairUseLimitModal';
+import { ContentIntegrityPanel } from '@/components/SiteCrawl/ContentIntegrityPanel';
+
 import { getScoreColor, getScoreBg } from '@/components/SiteCrawl/types';
 import { useCrawlEngine } from '@/hooks/useCrawlEngine';
 import { supabase } from '@/integrations/supabase/client';
