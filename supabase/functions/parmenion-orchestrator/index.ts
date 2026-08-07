@@ -433,6 +433,49 @@ try {
         console.warn('[Parménion] cannibalisation guard failed (non bloquant):', e);
       }
       const cannib = cannibResult?.ok ? cannibResult : null;
+
+      // ── Signal lexical complémentaire : quasi-doublons + contenus pauvres du dernier crawl ──
+      let integritySummary: any = null;
+      try {
+        const { data: lastCrawl } = await supabase
+          .from('site_crawls')
+          .select('content_integrity, created_at')
+          .eq('domain', domain)
+          .eq('status', 'completed')
+          .not('content_integrity', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const rep = (lastCrawl as any)?.content_integrity;
+        if (rep?.near_duplicate) {
+          integritySummary = {
+            analyzed_pages: rep.analyzed_pages || 0,
+            near_duplicate_groups: rep.near_duplicate.clusters?.length || 0,
+            cannibalization_groups: rep.near_duplicate.cannibalization_clusters || 0,
+            watch_groups: rep.near_duplicate.watch_clusters || 0,
+            thin_pages: rep.thin_content?.count || 0,
+            avg_thin_score: rep.thin_content?.avg_thin_score || 0,
+            duplicate_clusters: (rep.near_duplicate.clusters || [])
+              .filter((c: any) => c.verdict === 'cannibalization')
+              .slice(0, 5)
+              .map((c: any) => ({
+                pivot_url: c.pivot_url,
+                urls: (c.pages || []).map((p: any) => p.url),
+                similarity: Math.round((c.avg_similarity || 0) * 100),
+                recommended_action: c.recommended_action,
+              })),
+            thin_urls: (rep.thin_content?.pages || []).slice(0, 10).map((p: any) => ({
+              url: p.url,
+              thin_score: p.thin_score,
+              useful_words: p.useful_words,
+            })),
+          };
+          console.log(`[Parménion] 🧾 Intégrité contenu: ${integritySummary.near_duplicate_groups} groupes quasi-doublons (${integritySummary.cannibalization_groups} cannibalisation), ${integritySummary.thin_pages} pages pauvres`);
+        }
+      } catch (e) {
+        console.warn('[Parménion] lecture content_integrity échouée (non bloquant):', (e as Error).message);
+      }
+
       const saturatedThemes = cannib
         ? cannib.clusters.filter((c) => c.size >= 3).map((c) => ({
             theme: c.theme,
@@ -441,6 +484,20 @@ try {
             duplicates: c.duplicates.slice(0, 10).map((d) => d.path),
           }))
         : [];
+      // Les groupes quasi identiques (lexical) élargissent le garde de saturation.
+      for (const dup of integritySummary?.duplicate_clusters || []) {
+        const pivotPath = (() => { try { return new URL(dup.pivot_url).pathname; } catch { return dup.pivot_url; } })();
+        saturatedThemes.push({
+          theme: pivotPath.split('/').filter(Boolean).join(' ') || 'quasi-doublons',
+          size: dup.urls.length,
+          pilier: pivotPath,
+          duplicates: dup.urls
+            .filter((u: string) => u !== dup.pivot_url)
+            .map((u: string) => { try { return new URL(u).pathname; } catch { return u; } })
+            .slice(0, 10),
+        });
+      }
+
       // Le candidat au pruning doit être un cluster réellement saturé (≥ 3 pages),
       // sinon on consolidait des clusters sains de 2 pages sans bénéfice SEO.
       const pruningCandidate = cannib
