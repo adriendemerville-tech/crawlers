@@ -2726,9 +2726,8 @@ const confront_external_audit: SkillDefinition = {
       snapshot.last_crawl = crawl
         ? {
             crawled_at: crawl.created_at,
-            pages_crawled: crawl.pages_crawled,
-            avg_seo_score: crawl.avg_seo_score,
-            intent_distribution: crawl.intent_distribution,
+            crawled_pages: crawl.crawled_pages,
+
             near_duplicate: integrity?.near_duplicate
               ? {
                   cannibalization_clusters: integrity.near_duplicate.cannibalization_clusters ?? 0,
