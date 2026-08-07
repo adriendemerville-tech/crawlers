@@ -210,8 +210,12 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
           { headers: { Authorization: `Bearer ${session?.access_token}` } }
         );
         const data = await res.json();
-        if (data.status === 'completed') {
-          setItem({ status: 'completed', progress: 100 });
+        if (data.status === 'completed' || data.status === 'partial') {
+          setItem({
+            status: data.status,
+            progress: 100,
+            ...(data.status === 'partial' ? { error: data.warning || 'Couche stratégique indisponible' } : {}),
+          });
           refreshCredits();
           return;
         }
