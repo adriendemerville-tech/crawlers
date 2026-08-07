@@ -2697,8 +2697,12 @@ const confront_external_audit: SkillDefinition = {
       const [{ data: crawl }, { data: cocoon }, { data: lastAudit }] = await Promise.all([
         ctx.supabase
           .from('site_crawls')
-          .select('id, pages_crawled, avg_seo_score, intent_distribution, content_integrity, created_at')
-          .eq('tracked_site_id', resolved.id)
+          .select('id, crawled_pages, content_integrity, created_at')
+          .eq('domain', (resolved.domain ?? '').replace(/^www\./, ''))
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
