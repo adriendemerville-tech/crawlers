@@ -41,17 +41,18 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first** avec assistant Félix (SAV IA), Content Architecture Advisor (+ génération d'images IA multi-moteurs), générateur Scribe, Stratège Cocoon, diagnostics avancés, détection d'anomalies, autopilote Parménion (cycles complets), pipeline Marina (3 phases chaînées), Quiz SEO Félix, Benchmark SERP multi-providers (lead magnet), serveur MCP et API N8N :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first**, avec un front **TanStack Start (SSR)** depuis la migration d'août 2026 : assistant Félix (SAV IA), Copilot multi-personas, Content Architecture Advisor (+ génération d'images IA), générateur Scribe, Stratège Cocoon, module Content Integrity (near-duplicate / thin content), confrontation d'audits tiers, autopilote Parménion (cycles complets + file d'attente), pipeline Marina (mono-page et multipages 15 URLs), Netlinking, automatisation LinkedIn, captures Pagebolt, Quiz SEO, Benchmark SERP multi-providers, serveur MCP et API publique Crawlers :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
-│                    CLIENT (React/Vite)                   │
-│  SPA avec lazy-loading, React Query, Supabase JS SDK    │
+│              CLIENT (TanStack Start + React 19)          │
+│  SSR par route, head() natif, React Query, Supabase SDK │
 └────────────────────────┬────────────────────────────────┘
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  190+ fonctions serverless + 37 modules partagés        │
+│  310 fonctions serverless + 97 modules partagés         │
+
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Spider Cloud + Firecrawl fallback)      │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
