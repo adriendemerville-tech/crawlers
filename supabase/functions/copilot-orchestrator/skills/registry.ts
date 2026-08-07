@@ -2820,7 +2820,51 @@ const compare_methodology: SkillDefinition = {
   },
 };
 
+/**
+ * Repères sectoriels anonymisés issus des sites déjà audités par Crawlers.
+ * Sert à situer les chiffres d'un audit tiers quand le domaine n'a jamais été audité.
+ * Aucun domaine n'est exposé : uniquement des moyennes/médianes agrégées.
+ */
+async function sectorBenchmark(ctx: SkillContext): Promise<Record<string, unknown>> {
+  const { data: crawls } = await ctx.service
+    .from('site_crawls')
+    .select('crawled_pages, content_integrity, created_at')
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(60);
+
+  const rows = crawls ?? [];
+  if (!rows.length) {
+    return { sites_sample: 0, note: 'Aucun crawl de référence disponible pour situer les chiffres.' };
+  }
+
+  const avg = (nums: number[]) => (nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10 : null);
+  const pages = rows.map((r: any) => Number(r.crawled_pages ?? 0)).filter((n) => n > 0);
+  const thinRatio: number[] = [];
+  const cannibClusters: number[] = [];
+
+  for (const r of rows as any[]) {
+    const ci = (r.content_integrity ?? null) as Record<string, any> | null;
+    const total = Number(r.crawled_pages ?? 0);
+    if (ci?.thin_content && total > 0) {
+      thinRatio.push(Math.round((Number(ci.thin_content.count ?? 0) / total) * 1000) / 10);
+    }
+    if (ci?.near_duplicate) {
+      cannibClusters.push(Number(ci.near_duplicate.cannibalization_clusters ?? 0));
+    }
+  }
+
+  return {
+    sites_sample: rows.length,
+    avg_crawled_pages: avg(pages),
+    avg_thin_content_ratio_pct: avg(thinRatio),
+    avg_cannibalization_clusters: avg(cannibClusters),
+    note: "Moyennes anonymisées sur les derniers sites audités par Crawlers (concurrents directs ou non). À présenter comme un repère de secteur, jamais comme une mesure du site concerné.",
+  };
+}
+
 function normalizeDomainLoose(raw: string): string {
+
   return raw.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
 }
 
