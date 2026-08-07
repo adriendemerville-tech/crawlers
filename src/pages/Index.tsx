@@ -143,7 +143,9 @@ const Index = () => {
         window.location.href = '/app/console?tab=tracking';
       }
     }, 3500);
-    return () => { clearTimeout(timer); clearTimeout(fallback); };
+    // No cleanup: re-renders (credits refresh, admin check) must not cancel
+    // an already-scheduled redirect — that was what froze the spinner.
+
   }, [authUser, isSubscribed, isAdminUser, navTo]);
 
 
