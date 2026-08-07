@@ -1635,8 +1635,9 @@ Composant \\\`MarinaMultipagePanel\\\` sous la barre d'URL de \\\`/marina\\\`. D
 ## Limite connue
 
 Sur des pages très lourdes, la phase 1/2 peut atteindre le **CPU wall-time** de l'Edge Function. Le découpage du pipeline en phases persistées supplémentaires reste au backlog pour garantir un batch de 15 URLs sans mort CPU.
-
+`,
   },
+
 
   // ───────────────────────────────────────────────
   // SECTION : AUTOPILOTE
