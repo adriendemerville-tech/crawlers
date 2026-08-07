@@ -1479,35 +1479,37 @@ function compileMarinaReport(
       ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
     </div>
 
-    <!-- Section 1: Crawl -->
-    ${crawlContent}
+    <!-- Section 1: Crawl (périmètre site) -->
+    <div data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
 
     <div class="marina-separator"></div>
 
-    <!-- Section 2: Technical SEO -->
-    ${techContent}
+    <!-- Section 2: Technical SEO (périmètre page) -->
+    <div data-marina-scope="page" data-marina-block="tech">${techContent}</div>
 
     <div class="marina-separator"></div>
 
-    <!-- Section 3: Strategic GEO -->
-    ${strategicContent}
+    <!-- Section 3: Strategic GEO (périmètre page) -->
+    <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
 
     <div class="marina-separator"></div>
 
-    <!-- Section 4: Cocoon -->
-    ${cocoonContent}
+    <!-- Section 4: Cocoon (périmètre site) -->
+    <div data-marina-scope="site" data-marina-block="cocoon">${cocoonContent}</div>
 
     ${sectionHTMLs.indexation ? `
     <div class="marina-separator"></div>
-    <!-- Section 5: Indexation Health -->
-    ${extractBodyContent(sectionHTMLs.indexation, { stripHeader: true, stripFooter: true })}
+    <!-- Section 5: Indexation Health (périmètre site) -->
+    <div data-marina-scope="site" data-marina-block="indexation">${extractBodyContent(sectionHTMLs.indexation, { stripHeader: true, stripFooter: true })}</div>
     ` : ''}
 
     ${sectionHTMLs.consolidatedPlan ? `
     <div class="marina-separator"></div>
     <!-- Final Section: Consolidated Action Plan -->
-    ${sectionHTMLs.consolidatedPlan}
+    <div data-marina-scope="page" data-marina-block="plan">${sectionHTMLs.consolidatedPlan}</div>
     ` : ''}
+
+    ${sectionHTMLs.disclosure || ''}
 
     ${ctaHtml}
 
