@@ -9,6 +9,8 @@ import {
   type WorkbenchTask,
 } from '../_shared/topPriorities.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
+import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
+
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
