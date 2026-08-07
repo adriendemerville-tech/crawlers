@@ -1652,7 +1652,10 @@ function compileMarinaReport(
 
     ${introHtml}
 
+    ${sectionHTMLs.summary || ''}
+
     ${sectionHTMLs.visual || ''}
+
 
     <!-- Table of Contents -->
     <div class="toc">
