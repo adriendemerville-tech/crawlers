@@ -1717,7 +1717,12 @@ function compileMarinaReport(
   </div>
 </body>
 </html>`;
+
+  // Charte Crawlers : le blanc-label garde ses couleurs client, les emoji sont
+  // retirés dans tous les cas.
+  return sanitizeMarinaHtml(compiled, { keepColors: Boolean(isWL) });
 }
+
 
 // ─── Helper: darken/lighten hex color ───
 function adjustColor(hex: string, amount: number): string {
