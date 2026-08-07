@@ -274,7 +274,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
     try {
       const parts: { url: string; html: string }[] = [];
       for (const item of items) {
-        if (item.status !== 'completed' || !item.jobId) continue;
+        if ((item.status !== 'completed' && item.status !== 'partial') || !item.jobId) continue;
         const { data: job } = await supabase
           .from('async_jobs')
           .select('result_data')
