@@ -2743,9 +2743,33 @@ const confront_external_audit: SkillDefinition = {
       snapshot.data_freshness = crawl?.created_at
         ? `Dernier crawl Crawlers : ${crawl.created_at}`
         : "Aucun crawl Crawlers récent — nos données sont absentes, ne conclus pas à une contradiction.";
+      if (!crawl?.created_at) {
+        snapshot.never_audited = true;
+        snapshot.sector_benchmark = await sectorBenchmark(ctx);
+        snapshot.next_step = {
+          label: 'Crawl multi-pages',
+          path: '/app/site-crawl',
+          skill: 'navigate_to',
+          why: "Aucun crawl sur ce site : obtenir une mesure comparable avant tout verdict de contradiction.",
+        };
+      }
+
     } else {
-      snapshot.warning = `Site non résolu ("${rawSite || 'non fourni'}"). Impossible de confronter aux mesures Crawlers : propose d'ajouter le site dans « Mes Sites » puis de lancer un crawl.`;
+      // Domaine jamais audité : on ne bloque pas l'analyse. On fournit des repères
+      // sectoriels issus des sites déjà audités (concurrents directs ou non) pour
+      // situer les chiffres de l'audit importé, puis on propose un crawl multi-pages.
+      snapshot.site = null;
+      snapshot.never_audited = true;
+      snapshot.warning = `Domaine "${rawSite || 'non fourni'}" absent de « Mes Sites » : aucune mesure Crawlers propre à ce site. Analyse quand même la qualité et la profondeur de l'audit importé, et situe ses chiffres par rapport aux repères sectoriels ci-dessous.`;
+      snapshot.sector_benchmark = await sectorBenchmark(ctx);
+      snapshot.next_step = {
+        label: 'Crawl multi-pages',
+        path: '/app/site-crawl',
+        skill: 'navigate_to',
+        why: "Obtenir une mesure comparable (pages, thin content, near-duplicate, maillage) sur ce domaine.",
+      };
     }
+
 
     const text = String(audit.raw_text ?? '');
     const MAX = 30_000;
@@ -2765,12 +2789,16 @@ const confront_external_audit: SkillDefinition = {
         crawlers_snapshot: snapshot,
         methodology: methodologyFor(),
         instructions: [
-          "Produis un tableau markdown : | Affirmation de l'audit | Verdict | Notre donnée | Commentaire |.",
-          "Verdicts autorisés uniquement : FIABLE, NON FIABLE, CONFIRMÉ PAR CRAWLERS, CONTRADICTOIRE.",
-          "N'utilise CONTRADICTOIRE que si nous avons une mesure réelle et fraîche sur le même objet ; sinon indique FIABLE ou NON FIABLE avec la raison.",
-          "Si une donnée nous manque, propose explicitement une action et attends l'accord : trigger_audit (crawl réel), market_diagnosis / live_search (vérification SERP), compare_methodology (écart de calcul).",
+          "Commence TOUJOURS par une évaluation de la qualité et de la profondeur de l'audit importé : périmètre (nb de pages, on-site / off-site / technique / contenu / GEO), fraîcheur, sources des chiffres, métriques réellement mesurables vs inventées, seuils utilisés, actionnabilité des recommandations. Donne une note de profondeur sur 10 et dis ce qui manque.",
+          "Produis ensuite un tableau markdown : | Affirmation de l'audit | Verdict | Notre donnée / repère | Commentaire |.",
+          "Verdicts autorisés uniquement : FIABLE, NON FIABLE, CONFIRMÉ PAR CRAWLERS, CONTRADICTOIRE, ÉCART SECTORIEL.",
+          "N'utilise CONFIRMÉ PAR CRAWLERS ou CONTRADICTOIRE que si nous avons une mesure réelle et fraîche sur CE site. Sinon, utilise ÉCART SECTORIEL en t'appuyant sur crawlers_snapshot.sector_benchmark (« ça diffère des moyennes des sites que nous avons audités : ... »), en précisant que c'est un repère de secteur, pas une mesure du site.",
+          "Si crawlers_snapshot.never_audited est vrai : ne refuse jamais l'analyse. Après le tableau, dis explicitement « Tu n'as jamais audité ce nom de domaine : veux-tu commencer par un crawl multi-pages ? » et attends la réponse.",
+          "Si l'utilisateur répond oui : appelle navigate_to avec path '/app/site-crawl' (reason : crawl multi-pages du domaine de l'audit importé), puis, une fois la page chargée, réponds simplement « Démarrons. » en rappelant le domaine à saisir. N'invente aucune mesure avant que le crawl ait tourné.",
+          "Autres vérifications possibles sans crawl, à proposer avec accord : market_diagnosis / live_search (SERP, backlinks), compare_methodology (écart de calcul).",
           "Termine par 3 actions concrètes classées par impact.",
         ],
+
       },
     };
   },
@@ -2803,7 +2831,51 @@ const compare_methodology: SkillDefinition = {
   },
 };
 
+/**
+ * Repères sectoriels anonymisés issus des sites déjà audités par Crawlers.
+ * Sert à situer les chiffres d'un audit tiers quand le domaine n'a jamais été audité.
+ * Aucun domaine n'est exposé : uniquement des moyennes/médianes agrégées.
+ */
+async function sectorBenchmark(ctx: SkillContext): Promise<Record<string, unknown>> {
+  const { data: crawls } = await ctx.service
+    .from('site_crawls')
+    .select('crawled_pages, content_integrity, created_at')
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(60);
+
+  const rows = crawls ?? [];
+  if (!rows.length) {
+    return { sites_sample: 0, note: 'Aucun crawl de référence disponible pour situer les chiffres.' };
+  }
+
+  const avg = (nums: number[]) => (nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10 : null);
+  const pages = rows.map((r: any) => Number(r.crawled_pages ?? 0)).filter((n) => n > 0);
+  const thinRatio: number[] = [];
+  const cannibClusters: number[] = [];
+
+  for (const r of rows as any[]) {
+    const ci = (r.content_integrity ?? null) as Record<string, any> | null;
+    const total = Number(r.crawled_pages ?? 0);
+    if (ci?.thin_content && total > 0) {
+      thinRatio.push(Math.round((Number(ci.thin_content.count ?? 0) / total) * 1000) / 10);
+    }
+    if (ci?.near_duplicate) {
+      cannibClusters.push(Number(ci.near_duplicate.cannibalization_clusters ?? 0));
+    }
+  }
+
+  return {
+    sites_sample: rows.length,
+    avg_crawled_pages: avg(pages),
+    avg_thin_content_ratio_pct: avg(thinRatio),
+    avg_cannibalization_clusters: avg(cannibClusters),
+    note: "Moyennes anonymisées sur les derniers sites audités par Crawlers (concurrents directs ou non). À présenter comme un repère de secteur, jamais comme une mesure du site concerné.",
+  };
+}
+
 function normalizeDomainLoose(raw: string): string {
+
   return raw.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
 }
 
