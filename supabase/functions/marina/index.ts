@@ -1395,6 +1395,65 @@ interface MarinaBranding {
 }
 
 // ─── Compile multiple section HTMLs into one final report ───
+/**
+ * Détecte une couche stratégique (audit GEO) dégradée.
+ * `strategic-synthesis` répond toujours HTTP 200 : en cas d'échec LLM il renvoie
+ * un objet fallback (`_error`, `executive_summary: 'Analyse interrompue.'`,
+ * `overallScore: 0`, roadmap vide). Il faut donc l'identifier explicitement.
+ */
+function detectStrategicDegradation(strategicData: any): { degraded: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+  if (!strategicData) {
+    return { degraded: true, reasons: ['aucune donnée stratégique retournée'] };
+  }
+  if (strategicData._error) reasons.push(String(strategicData._error));
+
+  const summary = String(strategicData.executive_summary || '');
+  const intro = String(strategicData.introduction?.presentation || '');
+  if (/analyse interrompue/i.test(summary) || /analyse interrompue/i.test(intro)) {
+    reasons.push('synthèse exécutive non produite');
+  }
+
+  const roadmap = strategicData.executive_roadmap || strategicData.strategic_roadmap || [];
+  const score = Number(strategicData.overallScore || 0);
+  if (score === 0 && (!Array.isArray(roadmap) || roadmap.length === 0)) {
+    reasons.push('score GEO à 0 et feuille de route vide');
+  }
+
+  return { degraded: reasons.length > 0, reasons };
+}
+
+/** Bandeau d'avertissement, palette Crawlers (violet / or / noir / blanc), sans emoji. */
+function buildStrategicDegradedBannerHTML(lang: string, reasons: string[]): string {
+  const isFr = lang === 'fr';
+  const title = isFr
+    ? 'Couche stratégique indisponible'
+    : lang === 'es' ? 'Capa estratégica no disponible' : 'Strategic layer unavailable';
+  const body = isFr
+    ? `L'audit stratégique GEO (synthèse exécutive, score global de visibilité, feuille de route priorisée) n'a pas pu être produit lors de cette exécution. Les sections techniques, de crawl et de cocon sémantique ci-dessous restent valides et exploitables. Ce rapport est donc <strong>partiel</strong> : relancez l'audit pour obtenir la couche stratégique.`
+    : lang === 'es'
+      ? `La auditoría estratégica GEO no pudo generarse en esta ejecución. Las secciones técnicas, de rastreo y de arquitectura semántica siguen siendo válidas. Este informe es <strong>parcial</strong>: vuelva a lanzar la auditoría.`
+      : `The GEO strategic audit (executive summary, overall visibility score, prioritised roadmap) could not be produced during this run. The technical, crawl and semantic-architecture sections below remain valid. This report is therefore <strong>partial</strong>: re-run the audit to obtain the strategic layer.`;
+  const detail = reasons.length
+    ? `<div style="margin-top:8px;font-size:11px;color:#6b7280;">${isFr ? 'Cause technique' : 'Technical cause'} : ${reasons.map(r => r.replace(/[<>]/g, '')).join(' · ')}</div>`
+    : '';
+
+  return `<div class="marina-degraded-banner" data-marina-scope="page" data-marina-block="degraded" style="margin:20px 24px;padding:16px 18px;border:2px solid #6d28d9;border-left:6px solid #d4af37;border-radius:10px;background:#ffffff;">
+    <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#6d28d9;font-weight:700;margin-bottom:6px;">${isFr ? 'Rapport partiel' : 'Partial report'}</div>
+    <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:6px;">${title}</div>
+    <div style="font-size:13px;line-height:1.65;color:#374151;">${body}</div>
+    ${detail}
+  </div>`;
+}
+
+/** Insère le bandeau juste après l'ouverture du <body> (compatible avec les deux générateurs). */
+function injectDegradedBanner(html: string, banner: string): string {
+  if (!banner || html.includes('marina-degraded-banner')) return html;
+  const m = html.match(/<body[^>]*>/i);
+  if (!m) return banner + html;
+  return html.replace(m[0], `${m[0]}\n${banner}`);
+}
+
 function compileMarinaReport(
   sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string },
   lang: string,
@@ -2302,6 +2361,13 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       const { expertData, strategicData, domain, detectedLang } = cached.result_data as any;
 
+      // ─── Détection de dégradation de la couche stratégique (GEO) ───
+      // strategic-synthesis renvoie un fallback silencieux (« Analyse interrompue. »,
+      // overallScore 0, roadmap vide) lorsque tous les appels LLM échouent. Sans
+      // détection, le rapport se présente comme complet alors qu'une couche entière
+      // manque : on le signale dans le rapport et on marque le job en `partial`.
+      const strategicDegradation = detectStrategicDegradation(strategicData);
+
       // Cleanup intermediate cache (fire-and-forget)
       sb.from('audit_cache').delete().eq('cache_key', `marina_intermediate_${jobId}`).then(() => {});
 
@@ -2812,6 +2878,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         html = generateLegacyMarinaReport(url, domain, detectedLang, expertData, strategicData, cocoonResult, marinaBranding);
       }
 
+      // Bandeau « couche stratégique indisponible » (les deux générateurs).
+      if (strategicDegradation.degraded) {
+        html = injectDegradedBanner(
+          html,
+          buildStrategicDegradedBannerHTML(detectedLang, strategicDegradation.reasons),
+        );
+        console.warn(`[Marina] Strategic layer degraded for ${domain}: ${strategicDegradation.reasons.join(' | ')}`);
+      }
+
       // ─── Step 5: Store in shared-reports bucket ───
       const fileName = `marina/${jobId}.html`;
 
@@ -2856,13 +2931,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         cocoon_nodes: cocoonResult?.stats?.nodes_count || null,
         cocoon_clusters: cocoonResult?.stats?.clusters_count || null,
         visual_capture: visualCapture,
+        strategic_layer: strategicDegradation.degraded ? 'unavailable' : 'ok',
+        partial: strategicDegradation.degraded,
+        degraded_reasons: strategicDegradation.degraded ? strategicDegradation.reasons : [],
         generated_at: new Date().toISOString(),
       };
 
       await sb.from('async_jobs').update({
-        status: 'completed',
+        status: strategicDegradation.degraded ? 'partial' : 'completed',
         result_data: resultData,
         progress: 100,
+        error_message: strategicDegradation.degraded
+          ? `Couche stratégique indisponible — ${strategicDegradation.reasons.join(' | ')}`
+          : null,
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
 
@@ -2881,7 +2962,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         if (callbackUrl) {
           console.log(`[Marina] 📡 Sending webhook to ${callbackUrl}`);
           const webhookPayload = {
-            event: 'marina.report.completed',
+            event: strategicDegradation.degraded ? 'marina.report.partial' : 'marina.report.completed',
             job_id: jobId,
             ...resultData,
           };
@@ -3060,8 +3141,14 @@ Deno.serve(handleRequest(async (req) => {
       
       if (!job) return json({ error: 'Job not found' }, 404);
       
-      if (job.status === 'completed') {
-        return json({ success: true, data: job.result_data, status: 'completed' });
+      if (job.status === 'completed' || job.status === 'partial') {
+        // `partial` = rapport livré mais couche stratégique (GEO) indisponible.
+        return json({
+          success: true,
+          data: job.result_data,
+          status: job.status,
+          ...(job.status === 'partial' ? { warning: job.error_message || 'Couche stratégique indisponible' } : {}),
+        });
       }
       if (job.status === 'failed') {
         return json({ success: false, error: job.error_message, status: 'failed' });
