@@ -2833,6 +2833,10 @@ const SKILLS: Record<string, SkillDefinition> = {
   audit_internal_mesh,
   detect_content_cannibalization,
   read_content_integrity,
+  // Confrontation d'audits tiers importés
+  list_external_audits,
+  confront_external_audit,
+  compare_methodology,
   // Mémoire persistante & enrichissement carte d'identité (Sprint Q5)
   read_site_memory,
   write_site_memory,
