@@ -2457,9 +2457,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         }
       })();
 
-      // ─── Cocoon computation ───
+      // ─── Cocoon computation (mutualisé par domaine) ───
       let cocoonResult: any = null;
       const COCOON_TIMEOUT_MS = 270_000; // 270s — tripled for heavy sites
+      if (siteScope?.cocoon) {
+        cocoonResult = siteScope.cocoon;
+        reusedFromCache.push('cocon sémantique');
+        console.log(`[Marina] ♻️ Cocon réutilisé depuis le cache domaine (${domain})`);
+      } else {
       try {
         cocoonResult = await Promise.race([
           (async () => {
@@ -2499,9 +2504,13 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           })(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Cocoon timeout')), COCOON_TIMEOUT_MS)),
         ]);
+        if (cocoonResult) {
+          await writeSiteScopeCache(sb, domain, parentJob.user_id, { cocoon: cocoonResult });
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         console.warn(`[Marina] Cocoon failed (non-fatal, ${msg.includes('timeout') ? 'TIMEOUT' : 'error'}):`, msg);
+      }
       }
 
       // Wait for LLM visibility if still running
