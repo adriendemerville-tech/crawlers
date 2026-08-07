@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
+import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
