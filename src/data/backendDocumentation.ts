@@ -1599,17 +1599,43 @@ La phase 3 agrège les métriques de **toutes les pages crawlées** (\\\`crawl_p
 | Clusters sémantiques | \\\`semantic_nodes\\\` | Count distinct cluster_id |
 | Liens entrants par nœud | \\\`semantic_nodes.internal_links_in\\\` | Moyenne |
 
+## Audit multipages (max 15 URLs)
+
+Composant \\\`MarinaMultipagePanel\\\` sous la barre d'URL de \\\`/marina\\\`. Deux modes :
+
+| Mode | Fonctionnement |
+|------|----------------|
+| **Coller des URLs** | Une URL par ligne, plafond **15** (au-delà, seules les 15 premières sont retenues) |
+| **Répertoire** | Découverte via \\\`fetch-sitemap-tree\\\`, filtrage sur le préfixe (ex. \\\`/avis/\\\`), sélection manuelle des pages |
+
+- **Exécution séquentielle** : un job \\\`async_jobs\\\` par URL, traités les uns après les autres (~3 min/page).
+- **Persistance** : l'état du batch est conservé (clé \\\`marina_batch_v2\\\`) — l'onglet peut être fermé puis rouvert, la progression est reprise côté serveur.
+- **Livrable** : un **PDF unique** (sommaire + N audits + section « Portée et limites ») généré à la fin du batch.
+- **Cleanup** : les jobs \\\`pending\\\` d'un batch ne sont plus tués par le nettoyage 10 min (correctif d'août 2026) ; seuls les jobs réellement bloqués en \\\`running\\\` sont échoués.
+
+## Enrichissements du rapport
+
+| Bloc | Source | Détail |
+|------|--------|--------|
+| **Preuve visuelle** | \\\`site-visual-capture\\\` (Pagebolt, cache 24h) | Capture desktop/mobile du site prospecté insérée dans le rapport |
+| **Content Integrity** | module SimHash/LSH | Ratio de thin content, clusters near-duplicate, cannibalisation |
+| **Portée et limites** | \\\`src/lib/reports/auditDisclaimer.ts\\\` | Section disclaimer obligatoire : fiabilité méthodologique, maturité du domaine, crawlabilité observée, maturité du marché (Google vs IA) |
+
 ## Gestion des jobs
 
 | Fonctionnalité | Détail |
 |----------------|--------|
 | **Table** | \\\`async_jobs\\\` (function_name = 'marina') |
-| **Auto-cleanup** | Jobs bloqués > 10 min → marqués 'failed' |
+| **Auto-cleanup** | Jobs \\\`running\\\` bloqués > 10 min → 'failed' (les \\\`pending\\\` d'un batch sont préservés) |
 | **Annulation** | Statut 'cancelled' + message 'Interrompu manuellement' |
 | **Suppression** | Admin peut supprimer individuellement ou en masse |
 | **Partage** | Liens temporaires via \\\`share-actions\\\` (\\\`/temporarylink/{shareId}\\\`) |
 | **Coûts** | Compteur temps réel (LLM + APIs) via analytics_events |
-`,
+
+## Limite connue
+
+Sur des pages très lourdes, la phase 1/2 peut atteindre le **CPU wall-time** de l'Edge Function. Le découpage du pipeline en phases persistées supplémentaires reste au backlog pour garantir un batch de 15 URLs sans mort CPU.
+
   },
 
   // ───────────────────────────────────────────────
