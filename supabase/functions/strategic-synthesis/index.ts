@@ -171,45 +171,75 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     baseContext += `Analyse "${url}" (${domain}).\n${pageContentContext}\n${eeatSection}${founderSection}\n${marketSection}\n${toolsMarkdown}`;
 
     // ── LLM Call helper ──
+    // Une tentative unique suffisait rarement : timeouts et 429 sont fréquents sur
+    // les prompts stratégiques longs. On retente une seule fois, uniquement sur
+    // erreur transitoire (429 / 408 / 5xx / abandon réseau), avec backoff court.
     async function callLLM(model: string, timeoutMs: number, systemPrompt: string, userPromptText: string, label: string): Promise<string | null> {
       const logLabel = `[strategic-synthesis:${label}]`;
-      try {
-        console.log(`🤖 ${logLabel} ${model} (timeout: ${Math.round(timeoutMs / 1000)}s)`);
-        const resp = await aiGatewayFetch( {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model, messages: [{ role: 'system', content: `${strictLanguageInstruction}\n\n${systemPrompt}` }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 16384 }),
-          timeoutMs,
-          signal: AbortSignal.timeout(timeoutMs),
-        });
-        if (!resp.ok) {
-          const errText = await resp.text();
-          console.error(`❌ ${logLabel} ${model} error: ${resp.status} ${errText.substring(0, 200)}`);
+      const maxAttempts = 2;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          console.log(`${logLabel} ${model} (timeout: ${Math.round(timeoutMs / 1000)}s, tentative ${attempt}/${maxAttempts})`);
+          const resp = await aiGatewayFetch( {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model, messages: [{ role: 'system', content: `${strictLanguageInstruction}\n\n${systemPrompt}` }, { role: 'user', content: userPromptText }], temperature: 0.3, max_tokens: 16384 }),
+            timeoutMs,
+            signal: AbortSignal.timeout(timeoutMs),
+          });
+          if (!resp.ok) {
+            const errText = await resp.text();
+            const retryable = resp.status === 429 || resp.status === 408 || resp.status >= 500;
+            console.error(`${logLabel} ${model} error: ${resp.status} ${errText.substring(0, 200)}`);
+            if (retryable && attempt < maxAttempts) {
+              await new Promise((r) => setTimeout(r, 1500 * attempt));
+              continue;
+            }
+            return null;
+          }
+          const aiResp = await resp.json();
+          const content = aiResp.choices?.[0]?.message?.content;
+          trackTokenUsage(`strategic-synthesis-${label}`, model, aiResp.usage, url);
+          if (!content && attempt < maxAttempts) {
+            console.warn(`${logLabel} ${model}: réponse vide, nouvelle tentative`);
+            continue;
+          }
+          return content || null;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.warn(`${logLabel} ${model} failed (tentative ${attempt}): ${msg}`);
+          if (attempt < maxAttempts) {
+            await new Promise((r) => setTimeout(r, 1500 * attempt));
+            continue;
+          }
           return null;
         }
-        const aiResp = await resp.json();
-        const content = aiResp.choices?.[0]?.message?.content;
-        trackTokenUsage(`strategic-synthesis-${label}`, model, aiResp.usage, url);
-        return content || null;
-      } catch (e) {
-        console.warn(`⚠️ ${logLabel} ${model} failed: ${e instanceof Error ? e.message : e}`);
-        return null;
       }
+      return null;
     }
 
     async function callWithFallback(systemPrompt: string, userPromptText: string, label: string, timeoutMs: number): Promise<any | null> {
-      const model = label === 'A-identity' ? (body.modelOverride || 'google/gemini-3.1-pro-preview') : (body.modelOverride || 'google/gemini-3-flash-preview');
+      const FALLBACK_MODEL = 'google/gemini-3-flash-preview';
+      const model = label === 'A-identity' ? (body.modelOverride || 'google/gemini-3.1-pro-preview') : (body.modelOverride || FALLBACK_MODEL);
       const callTimeout = Math.min(timeoutMs, label === 'A-identity' ? 120_000 : 90_000);
       let raw = await callLLM(model, callTimeout, systemPrompt, userPromptText, label);
-      if (!raw && model !== 'google/gemini-3-flash-preview') {
-        console.log(`🔄 ${label}: Retrying with Flash...`);
-        raw = await callLLM('google/gemini-3-flash-preview', Math.min(60_000, timeoutMs - 5000), systemPrompt, userPromptText, label);
+      if (!raw && model !== FALLBACK_MODEL) {
+        console.log(`${label}: bascule sur le modèle de repli ${FALLBACK_MODEL}`);
+        raw = await callLLM(FALLBACK_MODEL, Math.max(30_000, Math.min(60_000, timeoutMs - 5000)), systemPrompt, userPromptText, label);
       }
       if (!raw) return null;
-      const parsed = parseLLMJson(raw);
-      if (!parsed) console.warn(`⚠️ ${label}: JSON parse failed`);
+      let parsed = parseLLMJson(raw);
+      if (!parsed && model !== FALLBACK_MODEL) {
+        // JSON illisible : on ne renonce pas, on redemande au modèle de repli.
+        console.warn(`${label}: JSON parse failed, nouvelle génération via ${FALLBACK_MODEL}`);
+        const retryRaw = await callLLM(FALLBACK_MODEL, Math.max(30_000, Math.min(60_000, timeoutMs - 5000)), systemPrompt, userPromptText, label);
+        parsed = retryRaw ? parseLLMJson(retryRaw) : null;
+      }
+      if (!parsed) console.warn(`${label}: JSON parse failed définitivement`);
       return parsed;
     }
+
 
     let parsedAnalysis: any = null;
 
