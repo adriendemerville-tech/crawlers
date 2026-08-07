@@ -2347,6 +2347,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
             crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+            // Constats d'intégrité → Workbench (idempotent, partagé avec le crawl)
+            await writeIntegrityFindingsToWorkbench(sb, (latestCrawl as any).content_integrity || null, {
+              domain,
+              userId: parentJob.user_id,
+              trackedSiteId: trackedSiteId || null,
+              sourceFunction: 'marina',
+            }).catch(() => {});
+
           }
         }
       } catch (crawlSnapshotError) {
