@@ -2744,8 +2744,21 @@ const confront_external_audit: SkillDefinition = {
         ? `Dernier crawl Crawlers : ${crawl.created_at}`
         : "Aucun crawl Crawlers récent — nos données sont absentes, ne conclus pas à une contradiction.";
     } else {
-      snapshot.warning = `Site non résolu ("${rawSite || 'non fourni'}"). Impossible de confronter aux mesures Crawlers : propose d'ajouter le site dans « Mes Sites » puis de lancer un crawl.`;
+      // Domaine jamais audité : on ne bloque pas l'analyse. On fournit des repères
+      // sectoriels issus des sites déjà audités (concurrents directs ou non) pour
+      // situer les chiffres de l'audit importé, puis on propose un crawl multi-pages.
+      snapshot.site = null;
+      snapshot.never_audited = true;
+      snapshot.warning = `Domaine "${rawSite || 'non fourni'}" absent de « Mes Sites » : aucune mesure Crawlers propre à ce site. Analyse quand même la qualité et la profondeur de l'audit importé, et situe ses chiffres par rapport aux repères sectoriels ci-dessous.`;
+      snapshot.sector_benchmark = await sectorBenchmark(ctx);
+      snapshot.next_step = {
+        label: 'Crawl multi-pages',
+        path: '/app/site-crawl',
+        skill: 'navigate_to',
+        why: "Obtenir une mesure comparable (pages, thin content, near-duplicate, maillage) sur ce domaine.",
+      };
     }
+
 
     const text = String(audit.raw_text ?? '');
     const MAX = 30_000;
