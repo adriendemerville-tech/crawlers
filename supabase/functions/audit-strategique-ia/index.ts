@@ -264,7 +264,7 @@ Deno.serve(handleRequest(async (req) => {
     const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
     console.log(`🎯 Entité: "${resolvedEntityName}" (${(brandConfidence * 100).toFixed(0)}%)`);
 
-    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null };
+    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, authorityData, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null };
 
     // ═══ CHECK DEADLINE ═══
     const remainingBeforeLLM = GLOBAL_DEADLINE - (Date.now() - startTime);
