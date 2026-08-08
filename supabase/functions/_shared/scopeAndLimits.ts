@@ -191,7 +191,14 @@ export function renderScopeLimitsHTML(input: ScopeLimitsInput): string {
         `No authority or age signal could be collected for ${domain} in this report: the reading below is theoretical and must not be used as a conclusion. `,
         `No se pudo recoger ninguna señal de autoridad para ${domain}: la lectura siguiente es teórica. `,
       );
-  const domainBody = domainObserved + t(
+  const authorityCaveat = typeof a?.authority_score === 'number'
+    ? t(
+        " L'autorité indiquée est une estimation propriétaire Crawlers (rank de domaine et diversité des référents, plafonnée à 92, pénalisée si le profil de liens est artificiel) : ce n'est ni un score Semrush, ni Moz, ni Majestic, et les valeurs de ces outils diffèrent légitimement.",
+        ' The authority figure is a proprietary Crawlers estimate (domain rank and referring-domain diversity, capped at 92, penalised for artificial link profiles): it is not a Semrush, Moz or Majestic score, and those tools legitimately report different values.',
+        ' La autoridad indicada es una estimación propia de Crawlers, no un score de Semrush, Moz o Majestic.',
+      )
+    : '';
+  const domainBody = domainObserved + authorityCaveat + ' ' + t(
     "Un domaine récent ou faiblement lié subit une inertie structurelle : même parfaitement optimisées, ses pages mettent plus longtemps à être explorées, indexées puis citées, et un score technique élevé ne compense pas un déficit d'autorité. À l'inverse, un domaine ancien porte parfois un passif — anciennes URL, contenus obsolètes, liens de mauvaise qualité — qui pèse davantage que les défauts techniques listés ici. Comptez 3 à 6 mois avant de juger l'effet d'une refonte sémantique, quelques semaines pour une correction technique sur un domaine installé. Aucun de ces délais n'est garanti.",
     'A young or weakly linked domain suffers structural inertia: even perfectly optimised, its pages take longer to be crawled, indexed and cited, and a high technical score does not offset an authority deficit. Conversely, an old domain may carry liabilities — legacy URLs, outdated content, poor links — weighing more than the technical defects listed here. Allow 3 to 6 months before judging a semantic overhaul, a few weeks for a technical fix on an established domain. None of these timeframes is guaranteed.',
     'Un dominio reciente o poco enlazado sufre una inercia estructural; un dominio antiguo puede arrastrar un pasivo. Ningún plazo está garantizado.',

@@ -391,10 +391,33 @@ export interface RankingOverview {
 }
 
 /** Bloc autorité / backlinks (miroir de supabase/functions/_shared/domainAuthority.ts) */
+export interface BacklinkToxicity {
+  toxicity_score: number;
+  verdict: 'sain' | 'a_surveiller' | 'pollue';
+  dominant_anchor_ratio: number;
+  dominant_anchor: string | null;
+  unnatural_anchor_ratio: number;
+  avg_referrer_rank: number;
+  links_per_domain: number;
+  broken_ratio: number;
+  signals: string[];
+  recommendation: string;
+}
+
+export interface OrganicVisibility {
+  estimated_traffic: number | null;
+  ranked_keywords: number | null;
+  average_position: number | null;
+  top3: number | null;
+  top10: number | null;
+  source: 'dataforseo_labs' | 'unavailable';
+}
+
 export interface DomainAuthority {
   domain: string;
   authority_score: number;
   domain_rank: number;
+  domain_rank_raw?: number;
   referring_domains: number;
   referring_main_domains: number;
   backlinks_total: number;
@@ -403,6 +426,12 @@ export interface DomainAuthority {
   first_seen: string | null;
   top_referring_domains: { domain: string; rank: number; backlinks: number }[];
   top_anchors: string[];
+  top_anchors_detail?: { anchor: string; count: number }[];
+  toxicity?: BacklinkToxicity | null;
+  organic_visibility?: OrganicVisibility | null;
+  confidence?: 'high' | 'medium' | 'low';
+  confidence_reason?: string;
+  calibration_version?: number;
   data_source: 'dataforseo' | 'unavailable';
   unavailable_reason?: string;
   fetched_at: string;

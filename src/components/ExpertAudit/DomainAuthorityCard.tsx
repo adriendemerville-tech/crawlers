@@ -15,6 +15,14 @@ function scoreVerdict(score: number): { label: string; tone: string } {
   return { label: 'Autorité très faible', tone: 'text-muted-foreground' };
 }
 
+function confidenceLabel(c: 'high' | 'medium' | 'low'): string {
+  return c === 'high' ? 'élevée' : c === 'medium' ? 'moyenne' : 'faible';
+}
+
+function toxicityLabel(v: 'sain' | 'a_surveiller' | 'pollue'): string {
+  return v === 'pollue' ? 'Pollué' : v === 'a_surveiller' ? 'À surveiller' : 'Sain';
+}
+
 /**
  * Bloc "Marché & Autorité" : expose le score d'autorité /100 et le profil de
  * backlinks calculés par _shared/domainAuthority.ts (DataForSEO, cache 24 h).
@@ -56,9 +64,65 @@ export function DomainAuthorityCard({ authority }: Props) {
               <Progress value={authority.authority_score} className="h-2" />
               <p className={`text-xs ${verdict.tone}`}>
                 {verdict.label} — 60 % rank de domaine ({authority.domain_rank}/100), 40 % diversité des
-                domaines référents.
+                domaines référents pondérée par leur qualité, moins la pénalité de toxicité.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Estimation propriétaire Crawlers (plafonnée à 92), pas un score Semrush ou Moz.
+                {authority.confidence ? ` Fiabilité : ${confidenceLabel(authority.confidence)}${authority.confidence_reason ? ` — ${authority.confidence_reason}` : ''}.` : ''}
               </p>
             </div>
+
+            {authority.toxicity && (
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Toxicité du profil de liens</span>
+                  <Badge variant="outline" className="text-xs">
+                    {toxicityLabel(authority.toxicity.verdict)} · {authority.toxicity.toxicity_score}/100
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
+                  <div>Ancre dominante : {Math.round(authority.toxicity.dominant_anchor_ratio * 100)} %</div>
+                  <div>Ancres non naturelles : {Math.round(authority.toxicity.unnatural_anchor_ratio * 100)} %</div>
+                  <div>Rank moyen des référents : {authority.toxicity.avg_referrer_rank}/100</div>
+                  <div>Liens par domaine : {authority.toxicity.links_per_domain}</div>
+                </div>
+                {authority.toxicity.signals.length > 0 && (
+                  <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
+                    {authority.toxicity.signals.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs">{authority.toxicity.recommendation}</p>
+              </div>
+            )}
+
+            {authority.organic_visibility?.source === 'dataforseo_labs' && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-lg border border-border p-3">
+                  <div className="text-xs text-muted-foreground">Trafic estimé / mois</div>
+                  <div className="text-lg font-semibold">
+                    {(authority.organic_visibility.estimated_traffic ?? 0).toLocaleString('fr-FR')}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <div className="text-xs text-muted-foreground">Mots-clés positionnés</div>
+                  <div className="text-lg font-semibold">
+                    {(authority.organic_visibility.ranked_keywords ?? 0).toLocaleString('fr-FR')}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <div className="text-xs text-muted-foreground">Position moyenne</div>
+                  <div className="text-lg font-semibold">{authority.organic_visibility.average_position ?? '—'}</div>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <div className="text-xs text-muted-foreground">Top 3 / Top 10</div>
+                  <div className="text-lg font-semibold">
+                    {authority.organic_visibility.top3 ?? 0} / {authority.organic_visibility.top10 ?? 0}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="rounded-lg border border-border p-3">

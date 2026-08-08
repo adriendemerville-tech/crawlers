@@ -1608,6 +1608,7 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
       break;
 
     case 'backlink_health':
+    case 'backlink_toxicity':
     case 'domain_authority':
       // Off-site actions removed — redirect to internal linking improvement instead
       tasks.push({

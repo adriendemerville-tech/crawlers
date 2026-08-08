@@ -785,12 +785,17 @@ export function generateExpertReportHTML(
              <span style="font-size: 30px; font-weight: 700; color: #7c3aed;">${authority.authority_score}</span>
              <span style="font-size: 13px; color: #6b7280;">/100 — Authority Score Crawlers</span>
            </div>
-           ${labelValue('Méthode', '60 % domain rank DataForSEO + 40 % diversité des domaines référents (log10)')}
-           ${labelValue('Domain rank', `${authority.domain_rank}/100`)}
+           ${labelValue('Méthode', "60 % rank de domaine (échelle source 0-1000 normalisée en courbe) + 40 % diversité des domaines référents pondérée par leur qualité, moins la pénalité de toxicité. Estimation propriétaire Crawlers plafonnée à 92 — ce n'est pas un score Semrush, Moz ou Majestic.")}
+           ${authority.confidence ? labelValue('Fiabilité de la mesure', `${authority.confidence === 'high' ? 'élevée' : authority.confidence === 'medium' ? 'moyenne' : 'faible'}${authority.confidence_reason ? ` — ${authority.confidence_reason}` : ''}`) : ''}
+           ${labelValue('Domain rank', `${authority.domain_rank}/100${authority.domain_rank_raw ? ` (rank source ${authority.domain_rank_raw}/1000)` : ''}`)}
            ${labelValue('Domaines référents', `${authority.referring_domains} (dont ${authority.referring_main_domains} domaines principaux)`)}
            ${labelValue('Backlinks', `${authority.backlinks_total} — dofollow ${authority.dofollow_ratio} %`)}
            ${labelValue('Liens cassés', String(authority.broken_backlinks))}
            ${labelValue('Premier backlink observé', authority.first_seen || 'inconnu')}
+           ${authority.toxicity ? labelValue('Toxicité du profil', `${authority.toxicity.toxicity_score}/100 — ${authority.toxicity.verdict === 'pollue' ? 'pollué' : authority.toxicity.verdict === 'a_surveiller' ? 'à surveiller' : 'sain'} (ancre dominante ${Math.round(authority.toxicity.dominant_anchor_ratio * 100)} %, ancres non naturelles ${Math.round(authority.toxicity.unnatural_anchor_ratio * 100)} %, rank moyen des référents ${authority.toxicity.avg_referrer_rank}/100, ${authority.toxicity.links_per_domain} liens par domaine)`) : ''}
+           ${authority.toxicity?.signals?.length ? labelValue('Signaux de toxicité', authority.toxicity.signals.join(' ; ')) : ''}
+           ${authority.toxicity ? labelValue('Action liens', authority.toxicity.recommendation) : ''}
+           ${authority.organic_visibility?.source === 'dataforseo_labs' ? labelValue('Visibilité organique', `${authority.organic_visibility.ranked_keywords ?? 0} mots-clés positionnés, trafic estimé ${authority.organic_visibility.estimated_traffic ?? 0}/mois, position moyenne ${authority.organic_visibility.average_position ?? '—'}, top 3 : ${authority.organic_visibility.top3 ?? 0}, top 10 : ${authority.organic_visibility.top10 ?? 0}`) : labelValue('Visibilité organique', 'non mesurée dans cet audit')}
            ${(authority.top_anchors || []).length ? labelValue('Ancres dominantes', authority.top_anchors.join(', ')) : ''}
            ${refRows ? `<table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-top: 10px;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Domaine référent</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Autorité</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Volume</th></tr></thead><tbody>${refRows}</tbody></table>` : ''}`));
       }

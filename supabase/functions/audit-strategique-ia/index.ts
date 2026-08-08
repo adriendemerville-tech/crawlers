@@ -253,7 +253,22 @@ Deno.serve(handleRequest(async (req) => {
       if (gmbResult.status === 'fulfilled' && gmbResult.value) gmbData = gmbResult.value;
       if (fbResult.status === 'fulfilled' && fbResult.value) facebookPageInfo = fbResult.value;
       authorityData = authorityResult.status === 'fulfilled' ? authorityResult.value : null;
-      if (authorityData?.data_source === 'dataforseo') console.log(`🔗 Autorité: AS=${authorityData.authority_score}/100, ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
+      // Comble l'angle mort trafic/positions du bloc autorité sans appel payant
+      // supplémentaire : on réutilise le ranking overview déjà collecté.
+      if (authorityData && rankingOverview) {
+        authorityData = {
+          ...authorityData,
+          organic_visibility: {
+            estimated_traffic: Math.round(rankingOverview.etv ?? 0) || null,
+            ranked_keywords: rankingOverview.total_ranked_keywords ?? null,
+            average_position: rankingOverview.average_position_global ?? null,
+            top3: rankingOverview.distribution?.top3 ?? null,
+            top10: rankingOverview.distribution?.top10 ?? null,
+            source: 'dataforseo_labs',
+          },
+        };
+      }
+      if (authorityData?.data_source === 'dataforseo') console.log(`🔗 Autorité: AS=${authorityData.authority_score}/100 (conf. ${authorityData.confidence}), toxicité=${authorityData.toxicity?.toxicity_score ?? 'n/a'}/100 (${authorityData.toxicity?.verdict ?? '—'}), ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
       else console.warn(`⚠️ Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
@@ -708,6 +723,20 @@ Réponds en JSON STRICT:
                 severity: a.broken_backlinks / a.backlinks_total > 0.25 ? 'danger' : 'warning', status: 'pending' as const,
                 target_url: `https://${cleanDomain}`,
                 payload: { auto_generated: true, broken_backlinks: a.broken_backlinks, backlinks_total: a.backlinks_total, authority_score: a.authority_score },
+              });
+            }
+            // Toxicité du profil de liens : plus actionnable qu'un total de backlinks.
+            if (a.toxicity && a.toxicity.verdict !== 'sain') {
+              const t = a.toxicity;
+              wbItems.push({
+                tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
+                title: `Profil de liens ${t.verdict === 'pollue' ? 'pollué' : 'à surveiller'} (toxicité ${t.toxicity_score}/100)`,
+                description: `${t.signals.length ? t.signals.join(' ; ') + '. ' : ''}${t.recommendation}`,
+                finding_category: 'backlink_toxicity', source_type: 'audit' as const,
+                source_function: 'audit-strategique-ia', source_record_id: `backlink_toxicity_${cleanDomain}`,
+                severity: t.verdict === 'pollue' ? 'danger' : 'warning', status: 'pending' as const,
+                target_url: `https://${cleanDomain}`,
+                payload: { auto_generated: true, ...t, authority_score: a.authority_score, confidence: a.confidence },
               });
             }
           }
