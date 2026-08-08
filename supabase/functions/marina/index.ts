@@ -3399,17 +3399,19 @@ Deno.serve(handleRequest(async (req) => {
     // séquentielle d'un batch multipages) : on ne les échoue que s'il n'y a
     // aucun job en cours pour les dépiler.
     try {
-      const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      // Un job Marina enchaîne plusieurs phases (chaque phase touche updated_at) :
+      // on n'échoue que ceux qui n'ont plus progressé depuis 15 minutes.
+      const staleSince = new Date(Date.now() - 15 * 60 * 1000).toISOString();
       await sb
         .from('async_jobs')
         .update({
           status: 'failed',
-          error_message: 'Timeout: job bloqué depuis plus de 10 minutes',
+          error_message: 'Timeout: job sans progression depuis plus de 15 minutes',
           completed_at: new Date().toISOString(),
         })
         .eq('function_name', 'marina')
         .eq('status', 'processing')
-        .lt('created_at', tenMinAgo);
+        .lt('updated_at', staleSince);
 
       const { data: processingNow } = await sb
         .from('async_jobs')
