@@ -623,7 +623,7 @@ Réponds en JSON STRICT:
     }
 
     // ═══ BUILD FINAL RESULT ═══
-    const result = { success: true, data: { url, domain, scannedAt: new Date().toISOString(), isContentMode, pageType, ...parsedAnalysis, raw_market_data: marketData, ranking_overview: rankingOverview, google_my_business: gmbData, toolsData: null, llm_visibility_raw: effectiveToolsData.llm, _cachedContext: cachedContextOut } };
+    const result = { success: true, data: { url, domain, scannedAt: new Date().toISOString(), isContentMode, pageType, ...parsedAnalysis, raw_market_data: marketData, ranking_overview: rankingOverview, domain_authority: authorityData, google_my_business: gmbData, toolsData: null, llm_visibility_raw: effectiveToolsData.llm, _cachedContext: cachedContextOut } };
     console.log(`✅ AUDIT TERMINÉ (${((Date.now() - startTime) / 1000).toFixed(1)}s)`);
 
     // ═══ SAVE & RETURN (fire-and-forget) ═══
