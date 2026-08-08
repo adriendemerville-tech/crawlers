@@ -390,6 +390,26 @@ export interface RankingOverview {
   indexed_pages?: number | null;
 }
 
+/** Bloc autorité / backlinks (miroir de supabase/functions/_shared/domainAuthority.ts) */
+export interface DomainAuthority {
+  domain: string;
+  authority_score: number;
+  domain_rank: number;
+  referring_domains: number;
+  referring_main_domains: number;
+  backlinks_total: number;
+  dofollow_ratio: number;
+  broken_backlinks: number;
+  first_seen: string | null;
+  top_referring_domains: { domain: string; rank: number; backlinks: number }[];
+  top_anchors: string[];
+  data_source: 'dataforseo' | 'unavailable';
+  unavailable_reason?: string;
+  fetched_at: string;
+}
+
+
+
 export interface ContentFreshness {
   has_recent_content: boolean;
   last_update_days: number;
@@ -532,6 +552,7 @@ export interface StrategicAnalysis {
   keyword_positioning?: KeywordPositioning;
   market_data_summary?: MarketDataSummary;
   ranking_overview?: RankingOverview;
+  domain_authority?: DomainAuthority | null;
   
   // Legacy format (backward compatibility)
   brand_identity?: BrandIdentity;

@@ -20,6 +20,7 @@ import { SocialSignalsCard } from './SocialSignalsCard';
 import { MarketIntelligenceCard } from './MarketIntelligenceCard';
 import { PremiumRoadmapCard } from './PremiumRoadmapCard';
 import { KeywordModuleSection } from './KeywordModuleSection';
+import { DomainAuthorityCard } from './DomainAuthorityCard';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 import { LLMVisibilityCard } from './LLMVisibilityCard';
 import { ClientTargetsCard } from './ClientTargetsCard';
@@ -271,6 +272,14 @@ export function StrategicInsights({
           <RevealWrapper delay={2000} isDataCard enabled={progressiveReveal}>
             <KeywordModuleSection analysis={analysis} domain={domain} />
           </RevealWrapper>
+
+          {/* 7b. Marché & Autorité (backlinks + Authority Score /100) */}
+          {analysis.domain_authority && (
+            <RevealWrapper delay={2500} isDataCard enabled={progressiveReveal}>
+              <DomainAuthorityCard authority={analysis.domain_authority} />
+            </RevealWrapper>
+          )}
+
 
           {/* 8. Score AEO (Answer Engine Optimization) */}
           {auditResult && (
