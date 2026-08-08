@@ -108,7 +108,7 @@ export async function fetchDomainAuthority(
 
     const backlinksTotal = s.backlinks || 0;
     const dofollow = backlinksTotal > 0 ? Math.round(((backlinksTotal - (s.backlinks_nofollow || 0)) / backlinksTotal) * 100) : 0;
-    const domainRank = s.rank || s.target_rank || 0;
+    const domainRank = normalizeDomainRank(s.rank || s.target_rank || 0);
     const referringDomains = s.referring_domains || 0;
 
     let topRef: AuthorityData['top_referring_domains'] = [];
