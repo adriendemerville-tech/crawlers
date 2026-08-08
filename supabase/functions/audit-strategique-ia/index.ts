@@ -729,7 +729,11 @@ Réponds en JSON STRICT:
   } catch (error) {
     console.error('❌ Fatal error:', error);
     await trackEdgeFunctionError('audit-strategique-ia', error instanceof Error ? error.message : 'Fatal error').catch(() => {});
-    if (jobSb && jobId) await jobSb.from('async_jobs').update({ status: 'failed', error_message: error instanceof Error ? error.message : 'Unknown error', completed_at: new Date().toISOString() }).eq('id', jobId).catch(() => {});
+    if (jobSb && jobId) {
+      try {
+        await jobSb.from('async_jobs').update({ status: 'failed', error_message: error instanceof Error ? error.message : 'Unknown error', completed_at: new Date().toISOString() }).eq('id', jobId);
+      } catch (jobErr) { console.warn('⚠️ async_jobs failure update failed:', jobErr); }
+    }
     return json({ success: true, data: { url: '', domain: '', scannedAt: new Date().toISOString(), overallScore: 0, introduction: { presentation: 'Une erreur inattendue est survenue. Veuillez relancer l\'analyse.', strengths: '', improvement: '', competitors: [] }, executive_roadmap: [], executive_summary: 'Analyse interrompue. Veuillez réessayer.', _error: error instanceof Error ? error.message : 'Unknown error' } });
   } finally {
     releaseConcurrency('audit-strategique-ia');
