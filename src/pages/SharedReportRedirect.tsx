@@ -93,52 +93,17 @@ export default function SharedReportRedirect() {
     if (!htmlContent) return;
     setIsGeneratingPDF(true);
     try {
-      const { default: html2canvas } = await import('html2canvas');
-      const { default: jsPDF } = await import('jspdf');
+      const [{ generateSectionBasedPDF }, { getReportFilename }] = await Promise.all([
+        import('@/utils/sectionBasedPdfExport'),
+        import('@/utils/reportFilename'),
+      ]);
 
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:1123px;border:none;';
-      document.body.appendChild(iframe);
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc) throw new Error('Cannot access iframe');
-      iframeDoc.open();
-      iframeDoc.write(htmlContent);
-      iframeDoc.close();
-
-      await new Promise((r) => setTimeout(r, 1200));
-
-      const body = iframeDoc.body;
-      const canvas = await html2canvas(body, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        width: 794,
-        windowWidth: 794,
-        logging: false,
+      // Export section par section : garantit la section finale « Portée et limites »
+      await generateSectionBasedPDF({
+        htmlContent,
+        filename: getReportFilename(shareId?.slice(0, 8) || 'report', 'audittechnique', 'pdf'),
+        disclaimer: { auditType: 'generic', language: (language as 'fr' | 'en' | 'es') || 'fr' },
       });
-      document.body.removeChild(iframe);
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      const pdfWidth = 210;
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      const pageHeight = 297;
-      const doc = new jsPDF('p', 'mm', 'a4');
-
-      let position = 0;
-      let remainingHeight = pdfHeight;
-
-      while (remainingHeight > 0) {
-        doc.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-        remainingHeight -= pageHeight;
-        if (remainingHeight > 0) {
-          doc.addPage();
-          position -= pageHeight;
-        }
-      }
-
-      const { getReportFilename } = await import('@/utils/reportFilename');
-      doc.save(getReportFilename(shareId?.slice(0, 8) || 'report', 'audittechnique', 'pdf'));
-      
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error(language === 'fr' ? 'Erreur de génération PDF' : 'PDF generation error');
@@ -146,6 +111,7 @@ export default function SharedReportRedirect() {
       setIsGeneratingPDF(false);
     }
   };
+
 
   const handlePrint = () => {
     if (!htmlContent) return;
