@@ -402,8 +402,9 @@ const ip = getClientIp(req);
     }
     console.log(`[Cocoon] Using crawl ${latestCrawlId} (${crawls?.[0]?.crawled_pages} pages) for domain ${domainBase}`);
 
-    // Cap at 100 pages for optimal TF-IDF precision (covers 100% of ~70% FR sites)
-    const MAX_COCOON_PAGES = 100;
+    // 100 pages en standard (précision TF-IDF optimale), jusqu'à 10 000 pour
+    // les admins qui auditent de grands sites.
+    const MAX_COCOON_PAGES = isAdmin ? 10000 : 100;
 
     // First count total pages to inform user of truncation
     const { count: totalCrawlPages } = await supabase
@@ -411,12 +412,22 @@ const ip = getClientIp(req);
       .select("id", { count: "exact", head: true })
       .eq("crawl_id", latestCrawlId);
 
-    const { data: crawlPages } = await supabase
-      .from("crawl_pages")
-      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at, http_status, anchor_texts, page_type_override, body_text_truncated")
-      .eq("crawl_id", latestCrawlId)
-      .order("crawl_depth", { ascending: true })
-      .limit(MAX_COCOON_PAGES);
+    const PAGE_COLUMNS = "id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at, http_status, anchor_texts, page_type_override, body_text_truncated";
+    // PostgREST plafonne chaque réponse à 1000 lignes : on pagine par tranches.
+    const crawlPages: any[] = [];
+    const PAGE_SIZE = 1000;
+    for (let offset = 0; offset < MAX_COCOON_PAGES; offset += PAGE_SIZE) {
+      const upper = Math.min(offset + PAGE_SIZE, MAX_COCOON_PAGES) - 1;
+      const { data: batch } = await supabase
+        .from("crawl_pages")
+        .select(PAGE_COLUMNS)
+        .eq("crawl_id", latestCrawlId)
+        .order("crawl_depth", { ascending: true })
+        .range(offset, upper);
+      if (!batch || batch.length === 0) break;
+      crawlPages.push(...batch);
+      if (batch.length < upper - offset + 1) break;
+    }
 
     // Filter out error pages (403, 500, etc.) — only keep 200/301/302
     const validPages = (crawlPages || []).filter((p: any) => {
@@ -520,29 +531,80 @@ const ip = getClientIp(req);
     const adjacency = new Map<number, number[]>();
     for (let i = 0; i < nodeData.length; i++) adjacency.set(i, []);
 
-    for (let i = 0; i < tfidfVectors.length; i++) {
-      const edges: { idx: number; score: number }[] = [];
+    // Au-delà de ce seuil, la comparaison exhaustive O(n²) dépasse le budget CPU
+    // de l'edge function : on passe par un index inversé (blocking) qui ne
+    // compare que les paires partageant au moins un terme fort.
+    const BLOCKING_THRESHOLD = 400;
+    const useBlocking = tfidfVectors.length > BLOCKING_THRESHOLD;
 
-      for (let j = i + 1; j < tfidfVectors.length; j++) {
-        const sim = cosineSimilaritySparse(tfidfVectors[i], tfidfVectors[j]);
-        if (sim >= WEAK_THRESHOLD) {
-          edges.push({ idx: j, score: sim });
-
-          // Build adjacency for clustering (medium+ only)
-          if (sim >= MEDIUM_THRESHOLD) {
-            adjacency.get(i)!.push(j);
-            adjacency.get(j)!.push(i);
-          }
-        }
-      }
-
-      // Keep top 10 most similar
+    const addEdges = (i: number, edges: { idx: number; score: number }[]) => {
       edges.sort((a, b) => b.score - a.score);
       nodeData[i].similarity_edges = edges.slice(0, 10).map((e) => ({
         target_url: nodeData[e.idx].url,
         score: Math.round(e.score * 1000) / 1000,
         type: e.score >= STRONG_THRESHOLD ? "strong" : e.score >= MEDIUM_THRESHOLD ? "medium" : "weak",
       }));
+    };
+
+    if (useBlocking) {
+      // Index inversé sur les 15 termes les plus pondérés de chaque document
+      const TOP_TERMS = 15;
+      const MAX_CANDIDATES = 150;
+      const inverted = new Map<string, number[]>();
+      const topTermsPerDoc: string[][] = [];
+
+      for (let i = 0; i < tfidfVectors.length; i++) {
+        const top = [...tfidfVectors[i].entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, TOP_TERMS)
+          .map((e) => e[0]);
+        topTermsPerDoc.push(top);
+        for (const term of top) {
+          const bucket = inverted.get(term);
+          if (bucket) bucket.push(i); else inverted.set(term, [i]);
+        }
+      }
+
+      for (let i = 0; i < tfidfVectors.length; i++) {
+        const candidates = new Set<number>();
+        for (const term of topTermsPerDoc[i]) {
+          for (const j of inverted.get(term) || []) {
+            if (j !== i) candidates.add(j);
+            if (candidates.size >= MAX_CANDIDATES) break;
+          }
+          if (candidates.size >= MAX_CANDIDATES) break;
+        }
+
+        const edges: { idx: number; score: number }[] = [];
+        for (const j of candidates) {
+          const sim = cosineSimilaritySparse(tfidfVectors[i], tfidfVectors[j]);
+          if (sim >= WEAK_THRESHOLD) {
+            edges.push({ idx: j, score: sim });
+            if (sim >= MEDIUM_THRESHOLD) adjacency.get(i)!.push(j);
+          }
+        }
+        addEdges(i, edges);
+      }
+      console.log(`[Cocoon] Blocking mode: ${tfidfVectors.length} nodes via inverted index`);
+    } else {
+      for (let i = 0; i < tfidfVectors.length; i++) {
+        const edges: { idx: number; score: number }[] = [];
+
+        for (let j = i + 1; j < tfidfVectors.length; j++) {
+          const sim = cosineSimilaritySparse(tfidfVectors[i], tfidfVectors[j]);
+          if (sim >= WEAK_THRESHOLD) {
+            edges.push({ idx: j, score: sim });
+
+            // Build adjacency for clustering (medium+ only)
+            if (sim >= MEDIUM_THRESHOLD) {
+              adjacency.get(i)!.push(j);
+              adjacency.get(j)!.push(i);
+            }
+          }
+        }
+
+        addEdges(i, edges);
+      }
     }
 
     // ─── 4b. Fallback: structural edges from URL path similarity + internal links ───

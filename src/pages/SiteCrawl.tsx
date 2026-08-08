@@ -424,7 +424,13 @@ export default function SiteCrawl() {
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={5}
-                      max={totalEstimatedPages && totalEstimatedPages > 0 ? totalEstimatedPages : maxSliderCap}
+                      max={(() => {
+                        const detected = totalEstimatedPages && totalEstimatedPages > 0
+                          ? totalEstimatedPages
+                          : maxSliderCap;
+                        // Plafond admin élargi à 10 000 pages (grands sites)
+                        return isAdmin ? Math.min(detected, 10000) : detected;
+                      })()}
                       step={5}
                       disabled={isLoading}
                     />

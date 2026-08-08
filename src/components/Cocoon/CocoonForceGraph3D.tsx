@@ -858,7 +858,7 @@ const DEFAULT_HALO_COLORS = ["#1e3a5f", "#0d4f4f", "#5f3a1e", "#3a1e5f", "#1e5f3
 
 // ─── Main Component ───
 export function CocoonForceGraph3D({
-  nodes,
+  nodes: allNodes,
   selectedNodeId,
   onNodeSelect,
   isXRayMode,
@@ -880,6 +880,19 @@ export function CocoonForceGraph3D({
   const [spreadScale, setSpreadScale] = useState(1);
   const [haloOpacity, setHaloOpacity] = useState(0.20);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Plafond de rendu : au-delà, on n'affiche que les pages les plus
+  // autoritaires (l'analyse backend porte sur la totalité du crawl).
+  const RENDER_NODE_CAP = 1500;
+  const nodes = useMemo(() => {
+    if (allNodes.length <= RENDER_NODE_CAP) return allNodes;
+    return [...allNodes]
+      .sort((a, b) => {
+        const home = (n: typeof a) => (n.page_type === "homepage" ? 1 : 0);
+        return (home(b) - home(a)) || ((b.page_authority ?? 0) - (a.page_authority ?? 0));
+      })
+      .slice(0, RENDER_NODE_CAP);
+  }, [allNodes]);
 
   const { graphNodes, graphLinks, nodeMap } = useMemo(() => {
     const urlToId = new Map<string, string>();
