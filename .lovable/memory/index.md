@@ -1,0 +1,1 @@
+- [Marina Portée & limites](mem://features/marina/scope-and-limits-backend-fr) — Section « Portée et limites » toujours générée backend depuis le domaine (_shared/scopeAndLimits.ts), fallback dans compileMarinaReport, mutualisée en dernière section des rapports multipages

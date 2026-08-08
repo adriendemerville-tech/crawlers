@@ -148,6 +148,10 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
   }
   const disclosure = siteBlocks.get('disclosure') || '';
   siteBlocks.delete('disclosure');
+  // « Portée et limites » : toujours présent, toujours en dernière position.
+  const scopeLimits = siteBlocks.get('scope_limits') || '';
+  siteBlocks.delete('scope_limits');
+
 
   const siteOrder = ['crawl', 'cocoon', 'llm', 'indexation'];
   const orderedSiteEntries = [
@@ -228,8 +232,12 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
   const disclosureSection = disclosure
     ? `<section class="marina-batch-disclosure" style="page-break-before:always;">${disclosure}</section>`
     : '';
+  const scopeLimitsSection = scopeLimits
+    ? `<section class="marina-batch-disclosure" style="page-break-before:always;">${scopeLimits}</section>`
+    : '';
 
   return `<!DOCTYPE html>
+
 <html lang="fr">
 <head>
 ${head}
@@ -244,6 +252,8 @@ ${cover}
 ${sharedSection}
 ${sections}
 ${disclosureSection}
+${scopeLimitsSection}
+
 </body>
 </html>`;
 }

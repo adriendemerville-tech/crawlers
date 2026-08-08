@@ -11,6 +11,7 @@ import {
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
+import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
 
 
 import { corsHeaders } from '../_shared/cors.ts';
@@ -1573,7 +1574,8 @@ function buildExecutiveSummaryHTML(
 }
 
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string },
+
 
   lang: string,
   domain: string,
@@ -1630,7 +1632,13 @@ function compileMarinaReport(
     .marina-separator { background: linear-gradient(90deg, transparent, ${headerColor}, transparent) !important; }
   ` : '';
 
+  // « Portée et limites » : contrat non négociable — la section est toujours
+  // présente. Si l'appelant n'a pas fourni de version enrichie par les signaux
+  // collectés, on en génère une dès le départ à partir du nom de domaine.
+  const scopeLimitsHtml = sectionHTMLs.scopeLimits || renderScopeLimitsHTML({ domain, url, lang });
+
   const compiled = `<!DOCTYPE html>
+
 
 <html lang="${lang}">
 <head>
@@ -1706,6 +1714,10 @@ function compileMarinaReport(
     ` : ''}
 
     ${sectionHTMLs.disclosure || ''}
+
+    <div class="marina-separator"></div>
+    ${scopeLimitsHtml}
+
 
     ${ctaHtml}
 
@@ -2040,6 +2052,32 @@ async function writeSiteScopeCache(sb: any, domain: string, userId: string, patc
   }
 }
 
+// ─── Freins de crawlabilité observés (partagés divulgation + portée et limites) ───
+function buildCrawlabilityBlockers(
+  lang: string,
+  ctx: { expertData?: any; crawlSnapshot?: any },
+): string[] {
+  const t = (fr: string, en: string, es: string) => (lang === 'en' ? en : lang === 'es' ? es : fr);
+  const pagesAnalyzed = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
+  const pagesKnown = ctx.crawlSnapshot?.total_pages || null;
+  const blockers: string[] = [];
+  const robots = ctx.expertData?.checks?.robots || ctx.expertData?.robots || null;
+  if (robots && robots.blocksAll) blockers.push(t('robots.txt bloque tout ou partie du crawl', 'robots.txt blocks all or part of crawling', 'robots.txt bloquea todo o parte del rastreo'));
+  if (ctx.expertData?.scores?.performance?.lcp && Number(ctx.expertData.scores.performance.lcp) > 4)
+    blockers.push(t('LCP supérieur à 4s : rendu lent, budget de crawl consommé', 'LCP above 4s: slow rendering, crawl budget consumed', 'LCP superior a 4s: renderizado lento'));
+  if (pagesAnalyzed && pagesKnown && pagesAnalyzed < pagesKnown)
+    blockers.push(
+      t(
+        `Crawl partiel : ${pagesAnalyzed} pages explorées sur ${pagesKnown} connues`,
+        `Partial crawl: ${pagesAnalyzed} of ${pagesKnown} known pages explored`,
+        `Rastreo parcial: ${pagesAnalyzed} de ${pagesKnown} páginas conocidas`,
+      ),
+    );
+  if (!pagesAnalyzed)
+    blockers.push(t('Aucun crawl multi-pages exploitable : le périmètre est réduit à la page auditée', 'No usable multi-page crawl: scope limited to the audited page', 'Sin rastreo multipágina utilizable: alcance limitado a la página auditada'));
+  return blockers;
+}
+
 // ─── Section finale : divulgation méthodologique ───
 function buildDisclosureSectionHTML(
   lang: string,
@@ -2067,21 +2105,8 @@ function buildDisclosureSectionHTML(
     0;
   const cocoonNodes = ctx.cocoonResult?.stats?.nodes_count || 0;
 
-  const blockers: string[] = [];
-  const robots = ctx.expertData?.checks?.robots || ctx.expertData?.robots || null;
-  if (robots && robots.blocksAll) blockers.push(t('robots.txt bloque tout ou partie du crawl', 'robots.txt blocks all or part of crawling', 'robots.txt bloquea todo o parte del rastreo'));
-  if (ctx.expertData?.scores?.performance?.lcp && Number(ctx.expertData.scores.performance.lcp) > 4)
-    blockers.push(t('LCP supérieur à 4s : rendu lent, budget de crawl consommé', 'LCP above 4s: slow rendering, crawl budget consumed', 'LCP superior a 4s: renderizado lento'));
-  if (pagesAnalyzed && pagesKnown && pagesAnalyzed < pagesKnown)
-    blockers.push(
-      t(
-        `Crawl partiel : ${pagesAnalyzed} pages explorées sur ${pagesKnown} connues`,
-        `Partial crawl: ${pagesAnalyzed} of ${pagesKnown} known pages explored`,
-        `Rastreo parcial: ${pagesAnalyzed} de ${pagesKnown} páginas conocidas`,
-      ),
-    );
-  if (!pagesAnalyzed)
-    blockers.push(t('Aucun crawl multi-pages exploitable : le périmètre est réduit à la page auditée', 'No usable multi-page crawl: scope limited to the audited page', 'Sin rastreo multipágina utilizable: alcance limitado a la página auditada'));
+  const blockers = buildCrawlabilityBlockers(lang, ctx);
+
 
   const li = (s: string) => `<li style="margin:0 0 6px 0;">${s}</li>`;
 
@@ -2993,7 +3018,22 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
             }),
+            scopeLimits: renderScopeLimitsHTML({
+              domain,
+              url,
+              lang: detectedLang,
+              pagesAnalyzed: crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length || null,
+              pagesKnown: crawlSnapshot?.total_pages || null,
+              singlePage: !(crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length),
+              analyzedAt: new Date().toISOString(),
+              authority:
+                strategicData?.domain_authority && strategicData.domain_authority.data_source !== 'unavailable'
+                  ? strategicData.domain_authority
+                  : null,
+              blockers: buildCrawlabilityBlockers(detectedLang, { expertData, crawlSnapshot }),
+            }),
           },
+
           detectedLang, domain, url, marinaBranding,
         );
 
