@@ -156,6 +156,7 @@ Deno.serve(handleRequest(async (req) => {
       eeatSignals = cachedContext.eeatSignals || { ...DEFAULT_EEAT_SIGNALS, linkedInUrls: [], detectedSocialUrls: [] };
       marketData = cachedContext.marketData || null;
       rankingOverview = cachedContext.rankingOverview || null;
+      authorityData = cachedContext.authorityData || null;
       founderInfo = cachedContext.founderInfo || { ...DEFAULT_FOUNDER_INFO };
       gmbData = cachedContext.gmbData || null;
       facebookPageInfo = cachedContext.facebookPageInfo || { ...DEFAULT_FACEBOOK_PAGE_INFO };
