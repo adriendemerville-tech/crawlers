@@ -639,18 +639,18 @@ Réponds en JSON STRICT:
         if (rawUser) saveRawAuditData({ userId: rawUser.id, url, domain, auditType: 'strategic', rawPayload: result.data, sourceFunctions: ['audit-strategique-ia'] }).catch(() => {});
       } catch {}
 
-      // ═══ WORKBENCH: Chunkability & Fan-Out findings ═══
+      // ═══ WORKBENCH: Chunkability, Fan-Out & Autorité de domaine ═══
       try {
         const sb3 = getUserClient(authHeader);
         const { data: { user: wbUser } } = await sb3.auth.getUser();
-        if (wbUser && isContentMode) {
+        if (wbUser) {
           const { data: siteRow } = await getServiceClient().from('tracked_sites').select('id').eq('user_id', wbUser.id).ilike('domain', `%${domain.replace(/^www\./, '')}%`).limit(1).maybeSingle();
           const trackedId = siteRow?.id || null;
           const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
           const wbItems: any[] = [];
 
           // Chunkability finding
-          if (parsedAnalysis.chunkability_score && parsedAnalysis.chunkability_score.score < 50) {
+          if (isContentMode && parsedAnalysis.chunkability_score && parsedAnalysis.chunkability_score.score < 50) {
             const cs = parsedAnalysis.chunkability_score;
             wbItems.push({
               tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
@@ -665,7 +665,7 @@ Réponds en JSON STRICT:
           }
 
           // Fan-out missing keywords → one finding per keyword
-          if (parsedAnalysis.fan_out_score?.recommendations?.length > 0) {
+          if (isContentMode && parsedAnalysis.fan_out_score?.recommendations?.length > 0) {
             for (const rec of parsedAnalysis.fan_out_score.recommendations.slice(0, 5)) {
               const kwSlug = rec.keyword.replace(/[^a-z0-9]/gi, '_').slice(0, 40);
               wbItems.push({
@@ -681,10 +681,41 @@ Réponds en JSON STRICT:
             }
           }
 
+          // ── Autorité de domaine / backlinks (site-level, données DataForSEO réelles) ──
+          // Consommé par cocoon-strategist (cases 'domain_authority' / 'backlink_health'
+          // → tâches add_internal_link, aucune action offsite) puis par Parménion.
+          if (authorityData?.data_source === 'dataforseo') {
+            const a = authorityData;
+            if (a.authority_score < 35) {
+              wbItems.push({
+                tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
+                title: `Authority Score faible (${a.authority_score}/100) — ${a.referring_domains} domaines référents`,
+                description: `Le profil de liens est étroit (rank ${a.domain_rank}/100, ${a.referring_domains} domaines référents, ${a.backlinks_total} backlinks). En attendant des liens externes, renforcez la circulation du PageRank interne vers les pages stratégiques.`,
+                finding_category: 'domain_authority', source_type: 'audit' as const,
+                source_function: 'audit-strategique-ia', source_record_id: `authority_${cleanDomain}`,
+                severity: a.authority_score < 20 ? 'danger' : 'warning', status: 'pending' as const,
+                target_url: `https://${cleanDomain}`,
+                payload: { auto_generated: true, ...a },
+              });
+            }
+            if (a.broken_backlinks > 0 && a.backlinks_total > 0 && a.broken_backlinks / a.backlinks_total > 0.1) {
+              wbItems.push({
+                tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
+                title: `${a.broken_backlinks} backlinks cassés (${Math.round((a.broken_backlinks / a.backlinks_total) * 100)} % du profil)`,
+                description: `Une part significative des liens entrants pointe vers des URLs mortes. Rétablissez ces cibles ou redirigez-les en 301 vers la page équivalente pour récupérer le signal d'autorité.`,
+                finding_category: 'backlink_health', source_type: 'audit' as const,
+                source_function: 'audit-strategique-ia', source_record_id: `backlink_health_${cleanDomain}`,
+                severity: a.broken_backlinks / a.backlinks_total > 0.25 ? 'danger' : 'warning', status: 'pending' as const,
+                target_url: `https://${cleanDomain}`,
+                payload: { auto_generated: true, broken_backlinks: a.broken_backlinks, backlinks_total: a.backlinks_total, authority_score: a.authority_score },
+              });
+            }
+          }
+
           if (wbItems.length > 0) {
             const { error: wbErr } = await getServiceClient().from('architect_workbench').upsert(wbItems, { onConflict: 'source_type,source_record_id', ignoreDuplicates: true });
             if (wbErr) console.warn('⚠️ Workbench upsert error:', wbErr.message);
-            else console.log(`✅ Workbench: ${wbItems.length} findings (chunkability + fan-out)`);
+            else console.log(`✅ Workbench: ${wbItems.length} findings (chunkability + fan-out + autorité)`);
           }
         }
       } catch (wbErr) { console.warn('⚠️ Workbench persistence failed:', wbErr); }

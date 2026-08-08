@@ -13,3 +13,9 @@ type: feature
 Câblage :
 - `audit-strategique-ia` : collecte en Wave 2 (deadline 30 s), stocké dans `_cachedContext.authorityData`, passé à `buildUserPrompt` (11e paramètre), alimente `computeFactualCitationScores({ backlinkData })`, exposé en `data.domain_authority`.
 - `strategic-synthesis` : réutilise `body.authorityData` ou refetch, injecte dans le prompt marché + `citationScorer`, exposé en `domain_authority`.
+
+Diffusion (2026-08-08) :
+- UI : `src/components/ExpertAudit/DomainAuthorityCard.tsx` dans `StrategicInsights`.
+- PDF : section « Marché & Autorité (backlinks) » dans `expertReportExport.ts` (message explicite si `data_source !== 'dataforseo'`).
+- Workbench : `audit-strategique-ia` écrit `finding_category='domain_authority'` (AS < 35) et `'backlink_health'` (>10 % de backlinks cassés), site-level, hors gate `isContentMode`.
+- Parménion : ces catégories sont mappées par `cocoon-strategist` en tâches `add_internal_link` (aucune action offsite).
