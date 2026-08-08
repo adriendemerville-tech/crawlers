@@ -1715,6 +1715,10 @@ function compileMarinaReport(
 
     ${sectionHTMLs.disclosure || ''}
 
+    <div class="marina-separator"></div>
+    ${scopeLimitsHtml}
+
+
     ${ctaHtml}
 
     <div class="footer">
