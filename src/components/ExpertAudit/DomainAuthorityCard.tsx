@@ -15,6 +15,14 @@ function scoreVerdict(score: number): { label: string; tone: string } {
   return { label: 'Autorité très faible', tone: 'text-muted-foreground' };
 }
 
+function confidenceLabel(c: 'high' | 'medium' | 'low'): string {
+  return c === 'high' ? 'élevée' : c === 'medium' ? 'moyenne' : 'faible';
+}
+
+function toxicityLabel(v: 'sain' | 'a_surveiller' | 'pollue'): string {
+  return v === 'pollue' ? 'Pollué' : v === 'a_surveiller' ? 'À surveiller' : 'Sain';
+}
+
 /**
  * Bloc "Marché & Autorité" : expose le score d'autorité /100 et le profil de
  * backlinks calculés par _shared/domainAuthority.ts (DataForSEO, cache 24 h).
