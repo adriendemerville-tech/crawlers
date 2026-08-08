@@ -561,10 +561,13 @@ export default function Marina() {
   const [loadingReport, setLoadingReport] = useState(false);
   const [demoHtml, setDemoHtml] = useState<string | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
-  const [activeTab, setActiveTab] = useState(() => {
+  const [activeTab, setActiveTab] = useState('features');
+
+  // Lecture du hash uniquement côté client (le SSR n'a pas de window)
+  useEffect(() => {
     const hash = window.location.hash.replace('#', '');
-    return ['features', 'preview', 'api', 'pricing'].includes(hash) ? hash : 'features';
-  });
+    if (['features', 'preview', 'api', 'pricing'].includes(hash)) setActiveTab(hash);
+  }, []);
 
   // Sync tab with URL hash
   useEffect(() => {
