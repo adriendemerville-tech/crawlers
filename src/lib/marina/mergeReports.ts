@@ -148,6 +148,10 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
   }
   const disclosure = siteBlocks.get('disclosure') || '';
   siteBlocks.delete('disclosure');
+  // « Portée et limites » : toujours présent, toujours en dernière position.
+  const scopeLimits = siteBlocks.get('scope_limits') || '';
+  siteBlocks.delete('scope_limits');
+
 
   const siteOrder = ['crawl', 'cocoon', 'llm', 'indexation'];
   const orderedSiteEntries = [
