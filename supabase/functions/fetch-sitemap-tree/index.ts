@@ -1,5 +1,6 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getAuthenticatedUser } from '../_shared/auth.ts';
 
 /**
  * Edge Function: fetch-sitemap-tree
@@ -19,7 +20,10 @@ interface FolderNode {
   urls: string[];
 }
 
+/** Plafond standard d'URLs collectées dans le sitemap. */
 const MAX_URLS = 1000;
+/** Plafond réservé aux admins (grands sites : 7 000+ pages indexées). */
+const MAX_URLS_ADMIN = 10_000;
 const FETCH_TIMEOUT_MS = 10_000;
 const CACHE_TTL_HOURS = 2;
 
@@ -40,7 +44,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
 /**
  * Parse sitemap XML to extract URLs. Handles both <sitemapindex> and <urlset>.
  */
-async function parseSitemapUrls(sitemapUrl: string, depth = 0): Promise<string[]> {
+async function parseSitemapUrls(sitemapUrl: string, depth = 0, limit: number = MAX_URLS): Promise<string[]> {
   if (depth > 3) return []; // Prevent infinite recursion
 
   try {
@@ -63,11 +67,11 @@ async function parseSitemapUrls(sitemapUrl: string, depth = 0): Promise<string[]
       // Recursively parse child sitemaps
       const allUrls: string[] = [];
       for (const childUrl of sitemapLocs) {
-        if (allUrls.length >= MAX_URLS) break;
-        const childUrls = await parseSitemapUrls(childUrl, depth + 1);
+        if (allUrls.length >= limit) break;
+        const childUrls = await parseSitemapUrls(childUrl, depth + 1, limit);
         allUrls.push(...childUrls);
       }
-      return allUrls.slice(0, MAX_URLS);
+      return allUrls.slice(0, limit);
     }
 
     // Regular urlset — extract <loc> tags
@@ -76,7 +80,7 @@ async function parseSitemapUrls(sitemapUrl: string, depth = 0): Promise<string[]
     let match;
     while ((match = urlLocRegex.exec(xml)) !== null) {
       urls.push(match[1].trim());
-      if (urls.length >= MAX_URLS) break;
+      if (urls.length >= limit) break;
     }
     return urls;
   } catch (err) {
@@ -299,18 +303,29 @@ try {
 
     const supabase = getServiceClient();
 
+    // Plafond élargi (10 000 URLs) réservé aux admins — grands sites.
+    let urlLimit = MAX_URLS;
+    try {
+      const auth = await getAuthenticatedUser(req);
+      if (auth?.isAdmin) urlLimit = MAX_URLS_ADMIN;
+    } catch (e) {
+      console.warn('[fetch-sitemap-tree] Auth check failed, standard limit applied:', e);
+    }
+    // Le cache est segmenté par plafond : un résultat tronqué à 1000 ne doit
+    // jamais être servi à un admin qui demande 10 000 URLs (et inversement).
+    const cacheType = urlLimit > MAX_URLS ? 'sitemap_tree_xl' : 'sitemap_tree';
+
     // Check cache first
-    const cacheKey = `sitemap_tree:${cleanDomain}`;
     const { data: cached } = await supabase
       .from('domain_data_cache')
       .select('result_data, expires_at')
-      .eq('data_type', 'sitemap_tree')
+      .eq('data_type', cacheType)
       .eq('domain', cleanDomain)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 
     if (cached?.result_data) {
-      console.log(`[fetch-sitemap-tree] Cache hit for ${cleanDomain}`);
+      console.log(`[fetch-sitemap-tree] Cache hit for ${cleanDomain} (${cacheType})`);
       return jsonOk({
         ...cached.result_data as Record<string, unknown>,
         cached: true,
@@ -328,9 +343,10 @@ try {
     let allUrls: string[] = [];
     for (const candidate of sitemapCandidates) {
       if (allUrls.length > 0) break;
-      console.log(`[fetch-sitemap-tree] Trying ${candidate}`);
-      allUrls = await parseSitemapUrls(candidate);
+      console.log(`[fetch-sitemap-tree] Trying ${candidate} (limit ${urlLimit})`);
+      allUrls = await parseSitemapUrls(candidate, 0, urlLimit);
     }
+
 
     // If no sitemap found, try robots.txt for sitemap location
     if (allUrls.length === 0) {
@@ -342,7 +358,7 @@ try {
           if (sitemapMatches) {
             for (const match of sitemapMatches) {
               const url = match.replace(/^Sitemap:\s*/i, '').trim();
-              allUrls = await parseSitemapUrls(url);
+              allUrls = await parseSitemapUrls(url, 0, urlLimit);
               if (allUrls.length > 0) break;
             }
           }
@@ -353,7 +369,7 @@ try {
     }
 
     // Deduplicate
-    allUrls = [...new Set(allUrls)].slice(0, MAX_URLS);
+    allUrls = [...new Set(allUrls)].slice(0, urlLimit);
 
     // ── Fallback Firecrawl /map quand fetch direct est bloqué (OVH/Cloudflare 403) ──
     let fallbackSource: string | null = null;
@@ -384,7 +400,7 @@ try {
               },
               body: JSON.stringify({
                 url: `https://${cleanDomain}`,
-                limit: MAX_URLS,
+                limit: urlLimit,
                 includeSubdomains: false,
               }),
               signal: fcController.signal,
@@ -397,7 +413,7 @@ try {
                 ? fcData.links.map((l: any) => typeof l === 'string' ? l : l?.url).filter(Boolean)
                 : Array.isArray(fcData?.data?.links) ? fcData.data.links : [];
               if (links.length > 0) {
-                allUrls = [...new Set(links)].slice(0, MAX_URLS);
+                allUrls = [...new Set(links)].slice(0, urlLimit);
                 fallbackSource = 'firecrawl_map';
                 console.log(`[fetch-sitemap-tree] Firecrawl fallback recovered ${allUrls.length} URLs for ${cleanDomain}`);
               }
@@ -433,7 +449,7 @@ try {
     const expiresAt = new Date(Date.now() + CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString();
     const { error: upsertError } = await supabase.from('domain_data_cache').upsert({
       domain: cleanDomain,
-      data_type: 'sitemap_tree',
+      data_type: cacheType,
       result_data: result,
       expires_at: expiresAt,
     }, { onConflict: 'domain,data_type' });
@@ -442,7 +458,7 @@ try {
       console.warn('[fetch-sitemap-tree] Upsert failed, trying insert:', upsertError.message);
       await supabase.from('domain_data_cache').insert({
         domain: cleanDomain,
-        data_type: 'sitemap_tree',
+        data_type: cacheType,
         result_data: result,
         expires_at: expiresAt,
       });

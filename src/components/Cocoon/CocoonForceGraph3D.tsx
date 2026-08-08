@@ -128,9 +128,17 @@ function simulate3D(
     const alpha = alpha0 * Math.pow(alphaDecay, iter);
     if (alpha < 0.001) break;
 
-    // Charge repulsion
+    // Charge repulsion — échantillonnée sur les grands graphes pour rester O(n)
+    const sampled = nodes.length > 600;
+    const SAMPLES = 24;
     for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
+      const jStart = i + 1;
+      const jCount = sampled ? SAMPLES : nodes.length - jStart;
+      for (let k = 0; k < jCount; k++) {
+        const j = sampled
+          ? Math.floor(Math.random() * nodes.length)
+          : jStart + k;
+        if (j === i) continue;
         const a = nodes[i];
         const b = nodes[j];
         let dx = b.x - a.x;
@@ -858,7 +866,7 @@ const DEFAULT_HALO_COLORS = ["#1e3a5f", "#0d4f4f", "#5f3a1e", "#3a1e5f", "#1e5f3
 
 // ─── Main Component ───
 export function CocoonForceGraph3D({
-  nodes,
+  nodes: allNodes,
   selectedNodeId,
   onNodeSelect,
   isXRayMode,
@@ -880,6 +888,19 @@ export function CocoonForceGraph3D({
   const [spreadScale, setSpreadScale] = useState(1);
   const [haloOpacity, setHaloOpacity] = useState(0.20);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Plafond de rendu : au-delà, on n'affiche que les pages les plus
+  // autoritaires (l'analyse backend porte sur la totalité du crawl).
+  const RENDER_NODE_CAP = 1500;
+  const nodes = useMemo(() => {
+    if (allNodes.length <= RENDER_NODE_CAP) return allNodes;
+    return [...allNodes]
+      .sort((a, b) => {
+        const home = (n: typeof a) => (n.page_type === "homepage" ? 1 : 0);
+        return (home(b) - home(a)) || ((b.page_authority ?? 0) - (a.page_authority ?? 0));
+      })
+      .slice(0, RENDER_NODE_CAP);
+  }, [allNodes]);
 
   const { graphNodes, graphLinks, nodeMap } = useMemo(() => {
     const urlToId = new Map<string, string>();
@@ -1019,7 +1040,8 @@ export function CocoonForceGraph3D({
       }
     }
 
-    simulate3D(gNodes, gLinks, 400);
+    // Grands graphes : moins d'itérations (la répulsion est échantillonnée)
+    simulate3D(gNodes, gLinks, gNodes.length > 600 ? 140 : 400);
 
     // Filter links by visible juice types and link directions
     let filteredLinks = visibleJuiceTypes && visibleJuiceTypes.size > 0
@@ -1204,7 +1226,10 @@ export function CocoonForceGraph3D({
 
       {/* Stats overlay */}
       <div className={`absolute top-4 right-14 text-[10px] font-mono space-y-0.5 text-right pointer-events-none ${isDayMode ? 'text-black/40' : 'text-white/30'}`}>
-        <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
+        <div>
+          {nodes.length} nœuds · {graphLinks.length} liens
+          {allNodes.length > nodes.length && ` (sur ${allNodes.length} pages analysées)`}
+        </div>
       </div>
 
       {/* Halo slider removed — now in header settings popover */}

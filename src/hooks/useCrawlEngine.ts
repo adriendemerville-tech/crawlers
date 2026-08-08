@@ -374,7 +374,11 @@ export function useCrawlEngine() {
           setSitemapPages(pagePatterns.slice(0, 20));
         }
 
-        const total = sitemapTotal && sitemapTotal > 0 ? sitemapTotal : (indexed || 0);
+        // Les admins peuvent viser au-delà du sitemap tronqué : on retient le
+        // plus grand des deux signaux (sitemap collecté vs pages indexées).
+        const total = (isAdmin || isAgencyPlus)
+          ? Math.max(sitemapTotal || 0, indexed || 0)
+          : (sitemapTotal && sitemapTotal > 0 ? sitemapTotal : (indexed || 0));
         if (total > 0) {
           setTotalEstimatedPages(total);
           const capMax = (isAgencyPlus || isAdmin) ? total : Math.min(maxSliderCap, total);
