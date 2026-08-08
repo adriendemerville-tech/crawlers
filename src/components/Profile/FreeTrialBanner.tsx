@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { Gift, X } from 'lucide-react';
@@ -6,9 +6,11 @@ import { Gift, X } from 'lucide-react';
 export function FreeTrialBanner() {
   const { profile } = useAuth();
   const { isAgencyPro } = useCredits();
-  const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem('free_trial_banner_dismissed') === 'true';
-  });
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (window.localStorage.getItem('free_trial_banner_dismissed') === 'true') setDismissed(true);
+  }, []);
 
   if (!profile || !isAgencyPro || dismissed) return null;
 
