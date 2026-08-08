@@ -137,6 +137,7 @@ Deno.serve(handleRequest(async (req) => {
     let eeatSignals: EEATSignals;
     let marketData: MarketData | null;
     let rankingOverview: RankingOverview | null;
+    let authorityData: AuthorityData | null = null;
     let founderInfo: FounderInfo;
     let localCompetitorData: { name: string; url: string; rank: number; score?: number } | null = null;
     let localCompetitorsAll: { name: string; url: string; rank: number; score?: number }[] = [];
