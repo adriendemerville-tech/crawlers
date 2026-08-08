@@ -36,14 +36,16 @@ export function calculateRelevanceScore(text: string): number {
 
 export function getWhitelistFromStorage(): WhitelistState {
   try {
-    const stored = localStorage.getItem(WHITELIST_STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(WHITELIST_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
     }
   } catch (e) {
     console.error('Error reading whitelist from storage:', e);
   }
-  
+
   return {
     sources: initialSources,
     lastUpdated: new Date().toISOString()
@@ -52,7 +54,8 @@ export function getWhitelistFromStorage(): WhitelistState {
 
 export function saveWhitelistToStorage(whitelist: WhitelistState): void {
   try {
-    localStorage.setItem(WHITELIST_STORAGE_KEY, JSON.stringify(whitelist));
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(WHITELIST_STORAGE_KEY, JSON.stringify(whitelist));
   } catch (e) {
     console.error('Error saving whitelist to storage:', e);
   }
