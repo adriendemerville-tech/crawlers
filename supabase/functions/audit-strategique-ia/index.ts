@@ -235,7 +235,7 @@ Deno.serve(handleRequest(async (req) => {
       // ── WAVE 2: Market + LLM + Competitor + Founder + GMB + Facebook ──
       console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
-      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult] = await Promise.allSettled([
+      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult, authorityResult] = await Promise.allSettled([
         withDeadline(fetchMarketData(domain, context, pageContentContext, url, existingKeywords), 120_000, 'market_data'),
         needsLlmCheck && supabaseUrl && supabaseAnonKey
           ? withDeadline((async () => { const r = await fetch(`${supabaseUrl}/functions/v1/check-llm`, { method: 'POST', headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ url, lang: 'fr' }), signal: AbortSignal.timeout(40000) }); if (!r.ok) { await r.text(); return null; } const d = await r.json(); return d.success && d.data ? d.data : null; })(), 45_000, 'check_llm') : Promise.resolve(null),
@@ -243,6 +243,7 @@ Deno.serve(handleRequest(async (req) => {
         !isContentMode ? withDeadline(searchFounderProfile(domain, context.location), 15_000, 'founder') : Promise.resolve(null),
         !isContentMode && context.locationCode ? withDeadline(detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode), 12_000, 'gmb') : Promise.resolve(null),
         !isContentMode && context.locationCode ? withDeadline(searchFacebookPage(context.brandName, context.sector, context.locationCode, context.languageCode), 10_000, 'facebook_page') : Promise.resolve(null),
+        withDeadline(fetchDomainAuthority(domainWithoutWww), 30_000, 'domain_authority'),
       ]);
 
       marketData = mktDataResult.status === 'fulfilled' ? mktDataResult.value : null;
@@ -251,6 +252,9 @@ Deno.serve(handleRequest(async (req) => {
       founderInfo = (founderResult.status === 'fulfilled' && founderResult.value) ? founderResult.value : { ...DEFAULT_FOUNDER_INFO };
       if (gmbResult.status === 'fulfilled' && gmbResult.value) gmbData = gmbResult.value;
       if (fbResult.status === 'fulfilled' && fbResult.value) facebookPageInfo = fbResult.value;
+      authorityData = authorityResult.status === 'fulfilled' ? authorityResult.value : null;
+      if (authorityData?.data_source === 'dataforseo') console.log(`🔗 Autorité: AS=${authorityData.authority_score}/100, ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
+      else console.warn(`⚠️ Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
