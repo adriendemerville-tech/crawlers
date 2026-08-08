@@ -4,6 +4,13 @@
  *
  * Deux appels DataForSEO maximum par domaine, mis en cache 24 h (les backlinks
  * bougent lentement) pour ne pas multiplier les appels payants.
+ *
+ * Recalibrage 2026-08-08 (confrontation Semrush) :
+ * - l'échelle rank backlinks DataForSEO est 0–1000 et logarithmique : une
+ *   division par 10 saturait à 100/100 des domaines réellement à ~38/100 ;
+ * - un profil gonflé par des annuaires/MFA ne vaut pas une autorité forte :
+ *   la toxicité du profil pénalise désormais le score ;
+ * - tout score est accompagné d'un niveau de confiance explicite.
  */
 import { trackPaidApiCall } from './tokenTracker.ts';
 import { cacheKey, getCached, setCache } from './auditCache.ts';
@@ -11,12 +18,44 @@ import { cacheKey, getCached, setCache } from './auditCache.ts';
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
 
+/** Version de calibrage : invalide les entrées de cache produites avant le recalibrage. */
+export const AUTHORITY_CALIBRATION_VERSION = 2;
+
+export interface BacklinkToxicity {
+  /** 0-100 : plus le score est haut, plus le profil est artificiel */
+  toxicity_score: number;
+  verdict: 'sain' | 'a_surveiller' | 'pollue';
+  /** Part de l'ancre la plus répétée dans l'échantillon d'ancres */
+  dominant_anchor_ratio: number;
+  dominant_anchor: string | null;
+  /** Part d'ancres non naturelles (URL nue, mot générique, emoji) */
+  unnatural_anchor_ratio: number;
+  /** Rank moyen (0-100) des principaux domaines référents */
+  avg_referrer_rank: number;
+  /** backlinks / domaines référents — un ratio élevé signe une empreinte d'annuaire */
+  links_per_domain: number;
+  broken_ratio: number;
+  signals: string[];
+  recommendation: string;
+}
+
+export interface OrganicVisibility {
+  estimated_traffic: number | null;
+  ranked_keywords: number | null;
+  average_position: number | null;
+  top3: number | null;
+  top10: number | null;
+  source: 'dataforseo_labs' | 'unavailable';
+}
+
 export interface AuthorityData {
   domain: string;
-  /** Authority Score maison sur 100 (domain_rank + diversité des domaines référents) */
+  /** Authority Score maison sur 100 (rank normalisé + diversité, pénalisé par la toxicité) */
   authority_score: number;
-  /** domain_rank DataForSEO (0-100) */
+  /** domain_rank normalisé sur 0-100 (échelle source DataForSEO : 0-1000) */
   domain_rank: number;
+  /** rank brut renvoyé par DataForSEO, conservé pour audit du calcul */
+  domain_rank_raw: number;
   referring_domains: number;
   referring_main_domains: number;
   backlinks_total: number;
@@ -25,6 +64,13 @@ export interface AuthorityData {
   first_seen: string | null;
   top_referring_domains: { domain: string; rank: number; backlinks: number }[];
   top_anchors: string[];
+  top_anchors_detail: { anchor: string; count: number }[];
+  toxicity: BacklinkToxicity | null;
+  organic_visibility?: OrganicVisibility | null;
+  /** Fiabilité de la mesure selon la complétude de la réponse DataForSEO */
+  confidence: 'high' | 'medium' | 'low';
+  confidence_reason: string;
+  calibration_version: number;
   data_source: 'dataforseo' | 'unavailable';
   unavailable_reason?: string;
   fetched_at: string;
@@ -35,29 +81,152 @@ export function hasAuthorityCredentials(): boolean {
 }
 
 /**
- * Normalise le rank DataForSEO (échelle backlinks 0–1000) vers une échelle 0–100.
- * Certains endpoints renvoient déjà du 0–100 : on ne divise que si > 100.
+ * Normalise le rank DataForSEO vers une échelle 0-100.
+ *
+ * L'échelle backlinks DataForSEO est 0–1000 et logarithmique : une division
+ * linéaire par 10 attribuait 100/100 à tout domaine à rank 1000, y compris des
+ * sites réellement à ~38/100 chez les autres fournisseurs. On applique donc une
+ * courbe puissance calibrée (1000 → 95, 600 → 38, 300 → 11, 100 → 1,5).
  */
-export function normalizeDomainRank(rawRank: number): number {
+export function normalizeDomainRank(rawRank: number, scale: 1000 | 100 = 1000): number {
   const r = Math.max(0, rawRank || 0);
-  return Math.round(r > 100 ? r / 10 : r);
+  if (scale === 100 || (r > 0 && r <= 100 && scale !== 1000)) return Math.round(Math.min(100, r));
+  const ratio = Math.min(1, r / 1000);
+  return Math.round(95 * Math.pow(ratio, 1.8) * 10) / 10;
 }
 
-/** Score d'autorité déterministe : 60 % domain_rank (0-100), 40 % diversité (log10 des domaines référents). */
-export function computeAuthorityScore(domainRank: number, referringDomains: number): number {
+/**
+ * Score d'autorité déterministe et borné à 92 (aucune mesure propriétaire ne
+ * justifie un 100/100) :
+ *   60 % rank normalisé + 40 % diversité des domaines référents pondérée par la
+ *   qualité moyenne des référents, puis pénalité de toxicité (max −45 %).
+ */
+export function computeAuthorityScore(
+  domainRank: number,
+  referringDomains: number,
+  opts?: { toxicityScore?: number; avgReferrerRank?: number },
+): number {
   const rankPart = Math.min(60, Math.max(0, Math.min(100, domainRank)) * 0.6);
-  const diversityPart = referringDomains > 0
-    ? Math.min(40, Math.round(Math.log10(referringDomains) * 11))
+  const rawDiversity = referringDomains > 0
+    ? Math.min(40, Math.log10(referringDomains) * 11)
     : 0;
-  return Math.max(0, Math.min(100, Math.round(rankPart + diversityPart)));
+  // Un référent moyen à rank 5/100 ne vaut pas un référent moyen à rank 50/100.
+  const quality = typeof opts?.avgReferrerRank === 'number'
+    ? Math.max(0.4, Math.min(1, 0.4 + (opts.avgReferrerRank / 100) * 1.2))
+    : 1;
+  const diversityPart = rawDiversity * quality;
+  const penalty = Math.min(0.45, Math.max(0, (opts?.toxicityScore ?? 0) / 100) * 0.5);
+  const score = (rankPart + diversityPart) * (1 - penalty);
+  return Math.max(0, Math.min(92, Math.round(score)));
 }
 
+const GENERIC_ANCHORS = [
+  'site web', 'site internet', 'cliquez ici', 'ici', 'lien', 'voir', 'en savoir plus',
+  'click here', 'read more', 'website', 'home', 'accueil', 'www', 'visiter', 'plus',
+];
+const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/u;
+
+function isUnnaturalAnchor(anchor: string): boolean {
+  const a = (anchor || '').trim().toLowerCase();
+  if (!a) return true;
+  if (EMOJI_RE.test(anchor)) return true;
+  if (/^(https?:\/\/|www\.)/.test(a) || /\.(fr|com|net|org|io)(\/|$)/.test(a)) return true;
+  return GENERIC_ANCHORS.includes(a);
+}
+
+/**
+ * Toxicité du profil de liens — 100 % déterministe, calculée depuis les données
+ * déjà payées (summary + top domaines référents). Aucun appel supplémentaire.
+ */
+export function computeBacklinkToxicity(input: {
+  anchors: { anchor: string; count: number }[];
+  topReferringDomains: { domain: string; rank: number; backlinks: number }[];
+  backlinksTotal: number;
+  referringDomains: number;
+  brokenBacklinks: number;
+  dofollowRatio: number;
+}): BacklinkToxicity {
+  const totalAnchorCount = input.anchors.reduce((s, a) => s + (a.count || 0), 0);
+  const sorted = [...input.anchors].sort((a, b) => (b.count || 0) - (a.count || 0));
+  const dominant = sorted[0] || null;
+  const dominantRatio = totalAnchorCount > 0 && dominant
+    ? Math.round((dominant.count / totalAnchorCount) * 100) / 100
+    : 0;
+  const unnaturalCount = input.anchors
+    .filter((a) => isUnnaturalAnchor(a.anchor))
+    .reduce((s, a) => s + (a.count || 0), 0);
+  const unnaturalRatio = totalAnchorCount > 0
+    ? Math.round((unnaturalCount / totalAnchorCount) * 100) / 100
+    : 0;
+  const ranks = input.topReferringDomains.map((d) => normalizeDomainRank(d.rank));
+  const avgReferrerRank = ranks.length
+    ? Math.round((ranks.reduce((s, r) => s + r, 0) / ranks.length) * 10) / 10
+    : 0;
+  const linksPerDomain = input.referringDomains > 0
+    ? Math.round((input.backlinksTotal / input.referringDomains) * 10) / 10
+    : 0;
+  const brokenRatio = input.backlinksTotal > 0
+    ? Math.round((input.brokenBacklinks / input.backlinksTotal) * 100) / 100
+    : 0;
+
+  const signals: string[] = [];
+  let score = 0;
+
+  if (dominantRatio >= 0.3) {
+    score += Math.min(35, Math.round((dominantRatio - 0.3) * 100) + 15);
+    signals.push(`ancre « ${dominant?.anchor} » répétée sur ${Math.round(dominantRatio * 100)} % de l'échantillon`);
+  }
+  if (unnaturalRatio >= 0.25) {
+    score += Math.min(25, Math.round((unnaturalRatio - 0.25) * 60) + 10);
+    signals.push(`${Math.round(unnaturalRatio * 100)} % d'ancres non naturelles (URL nue, mot générique, emoji)`);
+  }
+  if (ranks.length >= 3 && avgReferrerRank < 15) {
+    score += 20;
+    signals.push(`principaux référents à faible autorité (rank moyen ${avgReferrerRank}/100)`);
+  }
+  if (linksPerDomain >= 25) {
+    score += Math.min(20, Math.round(linksPerDomain / 5));
+    signals.push(`${linksPerDomain} liens par domaine référent en moyenne — empreinte de type annuaire`);
+  }
+  if (brokenRatio >= 0.1) {
+    score += 10;
+    signals.push(`${Math.round(brokenRatio * 100)} % de liens entrants cassés`);
+  }
+  if (input.dofollowRatio >= 98 && input.referringDomains > 50) {
+    score += 5;
+    signals.push('quasi 100 % de liens dofollow — profil peu naturel');
+  }
+
+  const toxicity = Math.max(0, Math.min(100, score));
+  const verdict: BacklinkToxicity['verdict'] = toxicity >= 60 ? 'pollue' : toxicity >= 35 ? 'a_surveiller' : 'sain';
+  const recommendation = verdict === 'pollue'
+    ? "Priorité au nettoyage : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens."
+    : verdict === 'a_surveiller'
+      ? "Surveillez la répétition d'ancres et la qualité des nouveaux référents ; un désaveu ciblé peut être utile sur les domaines les plus faibles."
+      : 'Profil de liens cohérent : aucune action de désaveu nécessaire à ce stade.';
+
+  return {
+    toxicity_score: toxicity,
+    verdict,
+    dominant_anchor_ratio: dominantRatio,
+    dominant_anchor: dominant?.anchor ?? null,
+    unnatural_anchor_ratio: unnaturalRatio,
+    avg_referrer_rank: avgReferrerRank,
+    links_per_domain: linksPerDomain,
+    broken_ratio: brokenRatio,
+    signals,
+    recommendation,
+  };
+}
 
 function unavailable(domain: string, reason: string): AuthorityData {
   return {
-    domain, authority_score: 0, domain_rank: 0, referring_domains: 0, referring_main_domains: 0,
-    backlinks_total: 0, dofollow_ratio: 0, broken_backlinks: 0, first_seen: null,
-    top_referring_domains: [], top_anchors: [],
+    domain, authority_score: 0, domain_rank: 0, domain_rank_raw: 0, referring_domains: 0,
+    referring_main_domains: 0, backlinks_total: 0, dofollow_ratio: 0, broken_backlinks: 0,
+    first_seen: null, top_referring_domains: [], top_anchors: [], top_anchors_detail: [],
+    toxicity: null, organic_visibility: null,
+    confidence: 'low', confidence_reason: reason,
+    calibration_version: AUTHORITY_CALIBRATION_VERSION,
     data_source: 'unavailable', unavailable_reason: reason, fetched_at: new Date().toISOString(),
   };
 }
@@ -75,28 +244,40 @@ async function dfsPost(path: string, payload: unknown, label: string, target: st
   return await resp.json();
 }
 
+/** Convertit `referring_links_anchors` (objet ancre→volume) en liste triée. */
+function extractAnchors(raw: unknown): { anchor: string; count: number }[] {
+  if (!raw || typeof raw !== 'object') return [];
+  return Object.entries(raw as Record<string, unknown>)
+    .map(([anchor, count]) => ({ anchor, count: Number(count) || 0 }))
+    .filter((a) => a.anchor)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 25);
+}
+
 /**
  * Récupère l'autorité de domaine + profil de backlinks.
  * Ne throw jamais : renvoie un objet `unavailable` explicite (pas de silence).
  */
 export async function fetchDomainAuthority(
   rawDomain: string,
-  opts?: { ttlMinutes?: number; skipCache?: boolean },
+  opts?: { ttlMinutes?: number; skipCache?: boolean; organicVisibility?: OrganicVisibility | null },
 ): Promise<AuthorityData> {
   const domain = rawDomain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
   if (!domain) return unavailable(rawDomain, 'domaine invalide');
   if (!hasAuthorityCredentials()) return unavailable(domain, 'identifiants DataForSEO absents');
 
-  const key = cacheKey('domain-authority', { domain });
+  const key = cacheKey('domain-authority', { domain, v: AUTHORITY_CALIBRATION_VERSION });
   if (!opts?.skipCache) {
     const cached = await getCached(key);
-    if (cached?.data_source === 'dataforseo') return cached as AuthorityData;
+    if (cached?.data_source === 'dataforseo' && cached?.calibration_version === AUTHORITY_CALIBRATION_VERSION) {
+      return { ...(cached as AuthorityData), organic_visibility: opts?.organicVisibility ?? (cached as AuthorityData).organic_visibility ?? null };
+    }
   }
 
   try {
     const [summaryRes, refRes] = await Promise.allSettled([
-      dfsPost('backlinks/summary/live', [{ target: domain, internal_list_limit: 5, include_subdomains: true }], 'backlinks/summary/live', domain),
-      dfsPost('backlinks/referring_domains/live', [{ target: domain, limit: 5, order_by: ['rank,desc'] }], 'backlinks/referring_domains/live', domain),
+      dfsPost('backlinks/summary/live', [{ target: domain, internal_list_limit: 10, include_subdomains: true }], 'backlinks/summary/live', domain),
+      dfsPost('backlinks/referring_domains/live', [{ target: domain, limit: 10, order_by: ['rank,desc'] }], 'backlinks/referring_domains/live', domain),
     ]);
 
     if (summaryRes.status !== 'fulfilled') {
@@ -108,25 +289,45 @@ export async function fetchDomainAuthority(
 
     const backlinksTotal = s.backlinks || 0;
     const dofollow = backlinksTotal > 0 ? Math.round(((backlinksTotal - (s.backlinks_nofollow || 0)) / backlinksTotal) * 100) : 0;
-    const domainRank = normalizeDomainRank(s.rank || s.target_rank || 0);
+    const rawRank = s.rank || s.target_rank || 0;
+    const domainRank = normalizeDomainRank(rawRank);
     const referringDomains = s.referring_domains || 0;
 
     let topRef: AuthorityData['top_referring_domains'] = [];
     if (refRes.status === 'fulfilled') {
       topRef = (refRes.value?.tasks?.[0]?.result?.[0]?.items || [])
-        .slice(0, 5)
+        .slice(0, 10)
         .map((r: any) => ({ domain: r.domain || '', rank: r.rank || 0, backlinks: r.backlinks || 0 }))
         .filter((r: any) => r.domain);
     }
 
-    const topAnchors: string[] = Array.isArray(s.referring_links_anchors)
-      ? Object.keys(s.referring_links_anchors).slice(0, 5)
-      : Object.keys(s.referring_links_anchors || {}).slice(0, 5);
+    const anchors = extractAnchors(s.referring_links_anchors);
+    const toxicity = computeBacklinkToxicity({
+      anchors,
+      topReferringDomains: topRef,
+      backlinksTotal,
+      referringDomains,
+      brokenBacklinks: s.broken_backlinks || 0,
+      dofollowRatio: dofollow,
+    });
+
+    // Confiance : la mesure vaut ce que vaut l'échantillon reçu.
+    let confidence: AuthorityData['confidence'] = 'high';
+    const missing: string[] = [];
+    if (refRes.status !== 'fulfilled' || topRef.length === 0) missing.push('domaines référents non détaillés');
+    if (anchors.length === 0) missing.push("échantillon d'ancres absent");
+    if (!rawRank) missing.push('rank de domaine absent');
+    if (missing.length >= 2) confidence = 'low';
+    else if (missing.length === 1) confidence = 'medium';
 
     const result: AuthorityData = {
       domain,
-      authority_score: computeAuthorityScore(domainRank, referringDomains),
+      authority_score: computeAuthorityScore(domainRank, referringDomains, {
+        toxicityScore: toxicity.toxicity_score,
+        avgReferrerRank: topRef.length ? toxicity.avg_referrer_rank : undefined,
+      }),
       domain_rank: domainRank,
+      domain_rank_raw: rawRank,
       referring_domains: referringDomains,
       referring_main_domains: s.referring_main_domains || 0,
       backlinks_total: backlinksTotal,
@@ -134,10 +335,22 @@ export async function fetchDomainAuthority(
       broken_backlinks: s.broken_backlinks || 0,
       first_seen: s.first_seen || null,
       top_referring_domains: topRef,
-      top_anchors: topAnchors,
+      top_anchors: anchors.slice(0, 8).map((a) => a.anchor),
+      top_anchors_detail: anchors.slice(0, 10),
+      toxicity,
+      organic_visibility: opts?.organicVisibility ?? null,
+      confidence,
+      confidence_reason: missing.length ? `échantillon partiel : ${missing.join(', ')}` : 'réponse DataForSEO complète',
+      calibration_version: AUTHORITY_CALIBRATION_VERSION,
       data_source: 'dataforseo',
       fetched_at: new Date().toISOString(),
     };
+
+    // Garde-fou anti-régression : un score quasi parfait est presque toujours
+    // un bug de normalisation, pas un domaine parfait.
+    if (result.authority_score >= 90) {
+      console.warn(`[domain-authority] score suspect ${result.authority_score}/100 sur ${domain} (rank brut ${rawRank}, ref_domains ${referringDomains}) — vérifier la calibration`);
+    }
 
     await setCache(key, 'domain-authority', result, opts?.ttlMinutes ?? 1440);
     return result;
@@ -153,15 +366,32 @@ export function buildAuthorityPromptSection(a: AuthorityData | null): string {
     return `AUTORITE / BACKLINKS : données indisponibles (${a.unavailable_reason || 'raison inconnue'}). N'invente aucun chiffre de backlinks ni d'Authority Score.`;
   }
   const refs = a.top_referring_domains.length
-    ? a.top_referring_domains.map(r => `${r.domain}(rank ${r.rank}, ${r.backlinks} liens)`).join(', ')
+    ? a.top_referring_domains.slice(0, 5).map(r => `${r.domain}(rank ${r.rank}, ${r.backlinks} liens)`).join(', ')
     : 'aucun domaine référent notable';
-  return [
+  const lines = [
     `AUTORITE / BACKLINKS (DataForSEO, chiffres réels — ne pas deviner) :`,
-    `- Authority Score Crawlers = ${a.authority_score}/100 (domain_rank DataForSEO=${a.domain_rank}/100)`,
+    `- Authority Score Crawlers = ${a.authority_score}/100 (estimation propriétaire, plafonnée à 92 ; rank source ${a.domain_rank_raw}/1000 normalisé à ${a.domain_rank}/100)`,
+    `- Fiabilité de la mesure : ${a.confidence} (${a.confidence_reason})`,
     `- Domaines référents = ${a.referring_domains} (dont domaines principaux : ${a.referring_main_domains})`,
     `- Backlinks totaux = ${a.backlinks_total}, ratio dofollow = ${a.dofollow_ratio}%, liens cassés = ${a.broken_backlinks}`,
     `- Premier backlink observé : ${a.first_seen || 'inconnu'}`,
     `- Top domaines référents : ${refs}`,
     a.top_anchors.length ? `- Ancres principales : ${a.top_anchors.join(', ')}` : `- Ancres principales : non exploitables`,
-  ].join('\n');
+  ];
+  if (a.toxicity) {
+    const t = a.toxicity;
+    lines.push(
+      `- TOXICITE DU PROFIL = ${t.toxicity_score}/100, verdict "${t.verdict}" (ancre dominante ${Math.round(t.dominant_anchor_ratio * 100)} %, ancres non naturelles ${Math.round(t.unnatural_anchor_ratio * 100)} %, rank moyen des référents ${t.avg_referrer_rank}/100, ${t.links_per_domain} liens/domaine)`,
+      t.signals.length ? `- Signaux de toxicité : ${t.signals.join(' ; ')}` : `- Signaux de toxicité : aucun`,
+      `- Action liens : ${t.recommendation}`,
+    );
+  }
+  const v = a.organic_visibility;
+  if (v && v.source === 'dataforseo_labs') {
+    lines.push(`- VISIBILITE ORGANIQUE : ${v.ranked_keywords ?? 'n/a'} mots-clés positionnés, trafic estimé ${v.estimated_traffic ?? 'n/a'}/mois, position moyenne ${v.average_position ?? 'n/a'}, top3=${v.top3 ?? 'n/a'}, top10=${v.top10 ?? 'n/a'}`);
+  } else {
+    lines.push(`- VISIBILITE ORGANIQUE : non mesurée dans cet audit. N'invente ni trafic ni position.`);
+  }
+  lines.push(`- IMPORTANT : l'Authority Score est une estimation propriétaire Crawlers, pas un score Semrush/Moz/Majestic. Ne la présente jamais comme un chiffre officiel.`);
+  return lines.join('\n');
 }

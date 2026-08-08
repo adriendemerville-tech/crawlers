@@ -128,12 +128,26 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     }
 
     // ── Bloc autorité / backlinks (cache 24 h par domaine) ──
-    const authorityData: AuthorityData | null = body.authorityData
+    let authorityData: AuthorityData | null = body.authorityData
       ?? marketData?.authorityData
       ?? await fetchDomainAuthority(domainWithoutWww).catch(() => null);
+    // Angle mort trafic/positions comblé sans appel payant supplémentaire.
+    if (authorityData && rankingOverview) {
+      authorityData = {
+        ...authorityData,
+        organic_visibility: {
+          estimated_traffic: Math.round(rankingOverview.etv ?? 0) || null,
+          ranked_keywords: rankingOverview.total_ranked_keywords ?? null,
+          average_position: rankingOverview.average_position_global ?? null,
+          top3: rankingOverview.distribution?.top3 ?? null,
+          top10: rankingOverview.distribution?.top10 ?? null,
+          source: 'dataforseo_labs',
+        },
+      };
+    }
     marketSection += `\n${buildAuthorityPromptSection(authorityData)}`;
     if (authorityData?.data_source === 'dataforseo') {
-      console.log(`[strategic-synthesis] AS=${authorityData.authority_score}/100, ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
+      console.log(`[strategic-synthesis] AS=${authorityData.authority_score}/100 (conf. ${authorityData.confidence}), toxicité=${authorityData.toxicity?.toxicity_score ?? 'n/a'}/100, ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
     } else {
       console.warn(`[strategic-synthesis] Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
     }
