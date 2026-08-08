@@ -273,6 +273,14 @@ export function StrategicInsights({
             <KeywordModuleSection analysis={analysis} domain={domain} />
           </RevealWrapper>
 
+          {/* 7b. Marché & Autorité (backlinks + Authority Score /100) */}
+          {analysis.domain_authority && (
+            <RevealWrapper delay={2500} isDataCard enabled={progressiveReveal}>
+              <DomainAuthorityCard authority={analysis.domain_authority} />
+            </RevealWrapper>
+          )}
+
+
           {/* 8. Score AEO (Answer Engine Optimization) */}
           {auditResult && (
             <RevealWrapper delay={4000} isDataCard enabled={progressiveReveal}>
