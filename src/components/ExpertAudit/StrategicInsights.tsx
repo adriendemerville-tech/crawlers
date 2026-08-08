@@ -20,6 +20,7 @@ import { SocialSignalsCard } from './SocialSignalsCard';
 import { MarketIntelligenceCard } from './MarketIntelligenceCard';
 import { PremiumRoadmapCard } from './PremiumRoadmapCard';
 import { KeywordModuleSection } from './KeywordModuleSection';
+import { DomainAuthorityCard } from './DomainAuthorityCard';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 import { LLMVisibilityCard } from './LLMVisibilityCard';
 import { ClientTargetsCard } from './ClientTargetsCard';
