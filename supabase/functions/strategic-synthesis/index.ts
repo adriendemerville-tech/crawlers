@@ -10,6 +10,7 @@ import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
+import { fetchDomainAuthority, buildAuthorityPromptSection, type AuthorityData } from '../_shared/domainAuthority.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -125,6 +126,19 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     if (rankingOverview) {
       marketSection += `\n📈 SEO: ${rankingOverview.total_ranked_keywords} mots-clés, pos moy=${rankingOverview.average_position_global}, Top10=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}`;
     }
+
+    // ── Bloc autorité / backlinks (cache 24 h par domaine) ──
+    const authorityData: AuthorityData | null = body.authorityData
+      ?? marketData?.authorityData
+      ?? await fetchDomainAuthority(domainWithoutWww).catch(() => null);
+    marketSection += `\n${buildAuthorityPromptSection(authorityData)}`;
+    if (authorityData?.data_source === 'dataforseo') {
+      console.log(`[strategic-synthesis] AS=${authorityData.authority_score}/100, ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
+    } else {
+      console.warn(`[strategic-synthesis] Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
+    }
+
+
 
     let eeatSection = '';
     if (eeatSignals) {
@@ -261,7 +275,9 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       const factualCitation = computeFactualCitationScores({
         rankingOverview,
         crawlData: toolsData || null,
-        backlinkData: null,
+        backlinkData: authorityData?.data_source === 'dataforseo'
+          ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains }
+          : null,
         gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
       });
 
@@ -385,6 +401,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
         ...parsedAnalysis,
         raw_market_data: mktData,
         ranking_overview: rankingOverview,
+        domain_authority: authorityData,
         google_my_business: gmbData,
         toolsData: null,
         llm_visibility_raw: llmData,

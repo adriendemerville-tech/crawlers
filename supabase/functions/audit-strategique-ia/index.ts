@@ -14,6 +14,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts';
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts';
+import { fetchDomainAuthority, type AuthorityData } from '../_shared/domainAuthority.ts';
 import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts';
 import { handleRequest } from '../_shared/serveHandler.ts';
 
@@ -136,6 +137,7 @@ Deno.serve(handleRequest(async (req) => {
     let eeatSignals: EEATSignals;
     let marketData: MarketData | null;
     let rankingOverview: RankingOverview | null;
+    let authorityData: AuthorityData | null = null;
     let founderInfo: FounderInfo;
     let localCompetitorData: { name: string; url: string; rank: number; score?: number } | null = null;
     let localCompetitorsAll: { name: string; url: string; rank: number; score?: number }[] = [];
@@ -154,6 +156,7 @@ Deno.serve(handleRequest(async (req) => {
       eeatSignals = cachedContext.eeatSignals || { ...DEFAULT_EEAT_SIGNALS, linkedInUrls: [], detectedSocialUrls: [] };
       marketData = cachedContext.marketData || null;
       rankingOverview = cachedContext.rankingOverview || null;
+      authorityData = cachedContext.authorityData || null;
       founderInfo = cachedContext.founderInfo || { ...DEFAULT_FOUNDER_INFO };
       gmbData = cachedContext.gmbData || null;
       facebookPageInfo = cachedContext.facebookPageInfo || { ...DEFAULT_FACEBOOK_PAGE_INFO };
@@ -232,7 +235,7 @@ Deno.serve(handleRequest(async (req) => {
       // ── WAVE 2: Market + LLM + Competitor + Founder + GMB + Facebook ──
       console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
-      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult] = await Promise.allSettled([
+      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult, authorityResult] = await Promise.allSettled([
         withDeadline(fetchMarketData(domain, context, pageContentContext, url, existingKeywords), 120_000, 'market_data'),
         needsLlmCheck && supabaseUrl && supabaseAnonKey
           ? withDeadline((async () => { const r = await fetch(`${supabaseUrl}/functions/v1/check-llm`, { method: 'POST', headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ url, lang: 'fr' }), signal: AbortSignal.timeout(40000) }); if (!r.ok) { await r.text(); return null; } const d = await r.json(); return d.success && d.data ? d.data : null; })(), 45_000, 'check_llm') : Promise.resolve(null),
@@ -240,6 +243,7 @@ Deno.serve(handleRequest(async (req) => {
         !isContentMode ? withDeadline(searchFounderProfile(domain, context.location), 15_000, 'founder') : Promise.resolve(null),
         !isContentMode && context.locationCode ? withDeadline(detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode), 12_000, 'gmb') : Promise.resolve(null),
         !isContentMode && context.locationCode ? withDeadline(searchFacebookPage(context.brandName, context.sector, context.locationCode, context.languageCode), 10_000, 'facebook_page') : Promise.resolve(null),
+        withDeadline(fetchDomainAuthority(domainWithoutWww), 30_000, 'domain_authority'),
       ]);
 
       marketData = mktDataResult.status === 'fulfilled' ? mktDataResult.value : null;
@@ -248,6 +252,9 @@ Deno.serve(handleRequest(async (req) => {
       founderInfo = (founderResult.status === 'fulfilled' && founderResult.value) ? founderResult.value : { ...DEFAULT_FOUNDER_INFO };
       if (gmbResult.status === 'fulfilled' && gmbResult.value) gmbData = gmbResult.value;
       if (fbResult.status === 'fulfilled' && fbResult.value) facebookPageInfo = fbResult.value;
+      authorityData = authorityResult.status === 'fulfilled' ? authorityResult.value : null;
+      if (authorityData?.data_source === 'dataforseo') console.log(`🔗 Autorité: AS=${authorityData.authority_score}/100, ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
+      else console.warn(`⚠️ Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
@@ -257,7 +264,7 @@ Deno.serve(handleRequest(async (req) => {
     const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
     console.log(`🎯 Entité: "${resolvedEntityName}" (${(brandConfidence * 100).toFixed(0)}%)`);
 
-    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null };
+    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, authorityData, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null };
 
     // ═══ CHECK DEADLINE ═══
     const remainingBeforeLLM = GLOBAL_DEADLINE - (Date.now() - startTime);
@@ -271,7 +278,7 @@ Deno.serve(handleRequest(async (req) => {
     // ═══ LLM ANALYSIS ═══
     console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo, authorityData);
     userPrompt = `🌐 LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
 
     const pageTypeLabels: Record<PageType, string> = { editorial: '📝 MODE ÉDITORIAL', product: '🛒 MODE PRODUIT', deep: '📄 MODE PAGE PROFONDE', homepage: '🏷️' };
@@ -347,7 +354,7 @@ Deno.serve(handleRequest(async (req) => {
 
     if (useParallelMode) {
       console.log('🚀 Parallel mode: 3 focused LLM calls...');
-      const factualCitation = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
+      const factualCitation = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: authorityData?.data_source === 'dataforseo' ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains } : null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
       const parallelTimeout = Math.min(remainingMs, 150_000);
       const [resultA, resultB, resultC] = await Promise.all([
         callWithFallback(SYSTEM_PROMPT_A, buildUserPromptA(url, domain, userPrompt), 'A-identity', parallelTimeout),
@@ -365,7 +372,7 @@ Deno.serve(handleRequest(async (req) => {
       parsedAnalysis = mergeParallelResults(resultA, resultB, resultC);
       console.log(`✅ Merged in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     } else {
-      const factualCitationMono = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
+      const factualCitationMono = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: authorityData?.data_source === 'dataforseo' ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains } : null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
       userPrompt = userPrompt + '\n' + factualCitationMono.factual_summary;
       const systemPromptForPage = getSystemPromptForPageType(pageType);
       const primaryModel = body._modelOverride || 'google/gemini-3.1-pro-preview';
@@ -616,7 +623,7 @@ Réponds en JSON STRICT:
     }
 
     // ═══ BUILD FINAL RESULT ═══
-    const result = { success: true, data: { url, domain, scannedAt: new Date().toISOString(), isContentMode, pageType, ...parsedAnalysis, raw_market_data: marketData, ranking_overview: rankingOverview, google_my_business: gmbData, toolsData: null, llm_visibility_raw: effectiveToolsData.llm, _cachedContext: cachedContextOut } };
+    const result = { success: true, data: { url, domain, scannedAt: new Date().toISOString(), isContentMode, pageType, ...parsedAnalysis, raw_market_data: marketData, ranking_overview: rankingOverview, domain_authority: authorityData, google_my_business: gmbData, toolsData: null, llm_visibility_raw: effectiveToolsData.llm, _cachedContext: cachedContextOut } };
     console.log(`✅ AUDIT TERMINÉ (${((Date.now() - startTime) / 1000).toFixed(1)}s)`);
 
     // ═══ SAVE & RETURN (fire-and-forget) ═══
