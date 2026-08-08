@@ -2,6 +2,7 @@
  * LLM system prompts, user prompt builder, and tools data formatter.
  */
 import type { ToolsData, EEATSignals, MarketData, RankingOverview, FounderInfo, FacebookPageInfo, PageType } from './types.ts';
+import { buildAuthorityPromptSection, type AuthorityData } from '../domainAuthority.ts';
 
 // ==================== TOOLS DATA → MARKDOWN ====================
 
