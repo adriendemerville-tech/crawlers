@@ -3035,9 +3035,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         console.error(`[Marina] Upload error:`, uploadError);
       }
 
-      const { data: signedUrlData } = await sb.storage
-        .from('shared-reports')
-        .createSignedUrl(fileName, 7 * 24 * 60 * 60);
+      // Signature du rapport : une seule tentative silencieuse laissait le job
+      // sans report_url. On réessaie et on trace explicitement l'échec.
+      let signedUrlData: { signedUrl: string } | null = null;
+      for (let attempt = 1; attempt <= 3 && !signedUrlData?.signedUrl; attempt++) {
+        const { data: signed, error: signError } = await sb.storage
+          .from('shared-reports')
+          .createSignedUrl(fileName, 7 * 24 * 60 * 60);
+        if (signed?.signedUrl) {
+          signedUrlData = signed as { signedUrl: string };
+          break;
+        }
+        console.warn(`[Marina] createSignedUrl attempt ${attempt} failed: ${signError?.message || 'unknown'}`);
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));
+      }
+      if (!signedUrlData?.signedUrl) {
+        console.error(`[Marina] ❌ report_url indisponible pour ${jobId} (HTML présent: ${fileName})`);
+      }
+
 
       // Now re-upload with the signed URL injected as meta tag for the "Copy link" button
       const reportDownloadUrl = signedUrlData?.signedUrl || '';
