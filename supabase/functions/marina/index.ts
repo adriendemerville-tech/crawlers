@@ -2052,6 +2052,32 @@ async function writeSiteScopeCache(sb: any, domain: string, userId: string, patc
   }
 }
 
+// ─── Freins de crawlabilité observés (partagés divulgation + portée et limites) ───
+function buildCrawlabilityBlockers(
+  lang: string,
+  ctx: { expertData?: any; crawlSnapshot?: any },
+): string[] {
+  const t = (fr: string, en: string, es: string) => (lang === 'en' ? en : lang === 'es' ? es : fr);
+  const pagesAnalyzed = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
+  const pagesKnown = ctx.crawlSnapshot?.total_pages || null;
+  const blockers: string[] = [];
+  const robots = ctx.expertData?.checks?.robots || ctx.expertData?.robots || null;
+  if (robots && robots.blocksAll) blockers.push(t('robots.txt bloque tout ou partie du crawl', 'robots.txt blocks all or part of crawling', 'robots.txt bloquea todo o parte del rastreo'));
+  if (ctx.expertData?.scores?.performance?.lcp && Number(ctx.expertData.scores.performance.lcp) > 4)
+    blockers.push(t('LCP supérieur à 4s : rendu lent, budget de crawl consommé', 'LCP above 4s: slow rendering, crawl budget consumed', 'LCP superior a 4s: renderizado lento'));
+  if (pagesAnalyzed && pagesKnown && pagesAnalyzed < pagesKnown)
+    blockers.push(
+      t(
+        `Crawl partiel : ${pagesAnalyzed} pages explorées sur ${pagesKnown} connues`,
+        `Partial crawl: ${pagesAnalyzed} of ${pagesKnown} known pages explored`,
+        `Rastreo parcial: ${pagesAnalyzed} de ${pagesKnown} páginas conocidas`,
+      ),
+    );
+  if (!pagesAnalyzed)
+    blockers.push(t('Aucun crawl multi-pages exploitable : le périmètre est réduit à la page auditée', 'No usable multi-page crawl: scope limited to the audited page', 'Sin rastreo multipágina utilizable: alcance limitado a la página auditada'));
+  return blockers;
+}
+
 // ─── Section finale : divulgation méthodologique ───
 function buildDisclosureSectionHTML(
   lang: string,
@@ -2079,21 +2105,8 @@ function buildDisclosureSectionHTML(
     0;
   const cocoonNodes = ctx.cocoonResult?.stats?.nodes_count || 0;
 
-  const blockers: string[] = [];
-  const robots = ctx.expertData?.checks?.robots || ctx.expertData?.robots || null;
-  if (robots && robots.blocksAll) blockers.push(t('robots.txt bloque tout ou partie du crawl', 'robots.txt blocks all or part of crawling', 'robots.txt bloquea todo o parte del rastreo'));
-  if (ctx.expertData?.scores?.performance?.lcp && Number(ctx.expertData.scores.performance.lcp) > 4)
-    blockers.push(t('LCP supérieur à 4s : rendu lent, budget de crawl consommé', 'LCP above 4s: slow rendering, crawl budget consumed', 'LCP superior a 4s: renderizado lento'));
-  if (pagesAnalyzed && pagesKnown && pagesAnalyzed < pagesKnown)
-    blockers.push(
-      t(
-        `Crawl partiel : ${pagesAnalyzed} pages explorées sur ${pagesKnown} connues`,
-        `Partial crawl: ${pagesAnalyzed} of ${pagesKnown} known pages explored`,
-        `Rastreo parcial: ${pagesAnalyzed} de ${pagesKnown} páginas conocidas`,
-      ),
-    );
-  if (!pagesAnalyzed)
-    blockers.push(t('Aucun crawl multi-pages exploitable : le périmètre est réduit à la page auditée', 'No usable multi-page crawl: scope limited to the audited page', 'Sin rastreo multipágina utilizable: alcance limitado a la página auditada'));
+  const blockers = buildCrawlabilityBlockers(lang, ctx);
+
 
   const li = (s: string) => `<li style="margin:0 0 6px 0;">${s}</li>`;
 
