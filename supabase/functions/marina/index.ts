@@ -11,6 +11,7 @@ import {
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
+import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
 
 
 import { corsHeaders } from '../_shared/cors.ts';
