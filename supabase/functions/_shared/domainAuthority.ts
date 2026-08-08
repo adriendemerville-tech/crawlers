@@ -34,14 +34,24 @@ export function hasAuthorityCredentials(): boolean {
   return !!(DATAFORSEO_LOGIN && DATAFORSEO_PASSWORD);
 }
 
-/** Score d'autorité déterministe : 60 % domain_rank, 40 % diversité (log10 des domaines référents). */
+/**
+ * Normalise le rank DataForSEO (échelle backlinks 0–1000) vers une échelle 0–100.
+ * Certains endpoints renvoient déjà du 0–100 : on ne divise que si > 100.
+ */
+export function normalizeDomainRank(rawRank: number): number {
+  const r = Math.max(0, rawRank || 0);
+  return Math.round(r > 100 ? r / 10 : r);
+}
+
+/** Score d'autorité déterministe : 60 % domain_rank (0-100), 40 % diversité (log10 des domaines référents). */
 export function computeAuthorityScore(domainRank: number, referringDomains: number): number {
-  const rankPart = Math.min(60, Math.max(0, domainRank) * 0.6);
+  const rankPart = Math.min(60, Math.max(0, Math.min(100, domainRank)) * 0.6);
   const diversityPart = referringDomains > 0
-    ? Math.min(40, Math.round(Math.log10(referringDomains) * 16))
+    ? Math.min(40, Math.round(Math.log10(referringDomains) * 11))
     : 0;
   return Math.max(0, Math.min(100, Math.round(rankPart + diversityPart)));
 }
+
 
 function unavailable(domain: string, reason: string): AuthorityData {
   return {
