@@ -1632,7 +1632,13 @@ function compileMarinaReport(
     .marina-separator { background: linear-gradient(90deg, transparent, ${headerColor}, transparent) !important; }
   ` : '';
 
+  // « Portée et limites » : contrat non négociable — la section est toujours
+  // présente. Si l'appelant n'a pas fourni de version enrichie par les signaux
+  // collectés, on en génère une dès le départ à partir du nom de domaine.
+  const scopeLimitsHtml = sectionHTMLs.scopeLimits || renderScopeLimitsHTML({ domain, url, lang });
+
   const compiled = `<!DOCTYPE html>
+
 
 <html lang="${lang}">
 <head>
