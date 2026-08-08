@@ -10,6 +10,8 @@ import {
 } from '../_shared/topPriorities.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
+import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
+
 
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
@@ -3035,9 +3037,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         console.error(`[Marina] Upload error:`, uploadError);
       }
 
-      const { data: signedUrlData } = await sb.storage
-        .from('shared-reports')
-        .createSignedUrl(fileName, 7 * 24 * 60 * 60);
+      // Signature du rapport : une seule tentative silencieuse laissait le job
+      // sans report_url. On réessaie et on trace explicitement l'échec.
+      let signedUrlData: { signedUrl: string } | null = null;
+      for (let attempt = 1; attempt <= 3 && !signedUrlData?.signedUrl; attempt++) {
+        const { data: signed, error: signError } = await sb.storage
+          .from('shared-reports')
+          .createSignedUrl(fileName, 7 * 24 * 60 * 60);
+        if (signed?.signedUrl) {
+          signedUrlData = signed as { signedUrl: string };
+          break;
+        }
+        console.warn(`[Marina] createSignedUrl attempt ${attempt} failed: ${signError?.message || 'unknown'}`);
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));
+      }
+      if (!signedUrlData?.signedUrl) {
+        console.error(`[Marina] ❌ report_url indisponible pour ${jobId} (HTML présent: ${fileName})`);
+      }
+
 
       // Now re-upload with the signed URL injected as meta tag for the "Copy link" button
       const reportDownloadUrl = signedUrlData?.signedUrl || '';
@@ -3111,7 +3128,38 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // Non-blocking: don't fail the job if webhook fails
       }
 
+      // ─── Step 5bis: Données brutes en BDD pour CHAQUE URL du batch ───
+      // Sans cette écriture, seules les URLs passées par le crawl multi-pages
+      // laissaient une trace dans audit_raw_data (recalcul impossible ensuite).
+      await saveRawAuditData({
+        userId: parentJob.user_id,
+        url,
+        domain,
+        auditType: 'marina',
+        rawPayload: {
+          expert: {
+            totalScore: expertData?.totalScore ?? null,
+            maxScore: expertData?.maxScore ?? null,
+            scores: expertData?.scores || {},
+            recommendations: expertData?.recommendations || [],
+          },
+          strategic: {
+            overallScore: strategicData?.overallScore ?? null,
+            scores: strategicData?.scores || {},
+            executive_roadmap: strategicData?.executive_roadmap || [],
+            keyword_positioning: strategicData?.keyword_positioning || null,
+          },
+          llm_visibility: llmVisibilityData || null,
+          cocoon: cocoonResult ? { stats: cocoonResult.stats || {}, cluster_summary: cocoonResult.cluster_summary || {} } : null,
+          crawl_snapshot: crawlSnapshot ? { crawled_pages: crawlSnapshot.crawled_pages, total_pages: crawlSnapshot.total_pages } : null,
+          report_path: fileName,
+          job_id: jobId,
+        },
+        sourceFunctions: ['marina', 'expert-audit', 'audit-strategique-ia'],
+      }).catch((e) => console.warn('[Marina] saveRawAuditData failed (non-fatal):', e));
+
       // ─── Step 6: Persist structured training data for ML ───
+
       try {
         const scores = expertData?.scores || {};
         await sb.from('marina_training_data').upsert({
