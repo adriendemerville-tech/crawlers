@@ -1032,7 +1032,8 @@ export function CocoonForceGraph3D({
       }
     }
 
-    simulate3D(gNodes, gLinks, 400);
+    // Grands graphes : moins d'itérations (la répulsion est échantillonnée)
+    simulate3D(gNodes, gLinks, gNodes.length > 600 ? 140 : 400);
 
     // Filter links by visible juice types and link directions
     let filteredLinks = visibleJuiceTypes && visibleJuiceTypes.size > 0
