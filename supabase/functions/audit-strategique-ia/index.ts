@@ -354,7 +354,7 @@ Deno.serve(handleRequest(async (req) => {
 
     if (useParallelMode) {
       console.log('🚀 Parallel mode: 3 focused LLM calls...');
-      const factualCitation = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
+      const factualCitation = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: authorityData?.data_source === 'dataforseo' ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains } : null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
       const parallelTimeout = Math.min(remainingMs, 150_000);
       const [resultA, resultB, resultC] = await Promise.all([
         callWithFallback(SYSTEM_PROMPT_A, buildUserPromptA(url, domain, userPrompt), 'A-identity', parallelTimeout),
