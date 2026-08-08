@@ -232,8 +232,12 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
   const disclosureSection = disclosure
     ? `<section class="marina-batch-disclosure" style="page-break-before:always;">${disclosure}</section>`
     : '';
+  const scopeLimitsSection = scopeLimits
+    ? `<section class="marina-batch-disclosure" style="page-break-before:always;">${scopeLimits}</section>`
+    : '';
 
   return `<!DOCTYPE html>
+
 <html lang="fr">
 <head>
 ${head}
