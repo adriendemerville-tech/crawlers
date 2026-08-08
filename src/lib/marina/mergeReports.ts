@@ -252,6 +252,8 @@ ${cover}
 ${sharedSection}
 ${sections}
 ${disclosureSection}
+${scopeLimitsSection}
+
 </body>
 </html>`;
 }
