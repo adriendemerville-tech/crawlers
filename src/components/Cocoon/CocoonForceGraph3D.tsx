@@ -1217,7 +1217,10 @@ export function CocoonForceGraph3D({
 
       {/* Stats overlay */}
       <div className={`absolute top-4 right-14 text-[10px] font-mono space-y-0.5 text-right pointer-events-none ${isDayMode ? 'text-black/40' : 'text-white/30'}`}>
-        <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
+        <div>
+          {nodes.length} nœuds · {graphLinks.length} liens
+          {allNodes.length > nodes.length && ` (sur ${allNodes.length} pages analysées)`}
+        </div>
       </div>
 
       {/* Halo slider removed — now in header settings popover */}
