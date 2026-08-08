@@ -719,8 +719,6 @@ Réponds en JSON STRICT:
           }
         }
       } catch (wbErr) { console.warn('⚠️ Workbench persistence failed:', wbErr); }
-
-      } catch (wbErr) { console.warn('⚠️ Workbench persistence failed:', wbErr); }
     }
     trackAnalyzedUrl(url).catch(() => {});
     persistIdentityData(domain, parsedAnalysis, jargonDistance, businessModelDetectionRef).catch(() => {});
