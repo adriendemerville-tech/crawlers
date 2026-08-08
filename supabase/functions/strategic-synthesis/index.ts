@@ -275,7 +275,9 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       const factualCitation = computeFactualCitationScores({
         rankingOverview,
         crawlData: toolsData || null,
-        backlinkData: null,
+        backlinkData: authorityData?.data_source === 'dataforseo'
+          ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains }
+          : null,
         gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
       });
 
