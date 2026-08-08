@@ -552,6 +552,7 @@ export interface StrategicAnalysis {
   keyword_positioning?: KeywordPositioning;
   market_data_summary?: MarketDataSummary;
   ranking_overview?: RankingOverview;
+  domain_authority?: DomainAuthority | null;
   
   // Legacy format (backward compatibility)
   brand_identity?: BrandIdentity;
