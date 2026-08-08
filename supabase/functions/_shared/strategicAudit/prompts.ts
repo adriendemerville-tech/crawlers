@@ -190,7 +190,8 @@ export function getSystemPromptForPageType(pageType: PageType): string {
 export function buildUserPrompt(
   url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null,
   pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo,
-  rankingOverview?: RankingOverview | null, contentMode: boolean = false, facebookPageInfo?: FacebookPageInfo
+  rankingOverview?: RankingOverview | null, contentMode: boolean = false, facebookPageInfo?: FacebookPageInfo,
+  authorityData?: AuthorityData | null
 ): string {
   let marketSection = '';
   if (marketData) {
@@ -205,6 +206,10 @@ export function buildUserPrompt(
   if (rankingOverview) {
     marketSection += `\n📈 ÉTAT DES LIEUX SEO: ${rankingOverview.total_ranked_keywords} mots-clés positionnés, pos moy=${rankingOverview.average_position_global}, Top10 moy=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}\nDistrib: Top3=${rankingOverview.distribution.top3} Top10=${rankingOverview.distribution.top10} Top20=${rankingOverview.distribution.top20} Top50=${rankingOverview.distribution.top50} Top100=${rankingOverview.distribution.top100}\nTop positionnés: ${rankingOverview.top_keywords.slice(0, 5).map(k => `"${k.keyword}" pos${k.position}(${k.volume}vol)`).join(', ')}`;
   }
+
+  marketSection += `\n${buildAuthorityPromptSection(authorityData ?? null)}`;
+
+
 
   let eeatSection = '';
   if (eeatSignals) {
