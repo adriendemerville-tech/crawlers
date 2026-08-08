@@ -768,6 +768,36 @@ export function generateExpertReportHTML(
     // 6. Analyse stratégique des mots-clés (DataForSEO)
     strategicSections.push(keywordsSection);
 
+    // 6b. Marché & Autorité (backlinks DataForSEO + Authority Score /100)
+    const authority: any = (strategic as any)?.domain_authority || (result as any)?.domain_authority;
+    if (authority) {
+      const authTitle = language === 'en' ? 'Market & Authority (backlinks)' : language === 'es' ? 'Mercado y Autoridad (backlinks)' : 'Marché & Autorité (backlinks)';
+      if (authority.data_source !== 'dataforseo') {
+        strategicSections.push(sectionCard(authTitle, '#6b7280', '#f9fafb',
+          textBlock(language === 'en'
+            ? `Backlink data unavailable (${authority.unavailable_reason || 'unknown reason'}). No authority figure is estimated here.`
+            : `Données de backlinks indisponibles (${authority.unavailable_reason || 'raison inconnue'}). Aucun chiffre d'autorité n'est estimé ici.`)));
+      } else {
+        const refRows = (authority.top_referring_domains || []).map((r: any) =>
+          `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-weight: 500;">${r.domain}</td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #334155;">rank ${r.rank}</td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #334155;">${r.backlinks} liens</td></tr>`).join('');
+        strategicSections.push(sectionCard(authTitle, '#7c3aed', 'linear-gradient(135deg, #faf5ff, #fffbeb)',
+          `<div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px;">
+             <span style="font-size: 30px; font-weight: 700; color: #7c3aed;">${authority.authority_score}</span>
+             <span style="font-size: 13px; color: #6b7280;">/100 — Authority Score Crawlers</span>
+           </div>
+           ${labelValue('Méthode', '60 % domain rank DataForSEO + 40 % diversité des domaines référents (log10)')}
+           ${labelValue('Domain rank', `${authority.domain_rank}/100`)}
+           ${labelValue('Domaines référents', `${authority.referring_domains} (dont ${authority.referring_main_domains} domaines principaux)`)}
+           ${labelValue('Backlinks', `${authority.backlinks_total} — dofollow ${authority.dofollow_ratio} %`)}
+           ${labelValue('Liens cassés', String(authority.broken_backlinks))}
+           ${labelValue('Premier backlink observé', authority.first_seen || 'inconnu')}
+           ${(authority.top_anchors || []).length ? labelValue('Ancres dominantes', authority.top_anchors.join(', ')) : ''}
+           ${refRows ? `<table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-top: 10px;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Domaine référent</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Autorité</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Volume</th></tr></thead><tbody>${refRows}</tbody></table>` : ''}`));
+      }
+    }
+
+
+
     // 7. Score AEO (computed from result data)
     if (result.scores && result.rawData) {
       const aeoLabel = language === 'fr' ? 'Score AEO (Answer Engine Optimization)' : language === 'es' ? 'Score AEO (Answer Engine Optimization)' : 'AEO Score (Answer Engine Optimization)';
