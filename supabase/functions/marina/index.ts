@@ -3005,7 +3005,22 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
             }),
+            scopeLimits: renderScopeLimitsHTML({
+              domain,
+              url,
+              lang: detectedLang,
+              pagesAnalyzed: crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length || null,
+              pagesKnown: crawlSnapshot?.total_pages || null,
+              singlePage: !(crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length),
+              analyzedAt: new Date().toISOString(),
+              authority:
+                strategicData?.domain_authority && strategicData.domain_authority.data_source !== 'unavailable'
+                  ? strategicData.domain_authority
+                  : null,
+              blockers: buildCrawlabilityBlockers(detectedLang, { expertData, crawlSnapshot }),
+            }),
           },
+
           detectedLang, domain, url, marinaBranding,
         );
 
