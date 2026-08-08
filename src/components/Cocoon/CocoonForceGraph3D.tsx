@@ -128,9 +128,17 @@ function simulate3D(
     const alpha = alpha0 * Math.pow(alphaDecay, iter);
     if (alpha < 0.001) break;
 
-    // Charge repulsion
+    // Charge repulsion — échantillonnée sur les grands graphes pour rester O(n)
+    const sampled = nodes.length > 600;
+    const SAMPLES = 24;
     for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
+      const jStart = i + 1;
+      const jCount = sampled ? SAMPLES : nodes.length - jStart;
+      for (let k = 0; k < jCount; k++) {
+        const j = sampled
+          ? Math.floor(Math.random() * nodes.length)
+          : jStart + k;
+        if (j === i) continue;
         const a = nodes[i];
         const b = nodes[j];
         let dx = b.x - a.x;
