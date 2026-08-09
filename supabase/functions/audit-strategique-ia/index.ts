@@ -753,7 +753,10 @@ Réponds en JSON STRICT:
           }
 
           if (wbItems.length > 0) {
-            const { error: wbErr } = await getServiceClient().from('architect_workbench').upsert(wbItems, { onConflict: 'source_type,source_record_id', ignoreDuplicates: true });
+            // Un ré-audit DOIT rafraîchir le constat (toxicité, autorité, liens cassés).
+            // ignoreDuplicates figeait le premier score indéfiniment.
+            const wbPayload = wbItems.map((it: any) => ({ ...it, updated_at: new Date().toISOString() }));
+            const { error: wbErr } = await getServiceClient().from('architect_workbench').upsert(wbPayload, { onConflict: 'source_type,source_record_id', ignoreDuplicates: false });
             if (wbErr) console.warn('⚠️ Workbench upsert error:', wbErr.message);
             else console.log(`✅ Workbench: ${wbItems.length} findings (chunkability + fan-out + autorité)`);
           }
