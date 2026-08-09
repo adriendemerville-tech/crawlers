@@ -278,6 +278,7 @@ const LABELS: Record<string, Record<string, string>> = {
     broken_link: 'Fix broken links (404)',
     low_authority: 'Strengthen page authority',
     anchor_over_optimized: 'Diversify link anchors',
+    backlink_disavow: 'Audit and disavow toxic backlinks',
     low_pagerank: 'Improve internal linking to this page',
     eeat_weak: 'Strengthen E-E-A-T signals',
     restructure: 'Restructure site architecture',
