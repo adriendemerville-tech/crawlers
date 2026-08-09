@@ -177,24 +177,24 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     const productsLabel = siteIdentityCtx?.products_services || businessContext?.productsServices || '';
     const businessTypeLabel = siteIdentityCtx?.business_type || businessContext?.businessType || '';
 
-    let baseContext = `🌐 LANGUE: ${langLabel}. Rédige en ${langLabel}.\n🔒 CONSIGNE DE LANGUE: ${strictLanguageInstruction}\n🏷️ ENTITÉ: "${resolvedEntityName}"\n`;
+    let baseContext = `LANGUE: ${langLabel}. Rédige en ${langLabel}.\nCONSIGNE DE LANGUE: ${strictLanguageInstruction}\nENTITÉ: "${resolvedEntityName}"\n`;
     if (sectorLabel || productsLabel) {
-      baseContext += `🏢 SECTEUR D'ACTIVITÉ: ${sectorLabel}${productsLabel ? ` — Produits/Services: ${productsLabel}` : ''}${businessTypeLabel ? ` — Type: ${businessTypeLabel}` : ''}\n`;
-      baseContext += `⚠️ ANTI-HOMONYMIE: "${resolvedEntityName}" opère dans le secteur "${sectorLabel || productsLabel}". Ne confonds PAS avec des homonymes célèbres (politiciens, artistes, etc.). Tous les concurrents doivent être dans le MÊME secteur d'activité.\n`;
+      baseContext += `SECTEUR D'ACTIVITÉ: ${sectorLabel}${productsLabel ? ` — Produits/Services: ${productsLabel}` : ''}${businessTypeLabel ? ` — Type: ${businessTypeLabel}` : ''}\n`;
+      baseContext += `ANTI-HOMONYMIE: "${resolvedEntityName}" opère dans le secteur "${sectorLabel || productsLabel}". Ne confonds PAS avec des homonymes célèbres (politiciens, artistes, etc.). Tous les concurrents doivent être dans le MÊME secteur d'activité.\n`;
     }
     if (competitors?.length > 0) {
       const compLines = competitors.map((c: any, i: number) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Score:${c.score || 0}`).join('\n');
-      baseContext += `🏙️ CONCURRENTS:\n${compLines}\n`;
+      baseContext += `CONCURRENTS:\n${compLines}\n`;
     }
     if (hallucinationCorrections) {
       const corrections = Object.entries(hallucinationCorrections).filter(([_, v]) => v).map(([k, v]) => `${k}="${v}"`).join(', ');
-      if (corrections) baseContext += `⚠️ CORRECTIONS: ${corrections}\n`;
+      if (corrections) baseContext += `CORRECTIONS: ${corrections}\n`;
     }
     if (competitorCorrections) {
       const parts: string[] = [];
       if (competitorCorrections.leader?.name) parts.push(`Leader:"${competitorCorrections.leader.name}"`);
       if (competitorCorrections.direct_competitor?.name) parts.push(`Concurrent:"${competitorCorrections.direct_competitor.name}"`);
-      if (parts.length > 0) baseContext += `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n`;
+      if (parts.length > 0) baseContext += `CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n`;
     }
     baseContext += `Analyse "${url}" (${domain}).\n${pageContentContext}\n${eeatSection}${founderSection}\n${marketSection}\n${toolsMarkdown}`;
 
