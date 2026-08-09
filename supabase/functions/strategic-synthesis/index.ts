@@ -157,16 +157,16 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     let eeatSection = '';
     if (eeatSignals) {
       const yn = (v: boolean) => v ? 'OUI' : 'NON';
-      eeatSection = `🔍 E-E-A-T: AuthorBio=${yn(eeatSignals.hasAuthorBio)}(${eeatSignals.authorBioCount || 0}), AuthorJsonLD=${yn(eeatSignals.hasAuthorInJsonLd)}, Person=${yn(eeatSignals.hasPerson)}, Organization=${yn(eeatSignals.hasOrganization)}, sameAs=${yn(eeatSignals.hasSameAs)}, Wikidata=${yn(eeatSignals.hasWikidataSameAs)}, SocialLinks=${eeatSignals.socialLinksCount || 0}`;
+      eeatSection = `E-E-A-T: AuthorBio=${yn(eeatSignals.hasAuthorBio)}(${eeatSignals.authorBioCount || 0}), AuthorJsonLD=${yn(eeatSignals.hasAuthorInJsonLd)}, Person=${yn(eeatSignals.hasPerson)}, Organization=${yn(eeatSignals.hasOrganization)}, sameAs=${yn(eeatSignals.hasSameAs)}, Wikidata=${yn(eeatSignals.hasWikidataSameAs)}, SocialLinks=${eeatSignals.socialLinksCount || 0}`;
       if (eeatSignals.detectedSocialUrls?.length > 0) eeatSection += `\nURLs sociales: ${eeatSignals.detectedSocialUrls.slice(0, 10).join(', ')}`;
-      if (facebookPageInfo?.found) eeatSection += `\n📘 Facebook: ${facebookPageInfo.pageName} → ${facebookPageInfo.pageUrl}`;
+      if (facebookPageInfo?.found) eeatSection += `\nFacebook: ${facebookPageInfo.pageName} - ${facebookPageInfo.pageUrl}`;
     }
 
     let founderSection = '';
     if (!isContentMode && founderInfo?.name && !founderInfo.geoMismatch) {
-      founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''}`;
+      founderSection = `\nFONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''}`;
     } else if (founderInfo?.geoMismatch) {
-      founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner.`;
+      founderSection = `\nFondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner.`;
     }
 
     const toolsMarkdown = formatToolsDataToMarkdown(toolsData || {});
