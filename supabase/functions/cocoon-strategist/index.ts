@@ -302,6 +302,7 @@ const LABELS: Record<string, Record<string, string>> = {
     broken_link: 'Reparar los enlaces rotos (404)',
     low_authority: 'Reforzar la autoridad de la página',
     anchor_over_optimized: 'Diversificar los anclajes de enlaces',
+    backlink_disavow: 'Auditar y desautorizar los backlinks tóxicos',
     low_pagerank: 'Mejorar el enlazado interno a esta página',
     eeat_weak: 'Reforzar las señales E-E-A-T',
     restructure: 'Reorganizar la arquitectura del sitio',
