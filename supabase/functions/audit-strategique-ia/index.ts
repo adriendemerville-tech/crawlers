@@ -17,6 +17,7 @@ import { computeFactualCitationScores } from '../_shared/citationScorer.ts';
 import { fetchDomainAuthority, type AuthorityData } from '../_shared/domainAuthority.ts';
 import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts';
 import { handleRequest } from '../_shared/serveHandler.ts';
+import { applyMarketWeighting } from '../_shared/marketPriority.ts';
 
 // ── Shared strategic audit modules ──
 import type { ToolsData, EEATSignals, MarketData, RankingOverview, BrandSignal, FounderInfo, FacebookPageInfo, GMBData, CtaSeoSignals, PageType } from '../_shared/strategicAudit/types.ts';
