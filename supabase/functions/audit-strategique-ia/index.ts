@@ -306,7 +306,7 @@ Deno.serve(handleRequest(async (req) => {
       const fields: Record<string, string> = { market_sector: 'Secteur', entity_type: 'Type', commercial_model: 'Modèle', products_services: 'Produits/Services', target_audience: 'Cible', commercial_area: 'Zone', company_size: 'Taille', business_type: 'Activité', competitors: 'Concurrents connus', brand_name: 'Marque', gmb_presence: 'GMB', gmb_city: 'Ville GMB' };
       for (const [k, label] of Object.entries(fields)) { if ((siteIdentityCtx as any)[k]) idParts.push(`${label}: ${(siteIdentityCtx as any)[k]}`); }
       if ((siteIdentityCtx as any).is_local_business) idParts.push('Business local: oui');
-      if (idParts.length > 0) userPrompt = `📇 CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\n⚠️ VÉRIFICATION: Compare ces données avec le contenu de la page. Signale toute incohérence.\n` + userPrompt;
+      if (idParts.length > 0) userPrompt = `CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\nVÉRIFICATION: Compare ces données avec le contenu de la page. Signale toute incohérence.\n` + userPrompt;
     }
 
     if (!isContentMode && localCompetitorsAll.length > 0) {
