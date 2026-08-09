@@ -311,7 +311,7 @@ Deno.serve(handleRequest(async (req) => {
 
     if (!isContentMode && localCompetitorsAll.length > 0) {
       const compLines = localCompetitorsAll.map((c, i) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Position:${c.rank || 'N/A'} Score:${c.score || 0}`).join('\n');
-      userPrompt = `🏙️ CONCURRENTS IDENTIFIÉS:\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
+      userPrompt = `CONCURRENTS IDENTIFIÉS:\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
     }
 
     if (hallucinationCorrections) {
