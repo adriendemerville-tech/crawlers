@@ -1607,10 +1607,30 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
       });
       break;
 
-    case 'backlink_health':
     case 'backlink_toxicity':
+      // Un profil de liens pollué se corrige par un audit + désaveu des domaines
+      // toxiques, JAMAIS par du maillage interne. Action offsite non automatisable :
+      // marquée destructive pour forcer une validation humaine dans Parménion.
+      tasks.push({
+        id: `${baseId}_disavow`,
+        action_type: 'fix_technical',
+        priority: 0,
+        title: label('backlink_disavow', lang),
+        description: `${finding.description || ''}\n\nAction attendue : exporter la liste des domaines référents, isoler les domaines toxiques (spam d'annuaires, fermes de liens, ancres sur-optimisées) et soumettre un fichier de désaveu. Aucune modification du site ni du maillage interne ne corrige ce constat.`,
+        affected_urls: urls.slice(0, 3),
+        source_diagnostics: [sourceType],
+        execution_mode: 'operational_queue',
+        is_destructive: true,
+        depends_on: [],
+        estimated_impact: impact,
+        metadata: { offsite_action: true, requires_human_validation: true, recommended_action: 'disavow_toxic_referring_domains' },
+      });
+      break;
+
+    case 'backlink_health':
     case 'domain_authority':
-      // Off-site actions removed — redirect to internal linking improvement instead
+      // Autorité faible / liens cassés : le levier interne actionnable reste la
+      // circulation du PageRank vers les pages stratégiques.
       tasks.push({
         id: `${baseId}_auth`,
         action_type: 'add_internal_link',
