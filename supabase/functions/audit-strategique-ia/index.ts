@@ -17,6 +17,7 @@ import { computeFactualCitationScores } from '../_shared/citationScorer.ts';
 import { fetchDomainAuthority, type AuthorityData } from '../_shared/domainAuthority.ts';
 import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts';
 import { handleRequest } from '../_shared/serveHandler.ts';
+import { applyMarketWeighting } from '../_shared/marketPriority.ts';
 
 // ── Shared strategic audit modules ──
 import type { ToolsData, EEATSignals, MarketData, RankingOverview, BrandSignal, FounderInfo, FacebookPageInfo, GMBData, CtaSeoSignals, PageType } from '../_shared/strategicAudit/types.ts';
@@ -294,11 +295,11 @@ Deno.serve(handleRequest(async (req) => {
     console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo, authorityData);
-    userPrompt = `🌐 LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
+    userPrompt = `LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
 
-    const pageTypeLabels: Record<PageType, string> = { editorial: '📝 MODE ÉDITORIAL', product: '🛒 MODE PRODUIT', deep: '📄 MODE PAGE PROFONDE', homepage: '🏷️' };
+    const pageTypeLabels: Record<PageType, string> = { editorial: 'MODE ÉDITORIAL', product: 'MODE PRODUIT', deep: 'MODE PAGE PROFONDE', homepage: 'MODE PAGE D\'ACCUEIL' };
     if (isContentMode) userPrompt = `${pageTypeLabels[pageType]}: Analyse de la page "${resolvedEntityName}" (type: ${pageType})\n` + userPrompt;
-    else userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}"\n` + userPrompt;
+    else userPrompt = `NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}"\n` + userPrompt;
 
     // Inject identity card
     if (siteIdentityCtx) {
@@ -306,17 +307,17 @@ Deno.serve(handleRequest(async (req) => {
       const fields: Record<string, string> = { market_sector: 'Secteur', entity_type: 'Type', commercial_model: 'Modèle', products_services: 'Produits/Services', target_audience: 'Cible', commercial_area: 'Zone', company_size: 'Taille', business_type: 'Activité', competitors: 'Concurrents connus', brand_name: 'Marque', gmb_presence: 'GMB', gmb_city: 'Ville GMB' };
       for (const [k, label] of Object.entries(fields)) { if ((siteIdentityCtx as any)[k]) idParts.push(`${label}: ${(siteIdentityCtx as any)[k]}`); }
       if ((siteIdentityCtx as any).is_local_business) idParts.push('Business local: oui');
-      if (idParts.length > 0) userPrompt = `📇 CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\n⚠️ VÉRIFICATION: Compare ces données avec le contenu de la page. Signale toute incohérence.\n` + userPrompt;
+      if (idParts.length > 0) userPrompt = `CARTE D'IDENTITÉ DU SITE (confiance: ${siteIdentityCtx.identity_confidence || 0}):\n${idParts.join('\n')}\nVÉRIFICATION: Compare ces données avec le contenu de la page. Signale toute incohérence.\n` + userPrompt;
     }
 
     if (!isContentMode && localCompetitorsAll.length > 0) {
       const compLines = localCompetitorsAll.map((c, i) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Position:${c.rank || 'N/A'} Score:${c.score || 0}`).join('\n');
-      userPrompt = `🏙️ CONCURRENTS IDENTIFIÉS:\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
+      userPrompt = `CONCURRENTS IDENTIFIÉS:\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
     }
 
     if (hallucinationCorrections) {
       const corrections = Object.entries(hallucinationCorrections).filter(([_, v]) => v).map(([k, v]) => `${k}="${v}"`).join(', ');
-      if (corrections) userPrompt = `⚠️ CORRECTIONS UTILISATEUR (priorité absolue): ${corrections}\n` + userPrompt;
+      if (corrections) userPrompt = `CORRECTIONS UTILISATEUR (priorité absolue): ${corrections}\n` + userPrompt;
     }
 
     if (competitorCorrections) {
@@ -326,7 +327,7 @@ Deno.serve(handleRequest(async (req) => {
       if (cc.leader?.name) { parts.push(`Leader:"${cc.leader.name}"${cc.leader.url ? `(${cc.leader.url})` : ''}`); competitorNames.push(cc.leader.name); }
       if (cc.direct_competitor?.name) { parts.push(`Concurrent:"${cc.direct_competitor.name}"${cc.direct_competitor.url ? `(${cc.direct_competitor.url})` : ''}`); competitorNames.push(cc.direct_competitor.name); }
       if (cc.challenger?.name) { parts.push(`Challenger:"${cc.challenger.name}"`); competitorNames.push(cc.challenger.name); }
-      if (parts.length > 0) userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
+      if (parts.length > 0) userPrompt = `CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
 
       if (competitorNames.length > 0 && trackedSiteIdForCrawl) {
         writeIdentity({ siteId: trackedSiteIdForCrawl, fields: { competitors: competitorNames }, source: 'user_manual', forceOverwrite: true })
@@ -578,6 +579,16 @@ Deno.serve(handleRequest(async (req) => {
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
 
+    // ═══ PONDÉRATION MARCHÉ DE LA PRIORISATION (déterministe, zéro coût LLM) ═══
+    if (Array.isArray(parsedAnalysis.executive_roadmap) && parsedAnalysis.executive_roadmap.length > 0) {
+      parsedAnalysis.executive_roadmap = applyMarketWeighting(parsedAnalysis.executive_roadmap, {
+        rankingOverview, marketData, authorityData,
+      });
+      console.log(`Roadmap repondérée marché: ${parsedAnalysis.executive_roadmap.map((r: any) => r.market_score).join(', ')}`);
+    }
+
+
+
     // ═══ JARGON DISTANCE ═══
     let jargonDistance: any = null;
     if (parsedAnalysis.client_targets && pageContentContext && !isOverDeadline()) {
@@ -742,7 +753,10 @@ Réponds en JSON STRICT:
           }
 
           if (wbItems.length > 0) {
-            const { error: wbErr } = await getServiceClient().from('architect_workbench').upsert(wbItems, { onConflict: 'source_type,source_record_id', ignoreDuplicates: true });
+            // Un ré-audit DOIT rafraîchir le constat (toxicité, autorité, liens cassés).
+            // ignoreDuplicates figeait le premier score indéfiniment.
+            const wbPayload = wbItems.map((it: any) => ({ ...it, updated_at: new Date().toISOString() }));
+            const { error: wbErr } = await getServiceClient().from('architect_workbench').upsert(wbPayload, { onConflict: 'source_type,source_record_id', ignoreDuplicates: false });
             if (wbErr) console.warn('⚠️ Workbench upsert error:', wbErr.message);
             else console.log(`✅ Workbench: ${wbItems.length} findings (chunkability + fan-out + autorité)`);
           }

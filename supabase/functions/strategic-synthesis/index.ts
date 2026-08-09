@@ -121,10 +121,10 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       const kwList = mktData.top_keywords.map((kw: any) => `"${kw.keyword}":${kw.volume}vol,diff${kw.difficulty},pos:${kw.current_rank}`).join('; ');
       const quickWins = mktData.top_keywords.filter((kw: any) => typeof kw.current_rank === 'number' && kw.current_rank >= 11 && kw.current_rank <= 20 && kw.volume > 100);
       const missing = mktData.top_keywords.filter((kw: any) => !kw.is_ranked && kw.volume > 200);
-      marketSection = `📊 DONNÉES MARCHÉ - Volume: ${mktData.total_market_volume}\nMots-clés: ${kwList}\nQuick Wins: ${quickWins.length > 0 ? quickWins.map((kw: any) => `"${kw.keyword}" pos${kw.current_rank}(${kw.volume}vol)`).join(', ') : 'Aucun'}\nManquants: ${missing.length > 0 ? missing.map((kw: any) => `"${kw.keyword}"(${kw.volume}vol)`).join(', ') : 'Aucun'}`;
-    } else { marketSection = '⚠️ DataForSEO non disponible.'; }
+      marketSection = `DONNÉES MARCHÉ - Volume: ${mktData.total_market_volume}\nMots-clés: ${kwList}\nQuick Wins: ${quickWins.length > 0 ? quickWins.map((kw: any) => `"${kw.keyword}" pos${kw.current_rank}(${kw.volume}vol)`).join(', ') : 'Aucun'}\nManquants: ${missing.length > 0 ? missing.map((kw: any) => `"${kw.keyword}"(${kw.volume}vol)`).join(', ') : 'Aucun'}`;
+    } else { marketSection = 'DataForSEO non disponible.'; }
     if (rankingOverview) {
-      marketSection += `\n📈 SEO: ${rankingOverview.total_ranked_keywords} mots-clés, pos moy=${rankingOverview.average_position_global}, Top10=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}`;
+      marketSection += `\nSEO: ${rankingOverview.total_ranked_keywords} mots-clés, pos moy=${rankingOverview.average_position_global}, Top10=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}`;
     }
 
     // ── Bloc autorité / backlinks (cache 24 h par domaine) ──
@@ -157,16 +157,16 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     let eeatSection = '';
     if (eeatSignals) {
       const yn = (v: boolean) => v ? 'OUI' : 'NON';
-      eeatSection = `🔍 E-E-A-T: AuthorBio=${yn(eeatSignals.hasAuthorBio)}(${eeatSignals.authorBioCount || 0}), AuthorJsonLD=${yn(eeatSignals.hasAuthorInJsonLd)}, Person=${yn(eeatSignals.hasPerson)}, Organization=${yn(eeatSignals.hasOrganization)}, sameAs=${yn(eeatSignals.hasSameAs)}, Wikidata=${yn(eeatSignals.hasWikidataSameAs)}, SocialLinks=${eeatSignals.socialLinksCount || 0}`;
+      eeatSection = `E-E-A-T: AuthorBio=${yn(eeatSignals.hasAuthorBio)}(${eeatSignals.authorBioCount || 0}), AuthorJsonLD=${yn(eeatSignals.hasAuthorInJsonLd)}, Person=${yn(eeatSignals.hasPerson)}, Organization=${yn(eeatSignals.hasOrganization)}, sameAs=${yn(eeatSignals.hasSameAs)}, Wikidata=${yn(eeatSignals.hasWikidataSameAs)}, SocialLinks=${eeatSignals.socialLinksCount || 0}`;
       if (eeatSignals.detectedSocialUrls?.length > 0) eeatSection += `\nURLs sociales: ${eeatSignals.detectedSocialUrls.slice(0, 10).join(', ')}`;
-      if (facebookPageInfo?.found) eeatSection += `\n📘 Facebook: ${facebookPageInfo.pageName} → ${facebookPageInfo.pageUrl}`;
+      if (facebookPageInfo?.found) eeatSection += `\nFacebook: ${facebookPageInfo.pageName} - ${facebookPageInfo.pageUrl}`;
     }
 
     let founderSection = '';
     if (!isContentMode && founderInfo?.name && !founderInfo.geoMismatch) {
-      founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''}`;
+      founderSection = `\nFONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''}`;
     } else if (founderInfo?.geoMismatch) {
-      founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner.`;
+      founderSection = `\nFondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner.`;
     }
 
     const toolsMarkdown = formatToolsDataToMarkdown(toolsData || {});
@@ -177,24 +177,24 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     const productsLabel = siteIdentityCtx?.products_services || businessContext?.productsServices || '';
     const businessTypeLabel = siteIdentityCtx?.business_type || businessContext?.businessType || '';
 
-    let baseContext = `🌐 LANGUE: ${langLabel}. Rédige en ${langLabel}.\n🔒 CONSIGNE DE LANGUE: ${strictLanguageInstruction}\n🏷️ ENTITÉ: "${resolvedEntityName}"\n`;
+    let baseContext = `LANGUE: ${langLabel}. Rédige en ${langLabel}.\nCONSIGNE DE LANGUE: ${strictLanguageInstruction}\nENTITÉ: "${resolvedEntityName}"\n`;
     if (sectorLabel || productsLabel) {
-      baseContext += `🏢 SECTEUR D'ACTIVITÉ: ${sectorLabel}${productsLabel ? ` — Produits/Services: ${productsLabel}` : ''}${businessTypeLabel ? ` — Type: ${businessTypeLabel}` : ''}\n`;
-      baseContext += `⚠️ ANTI-HOMONYMIE: "${resolvedEntityName}" opère dans le secteur "${sectorLabel || productsLabel}". Ne confonds PAS avec des homonymes célèbres (politiciens, artistes, etc.). Tous les concurrents doivent être dans le MÊME secteur d'activité.\n`;
+      baseContext += `SECTEUR D'ACTIVITÉ: ${sectorLabel}${productsLabel ? ` — Produits/Services: ${productsLabel}` : ''}${businessTypeLabel ? ` — Type: ${businessTypeLabel}` : ''}\n`;
+      baseContext += `ANTI-HOMONYMIE: "${resolvedEntityName}" opère dans le secteur "${sectorLabel || productsLabel}". Ne confonds PAS avec des homonymes célèbres (politiciens, artistes, etc.). Tous les concurrents doivent être dans le MÊME secteur d'activité.\n`;
     }
     if (competitors?.length > 0) {
       const compLines = competitors.map((c: any, i: number) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Score:${c.score || 0}`).join('\n');
-      baseContext += `🏙️ CONCURRENTS:\n${compLines}\n`;
+      baseContext += `CONCURRENTS:\n${compLines}\n`;
     }
     if (hallucinationCorrections) {
       const corrections = Object.entries(hallucinationCorrections).filter(([_, v]) => v).map(([k, v]) => `${k}="${v}"`).join(', ');
-      if (corrections) baseContext += `⚠️ CORRECTIONS: ${corrections}\n`;
+      if (corrections) baseContext += `CORRECTIONS: ${corrections}\n`;
     }
     if (competitorCorrections) {
       const parts: string[] = [];
       if (competitorCorrections.leader?.name) parts.push(`Leader:"${competitorCorrections.leader.name}"`);
       if (competitorCorrections.direct_competitor?.name) parts.push(`Concurrent:"${competitorCorrections.direct_competitor.name}"`);
-      if (parts.length > 0) baseContext += `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n`;
+      if (parts.length > 0) baseContext += `CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n`;
     }
     baseContext += `Analyse "${url}" (${domain}).\n${pageContentContext}\n${eeatSection}${founderSection}\n${marketSection}\n${toolsMarkdown}`;
 

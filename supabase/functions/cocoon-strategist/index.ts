@@ -254,6 +254,7 @@ const LABELS: Record<string, Record<string, string>> = {
     broken_link: 'Réparer les liens cassés (404)',
     low_authority: 'Renforcer l\'autorité de la page',
     anchor_over_optimized: 'Diversifier les ancres de liens',
+    backlink_disavow: 'Auditer et désavouer les backlinks toxiques',
     low_pagerank: 'Améliorer le maillage interne vers cette page',
     eeat_weak: 'Renforcer les signaux E-E-A-T',
     restructure: 'Réorganiser l\'arborescence du site',
@@ -277,6 +278,7 @@ const LABELS: Record<string, Record<string, string>> = {
     broken_link: 'Fix broken links (404)',
     low_authority: 'Strengthen page authority',
     anchor_over_optimized: 'Diversify link anchors',
+    backlink_disavow: 'Audit and disavow toxic backlinks',
     low_pagerank: 'Improve internal linking to this page',
     eeat_weak: 'Strengthen E-E-A-T signals',
     restructure: 'Restructure site architecture',
@@ -300,6 +302,7 @@ const LABELS: Record<string, Record<string, string>> = {
     broken_link: 'Reparar los enlaces rotos (404)',
     low_authority: 'Reforzar la autoridad de la página',
     anchor_over_optimized: 'Diversificar los anclajes de enlaces',
+    backlink_disavow: 'Auditar y desautorizar los backlinks tóxicos',
     low_pagerank: 'Mejorar el enlazado interno a esta página',
     eeat_weak: 'Reforzar las señales E-E-A-T',
     restructure: 'Reorganizar la arquitectura del sitio',
@@ -1607,10 +1610,30 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
       });
       break;
 
-    case 'backlink_health':
     case 'backlink_toxicity':
+      // Un profil de liens pollué se corrige par un audit + désaveu des domaines
+      // toxiques, JAMAIS par du maillage interne. Action offsite non automatisable :
+      // marquée destructive pour forcer une validation humaine dans Parménion.
+      tasks.push({
+        id: `${baseId}_disavow`,
+        action_type: 'fix_technical',
+        priority: 0,
+        title: label('backlink_disavow', lang),
+        description: `${finding.description || ''}\n\nAction attendue : exporter la liste des domaines référents, isoler les domaines toxiques (spam d'annuaires, fermes de liens, ancres sur-optimisées) et soumettre un fichier de désaveu. Aucune modification du site ni du maillage interne ne corrige ce constat.`,
+        affected_urls: urls.slice(0, 3),
+        source_diagnostics: [sourceType],
+        execution_mode: 'operational_queue',
+        is_destructive: true,
+        depends_on: [],
+        estimated_impact: impact,
+        metadata: { offsite_action: true, requires_human_validation: true, recommended_action: 'disavow_toxic_referring_domains' },
+      });
+      break;
+
+    case 'backlink_health':
     case 'domain_authority':
-      // Off-site actions removed — redirect to internal linking improvement instead
+      // Autorité faible / liens cassés : le levier interne actionnable reste la
+      // circulation du PageRank vers les pages stratégiques.
       tasks.push({
         id: `${baseId}_auth`,
         action_type: 'add_internal_link',
