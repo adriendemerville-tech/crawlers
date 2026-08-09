@@ -294,11 +294,11 @@ Deno.serve(handleRequest(async (req) => {
     console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo, authorityData);
-    userPrompt = `🌐 LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
+    userPrompt = `LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
 
-    const pageTypeLabels: Record<PageType, string> = { editorial: '📝 MODE ÉDITORIAL', product: '🛒 MODE PRODUIT', deep: '📄 MODE PAGE PROFONDE', homepage: '🏷️' };
+    const pageTypeLabels: Record<PageType, string> = { editorial: 'MODE ÉDITORIAL', product: 'MODE PRODUIT', deep: 'MODE PAGE PROFONDE', homepage: 'MODE PAGE D\'ACCUEIL' };
     if (isContentMode) userPrompt = `${pageTypeLabels[pageType]}: Analyse de la page "${resolvedEntityName}" (type: ${pageType})\n` + userPrompt;
-    else userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}"\n` + userPrompt;
+    else userPrompt = `NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}"\n` + userPrompt;
 
     // Inject identity card
     if (siteIdentityCtx) {
