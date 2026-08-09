@@ -316,7 +316,7 @@ Deno.serve(handleRequest(async (req) => {
 
     if (hallucinationCorrections) {
       const corrections = Object.entries(hallucinationCorrections).filter(([_, v]) => v).map(([k, v]) => `${k}="${v}"`).join(', ');
-      if (corrections) userPrompt = `⚠️ CORRECTIONS UTILISATEUR (priorité absolue): ${corrections}\n` + userPrompt;
+      if (corrections) userPrompt = `CORRECTIONS UTILISATEUR (priorité absolue): ${corrections}\n` + userPrompt;
     }
 
     if (competitorCorrections) {
