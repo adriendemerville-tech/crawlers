@@ -121,10 +121,10 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       const kwList = mktData.top_keywords.map((kw: any) => `"${kw.keyword}":${kw.volume}vol,diff${kw.difficulty},pos:${kw.current_rank}`).join('; ');
       const quickWins = mktData.top_keywords.filter((kw: any) => typeof kw.current_rank === 'number' && kw.current_rank >= 11 && kw.current_rank <= 20 && kw.volume > 100);
       const missing = mktData.top_keywords.filter((kw: any) => !kw.is_ranked && kw.volume > 200);
-      marketSection = `📊 DONNÉES MARCHÉ - Volume: ${mktData.total_market_volume}\nMots-clés: ${kwList}\nQuick Wins: ${quickWins.length > 0 ? quickWins.map((kw: any) => `"${kw.keyword}" pos${kw.current_rank}(${kw.volume}vol)`).join(', ') : 'Aucun'}\nManquants: ${missing.length > 0 ? missing.map((kw: any) => `"${kw.keyword}"(${kw.volume}vol)`).join(', ') : 'Aucun'}`;
-    } else { marketSection = '⚠️ DataForSEO non disponible.'; }
+      marketSection = `DONNÉES MARCHÉ - Volume: ${mktData.total_market_volume}\nMots-clés: ${kwList}\nQuick Wins: ${quickWins.length > 0 ? quickWins.map((kw: any) => `"${kw.keyword}" pos${kw.current_rank}(${kw.volume}vol)`).join(', ') : 'Aucun'}\nManquants: ${missing.length > 0 ? missing.map((kw: any) => `"${kw.keyword}"(${kw.volume}vol)`).join(', ') : 'Aucun'}`;
+    } else { marketSection = 'DataForSEO non disponible.'; }
     if (rankingOverview) {
-      marketSection += `\n📈 SEO: ${rankingOverview.total_ranked_keywords} mots-clés, pos moy=${rankingOverview.average_position_global}, Top10=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}`;
+      marketSection += `\nSEO: ${rankingOverview.total_ranked_keywords} mots-clés, pos moy=${rankingOverview.average_position_global}, Top10=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}`;
     }
 
     // ── Bloc autorité / backlinks (cache 24 h par domaine) ──
