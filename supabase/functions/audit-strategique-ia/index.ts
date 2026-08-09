@@ -326,7 +326,7 @@ Deno.serve(handleRequest(async (req) => {
       if (cc.leader?.name) { parts.push(`Leader:"${cc.leader.name}"${cc.leader.url ? `(${cc.leader.url})` : ''}`); competitorNames.push(cc.leader.name); }
       if (cc.direct_competitor?.name) { parts.push(`Concurrent:"${cc.direct_competitor.name}"${cc.direct_competitor.url ? `(${cc.direct_competitor.url})` : ''}`); competitorNames.push(cc.direct_competitor.name); }
       if (cc.challenger?.name) { parts.push(`Challenger:"${cc.challenger.name}"`); competitorNames.push(cc.challenger.name); }
-      if (parts.length > 0) userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
+      if (parts.length > 0) userPrompt = `CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
 
       if (competitorNames.length > 0 && trackedSiteIdForCrawl) {
         writeIdentity({ siteId: trackedSiteIdForCrawl, fields: { competitors: competitorNames }, source: 'user_manual', forceOverwrite: true })
