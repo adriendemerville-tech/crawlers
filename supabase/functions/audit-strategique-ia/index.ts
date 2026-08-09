@@ -579,6 +579,16 @@ Deno.serve(handleRequest(async (req) => {
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
 
+    // ═══ PONDÉRATION MARCHÉ DE LA PRIORISATION (déterministe, zéro coût LLM) ═══
+    if (Array.isArray(parsedAnalysis.executive_roadmap) && parsedAnalysis.executive_roadmap.length > 0) {
+      parsedAnalysis.executive_roadmap = applyMarketWeighting(parsedAnalysis.executive_roadmap, {
+        rankingOverview, marketData, authorityData,
+      });
+      console.log(`Roadmap repondérée marché: ${parsedAnalysis.executive_roadmap.map((r: any) => r.market_score).join(', ')}`);
+    }
+
+
+
     // ═══ JARGON DISTANCE ═══
     let jargonDistance: any = null;
     if (parsedAnalysis.client_targets && pageContentContext && !isOverDeadline()) {
