@@ -260,7 +260,11 @@ async function queryWithIterations(
   patterns: BrandPatterns,
   domain: string,
   followUpPrompts: string[] = ["Ok et t'aurais pas d'autres idées ?", "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?"],
-): Promise<{ iteration_found: number; response_text: string }> {
+): Promise<{ iteration_found: number; response_text: string; measured: boolean; error?: string }> {
+  // P0-1 : un échec technique (HTTP !ok, timeout, exception) ne doit JAMAIS être
+  // compté comme « la marque n'est pas citée ». On renvoie measured=false et le
+  // modèle est exclu du score au lieu d'être noté 0.
+  let failure: string | undefined
   const messages: Array<{ role: string; content: string }> = [
     { role: 'user', content: prompt },
   ]
@@ -291,6 +295,7 @@ async function queryWithIterations(
 
       if (!resp.ok) {
         console.error(`[llm-vis] ${model} it${iteration} HTTP ${resp.status}`)
+        if (iteration === 1) failure = `http_${resp.status}`
         break
       }
 
@@ -300,7 +305,7 @@ async function queryWithIterations(
       trackTokenUsage('calculate-llm-visibility', model, data.usage, domain)
 
       if (findBrandInText(content, patterns)) {
-        return { iteration_found: iteration, response_text: content }
+        return { iteration_found: iteration, response_text: content, measured: true }
       }
 
       messages.push({ role: 'assistant', content })
@@ -310,11 +315,12 @@ async function queryWithIterations(
       }
     } catch (err) {
       console.error(`[llm-vis] ${model} it${iteration} error:`, err)
+      if (iteration === 1) failure = err instanceof Error ? (err.name || err.message) : 'unknown_error'
       break
     }
   }
 
-  return { iteration_found: 0, response_text: '' }
+  return { iteration_found: 0, response_text: '', measured: !failure, error: failure }
 }
 
 // ═══════════════════════════════════════════════
