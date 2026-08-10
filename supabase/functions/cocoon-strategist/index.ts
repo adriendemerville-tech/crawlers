@@ -1274,6 +1274,8 @@ try {
       diagnostics_summary: diagnosticsSummary,
       conflicts_resolved: conflicts,
       feedback: feedbackAnalysis,
+      workbench_findings_written: workbenchWrite.written,
+
       development_axes: matchingAxes,
       cms_inventory_summary: cmsInventory ? {
         total: cmsInventory.items.length,
