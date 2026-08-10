@@ -100,17 +100,25 @@ export async function scrapePage(
         console.log(
           `[Worker] ${renderResult.usedRendering ? 'rendered' : 'fetched'} ${pageUrl} (${renderResult.html.length} chars${renderResult.framework ? `, ${renderResult.framework}` : ''}) ${responseTime}ms`
         );
+        if (budget) budget.freePages += 1;
       }
     } catch (renderErr) {
       console.warn(`[Worker] fetchAndRenderPage failed for ${pageUrl}:`, renderErr);
     }
 
-    // ── Spider.cloud PRIMARY → Firecrawl FALLBACK ──
-    if (!html || html.length < 500) {
+    // ── Spider.cloud PRIMARY → Firecrawl FALLBACK (1 seule tentative payante) ──
+    const budgetExhausted = !!budget && budget.paidCalls >= budget.max;
+    if ((!html || html.length < 500) && budgetExhausted) {
+      budget!.skipped += 1;
+      console.warn(`[Worker] Budget payant épuisé (${budget!.paidCalls}/${budget!.max}), ${pageUrl} ignorée`);
+    }
+    if ((!html || html.length < 500) && !budgetExhausted) {
       const spiderKey = Deno.env.get('SPIDER_API_KEY');
-      let spiderOk = false;
+      let spiderAttempted = false;
 
       if (spiderKey) {
+        spiderAttempted = true;
+        if (budget) budget.paidCalls += 1;
         try {
           console.log(`[Worker] HTML insufficient for ${pageUrl}, trying Spider.cloud...`);
           const fetchStart2 = Date.now();
