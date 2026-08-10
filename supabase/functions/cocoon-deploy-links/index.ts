@@ -70,6 +70,41 @@ try {
     const domain = site.domain?.replace(/^www\./, '') || ''
     const isIktracker = isIktrackerDomain(domain)
 
+    // ── Idempotence: en mode deploy, on ignore les liens déjà déployés
+    // (audit 2026-08-10 H2 : le même lien pouvait être re-injecté à chaque lot)
+    let toDeploy: LinkRecommendation[] = recommendations
+    let alreadyDeployed = 0
+    if (mode === 'deploy') {
+      const { data: deployedRows } = await supabase
+        .from('cocoon_auto_links')
+        .select('source_url, target_url, anchor_text')
+        .eq('tracked_site_id', tracked_site_id)
+        .eq('is_deployed', true)
+
+      if (deployedRows && deployedRows.length > 0) {
+        const deployedKeys = new Set(
+          deployedRows.map((r: any) => linkKey(r.source_url, r.target_url, r.anchor_text)),
+        )
+        const filtered = recommendations.filter(
+          (r: LinkRecommendation) =>
+            r.action !== 'add_link' ||
+            !deployedKeys.has(linkKey(r.source_url, r.target_url, r.anchor_text)),
+        )
+        alreadyDeployed = recommendations.length - filtered.length
+        toDeploy = filtered
+      }
+    }
+
+    if (toDeploy.length === 0) {
+      return jsonOk({
+        success: true,
+        path: 'skipped',
+        mode,
+        already_deployed: alreadyDeployed,
+        result: { deployed: 0, detail: 'Tous les liens de ce lot sont déjà déployés' },
+      })
+    }
+
     // ── Priority 1: connected CMS (cms_connections) → universal route via cms-patch-content
     const { data: cmsConn } = await supabase
       .from('cms_connections')
@@ -78,18 +113,32 @@ try {
       .eq('status', 'connected')
       .maybeSingle()
 
-    let deployResult: unknown
+    let deployResult: any
     let path: 'cms_connection' | 'iktracker' | 'site_rules'
 
     if (cmsConn) {
       path = 'cms_connection'
-      deployResult = await deployViaCmsPatch(authHeader, tracked_site_id, recommendations, mode)
+      deployResult = await deployViaCmsPatch(authHeader, tracked_site_id, toDeploy, mode)
     } else if (isIktracker) {
       path = 'iktracker'
-      deployResult = await deployViaIktracker(supabase, recommendations, mode)
+      deployResult = await deployViaIktracker(supabase, toDeploy, mode)
     } else {
       path = 'site_rules'
-      deployResult = await deployViaSiteRules(supabase, site, user.id, recommendations, mode)
+      deployResult = await deployViaSiteRules(supabase, site, user.id, toDeploy, mode)
+    }
+
+    // ── Traçabilité : marquer is_deployed = true sur les liens réellement déployés
+    let markedDeployed = 0
+    if (mode === 'deploy') {
+      const failedSources = new Set<string>(
+        (deployResult?.results || [])
+          .filter((r: any) => r && r.status !== 'deployed')
+          .map((r: any) => String(r.url || '')),
+      )
+      const succeeded = toDeploy.filter(
+        (r) => r.action === 'add_link' && !failedSources.has(r.source_url),
+      )
+      markedDeployed = await markLinksDeployed(supabase, tracked_site_id, succeeded, path)
     }
 
     // Log the action
@@ -102,11 +151,21 @@ try {
         path,
         platform: cmsConn?.platform || (isIktracker ? 'iktracker' : 'widget'),
         mode,
-        count: recommendations.length,
+        count: toDeploy.length,
+        already_deployed: alreadyDeployed,
+        marked_deployed: markedDeployed,
       },
     })
 
-    return jsonOk({ success: true, path, mode, result: deployResult })
+    return jsonOk({
+      success: true,
+      path,
+      mode,
+      already_deployed: alreadyDeployed,
+      marked_deployed: markedDeployed,
+      result: deployResult,
+    })
+
   } catch (error) {
     console.error('[cocoon-deploy-links] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
