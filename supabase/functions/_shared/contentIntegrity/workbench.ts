@@ -37,8 +37,12 @@ export async function writeIntegrityFindingsToWorkbench(
   const rows: any[] = [];
 
   // ── Quasi-doublons qualifiés (on ignore les clusters "normal") ──
-  for (const cluster of report.near_duplicate.clusters) {
+  // P1-6 : sous le seuil de confiance, l'échantillon est trop petit pour que LSH
+  // regroupe de façon fiable — on n'écrit aucun constat near-duplicate.
+  const ndConclusive = report.near_duplicate_confidence !== 'inconclusive';
+  for (const cluster of ndConclusive ? report.near_duplicate.clusters : []) {
     if (cluster.verdict === 'normal') continue;
+
     const urls = cluster.pages.map((p) => p.url);
     const sig = shortHash(urls.slice().sort().join('|'));
     rows.push({
