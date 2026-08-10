@@ -32,9 +32,21 @@ export interface IntegrityPageInput {
   page_intent?: string | null;
 }
 
+/**
+ * Seuil de confiance (P1-6) : sous ce nombre de pages comparables, les clusters
+ * de quasi-doublons ne sont pas statistiquement concluants — on ne conclut pas
+ * « site sain » et on ne pousse pas de constats near-duplicate au Workbench.
+ */
+export const MIN_COMPARABLE_PAGES = 30;
+
 export interface ContentIntegrityReport {
   version: 2;
   analyzed_pages: number;
+  /** 'conclusive' si analyzed_pages >= MIN_COMPARABLE_PAGES, sinon 'inconclusive'. */
+  near_duplicate_confidence: 'conclusive' | 'inconclusive';
+  min_pages_for_confidence: number;
+  similarity_threshold: number;
+
   similarity_threshold: number;
   sector_tolerance: number;
   near_duplicate: {
