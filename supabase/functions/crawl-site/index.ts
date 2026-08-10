@@ -94,14 +94,18 @@ Deno.serve(handleRequest(async (req) => {
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const controller1 = new AbortController();
-      const timeout1 = setTimeout(() => controller1.abort(), 15000);
+      // Budget aligné sur celui de fetch-sitemap-tree (45 s) : un gros sitemap
+      // d'index avec 20+ enfants ne doit plus être avorté à 15 s (P0-2).
+      const timeout1 = setTimeout(() => controller1.abort(), 50000);
+      // Appel service-role : débloque le plafond 10 000 URLs (P0-1).
+      const internalKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
       const sitemapRes = await fetch(`${supabaseUrl}/functions/v1/fetch-sitemap-tree`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+          'Authorization': `Bearer ${internalKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ domain }),
+        body: JSON.stringify({ domain, urlLimit: 10000 }),
         signal: controller1.signal,
       });
       clearTimeout(timeout1);

@@ -22,9 +22,13 @@ interface FolderNode {
 
 /** Plafond standard d'URLs collectées dans le sitemap. */
 const MAX_URLS = 1000;
-/** Plafond réservé aux admins (grands sites : 7 000+ pages indexées). */
+/** Plafond réservé aux admins et aux appels internes service-role (grands sites). */
 const MAX_URLS_ADMIN = 10_000;
 const FETCH_TIMEOUT_MS = 10_000;
+/** Budget global de parcours du sitemap (index + enfants en parallèle). */
+const SITEMAP_BUDGET_MS = 45_000;
+/** Nombre de sitemaps enfants récupérés en parallèle. */
+const CHILD_CONCURRENCY = 6;
 const CACHE_TTL_HOURS = 2;
 
 async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
@@ -43,12 +47,27 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
 
 /**
  * Parse sitemap XML to extract URLs. Handles both <sitemapindex> and <urlset>.
+ *
+ * Stratégie en 2 temps (P0-2) : l'index est lu d'abord, puis les sitemaps
+ * enfants sont récupérés par vagues parallèles sous un budget global de 45 s.
+ * Les gros sites (24 sitemaps enfants, 7 000 URLs) ne sont plus tronqués par
+ * une récursion séquentielle avortée au bout de 15 s.
  */
-async function parseSitemapUrls(sitemapUrl: string, depth = 0, limit: number = MAX_URLS): Promise<string[]> {
+async function parseSitemapUrls(
+  sitemapUrl: string,
+  depth = 0,
+  limit: number = MAX_URLS,
+  deadline: number = Date.now() + SITEMAP_BUDGET_MS,
+): Promise<string[]> {
   if (depth > 3) return []; // Prevent infinite recursion
+  if (Date.now() >= deadline) {
+    console.warn(`[fetch-sitemap-tree] Budget épuisé avant ${sitemapUrl}`);
+    return [];
+  }
 
   try {
-    const res = await fetchWithTimeout(sitemapUrl, FETCH_TIMEOUT_MS);
+    const remainingMs = Math.max(2_000, Math.min(FETCH_TIMEOUT_MS, deadline - Date.now()));
+    const res = await fetchWithTimeout(sitemapUrl, remainingMs);
     if (!res.ok) return [];
     const xml = await res.text();
 
@@ -63,13 +82,22 @@ async function parseSitemapUrls(sitemapUrl: string, depth = 0, limit: number = M
       while ((match = locRegex.exec(xml)) !== null) {
         sitemapLocs.push(match[1].trim());
       }
+      console.log(`[fetch-sitemap-tree] Index ${sitemapUrl}: ${sitemapLocs.length} sitemaps enfants`);
 
-      // Recursively parse child sitemaps
+      // Enfants traités par vagues parallèles, sous budget global
       const allUrls: string[] = [];
-      for (const childUrl of sitemapLocs) {
-        if (allUrls.length >= limit) break;
-        const childUrls = await parseSitemapUrls(childUrl, depth + 1, limit);
-        allUrls.push(...childUrls);
+      for (let i = 0; i < sitemapLocs.length; i += CHILD_CONCURRENCY) {
+        if (allUrls.length >= limit || Date.now() >= deadline) break;
+        const wave = sitemapLocs.slice(i, i + CHILD_CONCURRENCY);
+        const settled = await Promise.allSettled(
+          wave.map(childUrl => parseSitemapUrls(childUrl, depth + 1, limit, deadline)),
+        );
+        for (const r of settled) {
+          if (r.status === 'fulfilled') allUrls.push(...r.value);
+        }
+      }
+      if (Date.now() >= deadline && allUrls.length < limit) {
+        console.warn(`[fetch-sitemap-tree] Budget ${SITEMAP_BUDGET_MS}ms atteint — ${allUrls.length} URLs collectées (possible troncature)`);
       }
       return allUrls.slice(0, limit);
     }
@@ -294,7 +322,9 @@ async function persistTaxonomy(
 
 Deno.serve(handleRequest(async (req) => {
 try {
-    const { domain } = await req.json();
+    const body = await req.json();
+    const { domain } = body;
+    const requestedLimit = typeof body?.urlLimit === 'number' ? body.urlLimit : null;
     if (!domain || typeof domain !== 'string') {
       return jsonError('Missing domain', 400);
     }
@@ -303,14 +333,22 @@ try {
 
     const supabase = getServiceClient();
 
-    // Plafond élargi (10 000 URLs) réservé aux admins — grands sites.
+    // Plafond élargi (10 000 URLs) réservé aux admins et aux appels internes
+    // service-role (crawl-site). Sans cela le plafond de 1 000 s'appliquait
+    // toujours, rendant MAX_URLS_ADMIN inatteignable (P0-1).
     let urlLimit = MAX_URLS;
     try {
       const auth = await getAuthenticatedUser(req);
-      if (auth?.isAdmin) urlLimit = MAX_URLS_ADMIN;
+      const privileged = !!auth && (auth.isAdmin || auth.userId === 'service-role');
+      if (privileged) {
+        urlLimit = requestedLimit
+          ? Math.min(MAX_URLS_ADMIN, Math.max(MAX_URLS, requestedLimit))
+          : MAX_URLS_ADMIN;
+      }
     } catch (e) {
       console.warn('[fetch-sitemap-tree] Auth check failed, standard limit applied:', e);
     }
+    console.log(`[fetch-sitemap-tree] ${cleanDomain} — plafond appliqué ${urlLimit}`);
     // Le cache est segmenté par plafond : un résultat tronqué à 1000 ne doit
     // jamais être servi à un admin qui demande 10 000 URLs (et inversement).
     const cacheType = urlLimit > MAX_URLS ? 'sitemap_tree_xl' : 'sitemap_tree';

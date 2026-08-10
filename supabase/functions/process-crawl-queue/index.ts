@@ -15,7 +15,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk } from '../_shared/serveHandler.ts';
 import type { PageAnalysis, CustomSelector } from '../_shared/crawlQueue/types.ts';
-import { scrapePage, probeSPAStatus } from '../_shared/crawlQueue/scraperStrategy.ts';
+import { scrapePage, probeSPAStatus, createPaidBudget, budgetSummary } from '../_shared/crawlQueue/scraperStrategy.ts';
 import { computeDepth } from '../_shared/crawlQueue/duplicateDetector.ts';
 import { finalizeJob } from '../_shared/crawlQueue/finalizer.ts';
 
@@ -76,6 +76,11 @@ Deno.serve(handleRequest(async (req) => {
 
       let remaining = urlsToProcess.slice(alreadyProcessed);
 
+      // Budget d'appels payants du job : 1 tentative payante par page restante,
+      // + 10 % de marge pour les redirections. Empêche la dérive de coût
+      // constatée à l'audit (≈4,8 appels Spider par page utile).
+      const paidBudget = createPaidBudget(Math.ceil(Math.max(1, remaining.length) * 1.1));
+
       // Apply URL regex filter
       if (urlFilter) {
         try {
@@ -110,7 +115,7 @@ Deno.serve(handleRequest(async (req) => {
       let probeSize = 0;
 
       if (alreadyProcessed === 0) {
-        const probe = await probeSPAStatus(remaining[0], job.domain, firecrawlKey, renderingKey);
+        const probe = await probeSPAStatus(remaining[0], job.domain, firecrawlKey, renderingKey, paidBudget);
         useBrowserless = probe.isSPA;
         firstPageResult = probe.firstPageResult;
         probeSize = firstPageResult?.html_size_bytes || 0;
@@ -171,7 +176,7 @@ Deno.serve(handleRequest(async (req) => {
         console.log(`[Worker] Job ${job.id}: batch=${batchSize} (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA]' : ''}`);
 
         const scrapePromises = batch.map(pageUrl =>
-          scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url))
+          scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url), paidBudget)
         );
 
         const settled = await Promise.allSettled(scrapePromises);
@@ -260,6 +265,8 @@ Deno.serve(handleRequest(async (req) => {
           probeSize = validResults[validResults.length - 1].html_size_bytes || probeSize;
         }
       }
+
+      console.log(`[Worker] Job ${job.id}: coût scraping — ${budgetSummary(paidBudget)}`);
 
       if (alreadyProcessed >= job.total_count) {
         await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey, failedUrlsByJob.get(job.id) || []);

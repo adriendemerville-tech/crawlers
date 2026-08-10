@@ -43,6 +43,29 @@ export async function renderWithBrowserless(url: string, renderingKey: string): 
   return result ?? { html: null, responseTime: Date.now() - start };
 }
 
+// ── Budget d'appels payants par crawl (P0-3) ───────────────
+/**
+ * Plafonne les appels payants (Spider / Firecrawl) sur la durée d'un crawl.
+ * Objectif : 1 tentative payante maximum par page, et journalisation du ratio
+ * gratuit (renderPage) / payant pour piloter le coût.
+ */
+export interface PaidBudget {
+  max: number;
+  paidCalls: number;
+  freePages: number;
+  skipped: number;
+}
+
+export function createPaidBudget(max: number): PaidBudget {
+  return { max: Math.max(1, max), paidCalls: 0, freePages: 0, skipped: 0 };
+}
+
+export function budgetSummary(b: PaidBudget): string {
+  const total = b.paidCalls + b.freePages;
+  const freeRatio = total > 0 ? Math.round((b.freePages / total) * 100) : 0;
+  return `renderPage ${b.freePages}/${total} (${freeRatio}% gratuit), payants ${b.paidCalls}/${b.max}, ignorés ${b.skipped}`;
+}
+
 // ── Scrape a single page ───────────────────────────────────
 export async function scrapePage(
   pageUrl: string,
@@ -52,6 +75,7 @@ export async function scrapePage(
   renderingKey: string | null,
   customSelectors: CustomSelector[] = [],
   depth: number = 0,
+  budget?: PaidBudget,
 ): Promise<PageAnalysis | null> {
   try {
     let html = '';
@@ -76,17 +100,25 @@ export async function scrapePage(
         console.log(
           `[Worker] ${renderResult.usedRendering ? 'rendered' : 'fetched'} ${pageUrl} (${renderResult.html.length} chars${renderResult.framework ? `, ${renderResult.framework}` : ''}) ${responseTime}ms`
         );
+        if (budget) budget.freePages += 1;
       }
     } catch (renderErr) {
       console.warn(`[Worker] fetchAndRenderPage failed for ${pageUrl}:`, renderErr);
     }
 
-    // ── Spider.cloud PRIMARY → Firecrawl FALLBACK ──
-    if (!html || html.length < 500) {
+    // ── Spider.cloud PRIMARY → Firecrawl FALLBACK (1 seule tentative payante) ──
+    const budgetExhausted = !!budget && budget.paidCalls >= budget.max;
+    if ((!html || html.length < 500) && budgetExhausted) {
+      budget!.skipped += 1;
+      console.warn(`[Worker] Budget payant épuisé (${budget!.paidCalls}/${budget!.max}), ${pageUrl} ignorée`);
+    }
+    if ((!html || html.length < 500) && !budgetExhausted) {
       const spiderKey = Deno.env.get('SPIDER_API_KEY');
-      let spiderOk = false;
+      let spiderAttempted = false;
 
       if (spiderKey) {
+        spiderAttempted = true;
+        if (budget) budget.paidCalls += 1;
         try {
           console.log(`[Worker] HTML insufficient for ${pageUrl}, trying Spider.cloud...`);
           const fetchStart2 = Date.now();
@@ -104,7 +136,7 @@ export async function scrapePage(
             if (spiderHtml.length > 500) {
               html = spiderHtml;
               statusCode = page?.status || 200;
-              spiderOk = true;
+              // Spider a réussi : pas de repli Firecrawl.
               console.log(`[Worker] ✅ Spider.cloud OK for ${pageUrl} (${html.length} chars)`);
               await trackPaidApiCall('process-crawl-queue', 'spider', '/crawl', pageUrl).catch(() => {});
             }
@@ -114,7 +146,10 @@ export async function scrapePage(
         }
       }
 
-      if (!spiderOk) {
+      // Repli Firecrawl uniquement si Spider n'a pas été tenté (pas de clé) :
+      // une seule tentative payante par page.
+      if (!spiderAttempted && (!html || html.length < 500)) {
+        if (budget) budget.paidCalls += 1;
         try {
           console.log(`[Worker] Falling back to Firecrawl for ${pageUrl}...`);
           const fetchStart3 = Date.now();
@@ -160,8 +195,9 @@ export async function probeSPAStatus(
   domain: string,
   firecrawlKey: string,
   renderingKey: string | null,
+  budget?: PaidBudget,
 ): Promise<{ isSPA: boolean; firstPageResult: PageAnalysis | null }> {
-  const result = await scrapePage(firstUrl, domain, firecrawlKey, false, null);
+  const result = await scrapePage(firstUrl, domain, firecrawlKey, false, null, [], 0, budget);
   if (!result) return { isSPA: false, firstPageResult: null };
 
   const isThinContent = result.word_count < 50;
