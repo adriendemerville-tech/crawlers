@@ -69,6 +69,9 @@ export function emptyReport(): ContentIntegrityReport {
   return {
     version: 2,
     analyzed_pages: 0,
+    near_duplicate_confidence: 'inconclusive',
+    min_pages_for_confidence: MIN_COMPARABLE_PAGES,
+
     similarity_threshold: DEFAULT_SIMILARITY_THRESHOLD,
     sector_tolerance: 0.88,
     near_duplicate: {
