@@ -266,6 +266,8 @@ Deno.serve(handleRequest(async (req) => {
         }
       }
 
+      console.log(`[Worker] Job ${job.id}: coût scraping — ${budgetSummary(paidBudget)}`);
+
       if (alreadyProcessed >= job.total_count) {
         await finalizeJob(supabase, { ...job, processed_count: alreadyProcessed }, firecrawlKey, failedUrlsByJob.get(job.id) || []);
       }
