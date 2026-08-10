@@ -322,7 +322,9 @@ async function persistTaxonomy(
 
 Deno.serve(handleRequest(async (req) => {
 try {
-    const { domain } = await req.json();
+    const body = await req.json();
+    const { domain } = body;
+    const requestedLimit = typeof body?.urlLimit === 'number' ? body.urlLimit : null;
     if (!domain || typeof domain !== 'string') {
       return jsonError('Missing domain', 400);
     }
@@ -331,14 +333,22 @@ try {
 
     const supabase = getServiceClient();
 
-    // Plafond élargi (10 000 URLs) réservé aux admins — grands sites.
+    // Plafond élargi (10 000 URLs) réservé aux admins et aux appels internes
+    // service-role (crawl-site). Sans cela le plafond de 1 000 s'appliquait
+    // toujours, rendant MAX_URLS_ADMIN inatteignable (P0-1).
     let urlLimit = MAX_URLS;
     try {
       const auth = await getAuthenticatedUser(req);
-      if (auth?.isAdmin) urlLimit = MAX_URLS_ADMIN;
+      const privileged = !!auth && (auth.isAdmin || auth.userId === 'service-role');
+      if (privileged) {
+        urlLimit = requestedLimit
+          ? Math.min(MAX_URLS_ADMIN, Math.max(MAX_URLS, requestedLimit))
+          : MAX_URLS_ADMIN;
+      }
     } catch (e) {
       console.warn('[fetch-sitemap-tree] Auth check failed, standard limit applied:', e);
     }
+    console.log(`[fetch-sitemap-tree] ${cleanDomain} — plafond appliqué ${urlLimit}`);
     // Le cache est segmenté par plafond : un résultat tronqué à 1000 ne doit
     // jamais être servi à un admin qui demande 10 000 URLs (et inversement).
     const cacheType = urlLimit > MAX_URLS ? 'sitemap_tree_xl' : 'sitemap_tree';
