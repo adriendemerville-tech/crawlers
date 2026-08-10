@@ -287,7 +287,7 @@ Deno.serve(handleRequest(async (req: Request) => {
       }
     }
 
-    return jsonOk({ success: true, processed: results.length, results });
+    return jsonOk({ success: true, processed: results.length, reaped_stale_crawls: reaped, results });
   } catch (e) {
     return jsonError(e instanceof Error ? e.message : String(e), 500);
   }
