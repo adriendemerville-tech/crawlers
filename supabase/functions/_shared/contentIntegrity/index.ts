@@ -180,6 +180,9 @@ export async function analyzeContentIntegrity(
   return {
     version: 2,
     analyzed_pages: usable.length,
+    near_duplicate_confidence: usable.length >= MIN_COMPARABLE_PAGES ? 'conclusive' : 'inconclusive',
+    min_pages_for_confidence: MIN_COMPARABLE_PAGES,
+
     similarity_threshold: threshold,
     sector_tolerance: toleranceFor(identity),
     near_duplicate: {
