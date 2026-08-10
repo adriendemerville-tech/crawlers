@@ -115,7 +115,7 @@ Deno.serve(handleRequest(async (req) => {
       let probeSize = 0;
 
       if (alreadyProcessed === 0) {
-        const probe = await probeSPAStatus(remaining[0], job.domain, firecrawlKey, renderingKey);
+        const probe = await probeSPAStatus(remaining[0], job.domain, firecrawlKey, renderingKey, paidBudget);
         useBrowserless = probe.isSPA;
         firstPageResult = probe.firstPageResult;
         probeSize = firstPageResult?.html_size_bytes || 0;
