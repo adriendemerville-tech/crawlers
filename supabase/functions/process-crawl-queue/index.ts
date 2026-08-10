@@ -15,7 +15,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk } from '../_shared/serveHandler.ts';
 import type { PageAnalysis, CustomSelector } from '../_shared/crawlQueue/types.ts';
-import { scrapePage, probeSPAStatus } from '../_shared/crawlQueue/scraperStrategy.ts';
+import { scrapePage, probeSPAStatus, createPaidBudget, budgetSummary } from '../_shared/crawlQueue/scraperStrategy.ts';
 import { computeDepth } from '../_shared/crawlQueue/duplicateDetector.ts';
 import { finalizeJob } from '../_shared/crawlQueue/finalizer.ts';
 
