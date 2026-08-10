@@ -146,7 +146,10 @@ export async function scrapePage(
         }
       }
 
-      if (!spiderOk) {
+      // Repli Firecrawl uniquement si Spider n'a pas été tenté (pas de clé) :
+      // une seule tentative payante par page.
+      if (!spiderAttempted && (!html || html.length < 500)) {
+        if (budget) budget.paidCalls += 1;
         try {
           console.log(`[Worker] Falling back to Firecrawl for ${pageUrl}...`);
           const fetchStart3 = Date.now();
