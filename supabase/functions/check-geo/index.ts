@@ -1388,6 +1388,28 @@ function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
       sourceFunctions: ['check-geo'],
     }).catch(() => {});
 
+    // ── P0-2 : les constats GEO alimentent le Workbench (consommé par Parménion / Stratège) ──
+    if (userCtx?.userId) {
+      const geoDomain = new URL(normalizedUrl).hostname.replace(/^www\./, '');
+      (async () => {
+        const sb = getServiceClient();
+        const { data: trackedSite } = await sb
+          .from('tracked_sites')
+          .select('id')
+          .eq('user_id', userCtx.userId)
+          .eq('domain', geoDomain)
+          .maybeSingle();
+        await writeGeoFindingsToWorkbench(sb, factors, {
+          domain: geoDomain,
+          url: normalizedUrl,
+          userId: userCtx.userId,
+          trackedSiteId: trackedSite?.id ?? null,
+          totalScore: rawTotalScore,
+          reliabilityScore: selfAudit.reliabilityScore,
+        });
+      })().catch((e) => console.warn('[GEO-AUDIT] workbench write skipped:', e));
+    }
+
     return new Response(
       JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
