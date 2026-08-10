@@ -98,6 +98,13 @@ export async function writeCocoonFindingsToWorkbench(
     if (!sb || !opts.userId || !opts.domain || !opts.trackedSiteId || !Array.isArray(findings)) {
       return { attempted: 0, written: 0 };
     }
+    // 'service-role' is a placeholder, not a uuid: without a real owner the row
+    // would be invisible to RLS-scoped consumers anyway.
+    if (opts.userId === 'service-role') {
+      console.warn('[cocoonWorkbench] skipped: no real caller_user_id provided');
+      return { attempted: 0, written: 0 };
+    }
+
 
     const actionable = findings.filter((f) => {
       if (!f || f._suppressed) return false;
