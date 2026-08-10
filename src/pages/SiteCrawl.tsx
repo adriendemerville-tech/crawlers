@@ -631,7 +631,17 @@ export default function SiteCrawl() {
                 </div>
               )}
 
+              {/* Couverture du crawl (P1-4) */}
+              <CrawlCoverageBanner
+                crawledPages={crawlResult.crawled_pages}
+                sitemapCount={sitemapPagesCount}
+                indexedCount={indexedPagesCount}
+                discoveredCount={totalEstimatedPages}
+                language={language}
+              />
+
               {/* KPI Cards */}
+
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 <Card className="border">
                   <CardContent className="p-2.5 text-center">
