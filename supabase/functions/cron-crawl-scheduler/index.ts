@@ -119,7 +119,37 @@ Deno.serve(handleRequest(async (req: Request) => {
     const dryRun: boolean = !!body.dry_run;
     const onlyDomain: string | null = body.only_domain || null;
 
+    // 0) REAPER (P1-5) — les crawls bloqués > 2 h en cours sont marqués failed,
+    // sinon ils bloquent indéfiniment la file d'attente du domaine.
+    const STALE_CRAWL_MS = 2 * 60 * 60 * 1000;
+    let reaped = 0;
+    try {
+      const cutoff = new Date(Date.now() - STALE_CRAWL_MS).toISOString();
+      const { data: stale } = await supabase
+        .from('site_crawls')
+        .select('id, domain, status, created_at')
+        .in('status', ['pending', 'processing', 'queued', 'crawling'])
+        .lt('created_at', cutoff)
+        .limit(200);
+      for (const c of (stale || []) as any[]) {
+        const ageMin = Math.round((Date.now() - new Date(c.created_at).getTime()) / 60000);
+        const { error } = await supabase
+          .from('site_crawls')
+          .update({
+            status: 'failed',
+            error_message: `Crawl interrompu automatiquement : aucune progression depuis ${ageMin} min (statut « ${c.status} » bloqué au-delà du seuil de 2 h).`,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', c.id);
+        if (!error) reaped++;
+      }
+      if (reaped > 0) console.log(`[cron-crawl-scheduler] reaper: ${reaped} crawls bloqués marqués failed`);
+    } catch (e) {
+      console.warn('[cron-crawl-scheduler] reaper error:', (e as Error).message);
+    }
+
     // 1) Tous les targets actifs
+
     let q = supabase
       .from('parmenion_targets')
       .select('domain, created_by_user_id')
