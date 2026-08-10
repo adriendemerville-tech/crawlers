@@ -9,6 +9,8 @@ import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { writeGeoFindingsToWorkbench } from '../_shared/geoWorkbench.ts';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 // ============================================================================
 // INTERFACES EXPERT
