@@ -32,9 +32,21 @@ export interface IntegrityPageInput {
   page_intent?: string | null;
 }
 
+/**
+ * Seuil de confiance (P1-6) : sous ce nombre de pages comparables, les clusters
+ * de quasi-doublons ne sont pas statistiquement concluants — on ne conclut pas
+ * « site sain » et on ne pousse pas de constats near-duplicate au Workbench.
+ */
+export const MIN_COMPARABLE_PAGES = 30;
+
 export interface ContentIntegrityReport {
   version: 2;
   analyzed_pages: number;
+  /** 'conclusive' si analyzed_pages >= MIN_COMPARABLE_PAGES, sinon 'inconclusive'. */
+  near_duplicate_confidence: 'conclusive' | 'inconclusive';
+  min_pages_for_confidence: number;
+  similarity_threshold: number;
+
   similarity_threshold: number;
   sector_tolerance: number;
   near_duplicate: {
@@ -57,6 +69,9 @@ export function emptyReport(): ContentIntegrityReport {
   return {
     version: 2,
     analyzed_pages: 0,
+    near_duplicate_confidence: 'inconclusive',
+    min_pages_for_confidence: MIN_COMPARABLE_PAGES,
+
     similarity_threshold: DEFAULT_SIMILARITY_THRESHOLD,
     sector_tolerance: 0.88,
     near_duplicate: {
@@ -165,6 +180,9 @@ export async function analyzeContentIntegrity(
   return {
     version: 2,
     analyzed_pages: usable.length,
+    near_duplicate_confidence: usable.length >= MIN_COMPARABLE_PAGES ? 'conclusive' : 'inconclusive',
+    min_pages_for_confidence: MIN_COMPARABLE_PAGES,
+
     similarity_threshold: threshold,
     sector_tolerance: toleranceFor(identity),
     near_duplicate: {
@@ -193,11 +211,17 @@ export async function analyzeContentIntegrity(
 export function summarizeIntegrityReport(report: ContentIntegrityReport | null): string {
   if (!report || report.analyzed_pages === 0) return 'Intégrité du contenu : aucune analyse disponible.';
   const nd = report.near_duplicate;
+  const inconclusive = report.near_duplicate_confidence === 'inconclusive';
+  const minPages = report.min_pages_for_confidence ?? MIN_COMPARABLE_PAGES;
   const lines: string[] = [
     `Intégrité du contenu (${report.analyzed_pages} pages analysées) :`,
+    ...(inconclusive
+      ? [`- ATTENTION : échantillon insuffisant (< ${minPages} pages comparables). Le volet quasi-doublons n'est PAS concluant : ne pas conclure à l'absence de duplication.`]
+      : []),
     `- Quasi-doublons : ${nd.clusters.length} groupes (${nd.cannibalization_clusters} cannibalisation, ${nd.watch_clusters} à surveiller, ${nd.normal_clusters} normaux), ${nd.pages_affected} pages concernées.`,
     `- Contenus pauvres : ${report.thin_content.count} pages (score moyen ${report.thin_content.avg_thin_score}/100).`,
   ];
+
   for (const c of nd.clusters.filter((x) => x.verdict === 'cannibalization').slice(0, 5)) {
     lines.push(
       `  • ${c.pages.length} pages ~${Math.round(c.avg_similarity * 100)} % identiques, pivot ${c.pivot_url} — ${c.rationale}`,

@@ -22,6 +22,8 @@ import { ProAccessGate } from '@/components/ProAccessGate';
 import { MaillageIPRCard, computeMaillageFromCrawlPages } from '@/components/ExpertAudit/MaillageIPRCard';
 import { FairUseLimitModal } from '@/components/SiteCrawl/FairUseLimitModal';
 import { ContentIntegrityPanel } from '@/components/SiteCrawl/ContentIntegrityPanel';
+import { CrawlCoverageBanner } from '@/components/SiteCrawl/CrawlCoverageBanner';
+
 
 import { getScoreColor, getScoreBg } from '@/components/SiteCrawl/types';
 import { useCrawlEngine } from '@/hooks/useCrawlEngine';
@@ -631,7 +633,17 @@ export default function SiteCrawl() {
                 </div>
               )}
 
+              {/* Couverture du crawl (P1-4) */}
+              <CrawlCoverageBanner
+                crawledPages={crawlResult.crawled_pages}
+                sitemapCount={sitemapPagesCount}
+                indexedCount={indexedPagesCount}
+                discoveredCount={totalEstimatedPages}
+                language={language}
+              />
+
               {/* KPI Cards */}
+
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 <Card className="border">
                   <CardContent className="p-2.5 text-center">

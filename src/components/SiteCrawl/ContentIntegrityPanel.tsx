@@ -28,8 +28,11 @@ interface ThinPage {
 
 interface IntegrityReport {
   analyzed_pages: number;
+  near_duplicate_confidence?: 'conclusive' | 'inconclusive';
+  min_pages_for_confidence?: number;
   similarity_threshold: number;
   sector_tolerance: number;
+
   near_duplicate: {
     clusters: QualifiedCluster[];
     pages_affected: number;
@@ -87,7 +90,11 @@ export function ContentIntegrityPanel({ crawlId }: { crawlId?: string | null }) 
 
   const nd = report.near_duplicate;
   const thin = report.thin_content;
-  if (nd.clusters.length === 0 && thin.count === 0) return null;
+  const minPages = report.min_pages_for_confidence ?? 30;
+  const ndInconclusive = report.near_duplicate_confidence
+    ? report.near_duplicate_confidence === 'inconclusive'
+    : report.analyzed_pages < minPages;
+  if (nd.clusters.length === 0 && thin.count === 0 && !ndInconclusive) return null;
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -105,8 +112,16 @@ export function ContentIntegrityPanel({ crawlId }: { crawlId?: string | null }) 
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          {nd.clusters.length === 0 && (
+          {ndInconclusive && (
+            <div className="rounded-md border border-amber-500/40 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+              Résultat non concluant : seulement {report.analyzed_pages} page(s) comparables analysées
+              (seuil de confiance {minPages}). L'absence de groupe détecté ne signifie pas l'absence de
+              duplication — élargissez le crawl avant de conclure.
+            </div>
+          )}
+          {nd.clusters.length === 0 && !ndInconclusive && (
             <p className="text-xs text-muted-foreground">Aucun groupe de pages similaires détecté.</p>
+
           )}
           {nd.clusters.map((c, i) => (
             <Collapsible key={i}>
