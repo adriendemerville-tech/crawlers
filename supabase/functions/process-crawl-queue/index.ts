@@ -176,7 +176,7 @@ Deno.serve(handleRequest(async (req) => {
         console.log(`[Worker] Job ${job.id}: batch=${batchSize} (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA]' : ''}`);
 
         const scrapePromises = batch.map(pageUrl =>
-          scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url))
+          scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url), paidBudget)
         );
 
         const settled = await Promise.allSettled(scrapePromises);
