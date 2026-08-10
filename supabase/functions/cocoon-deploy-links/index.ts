@@ -172,7 +172,64 @@ try {
   }
 }));
 
+// ── Traçabilité du déploiement ──
+
+/** Clé d'identité d'un lien (insensible à la casse / au slash final). */
+function linkKey(source: string, target: string, anchor: string): string {
+  const norm = (s: string) => String(s || '').trim().toLowerCase().replace(/\/+$/, '')
+  return `${norm(source)}|${norm(target)}|${norm(anchor)}`
+}
+
+/**
+ * Marque les cocoon_auto_links correspondants comme déployés.
+ * Non bloquant : un échec d'écriture ne doit pas invalider le déploiement.
+ */
+async function markLinksDeployed(
+  supabase: ReturnType<typeof getServiceClient>,
+  trackedSiteId: string,
+  recs: LinkRecommendation[],
+  method: string,
+): Promise<number> {
+  if (recs.length === 0) return 0
+  try {
+    const { data: rows, error } = await supabase
+      .from('cocoon_auto_links')
+      .select('id, source_url, target_url, anchor_text')
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('is_deployed', false)
+
+    if (error || !rows || rows.length === 0) return 0
+
+    const wanted = new Set(recs.map(r => linkKey(r.source_url, r.target_url, r.anchor_text)))
+    const ids = rows
+      .filter((r: any) => wanted.has(linkKey(r.source_url, r.target_url, r.anchor_text)))
+      .map((r: any) => r.id)
+
+    if (ids.length === 0) return 0
+
+    const { error: updError } = await supabase
+      .from('cocoon_auto_links')
+      .update({
+        is_deployed: true,
+        deployment_method: method,
+        updated_at: new Date().toISOString(),
+      } as any)
+      .in('id', ids)
+
+    if (updError) {
+      console.warn('[cocoon-deploy-links] markLinksDeployed failed:', updError.message)
+      return 0
+    }
+    console.log(`[cocoon-deploy-links] marked ${ids.length} links deployed (${method})`)
+    return ids.length
+  } catch (e) {
+    console.warn('[cocoon-deploy-links] markLinksDeployed exception:', e)
+    return 0
+  }
+}
+
 // ── IKtracker deployment ──
+
 async function deployViaIktracker(
   supabase: ReturnType<typeof getServiceClient>,
   recommendations: LinkRecommendation[],
