@@ -28,8 +28,11 @@ interface ThinPage {
 
 interface IntegrityReport {
   analyzed_pages: number;
+  near_duplicate_confidence?: 'conclusive' | 'inconclusive';
+  min_pages_for_confidence?: number;
   similarity_threshold: number;
   sector_tolerance: number;
+
   near_duplicate: {
     clusters: QualifiedCluster[];
     pages_affected: number;
