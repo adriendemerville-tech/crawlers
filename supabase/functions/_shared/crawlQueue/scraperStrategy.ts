@@ -43,6 +43,29 @@ export async function renderWithBrowserless(url: string, renderingKey: string): 
   return result ?? { html: null, responseTime: Date.now() - start };
 }
 
+// ── Budget d'appels payants par crawl (P0-3) ───────────────
+/**
+ * Plafonne les appels payants (Spider / Firecrawl) sur la durée d'un crawl.
+ * Objectif : 1 tentative payante maximum par page, et journalisation du ratio
+ * gratuit (renderPage) / payant pour piloter le coût.
+ */
+export interface PaidBudget {
+  max: number;
+  paidCalls: number;
+  freePages: number;
+  skipped: number;
+}
+
+export function createPaidBudget(max: number): PaidBudget {
+  return { max: Math.max(1, max), paidCalls: 0, freePages: 0, skipped: 0 };
+}
+
+export function budgetSummary(b: PaidBudget): string {
+  const total = b.paidCalls + b.freePages;
+  const freeRatio = total > 0 ? Math.round((b.freePages / total) * 100) : 0;
+  return `renderPage ${b.freePages}/${total} (${freeRatio}% gratuit), payants ${b.paidCalls}/${b.max}, ignorés ${b.skipped}`;
+}
+
 // ── Scrape a single page ───────────────────────────────────
 export async function scrapePage(
   pageUrl: string,
@@ -52,6 +75,7 @@ export async function scrapePage(
   renderingKey: string | null,
   customSelectors: CustomSelector[] = [],
   depth: number = 0,
+  budget?: PaidBudget,
 ): Promise<PageAnalysis | null> {
   try {
     let html = '';
