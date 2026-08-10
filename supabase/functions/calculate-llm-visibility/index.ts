@@ -408,6 +408,8 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
       // Copy scores to user's own tables for their dashboard
       for (const s of (cached.scores || [])) {
+        // P0-1 : ne jamais recopier un score non mesuré (null) — sinon faux 0
+        if (s.score_percentage === null || s.score_percentage === undefined) continue
         await supabase.from('llm_visibility_scores').upsert({
           tracked_site_id,
           user_id,
