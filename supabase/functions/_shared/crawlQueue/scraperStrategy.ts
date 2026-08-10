@@ -136,7 +136,7 @@ export async function scrapePage(
             if (spiderHtml.length > 500) {
               html = spiderHtml;
               statusCode = page?.status || 200;
-              spiderOk = true;
+              // Spider a réussi : pas de repli Firecrawl.
               console.log(`[Worker] ✅ Spider.cloud OK for ${pageUrl} (${html.length} chars)`);
               await trackPaidApiCall('process-crawl-queue', 'spider', '/crawl', pageUrl).catch(() => {});
             }
