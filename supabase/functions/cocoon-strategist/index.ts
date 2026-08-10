@@ -1,6 +1,7 @@
 // redeploy bump 2026-06-28
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { writeCocoonFindingsToWorkbench } from '../_shared/cocoonWorkbench.ts';
 import { readSiteMemory, writeSiteMemory, applyIdentityUpdates } from '../_shared/siteMemory.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
@@ -1161,6 +1162,26 @@ try {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // PHASE 4b: Boucle mesure → correction — push des findings critiques
+    // dans architect_workbench (consommé par Parménion / Architects).
+    // Non bloquant par construction.
+    // ═══════════════════════════════════════════════════════════
+    let workbenchWrite = { attempted: 0, written: 0 };
+    try {
+      workbenchWrite = await writeCocoonFindingsToWorkbench(supabase, allFindings, {
+        domain,
+        trackedSiteId: tracked_site_id,
+        userId: auth.userId,
+        strategyPlanId: plan?.id ?? null,
+        spiralPhase: spiralPhase ?? null,
+      });
+    } catch (e) {
+      console.warn('[cocoon-strategist] workbench write failed:', e);
+    }
+
+
+
+    // ═══════════════════════════════════════════════════════════
     // PHASE 5: Persist individual recommendations for memory
     // ═══════════════════════════════════════════════════════════
     if (plan?.id) {
@@ -1253,6 +1274,8 @@ try {
       diagnostics_summary: diagnosticsSummary,
       conflicts_resolved: conflicts,
       feedback: feedbackAnalysis,
+      workbench_findings_written: workbenchWrite.written,
+
       development_axes: matchingAxes,
       cms_inventory_summary: cmsInventory ? {
         total: cmsInventory.items.length,
