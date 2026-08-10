@@ -76,6 +76,11 @@ Deno.serve(handleRequest(async (req) => {
 
       let remaining = urlsToProcess.slice(alreadyProcessed);
 
+      // Budget d'appels payants du job : 1 tentative payante par page restante,
+      // + 10 % de marge pour les redirections. Empêche la dérive de coût
+      // constatée à l'audit (≈4,8 appels Spider par page utile).
+      const paidBudget = createPaidBudget(Math.ceil(Math.max(1, remaining.length) * 1.1));
+
       // Apply URL regex filter
       if (urlFilter) {
         try {
