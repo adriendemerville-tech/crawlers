@@ -260,7 +260,11 @@ async function queryWithIterations(
   patterns: BrandPatterns,
   domain: string,
   followUpPrompts: string[] = ["Ok et t'aurais pas d'autres idées ?", "Lequel tu me recommanderais vraiment si tu devais en choisir un seul ?"],
-): Promise<{ iteration_found: number; response_text: string }> {
+): Promise<{ iteration_found: number; response_text: string; measured: boolean; error?: string }> {
+  // P0-1 : un échec technique (HTTP !ok, timeout, exception) ne doit JAMAIS être
+  // compté comme « la marque n'est pas citée ». On renvoie measured=false et le
+  // modèle est exclu du score au lieu d'être noté 0.
+  let failure: string | undefined
   const messages: Array<{ role: string; content: string }> = [
     { role: 'user', content: prompt },
   ]
@@ -291,6 +295,7 @@ async function queryWithIterations(
 
       if (!resp.ok) {
         console.error(`[llm-vis] ${model} it${iteration} HTTP ${resp.status}`)
+        if (iteration === 1) failure = `http_${resp.status}`
         break
       }
 
@@ -300,7 +305,7 @@ async function queryWithIterations(
       trackTokenUsage('calculate-llm-visibility', model, data.usage, domain)
 
       if (findBrandInText(content, patterns)) {
-        return { iteration_found: iteration, response_text: content }
+        return { iteration_found: iteration, response_text: content, measured: true }
       }
 
       messages.push({ role: 'assistant', content })
@@ -310,11 +315,12 @@ async function queryWithIterations(
       }
     } catch (err) {
       console.error(`[llm-vis] ${model} it${iteration} error:`, err)
+      if (iteration === 1) failure = err instanceof Error ? (err.name || err.message) : 'unknown_error'
       break
     }
   }
 
-  return { iteration_found: 0, response_text: '' }
+  return { iteration_found: 0, response_text: '', measured: !failure, error: failure }
 }
 
 // ═══════════════════════════════════════════════
@@ -402,6 +408,8 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
       // Copy scores to user's own tables for their dashboard
       for (const s of (cached.scores || [])) {
+        // P0-1 : ne jamais recopier un score non mesuré (null) — sinon faux 0
+        if (s.score_percentage === null || s.score_percentage === undefined) continue
         await supabase.from('llm_visibility_scores').upsert({
           tracked_site_id,
           user_id,
@@ -420,10 +428,12 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     const llmPromises = LLM_TARGETS.map(async (llm) => {
       const promptScores: PromptScore[] = []
       const responseTexts: string[] = []
+      let failedPrompts = 0
+      let lastError: string | undefined
 
       const followUps = getFollowUpPrompts(site)
       for (const prompt of prompts) {
-        const { iteration_found, response_text } = await queryWithIterations(
+        const { iteration_found, response_text, measured, error } = await queryWithIterations(
           openrouterKey,
           llm.model,
           prompt,
@@ -433,6 +443,16 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         )
 
         trackPaidApiCall('calculate-llm-visibility', 'openrouter', llm.model, site.domain)
+
+        // P0-1 : un prompt non mesuré (panne modèle) est exclu du score et
+        // n'est PAS enregistré comme « marque non trouvée ».
+        if (!measured) {
+          failedPrompts++
+          lastError = error
+          responseTexts.push('')
+          console.warn(`[llm-vis] ${site.domain} × ${llm.name}: prompt non mesuré (${error})`)
+          continue
+        }
 
         const ps = scorePromptResult(iteration_found, response_text, patterns)
         promptScores.push(ps)
@@ -451,20 +471,24 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         })
       }
 
-      const score = aggregateLLMScore(promptScores)
+      const measuredPrompts = promptScores.length
+      const score = measuredPrompts > 0 ? aggregateLLMScore(promptScores) : null
 
-      await supabase.from('llm_visibility_scores').upsert({
-        tracked_site_id,
-        user_id,
-        llm_name: llm.name,
-        score_percentage: score,
-        week_start_date: weekStart,
-      }, { onConflict: 'tracked_site_id,llm_name,week_start_date' })
+      // Aucun prompt mesuré → on n'écrit AUCUN score (0 serait un faux négatif)
+      if (score !== null) {
+        await supabase.from('llm_visibility_scores').upsert({
+          tracked_site_id,
+          user_id,
+          llm_name: llm.name,
+          score_percentage: score,
+          week_start_date: weekStart,
+        }, { onConflict: 'tracked_site_id,llm_name,week_start_date' })
+      }
 
       const breakdown = promptScores.map((ps, i) =>
         `P${i + 1}:it${ps.iterationFound}×pos${ps.positionRank}×${ps.sentiment}=${ps.compositeScore}`
       ).join(' | ')
-      console.log(`[llm-vis] ${site.domain} × ${llm.name}: ${score}% [${breakdown}]`)
+      console.log(`[llm-vis] ${site.domain} × ${llm.name}: ${score === null ? 'NON MESURÉ' : score + '%'} [${breakdown}] (${measuredPrompts}/${prompts.length} mesurés)`)
 
       // ── Save conversations for the Benchmark LLM modal ──
       const convRows = prompts.map((prompt, i) => ({
@@ -485,7 +509,18 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         .eq('llm_name', llm.name)
       await supabase.from('llm_depth_conversations').insert(convRows)
 
-      return { llm_name: llm.name, score, promptDetails: promptScores, responseTexts }
+      return {
+        llm_name: llm.name,
+        score,
+        measured_prompts: measuredPrompts,
+        total_prompts: prompts.length,
+        failed_prompts: failedPrompts,
+        measurement_status: measuredPrompts === 0 ? 'unmeasured' : (failedPrompts > 0 ? 'partial' : 'measured'),
+        error: measuredPrompts === 0 ? (lastError || 'model_unavailable') : undefined,
+        promptDetails: promptScores,
+        responseTexts,
+      }
+
 })
 
     const llmResults = await Promise.all(llmPromises)
@@ -493,6 +528,10 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     const scores = llmResults.map(r => ({
       llm_name: r.llm_name,
       score_percentage: r.score,
+      measurement_status: r.measurement_status,
+      measured_prompts: r.measured_prompts,
+      total_prompts: r.total_prompts,
+      measurement_error: r.error,
       response_excerpt: r.responseTexts?.[0]?.slice(0, 300) || '',
       overall_sentiment: r.promptDetails.length > 0
         ? (r.promptDetails.filter(d => d.sentiment === 'recommended' || d.sentiment === 'positive').length > r.promptDetails.length / 2 ? 'positive' : r.promptDetails.filter(d => d.sentiment === 'negative').length > r.promptDetails.length / 2 ? 'negative' : 'neutral')
@@ -508,10 +547,18 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       })),
     }))
 
-    console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage}%`).join(', ')}`)
+    const unmeasured = scores.filter(s => s.measurement_status === 'unmeasured').map(s => s.llm_name)
+    console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage === null ? 'n/m' : s.score_percentage + '%'}`).join(', ')}${unmeasured.length ? ` — non mesurés: ${unmeasured.join(', ')}` : ''}`)
 
     // ── Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h) ──
-    const cachePayload = { scores, week_start_date: weekStart }
+    const cachePayload = {
+      scores,
+      week_start_date: weekStart,
+      unmeasured_models: unmeasured,
+      measured_models: scores.length - unmeasured.length,
+      total_models: scores.length,
+    }
+
     await supabase.from('domain_data_cache').upsert({
       domain: site.domain,
       data_type: 'llm_visibility',

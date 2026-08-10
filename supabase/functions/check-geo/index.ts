@@ -9,6 +9,8 @@ import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { writeGeoFindingsToWorkbench } from '../_shared/geoWorkbench.ts';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 // ============================================================================
 // INTERFACES EXPERT
@@ -1385,6 +1387,28 @@ function analyzeReadability(doc: ReturnType<DOMParser['parseFromString']>): {
       rawPayload: { totalScore: rawTotalScore, factors: factors.map(f => ({ id: f.id, score: f.score, status: f.status })), reliabilityScore: selfAudit.reliabilityScore },
       sourceFunctions: ['check-geo'],
     }).catch(() => {});
+
+    // ── P0-2 : les constats GEO alimentent le Workbench (consommé par Parménion / Stratège) ──
+    if (userCtx?.userId) {
+      const geoDomain = new URL(normalizedUrl).hostname.replace(/^www\./, '');
+      (async () => {
+        const sb = getServiceClient();
+        const { data: trackedSite } = await sb
+          .from('tracked_sites')
+          .select('id')
+          .eq('user_id', userCtx.userId)
+          .eq('domain', geoDomain)
+          .maybeSingle();
+        await writeGeoFindingsToWorkbench(sb, factors, {
+          domain: geoDomain,
+          url: normalizedUrl,
+          userId: userCtx.userId,
+          trackedSiteId: trackedSite?.id ?? null,
+          totalScore: rawTotalScore,
+          reliabilityScore: selfAudit.reliabilityScore,
+        });
+      })().catch((e) => console.warn('[GEO-AUDIT] workbench write skipped:', e));
+    }
 
     return new Response(
       JSON.stringify(result),
