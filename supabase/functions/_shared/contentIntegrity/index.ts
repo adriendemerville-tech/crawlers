@@ -211,11 +211,17 @@ export async function analyzeContentIntegrity(
 export function summarizeIntegrityReport(report: ContentIntegrityReport | null): string {
   if (!report || report.analyzed_pages === 0) return 'Intégrité du contenu : aucune analyse disponible.';
   const nd = report.near_duplicate;
+  const inconclusive = report.near_duplicate_confidence === 'inconclusive';
+  const minPages = report.min_pages_for_confidence ?? MIN_COMPARABLE_PAGES;
   const lines: string[] = [
     `Intégrité du contenu (${report.analyzed_pages} pages analysées) :`,
+    ...(inconclusive
+      ? [`- ATTENTION : échantillon insuffisant (< ${minPages} pages comparables). Le volet quasi-doublons n'est PAS concluant : ne pas conclure à l'absence de duplication.`]
+      : []),
     `- Quasi-doublons : ${nd.clusters.length} groupes (${nd.cannibalization_clusters} cannibalisation, ${nd.watch_clusters} à surveiller, ${nd.normal_clusters} normaux), ${nd.pages_affected} pages concernées.`,
     `- Contenus pauvres : ${report.thin_content.count} pages (score moyen ${report.thin_content.avg_thin_score}/100).`,
   ];
+
   for (const c of nd.clusters.filter((x) => x.verdict === 'cannibalization').slice(0, 5)) {
     lines.push(
       `  • ${c.pages.length} pages ~${Math.round(c.avg_similarity * 100)} % identiques, pivot ${c.pivot_url} — ${c.rationale}`,
