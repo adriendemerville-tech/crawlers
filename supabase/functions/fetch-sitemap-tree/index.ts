@@ -22,9 +22,13 @@ interface FolderNode {
 
 /** Plafond standard d'URLs collectées dans le sitemap. */
 const MAX_URLS = 1000;
-/** Plafond réservé aux admins (grands sites : 7 000+ pages indexées). */
+/** Plafond réservé aux admins et aux appels internes service-role (grands sites). */
 const MAX_URLS_ADMIN = 10_000;
 const FETCH_TIMEOUT_MS = 10_000;
+/** Budget global de parcours du sitemap (index + enfants en parallèle). */
+const SITEMAP_BUDGET_MS = 45_000;
+/** Nombre de sitemaps enfants récupérés en parallèle. */
+const CHILD_CONCURRENCY = 6;
 const CACHE_TTL_HOURS = 2;
 
 async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
