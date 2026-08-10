@@ -195,8 +195,9 @@ export async function probeSPAStatus(
   domain: string,
   firecrawlKey: string,
   renderingKey: string | null,
+  budget?: PaidBudget,
 ): Promise<{ isSPA: boolean; firstPageResult: PageAnalysis | null }> {
-  const result = await scrapePage(firstUrl, domain, firecrawlKey, false, null);
+  const result = await scrapePage(firstUrl, domain, firecrawlKey, false, null, [], 0, budget);
   if (!result) return { isSPA: false, firstPageResult: null };
 
   const isThinContent = result.word_count < 50;
