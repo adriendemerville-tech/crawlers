@@ -526,6 +526,10 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     const scores = llmResults.map(r => ({
       llm_name: r.llm_name,
       score_percentage: r.score,
+      measurement_status: r.measurement_status,
+      measured_prompts: r.measured_prompts,
+      total_prompts: r.total_prompts,
+      measurement_error: r.error,
       response_excerpt: r.responseTexts?.[0]?.slice(0, 300) || '',
       overall_sentiment: r.promptDetails.length > 0
         ? (r.promptDetails.filter(d => d.sentiment === 'recommended' || d.sentiment === 'positive').length > r.promptDetails.length / 2 ? 'positive' : r.promptDetails.filter(d => d.sentiment === 'negative').length > r.promptDetails.length / 2 ? 'negative' : 'neutral')
@@ -541,10 +545,18 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       })),
     }))
 
-    console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage}%`).join(', ')}`)
+    const unmeasured = scores.filter(s => s.measurement_status === 'unmeasured').map(s => s.llm_name)
+    console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage === null ? 'n/m' : s.score_percentage + '%'}`).join(', ')}${unmeasured.length ? ` — non mesurés: ${unmeasured.join(', ')}` : ''}`)
 
     // ── Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h) ──
-    const cachePayload = { scores, week_start_date: weekStart }
+    const cachePayload = {
+      scores,
+      week_start_date: weekStart,
+      unmeasured_models: unmeasured,
+      measured_models: scores.length - unmeasured.length,
+      total_models: scores.length,
+    }
+
     await supabase.from('domain_data_cache').upsert({
       domain: site.domain,
       data_type: 'llm_visibility',
