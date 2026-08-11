@@ -12,6 +12,9 @@ import { mergeMarinaReports } from '@/lib/marina/mergeReports';
 const MAX_URLS = 15;
 const CREDIT_COST = 5;
 const CONCURRENCY = 2;
+// Décalage du 2e worker : laisse la 1re URL enregistrer le crawl partagé du
+// domaine avant que la suivante ne démarre (évite deux crawls simultanés).
+const STAGGER_MS = 20_000;
 const STORAGE_KEY = 'marina_batch_v2';
 
 type ItemStatus = 'pending' | 'running' | 'completed' | 'partial' | 'failed';
@@ -252,13 +255,19 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
     toast.success(`${targets.length} audits lancés — génération séquentielle en cours`);
 
     let cursor = 0;
-    const worker = async () => {
+    const worker = async (workerIndex: number) => {
+      // Le second worker attend que le premier ait initié le crawl mutualisé.
+      if (workerIndex > 0) {
+        await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
+      }
       while (cursor < initial.length && !cancelRef.current) {
         const index = cursor++;
         await runOne(index, initial[index].url);
       }
     };
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, initial.length) }, worker));
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, initial.length) }, (_, i) => worker(i)),
+    );
     setRunning(false);
   }, [credits, isAuthenticated, runOne, targets, totalCost]);
 

@@ -2396,46 +2396,68 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       if (!trackedSiteId) {
         console.warn(`[Marina] No tracked_site for ${domain} — skipping crawl, going to phase 3`);
       } else {
-        // Check if we have a recent crawl (< 12h) with enough pages
+        // ─── Mutualisation du crawl par domaine ───
+        // 1) crawl terminé récent (< 12h, >= 10 pages) → réutilisation directe
+        // 2) crawl déjà en vol (< 30 min) → on s'y raccroche au lieu d'en lancer un second
+        // 3) sinon → un seul crawl est lancé (la 1re URL du batch)
         const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
         const { data: existingCrawls, error: existingCrawlError } = await sb
           .from('site_crawls' as any)
           .select('id, crawled_pages, total_pages, status, created_at')
           .eq('domain', domain)
           .eq('user_id', parentJob.user_id)
-          .eq('status', 'completed')
           .gte('created_at', twelveHoursAgo)
           .order('created_at', { ascending: false })
-          .limit(1);
+          .limit(10);
 
         if (existingCrawlError) {
           console.warn(`[Marina] Existing crawl lookup failed for ${domain}: ${existingCrawlError.message}`);
         }
 
-        // Only reuse if recent AND has a reasonable number of pages (>= 10)
-        const recentCrawl = existingCrawls?.[0] as any;
-        const hasRecentCrawl = recentCrawl && recentCrawl.crawled_pages >= 10;
+        const crawlRows = (existingCrawls || []) as any[];
+        const reusableCrawl = crawlRows.find(
+          (c) => c.status === 'completed' && (c.crawled_pages || 0) >= 10,
+        );
+        const IN_FLIGHT_STATUSES = ['pending', 'queued', 'running', 'crawling', 'analyzing', 'processing'];
+        const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
+        const inFlightCrawl = crawlRows.find(
+          (c) => IN_FLIGHT_STATUSES.includes(c.status) && new Date(c.created_at).getTime() > thirtyMinAgo,
+        );
 
-        if (!hasRecentCrawl) {
-          const reason = recentCrawl 
-            ? `only ${recentCrawl.crawled_pages} pages (too few)` 
-            : 'no recent crawl (< 12h)';
-          console.log(`[Marina] ${reason} for ${domain}, launching real crawl (max 50 pages)...`);
-          await updateProgress(67, 'multi_crawl');
+        if (reusableCrawl) {
+          console.log(`[Marina] Found recent crawl with ${reusableCrawl.crawled_pages} pages (< 12h) — reusing`);
+        } else {
+          let crawlLaunchRes: any = null;
+
+          if (inFlightCrawl) {
+            console.log(`[Marina] Crawl ${inFlightCrawl.id} already in flight for ${domain} — attaching instead of launching a second one`);
+            crawlLaunchRes = {
+              success: true,
+              crawlId: inFlightCrawl.id,
+              totalPages: inFlightCrawl.total_pages,
+            };
+            await updateProgress(67, 'multi_crawl');
+          } else {
+            console.log(`[Marina] No reusable crawl for ${domain}, launching the single shared crawl (max 50 pages)...`);
+            await updateProgress(67, 'multi_crawl');
+            try {
+              crawlLaunchRes = await callFunction('crawl-site', {
+                url: url,
+                maxPages: 50,
+                userId: parentJob.user_id,
+                forceRefresh: true,
+              });
+            } catch (crawlErr) {
+              console.warn(`[Marina] Crawl launch failed (non-fatal):`, crawlErr);
+            }
+          }
 
           try {
-            const crawlLaunchRes = await callFunction('crawl-site', {
-              url: url,
-              maxPages: 50,
-              userId: parentJob.user_id,
-              forceRefresh: true,
-            });
-
             if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
               const crawlId = crawlLaunchRes.crawlId;
-              console.log(`[Marina] Crawl launched: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages`);
+              console.log(`[Marina] Crawl in progress: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages`);
 
-              // Poll until crawl completes — max 100s to stay within wall-clock
+              // Poll until crawl completes
               const crawlStartTime = Date.now();
               const CRAWL_TIMEOUT_MS = 300_000;
               const CRAWL_POLL_MS = 5_000;
@@ -2478,16 +2500,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               }
 
               if (!crawlDone) {
-                console.warn(`[Marina] Crawl ${crawlId} timed out after 100s — proceeding with partial data`);
+                console.warn(`[Marina] Crawl ${crawlId} timed out — proceeding with partial data`);
               }
             } else {
-              console.warn(`[Marina] crawl-site failed: ${crawlLaunchRes?.error || 'unknown error'}`);
+              console.warn(`[Marina] crawl-site unavailable: ${crawlLaunchRes?.error || 'unknown error'}`);
             }
           } catch (crawlErr) {
             console.warn(`[Marina] Multi-page crawl failed (non-fatal):`, crawlErr);
           }
-        } else {
-          console.log(`[Marina] Found recent crawl with ${recentCrawl.crawled_pages} pages (< 12h) — reusing`);
         }
       }
 
