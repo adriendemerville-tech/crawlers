@@ -234,11 +234,74 @@ async function callOnce(
 }
 
 
+// ═══════════════════════════════════════════════════════════════════
+// Instrumentation du coût — audit Cocoon 2026-08-10 (H3)
+// Chaque appel non-streaming réussi est loggé dans ai_gateway_usage.
+// Fire-and-forget: n'échoue jamais, ne bloque jamais l'appel.
+// ═══════════════════════════════════════════════════════════════════
+function logGatewayUsage(
+  model: string,
+  provider: 'lovable' | 'openrouter',
+  callerFunction: string,
+  usage: Record<string, number> | undefined,
+  isFallback: boolean,
+): void {
+  try {
+    if (!usage) return;
+    const url = Deno.env.get('SUPABASE_URL');
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !key) return;
+    const pt = Number(usage.prompt_tokens) || 0;
+    const ct = Number(usage.completion_tokens) || 0;
+    if (pt === 0 && ct === 0) return;
+    fetch(`${url}/rest/v1/ai_gateway_usage`, {
+      method: 'POST',
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({
+        gateway: provider,
+        model,
+        edge_function: callerFunction || 'unknown',
+        prompt_tokens: pt,
+        completion_tokens: ct,
+        total_tokens: Number(usage.total_tokens) || pt + ct,
+        estimated_cost_usd: estimateTokenCostUsd(model, pt, ct),
+        cache_creation_tokens: Number(usage.cache_creation_input_tokens) || 0,
+        cache_read_tokens: Number(usage.cache_read_input_tokens) || 0,
+        is_fallback: isFallback,
+      }),
+      signal: AbortSignal.timeout(3000),
+    }).catch(() => {});
+  } catch { /* silent */ }
+}
+
+/** Clone la réponse pour en extraire `usage`, logge, puis rend la réponse intacte. */
+function withUsageLog(
+  resp: Response,
+  model: string,
+  provider: 'lovable' | 'openrouter',
+  callerFunction: string,
+  isFallback: boolean,
+): Response {
+  try {
+    const clone = resp.clone();
+    clone.json()
+      .then((j: { usage?: Record<string, number> }) =>
+        logGatewayUsage(model, provider, callerFunction, j?.usage, isFallback))
+      .catch(() => {});
+  } catch { /* silent */ }
+  return resp;
+}
+
 /**
  * API recommandée: cascade primary → fallback1 → fallback2 avec allowlist.
  */
 export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
-  const { primary, fallback1, fallback2, cache = 'none', body, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {} } = opts;
+  const { primary, fallback1, fallback2, cache = 'none', body, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, callerFunction = 'unknown' } = opts;
 
   // Validation allowlist primary
   if (!PRIMARY_ALLOWED_2026.has(primary) && !PRIMARY_ALLOWED_CLAUDE_EXCEPTION.has(primary)) {
