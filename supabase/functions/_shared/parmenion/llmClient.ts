@@ -88,6 +88,7 @@ export async function callLLMWithTools(
         }
 
         const result = await response.json();
+        logAIUsageFromResponse(getServiceClient(), currentModel, 'parmenion-llmClient', result?.usage);
         const message = result.choices?.[0]?.message;
         const toolCalls = message?.tool_calls || [];
 
