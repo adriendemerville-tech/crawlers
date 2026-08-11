@@ -1117,12 +1117,14 @@ async function findTextPositions(
   return { data: results, type: 'application/json' };
 };`;
 
-    const resp = await fetch(getBrowserlessFunctionUrl(browserlessKey), {
+    const resp = await withBrowserlessSlot(() => fetch(getBrowserlessFunctionUrl(browserlessKey), {
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: script,
       signal: AbortSignal.timeout(60000),
-    });
+    }), 'analyze-ux-context/positions');
+
+    if (!resp) return [];
 
     if (!resp.ok) {
       console.log(`[analyze-ux-context] Text position search error: ${resp.status}`);
