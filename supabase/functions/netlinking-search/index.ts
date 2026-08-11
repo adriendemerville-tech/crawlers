@@ -157,23 +157,25 @@ Deno.serve(async (req) => {
     }
     const params = parsed.data;
     // Seuls les providers réellement câblés sont interrogés
-    const requested = params.providers?.length ? params.providers : WIRED_PROVIDERS;
-    const providers = requested.filter((p) => WIRED_PROVIDERS.includes(p));
+    const wired: string[] = [...WIRED_PROVIDERS];
+    const requested: string[] = params.providers?.length ? [...params.providers] : wired;
+    const providers = requested.filter((p) => wired.includes(p));
     if (providers.length === 0) {
       return new Response(JSON.stringify({ offers: [], providers_hit: [], unavailable_providers: requested, commission_rate: COMMISSION_RATE }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Cache lookup
+    // Cache lookup + purge des entrées expirées
     const cacheKey = `${providers.sort().join(',')}::${params.language}::${params.topic}::${params.min_dr ?? 0}::${params.min_traffic ?? 0}::${params.budget_max_cents ?? 0}`;
-    const service = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    await service.from('netlinking_catalog_cache').delete().lt('expires_at', new Date().toISOString());
     const { data: cached } = await service
       .from('netlinking_catalog_cache')
       .select('payload,expires_at')
       .eq('cache_key', cacheKey)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
+
 
     if (cached?.payload) {
       return new Response(JSON.stringify({ ...(cached.payload as object), cached: true }), {
