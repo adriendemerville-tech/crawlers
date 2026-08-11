@@ -60,20 +60,32 @@ Deno.serve(async (req) => {
       .update(patch)
       .eq('provider_slug', providerSlug)
       .eq('provider_order_id', providerOrderId)
-      .select('id,user_id,total_ht_cents,status')
+      .neq('status', 'refunded')
+      .select('id,user_id,total_ht_cents,status,refunded_at')
       .maybeSingle();
 
-    // Auto-refund on rejection
-    if (order && patch.status === 'rejected') {
-      await service.rpc('dev_wallet_credit', {
-        _user_id: order.user_id,
-        _amount_cents: order.total_ht_cents,
-        _source: 'refund',
-        _source_ref: `netlinking-refund:${order.id}`,
-        _description: `Refund rejet ${providerSlug}`,
-      });
-      await service.from('netlinking_orders').update({ status: 'refunded', refunded_at: new Date().toISOString() }).eq('id', order.id);
+    // Auto-refund on rejection — idempotent : le passage à 'refunded' est
+    // conditionné à refunded_at IS NULL, donc un replay du webhook ne recrédite pas.
+    if (order && patch.status === 'rejected' && !order.refunded_at) {
+      const { data: claimed } = await service
+        .from('netlinking_orders')
+        .update({ status: 'refunded', refunded_at: new Date().toISOString() })
+        .eq('id', order.id)
+        .is('refunded_at', null)
+        .select('id')
+        .maybeSingle();
+
+      if (claimed) {
+        await service.rpc('dev_wallet_credit', {
+          _user_id: order.user_id,
+          _amount_cents: order.total_ht_cents,
+          _source: 'refund',
+          _source_ref: `netlinking-refund:${order.id}`,
+          _description: `Refund rejet ${providerSlug}`,
+        });
+      }
     }
+
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
