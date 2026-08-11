@@ -128,6 +128,8 @@ function shouldFallback(status: number): boolean {
 
 interface AICallOptions {
   primary: string;
+  /** Nom de la fonction appelante — persisté dans ai_gateway_usage.edge_function. */
+  callerFunction?: string;
   fallback1?: string;
   fallback2?: string;
   cache?: 'anthropic' | 'none';
