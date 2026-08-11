@@ -80,3 +80,39 @@ export function classifyFuncError(funcName: string, isOnlyFailure: boolean): Err
   if (['iktracker-actions', 'cms-push-draft', 'cms-patch-content'].includes(funcName) && isOnlyFailure) return 'critical';
   return 'degraded';
 }
+
+export type PhaseErrorCategory =
+  | 'timeout'
+  | 'http_5xx'
+  | 'cms_4xx'
+  | 'guard_block'
+  | 'llm_failure'
+  | 'unknown';
+
+/** Famille dominante d'un lot d'erreurs de phase (audit Parménion P1-1). */
+export function categorizePhaseErrors(errors: ExecutionError[]): PhaseErrorCategory {
+  const order: PhaseErrorCategory[] = ['cms_4xx', 'guard_block', 'timeout', 'llm_failure', 'http_5xx', 'unknown'];
+  const found = new Set<PhaseErrorCategory>();
+
+  for (const e of errors) {
+    const msg = `${e.message || ''}`.toLowerCase();
+    const fn = `${e.function || ''}`.toLowerCase();
+
+    if (/http 4\d\d|\b4\d\d\b.*(cms|push|patch)|cms action .* failed: http 4/.test(msg) && /cms|iktracker|dictadevi|push|patch/.test(`${msg} ${fn}`)) {
+      found.add('cms_4xx');
+    } else if (/guard|block(ed)?|cannibaliz|saturation|dedup|backlog|jaccard|hallucination/.test(msg)) {
+      found.add('guard_block');
+    } else if (/timeout|timed out|aborted|deadline|watchdog/.test(msg)) {
+      found.add('timeout');
+    } else if (/llm|gateway|tool call|model|openrouter|lovable ai|402|429/.test(msg)) {
+      found.add('llm_failure');
+    } else if (/http 5\d\d|\b5\d\d\b|internal server error|bad gateway|unavailable/.test(msg)) {
+      found.add('http_5xx');
+    } else {
+      found.add('unknown');
+    }
+  }
+
+  for (const c of order) if (found.has(c)) return c;
+  return 'unknown';
+}
