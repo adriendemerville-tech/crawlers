@@ -21,6 +21,7 @@ import { TECH_TOOLS, CONTENT_TOOLS, DECISION_TOOL } from '../_shared/parmenion/t
 import { buildPhaseInstructions } from '../_shared/parmenion/prompts.ts';
 import { enrichKeywordsForPrescribe } from '../_shared/parmenion/keywordEnrichment.ts';
 import { callLLMWithTools } from '../_shared/parmenion/llmClient.ts';
+import { writePrescriptionsToWorkbench } from '../_shared/parmenion/prescriptionWorkbench.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
 import { loadPersonaRotation, buildPersonaPromptBlock, recordPersonaServed } from '../_shared/parmenion/personaEngine.ts';
 
