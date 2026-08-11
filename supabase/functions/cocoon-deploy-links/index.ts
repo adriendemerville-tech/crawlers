@@ -477,6 +477,7 @@ async function generateBridgeSentence(
 
   try {
     const result = await callLovableAI({
+      callerFunction: 'cocoon-deploy-links',
       model: 'google/gemini-3.1-flash-lite',
       messages: [
         {
