@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const service = createClient(SUPABASE_URL, SERVICE_ROLE);
-  const summary = { checked: 0, updated: 0, lost: 0, errors: [] as string[] };
+  const summary = { checked: 0, updated: 0, lost: 0, reaped: 0, refunded: 0, errors: [] as string[] };
 
   try {
     const { data: orders, error } = await service
@@ -156,6 +156,63 @@ Deno.serve(async (req) => {
         else summary.updated++;
       }
     }
+
+    // 3) Reaper des commandes orphelines : provider OK mais update final échoué,
+    // ou crash entre le débit wallet et la confirmation. Après 1 h, on annule et
+    // on rembourse si (et seulement si) un débit existe et aucun refund n'a eu lieu.
+    const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: stale } = await service
+      .from('netlinking_orders')
+      .select('id,user_id,total_ht_cents,created_at')
+      .eq('status', 'draft')
+      .lt('created_at', cutoff)
+      .limit(100);
+
+    for (const o of (stale || []) as Array<{ id: string; user_id: string; total_ht_cents: number }>) {
+      const { data: claimed } = await service
+        .from('netlinking_orders')
+        .update({
+          status: 'cancelled',
+          updated_at: new Date().toISOString(),
+          metadata: { reason: 'stale_draft_reaped' },
+        })
+        .eq('id', o.id)
+        .eq('status', 'draft')
+        .select('id')
+        .maybeSingle();
+      if (!claimed) continue;
+
+      const { data: debits } = await service
+        .from('dev_wallet_transactions')
+        .select('id')
+        .eq('source_ref', `netlinking:${o.id}`)
+        .limit(1);
+      const { data: refunds } = await service
+        .from('dev_wallet_transactions')
+        .select('id')
+        .eq('source_ref', `netlinking-refund:${o.id}`)
+        .limit(1);
+
+      if ((debits?.length ?? 0) > 0 && (refunds?.length ?? 0) === 0) {
+        const { error: rerr } = await service.rpc('dev_wallet_credit', {
+          _user_id: o.user_id,
+          _amount_cents: o.total_ht_cents,
+          _source: 'refund',
+          _source_ref: `netlinking-refund:${o.id}`,
+          _description: 'Refund commande netlinking restée en brouillon',
+        });
+        if (rerr) summary.errors.push(`reaper refund ${o.id}: ${rerr.message}`);
+        else {
+          await service.from('netlinking_orders')
+            .update({ status: 'refunded', refunded_at: new Date().toISOString() })
+            .eq('id', o.id);
+          summary.refunded++;
+        }
+      }
+      summary.reaped++;
+    }
+
+
 
 
     return new Response(JSON.stringify({ ok: true, ...summary }), {

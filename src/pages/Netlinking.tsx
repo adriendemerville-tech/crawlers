@@ -119,6 +119,35 @@ export default function Netlinking() {
     }
   }, [searchParams]);
 
+  // Opportunités issues du diagnostic (Cocoon / Stratège) : findings d'autorité
+  // off-site écrits dans le workbench avec ancres suggérées et URL cible.
+  const opportunitiesQuery = useQuery({
+    queryKey: ["netlinking-opportunities"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("architect_workbench")
+        .select("id,title,domain,target_url,severity,finding_category,payload,created_at")
+        .in("finding_category", ["low_authority", "thin_backlinks", "backlink_target"])
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const applyOpportunity = (item: any) => {
+    const anchors: string[] = Array.isArray(item?.payload?.suggested_anchors)
+      ? item.payload.suggested_anchors
+      : [];
+    if (item.target_url) setTargetUrl(item.target_url);
+    else if (item.domain) setTargetUrl(`https://${item.domain}`);
+    if (anchors[0]) setAnchor(anchors[0]);
+    const t = item?.payload?.topic ?? item?.payload?.cluster ?? item.finding_category;
+    if (typeof t === "string" && t.length > 2) setTopic(t);
+    toast({ title: "Opportunité chargée", description: "Vérifie l'ancre puis lance la recherche." });
+  };
+
   const ordersQuery = useQuery({
     queryKey: ["netlinking-orders"],
     queryFn: async () => {
@@ -242,6 +271,50 @@ export default function Netlinking() {
         </TabsList>
 
         <TabsContent value="search" className="space-y-6">
+          {(opportunitiesQuery.data?.length ?? 0) > 0 && (
+            <Card className="p-6 space-y-3">
+              <div>
+                <h2 className="text-lg font-semibold">Opportunités issues du diagnostic</h2>
+                <p className="text-sm text-muted-foreground">
+                  Pages identifiées comme faibles en autorité off-site par le Stratège Cocoon,
+                  avec les ancres cohérentes avec ton maillage interne.
+                </p>
+              </div>
+              <div className="space-y-2">
+                {(opportunitiesQuery.data ?? []).map((item: any) => {
+                  const anchors: string[] = Array.isArray(item?.payload?.suggested_anchors)
+                    ? item.payload.suggested_anchors
+                    : [];
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex flex-wrap items-center justify-between gap-3 border rounded-md p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {item.target_url || item.domain}
+                        </p>
+                        {anchors.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {anchors.map((a) => (
+                              <Badge key={a} variant="outline" className="text-[10px]">
+                                {a}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => applyOpportunity(item)}>
+                        Préparer la commande
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
           <Card className="p-6 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
