@@ -6,6 +6,9 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 
+const WIRED_PROVIDERS: string[] = ['accesslink'];
+const PREMIUM_PLANS = new Set(['premium', 'premium_yearly', 'agency_pro', 'agency_premium', 'pro_agency']);
+
 const BodySchema = z.object({
   provider_slug: z.enum(['accesslink', 'rocketlinks', 'getfluence']),
   provider_offer_id: z.string().min(1),
@@ -68,6 +71,21 @@ Deno.serve(async (req) => {
     }
     const userId = userData.user.id;
 
+    const service = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
+    // Gating Premium+ (engagement d'argent réel)
+    const { data: sub } = await service
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (!PREMIUM_PLANS.has((sub?.plan || '').toLowerCase())) {
+      return new Response(JSON.stringify({ error: 'plan_required', message: 'Le netlinking est réservé aux plans Premium et plus.' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) {
       return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), {
@@ -75,6 +93,13 @@ Deno.serve(async (req) => {
       });
     }
     const body = parsed.data;
+
+    // Refus explicite des providers non câblés (avant tout débit wallet)
+    if (!WIRED_PROVIDERS.includes(body.provider_slug)) {
+      return new Response(JSON.stringify({ error: 'provider_unavailable', message: `${body.provider_slug} n'est pas encore raccordé.` }), {
+        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Verify commission math server-side
     const expectedCommission = Math.round(body.cost_ht_cents * 0.10);
@@ -85,7 +110,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const service = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
     // 1. Insert draft order
     const orderRef = crypto.randomUUID();
