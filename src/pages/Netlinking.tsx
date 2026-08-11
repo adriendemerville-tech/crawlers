@@ -229,9 +229,10 @@ export default function Netlinking() {
           Netlinking
         </h1>
         <p className="text-muted-foreground mt-2 max-w-3xl">
-          Renforce l'autorité de tes pages via 3 marketplaces de backlinks.
+          Renforce l'autorité de tes pages via les marketplaces de backlinks raccordées.
           Commission Crawlers de 10% sur chaque commande, débitée du wallet développeur.
         </p>
+
       </div>
 
       <Tabs defaultValue="search">
