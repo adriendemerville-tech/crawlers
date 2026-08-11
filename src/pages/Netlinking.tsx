@@ -254,7 +254,7 @@ export default function Netlinking() {
     <div className="container max-w-6xl mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Link2 className="h-8 w-8 text-[hsl(262,83%,58%)]" />
+          <Link2 className="h-8 w-8 text-primary" />
           Netlinking
         </h1>
         <p className="text-muted-foreground mt-2 max-w-3xl">
@@ -385,7 +385,7 @@ export default function Netlinking() {
                         unavailable
                           ? "border-border/60 text-muted-foreground/60 cursor-not-allowed line-through"
                           : active
-                            ? "border-[hsl(262,83%,58%)] text-[hsl(262,83%,58%)] bg-[hsl(262,83%,58%)]/10"
+                            ? "border-primary text-primary bg-primary/10"
                             : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                       }`}
                     >
@@ -477,7 +477,7 @@ export default function Netlinking() {
           {offers.length === 0 && !loading && hasActiveFilters && (
             <Card className="p-10 text-center">
               <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                <Search className="h-10 w-10 text-[hsl(262,83%,58%)]/60" />
+                <Search className="h-10 w-10 text-primary/60" />
                 <p className="font-medium">Aucune offre ne correspond à tes critères.</p>
                 <p className="text-xs max-w-md">
                   Essaie d'élargir le sujet, de baisser le DR minimum ou d'augmenter le budget.
@@ -494,7 +494,7 @@ export default function Netlinking() {
               <Loader2 className="h-6 w-6 animate-spin" />
             ) : !ordersQuery.data?.length ? (
               <div className="text-center py-10 text-muted-foreground">
-                <Link2 className="h-10 w-10 mx-auto mb-3 text-[hsl(262,83%,58%)]/60" />
+                <Link2 className="h-10 w-10 mx-auto mb-3 text-primary/60" />
                 <p>Aucune commande pour le moment.</p>
                 <p className="text-xs mt-1">Les commandes passées apparaîtront ici avec leur statut et le lien live.</p>
               </div>
@@ -531,7 +531,7 @@ export default function Netlinking() {
                               href={o.live_url}
                               target="_blank"
                               rel="noopener"
-                              className="inline-flex items-center gap-1 text-[hsl(262,83%,58%)] hover:underline"
+                              className="inline-flex items-center gap-1 text-primary hover:underline"
                             >
                               Voir <ExternalLink className="h-3 w-3" />
                             </a>
