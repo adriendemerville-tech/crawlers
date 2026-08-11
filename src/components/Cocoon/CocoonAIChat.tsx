@@ -134,8 +134,9 @@ function extractQuickReplies(content: string): QuickReply[] {
   const tail = content.slice(-800);
   let m: RegExpExecArray | null;
 
-  // Strategist direction format: "**Architecture sémantique** : ..."
-  const targetPattern = /(?:^|\n)\s*[]\s*\*{0,2}([^*\n]{3,40})\*{0,2}\s*:/g;
+  // Strategist direction format: "» **Architecture sémantique** : ..."
+  const targetPattern = /(?:^|\n)\s*[»▸]\s*\*{0,2}([^*\n]{3,40})\*{0,2}\s*:/g;
+
   const targets: QuickReply[] = [];
   while ((m = targetPattern.exec(tail)) !== null) {
     const label = m[1].trim();
