@@ -2,3 +2,4 @@
 - [Cocoon workbench & déploiement](mem://tech/cocoon/workbench-and-deploy-tracking-fr) — cocoon-strategist écrit ses findings critiques dans architect_workbench (_shared/cocoonWorkbench.ts, clé idempotente cocoon_<domain>_<findingId>) et cocoon-deploy-links marque is_deployed = true + deployment_method, en ignorant les liens déjà déployés
 - [Cocoon coût & sessions](mem://tech/cocoon/cost-logging-and-session-persistence-fr) — aiGatewayFetch/aiGatewayCall loggent dans ai_gateway_usage via l'option callerFunction ; persist-cocoon-session appelée après calculate-cocoon-logic
 - [Cocoon P2 fiabilité/design/cycle](mem://tech/cocoon/p2-confidence-emoji-lifecycle-fr) — seuil 30 pages inconclusive, zéro emoji (marqueur d'axes »), expiration 30j des recommandations et tâches
+- [Parménion correctifs 2026-08-11](mem://tech/autopilot/parmenion-audit-p0-fixes-2026-08-11) — Skip audit (sources réelles + cooldown 24h), coût LLM loggé, prescriptions dans workbench, error_category
