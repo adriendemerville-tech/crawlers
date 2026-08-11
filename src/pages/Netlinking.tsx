@@ -76,14 +76,29 @@ export default function Netlinking() {
   const [anchor, setAnchor] = useState("");
   const [minDr, setMinDr] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
-  const [selectedProviders, setSelectedProviders] = useState<ProviderSlug[]>([
-    "accesslink",
-    "rocketlinks",
-    "getfluence",
-  ]);
+  const [selectedProviders, setSelectedProviders] = useState<ProviderSlug[]>(["accesslink"]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
+
+  const providersQuery = useQuery({
+    queryKey: ["netlinking-providers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("netlinking_providers")
+        .select("slug,name,status,supports_search,supports_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const availability = useMemo(() => {
+    const map = new Map<string, boolean>();
+    (providersQuery.data ?? []).forEach((p: any) => {
+      map.set(p.slug, p.status === "active" && p.supports_search === true);
+    });
+    return map;
+  }, [providersQuery.data]);
 
   // Pre-fill from query params (e.g. deep-link from Stratège Cocoon)
   useEffect(() => {
@@ -116,6 +131,7 @@ export default function Netlinking() {
       return data ?? [];
     },
   });
+
 
   const runSearch = async () => {
     if (!topic.trim()) {
