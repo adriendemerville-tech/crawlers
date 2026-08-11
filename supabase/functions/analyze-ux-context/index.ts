@@ -872,7 +872,7 @@ async function findTextPositions(
 
     const script = `export default async ({ page }) => {
   await page.setViewport({ width: 1280, height: 900 });
-  await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 45000 });
+  await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 60000 });
   await new Promise(r => setTimeout(r, 3000));
 
   const targets = ${targetsJson};
