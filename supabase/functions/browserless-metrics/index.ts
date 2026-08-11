@@ -1,10 +1,11 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getBrowserlessMetaUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 /**
  * Browserless v2 Cloud: /metrics endpoint no longer exists.
- * We use /meta (returns active sessions) + our own paid_api_calls table for usage tracking.
+ * We use /meta (active sessions) + analytics_events('paid_api_call') for usage tracking.
  */
 
 Deno.serve(handleRequest(async (_req) => {
