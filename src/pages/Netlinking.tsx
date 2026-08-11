@@ -203,7 +203,7 @@ export default function Netlinking() {
     setAnchor("");
     setMinDr("");
     setBudgetMax("");
-    setSelectedProviders(["accesslink", "rocketlinks", "getfluence"]);
+    setSelectedProviders(["accesslink"]);
     setOffers([]);
     setSearchParams({}, { replace: true });
   };
@@ -214,10 +214,12 @@ export default function Netlinking() {
   );
 
   const toggleProvider = (slug: ProviderSlug) => {
+    if (availability.get(slug) === false) return;
     setSelectedProviders((prev) =>
       prev.includes(slug) ? prev.filter((p) => p !== slug) : [...prev, slug]
     );
   };
+
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4">
