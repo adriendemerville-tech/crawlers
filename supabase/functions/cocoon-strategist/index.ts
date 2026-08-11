@@ -1315,6 +1315,8 @@ try {
       conflicts_resolved: conflicts,
       feedback: feedbackAnalysis,
       workbench_findings_written: workbenchWrite.written,
+      sample_confidence: sampleConfidence,
+
 
       development_axes: matchingAxes,
       cms_inventory_summary: cmsInventory ? {
