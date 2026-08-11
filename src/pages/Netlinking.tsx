@@ -298,24 +298,34 @@ export default function Netlinking() {
               <Label className="mb-2 block">Providers</Label>
               <div className="flex flex-wrap gap-2">
                 {PROVIDERS.map((p) => {
-                  const active = selectedProviders.includes(p.slug);
+                  const unavailable = availability.get(p.slug) === false;
+                  const active = !unavailable && selectedProviders.includes(p.slug);
                   return (
                     <button
                       key={p.slug}
                       type="button"
+                      disabled={unavailable}
+                      title={unavailable ? "Marketplace pas encore raccordée" : undefined}
                       onClick={() => toggleProvider(p.slug)}
                       className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
-                        active
-                          ? "border-[hsl(262,83%,58%)] text-[hsl(262,83%,58%)] bg-[hsl(262,83%,58%)]/10"
-                          : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                        unavailable
+                          ? "border-border/60 text-muted-foreground/60 cursor-not-allowed line-through"
+                          : active
+                            ? "border-[hsl(262,83%,58%)] text-[hsl(262,83%,58%)] bg-[hsl(262,83%,58%)]/10"
+                            : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                       }`}
                     >
                       {p.label}
+                      {unavailable ? " — indisponible" : ""}
                     </button>
                   );
                 })}
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Seules les marketplaces réellement raccordées sont interrogeables. Module réservé aux plans Premium et plus.
+              </p>
             </div>
+
 
             <div className="flex flex-wrap items-center gap-3">
               <Button onClick={runSearch} disabled={loading} variant="outline">
