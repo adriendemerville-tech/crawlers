@@ -2624,6 +2624,7 @@ export type Database = {
         Row: {
           created_at: string
           domain: string
+          expired_at: string | null
           id: string
           is_applied: boolean
           recommendation_text: string
@@ -2635,6 +2636,7 @@ export type Database = {
         Insert: {
           created_at?: string
           domain: string
+          expired_at?: string | null
           id?: string
           is_applied?: boolean
           recommendation_text: string
@@ -2646,6 +2648,7 @@ export type Database = {
         Update: {
           created_at?: string
           domain?: string
+          expired_at?: string | null
           id?: string
           is_applied?: boolean
           recommendation_text?: string
@@ -2810,6 +2813,7 @@ export type Database = {
           executed_at: string | null
           execution_result: Json | null
           execution_status: string | null
+          expired_at: string | null
           id: string
           priority: string
           source_recommendation_id: string | null
@@ -2827,6 +2831,7 @@ export type Database = {
           executed_at?: string | null
           execution_result?: Json | null
           execution_status?: string | null
+          expired_at?: string | null
           id?: string
           priority?: string
           source_recommendation_id?: string | null
@@ -2844,6 +2849,7 @@ export type Database = {
           executed_at?: string | null
           execution_result?: Json | null
           execution_status?: string | null
+          expired_at?: string | null
           id?: string
           priority?: string
           source_recommendation_id?: string | null
@@ -14406,6 +14412,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expire_stale_cocoon_items: { Args: never; Returns: Json }
       get_active_seasonal_context: {
         Args: { p_geo?: string; p_sector?: string }
         Returns: {
