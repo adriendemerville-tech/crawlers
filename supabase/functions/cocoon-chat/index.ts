@@ -124,7 +124,7 @@ serve(async (req) => {
           .limit(5);
 
         if (priorityPages?.length) {
-          priorityPagesBlock = `\n\n🎯 TOP 5 PAGES PRIORITAIRES À OPTIMISER :\n`;
+          priorityPagesBlock = `\n\n» TOP 5 PAGES PRIORITAIRES À OPTIMISER :\n`;
           for (let i = 0; i < priorityPages.length; i++) {
             const p = priorityPages[i];
             const opps = (p.top_opportunities as string[]) || [];
