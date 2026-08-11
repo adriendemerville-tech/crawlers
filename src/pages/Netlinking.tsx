@@ -119,6 +119,35 @@ export default function Netlinking() {
     }
   }, [searchParams]);
 
+  // Opportunités issues du diagnostic (Cocoon / Stratège) : findings d'autorité
+  // off-site écrits dans le workbench avec ancres suggérées et URL cible.
+  const opportunitiesQuery = useQuery({
+    queryKey: ["netlinking-opportunities"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("architect_workbench")
+        .select("id,title,domain,target_url,severity,finding_category,payload,created_at")
+        .in("finding_category", ["low_authority", "thin_backlinks", "backlink_target"])
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const applyOpportunity = (item: any) => {
+    const anchors: string[] = Array.isArray(item?.payload?.suggested_anchors)
+      ? item.payload.suggested_anchors
+      : [];
+    if (item.target_url) setTargetUrl(item.target_url);
+    else if (item.domain) setTargetUrl(`https://${item.domain}`);
+    if (anchors[0]) setAnchor(anchors[0]);
+    const t = item?.payload?.topic ?? item?.payload?.cluster ?? item.finding_category;
+    if (typeof t === "string" && t.length > 2) setTopic(t);
+    toast({ title: "Opportunité chargée", description: "Vérifie l'ancre puis lance la recherche." });
+  };
+
   const ordersQuery = useQuery({
     queryKey: ["netlinking-orders"],
     queryFn: async () => {
