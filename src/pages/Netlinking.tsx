@@ -271,6 +271,50 @@ export default function Netlinking() {
         </TabsList>
 
         <TabsContent value="search" className="space-y-6">
+          {(opportunitiesQuery.data?.length ?? 0) > 0 && (
+            <Card className="p-6 space-y-3">
+              <div>
+                <h2 className="text-lg font-semibold">Opportunités issues du diagnostic</h2>
+                <p className="text-sm text-muted-foreground">
+                  Pages identifiées comme faibles en autorité off-site par le Stratège Cocoon,
+                  avec les ancres cohérentes avec ton maillage interne.
+                </p>
+              </div>
+              <div className="space-y-2">
+                {(opportunitiesQuery.data ?? []).map((item: any) => {
+                  const anchors: string[] = Array.isArray(item?.payload?.suggested_anchors)
+                    ? item.payload.suggested_anchors
+                    : [];
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex flex-wrap items-center justify-between gap-3 border rounded-md p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {item.target_url || item.domain}
+                        </p>
+                        {anchors.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {anchors.map((a) => (
+                              <Badge key={a} variant="outline" className="text-[10px]">
+                                {a}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => applyOpportunity(item)}>
+                        Préparer la commande
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
           <Card className="p-6 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
