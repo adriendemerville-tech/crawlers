@@ -5,6 +5,7 @@ import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browser
 import { trackPaidApiCall, trackTokenUsage } from '../_shared/tokenTracker.ts';
 import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
+import { withBrowserlessSlot } from '../_shared/browserlessSemaphore.ts';
 
 /**
  * analyze-ux-context — Conversion Optimizer
