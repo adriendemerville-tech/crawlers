@@ -860,12 +860,17 @@ async function captureScreenshotWithAnnotations(
   };
 };`;
 
-    const resp = await fetch(getBrowserlessFunctionUrl(browserlessKey), {
+    const resp = await withBrowserlessSlot(() => fetch(getBrowserlessFunctionUrl(browserlessKey), {
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: script,
       signal: AbortSignal.timeout(60000),
-    });
+    }), 'analyze-ux-context/screenshot');
+
+    if (!resp) {
+      console.log('[analyze-ux-context] No Browserless slot available');
+      return { success: false };
+    }
 
     if (!resp.ok) {
       console.log(`[analyze-ux-context] Browserless screenshot error: ${resp.status}`);
