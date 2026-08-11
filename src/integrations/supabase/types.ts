@@ -14522,6 +14522,23 @@ export type Database = {
         }
         Returns: number
       }
+      netlinking_reconciliation: {
+        Args: never
+        Returns: {
+          age_hours: number
+          debited_cents: number
+          discrepancy_cents: number
+          flag: string
+          net_cents: number
+          order_id: string
+          provider_slug: string
+          publisher_domain: string
+          refunded_cents: number
+          status: string
+          total_ht_cents: number
+          user_id: string
+        }[]
+      }
       owns_tracked_site: { Args: { p_site_id: string }; Returns: boolean }
       parmenion_error_rate: {
         Args: { p_domain: string; p_last_n?: number }
