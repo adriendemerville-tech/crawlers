@@ -12,6 +12,9 @@ import { mergeMarinaReports } from '@/lib/marina/mergeReports';
 const MAX_URLS = 15;
 const CREDIT_COST = 5;
 const CONCURRENCY = 2;
+// Décalage du 2e worker : laisse la 1re URL enregistrer le crawl partagé du
+// domaine avant que la suivante ne démarre (évite deux crawls simultanés).
+const STAGGER_MS = 20_000;
 const STORAGE_KEY = 'marina_batch_v2';
 
 type ItemStatus = 'pending' | 'running' | 'completed' | 'partial' | 'failed';
