@@ -1,6 +1,7 @@
 import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 import { buildContentBrief, briefToPromptBlock, detectPageType as sharedDetectPageType, computeArticleDistribution, determineSemanticRing, buildDiversityPromptBlock, detectArticleType, type ArticleDistribution, type SemanticRing } from '../_shared/contentBrief.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
@@ -20,6 +21,7 @@ import { TECH_TOOLS, CONTENT_TOOLS, DECISION_TOOL } from '../_shared/parmenion/t
 import { buildPhaseInstructions } from '../_shared/parmenion/prompts.ts';
 import { enrichKeywordsForPrescribe } from '../_shared/parmenion/keywordEnrichment.ts';
 import { callLLMWithTools } from '../_shared/parmenion/llmClient.ts';
+import { writePrescriptionsToWorkbench } from '../_shared/parmenion/prescriptionWorkbench.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
 import { loadPersonaRotation, buildPersonaPromptBlock, recordPersonaServed } from '../_shared/parmenion/personaEngine.ts';
 
@@ -142,22 +144,48 @@ try {
 
 
 
-    // ═══ SKIP AUDIT (TTL 5j) ═══
-    // 1) Si workbench contient des findings agent-seo frais < 5 jours, skip
-    // 2) Sinon, on consulte parmenion_should_skip_phase (TTL + invalidation événementielle)
+    // ═══ SKIP AUDIT (TTL 5j + cooldown 24h) ═══
+    // 1) Findings d'audit frais < 5 jours dans le workbench → skip
+    //    (fix audit 2026-08-11 P0-1 : la garde ciblait 'agent-seo', source_function
+    //     qu'aucune fonction n'écrit jamais → skip mort → boucle audit horaire)
+    // 2) Cooldown 24h : une phase audit déjà TENTÉE (completed/degraded/skipped_stale)
+    //    dans les 24 dernières heures compte comme audit récent → casse la boucle.
+    // 3) Sinon, on consulte parmenion_should_skip_phase (TTL + invalidation événementielle)
+    const AUDIT_SOURCE_FUNCTIONS = [
+      'audit-expert-seo',
+      'expert-audit',
+      'audit-strategique-ia',
+      'check-eeat',
+      'check-geo',
+      'cocoon-strategist',
+      'marina',
+    ];
     if (currentPhase === 'audit') {
       const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: agentSeoItems, error: skipErr } = await supabase
+      const { data: auditItems, error: skipErr } = await supabase
         .from('architect_workbench')
         .select('id, source_function, created_at')
         .eq('domain', domain)
-        .eq('source_function', 'agent-seo')
+        .in('source_function', AUDIT_SOURCE_FUNCTIONS)
         .in('status', ['pending', 'in_progress'])
         .gte('created_at', fiveDaysAgo)
         .limit(1);
 
-      if (!skipErr && agentSeoItems && agentSeoItems.length > 0) {
-        console.log(`[Parménion] ⏭️ Skip audit — workbench agent-seo frais (<5j) trouvé`);
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: recentAuditAttempts } = await supabase
+        .from('parmenion_decision_log')
+        .select('id, status, created_at')
+        .eq('domain', domain)
+        .eq('pipeline_phase', 'audit')
+        .in('status', ['completed', 'degraded', 'partial', 'skipped_stale', 'failed'])
+        .gte('created_at', oneDayAgo)
+        .limit(1);
+
+      if (!skipErr && auditItems && auditItems.length > 0) {
+        console.log(`[Parménion] ⏭️ Skip audit — findings d'audit frais (<5j) dans le workbench`);
+        currentPhase = 'prescribe';
+      } else if (recentAuditAttempts && recentAuditAttempts.length > 0) {
+        console.log(`[Parménion] ⏭️ Skip audit — cooldown 24h (tentative ${recentAuditAttempts[0].status} le ${recentAuditAttempts[0].created_at})`);
         currentPhase = 'prescribe';
       } else {
         // Fallback : helper SQL combine TTL + invalidation événementielle
@@ -674,6 +702,15 @@ try {
               },
               summary: `Prescribe V3 (strategist): #1/${tasksForPlan.length} "${topTask.title}" → ${executorFn}. Urgence: ${topTask.urgency}. ${forceContent ? 'Content priority ON.' : ''}`,
             };
+
+            // Traçabilité workbench (audit 2026-08-11 P0-3) — jamais bloquant
+            await writePrescriptionsToWorkbench(supabase, tasksForPlan, {
+              domain,
+              trackedSiteId: tracked_site_id,
+              userId: authUserId || bodyUserId || null,
+              cycleNumber: cycle_number,
+              strategyPlanId: strategistData?.plan_id ?? null,
+            });
           }
         }
       } catch (e) {
@@ -2362,6 +2399,8 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
         }
 
         const result = await response.json();
+        // Instrumentation coût (audit 2026-08-11 P0-2) — fire-and-forget
+        logAIUsageFromResponse(getServiceClient(), 'google/gemini-3-flash-preview', 'parmenion-orchestrator', result?.usage);
         const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
         if (!toolCall) {
           console.error(`[Parménion] ${gw.label}: No tool call in LLM response`);

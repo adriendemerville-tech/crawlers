@@ -46,7 +46,7 @@ function callCmsBridge(
 // ═══ Modular imports ═══
 import {
   COOLDOWN_HOURS, CYCLE_DEADLINE_MS, MAX_CMS_ACTIONS_PER_CYCLE,
-  computeCycleStatus,
+  computeCycleStatus, categorizePhaseErrors,
   type ExecutionError, type CycleStatus, type AutopilotConfig, type SiteInfo, type RoutedActions,
 } from '../_shared/autopilot/types.ts';
 import { routeCmsActions } from '../_shared/autopilot/cmsActionRouter.ts';
@@ -539,6 +539,7 @@ try {
           
           await supabase.from('parmenion_decision_log').update({
             status: phaseStatus,
+            error_category: phaseErrors.length > 0 ? categorizePhaseErrors(phaseErrors) : null,
             execution_started_at: new Date().toISOString(),
             execution_completed_at: new Date().toISOString(),
             execution_results: {
