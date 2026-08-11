@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const service = createClient(SUPABASE_URL, SERVICE_ROLE);
-  const summary = { checked: 0, updated: 0, lost: 0, errors: [] as string[] };
+  const summary = { checked: 0, updated: 0, lost: 0, reaped: 0, refunded: 0, errors: [] as string[] };
 
   try {
     const { data: orders, error } = await service
