@@ -341,7 +341,7 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
           const lov = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
           if (lov.ok) {
             console.info(`[aiGatewayCall] Lovable AI rescue success: ${model}`);
-            return lov;
+            return withUsageLog(lov, model, 'lovable', callerFunction, true);
           }
           if (!shouldFallback(lov.status) || isLast) return lov;
           lastResp = lov;
