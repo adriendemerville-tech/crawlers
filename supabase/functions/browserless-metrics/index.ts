@@ -1,10 +1,11 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { getBrowserlessMetaUrl, getBrowserlessKey } from '../_shared/browserlessConfig.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 /**
  * Browserless v2 Cloud: /metrics endpoint no longer exists.
- * We use /meta (returns active sessions) + our own paid_api_calls table for usage tracking.
+ * We use /meta (active sessions) + analytics_events('paid_api_call') for usage tracking.
  */
 
 Deno.serve(handleRequest(async (_req) => {
@@ -26,21 +27,18 @@ Deno.serve(handleRequest(async (_req) => {
       console.warn(`[browserless-metrics] /meta returned ${metaRes.status}`);
     }
 
-    // 2. Get our own usage stats from paid_api_calls table
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // 2. Usage stats from analytics_events (event_type = 'paid_api_call')
+    const supabase = getServiceClient();
 
-    // Count Browserless calls this month
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    
+
     const { count: monthlyCallCount } = await supabase
-      .from('paid_api_calls')
+      .from('analytics_events')
       .select('*', { count: 'exact', head: true })
-      .eq('api_provider', 'browserless')
-      .gte('called_at', monthStart);
+      .eq('event_type', 'paid_api_call')
+      .eq('event_data->>api_service', 'browserless')
+      .gte('created_at', monthStart);
 
     const usedUnits = monthlyCallCount ?? 0;
 
@@ -54,7 +52,7 @@ Deno.serve(handleRequest(async (_req) => {
       planUnitsPerMonth: 1000,
       unitsRemaining: Math.max(0, 1000 - usedUnits),
       concurrencyLimit: 10,
-      source: 'meta+paid_api_calls',
+      source: 'meta+analytics_events',
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

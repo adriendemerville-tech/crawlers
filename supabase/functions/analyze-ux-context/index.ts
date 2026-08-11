@@ -5,6 +5,7 @@ import { getBrowserlessFunctionUrl, getBrowserlessKey } from '../_shared/browser
 import { trackPaidApiCall, trackTokenUsage } from '../_shared/tokenTracker.ts';
 import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
+import { withBrowserlessSlot } from '../_shared/browserlessSemaphore.ts';
 
 /**
  * analyze-ux-context — Conversion Optimizer
@@ -495,7 +496,12 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
   const allTargets = [...positionTargets, ...imageAnnotationTargets];
 
   if (screenshotResult?.success && allTargets.length > 0) {
-    annotations = await findTextPositions(page_url, allTargets);
+    // Single-pass: positions come from the textMap captured with the screenshot.
+    annotations = matchTargetsLocally(screenshotResult.textMap || [], allTargets);
+    if (annotations.length === 0 && (screenshotResult.textMap || []).length === 0) {
+      // Legacy fallback only when the capture returned no text map at all
+      annotations = await findTextPositions(page_url, allTargets);
+    }
   }
 
   const { error: insertErr } = await serviceClient
@@ -657,11 +663,81 @@ function buildImageAnnotationTargets(imageAnalysis: any[], imageFormats: any[]) 
   });
 }
 
+/**
+ * Local annotation matcher — replaces the second Browserless pass.
+ * Consumes the textMap collected during the single capture, so the screenshot
+ * and the bounding boxes always come from the exact same DOM snapshot.
+ */
+function normalizeText(value: string): string {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function matchTargetsLocally(
+  textMap: any[],
+  targets: Array<{ text: string; axis: string; priority: string; selector?: string | null; suggestionIndex: number }>,
+): any[] {
+  if (!Array.isArray(textMap) || textMap.length === 0 || targets.length === 0) return [];
+
+  const entries = textMap.map((entry) => ({
+    ...entry,
+    _norm: normalizeText(entry.text || entry.alt || ''),
+    _sig: `${entry.tag} ${entry.id} ${entry.cls} ${entry.role} ${entry.src}`.toLowerCase(),
+  }));
+
+  const results = targets.map((target) => {
+    const targetText = normalizeText(target.text).slice(0, 140);
+    const selectorHint = (target.selector || '').toLowerCase();
+    const hintTokens = selectorHint.match(/[a-z0-9-]{3,}/g) || [];
+    const targetWords = targetText.split(' ').filter((word) => word.length > 2);
+
+    let bestScore = 0;
+    let bestRect: any = null;
+
+    for (const entry of entries) {
+      const candidate = entry._norm;
+      if (!candidate && hintTokens.length === 0) continue;
+
+      let score = 0;
+      if (targetText && candidate) {
+        if (candidate.includes(targetText)) score += 120 + Math.min(targetText.length, 40);
+        if (targetText.includes(candidate) && candidate.length > 8) score += 80;
+        const matched = targetWords.filter((word) => candidate.includes(word));
+        score += matched.length * 12;
+        if (targetWords.length > 0 && matched.length === targetWords.length) score += 30;
+      }
+      if (hintTokens.length > 0 && hintTokens.every((token) => entry._sig.includes(token))) score += 35;
+
+      // Prefer tighter boxes when scores tie (avoids annotating a whole section)
+      if (score > bestScore || (score === bestScore && score > 0 && bestRect
+        && entry.rect.width * entry.rect.height < bestRect.width * bestRect.height)) {
+        bestScore = score;
+        bestRect = entry.rect;
+      }
+    }
+
+    return {
+      text: target.text,
+      rect: bestScore >= 24 ? bestRect : null,
+      axis: target.axis,
+      priority: target.priority,
+      suggestionIndex: target.suggestionIndex,
+    };
+  });
+
+  return results.filter((r) => r.rect);
+}
+
 async function captureScreenshotWithAnnotations(
   pageUrl: string,
   trackedSiteId: string,
   serviceClient: any,
-): Promise<{ success: boolean; url?: string; height?: number; imageFormats?: any[] }> {
+): Promise<{ success: boolean; url?: string; height?: number; imageFormats?: any[]; chunkabilitySignals?: any; textMap?: any[] }> {
   const browserlessKey = getBrowserlessKey();
   if (!browserlessKey) {
     console.log('[analyze-ux-context] No Browserless key, skipping screenshot');
@@ -798,6 +874,55 @@ async function captureScreenshotWithAnnotations(
     };
   });
 
+  // Text map: one single pass collecting every candidate element box + text.
+  // Consumed locally (in Deno) to place annotations WITHOUT a second Browserless call.
+  const textMap = await page.evaluate(() => {
+    const isIgnored = (element) => {
+      let current = element;
+      for (let depth = 0; current && depth < 6; depth += 1) {
+        const attrs = [
+          current.tagName || '',
+          current.id || '',
+          typeof current.className === 'string' ? current.className : '',
+          current.getAttribute?.('role') || '',
+          current.getAttribute?.('aria-label') || '',
+        ].join(' ').toLowerCase();
+        if (attrs.includes('cookie') || attrs.includes('consent') || attrs.includes('dialog') || attrs.includes('modal')) return true;
+        current = current.parentElement;
+      }
+      return false;
+    };
+
+    const out = [];
+    const push = (el, text) => {
+      if (!el || isIgnored(el)) return;
+      const rect = el.getBoundingClientRect();
+      if (!rect || rect.width <= 0 || rect.height <= 0) return;
+      out.push({
+        text: (text || '').slice(0, 400),
+        tag: el.tagName.toLowerCase(),
+        id: el.id || '',
+        cls: typeof el.className === 'string' ? el.className.slice(0, 160) : '',
+        src: el.getAttribute?.('src') || '',
+        alt: el.getAttribute?.('alt') || '',
+        role: el.getAttribute?.('role') || '',
+        rect: {
+          x: rect.left + window.scrollX,
+          y: rect.top + window.scrollY,
+          width: rect.width,
+          height: rect.height,
+          tag: el.tagName.toLowerCase(),
+        },
+      });
+    };
+
+    for (const el of document.querySelectorAll('h1, h2, h3, h4, h5, p, button, a, li, label, span, strong, em, td, th, img, [role="button"]')) {
+      push(el, el.tagName === 'IMG' ? (el.getAttribute('alt') || '') : (el.innerText || el.textContent || ''));
+      if (out.length >= 1200) break;
+    }
+    return out;
+  });
+
   const screenshot = await page.screenshot({
     type: 'jpeg',
     quality: 75,
@@ -806,17 +931,22 @@ async function captureScreenshotWithAnnotations(
   });
 
   return {
-    data: { screenshot, height: fullHeight, imageFormats, chunkabilitySignals },
+    data: { screenshot, height: fullHeight, imageFormats, chunkabilitySignals, textMap },
     type: 'application/json'
   };
 };`;
 
-    const resp = await fetch(getBrowserlessFunctionUrl(browserlessKey), {
+    const resp = await withBrowserlessSlot(() => fetch(getBrowserlessFunctionUrl(browserlessKey), {
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: script,
       signal: AbortSignal.timeout(60000),
-    });
+    }), 'analyze-ux-context/screenshot');
+
+    if (!resp) {
+      console.log('[analyze-ux-context] No Browserless slot available');
+      return { success: false };
+    }
 
     if (!resp.ok) {
       console.log(`[analyze-ux-context] Browserless screenshot error: ${resp.status}`);
@@ -853,7 +983,7 @@ async function captureScreenshotWithAnnotations(
       .getPublicUrl(fileName);
 
     console.log(`[analyze-ux-context] Screenshot captured: ${urlData.publicUrl} (height: ${data.height}px, images: ${(data.imageFormats || []).length})`);
-    return { success: true, url: urlData.publicUrl, height: data.height, imageFormats: data.imageFormats || [], chunkabilitySignals: data.chunkabilitySignals || null };
+    return { success: true, url: urlData.publicUrl, height: data.height, imageFormats: data.imageFormats || [], chunkabilitySignals: data.chunkabilitySignals || null, textMap: Array.isArray(data.textMap) ? data.textMap : [] };
   } catch (error: any) {
     console.error('[analyze-ux-context] Screenshot capture failed:', error.message);
     return { success: false };
@@ -1063,12 +1193,14 @@ async function findTextPositions(
   return { data: results, type: 'application/json' };
 };`;
 
-    const resp = await fetch(getBrowserlessFunctionUrl(browserlessKey), {
+    const resp = await withBrowserlessSlot(() => fetch(getBrowserlessFunctionUrl(browserlessKey), {
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: script,
       signal: AbortSignal.timeout(60000),
-    });
+    }), 'analyze-ux-context/positions');
+
+    if (!resp) return [];
 
     if (!resp.ok) {
       console.log(`[analyze-ux-context] Text position search error: ${resp.status}`);
