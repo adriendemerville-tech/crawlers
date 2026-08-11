@@ -495,7 +495,12 @@ Propose un current_text probable et un suggested_text amélioré quand c'est app
   const allTargets = [...positionTargets, ...imageAnnotationTargets];
 
   if (screenshotResult?.success && allTargets.length > 0) {
-    annotations = await findTextPositions(page_url, allTargets);
+    // Single-pass: positions come from the textMap captured with the screenshot.
+    annotations = matchTargetsLocally(screenshotResult.textMap || [], allTargets);
+    if (annotations.length === 0 && (screenshotResult.textMap || []).length === 0) {
+      // Legacy fallback only when the capture returned no text map at all
+      annotations = await findTextPositions(page_url, allTargets);
+    }
   }
 
   const { error: insertErr } = await serviceClient
