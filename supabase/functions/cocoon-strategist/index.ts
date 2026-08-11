@@ -1179,6 +1179,46 @@ try {
       console.warn('[cocoon-strategist] workbench write failed:', e);
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // PHASE 4c: Garde-fou de fiabilité — parité avec le seuil
+    // 30 pages du Content Integrity. Sous ce seuil, le plan est
+    // marqué `inconclusive` (aucun score présenté comme fiable).
+    // ═══════════════════════════════════════════════════════════
+    const SAMPLE_THRESHOLD = 30;
+    let sampleConfidence: {
+      pages_analyzed: number;
+      threshold: number;
+      inconclusive: boolean;
+      reason: string | null;
+    } = { pages_analyzed: 0, threshold: SAMPLE_THRESHOLD, inconclusive: true, reason: 'no_crawl' };
+    try {
+      const dom = domain.replace(/^www\./, '');
+      const { data: lastCrawl } = await supabase
+        .from('site_crawls')
+        .select('id')
+        .or(`domain.eq.${dom},domain.eq.www.${dom}`)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (lastCrawl?.[0]?.id) {
+        const { count } = await supabase
+          .from('crawl_pages')
+          .select('id', { count: 'exact', head: true })
+          .eq('crawl_id', lastCrawl[0].id);
+        const pages = count ?? 0;
+        sampleConfidence = {
+          pages_analyzed: pages,
+          threshold: SAMPLE_THRESHOLD,
+          inconclusive: pages < SAMPLE_THRESHOLD,
+          reason: pages < SAMPLE_THRESHOLD ? 'insufficient_sample' : null,
+        };
+      }
+    } catch (e) {
+      console.warn('[cocoon-strategist] sample confidence check failed:', e);
+    }
+    if (sampleConfidence.inconclusive) {
+      console.log(`[strategist] sample inconclusive (${sampleConfidence.pages_analyzed} pages < ${SAMPLE_THRESHOLD})`);
+    }
 
 
     // ═══════════════════════════════════════════════════════════
