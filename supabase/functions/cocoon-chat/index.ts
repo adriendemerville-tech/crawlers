@@ -265,7 +265,7 @@ serve(async (req) => {
               for (const ax of strat.feedback.axes) {
                 const l = ax.label?.[language || 'fr'] || ax.label?.fr || ax.id;
                 const d = ax.description?.[language || 'fr'] || ax.description?.fr || '';
-                parts.push(`\n🎯 **${l}** : ${d}`);
+                parts.push(`\n» **${l}** : ${d}`);
               }
             }
           }
