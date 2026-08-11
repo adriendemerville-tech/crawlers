@@ -331,7 +331,7 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
       const resp = await callOnce(model, body, cache, timeoutMs, headers);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCall] Fallback success: ${model} (level ${i})`);
-        return resp;
+        return withUsageLog(resp, model, 'openrouter', callerFunction, i > 0);
       }
 
       // Filet de sécurité Lovable AI pour google/* et openai/* si OpenRouter échoue.
