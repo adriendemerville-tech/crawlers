@@ -206,7 +206,7 @@ serve(async (req) => {
               const warnings = findings.filter((f: any) => f.severity === 'warning');
               const scores = diag.scores as any;
               
-              parts.push(`\n📊 Diagnostic ${diag.diagnostic_type.toUpperCase()} (${diag.created_at?.slice(0, 10)}):`);
+              parts.push(`\nDiagnostic ${diag.diagnostic_type.toUpperCase()} (${diag.created_at?.slice(0, 10)}):`);
               parts.push(`  Scores: ${JSON.stringify(scores).slice(0, 200)}`);
               parts.push(`  ${criticals.length} critiques, ${warnings.length} avertissements, ${findings.length} total`);
               
