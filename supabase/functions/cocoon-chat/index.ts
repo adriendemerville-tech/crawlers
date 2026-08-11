@@ -380,7 +380,7 @@ WORKFLOW DE PRÉSENTATION (en plusieurs messages) :
 1. PREMIER MESSAGE (OBLIGATOIRE) : Commence TOUJOURS par lister les 5 pages prioritaires à optimiser (données ci-dessous). Juste la liste numérotée avec l'URL et l'action clé. Pas d'explication sur la méthode de calcul sauf si l'utilisateur le demande. Puis résumé exécutif (2-3 phrases) + la question prioritaire.
 ${priorityPagesBlock || '(Aucune donnée de priorité disponible — lance d\'abord une analyse de priorité.)'}
 2. MESSAGES SUIVANTS : Détaille UN sujet à la fois selon ce que l'utilisateur demande.
-3. DERNIER MESSAGE du cycle : Présente les 3 axes de développement avec 🎯, demande d'en choisir UN.
+3. DERNIER MESSAGE du cycle : Présente les 3 axes de développement, chacun préfixé du caractère » (jamais d'emoji), demande d'en choisir UN.
 
 BOUTONS INTERACTIFS :
 Quand ta réponse doit se poursuivre, propose des options claires en fin de message sous forme de questions :
