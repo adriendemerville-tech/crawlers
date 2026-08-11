@@ -12,11 +12,12 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 type Order = {
   id: string;
   user_id: string;
+  tracked_site_id: string | null;
   provider_slug: 'accesslink' | 'rocketlinks' | 'getfluence';
   provider_order_id: string | null;
   target_url: string;
   anchor_text: string;
-  published_url: string | null;
+  live_url: string | null;
   status: string;
 };
 
@@ -78,7 +79,7 @@ Deno.serve(async (req) => {
   try {
     const { data: orders, error } = await service
       .from('netlinking_orders')
-      .select('id,user_id,provider_slug,provider_order_id,target_url,anchor_text,published_url,status')
+      .select('id,user_id,tracked_site_id,provider_slug,provider_order_id,target_url,anchor_text,live_url,status')
       .in('status', ['pending', 'in_progress', 'live'])
       .limit(500);
 
@@ -97,7 +98,7 @@ Deno.serve(async (req) => {
           if (s === 'published' || s === 'live' || s === 'completed') {
             patch.status = 'live';
             patch.published_at = new Date().toISOString();
-            if (remote.published_url) patch.published_url = remote.published_url;
+            if (remote.published_url) patch.live_url = remote.published_url;
           } else if (s === 'rejected' || s === 'cancelled' || s === 'failed') {
             patch.status = 'rejected';
           }
@@ -105,21 +106,46 @@ Deno.serve(async (req) => {
       }
 
       // 2) Vérification hebdo des liens vivants
-      const urlToCheck = (patch.published_url as string | undefined) ?? order.published_url;
+      const urlToCheck = (patch.live_url as string | undefined) ?? order.live_url;
       if (urlToCheck && (patch.status === 'live' || order.status === 'live')) {
         const health = await verifyLiveLink(urlToCheck, order.target_url);
         if (health === 'lost') {
           patch.status = 'lost';
           summary.lost++;
-          await service.from('anomaly_alerts').insert({
-            user_id: order.user_id,
-            metric_name: 'netlinking_link_lost',
-            metric_source: 'netlinking',
-            severity: 'high',
-            direction: 'down',
-            description: `Backlink perdu : ${order.target_url} n'est plus détecté sur ${urlToCheck}. Contacte ${order.provider_slug} pour recours.`,
-            domain: (() => { try { return new URL(order.target_url).hostname; } catch { return null; } })(),
-          });
+
+          const domain = (() => { try { return new URL(order.target_url).hostname; } catch { return null; } })();
+          let trackedSiteId = order.tracked_site_id;
+          if (!trackedSiteId && domain) {
+            const { data: site } = await service
+              .from('tracked_sites')
+              .select('id')
+              .eq('user_id', order.user_id)
+              .ilike('domain', `%${domain.replace(/^www\./, '')}%`)
+              .limit(1)
+              .maybeSingle();
+            trackedSiteId = site?.id ?? null;
+          }
+
+          // anomaly_alerts exige tracked_site_id + les colonnes statistiques NOT NULL
+          if (trackedSiteId && domain) {
+            const { error: aerr } = await service.from('anomaly_alerts').insert({
+              tracked_site_id: trackedSiteId,
+              user_id: order.user_id,
+              domain,
+              metric_name: 'netlinking_link_lost',
+              metric_source: 'netlinking',
+              severity: 'high',
+              direction: 'down',
+              z_score: 0,
+              current_value: 0,
+              baseline_mean: 1,
+              baseline_stddev: 0,
+              description: `Backlink perdu : ${order.target_url} n'est plus détecté sur ${urlToCheck}. Contacte ${order.provider_slug} pour recours.`,
+            });
+            if (aerr) summary.errors.push(`alert ${order.id}: ${aerr.message}`);
+          } else {
+            summary.errors.push(`alert ${order.id}: aucun tracked_site résolu pour ${domain ?? 'url invalide'}`);
+          }
         }
       }
 
@@ -130,6 +156,7 @@ Deno.serve(async (req) => {
         else summary.updated++;
       }
     }
+
 
     return new Response(JSON.stringify({ ok: true, ...summary }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
