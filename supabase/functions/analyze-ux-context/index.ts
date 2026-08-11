@@ -657,6 +657,76 @@ function buildImageAnnotationTargets(imageAnalysis: any[], imageFormats: any[]) 
   });
 }
 
+/**
+ * Local annotation matcher — replaces the second Browserless pass.
+ * Consumes the textMap collected during the single capture, so the screenshot
+ * and the bounding boxes always come from the exact same DOM snapshot.
+ */
+function normalizeText(value: string): string {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function matchTargetsLocally(
+  textMap: any[],
+  targets: Array<{ text: string; axis: string; priority: string; selector?: string | null; suggestionIndex: number }>,
+): any[] {
+  if (!Array.isArray(textMap) || textMap.length === 0 || targets.length === 0) return [];
+
+  const entries = textMap.map((entry) => ({
+    ...entry,
+    _norm: normalizeText(entry.text || entry.alt || ''),
+    _sig: `${entry.tag} ${entry.id} ${entry.cls} ${entry.role} ${entry.src}`.toLowerCase(),
+  }));
+
+  const results = targets.map((target) => {
+    const targetText = normalizeText(target.text).slice(0, 140);
+    const selectorHint = (target.selector || '').toLowerCase();
+    const hintTokens = selectorHint.match(/[a-z0-9-]{3,}/g) || [];
+    const targetWords = targetText.split(' ').filter((word) => word.length > 2);
+
+    let bestScore = 0;
+    let bestRect: any = null;
+
+    for (const entry of entries) {
+      const candidate = entry._norm;
+      if (!candidate && hintTokens.length === 0) continue;
+
+      let score = 0;
+      if (targetText && candidate) {
+        if (candidate.includes(targetText)) score += 120 + Math.min(targetText.length, 40);
+        if (targetText.includes(candidate) && candidate.length > 8) score += 80;
+        const matched = targetWords.filter((word) => candidate.includes(word));
+        score += matched.length * 12;
+        if (targetWords.length > 0 && matched.length === targetWords.length) score += 30;
+      }
+      if (hintTokens.length > 0 && hintTokens.every((token) => entry._sig.includes(token))) score += 35;
+
+      // Prefer tighter boxes when scores tie (avoids annotating a whole section)
+      if (score > bestScore || (score === bestScore && score > 0 && bestRect
+        && entry.rect.width * entry.rect.height < bestRect.width * bestRect.height)) {
+        bestScore = score;
+        bestRect = entry.rect;
+      }
+    }
+
+    return {
+      text: target.text,
+      rect: bestScore >= 24 ? bestRect : null,
+      axis: target.axis,
+      priority: target.priority,
+      suggestionIndex: target.suggestionIndex,
+    };
+  });
+
+  return results.filter((r) => r.rect);
+}
+
 async function captureScreenshotWithAnnotations(
   pageUrl: string,
   trackedSiteId: string,
