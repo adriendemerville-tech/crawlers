@@ -48,7 +48,48 @@ const CRITICAL_CATEGORIES = new Set([
   'keyword_gaps',
   'broken_links',
   'anchor_over_optimization',
+  // Autorité off-site (audit netlinking P1) : ces findings ne se corrigent pas
+  // par injection de code, mais par un achat de backlink ciblé.
+  'low_authority',
+  'thin_backlinks',
+  'backlink_target',
 ]);
+
+/** Catégories relevant de l'acquisition de liens externes, pas d'une correction on-site. */
+const OFFSITE_CATEGORIES = new Set(['low_authority', 'thin_backlinks', 'backlink_target']);
+
+/**
+ * Ancres suggérées pour l'achat de backlink, cohérentes avec le maillage interne :
+ * on réutilise en priorité les ancres/mots-clés déjà calculés par le diagnostic
+ * Cocoon (anchor_variants, keywords, main_keyword), sinon rien.
+ */
+function suggestedAnchors(f: CocoonFindingLike): string[] {
+  const d = (f.data || {}) as Record<string, unknown>;
+  const pools: unknown[] = [d['anchor_variants'], d['anchors'], d['keywords'], d['main_keyword'], d['target_keyword']];
+  const out: string[] = [];
+  for (const pool of pools) {
+    if (typeof pool === 'string') out.push(pool);
+    else if (Array.isArray(pool)) {
+      for (const v of pool) {
+        if (typeof v === 'string') out.push(v);
+        else if (v && typeof v === 'object' && typeof (v as Record<string, unknown>)['text'] === 'string') {
+          out.push((v as Record<string, string>)['text']);
+        }
+      }
+    }
+  }
+  const cleaned = out.map((a) => a.trim()).filter((a) => a.length >= 3 && a.length <= 80);
+  return Array.from(new Set(cleaned)).slice(0, 3);
+}
+
+/** Deep-link diagnostic → achat ciblé (URL cible, ancre et thème pré-remplis). */
+function netlinkingDeepLink(domain: string, url: string | null, anchors: string[], topic?: string | null): string {
+  const p = new URLSearchParams({ tab: 'netlinking' });
+  p.set('target_url', url || `https://${domain}`);
+  if (anchors[0]) p.set('anchor', anchors[0]);
+  if (topic) p.set('topic', topic);
+  return `/app/console?${p.toString()}`;
+}
 
 /** category / finding id → (target_selector, target_operation) */
 const TARGET_MAP: Record<string, { selector: string; operation: string }> = {
