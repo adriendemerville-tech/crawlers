@@ -93,10 +93,10 @@ Deno.serve(handleRequest(async (req) => {
 
     // Build a focused prompt for manual annotations only
     const annotationDescriptions = manualAnnotations.map((a: any, i: number) => {
-      const axisLabel = {
+      const axisLabel = ({
         tone: 'Ton', cta_pressure: 'CTA', alignment: 'Alignement', readability: 'Lisibilité',
         conversion: 'Conversion', mobile_ux: 'Mobile UX', keyword_usage: 'Mots-clés', chunkability: 'Chunkability IA',
-      }[a.axis] || a.axis;
+      } as Record<string, string>)[a.axis] || a.axis;
       return `${i + 1}. [${axisLabel}] Priorité: ${a.priority} — Zone: (${Math.round(a.rect.x)}, ${Math.round(a.rect.y)}, ${Math.round(a.rect.width)}×${Math.round(a.rect.height)}) — Commentaire: "${a.comment}"`;
     }).join('\n');
 
