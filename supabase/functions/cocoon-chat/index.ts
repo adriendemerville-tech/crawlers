@@ -124,7 +124,7 @@ serve(async (req) => {
           .limit(5);
 
         if (priorityPages?.length) {
-          priorityPagesBlock = `\n\n🎯 TOP 5 PAGES PRIORITAIRES À OPTIMISER :\n`;
+          priorityPagesBlock = `\n\n» TOP 5 PAGES PRIORITAIRES À OPTIMISER :\n`;
           for (let i = 0; i < priorityPages.length; i++) {
             const p = priorityPages[i];
             const opps = (p.top_opportunities as string[]) || [];
@@ -206,7 +206,7 @@ serve(async (req) => {
               const warnings = findings.filter((f: any) => f.severity === 'warning');
               const scores = diag.scores as any;
               
-              parts.push(`\n📊 Diagnostic ${diag.diagnostic_type.toUpperCase()} (${diag.created_at?.slice(0, 10)}):`);
+              parts.push(`\nDiagnostic ${diag.diagnostic_type.toUpperCase()} (${diag.created_at?.slice(0, 10)}):`);
               parts.push(`  Scores: ${JSON.stringify(scores).slice(0, 200)}`);
               parts.push(`  ${criticals.length} critiques, ${warnings.length} avertissements, ${findings.length} total`);
               
@@ -265,7 +265,7 @@ serve(async (req) => {
               for (const ax of strat.feedback.axes) {
                 const l = ax.label?.[language || 'fr'] || ax.label?.fr || ax.id;
                 const d = ax.description?.[language || 'fr'] || ax.description?.fr || '';
-                parts.push(`\n🎯 **${l}** : ${d}`);
+                parts.push(`\n» **${l}** : ${d}`);
               }
             }
           }
@@ -380,7 +380,7 @@ WORKFLOW DE PRÉSENTATION (en plusieurs messages) :
 1. PREMIER MESSAGE (OBLIGATOIRE) : Commence TOUJOURS par lister les 5 pages prioritaires à optimiser (données ci-dessous). Juste la liste numérotée avec l'URL et l'action clé. Pas d'explication sur la méthode de calcul sauf si l'utilisateur le demande. Puis résumé exécutif (2-3 phrases) + la question prioritaire.
 ${priorityPagesBlock || '(Aucune donnée de priorité disponible — lance d\'abord une analyse de priorité.)'}
 2. MESSAGES SUIVANTS : Détaille UN sujet à la fois selon ce que l'utilisateur demande.
-3. DERNIER MESSAGE du cycle : Présente les 3 axes de développement avec 🎯, demande d'en choisir UN.
+3. DERNIER MESSAGE du cycle : Présente les 3 axes de développement, chacun préfixé du caractère » (jamais d'emoji), demande d'en choisir UN.
 
 BOUTONS INTERACTIFS :
 Quand ta réponse doit se poursuivre, propose des options claires en fin de message sous forme de questions :
@@ -451,8 +451,9 @@ CORRÉLATIONS OBLIGATOIRES :
 6. BOTS IA vs BOTS SEO : Si Googlebot crawle mais que les bots IA ignorent le site, c'est un signal GEO critique — le contenu n'est pas "citable" par les LLMs.
 
 FORMAT LOG : Quand tu cites un insight log, utilise le format :
-"📊 Logs serveur : [constat factuel] → [conséquence business] → [action]"
-Exemple : "📊 Logs serveur : GPTBot n'a visité que 3 pages en 7 jours → ta marque est quasi absente des réponses IA → Priorité : débloquer GPTBot dans robots.txt et enrichir tes pages clés avec des passages FAQ structurés."
+"Logs serveur : [constat factuel] → [conséquence business] → [action]"
+Exemple : "Logs serveur : GPTBot n'a visité que 3 pages en 7 jours → ta marque est quasi absente des réponses IA → Priorité : débloquer GPTBot dans robots.txt et enrichir tes pages clés avec des passages FAQ structurés."
+N'utilise JAMAIS d'emoji dans tes réponses.
 
 Ne mentionne jamais le nom d'une table ou fonction technique. Dis "notre analyse des logs serveur" ou "les données de crawl réel".
 
@@ -481,7 +482,7 @@ OUTILS D'ACTION DISPONIBLES (IMPORTANT) :
 Tu n'es PAS qu'un conseiller passif. L'utilisateur dispose d'outils d'action directement dans ton interface :
 - **Bouton Seringue (🩺)** : Permet d'injecter automatiquement le maillage interne optimisé dans le site de l'utilisateur (via son CMS ou notre widget). Quand tu recommandes des liens, dis à l'utilisateur qu'il peut les appliquer en un clic via le bouton d'injection en bas de la fenêtre.
 - **Bouton Architecte Contenu (✏️)** : Permet de générer une page complète optimisée E-E-A-T prête à publier. Quand tu recommandes de créer une nouvelle page, dis à l'utilisateur qu'il peut la générer directement via le bouton Architecte Contenu.
-- **Bouton Auto-Maillage IA (🔗)** : Disponible dans le panneau de chaque nœud. Analyse automatiquement le contenu de la page pour trouver les meilleurs emplacements d'ancres internes. Utilise un pré-scan intelligent (détection des titres déjà présents dans le texte) puis l'IA pour sélectionner les ancres contextuelles optimales. Quand tu recommandes d'améliorer le maillage d'une page spécifique, oriente l'utilisateur vers ce bouton.
+- **Bouton Auto-Maillage IA** : Disponible dans le panneau de chaque nœud. Analyse automatiquement le contenu de la page pour trouver les meilleurs emplacements d'ancres internes. Utilise un pré-scan intelligent (détection des titres déjà présents dans le texte) puis l'IA pour sélectionner les ancres contextuelles optimales. Quand tu recommandes d'améliorer le maillage d'une page spécifique, oriente l'utilisateur vers ce bouton.
 - **Toggles d'exclusion** : Dans le panneau de chaque nœud, 3 interrupteurs permettent d'exclure une page du maillage automatique (pas de liens sortants / pas de liens entrants / exclusion totale). Utile pour protéger les pages sponsorisées, légales ou désindexées. Mentionne cette option quand l'utilisateur s'inquiète de liens automatiques sur certaines pages.
 - Ces boutons apparaissent automatiquement en bas de la fenêtre après une analyse de maillage ou une stratégie.
 Tu dois TOUJOURS orienter l'utilisateur vers ces outils quand c'est pertinent, au lieu de lui dire de le faire manuellement dans son CMS.

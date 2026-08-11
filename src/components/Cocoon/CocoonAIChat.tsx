@@ -134,8 +134,9 @@ function extractQuickReplies(content: string): QuickReply[] {
   const tail = content.slice(-800);
   let m: RegExpExecArray | null;
 
-  // Strategist direction format: "🎯 **Architecture sémantique** : ..."
-  const targetPattern = /(?:^|\n)\s*[🎯]\s*\*{0,2}([^*\n]{3,40})\*{0,2}\s*:/g;
+  // Strategist direction format: "» **Architecture sémantique** : ..."
+  const targetPattern = /(?:^|\n)\s*[»▸]\s*\*{0,2}([^*\n]{3,40})\*{0,2}\s*:/g;
+
   const targets: QuickReply[] = [];
   while ((m = targetPattern.exec(tail)) !== null) {
     const label = m[1].trim();
@@ -250,21 +251,21 @@ function isStrategyPrompt(content: string): boolean {
 function getAnalysisLabel(content: string, lang: string): string {
   const match = content.match(/pages suivantes:\s*(.+?)\.\s*Réponds|following pages:\s*(.+?)\.\s*Respond|siguientes páginas:\s*(.+?)\.\s*Responde/);
   const pages = match?.[1] || match?.[2] || match?.[3] || '';
-  if (lang === 'en') return `📊 Multi-page analysis: ${pages}`;
-  if (lang === 'es') return `📊 Análisis multi-página: ${pages}`;
-  return `📊 Analyse multi-pages : ${pages}`;
+  if (lang === 'en') return `Multi-page analysis: ${pages}`;
+  if (lang === 'es') return `Análisis multi-página: ${pages}`;
+  return `Analyse multi-pages : ${pages}`;
 }
 
 function getOptimizeLabel(lang: string): string {
-  if (lang === 'en') return '🔗 Internal linking optimization';
-  if (lang === 'es') return '🔗 Optimización del enlazado interno';
-  return '🔗 Optimisation du maillage interne';
+  if (lang === 'en') return 'Internal linking optimization';
+  if (lang === 'es') return 'Optimización del enlazado interno';
+  return 'Optimisation du maillage interne';
 }
 
 function getStrategyLabel(lang: string): string {
-  if (lang === 'en') return '🧭 360° Strategy — Diagnosis & Prescription';
-  if (lang === 'es') return '🧭 Estrategia 360° — Diagnóstico y Prescripción';
-  return '🧭 Stratégie 360° — Diagnostic & Prescription';
+  if (lang === 'en') return '360° Strategy — Diagnosis & Prescription';
+  if (lang === 'es') return 'Estrategia 360° — Diagnóstico y Prescripción';
+  return 'Stratégie 360° — Diagnostic & Prescription';
 }
 
 // ─── Copy button ───
@@ -925,7 +926,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
 
   const activateBugReportMode = useCallback(() => {
     setBugReportMode('waiting');
-    const promptMsg: Msg = { role: 'assistant', content: "Pas de problème ! Votre prochain message sera le signalement. Décrivez le problème rencontré. C'est à vous. 📝" };
+    const promptMsg: Msg = { role: 'assistant', content: "Pas de problème ! Votre prochain message sera le signalement. Décrivez le problème rencontré. C'est à vous." };
     setMessages(prev => [...prev, promptMsg]);
   }, []);
 
@@ -1000,7 +1001,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       if (newCount >= 3 && !quizSuggested && !quizData) {
         setQuizSuggested(true);
         setTimeout(() => {
-          setMessages(prev => [...prev, { role: 'assistant', content: '💡 **Tu poses beaucoup de questions sur le maillage !** Teste tes connaissances avec un quiz rapide ?\n\nTape **"quiz"** pour lancer.' }]);
+          setMessages(prev => [...prev, { role: 'assistant', content: '**Tu poses beaucoup de questions sur le maillage !** Teste tes connaissances avec un quiz rapide ?\n\nTape **"quiz"** pour lancer.' }]);
         }, 1500);
       }
     }
@@ -1089,7 +1090,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       });
 
       if (resp.status === 429) { upsertAssistant(t.rateLimit); setIsLoading(false); return; }
-      if (resp.status === 402) { upsertAssistant('⚠️ Credits insuffisants.'); setIsLoading(false); return; }
+      if (resp.status === 402) { upsertAssistant('Credits insuffisants.'); setIsLoading(false); return; }
       if (!resp.ok || !resp.body) throw new Error('Stream failed');
 
       const reader = resp.body.getReader();
@@ -1256,48 +1257,48 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     const prompts: Record<string, string> = {
       fr: `Analyse les pages suivantes: ${slugList}. Réponds EXACTEMENT dans ce format:
 
-**🔗 Fonction & Relation**
+**Fonction & Relation**
 - En 1 phrase: décris la fonction de chaque page et leur relation hiérarchique (page mère → page fille, pages sœurs, ou aucun lien).
 
-**⚡ Flux de Juice**
+**Flux de Juice**
 - Sens du juice: de quelle page vers quelle page (descendant/ascendant/bidirectionnel)
 - Intensité: faible / moyenne / forte (basé sur les liens internes entrants/sortants)
 - Dynamique: flux en hausse, stable ou en baisse (basé sur la densité de liens et le maillage)
 
-**🧠 Liens sémantiques**
+**Liens sémantiques**
 En exactement 3 phrases, analyse la proximité sémantique entre ces pages (clusters, mots-clés partagés, intent commun ou divergent).
 
-**✨ 3 Quick Wins**
+**3 Quick Wins**
 Liste exactement 3 actions concrètes et rapides à implémenter pour améliorer le maillage entre ces pages.`,
       en: `Analyze the following pages: ${slugList}. Respond EXACTLY in this format:
 
-**🔗 Function & Relationship**
+**Function & Relationship**
 - In 1 sentence: describe each page's function and their hierarchical relationship (parent → child, sibling pages, or no link).
 
-**⚡ Juice Flow**
+**Juice Flow**
 - Direction: from which page to which (descending/ascending/bidirectional)
 - Intensity: weak / medium / strong (based on internal links in/out)
 - Dynamic: flow increasing, stable or decreasing (based on link density and interlinking)
 
-**🧠 Semantic Links**
+**Semantic Links**
 In exactly 3 sentences, analyze the semantic proximity between these pages (clusters, shared keywords, common or divergent intent).
 
-**✨ 3 Quick Wins**
+**3 Quick Wins**
 List exactly 3 concrete, quick actions to improve interlinking between these pages.`,
       es: `Analiza las siguientes páginas: ${slugList}. Responde EXACTAMENTE en este formato:
 
-**🔗 Función y Relación**
+**Función y Relación**
 - En 1 frase: describe la función de cada página y su relación jerárquica (página madre → hija, páginas hermanas, o sin enlace).
 
-**⚡ Flujo de Juice**
+**Flujo de Juice**
 - Dirección: de qué página a cuál (descendente/ascendente/bidireccional)
 - Intensidad: débil / media / fuerte (basado en enlaces internos entrantes/salientes)
 - Dinámica: flujo en alza, estable o en baja (basado en la densidad de enlaces)
 
-**🧠 Enlaces semánticos**
+**Enlaces semánticos**
 En exactamente 3 frases, analiza la proximidad semántica entre estas páginas (clusters, palabras clave compartidas, intent común o divergente).
 
-**✨ 3 Quick Wins**
+**3 Quick Wins**
 Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado interno entre estas páginas.`,
     };
     sendMessage(prompts[language] || prompts.fr);
@@ -1350,11 +1351,11 @@ ${topologyBlock}
 
 En te basant sur cette topologie complète du graphe, propose un PLAN D'ACTION COMPLET pour optimiser le maillage interne. Réponds avec ce format :
 
-**🔴 Pages orphelines & profondeur**
+**Pages orphelines & profondeur**
 - Liste chaque page orpheline ou trop profonde (≥4 clics)
 - Pour chacune, propose une page source concrète depuis laquelle créer un lien, avec une ancre suggérée
 
-**📊 Distribution du PageRank**
+**Distribution du PageRank**
 - Identifie les pages à fort PageRank qui ne redistribuent pas assez (peu de liens sortants)
 - Identifie les pages stratégiques (fort ROI/GEO) qui manquent d'autorité
 - Propose des liens précis pour rééquilibrer
@@ -1364,13 +1365,13 @@ En te basant sur cette topologie complète du graphe, propose un PLAN D'ACTION C
 - Identifie les fuites inter-silos (liens entre clusters non pertinents)
 - Propose des corrections
 
-**🎯 Faisceaux de famille (Fan Beams)**
+**Faisceaux de famille (Fan Beams)**
 - Analyse la taille angulaire de chaque faisceau sur la vue radiale : un faisceau ne devrait pas dépasser ~30% de l'espace angulaire total
 - Si un faisceau est disproportionné, c'est que le cluster contient trop de pages → proposer un découpage en sous-clusters plus cohérents
 - Les faisceaux qui se chevauchent indiquent des pages partagées entre clusters → vérifier s'il s'agit de pages pivot (liaisons inter-silos légitimes) ou de mauvaise classification
 - Un gap vide entre faisceaux = espace sémantique non couvert → opportunité de contenu
 
-**✨ Pages à créer / fusionner / supprimer**
+**Pages à créer / fusionner / supprimer**
 - Pages manquantes dans le cocon (gaps sémantiques à combler)
 - Pages à risque de cannibalisation à fusionner
 - Pages à faible valeur à désindexer ou supprimer
@@ -1384,11 +1385,11 @@ ${topologyBlock}
 
 Based on this complete graph topology, propose a FULL ACTION PLAN to optimize internal linking. Use this format:
 
-**🔴 Orphan pages & depth**
+**Orphan pages & depth**
 - List each orphan or too-deep page (≥4 clicks)
 - For each, suggest a concrete source page to link from, with suggested anchor text
 
-**📊 PageRank distribution**
+**PageRank distribution**
 - Identify high-PR pages that don't redistribute enough (few outgoing links)
 - Identify strategic pages (high ROI/GEO) lacking authority
 - Suggest specific links to rebalance
@@ -1398,13 +1399,13 @@ Based on this complete graph topology, propose a FULL ACTION PLAN to optimize in
 - Identify inter-silo leaks (irrelevant cross-cluster links)
 - Suggest corrections
 
-**🎯 Family Beams (Fan Beams)**
+**Family Beams (Fan Beams)**
 - Analyze the angular size of each beam on the radial view: no beam should exceed ~30% of total angular space
 - If a beam is disproportionate, the cluster has too many pages → suggest splitting into more coherent sub-clusters
 - Overlapping beams indicate shared pages between clusters → check if these are legitimate pivot pages or misclassification
 - Empty gaps between beams = uncovered semantic space → content opportunity
 
-**✨ Pages to create / merge / remove**
+**Pages to create / merge / remove**
 - Missing pages in the cocoon (semantic gaps to fill)
 - Cannibalization-risk pages to merge
 - Low-value pages to deindex or remove
@@ -1418,11 +1419,11 @@ ${topologyBlock}
 
 Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COMPLETO para optimizar el enlazado interno. Usa este formato:
 
-**🔴 Páginas huérfanas y profundidad**
+**Páginas huérfanas y profundidad**
 - Lista cada página huérfana o demasiado profunda (≥4 clics)
 - Para cada una, sugiere una página fuente concreta desde la cual crear un enlace, con texto ancla sugerido
 
-**📊 Distribución del PageRank**
+**Distribución del PageRank**
 - Identifica páginas con alto PR que no redistribuyen suficiente (pocos enlaces salientes)
 - Identifica páginas estratégicas (alto ROI/GEO) que carecen de autoridad
 - Sugiere enlaces específicos para reequilibrar
@@ -1432,13 +1433,13 @@ Basándote en esta topología completa del grafo, propón un PLAN DE ACCIÓN COM
 - Identifica fugas inter-silo (enlaces entre clusters no pertinentes)
 - Sugiere correcciones
 
-**🎯 Haces de familia (Fan Beams)**
+**Haces de familia (Fan Beams)**
 - Analiza el tamaño angular de cada haz en la vista radial: ningún haz debería superar ~30% del espacio angular total
 - Si un haz es desproporcionado, el cluster tiene demasiadas páginas → sugiere dividirlo en sub-clusters más coherentes
 - Los haces superpuestos indican páginas compartidas entre clusters → verificar si son páginas pivot legítimas o mala clasificación
 - Un vacío entre haces = espacio semántico no cubierto → oportunidad de contenido
 
-**✨ Páginas a crear / fusionar / eliminar**
+**Páginas a crear / fusionar / eliminar**
 - Páginas faltantes en el cocoon (gaps semánticos a llenar)
 - Páginas con riesgo de canibalización a fusionar
 - Páginas de bajo valor a desindexar o eliminar
@@ -1886,10 +1887,10 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
               if (nodes.length > 0) {
                 const orphanPct = Math.round((orphans.length / nodes.length) * 100);
                 const priorityMsg = language === 'en'
-                  ? `📊 **${nodes.length} pages** loaded.${hasOrphans ? ` ⚠️ ${orphans.length} orphan pages (${orphanPct}%).` : ''} What do you want to do?`
+                  ? `**${nodes.length} pages** loaded.${hasOrphans ? ` ${orphans.length} orphan pages (${orphanPct}%).` : ''} What do you want to do?`
                   : language === 'es'
-                  ? `📊 **${nodes.length} páginas** cargadas.${hasOrphans ? ` ⚠️ ${orphans.length} páginas huérfanas (${orphanPct}%).` : ''} ¿Qué quieres hacer?`
-                  : `📊 **${nodes.length} pages** chargées.${hasOrphans ? ` ⚠️ ${orphans.length} pages orphelines (${orphanPct}%).` : ''} Que veux-tu faire ?`;
+                  ? `**${nodes.length} páginas** cargadas.${hasOrphans ? ` ${orphans.length} páginas huérfanas (${orphanPct}%).` : ''} ¿Qué quieres hacer?`
+                  : `**${nodes.length} pages** chargées.${hasOrphans ? ` ${orphans.length} pages orphelines (${orphanPct}%).` : ''} Que veux-tu faire ?`;
 
                 return (
                   <div className="text-center py-4 space-y-3">
