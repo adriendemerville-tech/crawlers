@@ -255,13 +255,19 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
     toast.success(`${targets.length} audits lancés — génération séquentielle en cours`);
 
     let cursor = 0;
-    const worker = async () => {
+    const worker = async (workerIndex: number) => {
+      // Le second worker attend que le premier ait initié le crawl mutualisé.
+      if (workerIndex > 0) {
+        await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
+      }
       while (cursor < initial.length && !cancelRef.current) {
         const index = cursor++;
         await runOne(index, initial[index].url);
       }
     };
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, initial.length) }, worker));
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, initial.length) }, (_, i) => worker(i)),
+    );
     setRunning(false);
   }, [credits, isAuthenticated, runOne, targets, totalCost]);
 
