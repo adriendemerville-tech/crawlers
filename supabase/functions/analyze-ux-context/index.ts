@@ -798,6 +798,55 @@ async function captureScreenshotWithAnnotations(
     };
   });
 
+  // Text map: one single pass collecting every candidate element box + text.
+  // Consumed locally (in Deno) to place annotations WITHOUT a second Browserless call.
+  const textMap = await page.evaluate(() => {
+    const isIgnored = (element) => {
+      let current = element;
+      for (let depth = 0; current && depth < 6; depth += 1) {
+        const attrs = [
+          current.tagName || '',
+          current.id || '',
+          typeof current.className === 'string' ? current.className : '',
+          current.getAttribute?.('role') || '',
+          current.getAttribute?.('aria-label') || '',
+        ].join(' ').toLowerCase();
+        if (attrs.includes('cookie') || attrs.includes('consent') || attrs.includes('dialog') || attrs.includes('modal')) return true;
+        current = current.parentElement;
+      }
+      return false;
+    };
+
+    const out = [];
+    const push = (el, text) => {
+      if (!el || isIgnored(el)) return;
+      const rect = el.getBoundingClientRect();
+      if (!rect || rect.width <= 0 || rect.height <= 0) return;
+      out.push({
+        text: (text || '').slice(0, 400),
+        tag: el.tagName.toLowerCase(),
+        id: el.id || '',
+        cls: typeof el.className === 'string' ? el.className.slice(0, 160) : '',
+        src: el.getAttribute?.('src') || '',
+        alt: el.getAttribute?.('alt') || '',
+        role: el.getAttribute?.('role') || '',
+        rect: {
+          x: rect.left + window.scrollX,
+          y: rect.top + window.scrollY,
+          width: rect.width,
+          height: rect.height,
+          tag: el.tagName.toLowerCase(),
+        },
+      });
+    };
+
+    for (const el of document.querySelectorAll('h1, h2, h3, h4, h5, p, button, a, li, label, span, strong, em, td, th, img, [role="button"]')) {
+      push(el, el.tagName === 'IMG' ? (el.getAttribute('alt') || '') : (el.innerText || el.textContent || ''));
+      if (out.length >= 1200) break;
+    }
+    return out;
+  });
+
   const screenshot = await page.screenshot({
     type: 'jpeg',
     quality: 75,
@@ -806,7 +855,7 @@ async function captureScreenshotWithAnnotations(
   });
 
   return {
-    data: { screenshot, height: fullHeight, imageFormats, chunkabilitySignals },
+    data: { screenshot, height: fullHeight, imageFormats, chunkabilitySignals, textMap },
     type: 'application/json'
   };
 };`;
