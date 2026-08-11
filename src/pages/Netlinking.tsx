@@ -76,14 +76,29 @@ export default function Netlinking() {
   const [anchor, setAnchor] = useState("");
   const [minDr, setMinDr] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
-  const [selectedProviders, setSelectedProviders] = useState<ProviderSlug[]>([
-    "accesslink",
-    "rocketlinks",
-    "getfluence",
-  ]);
+  const [selectedProviders, setSelectedProviders] = useState<ProviderSlug[]>(["accesslink"]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
+
+  const providersQuery = useQuery({
+    queryKey: ["netlinking-providers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("netlinking_providers")
+        .select("slug,name,status,supports_search,supports_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const availability = useMemo(() => {
+    const map = new Map<string, boolean>();
+    (providersQuery.data ?? []).forEach((p: any) => {
+      map.set(p.slug, p.status === "active" && p.supports_search === true);
+    });
+    return map;
+  }, [providersQuery.data]);
 
   // Pre-fill from query params (e.g. deep-link from Stratège Cocoon)
   useEffect(() => {
@@ -116,6 +131,7 @@ export default function Netlinking() {
       return data ?? [];
     },
   });
+
 
   const runSearch = async () => {
     if (!topic.trim()) {
@@ -187,7 +203,7 @@ export default function Netlinking() {
     setAnchor("");
     setMinDr("");
     setBudgetMax("");
-    setSelectedProviders(["accesslink", "rocketlinks", "getfluence"]);
+    setSelectedProviders(["accesslink"]);
     setOffers([]);
     setSearchParams({}, { replace: true });
   };
@@ -198,10 +214,12 @@ export default function Netlinking() {
   );
 
   const toggleProvider = (slug: ProviderSlug) => {
+    if (availability.get(slug) === false) return;
     setSelectedProviders((prev) =>
       prev.includes(slug) ? prev.filter((p) => p !== slug) : [...prev, slug]
     );
   };
+
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4">
@@ -211,9 +229,10 @@ export default function Netlinking() {
           Netlinking
         </h1>
         <p className="text-muted-foreground mt-2 max-w-3xl">
-          Renforce l'autorité de tes pages via 3 marketplaces de backlinks.
+          Renforce l'autorité de tes pages via les marketplaces de backlinks raccordées.
           Commission Crawlers de 10% sur chaque commande, débitée du wallet développeur.
         </p>
+
       </div>
 
       <Tabs defaultValue="search">
@@ -280,24 +299,34 @@ export default function Netlinking() {
               <Label className="mb-2 block">Providers</Label>
               <div className="flex flex-wrap gap-2">
                 {PROVIDERS.map((p) => {
-                  const active = selectedProviders.includes(p.slug);
+                  const unavailable = availability.get(p.slug) === false;
+                  const active = !unavailable && selectedProviders.includes(p.slug);
                   return (
                     <button
                       key={p.slug}
                       type="button"
+                      disabled={unavailable}
+                      title={unavailable ? "Marketplace pas encore raccordée" : undefined}
                       onClick={() => toggleProvider(p.slug)}
                       className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
-                        active
-                          ? "border-[hsl(262,83%,58%)] text-[hsl(262,83%,58%)] bg-[hsl(262,83%,58%)]/10"
-                          : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                        unavailable
+                          ? "border-border/60 text-muted-foreground/60 cursor-not-allowed line-through"
+                          : active
+                            ? "border-[hsl(262,83%,58%)] text-[hsl(262,83%,58%)] bg-[hsl(262,83%,58%)]/10"
+                            : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                       }`}
                     >
                       {p.label}
+                      {unavailable ? " — indisponible" : ""}
                     </button>
                   );
                 })}
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Seules les marketplaces réellement raccordées sont interrogeables. Module réservé aux plans Premium et plus.
+              </p>
             </div>
+
 
             <div className="flex flex-wrap items-center gap-3">
               <Button onClick={runSearch} disabled={loading} variant="outline">

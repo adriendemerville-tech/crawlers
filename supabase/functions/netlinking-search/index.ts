@@ -9,6 +9,9 @@ import { z } from 'npm:zod@3';
 
 const COMMISSION_RATE = 0.10;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+// Providers dont l'API est réellement câblée (search + order)
+const WIRED_PROVIDERS = ['accesslink'] as const satisfies readonly string[];
+const PREMIUM_PLANS = new Set(['premium', 'premium_yearly', 'agency_pro', 'agency_premium', 'pro_agency']);
 
 const BodySchema = z.object({
   topic: z.string().min(2).max(200),
@@ -130,6 +133,22 @@ Deno.serve(async (req) => {
       });
     }
 
+    const service = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
+    // Gating Premium+ (le netlinking engage de l'argent réel)
+    const { data: sub } = await service
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', userData.user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    const plan = (sub?.plan || '').toLowerCase();
+    if (!PREMIUM_PLANS.has(plan)) {
+      return new Response(JSON.stringify({ error: 'plan_required', message: 'Le netlinking est réservé aux plans Premium et plus.' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) {
       return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), {
@@ -137,17 +156,26 @@ Deno.serve(async (req) => {
       });
     }
     const params = parsed.data;
-    const providers = params.providers?.length ? params.providers : ['accesslink', 'rocketlinks', 'getfluence'];
+    // Seuls les providers réellement câblés sont interrogés
+    const wired: string[] = [...WIRED_PROVIDERS];
+    const requested: string[] = params.providers?.length ? [...params.providers] : wired;
+    const providers = requested.filter((p) => wired.includes(p));
+    if (providers.length === 0) {
+      return new Response(JSON.stringify({ offers: [], providers_hit: [], unavailable_providers: requested, commission_rate: COMMISSION_RATE }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    // Cache lookup
+    // Cache lookup + purge des entrées expirées
     const cacheKey = `${providers.sort().join(',')}::${params.language}::${params.topic}::${params.min_dr ?? 0}::${params.min_traffic ?? 0}::${params.budget_max_cents ?? 0}`;
-    const service = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    await service.from('netlinking_catalog_cache').delete().lt('expires_at', new Date().toISOString());
     const { data: cached } = await service
       .from('netlinking_catalog_cache')
       .select('payload,expires_at')
       .eq('cache_key', cacheKey)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
+
 
     if (cached?.payload) {
       return new Response(JSON.stringify({ ...(cached.payload as object), cached: true }), {

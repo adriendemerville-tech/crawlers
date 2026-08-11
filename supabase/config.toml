@@ -1,5 +1,12 @@
 project_id = "tutlimtasnjabdfhpewu"
 
+[functions.netlinking-webhook]
+verify_jwt = false
+
+[functions.cron-netlinking-monitor]
+verify_jwt = false
+
+
 [functions.wp-test-connection]
 verify_jwt = false
 
