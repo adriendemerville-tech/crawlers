@@ -671,7 +671,7 @@ async function captureScreenshotWithAnnotations(
   try {
     const script = `export default async ({ page }) => {
   await page.setViewport({ width: 1280, height: 900 });
-  await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 45000 });
+  await page.goto(${JSON.stringify(pageUrl)}, { waitUntil: 'networkidle2', timeout: 60000 });
   await new Promise(r => setTimeout(r, 4000));
 
   // Scroll progressively to trigger lazy-loaded images
@@ -815,6 +815,7 @@ async function captureScreenshotWithAnnotations(
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: script,
+      signal: AbortSignal.timeout(60000),
     });
 
     if (!resp.ok) {
@@ -1066,6 +1067,7 @@ async function findTextPositions(
       method: 'POST',
       headers: { 'Content-Type': 'application/javascript' },
       body: script,
+      signal: AbortSignal.timeout(60000),
     });
 
     if (!resp.ok) {
