@@ -701,6 +701,15 @@ try {
               },
               summary: `Prescribe V3 (strategist): #1/${tasksForPlan.length} "${topTask.title}" → ${executorFn}. Urgence: ${topTask.urgency}. ${forceContent ? 'Content priority ON.' : ''}`,
             };
+
+            // Traçabilité workbench (audit 2026-08-11 P0-3) — jamais bloquant
+            await writePrescriptionsToWorkbench(supabase, tasksForPlan, {
+              domain,
+              trackedSiteId: tracked_site_id,
+              userId: authUserId || bodyUserId || null,
+              cycleNumber: cycle_number,
+              strategyPlanId: strategistData?.plan_id ?? null,
+            });
           }
         }
       } catch (e) {
