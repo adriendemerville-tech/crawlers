@@ -2388,6 +2388,8 @@ Quelle action concrète exécutes-tu pour la phase ${context.currentPhase.toUppe
         }
 
         const result = await response.json();
+        // Instrumentation coût (audit 2026-08-11 P0-2) — fire-and-forget
+        logAIUsageFromResponse(getServiceClient(), 'google/gemini-3-flash-preview', 'parmenion-orchestrator', result?.usage);
         const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
         if (!toolCall) {
           console.error(`[Parménion] ${gw.label}: No tool call in LLM response`);
