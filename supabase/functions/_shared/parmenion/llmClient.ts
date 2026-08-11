@@ -1,7 +1,10 @@
 /**
  * parmenion/llmClient.ts — LLM call wrapper with retry & fallback strategy.
  * Priority: OpenRouter (primary) → Lovable AI Gateway (fallback).
+ * Chaque réponse est loggée dans ai_gateway_usage (audit 2026-08-11 P0-2).
  */
+import { getServiceClient } from '../supabaseClient.ts';
+import { logAIUsageFromResponse } from '../logAIUsage.ts';
 
 interface Gateway {
   url: string;
