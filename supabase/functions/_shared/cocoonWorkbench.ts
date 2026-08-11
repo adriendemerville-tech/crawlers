@@ -165,6 +165,8 @@ export async function writeCocoonFindingsToWorkbench(
       const urls = Array.isArray(f.affected_urls) ? f.affected_urls.filter(Boolean) : [];
       const primaryUrl = urls[0] || null;
       const target = TARGET_MAP[f.category || ''] || TARGET_MAP[f.id || ''] || null;
+      const isOffsite = OFFSITE_CATEGORIES.has(f.category || '') || OFFSITE_CATEGORIES.has(f.id || '');
+      const anchors = isOffsite ? suggestedAnchors(f) : [];
       const recordId = `cocoon_${opts.domain}_${findingKey}${primaryUrl ? `_${shortHash(primaryUrl)}` : ''}`;
 
       rows.set(recordId, {
@@ -189,6 +191,18 @@ export async function writeCocoonFindingsToWorkbench(
           affected_count: urls.length,
           strategy_plan_id: opts.strategyPlanId ?? null,
           spiral_phase: opts.spiralPhase ?? null,
+          ...(isOffsite
+            ? {
+                remediation_channel: 'netlinking',
+                suggested_anchors: anchors,
+                deep_link: netlinkingDeepLink(
+                  opts.domain,
+                  primaryUrl,
+                  anchors,
+                  (f.data?.['topic'] as string | undefined) ?? null,
+                ),
+              }
+            : {}),
         },
       });
     }
