@@ -183,7 +183,25 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Quota fair-use : uniquement sur les recherches qui déclenchent un vrai
+    // appel provider (payant). Un hit de cache ne consomme rien.
+    const isAgency = plan.includes('agency');
+    const { data: fairUse } = await service.rpc('check_fair_use_v2', {
+      p_user_id: userData.user.id,
+      p_action: 'netlinking_search',
+      p_hourly_limit: isAgency ? 60 : 20,
+      p_daily_limit: isAgency ? 300 : 60,
+    });
+    if (fairUse && (fairUse as Record<string, unknown>)['allowed'] === false) {
+      return new Response(JSON.stringify({
+        error: 'rate_limited',
+        message: 'Limite de recherches netlinking atteinte. Réessaie plus tard.',
+        details: fairUse,
+      }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const results = await Promise.all([
+
       providers.includes('accesslink') ? fetchAccesslink(params) : Promise.resolve([]),
       providers.includes('rocketlinks') ? fetchRocketlinks(params) : Promise.resolve([]),
       providers.includes('getfluence') ? fetchGetfluence(params) : Promise.resolve([]),
