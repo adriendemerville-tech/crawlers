@@ -492,7 +492,7 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
               </h4>
               {linkStats && linkStats.api_calls_saved > 0 && (
                 <span className="text-[10px] text-emerald-400/70">
-                  ⚡ {linkStats.api_calls_saved} {t.savedCalls}
+                  {linkStats.api_calls_saved} {t.savedCalls}
                 </span>
               )}
             </div>

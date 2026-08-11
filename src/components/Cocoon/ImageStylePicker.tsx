@@ -24,14 +24,14 @@ interface StyleOption {
 const ALL_STYLES: StyleOption[] = [
   { key: 'photo', label: 'Photo réaliste', emoji: '📸', provider: 'imagen3', suitableFor: ['product', 'landing', 'homepage'], suitableSectors: ['ecommerce', 'immobilier', 'tourisme', 'restauration', 'mode'] },
   { key: 'cinematic', label: 'Cinématique', emoji: '🌙', provider: 'imagen3', suitableFor: ['landing', 'homepage', 'article'], suitableSectors: ['luxe', 'mode', 'culture', 'entertainment', 'tourisme'] },
-  { key: 'flat', label: 'Illustration flat', emoji: '🎨', provider: 'flux', suitableFor: ['article', 'landing', 'faq'], suitableSectors: ['tech', 'saas', 'startup', 'education', 'finance'] },
+  { key: 'flat', label: 'Illustration flat', emoji: '', provider: 'flux', suitableFor: ['article', 'landing', 'faq'], suitableSectors: ['tech', 'saas', 'startup', 'education', 'finance'] },
   { key: 'watercolor', label: 'Aquarelle', emoji: '🖌️', provider: 'flux', suitableFor: ['article', 'landing'], suitableSectors: ['art', 'bien-etre', 'nature', 'education', 'culture'] },
   { key: 'isometric', label: 'Isométrique 3D', emoji: '🏗️', provider: 'flux', suitableFor: ['landing', 'article', 'product'], suitableSectors: ['tech', 'saas', 'immobilier', 'industrie', 'logistique'] },
   { key: 'sketch', label: 'Croquis', emoji: '✏️', provider: 'flux', suitableFor: ['article', 'faq'], suitableSectors: ['architecture', 'design', 'education', 'artisanat'] },
   { key: 'popart', label: 'Pop Art', emoji: '🌈', provider: 'flux', suitableFor: ['landing', 'article'], suitableSectors: ['culture', 'entertainment', 'mode', 'media'] },
   { key: 'vintage', label: 'Vintage', emoji: '🪵', provider: 'flux', suitableFor: ['article', 'landing'], suitableSectors: ['artisanat', 'restauration', 'culture', 'mode', 'tourisme'] },
   { key: 'typography', label: 'Typographique', emoji: '🔤', provider: 'ideogram', suitableFor: ['landing', 'homepage', 'category'], suitableSectors: ['marketing', 'media', 'education', 'saas'] },
-  { key: 'infographic', label: 'Infographie', emoji: '📊', provider: 'ideogram', suitableFor: ['article', 'faq', 'landing'], suitableSectors: ['finance', 'sante', 'tech', 'education', 'b2b'] },
+  { key: 'infographic', label: 'Infographie', emoji: '', provider: 'ideogram', suitableFor: ['article', 'faq', 'landing'], suitableSectors: ['finance', 'sante', 'tech', 'education', 'b2b'] },
   { key: 'bw_photo', label: 'Noir & Blanc', emoji: '⚫', provider: 'ideogram', suitableFor: ['article', 'landing', 'homepage'], suitableSectors: ['luxe', 'architecture', 'art', 'mode', 'culture'] },
   { key: 'classic_painting', label: 'Peinture classique', emoji: '🖼️', provider: 'ideogram', suitableFor: ['article', 'landing'], suitableSectors: ['art', 'culture', 'tourisme', 'restauration', 'luxe', 'vin'] },
 ];
