@@ -398,7 +398,9 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
  */
 const LONG_CALL_TIMEOUT_MS = 150_000;
 
-export async function aiGatewayFetch(init: RequestInit & { timeoutMs?: number }): Promise<Response> {
+export async function aiGatewayFetch(
+  init: RequestInit & { timeoutMs?: number; callerFunction?: string },
+): Promise<Response> {
   let bodyObj: Record<string, unknown> = {};
   if (typeof init.body === 'string') {
     try { bodyObj = JSON.parse(init.body); } catch { bodyObj = {}; }
@@ -412,6 +414,7 @@ export async function aiGatewayFetch(init: RequestInit & { timeoutMs?: number })
     primary: model,
     body: bodyObj,
     timeoutMs,
+    callerFunction: init.callerFunction,
     headers: (init.headers as Record<string, string>) || {},
   });
 }
