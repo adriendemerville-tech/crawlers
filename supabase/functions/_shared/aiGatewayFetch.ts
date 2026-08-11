@@ -31,6 +31,8 @@
  *   });
  */
 
+import { estimateTokenCostUsd } from './tokenTracker.ts';
+
 const LOVABLE_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -126,6 +128,8 @@ function shouldFallback(status: number): boolean {
 
 interface AICallOptions {
   primary: string;
+  /** Nom de la fonction appelante — persisté dans ai_gateway_usage.edge_function. */
+  callerFunction?: string;
   fallback1?: string;
   fallback2?: string;
   cache?: 'anthropic' | 'none';
@@ -230,11 +234,74 @@ async function callOnce(
 }
 
 
+// ═══════════════════════════════════════════════════════════════════
+// Instrumentation du coût — audit Cocoon 2026-08-10 (H3)
+// Chaque appel non-streaming réussi est loggé dans ai_gateway_usage.
+// Fire-and-forget: n'échoue jamais, ne bloque jamais l'appel.
+// ═══════════════════════════════════════════════════════════════════
+function logGatewayUsage(
+  model: string,
+  provider: 'lovable' | 'openrouter',
+  callerFunction: string,
+  usage: Record<string, number> | undefined,
+  isFallback: boolean,
+): void {
+  try {
+    if (!usage) return;
+    const url = Deno.env.get('SUPABASE_URL');
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !key) return;
+    const pt = Number(usage.prompt_tokens) || 0;
+    const ct = Number(usage.completion_tokens) || 0;
+    if (pt === 0 && ct === 0) return;
+    fetch(`${url}/rest/v1/ai_gateway_usage`, {
+      method: 'POST',
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({
+        gateway: provider,
+        model,
+        edge_function: callerFunction || 'unknown',
+        prompt_tokens: pt,
+        completion_tokens: ct,
+        total_tokens: Number(usage.total_tokens) || pt + ct,
+        estimated_cost_usd: estimateTokenCostUsd(model, pt, ct),
+        cache_creation_tokens: Number(usage.cache_creation_input_tokens) || 0,
+        cache_read_tokens: Number(usage.cache_read_input_tokens) || 0,
+        is_fallback: isFallback,
+      }),
+      signal: AbortSignal.timeout(3000),
+    }).catch(() => {});
+  } catch { /* silent */ }
+}
+
+/** Clone la réponse pour en extraire `usage`, logge, puis rend la réponse intacte. */
+function withUsageLog(
+  resp: Response,
+  model: string,
+  provider: 'lovable' | 'openrouter',
+  callerFunction: string,
+  isFallback: boolean,
+): Response {
+  try {
+    const clone = resp.clone();
+    clone.json()
+      .then((j: { usage?: Record<string, number> }) =>
+        logGatewayUsage(model, provider, callerFunction, j?.usage, isFallback))
+      .catch(() => {});
+  } catch { /* silent */ }
+  return resp;
+}
+
 /**
  * API recommandée: cascade primary → fallback1 → fallback2 avec allowlist.
  */
 export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
-  const { primary, fallback1, fallback2, cache = 'none', body, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {} } = opts;
+  const { primary, fallback1, fallback2, cache = 'none', body, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, callerFunction = 'unknown' } = opts;
 
   // Validation allowlist primary
   if (!PRIMARY_ALLOWED_2026.has(primary) && !PRIMARY_ALLOWED_CLAUDE_EXCEPTION.has(primary)) {
@@ -264,7 +331,7 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
       const resp = await callOnce(model, body, cache, timeoutMs, headers);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCall] Fallback success: ${model} (level ${i})`);
-        return resp;
+        return withUsageLog(resp, model, 'openrouter', callerFunction, i > 0);
       }
 
       // Filet de sécurité Lovable AI pour google/* et openai/* si OpenRouter échoue.
@@ -274,7 +341,7 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
           const lov = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
           if (lov.ok) {
             console.info(`[aiGatewayCall] Lovable AI rescue success: ${model}`);
-            return lov;
+            return withUsageLog(lov, model, 'lovable', callerFunction, true);
           }
           if (!shouldFallback(lov.status) || isLast) return lov;
           lastResp = lov;
@@ -297,7 +364,7 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
           const lov = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
           if (lov.ok) {
             console.info(`[aiGatewayCall] Lovable AI rescue success after throw: ${model}`);
-            return lov;
+            return withUsageLog(lov, model, 'lovable', callerFunction, true);
           }
           if (!shouldFallback(lov.status) || isLast) return lov;
           lastResp = lov;
@@ -331,7 +398,9 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
  */
 const LONG_CALL_TIMEOUT_MS = 150_000;
 
-export async function aiGatewayFetch(init: RequestInit & { timeoutMs?: number }): Promise<Response> {
+export async function aiGatewayFetch(
+  init: RequestInit & { timeoutMs?: number; callerFunction?: string },
+): Promise<Response> {
   let bodyObj: Record<string, unknown> = {};
   if (typeof init.body === 'string') {
     try { bodyObj = JSON.parse(init.body); } catch { bodyObj = {}; }
@@ -345,6 +414,7 @@ export async function aiGatewayFetch(init: RequestInit & { timeoutMs?: number })
     primary: model,
     body: bodyObj,
     timeoutMs,
+    callerFunction: init.callerFunction,
     headers: (init.headers as Record<string, string>) || {},
   });
 }

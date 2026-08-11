@@ -546,6 +546,7 @@ LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).`
     const systemPrompt = basePrompt + LEXIQUE_PROMPT_BLOCK + analysisPrompt + subdomainPrompt;
 
     const response = await aiGatewayFetch( {
+      callerFunction: 'cocoon-chat',
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,

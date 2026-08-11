@@ -661,6 +661,14 @@ function CocoonContent() {
           console.warn("PageRank calculation failed (non-blocking):", prErr);
         }
 
+        // Persist a session snapshot (mémoire + re-mesure d'impact) — non bloquant.
+        supabase.functions
+          .invoke("persist-cocoon-session", {
+            body: { tracked_site_id: selectedSiteId },
+          })
+          .catch(() => {});
+
+
         toast({
           title: t.successTitle,
           description: t.successDesc(stats?.nodes_count || 0, stats?.clusters_count || 0),

@@ -132,6 +132,7 @@ ANALYSE DEMANDÉE (format JSON strict):
 Réponds UNIQUEMENT avec le JSON, sans commentaire.`;
 
     const aiResponse = await aiGatewayFetch( {
+      callerFunction: 'cocoon-diag-subdomains',
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
