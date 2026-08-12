@@ -28,30 +28,30 @@ function escapeXml(str: string): string {
     .replace(/'/g, '&apos;');
 }
 
-function buildHreflang(loc: string): string {
-  if (!loc.startsWith(SITE_URL)) return '';
-  const sep = loc.includes('?') ? '&' : '?';
-  return `
-    <xhtml:link rel="alternate" hreflang="fr" href="${escapeXml(loc)}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${escapeXml(loc + sep + 'lang=en')}" />
-    <xhtml:link rel="alternate" hreflang="es" href="${escapeXml(loc + sep + 'lang=es')}" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(loc)}" />`;
+/**
+ * Le site est mono-langue (FR) pour le SEO : les variantes `?lang=en` / `?lang=es`
+ * sont des duplicats servis en `noindex, nofollow` en SSR. On n'émet donc plus
+ * d'alternates `xhtml:link hreflang` (qui déclaraient ces URL comme indexables)
+ * et on exclut du sitemap toute URL portant un paramètre `lang=`.
+ */
+function hasLangParam(loc: string): boolean {
+  return /[?&]lang=/i.test(loc);
 }
 
 function generateSitemapXml(entries: Array<{ loc: string; lastmod: string; changefreq?: string; priority?: number }>): string {
   const urlEntries = entries.map(e => `
   <url>
     <loc>${escapeXml(e.loc)}</loc>
-    <lastmod>${e.lastmod}</lastmod>${e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ''}${e.priority != null ? `\n    <priority>${e.priority}</priority>` : ''}${buildHreflang(e.loc)}
+    <lastmod>${e.lastmod}</lastmod>${e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ''}${e.priority != null ? `\n    <priority>${e.priority}</priority>` : ''}
   </url>`).join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <!-- Crawlers.fr Sitemap - Generated ${new Date().toISOString()} from sitemap_entries -->
 ${urlEntries}
 </urlset>`;
 }
+
 
 Deno.serve(handleRequest(async (req) => {
   try {
