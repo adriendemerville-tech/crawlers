@@ -431,6 +431,17 @@ export function ParmenionTargetPanel({
             <Plus className="h-4 w-4" />
             {isMobile ? 'Nouvelle' : 'Nouvelle action'}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleForceAudit}
+            disabled={auditRunning || !autopilotConfig?.tracked_site_id}
+            className="gap-1.5 shrink-0"
+            title="Relancer immédiatement un cycle d'audit (ignore TTL 5j et cooldown 24h)"
+          >
+            <RefreshCw className={cn("h-4 w-4", auditRunning && "animate-spin")} />
+            {isMobile ? 'Audit' : (auditRunning ? 'Audit en cours…' : "Relancer l'audit")}
+          </Button>
           {showForceArticle && (
             <Button
               variant={autopilotConfig?.force_iktracker_article ? 'default' : 'outline'}
