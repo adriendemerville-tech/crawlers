@@ -108,6 +108,8 @@ export function ParmenionTargetPanel({
   const [escalatingIds, setEscalatingIds] = useState<Set<string>>(new Set());
   const [dictadeviContextEnabled, setDictadeviContextEnabled] = useState<boolean>(true);
   const [dictadeviContextSaving, setDictadeviContextSaving] = useState(false);
+  const [auditRunning, setAuditRunning] = useState(false);
+  const [auditPhaseResult, setAuditPhaseResult] = useState<string | null>(null);
 
   const isDictadeviTarget = (targetDomain || '').toLowerCase().includes('dictadevi');
 
@@ -339,7 +341,49 @@ export function ParmenionTargetPanel({
     toast({ title: 'Erreur', description: lastError?.message || 'Échec après 3 tentatives', variant: 'destructive' });
   };
 
+  const handleForceAudit = async () => {
+    if (!autopilotConfig?.tracked_site_id || !autopilotConfig?.domain) {
+      toast({ title: 'Erreur', description: `Aucun site autopilote actif trouvé pour ${targetLabel}.`, variant: 'destructive' });
+      return;
+    }
+    setAuditRunning(true);
+    setAuditPhaseResult(null);
+    toast({ title: 'Audit relancé', description: `Cycle d'audit immédiat lancé pour ${targetLabel}.` });
+
+    const body = {
+      force_new: true,
+      forced_phase: 'audit',
+      tracked_site_id: autopilotConfig.tracked_site_id,
+      domain: autopilotConfig.domain,
+      cycle_number: (autopilotConfig.total_cycles_run || 0) + 1,
+    };
+
+    try {
+      const { data, error } = await supabase.functions.invoke('parmenion-orchestrator', { body });
+      if (error) throw error;
+      if (data?.ok === false) {
+        setAuditPhaseResult(`Erreur : ${data.message || 'inconnue'}`);
+        toast({ title: 'Audit — erreur', description: data.message || 'Erreur inconnue', variant: 'destructive' });
+      } else {
+        setAuditPhaseResult(`Phase exécutée : ${data?.phase || 'audit'} · statut ${data?.status || 'terminé'}`);
+        toast({ title: 'Audit terminé', description: `Phase ${data?.phase || 'audit'} traitée pour ${targetLabel}.` });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Échec de la relance';
+      setAuditPhaseResult(`Erreur : ${msg}`);
+      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+    } finally {
+      setAuditRunning(false);
+      fetchLogs();
+      fetchAutopilotConfig();
+    }
+  };
+
   const activeDecision = logs.find(l => ['thinking', 'executing', 'pending'].includes(l.status));
+  const lastAuditLog = useMemo(
+    () => logs.find(l => l.pipeline_phase === 'audit') || null,
+    [logs],
+  );
 
   const llmCostStats = useMemo(() => {
     const totalTokens = logs.reduce((sum, l) => sum + (l.estimated_tokens || 0), 0);
@@ -386,6 +430,17 @@ export function ParmenionTargetPanel({
           <Button variant="default" size="sm" onClick={handleNewAction} className="gap-1.5 shrink-0">
             <Plus className="h-4 w-4" />
             {isMobile ? 'Nouvelle' : 'Nouvelle action'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleForceAudit}
+            disabled={auditRunning || !autopilotConfig?.tracked_site_id}
+            className="gap-1.5 shrink-0"
+            title="Relancer immédiatement un cycle d'audit (ignore TTL 5j et cooldown 24h)"
+          >
+            <RefreshCw className={cn("h-4 w-4", auditRunning && "animate-spin")} />
+            {isMobile ? 'Audit' : (auditRunning ? 'Audit en cours…' : "Relancer l'audit")}
           </Button>
           {showForceArticle && (
             <Button
@@ -455,6 +510,53 @@ export function ParmenionTargetPanel({
           </Button>
         </div>
       </div>
+
+      {/* Statut audit temps réel */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Shield className="h-4 w-4 text-primary" />
+            Statut du cycle d'audit
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Mise à jour en direct depuis le registre décisionnel
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <div className="flex items-center gap-2 flex-wrap">
+            {auditRunning ? (
+              <Badge variant="outline" className="gap-1 text-[10px]">
+                <RefreshCw className="h-3 w-3 animate-spin" /> Relance en cours
+              </Badge>
+            ) : lastAuditLog ? (
+              <Badge variant="outline" className={cn('text-[10px]', statusConfig[lastAuditLog.status]?.color)}>
+                {statusConfig[lastAuditLog.status]?.label || lastAuditLog.status}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px]">Aucun audit enregistré</Badge>
+            )}
+            {lastAuditLog && (
+              <span className="text-xs text-muted-foreground">
+                Cycle #{lastAuditLog.cycle_number} · {new Date(lastAuditLog.updated_at || lastAuditLog.created_at).toLocaleString('fr-FR')}
+              </span>
+            )}
+          </div>
+          {lastAuditLog?.goal_description && (
+            <p className="text-xs text-muted-foreground">{lastAuditLog.goal_description}</p>
+          )}
+          {lastAuditLog?.functions_called?.length ? (
+            <p className="text-xs text-muted-foreground">
+              Fonctions : {lastAuditLog.functions_called.join(', ')}
+            </p>
+          ) : null}
+          {lastAuditLog?.execution_error && (
+            <p className="text-xs text-destructive">Erreur : {lastAuditLog.execution_error}</p>
+          )}
+          {auditPhaseResult && (
+            <p className="text-xs text-muted-foreground">{auditPhaseResult}</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Status cards */}
       <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-6")}>
