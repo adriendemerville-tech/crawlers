@@ -78,13 +78,20 @@ Deno.serve(handleRequest(async (req) => {
       return jsonError('No sitemap entries found', 404);
     }
 
-    // 2. Format dates to YYYY-MM-DD
-    const formatted = entries.map(e => ({
+    // 2. Exclure les variantes linguistiques (?lang=en / ?lang=es) : noindex SSR
+    const indexable = entries.filter(e => !hasLangParam(e.loc));
+    if (indexable.length !== entries.length) {
+      console.log('[regenerate-sitemap] lang variants excluded:', entries.length - indexable.length);
+    }
+
+    // 3. Format dates to YYYY-MM-DD
+    const formatted = indexable.map(e => ({
       ...e,
       lastmod: typeof e.lastmod === 'string' && e.lastmod.includes('T')
         ? e.lastmod.split('T')[0]
         : e.lastmod,
     }));
+
 
     // 3. Generate XML
     const xml = generateSitemapXml(formatted);
