@@ -108,6 +108,8 @@ export function ParmenionTargetPanel({
   const [escalatingIds, setEscalatingIds] = useState<Set<string>>(new Set());
   const [dictadeviContextEnabled, setDictadeviContextEnabled] = useState<boolean>(true);
   const [dictadeviContextSaving, setDictadeviContextSaving] = useState(false);
+  const [auditRunning, setAuditRunning] = useState(false);
+  const [auditPhaseResult, setAuditPhaseResult] = useState<string | null>(null);
 
   const isDictadeviTarget = (targetDomain || '').toLowerCase().includes('dictadevi');
 
