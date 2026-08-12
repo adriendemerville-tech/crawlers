@@ -339,7 +339,49 @@ export function ParmenionTargetPanel({
     toast({ title: 'Erreur', description: lastError?.message || 'Échec après 3 tentatives', variant: 'destructive' });
   };
 
+  const handleForceAudit = async () => {
+    if (!autopilotConfig?.tracked_site_id || !autopilotConfig?.domain) {
+      toast({ title: 'Erreur', description: `Aucun site autopilote actif trouvé pour ${targetLabel}.`, variant: 'destructive' });
+      return;
+    }
+    setAuditRunning(true);
+    setAuditPhaseResult(null);
+    toast({ title: 'Audit relancé', description: `Cycle d'audit immédiat lancé pour ${targetLabel}.` });
+
+    const body = {
+      force_new: true,
+      forced_phase: 'audit',
+      tracked_site_id: autopilotConfig.tracked_site_id,
+      domain: autopilotConfig.domain,
+      cycle_number: (autopilotConfig.total_cycles_run || 0) + 1,
+    };
+
+    try {
+      const { data, error } = await supabase.functions.invoke('parmenion-orchestrator', { body });
+      if (error) throw error;
+      if (data?.ok === false) {
+        setAuditPhaseResult(`Erreur : ${data.message || 'inconnue'}`);
+        toast({ title: 'Audit — erreur', description: data.message || 'Erreur inconnue', variant: 'destructive' });
+      } else {
+        setAuditPhaseResult(`Phase exécutée : ${data?.phase || 'audit'} · statut ${data?.status || 'terminé'}`);
+        toast({ title: 'Audit terminé', description: `Phase ${data?.phase || 'audit'} traitée pour ${targetLabel}.` });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Échec de la relance';
+      setAuditPhaseResult(`Erreur : ${msg}`);
+      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
+    } finally {
+      setAuditRunning(false);
+      fetchLogs();
+      fetchAutopilotConfig();
+    }
+  };
+
   const activeDecision = logs.find(l => ['thinking', 'executing', 'pending'].includes(l.status));
+  const lastAuditLog = useMemo(
+    () => logs.find(l => l.pipeline_phase === 'audit') || null,
+    [logs],
+  );
 
   const llmCostStats = useMemo(() => {
     const totalTokens = logs.reduce((sum, l) => sum + (l.estimated_tokens || 0), 0);
