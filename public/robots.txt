@@ -13,6 +13,11 @@
 #     voir le noindex et laisserait ces URL dans l'index).
 #     Les outils SEO tiers restent bloqués sur /app/*.
 #   • Bots IA / moteurs génératifs → accès total (visibilité GEO).
+#   • Variantes linguistiques (?lang=en / ?lang=es) → duplicats du FR, servis
+#     en <meta name="robots" content="noindex, nofollow"> + X-Robots-Tag en SSR,
+#     absentes du sitemap.xml. Elles restent crawlables par les moteurs de
+#     recherche (sinon ils ne liraient jamais le noindex) mais sont bloquées
+#     pour les bots génériques : aucune valeur, gaspillage de budget de crawl.
 # ============================================
 
 # --------------------------------------------
@@ -23,7 +28,8 @@ Allow: /app/
 Allow: /ranking-serp
 Allow: /conversion-optimizer
 Allow: /
-Disallow:
+Disallow: /*?lang=
+Disallow: /*&lang=
 Crawl-delay: 1
 
 # --------------------------------------------
@@ -32,34 +38,43 @@ Crawl-delay: 1
 # --------------------------------------------
 User-agent: Googlebot
 Allow: /app/
+Allow: /*?lang=
 Allow: /
 
 User-agent: Googlebot-Image
 Allow: /app/
+Allow: /*?lang=
 Allow: /
 
 User-agent: Googlebot-News
 Allow: /app/
+Allow: /*?lang=
 Allow: /
 
 User-agent: Googlebot-Video
 Allow: /app/
+Allow: /*?lang=
 Allow: /
 
 User-agent: AdsBot-Google
 Allow: /app/
+Allow: /*?lang=
 Allow: /
 
 User-agent: Bingbot
 Allow: /app/
+Allow: /*?lang=
 Allow: /
 
 User-agent: Yandex
 Allow: /app/
+Allow: /*?lang=
 Allow: /
+Clean-param: lang
 
 User-agent: DuckDuckBot
 Allow: /app/
+Allow: /*?lang=
 Allow: /
 
 User-agent: Baiduspider
@@ -72,6 +87,7 @@ Allow: /
 
 User-agent: Qwantify
 Allow: /app/
+Allow: /*?lang=
 Allow: /
 
 # --------------------------------------------
