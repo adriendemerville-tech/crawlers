@@ -160,7 +160,12 @@ try {
       'cocoon-strategist',
       'marina',
     ];
-    if (currentPhase === 'audit') {
+    // Relance manuelle explicite d'un audit (bouton admin) → on ignore TTL 5j + cooldown 24h
+    const forceAuditNow = forced_phase === 'audit';
+    if (forceAuditNow) {
+      console.log('[Parménion] Audit forcé manuellement — gardes TTL/cooldown ignorées');
+    }
+    if (currentPhase === 'audit' && !forceAuditNow) {
       const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
       const { data: auditItems, error: skipErr } = await supabase
         .from('architect_workbench')
