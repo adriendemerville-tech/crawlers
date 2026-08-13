@@ -3304,7 +3304,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               visual: Boolean(visualCapture),
               plan: consolidatedPlan,
             }),
-            conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan),
+            archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
+            conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan, archetypeAnalysis),
             disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
             }),
