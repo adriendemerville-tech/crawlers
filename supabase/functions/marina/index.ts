@@ -2529,7 +2529,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         throw new Error(`Expert SEO audit failed: ${expertResult?.error || 'No data returned'}`);
       }
       
-      const domain = expertResult.data.domain;
+      // Normalisation obligatoire : les actions identity_* et tracked_sites stockent le
+      // domaine sans `www.`. Sans ce strip, une carte d'identité verrouillée sur
+      // example.com était ignorée quand le site répond sur www.example.com.
+      const domain = String(expertResult.data.domain || '').replace(/^www\./, '');
+
       // Priority: explicit lang param > visible SEO signals (title/meta/H1/H2) > HTML visible text > fallback FR
       const detectedLang = resolveReportLanguage(lang, expertResult.data);
       
@@ -3583,18 +3587,20 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const callbackUrl = (completedJob?.input_payload as any)?.callback_url;
         if (callbackUrl) {
           console.log(`[Marina] 📡 Sending webhook to ${callbackUrl}`);
+          const eventName = strategicDegradation.degraded ? 'marina.report.partial' : 'marina.report.completed';
           const webhookPayload = {
-            event: strategicDegradation.degraded ? 'marina.report.partial' : 'marina.report.completed',
+            event: eventName,
             job_id: jobId,
             ...resultData,
           };
           const cbRes = await fetch(callbackUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-marina-event': eventName },
             body: JSON.stringify(webhookPayload),
           });
           console.log(`[Marina] Webhook response: ${cbRes.status}`);
         }
+
       } catch (webhookErr) {
         console.warn('[Marina] Webhook delivery failed:', webhookErr);
         // Non-blocking: don't fail the job if webhook fails
@@ -3683,6 +3689,38 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
     } catch (_) { /* ignore */ }
+
+    // ─── Webhook d'échec (marina.report.failed) ───
+    // Manquait totalement : les clients API n'étaient jamais notifiés d'un échec
+    // et devaient deviner via polling.
+    try {
+      const { data: failedJob } = await sb.from('async_jobs')
+        .select('input_payload')
+        .eq('id', jobId)
+        .single();
+      const callbackUrl = (failedJob?.input_payload as any)?.callback_url;
+      if (callbackUrl) {
+        const cbRes = await fetch(callbackUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-marina-event': 'marina.report.failed' },
+          body: JSON.stringify({
+            event: 'marina.report.failed',
+            job_id: jobId,
+            url,
+            domain: (() => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return null; } })(),
+
+            phase: currentPhase,
+            error: error instanceof Error ? error.message : 'Pipeline failed',
+            failed_at: new Date().toISOString(),
+          }),
+        });
+        console.log(`[Marina] Webhook (failed) response: ${cbRes.status}`);
+      }
+    } catch (webhookErr) {
+      console.warn('[Marina] Webhook (failed) delivery error:', webhookErr);
+    }
+
+
 
     // Trigger next queued job even on failure
     await triggerNextPendingJob();

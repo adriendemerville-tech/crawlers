@@ -112,7 +112,10 @@ export function normalizeCommercialModel(input: {
   if (/e-?commerce|boutique|marketplace|retail|vente en ligne/.test(blob) || input.sector === 'ecommerce') return 'ecommerce';
   if (/saas|abonnement|subscription|logiciel|software/.test(blob) || input.sector === 'saas_logiciel') return 'saas';
   if (/m[eé]dia|presse|[eé]dition|publisher|audience/.test(blob) || input.sector === 'media_edition') return 'media';
-  if (input.is_local_business === true || /local|agence|point de vente|magasin|multi-?site/.test(blob)) return 'local_service';
+  // `agence` seul est trop large (agence web/SEO/marketing = lead_gen, pas d'implantation
+  // physique) : on exige un signal d'implantation ou is_local_business.
+  if (input.is_local_business === true || /point de vente|magasin|showroom|multi-?site|agence (immobili|de travaux|locale)|implantation locale|\blocal\b/.test(blob)) return 'local_service';
+
   if (/lead|devis|prise de contact|b2b|service/.test(blob)) return 'lead_gen';
   return 'unknown';
 }

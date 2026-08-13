@@ -61,7 +61,7 @@ try {
       authUserId = auth.userId;
     }
 
-    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_content_cycle, content_budget_pct, force_iktracker_article, disable_new_content, throttle_info } = await req.json();
+    const { tracked_site_id, domain, cycle_number = 1, user_id: bodyUserId, forced_phase, force_audit, force_content_cycle, content_budget_pct, force_iktracker_article, disable_new_content, throttle_info } = await req.json();
     if (!tracked_site_id || !domain) {
       return jsonError('tracked_site_id and domain required', 400);
     }
@@ -160,8 +160,12 @@ try {
       'cocoon-strategist',
       'marina',
     ];
-    // Relance manuelle explicite d'un audit (bouton admin) → on ignore TTL 5j + cooldown 24h
-    const forceAuditNow = forced_phase === 'audit';
+    // Relance manuelle explicite d'un audit (bouton admin) → on ignore TTL 5j + cooldown 24h.
+    // Le flag doit être EXPLICITE : `forced_phase === 'audit'` est aussi envoyé par
+    // autopilot-engine à chaque cycle planifié, donc s'en servir comme signal de forçage
+    // désactivait les gardes anti-boucle sur tous les cycles automatiques.
+    const forceAuditNow = force_audit === true;
+
     if (forceAuditNow) {
       console.log('[Parménion] Audit forcé manuellement — gardes TTL/cooldown ignorées');
     }
