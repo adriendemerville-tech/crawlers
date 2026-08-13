@@ -53,6 +53,33 @@ export interface ArchetypeGroup {
   verdict: 'strong' | 'ok' | 'weak';
 }
 
+export type MixAction = 'balanced' | 'expand' | 'prune' | 'differentiate' | 'create';
+
+export interface ArchetypeMixEntry {
+  key: string;
+  label: string;
+  role: ArchetypeRole;
+  crawledPages: number;
+  crawlShare: number;          // 0-1
+  sitemapPages: number | null; // null si sitemap indisponible
+  sitemapShare: number | null; // 0-1
+  targetMin: number;           // 0-1
+  targetMax: number;           // 0-1
+  action: MixAction;
+  rationale: string;
+}
+
+export interface ArchetypeMix {
+  basis: 'crawl' | 'crawl+sitemap';
+  crawlPages: number;
+  sitemapPages: number | null;
+  coverage: number | null;     // pages crawlées / pages sitemap
+  entries: ArchetypeMixEntry[];
+  missing: Array<{ key: string; label: string; role: ArchetypeRole; rationale: string }>;
+  verdict: 'balanced' | 'unbalanced';
+  synthesis: string;
+}
+
 export interface ArchetypeAnalysis {
   totalPages: number;
   groups: ArchetypeGroup[];
@@ -60,7 +87,9 @@ export interface ArchetypeAnalysis {
   mainProblem: string | null;
   globalVerdict: 'strong' | 'ok' | 'weak';
   synthesis: string;
+  mix: ArchetypeMix | null;
 }
+
 
 interface ArchetypeDef {
   key: string;
