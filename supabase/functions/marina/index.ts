@@ -3289,6 +3289,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             visual: buildVisualEvidenceHtml(visualCapture, detectedLang),
             summary: buildExecutiveSummaryHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
+              criticalCount: (consolidatedPlan?.items || []).filter((i: any) => i.severity === 'critical').length,
             }),
             intro: buildReportIntroHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData,
