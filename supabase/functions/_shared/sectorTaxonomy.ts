@@ -116,3 +116,18 @@ export function normalizeCommercialModel(input: {
   if (/lead|devis|prise de contact|b2b|service/.test(blob)) return 'lead_gen';
   return 'unknown';
 }
+
+const MODEL_LABELS: Record<CommercialModelKey, string> = {
+  local_service: 'Service local (implantation physique, demande géolocalisée)',
+  ecommerce: 'E-commerce (vente de produits en ligne)',
+  saas: 'SaaS / logiciel en abonnement',
+  lead_gen: 'Génération de contacts (offre de services, devis)',
+  media: 'Média / éditeur (audience)',
+  non_commercial: 'Structure non commerciale (association, public)',
+  unknown: 'Modèle d’affaires non résolu',
+};
+
+export function commercialModelLabel(key: CommercialModelKey | string): string {
+  return MODEL_LABELS[key as CommercialModelKey] || MODEL_LABELS.unknown;
+}
+

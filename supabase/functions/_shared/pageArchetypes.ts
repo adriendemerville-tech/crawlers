@@ -307,8 +307,13 @@ function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGr
  * mesurés : ils ne servent que de repli quand la mémoire de marché n'a pas
  * encore assez d'observations dans le secteur (< 5 domaines). Le rapport
  * indique toujours laquelle des deux sources a été utilisée.
+ *
+ * Elles sont désormais sélectionnées PAR MODÈLE D'AFFAIRES : le mix attendu d'un
+ * service local multi-agences n'a rien à voir avec celui d'un e-commerce, d'un
+ * SaaS ou d'un média. Une cible globale unique était la principale faiblesse de
+ * ce module.
  */
-const MIX_TARGETS: Record<string, [number, number]> = {
+const MIX_TARGETS_GENERIC: Record<string, [number, number]> = {
   home: [0, 0.05],
   agency: [0.05, 0.35],
   product: [0.05, 0.45],
@@ -322,18 +327,102 @@ const MIX_TARGETS: Record<string, [number, number]> = {
   other: [0, 0.15],
 };
 
+const MIX_TARGETS_BY_MODEL: Record<string, Record<string, [number, number]>> = {
+  local_service: {
+    home: [0, 0.05],
+    agency: [0.15, 0.50],
+    service: [0.10, 0.40],
+    reviews: [0.02, 0.12],
+    conversion: [0.02, 0.10],
+    editorial: [0.10, 0.40],
+    listing: [0.01, 0.12],
+    product: [0, 0.15],
+    institutional: [0.01, 0.08],
+    legal: [0, 0.05],
+    other: [0, 0.15],
+  },
+  ecommerce: {
+    home: [0, 0.03],
+    product: [0.30, 0.75],
+    listing: [0.05, 0.25],
+    editorial: [0.05, 0.30],
+    reviews: [0.01, 0.10],
+    conversion: [0.01, 0.06],
+    service: [0, 0.10],
+    agency: [0, 0.10],
+    institutional: [0.01, 0.06],
+    legal: [0, 0.04],
+    other: [0, 0.12],
+  },
+  saas: {
+    home: [0, 0.05],
+    service: [0.15, 0.45],
+    conversion: [0.03, 0.12],
+    editorial: [0.25, 0.65],
+    reviews: [0.01, 0.10],
+    listing: [0, 0.10],
+    product: [0, 0.15],
+    agency: [0, 0.05],
+    institutional: [0.01, 0.08],
+    legal: [0, 0.06],
+    other: [0, 0.15],
+  },
+  lead_gen: {
+    home: [0, 0.05],
+    service: [0.15, 0.45],
+    conversion: [0.03, 0.12],
+    editorial: [0.20, 0.55],
+    reviews: [0.02, 0.12],
+    agency: [0, 0.20],
+    product: [0, 0.12],
+    listing: [0, 0.12],
+    institutional: [0.01, 0.08],
+    legal: [0, 0.05],
+    other: [0, 0.15],
+  },
+  media: {
+    home: [0, 0.02],
+    editorial: [0.55, 0.92],
+    listing: [0.02, 0.20],
+    institutional: [0, 0.05],
+    conversion: [0, 0.05],
+    service: [0, 0.08],
+    product: [0, 0.10],
+    agency: [0, 0.05],
+    reviews: [0, 0.06],
+    legal: [0, 0.04],
+    other: [0, 0.12],
+  },
+  non_commercial: {
+    home: [0, 0.05],
+    editorial: [0.30, 0.75],
+    institutional: [0.05, 0.25],
+    conversion: [0.01, 0.10],
+    listing: [0, 0.15],
+    service: [0, 0.20],
+    agency: [0, 0.15],
+    product: [0, 0.08],
+    reviews: [0, 0.06],
+    legal: [0, 0.06],
+    other: [0, 0.15],
+  },
+};
+
 interface ResolvedTarget {
   min: number;
   max: number;
   source: TargetSource;
   median: number | null;
   sample: number | null;
+  /** Modèle d'affaires ayant servi à choisir la fourchette a priori. */
+  modelScoped: boolean;
 }
 
 function mixTarget(
   key: string,
   role: ArchetypeRole,
   benchmarks: Map<string, ArchetypeMixReference> | null,
+  commercialModel?: string | null,
 ): ResolvedTarget {
   const bench = benchmarks?.get(key);
   if (bench && bench.sampleSize >= 5 && Number.isFinite(bench.p20) && Number.isFinite(bench.p80)) {
@@ -346,12 +435,23 @@ function mixTarget(
       source: 'benchmark',
       median: bench.p50,
       sample: bench.sampleSize,
+      modelScoped: false,
     };
   }
-  const fallback = MIX_TARGETS[key]
+
+  const modelTable = commercialModel && commercialModel !== 'unknown'
+    ? MIX_TARGETS_BY_MODEL[commercialModel]
+    : null;
+  const scoped = modelTable?.[key];
+  if (scoped) {
+    return { min: scoped[0], max: scoped[1], source: 'a_priori', median: null, sample: null, modelScoped: true };
+  }
+
+  const fallback = MIX_TARGETS_GENERIC[key]
     ?? (role === 'core_business' ? [0.05, 0.40] : role === 'auxiliary_pillar' ? [0.10, 0.45] : [0, 0.15]);
-  return { min: fallback[0], max: fallback[1], source: 'a_priori', median: null, sample: null };
+  return { min: fallback[0], max: fallback[1], source: 'a_priori', median: null, sample: null, modelScoped: false };
 }
+
 
 
 function pct1(x: number): string {
