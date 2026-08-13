@@ -1940,6 +1940,12 @@ function compileMarinaReport(
     <!-- Section 1: Crawl (périmètre site) -->
     <div data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
 
+    ${sectionHTMLs.archetypes ? `
+    <div class="marina-separator"></div>
+    <!-- Audit par type de page (périmètre site) -->
+    ${sectionHTMLs.archetypes}
+    ` : ''}
+
     <div class="marina-separator"></div>
 
     <!-- Section 2: Technical SEO (périmètre page) -->
