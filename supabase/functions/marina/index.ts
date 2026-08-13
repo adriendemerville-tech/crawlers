@@ -2819,19 +2819,37 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // ─── LLM Visibility (parallel with cocoon) ───
       let llmVisibilityData: any = null;
       let trackedSiteId: string | null = null;
+      let identityRow: Record<string, any> | null = null;
       {
         const { data: trackedSites, error: trackedSiteLookupError } = await sb
           .from('tracked_sites')
-          .select('id')
+          .select('id, market_sector, entity_type, commercial_model, business_model, business_type, is_local_business, target_audience, client_targets, competitors')
           .eq('user_id', parentJob.user_id)
           .eq('domain', domain)
           .limit(1);
         trackedSiteId = trackedSites?.[0]?.id || null;
+        identityRow = trackedSites?.[0] || null;
         if (trackedSiteLookupError) {
           console.warn(`[Marina] Phase 3 tracked_site lookup warning for ${domain}: ${trackedSiteLookupError.message}`);
         }
         console.log(`[Marina] Phase 3: tracked_site lookup for ${domain}: ${trackedSiteId || 'NOT FOUND'}`);
       }
+
+      // ─── Profil de marché normalisé (secteur + modèle commercial) ───
+      // Sert à deux choses : sélectionner les fourchettes de référence calibrées
+      // sur des sites comparables, et alimenter la mémoire de marché.
+      const marketProfile = buildMarketProfile({
+        ...(identityRow || {}),
+        // le secteur extrait de l'audit stratégique prime s'il est plus précis
+        market_sector: (strategicData?.introduction?.sector
+          || strategicData?.market_sector
+          || identityRow?.['market_sector']) ?? null,
+        target_audience: (strategicData?.introduction?.target_audience || identityRow?.['target_audience']) ?? null,
+      });
+      const marketSectorLabel = marketProfile.sector === 'unknown' ? null : sectorLabel(marketProfile.sector);
+      console.log(`[Marina] Profil de marché : ${marketProfile.sector} / ${marketProfile.commercialModel}`);
+      const archetypeBenchmarks = await fetchArchetypeBenchmarks(sb, marketProfile);
+
 
       // Extract site context from strategic audit data (enriches LLM prompts)
       const marinaSiteContext: Record<string, string> = {};
