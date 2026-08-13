@@ -474,6 +474,47 @@ function scoreColor(score: number, max: number): string {
   return '#ef4444';
 }
 
+/**
+ * Chapeaux pédagogiques de section (déterministes, 0 token).
+ * Chaque section du rapport explique en une phrase vulgarisée ce qu'elle mesure,
+ * comment la lire, et ce qu'elle ne dit pas.
+ */
+const SECTION_LEADS: Record<string, { fr: string; en: string; es: string }> = {
+  crawl: {
+    fr: "Ce que mesure cette section : le robot Crawlers a parcouru le site comme le fait Googlebot, puis a relevé pour chaque page ses balises, sa structure de titres, ses liens et sa vitesse réelle. À lire comme un état des lieux factuel : aucun jugement éditorial ici, uniquement ce qui est techniquement présent ou absent.",
+    en: "What this section measures: the Crawlers robot browsed the site the way Googlebot does, then recorded each page's tags, heading structure, links and real-world speed. Read it as a factual inventory: no editorial judgement here, only what is technically present or missing.",
+    es: "Lo que mide esta sección: el robot de Crawlers recorrió el sitio como lo hace Googlebot y registró etiquetas, estructura de títulos, enlaces y velocidad real.",
+  },
+  tech: {
+    fr: "Ce que mesure cette section : la conformité technique et sémantique de la page auditée, notée sur 200 points répartis en performance, technique, sémantique et lisibilité par les IA. Un score élevé ne garantit pas du trafic : il garantit qu'aucun blocage technique n'empêche d'en obtenir.",
+    en: "What this section measures: technical and semantic compliance of the audited page, scored out of 200 points across performance, technical, semantic and AI readability. A high score does not guarantee traffic: it guarantees no technical blocker prevents it.",
+    es: "Lo que mide esta sección: la conformidad técnica y semántica de la página auditada, sobre 200 puntos.",
+  },
+  strategic: {
+    fr: "Ce que mesure cette section : la citabilité du site par les moteurs de réponse IA (ChatGPT, Perplexity, Gemini, Google AI Overviews) et la solidité de son positionnement de marché. Elle repose sur des interrogations réelles de modèles et sur des données de marché externes, pas sur une simple lecture du code.",
+    en: "What this section measures: how citable the site is for AI answer engines (ChatGPT, Perplexity, Gemini, Google AI Overviews) and how solid its market positioning is. It relies on real model queries and external market data, not merely on reading the code.",
+    es: "Lo que mide esta sección: la citabilidad del sitio por los motores de respuesta IA y la solidez de su posicionamiento.",
+  },
+  cocoon: {
+    fr: "Ce que mesure cette section : la manière dont les pages du site se relient entre elles et se répartissent en thématiques. Un cocon sain regroupe les pages par intention, évite les pages orphelines et empêche deux pages de se disputer la même requête (cannibalisation).",
+    en: "What this section measures: how the site's pages link to each other and cluster into topics. A healthy cocoon groups pages by intent, avoids orphan pages and prevents two pages competing for the same query (cannibalisation).",
+    es: "Lo que mide esta sección: cómo se enlazan las páginas del sitio y cómo se agrupan por temática.",
+  },
+  indexation: {
+    fr: "Ce que mesure cette section : la présence effective des URLs dans l'index Google. Une page non indexée ne peut générer aucun trafic, quel que soit son score technique — c'est donc à traiter avant toute optimisation de contenu.",
+    en: "What this section measures: whether URLs are actually in Google's index. A non-indexed page cannot generate traffic whatever its technical score.",
+    es: "Lo que mide esta sección: la presencia efectiva de las URL en el índice de Google.",
+  },
+};
+
+function sectionLead(key: keyof typeof SECTION_LEADS | string, lang: string): string {
+  const entry = SECTION_LEADS[key];
+  if (!entry) return '';
+  const text = lang === 'en' ? entry.en : lang === 'es' ? entry.es : entry.fr;
+  return `<p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 16px 0;">${text}</p>`;
+}
+
+
 function checkMark(val: boolean): string {
   return val ? '✅' : '❌';
 }
@@ -519,6 +560,11 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
 
   return {
     pagesFound: Number(crawl?.crawled_pages || crawlPages.length || 1),
+    // Alias consommés par la synthèse exécutive et « Portée et limites » :
+    // sans eux, « Pages explorées » retombait sur n/d et le rapport se déclarait
+    // mono-page alors que le crawl multi-pages avait bien tourné.
+    crawled_pages: Number(crawl?.crawled_pages || crawlPages.length || 1),
+    total_pages: Number(crawl?.total_pages || crawl?.pages_discovered || crawl?.urls_discovered || 0) || null,
     avgSeoScore: crawl?.avg_score ? Math.round(Number(crawl.avg_score)) : null,
     avgResponseTime: rawData?.responseTimeMs || null,
     wordCount: totalWordCount || htmlAnalysis?.wordCount || 0,
@@ -957,6 +1003,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      ${sectionLead('crawl', lang)}
       ${topHtml}
       ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/200</strong>` : ''}</div>` : ''}
       <div class="stat-grid-4">
@@ -1035,6 +1082,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
+      ${sectionLead('tech', lang)}
       ${topHtml}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(techScore, techMaxScore)}">${techScore} / ${techMaxScore}</div>
@@ -1094,6 +1142,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
+      ${sectionLead('strategic', lang)}
       ${topHtmlGeo}
       ${topHtmlEeat}
       ${topHtmlKw}
@@ -1165,6 +1214,7 @@ function generateIndexationSectionHTML(indexationData: any[], lang: string, doma
     .join('');
 
   return `<div class="section"><h2><span class="section-number">5</span> 📊 ${title}</h2>
+  ${sectionLead('indexation', lang)}
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
       <div class="stat-card"><div class="value" style="color:${ratioColor}">${ratio}%</div><div class="label">${lang === 'fr' ? 'Taux d\'indexation' : 'Indexation rate'}</div></div>
       <div class="stat-card"><div class="value" style="color:#22c55e">${indexed}</div><div class="label">${lang === 'fr' ? 'Pages indexées' : 'Indexed pages'}</div></div>
@@ -1198,6 +1248,7 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
+      ${sectionLead('cocoon', lang)}
       ${topHtml}
       ${cocoonStats ? `
       <div class="stat-grid">
