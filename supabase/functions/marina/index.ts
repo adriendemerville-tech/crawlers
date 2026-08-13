@@ -10,6 +10,7 @@ import {
 } from '../_shared/topPriorities.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
+import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
@@ -3070,7 +3071,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
             // Segmentation par type de page (agence / produit / service / avis / éditorial…) :
             // conclusion intermédiaire par type, puis synthèse business. 0 token LLM.
-            archetypeAnalysis = analyzePageArchetypes(crawlPages as any[]);
+            // Pondération du mix de gabarits : le sitemap donne la répartition du site
+            // entier, le crawl la qualité. Fetch XML léger, aucun token LLM.
+            const sitemapUrlsForMix = await fetchSitemapUrls(domain).catch(() => [] as string[]);
+            archetypeAnalysis = analyzePageArchetypes(crawlPages as any[], sitemapUrlsForMix);
             // Constats d'intégrité → Workbench (idempotent, partagé avec le crawl)
             await writeIntegrityFindingsToWorkbench(sb, (latestCrawl as any).content_integrity || null, {
               domain,

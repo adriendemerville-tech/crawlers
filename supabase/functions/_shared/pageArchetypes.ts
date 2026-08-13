@@ -53,6 +53,33 @@ export interface ArchetypeGroup {
   verdict: 'strong' | 'ok' | 'weak';
 }
 
+export type MixAction = 'balanced' | 'expand' | 'prune' | 'differentiate' | 'create';
+
+export interface ArchetypeMixEntry {
+  key: string;
+  label: string;
+  role: ArchetypeRole;
+  crawledPages: number;
+  crawlShare: number;          // 0-1
+  sitemapPages: number | null; // null si sitemap indisponible
+  sitemapShare: number | null; // 0-1
+  targetMin: number;           // 0-1
+  targetMax: number;           // 0-1
+  action: MixAction;
+  rationale: string;
+}
+
+export interface ArchetypeMix {
+  basis: 'crawl' | 'crawl+sitemap';
+  crawlPages: number;
+  sitemapPages: number | null;
+  coverage: number | null;     // pages crawlées / pages sitemap
+  entries: ArchetypeMixEntry[];
+  missing: Array<{ key: string; label: string; role: ArchetypeRole; rationale: string }>;
+  verdict: 'balanced' | 'unbalanced';
+  synthesis: string;
+}
+
 export interface ArchetypeAnalysis {
   totalPages: number;
   groups: ArchetypeGroup[];
@@ -60,7 +87,9 @@ export interface ArchetypeAnalysis {
   mainProblem: string | null;
   globalVerdict: 'strong' | 'ok' | 'weak';
   synthesis: string;
+  mix: ArchetypeMix | null;
 }
+
 
 interface ArchetypeDef {
   key: string;
@@ -240,7 +269,127 @@ function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGr
   };
 }
 
-export function analyzePageArchetypes(pages: ArchetypePageInput[]): ArchetypeAnalysis | null {
+/**
+ * Fourchettes de référence de la part de chaque type dans un site d'acquisition
+ * (part du nombre de pages). Déterministe, volontairement large : on ne signale
+ * qu'un déséquilibre net, jamais un écart de quelques points.
+ */
+const MIX_TARGETS: Record<string, [number, number]> = {
+  home: [0, 0.05],
+  agency: [0.05, 0.35],
+  product: [0.05, 0.45],
+  service: [0.05, 0.30],
+  conversion: [0.01, 0.08],
+  reviews: [0.01, 0.10],
+  editorial: [0.15, 0.50],
+  listing: [0.02, 0.20],
+  institutional: [0.01, 0.08],
+  legal: [0, 0.05],
+  other: [0, 0.15],
+};
+
+function mixTarget(key: string, role: ArchetypeRole): [number, number] {
+  if (MIX_TARGETS[key]) return MIX_TARGETS[key];
+  return role === 'core_business' ? [0.05, 0.40] : role === 'auxiliary_pillar' ? [0.10, 0.45] : [0, 0.15];
+}
+
+function pct1(x: number): string {
+  return `${Math.round(x * 1000) / 10} %`;
+}
+
+function buildMix(groups: ArchetypeGroup[], crawlPages: number, sitemapUrls?: string[] | null): ArchetypeMix | null {
+  if (!crawlPages) return null;
+
+  // Répartition du sitemap par type (même classifieur, sur la seule URL)
+  let sitemapCounts: Map<string, number> | null = null;
+  let sitemapTotal: number | null = null;
+  const cleanSitemap = (sitemapUrls || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
+  if (cleanSitemap.length >= 5) {
+    sitemapCounts = new Map();
+    for (const url of cleanSitemap) {
+      const key = classify({ url }).key;
+      sitemapCounts.set(key, (sitemapCounts.get(key) || 0) + 1);
+    }
+    sitemapTotal = cleanSitemap.length;
+  }
+
+  const reference = sitemapCounts && sitemapTotal ? { counts: sitemapCounts, total: sitemapTotal } : null;
+
+  const entries: ArchetypeMixEntry[] = groups.map((g) => {
+    const crawlShare = g.pages / crawlPages;
+    const sitemapPages = reference ? (reference.counts.get(g.key) || 0) : null;
+    const sitemapShare = reference && sitemapPages !== null ? sitemapPages / reference.total : null;
+    const share = sitemapShare ?? crawlShare;
+    const [targetMin, targetMax] = mixTarget(g.key, g.role);
+
+    const thinRatio = g.pages ? g.thinPages / g.pages : 0;
+    const unhealthy = g.verdict === 'weak' || thinRatio >= 0.4 || g.duplicateGroups > 0;
+
+    let action: MixAction = 'balanced';
+    let rationale = `part de ${pct1(share)} du site, cohérente avec la fourchette de référence (${pct1(targetMin)}–${pct1(targetMax)}).`;
+
+    if (share > targetMax && unhealthy) {
+      action = 'prune';
+      rationale = `${pct1(share)} du site pour ce seul gabarit, dont ${g.thinPages} page(s) trop légère(s)${g.duplicateGroups ? ` et ${g.duplicateGroups} groupe(s) quasi identique(s)` : ''} : élaguer ou fusionner les pages les plus faibles avant d'en créer d'autres.`;
+    } else if (share > targetMax) {
+      action = 'differentiate';
+      rationale = `${pct1(share)} du site, au-dessus de la fourchette de référence (max ${pct1(targetMax)}) : le volume est là, l'enjeu est de différencier ces pages plutôt que d'en ajouter.`;
+    } else if (share < targetMin) {
+      action = 'expand';
+      rationale = `seulement ${pct1(share)} du site (${g.pages} page(s)) contre ${pct1(targetMin)} attendu au minimum : ce gabarit est sous-représenté au regard de son rôle.`;
+    }
+
+    return {
+      key: g.key, label: g.label, role: g.role,
+      crawledPages: g.pages, crawlShare,
+      sitemapPages, sitemapShare,
+      targetMin, targetMax, action, rationale,
+    };
+  });
+
+  const present = new Set(groups.map((g) => g.key));
+  const MISSING_WATCH = ['conversion', 'reviews', 'editorial', 'service'];
+  const missing = DEFS.filter((d) => MISSING_WATCH.includes(d.key) && !present.has(d.key)).map((d) => ({
+    key: d.key, label: d.label, role: d.role,
+    rationale: `aucune page de ce type n'a été détectée : créer ce gabarit pour ${d.purpose}.`,
+  }));
+
+  const coverage = reference ? Math.min(1, crawlPages / reference.total) : null;
+  const flagged = entries.filter((e) => e.action !== 'balanced');
+  const verdict: ArchetypeMix['verdict'] = flagged.length || missing.length ? 'unbalanced' : 'balanced';
+
+  const toPrune = entries.filter((e) => e.action === 'prune');
+  const toExpand = entries.filter((e) => e.action === 'expand');
+  const toDiff = entries.filter((e) => e.action === 'differentiate');
+
+  const parts: string[] = [];
+  parts.push(reference
+    ? `Répartition établie sur ${reference.total} URL(s) du sitemap, recoupée avec ${crawlPages} page(s) réellement crawlée(s)${coverage !== null ? ` (couverture ${pct1(coverage)})` : ''}.`
+    : `Répartition établie sur les ${crawlPages} page(s) crawlée(s) — sitemap non exploitable, les parts sont donc indicatives du périmètre crawlé et non du site entier.`);
+  if (verdict === 'balanced') {
+    parts.push("Le ratio entre gabarits est équilibré : aucun type n'est nettement sur- ou sous-représenté, l'effort doit porter sur la qualité des pages existantes plutôt que sur leur nombre.");
+  } else {
+    if (toPrune.length) parts.push(`À élaguer en priorité : ${toPrune.map((e) => e.label.toLowerCase()).join(', ')} — le volume produit de la dilution, pas de la couverture.`);
+    if (toDiff.length) parts.push(`À différencier sans en créer davantage : ${toDiff.map((e) => e.label.toLowerCase()).join(', ')}.`);
+    if (toExpand.length) parts.push(`À développer : ${toExpand.map((e) => e.label.toLowerCase()).join(', ')}.`);
+    if (missing.length) parts.push(`Gabarit(s) à créer, aujourd'hui absent(s) : ${missing.map((m) => m.label.toLowerCase()).join(', ')}.`);
+  }
+  parts.push("Ces arbitrages de volume rejoignent ceux du module Cocoon (élagage, cannibalisation, création de piliers) : les traiter au même endroit évite de créer des pages qui viendraient concurrencer les existantes.");
+
+  return {
+    basis: reference ? 'crawl+sitemap' : 'crawl',
+    crawlPages,
+    sitemapPages: reference?.total ?? null,
+    coverage,
+    entries,
+    missing,
+    verdict,
+    synthesis: parts.join(' '),
+  };
+}
+
+export function analyzePageArchetypes(pages: ArchetypePageInput[], sitemapUrls?: string[] | null): ArchetypeAnalysis | null {
+
   const usable = (pages || []).filter((p) => p && p.url);
   if (usable.length < 3) return null;
 
@@ -299,7 +448,11 @@ export function analyzePageArchetypes(pages: ArchetypePageInput[]): ArchetypeAna
     mainProblem ? `Le problème principal est simple : ${mainProblem}.` : null,
   ].filter(Boolean).join(' ');
 
-  return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis };
+  const mix = buildMix(groups, usable.length, sitemapUrls);
+  const fullSynthesis = mix ? `${synthesis} ${mix.synthesis}` : synthesis;
+
+  return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis: fullSynthesis, mix };
+
 }
 
 const ROLE_LABELS: Record<ArchetypeRole, string> = {
@@ -345,16 +498,60 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
     </div>`;
   }).join('');
 
+  const mix = analysis.mix;
+  const ACTION_LABELS: Record<MixAction, { text: string; color: string }> = {
+    balanced: { text: 'Ratio correct', color: '#22c55e' },
+    expand: { text: 'Créer plus de pages', color: '#6d28d9' },
+    prune: { text: 'Élaguer / fusionner', color: '#ef4444' },
+    differentiate: { text: 'Différencier, ne pas en créer', color: '#d4af37' },
+    create: { text: 'Gabarit à créer', color: '#6d28d9' },
+  };
+
+  const mixHTML = !mix ? '' : `
+  <div data-marina-block="archetype-mix" data-pdf-section style="border:1px solid #e5e7eb;border-left:4px solid #d4af37;border-radius:8px;padding:14px 16px;margin:0 0 12px 0;background:#ffffff;">
+    <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;">Pondération du mix de pages</div>
+    <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:6px;">Ratio entre gabarits : ${mix.verdict === 'balanced' ? 'équilibré' : 'déséquilibré'}</div>
+    <p style="font-size:12.5px;color:#4b5563;line-height:1.7;margin:0 0 10px 0;">
+      Base de calcul : ${mix.basis === 'crawl+sitemap' ? `sitemap (${mix.sitemapPages} URL) recoupé avec le crawl (${mix.crawlPages} pages)` : `crawl seul (${mix.crawlPages} pages), sitemap non exploitable`}. Chaque part est comparée à une fourchette de référence pour un site d'acquisition ; seuls les écarts nets sont signalés.
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead>
+        <tr style="background:#faf9f5;color:#374151;text-align:left;">
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Type de page</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Crawl</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Sitemap</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Référence</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Arbitrage</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${mix.entries.map((e) => `<tr>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#111827;">${e.label}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#4b5563;">${e.crawledPages} (${pct1(e.crawlShare)})</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#4b5563;">${e.sitemapPages !== null ? `${e.sitemapPages} (${pct1(e.sitemapShare || 0)})` : 'n/d'}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${pct1(e.targetMin)}–${pct1(e.targetMax)}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:${ACTION_LABELS[e.action].color};font-weight:600;">${ACTION_LABELS[e.action].text}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <ul style="padding-left:18px;margin:10px 0 0 0;font-size:12.5px;line-height:1.65;color:#374151;">
+      ${mix.entries.filter((e) => e.action !== 'balanced').map((e) => `<li><strong>${e.label}</strong> — ${e.rationale}</li>`).join('')}
+      ${mix.missing.map((m) => `<li><strong>${m.label}</strong> — ${m.rationale}</li>`).join('')}
+    </ul>
+  </div>`;
+
   return `
   <div class="section" data-marina-scope="site" data-marina-block="archetypes" data-pdf-section style="border-left:6px solid #6d28d9;">
     <h2 style="font-size:19px;margin:0 0 10px 0;">Audit par type de page</h2>
     <p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 16px 0;">
-      Ce que mesure cette section : un site ne se juge pas page par page mais gabarit par gabarit. Les ${analysis.totalPages} pages retenues sur ${domain} sont regroupées par type (agence, produit, service, avis, éditorial…), chaque type est confronté à l'objectif qu'il est censé servir, puis une conclusion intermédiaire précise s'il le remplit. Le verdict global du site en découle.
+      Ce que mesure cette section : un site ne se juge pas page par page mais gabarit par gabarit. Les ${analysis.totalPages} pages retenues sur ${domain} sont regroupées par type (agence, produit, service, avis, éditorial…), chaque type est confronté à l'objectif qu'il est censé servir, puis une conclusion intermédiaire précise s'il le remplit. La pondération du mix indique enfin s'il faut créer, élaguer ou simplement différencier chaque gabarit. Le verdict global du site en découle.
     </p>
     ${cards}
+    ${mixHTML}
     <div style="border:2px solid #6d28d9;border-left:6px solid #d4af37;border-radius:10px;padding:16px 18px;background:#ffffff;">
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">Conclusion par types de pages</div>
       <p style="font-size:13.5px;line-height:1.8;color:#111827;margin:0;">${analysis.synthesis}</p>
     </div>
   </div>`;
 }
+
