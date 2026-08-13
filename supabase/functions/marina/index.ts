@@ -13,7 +13,15 @@ import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
 import { writeArchetypePrescriptions } from '../_shared/archetypeWorkbench.ts';
 import { buildMarketProfile, fetchArchetypeBenchmarks, writeMarketObservation } from '../_shared/marketObservations.ts';
-import { sectorLabel, commercialModelLabel } from '../_shared/sectorTaxonomy.ts';
+import {
+  sectorLabel,
+  commercialModelLabel,
+  normalizeSector,
+  normalizeCommercialModel,
+  SECTOR_OPTIONS,
+  COMMERCIAL_MODEL_OPTIONS,
+} from '../_shared/sectorTaxonomy.ts';
+
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
