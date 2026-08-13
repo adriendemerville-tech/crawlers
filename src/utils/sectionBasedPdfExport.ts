@@ -127,18 +127,23 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   let isFirstElement = true;
 
   for (const section of sections) {
+    // On capture chaque bloc à sa largeur réelle (les blocs imbriqués sont plus
+    // étroits que le conteneur) puis on le recentre dans la zone utile, sinon
+    // html2canvas ajoutait une bande blanche à droite.
+    const nativeWidth = Math.min(captureWidth, section.offsetWidth || captureWidth);
     const canvas = await html2canvas(section, {
       scale,
       useCORS: true,
       allowTaint: true,
-      width: captureWidth,
+      width: nativeWidth,
       windowWidth: iframeWidth,
       logging: false,
       backgroundColor,
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    const sectionWidthMm = usableWidthMm;
+    const sectionWidthMm = usableWidthMm * (nativeWidth / captureWidth);
+    const sectionX = marginSide + (usableWidthMm - sectionWidthMm) / 2;
     const sectionHeightMm = (canvas.height * sectionWidthMm) / canvas.width;
 
     const spaceLeft = pdfHeightMm - marginBottom - cursorY;
