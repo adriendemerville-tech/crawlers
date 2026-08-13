@@ -555,7 +555,7 @@ export function analyzePageArchetypes(
     mainProblem ? `Le problème principal est simple : ${mainProblem}.` : null,
   ].filter(Boolean).join(' ');
 
-  const mix = buildMix(groups, usable.length, sitemapUrls);
+  const mix = buildMix(groups, usable.length, options);
   const fullSynthesis = mix ? `${synthesis} ${mix.synthesis}` : synthesis;
 
   return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis: fullSynthesis, mix };
