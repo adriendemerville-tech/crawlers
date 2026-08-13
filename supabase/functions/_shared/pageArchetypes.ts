@@ -269,7 +269,127 @@ function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGr
   };
 }
 
-export function analyzePageArchetypes(pages: ArchetypePageInput[]): ArchetypeAnalysis | null {
+/**
+ * Fourchettes de référence de la part de chaque type dans un site d'acquisition
+ * (part du nombre de pages). Déterministe, volontairement large : on ne signale
+ * qu'un déséquilibre net, jamais un écart de quelques points.
+ */
+const MIX_TARGETS: Record<string, [number, number]> = {
+  home: [0, 0.05],
+  agency: [0.05, 0.35],
+  product: [0.05, 0.45],
+  service: [0.05, 0.30],
+  conversion: [0.01, 0.08],
+  reviews: [0.01, 0.10],
+  editorial: [0.15, 0.50],
+  listing: [0.02, 0.20],
+  institutional: [0.01, 0.08],
+  legal: [0, 0.05],
+  other: [0, 0.15],
+};
+
+function mixTarget(key: string, role: ArchetypeRole): [number, number] {
+  if (MIX_TARGETS[key]) return MIX_TARGETS[key];
+  return role === 'core_business' ? [0.05, 0.40] : role === 'auxiliary_pillar' ? [0.10, 0.45] : [0, 0.15];
+}
+
+function pct1(x: number): string {
+  return `${Math.round(x * 1000) / 10} %`;
+}
+
+function buildMix(groups: ArchetypeGroup[], crawlPages: number, sitemapUrls?: string[] | null): ArchetypeMix | null {
+  if (!crawlPages) return null;
+
+  // Répartition du sitemap par type (même classifieur, sur la seule URL)
+  let sitemapCounts: Map<string, number> | null = null;
+  let sitemapTotal: number | null = null;
+  const cleanSitemap = (sitemapUrls || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
+  if (cleanSitemap.length >= 5) {
+    sitemapCounts = new Map();
+    for (const url of cleanSitemap) {
+      const key = classify({ url }).key;
+      sitemapCounts.set(key, (sitemapCounts.get(key) || 0) + 1);
+    }
+    sitemapTotal = cleanSitemap.length;
+  }
+
+  const reference = sitemapCounts && sitemapTotal ? { counts: sitemapCounts, total: sitemapTotal } : null;
+
+  const entries: ArchetypeMixEntry[] = groups.map((g) => {
+    const crawlShare = g.pages / crawlPages;
+    const sitemapPages = reference ? (reference.counts.get(g.key) || 0) : null;
+    const sitemapShare = reference && sitemapPages !== null ? sitemapPages / reference.total : null;
+    const share = sitemapShare ?? crawlShare;
+    const [targetMin, targetMax] = mixTarget(g.key, g.role);
+
+    const thinRatio = g.pages ? g.thinPages / g.pages : 0;
+    const unhealthy = g.verdict === 'weak' || thinRatio >= 0.4 || g.duplicateGroups > 0;
+
+    let action: MixAction = 'balanced';
+    let rationale = `part de ${pct1(share)} du site, cohérente avec la fourchette de référence (${pct1(targetMin)}–${pct1(targetMax)}).`;
+
+    if (share > targetMax && unhealthy) {
+      action = 'prune';
+      rationale = `${pct1(share)} du site pour ce seul gabarit, dont ${g.thinPages} page(s) trop légère(s)${g.duplicateGroups ? ` et ${g.duplicateGroups} groupe(s) quasi identique(s)` : ''} : élaguer ou fusionner les pages les plus faibles avant d'en créer d'autres.`;
+    } else if (share > targetMax) {
+      action = 'differentiate';
+      rationale = `${pct1(share)} du site, au-dessus de la fourchette de référence (max ${pct1(targetMax)}) : le volume est là, l'enjeu est de différencier ces pages plutôt que d'en ajouter.`;
+    } else if (share < targetMin) {
+      action = 'expand';
+      rationale = `seulement ${pct1(share)} du site (${g.pages} page(s)) contre ${pct1(targetMin)} attendu au minimum : ce gabarit est sous-représenté au regard de son rôle.`;
+    }
+
+    return {
+      key: g.key, label: g.label, role: g.role,
+      crawledPages: g.pages, crawlShare,
+      sitemapPages, sitemapShare,
+      targetMin, targetMax, action, rationale,
+    };
+  });
+
+  const present = new Set(groups.map((g) => g.key));
+  const MISSING_WATCH = ['conversion', 'reviews', 'editorial', 'service'];
+  const missing = DEFS.filter((d) => MISSING_WATCH.includes(d.key) && !present.has(d.key)).map((d) => ({
+    key: d.key, label: d.label, role: d.role,
+    rationale: `aucune page de ce type n'a été détectée : créer ce gabarit pour ${d.purpose}.`,
+  }));
+
+  const coverage = reference ? Math.min(1, crawlPages / reference.total) : null;
+  const flagged = entries.filter((e) => e.action !== 'balanced');
+  const verdict: ArchetypeMix['verdict'] = flagged.length || missing.length ? 'unbalanced' : 'balanced';
+
+  const toPrune = entries.filter((e) => e.action === 'prune');
+  const toExpand = entries.filter((e) => e.action === 'expand');
+  const toDiff = entries.filter((e) => e.action === 'differentiate');
+
+  const parts: string[] = [];
+  parts.push(reference
+    ? `Répartition établie sur ${reference.total} URL(s) du sitemap, recoupée avec ${crawlPages} page(s) réellement crawlée(s)${coverage !== null ? ` (couverture ${pct1(coverage)})` : ''}.`
+    : `Répartition établie sur les ${crawlPages} page(s) crawlée(s) — sitemap non exploitable, les parts sont donc indicatives du périmètre crawlé et non du site entier.`);
+  if (verdict === 'balanced') {
+    parts.push("Le ratio entre gabarits est équilibré : aucun type n'est nettement sur- ou sous-représenté, l'effort doit porter sur la qualité des pages existantes plutôt que sur leur nombre.");
+  } else {
+    if (toPrune.length) parts.push(`À élaguer en priorité : ${toPrune.map((e) => e.label.toLowerCase()).join(', ')} — le volume produit de la dilution, pas de la couverture.`);
+    if (toDiff.length) parts.push(`À différencier sans en créer davantage : ${toDiff.map((e) => e.label.toLowerCase()).join(', ')}.`);
+    if (toExpand.length) parts.push(`À développer : ${toExpand.map((e) => e.label.toLowerCase()).join(', ')}.`);
+    if (missing.length) parts.push(`Gabarit(s) à créer, aujourd'hui absent(s) : ${missing.map((m) => m.label.toLowerCase()).join(', ')}.`);
+  }
+  parts.push("Ces arbitrages de volume rejoignent ceux du module Cocoon (élagage, cannibalisation, création de piliers) : les traiter au même endroit évite de créer des pages qui viendraient concurrencer les existantes.");
+
+  return {
+    basis: reference ? 'crawl+sitemap' : 'crawl',
+    crawlPages,
+    sitemapPages: reference?.total ?? null,
+    coverage,
+    entries,
+    missing,
+    verdict,
+    synthesis: parts.join(' '),
+  };
+}
+
+export function analyzePageArchetypes(pages: ArchetypePageInput[], sitemapUrls?: string[] | null): ArchetypeAnalysis | null {
+
   const usable = (pages || []).filter((p) => p && p.url);
   if (usable.length < 3) return null;
 
