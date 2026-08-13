@@ -160,7 +160,7 @@ Deno.serve(handleRequest(async (req) => {
       const processedUrls = new Set<string>(urlsToProcess.map(u => u.replace(/\/$/, '')));
 
       // ── INNER LOOP: keep processing pages while time allows ──
-      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < MAX_GLOBAL_CONCURRENT) {
+      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN) {
         // Check if crawl was stopped by user
         const { data: crawlCheck } = await supabase
           .from('site_crawls')
