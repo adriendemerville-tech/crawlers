@@ -154,7 +154,7 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
   siteBlocks.delete('scope_limits');
 
 
-  const siteOrder = ['intro', 'crawl', 'cocoon', 'llm', 'indexation'];
+  const siteOrder = ['intro', 'crawl', 'archetypes', 'cocoon', 'llm', 'indexation'];
   const orderedSiteEntries = [
     ...siteOrder.filter(id => siteBlocks.has(id)).map(id => [id, siteBlocks.get(id)!] as const),
     ...[...siteBlocks.entries()].filter(([id]) => !siteOrder.includes(id)),
