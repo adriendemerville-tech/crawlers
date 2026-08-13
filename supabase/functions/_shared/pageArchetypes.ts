@@ -100,6 +100,9 @@ export interface ArchetypeMix {
   benchmarkScope: 'sector_model' | 'sector' | null;
   benchmarkSample: number | null;
   sectorLabel: string | null;
+  /** Modèle d'affaires ayant servi à choisir les fourchettes a priori. */
+  commercialModel: string | null;
+  commercialModelLabel: string | null;
   synthesis: string;
 }
 
@@ -109,7 +112,11 @@ export interface ArchetypeAnalysisOptions {
   benchmarks?: ArchetypeMixReference[] | null;
   /** Libellé lisible du secteur retenu, affiché dans le rapport. */
   sectorLabel?: string | null;
+  /** Modèle d'affaires normalisé (carte d'identité résolue en phase 0). */
+  commercialModel?: string | null;
+  commercialModelLabel?: string | null;
 }
+
 
 export interface ArchetypeAnalysis {
   totalPages: number;
@@ -493,12 +500,15 @@ function buildMix(
     const sitemapPages = reference ? (reference.counts.get(g.key) || 0) : null;
     const sitemapShare = reference && sitemapPages !== null ? sitemapPages / reference.total : null;
     const share = sitemapShare ?? crawlShare;
-    const target = mixTarget(g.key, g.role, benchmarks);
+    const target = mixTarget(g.key, g.role, benchmarks, options.commercialModel ?? null);
     const targetMin = target.min;
     const targetMax = target.max;
     const origin = target.source === 'benchmark'
       ? `fourchette observée sur ${target.sample} site(s) comparable(s)`
-      : 'fourchette de référence';
+      : target.modelScoped
+        ? `fourchette de référence pour un modèle « ${options.commercialModelLabel || options.commercialModel} »`
+        : 'fourchette de référence générique';
+
 
     const thinRatio = g.pages ? g.thinPages / g.pages : 0;
     const unhealthy = g.verdict === 'weak' || thinRatio >= 0.4 || g.duplicateGroups > 0;
@@ -563,10 +573,15 @@ function buildMix(
   const targetBasis: ArchetypeMix['targetBasis'] =
     benchCount === 0 ? 'a_priori' : benchCount === entries.length ? 'benchmark' : 'mixed';
 
+  const modelScopedCount = entries.filter((e) => e.targetSource === 'a_priori').length;
   if (targetBasis === 'a_priori') {
-    parts.push(`Attention à la lecture : faute d'un échantillon sectoriel suffisant${options.sectorLabel ? ` pour le secteur « ${options.sectorLabel} »` : ''}, les fourchettes utilisées ici sont des repères posés a priori et non des normes mesurées ; elles signalent un déséquilibre probable, pas une règle.`);
+    parts.push(
+      options.commercialModel && options.commercialModel !== 'unknown'
+        ? `Attention à la lecture : faute d'un échantillon sectoriel suffisant${options.sectorLabel ? ` pour le secteur « ${options.sectorLabel} »` : ''}, les fourchettes utilisées ici sont des repères posés a priori pour un modèle « ${options.commercialModelLabel || options.commercialModel} » — pas des normes mesurées. Elles signalent un déséquilibre probable au regard de ce modèle, pas une règle.`
+        : `Attention à la lecture : le modèle d'affaires du site n'a pas pu être résolu et l'échantillon sectoriel est insuffisant. Les fourchettes utilisées sont donc génériques : elles signalent au mieux une anomalie grossière, et un écart isolé ne doit pas être interprété.`,
+    );
   } else {
-    parts.push(`Les fourchettes utilisées sont ${targetBasis === 'benchmark' ? '' : 'en partie '}calibrées sur les répartitions réellement observées ${options.sectorLabel ? `dans le secteur « ${options.sectorLabel} »` : 'sur des sites comparables'}${benchmarkSample ? ` (au moins ${benchmarkSample} domaine(s) par gabarit)` : ''}${benchmarkScope === 'sector' ? ', modèle commercial confondu' : ''} — les gabarits sans échantillon suffisant restent comparés à un repère a priori.`);
+    parts.push(`Les fourchettes utilisées sont ${targetBasis === 'benchmark' ? '' : 'en partie '}calibrées sur les répartitions réellement observées ${options.sectorLabel ? `dans le secteur « ${options.sectorLabel} »` : 'sur des sites comparables'}${benchmarkSample ? ` (au moins ${benchmarkSample} domaine(s) par gabarit)` : ''}${benchmarkScope === 'sector' ? ', modèle commercial confondu' : ''} — les ${modelScopedCount} gabarit(s) sans échantillon suffisant restent comparés à un repère a priori${options.commercialModelLabel ? ` propre au modèle « ${options.commercialModelLabel} »` : ''}.`);
   }
 
   return {
@@ -581,9 +596,12 @@ function buildMix(
     benchmarkScope,
     benchmarkSample,
     sectorLabel: options.sectorLabel ?? null,
+    commercialModel: options.commercialModel ?? null,
+    commercialModelLabel: options.commercialModelLabel ?? null,
     synthesis: parts.join(' '),
   };
 }
+
 
 export function analyzePageArchetypes(
   pages: ArchetypePageInput[],
@@ -724,8 +742,9 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
           ? `répartitions réellement observées${mix.sectorLabel ? ` sur des sites du secteur « ${mix.sectorLabel} »` : ' sur des sites comparables'}${mix.benchmarkSample ? `, ${mix.benchmarkSample} domaine(s) minimum par gabarit` : ''}${mix.benchmarkScope === 'sector' ? ', modèle commercial confondu' : ''}`
           : mix.targetBasis === 'mixed'
             ? `mixte — certains gabarits sont comparés aux répartitions observées${mix.sectorLabel ? ` dans le secteur « ${mix.sectorLabel} »` : ''}, les autres à un repère posé a priori faute d'échantillon suffisant`
-            : "repères posés a priori (aucun échantillon sectoriel suffisant à ce jour) : ils signalent un déséquilibre probable, ils ne constituent pas une norme"
+            : `repères posés a priori (aucun échantillon sectoriel suffisant à ce jour)${mix.commercialModelLabel ? `, calés sur un modèle « ${mix.commercialModelLabel} »` : ' et non calés sur un modèle d\'affaires identifié'} : ils signalent un déséquilibre probable, ils ne constituent pas une norme`
       }. Seuls les écarts nets sont signalés.
+
     </p>
     <table style="width:100%;border-collapse:collapse;font-size:12px;">
       <thead>

@@ -13,10 +13,18 @@ import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
 import { writeArchetypePrescriptions } from '../_shared/archetypeWorkbench.ts';
 import { buildMarketProfile, fetchArchetypeBenchmarks, writeMarketObservation } from '../_shared/marketObservations.ts';
-import { sectorLabel } from '../_shared/sectorTaxonomy.ts';
+import { sectorLabel, commercialModelLabel } from '../_shared/sectorTaxonomy.ts';
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
+import {
+  resolveIdentityCard,
+  detectIdentityContradiction,
+  renderIdentityCardHTML,
+  emptyIdentityCard,
+  type IdentityCard,
+} from '../_shared/identityResolver.ts';
+
 
 
 import { corsHeaders } from '../_shared/cors.ts';
@@ -1835,7 +1843,7 @@ function buildConclusionHTML(
 
 
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string; archetypes?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string; archetypes?: string; identity?: string },
 
 
   lang: string,
@@ -1925,9 +1933,12 @@ function compileMarinaReport(
 
     ${sectionHTMLs.summary || ''}
 
+    ${sectionHTMLs.identity || ''}
+
     ${sectionHTMLs.intro || ''}
 
     ${sectionHTMLs.visual || ''}
+
 
 
     <!-- Table of Contents -->
@@ -2515,7 +2526,27 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       const detectedLang = resolveReportLanguage(lang, expertResult.data);
       
       console.log(`[Marina] Expert SEO done. Score: ${expertResult.data.totalScore}. Lang: ${detectedLang}`);
+
+      // ─── Phase 0 : carte d'identité AVANT toute analyse de gabarits ───
+      // Le mix de pages attendu dépend entièrement du modèle d'affaires : on le
+      // résout ici (lecture en base, sinon une seule inférence légère) pour que
+      // les phases suivantes calibrent leurs fourchettes au lieu de les subir.
+      let identityCard: IdentityCard;
+      try {
+        identityCard = await resolveIdentityCard(sb, { domain, url, userId: parentJob.user_id });
+        console.log(
+          `[Marina] Phase 0 identité ${domain} : ${identityCard.sector} / ${identityCard.commercialModel} ` +
+          `(source ${identityCard.source}, confiance ${identityCard.confidence})`,
+        );
+      } catch (e) {
+        identityCard = emptyIdentityCard(domain, null, [
+          'Résolution de la carte d’identité impossible : ' + String((e as Error)?.message || e),
+        ]);
+        console.warn(`[Marina] Phase 0 identité échouée pour ${domain} — audit poursuivi sans calibration.`);
+      }
+
       await updateProgress(30, 'strategic_audit');
+
 
       // ─── Step 2: Launch Strategic GEO Audit (don't wait — self-invoke phase1b) ───
       console.log(`[Marina] Phase 1 Step 2: launching strategic-orchestrator for ${url}`);
@@ -2550,7 +2581,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           domain,
           detectedLang,
           strategicJobId,
+          identityCard,
         },
+
         expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
       }, { onConflict: 'cache_key' });
 
@@ -2571,7 +2604,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         throw new Error('Phase 1b: phase 1a data not found');
       }
 
-      const { expertData, domain, detectedLang, strategicJobId } = cached1a.result_data as any;
+      const { expertData, domain, detectedLang, strategicJobId, identityCard } = cached1a.result_data as any;
 
       let lastMirroredProgress = 30;
       const strategicData = await waitForTrackedJob(sb, strategicJobId, {
@@ -2596,7 +2629,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         strategicData,
         domain,
         detectedLang,
+        identityCard: identityCard ?? null,
       };
+
 
       await sb.from('audit_cache').upsert({
         cache_key: `marina_intermediate_${jobId}`,
@@ -2805,7 +2840,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         throw new Error('Phase 3: intermediate data not found — phase 1 may have failed');
       }
 
-      const { expertData, strategicData, domain, detectedLang } = cached.result_data as any;
+      const { expertData, strategicData, domain, detectedLang, identityCard: identityCardRaw } = cached.result_data as any;
+      const phase0Identity: IdentityCard | null = identityCardRaw ?? null;
+
 
       // ─── Détection de dégradation de la couche stratégique (GEO) ───
       // strategic-synthesis renvoie un fallback silencieux (« Analyse interrompue. »,
@@ -2839,19 +2876,34 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       }
 
       // ─── Profil de marché normalisé (secteur + modèle commercial) ───
-      // Sert à deux choses : sélectionner les fourchettes de référence calibrées
-      // sur des sites comparables, et alimenter la mémoire de marché.
+      // La carte d'identité résolue en phase 0 est la source primaire : elle a été
+      // établie AVANT le crawl, donc sans se laisser influencer par ce que le crawl
+      // a trouvé. Les données de l'audit stratégique ne servent qu'à combler les
+      // trous, et la ligne tracked_sites qu'en dernier recours.
       const marketProfile = buildMarketProfile({
         ...(identityRow || {}),
-        // le secteur extrait de l'audit stratégique prime s'il est plus précis
-        market_sector: (strategicData?.introduction?.sector
+        market_sector: (phase0Identity?.marketSector
+          || strategicData?.introduction?.sector
           || strategicData?.market_sector
           || identityRow?.['market_sector']) ?? null,
-        target_audience: (strategicData?.introduction?.target_audience || identityRow?.['target_audience']) ?? null,
+        commercial_model: (phase0Identity?.commercialModel && phase0Identity.commercialModel !== 'unknown'
+          ? phase0Identity.commercialModel
+          : identityRow?.['commercial_model']) ?? null,
+        products_services: (phase0Identity?.productsServices || identityRow?.['products_services']) ?? null,
+        is_local_business: phase0Identity?.isLocalBusiness ?? identityRow?.['is_local_business'] ?? null,
+        entity_type: (phase0Identity?.entityType || identityRow?.['entity_type']) ?? null,
+        target_audience: (phase0Identity?.targetAudience
+          || strategicData?.introduction?.target_audience
+          || identityRow?.['target_audience']) ?? null,
       });
       const marketSectorLabel = marketProfile.sector === 'unknown' ? null : sectorLabel(marketProfile.sector);
-      console.log(`[Marina] Profil de marché : ${marketProfile.sector} / ${marketProfile.commercialModel}`);
+      console.log(
+        `[Marina] Profil de marché : ${marketProfile.sector} / ${marketProfile.commercialModel} ` +
+        `(identité phase 0 : ${phase0Identity?.source || 'absente'})`,
+      );
       const archetypeBenchmarks = await fetchArchetypeBenchmarks(sb, marketProfile);
+
+
 
 
       // Extract site context from strategic audit data (enriches LLM prompts)
@@ -3099,7 +3151,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               sitemapUrls: sitemapUrlsForMix,
               benchmarks: archetypeBenchmarks,
               sectorLabel: marketSectorLabel,
+              commercialModel: marketProfile.commercialModel,
+              commercialModelLabel: marketProfile.commercialModel === 'unknown'
+                ? null
+                : commercialModelLabel(marketProfile.commercialModel),
             });
+
 
             // Les arbitrages de gabarits deviennent des prescriptions exécutables
             // (Parménion phase prescribe + Stratège cocoon), pas un simple constat.
@@ -3369,8 +3426,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               visual: Boolean(visualCapture),
               plan: consolidatedPlan,
             }),
+            // Carte d'identité résolue AVANT le crawl : elle explique au lecteur sur
+            // quelle lecture du business les fourchettes de gabarits ont été calées,
+            // et signale une éventuelle contradiction avec ce que le crawl a trouvé.
+            identity: phase0Identity
+              ? renderIdentityCardHTML(
+                  phase0Identity,
+                  detectedLang,
+                  detectIdentityContradiction(phase0Identity, archetypeAnalysis?.mix ?? null),
+                )
+              : undefined,
             archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
             conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan, archetypeAnalysis),
+
             disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
             }),
