@@ -769,8 +769,6 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
       </tbody>
     </table>
 
-      </tbody>
-    </table>
     <ul style="padding-left:18px;margin:10px 0 0 0;font-size:12.5px;line-height:1.65;color:#374151;">
       ${mix.entries.filter((e) => e.action !== 'balanced').map((e) => `<li><strong>${e.label}</strong> — ${e.rationale}</li>`).join('')}
       ${mix.missing.map((m) => `<li><strong>${m.label}</strong> — ${m.rationale}</li>`).join('')}

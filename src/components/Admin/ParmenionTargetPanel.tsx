@@ -353,6 +353,8 @@ export function ParmenionTargetPanel({
     const body = {
       force_new: true,
       forced_phase: 'audit',
+      force_audit: true,
+
       tracked_site_id: autopilotConfig.tracked_site_id,
       domain: autopilotConfig.domain,
       cycle_number: (autopilotConfig.total_cycles_run || 0) + 1,

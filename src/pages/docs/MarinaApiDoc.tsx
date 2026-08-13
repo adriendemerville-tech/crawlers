@@ -113,6 +113,9 @@ export default function MarinaApiDoc() {
             <li><a href="#errors" className="hover:text-foreground">8. Codes d'erreur</a></li>
             <li><a href="#full-example" className="hover:text-foreground">9. Exemple complet</a></li>
             <li><a href="#lovable" className="hover:text-foreground">10. Intégration Lovable</a></li>
+            <li><a href="#identity" className="hover:text-foreground">11. Carte d'identité (pré-crawl)</a></li>
+            <li><a href="#multipage" className="hover:text-foreground">12. Multipages</a></li>
+
           </ol>
         </aside>
 
@@ -126,7 +129,8 @@ export default function MarinaApiDoc() {
             polling GET jusqu'à <code className="rounded bg-muted px-1">status: "completed"</code>.
           </p>
           <Code lang="bash">{`# 1. Récupérez votre clé depuis Console → API → Marina
-export MARINA_KEY="mk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+export MARINA_KEY="marina_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
 
 # 2. Lancez un audit
 JOB=$(curl -s -X POST ${BASE} \\
@@ -151,15 +155,20 @@ done`}</Code>
           <p className="mb-4 text-muted-foreground">
             Toutes les requêtes externes utilisent le header <code className="rounded bg-muted px-1">x-marina-key</code>.
             La clé est liée à votre compte Crawlers et hérite de votre plan (quotas, branding, langues disponibles).
+            Deux variantes sont également acceptées : le champ <code className="rounded bg-muted px-1">api_key</code>{' '}
+            dans le body JSON, et un <code className="rounded bg-muted px-1">Authorization: Bearer &lt;JWT&gt;</code>{' '}
+            pour un utilisateur connecté au dashboard.
           </p>
           <Code lang="http">{`POST /functions/v1/marina HTTP/1.1
 Host: tutlimtasnjabdfhpewu.functions.supabase.co
-x-marina-key: mk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x-marina-key: marina_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 Content-Type: application/json`}</Code>
           <p className="mt-4 text-sm text-muted-foreground">
-            Générer / régénérer une clé : <strong>Console → API → Marina → Générer une clé</strong>. La régénération
-            invalide immédiatement l'ancienne clé.
+            Générer / régénérer une clé : <strong>Console → API → Marina → Générer une clé</strong> (équivalent
+            technique : <code className="rounded bg-muted px-1">GET {'?action=generate_key'}</code> avec le JWT
+            utilisateur, et non une clé Marina). La régénération invalide immédiatement l'ancienne clé.
           </p>
+
         </section>
 
         {/* 3. Create job */}
@@ -228,11 +237,34 @@ Content-Type: application/json`}</Code>
   "success": true,
   "status": "completed",
   "data": {
-    "report_url": "https://crawlers.fr/r/8f3a9b2c-...",   // rapport HTML public
-    "report_html": "<!doctype html>...",                  // optionnel
-    "scores": { "seo": 78, "geo": 64, "ai_visibility": 51 },
-    "completed_at": "2026-05-26T14:32:11Z"
+    "url": "https://example.com",
+    "domain": "example.com",
+    "language": "fr",
+    "report_url": "https://.../rapport.html",          // URL signée du rapport HTML
+    "report_view_url": "https://crawlers.fr/r/8f3a9b2c-...", // lecteur public
+    "report_path": "reports/8f3a9b2c/rapport.html",
+    "expert_seo_score": 78,
+    "expert_seo_max": 100,
+    "strategic_score": 64,                              // couche stratégique GEO / IA
+    "cocoon_nodes": 42,
+    "cocoon_clusters": 6,
+    "visual_capture": { "desktop": "https://...", "mobile": "https://..." },
+    "partial": false,
+    "degraded_reasons": [],
+    "generated_at": "2026-05-26T14:32:11Z"
   }
+}`}</Code>
+
+          <p className="mb-2 mt-4 text-sm font-semibold">Livraison partielle</p>
+          <p className="mb-2 text-sm text-muted-foreground">
+            Le rapport est livré mais une couche non bloquante (le plus souvent la couche stratégique GEO) est
+            indisponible. Traitez ce cas comme un succès exploitable.
+          </p>
+          <Code lang="json">{`{
+  "success": true,
+  "status": "partial",
+  "warning": "Couche stratégique indisponible",
+  "data": { "...": "identique à completed", "partial": true, "degraded_reasons": ["strategic_timeout"] }
 }`}</Code>
 
           <p className="mb-2 mt-4 text-sm font-semibold">Échec</p>
@@ -241,6 +273,7 @@ Content-Type: application/json`}</Code>
   "status": "failed",
   "error": "Crawl timeout after 180s"
 }`}</Code>
+
 
           <p className="mt-4 text-sm text-muted-foreground">
             Polling recommandé : toutes les <strong>5 à 10 secondes</strong>. Durée typique d'un job : 2 à 4 minutes.
@@ -255,24 +288,45 @@ Content-Type: application/json`}</Code>
           </h2>
           <p className="mb-4 text-muted-foreground">
             Plutôt que de poller, fournissez un <code className="rounded bg-muted px-1">callback_url</code> à la
-            création du job. Marina enverra un POST JSON à cette URL dès la complétion (succès ou échec).
+            création du job. Marina enverra un POST JSON à cette URL à la fin du job (succès, livraison partielle
+            ou échec). Le nom de l'événement est répété dans le header{' '}
+            <code className="rounded bg-muted px-1">x-marina-event</code>.
           </p>
           <Code lang="json">{`POST {callback_url}
 Content-Type: application/json
-x-marina-event: job.completed   // ou job.failed
+x-marina-event: marina.report.completed   // ou marina.report.partial | marina.report.failed
 
+// Succès (ou partial) — le corps reprend exactement l'objet "data" du polling
 {
+  "event": "marina.report.completed",
   "job_id": "8f3a9b2c-...",
-  "status": "completed",
   "url": "https://example.com",
-  "report_url": "https://crawlers.fr/r/8f3a9b2c-...",
-  "scores": { "seo": 78, "geo": 64, "ai_visibility": 51 },
-  "completed_at": "2026-05-26T14:32:11Z"
+  "domain": "example.com",
+  "language": "fr",
+  "report_url": "https://.../rapport.html",
+  "report_view_url": "https://crawlers.fr/r/8f3a9b2c-...",
+  "expert_seo_score": 78,
+  "expert_seo_max": 100,
+  "strategic_score": 64,
+  "partial": false,
+  "generated_at": "2026-05-26T14:32:11Z"
+}
+
+// Échec
+{
+  "event": "marina.report.failed",
+  "job_id": "8f3a9b2c-...",
+  "url": "https://example.com",
+  "domain": "example.com",
+  "phase": "phase2",
+  "error": "Crawl timeout",
+  "failed_at": "2026-05-26T14:32:11Z"
 }`}</Code>
           <p className="mt-4 text-sm text-muted-foreground">
             Le webhook est appelé <strong>une seule fois</strong>, sans retry. Votre endpoint doit répondre 2xx en
             moins de 10 secondes.
           </p>
+
         </section>
 
         {/* 6. Lang */}
@@ -343,10 +397,11 @@ x-marina-event: job.completed   // ou job.failed
                   <td className="py-2">Vérifier l'ID retourné par le POST initial.</td>
                 </tr>
                 <tr className="border-b border-border/50">
-                  <td className="py-2 pr-4 font-mono">429</td>
-                  <td className="py-2 pr-4">Quota plan dépassé</td>
-                  <td className="py-2">Upgrade ou attendre le reset (mensuel).</td>
+                  <td className="py-2 pr-4 font-mono">409</td>
+                  <td className="py-2 pr-4">Un job est déjà en cours sur ce domaine</td>
+                  <td className="py-2">Le job est mis en file (status "queued") plutôt que rejeté.</td>
                 </tr>
+
                 <tr>
                   <td className="py-2 pr-4 font-mono">500</td>
                   <td className="py-2 pr-4">Erreur interne pipeline</td>
@@ -384,7 +439,7 @@ export async function auditWithMarina(url: string, lang?: "fr" | "en" | "es") {
       headers: { "x-marina-key": MARINA_KEY },
     });
     const json = await poll.json();
-    if (json.status === "completed") return json.data;       // { report_url, scores, ... }
+    if (json.status === "completed" || json.status === "partial") return json.data; // { report_url, expert_seo_score, strategic_score, ... }
     if (json.status === "failed") throw new Error(json.error);
   }
   throw new Error("Timeout");
@@ -428,6 +483,74 @@ Deno.serve(async (req) => {
   });
 });`}</Code>
         </section>
+
+        {/* 11. Identity */}
+        <section id="identity" className="mb-12">
+          <h2 className="mb-4 text-2xl font-bold">11. Carte d'identité (phase 0, pré-crawl)</h2>
+          <p className="mb-4 text-muted-foreground">
+            Avant de lancer un audit, Marina résout une carte d'identité du site (secteur, modèle commercial, cible,
+            offre, zone commerciale). Elle calibre les seuils de sévérité et les cibles de mix de gabarits. Vous pouvez
+            la lire, la recalculer avec vos propres valeurs, puis la verrouiller pour qu'elle soit utilisée par l'audit.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="py-2 pr-4 font-semibold">action</th>
+                  <th className="py-2 pr-4 font-semibold">Body</th>
+                  <th className="py-2 font-semibold">Effet</th>
+                </tr>
+              </thead>
+              <tbody className="text-muted-foreground">
+                <tr className="border-b border-border/50">
+                  <td className="py-2 pr-4 font-mono text-foreground">identity_options</td>
+                  <td className="py-2 pr-4">—</td>
+                  <td className="py-2">Listes de référence (secteurs, modèles commerciaux, types d'entité).</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2 pr-4 font-mono text-foreground">identity_resolve</td>
+                  <td className="py-2 pr-4"><code>url</code>, <code>force?</code></td>
+                  <td className="py-2">Résolution automatique (cache, sinon inférence). Réponse <code>{'{ card, locked, options }'}</code>.</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2 pr-4 font-mono text-foreground">identity_recompute</td>
+                  <td className="py-2 pr-4"><code>url</code>, <code>fields</code></td>
+                  <td className="py-2">Prévisualisation déterministe (aucune écriture) avec vos champs.</td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-4 font-mono text-foreground">identity_lock</td>
+                  <td className="py-2 pr-4"><code>url</code>, <code>fields</code></td>
+                  <td className="py-2">Persiste et verrouille la carte : l'audit l'utilisera telle quelle.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <Code lang="bash">{`curl -X POST ${BASE} \\
+  -H "x-marina-key: $MARINA_KEY" -H "Content-Type: application/json" \\
+  -d '{"action":"identity_lock","url":"https://example.com","fields":{
+        "sector":"renovation_batiment",
+        "commercialModel":"local_service",
+        "productsServices":"Rénovation complète, isolation, toiture",
+        "targetAudience":"Propriétaires particuliers",
+        "commercialArea":"Provence"}}'`}</Code>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Le verrouillage nécessite que le domaine soit suivi par votre compte ; sinon la carte est renvoyée en
+            prévisualisation seulement.
+          </p>
+        </section>
+
+        {/* 12. Multipage */}
+        <section id="multipage" className="mb-12">
+          <h2 className="mb-4 text-2xl font-bold">12. Multipages</h2>
+          <p className="text-muted-foreground">
+            Il n'existe pas d'action batch côté API : un audit multipages est une <strong>boucle client</strong> sur
+            l'endpoint standard, une URL par job (jusqu'à 15 URLs dans l'interface Marina, 5 crédits par rapport).
+            Espacez les créations de jobs d'environ 20 secondes ; les jobs du même domaine sont mis en file et
+            partagent le crawl en cours plutôt que de le relancer.
+          </p>
+        </section>
+
+
 
         {/* Footer CTA */}
         <div className="rounded-md border border-border p-6">
