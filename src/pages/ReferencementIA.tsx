@@ -1,9 +1,11 @@
 import { Suspense, lazy } from 'react';
 import { Link } from '@/lib/router-compat';
 import { ArrowRight, Bot, CheckCircle2, Quote, Search, Sparkles } from 'lucide-react';
-import Header from '@/components/Header';
+import { Header } from '@/components/Header';
 
-const Footer = lazy(() => import('@/components/Footer'));
+const Footer = lazy(() =>
+  import('@/components/Footer').then((m) => ({ default: m.Footer })),
+);
 
 const PILLARS = [
   {
