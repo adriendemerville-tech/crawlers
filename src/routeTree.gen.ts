@@ -61,6 +61,7 @@ import { Route as PolitiqueConfidentialiteRouteImport } from './routes/politique
 import { Route as PrivacyGoogleAdsRouteImport } from './routes/privacy-google-ads'
 import { Route as ProAgencyRouteImport } from './routes/pro-agency'
 import { Route as ProfilRouteImport } from './routes/profil'
+import { Route as ReferencementIaRouteImport } from './routes/referencement-ia'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RgpdRouteImport } from './routes/rgpd'
 import { Route as ScoreGeoRouteImport } from './routes/score-geo'
@@ -395,6 +396,11 @@ const ProAgencyRoute = ProAgencyRouteImport.update({
 const ProfilRoute = ProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferencementIaRoute = ReferencementIaRouteImport.update({
+  id: '/referencement-ia',
+  path: '/referencement-ia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -794,6 +800,7 @@ export interface FileRoutesByFullPath {
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
+  '/referencement-ia': typeof ReferencementIaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rgpd': typeof RgpdRoute
   '/score-geo': typeof ScoreGeoRoute
@@ -916,6 +923,7 @@ export interface FileRoutesByTo {
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
+  '/referencement-ia': typeof ReferencementIaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rgpd': typeof RgpdRoute
   '/score-geo': typeof ScoreGeoRoute
@@ -1039,6 +1047,7 @@ export interface FileRoutesById {
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
+  '/referencement-ia': typeof ReferencementIaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rgpd': typeof RgpdRoute
   '/score-geo': typeof ScoreGeoRoute
@@ -1163,6 +1172,7 @@ export interface FileRouteTypes {
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
+    | '/referencement-ia'
     | '/reset-password'
     | '/rgpd'
     | '/score-geo'
@@ -1285,6 +1295,7 @@ export interface FileRouteTypes {
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
+    | '/referencement-ia'
     | '/reset-password'
     | '/rgpd'
     | '/score-geo'
@@ -1407,6 +1418,7 @@ export interface FileRouteTypes {
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
+    | '/referencement-ia'
     | '/reset-password'
     | '/rgpd'
     | '/score-geo'
@@ -1530,6 +1542,7 @@ export interface RootRouteChildren {
   PrivacyGoogleAdsRoute: typeof PrivacyGoogleAdsRoute
   ProAgencyRoute: typeof ProAgencyRoute
   ProfilRoute: typeof ProfilRoute
+  ReferencementIaRoute: typeof ReferencementIaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RgpdRoute: typeof RgpdRoute
   ScoreGeoRoute: typeof ScoreGeoRoute
@@ -1964,6 +1977,13 @@ declare module '@tanstack/react-router' {
       path: '/profil'
       fullPath: '/profil'
       preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referencement-ia': {
+      id: '/referencement-ia'
+      path: '/referencement-ia'
+      fullPath: '/referencement-ia'
+      preLoaderRoute: typeof ReferencementIaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -2498,6 +2518,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyGoogleAdsRoute: PrivacyGoogleAdsRoute,
   ProAgencyRoute: ProAgencyRoute,
   ProfilRoute: ProfilRoute,
+  ReferencementIaRoute: ReferencementIaRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RgpdRoute: RgpdRoute,
   ScoreGeoRoute: ScoreGeoRoute,
