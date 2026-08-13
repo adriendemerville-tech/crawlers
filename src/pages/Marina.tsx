@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
+import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
@@ -801,6 +802,9 @@ export default function Marina() {
                     <span className="ml-2">{loading ? t.hero.btnAnalyzing : t.hero.btnAnalyze}</span>
                   </Button>
                 </div>
+
+                {/* Carte d'identité éditable et verrouillable avant le crawl */}
+                <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
 
                 {/* Audit multipages (max 15 URLs, PDF unique) */}
                 <MarinaMultipagePanel
