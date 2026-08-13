@@ -498,16 +498,60 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
     </div>`;
   }).join('');
 
+  const mix = analysis.mix;
+  const ACTION_LABELS: Record<MixAction, { text: string; color: string }> = {
+    balanced: { text: 'Ratio correct', color: '#22c55e' },
+    expand: { text: 'Créer plus de pages', color: '#6d28d9' },
+    prune: { text: 'Élaguer / fusionner', color: '#ef4444' },
+    differentiate: { text: 'Différencier, ne pas en créer', color: '#d4af37' },
+    create: { text: 'Gabarit à créer', color: '#6d28d9' },
+  };
+
+  const mixHTML = !mix ? '' : `
+  <div data-marina-block="archetype-mix" data-pdf-section style="border:1px solid #e5e7eb;border-left:4px solid #d4af37;border-radius:8px;padding:14px 16px;margin:0 0 12px 0;background:#ffffff;">
+    <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;">Pondération du mix de pages</div>
+    <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:6px;">Ratio entre gabarits : ${mix.verdict === 'balanced' ? 'équilibré' : 'déséquilibré'}</div>
+    <p style="font-size:12.5px;color:#4b5563;line-height:1.7;margin:0 0 10px 0;">
+      Base de calcul : ${mix.basis === 'crawl+sitemap' ? `sitemap (${mix.sitemapPages} URL) recoupé avec le crawl (${mix.crawlPages} pages)` : `crawl seul (${mix.crawlPages} pages), sitemap non exploitable`}. Chaque part est comparée à une fourchette de référence pour un site d'acquisition ; seuls les écarts nets sont signalés.
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead>
+        <tr style="background:#faf9f5;color:#374151;text-align:left;">
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Type de page</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Crawl</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Sitemap</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Référence</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Arbitrage</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${mix.entries.map((e) => `<tr>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#111827;">${e.label}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#4b5563;">${e.crawledPages} (${pct1(e.crawlShare)})</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#4b5563;">${e.sitemapPages !== null ? `${e.sitemapPages} (${pct1(e.sitemapShare || 0)})` : 'n/d'}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${pct1(e.targetMin)}–${pct1(e.targetMax)}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:${ACTION_LABELS[e.action].color};font-weight:600;">${ACTION_LABELS[e.action].text}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <ul style="padding-left:18px;margin:10px 0 0 0;font-size:12.5px;line-height:1.65;color:#374151;">
+      ${mix.entries.filter((e) => e.action !== 'balanced').map((e) => `<li><strong>${e.label}</strong> — ${e.rationale}</li>`).join('')}
+      ${mix.missing.map((m) => `<li><strong>${m.label}</strong> — ${m.rationale}</li>`).join('')}
+    </ul>
+  </div>`;
+
   return `
   <div class="section" data-marina-scope="site" data-marina-block="archetypes" data-pdf-section style="border-left:6px solid #6d28d9;">
     <h2 style="font-size:19px;margin:0 0 10px 0;">Audit par type de page</h2>
     <p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 16px 0;">
-      Ce que mesure cette section : un site ne se juge pas page par page mais gabarit par gabarit. Les ${analysis.totalPages} pages retenues sur ${domain} sont regroupées par type (agence, produit, service, avis, éditorial…), chaque type est confronté à l'objectif qu'il est censé servir, puis une conclusion intermédiaire précise s'il le remplit. Le verdict global du site en découle.
+      Ce que mesure cette section : un site ne se juge pas page par page mais gabarit par gabarit. Les ${analysis.totalPages} pages retenues sur ${domain} sont regroupées par type (agence, produit, service, avis, éditorial…), chaque type est confronté à l'objectif qu'il est censé servir, puis une conclusion intermédiaire précise s'il le remplit. La pondération du mix indique enfin s'il faut créer, élaguer ou simplement différencier chaque gabarit. Le verdict global du site en découle.
     </p>
     ${cards}
+    ${mixHTML}
     <div style="border:2px solid #6d28d9;border-left:6px solid #d4af37;border-radius:10px;padding:16px 18px;background:#ffffff;">
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">Conclusion par types de pages</div>
       <p style="font-size:13.5px;line-height:1.8;color:#111827;margin:0;">${analysis.synthesis}</p>
     </div>
   </div>`;
 }
+
