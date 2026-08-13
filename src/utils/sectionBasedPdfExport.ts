@@ -150,7 +150,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
 
     if (sectionHeightMm <= spaceLeft) {
       // Fits on current page
-      doc.addImage(imgData, 'JPEG', marginSide, cursorY, sectionWidthMm, sectionHeightMm);
+      doc.addImage(imgData, 'JPEG', sectionX, cursorY, sectionWidthMm, sectionHeightMm);
       cursorY += sectionHeightMm + sectionGap;
     } else if (sectionHeightMm <= usableHeightMm) {
       // Fits on a fresh page (don't break it)
@@ -158,7 +158,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
         doc.addPage();
         cursorY = marginTop;
       }
-      doc.addImage(imgData, 'JPEG', marginSide, cursorY, sectionWidthMm, sectionHeightMm);
+      doc.addImage(imgData, 'JPEG', sectionX, cursorY, sectionWidthMm, sectionHeightMm);
       cursorY += sectionHeightMm + sectionGap;
     } else {
       // Section is taller than one full page — must slice (rare: huge tables)
@@ -178,7 +178,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
         if (ctx) {
           ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
           const sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
-          doc.addImage(sliceImg, 'JPEG', marginSide, cursorY, sectionWidthMm, sliceHeightMm);
+          doc.addImage(sliceImg, 'JPEG', sectionX, cursorY, sectionWidthMm, sliceHeightMm);
         }
 
         srcYPx += sliceHeightPx;
