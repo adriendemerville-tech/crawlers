@@ -2819,11 +2819,13 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               const crawlId = crawlLaunchRes.crawlId;
               console.log(`[Marina] Crawl in progress: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages`);
 
-              // Poll until crawl completes
+              // Poll until crawl completes — un tour d'attente de 170 s max,
+              // puis relais explicite par ré-invocation de la phase 2.
               const crawlStartTime = Date.now();
-              const CRAWL_TIMEOUT_MS = 300_000;
+              const CRAWL_TIMEOUT_MS = 170_000;
               const CRAWL_POLL_MS = 5_000;
               let crawlDone = false;
+              let lastCrawledPages = 0;
 
               while (!crawlDone && (Date.now() - crawlStartTime) < CRAWL_TIMEOUT_MS) {
                 await new Promise(r => setTimeout(r, CRAWL_POLL_MS));
@@ -2839,6 +2841,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                 const status = (crawlStatus as any).status;
                 const crawledPages = (crawlStatus as any).crawled_pages || 0;
                 const totalPages = (crawlStatus as any).total_pages || 1;
+                lastCrawledPages = crawledPages;
 
                 const crawlProgress = Math.min(78, 67 + Math.round((crawledPages / totalPages) * 11));
                 await updateProgress(crawlProgress, 'multi_crawl');
@@ -2862,7 +2865,26 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               }
 
               if (!crawlDone) {
-                console.warn(`[Marina] Crawl ${crawlId} timed out — proceeding with partial data`);
+                if (crawlWaitRound + 1 < MAX_CRAWL_WAIT_ROUNDS) {
+                  // Le worker reprendra le lot suivant depuis le checkpoint
+                  // `crawl_pages` ; on relance un tour d'attente au lieu de
+                  // consommer tout le wall-time d'un seul run.
+                  console.log(`[Marina] Crawl ${crawlId} encore en cours (${lastCrawledPages} pages) — tour d'attente ${crawlWaitRound + 1}/${MAX_CRAWL_WAIT_ROUNDS}`);
+                  fetch(`${SUPABASE_URL}/functions/v1/process-crawl-queue`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${SERVICE_KEY}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ trigger: 'marina-chunk-relay' }),
+                  }).catch(() => {});
+                  await selfInvokePhase(jobId, url, detectedLang, 'phase2', {
+                    domain,
+                    crawlWaitRound: crawlWaitRound + 1,
+                  });
+                  return;
+                }
+                console.warn(`[Marina] Crawl ${crawlId} non terminé après ${MAX_CRAWL_WAIT_ROUNDS} tours — poursuite avec les ${lastCrawledPages} pages déjà crawlées`);
               }
             } else {
               console.warn(`[Marina] crawl-site unavailable: ${crawlLaunchRes?.error || 'unknown error'}`);
