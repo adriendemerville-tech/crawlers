@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense} from 'react';
+import { AiCitationsObservatory } from '@/components/observatoire/AiCitationsObservatory';
 import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -737,6 +738,8 @@ const Observatoire = () => {
             </>
           )}
         </section>
+
+        <AiCitationsObservatory />
 
         {/* Methodology */}
         <section className="bg-muted/30 border-y border-border">
