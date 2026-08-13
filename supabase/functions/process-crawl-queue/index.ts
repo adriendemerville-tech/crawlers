@@ -19,7 +19,13 @@ import { scrapePage, probeSPAStatus, createPaidBudget, budgetSummary } from '../
 import { computeDepth } from '../_shared/crawlQueue/duplicateDetector.ts';
 import { finalizeJob } from '../_shared/crawlQueue/finalizer.ts';
 
-const MAX_GLOBAL_CONCURRENT = 20;
+/**
+ * Découpage en lots : un run du worker traite au maximum PAGES_PER_RUN pages,
+ * puis se re-déclenche (self-relay) sur le checkpoint persisté dans
+ * `crawl_pages`. Un gros domaine est donc crawlé en N runs successifs de
+ * 100-150 pages au lieu d'un run unique qui explose le wall-time.
+ */
+const PAGES_PER_RUN = 150;
 
 Deno.serve(handleRequest(async (req) => {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
@@ -48,9 +54,9 @@ Deno.serve(handleRequest(async (req) => {
     const failedUrlsByJob = new Map<string, Array<{ url: string; reason: string }>>();
 
     for (const job of jobs) {
-      if (globalPagesProcessed >= MAX_GLOBAL_CONCURRENT || isTimeUp()) {
+      if (globalPagesProcessed >= PAGES_PER_RUN || isTimeUp()) {
         if (isTimeUp()) console.log(`[Worker] ⏱️ Watchdog triggered after ${Math.round((Date.now() - startTime) / 1000)}s — stopping gracefully`);
-        else console.log(`[Worker] Global limit reached (${MAX_GLOBAL_CONCURRENT}), stopping`);
+        else console.log(`[Worker] Quota de pages du run atteint (${PAGES_PER_RUN}) — relais sur le checkpoint`);
         break;
       }
 
@@ -154,7 +160,7 @@ Deno.serve(handleRequest(async (req) => {
       const processedUrls = new Set<string>(urlsToProcess.map(u => u.replace(/\/$/, '')));
 
       // ── INNER LOOP: keep processing pages while time allows ──
-      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < MAX_GLOBAL_CONCURRENT) {
+      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN) {
         // Check if crawl was stopped by user
         const { data: crawlCheck } = await supabase
           .from('site_crawls')
@@ -169,7 +175,7 @@ Deno.serve(handleRequest(async (req) => {
 
         // Dynamic batch sizing based on page weight
         const dynamicMax = probeSize > 150_000 ? 1 : probeSize > 100_000 ? 2 : probeSize > 50_000 ? 3 : 4;
-        const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
+        const availableSlots = PAGES_PER_RUN - globalPagesProcessed;
         const batchSize = Math.min(remaining.length, availableSlots, dynamicMax);
         const batch = remaining.slice(0, batchSize);
 
