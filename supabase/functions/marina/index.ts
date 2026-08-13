@@ -25,6 +25,7 @@ import {
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
+import { resolveScanMode, scanModeSentence } from '../_shared/marinaScanMode.ts';
 import {
   resolveIdentityCard,
   detectIdentityContradiction,
@@ -1751,6 +1752,12 @@ function buildReportIntroHTML(
         : t(`Analyse limitée à l'URL soumise : le crawl multi-pages n'a pas produit de périmètre exploitable pour ce rapport.`,
             `Analysis limited to the submitted URL: the multi-page crawl produced no usable scope.`,
             `Análisis limitado a la URL enviada.`))}
+      ${li(scanModeSentence(resolveScanMode(pagesKnown), lang))}
+      ${li(t(
+        `Trois modes de scan existent et la bascule est automatique, jamais manuelle : Approfondi (site ≤ 120 URLs, jusqu'à 120 pages), Standard (≤ 1 000 URLs, jusqu'à 150 pages), Échantillon (> 1 000 URLs, 60 pages représentatives des gabarits). Ce plafonnement garantit un diagnostic complet dans un temps d'exécution maîtrisé.`,
+        `Three scan modes exist and switching is automatic, never manual: Deep (site ≤ 120 URLs, up to 120 pages), Standard (≤ 1,000 URLs, up to 150 pages), Sample (> 1,000 URLs, 60 template-representative pages).`,
+        `Existen tres modos de escaneo con conmutación automática: Profundo (≤ 120 URL), Estándar (≤ 1 000 URL) y Muestra (> 1 000 URL, 60 páginas).`,
+      ))}
       ${li(t(
         `Les scores sont mesurés, pas estimés : ils portent sur l'état du site au moment du crawl et ne prédisent pas un volume de trafic.`,
         `Scores are measured, not estimated: they describe the site at crawl time and do not predict traffic volume.`,
@@ -2758,12 +2765,38 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             };
             await updateProgress(67, 'multi_crawl');
           } else {
-            console.log(`[Marina] No reusable crawl for ${domain}, launching the single shared crawl (max 50 pages)...`);
             await updateProgress(67, 'multi_crawl');
+
+            // ─── Résolution automatique du mode de scan (sample / standard / deep) ───
+            // On mesure d'abord la taille réelle du domaine, sans scraper :
+            // 1) total_pages du dernier crawl connu (gratuit, immédiat)
+            // 2) sinon détection d'URLs via crawl-site mode 'detect' (gratuit)
+            let discoveredUrls: number | null = null;
+            const knownTotal = crawlRows.find((c) => (c.total_pages || 0) > 0)?.total_pages ?? null;
+            if (knownTotal) {
+              discoveredUrls = knownTotal;
+            } else {
+              try {
+                const detectRes: any = await callFunction('crawl-site', {
+                  url: url,
+                  mode: 'detect',
+                  userId: parentJob.user_id,
+                });
+                if (detectRes?.success && typeof detectRes.totalDiscovered === 'number') {
+                  discoveredUrls = detectRes.totalDiscovered;
+                }
+              } catch (detectErr) {
+                console.warn(`[Marina] URL detection failed (non-fatal), falling back to standard mode:`, detectErr);
+              }
+            }
+
+            const scanMode = resolveScanMode(discoveredUrls);
+            console.log(`[Marina] Scan mode = ${scanMode.mode} (${scanMode.maxPages} pages max) — ${scanMode.reason}`);
+
             try {
               crawlLaunchRes = await callFunction('crawl-site', {
                 url: url,
-                maxPages: 50,
+                maxPages: scanMode.maxPages,
                 userId: parentJob.user_id,
                 forceRefresh: true,
               });
