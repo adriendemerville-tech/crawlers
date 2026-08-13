@@ -11,6 +11,9 @@ import {
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
+import { writeArchetypePrescriptions } from '../_shared/archetypeWorkbench.ts';
+import { buildMarketProfile, fetchArchetypeBenchmarks, writeMarketObservation } from '../_shared/marketObservations.ts';
+import { sectorLabel } from '../_shared/sectorTaxonomy.ts';
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
@@ -2819,19 +2822,37 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // ─── LLM Visibility (parallel with cocoon) ───
       let llmVisibilityData: any = null;
       let trackedSiteId: string | null = null;
+      let identityRow: Record<string, any> | null = null;
       {
         const { data: trackedSites, error: trackedSiteLookupError } = await sb
           .from('tracked_sites')
-          .select('id')
+          .select('id, market_sector, entity_type, commercial_model, business_model, business_type, is_local_business, target_audience, client_targets, competitors')
           .eq('user_id', parentJob.user_id)
           .eq('domain', domain)
           .limit(1);
         trackedSiteId = trackedSites?.[0]?.id || null;
+        identityRow = trackedSites?.[0] || null;
         if (trackedSiteLookupError) {
           console.warn(`[Marina] Phase 3 tracked_site lookup warning for ${domain}: ${trackedSiteLookupError.message}`);
         }
         console.log(`[Marina] Phase 3: tracked_site lookup for ${domain}: ${trackedSiteId || 'NOT FOUND'}`);
       }
+
+      // ─── Profil de marché normalisé (secteur + modèle commercial) ───
+      // Sert à deux choses : sélectionner les fourchettes de référence calibrées
+      // sur des sites comparables, et alimenter la mémoire de marché.
+      const marketProfile = buildMarketProfile({
+        ...(identityRow || {}),
+        // le secteur extrait de l'audit stratégique prime s'il est plus précis
+        market_sector: (strategicData?.introduction?.sector
+          || strategicData?.market_sector
+          || identityRow?.['market_sector']) ?? null,
+        target_audience: (strategicData?.introduction?.target_audience || identityRow?.['target_audience']) ?? null,
+      });
+      const marketSectorLabel = marketProfile.sector === 'unknown' ? null : sectorLabel(marketProfile.sector);
+      console.log(`[Marina] Profil de marché : ${marketProfile.sector} / ${marketProfile.commercialModel}`);
+      const archetypeBenchmarks = await fetchArchetypeBenchmarks(sb, marketProfile);
+
 
       // Extract site context from strategic audit data (enriches LLM prompts)
       const marinaSiteContext: Record<string, string> = {};
@@ -3074,7 +3095,36 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             // Pondération du mix de gabarits : le sitemap donne la répartition du site
             // entier, le crawl la qualité. Fetch XML léger, aucun token LLM.
             const sitemapUrlsForMix = await fetchSitemapUrls(domain).catch(() => [] as string[]);
-            archetypeAnalysis = analyzePageArchetypes(crawlPages as any[], sitemapUrlsForMix);
+            archetypeAnalysis = analyzePageArchetypes(crawlPages as any[], {
+              sitemapUrls: sitemapUrlsForMix,
+              benchmarks: archetypeBenchmarks,
+              sectorLabel: marketSectorLabel,
+            });
+
+            // Les arbitrages de gabarits deviennent des prescriptions exécutables
+            // (Parménion phase prescribe + Stratège cocoon), pas un simple constat.
+            await writeArchetypePrescriptions(sb, archetypeAnalysis, {
+              domain,
+              url,
+              userId: parentJob.user_id,
+              trackedSiteId: trackedSiteId || null,
+              sectorLabel: marketSectorLabel,
+            }).catch(() => {});
+
+            // Mémoire de marché : observation historisée, base de la calibration
+            // sectorielle hebdomadaire et d'un apprentissage ultérieur.
+            await writeMarketObservation(sb, {
+              domain,
+              userId: parentJob.user_id,
+              trackedSiteId: trackedSiteId || null,
+              source: 'marina',
+              profile: marketProfile,
+              analysis: archetypeAnalysis,
+              avgSeoScore: Number((latestCrawl as any)?.avg_score) || null,
+              geoScore: Number(llmVisibilityData?.global_score ?? llmVisibilityData?.data?.global_score) || null,
+              authorityScore: Number((strategicData as any)?.domain_authority?.authority_score) || null,
+            }).catch(() => {});
+
             // Constats d'intégrité → Workbench (idempotent, partagé avec le crawl)
             await writeIntegrityFindingsToWorkbench(sb, (latestCrawl as any).content_integrity || null, {
               domain,

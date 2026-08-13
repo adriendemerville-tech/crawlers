@@ -789,6 +789,42 @@ export type Database = {
           },
         ]
       }
+      archetype_mix_benchmarks: {
+        Row: {
+          archetype_key: string
+          commercial_model: string
+          id: string
+          p20: number
+          p50: number
+          p80: number
+          sample_size: number
+          sector_normalized: string
+          updated_at: string
+        }
+        Insert: {
+          archetype_key: string
+          commercial_model?: string
+          id?: string
+          p20: number
+          p50: number
+          p80: number
+          sample_size: number
+          sector_normalized: string
+          updated_at?: string
+        }
+        Update: {
+          archetype_key?: string
+          commercial_model?: string
+          id?: string
+          p20?: number
+          p50?: number
+          p80?: number
+          sample_size?: number
+          sector_normalized?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       architect_workbench: {
         Row: {
           action_type:
@@ -8335,6 +8371,93 @@ export type Database = {
         }
         Relationships: []
       }
+      market_observations: {
+        Row: {
+          archetype_mix: Json
+          archetype_verdict: string | null
+          authority_score: number | null
+          avg_seo_score: number | null
+          business_type: string | null
+          client_targets: Json | null
+          commercial_model: string
+          competitors: Json | null
+          coverage: number | null
+          crawled_pages: number | null
+          created_at: string
+          domain: string
+          domain_hash: string
+          entity_type: string | null
+          geo_score: number | null
+          id: string
+          is_local_business: boolean | null
+          main_problem: string | null
+          observed_on: string
+          sector_normalized: string
+          sector_raw: string | null
+          sitemap_pages: number | null
+          source: string
+          target_audience: string | null
+          tracked_site_id: string | null
+          user_id: string
+        }
+        Insert: {
+          archetype_mix?: Json
+          archetype_verdict?: string | null
+          authority_score?: number | null
+          avg_seo_score?: number | null
+          business_type?: string | null
+          client_targets?: Json | null
+          commercial_model?: string
+          competitors?: Json | null
+          coverage?: number | null
+          crawled_pages?: number | null
+          created_at?: string
+          domain: string
+          domain_hash: string
+          entity_type?: string | null
+          geo_score?: number | null
+          id?: string
+          is_local_business?: boolean | null
+          main_problem?: string | null
+          observed_on?: string
+          sector_normalized?: string
+          sector_raw?: string | null
+          sitemap_pages?: number | null
+          source?: string
+          target_audience?: string | null
+          tracked_site_id?: string | null
+          user_id: string
+        }
+        Update: {
+          archetype_mix?: Json
+          archetype_verdict?: string | null
+          authority_score?: number | null
+          avg_seo_score?: number | null
+          business_type?: string | null
+          client_targets?: Json | null
+          commercial_model?: string
+          competitors?: Json | null
+          coverage?: number | null
+          crawled_pages?: number | null
+          created_at?: string
+          domain?: string
+          domain_hash?: string
+          entity_type?: string | null
+          geo_score?: number | null
+          id?: string
+          is_local_business?: boolean | null
+          main_problem?: string | null
+          observed_on?: string
+          sector_normalized?: string
+          sector_raw?: string | null
+          sitemap_pages?: number | null
+          source?: string
+          target_audience?: string | null
+          tracked_site_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       market_trends: {
         Row: {
           id: string
@@ -14443,6 +14566,17 @@ export type Database = {
           share: number
         }[]
       }
+      get_archetype_mix_benchmarks: {
+        Args: { p_model: string; p_sector: string }
+        Returns: {
+          archetype_key: string
+          p20: number
+          p50: number
+          p80: number
+          sample_size: number
+          scope: string
+        }[]
+      }
       get_bot_log_summary: {
         Args: { p_tracked_site_id: string }
         Returns: Json
@@ -14612,6 +14746,7 @@ export type Database = {
       }
       reap_zombie_async_jobs: { Args: never; Returns: number }
       recalculate_reliability: { Args: never; Returns: undefined }
+      refresh_archetype_mix_benchmarks: { Args: never; Returns: number }
       resolve_human_sample_rate: {
         Args: { p_user_id: string }
         Returns: number
