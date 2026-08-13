@@ -14427,6 +14427,22 @@ export type Database = {
           prep_weeks_before: number
         }[]
       }
+      get_ai_citation_content_types: {
+        Args: { _days?: number }
+        Returns: {
+          citations: number
+          content_type: string
+          share: number
+        }[]
+      }
+      get_ai_citation_domains: {
+        Args: { _days?: number; _limit?: number }
+        Returns: {
+          citations: number
+          domain: string
+          share: number
+        }[]
+      }
       get_bot_log_summary: {
         Args: { p_tracked_site_id: string }
         Returns: Json
