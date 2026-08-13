@@ -108,13 +108,20 @@ export function normalizeCommercialModel(input: {
   const blob = [input.commercial_model, input.business_model, input.business_type, input.entity_type]
     .filter(Boolean).join(' ').toLowerCase();
 
+  // Clé canonique explicite (panel identité / carte verrouillée) : priorité absolue.
+  const explicit = (input.commercial_model || '').trim().toLowerCase();
+  if (['local_service', 'ecommerce', 'saas', 'lead_gen', 'media', 'non_commercial'].includes(explicit)) {
+    return explicit as CommercialModelKey;
+  }
+
   if (/non_commercial|non commercial|association|ong|public|nonprofit/.test(blob)) return 'non_commercial';
   if (/e-?commerce|boutique|marketplace|retail|vente en ligne/.test(blob) || input.sector === 'ecommerce') return 'ecommerce';
   if (/saas|abonnement|subscription|logiciel|software/.test(blob) || input.sector === 'saas_logiciel') return 'saas';
   if (/m[eé]dia|presse|[eé]dition|publisher|audience/.test(blob) || input.sector === 'media_edition') return 'media';
   // `agence` seul est trop large (agence web/SEO/marketing = lead_gen, pas d'implantation
   // physique) : on exige un signal d'implantation ou is_local_business.
-  if (input.is_local_business === true || /point de vente|magasin|showroom|multi-?site|agence (immobili|de travaux|locale)|implantation locale|\blocal\b/.test(blob)) return 'local_service';
+  if (input.is_local_business === true || /point de vente|magasin|showroom|multi-?site|agence (immobili|de travaux|locale)|implantation locale|service local|\blocal\b/.test(blob)) return 'local_service';
+
 
   if (/lead|devis|prise de contact|b2b|service/.test(blob)) return 'lead_gen';
   return 'unknown';
