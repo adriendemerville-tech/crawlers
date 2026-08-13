@@ -55,6 +55,22 @@ export interface ArchetypeGroup {
 
 export type MixAction = 'balanced' | 'expand' | 'prune' | 'differentiate' | 'create';
 
+/**
+ * Fourchette de référence calibrée sur les observations réelles d'un secteur
+ * (percentiles de la part de chaque gabarit). Fournie par la mémoire de marché ;
+ * en son absence on retombe sur les cibles a priori, et le rapport le dit.
+ */
+export interface ArchetypeMixReference {
+  archetypeKey: string;
+  p20: number;
+  p50: number;
+  p80: number;
+  sampleSize: number;
+  scope: 'sector_model' | 'sector';
+}
+
+export type TargetSource = 'benchmark' | 'a_priori';
+
 export interface ArchetypeMixEntry {
   key: string;
   label: string;
@@ -65,6 +81,9 @@ export interface ArchetypeMixEntry {
   sitemapShare: number | null; // 0-1
   targetMin: number;           // 0-1
   targetMax: number;           // 0-1
+  targetSource: TargetSource;
+  targetMedian: number | null; // médiane sectorielle observée (benchmark seulement)
+  targetSample: number | null; // nombre de domaines de l'échantillon
   action: MixAction;
   rationale: string;
 }
@@ -77,7 +96,19 @@ export interface ArchetypeMix {
   entries: ArchetypeMixEntry[];
   missing: Array<{ key: string; label: string; role: ArchetypeRole; rationale: string }>;
   verdict: 'balanced' | 'unbalanced';
+  targetBasis: 'benchmark' | 'a_priori' | 'mixed';
+  benchmarkScope: 'sector_model' | 'sector' | null;
+  benchmarkSample: number | null;
+  sectorLabel: string | null;
   synthesis: string;
+}
+
+export interface ArchetypeAnalysisOptions {
+  sitemapUrls?: string[] | null;
+  /** Fourchettes calibrées par secteur × modèle commercial (mémoire de marché). */
+  benchmarks?: ArchetypeMixReference[] | null;
+  /** Libellé lisible du secteur retenu, affiché dans le rapport. */
+  sectorLabel?: string | null;
 }
 
 export interface ArchetypeAnalysis {
@@ -89,6 +120,7 @@ export interface ArchetypeAnalysis {
   synthesis: string;
   mix: ArchetypeMix | null;
 }
+
 
 
 interface ArchetypeDef {
@@ -270,9 +302,11 @@ function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGr
 }
 
 /**
- * Fourchettes de référence de la part de chaque type dans un site d'acquisition
- * (part du nombre de pages). Déterministe, volontairement large : on ne signale
- * qu'un déséquilibre net, jamais un écart de quelques points.
+ * Fourchettes de référence POSÉES A PRIORI de la part de chaque type dans un
+ * site d'acquisition. Ce sont des repères de bon sens, pas des benchmarks
+ * mesurés : ils ne servent que de repli quand la mémoire de marché n'a pas
+ * encore assez d'observations dans le secteur (< 5 domaines). Le rapport
+ * indique toujours laquelle des deux sources a été utilisée.
  */
 const MIX_TARGETS: Record<string, [number, number]> = {
   home: [0, 0.05],
@@ -288,17 +322,56 @@ const MIX_TARGETS: Record<string, [number, number]> = {
   other: [0, 0.15],
 };
 
-function mixTarget(key: string, role: ArchetypeRole): [number, number] {
-  if (MIX_TARGETS[key]) return MIX_TARGETS[key];
-  return role === 'core_business' ? [0.05, 0.40] : role === 'auxiliary_pillar' ? [0.10, 0.45] : [0, 0.15];
+interface ResolvedTarget {
+  min: number;
+  max: number;
+  source: TargetSource;
+  median: number | null;
+  sample: number | null;
 }
+
+function mixTarget(
+  key: string,
+  role: ArchetypeRole,
+  benchmarks: Map<string, ArchetypeMixReference> | null,
+): ResolvedTarget {
+  const bench = benchmarks?.get(key);
+  if (bench && bench.sampleSize >= 5 && Number.isFinite(bench.p20) && Number.isFinite(bench.p80)) {
+    // Fourchette interquintile observée, légèrement élargie : on ne veut
+    // signaler qu'un écart net, pas un site simplement atypique.
+    const span = Math.max(0.02, (bench.p80 - bench.p20) * 0.15);
+    return {
+      min: Math.max(0, bench.p20 - span),
+      max: Math.min(1, bench.p80 + span),
+      source: 'benchmark',
+      median: bench.p50,
+      sample: bench.sampleSize,
+    };
+  }
+  const fallback = MIX_TARGETS[key]
+    ?? (role === 'core_business' ? [0.05, 0.40] : role === 'auxiliary_pillar' ? [0.10, 0.45] : [0, 0.15]);
+  return { min: fallback[0], max: fallback[1], source: 'a_priori', median: null, sample: null };
+}
+
 
 function pct1(x: number): string {
   return `${Math.round(x * 1000) / 10} %`;
 }
 
-function buildMix(groups: ArchetypeGroup[], crawlPages: number, sitemapUrls?: string[] | null): ArchetypeMix | null {
+function buildMix(
+  groups: ArchetypeGroup[],
+  crawlPages: number,
+  options: ArchetypeAnalysisOptions,
+): ArchetypeMix | null {
   if (!crawlPages) return null;
+  const sitemapUrls = options.sitemapUrls;
+
+  const benchList = (options.benchmarks || []).filter((b) => b && b.archetypeKey && b.sampleSize >= 5);
+  const benchmarks = benchList.length ? new Map(benchList.map((b) => [b.archetypeKey, b])) : null;
+  const benchmarkScope: ArchetypeMix['benchmarkScope'] = benchList.length
+    ? (benchList.some((b) => b.scope === 'sector_model') ? 'sector_model' : 'sector')
+    : null;
+  const benchmarkSample = benchList.length ? Math.min(...benchList.map((b) => b.sampleSize)) : null;
 
   // Répartition du sitemap par type (même classifieur, sur la seule URL)
   let sitemapCounts: Map<string, number> | null = null;
@@ -320,32 +393,42 @@ function buildMix(groups: ArchetypeGroup[], crawlPages: number, sitemapUrls?: st
     const sitemapPages = reference ? (reference.counts.get(g.key) || 0) : null;
     const sitemapShare = reference && sitemapPages !== null ? sitemapPages / reference.total : null;
     const share = sitemapShare ?? crawlShare;
-    const [targetMin, targetMax] = mixTarget(g.key, g.role);
+    const target = mixTarget(g.key, g.role, benchmarks);
+    const targetMin = target.min;
+    const targetMax = target.max;
+    const origin = target.source === 'benchmark'
+      ? `fourchette observée sur ${target.sample} site(s) comparable(s)`
+      : 'fourchette de référence';
 
     const thinRatio = g.pages ? g.thinPages / g.pages : 0;
     const unhealthy = g.verdict === 'weak' || thinRatio >= 0.4 || g.duplicateGroups > 0;
 
     let action: MixAction = 'balanced';
-    let rationale = `part de ${pct1(share)} du site, cohérente avec la fourchette de référence (${pct1(targetMin)}–${pct1(targetMax)}).`;
+    let rationale = `part de ${pct1(share)} du site, cohérente avec la ${origin} (${pct1(targetMin)}–${pct1(targetMax)}${target.median !== null ? `, médiane ${pct1(target.median)}` : ''}).`;
 
     if (share > targetMax && unhealthy) {
       action = 'prune';
-      rationale = `${pct1(share)} du site pour ce seul gabarit, dont ${g.thinPages} page(s) trop légère(s)${g.duplicateGroups ? ` et ${g.duplicateGroups} groupe(s) quasi identique(s)` : ''} : élaguer ou fusionner les pages les plus faibles avant d'en créer d'autres.`;
+      rationale = `${pct1(share)} du site pour ce seul gabarit, dont ${g.thinPages} page(s) trop légère(s)${g.duplicateGroups ? ` et ${g.duplicateGroups} groupe(s) quasi identique(s)` : ''} : élaguer ou fusionner les pages les plus faibles avant d'en créer d'autres (${origin} : max ${pct1(targetMax)}).`;
     } else if (share > targetMax) {
       action = 'differentiate';
-      rationale = `${pct1(share)} du site, au-dessus de la fourchette de référence (max ${pct1(targetMax)}) : le volume est là, l'enjeu est de différencier ces pages plutôt que d'en ajouter.`;
+      rationale = `${pct1(share)} du site, au-dessus de la ${origin} (max ${pct1(targetMax)}) : le volume est là, l'enjeu est de différencier ces pages plutôt que d'en ajouter.`;
     } else if (share < targetMin) {
       action = 'expand';
-      rationale = `seulement ${pct1(share)} du site (${g.pages} page(s)) contre ${pct1(targetMin)} attendu au minimum : ce gabarit est sous-représenté au regard de son rôle.`;
+      rationale = `seulement ${pct1(share)} du site (${g.pages} page(s)) contre ${pct1(targetMin)} attendu au minimum selon la ${origin} : ce gabarit est sous-représenté au regard de son rôle.`;
     }
 
     return {
       key: g.key, label: g.label, role: g.role,
       crawledPages: g.pages, crawlShare,
       sitemapPages, sitemapShare,
-      targetMin, targetMax, action, rationale,
+      targetMin, targetMax,
+      targetSource: target.source,
+      targetMedian: target.median,
+      targetSample: target.sample,
+      action, rationale,
     };
   });
+
 
   const present = new Set(groups.map((g) => g.key));
   const MISSING_WATCH = ['conversion', 'reviews', 'editorial', 'service'];
