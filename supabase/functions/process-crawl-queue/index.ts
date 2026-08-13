@@ -54,9 +54,9 @@ Deno.serve(handleRequest(async (req) => {
     const failedUrlsByJob = new Map<string, Array<{ url: string; reason: string }>>();
 
     for (const job of jobs) {
-      if (globalPagesProcessed >= MAX_GLOBAL_CONCURRENT || isTimeUp()) {
+      if (globalPagesProcessed >= PAGES_PER_RUN || isTimeUp()) {
         if (isTimeUp()) console.log(`[Worker] ⏱️ Watchdog triggered after ${Math.round((Date.now() - startTime) / 1000)}s — stopping gracefully`);
-        else console.log(`[Worker] Global limit reached (${MAX_GLOBAL_CONCURRENT}), stopping`);
+        else console.log(`[Worker] Quota de pages du run atteint (${PAGES_PER_RUN}) — relais sur le checkpoint`);
         break;
       }
 
