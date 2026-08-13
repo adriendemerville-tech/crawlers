@@ -9,6 +9,7 @@ import {
   type WorkbenchTask,
 } from '../_shared/topPriorities.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
+import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
@@ -1764,6 +1765,7 @@ function buildConclusionHTML(
   lang: string,
   domain: string,
   plan: Array<{ severity: string; title: string; description?: string }>,
+  archetypes?: ArchetypeAnalysis | null,
 ): string {
   const isEn = lang === 'en';
   const isEs = lang === 'es';
@@ -1797,6 +1799,11 @@ function buildConclusionHTML(
         `El orden importa: mientras exista un bloqueo técnico o de indexación en ${domain}, el contenido y el netlinking tendrán poco efecto medible.`,
       )}
     </p>
+    ${archetypes ? `
+    <div style="border:1px solid #e5e7eb;border-left:4px solid #6d28d9;border-radius:8px;padding:14px 16px;margin:0 0 12px 0;background:#ffffff;">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">${t('Lecture business par type de page', 'Business reading by page type', 'Lectura por tipo de página')}</div>
+      <p style="font-size:13px;line-height:1.8;color:#111827;margin:0;">${archetypes.synthesis}</p>
+    </div>` : ''}
     ${bucket(
       t('Débloquer', 'Unblock', 'Desbloquear'),
       t('Horizon 0 à 30 jours', 'Horizon 0 to 30 days', 'Horizonte 0 a 30 días'),
@@ -1824,7 +1831,7 @@ function buildConclusionHTML(
 
 
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string; archetypes?: string },
 
 
   lang: string,
@@ -1922,6 +1929,7 @@ function compileMarinaReport(
     <!-- Table of Contents -->
     <div class="toc" data-pdf-section>
       <div class="toc-item"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
       <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
@@ -1932,6 +1940,12 @@ function compileMarinaReport(
 
     <!-- Section 1: Crawl (périmètre site) -->
     <div data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
+
+    ${sectionHTMLs.archetypes ? `
+    <div class="marina-separator"></div>
+    <!-- Audit par type de page (périmètre site) -->
+    ${sectionHTMLs.archetypes}
+    ` : ''}
 
     <div class="marina-separator"></div>
 
@@ -3027,6 +3041,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       await llmVisibilityPromise;
 
       let crawlSnapshot: any = null;
+      let archetypeAnalysis: ArchetypeAnalysis | null = null;
       try {
         const { data: recentCrawls, error: crawlLookupError } = await sb
           .from('site_crawls' as any)
@@ -3053,6 +3068,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
             crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+            // Segmentation par type de page (agence / produit / service / avis / éditorial…) :
+            // conclusion intermédiaire par type, puis synthèse business. 0 token LLM.
+            archetypeAnalysis = analyzePageArchetypes(crawlPages as any[]);
             // Constats d'intégrité → Workbench (idempotent, partagé avec le crawl)
             await writeIntegrityFindingsToWorkbench(sb, (latestCrawl as any).content_integrity || null, {
               domain,
@@ -3297,7 +3315,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               visual: Boolean(visualCapture),
               plan: consolidatedPlan,
             }),
-            conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan),
+            archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
+            conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan, archetypeAnalysis),
             disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
             }),
