@@ -1547,7 +1547,8 @@ function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): stri
 function buildExecutiveSummaryHTML(
   lang: string,
   domain: string,
-  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean },
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number },
+
 ): string {
   const isEn = lang === 'en';
   const isEs = lang === 'es';
