@@ -1799,6 +1799,11 @@ function buildConclusionHTML(
         `El orden importa: mientras exista un bloqueo técnico o de indexación en ${domain}, el contenido y el netlinking tendrán poco efecto medible.`,
       )}
     </p>
+    ${archetypes ? `
+    <div style="border:1px solid #e5e7eb;border-left:4px solid #6d28d9;border-radius:8px;padding:14px 16px;margin:0 0 12px 0;background:#ffffff;">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">${t('Lecture business par type de page', 'Business reading by page type', 'Lectura por tipo de página')}</div>
+      <p style="font-size:13px;line-height:1.8;color:#111827;margin:0;">${archetypes.synthesis}</p>
+    </div>` : ''}
     ${bucket(
       t('Débloquer', 'Unblock', 'Desbloquear'),
       t('Horizon 0 à 30 jours', 'Horizon 0 to 30 days', 'Horizonte 0 a 30 días'),
