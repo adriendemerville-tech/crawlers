@@ -1905,17 +1905,20 @@ function compileMarinaReport(
 
     ${sectionHTMLs.summary || ''}
 
+    ${sectionHTMLs.intro || ''}
+
     ${sectionHTMLs.visual || ''}
 
 
     <!-- Table of Contents -->
-    <div class="toc">
+    <div class="toc" data-pdf-section>
       <div class="toc-item"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
       <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
       ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
       ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
+      ${sectionHTMLs.conclusion ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '7' : '6'}</span> ${lang === 'fr' ? 'Conclusion et priorités' : lang === 'es' ? 'Conclusión y prioridades' : 'Conclusion and priorities'}</div>` : ''}
     </div>
 
     <!-- Section 1: Crawl (périmètre site) -->
