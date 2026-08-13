@@ -275,7 +275,7 @@ export function FloatingChatBubble() {
       {/* Onboarding tooltip — charte : bordure + texte, pas de fond plein, pas d'émoji */}
       {showOnboardingPulse && !isOpen && (
         <div
-          className="fixed bottom-[72px] z-[110] max-w-[220px] rounded-xl border border-primary/40 bg-background/95 backdrop-blur text-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
+          className="fixed bottom-[72px] z-[110] max-w-[220px] rounded-xl border border-foreground/20 bg-background/95 backdrop-blur text-foreground px-3 py-2 text-xs font-medium shadow-lg animate-bounce cursor-pointer group"
            style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}
           onClick={handleOpen}
         >
