@@ -3,3 +3,4 @@
 - [Cocoon coût & sessions](mem://tech/cocoon/cost-logging-and-session-persistence-fr) — aiGatewayFetch/aiGatewayCall loggent dans ai_gateway_usage via l'option callerFunction ; persist-cocoon-session appelée après calculate-cocoon-logic
 - [Cocoon P2 fiabilité/design/cycle](mem://tech/cocoon/p2-confidence-emoji-lifecycle-fr) — seuil 30 pages inconclusive, zéro emoji (marqueur d'axes »), expiration 30j des recommandations et tâches
 - [Parménion correctifs 2026-08-11](mem://tech/autopilot/parmenion-audit-p0-fixes-2026-08-11) — Skip audit (sources réelles + cooldown 24h), coût LLM loggé, prescriptions dans workbench, error_category
+- [Marina structure narrative](mem://features/marina/report-narrative-structure-fr) — Intro « comment lire ce rapport », chapeaux pédagogiques par section, conclusion 0-90j, garde d'exigence du verdict si actions critiques, et découpe PDF sans cadres coupés
