@@ -84,6 +84,23 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     sections = Array.from(container.children) as HTMLElement[];
   }
 
+  // Un bloc plus haut qu'une page était découpé au pixel, ce qui coupait les
+  // cadres en bas de page. On le remplace par ses sous-blocs paginables
+  // (cartes `.section`, `.toc`, `.reco-card`…) afin que la coupure tombe
+  // toujours entre deux cadres et non au milieu de l'un d'eux.
+  const A4_CONTENT_PX = Math.round(((297 - marginTop - marginBottom) / (210 - marginSide * 2)) * (iframeWidth - 32));
+  const PAGINABLE_CHILD = ':scope > .section, :scope > .toc, :scope > .header, :scope > [data-pdf-section], :scope > [data-marina-block], :scope > section, :scope > div';
+
+  const expand = (el: HTMLElement, depth = 0): HTMLElement[] => {
+    if (depth > 3 || el.offsetHeight <= A4_CONTENT_PX) return [el];
+    const children = Array.from(el.querySelectorAll(PAGINABLE_CHILD)) as HTMLElement[];
+    const usable = children.filter((c) => c.offsetHeight > 8);
+    if (usable.length < 2) return [el];
+    return usable.flatMap((c) => expand(c, depth + 1));
+  };
+
+  sections = sections.flatMap((s) => expand(s));
+
   // Disclaimer obligatoire en dernière section (sauf s'il est déjà dans le HTML source).
   // Ajouté APRÈS la collecte pour ne jamais court-circuiter le fallback ci-dessus.
   if (!container.querySelector('[data-pdf-section="disclaimer"]')) {
@@ -110,25 +127,30 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   let isFirstElement = true;
 
   for (const section of sections) {
+    // On capture chaque bloc à sa largeur réelle (les blocs imbriqués sont plus
+    // étroits que le conteneur) puis on le recentre dans la zone utile, sinon
+    // html2canvas ajoutait une bande blanche à droite.
+    const nativeWidth = Math.min(captureWidth, section.offsetWidth || captureWidth);
     const canvas = await html2canvas(section, {
       scale,
       useCORS: true,
       allowTaint: true,
-      width: captureWidth,
+      width: nativeWidth,
       windowWidth: iframeWidth,
       logging: false,
       backgroundColor,
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    const sectionWidthMm = usableWidthMm;
+    const sectionWidthMm = usableWidthMm * (nativeWidth / captureWidth);
+    const sectionX = marginSide + (usableWidthMm - sectionWidthMm) / 2;
     const sectionHeightMm = (canvas.height * sectionWidthMm) / canvas.width;
 
     const spaceLeft = pdfHeightMm - marginBottom - cursorY;
 
     if (sectionHeightMm <= spaceLeft) {
       // Fits on current page
-      doc.addImage(imgData, 'JPEG', marginSide, cursorY, sectionWidthMm, sectionHeightMm);
+      doc.addImage(imgData, 'JPEG', sectionX, cursorY, sectionWidthMm, sectionHeightMm);
       cursorY += sectionHeightMm + sectionGap;
     } else if (sectionHeightMm <= usableHeightMm) {
       // Fits on a fresh page (don't break it)
@@ -136,7 +158,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
         doc.addPage();
         cursorY = marginTop;
       }
-      doc.addImage(imgData, 'JPEG', marginSide, cursorY, sectionWidthMm, sectionHeightMm);
+      doc.addImage(imgData, 'JPEG', sectionX, cursorY, sectionWidthMm, sectionHeightMm);
       cursorY += sectionHeightMm + sectionGap;
     } else {
       // Section is taller than one full page — must slice (rare: huge tables)
@@ -156,7 +178,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
         if (ctx) {
           ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
           const sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
-          doc.addImage(sliceImg, 'JPEG', marginSide, cursorY, sectionWidthMm, sliceHeightMm);
+          doc.addImage(sliceImg, 'JPEG', sectionX, cursorY, sectionWidthMm, sliceHeightMm);
         }
 
         srcYPx += sliceHeightPx;

@@ -1547,7 +1547,8 @@ function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): stri
 function buildExecutiveSummaryHTML(
   lang: string,
   domain: string,
-  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean },
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number },
+
 ): string {
   const isEn = lang === 'en';
   const isEs = lang === 'es';
@@ -1564,7 +1565,15 @@ function buildExecutiveSummaryHTML(
 
   const band = (s: number | null) =>
     s === null ? 'unknown' : s >= 75 ? 'strong' : s >= 55 ? 'ok' : s >= 35 ? 'weak' : 'critical';
-  const b = band(global);
+  // Garde d'exigence : un site avec des blocages critiques ne peut pas être
+  // déclaré « solide » sur la seule moyenne des scores — le verdict est
+  // rétrogradé d'un cran dès qu'il reste au moins un point critique ouvert.
+  const rawBand = band(global);
+  const critical = Number(ctx.criticalCount || 0);
+  const b =
+    critical > 0 && rawBand === 'strong' ? 'ok'
+    : critical >= 3 && rawBand === 'ok' ? 'weak'
+    : rawBand;
 
   const verdict =
     b === 'unknown'
@@ -1956,6 +1965,8 @@ function compileMarinaReport(
     <!-- Final Section: Consolidated Action Plan -->
     <div data-marina-scope="page" data-marina-block="plan">${sectionHTMLs.consolidatedPlan}</div>
     ` : ''}
+
+    ${sectionHTMLs.conclusion || ''}
 
     ${sectionHTMLs.disclosure || ''}
 
@@ -3278,7 +3289,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             visual: buildVisualEvidenceHtml(visualCapture, detectedLang),
             summary: buildExecutiveSummaryHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
+              criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
             }),
+            intro: buildReportIntroHTML(detectedLang, domain, {
+              expertData, strategicData, crawlSnapshot, llmVisibilityData,
+              indexationCount: indexationData.length,
+              visual: Boolean(visualCapture),
+              plan: consolidatedPlan,
+            }),
+            conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan),
             disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
             }),
