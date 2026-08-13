@@ -175,7 +175,7 @@ Deno.serve(handleRequest(async (req) => {
 
         // Dynamic batch sizing based on page weight
         const dynamicMax = probeSize > 150_000 ? 1 : probeSize > 100_000 ? 2 : probeSize > 50_000 ? 3 : 4;
-        const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
+        const availableSlots = PAGES_PER_RUN - globalPagesProcessed;
         const batchSize = Math.min(remaining.length, availableSlots, dynamicMax);
         const batch = remaining.slice(0, batchSize);
 
