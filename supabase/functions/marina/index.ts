@@ -1565,7 +1565,15 @@ function buildExecutiveSummaryHTML(
 
   const band = (s: number | null) =>
     s === null ? 'unknown' : s >= 75 ? 'strong' : s >= 55 ? 'ok' : s >= 35 ? 'weak' : 'critical';
-  const b = band(global);
+  // Garde d'exigence : un site avec des blocages critiques ne peut pas être
+  // déclaré « solide » sur la seule moyenne des scores — le verdict est
+  // rétrogradé d'un cran dès qu'il reste au moins un point critique ouvert.
+  const rawBand = band(global);
+  const critical = Number(ctx.criticalCount || 0);
+  const b =
+    critical > 0 && rawBand === 'strong' ? 'ok'
+    : critical >= 3 && rawBand === 'ok' ? 'weak'
+    : rawBand;
 
   const verdict =
     b === 'unknown'
