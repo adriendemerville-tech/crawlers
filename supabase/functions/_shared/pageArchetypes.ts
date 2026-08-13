@@ -619,7 +619,13 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
     <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;">Pondération du mix de pages</div>
     <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:6px;">Ratio entre gabarits : ${mix.verdict === 'balanced' ? 'équilibré' : 'déséquilibré'}</div>
     <p style="font-size:12.5px;color:#4b5563;line-height:1.7;margin:0 0 10px 0;">
-      Base de calcul : ${mix.basis === 'crawl+sitemap' ? `sitemap (${mix.sitemapPages} URL) recoupé avec le crawl (${mix.crawlPages} pages)` : `crawl seul (${mix.crawlPages} pages), sitemap non exploitable`}. Chaque part est comparée à une fourchette de référence pour un site d'acquisition ; seuls les écarts nets sont signalés.
+      Base de calcul : ${mix.basis === 'crawl+sitemap' ? `sitemap (${mix.sitemapPages} URL) recoupé avec le crawl (${mix.crawlPages} pages)` : `crawl seul (${mix.crawlPages} pages), sitemap non exploitable`}. Origine des fourchettes : ${
+        mix.targetBasis === 'benchmark'
+          ? `répartitions réellement observées${mix.sectorLabel ? ` sur des sites du secteur « ${mix.sectorLabel} »` : ' sur des sites comparables'}${mix.benchmarkSample ? `, ${mix.benchmarkSample} domaine(s) minimum par gabarit` : ''}${mix.benchmarkScope === 'sector' ? ', modèle commercial confondu' : ''}`
+          : mix.targetBasis === 'mixed'
+            ? `mixte — certains gabarits sont comparés aux répartitions observées${mix.sectorLabel ? ` dans le secteur « ${mix.sectorLabel} »` : ''}, les autres à un repère posé a priori faute d'échantillon suffisant`
+            : "repères posés a priori (aucun échantillon sectoriel suffisant à ce jour) : ils signalent un déséquilibre probable, ils ne constituent pas une norme"
+      }. Seuls les écarts nets sont signalés.
     </p>
     <table style="width:100%;border-collapse:collapse;font-size:12px;">
       <thead>
@@ -628,6 +634,7 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
           <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Crawl</th>
           <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Sitemap</th>
           <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Référence</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Source</th>
           <th style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Arbitrage</th>
         </tr>
       </thead>
@@ -636,9 +643,13 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
           <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#111827;">${e.label}</td>
           <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#4b5563;">${e.crawledPages} (${pct1(e.crawlShare)})</td>
           <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#4b5563;">${e.sitemapPages !== null ? `${e.sitemapPages} (${pct1(e.sitemapShare || 0)})` : 'n/d'}</td>
-          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${pct1(e.targetMin)}–${pct1(e.targetMax)}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${pct1(e.targetMin)}–${pct1(e.targetMax)}${e.targetMedian !== null ? ` (méd. ${pct1(e.targetMedian)})` : ''}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${e.targetSource === 'benchmark' ? `observé (n=${e.targetSample})` : 'a priori'}</td>
           <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:${ACTION_LABELS[e.action].color};font-weight:600;">${ACTION_LABELS[e.action].text}</td>
         </tr>`).join('')}
+      </tbody>
+    </table>
+
       </tbody>
     </table>
     <ul style="padding-left:18px;margin:10px 0 0 0;font-size:12.5px;line-height:1.65;color:#374151;">
