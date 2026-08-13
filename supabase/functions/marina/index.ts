@@ -13,7 +13,15 @@ import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
 import { writeArchetypePrescriptions } from '../_shared/archetypeWorkbench.ts';
 import { buildMarketProfile, fetchArchetypeBenchmarks, writeMarketObservation } from '../_shared/marketObservations.ts';
-import { sectorLabel, commercialModelLabel } from '../_shared/sectorTaxonomy.ts';
+import {
+  sectorLabel,
+  commercialModelLabel,
+  normalizeSector,
+  normalizeCommercialModel,
+  SECTOR_OPTIONS,
+  COMMERCIAL_MODEL_OPTIONS,
+} from '../_shared/sectorTaxonomy.ts';
+
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
@@ -3866,6 +3874,195 @@ Deno.serve(handleRequest(async (req) => {
     if (!isAuthorized || !userId) {
       return json({ error: 'Unauthorized. Use x-marina-key header or authenticate.' }, 401);
     }
+
+    // ── Carte d'identité : édition / verrouillage AVANT le crawl ──
+    // identity_resolve   : résolution (réutilise la base, sinon inférence légère)
+    // identity_recompute : recalcul déterministe des axes depuis les champs édités (0 token, 0 écriture)
+    // identity_lock      : persistance en source `user_manual`, qui prime ensuite sur toute inférence
+    if (typeof body.action === 'string' && body.action.startsWith('identity_')) {
+      const identityOptions = {
+        sectors: SECTOR_OPTIONS,
+        commercialModels: COMMERCIAL_MODEL_OPTIONS,
+      };
+
+      if (body.action === 'identity_options') {
+        return json({ success: true, options: identityOptions });
+      }
+
+      const rawUrl = typeof body.url === 'string' ? body.url.trim() : '';
+      let parsedIdentityUrl: URL;
+      try {
+        parsedIdentityUrl = new URL(/^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`);
+        if (!['http:', 'https:'].includes(parsedIdentityUrl.protocol)) throw new Error('protocole invalide');
+      } catch {
+        return json({ error: 'url invalide' }, 400);
+      }
+      const identityDomain = parsedIdentityUrl.hostname.replace(/^www\./, '');
+
+      const clean = (v: unknown, max = 400): string | null => {
+        const s = typeof v === 'string' ? v.trim() : '';
+        return s.length >= 2 ? s.slice(0, max) : null;
+      };
+      const raw = (body.fields || {}) as Record<string, unknown>;
+      const overrides = {
+        sector: clean(raw['sector'], 60),
+        commercialModel: clean(raw['commercialModel'], 60),
+        marketSector: clean(raw['marketSector']),
+        productsServices: clean(raw['productsServices'], 600),
+        targetAudience: clean(raw['targetAudience'], 600),
+        commercialArea: clean(raw['commercialArea']),
+        entityType: clean(raw['entityType'], 120),
+        isLocalBusiness: typeof raw['isLocalBusiness'] === 'boolean' ? (raw['isLocalBusiness'] as boolean) : null,
+        competitors: Array.isArray(raw['competitors'])
+          ? (raw['competitors'] as unknown[]).map((c) => String(c).trim()).filter(Boolean).slice(0, 6)
+          : [],
+      };
+
+      // Le texte stocké dans market_sector doit se re-normaliser vers la clé choisie.
+      const chosenSector = SECTOR_OPTIONS.find((s) => s.key === overrides.sector);
+      const sectorKey = chosenSector ? chosenSector.key : normalizeSector(overrides.marketSector);
+      const sectorText = chosenSector ? chosenSector.canonicalText : overrides.marketSector;
+      const chosenModel = COMMERCIAL_MODEL_OPTIONS.find((m) => m.key === overrides.commercialModel);
+      const modelKey = chosenModel
+        ? chosenModel.key
+        : normalizeCommercialModel({
+            commercial_model: overrides.commercialModel,
+            business_type: overrides.entityType,
+            entity_type: overrides.entityType,
+            is_local_business: overrides.isLocalBusiness,
+            sector: sectorKey,
+          });
+
+      if (body.action === 'identity_recompute') {
+        let confidence = 0;
+        if (sectorKey !== 'unknown') confidence += 35;
+        if (modelKey !== 'unknown') confidence += 35;
+        if (overrides.productsServices) confidence += 15;
+        if (overrides.targetAudience) confidence += 8;
+        if (overrides.commercialArea) confidence += 7;
+
+        const notes: string[] = [];
+        if (sectorKey === 'unknown') notes.push("Secteur non résolu : les fourchettes de mix de pages resteront génériques.");
+        if (modelKey === 'unknown') notes.push("Modèle d'affaires non résolu : la calibration par modèle ne sera pas appliquée.");
+        notes.push("Prévisualisation non enregistrée : verrouillez la carte pour qu'elle soit utilisée par l'audit.");
+
+        const preview: IdentityCard = {
+          domain: identityDomain,
+          trackedSiteId: null,
+          source: sectorKey === 'unknown' && modelKey === 'unknown' ? 'unresolved' : 'identity_card',
+          reused: false,
+          resolvedAt: new Date().toISOString(),
+          confidence: Math.min(100, confidence),
+          sector: sectorKey,
+          sectorLabelText: sectorLabel(sectorKey),
+          commercialModel: modelKey,
+          commercialModelLabelText: commercialModelLabel(modelKey),
+          marketSector: sectorText,
+          productsServices: overrides.productsServices,
+          targetAudience: overrides.targetAudience,
+          secondaryAudience: null,
+          commercialArea: overrides.commercialArea,
+          entityType: overrides.entityType,
+          isLocalBusiness: overrides.isLocalBusiness,
+          competitors: overrides.competitors,
+          pagesUsed: [],
+          notes,
+        };
+        return json({ success: true, card: preview, locked: false, options: identityOptions });
+      }
+
+      if (body.action === 'identity_lock') {
+        // Un site suivi est nécessaire pour persister la carte.
+        let trackedSiteId: string | null = null;
+        try {
+          const { data: existing } = await sb
+            .from('tracked_sites')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('domain', identityDomain)
+            .limit(1);
+          trackedSiteId = existing?.[0]?.id ? String(existing[0].id) : null;
+          if (!trackedSiteId) {
+            const { data: created, error: insErr } = await sb
+              .from('tracked_sites')
+              .insert({ user_id: userId, domain: identityDomain, site_name: identityDomain })
+              .select('id')
+              .single();
+            if (insErr) throw insErr;
+            trackedSiteId = String((created as any).id);
+          }
+        } catch (e) {
+          return json({ error: `Site suivi indisponible : ${String((e as Error)?.message || e)}` }, 500);
+        }
+
+        const write: Record<string, unknown> = {};
+        if (sectorText) write['market_sector'] = sectorText;
+        if (modelKey !== 'unknown') write['commercial_model'] = modelKey;
+        if (overrides.productsServices) write['products_services'] = overrides.productsServices;
+        if (overrides.targetAudience) write['target_audience'] = overrides.targetAudience;
+        if (overrides.commercialArea) write['commercial_area'] = overrides.commercialArea;
+        if (overrides.entityType) write['entity_type'] = overrides.entityType;
+        if (typeof overrides.isLocalBusiness === 'boolean') write['is_local_business'] = overrides.isLocalBusiness;
+        if (overrides.competitors.length) write['competitors'] = overrides.competitors;
+
+        if (Object.keys(write).length === 0) {
+          return json({ error: 'Aucun champ exploitable à verrouiller.' }, 400);
+        }
+
+        const writeResult = await writeIdentity({
+          siteId: trackedSiteId,
+          fields: write,
+          source: 'user_manual',
+          userId,
+          forceDirectWrite: true,
+          forceOverwrite: true,
+        });
+
+        const lockedCard = await resolveIdentityCard(sb, {
+          domain: identityDomain,
+          url: parsedIdentityUrl.toString(),
+          userId,
+          trackedSiteId,
+        });
+        if (writeResult.rejected.length) {
+          lockedCard.notes.push(`Champs non enregistrés : ${writeResult.rejected.join(', ')}.`);
+        }
+        return json({
+          success: true,
+          card: lockedCard,
+          locked: true,
+          applied: writeResult.applied,
+          options: identityOptions,
+        });
+      }
+
+      // identity_resolve
+      let resolved: IdentityCard;
+      try {
+        resolved = await resolveIdentityCard(sb, {
+          domain: identityDomain,
+          url: parsedIdentityUrl.toString(),
+          userId,
+          forceRefresh: body.force === true,
+        });
+      } catch (e) {
+        resolved = emptyIdentityCard(identityDomain, null, [String((e as Error)?.message || e)]);
+      }
+
+      let locked = false;
+      try {
+        const { data: srcRow } = await sb
+          .from('tracked_sites')
+          .select('identity_source')
+          .eq('user_id', userId)
+          .eq('domain', identityDomain)
+          .limit(1);
+        locked = String(srcRow?.[0]?.identity_source || '') === 'user_manual';
+      } catch { /* non critique */ }
+
+      return json({ success: true, card: resolved, locked, options: identityOptions });
+    }
+
 
     // ── List jobs ──
     if (body.action === 'list_jobs') {

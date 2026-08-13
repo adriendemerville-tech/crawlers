@@ -358,8 +358,12 @@ export async function resolveIdentityCard(
   }
 
   // 1) Carte existante fraîche et exploitable → réutilisation, 0 token.
-  if (row && !opts.forceRefresh && isUsable(row) && isFresh(row)) {
-    const manual = String(row['identity_source'] || '') === 'user_manual';
+  // Une carte verrouillée manuellement (user_manual) prime toujours : ni la
+  // fraîcheur ni un forceRefresh ne peuvent déclencher une réinférence dessus.
+  const isManual = String(row?.['identity_source'] || '') === 'user_manual';
+  if (row && ((isManual && isUsable(row)) || (!opts.forceRefresh && isUsable(row) && isFresh(row)))) {
+    const manual = isManual;
+
     return buildCard(domain, trackedSiteId, row, {
       source: 'identity_card',
       reused: true,

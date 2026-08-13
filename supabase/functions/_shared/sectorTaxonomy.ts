@@ -131,3 +131,27 @@ export function commercialModelLabel(key: CommercialModelKey | string): string {
   return MODEL_LABELS[key as CommercialModelKey] || MODEL_LABELS.unknown;
 }
 
+
+/**
+ * Options exposées à l'interface d'édition de la carte d'identité.
+ * `canonicalText` est le texte réellement stocké dans `market_sector` : il est
+ * choisi pour que `normalizeSector(canonicalText)` retourne bien `key`.
+ */
+export interface SectorOption { key: SectorKey; label: string; canonicalText: string }
+
+const CANONICAL_OVERRIDES: Partial<Record<SectorKey, string>> = {
+  media_edition: 'Média, presse et édition',
+  telecom_reseaux: 'Télécom et réseaux informatiques',
+};
+
+export const SECTOR_OPTIONS: SectorOption[] = SECTORS.map((s) => ({
+  key: s.key,
+  label: s.label,
+  canonicalText: CANONICAL_OVERRIDES[s.key] || s.label,
+}));
+
+export interface CommercialModelOption { key: CommercialModelKey; label: string }
+
+export const COMMERCIAL_MODEL_OPTIONS: CommercialModelOption[] = (
+  ['local_service', 'ecommerce', 'saas', 'lead_gen', 'media', 'non_commercial'] as CommercialModelKey[]
+).map((k) => ({ key: k, label: MODEL_LABELS[k] }));
