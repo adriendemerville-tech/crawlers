@@ -474,6 +474,47 @@ function scoreColor(score: number, max: number): string {
   return '#ef4444';
 }
 
+/**
+ * Chapeaux pédagogiques de section (déterministes, 0 token).
+ * Chaque section du rapport explique en une phrase vulgarisée ce qu'elle mesure,
+ * comment la lire, et ce qu'elle ne dit pas.
+ */
+const SECTION_LEADS: Record<string, { fr: string; en: string; es: string }> = {
+  crawl: {
+    fr: "Ce que mesure cette section : le robot Crawlers a parcouru le site comme le fait Googlebot, puis a relevé pour chaque page ses balises, sa structure de titres, ses liens et sa vitesse réelle. À lire comme un état des lieux factuel : aucun jugement éditorial ici, uniquement ce qui est techniquement présent ou absent.",
+    en: "What this section measures: the Crawlers robot browsed the site the way Googlebot does, then recorded each page's tags, heading structure, links and real-world speed. Read it as a factual inventory: no editorial judgement here, only what is technically present or missing.",
+    es: "Lo que mide esta sección: el robot de Crawlers recorrió el sitio como lo hace Googlebot y registró etiquetas, estructura de títulos, enlaces y velocidad real.",
+  },
+  tech: {
+    fr: "Ce que mesure cette section : la conformité technique et sémantique de la page auditée, notée sur 200 points répartis en performance, technique, sémantique et lisibilité par les IA. Un score élevé ne garantit pas du trafic : il garantit qu'aucun blocage technique n'empêche d'en obtenir.",
+    en: "What this section measures: technical and semantic compliance of the audited page, scored out of 200 points across performance, technical, semantic and AI readability. A high score does not guarantee traffic: it guarantees no technical blocker prevents it.",
+    es: "Lo que mide esta sección: la conformidad técnica y semántica de la página auditada, sobre 200 puntos.",
+  },
+  strategic: {
+    fr: "Ce que mesure cette section : la citabilité du site par les moteurs de réponse IA (ChatGPT, Perplexity, Gemini, Google AI Overviews) et la solidité de son positionnement de marché. Elle repose sur des interrogations réelles de modèles et sur des données de marché externes, pas sur une simple lecture du code.",
+    en: "What this section measures: how citable the site is for AI answer engines (ChatGPT, Perplexity, Gemini, Google AI Overviews) and how solid its market positioning is. It relies on real model queries and external market data, not merely on reading the code.",
+    es: "Lo que mide esta sección: la citabilidad del sitio por los motores de respuesta IA y la solidez de su posicionamiento.",
+  },
+  cocoon: {
+    fr: "Ce que mesure cette section : la manière dont les pages du site se relient entre elles et se répartissent en thématiques. Un cocon sain regroupe les pages par intention, évite les pages orphelines et empêche deux pages de se disputer la même requête (cannibalisation).",
+    en: "What this section measures: how the site's pages link to each other and cluster into topics. A healthy cocoon groups pages by intent, avoids orphan pages and prevents two pages competing for the same query (cannibalisation).",
+    es: "Lo que mide esta sección: cómo se enlazan las páginas del sitio y cómo se agrupan por temática.",
+  },
+  indexation: {
+    fr: "Ce que mesure cette section : la présence effective des URLs dans l'index Google. Une page non indexée ne peut générer aucun trafic, quel que soit son score technique — c'est donc à traiter avant toute optimisation de contenu.",
+    en: "What this section measures: whether URLs are actually in Google's index. A non-indexed page cannot generate traffic whatever its technical score.",
+    es: "Lo que mide esta sección: la presencia efectiva de las URL en el índice de Google.",
+  },
+};
+
+function sectionLead(key: keyof typeof SECTION_LEADS | string, lang: string): string {
+  const entry = SECTION_LEADS[key];
+  if (!entry) return '';
+  const text = lang === 'en' ? entry.en : lang === 'es' ? entry.es : entry.fr;
+  return `<p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 16px 0;">${text}</p>`;
+}
+
+
 function checkMark(val: boolean): string {
   return val ? '✅' : '❌';
 }
@@ -519,6 +560,11 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
 
   return {
     pagesFound: Number(crawl?.crawled_pages || crawlPages.length || 1),
+    // Alias consommés par la synthèse exécutive et « Portée et limites » :
+    // sans eux, « Pages explorées » retombait sur n/d et le rapport se déclarait
+    // mono-page alors que le crawl multi-pages avait bien tourné.
+    crawled_pages: Number(crawl?.crawled_pages || crawlPages.length || 1),
+    total_pages: Number(crawl?.total_pages || crawl?.pages_discovered || crawl?.urls_discovered || 0) || null,
     avgSeoScore: crawl?.avg_score ? Math.round(Number(crawl.avg_score)) : null,
     avgResponseTime: rawData?.responseTimeMs || null,
     wordCount: totalWordCount || htmlAnalysis?.wordCount || 0,
@@ -957,6 +1003,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      ${sectionLead('crawl', lang)}
       ${topHtml}
       ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/200</strong>` : ''}</div>` : ''}
       <div class="stat-grid-4">
@@ -1035,6 +1082,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
+      ${sectionLead('tech', lang)}
       ${topHtml}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(techScore, techMaxScore)}">${techScore} / ${techMaxScore}</div>
@@ -1094,6 +1142,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
+      ${sectionLead('strategic', lang)}
       ${topHtmlGeo}
       ${topHtmlEeat}
       ${topHtmlKw}
@@ -1165,6 +1214,7 @@ function generateIndexationSectionHTML(indexationData: any[], lang: string, doma
     .join('');
 
   return `<div class="section"><h2><span class="section-number">5</span> 📊 ${title}</h2>
+  ${sectionLead('indexation', lang)}
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
       <div class="stat-card"><div class="value" style="color:${ratioColor}">${ratio}%</div><div class="label">${lang === 'fr' ? 'Taux d\'indexation' : 'Indexation rate'}</div></div>
       <div class="stat-card"><div class="value" style="color:#22c55e">${indexed}</div><div class="label">${lang === 'fr' ? 'Pages indexées' : 'Indexed pages'}</div></div>
@@ -1198,6 +1248,7 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
+      ${sectionLead('cocoon', lang)}
       ${topHtml}
       ${cocoonStats ? `
       <div class="stat-grid">
@@ -1573,8 +1624,198 @@ function buildExecutiveSummaryHTML(
   </div>`;
 }
 
+/**
+ * Introduction méthodologique en tête de rapport : périmètre réellement exploré,
+ * précision de la mesure, outils externes mobilisés, points clés à retenir.
+ * 100 % déterministe (aucun appel LLM).
+ */
+function buildReportIntroHTML(
+  lang: string,
+  domain: string,
+  ctx: {
+    expertData?: any;
+    strategicData?: any;
+    crawlSnapshot?: any;
+    llmVisibilityData?: any;
+    indexationCount?: number;
+    visual?: boolean;
+    plan?: Array<{ severity: string; title: string }>;
+  },
+): string {
+  const isEn = lang === 'en';
+  const isEs = lang === 'es';
+  const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
+
+  const pagesAnalyzed = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pagesFound || null;
+  const pagesKnown = ctx.crawlSnapshot?.total_pages || null;
+  const coverage = pagesAnalyzed && pagesKnown && pagesKnown > 0
+    ? Math.min(100, Math.round((pagesAnalyzed / pagesKnown) * 100))
+    : null;
+
+  const tools: string[] = [];
+  tools.push(t(
+    `Crawler Crawlers (exploration des pages, balises, maillage interne, contenu dupliqué et pages fines)`,
+    `Crawlers crawler (pages, tags, internal linking, near-duplicate and thin content)`,
+    `Rastreador Crawlers (páginas, etiquetas, enlazado interno, contenido duplicado)`,
+  ));
+  if (ctx.expertData?.scores?.performance?.psiPerformance) {
+    tools.push(t(
+      `Google PageSpeed Insights / Lighthouse (Core Web Vitals mesurés en session mobile)`,
+      `Google PageSpeed Insights / Lighthouse (Core Web Vitals, mobile session)`,
+      `Google PageSpeed Insights / Lighthouse (Core Web Vitals, sesión móvil)`,
+    ));
+  }
+  if (ctx.strategicData?.market_data_summary || ctx.strategicData?.domain_authority || ctx.strategicData?.keyword_positioning) {
+    tools.push(t(
+      `DataForSEO (volumes de recherche, positions, backlinks et autorité de domaine)`,
+      `DataForSEO (search volumes, rankings, backlinks and domain authority)`,
+      `DataForSEO (volúmenes, posiciones, backlinks y autoridad de dominio)`,
+    ));
+  }
+  if (ctx.llmVisibilityData) {
+    tools.push(t(
+      `Interrogation réelle de moteurs de réponse IA pour mesurer la citabilité de la marque`,
+      `Real queries sent to AI answer engines to measure brand citability`,
+      `Consultas reales a motores de respuesta IA para medir la citabilidad`,
+    ));
+  }
+  if (ctx.indexationCount) {
+    tools.push(t(
+      `Vérification d'indexation Google sur ${ctx.indexationCount} URLs`,
+      `Google indexation check on ${ctx.indexationCount} URLs`,
+      `Verificación de indexación en Google sobre ${ctx.indexationCount} URL`,
+    ));
+  }
+  if (ctx.visual) {
+    tools.push(t(
+      `Capture visuelle de la page (preuve d'affichage desktop et mobile)`,
+      `Visual page capture (desktop and mobile rendering evidence)`,
+      `Captura visual de la página (desktop y móvil)`,
+    ));
+  }
+
+  const takeaways = (ctx.plan || [])
+    .filter((p) => ['critical', 'important'].includes(String(p.severity)))
+    .slice(0, 3)
+    .map((p) => `<li style="margin:0 0 6px 0;">${p.title}</li>`)
+    .join('');
+
+  const li = (s: string) => `<li style="margin:0 0 6px 0;">${s}</li>`;
+
+  return `
+  <div class="section" data-marina-scope="site" data-marina-block="intro" data-pdf-section style="border-left:6px solid #6d28d9;">
+    <h2 style="font-size:19px;margin:0 0 10px 0;">${t('Comment lire ce rapport', 'How to read this report', 'Cómo leer este informe')}</h2>
+    <p style="font-size:13.5px;line-height:1.75;color:#374151;margin:0 0 14px 0;">
+      ${t(
+        `Ce document combine cinq analyses distinctes de ${domain}, dans cet ordre : le crawl (ce que voit un robot), l'audit technique SEO (conformité de la page), l'audit stratégique GEO (citabilité par les IA et positionnement de marché), le cocon sémantique et le maillage interne, puis le plan d'action consolidé. Chaque section débute par une phrase qui explique ce qu'elle mesure et comment l'interpréter.`,
+        `This document combines five distinct analyses of ${domain}, in order: the crawl (what a robot sees), the technical SEO audit, the strategic GEO audit (AI citability and market positioning), the semantic cocoon and internal linking, then the consolidated action plan. Each section opens with a sentence explaining what it measures and how to read it.`,
+        `Este documento combina cinco análisis distintos de ${domain}: rastreo, auditoría técnica SEO, auditoría estratégica GEO, capullo semántico y plan de acción consolidado.`,
+      )}
+    </p>
+    <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('Périmètre et précision de la mesure', 'Scope and measurement precision', 'Alcance y precisión')}</h3>
+    <ul style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0 0 14px 0;">
+      ${li(pagesAnalyzed
+        ? t(`<strong>${pagesAnalyzed} page${pagesAnalyzed > 1 ? 's' : ''}</strong> réellement explorée${pagesAnalyzed > 1 ? 's' : ''} et analysée${pagesAnalyzed > 1 ? 's' : ''}${pagesKnown ? ` sur ${pagesKnown} URLs découvertes${coverage !== null ? ` (couverture ${coverage} %)` : ''}` : ''}.`,
+            `<strong>${pagesAnalyzed} page(s)</strong> actually crawled and analysed${pagesKnown ? ` out of ${pagesKnown} discovered URLs${coverage !== null ? ` (${coverage}% coverage)` : ''}` : ''}.`,
+            `<strong>${pagesAnalyzed} página(s)</strong> rastreadas${pagesKnown ? ` de ${pagesKnown} URL descubiertas` : ''}.`)
+        : t(`Analyse limitée à l'URL soumise : le crawl multi-pages n'a pas produit de périmètre exploitable pour ce rapport.`,
+            `Analysis limited to the submitted URL: the multi-page crawl produced no usable scope.`,
+            `Análisis limitado a la URL enviada.`))}
+      ${li(t(
+        `Les scores sont mesurés, pas estimés : ils portent sur l'état du site au moment du crawl et ne prédisent pas un volume de trafic.`,
+        `Scores are measured, not estimated: they describe the site at crawl time and do not predict traffic volume.`,
+        `Las puntuaciones son medidas, no estimadas.`,
+      ))}
+      ${li(t(
+        `Les données de marché et de backlinks proviennent de bases tierces mises à jour périodiquement : un écart de quelques jours avec la réalité est normal.`,
+        `Market and backlink data come from third-party databases refreshed periodically: a few days' lag is normal.`,
+        `Los datos de mercado y backlinks provienen de bases de terceros.`,
+      ))}
+      ${li(t(
+        `La section « Portée et limites », en fin de document, détaille précisément ce qui est mesuré et ce qui ne l'est pas.`,
+        `The "Scope and limits" section at the end of the document details exactly what is and is not measured.`,
+        `La sección «Alcance y límites» al final detalla lo medido y lo no medido.`,
+      ))}
+    </ul>
+    <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('Sources et outils mobilisés', 'Sources and tools used', 'Fuentes y herramientas')}</h3>
+    <ul style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0 0 ${takeaways ? '14px' : '0'} 0;">
+      ${tools.map(li).join('')}
+    </ul>
+    ${takeaways ? `
+    <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('À retenir en priorité', 'Key takeaways', 'Puntos clave')}</h3>
+    <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${takeaways}</ol>` : ''}
+  </div>`;
+}
+
+/**
+ * Conclusion en fin de rapport : hiérarchisation des chantiers en trois horizons.
+ * Déterministe, dérivée du plan d'action consolidé (aucun appel LLM).
+ */
+function buildConclusionHTML(
+  lang: string,
+  domain: string,
+  plan: Array<{ severity: string; title: string; description?: string }>,
+): string {
+  const isEn = lang === 'en';
+  const isEs = lang === 'es';
+  const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
+
+  const critical = plan.filter((p) => String(p.severity) === 'critical');
+  const important = plan.filter((p) => String(p.severity) === 'important');
+  const rest = plan.filter((p) => !['critical', 'important'].includes(String(p.severity)));
+
+  const bucket = (
+    label: string,
+    horizon: string,
+    items: Array<{ title: string }>,
+    color: string,
+  ) => `
+    <div style="border:1px solid #e5e7eb;border-left:4px solid ${color};border-radius:8px;padding:14px 16px;margin:0 0 10px 0;background:#ffffff;">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;">${horizon}</div>
+      <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:8px;">${label}</div>
+      ${items.length
+        ? `<ol style="padding-left:18px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${items.slice(0, 4).map((i) => `<li style="margin:0 0 4px 0;">${i.title}</li>`).join('')}</ol>`
+        : `<p style="font-size:13px;color:#6b7280;margin:0;">${t('Aucun chantier de ce niveau détecté.', 'No item detected at this level.', 'Ningún elemento detectado en este nivel.')}</p>`}
+    </div>`;
+
+  return `
+  <div class="section" data-marina-scope="page" data-marina-block="conclusion" data-pdf-section style="border-left:6px solid #d4af37;">
+    <h2 style="font-size:19px;margin:0 0 10px 0;">${t('Conclusion : par où commencer', 'Conclusion: where to start', 'Conclusión: por dónde empezar')}</h2>
+    <p style="font-size:13.5px;line-height:1.75;color:#374151;margin:0 0 14px 0;">
+      ${t(
+        `L'ordre ci-dessous n'est pas négociable : tant qu'un blocage technique ou d'indexation subsiste sur ${domain}, la production de contenu et le netlinking produisent peu d'effet mesurable. Traitez les chantiers dans l'ordre des horizons, puis relancez un audit pour mesurer le delta.`,
+        `The order below matters: while a technical or indexation blocker remains on ${domain}, content production and link building yield little measurable effect. Work through the horizons in order, then re-run an audit to measure the delta.`,
+        `El orden importa: mientras exista un bloqueo técnico o de indexación en ${domain}, el contenido y el netlinking tendrán poco efecto medible.`,
+      )}
+    </p>
+    ${bucket(
+      t('Débloquer', 'Unblock', 'Desbloquear'),
+      t('Horizon 0 à 30 jours', 'Horizon 0 to 30 days', 'Horizonte 0 a 30 días'),
+      critical, '#ef4444',
+    )}
+    ${bucket(
+      t('Consolider', 'Consolidate', 'Consolidar'),
+      t('Horizon 30 à 60 jours', 'Horizon 30 to 60 days', 'Horizonte 30 a 60 días'),
+      important, '#d4af37',
+    )}
+    ${bucket(
+      t('Amplifier', 'Amplify', 'Amplificar'),
+      t('Horizon 60 à 90 jours', 'Horizon 60 to 90 days', 'Horizonte 60 a 90 días'),
+      rest, '#6d28d9',
+    )}
+    <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
+      ${t(
+        `Hiérarchisation dérivée automatiquement du plan d'action consolidé : elle reprend les mêmes éléments, réordonnés par effort et par dépendance. Un second audit après remédiation permet de chiffrer le gain réel.`,
+        `This prioritisation is derived automatically from the consolidated action plan, reordered by effort and dependency. A second audit after remediation quantifies the real gain.`,
+        `Priorización derivada del plan de acción consolidado.`,
+      )}
+    </p>
+  </div>`;
+}
+
+
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string },
 
 
   lang: string,
@@ -1664,17 +1905,20 @@ function compileMarinaReport(
 
     ${sectionHTMLs.summary || ''}
 
+    ${sectionHTMLs.intro || ''}
+
     ${sectionHTMLs.visual || ''}
 
 
     <!-- Table of Contents -->
-    <div class="toc">
+    <div class="toc" data-pdf-section>
       <div class="toc-item"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
       <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
       ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
       ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
+      ${sectionHTMLs.conclusion ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '7' : '6'}</span> ${lang === 'fr' ? 'Conclusion et priorités' : lang === 'es' ? 'Conclusión y prioridades' : 'Conclusion and priorities'}</div>` : ''}
     </div>
 
     <!-- Section 1: Crawl (périmètre site) -->
