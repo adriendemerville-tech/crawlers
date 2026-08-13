@@ -3060,6 +3060,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
             crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+            // Segmentation par type de page (agence / produit / service / avis / éditorial…) :
+            // conclusion intermédiaire par type, puis synthèse business. 0 token LLM.
+            archetypeAnalysis = analyzePageArchetypes(crawlPages as any[]);
             // Constats d'intégrité → Workbench (idempotent, partagé avec le crawl)
             await writeIntegrityFindingsToWorkbench(sb, (latestCrawl as any).content_integrity || null, {
               domain,
