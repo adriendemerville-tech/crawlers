@@ -1765,6 +1765,7 @@ function buildConclusionHTML(
   lang: string,
   domain: string,
   plan: Array<{ severity: string; title: string; description?: string }>,
+  archetypes?: ArchetypeAnalysis | null,
 ): string {
   const isEn = lang === 'en';
   const isEs = lang === 'es';
