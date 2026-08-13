@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
+import { MarinaScanModePanel } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -802,6 +803,9 @@ export default function Marina() {
                     <span className="ml-2">{loading ? t.hero.btnAnalyzing : t.hero.btnAnalyze}</span>
                   </Button>
                 </div>
+
+                {/* Modes de scan : sample / standard / deep, bascule automatique */}
+                <MarinaScanModePanel language={language} />
 
                 {/* Carte d'identité éditable et verrouillable avant le crawl */}
                 <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
