@@ -448,7 +448,11 @@ export function analyzePageArchetypes(pages: ArchetypePageInput[], sitemapUrls?:
     mainProblem ? `Le problème principal est simple : ${mainProblem}.` : null,
   ].filter(Boolean).join(' ');
 
-  return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis };
+  const mix = buildMix(groups, usable.length, sitemapUrls);
+  const fullSynthesis = mix ? `${synthesis} ${mix.synthesis}` : synthesis;
+
+  return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis: fullSynthesis, mix };
+
 }
 
 const ROLE_LABELS: Record<ArchetypeRole, string> = {
