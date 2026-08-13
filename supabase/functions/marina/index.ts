@@ -3281,6 +3281,13 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             summary: buildExecutiveSummaryHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
             }),
+            intro: buildReportIntroHTML(detectedLang, domain, {
+              expertData, strategicData, crawlSnapshot, llmVisibilityData,
+              indexationCount: indexationData.length,
+              visual: Boolean(visualCapture),
+              plan: consolidatedPlan,
+            }),
+            conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan),
             disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
             }),
