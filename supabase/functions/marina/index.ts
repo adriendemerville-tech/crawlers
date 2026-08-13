@@ -3092,7 +3092,36 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             // Pondération du mix de gabarits : le sitemap donne la répartition du site
             // entier, le crawl la qualité. Fetch XML léger, aucun token LLM.
             const sitemapUrlsForMix = await fetchSitemapUrls(domain).catch(() => [] as string[]);
-            archetypeAnalysis = analyzePageArchetypes(crawlPages as any[], sitemapUrlsForMix);
+            archetypeAnalysis = analyzePageArchetypes(crawlPages as any[], {
+              sitemapUrls: sitemapUrlsForMix,
+              benchmarks: archetypeBenchmarks,
+              sectorLabel: marketSectorLabel,
+            });
+
+            // Les arbitrages de gabarits deviennent des prescriptions exécutables
+            // (Parménion phase prescribe + Stratège cocoon), pas un simple constat.
+            await writeArchetypePrescriptions(sb, archetypeAnalysis, {
+              domain,
+              url,
+              userId: parentJob.user_id,
+              trackedSiteId: trackedSiteId || null,
+              sectorLabel: marketSectorLabel,
+            }).catch(() => {});
+
+            // Mémoire de marché : observation historisée, base de la calibration
+            // sectorielle hebdomadaire et d'un apprentissage ultérieur.
+            await writeMarketObservation(sb, {
+              domain,
+              userId: parentJob.user_id,
+              trackedSiteId: trackedSiteId || null,
+              source: 'marina',
+              profile: marketProfile,
+              analysis: archetypeAnalysis,
+              avgSeoScore: Number((latestCrawl as any)?.avg_score) || null,
+              geoScore: Number(llmVisibilityData?.global_score ?? llmVisibilityData?.data?.global_score) || null,
+              authorityScore: Number((strategicData as any)?.domain_authority?.authority_score) || null,
+            }).catch(() => {});
+
             // Constats d'intégrité → Workbench (idempotent, partagé avec le crawl)
             await writeIntegrityFindingsToWorkbench(sb, (latestCrawl as any).content_integrity || null, {
               domain,
