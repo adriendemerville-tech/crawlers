@@ -1929,6 +1929,7 @@ function compileMarinaReport(
     <!-- Table of Contents -->
     <div class="toc" data-pdf-section>
       <div class="toc-item"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
       <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
