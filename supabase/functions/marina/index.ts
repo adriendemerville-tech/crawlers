@@ -1957,6 +1957,8 @@ function compileMarinaReport(
     <div data-marina-scope="page" data-marina-block="plan">${sectionHTMLs.consolidatedPlan}</div>
     ` : ''}
 
+    ${sectionHTMLs.conclusion || ''}
+
     ${sectionHTMLs.disclosure || ''}
 
     <div class="marina-separator"></div>
