@@ -2755,9 +2755,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           (c) => c.status === 'completed' && (c.crawled_pages || 0) >= 10,
         );
         const IN_FLIGHT_STATUSES = ['pending', 'queued', 'running', 'crawling', 'analyzing', 'processing'];
-        const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
+        // Fenêtre alignée sur le crawl découpé en lots : 8 tours d'attente de
+        // ~3 min = jusqu'à ~25 min d'attente côté Marina, plus la marge des
+        // relais du worker → 60 min.
+        const inFlightWindowStart = Date.now() - 60 * 60 * 1000;
         const inFlightCrawl = crawlRows.find(
-          (c) => IN_FLIGHT_STATUSES.includes(c.status) && new Date(c.created_at).getTime() > thirtyMinAgo,
+          (c) => IN_FLIGHT_STATUSES.includes(c.status) && new Date(c.created_at).getTime() > inFlightWindowStart,
         );
 
         if (reusableCrawl) {
