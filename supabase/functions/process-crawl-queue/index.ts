@@ -19,7 +19,13 @@ import { scrapePage, probeSPAStatus, createPaidBudget, budgetSummary } from '../
 import { computeDepth } from '../_shared/crawlQueue/duplicateDetector.ts';
 import { finalizeJob } from '../_shared/crawlQueue/finalizer.ts';
 
-const MAX_GLOBAL_CONCURRENT = 20;
+/**
+ * Découpage en lots : un run du worker traite au maximum PAGES_PER_RUN pages,
+ * puis se re-déclenche (self-relay) sur le checkpoint persisté dans
+ * `crawl_pages`. Un gros domaine est donc crawlé en N runs successifs de
+ * 100-150 pages au lieu d'un run unique qui explose le wall-time.
+ */
+const PAGES_PER_RUN = 150;
 
 Deno.serve(handleRequest(async (req) => {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
