@@ -459,6 +459,16 @@ function buildMix(
   }
   parts.push("Ces arbitrages de volume rejoignent ceux du module Cocoon (élagage, cannibalisation, création de piliers) : les traiter au même endroit évite de créer des pages qui viendraient concurrencer les existantes.");
 
+  const benchCount = entries.filter((e) => e.targetSource === 'benchmark').length;
+  const targetBasis: ArchetypeMix['targetBasis'] =
+    benchCount === 0 ? 'a_priori' : benchCount === entries.length ? 'benchmark' : 'mixed';
+
+  if (targetBasis === 'a_priori') {
+    parts.push(`Attention à la lecture : faute d'un échantillon sectoriel suffisant${options.sectorLabel ? ` pour le secteur « ${options.sectorLabel} »` : ''}, les fourchettes utilisées ici sont des repères posés a priori et non des normes mesurées ; elles signalent un déséquilibre probable, pas une règle.`);
+  } else {
+    parts.push(`Les fourchettes utilisées sont ${targetBasis === 'benchmark' ? '' : 'en partie '}calibrées sur les répartitions réellement observées ${options.sectorLabel ? `dans le secteur « ${options.sectorLabel} »` : 'sur des sites comparables'}${benchmarkSample ? ` (au moins ${benchmarkSample} domaine(s) par gabarit)` : ''}${benchmarkScope === 'sector' ? ', modèle commercial confondu' : ''} — les gabarits sans échantillon suffisant restent comparés à un repère a priori.`);
+  }
+
   return {
     basis: reference ? 'crawl+sitemap' : 'crawl',
     crawlPages,
@@ -467,14 +477,28 @@ function buildMix(
     entries,
     missing,
     verdict,
+    targetBasis,
+    benchmarkScope,
+    benchmarkSample,
+    sectorLabel: options.sectorLabel ?? null,
     synthesis: parts.join(' '),
   };
 }
 
-export function analyzePageArchetypes(pages: ArchetypePageInput[], sitemapUrls?: string[] | null): ArchetypeAnalysis | null {
+export function analyzePageArchetypes(
+  pages: ArchetypePageInput[],
+  sitemapUrlsOrOptions?: string[] | null | ArchetypeAnalysisOptions,
+  maybeOptions?: ArchetypeAnalysisOptions,
+): ArchetypeAnalysis | null {
+
+  // Compat : l'ancienne signature (pages, sitemapUrls) reste acceptée.
+  const options: ArchetypeAnalysisOptions = Array.isArray(sitemapUrlsOrOptions) || sitemapUrlsOrOptions == null
+    ? { ...(maybeOptions || {}), sitemapUrls: (sitemapUrlsOrOptions as string[] | null) ?? maybeOptions?.sitemapUrls ?? null }
+    : (sitemapUrlsOrOptions as ArchetypeAnalysisOptions);
 
   const usable = (pages || []).filter((p) => p && p.url);
   if (usable.length < 3) return null;
+
 
   const buckets = new Map<string, { def: ArchetypeDef; pages: ArchetypePageInput[] }>();
   for (const p of usable) {
