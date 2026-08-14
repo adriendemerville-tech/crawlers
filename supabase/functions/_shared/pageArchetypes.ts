@@ -124,7 +124,16 @@ export interface ArchetypeAnalysisOptions {
   /** Modèle d'affaires normalisé (carte d'identité résolue en phase 0). */
   commercialModel?: string | null;
   commercialModelLabel?: string | null;
+  /**
+   * Audit ciblé sur une URL précise : l'analyse se limite alors à cette page et
+   * à son voisinage de liens (pages atteintes par les liens sortants et pages
+   * qui pointent vers elle), au lieu de segmenter le site entier.
+   */
+  focusUrl?: string | null;
+  /** URLs du voisinage de liens de focusUrl (entrants et sortants confondus). */
+  linkedUrls?: string[] | null;
 }
+
 
 
 export interface ArchetypeAnalysis {
