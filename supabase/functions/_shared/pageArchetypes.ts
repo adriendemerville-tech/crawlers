@@ -304,6 +304,10 @@ function pagePath(p: ArchetypePageInput): string {
   try { return new URL(p.url).pathname; } catch { return '/'; }
 }
 
+function defByKey(key: string): ArchetypeDef {
+  return DEFS.find((d) => d.key === key)!;
+}
+
 function classify(p: ArchetypePageInput): ArchetypeDef {
   const path = pagePath(p);
   if (isHome(path)) {
@@ -314,17 +318,30 @@ function classify(p: ArchetypePageInput): ArchetypeDef {
     const hit = DEFS.find((d) => d.key === override);
     if (hit) return hit;
   }
-  for (const def of DEFS) if (def.pattern.test(path)) return def;
+  for (const def of DEFS) if (def.pattern.test(deaccent(path))) return def;
 
-  // Repli par intention détectée au crawl
+  // 2e passage : mots-clés du slug, du title et du H1. Sans ce passage, tout ce
+  // qui n'a pas de préfixe d'URL normalisé finissait dans « Autres pages ».
+  const haystack = deaccent([path.replace(/[-_/]+/g, ' '), p.title || '', p.h1 || ''].join(' '));
+  for (const hint of KEYWORD_HINTS) {
+    if (hint.words.test(haystack)) return defByKey(hint.key);
+  }
+
+  // 3e passage : intention détectée au crawl
   const intent = (p.page_intent || '').toLowerCase();
-  if (intent === 'buy') return DEFS.find((d) => d.key === 'product')!;
-  if (intent === 'do') return DEFS.find((d) => d.key === 'conversion')!;
-  if (intent === 'know') return DEFS.find((d) => d.key === 'editorial')!;
-  if (intent === 'navigate') return DEFS.find((d) => d.key === 'institutional')!;
+  if (intent === 'buy') return defByKey('product');
+  if (intent === 'do') return defByKey('conversion');
+  if (intent === 'know') return defByKey('editorial');
+  if (intent === 'navigate') return defByKey('institutional');
 
-  return { key: 'other', label: 'Autres pages', role: 'support', purpose: "rôle non déterminé par l'URL ni par l'intention détectée", pattern: /^$/ };
+  // Dernier repli : une page de premier niveau sans marqueur est presque
+  // toujours une page d'offre ciblée ; au-delà, on assume l'incertitude.
+  const depth = Number.isFinite(Number(p.crawl_depth)) ? Number(p.crawl_depth) : (path.split('/').filter(Boolean).length);
+  if (depth <= 1) return defByKey('landing');
+
+  return { key: 'other', label: 'Pages non typées', role: 'support', purpose: "rôle non déterminé ni par l'URL, ni par le contenu, ni par l'intention détectée", pattern: /^$/ };
 }
+
 
 function avg(values: number[]): number {
   if (!values.length) return 0;
