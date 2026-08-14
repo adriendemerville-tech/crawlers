@@ -807,7 +807,7 @@ export default function Marina() {
                 </div>
 
                 {/* Modes de scan : sample / standard / deep, bascule automatique */}
-                <MarinaScanModePanel language={language} />
+                <MarinaScanModePanel language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
 
                 {/* Carte d'identité éditable et verrouillable avant le crawl */}
                 <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
