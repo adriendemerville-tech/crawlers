@@ -903,8 +903,32 @@ function list(items: string[], color: string, title: string): string {
   </div>`;
 }
 
+function escHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/** Exemples concrets : H1 lisible + lien cliquable vers la page représentative. */
+function renderExamples(g: ArchetypeGroup): string {
+  const examples = (g.examples && g.examples.length)
+    ? g.examples
+    : (g.sample || []).map((url) => ({ url, h1: null, title: null }));
+  if (!examples.length) return '';
+  const rows = examples.map((e) => {
+    const heading = e.h1 || e.title || 'H1 absent sur cette page';
+    return `<li style="margin-bottom:5px;">
+      <span style="color:#111827;font-weight:600;">${escHtml(heading)}</span><br/>
+      <a href="${escHtml(e.url)}" target="_blank" rel="noopener" style="color:#6d28d9;text-decoration:underline;word-break:break-all;">${escHtml(e.url)}</a>
+    </li>`;
+  }).join('');
+  return `<div style="margin:10px 0 0 0;">
+    <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">Exemple${examples.length > 1 ? 's' : ''} de page de ce type</div>
+    <ul style="padding-left:18px;margin:0;font-size:12px;line-height:1.55;color:#4b5563;">${rows}</ul>
+  </div>`;
+}
+
 /** Rendu HTML de la section « Audit par type de page » (déterministe). */
 export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: string): string {
+
   const cards = analysis.groups.map((g) => {
     const v = VERDICT_LABELS[g.verdict];
     return `<div data-marina-block="archetype-${g.key}" style="border:1px solid #e5e7eb;border-left:4px solid ${v.color};border-radius:8px;padding:14px 16px;margin:0 0 12px 0;background:#ffffff;">
