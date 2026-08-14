@@ -265,10 +265,10 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     );
 
     const className = cn(
-      'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-thin transition-colors text-left',
+      'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-normal transition-colors text-left',
       isActive
-        ? 'bg-accent/60 text-foreground'
-        : 'text-muted-foreground hover:text-foreground hover:bg-accent/30',
+        ? 'bg-accent/60 text-foreground font-medium'
+        : 'text-foreground/75 hover:text-foreground hover:bg-accent/30',
       isLocked && 'opacity-40 cursor-not-allowed',
     );
 
@@ -407,7 +407,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
             onClick={toggle}
             aria-pressed={advanced}
             title={advanced ? 'Passer en vue simplifiée' : 'Passer en vue avancée'}
-            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-thin text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-normal text-foreground/75 hover:text-foreground hover:bg-accent/30 transition-colors"
           >
             <span className="flex-1 text-left truncate">
               {advanced ? 'Vue avancée' : 'Vue simplifiée'}
@@ -448,8 +448,8 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
                   onTabChange(item.value);
                 }}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-thin whitespace-nowrap transition-colors',
-                  isActive ? 'bg-accent text-foreground' : 'text-muted-foreground',
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-normal whitespace-nowrap transition-colors',
+                  isActive ? 'bg-accent text-foreground font-medium' : 'text-foreground/75',
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
