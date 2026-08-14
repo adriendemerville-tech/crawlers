@@ -869,10 +869,16 @@ export function analyzePageArchetypes(
     mainProblem ? `Le problème principal est simple : ${mainProblem}.` : null,
   ].filter(Boolean).join(' ');
 
-  const mix = buildMix(groups, usable.length, options);
-  const fullSynthesis = mix ? `${synthesis} ${mix.synthesis}` : synthesis;
+  // En périmètre ciblé, une pondération de mix n'a aucun sens statistique.
+  const mix = scope === 'url' ? null : buildMix(groups, usable.length, options);
+  const scopeNote = scope === 'url'
+    ? ` Périmètre de cette analyse : l'URL auditée et son voisinage de liens (${neighborhoodPages} page(s) atteinte(s) par ses liens internes) — aucune extrapolation au site entier n'est faite, et aucune pondération de mix n'est calculée.`
+    : '';
+  const fullSynthesis = `${synthesis}${mix ? ` ${mix.synthesis}` : ''}${scopeNote}`;
 
-  return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis: fullSynthesis, mix };
+  return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis: fullSynthesis, mix, scope, focusUrl, neighborhoodPages };
+
+
 
 }
 
