@@ -921,9 +921,15 @@ export default function Marina() {
                 <TabsTrigger value="api" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
                   <Terminal className="w-3.5 h-3.5" /> {t.preview.tabApi}
                 </TabsTrigger>
+                {user && (
+                  <TabsTrigger value="my-audits" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                    <FileText className="w-3.5 h-3.5" /> Mes audits
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
                   <Coins className="w-3.5 h-3.5" /> {t.preview.tabPricing}
                 </TabsTrigger>
+
               </TabsList>
             </Tabs>
           </div>
