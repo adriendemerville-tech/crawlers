@@ -90,49 +90,66 @@ export function MarinaScanModePanel({
         : `Mode retenu pour ce run : ${t.rows[activeIndex][0]} — jusqu'à ${active.maxPages} pages${active.discoveredUrls ? `, ${active.discoveredUrls} URLs découvertes` : ''}${active.coveragePct !== null ? `, couverture visée ${active.coveragePct} %` : ''}${pagesCrawled ? ` · ${pagesCrawled} pages déjà crawlées` : ''}.`
     : null;
 
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <Card className="mt-4 border-border/60 bg-card/50 text-left">
       <CardContent className="p-5">
-        <div className="flex items-start gap-3">
-          <Layers className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-          <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-foreground">{t.title}</h3>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t.subtitle}</p>
+        <button
+          type="button"
+          onClick={() => setIsOpen((v) => !v)}
+          className="flex w-full items-start justify-between gap-3 text-left"
+          aria-expanded={isOpen}
+        >
+          <div className="flex items-start gap-3 min-w-0">
+            <Layers className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">{t.title}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t.subtitle}</p>
+            </div>
           </div>
-        </div>
+          <ChevronDown
+            className={`w-4 h-4 mt-0.5 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            aria-hidden="true"
+          />
+        </button>
 
-        {activeLine && (
-          <p className="mt-3 rounded-md border border-primary/40 px-3 py-2 text-xs font-medium leading-relaxed text-foreground">
-            {activeLine}
-          </p>
+        {isOpen && (
+          <>
+            {activeLine && (
+              <p className="mt-3 rounded-md border border-primary/40 px-3 py-2 text-xs font-medium leading-relaxed text-foreground">
+                {activeLine}
+              </p>
+            )}
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    {t.cols.map((c) => (
+                      <th key={c} className="border-b border-border/60 pb-2 pr-4 font-medium uppercase tracking-wide">
+                        {c}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {t.rows.map((r, i) => (
+                    <tr key={r[0]} className={i === activeIndex ? 'align-top bg-primary/10' : 'align-top'}>
+                      <td className="border-b border-border/40 py-2 pr-4 font-semibold text-foreground whitespace-nowrap">
+                        {r[0]}
+                      </td>
+                      <td className="border-b border-border/40 py-2 pr-4 text-muted-foreground">{r[1]}</td>
+                      <td className="border-b border-border/40 py-2 text-muted-foreground">{r[2]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t.note}</p>
+          </>
         )}
-
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left text-muted-foreground">
-                {t.cols.map((c) => (
-                  <th key={c} className="border-b border-border/60 pb-2 pr-4 font-medium uppercase tracking-wide">
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {t.rows.map((r, i) => (
-                <tr key={r[0]} className={i === activeIndex ? 'align-top bg-primary/10' : 'align-top'}>
-                  <td className="border-b border-border/40 py-2 pr-4 font-semibold text-foreground whitespace-nowrap">
-                    {r[0]}
-                  </td>
-                  <td className="border-b border-border/40 py-2 pr-4 text-muted-foreground">{r[1]}</td>
-                  <td className="border-b border-border/40 py-2 text-muted-foreground">{r[2]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t.note}</p>
       </CardContent>
     </Card>
   );
