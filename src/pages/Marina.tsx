@@ -667,6 +667,8 @@ export default function Marina() {
             return;
           }
           setProgress(data.progress || 0);
+          if (data.scan_mode?.mode) setActiveScanMode(data.scan_mode as ActiveScanMode);
+          if (typeof data.pages_crawled === 'number') setScanPagesCrawled(data.pages_crawled);
           setPhase(data.phase || t.phases.inProgress);
         } catch {}
         await new Promise(r => setTimeout(r, 4000));
