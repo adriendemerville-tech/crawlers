@@ -144,7 +144,13 @@ export interface ArchetypeAnalysis {
   globalVerdict: 'strong' | 'ok' | 'weak';
   synthesis: string;
   mix: ArchetypeMix | null;
+  /** 'site' = segmentation du périmètre crawlé ; 'url' = URL ciblée + voisinage de liens. */
+  scope: 'site' | 'url';
+  focusUrl: string | null;
+  /** Nombre de pages du voisinage de liens retenues en scope 'url'. */
+  neighborhoodPages: number;
 }
+
 
 
 
