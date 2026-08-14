@@ -118,7 +118,7 @@ function pickParagraph(paragraphs: string[]): string | null {
  * amorcées par une formulation auto-suffisante.
  */
 function buildAnswer(question: string, paragraph: string, page: AeoPageInput): string {
-  const subject = (page.h1 || page.title || '').replace(/\s*[|–—-]\s*[^|–—-]{2,40}$/, '').trim();
+  const subject = cleanSubject(page);
   const sentences = splitSentences(paragraph);
   const scored = sentences
     .map((s) => {
@@ -128,8 +128,11 @@ function buildAnswer(question: string, paragraph: string, page: AeoPageInput): s
       if (subject && s.toLowerCase().includes(subject.toLowerCase().split(/\s+/)[0] || '')) score += 1;
       const w = words(s).length;
       if (w >= 8 && w <= 35) score += 1;
+      // Une incitation seule n'apporte aucune information extractible.
+      if (/^(contactez|appelez|demandez|remplissez|cliquez|découvrez)\b/i.test(s.trim()) && w <= 8) score -= 4;
       return { s, score };
     })
+
     .sort((a, b) => b.score - a.score)
     .map((x) => x.s);
 
