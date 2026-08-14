@@ -2764,6 +2764,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
 
         if (reusableCrawl) {
+          if (!scanModeInfo) {
+            scanModeInfo = resolveScanMode(reusableCrawl.total_pages || reusableCrawl.crawled_pages || null);
+          }
+          pagesCrawledInfo = reusableCrawl.crawled_pages || null;
           console.log(`[Marina] Found recent crawl with ${reusableCrawl.crawled_pages} pages (< 12h) — reusing`);
         } else {
           let crawlLaunchRes: any = null;
