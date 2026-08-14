@@ -1886,6 +1886,30 @@ export type Database = {
           },
         ]
       }
+      browserless_render_slots: {
+        Row: {
+          lease_id: string | null
+          leased_for: string | null
+          leased_until: string | null
+          slot_id: number
+          updated_at: string
+        }
+        Insert: {
+          lease_id?: string | null
+          leased_for?: string | null
+          leased_until?: string | null
+          slot_id: number
+          updated_at?: string
+        }
+        Update: {
+          lease_id?: string | null
+          leased_for?: string | null
+          leased_until?: string | null
+          slot_id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bundle_api_catalog: {
         Row: {
           api_name: string
@@ -14420,6 +14444,10 @@ export type Database = {
       }
     }
     Functions: {
+      acquire_browserless_slot: {
+        Args: { p_label?: string; p_lease_id: string; p_lease_seconds?: number }
+        Returns: number
+      }
       atomic_credit_update: {
         Args: { p_amount: number; p_user_id: string }
         Returns: Json
@@ -14747,6 +14775,10 @@ export type Database = {
       reap_zombie_async_jobs: { Args: never; Returns: number }
       recalculate_reliability: { Args: never; Returns: undefined }
       refresh_archetype_mix_benchmarks: { Args: never; Returns: number }
+      release_browserless_slot: {
+        Args: { p_lease_id: string }
+        Returns: boolean
+      }
       resolve_human_sample_rate: {
         Args: { p_user_id: string }
         Returns: number
