@@ -2902,7 +2902,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       console.log(`[Marina] ✅ Phase 2 complete — crawl done, launching Phase 3`);
 
       // Self-invoke phase 3
-      await selfInvokePhase(jobId, url, detectedLang, 'phase3', { domain });
+      await selfInvokePhase(jobId, url, detectedLang, 'phase3', {
+        domain,
+        scanMode: scanModeInfo,
+        pagesCrawled: pagesCrawledInfo,
+      });
 
     } else if (currentPhase === 'phase3') {
       // ═══ PHASE 3: Cocoon + LLM Visibility + Report ═══
