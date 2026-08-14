@@ -2904,20 +2904,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       const marketProfile = buildMarketProfile({
 
         ...(identityRow || {}),
-        market_sector: (phase0Identity?.marketSector
+        market_sector: (revisedIdentity?.marketSector
           || strategicData?.introduction?.sector
           || strategicData?.market_sector
           || identityRow?.['market_sector']) ?? null,
-        commercial_model: (phase0Identity?.commercialModel && phase0Identity.commercialModel !== 'unknown'
-          ? phase0Identity.commercialModel
+        commercial_model: (revisedIdentity?.commercialModel && revisedIdentity.commercialModel !== 'unknown'
+          ? revisedIdentity.commercialModel
           : identityRow?.['commercial_model']) ?? null,
-        products_services: (phase0Identity?.productsServices || identityRow?.['products_services']) ?? null,
-        is_local_business: phase0Identity?.isLocalBusiness ?? identityRow?.['is_local_business'] ?? null,
-        entity_type: (phase0Identity?.entityType || identityRow?.['entity_type']) ?? null,
-        target_audience: (phase0Identity?.targetAudience
+        products_services: (revisedIdentity?.productsServices || identityRow?.['products_services']) ?? null,
+        is_local_business: revisedIdentity?.isLocalBusiness ?? identityRow?.['is_local_business'] ?? null,
+        entity_type: (revisedIdentity?.entityType || identityRow?.['entity_type']) ?? null,
+        target_audience: (revisedIdentity?.targetAudience
           || strategicData?.introduction?.target_audience
           || identityRow?.['target_audience']) ?? null,
       });
+      const identitySectorOverride = revisedIdentity && revisedIdentity.sector !== 'unknown'
+        ? revisedIdentity.sector : null;
+      if (identitySectorOverride && marketProfile.sector === 'unknown') marketProfile.sector = identitySectorOverride;
+
       const marketSectorLabel = marketProfile.sector === 'unknown' ? null : sectorLabel(marketProfile.sector);
       console.log(
         `[Marina] Profil de marché : ${marketProfile.sector} / ${marketProfile.commercialModel} ` +
