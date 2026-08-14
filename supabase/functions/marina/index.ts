@@ -1998,6 +1998,12 @@ function compileMarinaReport(
     <!-- Section 3: Strategic GEO (périmètre page) -->
     <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
 
+    ${sectionHTMLs.ownerPerformance ? `
+    <div class="marina-separator"></div>
+    <!-- Section 3b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
+    ${sectionHTMLs.ownerPerformance}
+    ` : ''}
+
     <div class="marina-separator"></div>
 
     <!-- Section 4: Cocoon (périmètre site) -->
