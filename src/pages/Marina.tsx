@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 import { getMarinaShowcaseReport } from '@/lib/marina/showcase.functions';
+import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
+
 
 
 const MARINA_API_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`;
@@ -575,14 +577,14 @@ export default function Marina() {
   // Lecture du hash uniquement côté client (le SSR n'a pas de window)
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
-    if (['features', 'preview', 'api', 'pricing'].includes(hash)) setActiveTab(hash);
+    if (['features', 'preview', 'api', 'my-audits', 'pricing'].includes(hash)) setActiveTab(hash);
   }, []);
 
   // Sync tab with URL hash
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['features', 'preview', 'api', 'pricing'].includes(hash)) {
+      if (['features', 'preview', 'api', 'my-audits', 'pricing'].includes(hash)) {
         setActiveTab(hash);
       }
     };
@@ -921,9 +923,15 @@ export default function Marina() {
                 <TabsTrigger value="api" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
                   <Terminal className="w-3.5 h-3.5" /> {t.preview.tabApi}
                 </TabsTrigger>
+                {user && (
+                  <TabsTrigger value="my-audits" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
+                    <FileText className="w-3.5 h-3.5" /> Mes audits
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
                   <Coins className="w-3.5 h-3.5" /> {t.preview.tabPricing}
                 </TabsTrigger>
+
               </TabsList>
             </Tabs>
           </div>
@@ -1469,7 +1477,11 @@ async function generateReport(url) {
         </section>
         )}
 
+        {/* Tab: Mes audits */}
+        {activeTab === 'my-audits' && user && <MarinaMyAuditsTab />}
+
         {/* Tab: Pricing */}
+
         {activeTab === 'pricing' && (
         <section className="py-12">
           <div className="mx-auto max-w-3xl px-4 text-center">
