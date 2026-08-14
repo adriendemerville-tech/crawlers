@@ -786,8 +786,32 @@ export function analyzePageArchetypes(
     ? { ...(maybeOptions || {}), sitemapUrls: (sitemapUrlsOrOptions as string[] | null) ?? maybeOptions?.sitemapUrls ?? null }
     : (sitemapUrlsOrOptions as ArchetypeAnalysisOptions);
 
-  const usable = (pages || []).filter((p) => p && p.url);
-  if (usable.length < 3) return null;
+  const norm = (u: string): string => {
+    try {
+      const x = new URL(u);
+      return `${x.hostname.replace(/^www\./, '')}${x.pathname.replace(/\/+$/, '')}`.toLowerCase();
+    } catch { return u.replace(/\/+$/, '').toLowerCase(); }
+  };
+
+  let usable = (pages || []).filter((p) => p && p.url);
+
+  // Périmètre ciblé : l'audit porte sur une URL précise. On ne segmente alors
+  // que cette page et son voisinage de liens (entrants + sortants), sinon on
+  // décrirait des gabarits que l'audit n'a pas réellement examinés.
+  const focusUrl = options.focusUrl || null;
+  const scope: ArchetypeAnalysis['scope'] = focusUrl ? 'url' : 'site';
+  let neighborhoodPages = 0;
+  if (focusUrl) {
+    const allowed = new Set<string>([norm(focusUrl), ...(options.linkedUrls || []).filter((u) => typeof u === 'string').map(norm)]);
+    const scoped = usable.filter((p) => allowed.has(norm(p.url)));
+    if (scoped.length) {
+      usable = scoped;
+      neighborhoodPages = Math.max(0, scoped.length - 1);
+    }
+  }
+
+  if (usable.length < (focusUrl ? 1 : 3)) return null;
+
 
 
   const buckets = new Map<string, { def: ArchetypeDef; pages: ArchetypePageInput[] }>();
