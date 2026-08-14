@@ -2884,6 +2884,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                   await selfInvokePhase(jobId, url, detectedLang, 'phase2', {
                     domain,
                     crawlWaitRound: crawlWaitRound + 1,
+                    scanMode: scanModeInfo,
+                    pagesCrawled: pagesCrawledInfo,
                   });
                   return;
                 }
