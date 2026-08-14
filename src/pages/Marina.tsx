@@ -26,6 +26,8 @@ import {
   BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer, Palette
 } from 'lucide-react';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+import { getMarinaShowcaseReport } from '@/lib/marina/showcase.functions';
+
 
 const MARINA_API_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`;
 const CREDIT_COST = 5;
@@ -593,11 +595,24 @@ export default function Marina() {
     window.history.replaceState(null, '', `#${value}`);
   };
 
-  // Load demo report from latest completed marina job
+  // Aperçu du rapport : vitrine figée sur crawlers.fr (visible même hors connexion),
+  // avec repli sur le dernier rapport de l'utilisateur si la vitrine est indisponible.
   useEffect(() => {
-    if (!user) return;
+    let cancelled = false;
     const loadDemo = async () => {
       setLoadingDemo(true);
+      try {
+        const showcase = await getMarinaShowcaseReport();
+        if (!cancelled && showcase?.html) {
+          setDemoHtml(showcase.html);
+          setLoadingDemo(false);
+          return;
+        }
+      } catch (e) {
+        console.error('Showcase report load error:', e);
+      }
+
+      if (!user) { if (!cancelled) setLoadingDemo(false); return; }
       try {
         const { data: latestJob } = await supabase
           .from('async_jobs')
@@ -610,23 +625,21 @@ export default function Marina() {
           .maybeSingle();
         if (latestJob) {
           const resultData = latestJob.result_data as any;
-          const viewUrl = resultData?.report_view_url;
-          const reportUrlFallback = resultData?.report_url;
-          const fetchUrl = viewUrl || reportUrlFallback;
+          const fetchUrl = resultData?.report_view_url || resultData?.report_url;
           if (fetchUrl) {
             const resp = await fetch(fetchUrl);
-            if (resp.ok) {
-              setDemoHtml(await resp.text());
-            }
+            if (resp.ok && !cancelled) setDemoHtml(await resp.text());
           }
         }
       } catch (e) {
         console.error('Demo report load error:', e);
       }
-      setLoadingDemo(false);
+      if (!cancelled) setLoadingDemo(false);
     };
     loadDemo();
+    return () => { cancelled = true; };
   }, [user]);
+
 
   // Poll job progress via fetch
 
