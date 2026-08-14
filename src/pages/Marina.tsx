@@ -577,14 +577,14 @@ export default function Marina() {
   // Lecture du hash uniquement côté client (le SSR n'a pas de window)
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
-    if (['features', 'preview', 'api', 'pricing'].includes(hash)) setActiveTab(hash);
+    if (['features', 'preview', 'api', 'my-audits', 'pricing'].includes(hash)) setActiveTab(hash);
   }, []);
 
   // Sync tab with URL hash
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['features', 'preview', 'api', 'pricing'].includes(hash)) {
+      if (['features', 'preview', 'api', 'my-audits', 'pricing'].includes(hash)) {
         setActiveTab(hash);
       }
     };
