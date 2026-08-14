@@ -70,6 +70,7 @@ const UI: Record<Locale, Record<string, string>> = {
     h4: '4. Domain name maturity',
     h5: '5. Observed crawlability',
     h6: '6. Market maturity and the shift to AI answer engines',
+    h7: '7. Acknowledged blind spots',
     note: 'Recommendations are ranked by expected impact, not certainty of outcome. No ranking, AI citation or traffic volume is guaranteed.',
   },
   es: {
