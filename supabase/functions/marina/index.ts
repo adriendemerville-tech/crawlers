@@ -3610,9 +3610,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
             conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan, archetypeAnalysis),
 
-            disclosure: buildDisclosureSectionHTML(detectedLang, domain, {
-              expertData, strategicData, crawlSnapshot, llmVisibilityData, cocoonResult, reusedFromCache,
-            }),
+            // « Divulgation méthodologique » supprimée : forces / faiblesses / angles morts
+            // faisaient doublon avec « Portée et limites », qui est désormais l'unique
+            // section méthodologique de fin de rapport (angles morts inclus).
             scopeLimits: renderScopeLimitsHTML({
               domain,
               url,
