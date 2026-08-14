@@ -12,6 +12,8 @@ import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
 import { writeArchetypePrescriptions } from '../_shared/archetypeWorkbench.ts';
+import { buildAeoRewrites, writeAeoRewritePrescriptions } from '../_shared/aeoRewrites.ts';
+
 import { buildMarketProfile, fetchArchetypeBenchmarks, writeMarketObservation } from '../_shared/marketObservations.ts';
 import {
   sectorLabel,
