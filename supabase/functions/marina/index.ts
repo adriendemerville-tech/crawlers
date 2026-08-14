@@ -3916,6 +3916,8 @@ Deno.serve(handleRequest(async (req) => {
         status: job.status, 
         progress: job.progress,
         phase: (job.input_payload as any)?.phase || 'initializing',
+        scan_mode: (job.input_payload as any)?.scan_mode || null,
+        pages_crawled: (job.input_payload as any)?.pages_crawled ?? null,
       });
     }
 
