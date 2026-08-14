@@ -81,6 +81,7 @@ const UI: Record<Locale, Record<string, string>> = {
     h4: '4. Madurez del nombre de dominio',
     h5: '5. Rastreabilidad observada',
     h6: '6. Madurez del mercado y cambio hacia los motores de respuesta IA',
+    h7: '7. Puntos ciegos asumidos',
     note: 'Las recomendaciones se priorizan por impacto esperado, no por certeza de resultado. No se garantiza ningún resultado.',
   },
 };
