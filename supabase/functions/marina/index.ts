@@ -33,6 +33,7 @@ import {
   detectIdentityContradiction,
   renderIdentityCardHTML,
   emptyIdentityCard,
+  reviseIdentityAfterCrawl,
   type IdentityCard,
 } from '../_shared/identityResolver.ts';
 
