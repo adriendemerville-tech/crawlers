@@ -3519,11 +3519,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             // Carte d'identité résolue AVANT le crawl : elle explique au lecteur sur
             // quelle lecture du business les fourchettes de gabarits ont été calées,
             // et signale une éventuelle contradiction avec ce que le crawl a trouvé.
-            identity: phase0Identity
+            identity: revisedIdentity
               ? renderIdentityCardHTML(
-                  phase0Identity,
+                  revisedIdentity,
                   detectedLang,
-                  detectIdentityContradiction(phase0Identity, archetypeAnalysis?.mix ?? null),
+                  detectIdentityContradiction(revisedIdentity, archetypeAnalysis?.mix ?? null),
                 )
               : undefined,
             archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
