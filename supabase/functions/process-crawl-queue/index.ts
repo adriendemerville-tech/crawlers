@@ -18,6 +18,7 @@ import type { PageAnalysis, CustomSelector } from '../_shared/crawlQueue/types.t
 import { scrapePage, probeSPAStatus, createPaidBudget, budgetSummary } from '../_shared/crawlQueue/scraperStrategy.ts';
 import { computeDepth } from '../_shared/crawlQueue/duplicateDetector.ts';
 import { finalizeJob } from '../_shared/crawlQueue/finalizer.ts';
+import { filterCrawlablePublicUrls, isCrawlablePublicUrl } from '../_shared/crawlUrlFilter.ts';
 
 /**
  * Découpage en lots : un run du worker traite au maximum PAGES_PER_RUN pages,
@@ -60,7 +61,14 @@ Deno.serve(handleRequest(async (req) => {
         break;
       }
 
-      const urlsToProcess: string[] = (job.urls_to_process as string[]) || [];
+      const originalUrls: string[] = (job.urls_to_process as string[]) || [];
+      const urlsToProcess = filterCrawlablePublicUrls(originalUrls);
+      if (urlsToProcess.length !== originalUrls.length) {
+        console.log(`[Worker] Job ${job.id}: excluded ${originalUrls.length - urlsToProcess.length} private/non-page URLs`);
+        await supabase.from('crawl_jobs').update({ urls_to_process: urlsToProcess, total_count: urlsToProcess.length }).eq('id', job.id);
+        await supabase.from('site_crawls').update({ total_pages: urlsToProcess.length }).eq('id', job.crawl_id);
+        job.total_count = urlsToProcess.length;
+      }
       const customSelectors: CustomSelector[] = (job.custom_selectors as CustomSelector[]) || [];
       const maxDepth: number = job.max_depth || 0;
       const urlFilter: string | null = job.url_filter || null;
@@ -181,9 +189,12 @@ Deno.serve(handleRequest(async (req) => {
 
         console.log(`[Worker] Job ${job.id}: batch=${batchSize} (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA]' : ''}`);
 
-        const scrapePromises = batch.map(pageUrl =>
-          scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url), paidBudget)
-        );
+        const scrapePromises = batch.map(async pageUrl => {
+          const first = await scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url), paidBudget);
+          if (first) return first;
+          console.warn(`[Worker] First attempt failed for ${pageUrl}; retrying once`);
+          return await scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url), paidBudget);
+        });
 
         const settled = await Promise.allSettled(scrapePromises);
         const validResults = settled
@@ -227,7 +238,7 @@ Deno.serve(handleRequest(async (req) => {
                 const normalized = fullUrl.replace(/\/$/, '');
                 const linkDomain = new URL(fullUrl).hostname;
                 if (!linkDomain.includes(job.domain.replace(/^www\./, '')) && !job.domain.includes(linkDomain.replace(/^www\./, ''))) continue;
-                if (processedUrls.has(normalized)) continue;
+                if (processedUrls.has(normalized) || !isCrawlablePublicUrl(fullUrl)) continue;
                 processedUrls.add(normalized);
                 remaining.push(fullUrl);
                 discoveredNew++;
@@ -250,14 +261,9 @@ Deno.serve(handleRequest(async (req) => {
         }
 
         // Reconcile from DB
-        const { count: persistedAfterBatch } = await supabase
-          .from('crawl_pages')
-          .select('id', { count: 'exact', head: true })
-          .eq('crawl_id', job.crawl_id);
-
-        const newProcessedCount = Math.max(alreadyProcessed, persistedAfterBatch || 0);
-        const pagesInThisCycle = Math.max(0, newProcessedCount - alreadyProcessed);
-        globalPagesProcessed += pagesInThisCycle;
+        const attemptedCount = batch.length;
+        const newProcessedCount = Math.min(job.total_count, alreadyProcessed + attemptedCount);
+        globalPagesProcessed += attemptedCount;
         alreadyProcessed = newProcessedCount;
 
         await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);

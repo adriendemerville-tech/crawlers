@@ -7,28 +7,13 @@ import { logSilentError, fireAndLog } from '../_shared/silentErrorLogger.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent } from '../_shared/cmsContentScanner.ts';
 import { isIktrackerDomain, getIktrackerApiKey, IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
+import { filterCrawlablePublicUrls } from '../_shared/crawlUrlFilter.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
 
-// Extensions non-HTML à exclure (sitemap XML, assets, documents…)
-const NON_PAGE_EXTENSIONS = /\.(xml|xsl|xslt|pdf|zip|gz|tar|rar|7z|exe|dmg|iso|bin|css|js|json|woff|woff2|ttf|eot|otf|svg|ico|png|jpg|jpeg|gif|webp|avif|mp3|mp4|avi|mov|wmv|flv|swf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|log|bak|sql|db)$/i;
-
-// Patterns d'URL non-page à exclure
-const NON_PAGE_PATTERNS = /\/(sitemap[^/]*\.xml|feed\/?|rss\/?|atom\/?|wp-json\/?|wp-admin|wp-includes|xmlrpc\.php|robots\.txt)/i;
-
 function filterNonPageUrls(rawUrls: string[]): string[] {
-  return rawUrls.filter(u => {
-    try {
-      const parsed = new URL(u);
-      const path = parsed.pathname;
-      if (NON_PAGE_EXTENSIONS.test(path)) return false;
-      if (NON_PAGE_PATTERNS.test(path)) return false;
-      return true;
-    } catch {
-      return false;
-    }
-  });
+  return filterCrawlablePublicUrls(rawUrls);
 }
 
 /**
