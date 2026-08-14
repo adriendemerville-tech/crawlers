@@ -2770,6 +2770,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
           if (inFlightCrawl) {
             console.log(`[Marina] Crawl ${inFlightCrawl.id} already in flight for ${domain} — attaching instead of launching a second one`);
+            if (!scanModeInfo) scanModeInfo = resolveScanMode(inFlightCrawl.total_pages || null);
             crawlLaunchRes = {
               success: true,
               crawlId: inFlightCrawl.id,
