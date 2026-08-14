@@ -2845,6 +2845,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                 const crawledPages = (crawlStatus as any).crawled_pages || 0;
                 const totalPages = (crawlStatus as any).total_pages || 1;
                 lastCrawledPages = crawledPages;
+                pagesCrawledInfo = crawledPages;
 
                 const crawlProgress = Math.min(78, 67 + Math.round((crawledPages / totalPages) * 11));
                 await updateProgress(crawlProgress, 'multi_crawl');
