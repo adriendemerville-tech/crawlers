@@ -227,6 +227,36 @@ export function renderScopeLimitsHTML(input: ScopeLimitsInput): string {
     ),
   );
 
+  // 7. Angles morts — contenu unique repris de l'ancienne section
+  // « Divulgation méthodologique », désormais fusionnée ici pour éviter le doublon.
+  const blindSpots = ul([
+    t(
+      'Contenus derrière authentification, formulaire ou paywall : non explorés, donc non évalués.',
+      'Content behind authentication, forms or paywall: not crawled, therefore not assessed.',
+      'Contenido tras autenticación, formulario o muro de pago: no rastreado.',
+    ),
+    t(
+      'Rendu JavaScript tardif et personnalisation par géolocalisation ou cookie : ce que voient certains utilisateurs peut différer de ce qui est analysé.',
+      'Late JavaScript rendering and geo/cookie personalisation: what some users see may differ from what is analysed.',
+      'Renderizado JS tardío y personalización: lo que ven algunos usuarios puede diferir.',
+    ),
+    t(
+      'Réputation hors-site (avis, presse, réseaux, mentions de marque) : partiellement approchée, jamais exhaustive.',
+      'Off-site reputation (reviews, press, social, brand mentions): partially approximated, never exhaustive.',
+      'Reputación externa: parcialmente aproximada, nunca exhaustiva.',
+    ),
+    t(
+      'Historique de pénalités, migrations passées et changements de nom de domaine : invisibles depuis un audit externe.',
+      'Penalty history, past migrations and domain changes: invisible from an external audit.',
+      'Historial de penalizaciones y migraciones: invisible desde una auditoría externa.',
+    ),
+    t(
+      "Tests de visibilité IA non déterministes : une même question peut donner une réponse différente d'une exécution à l'autre.",
+      'AI visibility tests are not deterministic: the same question can yield a different answer between runs.',
+      'Las pruebas de visibilidad IA no son deterministas.',
+    ),
+  ]);
+
   return `
   <div class="section" data-pdf-section="disclaimer" data-marina-scope="site" data-marina-block="scope_limits" style="page-break-before:always;border-top:3px solid #5b21b6;">
     <h2 style="font-size:20px;margin:0 0 6px 0;">${ui.title}</h2>
