@@ -1671,6 +1671,8 @@ function buildReportIntroHTML(
     indexationCount?: number;
     visual?: boolean;
     plan?: Array<{ severity: string; title: string }>;
+    /** Mode de scan réellement appliqué au run (persisté sur le job). */
+    scanMode?: ScanModeResolution | null;
   },
 ): string {
   const isEn = lang === 'en';
