@@ -59,6 +59,7 @@ const UI: Record<Locale, Record<string, string>> = {
     h4: '4. Maturité du nom de domaine',
     h5: '5. Crawlabilité observée',
     h6: '6. Maturité du marché et bascule vers les moteurs de réponse IA',
+    h7: '7. Angles morts assumés',
     note: "Les recommandations sont hiérarchisées par impact attendu, pas par certitude de résultat. Aucun positionnement, aucune citation IA et aucun volume de trafic ne sont garantis.",
   },
   en: {
@@ -69,6 +70,7 @@ const UI: Record<Locale, Record<string, string>> = {
     h4: '4. Domain name maturity',
     h5: '5. Observed crawlability',
     h6: '6. Market maturity and the shift to AI answer engines',
+    h7: '7. Acknowledged blind spots',
     note: 'Recommendations are ranked by expected impact, not certainty of outcome. No ranking, AI citation or traffic volume is guaranteed.',
   },
   es: {
@@ -79,6 +81,7 @@ const UI: Record<Locale, Record<string, string>> = {
     h4: '4. Madurez del nombre de dominio',
     h5: '5. Rastreabilidad observada',
     h6: '6. Madurez del mercado y cambio hacia los motores de respuesta IA',
+    h7: '7. Puntos ciegos asumidos',
     note: 'Las recomendaciones se priorizan por impacto esperado, no por certeza de resultado. No se garantiza ningún resultado.',
   },
 };
@@ -224,6 +227,36 @@ export function renderScopeLimitsHTML(input: ScopeLimitsInput): string {
     ),
   );
 
+  // 7. Angles morts — contenu unique repris de l'ancienne section
+  // « Divulgation méthodologique », désormais fusionnée ici pour éviter le doublon.
+  const blindSpots = ul([
+    t(
+      'Contenus derrière authentification, formulaire ou paywall : non explorés, donc non évalués.',
+      'Content behind authentication, forms or paywall: not crawled, therefore not assessed.',
+      'Contenido tras autenticación, formulario o muro de pago: no rastreado.',
+    ),
+    t(
+      'Rendu JavaScript tardif et personnalisation par géolocalisation ou cookie : ce que voient certains utilisateurs peut différer de ce qui est analysé.',
+      'Late JavaScript rendering and geo/cookie personalisation: what some users see may differ from what is analysed.',
+      'Renderizado JS tardío y personalización: lo que ven algunos usuarios puede diferir.',
+    ),
+    t(
+      'Réputation hors-site (avis, presse, réseaux, mentions de marque) : partiellement approchée, jamais exhaustive.',
+      'Off-site reputation (reviews, press, social, brand mentions): partially approximated, never exhaustive.',
+      'Reputación externa: parcialmente aproximada, nunca exhaustiva.',
+    ),
+    t(
+      'Historique de pénalités, migrations passées et changements de nom de domaine : invisibles depuis un audit externe.',
+      'Penalty history, past migrations and domain changes: invisible from an external audit.',
+      'Historial de penalizaciones y migraciones: invisible desde una auditoría externa.',
+    ),
+    t(
+      "Tests de visibilité IA non déterministes : une même question peut donner une réponse différente d'une exécution à l'autre.",
+      'AI visibility tests are not deterministic: the same question can yield a different answer between runs.',
+      'Las pruebas de visibilidad IA no son deterministas.',
+    ),
+  ]);
+
   return `
   <div class="section" data-pdf-section="disclaimer" data-marina-scope="site" data-marina-block="scope_limits" style="page-break-before:always;border-top:3px solid #5b21b6;">
     <h2 style="font-size:20px;margin:0 0 6px 0;">${ui.title}</h2>
@@ -240,6 +273,7 @@ export function renderScopeLimitsHTML(input: ScopeLimitsInput): string {
     ${h3(ui.h4)}${p(domainBody)}
     ${h3(ui.h5)}${crawlBody}
     ${h3(ui.h6)}${marketBody}
+    ${h3(ui.h7)}${blindSpots}
     <p style="font-size:12px;color:#6b7280;line-height:1.6;margin:16px 0 0 0;font-style:italic;">${ui.note}</p>
   </div>`;
 }
