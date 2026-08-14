@@ -273,6 +273,7 @@ export function renderScopeLimitsHTML(input: ScopeLimitsInput): string {
     ${h3(ui.h4)}${p(domainBody)}
     ${h3(ui.h5)}${crawlBody}
     ${h3(ui.h6)}${marketBody}
+    ${h3(ui.h7)}${blindSpots}
     <p style="font-size:12px;color:#6b7280;line-height:1.6;margin:16px 0 0 0;font-style:italic;">${ui.note}</p>
   </div>`;
 }
