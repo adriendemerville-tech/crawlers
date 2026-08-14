@@ -16,6 +16,7 @@ import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreview
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
 import { MarinaScanModePanel, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
+import { persistMarinaReport } from '@/lib/marina/persistReport';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
