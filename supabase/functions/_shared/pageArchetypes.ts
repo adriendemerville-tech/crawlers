@@ -921,7 +921,7 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
       ${list(g.strengths, '#16a34a', 'Ce qui fonctionne')}
       ${list(g.failures, '#b91c1c', 'Ce qui échoue')}
       ${list(g.optimizations, '#6d28d9', 'Comment les optimiser')}
-      ${g.sample.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;word-break:break-all;">Exemples : ${g.sample.join(' · ')}</div>` : ''}
+      ${renderExamples(g)}
     </div>`;
   }).join('');
 
