@@ -3529,6 +3529,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           {
             crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML,
             indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML,
+            ownerPerformance: ownerPerformanceHTML || undefined,
             visual: buildVisualEvidenceHtml(visualCapture, detectedLang),
             summary: buildExecutiveSummaryHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
