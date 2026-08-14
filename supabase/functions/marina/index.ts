@@ -1752,7 +1752,7 @@ function buildReportIntroHTML(
         : t(`Analyse limitée à l'URL soumise : le crawl multi-pages n'a pas produit de périmètre exploitable pour ce rapport.`,
             `Analysis limited to the submitted URL: the multi-page crawl produced no usable scope.`,
             `Análisis limitado a la URL enviada.`))}
-      ${li(scanModeSentence(resolveScanMode(pagesKnown), lang))}
+      ${li(scanModeSentence(ctx.scanMode ?? resolveScanMode(pagesKnown), lang))}
       ${li(t(
         `Trois modes de scan existent et la bascule est automatique, jamais manuelle : Approfondi (site ≤ 120 URLs, jusqu'à 120 pages), Standard (≤ 1 000 URLs, jusqu'à 150 pages), Échantillon (> 1 000 URLs, 60 pages représentatives des gabarits). Ce plafonnement garantit un diagnostic complet dans un temps d'exécution maîtrisé.`,
         `Three scan modes exist and switching is automatic, never manual: Deep (site ≤ 120 URLs, up to 120 pages), Standard (≤ 1,000 URLs, up to 150 pages), Sample (> 1,000 URLs, 60 template-representative pages).`,
