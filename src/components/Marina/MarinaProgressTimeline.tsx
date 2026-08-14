@@ -128,7 +128,6 @@ export default function MarinaProgressTimeline({
 
   useEffect(() => {
     targetRef.current = Math.max(0, Math.min(100, progress));
-    setSmooth((prev) => Math.min(prev, targetRef.current > prev ? prev : targetRef.current));
   }, [progress]);
 
   useEffect(() => {
