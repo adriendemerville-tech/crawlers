@@ -752,6 +752,31 @@ Réponds en JSON STRICT:
             }
           }
 
+          // ── Réécriture « réponse directe » (~40 mots) sur la page auditée ──
+          // Pas de score ni de section dédiés : la prescription part dans le
+          // Workbench (rewrite_content) et devient exécutable par Parménion.
+          try {
+            const rawPageText = (pageContentContext || '')
+              .replace(/(?:Titre|H1|H2|H3|Desc)="([^"]*)"/g, '$1\n')
+              .replace(/[ \t]+/g, ' ')
+              .trim();
+            const h1Only = (pageContentContext || '').match(/H1="([^"]+)"/)?.[1] || null;
+            const titleOnly = (pageContentContext || '').match(/Titre="([^"]+)"/)?.[1] || null;
+            const aeoRewrite = rawPageText
+              ? buildAeoRewrite({ url, title: titleOnly, h1: h1Only, text: rawPageText })
+              : null;
+            if (aeoRewrite) {
+              await writeAeoRewritePrescriptions(getServiceClient(), [aeoRewrite], {
+                domain: cleanDomain,
+                userId: wbUser.id,
+                trackedSiteId: trackedId,
+                sourceFunction: 'audit-strategique-ia',
+                sourceType: 'audit',
+              });
+            }
+          } catch (aeoErr) { console.warn('⚠️ AEO rewrite prescription failed:', aeoErr); }
+
+
           if (wbItems.length > 0) {
             // Un ré-audit DOIT rafraîchir le constat (toxicité, autorité, liens cassés).
             // ignoreDuplicates figeait le premier score indéfiniment.
