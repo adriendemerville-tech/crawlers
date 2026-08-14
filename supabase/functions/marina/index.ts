@@ -29,6 +29,11 @@ import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
 import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
 import {
+  fetchOwnerPerformanceData,
+  renderOwnerPerformanceHTML,
+  type OwnerPerformanceData,
+} from '../_shared/marinaOwnerData.ts';
+import {
   resolveIdentityCard,
   detectIdentityContradiction,
   renderIdentityCardHTML,
