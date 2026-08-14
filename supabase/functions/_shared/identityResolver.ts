@@ -591,3 +591,147 @@ export function identityScopeNote(card: IdentityCard, lang = 'fr'): string {
     `La hipótesis de negocio de esta auditoría fue ${origin}. No es un dato declarado por la empresa sino una inferencia editable.`,
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Révision post-crawl de la carte d'identité
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * La phase 0 ne lit que la home et 2-3 pages clés, en fetch brut : sur un site
+ * rendu côté client, derrière un mur d'authentification ou dont la home est
+ * volontairement allusive, le secteur peut rester non résolu — ou être résolu à
+ * partir d'un libellé trop vague. Une fois le crawl fait, on dispose d'un corpus
+ * bien plus représentatif (titres et H1 de dizaines de pages réellement rendues) :
+ * on s'en sert pour corriger la carte AVANT que le mix de gabarits ne soit calibré.
+ *
+ * Coûts : normalisation déterministe d'abord (0 token). Un seul appel LLM court,
+ * et seulement si le secteur reste non résolu après cette passe.
+ * Jamais bloquant, et une carte `user_manual` n'est jamais touchée.
+ */
+export async function reviseIdentityAfterCrawl(
+  sb: any,
+  card: IdentityCard,
+  corpus: Array<{ url?: string | null; title?: string | null; h1?: string | null }>,
+  opts: { userId: string; domain: string },
+): Promise<IdentityCard> {
+  try {
+    if (card.source === 'identity_card' && card.reused && card.confidence >= 90) return card; // carte verrouillée / manuelle
+    const texts = corpus
+      .map((p) => [p.title, p.h1].filter(Boolean).join(' — '))
+      .filter((s) => s && s.length > 3)
+      .slice(0, 60);
+    if (texts.length < 3) return card;
+    const blob = texts.join(' | ').slice(0, 6000);
+
+    // 1) Passe déterministe : le corpus de crawl comme texte de secours.
+    const crawlSector = normalizeSector(blob);
+    let sector = card.sector;
+    const notes = [...card.notes];
+    let confidence = card.confidence;
+
+    if (sector === 'unknown' && crawlSector !== 'unknown') {
+      sector = crawlSector;
+      confidence = Math.max(confidence, 55);
+      notes.push(
+        `Secteur déduit après le crawl à partir des titres et H1 de ${texts.length} pages réellement rendues, la home seule ne suffisant pas.`,
+      );
+    } else if (sector !== 'unknown' && crawlSector !== 'unknown' && crawlSector !== sector) {
+      notes.push(
+        `Le corpus de crawl orienterait plutôt vers « ${sectorLabel(crawlSector)} » : la carte retenue reste « ${sectorLabel(sector)} », à vérifier dans la carte d'identité du site.`,
+      );
+    } else if (sector !== 'unknown' && crawlSector === sector) {
+      confidence = Math.min(90, confidence + 10);
+      notes.push('Secteur confirmé par le corpus de pages crawlées.');
+    }
+
+    // 2) Un seul appel court si le secteur reste indéterminé.
+    if (sector === 'unknown') {
+      try {
+        const res = await aiGatewayFetch({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          timeoutMs: LLM_TIMEOUT_MS,
+          callerFunction: 'marina-identity-postcrawl',
+          body: JSON.stringify({
+            model: 'google/gemini-3-flash-preview',
+            temperature: 0,
+            max_tokens: 300,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              {
+                role: 'user',
+                content: `Domaine : ${opts.domain}\n\nTitres et H1 des pages du site :\n${blob}`,
+              },
+            ],
+          }),
+        });
+        if (res.ok) {
+          const j = (await res.json().catch(() => null)) as any;
+          const content = j?.choices?.[0]?.message?.content;
+          const m = typeof content === 'string' ? content.match(/\{[\s\S]*\}/) : null;
+          if (m) {
+            const parsed = JSON.parse(m[0]) as Record<string, unknown>;
+            const revised = buildCard(card.domain, card.trackedSiteId, {
+              market_sector: parsed['market_sector'] ?? card.marketSector,
+              products_services: parsed['products_services'] ?? card.productsServices,
+              target_audience: parsed['target_audience'] ?? card.targetAudience,
+              secondary_audience: parsed['secondary_audience'] ?? card.secondaryAudience,
+              commercial_area: parsed['commercial_area'] ?? card.commercialArea,
+              commercial_model: parsed['commercial_model'] ?? card.commercialModel,
+              entity_type: parsed['entity_type'] ?? card.entityType,
+              is_local_business: parsed['is_local_business'] ?? card.isLocalBusiness,
+              competitors: parsed['competitors'] ?? card.competitors,
+            }, {
+              source: 'llm_inference',
+              reused: false,
+              confidence: 60,
+              pagesUsed: card.pagesUsed,
+              notes: [
+                ...notes,
+                `Carte d'identité déduite après le crawl (titres et H1 de ${texts.length} pages), la lecture de la home n'ayant pas permis de conclure.`,
+              ],
+            });
+            if (revised.sector !== 'unknown' || revised.commercialModel !== 'unknown') {
+              await persistRevision(sb, revised, opts.userId);
+              return revised;
+            }
+          }
+        }
+      } catch (e) {
+        notes.push('Révision post-crawl de la carte interrompue : ' + String((e as Error)?.message || e));
+      }
+    }
+
+    if (sector === card.sector && confidence === card.confidence && notes.length === card.notes.length) return card;
+
+    const updated: IdentityCard = {
+      ...card,
+      sector,
+      sectorLabelText: sectorLabel(sector),
+      confidence,
+      notes,
+    };
+    if (sector !== card.sector) await persistRevision(sb, updated, opts.userId);
+    return updated;
+  } catch {
+    return card; // jamais bloquant
+  }
+}
+
+/** Écriture via le gateway : `user_manual` reste protégé, champs critiques en suggestion. */
+async function persistRevision(sb: any, card: IdentityCard, userId: string): Promise<void> {
+  if (!card.trackedSiteId) return;
+  try {
+    const write: Record<string, unknown> = {};
+    if (card.marketSector) write['market_sector'] = card.marketSector;
+    if (card.productsServices) write['products_services'] = card.productsServices;
+    if (card.targetAudience) write['target_audience'] = card.targetAudience;
+    if (card.commercialArea) write['commercial_area'] = card.commercialArea;
+    if (card.entityType) write['entity_type'] = card.entityType;
+    if (card.commercialModel !== 'unknown') write['commercial_model'] = card.commercialModel;
+    if (typeof card.isLocalBusiness === 'boolean') write['is_local_business'] = card.isLocalBusiness;
+    if (!Object.keys(write).length) return;
+    await writeIdentity({ siteId: card.trackedSiteId, fields: write, source: 'marina', userId });
+  } catch {
+    /* non bloquant */
+  }
+}
