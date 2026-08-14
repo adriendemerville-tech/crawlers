@@ -650,6 +650,10 @@ export default function Marina() {
                 if (html) setDemoHtml(html);
               }).catch(() => {});
             }
+            // Utilisateur connecté : on archive le rapport dans /app/console?tab=marina
+            if (user) {
+              void persistMarinaReport(user.id, jobId, url.trim() || data.data?.url || '', data.data, language);
+            }
             setLoading(false);
             setProgress(100);
             setPhase(t.phases.done);
