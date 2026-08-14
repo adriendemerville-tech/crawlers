@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
-import { MarinaScanModePanel } from '@/components/Marina/MarinaScanModePanel';
+import { MarinaScanModePanel, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
