@@ -2511,10 +2511,21 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
     throw new Error('Parent Marina job missing user_id');
   }
   
+  // Mode de scan réellement appliqué au run : résolu en phase 2, transporté
+  // dans intermediateData d'une phase à l'autre, puis répliqué dans
+  // input_payload à chaque updateProgress (qui réécrit ce champ).
+  let scanModeInfo: ScanModeResolution | null = (intermediateData as any)?.scanMode ?? null;
+  let pagesCrawledInfo: number | null = (intermediateData as any)?.pagesCrawled ?? null;
+
   const updateProgress = async (progress: number, phaseName?: string) => {
     try {
       const updateData: any = { progress };
-      if (phaseName) updateData.input_payload = { phase: phaseName, url };
+      if (phaseName) updateData.input_payload = {
+        phase: phaseName,
+        url,
+        ...(scanModeInfo ? { scan_mode: scanModeInfo } : {}),
+        ...(pagesCrawledInfo !== null ? { pages_crawled: pagesCrawledInfo } : {}),
+      };
       if (progress === 5) updateData.started_at = new Date().toISOString();
       updateData.status = 'processing';
       await sb.from('async_jobs').update(updateData).eq('id', jobId);
