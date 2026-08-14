@@ -31,6 +31,12 @@ export interface ArchetypePageInput {
 
 export type ArchetypeRole = 'core_business' | 'auxiliary_pillar' | 'support' | 'functional';
 
+export interface ArchetypeExample {
+  url: string;
+  h1: string | null;
+  title: string | null;
+}
+
 export interface ArchetypeGroup {
   key: string;
   label: string;
@@ -38,6 +44,8 @@ export interface ArchetypeGroup {
   purpose: string;
   pages: number;
   sample: string[];
+  /** Exemples concrets (URL cliquable + H1) affichés dans la carte du type. */
+  examples: ArchetypeExample[];
   avgSeoScore: number | null;
   avgWordCount: number;
   avgInternalLinks: number;
@@ -52,6 +60,7 @@ export interface ArchetypeGroup {
   optimizations: string[];
   verdict: 'strong' | 'ok' | 'weak';
 }
+
 
 export type MixAction = 'balanced' | 'expand' | 'prune' | 'differentiate' | 'create';
 
