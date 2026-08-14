@@ -1972,6 +1972,7 @@ function compileMarinaReport(
       ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
       <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
+      ${sectionHTMLs.ownerPerformance ? `<div class="toc-item"><span class="section-number">3b</span> ${lang === 'fr' ? 'Données propriétaires du domaine' : lang === 'es' ? 'Datos propietarios del dominio' : 'First-party domain data'}</div>` : ''}
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
       ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
       ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
