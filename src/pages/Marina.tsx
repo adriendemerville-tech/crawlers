@@ -16,6 +16,8 @@ import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreview
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
 import { MarinaScanModePanel, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
+import MarinaProgressTimeline from '@/components/Marina/MarinaProgressTimeline';
+
 import { persistMarinaReport } from '@/lib/marina/persistReport';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -862,15 +864,15 @@ export default function Marina() {
 
               {/* Progress */}
               {loading && (
-                <div className="mt-8 max-w-md mx-auto">
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full"
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">{PHASE_LABELS[phase] || phase}</p>
-                </div>
+                <MarinaProgressTimeline
+                  phase={phase}
+                  progress={progress}
+                  language={language}
+                  pagesCrawled={scanPagesCrawled}
+                  scanModeLabel={activeScanMode?.mode ?? null}
+                />
               )}
+
 
               {/* Error */}
               {error && (
