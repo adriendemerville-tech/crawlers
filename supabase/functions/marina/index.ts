@@ -29,6 +29,11 @@ import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
 import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
 import {
+  fetchOwnerPerformanceData,
+  renderOwnerPerformanceHTML,
+  type OwnerPerformanceData,
+} from '../_shared/marinaOwnerData.ts';
+import {
   resolveIdentityCard,
   detectIdentityContradiction,
   renderIdentityCardHTML,
@@ -1863,7 +1868,7 @@ function buildConclusionHTML(
 
 
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string; archetypes?: string; identity?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string; archetypes?: string; identity?: string; ownerPerformance?: string },
 
 
   lang: string,
@@ -1967,6 +1972,7 @@ function compileMarinaReport(
       ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
       <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
+      ${sectionHTMLs.ownerPerformance ? `<div class="toc-item"><span class="section-number">3b</span> ${lang === 'fr' ? 'Données propriétaires du domaine' : lang === 'es' ? 'Datos propietarios del dominio' : 'First-party domain data'}</div>` : ''}
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
       ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
       ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
@@ -1991,6 +1997,12 @@ function compileMarinaReport(
 
     <!-- Section 3: Strategic GEO (périmètre page) -->
     <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
+
+    ${sectionHTMLs.ownerPerformance ? `
+    <div class="marina-separator"></div>
+    <!-- Section 3b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
+    ${sectionHTMLs.ownerPerformance}
+    ` : ''}
 
     <div class="marina-separator"></div>
 
@@ -3480,6 +3492,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
         const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan);
 
+        // Données propriétaires : uniquement si l'utilisateur possède une connexion
+        // Google vérifiée couvrant CE domaine. Sinon la section n'existe pas.
+        let ownerPerformance: OwnerPerformanceData | null = null;
+        try {
+          ownerPerformance = await fetchOwnerPerformanceData(sb, parentJob.user_id, domain);
+          console.log(
+            `[Marina] Données propriétaires ${ownerPerformance ? 'disponibles' : 'absentes'} pour ${domain}`,
+          );
+        } catch (ownerErr) {
+          console.warn('[Marina] Owner performance fetch failed (non-fatal):', ownerErr);
+        }
+        const ownerPerformanceHTML = renderOwnerPerformanceHTML(ownerPerformance, '3b');
+
         const tempPrefix = `marina/tmp/${jobId}`;
         const storageUploads = [
           { path: `${tempPrefix}/1-crawl.html`, content: crawlHTML },
@@ -3504,6 +3529,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           {
             crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML,
             indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML,
+            ownerPerformance: ownerPerformanceHTML || undefined,
             visual: buildVisualEvidenceHtml(visualCapture, detectedLang),
             summary: buildExecutiveSummaryHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
