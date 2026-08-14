@@ -3260,6 +3260,31 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             // Pondération du mix de gabarits : le sitemap donne la répartition du site
             // entier, le crawl la qualité. Fetch XML léger, aucun token LLM.
             const sitemapUrlsForMix = await fetchSitemapUrls(domain).catch(() => [] as string[]);
+
+            // Audit ciblé sur une URL précise (pas la racine du domaine) : on ne
+            // segmente que cette page et son voisinage de liens, au lieu de
+            // décrire des gabarits que l'audit n'a pas examinés.
+            const auditedPath = (() => { try { return new URL(url).pathname.replace(/\/+$/, ''); } catch { return ''; } })();
+            const isFocusedAudit = auditedPath !== '' && auditedPath !== '/';
+            let linkedUrls: string[] = [];
+            if (isFocusedAudit) {
+              const rawHtml: string = expertData?.rawData?.htmlAnalysis?.rawHtml || '';
+              const outbound = new Set<string>();
+              for (const m of rawHtml.matchAll(/<a[^>]+href=["']([^"'#]+)["']/gi)) {
+                try {
+                  const abs = new URL(m[1], url);
+                  if (abs.hostname.replace(/^www\./, '') === domain.replace(/^www\./, '')) outbound.add(abs.toString());
+                } catch { /* href non résolvable */ }
+              }
+              // Voisinage entrant approché : pages de la même branche de
+              // répertoire, seule information de maillage disponible au crawl.
+              const branch = auditedPath.split('/').slice(0, -1).join('/');
+              const inbound = (crawlPages as any[])
+                .filter((p) => branch && typeof p.path === 'string' && p.path.startsWith(`${branch}/`))
+                .map((p) => p.url as string);
+              linkedUrls = [...outbound, ...inbound];
+            }
+
             archetypeAnalysis = analyzePageArchetypes(crawlPages as any[], {
               sitemapUrls: sitemapUrlsForMix,
               benchmarks: archetypeBenchmarks,
@@ -3268,7 +3293,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               commercialModelLabel: marketProfile.commercialModel === 'unknown'
                 ? null
                 : commercialModelLabel(marketProfile.commercialModel),
+              focusUrl: isFocusedAudit ? url : null,
+              linkedUrls: isFocusedAudit ? linkedUrls : null,
             });
+
 
 
             // Les arbitrages de gabarits deviennent des prescriptions exécutables
