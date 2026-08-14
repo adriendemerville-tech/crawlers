@@ -14,7 +14,10 @@
  *     (flagged "newly_detected" so the user can spot fresh findings).
  */
 
+import { ROI_TIER_STYLE, summarizeRoi, type RoiAnnotation } from './roiWeighting.ts';
+
 // ───────────────────────── Types ─────────────────────────
+
 
 export type Severity = 'critical' | 'important' | 'suggestion' | 'optional' | 'low';
 
@@ -316,7 +319,9 @@ export function renderTopPrioritiesHTML(top: SectionTopPriorities): string {
 /**
  * Render the consolidated end-of-report action plan as HTML.
  */
-export function renderConsolidatedPlanHTML(items: ConsolidatedPlanItem[]): string {
+export function renderConsolidatedPlanHTML(
+  items: Array<ConsolidatedPlanItem & { roi?: RoiAnnotation }>,
+): string {
   if (!items.length) {
     return `<div class="section">
       <div class="section-title">Plan d'action consolidé</div>
@@ -327,38 +332,51 @@ export function renderConsolidatedPlanHTML(items: ConsolidatedPlanItem[]): strin
   const rows = items.map((it) => {
     const badge = SEVERITY_BADGE[it.severity];
     const origin = it.source === 'workbench'
-      ? `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">Workbench</span>`
-      : `<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">Nouveau · ${escapeHtml(SECTION_LABELS[it.source_section || 'seo'])}</span>`;
+      ? `<span style="background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">Workbench</span>`
+      : `<span style="background:#fef3c7;color:#7c5b00;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">Nouveau · ${escapeHtml(SECTION_LABELS[it.source_section || 'seo'])}</span>`;
+    const roiCell = it.roi
+      ? `<div><span style="background:${ROI_TIER_STYLE[it.roi.tier].bg};color:${ROI_TIER_STYLE[it.roi.tier].fg};padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">${escapeHtml(it.roi.tier_label)}</span></div>
+         <div style="font-size:10.5px;color:#6b7280;margin-top:4px;">${escapeHtml(it.roi.effort_label)}</div>`
+      : '<span style="font-size:11px;color:#9ca3af;">n/d</span>';
     return `<tr style="border-bottom:1px solid #e5e7eb;">
       <td style="padding:10px 12px;font-weight:700;color:#111827;font-size:13px;">${it.rank}</td>
       <td style="padding:10px 12px;">
         <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:3px;">${escapeHtml(it.title)}</div>
         ${it.description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(it.description)}</div>` : ''}
+        ${it.roi ? `<div style="font-size:11px;color:#6b7280;margin-top:5px;">${escapeHtml(it.roi.roi_note)}</div>` : ''}
       </td>
       <td style="padding:10px 12px;white-space:nowrap;">
         <span style="background:${badge.bg};color:${badge.fg};padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">${badge.label}</span>
       </td>
+      <td style="padding:10px 12px;white-space:nowrap;">${roiCell}</td>
       <td style="padding:10px 12px;white-space:nowrap;">${origin}</td>
     </tr>`;
   }).join('');
 
   const wbCount = items.filter((i) => i.source === 'workbench').length;
   const newCount = items.length - wbCount;
+  const roiSummary = summarizeRoi(items as Array<{ title: string; roi?: RoiAnnotation }>);
 
   return `<div class="section">
     <div class="section-title">Plan d'action consolidé</div>
-    <p style="font-size:12.5px;color:#4b5563;margin-bottom:12px;">
+    <p style="font-size:12.5px;color:#4b5563;margin-bottom:6px;">
       ${items.length} action${items.length > 1 ? 's' : ''} prioritaire${items.length > 1 ? 's' : ''} —
       ${wbCount} déjà dans votre Workbench, ${newCount} nouvellement détectée${newCount > 1 ? 's' : ''} dans ce rapport.
+    </p>
+    <p style="font-size:12.5px;color:#4b5563;margin-bottom:12px;">
+      ${roiSummary.sentence} Les blocages critiques restent en tête quel que soit leur rendement ;
+      à gravité égale, l'ordre suit le rapport impact / effort.
     </p>
     <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
       <thead><tr style="background:#f9fafb;">
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">#</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Action</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Sévérité</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Rendement</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Origine</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>`;
 }
+

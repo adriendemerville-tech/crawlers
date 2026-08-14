@@ -28,6 +28,8 @@ import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/w
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
 import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
+import { applyRoiWeighting, summarizeRoi, type RoiSummary } from '../_shared/roiWeighting.ts';
+
 import {
   fetchOwnerPerformanceData,
   renderOwnerPerformanceHTML,
@@ -1577,7 +1579,7 @@ function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): stri
 function buildExecutiveSummaryHTML(
   lang: string,
   domain: string,
-  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number },
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null },
 
 ): string {
   const isEn = lang === 'en';
@@ -1651,7 +1653,10 @@ function buildExecutiveSummaryHTML(
       ${cell(t('SEO technique', 'Technical SEO', 'SEO técnico'), tech100 === null ? 'n/d' : `${tech100}/100`)}
       ${cell(t('GEO / citabilité IA', 'GEO / AI citability', 'GEO / citabilidad IA'), geo100 === null ? 'n/d' : `${geo100}/100`)}
       ${cell(t('Pages explorées', 'Pages crawled', 'Páginas rastreadas'), pages ? String(pages) : 'n/d')}
+      ${ctx.roi ? cell(t('Gains rapides', 'Quick wins', 'Ganancias rápidas'), `${ctx.roi.quickWins}${ctx.roi.quickWinDays ? ` · ~${ctx.roi.quickWinDays} j` : ''}`) : ''}
     </div>
+    ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
+
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(
         `Score global = moyenne des scores SEO technique et GEO ramenés sur 100. Il ne remplace pas la lecture détaillée : la portée et les limites de la méthode sont exposées en fin de rapport.`,
@@ -1681,7 +1686,10 @@ function buildReportIntroHTML(
     plan?: Array<{ severity: string; title: string }>;
     /** Mode de scan réellement appliqué au run (persisté sur le job). */
     scanMode?: ScanModeResolution | null;
+    /** Synthèse de la pondération impact / effort du plan d'action. */
+    roi?: RoiSummary | null;
   },
+
 ): string {
   const isEn = lang === 'en';
   const isEs = lang === 'es';
@@ -1783,6 +1791,16 @@ function buildReportIntroHTML(
         `The "Scope and limits" section at the end of the document details exactly what is and is not measured.`,
         `La sección «Alcance y límites» al final detalla lo medido y lo no medido.`,
       ))}
+      ${li(t(
+        `Les constats ne sont pas listés à plat : chaque action est pondérée par son rapport <strong>impact / effort</strong> et étiquetée « gain rapide », « chantier rentable » ou « investissement de fond ». Les blocages critiques restent en tête quel que soit leur rendement ; à gravité égale, ce qui rapporte le plus vite passe devant.`,
+        `Findings are not listed flat: every action is weighted by its <strong>impact / effort</strong> ratio and labelled quick win, worthwhile project or long-term investment. Critical blockers stay first regardless of return.`,
+        `Los hallazgos se ponderan por <strong>impacto / esfuerzo</strong> y se etiquetan como ganancia rápida, proyecto rentable o inversión de fondo.`,
+      ))}
+      ${li(t(
+        `L'effort affiché est un ordre de grandeur en jours-homme déduit de la nature de l'action, pas un devis : il sert à comparer les actions entre elles.`,
+        `The displayed effort is an order of magnitude in person-days inferred from the nature of the action, not a quote: it is meant to compare actions with each other.`,
+        `El esfuerzo mostrado es un orden de magnitud, no un presupuesto.`,
+      ))}
     </ul>
     <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('Sources et outils mobilisés', 'Sources and tools used', 'Fuentes y herramientas')}</h3>
     <ul style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0 0 ${takeaways ? '14px' : '0'} 0;">
@@ -1790,7 +1808,9 @@ function buildReportIntroHTML(
     </ul>
     ${takeaways ? `
     <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('À retenir en priorité', 'Key takeaways', 'Puntos clave')}</h3>
-    <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${takeaways}</ol>` : ''}
+    <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0 0 ${ctx.roi ? '10px' : '0'} 0;">${takeaways}</ol>
+    ${ctx.roi ? `<p style="font-size:13px;color:#374151;line-height:1.7;margin:0;">${ctx.roi.sentence}</p>` : ''}` : ''}
+
   </div>`;
 }
 
@@ -1801,8 +1821,9 @@ function buildReportIntroHTML(
 function buildConclusionHTML(
   lang: string,
   domain: string,
-  plan: Array<{ severity: string; title: string; description?: string }>,
+  plan: Array<{ severity: string; title: string; description?: string; roi?: { tier_label: string; effort_label: string } }>,
   archetypes?: ArchetypeAnalysis | null,
+  roi?: RoiSummary | null,
 ): string {
   const isEn = lang === 'en';
   const isEs = lang === 'es';
@@ -1815,16 +1836,17 @@ function buildConclusionHTML(
   const bucket = (
     label: string,
     horizon: string,
-    items: Array<{ title: string }>,
+    items: Array<{ title: string; roi?: { tier_label: string; effort_label: string } }>,
     color: string,
   ) => `
     <div style="border:1px solid #e5e7eb;border-left:4px solid ${color};border-radius:8px;padding:14px 16px;margin:0 0 10px 0;background:#ffffff;">
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;">${horizon}</div>
       <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:8px;">${label}</div>
       ${items.length
-        ? `<ol style="padding-left:18px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${items.slice(0, 4).map((i) => `<li style="margin:0 0 4px 0;">${i.title}</li>`).join('')}</ol>`
+        ? `<ol style="padding-left:18px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${items.slice(0, 4).map((i) => `<li style="margin:0 0 4px 0;">${i.title}${i.roi ? ` <span style="color:#6b7280;font-size:12px;">— ${i.roi.tier_label}, ${i.roi.effort_label.toLowerCase()}</span>` : ''}</li>`).join('')}</ol>`
         : `<p style="font-size:13px;color:#6b7280;margin:0;">${t('Aucun chantier de ce niveau détecté.', 'No item detected at this level.', 'Ningún elemento detectado en este nivel.')}</p>`}
     </div>`;
+
 
   return `
   <div class="section" data-marina-scope="page" data-marina-block="conclusion" data-pdf-section style="border-left:6px solid #d4af37;">
@@ -1836,6 +1858,16 @@ function buildConclusionHTML(
         `El orden importa: mientras exista un bloqueo técnico o de indexación en ${domain}, el contenido y el netlinking tendrán poco efecto medible.`,
       )}
     </p>
+    ${roi ? `<p style="font-size:13.5px;line-height:1.75;color:#374151;margin:0 0 14px 0;">
+      ${roi.sentence}
+      ${roi.topQuickWins.length ? `${t('Concrètement, les trois premières actions à lancer cette semaine', 'Concretely, the first three actions to launch this week', 'Concretamente, las tres primeras acciones de esta semana')} : ${roi.topQuickWins.join(' ; ')}.` : ''}
+      ${t(
+        `À l'intérieur de chaque horizon, les chantiers sont ordonnés par rendement décroissant : commencer par le haut maximise le gain visible à budget constant.`,
+        `Within each horizon, items are ordered by decreasing return: starting at the top maximises visible gain at constant budget.`,
+        `Dentro de cada horizonte, los elementos se ordenan por rendimiento decreciente.`,
+      )}
+    </p>` : ''}
+
     ${archetypes ? `
     <div style="border:1px solid #e5e7eb;border-left:4px solid #6d28d9;border-radius:8px;padding:14px 16px;margin:0 0 12px 0;background:#ffffff;">
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">${t('Lecture business par type de page', 'Business reading by page type', 'Lectura por tipo de página')}</div>
@@ -3474,11 +3506,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         } catch (wbErr) {
           console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
         }
-        const consolidatedPlan = buildConsolidatedActionPlan(
+        const rawConsolidatedPlan = buildConsolidatedActionPlan(
           workbenchTasks,
           [topSeo, topGeo, topKw, topEeat, topCocoon],
           { maxItems: 12 },
         );
+
 
         const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url, crawlSnapshot, renderTopPrioritiesHTML(topSeo));
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
@@ -3490,7 +3523,6 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
-        const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan);
 
         // Données propriétaires : uniquement si l'utilisateur possède une connexion
         // Google vérifiée couvrant CE domaine. Sinon la section n'existe pas.
@@ -3504,6 +3536,16 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn('[Marina] Owner performance fetch failed (non-fatal):', ownerErr);
         }
         const ownerPerformanceHTML = renderOwnerPerformanceHTML(ownerPerformance, '3b');
+
+        // Pondération ROI diffuse (impact / effort, 0 token) : les blocages critiques
+        // restent en tête, l'ordre interne suit le rendement.
+        const consolidatedPlan = applyRoiWeighting(rawConsolidatedPlan, {
+          pagesAnalyzed: crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length || null,
+          hasOwnerPerformance: Boolean(ownerPerformance),
+        });
+        const roiSummary = summarizeRoi(consolidatedPlan, detectedLang);
+        const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan);
+
 
         const tempPrefix = `marina/tmp/${jobId}`;
         const storageUploads = [
@@ -3534,6 +3576,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             summary: buildExecutiveSummaryHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
               criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
+              roi: roiSummary,
             }),
             intro: buildReportIntroHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData,
@@ -3541,7 +3584,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               visual: Boolean(visualCapture),
               plan: consolidatedPlan,
               scanMode: scanModeInfo,
+              roi: roiSummary,
             }),
+
             // Carte d'identité résolue AVANT le crawl : elle explique au lecteur sur
             // quelle lecture du business les fourchettes de gabarits ont été calées,
             // et signale une éventuelle contradiction avec ce que le crawl a trouvé.
@@ -3553,7 +3598,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                 )
               : undefined,
             archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
-            conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan, archetypeAnalysis),
+            conclusion: buildConclusionHTML(detectedLang, domain, consolidatedPlan, archetypeAnalysis, roiSummary),
 
             // « Divulgation méthodologique » supprimée : forces / faiblesses / angles morts
             // faisaient doublon avec « Portée et limites », qui est désormais l'unique
