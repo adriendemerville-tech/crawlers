@@ -2874,7 +2874,35 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // établie AVANT le crawl, donc sans se laisser influencer par ce que le crawl
       // a trouvé. Les données de l'audit stratégique ne servent qu'à combler les
       // trous, et la ligne tracked_sites qu'en dernier recours.
+      // ─── Révision post-crawl de la carte d'identité ───
+      // La phase 0 ne lit que la home et 2-3 pages clés : si elle n'a pas conclu,
+      // le corpus de crawl (titres + H1) tranche AVANT toute calibration.
+      let revisedIdentity: IdentityCard | null = phase0Identity;
+      if (phase0Identity) {
+        try {
+          const { data: lastCrawl } = await sb
+            .from('site_crawls').select('id').eq('domain', domain)
+            .order('created_at', { ascending: false }).limit(1);
+          const crawlId = lastCrawl?.[0]?.id;
+          if (crawlId) {
+            const { data: corpusPages } = await sb
+              .from('crawl_pages').select('url, title, h1').eq('crawl_id', crawlId).limit(60);
+            if (corpusPages?.length) {
+              revisedIdentity = await reviseIdentityAfterCrawl(
+                sb,
+                { ...phase0Identity, trackedSiteId: phase0Identity.trackedSiteId || trackedSiteId },
+                corpusPages,
+                { userId: parentJob.user_id, domain },
+              );
+            }
+          }
+        } catch (e) {
+          console.warn(`[Marina] Révision post-crawl de l'identité ignorée : ${String((e as Error)?.message || e)}`);
+        }
+      }
+
       const marketProfile = buildMarketProfile({
+
         ...(identityRow || {}),
         market_sector: (phase0Identity?.marketSector
           || strategicData?.introduction?.sector
