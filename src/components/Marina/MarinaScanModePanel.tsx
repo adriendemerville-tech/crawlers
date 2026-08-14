@@ -57,8 +57,37 @@ const COPY: Record<Lang, {
   },
 };
 
-export function MarinaScanModePanel({ language = 'fr' }: { language?: string }) {
-  const t = COPY[(language as Lang) in COPY ? (language as Lang) : 'fr'];
+export interface ActiveScanMode {
+  mode: 'deep' | 'standard' | 'sample';
+  maxPages: number;
+  discoveredUrls: number | null;
+  coveragePct: number | null;
+  reason?: string;
+}
+
+const MODE_ROW_INDEX: Record<ActiveScanMode['mode'], number> = { deep: 0, standard: 1, sample: 2 };
+
+export function MarinaScanModePanel({
+  language = 'fr',
+  active = null,
+  pagesCrawled = null,
+}: {
+  language?: string;
+  /** Mode réellement retenu pour le run en cours (renvoyé par le job). */
+  active?: ActiveScanMode | null;
+  pagesCrawled?: number | null;
+}) {
+  const lang: Lang = (language as Lang) in COPY ? (language as Lang) : 'fr';
+  const t = COPY[lang];
+  const activeIndex = active ? MODE_ROW_INDEX[active.mode] : -1;
+
+  const activeLine = active
+    ? lang === 'en'
+      ? `Mode applied to this run: ${t.rows[activeIndex][0]} — up to ${active.maxPages} pages${active.discoveredUrls ? `, ${active.discoveredUrls} discovered URLs` : ''}${active.coveragePct !== null ? `, target coverage ${active.coveragePct}%` : ''}${pagesCrawled ? ` · ${pagesCrawled} pages crawled so far` : ''}.`
+      : lang === 'es'
+        ? `Modo aplicado a esta ejecución: ${t.rows[activeIndex][0]} — hasta ${active.maxPages} páginas${active.discoveredUrls ? `, ${active.discoveredUrls} URL descubiertas` : ''}${active.coveragePct !== null ? `, cobertura objetivo ${active.coveragePct} %` : ''}${pagesCrawled ? ` · ${pagesCrawled} páginas rastreadas` : ''}.`
+        : `Mode retenu pour ce run : ${t.rows[activeIndex][0]} — jusqu'à ${active.maxPages} pages${active.discoveredUrls ? `, ${active.discoveredUrls} URLs découvertes` : ''}${active.coveragePct !== null ? `, couverture visée ${active.coveragePct} %` : ''}${pagesCrawled ? ` · ${pagesCrawled} pages déjà crawlées` : ''}.`
+    : null;
 
   return (
     <Card className="mt-4 border-border/60 bg-card/50 text-left">
@@ -70,6 +99,12 @@ export function MarinaScanModePanel({ language = 'fr' }: { language?: string }) 
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t.subtitle}</p>
           </div>
         </div>
+
+        {activeLine && (
+          <p className="mt-3 rounded-md border border-primary/40 px-3 py-2 text-xs font-medium leading-relaxed text-foreground">
+            {activeLine}
+          </p>
+        )}
 
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-xs">
@@ -83,8 +118,8 @@ export function MarinaScanModePanel({ language = 'fr' }: { language?: string }) 
               </tr>
             </thead>
             <tbody>
-              {t.rows.map((r) => (
-                <tr key={r[0]} className="align-top">
+              {t.rows.map((r, i) => (
+                <tr key={r[0]} className={i === activeIndex ? 'align-top bg-primary/10' : 'align-top'}>
                   <td className="border-b border-border/40 py-2 pr-4 font-semibold text-foreground whitespace-nowrap">
                     {r[0]}
                   </td>

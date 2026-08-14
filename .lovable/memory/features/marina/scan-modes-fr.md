@@ -28,3 +28,9 @@ Motif : au-delà de 1000 URLs un crawl intégral ne tient pas dans le wall-time 
 - `process-crawl-queue` : `PAGES_PER_RUN = 150` par invocation (au lieu de 20), puis self-relay sur le checkpoint persisté dans `crawl_pages` (réconciliation `processed_count` déjà en place). Concurrence de fetch inchangée (`dynamicMax` 1-4 selon le poids des pages).
 - Marina phase 2 : attente du crawl découpée en tours de 170 s ; si le crawl n'est pas fini, Marina relance le worker puis se ré-invoque en `phase2` avec `crawlWaitRound + 1`, jusqu'à 8 tours (~25 min) avant de poursuivre avec les pages déjà crawlées.
 - Fenêtre d'attachement à un crawl en vol portée de 30 à 60 min pour couvrir les tours d'attente.
+
+### Persistance du mode (obligatoire)
+- Le mode est résolu une seule fois en phase 2 puis transporté d'une phase à l'autre (`intermediateData.scanMode`) et répliqué dans `async_jobs.input_payload.scan_mode` / `pages_crawled` à chaque `updateProgress`.
+- L'introduction du rapport consomme le mode persisté (`ctx.scanMode`) — plus jamais un recalcul divergent.
+- `GET /marina?job_id=` renvoie `scan_mode` + `pages_crawled` ; `MarinaScanModePanel` surligne la ligne du mode retenu et affiche couverture visée + pages déjà crawlées.
+- Phase 3 lit `crawl_pages` avec `.limit(maxPages)` : le plafond du mode borne réellement le coût d'analyse aval.

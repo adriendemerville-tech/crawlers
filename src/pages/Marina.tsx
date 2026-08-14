@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
-import { MarinaScanModePanel } from '@/components/Marina/MarinaScanModePanel';
+import { MarinaScanModePanel, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -555,6 +555,8 @@ export default function Marina() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState('');
+  const [activeScanMode, setActiveScanMode] = useState<ActiveScanMode | null>(null);
+  const [scanPagesCrawled, setScanPagesCrawled] = useState<number | null>(null);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [reportHtml, setReportHtml] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -665,6 +667,8 @@ export default function Marina() {
             return;
           }
           setProgress(data.progress || 0);
+          if (data.scan_mode?.mode) setActiveScanMode(data.scan_mode as ActiveScanMode);
+          if (typeof data.pages_crawled === 'number') setScanPagesCrawled(data.pages_crawled);
           setPhase(data.phase || t.phases.inProgress);
         } catch {}
         await new Promise(r => setTimeout(r, 4000));
@@ -805,7 +809,7 @@ export default function Marina() {
                 </div>
 
                 {/* Modes de scan : sample / standard / deep, bascule automatique */}
-                <MarinaScanModePanel language={language} />
+                <MarinaScanModePanel language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
 
                 {/* Carte d'identité éditable et verrouillable avant le crawl */}
                 <MarinaIdentityPanel url={url} isAuthenticated={!!user} />

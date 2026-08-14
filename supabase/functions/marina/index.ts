@@ -25,7 +25,7 @@ import {
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
-import { resolveScanMode, scanModeSentence } from '../_shared/marinaScanMode.ts';
+import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
 import {
   resolveIdentityCard,
   detectIdentityContradiction,
@@ -1671,6 +1671,8 @@ function buildReportIntroHTML(
     indexationCount?: number;
     visual?: boolean;
     plan?: Array<{ severity: string; title: string }>;
+    /** Mode de scan réellement appliqué au run (persisté sur le job). */
+    scanMode?: ScanModeResolution | null;
   },
 ): string {
   const isEn = lang === 'en';
@@ -1752,7 +1754,7 @@ function buildReportIntroHTML(
         : t(`Analyse limitée à l'URL soumise : le crawl multi-pages n'a pas produit de périmètre exploitable pour ce rapport.`,
             `Analysis limited to the submitted URL: the multi-page crawl produced no usable scope.`,
             `Análisis limitado a la URL enviada.`))}
-      ${li(scanModeSentence(resolveScanMode(pagesKnown), lang))}
+      ${li(scanModeSentence(ctx.scanMode ?? resolveScanMode(pagesKnown), lang))}
       ${li(t(
         `Trois modes de scan existent et la bascule est automatique, jamais manuelle : Approfondi (site ≤ 120 URLs, jusqu'à 120 pages), Standard (≤ 1 000 URLs, jusqu'à 150 pages), Échantillon (> 1 000 URLs, 60 pages représentatives des gabarits). Ce plafonnement garantit un diagnostic complet dans un temps d'exécution maîtrisé.`,
         `Three scan modes exist and switching is automatic, never manual: Deep (site ≤ 120 URLs, up to 120 pages), Standard (≤ 1,000 URLs, up to 150 pages), Sample (> 1,000 URLs, 60 template-representative pages).`,
@@ -2511,10 +2513,21 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
     throw new Error('Parent Marina job missing user_id');
   }
   
+  // Mode de scan réellement appliqué au run : résolu en phase 2, transporté
+  // dans intermediateData d'une phase à l'autre, puis répliqué dans
+  // input_payload à chaque updateProgress (qui réécrit ce champ).
+  let scanModeInfo: ScanModeResolution | null = (intermediateData as any)?.scanMode ?? null;
+  let pagesCrawledInfo: number | null = (intermediateData as any)?.pagesCrawled ?? null;
+
   const updateProgress = async (progress: number, phaseName?: string) => {
     try {
       const updateData: any = { progress };
-      if (phaseName) updateData.input_payload = { phase: phaseName, url };
+      if (phaseName) updateData.input_payload = {
+        phase: phaseName,
+        url,
+        ...(scanModeInfo ? { scan_mode: scanModeInfo } : {}),
+        ...(pagesCrawledInfo !== null ? { pages_crawled: pagesCrawledInfo } : {}),
+      };
       if (progress === 5) updateData.started_at = new Date().toISOString();
       updateData.status = 'processing';
       await sb.from('async_jobs').update(updateData).eq('id', jobId);
@@ -2764,12 +2777,17 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
 
         if (reusableCrawl) {
+          if (!scanModeInfo) {
+            scanModeInfo = resolveScanMode(reusableCrawl.total_pages || reusableCrawl.crawled_pages || null);
+          }
+          pagesCrawledInfo = reusableCrawl.crawled_pages || null;
           console.log(`[Marina] Found recent crawl with ${reusableCrawl.crawled_pages} pages (< 12h) — reusing`);
         } else {
           let crawlLaunchRes: any = null;
 
           if (inFlightCrawl) {
             console.log(`[Marina] Crawl ${inFlightCrawl.id} already in flight for ${domain} — attaching instead of launching a second one`);
+            if (!scanModeInfo) scanModeInfo = resolveScanMode(inFlightCrawl.total_pages || null);
             crawlLaunchRes = {
               success: true,
               crawlId: inFlightCrawl.id,
@@ -2803,6 +2821,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             }
 
             const scanMode = resolveScanMode(discoveredUrls);
+            scanModeInfo = scanMode;
+            await updateProgress(67, 'multi_crawl');
             console.log(`[Marina] Scan mode = ${scanMode.mode} (${scanMode.maxPages} pages max) — ${scanMode.reason}`);
 
             try {
@@ -2845,6 +2865,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                 const crawledPages = (crawlStatus as any).crawled_pages || 0;
                 const totalPages = (crawlStatus as any).total_pages || 1;
                 lastCrawledPages = crawledPages;
+                pagesCrawledInfo = crawledPages;
 
                 const crawlProgress = Math.min(78, 67 + Math.round((crawledPages / totalPages) * 11));
                 await updateProgress(crawlProgress, 'multi_crawl');
@@ -2884,6 +2905,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                   await selfInvokePhase(jobId, url, detectedLang, 'phase2', {
                     domain,
                     crawlWaitRound: crawlWaitRound + 1,
+                    scanMode: scanModeInfo,
+                    pagesCrawled: pagesCrawledInfo,
                   });
                   return;
                 }
@@ -2902,7 +2925,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       console.log(`[Marina] ✅ Phase 2 complete — crawl done, launching Phase 3`);
 
       // Self-invoke phase 3
-      await selfInvokePhase(jobId, url, detectedLang, 'phase3', { domain });
+      await selfInvokePhase(jobId, url, detectedLang, 'phase3', {
+        domain,
+        scanMode: scanModeInfo,
+        pagesCrawled: pagesCrawledInfo,
+      });
 
     } else if (currentPhase === 'phase3') {
       // ═══ PHASE 3: Cocoon + LLM Visibility + Report ═══
@@ -3211,11 +3238,16 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
         const latestCrawl = recentCrawls?.[0];
         if (latestCrawl?.id) {
+          // Plafond du mode de scan : on ne lit jamais plus de pages que le
+          // budget du mode retenu (deep 120 / standard 150 / sample 60), sinon
+          // un gros domaine ferait exploser le coût d'analyse en aval.
+          const pageCeiling = (scanModeInfo ?? resolveScanMode((latestCrawl as any).total_pages || null)).maxPages;
           const { data: crawlPages, error: crawlPagesError } = await sb
             .from('crawl_pages')
             .select('*')
             .eq('crawl_id', latestCrawl.id)
-            .order('created_at', { ascending: true });
+            .order('created_at', { ascending: true })
+            .limit(pageCeiling);
 
           if (crawlPagesError) {
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
@@ -3504,6 +3536,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               indexationCount: indexationData.length,
               visual: Boolean(visualCapture),
               plan: consolidatedPlan,
+              scanMode: scanModeInfo,
             }),
             // Carte d'identité résolue AVANT le crawl : elle explique au lecteur sur
             // quelle lecture du business les fourchettes de gabarits ont été calées,
@@ -3916,6 +3949,8 @@ Deno.serve(handleRequest(async (req) => {
         status: job.status, 
         progress: job.progress,
         phase: (job.input_payload as any)?.phase || 'initializing',
+        scan_mode: (job.input_payload as any)?.scan_mode || null,
+        pages_crawled: (job.input_payload as any)?.pages_crawled ?? null,
       });
     }
 
