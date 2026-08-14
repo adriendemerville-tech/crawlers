@@ -14938,6 +14938,7 @@ export type Database = {
         | "pagespeed"
         | "crawlers"
         | "cocoon"
+        | "marina"
       revenue_source:
         | "ga4"
         | "shopify"
@@ -15168,6 +15169,7 @@ export const Constants = {
         "pagespeed",
         "crawlers",
         "cocoon",
+        "marina",
       ],
       revenue_source: [
         "ga4",
