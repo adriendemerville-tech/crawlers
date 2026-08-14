@@ -555,6 +555,8 @@ export default function Marina() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState('');
+  const [activeScanMode, setActiveScanMode] = useState<ActiveScanMode | null>(null);
+  const [scanPagesCrawled, setScanPagesCrawled] = useState<number | null>(null);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [reportHtml, setReportHtml] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
