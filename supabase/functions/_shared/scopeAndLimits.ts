@@ -59,6 +59,7 @@ const UI: Record<Locale, Record<string, string>> = {
     h4: '4. Maturité du nom de domaine',
     h5: '5. Crawlabilité observée',
     h6: '6. Maturité du marché et bascule vers les moteurs de réponse IA',
+    h7: '7. Angles morts assumés',
     note: "Les recommandations sont hiérarchisées par impact attendu, pas par certitude de résultat. Aucun positionnement, aucune citation IA et aucun volume de trafic ne sont garantis.",
   },
   en: {
