@@ -1475,7 +1475,11 @@ async function generateReport(url) {
         </section>
         )}
 
+        {/* Tab: Mes audits */}
+        {activeTab === 'my-audits' && user && <MarinaMyAuditsTab />}
+
         {/* Tab: Pricing */}
+
         {activeTab === 'pricing' && (
         <section className="py-12">
           <div className="mx-auto max-w-3xl px-4 text-center">
