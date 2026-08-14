@@ -705,12 +705,19 @@ function buildMix(
   });
 
 
+  // Un type manquant n'est signalé que s'il est réellement attendu pour ce
+  // modèle d'affaires : on ne reproche pas à un SaaS de ne pas avoir de pages
+  // agence ou de pages devis locales.
   const present = new Set(groups.map((g) => g.key));
-  const MISSING_WATCH = ['conversion', 'reviews', 'editorial', 'service'];
-  const missing = DEFS.filter((d) => MISSING_WATCH.includes(d.key) && !present.has(d.key)).map((d) => ({
+  const missing = DEFS.filter((d) => {
+    if (present.has(d.key)) return false;
+    const t = mixTarget(d.key, d.role, benchmarks, options.commercialModel ?? null);
+    return t.min > 0;
+  }).map((d) => ({
     key: d.key, label: d.label, role: d.role,
-    rationale: `aucune page de ce type n'a été détectée : créer ce gabarit pour ${d.purpose}.`,
+    rationale: `aucune page de ce type n'a été détectée alors qu'elle est attendue pour ce modèle d'affaires : créer ce gabarit pour ${d.purpose}.`,
   }));
+
 
   const coverage = reference ? Math.min(1, crawlPages / reference.total) : null;
   const flagged = entries.filter((e) => e.action !== 'balanced');
