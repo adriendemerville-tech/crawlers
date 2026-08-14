@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Layers } from 'lucide-react';
+import { Layers, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 /**
  * Explicite les trois modes de scan Marina et le fait que la bascule est
