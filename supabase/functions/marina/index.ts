@@ -3504,6 +3504,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               indexationCount: indexationData.length,
               visual: Boolean(visualCapture),
               plan: consolidatedPlan,
+              scanMode: scanModeInfo,
             }),
             // Carte d'identité résolue AVANT le crawl : elle explique au lecteur sur
             // quelle lecture du business les fourchettes de gabarits ont été calées,
