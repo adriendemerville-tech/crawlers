@@ -33,6 +33,7 @@ import {
   detectIdentityContradiction,
   renderIdentityCardHTML,
   emptyIdentityCard,
+  reviseIdentityAfterCrawl,
   type IdentityCard,
 } from '../_shared/identityResolver.ts';
 
@@ -2874,22 +2875,54 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // établie AVANT le crawl, donc sans se laisser influencer par ce que le crawl
       // a trouvé. Les données de l'audit stratégique ne servent qu'à combler les
       // trous, et la ligne tracked_sites qu'en dernier recours.
+      // ─── Révision post-crawl de la carte d'identité ───
+      // La phase 0 ne lit que la home et 2-3 pages clés : si elle n'a pas conclu,
+      // le corpus de crawl (titres + H1) tranche AVANT toute calibration.
+      let revisedIdentity: IdentityCard | null = phase0Identity;
+      if (phase0Identity) {
+        try {
+          const { data: lastCrawl } = await sb
+            .from('site_crawls').select('id').eq('domain', domain)
+            .order('created_at', { ascending: false }).limit(1);
+          const crawlId = lastCrawl?.[0]?.id;
+          if (crawlId) {
+            const { data: corpusPages } = await sb
+              .from('crawl_pages').select('url, title, h1').eq('crawl_id', crawlId).limit(60);
+            if (corpusPages?.length) {
+              revisedIdentity = await reviseIdentityAfterCrawl(
+                sb,
+                { ...phase0Identity, trackedSiteId: phase0Identity.trackedSiteId || trackedSiteId },
+                corpusPages,
+                { userId: parentJob.user_id, domain },
+              );
+            }
+          }
+        } catch (e) {
+          console.warn(`[Marina] Révision post-crawl de l'identité ignorée : ${String((e as Error)?.message || e)}`);
+        }
+      }
+
       const marketProfile = buildMarketProfile({
+
         ...(identityRow || {}),
-        market_sector: (phase0Identity?.marketSector
+        market_sector: (revisedIdentity?.marketSector
           || strategicData?.introduction?.sector
           || strategicData?.market_sector
           || identityRow?.['market_sector']) ?? null,
-        commercial_model: (phase0Identity?.commercialModel && phase0Identity.commercialModel !== 'unknown'
-          ? phase0Identity.commercialModel
+        commercial_model: (revisedIdentity?.commercialModel && revisedIdentity.commercialModel !== 'unknown'
+          ? revisedIdentity.commercialModel
           : identityRow?.['commercial_model']) ?? null,
-        products_services: (phase0Identity?.productsServices || identityRow?.['products_services']) ?? null,
-        is_local_business: phase0Identity?.isLocalBusiness ?? identityRow?.['is_local_business'] ?? null,
-        entity_type: (phase0Identity?.entityType || identityRow?.['entity_type']) ?? null,
-        target_audience: (phase0Identity?.targetAudience
+        products_services: (revisedIdentity?.productsServices || identityRow?.['products_services']) ?? null,
+        is_local_business: revisedIdentity?.isLocalBusiness ?? identityRow?.['is_local_business'] ?? null,
+        entity_type: (revisedIdentity?.entityType || identityRow?.['entity_type']) ?? null,
+        target_audience: (revisedIdentity?.targetAudience
           || strategicData?.introduction?.target_audience
           || identityRow?.['target_audience']) ?? null,
       });
+      const identitySectorOverride = revisedIdentity && revisedIdentity.sector !== 'unknown'
+        ? revisedIdentity.sector : null;
+      if (identitySectorOverride && marketProfile.sector === 'unknown') marketProfile.sector = identitySectorOverride;
+
       const marketSectorLabel = marketProfile.sector === 'unknown' ? null : sectorLabel(marketProfile.sector);
       console.log(
         `[Marina] Profil de marché : ${marketProfile.sector} / ${marketProfile.commercialModel} ` +
@@ -3486,11 +3519,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             // Carte d'identité résolue AVANT le crawl : elle explique au lecteur sur
             // quelle lecture du business les fourchettes de gabarits ont été calées,
             // et signale une éventuelle contradiction avec ce que le crawl a trouvé.
-            identity: phase0Identity
+            identity: revisedIdentity
               ? renderIdentityCardHTML(
-                  phase0Identity,
+                  revisedIdentity,
                   detectedLang,
-                  detectIdentityContradiction(phase0Identity, archetypeAnalysis?.mix ?? null),
+                  detectIdentityContradiction(revisedIdentity, archetypeAnalysis?.mix ?? null),
                 )
               : undefined,
             archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
