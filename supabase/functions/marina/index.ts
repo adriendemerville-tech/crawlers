@@ -2803,6 +2803,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             }
 
             const scanMode = resolveScanMode(discoveredUrls);
+            scanModeInfo = scanMode;
+            await updateProgress(67, 'multi_crawl');
             console.log(`[Marina] Scan mode = ${scanMode.mode} (${scanMode.maxPages} pages max) — ${scanMode.reason}`);
 
             try {
