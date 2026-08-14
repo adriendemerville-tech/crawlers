@@ -133,8 +133,10 @@ function buildAnswer(question: string, paragraph: string, page: AeoPageInput): s
       return { s, score };
     })
 
+    .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score)
     .map((x) => x.s);
+
 
   const lead = subject ? `${subject} :` : '';
   const bodyParts: string[] = [];
