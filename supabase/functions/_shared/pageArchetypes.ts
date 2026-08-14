@@ -193,6 +193,27 @@ const DEFS: ArchetypeDef[] = [
     pattern: /\/(devis|estimation|simulateur|demande|rendez-vous|rdv|reservation|contact-commercial|tarif|tarifs|prix|pricing)\b/i,
   },
   {
+    key: 'feature',
+    label: 'Pages fonctionnalité / outil',
+    role: 'core_business',
+    purpose: "expliquer ce que fait précisément une fonctionnalité ou un outil et déclencher l'essai",
+    pattern: /\/(fonctionnalite|fonctionnalites|feature|features|outil|outils|tool|tools|module|modules|application|logiciel|plateforme|platform)\b/i,
+  },
+  {
+    key: 'comparison',
+    label: 'Pages comparatif / alternative',
+    role: 'core_business',
+    purpose: "capter les requêtes de fin de parcours (« X vs Y », « alternative à X ») et emporter l'arbitrage",
+    pattern: /\/([^/]*-vs-[^/]*|comparatif|comparatifs|comparaison|compare|alternative|alternatives|versus|concurrent|concurrents)\b/i,
+  },
+  {
+    key: 'case_study',
+    label: 'Pages étude de cas / références clients',
+    role: 'auxiliary_pillar',
+    purpose: "prouver le résultat obtenu avec des chiffres réels et nourrir les signaux E-E-A-T",
+    pattern: /\/(etude|etudes|etude-de-cas|etudes-de-cas|case-study|case-studies|cas-client|cas-clients|client|clients|portfolio|references-clients)\b/i,
+  },
+  {
     key: 'reviews',
     label: 'Pages avis / témoignages',
     role: 'auxiliary_pillar',
@@ -207,6 +228,20 @@ const DEFS: ArchetypeDef[] = [
     pattern: /\/(blog|article|articles|actualite|actualites|news|guide|guides|conseil|conseils|dossier|dossiers|tutoriel|faq|lexique|glossaire)\b/i,
   },
   {
+    key: 'docs',
+    label: 'Pages documentation / support',
+    role: 'support',
+    purpose: "réduire la friction à l'usage et capter les requêtes de support technique",
+    pattern: /\/(doc|docs|documentation|api|developpeur|developers|aide|help|support|assistance|changelog|integration|integrations)\b/i,
+  },
+  {
+    key: 'landing',
+    label: 'Pages landing / offre ciblée',
+    role: 'core_business',
+    purpose: "adresser une cible ou une promesse unique en un seul écran et convertir sans détour",
+    pattern: /\/(lp|landing|offre|offres|promo|promotion|campagne|essai|essai-gratuit|demo|demonstration|inscription-offre)\b/i,
+  },
+  {
     key: 'listing',
     label: 'Pages de listing / catégories',
     role: 'support',
@@ -218,7 +253,14 @@ const DEFS: ArchetypeDef[] = [
     label: 'Pages institutionnelles',
     role: 'functional',
     purpose: "porter la confiance de marque et les mentions obligatoires",
-    pattern: /\/(a-propos|qui-sommes-nous|equipe|notre-histoire|entreprise|about|recrutement|carriere|carrieres|partenaires?)\b/i,
+    pattern: /\/(a-propos|qui-sommes-nous|equipe|notre-histoire|entreprise|about|recrutement|carriere|carrieres|partenaires?|auteur|auteurs)\b/i,
+  },
+  {
+    key: 'account',
+    label: 'Pages compte / espace applicatif',
+    role: 'functional',
+    purpose: "servir les utilisateurs déjà connectés ; aucun objectif d'acquisition organique",
+    pattern: /\/(app|dashboard|console|compte|profil|mon-compte|login|connexion|auth|inscription|signup|signin|admin|checkout|panier|espace-client)\b/i,
   },
   {
     key: 'legal',
@@ -228,6 +270,30 @@ const DEFS: ArchetypeDef[] = [
     pattern: /\/(mentions|mentions-legales|cgv|cgu|confidentialite|privacy|cookies|plan-du-site|sitemap|contact)\b/i,
   },
 ];
+
+/**
+ * Second passage de classement : mots-clés cherchés dans le title, le H1 et le
+ * slug quand l'URL seule ne dit rien. C'est ce passage qui évite de déverser la
+ * moitié du site dans « Autres pages ».
+ */
+const KEYWORD_HINTS: Array<{ key: string; words: RegExp }> = [
+  { key: 'comparison', words: /\b(vs|versus|comparatif|comparaison|alternative|alternatives|meilleur|meilleurs|meilleure|top \d+|classement)\b/ },
+  { key: 'conversion', words: /\b(devis|tarif|tarifs|prix|pricing|abonnement|combien coute|essai gratuit|demander|reserver|rendez-vous)\b/ },
+  { key: 'feature', words: /\b(fonctionnalite|fonctionnalites|outil|outils|logiciel|plateforme|generateur|analyseur|audit automatique|module)\b/ },
+  { key: 'case_study', words: /\b(etude de cas|cas client|resultats|retour d.experience|temoignage client|reference client)\b/ },
+  { key: 'editorial', words: /\b(guide|comment|pourquoi|definition|qu.est-ce|tutoriel|checklist|exemples?|conseils?|actualite)\b/ },
+  { key: 'service', words: /\b(prestation|accompagnement|consulting|expertise|service|agence de|externalisation)\b/ },
+  { key: 'agency', words: /\b(agence de |notre agence|point de vente|showroom|nous trouver)\b/ },
+  { key: 'product', words: /\b(fiche produit|reference|modele|gamme|collection|acheter)\b/ },
+  { key: 'reviews', words: /\b(avis|temoignages|notes clients|satisfaction)\b/ },
+  { key: 'docs', words: /\b(documentation|api|integration|changelog|aide|support technique)\b/ },
+  { key: 'institutional', words: /\b(a propos|qui sommes-nous|notre equipe|notre histoire|recrutement|auteur)\b/ },
+];
+
+function deaccent(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 
 function isHome(path: string): boolean {
   return path === '/' || path === '' || /^\/(index(\.html?)?)?$/i.test(path);
