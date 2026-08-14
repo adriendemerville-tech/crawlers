@@ -392,13 +392,28 @@ function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGr
   if (failures.length === 0 && (avgSeoScore === null || avgSeoScore >= 65)) verdict = 'strong';
   if (failures.length >= 3 || notIndexable > 0 || (avgSeoScore !== null && avgSeoScore < 45)) verdict = 'weak';
 
+  // Exemples : on privilégie les pages qui ont un H1 exploitable et le contenu
+  // le plus développé — c'est la page la plus représentative du gabarit.
+  const ranked = [...pages].sort((a, b) => {
+    const ha = a.h1 ? 1 : 0, hb = b.h1 ? 1 : 0;
+    if (ha !== hb) return hb - ha;
+    return Number(b.word_count || 0) - Number(a.word_count || 0);
+  });
+  const examples: ArchetypeExample[] = ranked.slice(0, 3).map((p) => ({
+    url: p.url,
+    h1: p.h1 || null,
+    title: p.title || null,
+  }));
+
   return {
     key: def.key,
     label: def.label,
     role: def.role,
     purpose: def.purpose,
     pages: n,
-    sample: pages.slice(0, 3).map((p) => p.url),
+    sample: examples.map((e) => e.url),
+    examples,
+
     avgSeoScore,
     avgWordCount,
     avgInternalLinks,
