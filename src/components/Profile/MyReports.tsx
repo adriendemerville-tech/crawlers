@@ -86,6 +86,7 @@ const translations = {
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
       cocoon: 'Rapport Cocoon',
+      marina: 'Rapport Marina',
     },
   },
   en: {
@@ -112,6 +113,7 @@ const translations = {
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
       cocoon: 'Cocoon Report',
+      marina: 'Marina Report',
     },
   },
   es: {
@@ -138,6 +140,7 @@ const translations = {
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
       cocoon: 'Informe Cocoon',
+      marina: 'Informe Marina',
     },
   },
 };

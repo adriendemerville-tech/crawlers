@@ -91,6 +91,34 @@ export function MarinaConsoleTab() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [jobsLoading, setJobsLoading] = useState(true);
 
+  const [reports, setReports] = useState<any[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(true);
+
+  const loadReports = useCallback(async () => {
+    if (!user) return;
+    setReportsLoading(true);
+    const { data } = await supabase
+      .from('saved_reports')
+      .select('id, title, url, report_data, created_at')
+      .eq('user_id', user.id)
+      .eq('report_type', 'marina' as any)
+      .eq('is_archived', false)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setReports(data || []);
+    setReportsLoading(false);
+  }, [user]);
+
+  useEffect(() => { loadReports(); }, [loadReports]);
+
+  const deleteReport = async (id: string) => {
+    const { error } = await supabase.from('saved_reports').delete().eq('id', id);
+    if (!error) {
+      toast.success(t3(language, 'Rapport supprimé', 'Report deleted', 'Informe eliminado'));
+      loadReports();
+    }
+  };
+
   const loadKeys = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -496,6 +524,65 @@ export function MarinaConsoleTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Rapports Marina enregistrés */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{t3(language, 'Rapports Marina enregistrés', 'Saved Marina reports', 'Informes Marina guardados')}</CardTitle>
+          <CardDescription className="text-xs">
+            {t3(language,
+              'Chaque rapport généré alors que vous êtes connecté est archivé ici automatiquement',
+              'Every report generated while you are signed in is archived here automatically',
+              'Cada informe generado mientras está conectado se archiva aquí automáticamente'
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {reportsLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
+              <Loader2 className="h-4 w-4 animate-spin" /> {t3(language, 'Chargement...', 'Loading...', 'Cargando...')}
+            </div>
+          ) : reports.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground mb-3">
+                {t3(language, 'Aucun rapport Marina enregistré', 'No saved Marina report', 'Ningún informe Marina guardado')}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => navigate('/marina')} className="gap-2">
+                <Anchor className="h-4 w-4" />
+                {t3(language, 'Lancer un audit Marina', 'Launch a Marina audit', 'Lanzar una auditoría Marina')}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {reports.map((report) => {
+                const rd = (report.report_data || {}) as any;
+                const viewUrl = rd.report_view_url || rd.report_url || null;
+                return (
+                  <div key={report.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm truncate">{report.title}</p>
+                      <p className="text-[10px] text-muted-foreground truncate font-mono">{report.url}</p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {rd.scan_mode?.mode && (
+                        <Badge variant="outline" className="text-[10px]">{rd.scan_mode.mode}</Badge>
+                      )}
+                      {viewUrl && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(viewUrl, '_blank', 'noopener')} title={t3(language, 'Ouvrir', 'Open', 'Abrir')}>
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteReport(report.id)} title={t3(language, 'Supprimer', 'Delete', 'Eliminar')}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Jobs list */}
       <Card>

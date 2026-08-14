@@ -16,6 +16,7 @@ import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreview
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
 import { MarinaScanModePanel, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
+import { persistMarinaReport } from '@/lib/marina/persistReport';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
@@ -649,6 +650,10 @@ export default function Marina() {
               fetch(viewUrl).then(r => r.ok ? r.text() : null).then(html => {
                 if (html) setDemoHtml(html);
               }).catch(() => {});
+            }
+            // Utilisateur connecté : on archive le rapport dans /app/console?tab=marina
+            if (user) {
+              void persistMarinaReport(user.id, jobId, url.trim() || data.data?.url || '', data.data, language);
             }
             setLoading(false);
             setProgress(100);

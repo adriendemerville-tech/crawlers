@@ -67,6 +67,7 @@ const t = {
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
       cocoon: 'Rapport Cocoon',
+      marina: 'Rapport Marina',
     } as Record<string, string>,
   },
   en: {
@@ -93,6 +94,7 @@ const t = {
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
       cocoon: 'Cocoon Report',
+      marina: 'Marina Report',
     } as Record<string, string>,
   },
   es: {
@@ -119,6 +121,7 @@ const t = {
       pagespeed: 'PageSpeed',
       crawlers: 'Crawlers',
       cocoon: 'Informe Cocoon',
+      marina: 'Informe Marina',
     } as Record<string, string>,
   },
 };
