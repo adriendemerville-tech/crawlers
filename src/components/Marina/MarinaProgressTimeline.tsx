@@ -122,13 +122,12 @@ export default function MarinaProgressTimeline({
 
   // Progression lissée : évite les sauts brusques et avance légèrement
   // entre deux polls pour que l'utilisateur voie toujours du mouvement.
-  const [smooth, setSmooth] = useState(progress);
-  const targetRef = useRef(progress);
+  const [smooth, setSmooth] = useState(0);
+  const targetRef = useRef(0);
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     targetRef.current = Math.max(0, Math.min(100, progress));
-    setSmooth((prev) => Math.max(prev, Math.min(targetRef.current, prev)));
   }, [progress]);
 
   useEffect(() => {
@@ -159,7 +158,7 @@ export default function MarinaProgressTimeline({
   const pct = Math.round(smooth);
 
   return (
-    <div className="mt-8 max-w-xl mx-auto text-left animate-fade-in">
+    <div className="mt-4 max-w-xl mx-auto text-left animate-fade-in">
       <div className="rounded-xl border border-primary/20 bg-card/60 backdrop-blur-sm p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
@@ -176,7 +175,7 @@ export default function MarinaProgressTimeline({
 
         {/* Barre de progression */}
         <div
-          className="h-2 w-full bg-muted rounded-full overflow-hidden"
+          className="h-2 w-full bg-border/60 rounded-full overflow-hidden"
           role="progressbar"
           aria-valuenow={pct}
           aria-valuemin={0}
@@ -184,8 +183,8 @@ export default function MarinaProgressTimeline({
           aria-label={c.title}
         >
           <div
-            className="h-full rounded-full bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] transition-[width] duration-300 ease-out"
-            style={{ width: `${Math.max(2, pct)}%`, animation: 'marina-shimmer 2.2s linear infinite' }}
+            className="h-full rounded-full bg-gradient-to-r from-brand-violet to-brand-gold transition-[width] duration-300 ease-out"
+            style={{ width: `${Math.min(100, Math.max(1, smooth))}%` }}
           />
         </div>
 
@@ -248,7 +247,6 @@ export default function MarinaProgressTimeline({
         </p>
       </div>
 
-      <style>{`@keyframes marina-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
     </div>
   );
 }
