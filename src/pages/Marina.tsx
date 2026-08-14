@@ -595,50 +595,24 @@ export default function Marina() {
     window.history.replaceState(null, '', `#${value}`);
   };
 
-  // Aperçu du rapport : vitrine figée sur crawlers.fr (visible même hors connexion),
-  // avec repli sur le dernier rapport de l'utilisateur si la vitrine est indisponible.
+  // Aperçu du rapport : toujours le même exemple vitrine (crawlers.fr),
+  // identique pour tous les visiteurs, connectés ou non.
   useEffect(() => {
     let cancelled = false;
     const loadDemo = async () => {
       setLoadingDemo(true);
       try {
         const showcase = await getMarinaShowcaseReport();
-        if (!cancelled && showcase?.html) {
-          setDemoHtml(showcase.html);
-          setLoadingDemo(false);
-          return;
-        }
+        if (!cancelled && showcase?.html) setDemoHtml(showcase.html);
       } catch (e) {
         console.error('Showcase report load error:', e);
-      }
-
-      if (!user) { if (!cancelled) setLoadingDemo(false); return; }
-      try {
-        const { data: latestJob } = await supabase
-          .from('async_jobs')
-          .select('id, result_data')
-          .eq('user_id', user.id)
-          .eq('function_name', 'marina')
-          .eq('status', 'completed')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (latestJob) {
-          const resultData = latestJob.result_data as any;
-          const fetchUrl = resultData?.report_view_url || resultData?.report_url;
-          if (fetchUrl) {
-            const resp = await fetch(fetchUrl);
-            if (resp.ok && !cancelled) setDemoHtml(await resp.text());
-          }
-        }
-      } catch (e) {
-        console.error('Demo report load error:', e);
       }
       if (!cancelled) setLoadingDemo(false);
     };
     loadDemo();
     return () => { cancelled = true; };
-  }, [user]);
+  }, []);
+
 
 
   // Poll job progress via fetch
