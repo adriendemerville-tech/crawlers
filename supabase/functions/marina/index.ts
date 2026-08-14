@@ -25,7 +25,7 @@ import {
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
-import { resolveScanMode, scanModeSentence } from '../_shared/marinaScanMode.ts';
+import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
 import {
   resolveIdentityCard,
   detectIdentityContradiction,
