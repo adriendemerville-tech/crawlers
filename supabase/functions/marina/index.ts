@@ -3211,11 +3211,16 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
         const latestCrawl = recentCrawls?.[0];
         if (latestCrawl?.id) {
+          // Plafond du mode de scan : on ne lit jamais plus de pages que le
+          // budget du mode retenu (deep 120 / standard 150 / sample 60), sinon
+          // un gros domaine ferait exploser le coût d'analyse en aval.
+          const pageCeiling = (scanModeInfo ?? resolveScanMode((latestCrawl as any).total_pages || null)).maxPages;
           const { data: crawlPages, error: crawlPagesError } = await sb
             .from('crawl_pages')
             .select('*')
             .eq('crawl_id', latestCrawl.id)
-            .order('created_at', { ascending: true });
+            .order('created_at', { ascending: true })
+            .limit(pageCeiling);
 
           if (crawlPagesError) {
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
