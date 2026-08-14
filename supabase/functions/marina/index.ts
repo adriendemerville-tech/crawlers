@@ -12,6 +12,8 @@ import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
 import { writeArchetypePrescriptions } from '../_shared/archetypeWorkbench.ts';
+import { buildAeoRewrites, writeAeoRewritePrescriptions } from '../_shared/aeoRewrites.ts';
+
 import { buildMarketProfile, fetchArchetypeBenchmarks, writeMarketObservation } from '../_shared/marketObservations.ts';
 import {
   sectorLabel,
@@ -3278,6 +3280,35 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               trackedSiteId: trackedSiteId || null,
               sectorLabel: marketSectorLabel,
             }).catch(() => {});
+
+            // Réécritures « réponse directe » (~40 mots) : un exemple concret par
+            // gabarit de page, poussé dans le Workbench (catégorie rewrite_content)
+            // et donc exécutable par Parménion / Stratège cocoon. 0 token LLM.
+            try {
+              const archetypeByUrl = new Map<string, { key: string; label: string }>();
+              for (const g of archetypeAnalysis?.groups || []) {
+                for (const s of (g as any).sample || []) archetypeByUrl.set(s, { key: (g as any).key, label: (g as any).label });
+              }
+              const aeoRewrites = buildAeoRewrites((crawlPages as any[]).map((p: any) => ({
+                url: p.url,
+                title: p.title,
+                h1: p.h1,
+                text: p.body_text_truncated,
+                page_intent: p.page_intent,
+                word_count: p.word_count,
+                archetype_key: archetypeByUrl.get(p.url)?.key || null,
+                archetype_label: archetypeByUrl.get(p.url)?.label || null,
+              })), 6);
+              await writeAeoRewritePrescriptions(sb, aeoRewrites, {
+                domain,
+                userId: parentJob.user_id,
+                trackedSiteId: trackedSiteId || null,
+                sourceFunction: 'marina',
+              });
+            } catch (aeoErr) {
+              console.warn('[Marina] AEO rewrite prescriptions failed (non-fatal):', aeoErr);
+            }
+
 
             // Mémoire de marché : observation historisée, base de la calibration
             // sectorielle hebdomadaire et d'un apprentissage ultérieur.
