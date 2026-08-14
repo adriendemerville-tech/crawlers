@@ -201,11 +201,57 @@ export function renderScopeLimitsHTML(input: ScopeLimitsInput): string {
         ' La autoridad indicada es una estimación propia de Crawlers, no un score de Semrush, Moz o Majestic.',
       )
     : '';
-  const domainBody = domainObserved + authorityCaveat + ' ' + t(
-    "Un domaine récent ou faiblement lié subit une inertie structurelle : même parfaitement optimisées, ses pages mettent plus longtemps à être explorées, indexées puis citées, et un score technique élevé ne compense pas un déficit d'autorité. À l'inverse, un domaine ancien porte parfois un passif — anciennes URL, contenus obsolètes, liens de mauvaise qualité — qui pèse davantage que les défauts techniques listés ici. Comptez 3 à 6 mois avant de juger l'effet d'une refonte sémantique, quelques semaines pour une correction technique sur un domaine installé. Aucun de ces délais n'est garanti.",
-    'A young or weakly linked domain suffers structural inertia: even perfectly optimised, its pages take longer to be crawled, indexed and cited, and a high technical score does not offset an authority deficit. Conversely, an old domain may carry liabilities — legacy URLs, outdated content, poor links — weighing more than the technical defects listed here. Allow 3 to 6 months before judging a semantic overhaul, a few weeks for a technical fix on an established domain. None of these timeframes is guaranteed.',
-    'Un dominio reciente o poco enlazado sufre una inercia estructural; un dominio antiguo puede arrastrar un pasivo. Ningún plazo está garantizado.',
+  // Verdict d'ancienneté daté et propre au domaine audité : on nomme le mois et
+  // l'année de la première trace externe observée, puis on en tire une consigne
+  // de prudence (jeune) ou de confiance renforcée (mature).
+  const firstSeenLabel = a?.first_seen
+    ? new Date(a.first_seen).toLocaleDateString(l === 'en' ? 'en-GB' : l === 'es' ? 'es-ES' : 'fr-FR', { month: 'long', year: 'numeric' })
+    : null;
+  const ageLabel = ageMonths !== null
+    ? (ageMonths >= 12
+        ? t(`${Math.floor(ageMonths / 12)} an(s)`, `${Math.floor(ageMonths / 12)} year(s)`, `${Math.floor(ageMonths / 12)} año(s)`)
+        : t(`${ageMonths} mois`, `${ageMonths} months`, `${ageMonths} meses`))
+    : null;
+
+  let maturityVerdict: string;
+  if (ageMonths === null || !firstSeenLabel) {
+    maturityVerdict = t(
+      `Aucune date de première trace externe n'a pu être établie pour ${domain} : l'ancienneté du nom de domaine est inconnue dans ce rapport. Les délais de prise d'effet annoncés (quelques semaines pour une correction technique, 3 à 6 mois pour une refonte sémantique) sont donc à considérer comme des ordres de grandeur non calés sur votre historique.`,
+      `No first external trace date could be established for ${domain}: domain age is unknown in this report. The stated timeframes (a few weeks for a technical fix, 3 to 6 months for a semantic overhaul) are therefore rough orders of magnitude, not calibrated on your history.`,
+      `No se pudo establecer la fecha de primera huella externa de ${domain}: la antigüedad es desconocida en este informe.`,
+    );
+  } else if (ageMonths < 18) {
+    maturityVerdict = t(
+      `${domain} a été vu pour la première fois par nos sources externes en ${esc(firstSeenLabel)}, soit une ancienneté observable d'environ ${ageLabel}. C'est un domaine jeune : restons prudents sur l'interprétation. Ses pages subissent une inertie structurelle — elles mettent plus longtemps à être explorées, indexées puis citées — et un score technique élevé ne compense pas encore le déficit d'autorité. Comptez plutôt 4 à 8 mois avant de juger l'effet d'une refonte sémantique, et considérez les écarts de position comme instables tant que l'historique reste court.`,
+      `${domain} was first seen by our external sources in ${esc(firstSeenLabel)}, i.e. an observable age of about ${ageLabel}. This is a young domain, so read the findings cautiously. Its pages face structural inertia — slower crawling, indexing and citation — and a high technical score does not yet offset the authority gap. Allow 4 to 8 months before judging a semantic overhaul, and treat ranking swings as unstable while history remains short.`,
+      `${domain} fue visto por primera vez en ${esc(firstSeenLabel)} (unos ${ageLabel}). Es un dominio joven: conviene ser prudente, sus páginas tardan más en ser rastreadas, indexadas y citadas.`,
+    );
+  } else if (ageMonths < 48) {
+    maturityVerdict = t(
+      `${domain} a été vu pour la première fois par nos sources externes en ${esc(firstSeenLabel)}, soit une ancienneté observable d'environ ${ageLabel}. Le domaine est en phase intermédiaire : l'historique est suffisant pour que les constats techniques et sémantiques soient exploitables, mais pas assez profond pour attribuer avec certitude un écart de position à l'autorité plutôt qu'au contenu. Comptez 3 à 6 mois pour juger une refonte sémantique, quelques semaines pour une correction technique.`,
+      `${domain} was first seen by our external sources in ${esc(firstSeenLabel)}, i.e. an observable age of about ${ageLabel}. The domain is in an intermediate phase: history is sufficient for technical and semantic findings to be actionable, but not deep enough to confidently attribute a ranking gap to authority rather than content. Allow 3 to 6 months for a semantic overhaul, a few weeks for a technical fix.`,
+      `${domain} fue visto por primera vez en ${esc(firstSeenLabel)} (unos ${ageLabel}): fase intermedia, los hallazgos son accionables pero la atribución sigue siendo parcial.`,
+    );
+  } else {
+    maturityVerdict = t(
+      `${domain} a été vu pour la première fois par nos sources externes en ${esc(firstSeenLabel)}, soit une ancienneté observable d'environ ${ageLabel}. C'est un domaine mature : nos observations sont d'autant plus fiables, car l'historique écarte l'hypothèse d'un simple manque d'ancienneté pour expliquer les faiblesses relevées. En contrepartie, un domaine installé porte souvent un passif — anciennes URL, contenus obsolètes, liens de mauvaise qualité, migrations passées — qui peut peser plus lourd que les défauts techniques listés ici. Sur ce type de domaine, une correction technique produit généralement un effet en quelques semaines.`,
+      `${domain} was first seen by our external sources in ${esc(firstSeenLabel)}, i.e. an observable age of about ${ageLabel}. This is a mature domain: our observations are all the more reliable, since history rules out mere youth as the explanation for the weaknesses found. In return, an established domain often carries liabilities — legacy URLs, outdated content, poor links, past migrations — that can weigh more than the technical defects listed here. On such a domain, a technical fix usually shows effect within weeks.`,
+      `${domain} fue visto por primera vez en ${esc(firstSeenLabel)} (unos ${ageLabel}). Es un dominio maduro: nuestras observaciones son más fiables, aunque puede arrastrar un pasivo histórico.`,
+    );
+  }
+  const firstSeenCaveat = firstSeenLabel
+    ? ' ' + t(
+        `Cette date correspond au premier lien entrant observé par nos sources, pas à la date de création du nom de domaine ni à sa première indexation exacte : elle en constitue une borne supérieure prudente (le domaine peut être antérieur).`,
+        `This date is the first backlink observed by our sources, not the domain registration or exact first indexation date: it is a conservative upper bound (the domain may be older).`,
+        `Esta fecha es el primer enlace entrante observado, no la fecha de creación del dominio: es una cota superior prudente.`,
+      )
+    : '';
+  const domainBody = domainObserved + authorityCaveat + ' ' + maturityVerdict + firstSeenCaveat + ' ' + t(
+    'Aucun de ces délais n\'est garanti.',
+    'None of these timeframes is guaranteed.',
+    'Ningún plazo está garantizado.',
   );
+
 
   // 5. Crawlabilité
   const blockers = (input.blockers || []).filter(Boolean);
