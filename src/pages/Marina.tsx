@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 import { getMarinaShowcaseReport } from '@/lib/marina/showcase.functions';
+import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
+
 
 
 const MARINA_API_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`;
