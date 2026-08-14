@@ -31,6 +31,12 @@ export interface ArchetypePageInput {
 
 export type ArchetypeRole = 'core_business' | 'auxiliary_pillar' | 'support' | 'functional';
 
+export interface ArchetypeExample {
+  url: string;
+  h1: string | null;
+  title: string | null;
+}
+
 export interface ArchetypeGroup {
   key: string;
   label: string;
@@ -38,6 +44,8 @@ export interface ArchetypeGroup {
   purpose: string;
   pages: number;
   sample: string[];
+  /** Exemples concrets (URL cliquable + H1) affichés dans la carte du type. */
+  examples: ArchetypeExample[];
   avgSeoScore: number | null;
   avgWordCount: number;
   avgInternalLinks: number;
@@ -52,6 +60,7 @@ export interface ArchetypeGroup {
   optimizations: string[];
   verdict: 'strong' | 'ok' | 'weak';
 }
+
 
 export type MixAction = 'balanced' | 'expand' | 'prune' | 'differentiate' | 'create';
 
@@ -115,7 +124,16 @@ export interface ArchetypeAnalysisOptions {
   /** Modèle d'affaires normalisé (carte d'identité résolue en phase 0). */
   commercialModel?: string | null;
   commercialModelLabel?: string | null;
+  /**
+   * Audit ciblé sur une URL précise : l'analyse se limite alors à cette page et
+   * à son voisinage de liens (pages atteintes par les liens sortants et pages
+   * qui pointent vers elle), au lieu de segmenter le site entier.
+   */
+  focusUrl?: string | null;
+  /** URLs du voisinage de liens de focusUrl (entrants et sortants confondus). */
+  linkedUrls?: string[] | null;
 }
+
 
 
 export interface ArchetypeAnalysis {
@@ -126,7 +144,13 @@ export interface ArchetypeAnalysis {
   globalVerdict: 'strong' | 'ok' | 'weak';
   synthesis: string;
   mix: ArchetypeMix | null;
+  /** 'site' = segmentation du périmètre crawlé ; 'url' = URL ciblée + voisinage de liens. */
+  scope: 'site' | 'url';
+  focusUrl: string | null;
+  /** Nombre de pages du voisinage de liens retenues en scope 'url'. */
+  neighborhoodPages: number;
 }
+
 
 
 
@@ -169,6 +193,27 @@ const DEFS: ArchetypeDef[] = [
     pattern: /\/(devis|estimation|simulateur|demande|rendez-vous|rdv|reservation|contact-commercial|tarif|tarifs|prix|pricing)\b/i,
   },
   {
+    key: 'feature',
+    label: 'Pages fonctionnalité / outil',
+    role: 'core_business',
+    purpose: "expliquer ce que fait précisément une fonctionnalité ou un outil et déclencher l'essai",
+    pattern: /\/(fonctionnalite|fonctionnalites|feature|features|outil|outils|tool|tools|module|modules|application|logiciel|plateforme|platform)\b/i,
+  },
+  {
+    key: 'comparison',
+    label: 'Pages comparatif / alternative',
+    role: 'core_business',
+    purpose: "capter les requêtes de fin de parcours (« X vs Y », « alternative à X ») et emporter l'arbitrage",
+    pattern: /\/([^/]*-vs-[^/]*|comparatif|comparatifs|comparaison|compare|alternative|alternatives|versus|concurrent|concurrents)\b/i,
+  },
+  {
+    key: 'case_study',
+    label: 'Pages étude de cas / références clients',
+    role: 'auxiliary_pillar',
+    purpose: "prouver le résultat obtenu avec des chiffres réels et nourrir les signaux E-E-A-T",
+    pattern: /\/(etude|etudes|etude-de-cas|etudes-de-cas|case-study|case-studies|cas-client|cas-clients|client|clients|portfolio|references-clients)\b/i,
+  },
+  {
     key: 'reviews',
     label: 'Pages avis / témoignages',
     role: 'auxiliary_pillar',
@@ -183,6 +228,20 @@ const DEFS: ArchetypeDef[] = [
     pattern: /\/(blog|article|articles|actualite|actualites|news|guide|guides|conseil|conseils|dossier|dossiers|tutoriel|faq|lexique|glossaire)\b/i,
   },
   {
+    key: 'docs',
+    label: 'Pages documentation / support',
+    role: 'support',
+    purpose: "réduire la friction à l'usage et capter les requêtes de support technique",
+    pattern: /\/(doc|docs|documentation|api|developpeur|developers|aide|help|support|assistance|changelog|integration|integrations)\b/i,
+  },
+  {
+    key: 'landing',
+    label: 'Pages landing / offre ciblée',
+    role: 'core_business',
+    purpose: "adresser une cible ou une promesse unique en un seul écran et convertir sans détour",
+    pattern: /\/(lp|landing|offre|offres|promo|promotion|campagne|essai|essai-gratuit|demo|demonstration|inscription-offre)\b/i,
+  },
+  {
     key: 'listing',
     label: 'Pages de listing / catégories',
     role: 'support',
@@ -194,7 +253,14 @@ const DEFS: ArchetypeDef[] = [
     label: 'Pages institutionnelles',
     role: 'functional',
     purpose: "porter la confiance de marque et les mentions obligatoires",
-    pattern: /\/(a-propos|qui-sommes-nous|equipe|notre-histoire|entreprise|about|recrutement|carriere|carrieres|partenaires?)\b/i,
+    pattern: /\/(a-propos|qui-sommes-nous|equipe|notre-histoire|entreprise|about|recrutement|carriere|carrieres|partenaires?|auteur|auteurs)\b/i,
+  },
+  {
+    key: 'account',
+    label: 'Pages compte / espace applicatif',
+    role: 'functional',
+    purpose: "servir les utilisateurs déjà connectés ; aucun objectif d'acquisition organique",
+    pattern: /\/(app|dashboard|console|compte|profil|mon-compte|login|connexion|auth|inscription|signup|signin|admin|checkout|panier|espace-client)\b/i,
   },
   {
     key: 'legal',
@@ -205,6 +271,30 @@ const DEFS: ArchetypeDef[] = [
   },
 ];
 
+/**
+ * Second passage de classement : mots-clés cherchés dans le title, le H1 et le
+ * slug quand l'URL seule ne dit rien. C'est ce passage qui évite de déverser la
+ * moitié du site dans « Autres pages ».
+ */
+const KEYWORD_HINTS: Array<{ key: string; words: RegExp }> = [
+  { key: 'comparison', words: /\b(vs|versus|comparatif|comparaison|alternative|alternatives|meilleur|meilleurs|meilleure|top \d+|classement)\b/ },
+  { key: 'conversion', words: /\b(devis|tarif|tarifs|prix|pricing|abonnement|combien coute|essai gratuit|demander|reserver|rendez-vous)\b/ },
+  { key: 'feature', words: /\b(fonctionnalite|fonctionnalites|outil|outils|logiciel|plateforme|generateur|analyseur|audit automatique|module)\b/ },
+  { key: 'case_study', words: /\b(etude de cas|cas client|resultats|retour d.experience|temoignage client|reference client)\b/ },
+  { key: 'editorial', words: /\b(guide|comment|pourquoi|definition|qu.est-ce|tutoriel|checklist|exemples?|conseils?|actualite)\b/ },
+  { key: 'service', words: /\b(prestation|accompagnement|consulting|expertise|service|agence de|externalisation)\b/ },
+  { key: 'agency', words: /\b(agence de |notre agence|point de vente|showroom|nous trouver)\b/ },
+  { key: 'product', words: /\b(fiche produit|reference|modele|gamme|collection|acheter)\b/ },
+  { key: 'reviews', words: /\b(avis|temoignages|notes clients|satisfaction)\b/ },
+  { key: 'docs', words: /\b(documentation|api|integration|changelog|aide|support technique)\b/ },
+  { key: 'institutional', words: /\b(a propos|qui sommes-nous|notre equipe|notre histoire|recrutement|auteur)\b/ },
+];
+
+function deaccent(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+
 function isHome(path: string): boolean {
   return path === '/' || path === '' || /^\/(index(\.html?)?)?$/i.test(path);
 }
@@ -212,6 +302,10 @@ function isHome(path: string): boolean {
 function pagePath(p: ArchetypePageInput): string {
   if (p.path) return p.path;
   try { return new URL(p.url).pathname; } catch { return '/'; }
+}
+
+function defByKey(key: string): ArchetypeDef {
+  return DEFS.find((d) => d.key === key)!;
 }
 
 function classify(p: ArchetypePageInput): ArchetypeDef {
@@ -224,17 +318,30 @@ function classify(p: ArchetypePageInput): ArchetypeDef {
     const hit = DEFS.find((d) => d.key === override);
     if (hit) return hit;
   }
-  for (const def of DEFS) if (def.pattern.test(path)) return def;
+  for (const def of DEFS) if (def.pattern.test(deaccent(path))) return def;
 
-  // Repli par intention détectée au crawl
+  // 2e passage : mots-clés du slug, du title et du H1. Sans ce passage, tout ce
+  // qui n'a pas de préfixe d'URL normalisé finissait dans « Autres pages ».
+  const haystack = deaccent([path.replace(/[-_/]+/g, ' '), p.title || '', p.h1 || ''].join(' '));
+  for (const hint of KEYWORD_HINTS) {
+    if (hint.words.test(haystack)) return defByKey(hint.key);
+  }
+
+  // 3e passage : intention détectée au crawl
   const intent = (p.page_intent || '').toLowerCase();
-  if (intent === 'buy') return DEFS.find((d) => d.key === 'product')!;
-  if (intent === 'do') return DEFS.find((d) => d.key === 'conversion')!;
-  if (intent === 'know') return DEFS.find((d) => d.key === 'editorial')!;
-  if (intent === 'navigate') return DEFS.find((d) => d.key === 'institutional')!;
+  if (intent === 'buy') return defByKey('product');
+  if (intent === 'do') return defByKey('conversion');
+  if (intent === 'know') return defByKey('editorial');
+  if (intent === 'navigate') return defByKey('institutional');
 
-  return { key: 'other', label: 'Autres pages', role: 'support', purpose: "rôle non déterminé par l'URL ni par l'intention détectée", pattern: /^$/ };
+  // Dernier repli : une page de premier niveau sans marqueur est presque
+  // toujours une page d'offre ciblée ; au-delà, on assume l'incertitude.
+  const depth = Number.isFinite(Number(p.crawl_depth)) ? Number(p.crawl_depth) : (path.split('/').filter(Boolean).length);
+  if (depth <= 1) return defByKey('landing');
+
+  return { key: 'other', label: 'Pages non typées', role: 'support', purpose: "rôle non déterminé ni par l'URL, ni par le contenu, ni par l'intention détectée", pattern: /^$/ };
 }
+
 
 function avg(values: number[]): number {
   if (!values.length) return 0;
@@ -285,13 +392,28 @@ function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGr
   if (failures.length === 0 && (avgSeoScore === null || avgSeoScore >= 65)) verdict = 'strong';
   if (failures.length >= 3 || notIndexable > 0 || (avgSeoScore !== null && avgSeoScore < 45)) verdict = 'weak';
 
+  // Exemples : on privilégie les pages qui ont un H1 exploitable et le contenu
+  // le plus développé — c'est la page la plus représentative du gabarit.
+  const ranked = [...pages].sort((a, b) => {
+    const ha = a.h1 ? 1 : 0, hb = b.h1 ? 1 : 0;
+    if (ha !== hb) return hb - ha;
+    return Number(b.word_count || 0) - Number(a.word_count || 0);
+  });
+  const examples: ArchetypeExample[] = ranked.slice(0, 3).map((p) => ({
+    url: p.url,
+    h1: p.h1 || null,
+    title: p.title || null,
+  }));
+
   return {
     key: def.key,
     label: def.label,
     role: def.role,
     purpose: def.purpose,
     pages: n,
-    sample: pages.slice(0, 3).map((p) => p.url),
+    sample: examples.map((e) => e.url),
+    examples,
+
     avgSeoScore,
     avgWordCount,
     avgInternalLinks,
@@ -322,14 +444,20 @@ function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGr
  */
 const MIX_TARGETS_GENERIC: Record<string, [number, number]> = {
   home: [0, 0.05],
-  agency: [0.05, 0.35],
-  product: [0.05, 0.45],
-  service: [0.05, 0.30],
+  agency: [0, 0.35],
+  product: [0, 0.45],
+  service: [0, 0.30],
+  feature: [0, 0.20],
+  comparison: [0, 0.10],
+  landing: [0, 0.15],
   conversion: [0.01, 0.08],
-  reviews: [0.01, 0.10],
+  reviews: [0, 0.10],
+  case_study: [0, 0.10],
   editorial: [0.15, 0.50],
-  listing: [0.02, 0.20],
+  listing: [0, 0.20],
+  docs: [0, 0.15],
   institutional: [0.01, 0.08],
+  account: [0, 0.08],
   legal: [0, 0.05],
   other: [0, 0.15],
 };
@@ -340,11 +468,17 @@ const MIX_TARGETS_BY_MODEL: Record<string, Record<string, [number, number]>> = {
     agency: [0.15, 0.50],
     service: [0.10, 0.40],
     reviews: [0.02, 0.12],
+    case_study: [0, 0.12],
     conversion: [0.02, 0.10],
     editorial: [0.10, 0.40],
     listing: [0.01, 0.12],
     product: [0, 0.15],
+    feature: [0, 0.05],
+    comparison: [0, 0.05],
+    landing: [0, 0.10],
+    docs: [0, 0.05],
     institutional: [0.01, 0.08],
+    account: [0, 0.05],
     legal: [0, 0.05],
     other: [0, 0.15],
   },
@@ -354,23 +488,35 @@ const MIX_TARGETS_BY_MODEL: Record<string, Record<string, [number, number]>> = {
     listing: [0.05, 0.25],
     editorial: [0.05, 0.30],
     reviews: [0.01, 0.10],
+    case_study: [0, 0.05],
     conversion: [0.01, 0.06],
     service: [0, 0.10],
     agency: [0, 0.10],
+    feature: [0, 0.05],
+    comparison: [0, 0.08],
+    landing: [0, 0.10],
+    docs: [0, 0.06],
     institutional: [0.01, 0.06],
+    account: [0, 0.06],
     legal: [0, 0.04],
     other: [0, 0.12],
   },
   saas: {
     home: [0, 0.05],
-    service: [0.15, 0.45],
-    conversion: [0.03, 0.12],
+    feature: [0.10, 0.35],
+    service: [0, 0.35],
+    comparison: [0.02, 0.12],
+    conversion: [0.02, 0.12],
+    landing: [0.02, 0.15],
     editorial: [0.25, 0.65],
-    reviews: [0.01, 0.10],
+    case_study: [0.02, 0.12],
+    reviews: [0, 0.10],
+    docs: [0, 0.30],
     listing: [0, 0.10],
     product: [0, 0.15],
-    agency: [0, 0.05],
+    agency: [0, 0],
     institutional: [0.01, 0.08],
+    account: [0, 0.08],
     legal: [0, 0.06],
     other: [0, 0.15],
   },
@@ -380,10 +526,16 @@ const MIX_TARGETS_BY_MODEL: Record<string, Record<string, [number, number]>> = {
     conversion: [0.03, 0.12],
     editorial: [0.20, 0.55],
     reviews: [0.02, 0.12],
+    case_study: [0.02, 0.12],
     agency: [0, 0.20],
     product: [0, 0.12],
+    feature: [0, 0.15],
+    comparison: [0, 0.10],
+    landing: [0.02, 0.15],
+    docs: [0, 0.10],
     listing: [0, 0.12],
     institutional: [0.01, 0.08],
+    account: [0, 0.06],
     legal: [0, 0.05],
     other: [0, 0.15],
   },
@@ -395,8 +547,14 @@ const MIX_TARGETS_BY_MODEL: Record<string, Record<string, [number, number]>> = {
     conversion: [0, 0.05],
     service: [0, 0.08],
     product: [0, 0.10],
-    agency: [0, 0.05],
+    agency: [0, 0],
     reviews: [0, 0.06],
+    case_study: [0, 0.05],
+    feature: [0, 0.05],
+    comparison: [0, 0.08],
+    landing: [0, 0.06],
+    docs: [0, 0.05],
+    account: [0, 0.05],
     legal: [0, 0.04],
     other: [0, 0.12],
   },
@@ -404,16 +562,23 @@ const MIX_TARGETS_BY_MODEL: Record<string, Record<string, [number, number]>> = {
     home: [0, 0.05],
     editorial: [0.30, 0.75],
     institutional: [0.05, 0.25],
-    conversion: [0.01, 0.10],
+    conversion: [0, 0.10],
     listing: [0, 0.15],
     service: [0, 0.20],
-    agency: [0, 0.15],
+    agency: [0, 0],
     product: [0, 0.08],
     reviews: [0, 0.06],
+    case_study: [0, 0.10],
+    feature: [0, 0.10],
+    comparison: [0, 0.05],
+    landing: [0, 0.08],
+    docs: [0, 0.15],
+    account: [0, 0.06],
     legal: [0, 0.06],
     other: [0, 0.15],
   },
 };
+
 
 interface ResolvedTarget {
   min: number;
@@ -540,12 +705,19 @@ function buildMix(
   });
 
 
+  // Un type manquant n'est signalé que s'il est réellement attendu pour ce
+  // modèle d'affaires : on ne reproche pas à un SaaS de ne pas avoir de pages
+  // agence ou de pages devis locales.
   const present = new Set(groups.map((g) => g.key));
-  const MISSING_WATCH = ['conversion', 'reviews', 'editorial', 'service'];
-  const missing = DEFS.filter((d) => MISSING_WATCH.includes(d.key) && !present.has(d.key)).map((d) => ({
+  const missing = DEFS.filter((d) => {
+    if (present.has(d.key)) return false;
+    const t = mixTarget(d.key, d.role, benchmarks, options.commercialModel ?? null);
+    return t.min > 0;
+  }).map((d) => ({
     key: d.key, label: d.label, role: d.role,
-    rationale: `aucune page de ce type n'a été détectée : créer ce gabarit pour ${d.purpose}.`,
+    rationale: `aucune page de ce type n'a été détectée alors qu'elle est attendue pour ce modèle d'affaires : créer ce gabarit pour ${d.purpose}.`,
   }));
+
 
   const coverage = reference ? Math.min(1, crawlPages / reference.total) : null;
   const flagged = entries.filter((e) => e.action !== 'balanced');
@@ -614,8 +786,32 @@ export function analyzePageArchetypes(
     ? { ...(maybeOptions || {}), sitemapUrls: (sitemapUrlsOrOptions as string[] | null) ?? maybeOptions?.sitemapUrls ?? null }
     : (sitemapUrlsOrOptions as ArchetypeAnalysisOptions);
 
-  const usable = (pages || []).filter((p) => p && p.url);
-  if (usable.length < 3) return null;
+  const norm = (u: string): string => {
+    try {
+      const x = new URL(u);
+      return `${x.hostname.replace(/^www\./, '')}${x.pathname.replace(/\/+$/, '')}`.toLowerCase();
+    } catch { return u.replace(/\/+$/, '').toLowerCase(); }
+  };
+
+  let usable = (pages || []).filter((p) => p && p.url);
+
+  // Périmètre ciblé : l'audit porte sur une URL précise. On ne segmente alors
+  // que cette page et son voisinage de liens (entrants + sortants), sinon on
+  // décrirait des gabarits que l'audit n'a pas réellement examinés.
+  const focusUrl = options.focusUrl || null;
+  const scope: ArchetypeAnalysis['scope'] = focusUrl ? 'url' : 'site';
+  let neighborhoodPages = 0;
+  if (focusUrl) {
+    const allowed = new Set<string>([norm(focusUrl), ...(options.linkedUrls || []).filter((u) => typeof u === 'string').map(norm)]);
+    const scoped = usable.filter((p) => allowed.has(norm(p.url)));
+    if (scoped.length) {
+      usable = scoped;
+      neighborhoodPages = Math.max(0, scoped.length - 1);
+    }
+  }
+
+  if (usable.length < (focusUrl ? 1 : 3)) return null;
+
 
 
   const buckets = new Map<string, { def: ArchetypeDef; pages: ArchetypePageInput[] }>();
@@ -673,10 +869,16 @@ export function analyzePageArchetypes(
     mainProblem ? `Le problème principal est simple : ${mainProblem}.` : null,
   ].filter(Boolean).join(' ');
 
-  const mix = buildMix(groups, usable.length, options);
-  const fullSynthesis = mix ? `${synthesis} ${mix.synthesis}` : synthesis;
+  // En périmètre ciblé, une pondération de mix n'a aucun sens statistique.
+  const mix = scope === 'url' ? null : buildMix(groups, usable.length, options);
+  const scopeNote = scope === 'url'
+    ? ` Périmètre de cette analyse : l'URL auditée et son voisinage de liens (${neighborhoodPages} page(s) atteinte(s) par ses liens internes) — aucune extrapolation au site entier n'est faite, et aucune pondération de mix n'est calculée.`
+    : '';
+  const fullSynthesis = `${synthesis}${mix ? ` ${mix.synthesis}` : ''}${scopeNote}`;
 
-  return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis: fullSynthesis, mix };
+  return { totalPages: usable.length, groups, coreGroups, mainProblem, globalVerdict, synthesis: fullSynthesis, mix, scope, focusUrl, neighborhoodPages };
+
+
 
 }
 
@@ -701,8 +903,32 @@ function list(items: string[], color: string, title: string): string {
   </div>`;
 }
 
+function escHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/** Exemples concrets : H1 lisible + lien cliquable vers la page représentative. */
+function renderExamples(g: ArchetypeGroup): string {
+  const examples = (g.examples && g.examples.length)
+    ? g.examples
+    : (g.sample || []).map((url) => ({ url, h1: null, title: null }));
+  if (!examples.length) return '';
+  const rows = examples.map((e) => {
+    const heading = e.h1 || e.title || 'H1 absent sur cette page';
+    return `<li style="margin-bottom:5px;">
+      <span style="color:#111827;font-weight:600;">${escHtml(heading)}</span><br/>
+      <a href="${escHtml(e.url)}" target="_blank" rel="noopener" style="color:#6d28d9;text-decoration:underline;word-break:break-all;">${escHtml(e.url)}</a>
+    </li>`;
+  }).join('');
+  return `<div style="margin:10px 0 0 0;">
+    <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">Exemple${examples.length > 1 ? 's' : ''} de page de ce type</div>
+    <ul style="padding-left:18px;margin:0;font-size:12px;line-height:1.55;color:#4b5563;">${rows}</ul>
+  </div>`;
+}
+
 /** Rendu HTML de la section « Audit par type de page » (déterministe). */
 export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: string): string {
+
   const cards = analysis.groups.map((g) => {
     const v = VERDICT_LABELS[g.verdict];
     return `<div data-marina-block="archetype-${g.key}" style="border:1px solid #e5e7eb;border-left:4px solid ${v.color};border-radius:8px;padding:14px 16px;margin:0 0 12px 0;background:#ffffff;">
@@ -719,7 +945,7 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
       ${list(g.strengths, '#16a34a', 'Ce qui fonctionne')}
       ${list(g.failures, '#b91c1c', 'Ce qui échoue')}
       ${list(g.optimizations, '#6d28d9', 'Comment les optimiser')}
-      ${g.sample.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;word-break:break-all;">Exemples : ${g.sample.join(' · ')}</div>` : ''}
+      ${renderExamples(g)}
     </div>`;
   }).join('');
 
@@ -775,12 +1001,18 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
     </ul>
   </div>`;
 
+  const detected = analysis.groups.map((g) => g.label.toLowerCase()).slice(0, 6).join(', ');
+  const intro = analysis.scope === 'url'
+    ? `Ce que mesure cette section : le type de la page auditée et celui des pages atteintes depuis ses liens internes. Périmètre réel : ${analysis.totalPages} page(s) sur ${domain}${analysis.focusUrl ? ` autour de ${escHtml(analysis.focusUrl)}` : ''}. Seuls les types réellement rencontrés sont décrits — aucun gabarit théorique n'est ajouté, et aucune pondération de mix n'est calculée sur un périmètre aussi restreint.`
+    : `Ce que mesure cette section : un site ne se juge pas page par page mais gabarit par gabarit. Les ${analysis.totalPages} pages retenues sur ${domain} sont regroupées selon les types réellement détectés sur ce domaine (${detected}) : aucun type absent du site n'est décrit ici, et un gabarit n'est signalé comme manquant que s'il est attendu pour le modèle d'affaires identifié. Chaque type est confronté à l'objectif qu'il est censé servir, illustré par une page exemple, puis une conclusion intermédiaire précise s'il le remplit. La pondération du mix indique enfin s'il faut créer, élaguer ou simplement différencier chaque gabarit.`;
+
   return `
-  <div class="section" data-marina-scope="site" data-marina-block="archetypes" data-pdf-section style="border-left:6px solid #6d28d9;">
+  <div class="section" data-marina-scope="${analysis.scope === 'url' ? 'page' : 'site'}" data-marina-block="archetypes" data-pdf-section style="border-left:6px solid #6d28d9;">
     <h2 style="font-size:19px;margin:0 0 10px 0;">Audit par type de page</h2>
     <p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 16px 0;">
-      Ce que mesure cette section : un site ne se juge pas page par page mais gabarit par gabarit. Les ${analysis.totalPages} pages retenues sur ${domain} sont regroupées par type (agence, produit, service, avis, éditorial…), chaque type est confronté à l'objectif qu'il est censé servir, puis une conclusion intermédiaire précise s'il le remplit. La pondération du mix indique enfin s'il faut créer, élaguer ou simplement différencier chaque gabarit. Le verdict global du site en découle.
+      ${intro}
     </p>
+
     ${cards}
     ${mixHTML}
     <div style="border:2px solid #6d28d9;border-left:6px solid #d4af37;border-radius:10px;padding:16px 18px;background:#ffffff;">
