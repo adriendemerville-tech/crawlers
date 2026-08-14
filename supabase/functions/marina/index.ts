@@ -3492,6 +3492,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
         const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan);
 
+        // Données propriétaires : uniquement si l'utilisateur possède une connexion
+        // Google vérifiée couvrant CE domaine. Sinon la section n'existe pas.
+        let ownerPerformance: OwnerPerformanceData | null = null;
+        try {
+          ownerPerformance = await fetchOwnerPerformanceData(sb, parentJob.user_id, domain);
+          console.log(
+            `[Marina] Données propriétaires ${ownerPerformance ? 'disponibles' : 'absentes'} pour ${domain}`,
+          );
+        } catch (ownerErr) {
+          console.warn('[Marina] Owner performance fetch failed (non-fatal):', ownerErr);
+        }
+        const ownerPerformanceHTML = renderOwnerPerformanceHTML(ownerPerformance, '3b');
+
         const tempPrefix = `marina/tmp/${jobId}`;
         const storageUploads = [
           { path: `${tempPrefix}/1-crawl.html`, content: crawlHTML },
