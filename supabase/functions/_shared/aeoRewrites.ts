@@ -80,9 +80,19 @@ function splitSentences(paragraph: string): string[] {
     .filter(Boolean);
 }
 
+/** Retire le suffixe de marque (« … | Marque »), sans casser les traits d'union internes. */
+function cleanSubject(page: AeoPageInput): string {
+  return (page.h1 || page.title || '')
+    .replace(/\s+[|·»]\s*.{2,40}$/, '')
+    .replace(/\s+[–—]\s+.{2,40}$/, '')
+    .replace(/\s-\s.{2,40}$/, '')
+    .trim();
+}
+
 /** Question cible : on part du H1 (l'intention réelle de la page), pas du titre SEO. */
 function deriveQuestion(page: AeoPageInput): string {
-  const base = (page.h1 || page.title || '').replace(/\s*[|–—-]\s*[^|–—-]{2,40}$/, '').trim();
+  const base = cleanSubject(page);
+
   if (!base) return 'Quelle est la réponse que cette page doit donner en premier ?';
   if (/\?$/.test(base)) return base;
   const intent = (page.page_intent || '').toLowerCase();
