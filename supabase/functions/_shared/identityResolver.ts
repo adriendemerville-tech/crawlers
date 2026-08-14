@@ -113,7 +113,15 @@ function buildCard(
   raw: Record<string, unknown>,
   meta: { source: IdentityResolutionSource; reused: boolean; confidence: number; pagesUsed?: string[]; notes?: string[]; resolvedAt?: string },
 ): IdentityCard {
-  const sector = normalizeSector(String(raw['market_sector'] ?? ''));
+  // Le libellé de secteur produit par le modèle est souvent vague (« Services web
+  // et développement ») : on autorise le repli sur ce qui est réellement vendu et
+  // sur le type d'activité avant de conclure à un secteur non résolu.
+  const sector = normalizeSector(
+    String(raw['market_sector'] ?? ''),
+    String(raw['products_services'] ?? ''),
+    String(raw['business_type'] ?? ''),
+    String(raw['target_audience'] ?? ''),
+  );
   const commercialModel = normalizeCommercialModel({
     commercial_model: (raw['commercial_model'] as string) ?? null,
     business_model: (raw['business_model'] as string) ?? null,
@@ -149,7 +157,11 @@ function buildCard(
 
 /** Une carte est exploitable si les deux axes de calibration sont résolus. */
 function isUsable(row: Record<string, unknown>): boolean {
-  const sector = normalizeSector(String(row['market_sector'] ?? ''));
+  const sector = normalizeSector(
+    String(row['market_sector'] ?? ''),
+    String(row['products_services'] ?? ''),
+    String(row['business_type'] ?? ''),
+  );
   const model = normalizeCommercialModel({
     commercial_model: (row['commercial_model'] as string) ?? null,
     business_model: (row['business_model'] as string) ?? null,

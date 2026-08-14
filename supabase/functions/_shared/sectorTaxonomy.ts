@@ -45,30 +45,38 @@ interface SectorDef {
   pattern: RegExp;
 }
 
-/** Ordre = priorité de matching. */
+/**
+ * Ordre = priorité de matching.
+ *
+ * RÈGLE DE SÛRETÉ : tout mot court ou fréquent comme sous-chaîne DOIT être
+ * ancré par \b. Sans ancre, `/v[eé]lo/` matchait « déve**lo**ppement » et
+ * classait un SaaS SEO en « Sport et loisirs » ; `/paie/` matchait
+ * « paiement », `/solaire/` matchait « scolaire », `/art\b/` matchait
+ * « départ », `/eau\b/` matchait « bureau », `/vin/` matchait « province ».
+ */
 const SECTORS: SectorDef[] = [
-  { key: 'renovation_batiment', label: 'Rénovation, bâtiment et travaux', pattern: /r[eé]novation|b[aâ]timent|travaux|ma[çc]onnerie|couvreur|toiture|isolation|menuiserie|plomberie|[eé]lectricit[eé] g[eé]n[eé]rale|btp|construction|charpente|carrelage|peinture en b/i },
+  { key: 'renovation_batiment', label: 'Rénovation, bâtiment et travaux', pattern: /r[eé]novation|b[aâ]timent|travaux|ma[çc]onnerie|couvreur|toiture|isolation thermique|menuiserie|plomberie|[eé]lectricit[eé] g[eé]n[eé]rale|\bbtp\b|construction|charpente|carrelage|peinture en b/i },
   { key: 'immobilier', label: 'Immobilier', pattern: /immobili|agence immo|syndic|g[eé]rance locative|promoteur|foncier/i },
-  { key: 'saas_logiciel', label: 'Logiciel et SaaS', pattern: /saas|logiciel|software|application (web|mobile)|plateforme (web|logicielle)|[eé]diteur de logiciel|outil en ligne|transcription|sous-titrage|aide [aà] la r[eé]daction|voip/i },
-  { key: 'services_web_seo', label: 'Services web, SEO et numérique', pattern: /seo|r[eé]f[eé]rencement|d[eé]veloppement web|web design|cr[eé]ation de site|agence (web|digitale)|services num[eé]riques|webmarketing technique|int[eé]gration web/i },
+  { key: 'services_web_seo', label: 'Services web, SEO et numérique', pattern: /\bseo\b|\bgeo\b|\baeo\b|r[eé]f[eé]rencement|visibilit[eé] (en ligne|ia)|moteurs? de r[eé]ponse|d[eé]veloppement web|web et d[eé]veloppement|web design|cr[eé]ation de site|agence (web|digitale|de r[eé]f[eé]rencement)|services? num[eé]riques?|webmarketing|int[eé]gration web/i },
+  { key: 'saas_logiciel', label: 'Logiciel et SaaS', pattern: /\bsaas\b|logiciel|software|application (web|mobile)|plateforme (web|logicielle|\bsaas\b)|[eé]diteur de logiciel|outil en ligne|transcription|sous-titrage|aide [aà] la r[eé]daction|\bvoip\b/i },
   { key: 'marketing_communication', label: 'Marketing, publicité et communication', pattern: /marketing|publicit|communication|branding|relations presse|social media|influence/i },
   { key: 'ecommerce', label: 'E-commerce et distribution', pattern: /e-?commerce|boutique en ligne|vente en ligne|distribution|retail|commerce de d[eé]tail|marketplace|^commerce$/i },
-  { key: 'rh_recrutement', label: 'Ressources humaines et recrutement', pattern: /recrutement|ressources humaines|\brh\b|int[eé]rim|portage salarial|paie/i },
-  { key: 'finance_assurance', label: 'Finance, assurance et comptabilité', pattern: /financ|assurance|banque|comptab|expert-comptable|fiscal|urssaf|indemnit[eé]s kilom|courtage|patrimoine|cr[eé]dit/i },
-  { key: 'juridique', label: 'Juridique et conformité', pattern: /juridique|avocat|notaire|droit|contentieux|conformit[eé] (r[eé]glementaire|l[eé]gale)|rgpd|huissier/i },
-  { key: 'sante_medical', label: 'Santé et médical', pattern: /sant[eé]|m[eé]dical|m[eé]decin|dentaire|kin[eé]|infirm|pharma|clinique|h[oô]pital|psycho|v[eé]t[eé]rinaire|ost[eé]opath/i },
-  { key: 'beaute_bienetre', label: 'Beauté et bien-être', pattern: /beaut[eé]|coiffure|esth[eé]tique|bien-?[eê]tre|spa|massage|cosm[eé]tique|onglerie/i },
-  { key: 'education_formation', label: 'Éducation et formation', pattern: /formation|[eé]ducation|enseignement|e-?learning|[eé]cole|universit|coaching scolaire|soutien scolaire|certification/i },
-  { key: 'tourisme_hotellerie', label: 'Tourisme et hôtellerie', pattern: /tourism|h[oô]tel|h[eé]bergement|g[iî]te|camping|voyage|s[eé]jour|location de vacances/i },
-  { key: 'restauration', label: 'Restauration et alimentation', pattern: /restaur|traiteur|boulanger|p[aâ]tisser|caf[eé]|bar\b|alimentaire|[eé]picerie|vin|brasserie/i },
-  { key: 'transport_logistique', label: 'Transport et logistique', pattern: /transport|logistique|d[eé]m[eé]nagement|fret|livraison|messagerie|entreposage|frais de d[eé]placement/i },
-  { key: 'automobile', label: 'Automobile et mobilité', pattern: /automobile|garage|carrosserie|concession|v[eé]hicule|moto\b|pneu|mobilit[eé]/i },
-  { key: 'industrie_production', label: 'Industrie et production', pattern: /industr|usine|fabrication|manufactur|m[eé]tallurg|plastur|machine-?outil|sous-traitance industrielle/i },
-  { key: 'artisanat_creation', label: 'Artisanat et création', pattern: /artisan|artisanat|fait main|c[eé]ramique|bijou|art\b|galerie|cr[eé]ation graphique|design graphique|illustration/i },
-  { key: 'sport_loisirs', label: 'Sport et loisirs', pattern: /sport|fitness|salle de sport|loisir|jeux|escalade|v[eé]lo|randonn/i },
-  { key: 'media_edition', label: 'Média, édition et information', pattern: /m[eé]dia|presse|[eé]dition|journal|magazine|audiovisuel|radio|t[eé]l[eé]vision|podcast|information politique/i },
-  { key: 'telecom_reseaux', label: 'Télécommunications et réseaux', pattern: /t[eé]l[eé]com|op[eé]rateur|fibre|r[eé]seaux (informatiques|t[eé]l[eé])|h[eé]bergement web|infog[eé]rance|cloud|cybers[eé]curit/i },
-  { key: 'energie_environnement', label: 'Énergie et environnement', pattern: /[eé]nergie|photovolta|solaire|pompe [aà] chaleur|environnement|recyclage|d[eé]chets|eau\b|[eé]olien/i },
+  { key: 'rh_recrutement', label: 'Ressources humaines et recrutement', pattern: /recrutement|ressources humaines|\brh\b|int[eé]rim|portage salarial|\bpaie\b|\bpaies\b/i },
+  { key: 'finance_assurance', label: 'Finance, assurance et comptabilité', pattern: /financ|assurance|banque|comptab|expert-comptable|fiscal|urssaf|indemnit[eé]s kilom|courtage|gestion de patrimoine|\bcr[eé]dit\b/i },
+  { key: 'juridique', label: 'Juridique et conformité', pattern: /juridique|avocat|notaire|\bdroit\b|contentieux|conformit[eé] (r[eé]glementaire|l[eé]gale)|\brgpd\b|huissier/i },
+  { key: 'sante_medical', label: 'Santé et médical', pattern: /\bsant[eé]\b|m[eé]dical|m[eé]decin|dentaire|kin[eé]sith|infirm|pharma|clinique|h[oô]pital|psycho|v[eé]t[eé]rinaire|ost[eé]opath/i },
+  { key: 'beaute_bienetre', label: 'Beauté et bien-être', pattern: /beaut[eé]|coiffure|esth[eé]tique|bien-?[eê]tre|\bspa\b|massage|cosm[eé]tique|onglerie/i },
+  { key: 'education_formation', label: 'Éducation et formation', pattern: /formation|[eé]ducation|enseignement|e-?learning|\b[eé]cole\b|universit|coaching scolaire|soutien scolaire|certification/i },
+  { key: 'tourisme_hotellerie', label: 'Tourisme et hôtellerie', pattern: /tourism|h[oô]tel|h[eé]bergement touristique|\bg[iî]te\b|camping|voyage|s[eé]jour|location de vacances/i },
+  { key: 'restauration', label: 'Restauration et alimentation', pattern: /restaur|traiteur|boulanger|p[aâ]tisser|\bcaf[eé]\b|\bbar\b|alimentaire|[eé]picerie|\bvins?\b|brasserie/i },
+  { key: 'transport_logistique', label: 'Transport et logistique', pattern: /\btransport|logistique|d[eé]m[eé]nagement|\bfret\b|livraison|messagerie|entreposage|frais de d[eé]placement/i },
+  { key: 'automobile', label: 'Automobile et mobilité', pattern: /automobile|\bgarage\b|carrosserie|concession|v[eé]hicule|\bmoto\b|\bpneu|mobilit[eé] (urbaine|douce)/i },
+  { key: 'industrie_production', label: 'Industrie et production', pattern: /industr|\busine\b|fabrication|manufactur|m[eé]tallurg|plastur|machine-?outil|sous-traitance industrielle/i },
+  { key: 'artisanat_creation', label: 'Artisanat et création', pattern: /artisan|artisanat|fait main|c[eé]ramique|bijou|\bart\b|\bgalerie\b|cr[eé]ation graphique|design graphique|illustration/i },
+  { key: 'sport_loisirs', label: 'Sport et loisirs', pattern: /\bsport(s|if|ive)?\b|\bfitness\b|salle de sport|\bloisirs?\b|\bjeux?\b|escalade|\bv[eé]los?\b|randonn/i },
+  { key: 'media_edition', label: 'Média, édition et information', pattern: /\bm[eé]dias?\b|\bpresse\b|[eé]dition|journal|magazine|audiovisuel|\bradio\b|t[eé]l[eé]vision|podcast|information politique/i },
+  { key: 'telecom_reseaux', label: 'Télécommunications et réseaux', pattern: /t[eé]l[eé]com|op[eé]rateur (t[eé]l[eé]|mobile)|\bfibre optique\b|r[eé]seaux (informatiques|t[eé]l[eé])|h[eé]bergement web|infog[eé]rance|\bcloud\b|cybers[eé]curit/i },
+  { key: 'energie_environnement', label: 'Énergie et environnement', pattern: /[eé]nergie|photovolta|\bsolaire\b|pompe [aà] chaleur|environnement|recyclage|d[eé]chets|\beau\b|[eé]olien/i },
   { key: 'conseil_strategie', label: 'Conseil, stratégie et expertise', pattern: /conseil|consult|strat[eé]gie|expertise|accompagnement|audit d[’']|services professionnels|d[eé]veloppement personnel|coaching/i },
   { key: 'association_public', label: 'Association, ONG et secteur public', pattern: /association|\bong\b|but non lucratif|fondation|collectivit|secteur public|mairie|patrimoine (b[aâ]ti|prot[eé]g[eé])|monument/i },
 ];
@@ -76,15 +84,26 @@ const SECTORS: SectorDef[] = [
 const LABELS = new Map<SectorKey, string>(SECTORS.map((s) => [s.key, s.label]));
 LABELS.set('unknown', 'Secteur non résolu');
 
-/** Projette un secteur en texte libre sur le vocabulaire contrôlé. */
-export function normalizeSector(raw?: string | null): SectorKey {
-  const text = (raw || '').trim();
-  if (text.length < 3) return 'unknown';
-  for (const def of SECTORS) {
-    if (def.pattern.test(text)) return def.key;
+/**
+ * Projette un secteur en texte libre sur le vocabulaire contrôlé.
+ *
+ * `fallbackTexts` : textes de repli (ce qui est vendu, type d'activité, cible…)
+ * essayés dans l'ordre uniquement si le libellé principal ne résout rien. Un
+ * `market_sector` vague comme « Services web et développement » ne doit pas
+ * produire un secteur inconnu quand `products_services` dit explicitement
+ * « SaaS d'audit SEO-GEO ».
+ */
+export function normalizeSector(raw?: string | null, ...fallbackTexts: Array<string | null | undefined>): SectorKey {
+  for (const candidate of [raw, ...fallbackTexts]) {
+    const text = (candidate || '').trim();
+    if (text.length < 3) continue;
+    for (const def of SECTORS) {
+      if (def.pattern.test(text)) return def.key;
+    }
   }
   return 'unknown';
 }
+
 
 export function sectorLabel(key: SectorKey | string): string {
   return LABELS.get(key as SectorKey) || 'Secteur non résolu';
