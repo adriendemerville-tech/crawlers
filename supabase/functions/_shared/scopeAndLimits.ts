@@ -180,13 +180,8 @@ export function renderScopeLimitsHTML(input: ScopeLimitsInput): string {
     facts.push(t(`${a.referring_domains} domaine(s) référent(s)`, `${a.referring_domains} referring domain(s)`, `${a.referring_domains} dominio(s) de referencia`));
   if (typeof a?.backlinks_total === 'number')
     facts.push(t(`${a.backlinks_total} lien(s) entrant(s)`, `${a.backlinks_total} backlink(s)`, `${a.backlinks_total} enlace(s) entrante(s)`));
-  if (ageMonths !== null) {
-    const years = Math.floor(ageMonths / 12);
-    const age = years >= 1
-      ? t(`${years} an(s)`, `${years} year(s)`, `${years} año(s)`)
-      : t(`${ageMonths} mois`, `${ageMonths} months`, `${ageMonths} meses`);
-    facts.push(t(`ancienneté observée des liens ${age}`, `observed link history ${age}`, `historial de enlaces ${age}`));
-  }
+  // L'ancienneté n'est pas listée ici : elle est datée et interprétée juste en dessous.
+
   const domainObserved = facts.length
     ? t(`Signaux relevés pour ${domain} : ${facts.join(', ')}. `, `Observed signals for ${domain}: ${facts.join(', ')}. `, `Señales observadas para ${domain}: ${facts.join(', ')}. `)
     : t(
