@@ -815,6 +815,17 @@ export default function Marina() {
                   </Button>
                 </div>
 
+                {/* Progression de l'audit — juste sous le champ URL */}
+                {loading && (
+                  <MarinaProgressTimeline
+                    phase={phase}
+                    progress={progress}
+                    language={language}
+                    pagesCrawled={scanPagesCrawled}
+                    scanModeLabel={activeScanMode?.mode ?? null}
+                  />
+                )}
+
                 {/* Modes de scan : sample / standard / deep, bascule automatique */}
                 <MarinaScanModePanel language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
 
@@ -861,17 +872,6 @@ export default function Marina() {
                   </button>
                 </div>
               </div>
-
-              {/* Progress */}
-              {loading && (
-                <MarinaProgressTimeline
-                  phase={phase}
-                  progress={progress}
-                  language={language}
-                  pagesCrawled={scanPagesCrawled}
-                  scanModeLabel={activeScanMode?.mode ?? null}
-                />
-              )}
 
 
               {/* Error */}
