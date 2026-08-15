@@ -403,18 +403,22 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
         fanout_rows: 0,
       }, opts);
 
+      const metrics = (hit.metrics ?? {}) as Record<string, unknown>;
       return {
         queryNormalized: key.query_normalized,
         organic: (hit.organic_results ?? []) as SerpOrganicResult[],
         paa: (hit.paa ?? []) as string[],
         relatedSearches: (hit.related_searches ?? []) as string[],
         knowledgeGraph: hit.knowledge_graph ?? null,
+        serpFeatures: (metrics['serp_features'] as string[] | undefined) ?? [],
+        seResultsCount: (metrics['se_results_count'] as number | undefined) ?? null,
         provider: hit.provider,
         source: 'pool',
         fetchedAt: hit.fetched_at,
         costUsd: 0,
         fanoutRows: 0,
       };
+
     }
   }
 
