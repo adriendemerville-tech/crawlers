@@ -18,7 +18,7 @@ import type { PageAnalysis, CustomSelector } from '../_shared/crawlQueue/types.t
 import { scrapePage, probeSPAStatus, createPaidBudget, budgetSummary } from '../_shared/crawlQueue/scraperStrategy.ts';
 import { computeDepth } from '../_shared/crawlQueue/duplicateDetector.ts';
 import { finalizeJob } from '../_shared/crawlQueue/finalizer.ts';
-import { filterCrawlablePublicUrls, isCrawlablePublicUrl } from '../_shared/crawlUrlFilter.ts';
+import { filterCrawlablePublicUrls, isCrawlablePublicUrl, canonicalizeCrawlUrl, crawlUrlKey } from '../_shared/crawlUrlFilter.ts';
 
 /**
  * Découpage en lots : un run du worker traite au maximum PAGES_PER_RUN pages,
@@ -165,7 +165,7 @@ Deno.serve(handleRequest(async (req) => {
       }
 
       // ── Track discovered URLs to avoid re-crawling ──
-      const processedUrls = new Set<string>(urlsToProcess.map(u => u.replace(/\/$/, '')));
+      const processedUrls = new Set<string>(urlsToProcess.map(u => crawlUrlKey(u)));
 
       // ── INNER LOOP: keep processing pages while time allows ──
       while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN) {
@@ -232,13 +232,16 @@ Deno.serve(handleRequest(async (req) => {
             for (const link of page.anchor_texts) {
               if (link.type !== 'internal') continue;
               try {
-                const fullUrl = link.href.startsWith('http')
+                const rawUrl = link.href.startsWith('http')
                   ? link.href
                   : `https://${job.domain}${link.href.startsWith('/') ? '' : '/'}${link.href}`;
-                const normalized = fullUrl.replace(/\/$/, '');
+                if (!isCrawlablePublicUrl(rawUrl)) continue;
+                const fullUrl = canonicalizeCrawlUrl(rawUrl);
+                if (!fullUrl) continue;
+                const normalized = crawlUrlKey(fullUrl);
                 const linkDomain = new URL(fullUrl).hostname;
                 if (!linkDomain.includes(job.domain.replace(/^www\./, '')) && !job.domain.includes(linkDomain.replace(/^www\./, ''))) continue;
-                if (processedUrls.has(normalized) || !isCrawlablePublicUrl(fullUrl)) continue;
+                if (processedUrls.has(normalized)) continue;
                 processedUrls.add(normalized);
                 remaining.push(fullUrl);
                 discoveredNew++;
