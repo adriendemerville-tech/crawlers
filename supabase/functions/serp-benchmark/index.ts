@@ -487,7 +487,8 @@ Deno.serve(handleRequest(async (req) => {
       .from('serp_benchmark_results')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
+
       .single();
     if (error) return jsonError(error.message, 500);
     return jsonOk(data);
