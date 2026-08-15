@@ -428,7 +428,44 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
   const payload = await callProvider(key);
   if (!payload) return null;
 
-  const cost = PROVIDER_COST[payload.provider] ?? 0.001;
+  return await persistPayload(supabase, query, key, usageClass, payload, opts, PROVIDER_COST[payload.provider] ?? 0.001);
+}
+
+/**
+ * Écrit dans le pool une SERP déjà obtenue ailleurs (ex. serp-benchmark qui
+ * appelle plusieurs providers pour comparer) : la donnée payée profite ensuite
+ * à tous les appelants, et les positions sont fan-out vers keyword_universe.
+ */
+export async function ingestExternalSerp(
+  query: string,
+  opts: SerpOptions,
+  payload: ProviderPayload,
+  costUsd = 0,
+): Promise<SerpResult | null> {
+  if (payload.organic.length === 0) return null;
+  const supabase = admin();
+  const key = poolKey(query, opts);
+  if (!key.query_normalized) return null;
+  return await persistPayload(
+    supabase,
+    query,
+    key,
+    opts.usageClass ?? 'position',
+    payload,
+    opts,
+    costUsd,
+  );
+}
+
+async function persistPayload(
+  supabase: SupabaseClient,
+  query: string,
+  key: PoolKey,
+  usageClass: SerpUsageClass,
+  payload: ProviderPayload,
+  opts: SerpOptions,
+  cost: number,
+): Promise<SerpResult> {
   const expiresAt = new Date(Date.now() + TTL_HOURS[usageClass] * 3600_000).toISOString();
 
   const { data: saved } = await supabase
@@ -442,6 +479,10 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
       paa: payload.paa,
       related_searches: payload.relatedSearches,
       knowledge_graph: payload.knowledgeGraph,
+      metrics: {
+        serp_features: payload.serpFeatures ?? [],
+        se_results_count: payload.seResultsCount ?? null,
+      },
       result_count: payload.organic.length,
       cost_usd: cost,
       fetched_at: new Date().toISOString(),
@@ -451,7 +492,7 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
     .select('id')
     .maybeSingle();
 
-  // 3. fan-out des positions vers tous les domaines suivis
+  // fan-out des positions vers tous les domaines suivis
   let fanoutRows = 0;
   if (!opts.skipFanout) {
     try {
@@ -478,6 +519,8 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
     paa: payload.paa,
     relatedSearches: payload.relatedSearches,
     knowledgeGraph: payload.knowledgeGraph,
+    serpFeatures: payload.serpFeatures ?? [],
+    seResultsCount: payload.seResultsCount ?? null,
     provider: payload.provider,
     source: 'provider',
     fetchedAt: new Date().toISOString(),
@@ -485,6 +528,7 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
     fanoutRows,
   };
 }
+
 
 /** Lecture par lot : sert d'abord le pool, n'achète que les requêtes manquantes */
 export async function getSerpBatch(
