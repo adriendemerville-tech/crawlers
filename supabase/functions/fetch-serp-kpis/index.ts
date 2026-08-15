@@ -219,36 +219,28 @@ try {
       url: item.ranked_serp_element?.serp_item?.url,
     }))
 
-    // Fetch indexed pages count via SERP API (site:domain)
+    // Pages indexées via le pool SERP mutualisé (requête `site:domaine`, TTL 30j)
     let indexed_pages: number | null = null
     try {
-      const indexResp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify([{
-          keyword: `site:${bareHomepage}`,
-          language_code: effectiveLanguageCode,
-          location_code: effectiveLocationCode,
-          device: 'desktop',
-          depth: 1,
-        }]),
+      const sitePool = await getSerp(`site:${bareHomepage}`, {
+        caller: 'fetch-serp-kpis',
+        usageClass: 'volume',
+        language: effectiveLanguageCode,
+        country: effectiveLanguageCode,
+        device: 'desktop',
+        skipFanout: true,
       })
-
-      if (indexResp.ok) {
-        const indexData = await indexResp.json()
-        const indexResult = indexData?.tasks?.[0]?.result?.[0]
-        indexed_pages = indexResult?.se_results_count ?? null
-        console.log(`[fetch-serp-kpis] Indexed pages for ${bareHomepage}: ${indexed_pages}`)
-        trackPaidApiCall('fetch-serp-kpis', 'dataforseo', 'serp/organic/live (indexed pages)')
-      } else {
-        console.error('[fetch-serp-kpis] Indexed pages API error:', indexResp.status)
+      if (sitePool) {
+        indexed_pages = sitePool.seResultsCount ?? null
+        console.log(`[fetch-serp-kpis] Indexed pages for ${bareHomepage}: ${indexed_pages} (${sitePool.source})`)
+        if (sitePool.source === 'provider') {
+          trackPaidApiCall('fetch-serp-kpis', sitePool.provider, 'serp/organic (indexed pages)')
+        }
       }
     } catch (err) {
       console.error('[fetch-serp-kpis] Indexed pages fetch error:', err)
     }
+
 
     // === Semantic Authority: LLM-scored keyword relevance × position × volume ===
     let semantic_authority: number | null = null
