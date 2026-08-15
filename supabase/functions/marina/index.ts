@@ -4426,24 +4426,45 @@ Deno.serve(handleRequest(async (req) => {
       return json({ success: true });
     }
 
-    // ── Auto-cleanup : ne tue QUE les jobs réellement bloqués en exécution.
-    // Les jobs 'pending' peuvent légitimement attendre longtemps (file d'attente
-    // séquentielle d'un batch multipages) : on ne les échoue que s'il n'y a
-    // aucun job en cours pour les dépiler.
+    // ── Reprise manuelle d'un job interrompu ──
+    if (body.action === 'resume_job' && body.job_id) {
+      const res = await resumeJobFromCheckpoint(body.job_id);
+      return json({ success: res.resumed, ...res });
+    }
+
+    // ── Auto-cleanup : tente d'abord de REPRENDRE les jobs interrompus depuis
+    // leur checkpoint de phase (un run tué par le wall-time laisse le job muet
+    // mais parfaitement reprenable) ; on n'échoue que ceux qui n'ont plus de
+    // checkpoint exploitable ou qui ont épuisé leurs reprises.
     try {
       // Un job Marina enchaîne plusieurs phases (chaque phase touche updated_at) :
-      // on n'échoue que ceux qui n'ont plus progressé depuis 15 minutes.
-      const staleSince = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      await sb
+      // au-delà de 6 minutes sans progression, le run a été tué → on reprend.
+      const stalledSince = new Date(Date.now() - 6 * 60 * 1000).toISOString();
+      const { data: stalledJobs } = await sb
         .from('async_jobs')
-        .update({
-          status: 'failed',
-          error_message: 'Timeout: job sans progression depuis plus de 15 minutes',
-          completed_at: new Date().toISOString(),
-        })
+        .select('id')
         .eq('function_name', 'marina')
         .eq('status', 'processing')
-        .lt('updated_at', staleSince);
+        .lt('updated_at', stalledSince)
+        .limit(5);
+
+      for (const stalled of stalledJobs || []) {
+        const res = await resumeJobFromCheckpoint(stalled.id);
+        if (!res.resumed) {
+          await sb
+            .from('async_jobs')
+            .update({
+              status: 'failed',
+              error_message: res.reason === 'max_resumes_reached'
+                ? 'Job interrompu : nombre maximum de reprises atteint'
+                : 'Timeout: job sans progression et sans point de reprise',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', stalled.id)
+            .eq('function_name', 'marina')
+            .eq('status', 'processing');
+        }
+      }
 
       const { data: processingNow } = await sb
         .from('async_jobs')
@@ -4460,6 +4481,7 @@ Deno.serve(handleRequest(async (req) => {
     } catch (e) {
       console.warn('[Marina] Auto-cleanup failed:', e);
     }
+
 
 
 
