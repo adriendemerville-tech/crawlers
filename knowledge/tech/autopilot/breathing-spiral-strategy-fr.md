@@ -23,15 +23,20 @@ Le helper `_shared/spiralClassifier.ts` classifie automatiquement les keywords e
 
 ### Formule spiral_score (implémentation réelle dans compute-spiral-signals)
 ```
-spiral_score = min(100, round(
+spiral_score = min(100, max(0, round(
   velocity_decay × 1.6      // max 40 pts — pages en déclin = urgence max
 + competitor_momentum × 0.8  // max 20 pts — pression externe
 + (100 - cluster_maturity) / 100 × 15  // max 15 pts — clusters immatures
 + gmb_urgency × 0.6         // max 15 pts — déclin local
 + conversion_weight × 10    // max 10 pts — pages à fort taux de conversion
-))
++ ring_proximity            // max 12 pts — proximité du cœur de métier (Ring 1 > 2 > 3)
++ anomaly_urgency           // max 12 pts — contraction défensive sur anomalie récente
++ seasonal_boost            // max 10 pts — fenêtre saisonnière ouverte
++ keyword_coverage          // max 10 pts — trou de couverture SERP du cluster
+- topic_saturation          // malus 0-20 pts, items de création en cluster saturé
+)))
 ```
-Note : la formule théorique à 9 poids (ring_proximity, anomaly_urgency, seasonal_boost, keyword_coverage) est la cible à terme. L'implémentation actuelle utilise 5 signaux mesurables.
+Les 10 poids de la formule cible sont implémentés (100 % déterministe, zéro LLM). Les 4 derniers signaux vivent dans `_shared/spiralSignalsExtended.ts` et sont persistés dans `architect_workbench` (`ring_proximity_score`, `anomaly_urgency_score`, `seasonal_boost_score`, `keyword_coverage_score`).
 
 ### Signaux dynamiques (compute-spiral-signals, cron 6h)
 1. **Velocity Decay** : perte ≥3 positions sur 3 semaines (gsc_daily_positions)
@@ -39,7 +44,12 @@ Note : la formule théorique à 9 poids (ring_proximity, anomaly_urgency, season
 3. **Cluster Maturity** : % items deployed/done par cluster
 4. **GMB Urgency** : chute ranking local ou perte d'avis
 5. **Conversion Weight** : coefficient basé sur ga4_behavioral_metrics.conversion_rate
-6. **News Context** : détection d'événements perturbateurs via anomaly_alerts (sévérité, amplitude, source GSC) — déclenche la contraction défensive
+6. **Topic Saturation** (malus) : clusters déjà surchargés en articles
+7. **Ring Proximity** : ring du cluster de l'item (Ring 1 = 12 pts, Ring 2 = 7, Ring 3 = 3, sans cluster = 0)
+8. **Anomaly Urgency** : dérivé de `computeNewsContext` (anomaly_alerts : sévérité, amplitude, source GSC) — plafonné à 12 pts, déclenche la contraction défensive
+9. **Seasonal Boost** : `seasonal_context` filtré par secteur de l'identity_card, fenêtre [début − prep_weeks ; fin] ; bonus renforcé si les `peak_keywords` matchent le titre de l'item
+10. **Keyword Coverage** : % de mots-clés du cluster en top 20 (`keyword_universe.current_position`) ; couverture faible = priorité. Un cluster sans aucune position connue est ignoré (absence de donnée ≠ absence de couverture)
+
 
 ### Respiration de la spirale
 | Événement | Direction | Effet | Mécanisme |

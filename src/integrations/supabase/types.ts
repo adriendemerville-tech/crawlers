@@ -830,6 +830,7 @@ export type Database = {
           action_type:
             | Database["public"]["Enums"]["architect_action_type"]
             | null
+          anomaly_urgency_score: number
           assigned_to: string | null
           cluster_id: string | null
           cluster_maturity_pct: number | null
@@ -846,9 +847,12 @@ export type Database = {
           finding_category: string
           gmb_urgency_score: number | null
           id: string
+          keyword_coverage_score: number
           manual_priority: number | null
           payload: Json | null
           priority_tag: string | null
+          ring_proximity_score: number
+          seasonal_boost_score: number
           severity: string
           source_function: string | null
           source_record_id: string | null
@@ -870,6 +874,7 @@ export type Database = {
           action_type?:
             | Database["public"]["Enums"]["architect_action_type"]
             | null
+          anomaly_urgency_score?: number
           assigned_to?: string | null
           cluster_id?: string | null
           cluster_maturity_pct?: number | null
@@ -886,9 +891,12 @@ export type Database = {
           finding_category: string
           gmb_urgency_score?: number | null
           id?: string
+          keyword_coverage_score?: number
           manual_priority?: number | null
           payload?: Json | null
           priority_tag?: string | null
+          ring_proximity_score?: number
+          seasonal_boost_score?: number
           severity?: string
           source_function?: string | null
           source_record_id?: string | null
@@ -910,6 +918,7 @@ export type Database = {
           action_type?:
             | Database["public"]["Enums"]["architect_action_type"]
             | null
+          anomaly_urgency_score?: number
           assigned_to?: string | null
           cluster_id?: string | null
           cluster_maturity_pct?: number | null
@@ -926,9 +935,12 @@ export type Database = {
           finding_category?: string
           gmb_urgency_score?: number | null
           id?: string
+          keyword_coverage_score?: number
           manual_priority?: number | null
           payload?: Json | null
           priority_tag?: string | null
+          ring_proximity_score?: number
+          seasonal_boost_score?: number
           severity?: string
           source_function?: string | null
           source_record_id?: string | null
