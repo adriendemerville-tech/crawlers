@@ -232,13 +232,16 @@ Deno.serve(handleRequest(async (req) => {
             for (const link of page.anchor_texts) {
               if (link.type !== 'internal') continue;
               try {
-                const fullUrl = link.href.startsWith('http')
+                const rawUrl = link.href.startsWith('http')
                   ? link.href
                   : `https://${job.domain}${link.href.startsWith('/') ? '' : '/'}${link.href}`;
-                const normalized = fullUrl.replace(/\/$/, '');
+                if (!isCrawlablePublicUrl(rawUrl)) continue;
+                const fullUrl = canonicalizeCrawlUrl(rawUrl);
+                if (!fullUrl) continue;
+                const normalized = crawlUrlKey(fullUrl);
                 const linkDomain = new URL(fullUrl).hostname;
                 if (!linkDomain.includes(job.domain.replace(/^www\./, '')) && !job.domain.includes(linkDomain.replace(/^www\./, ''))) continue;
-                if (processedUrls.has(normalized) || !isCrawlablePublicUrl(fullUrl)) continue;
+                if (processedUrls.has(normalized)) continue;
                 processedUrls.add(normalized);
                 remaining.push(fullUrl);
                 discoveredNew++;
