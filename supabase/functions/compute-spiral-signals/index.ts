@@ -188,7 +188,7 @@ async function computeSignalsForSite(
       patch: {
         velocity_decay_score: velocityScore,
         competitor_momentum_score: competitorScore,
-        cluster_maturity_pct: maturity,
+        cluster_maturity_pct: maturity, // NULL si aucun cluster rattaché (neutralité assumée)
         gmb_urgency_score: gmbScore,
         conversion_weight: convWeight,
         ring_proximity_score: ext.ring_proximity_score,
