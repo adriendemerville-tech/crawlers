@@ -277,10 +277,47 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
+const MAX_TITLE_CHARS = 80;
+
+/**
+ * Les titres produits par les modules LLM dépassent parfois 150 caractères et
+ * étaient tronqués visuellement dans le PDF. On garde une accroche courte et on
+ * reverse le reste en tête de description : aucune information n'est perdue.
+ */
+export function splitLongTitle(
+  rawTitle: string,
+  rawDescription?: string,
+): { title: string; description: string } {
+  const title = (rawTitle || '').replace(/\s+/g, ' ').trim();
+  const description = (rawDescription || '').replace(/\s+/g, ' ').trim();
+  if (title.length <= MAX_TITLE_CHARS) return { title, description };
+
+  const head = title.slice(0, MAX_TITLE_CHARS + 20);
+  const breakers = [' : ', ' — ', ' – ', ' - ', ', ', ' afin ', ' pour ', ' ('];
+  let cut = -1;
+  for (const b of breakers) {
+    const idx = head.lastIndexOf(b);
+    if (idx >= 30 && idx > cut) cut = idx;
+  }
+  if (cut < 0) {
+    const space = title.lastIndexOf(' ', MAX_TITLE_CHARS);
+    cut = space >= 30 ? space : MAX_TITLE_CHARS;
+  }
+
+  const shortTitle = title.slice(0, cut).replace(/[\s:,–—-]+$/, '');
+  const remainder = title.slice(cut).replace(/^[\s:,–—-]+/, '');
+  const sentence = remainder ? remainder.charAt(0).toUpperCase() + remainder.slice(1) : '';
+  const merged = [sentence ? (/[.!?]$/.test(sentence) ? sentence : `${sentence}.`) : '', description]
+    .filter(Boolean)
+    .join(' ');
+  return { title: shortTitle, description: merged };
+}
+
 /**
  * Render the "Top 3 actions prioritaires" block as standalone HTML
  * to be injected at the top of a Marina section.
  */
+
 export function renderTopPrioritiesHTML(top: SectionTopPriorities): string {
   if (!top.actions.length) {
     return `<div style="margin:16px 0 20px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;color:#6b7280;font-size:13px;">
