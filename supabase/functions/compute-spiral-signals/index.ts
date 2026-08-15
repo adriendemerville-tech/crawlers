@@ -39,13 +39,15 @@ Deno.serve(handleRequest(async (req) => {
   const cronMode = !auth && body.all === true
   if (!auth && !cronMode) return jsonError('Unauthorized', 401)
 
-  if (cronMode) {
+  if (cronMode && body.force !== true) {
     const { data: lastRun } = await supabase
       .from('system_config').select('value').eq('key', 'spiral_signals_last_run').maybeSingle()
     const lastTs = lastRun?.value ? Date.parse(String((lastRun.value as any)?.at ?? lastRun.value)) : NaN
     if (!Number.isNaN(lastTs) && Date.now() - lastTs < CRON_MIN_INTERVAL_MIN * 60_000) {
       return jsonOk({ skipped: true, reason: `cron throttled (< ${CRON_MIN_INTERVAL_MIN} min)` })
     }
+  }
+  if (cronMode) {
     await supabase.from('system_config')
       .upsert({ key: 'spiral_signals_last_run', value: { at: new Date().toISOString() } }, { onConflict: 'key' })
   }
@@ -146,7 +148,11 @@ async function computeSignalsForSite(
   const payloads = items.map((item: any) => {
     const velocityScore = getVelocityForItem(velocityMap, item.target_url)
     const competitorScore = getCompetitorMomentumForItem(competitorMomentumMap, item.target_url, item.finding_category)
-    const maturity = item.cluster_id ? (clusterMaturityMap.get(item.cluster_id) ?? 0) : 0
+    // Absence de cluster ≠ cluster immature : on reste neutre (7 pts sur 15) au lieu
+    // d'offrir le bonus maximal (+15) aux items non rattachés, ce qui écrasait la
+    // discrimination du spiral_score (biais constaté sur 56/113 items pending).
+    const maturity: number | null = item.cluster_id ? (clusterMaturityMap.get(item.cluster_id) ?? 0) : null
+    const maturityPoints = maturity === null ? 7 : ((100 - maturity) / 100) * 15
     const convWeight = getConversionForItem(conversionMap, item.target_url)
     const topicSat = item.cluster_id ? (topicSaturationMap.get(item.cluster_id) ?? 0) : 0
     const ext = computeExtendedSignals(extendedCtx, item)
@@ -169,7 +175,7 @@ async function computeSignalsForSite(
     const spiralScore = Math.min(100, Math.max(0, Math.round(
       (velocityScore * 1.6) +
       (competitorScore * 0.8) +
-      ((100 - maturity) / 100 * 15) +
+      maturityPoints +
       (gmbScore * 0.6) +
       (convWeight * 10) +
       ext.ring_proximity_score +
@@ -184,7 +190,7 @@ async function computeSignalsForSite(
       patch: {
         velocity_decay_score: velocityScore,
         competitor_momentum_score: competitorScore,
-        cluster_maturity_pct: maturity,
+        cluster_maturity_pct: maturity, // NULL si aucun cluster rattaché (neutralité assumée)
         gmb_urgency_score: gmbScore,
         conversion_weight: convWeight,
         ring_proximity_score: ext.ring_proximity_score,
