@@ -144,10 +144,12 @@ async function loadSeasonalEvents(supabase: any, trackedSiteId: string): Promise
   const result: SeasonalEvent[] = []
   for (const ev of events || []) {
     const sectors: string[] = (ev.sectors || []).map((s: string) => String(s).toLowerCase())
-    const sectorMatch = sectors.length === 0
+    // Correspondance par mot entier : évite « sport » ⊂ « transport ».
+    const sectorMatch = sectors.length === 0 || sector.length < 3
       ? false
-      : sectors.some((s) => sector.length > 2 && (sector.includes(s) || s.includes(sector)))
+      : sectors.some((s) => s.length > 2 && new RegExp(`\\b${escapeRegex(s)}`, 'i').test(sector))
     if (!sectorMatch) continue
+
 
     if (!isWindowOpen(ev)) continue
 
