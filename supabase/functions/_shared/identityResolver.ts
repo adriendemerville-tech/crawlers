@@ -415,7 +415,12 @@ export async function resolveIdentityCard(
   for (const [k, v] of Object.entries(inference.fields)) {
     if (v === null || v === undefined || v === '') continue;
     if (Array.isArray(v) && v.length === 0) continue;
-    if (!merged[k] || String(row?.['identity_source'] || '') !== 'user_manual') merged[k] = v;
+    // On complète uniquement les champs vides : ni la saisie manuelle
+    // ni une inférence antérieure déjà résolue ne sont écrasées.
+    const existing = merged[k];
+    const isEmpty = existing === null || existing === undefined || existing === ''
+      || (Array.isArray(existing) && existing.length === 0);
+    if (isEmpty) merged[k] = v;
   }
 
   const card = buildCard(domain, trackedSiteId, merged, {

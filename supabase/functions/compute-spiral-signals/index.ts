@@ -143,7 +143,7 @@ async function computeSignalsForSite(
 
   // Update each item with individual signals + aggregated spiral_score
   let updated = 0
-  for (const item of items) {
+  const payloads = items.map((item: any) => {
     const velocityScore = getVelocityForItem(velocityMap, item.target_url)
     const competitorScore = getCompetitorMomentumForItem(competitorMomentumMap, item.target_url, item.finding_category)
     const maturity = item.cluster_id ? (clusterMaturityMap.get(item.cluster_id) ?? 0) : 0
@@ -179,9 +179,9 @@ async function computeSignalsForSite(
       saturationMalus
     )))
 
-    const { error } = await supabase
-      .from('architect_workbench')
-      .update({
+    return {
+      id: item.id as string,
+      patch: {
         velocity_decay_score: velocityScore,
         competitor_momentum_score: competitorScore,
         cluster_maturity_pct: maturity,
@@ -193,10 +193,21 @@ async function computeSignalsForSite(
         keyword_coverage_score: ext.keyword_coverage_score,
         spiral_score: spiralScore,
         updated_at: new Date().toISOString(),
-      })
-      .eq('id', item.id)
+      },
+    }
+  })
 
-    if (!error) updated++
+  // Écriture par lots parallèles : évite jusqu'à 500 aller-retours séquentiels par site.
+  for (let i = 0; i < payloads.length; i += 25) {
+    const results = await Promise.all(
+      payloads.slice(i, i + 25).map(({ id, patch }: any) =>
+        supabase.from('architect_workbench').update(patch).eq('id', id),
+      ),
+    )
+    for (const r of results) {
+      if (!r?.error) updated++
+      else console.error('[compute-spiral] update item échoué:', r.error.message)
+    }
   }
 
 
@@ -394,28 +405,48 @@ async function computeClusterMaturity(
 
   if (!clusters?.length) return maturityMap
 
-  for (const cluster of clusters) {
-    const { count: total } = await supabase
-      .from('architect_workbench')
-      .select('id', { count: 'exact', head: true })
-      .eq('cluster_id', cluster.id)
+  const clusterIds = clusters.map((c: any) => c.id as string)
 
-    const { count: done } = await supabase
-      .from('architect_workbench')
-      .select('id', { count: 'exact', head: true })
-      .eq('cluster_id', cluster.id)
-      .in('status', ['deployed', 'done'])
+  // Une seule lecture pour tous les clusters du site (au lieu de 2 COUNT par cluster).
+  const { data: rows, error } = await supabase
+    .from('architect_workbench')
+    .select('cluster_id, status')
+    .in('cluster_id', clusterIds)
+    .limit(20000)
 
-    const totalN = total || 0
-    const doneN = done || 0
-    const maturity = totalN > 0 ? Math.round((doneN / totalN) * 100) : 0
-    maturityMap.set(cluster.id, maturity)
+  if (error) {
+    console.error('[compute-spiral] maturité clusters indisponible:', error.message)
+    return maturityMap
+  }
 
-    // Also update cluster totals
-    await supabase
-      .from('cluster_definitions')
-      .update({ total_items: totalN, deployed_items: doneN, maturity_pct: maturity })
-      .eq('id', cluster.id)
+  const tally = new Map<string, { total: number; done: number }>()
+  for (const id of clusterIds) tally.set(id, { total: 0, done: 0 })
+  for (const r of rows || []) {
+    const entry = tally.get(r.cluster_id as string)
+    if (!entry) continue
+    entry.total++
+    if (r.status === 'deployed' || r.status === 'done') entry.done++
+  }
+
+  // Rafraîchissement des compteurs : updates parallélisés par lots.
+  // (Pas d'upsert : cluster_definitions a des colonnes NOT NULL sans défaut,
+  //  le chemin INSERT de ON CONFLICT échouerait.)
+  const updates: Array<{ id: string; total_items: number; deployed_items: number; maturity_pct: number }> = []
+  for (const [clusterId, { total, done }] of tally) {
+    const maturity = total > 0 ? Math.round((done / total) * 100) : 0
+    maturityMap.set(clusterId, maturity)
+    updates.push({ id: clusterId, total_items: total, deployed_items: done, maturity_pct: maturity })
+  }
+
+  for (let i = 0; i < updates.length; i += 20) {
+    const results = await Promise.all(
+      updates.slice(i, i + 20).map(({ id, ...counters }) =>
+        supabase.from('cluster_definitions').update(counters).eq('id', id),
+      ),
+    )
+    for (const r of results) {
+      if (r?.error) console.error('[compute-spiral] update cluster échoué:', r.error.message)
+    }
   }
 
   return maturityMap

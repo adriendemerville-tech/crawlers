@@ -115,14 +115,26 @@ async function loadCoverageByCluster(
 }
 
 async function loadSeasonalEvents(supabase: any, trackedSiteId: string): Promise<SeasonalEvent[]> {
-  const { data: site } = await supabase
+  // La carte d'identité est stockée en colonnes plates sur tracked_sites
+  // (il n'existe PAS de colonne identity_card).
+  const { data: site, error } = await supabase
     .from('tracked_sites')
-    .select('identity_card')
+    .select('market_sector, business_type, products_services')
     .eq('id', trackedSiteId)
     .maybeSingle()
 
-  const identity = (site?.identity_card ?? {}) as Record<string, unknown>
-  const sector = String(identity.market_sector ?? '').toLowerCase().trim()
+  if (error) {
+    console.error('[spiralSignalsExtended] lecture secteur impossible:', error.message)
+    return []
+  }
+
+  const sector = [site?.market_sector, site?.business_type, site?.products_services]
+    .filter(Boolean)
+    .map((v: unknown) => String(v))
+    .join(' ')
+    .toLowerCase()
+    .trim()
+
 
   const { data: events } = await supabase
     .from('seasonal_context')
@@ -132,10 +144,12 @@ async function loadSeasonalEvents(supabase: any, trackedSiteId: string): Promise
   const result: SeasonalEvent[] = []
   for (const ev of events || []) {
     const sectors: string[] = (ev.sectors || []).map((s: string) => String(s).toLowerCase())
-    const sectorMatch = sectors.length === 0
+    // Correspondance par mot entier : évite « sport » ⊂ « transport ».
+    const sectorMatch = sectors.length === 0 || sector.length < 3
       ? false
-      : sectors.some((s) => sector.length > 2 && (sector.includes(s) || s.includes(sector)))
+      : sectors.some((s) => s.length > 2 && new RegExp(`\\b${escapeRegex(s)}`, 'i').test(sector))
     if (!sectorMatch) continue
+
 
     if (!isWindowOpen(ev)) continue
 
@@ -148,6 +162,11 @@ async function loadSeasonalEvents(supabase: any, trackedSiteId: string): Promise
   }
   return result
 }
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 
 /** Fenêtre saisonnière : [début − prep_weeks, fin], sans année (récurrence). */
 function isWindowOpen(ev: any): boolean {
