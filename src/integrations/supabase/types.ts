@@ -14893,6 +14893,10 @@ export type Database = {
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       title_similarity: { Args: { a: string; b: string }; Returns: number }
+      trigger_gsc_sync: {
+        Args: { p_days?: number; p_sync_keywords?: boolean }
+        Returns: number
+      }
       upsert_analyzed_url: {
         Args: { p_domain: string; p_url: string }
         Returns: undefined
