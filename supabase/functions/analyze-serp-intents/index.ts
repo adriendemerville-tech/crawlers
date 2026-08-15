@@ -401,11 +401,9 @@ export default handleRequest(async (req) => {
   }
 
   // 2) SERP fetch
-  let serp = await fetchSerpDataForSEO(keyword, location_name, language_code);
-  if (!serp) {
-    serp = await fetchSerpSerperFallback(keyword, location_name, language_code);
-  }
-  if (!serp) return jsonError('SERP providers unavailable (DataForSEO + Serper failed)', 502);
+  const serp = await fetchSerpPooled(keyword, location_name, language_code, auth.userId);
+  if (!serp) return jsonError('SERP indisponible (pool + providers en échec)', 502);
+
 
   // 3) Position
   const { position: ourPosition, source: positionSource } = await findOurPosition(
