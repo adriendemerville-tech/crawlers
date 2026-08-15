@@ -26,8 +26,9 @@ interface Site {
 const SITE_COLUMNS = 'id, domain, user_id, target_countries'
 
 Deno.serve(handleRequest(async (req) => {
-  const cronSecret = Deno.env.get('CRON_SECRET')
-  const isCron = !!cronSecret && req.headers.get('x-cron-secret') === cronSecret
+  const headerSecret = req.headers.get('x-cron-secret')
+  const isCron = !!headerSecret && [Deno.env.get('CRON_SECRET'), Deno.env.get('CRON_SECRET_V2')]
+    .some((s) => !!s && s === headerSecret)
 
   const auth = isCron ? null : await getAuthenticatedUser(req)
   if (!isCron && !auth) return jsonError('Unauthorized', 401)
