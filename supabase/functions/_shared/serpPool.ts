@@ -101,10 +101,12 @@ export function normalizeQuery(query: string): string {
   return query
     .toLowerCase()
     .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
-    .replace(/[^\p{L}\p{N}'\-\s]/gu, ' ')
+    // on conserve : . / _ - pour ne pas casser les opérateurs (site:, inurl:)
+    .replace(/[^\p{L}\p{N}'\-:._/\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
+
 
 export function extractDomain(url: string): string {
   try {
