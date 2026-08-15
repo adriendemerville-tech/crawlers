@@ -22,6 +22,8 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 import { callLovableAIJson } from '../_shared/lovableAI.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { getSerp } from '../_shared/serpPool.ts';
+
 
 // ───────────────────────────────────────────────────────────────
 // Schémas
