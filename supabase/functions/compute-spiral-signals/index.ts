@@ -39,13 +39,15 @@ Deno.serve(handleRequest(async (req) => {
   const cronMode = !auth && body.all === true
   if (!auth && !cronMode) return jsonError('Unauthorized', 401)
 
-  if (cronMode) {
+  if (cronMode && body.force !== true) {
     const { data: lastRun } = await supabase
       .from('system_config').select('value').eq('key', 'spiral_signals_last_run').maybeSingle()
     const lastTs = lastRun?.value ? Date.parse(String((lastRun.value as any)?.at ?? lastRun.value)) : NaN
     if (!Number.isNaN(lastTs) && Date.now() - lastTs < CRON_MIN_INTERVAL_MIN * 60_000) {
       return jsonOk({ skipped: true, reason: `cron throttled (< ${CRON_MIN_INTERVAL_MIN} min)` })
     }
+  }
+  if (cronMode) {
     await supabase.from('system_config')
       .upsert({ key: 'spiral_signals_last_run', value: { at: new Date().toISOString() } }, { onConflict: 'key' })
   }
