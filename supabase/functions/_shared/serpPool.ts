@@ -138,14 +138,17 @@ function poolKey(query: string, opts: SerpOptions): PoolKey {
 
 // ---------------------------------------------------------------- providers
 
-interface ProviderPayload {
+export interface ProviderPayload {
   provider: string;
   organic: SerpOrganicResult[];
   paa: string[];
   relatedSearches: string[];
   knowledgeGraph: unknown | null;
+  serpFeatures?: string[];
+  seResultsCount?: number | null;
   raw: unknown;
 }
+
 
 async function fetchDataForSeo(key: PoolKey): Promise<ProviderPayload | null> {
   const login = Deno.env.get('DATAFORSEO_LOGIN');
