@@ -174,29 +174,47 @@ async function fetchDataForSeo(key: PoolKey): Promise<ProviderPayload | null> {
   if (!resp.ok) return null;
 
   const json = await resp.json();
-  const items = json?.tasks?.[0]?.result?.[0]?.items ?? [];
+  const taskResult = json?.tasks?.[0]?.result?.[0];
+  const items = taskResult?.items ?? [];
   const organic: SerpOrganicResult[] = [];
   const paa: string[] = [];
   const related: string[] = [];
+  const features = new Set<string>();
 
   for (const item of items) {
     if (item?.type === 'organic' && item.url) {
       organic.push({
-        position: organic.length + 1,
+        position: item.rank_absolute ?? organic.length + 1,
         url: item.url,
         domain: extractDomain(item.url),
         title: item.title ?? '',
         snippet: item.description ?? '',
       });
-    } else if (item?.type === 'people_also_ask') {
-      for (const q of item.items ?? []) if (q?.title) paa.push(q.title);
-    } else if (item?.type === 'related_searches') {
-      for (const q of item.items ?? []) if (typeof q === 'string') related.push(q);
+    } else {
+      if (item?.type) features.add(String(item.type));
+      if (item?.type === 'people_also_ask') {
+        for (const q of item.items ?? []) if (q?.title) paa.push(q.title);
+      } else if (item?.type === 'related_searches') {
+        for (const q of item.items ?? []) {
+          if (typeof q === 'string') related.push(q);
+          else if (q?.title) related.push(q.title);
+        }
+      }
     }
   }
 
-  return { provider: 'dataforseo', organic, paa, relatedSearches: related, knowledgeGraph: null, raw: null };
+  return {
+    provider: 'dataforseo',
+    organic,
+    paa,
+    relatedSearches: related,
+    knowledgeGraph: null,
+    serpFeatures: Array.from(features),
+    seResultsCount: typeof taskResult?.se_results_count === 'number' ? taskResult.se_results_count : null,
+    raw: null,
+  };
 }
+
 
 async function fetchSerper(key: PoolKey): Promise<ProviderPayload | null> {
   const apiKey = Deno.env.get('SERPER_API_KEY');
