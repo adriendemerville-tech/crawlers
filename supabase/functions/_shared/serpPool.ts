@@ -242,15 +242,27 @@ async function fetchSerper(key: PoolKey): Promise<ProviderPayload | null> {
     snippet: String(r['snippet'] ?? ''),
   })).filter((r: SerpOrganicResult) => !!r.url);
 
+  const features: string[] = [];
+  if (json?.peopleAlsoAsk) features.push('people_also_ask');
+  if (json?.knowledgeGraph) features.push('knowledge_graph');
+  if (json?.topStories) features.push('top_stories');
+  if (json?.videos) features.push('video');
+  if (json?.images) features.push('images');
+
   return {
     provider: 'serper',
     organic,
     paa: (json?.peopleAlsoAsk ?? []).map((p: Record<string, unknown>) => String(p['question'] ?? '')).filter(Boolean),
     relatedSearches: (json?.relatedSearches ?? []).map((p: Record<string, unknown>) => String(p['query'] ?? '')).filter(Boolean),
     knowledgeGraph: json?.knowledgeGraph ?? null,
+    serpFeatures: features,
+    seResultsCount: typeof json?.searchInformation?.totalResults === 'string'
+      ? Number(json.searchInformation.totalResults) || null
+      : null,
     raw: null,
   };
 }
+
 
 async function fetchSerpApi(key: PoolKey): Promise<ProviderPayload | null> {
   const apiKey = Deno.env.get('SERPAPI_KEY');
