@@ -2736,14 +2736,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       const { domain, detectedLang } = cached.result_data as any;
 
-      // ─── Attente du crawl découpée en tours ───
+      // ─── Attente du crawl découpée en tours courts ───
       // Un run d'edge function ne peut pas attendre un crawl de plusieurs
-      // centaines de pages. Le worker traite des lots de 150 pages et se
-      // re-déclenche sur le checkpoint `crawl_pages` ; Marina fait pareil :
-      // elle attend un tour (180 s), puis se ré-invoque en phase 2 tant que le
-      // crawl progresse, dans la limite de MAX_CRAWL_WAIT_ROUNDS tours.
+      // centaines de pages : au-delà du wall-time, le run est tué. Le worker
+      // traite des lots de 150 pages depuis le checkpoint `crawl_pages` ; Marina
+      // fait pareil avec des tours courts (~70 s) et beaucoup de tours, chaque
+      // tour étant persisté en checkpoint donc reprenable après un kill.
       const crawlWaitRound = Number((intermediateData as any)?.crawlWaitRound || 0);
-      const MAX_CRAWL_WAIT_ROUNDS = 8;
+      const MAX_CRAWL_WAIT_ROUNDS = 20;
+
 
       await updateProgress(66, 'multi_crawl');
 
