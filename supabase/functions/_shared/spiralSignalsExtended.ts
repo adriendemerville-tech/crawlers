@@ -72,7 +72,7 @@ async function loadCoverageByCluster(
   trackedSiteId: string,
   domain: string,
 ): Promise<Map<string, number>> {
-  const totals = new Map<string, { total: number; covered: number }>()
+  const totals = new Map<string, { total: number; covered: number; positioned: number }>()
 
   let { data } = await supabase
     .from('keyword_universe')
@@ -93,18 +93,22 @@ async function loadCoverageByCluster(
   }
 
   for (const kw of data || []) {
-    const entry = totals.get(kw.cluster_id as string) || { total: 0, covered: 0 }
+    const entry = totals.get(kw.cluster_id as string) || { total: 0, covered: 0, positioned: 0 }
     entry.total++
     const pos = kw.current_position === null || kw.current_position === undefined
       ? null
       : Number(kw.current_position)
-    if (pos !== null && pos > 0 && pos <= COVERED_POSITION_THRESHOLD) entry.covered++
+    if (pos !== null && pos > 0) {
+      entry.positioned++
+      if (pos <= COVERED_POSITION_THRESHOLD) entry.covered++
+    }
     totals.set(kw.cluster_id as string, entry)
   }
 
   const coverage = new Map<string, number>()
-  for (const [clusterId, { total, covered }] of totals) {
+  for (const [clusterId, { total, covered, positioned }] of totals) {
     if (total < 3) continue // échantillon trop faible pour être exploitable
+    if (positioned === 0) continue // absence de données de position ≠ absence de couverture
     coverage.set(clusterId, Math.round((covered / total) * 100))
   }
   return coverage
