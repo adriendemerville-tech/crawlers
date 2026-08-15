@@ -44,14 +44,68 @@ Deno.serve(handleRequest(async (req) => {
   // POST: API actions
   // ═══════════════════════════════════════════════════════════════════
   try {
+    const body = await req.json().catch(() => ({}));
+    const { action, frontend_origin } = body;
+
+    // ─── CRON: backfill des volumes Keyword Planner pour tous les comptes Ads ───
+    const headerSecret = req.headers.get('x-cron-secret');
+    const isCron = !!headerSecret && [
+      Deno.env.get('CRON_SECRET'), Deno.env.get('CRON_SECRET_V2'),
+    ].filter(Boolean).includes(headerSecret);
+
+    if (action === 'backfill_all_volumes') {
+      if (!isCron) return jsonError('Cron secret required', 401);
+      const { data: conns } = await supabase
+        .from('google_connections')
+        .select('user_id')
+        .not('ads_customer_id', 'is', null);
+      const userIds = [...new Set((conns || []).map((c: any) => c.user_id))];
+      const results: any[] = [];
+      for (const uid of userIds) {
+        results.push({ user_id: uid, ...(await backfillKeywordUniverse(supabase, uid, body)) });
+      }
+      return jsonOk({ success: true, users: userIds.length, results });
+    }
+
     const authenticatedUserId = await getAuthenticatedUserId(req);
     if (!authenticatedUserId) {
       return jsonError('Authentication required', 401);
     }
-
-    const body = await req.json().catch(() => ({}));
-    const { action, frontend_origin } = body;
     const user_id = authenticatedUserId;
+
+    // ─── KEYWORD PLANNER: lookup brut mutualisé (pool → Planner → DataForSEO) ───
+    if (action === 'keyword_volumes') {
+      const keywords: string[] = Array.isArray(body.keywords) ? body.keywords : [];
+      if (keywords.length === 0) return jsonError('keywords[] required', 400);
+      const { volumes, stats } = await getKeywordVolumes(supabase, user_id, keywords.slice(0, 2000), {
+        geo: body.geo, language: body.language, allowPaid: body.allow_paid === true,
+      });
+      return jsonOk({ success: true, stats, metrics: Array.from(volumes.values()) });
+    }
+
+    // ─── KEYWORD PLANNER: remplit keyword_universe.search_volume ───
+    if (action === 'backfill_volumes') {
+      const res = await backfillKeywordUniverse(supabase, user_id, body);
+      return jsonOk({ success: true, ...res });
+    }
+
+    // ─── KEYWORD PLANNER: état de la couverture volumes ───
+    if (action === 'volumes_status') {
+      const creds = await resolveAdsCredentials(supabase, user_id);
+      const [{ count: total }, { count: missing }, { count: pooled }] = await Promise.all([
+        supabase.from('keyword_universe').select('id', { count: 'exact', head: true }).eq('user_id', user_id),
+        supabase.from('keyword_universe').select('id', { count: 'exact', head: true }).eq('user_id', user_id).is('search_volume', null),
+        supabase.from('keyword_volume_pool').select('id', { count: 'exact', head: true }),
+      ]);
+      return jsonOk({
+        keyword_planner_available: !!creds,
+        developer_token_configured: !!Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN'),
+        keyword_universe_total: total ?? 0,
+        keyword_universe_missing_volume: missing ?? 0,
+        shared_pool_size: pooled ?? 0,
+      });
+    }
+
 
     // === LOGIN: delegate to gsc-auth (unified OAuth) ===
     if (action === 'login') {
