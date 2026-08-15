@@ -146,7 +146,11 @@ async function computeSignalsForSite(
   const payloads = items.map((item: any) => {
     const velocityScore = getVelocityForItem(velocityMap, item.target_url)
     const competitorScore = getCompetitorMomentumForItem(competitorMomentumMap, item.target_url, item.finding_category)
-    const maturity = item.cluster_id ? (clusterMaturityMap.get(item.cluster_id) ?? 0) : 0
+    // Absence de cluster ≠ cluster immature : on reste neutre (7 pts sur 15) au lieu
+    // d'offrir le bonus maximal (+15) aux items non rattachés, ce qui écrasait la
+    // discrimination du spiral_score (biais constaté sur 56/113 items pending).
+    const maturity: number | null = item.cluster_id ? (clusterMaturityMap.get(item.cluster_id) ?? 0) : null
+    const maturityPoints = maturity === null ? 7 : ((100 - maturity) / 100) * 15
     const convWeight = getConversionForItem(conversionMap, item.target_url)
     const topicSat = item.cluster_id ? (topicSaturationMap.get(item.cluster_id) ?? 0) : 0
     const ext = computeExtendedSignals(extendedCtx, item)
