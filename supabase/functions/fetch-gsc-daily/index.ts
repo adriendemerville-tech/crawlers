@@ -1,163 +1,231 @@
 /**
- * fetch-gsc-daily — Daily GSC position fetcher for anomaly detection
- * 
- * Fetches per-query daily positions from GSC for tracked sites.
- * Runs via cron daily. Feeds gsc_daily_positions table for J-1 anomaly detection.
- * 
- * POST { all: true } → cron mode
- * POST { tracked_site_id } → single site
+ * fetch-gsc-daily — Alimentation Search Console des signaux Breathing Spiral
+ *
+ * Pour chaque site dont l'utilisateur a connecté sa Search Console :
+ *  1. gsc_daily_positions ← positions quotidiennes par requête (velocity decay + anomalies J-1)
+ *  2. keyword_universe.current_position / best_position ← moyenne 28 j (couverture SERP)
+ *
+ * Les sites sans connexion Google sont ignorés : aucun signal n'est inventé.
+ *
+ * POST { all: true, days?: number, sync_keywords?: boolean }  → mode cron (header x-cron-secret)
+ * POST { tracked_site_id }                                    → un seul site
+ * POST { }                                                    → tous les sites de l'appelant
  */
 import { getAuthenticatedUser } from '../_shared/auth.ts'
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
+import { resolveGscAccess, queryGscRows, gscWindow, type GscAccess } from '../_shared/gscQuery.ts'
+
+interface Site {
+  id: string
+  domain: string
+  user_id: string
+  target_countries?: string[] | null
+}
+
+const SITE_COLUMNS = 'id, domain, user_id, target_countries'
 
 Deno.serve(handleRequest(async (req) => {
-  const auth = await getAuthenticatedUser(req)
-  if (!auth) return jsonError('Unauthorized', 401)
+  const headerSecret = req.headers.get('x-cron-secret')
+  const isCron = !!headerSecret && [Deno.env.get('CRON_SECRET'), Deno.env.get('CRON_SECRET_V2')]
+    .some((s) => !!s && s === headerSecret)
 
-  const body = await req.json()
+  const auth = isCron ? null : await getAuthenticatedUser(req)
+  if (!isCron && !auth) return jsonError('Unauthorized', 401)
+
+  const body = await req.json().catch(() => ({}))
   const supabase = getServiceClient()
 
-  // Determine sites to process
-  let sites: { id: string; domain: string; user_id: string; target_countries?: string[] }[] = []
+  const days = Math.min(90, Math.max(1, Number(body.days) || 3))
+  const syncKeywords = body.sync_keywords !== false
 
-  if (body.all) {
-    const { data } = await supabase
-      .from('tracked_sites')
-      .select('id, domain, user_id, target_countries')
-      .eq('is_active', true)
-      .limit(200)
-    sites = data || []
-  } else if (body.tracked_site_id) {
-    const { data } = await supabase
-      .from('tracked_sites')
-      .select('id, domain, user_id, target_countries')
-      .eq('id', body.tracked_site_id)
-      .maybeSingle()
-    if (data) sites = [data]
+  // ─── Sélection des sites ───────────────────────────────────────────
+  let sites: Site[] = []
+  if (body.tracked_site_id) {
+    const { data } = await supabase.from('tracked_sites').select(SITE_COLUMNS)
+      .eq('id', body.tracked_site_id).maybeSingle()
+    if (data) sites = [data as Site]
+  } else if (body.all || isCron) {
+    const { data, error } = await supabase.from('tracked_sites').select(SITE_COLUMNS).limit(300)
+    if (error) return jsonError(`sites_query_failed: ${error.message}`, 500)
+    sites = (data || []) as Site[]
   } else {
-    const { data } = await supabase
-      .from('tracked_sites')
-      .select('id, domain, user_id, target_countries')
-      .eq('user_id', auth.userId)
-      .eq('is_active', true)
-    sites = data || []
+    const { data } = await supabase.from('tracked_sites').select(SITE_COLUMNS).eq('user_id', auth!.userId)
+    sites = (data || []) as Site[]
   }
 
-  let totalInserted = 0
+  let dailyRows = 0
+  let keywordsUpdated = 0
+  let sitesWithGsc = 0
+  const skipped: string[] = []
 
   for (const site of sites) {
-    const countries = site.target_countries?.length ? site.target_countries : ['fra']
+    const cleanDomain = site.domain.replace(/^www\./, '').toLowerCase()
 
-    for (const countryCode of countries) {
+    let access: GscAccess | null = null
+    try {
+      access = await resolveGscAccess(supabase, site.user_id, site.domain)
+    } catch (e) {
+      console.error(`[fetch-gsc-daily] résolution GSC impossible pour ${cleanDomain}:`, e)
+    }
+    if (!access) { skipped.push(cleanDomain); continue }
+    sitesWithGsc++
+
+    const countries = site.target_countries?.length ? site.target_countries : [null]
+
+    for (const country of countries) {
       try {
-        // Get Google connection for this user
-        const { data: conn } = await supabase
-          .from('google_connections')
-          .select('access_token, refresh_token, token_expiry')
-          .eq('user_id', site.user_id)
-          .maybeSingle()
-
-        if (!conn?.access_token) continue
-
-        // Check if token needs refresh
-        let accessToken = conn.access_token
-        if (conn.token_expiry && new Date(conn.token_expiry) < new Date()) {
-          const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
-          const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')
-          if (clientId && clientSecret && conn.refresh_token) {
-            try {
-              const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                  client_id: clientId,
-                  client_secret: clientSecret,
-                  refresh_token: conn.refresh_token,
-                  grant_type: 'refresh_token',
-                }),
-              })
-              if (tokenRes.ok) {
-                const tokens = await tokenRes.json()
-                accessToken = tokens.access_token
-                await supabase.from('google_connections').update({
-                  access_token: tokens.access_token,
-                  token_expiry: new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString(),
-                }).eq('user_id', site.user_id)
-              } else { continue }
-            } catch { continue }
-          } else { continue }
-        }
-
-        const cleanDomain = site.domain.replace(/^www\./, '').toLowerCase()
-        const siteUrl = `sc-domain:${cleanDomain}`
-        
-        // Fetch yesterday's data (GSC has ~2 day delay, try J-2)
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 2)
-        const dateStr = yesterday.toISOString().split('T')[0]
-
-        const gscRes = await fetch(
-          `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              startDate: dateStr,
-              endDate: dateStr,
-              dimensions: ['query'],
-              rowLimit: 500,
-              dimensionFilterGroups: [{
-                filters: [{ dimension: 'country', expression: countryCode }]
-              }],
-            }),
-            signal: AbortSignal.timeout(15000),
-          }
-        )
-
-        if (!gscRes.ok) {
-          console.warn(`[fetch-gsc-daily] GSC API error for ${cleanDomain}/${countryCode}: ${gscRes.status}`)
-          continue
-        }
-
-        const gscData = await gscRes.json()
-        const rows = gscData.rows || []
-
-        if (rows.length === 0) continue
-
-        const insertRows = rows.map((row: any) => ({
-          tracked_site_id: site.id,
-          user_id: site.user_id,
-          domain: cleanDomain,
-          query: row.keys[0],
-          position: Math.round(row.position * 100) / 100,
-          clicks: row.clicks || 0,
-          impressions: row.impressions || 0,
-          ctr: Math.round((row.ctr || 0) * 10000) / 100,
-          date_val: dateStr,
-          country: countryCode,
-        }))
-
-        // Upsert (ON CONFLICT do update)
-        for (let i = 0; i < insertRows.length; i += 100) {
-          const batch = insertRows.slice(i, i + 100)
-        const { error } = await supabase.from('gsc_daily_positions').upsert(batch, {
-            onConflict: 'tracked_site_id,query,date_val,country',
-            ignoreDuplicates: false,
-          })
-          if (error) console.error(`[fetch-gsc-daily] Upsert error for ${cleanDomain}/${countryCode}:`, error)
-          else totalInserted += batch.length
-        }
-
-        console.log(`[fetch-gsc-daily] ${cleanDomain}/${countryCode}: ${rows.length} queries stored for ${dateStr}`)
+        dailyRows += await syncDailyPositions(supabase, site, cleanDomain, access, days, country)
       } catch (e) {
-        console.error(`[fetch-gsc-daily] Error for ${site.domain}/${countryCode}:`, e)
+        console.error(`[fetch-gsc-daily] positions quotidiennes ${cleanDomain}/${country ?? 'all'}:`, e)
+      }
+    }
+
+    if (syncKeywords) {
+      try {
+        keywordsUpdated += await syncKeywordPositions(supabase, site, cleanDomain, access)
+      } catch (e) {
+        console.error(`[fetch-gsc-daily] couverture SERP ${cleanDomain}:`, e)
       }
     }
   }
 
-  return jsonOk({ success: true, sites_processed: sites.length, rows_inserted: totalInserted })
-}))
+  console.log(
+    `[fetch-gsc-daily] ${sitesWithGsc}/${sites.length} sites GSC — ${dailyRows} lignes quotidiennes, ${keywordsUpdated} mots-clés positionnés`,
+  )
+
+  return jsonOk({
+    success: true,
+    sites_processed: sites.length,
+    sites_with_gsc: sitesWithGsc,
+    sites_without_gsc: skipped.length,
+    rows_inserted: dailyRows,
+    keywords_updated: keywordsUpdated,
+    window_days: days,
+  })
+}, 'fetch-gsc-daily'))
+
+// ─── 1. Positions quotidiennes (velocity decay + détection d'anomalies) ──
+
+async function syncDailyPositions(
+  supabase: any,
+  site: Site,
+  cleanDomain: string,
+  access: GscAccess,
+  days: number,
+  country: string | null,
+): Promise<number> {
+  const { startDate, endDate } = gscWindow(days)
+  const rows = await queryGscRows(access, {
+    startDate,
+    endDate,
+    dimensions: ['date', 'query'],
+    rowLimit: days > 7 ? 5000 : 1000,
+    country,
+  })
+  if (!rows.length) return 0
+
+  const payload = rows
+    .filter((r) => r.date && r.query)
+    .map((r) => ({
+      tracked_site_id: site.id,
+      user_id: site.user_id,
+      domain: cleanDomain,
+      query: r.query,
+      position: r.position,
+      clicks: r.clicks,
+      impressions: r.impressions,
+      ctr: r.ctr,
+      date_val: r.date,
+      country: country ?? 'all',
+    }))
+
+  let inserted = 0
+  for (let i = 0; i < payload.length; i += 200) {
+    const batch = payload.slice(i, i + 200)
+    const { error } = await supabase.from('gsc_daily_positions').upsert(batch, {
+      onConflict: 'tracked_site_id,query,date_val,country',
+      ignoreDuplicates: false,
+    })
+    if (error) console.error(`[fetch-gsc-daily] upsert ${cleanDomain}:`, error.message)
+    else inserted += batch.length
+  }
+  return inserted
+}
+
+// ─── 2. Couverture SERP (keyword_universe.current_position) ─────────────
+
+async function syncKeywordPositions(
+  supabase: any,
+  site: Site,
+  cleanDomain: string,
+  access: GscAccess,
+): Promise<number> {
+  const { startDate, endDate } = gscWindow(28)
+  const rows = await queryGscRows(access, {
+    startDate,
+    endDate,
+    dimensions: ['query'],
+    rowLimit: 5000,
+  })
+  if (!rows.length) return 0
+
+  const positionByQuery = new Map<string, number>()
+  for (const r of rows) {
+    if (!r.query || !r.position) continue
+    positionByQuery.set(normalize(r.query), Math.round(r.position))
+  }
+
+  // Univers de mots-clés du site (tracked_site_id prioritaire, repli domaine)
+  let { data: universe } = await supabase
+    .from('keyword_universe')
+    .select('id, keyword, current_position, best_position')
+    .eq('tracked_site_id', site.id)
+    .limit(5000)
+
+  if (!universe?.length) {
+    const res = await supabase
+      .from('keyword_universe')
+      .select('id, keyword, current_position, best_position')
+      .eq('domain', cleanDomain)
+      .eq('user_id', site.user_id)
+      .limit(5000)
+    universe = res.data
+  }
+  if (!universe?.length) return 0
+
+  const updates = universe
+    .map((kw: any) => {
+      const pos = positionByQuery.get(normalize(kw.keyword || ''))
+      if (!pos) return null
+      if (kw.current_position === pos) return null
+      return {
+        id: kw.id,
+        current_position: pos,
+        best_position: kw.best_position ? Math.min(kw.best_position, pos) : pos,
+      }
+    })
+    .filter(Boolean) as { id: string; current_position: number; best_position: number }[]
+
+  let updated = 0
+  for (let i = 0; i < updates.length; i += 25) {
+    const batch = updates.slice(i, i + 25)
+    const results = await Promise.all(
+      batch.map((u) =>
+        supabase.from('keyword_universe').update({
+          current_position: u.current_position,
+          best_position: u.best_position,
+          updated_at: new Date().toISOString(),
+        }).eq('id', u.id),
+      ),
+    )
+    updated += results.filter((r: any) => !r.error).length
+  }
+
+  console.log(`[fetch-gsc-daily] ${cleanDomain}: ${updated}/${universe.length} mots-clés positionnés via GSC`)
+  return updated
+}
+
+function normalize(s: string): string {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim()
+}

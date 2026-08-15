@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.trigger_gsc_sync(integer, boolean) TO postgres;
