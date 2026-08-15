@@ -2371,9 +2371,44 @@ function generateApiKey(): string {
   return key;
 }
 
+// ─── Checkpoint de phase : rend le pipeline reprenable ───
+// Un run d'edge function peut être tué (wall-time CPU) au milieu d'une phase.
+// On persiste donc systématiquement la dernière phase demandée + son payload :
+// un reaper peut alors relancer exactement ce point au lieu d'échouer le job.
+const PHASE_CHECKPOINT_TTL_MS = 3 * 60 * 60 * 1000;
+const MAX_PHASE_RESUMES = 6;
+
+function phaseCheckpointKey(jobId: string): string {
+  return `marina_checkpoint_${jobId}`;
+}
+
+async function savePhaseCheckpoint(
+  jobId: string,
+  payload: { url: string; lang: string; phase: string; intermediate: any },
+) {
+  try {
+    const sb = getServiceClient();
+    const { data: existing } = await sb
+      .from('audit_cache')
+      .select('result_data')
+      .eq('cache_key', phaseCheckpointKey(jobId))
+      .maybeSingle();
+    const resumes = Number((existing?.result_data as any)?.resumes || 0);
+    await sb.from('audit_cache').upsert({
+      cache_key: phaseCheckpointKey(jobId),
+      function_name: 'marina',
+      result_data: { ...payload, resumes, saved_at: new Date().toISOString() },
+      expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
+    }, { onConflict: 'cache_key' });
+  } catch (e) {
+    console.warn('[Marina] checkpoint write failed (non-fatal):', e);
+  }
+}
+
 // ─── Self-invoke helper for phase chaining ───
 async function selfInvokePhase(jobId: string, url: string, lang: string, phase: string, intermediateData: any) {
   console.log(`[Marina] 🔗 Self-invoking phase "${phase}" for job ${jobId}`);
+  await savePhaseCheckpoint(jobId, { url, lang, phase, intermediate: intermediateData });
   fetch(`${SUPABASE_URL}/functions/v1/marina`, {
     method: 'POST',
     headers: {
@@ -2385,6 +2420,55 @@ async function selfInvokePhase(jobId: string, url: string, lang: string, phase: 
     console.error(`[Marina] Phase "${phase}" self-invocation failed:`, err);
   });
 }
+
+// ─── Reprise d'un job interrompu depuis son checkpoint ───
+async function resumeJobFromCheckpoint(jobId: string): Promise<{ resumed: boolean; reason?: string; phase?: string }> {
+  const sb = getServiceClient();
+  const { data: row } = await sb
+    .from('audit_cache')
+    .select('result_data')
+    .eq('cache_key', phaseCheckpointKey(jobId))
+    .maybeSingle();
+
+  const cp = row?.result_data as any;
+  if (!cp?.phase || !cp?.url) return { resumed: false, reason: 'no_checkpoint' };
+
+  const resumes = Number(cp.resumes || 0);
+  if (resumes >= MAX_PHASE_RESUMES) return { resumed: false, reason: 'max_resumes_reached', phase: cp.phase };
+
+  await sb.from('audit_cache').upsert({
+    cache_key: phaseCheckpointKey(jobId),
+    function_name: 'marina',
+    result_data: { ...cp, resumes: resumes + 1, resumed_at: new Date().toISOString() },
+    expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
+  }, { onConflict: 'cache_key' });
+
+  await sb
+    .from('async_jobs')
+    .update({ status: 'processing', error_message: null, updated_at: new Date().toISOString() })
+    .eq('id', jobId)
+    .eq('function_name', 'marina');
+
+  console.log(`[Marina] ♻️ Reprise du job ${jobId} sur la phase "${cp.phase}" (reprise ${resumes + 1}/${MAX_PHASE_RESUMES})`);
+  fetch(`${SUPABASE_URL}/functions/v1/marina`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'run_job',
+      job_id: jobId,
+      url: cp.url,
+      lang: cp.lang ?? null,
+      _phase: cp.phase,
+      _intermediate: cp.intermediate ?? null,
+    }),
+  }).catch(err => console.error('[Marina] resume self-invocation failed:', err));
+
+  return { resumed: true, phase: cp.phase };
+}
+
 
 
 // ─── Mutualisation par domaine : cache des analyses "site-scoped" ───
@@ -2652,14 +2736,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       const { domain, detectedLang } = cached.result_data as any;
 
-      // ─── Attente du crawl découpée en tours ───
+      // ─── Attente du crawl découpée en tours courts ───
       // Un run d'edge function ne peut pas attendre un crawl de plusieurs
-      // centaines de pages. Le worker traite des lots de 150 pages et se
-      // re-déclenche sur le checkpoint `crawl_pages` ; Marina fait pareil :
-      // elle attend un tour (180 s), puis se ré-invoque en phase 2 tant que le
-      // crawl progresse, dans la limite de MAX_CRAWL_WAIT_ROUNDS tours.
+      // centaines de pages : au-delà du wall-time, le run est tué. Le worker
+      // traite des lots de 150 pages depuis le checkpoint `crawl_pages` ; Marina
+      // fait pareil avec des tours courts (~70 s) et beaucoup de tours, chaque
+      // tour étant persisté en checkpoint donc reprenable après un kill.
       const crawlWaitRound = Number((intermediateData as any)?.crawlWaitRound || 0);
-      const MAX_CRAWL_WAIT_ROUNDS = 8;
+      const MAX_CRAWL_WAIT_ROUNDS = 20;
+
 
       await updateProgress(66, 'multi_crawl');
 
@@ -2795,6 +2880,21 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             } catch (crawlErr) {
               console.warn(`[Marina] Crawl launch failed (non-fatal):`, crawlErr);
             }
+
+            // Le run de lancement a déjà consommé la détection d'URLs + le
+            // démarrage du crawl : on ne poll pas dans le même run (risque de
+            // kill wall-time sur gros site), on rend la main et on reprend
+            // l'attente au tour suivant, qui se raccrochera au crawl en vol.
+            if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
+              console.log(`[Marina] Crawl ${crawlLaunchRes.crawlId} lancé — attente déportée au tour suivant`);
+              await selfInvokePhase(jobId, url, detectedLang, 'phase2', {
+                domain,
+                crawlWaitRound: crawlWaitRound + 1,
+                scanMode: scanModeInfo,
+                pagesCrawled: pagesCrawledInfo,
+              });
+              return;
+            }
           }
 
           try {
@@ -2802,11 +2902,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               const crawlId = crawlLaunchRes.crawlId;
               console.log(`[Marina] Crawl in progress: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages`);
 
-              // Poll until crawl completes — un tour d'attente de 170 s max,
+              // Poll until crawl completes — tour d'attente court (70 s),
               // puis relais explicite par ré-invocation de la phase 2.
               const crawlStartTime = Date.now();
-              const CRAWL_TIMEOUT_MS = 170_000;
+              const CRAWL_TIMEOUT_MS = 70_000;
               const CRAWL_POLL_MS = 5_000;
+
               let crawlDone = false;
               let lastCrawledPages = 0;
 
@@ -4325,24 +4426,45 @@ Deno.serve(handleRequest(async (req) => {
       return json({ success: true });
     }
 
-    // ── Auto-cleanup : ne tue QUE les jobs réellement bloqués en exécution.
-    // Les jobs 'pending' peuvent légitimement attendre longtemps (file d'attente
-    // séquentielle d'un batch multipages) : on ne les échoue que s'il n'y a
-    // aucun job en cours pour les dépiler.
+    // ── Reprise manuelle d'un job interrompu ──
+    if (body.action === 'resume_job' && body.job_id) {
+      const res = await resumeJobFromCheckpoint(body.job_id);
+      return json({ success: res.resumed, ...res });
+    }
+
+    // ── Auto-cleanup : tente d'abord de REPRENDRE les jobs interrompus depuis
+    // leur checkpoint de phase (un run tué par le wall-time laisse le job muet
+    // mais parfaitement reprenable) ; on n'échoue que ceux qui n'ont plus de
+    // checkpoint exploitable ou qui ont épuisé leurs reprises.
     try {
       // Un job Marina enchaîne plusieurs phases (chaque phase touche updated_at) :
-      // on n'échoue que ceux qui n'ont plus progressé depuis 15 minutes.
-      const staleSince = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      await sb
+      // au-delà de 6 minutes sans progression, le run a été tué → on reprend.
+      const stalledSince = new Date(Date.now() - 6 * 60 * 1000).toISOString();
+      const { data: stalledJobs } = await sb
         .from('async_jobs')
-        .update({
-          status: 'failed',
-          error_message: 'Timeout: job sans progression depuis plus de 15 minutes',
-          completed_at: new Date().toISOString(),
-        })
+        .select('id')
         .eq('function_name', 'marina')
         .eq('status', 'processing')
-        .lt('updated_at', staleSince);
+        .lt('updated_at', stalledSince)
+        .limit(5);
+
+      for (const stalled of stalledJobs || []) {
+        const res = await resumeJobFromCheckpoint(stalled.id);
+        if (!res.resumed) {
+          await sb
+            .from('async_jobs')
+            .update({
+              status: 'failed',
+              error_message: res.reason === 'max_resumes_reached'
+                ? 'Job interrompu : nombre maximum de reprises atteint'
+                : 'Timeout: job sans progression et sans point de reprise',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', stalled.id)
+            .eq('function_name', 'marina')
+            .eq('status', 'processing');
+        }
+      }
 
       const { data: processingNow } = await sb
         .from('async_jobs')
@@ -4359,6 +4481,14 @@ Deno.serve(handleRequest(async (req) => {
     } catch (e) {
       console.warn('[Marina] Auto-cleanup failed:', e);
     }
+
+    // ── Watchdog appelé par le cron : la reprise ci-dessus a déjà tourné ──
+    if (body.action === 'reap_jobs') {
+      return json({ success: true, reaped: true });
+    }
+
+
+
 
 
 
