@@ -370,6 +370,7 @@ export function renderConsolidatedPlanHTML(
 
   const rows = items.map((it) => {
     const badge = SEVERITY_BADGE[it.severity];
+    const { title, description } = splitLongTitle(it.title, it.description);
     const origin = it.source === 'workbench'
       ? `<span style="background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">Workbench</span>`
       : `<span style="background:#fef3c7;color:#7c5b00;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">Nouveau · ${escapeHtml(SECTION_LABELS[it.source_section || 'seo'])}</span>`;
@@ -380,8 +381,9 @@ export function renderConsolidatedPlanHTML(
     return `<tr style="border-bottom:1px solid #e5e7eb;">
       <td style="padding:10px 12px;font-weight:700;color:#111827;font-size:13px;">${it.rank}</td>
       <td style="padding:10px 12px;">
-        <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:3px;">${escapeHtml(it.title)}</div>
-        ${it.description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(it.description)}</div>` : ''}
+        <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:3px;">${escapeHtml(title)}</div>
+        ${description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(description)}</div>` : ''}
+
         ${it.roi ? `<div style="font-size:11px;color:#6b7280;margin-top:5px;">${escapeHtml(it.roi.roi_note)}</div>` : ''}
       </td>
       <td style="padding:10px 12px;white-space:nowrap;">
