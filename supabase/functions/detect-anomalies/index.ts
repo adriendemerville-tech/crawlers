@@ -86,9 +86,10 @@ function classifyAnomaly(z: number, cv = 0, trendStrength = 0): { severity: stri
 
 Deno.serve(handleRequest(async (req) => {
 try {
-    // Auth : utilisateur connecté OU appel cron (header x-cron-secret = CRON_SECRET)
-    const cronSecret = Deno.env.get('CRON_SECRET');
-    const isCron = !!cronSecret && req.headers.get('x-cron-secret') === cronSecret;
+    // Auth : utilisateur connecté OU appel cron (header x-cron-secret)
+    const headerSecret = req.headers.get('x-cron-secret');
+    const isCron = !!headerSecret && [Deno.env.get('CRON_SECRET'), Deno.env.get('CRON_SECRET_V2')]
+      .some((s) => !!s && s === headerSecret);
     const auth = isCron ? null : await getAuthenticatedUser(req);
     if (!isCron && !auth) {
       return jsonError('Unauthorized', 401);
