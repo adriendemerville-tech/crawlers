@@ -4482,6 +4482,13 @@ Deno.serve(handleRequest(async (req) => {
       console.warn('[Marina] Auto-cleanup failed:', e);
     }
 
+    // ── Watchdog appelé par le cron : la reprise ci-dessus a déjà tourné ──
+    if (body.action === 'reap_jobs') {
+      return json({ success: true, reaped: true });
+    }
+
+
+
 
 
 
