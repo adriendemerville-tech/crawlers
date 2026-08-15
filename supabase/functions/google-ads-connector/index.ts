@@ -2,6 +2,64 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUserId } from '../_shared/auth.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { resolveAdsCredentials } from '../_shared/keywordPlanner.ts';
+import { getKeywordVolumes } from '../_shared/keywordVolumeSource.ts';
+
+/**
+ * Remplit `keyword_universe.search_volume` depuis Keyword Planner (gratuit),
+ * en passant d'abord par le pool mutualisé `keyword_volume_pool`.
+ * DataForSEO n'est appelé que si `allow_paid === true`.
+ */
+async function backfillKeywordUniverse(
+  supabase: ReturnType<typeof getServiceClient>,
+  userId: string,
+  opts: { domain?: string; tracked_site_id?: string; limit?: number; geo?: string; language?: string; allow_paid?: boolean },
+) {
+  const limit = Math.min(opts.limit ?? 2000, 2000);
+
+  let query = supabase
+    .from('keyword_universe')
+    .select('id, keyword, search_volume, difficulty, sources')
+    .eq('user_id', userId)
+    .is('search_volume', null)
+    .limit(limit);
+
+  if (opts.domain) query = query.eq('domain', opts.domain.replace(/^www\./, ''));
+  if (opts.tracked_site_id) query = query.eq('tracked_site_id', opts.tracked_site_id);
+
+  const { data: rows, error } = await query;
+  if (error) return { error: error.message, updated: 0 };
+  if (!rows?.length) return { updated: 0, candidates: 0, message: 'Aucun mot-clé sans volume' };
+
+  const { volumes, stats } = await getKeywordVolumes(
+    supabase,
+    userId,
+    rows.map((r: any) => r.keyword),
+    { geo: opts.geo, language: opts.language, allowPaid: opts.allow_paid === true },
+  );
+
+  let updated = 0;
+  for (const row of rows as any[]) {
+    const rec = volumes.get((row.keyword || '').trim().toLowerCase());
+    if (!rec) continue;
+    const sources: string[] = Array.isArray(row.sources) ? row.sources : [];
+    const tag = rec.source === 'pool' ? 'volume_pool' : rec.source;
+    const { error: upErr } = await supabase
+      .from('keyword_universe')
+      .update({
+        search_volume: rec.search_volume,
+        difficulty: row.difficulty ?? rec.difficulty,
+        sources: sources.includes(tag) ? sources : [...sources, tag],
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', row.id);
+    if (!upErr) updated++;
+  }
+
+  console.log(`[keyword-volumes] user=${userId} candidats=${rows.length} maj=${updated} planner=${stats.from_planner} pool=${stats.from_pool} payant=${stats.from_dataforseo}`);
+  return { updated, candidates: rows.length, stats };
+}
+
 
 /**
  * Edge Function: google-ads-connector
@@ -44,14 +102,87 @@ Deno.serve(handleRequest(async (req) => {
   // POST: API actions
   // ═══════════════════════════════════════════════════════════════════
   try {
+    const body = await req.json().catch(() => ({}));
+    const { action, frontend_origin } = body;
+
+    // ─── CRON: backfill des volumes Keyword Planner pour tous les comptes Ads ───
+    const headerSecret = req.headers.get('x-cron-secret');
+    const isCron = !!headerSecret && [
+      Deno.env.get('CRON_SECRET'), Deno.env.get('CRON_SECRET_V2'),
+    ].filter(Boolean).includes(headerSecret);
+
+    if (action === 'backfill_all_volumes') {
+      if (!isCron) return jsonError('Cron secret required', 401);
+      const { data: conns } = await supabase
+        .from('google_connections')
+        .select('user_id')
+        .not('ads_customer_id', 'is', null);
+      const userIds = [...new Set((conns || []).map((c: any) => c.user_id))];
+      const results: any[] = [];
+      for (const uid of userIds) {
+        results.push({ user_id: uid, ...(await backfillKeywordUniverse(supabase, uid, body)) });
+      }
+      return jsonOk({ success: true, users: userIds.length, results });
+    }
+
+    // ─── CRON: self-test de la chaîne Keyword Planner (diagnostic) ───
+    if (action === 'volumes_selftest') {
+      if (!isCron) return jsonError('Cron secret required', 401);
+      const { data: conns } = await supabase
+        .from('google_connections')
+        .select('user_id')
+        .not('ads_customer_id', 'is', null)
+        .limit(1);
+      const uid = conns?.[0]?.user_id;
+      if (!uid) return jsonOk({ ok: false, reason: 'no ads connection' });
+      const kws: string[] = Array.isArray(body.keywords) && body.keywords.length
+        ? body.keywords
+        : ['référencement ia', 'audit seo', 'agence seo'];
+      const { volumes, stats } = await getKeywordVolumes(supabase, uid, kws, { allowPaid: false });
+      console.log('[keyword-volumes][selftest]', JSON.stringify({ stats, metrics: Array.from(volumes.values()) }));
+      return jsonOk({ ok: true, stats, metrics: Array.from(volumes.values()) });
+    }
+
+
     const authenticatedUserId = await getAuthenticatedUserId(req);
     if (!authenticatedUserId) {
       return jsonError('Authentication required', 401);
     }
-
-    const body = await req.json().catch(() => ({}));
-    const { action, frontend_origin } = body;
     const user_id = authenticatedUserId;
+
+    // ─── KEYWORD PLANNER: lookup brut mutualisé (pool → Planner → DataForSEO) ───
+    if (action === 'keyword_volumes') {
+      const keywords: string[] = Array.isArray(body.keywords) ? body.keywords : [];
+      if (keywords.length === 0) return jsonError('keywords[] required', 400);
+      const { volumes, stats } = await getKeywordVolumes(supabase, user_id, keywords.slice(0, 2000), {
+        geo: body.geo, language: body.language, allowPaid: body.allow_paid === true,
+      });
+      return jsonOk({ success: true, stats, metrics: Array.from(volumes.values()) });
+    }
+
+    // ─── KEYWORD PLANNER: remplit keyword_universe.search_volume ───
+    if (action === 'backfill_volumes') {
+      const res = await backfillKeywordUniverse(supabase, user_id, body);
+      return jsonOk({ success: true, ...res });
+    }
+
+    // ─── KEYWORD PLANNER: état de la couverture volumes ───
+    if (action === 'volumes_status') {
+      const creds = await resolveAdsCredentials(supabase, user_id);
+      const [{ count: total }, { count: missing }, { count: pooled }] = await Promise.all([
+        supabase.from('keyword_universe').select('id', { count: 'exact', head: true }).eq('user_id', user_id),
+        supabase.from('keyword_universe').select('id', { count: 'exact', head: true }).eq('user_id', user_id).is('search_volume', null),
+        supabase.from('keyword_volume_pool').select('id', { count: 'exact', head: true }),
+      ]);
+      return jsonOk({
+        keyword_planner_available: !!creds,
+        developer_token_configured: !!Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN'),
+        keyword_universe_total: total ?? 0,
+        keyword_universe_missing_volume: missing ?? 0,
+        shared_pool_size: pooled ?? 0,
+      });
+    }
+
 
     // === LOGIN: delegate to gsc-auth (unified OAuth) ===
     if (action === 'login') {

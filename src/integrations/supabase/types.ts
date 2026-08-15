@@ -6616,6 +6616,7 @@ export type Database = {
           access_token: string
           ads_account_name: string | null
           ads_customer_id: string | null
+          ads_login_customer_id: string | null
           ads_status: string | null
           created_at: string | null
           ga4_property_id: string | null
@@ -6634,6 +6635,7 @@ export type Database = {
           access_token: string
           ads_account_name?: string | null
           ads_customer_id?: string | null
+          ads_login_customer_id?: string | null
           ads_status?: string | null
           created_at?: string | null
           ga4_property_id?: string | null
@@ -6652,6 +6654,7 @@ export type Database = {
           access_token?: string
           ads_account_name?: string | null
           ads_customer_id?: string | null
+          ads_login_customer_id?: string | null
           ads_status?: string | null
           created_at?: string | null
           ga4_property_id?: string | null
@@ -7623,6 +7626,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      keyword_volume_pool: {
+        Row: {
+          competition: string | null
+          cpc_usd: number | null
+          created_at: string
+          difficulty: number | null
+          fetched_at: string
+          geo: string
+          id: string
+          keyword: string
+          language: string
+          search_volume: number | null
+          source: string
+        }
+        Insert: {
+          competition?: string | null
+          cpc_usd?: number | null
+          created_at?: string
+          difficulty?: number | null
+          fetched_at?: string
+          geo?: string
+          id?: string
+          keyword: string
+          language?: string
+          search_volume?: number | null
+          source?: string
+        }
+        Update: {
+          competition?: string | null
+          cpc_usd?: number | null
+          created_at?: string
+          difficulty?: number | null
+          fetched_at?: string
+          geo?: string
+          id?: string
+          keyword?: string
+          language?: string
+          search_volume?: number | null
+          source?: string
+        }
+        Relationships: []
       }
       linkedin_features_catalog: {
         Row: {
