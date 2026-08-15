@@ -1225,7 +1225,9 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildModuleSection('Red Team (Adversarial)', '🔴', redTeam)}
       ${buildModuleSection('Google My Business', '📍', gmb)}
       ${buildModuleSection('Cibles Clients', '👥', clientTargets)}
-      ${stratRoadmap.length > 0 ? `
+      ${hasConsolidatedPlan ? `<div class="intro-text" style="font-size:12px;color:#6b7280;">Les actions issues de cette analyse ne sont pas listées ici : elles sont fusionnées, dédoublonnées et pondérées par impact / effort dans la section « Plan d'action consolidé ».</div>` : ''}
+      ${(!hasConsolidatedPlan && stratRoadmap.length > 0) ? `
+
       <div style="margin-top:20px;">
         <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">🗺️ ${tr.roadmap}</h3>
         <table style="width:100%;border-collapse:collapse;">
