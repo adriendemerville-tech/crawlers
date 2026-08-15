@@ -417,19 +417,25 @@ async function computeClusterMaturity(
     if (r.status === 'deployed' || r.status === 'done') entry.done++
   }
 
-  // Un seul upsert groupé pour rafraîchir les compteurs de clusters.
-  const updates: Array<Record<string, unknown>> = []
+  // Rafraîchissement des compteurs : updates parallélisés par lots.
+  // (Pas d'upsert : cluster_definitions a des colonnes NOT NULL sans défaut,
+  //  le chemin INSERT de ON CONFLICT échouerait.)
+  const updates: Array<{ id: string; total_items: number; deployed_items: number; maturity_pct: number }> = []
   for (const [clusterId, { total, done }] of tally) {
     const maturity = total > 0 ? Math.round((done / total) * 100) : 0
     maturityMap.set(clusterId, maturity)
     updates.push({ id: clusterId, total_items: total, deployed_items: done, maturity_pct: maturity })
   }
 
-  for (let i = 0; i < updates.length; i += 200) {
-    const { error: upErr } = await supabase
-      .from('cluster_definitions')
-      .upsert(updates.slice(i, i + 200), { onConflict: 'id' })
-    if (upErr) console.error('[compute-spiral] upsert clusters échoué:', upErr.message)
+  for (let i = 0; i < updates.length; i += 20) {
+    const results = await Promise.all(
+      updates.slice(i, i + 20).map(({ id, ...counters }) =>
+        supabase.from('cluster_definitions').update(counters).eq('id', id),
+      ),
+    )
+    for (const r of results) {
+      if (r?.error) console.error('[compute-spiral] update cluster échoué:', r.error.message)
+    }
   }
 
   return maturityMap
