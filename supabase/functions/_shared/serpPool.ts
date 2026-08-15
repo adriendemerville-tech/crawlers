@@ -291,15 +291,27 @@ async function fetchSerpApi(key: PoolKey): Promise<ProviderPayload | null> {
     snippet: String(r['snippet'] ?? ''),
   })).filter((r: SerpOrganicResult) => !!r.url);
 
+  const features: string[] = [];
+  if (json?.related_questions) features.push('people_also_ask');
+  if (json?.knowledge_graph) features.push('knowledge_graph');
+  if (json?.top_stories) features.push('top_stories');
+  if (json?.inline_videos) features.push('video');
+  if (json?.inline_images) features.push('images');
+
   return {
     provider: 'serpapi',
     organic,
     paa: (json?.related_questions ?? []).map((p: Record<string, unknown>) => String(p['question'] ?? '')).filter(Boolean),
     relatedSearches: (json?.related_searches ?? []).map((p: Record<string, unknown>) => String(p['query'] ?? '')).filter(Boolean),
     knowledgeGraph: json?.knowledge_graph ?? null,
+    serpFeatures: features,
+    seResultsCount: typeof json?.search_information?.total_results === 'number'
+      ? json.search_information.total_results
+      : null,
     raw: null,
   };
 }
+
 
 async function callProvider(key: PoolKey): Promise<ProviderPayload | null> {
   for (const fn of [fetchDataForSeo, fetchSerper, fetchSerpApi]) {
