@@ -2880,6 +2880,21 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             } catch (crawlErr) {
               console.warn(`[Marina] Crawl launch failed (non-fatal):`, crawlErr);
             }
+
+            // Le run de lancement a déjà consommé la détection d'URLs + le
+            // démarrage du crawl : on ne poll pas dans le même run (risque de
+            // kill wall-time sur gros site), on rend la main et on reprend
+            // l'attente au tour suivant, qui se raccrochera au crawl en vol.
+            if (crawlLaunchRes?.success && crawlLaunchRes?.crawlId) {
+              console.log(`[Marina] Crawl ${crawlLaunchRes.crawlId} lancé — attente déportée au tour suivant`);
+              await selfInvokePhase(jobId, url, detectedLang, 'phase2', {
+                domain,
+                crawlWaitRound: crawlWaitRound + 1,
+                scanMode: scanModeInfo,
+                pagesCrawled: pagesCrawledInfo,
+              });
+              return;
+            }
           }
 
           try {
@@ -2887,11 +2902,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               const crawlId = crawlLaunchRes.crawlId;
               console.log(`[Marina] Crawl in progress: ${crawlId} — ${crawlLaunchRes.totalPages || '?'} pages`);
 
-              // Poll until crawl completes — un tour d'attente de 170 s max,
+              // Poll until crawl completes — tour d'attente court (70 s),
               // puis relais explicite par ré-invocation de la phase 2.
               const crawlStartTime = Date.now();
-              const CRAWL_TIMEOUT_MS = 170_000;
+              const CRAWL_TIMEOUT_MS = 70_000;
               const CRAWL_POLL_MS = 5_000;
+
               let crawlDone = false;
               let lastCrawledPages = 0;
 
