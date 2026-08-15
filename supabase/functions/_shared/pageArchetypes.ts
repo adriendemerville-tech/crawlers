@@ -349,8 +349,11 @@ function avg(values: number[]): number {
 }
 
 function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGroup {
+  // `seo_score` est produit sur une échelle /200 par le crawl (seoScoringV2).
+  // Toute la section raisonne et affiche sur /100 : on normalise ici, une fois.
   const seoScores = pages.map((p) => Number(p.seo_score)).filter((n) => Number.isFinite(n) && n > 0);
-  const avgSeoScore = seoScores.length ? Math.round(avg(seoScores)) : null;
+  const avgSeoScore = seoScores.length ? Math.min(100, Math.round(avg(seoScores) / 2)) : null;
+
   const avgWordCount = Math.round(avg(pages.map((p) => Number(p.word_count || 0))));
   const avgInternalLinks = Math.round(avg(pages.map((p) => Number(p.internal_links || 0))));
   const thinPages = pages.filter((p) => Number(p.thin_score || 0) >= 60 || Number(p.word_count || 0) < 250).length;
