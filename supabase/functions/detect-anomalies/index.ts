@@ -86,22 +86,25 @@ function classifyAnomaly(z: number, cv = 0, trendStrength = 0): { severity: stri
 
 Deno.serve(handleRequest(async (req) => {
 try {
-    const auth = await getAuthenticatedUser(req);
-    if (!auth) {
+    // Auth : utilisateur connecté OU appel cron (header x-cron-secret = CRON_SECRET)
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const isCron = !!cronSecret && req.headers.get('x-cron-secret') === cronSecret;
+    const auth = isCron ? null : await getAuthenticatedUser(req);
+    if (!isCron && !auth) {
       return jsonError('Unauthorized', 401);
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const supabase = getServiceClient();
 
     let siteIds: { id: string; domain: string; user_id: string }[] = [];
 
-    if (body.all) {
+    if (body.all || isCron) {
+      // tracked_sites n'a pas de colonne is_active : filtrer dessus renvoyait 0 site.
       const { data: sites } = await supabase
         .from('tracked_sites')
         .select('id, domain, user_id')
-        .eq('is_active', true)
-        .limit(200);
+        .limit(300);
       siteIds = (sites || []).map((s: any) => ({ id: s.id, domain: s.domain, user_id: s.user_id }));
     } else if (body.tracked_site_id) {
       const { data: site } = await supabase
@@ -114,8 +117,7 @@ try {
       const { data: sites } = await supabase
         .from('tracked_sites')
         .select('id, domain, user_id')
-        .eq('user_id', auth.userId)
-        .eq('is_active', true);
+        .eq('user_id', auth!.userId);
       siteIds = (sites || []).map((s: any) => ({ id: s.id, domain: s.domain, user_id: s.user_id }));
     }
 
