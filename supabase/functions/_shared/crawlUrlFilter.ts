@@ -92,10 +92,20 @@ export function filterCrawlablePublicUrls(rawUrls: string[]): string[] {
     if (!isCrawlablePublicUrl(raw)) continue;
     const canonical = canonicalizeCrawlUrl(raw);
     if (!canonical) continue;
-    const key = canonical.replace(/^https?:\/\//, '').replace(/^www\./, '').toLowerCase();
+    const key = crawlUrlKey(canonical);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(canonical);
   }
   return out;
+}
+
+/** Clé de déduplication d'une URL (schéma, www et slash final neutralisés). */
+export function crawlUrlKey(rawUrl: string): string {
+  const canonical = canonicalizeCrawlUrl(rawUrl) ?? rawUrl;
+  return canonical
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/$/, '')
+    .toLowerCase();
 }
