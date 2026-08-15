@@ -1095,7 +1095,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div class="checklist" style="margin-top:16px;">
         <div class="checklist-item">${checkMark(crawlMeta.indexable)} Indexable</div>
         <div class="checklist-item">${checkMark(crawlMeta.isHttps)} HTTPS</div>
-        <div class="checklist-item">${checkMark(crawlMeta.hasCanonical)} Canonical</div>
+        <div class="checklist-item">${checkMark(crawlMeta.hasCanonical)} Canonical${crawlMeta.canonicalCoverage != null ? ` (${crawlMeta.canonicalCoverage} % des pages crawlées)` : ''}</div>
         <div class="checklist-item">${checkMark(crawlMeta.hasOg)} Open Graph</div>
         <div class="checklist-item">${checkMark(crawlMeta.hasSchema)} Schema.org ${crawlMeta.schemaTypes.length > 0 ? `(${crawlMeta.schemaTypes.join(', ')})` : ''}</div>
         <div class="checklist-item">${checkMark(crawlMeta.hasRobotsTxt)} robots.txt ${crawlMeta.robotsPermissive ? '(permissif)' : ''}</div>
