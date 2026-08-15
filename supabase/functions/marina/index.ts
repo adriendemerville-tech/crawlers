@@ -3337,7 +3337,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               source: 'marina',
               profile: marketProfile,
               analysis: archetypeAnalysis,
-              avgSeoScore: Number((latestCrawl as any)?.avg_score) || null,
+              // Normalisé /100 comme le reste du rapport (avg_score est stocké /200).
+              avgSeoScore: (latestCrawl as any)?.avg_score
+                ? Math.min(100, Math.round(Number((latestCrawl as any).avg_score) / 2))
+                : null,
+
               geoScore: Number(llmVisibilityData?.global_score ?? llmVisibilityData?.data?.global_score) || null,
               authorityScore: Number((strategicData as any)?.domain_authority?.authority_score) || null,
             }).catch(() => {});
