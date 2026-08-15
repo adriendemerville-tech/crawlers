@@ -64,3 +64,22 @@ L'endpoint utilisé est `https://api.brightdata.com/request` avec :
 - Code couleur : vert (≤3), bleu (≤10), orange (≤20), rouge (>20)
 - Bouton Copy pour export clipboard
 - Le domaine cible est mis en surbrillance dans le tableau
+
+## Pool SERP mutualisé (`_shared/serpPool.ts`)
+
+Depuis la migration des appelants, la SERP n'est plus achetée par module mais lue via `getSerp()` :
+
+1. **Read-through** : hit frais dans `serp_pool` (clé = requête normalisée + moteur + pays + langue + device + location) → 0 $. Sinon cascade DataForSEO → Serper → SerpAPI, écriture dans le pool, puis fan-out des positions vers `keyword_universe` pour tous les domaines suivis du top 100.
+2. **TTL par classe d'usage** : `position` 24 h, `intent` 7 j, `volume` 30 j.
+3. **Journal** : `serp_pool_hits` (appelant, source pool/provider, coût, économie, lignes fan-out) — base du compteur d'économies admin.
+4. **`ingestExternalSerp()`** : écrit dans le pool une SERP obtenue hors pool (cas `serp-benchmark`, qui interroge volontairement plusieurs providers pour comparer).
+5. La normalisation de requête conserve `: . / _ -` afin de ne pas casser les opérateurs (`site:`, `inurl:`).
+
+### Appelants migrés
+| Fonction | Usage | Classe |
+|---|---|---|
+| `serp-benchmark` | réutilise un hit frais au lieu de repayer DataForSEO ; ingère sinon le résultat canonique | `position` |
+| `analyze-serp-intents` | remplace ses deux fetchers DataForSEO/Serper par `getSerp()` | `intent` |
+| `fetch-serp-kpis` | pages indexées via `site:domaine` (`seResultsCount`), sans fan-out | `volume` |
+
+`refresh-serp-all` et `audit-strategique-ia` restent hors pool : ils utilisent DataForSEO Labs `ranked_keywords` (agrégat par domaine, pas une page de résultats) ou lisent les snapshots existants.
