@@ -394,28 +394,42 @@ async function computeClusterMaturity(
 
   if (!clusters?.length) return maturityMap
 
-  for (const cluster of clusters) {
-    const { count: total } = await supabase
-      .from('architect_workbench')
-      .select('id', { count: 'exact', head: true })
-      .eq('cluster_id', cluster.id)
+  const clusterIds = clusters.map((c: any) => c.id as string)
 
-    const { count: done } = await supabase
-      .from('architect_workbench')
-      .select('id', { count: 'exact', head: true })
-      .eq('cluster_id', cluster.id)
-      .in('status', ['deployed', 'done'])
+  // Une seule lecture pour tous les clusters du site (au lieu de 2 COUNT par cluster).
+  const { data: rows, error } = await supabase
+    .from('architect_workbench')
+    .select('cluster_id, status')
+    .in('cluster_id', clusterIds)
+    .limit(20000)
 
-    const totalN = total || 0
-    const doneN = done || 0
-    const maturity = totalN > 0 ? Math.round((doneN / totalN) * 100) : 0
-    maturityMap.set(cluster.id, maturity)
+  if (error) {
+    console.error('[compute-spiral] maturité clusters indisponible:', error.message)
+    return maturityMap
+  }
 
-    // Also update cluster totals
-    await supabase
+  const tally = new Map<string, { total: number; done: number }>()
+  for (const id of clusterIds) tally.set(id, { total: 0, done: 0 })
+  for (const r of rows || []) {
+    const entry = tally.get(r.cluster_id as string)
+    if (!entry) continue
+    entry.total++
+    if (r.status === 'deployed' || r.status === 'done') entry.done++
+  }
+
+  // Un seul upsert groupé pour rafraîchir les compteurs de clusters.
+  const updates: Array<Record<string, unknown>> = []
+  for (const [clusterId, { total, done }] of tally) {
+    const maturity = total > 0 ? Math.round((done / total) * 100) : 0
+    maturityMap.set(clusterId, maturity)
+    updates.push({ id: clusterId, total_items: total, deployed_items: done, maturity_pct: maturity })
+  }
+
+  for (let i = 0; i < updates.length; i += 200) {
+    const { error: upErr } = await supabase
       .from('cluster_definitions')
-      .update({ total_items: totalN, deployed_items: doneN, maturity_pct: maturity })
-      .eq('id', cluster.id)
+      .upsert(updates.slice(i, i + 200), { onConflict: 'id' })
+    if (upErr) console.error('[compute-spiral] upsert clusters échoué:', upErr.message)
   }
 
   return maturityMap
