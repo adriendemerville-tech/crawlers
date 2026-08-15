@@ -163,6 +163,11 @@ async function loadSeasonalEvents(supabase: any, trackedSiteId: string): Promise
   return result
 }
 
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+
 /** Fenêtre saisonnière : [début − prep_weeks, fin], sans année (récurrence). */
 function isWindowOpen(ev: any): boolean {
   const now = new Date()
