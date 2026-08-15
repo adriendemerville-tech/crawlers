@@ -143,7 +143,7 @@ async function computeSignalsForSite(
 
   // Update each item with individual signals + aggregated spiral_score
   let updated = 0
-  for (const item of items) {
+  const payloads = items.map((item: any) => {
     const velocityScore = getVelocityForItem(velocityMap, item.target_url)
     const competitorScore = getCompetitorMomentumForItem(competitorMomentumMap, item.target_url, item.finding_category)
     const maturity = item.cluster_id ? (clusterMaturityMap.get(item.cluster_id) ?? 0) : 0
@@ -179,9 +179,9 @@ async function computeSignalsForSite(
       saturationMalus
     )))
 
-    const { error } = await supabase
-      .from('architect_workbench')
-      .update({
+    return {
+      id: item.id as string,
+      patch: {
         velocity_decay_score: velocityScore,
         competitor_momentum_score: competitorScore,
         cluster_maturity_pct: maturity,
@@ -193,10 +193,21 @@ async function computeSignalsForSite(
         keyword_coverage_score: ext.keyword_coverage_score,
         spiral_score: spiralScore,
         updated_at: new Date().toISOString(),
-      })
-      .eq('id', item.id)
+      },
+    }
+  })
 
-    if (!error) updated++
+  // Écriture par lots parallèles : évite jusqu'à 500 aller-retours séquentiels par site.
+  for (let i = 0; i < payloads.length; i += 25) {
+    const results = await Promise.all(
+      payloads.slice(i, i + 25).map(({ id, patch }: any) =>
+        supabase.from('architect_workbench').update(patch).eq('id', id),
+      ),
+    )
+    for (const r of results) {
+      if (!r?.error) updated++
+      else console.error('[compute-spiral] update item échoué:', r.error.message)
+    }
   }
 
 
