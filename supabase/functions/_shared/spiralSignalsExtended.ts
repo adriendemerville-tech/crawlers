@@ -115,14 +115,26 @@ async function loadCoverageByCluster(
 }
 
 async function loadSeasonalEvents(supabase: any, trackedSiteId: string): Promise<SeasonalEvent[]> {
-  const { data: site } = await supabase
+  // La carte d'identité est stockée en colonnes plates sur tracked_sites
+  // (il n'existe PAS de colonne identity_card).
+  const { data: site, error } = await supabase
     .from('tracked_sites')
-    .select('identity_card')
+    .select('market_sector, business_type, products_services')
     .eq('id', trackedSiteId)
     .maybeSingle()
 
-  const identity = (site?.identity_card ?? {}) as Record<string, unknown>
-  const sector = String(identity.market_sector ?? '').toLowerCase().trim()
+  if (error) {
+    console.error('[spiralSignalsExtended] lecture secteur impossible:', error.message)
+    return []
+  }
+
+  const sector = [site?.market_sector, site?.business_type, site?.products_services]
+    .filter(Boolean)
+    .map((v: unknown) => String(v))
+    .join(' ')
+    .toLowerCase()
+    .trim()
+
 
   const { data: events } = await supabase
     .from('seasonal_context')
