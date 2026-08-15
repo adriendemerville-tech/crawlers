@@ -50,12 +50,17 @@ export interface SerpResult {
   paa: string[];
   relatedSearches: string[];
   knowledgeGraph: unknown | null;
+  /** Types de blocs SERP non organiques rencontrés (people_also_ask, video, …) */
+  serpFeatures: string[];
+  /** Nombre de résultats annoncés par le moteur (utile pour `site:`) */
+  seResultsCount: number | null;
   provider: string;
   source: 'pool' | 'provider';
   fetchedAt: string;
   costUsd: number;
   fanoutRows: number;
 }
+
 
 /** TTL par classe d'usage (heures) */
 const TTL_HOURS: Record<SerpUsageClass, number> = {
