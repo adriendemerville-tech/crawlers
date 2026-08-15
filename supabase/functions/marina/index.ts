@@ -3547,7 +3547,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           renderTopPrioritiesHTML(topGeo),
           renderTopPrioritiesHTML(topKw),
           renderTopPrioritiesHTML(topEeat),
+          rawConsolidatedPlan.length > 0,
         );
+
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
 
