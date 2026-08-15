@@ -7542,6 +7542,7 @@ export type Database = {
           intent: string | null
           is_quick_win: boolean | null
           keyword: string
+          keyword_normalized: string | null
           opportunity_score: number | null
           parent_query_id: string | null
           quick_win_action: string | null
@@ -7566,6 +7567,7 @@ export type Database = {
           intent?: string | null
           is_quick_win?: boolean | null
           keyword: string
+          keyword_normalized?: string | null
           opportunity_score?: number | null
           parent_query_id?: string | null
           quick_win_action?: string | null
@@ -7590,6 +7592,7 @@ export type Database = {
           intent?: string | null
           is_quick_win?: boolean | null
           keyword?: string
+          keyword_normalized?: string | null
           opportunity_score?: number | null
           parent_query_id?: string | null
           quick_win_action?: string | null
@@ -14912,6 +14915,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      normalize_serp_query: { Args: { q: string }; Returns: string }
       owns_tracked_site: { Args: { p_site_id: string }; Returns: boolean }
       parmenion_error_rate: {
         Args: { p_domain: string; p_last_n?: number }

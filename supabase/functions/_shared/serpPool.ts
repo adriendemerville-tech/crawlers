@@ -338,10 +338,13 @@ export async function fanoutPositions(
 ): Promise<number> {
   if (organic.length === 0) return 0;
 
+  // Le rapprochement se fait sur `keyword_normalized` (colonne générée en base,
+  // miroir SQL de normalizeQuery) : sans cela, tout mot-clé contenant de la
+  // ponctuation (« … : étapes », « barème 2026 – … ») n'était jamais matché.
   const { data: rows, error } = await supabase
     .from('keyword_universe')
     .select('id, domain, current_position, best_position')
-    .eq('keyword', queryNormalized);
+    .eq('keyword_normalized', queryNormalized);
 
   if (error || !rows || rows.length === 0) return 0;
 

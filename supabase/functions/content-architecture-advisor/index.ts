@@ -1198,22 +1198,39 @@ FRAÎCHEUR & DÉNOMINATION:
     }
 
 
+    // Dernière chance « compacte » : si tous les tiers ont expiré, on rejoue
+    // flash-lite avec un prompt tronqué. Coûte ~20s et évite un job `failed`
+    // (7 échecs "Signal timed out" sur les 7 derniers jours).
+    const COMPACT_ATTEMPT_MS = 22_000;
+    const COMPACT_PROMPT_CHARS = 6_000;
+    const attemptSpecs: { model: string; compact: boolean }[] = [
+      ...modelTiers.map((m) => ({ model: m, compact: false })),
+      { model: 'google/gemini-3.1-flash-lite', compact: true },
+    ];
+    const lastFullTierIndex = modelTiers.length - 1;
+
     async function callLLMWithRetry(): Promise<Response> {
-      for (let attempt = 0; attempt < modelTiers.length; attempt++) {
-        const model = modelTiers[attempt];
+      for (let attempt = 0; attempt < attemptSpecs.length; attempt++) {
+        const { model, compact } = attemptSpecs[attempt];
         const remaining = TOTAL_BUDGET_MS - (Date.now() - startTime);
-        if (remaining < MIN_ATTEMPT_MS) {
+        const minNeeded = compact ? COMPACT_ATTEMPT_MS - 4_000 : MIN_ATTEMPT_MS;
+        if (remaining < minNeeded) {
           throw new Error(`LLM budget exhausted (${Math.round(remaining / 1000)}s restants) — abandon avant kill CPU`);
         }
-        // Le dernier tier a droit à tout le budget restant ; les précédents sont
+        // Le dernier tier complet a droit au budget restant ; les précédents sont
         // plafonnés pour laisser une vraie fenêtre au fallback plus rapide.
-        const isLastTier = attempt === modelTiers.length - 1;
-        const attemptTimeoutMs = isLastTier
-          ? Math.min(MAX_ATTEMPT_MS, remaining - 5_000)
-          : Math.min(FIRST_ATTEMPT_MAX_MS, Math.max(MIN_ATTEMPT_MS, remaining - MIN_ATTEMPT_MS - 5_000));
+        const isLastTier = attempt === lastFullTierIndex;
+        const attemptTimeoutMs = compact
+          ? Math.min(COMPACT_ATTEMPT_MS, remaining - 3_000)
+          : isLastTier
+            ? Math.min(MAX_ATTEMPT_MS, Math.max(MIN_ATTEMPT_MS, remaining - COMPACT_ATTEMPT_MS - 5_000))
+            : Math.min(FIRST_ATTEMPT_MAX_MS, Math.max(MIN_ATTEMPT_MS, remaining - MIN_ATTEMPT_MS - 5_000));
+        const promptForAttempt = compact
+          ? `${userPrompt.slice(0, COMPACT_PROMPT_CHARS)}\n\n(Contexte tronqué pour cause de délai : produis une recommandation complète et valide à partir des éléments ci-dessus.)`
+          : userPrompt;
         const isRetry = attempt > 0;
         if (isRetry) {
-          console.log(`[content-advisor] ⚡ Retry with faster model: ${model} (attempt ${attempt + 1}, budget ${Math.round(attemptTimeoutMs / 1000)}s)`);
+          console.log(`[content-advisor] ⚡ Retry ${compact ? 'compact' : ''} with faster model: ${model} (attempt ${attempt + 1}, budget ${Math.round(attemptTimeoutMs / 1000)}s)`);
         }
         console.log(`[content-advisor] 🧠 Complexity score: ${complexityScore} → Model: ${model} (timeout ${Math.round(attemptTimeoutMs / 1000)}s, brief: ${brief.target_length.ideal} words, ${brief.h2_count.max} H2, ${brief.eeat_signals.length} E-E-A-T signals, template: ${!!contentTemplate})`);
         try {
@@ -1224,7 +1241,7 @@ FRAÎCHEUR & DÉNOMINATION:
               model,
               messages: [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt },
+                { role: 'user', content: promptForAttempt },
               ],
               tools: [{
                 type: 'function',
@@ -1325,9 +1342,10 @@ FRAÎCHEUR & DÉNOMINATION:
           const name = (err as { name?: string })?.name || '';
           const msg = err instanceof Error ? err.message : String(err);
           const isTimeout = name === 'TimeoutError' || name === 'AbortError' || /timed out|timeout/i.test(msg);
-          const isLastAttempt = attempt === modelTiers.length - 1;
+          const isLastAttempt = attempt === attemptSpecs.length - 1;
           const budgetLeft = TOTAL_BUDGET_MS - (Date.now() - startTime);
-          if (isTimeout && !isLastAttempt && budgetLeft >= MIN_ATTEMPT_MS) {
+          const nextNeeds = attemptSpecs[attempt + 1]?.compact ? COMPACT_ATTEMPT_MS - 4_000 : MIN_ATTEMPT_MS;
+          if (isTimeout && !isLastAttempt && budgetLeft >= nextNeeds) {
             console.warn(`[content-advisor] ⏱️ Model ${model} timed out after ${Math.round(attemptTimeoutMs / 1000)}s, fallback (${Math.round(budgetLeft / 1000)}s restants)...`);
             continue;
           }
