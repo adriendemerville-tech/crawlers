@@ -1,5 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getSerp, ingestExternalSerp } from '../_shared/serpPool.ts';
+
 
 /**
  * serp-benchmark — Multi-provider SERP position benchmark
