@@ -50,12 +50,17 @@ export interface SerpResult {
   paa: string[];
   relatedSearches: string[];
   knowledgeGraph: unknown | null;
+  /** Types de blocs SERP non organiques rencontrés (people_also_ask, video, …) */
+  serpFeatures: string[];
+  /** Nombre de résultats annoncés par le moteur (utile pour `site:`) */
+  seResultsCount: number | null;
   provider: string;
   source: 'pool' | 'provider';
   fetchedAt: string;
   costUsd: number;
   fanoutRows: number;
 }
+
 
 /** TTL par classe d'usage (heures) */
 const TTL_HOURS: Record<SerpUsageClass, number> = {
@@ -96,10 +101,12 @@ export function normalizeQuery(query: string): string {
   return query
     .toLowerCase()
     .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
-    .replace(/[^\p{L}\p{N}'\-\s]/gu, ' ')
+    // on conserve : . / _ - pour ne pas casser les opérateurs (site:, inurl:)
+    .replace(/[^\p{L}\p{N}'\-:._/\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
+
 
 export function extractDomain(url: string): string {
   try {
@@ -131,14 +138,17 @@ function poolKey(query: string, opts: SerpOptions): PoolKey {
 
 // ---------------------------------------------------------------- providers
 
-interface ProviderPayload {
+export interface ProviderPayload {
   provider: string;
   organic: SerpOrganicResult[];
   paa: string[];
   relatedSearches: string[];
   knowledgeGraph: unknown | null;
+  serpFeatures?: string[];
+  seResultsCount?: number | null;
   raw: unknown;
 }
+
 
 async function fetchDataForSeo(key: PoolKey): Promise<ProviderPayload | null> {
   const login = Deno.env.get('DATAFORSEO_LOGIN');
@@ -164,29 +174,47 @@ async function fetchDataForSeo(key: PoolKey): Promise<ProviderPayload | null> {
   if (!resp.ok) return null;
 
   const json = await resp.json();
-  const items = json?.tasks?.[0]?.result?.[0]?.items ?? [];
+  const taskResult = json?.tasks?.[0]?.result?.[0];
+  const items = taskResult?.items ?? [];
   const organic: SerpOrganicResult[] = [];
   const paa: string[] = [];
   const related: string[] = [];
+  const features = new Set<string>();
 
   for (const item of items) {
     if (item?.type === 'organic' && item.url) {
       organic.push({
-        position: organic.length + 1,
+        position: item.rank_absolute ?? organic.length + 1,
         url: item.url,
         domain: extractDomain(item.url),
         title: item.title ?? '',
         snippet: item.description ?? '',
       });
-    } else if (item?.type === 'people_also_ask') {
-      for (const q of item.items ?? []) if (q?.title) paa.push(q.title);
-    } else if (item?.type === 'related_searches') {
-      for (const q of item.items ?? []) if (typeof q === 'string') related.push(q);
+    } else {
+      if (item?.type) features.add(String(item.type));
+      if (item?.type === 'people_also_ask') {
+        for (const q of item.items ?? []) if (q?.title) paa.push(q.title);
+      } else if (item?.type === 'related_searches') {
+        for (const q of item.items ?? []) {
+          if (typeof q === 'string') related.push(q);
+          else if (q?.title) related.push(q.title);
+        }
+      }
     }
   }
 
-  return { provider: 'dataforseo', organic, paa, relatedSearches: related, knowledgeGraph: null, raw: null };
+  return {
+    provider: 'dataforseo',
+    organic,
+    paa,
+    relatedSearches: related,
+    knowledgeGraph: null,
+    serpFeatures: Array.from(features),
+    seResultsCount: typeof taskResult?.se_results_count === 'number' ? taskResult.se_results_count : null,
+    raw: null,
+  };
 }
+
 
 async function fetchSerper(key: PoolKey): Promise<ProviderPayload | null> {
   const apiKey = Deno.env.get('SERPER_API_KEY');
@@ -214,15 +242,27 @@ async function fetchSerper(key: PoolKey): Promise<ProviderPayload | null> {
     snippet: String(r['snippet'] ?? ''),
   })).filter((r: SerpOrganicResult) => !!r.url);
 
+  const features: string[] = [];
+  if (json?.peopleAlsoAsk) features.push('people_also_ask');
+  if (json?.knowledgeGraph) features.push('knowledge_graph');
+  if (json?.topStories) features.push('top_stories');
+  if (json?.videos) features.push('video');
+  if (json?.images) features.push('images');
+
   return {
     provider: 'serper',
     organic,
     paa: (json?.peopleAlsoAsk ?? []).map((p: Record<string, unknown>) => String(p['question'] ?? '')).filter(Boolean),
     relatedSearches: (json?.relatedSearches ?? []).map((p: Record<string, unknown>) => String(p['query'] ?? '')).filter(Boolean),
     knowledgeGraph: json?.knowledgeGraph ?? null,
+    serpFeatures: features,
+    seResultsCount: typeof json?.searchInformation?.totalResults === 'string'
+      ? Number(json.searchInformation.totalResults) || null
+      : null,
     raw: null,
   };
 }
+
 
 async function fetchSerpApi(key: PoolKey): Promise<ProviderPayload | null> {
   const apiKey = Deno.env.get('SERPAPI_KEY');
@@ -251,15 +291,27 @@ async function fetchSerpApi(key: PoolKey): Promise<ProviderPayload | null> {
     snippet: String(r['snippet'] ?? ''),
   })).filter((r: SerpOrganicResult) => !!r.url);
 
+  const features: string[] = [];
+  if (json?.related_questions) features.push('people_also_ask');
+  if (json?.knowledge_graph) features.push('knowledge_graph');
+  if (json?.top_stories) features.push('top_stories');
+  if (json?.inline_videos) features.push('video');
+  if (json?.inline_images) features.push('images');
+
   return {
     provider: 'serpapi',
     organic,
     paa: (json?.related_questions ?? []).map((p: Record<string, unknown>) => String(p['question'] ?? '')).filter(Boolean),
     relatedSearches: (json?.related_searches ?? []).map((p: Record<string, unknown>) => String(p['query'] ?? '')).filter(Boolean),
     knowledgeGraph: json?.knowledge_graph ?? null,
+    serpFeatures: features,
+    seResultsCount: typeof json?.search_information?.total_results === 'number'
+      ? json.search_information.total_results
+      : null,
     raw: null,
   };
 }
+
 
 async function callProvider(key: PoolKey): Promise<ProviderPayload | null> {
   for (const fn of [fetchDataForSeo, fetchSerper, fetchSerpApi]) {
@@ -351,18 +403,22 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
         fanout_rows: 0,
       }, opts);
 
+      const metrics = (hit.metrics ?? {}) as Record<string, unknown>;
       return {
         queryNormalized: key.query_normalized,
         organic: (hit.organic_results ?? []) as SerpOrganicResult[],
         paa: (hit.paa ?? []) as string[],
         relatedSearches: (hit.related_searches ?? []) as string[],
         knowledgeGraph: hit.knowledge_graph ?? null,
+        serpFeatures: (metrics['serp_features'] as string[] | undefined) ?? [],
+        seResultsCount: (metrics['se_results_count'] as number | undefined) ?? null,
         provider: hit.provider,
         source: 'pool',
         fetchedAt: hit.fetched_at,
         costUsd: 0,
         fanoutRows: 0,
       };
+
     }
   }
 
@@ -372,7 +428,44 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
   const payload = await callProvider(key);
   if (!payload) return null;
 
-  const cost = PROVIDER_COST[payload.provider] ?? 0.001;
+  return await persistPayload(supabase, query, key, usageClass, payload, opts, PROVIDER_COST[payload.provider] ?? 0.001);
+}
+
+/**
+ * Écrit dans le pool une SERP déjà obtenue ailleurs (ex. serp-benchmark qui
+ * appelle plusieurs providers pour comparer) : la donnée payée profite ensuite
+ * à tous les appelants, et les positions sont fan-out vers keyword_universe.
+ */
+export async function ingestExternalSerp(
+  query: string,
+  opts: SerpOptions,
+  payload: ProviderPayload,
+  costUsd = 0,
+): Promise<SerpResult | null> {
+  if (payload.organic.length === 0) return null;
+  const supabase = admin();
+  const key = poolKey(query, opts);
+  if (!key.query_normalized) return null;
+  return await persistPayload(
+    supabase,
+    query,
+    key,
+    opts.usageClass ?? 'position',
+    payload,
+    opts,
+    costUsd,
+  );
+}
+
+async function persistPayload(
+  supabase: SupabaseClient,
+  query: string,
+  key: PoolKey,
+  usageClass: SerpUsageClass,
+  payload: ProviderPayload,
+  opts: SerpOptions,
+  cost: number,
+): Promise<SerpResult> {
   const expiresAt = new Date(Date.now() + TTL_HOURS[usageClass] * 3600_000).toISOString();
 
   const { data: saved } = await supabase
@@ -386,6 +479,10 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
       paa: payload.paa,
       related_searches: payload.relatedSearches,
       knowledge_graph: payload.knowledgeGraph,
+      metrics: {
+        serp_features: payload.serpFeatures ?? [],
+        se_results_count: payload.seResultsCount ?? null,
+      },
       result_count: payload.organic.length,
       cost_usd: cost,
       fetched_at: new Date().toISOString(),
@@ -395,7 +492,7 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
     .select('id')
     .maybeSingle();
 
-  // 3. fan-out des positions vers tous les domaines suivis
+  // fan-out des positions vers tous les domaines suivis
   let fanoutRows = 0;
   if (!opts.skipFanout) {
     try {
@@ -422,6 +519,8 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
     paa: payload.paa,
     relatedSearches: payload.relatedSearches,
     knowledgeGraph: payload.knowledgeGraph,
+    serpFeatures: payload.serpFeatures ?? [],
+    seResultsCount: payload.seResultsCount ?? null,
     provider: payload.provider,
     source: 'provider',
     fetchedAt: new Date().toISOString(),
@@ -429,6 +528,7 @@ export async function getSerp(query: string, opts: SerpOptions): Promise<SerpRes
     fanoutRows,
   };
 }
+
 
 /** Lecture par lot : sert d'abord le pool, n'achète que les requêtes manquantes */
 export async function getSerpBatch(
