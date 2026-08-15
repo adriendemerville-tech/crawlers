@@ -11616,6 +11616,143 @@ export type Database = {
           },
         ]
       }
+      serp_pool: {
+        Row: {
+          ads_results: Json
+          cost_usd: number
+          country: string
+          created_at: string
+          device: string
+          engine: string
+          expires_at: string
+          fetched_at: string
+          hit_count: number
+          id: string
+          knowledge_graph: Json | null
+          language: string
+          location: string
+          metrics: Json
+          organic_results: Json
+          paa: Json
+          provider: string
+          query_normalized: string
+          query_raw: string
+          raw: Json | null
+          related_searches: Json
+          result_count: number
+          updated_at: string
+          usage_class: string
+        }
+        Insert: {
+          ads_results?: Json
+          cost_usd?: number
+          country?: string
+          created_at?: string
+          device?: string
+          engine?: string
+          expires_at: string
+          fetched_at?: string
+          hit_count?: number
+          id?: string
+          knowledge_graph?: Json | null
+          language?: string
+          location?: string
+          metrics?: Json
+          organic_results?: Json
+          paa?: Json
+          provider: string
+          query_normalized: string
+          query_raw: string
+          raw?: Json | null
+          related_searches?: Json
+          result_count?: number
+          updated_at?: string
+          usage_class?: string
+        }
+        Update: {
+          ads_results?: Json
+          cost_usd?: number
+          country?: string
+          created_at?: string
+          device?: string
+          engine?: string
+          expires_at?: string
+          fetched_at?: string
+          hit_count?: number
+          id?: string
+          knowledge_graph?: Json | null
+          language?: string
+          location?: string
+          metrics?: Json
+          organic_results?: Json
+          paa?: Json
+          provider?: string
+          query_normalized?: string
+          query_raw?: string
+          raw?: Json | null
+          related_searches?: Json
+          result_count?: number
+          updated_at?: string
+          usage_class?: string
+        }
+        Relationships: []
+      }
+      serp_pool_hits: {
+        Row: {
+          caller: string
+          cost_usd: number
+          created_at: string
+          fanout_rows: number
+          id: string
+          provider: string | null
+          query_normalized: string
+          saved_usd: number
+          serp_pool_id: string | null
+          source: string
+          tracked_site_id: string | null
+          usage_class: string
+          user_id: string | null
+        }
+        Insert: {
+          caller: string
+          cost_usd?: number
+          created_at?: string
+          fanout_rows?: number
+          id?: string
+          provider?: string | null
+          query_normalized: string
+          saved_usd?: number
+          serp_pool_id?: string | null
+          source: string
+          tracked_site_id?: string | null
+          usage_class?: string
+          user_id?: string | null
+        }
+        Update: {
+          caller?: string
+          cost_usd?: number
+          created_at?: string
+          fanout_rows?: number
+          id?: string
+          provider?: string | null
+          query_normalized?: string
+          saved_usd?: number
+          serp_pool_id?: string | null
+          source?: string
+          tracked_site_id?: string | null
+          usage_class?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serp_pool_hits_serp_pool_id_fkey"
+            columns: ["serp_pool_id"]
+            isOneToOne: false
+            referencedRelation: "serp_pool"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       serp_snapshots: {
         Row: {
           avg_position: number | null
@@ -14568,6 +14705,7 @@ export type Database = {
       cleanup_expired_oauth_states: { Args: never; Returns: undefined }
       cleanup_expired_phone_callbacks: { Args: never; Returns: undefined }
       cleanup_expired_roles: { Args: never; Returns: undefined }
+      cleanup_serp_pool: { Args: never; Returns: number }
       cleanup_stale_sessions: { Args: never; Returns: number }
       compute_ai_traffic_ratio: {
         Args: { p_tracked_site_id: string; p_window_days?: number }
