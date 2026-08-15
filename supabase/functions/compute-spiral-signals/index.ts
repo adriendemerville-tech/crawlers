@@ -19,6 +19,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
 import { getAuthenticatedUser } from '../_shared/auth.ts'
+import { loadExtendedSignalContext, computeExtendedSignals } from '../_shared/spiralSignalsExtended.ts'
 
 const MAX_SITES_PER_RUN = 50
 const VELOCITY_DECAY_WEEKS = 3
