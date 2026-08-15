@@ -2,6 +2,64 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthenticatedUserId } from '../_shared/auth.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { resolveAdsCredentials } from '../_shared/keywordPlanner.ts';
+import { getKeywordVolumes } from '../_shared/keywordVolumeSource.ts';
+
+/**
+ * Remplit `keyword_universe.search_volume` depuis Keyword Planner (gratuit),
+ * en passant d'abord par le pool mutualisé `keyword_volume_pool`.
+ * DataForSEO n'est appelé que si `allow_paid === true`.
+ */
+async function backfillKeywordUniverse(
+  supabase: ReturnType<typeof getServiceClient>,
+  userId: string,
+  opts: { domain?: string; tracked_site_id?: string; limit?: number; geo?: string; language?: string; allow_paid?: boolean },
+) {
+  const limit = Math.min(opts.limit ?? 2000, 2000);
+
+  let query = supabase
+    .from('keyword_universe')
+    .select('id, keyword, search_volume, difficulty, sources')
+    .eq('user_id', userId)
+    .is('search_volume', null)
+    .limit(limit);
+
+  if (opts.domain) query = query.eq('domain', opts.domain.replace(/^www\./, ''));
+  if (opts.tracked_site_id) query = query.eq('tracked_site_id', opts.tracked_site_id);
+
+  const { data: rows, error } = await query;
+  if (error) return { error: error.message, updated: 0 };
+  if (!rows?.length) return { updated: 0, candidates: 0, message: 'Aucun mot-clé sans volume' };
+
+  const { volumes, stats } = await getKeywordVolumes(
+    supabase,
+    userId,
+    rows.map((r: any) => r.keyword),
+    { geo: opts.geo, language: opts.language, allowPaid: opts.allow_paid === true },
+  );
+
+  let updated = 0;
+  for (const row of rows as any[]) {
+    const rec = volumes.get((row.keyword || '').trim().toLowerCase());
+    if (!rec) continue;
+    const sources: string[] = Array.isArray(row.sources) ? row.sources : [];
+    const tag = rec.source === 'pool' ? 'volume_pool' : rec.source;
+    const { error: upErr } = await supabase
+      .from('keyword_universe')
+      .update({
+        search_volume: rec.search_volume,
+        difficulty: row.difficulty ?? rec.difficulty,
+        sources: sources.includes(tag) ? sources : [...sources, tag],
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', row.id);
+    if (!upErr) updated++;
+  }
+
+  console.log(`[keyword-volumes] user=${userId} candidats=${rows.length} maj=${updated} planner=${stats.from_planner} pool=${stats.from_pool} payant=${stats.from_dataforseo}`);
+  return { updated, candidates: rows.length, stats };
+}
+
 
 /**
  * Edge Function: google-ads-connector
