@@ -14786,6 +14786,10 @@ export type Database = {
       }
       reap_zombie_async_jobs: { Args: never; Returns: number }
       recalculate_reliability: { Args: never; Returns: undefined }
+      reconcile_stale_parmenion_decisions: {
+        Args: { p_hours?: number }
+        Returns: number
+      }
       refresh_archetype_mix_benchmarks: { Args: never; Returns: number }
       release_browserless_slot: {
         Args: { p_lease_id: string }
@@ -14800,6 +14804,10 @@ export type Database = {
         Returns: Json
       }
       resolve_job_priority: { Args: { p_user_id: string }; Returns: number }
+      retry_workbench_cluster_assignment: {
+        Args: { p_limit?: number }
+        Returns: number
+      }
       score_spiral_priority: {
         Args: {
           p_domain: string
