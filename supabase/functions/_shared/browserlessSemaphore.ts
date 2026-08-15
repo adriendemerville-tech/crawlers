@@ -7,7 +7,7 @@
 
 // Local guard remains as a fallback. The database lease enforces the actual
 // seven-session ceiling across all worker isolates.
-const MAX_CONCURRENT = 1;
+const MAX_CONCURRENT = 7;
 const WAIT_TIMEOUT_MS = 30_000; // max wait before giving up
 const POLL_INTERVAL_MS = 500;
 
