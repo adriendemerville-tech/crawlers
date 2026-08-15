@@ -327,18 +327,20 @@ export function renderTopPrioritiesHTML(top: SectionTopPriorities): string {
 
   const items = top.actions.map((a) => {
     const badge = SEVERITY_BADGE[a.severity];
+    const { title, description } = splitLongTitle(a.title, a.description);
     return `<li style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6;">
       <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">${a.rank}</div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-          <span style="font-weight:600;font-size:13.5px;color:#111827;">${escapeHtml(a.title)}</span>
+          <span style="font-weight:600;font-size:13.5px;color:#111827;">${escapeHtml(title)}</span>
           <span style="background:${badge.bg};color:${badge.fg};padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;letter-spacing:0.2px;">${badge.label}</span>
         </div>
-        ${a.description ? `<div style="font-size:12.5px;color:#4b5563;line-height:1.45;">${escapeHtml(a.description)}</div>` : ''}
+        ${description ? `<div style="font-size:12.5px;color:#4b5563;line-height:1.45;">${escapeHtml(description)}</div>` : ''}
         ${a.next_step ? `<div style="margin-top:6px;font-size:12px;color:#374151;"><strong>Prochaine étape :</strong> ${escapeHtml(a.next_step)}</div>` : ''}
       </div>
     </li>`;
   }).join('');
+
 
   return `<div style="margin:16px 0 24px;padding:16px 18px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
