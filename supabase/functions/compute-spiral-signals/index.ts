@@ -173,7 +173,7 @@ async function computeSignalsForSite(
     const spiralScore = Math.min(100, Math.max(0, Math.round(
       (velocityScore * 1.6) +
       (competitorScore * 0.8) +
-      ((100 - maturity) / 100 * 15) +
+      maturityPoints +
       (gmbScore * 0.6) +
       (convWeight * 10) +
       ext.ring_proximity_score +
