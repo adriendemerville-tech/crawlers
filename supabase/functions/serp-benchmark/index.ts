@@ -469,7 +469,8 @@ Deno.serve(handleRequest(async (req) => {
     let q = supabase
       .from('serp_benchmark_results')
       .select('id, query_text, target_domain, location, providers_used, total_sites_found, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
+
       .order('created_at', { ascending: false })
       .limit(limit);
 
