@@ -125,6 +125,25 @@ Deno.serve(handleRequest(async (req) => {
       return jsonOk({ success: true, users: userIds.length, results });
     }
 
+    // ─── CRON: self-test de la chaîne Keyword Planner (diagnostic) ───
+    if (action === 'volumes_selftest') {
+      if (!isCron) return jsonError('Cron secret required', 401);
+      const { data: conns } = await supabase
+        .from('google_connections')
+        .select('user_id')
+        .not('ads_customer_id', 'is', null)
+        .limit(1);
+      const uid = conns?.[0]?.user_id;
+      if (!uid) return jsonOk({ ok: false, reason: 'no ads connection' });
+      const kws: string[] = Array.isArray(body.keywords) && body.keywords.length
+        ? body.keywords
+        : ['référencement ia', 'audit seo', 'agence seo'];
+      const { volumes, stats } = await getKeywordVolumes(supabase, uid, kws, { allowPaid: false });
+      console.log('[keyword-volumes][selftest]', JSON.stringify({ stats, metrics: Array.from(volumes.values()) }));
+      return jsonOk({ ok: true, stats, metrics: Array.from(volumes.values()) });
+    }
+
+
     const authenticatedUserId = await getAuthenticatedUserId(req);
     if (!authenticatedUserId) {
       return jsonError('Authentication required', 401);
