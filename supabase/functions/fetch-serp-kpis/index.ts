@@ -6,6 +6,8 @@ import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 import { logApiBillingAlert } from '../_shared/apiBillingAlert.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getSerp } from '../_shared/serpPool.ts';
+
 
 /**
  * fetch-serp-kpis
