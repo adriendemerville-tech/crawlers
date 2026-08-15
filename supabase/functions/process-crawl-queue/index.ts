@@ -165,7 +165,7 @@ Deno.serve(handleRequest(async (req) => {
       }
 
       // ── Track discovered URLs to avoid re-crawling ──
-      const processedUrls = new Set<string>(urlsToProcess.map(u => u.replace(/\/$/, '')));
+      const processedUrls = new Set<string>(urlsToProcess.map(u => crawlUrlKey(u)));
 
       // ── INNER LOOP: keep processing pages while time allows ──
       while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN) {
