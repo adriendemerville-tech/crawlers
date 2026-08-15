@@ -1,5 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getSerp, ingestExternalSerp } from '../_shared/serpPool.ts';
+
 
 /**
  * serp-benchmark — Multi-provider SERP position benchmark
@@ -285,11 +287,36 @@ Deno.serve(handleRequest(async (req) => {
 
     if (!query) return jsonError('query required', 400);
 
+    // Pool mutualisé : si une SERP fraîche existe déjà, on économise l'appel
+    // DataForSEO (le provider canonique du pool) et on la réutilise telle quelle.
+    const poolOpts = {
+      caller: 'serp-benchmark',
+      userId: user?.id ?? null,
+      trackedSiteId: tracked_site_id || null,
+      usageClass: 'position' as const,
+      country,
+      language,
+      device: 'desktop' as const,
+      location,
+    };
+    const poolHit = await getSerp(query, { ...poolOpts, poolOnly: true }).catch(() => null);
+
     // Call selected providers in parallel
     const fetchers: Promise<ProviderResult>[] = [];
     for (const p of providers) {
       switch (p) {
-        case 'DataForSEO': fetchers.push(fetchDataForSEO(query, location, language, country)); break;
+        case 'DataForSEO':
+          if (poolHit) {
+            fetchers.push(Promise.resolve({
+              provider: 'DataForSEO',
+              results: poolHit.organic.map(o => ({
+                url: o.url, position: o.position, title: o.title, domain: o.domain,
+              })),
+            }));
+          } else {
+            fetchers.push(fetchDataForSEO(query, location, language, country));
+          }
+          break;
         case 'SerpApi': fetchers.push(fetchSerpApi(query, location, language, country)); break;
         case 'Serper': fetchers.push(fetchSerper(query, country, language)); break;
         case 'Bright Data': fetchers.push(fetchBrightData(query, country, language)); break;
@@ -298,6 +325,29 @@ Deno.serve(handleRequest(async (req) => {
 
     const providerResults = await Promise.all(fetchers);
     const averaged = computeAveragedResults(providerResults, single_hit_penalty);
+
+    // Alimentation du pool : la SERP payée ici profite aux autres modules
+    // (et fan-out des positions vers keyword_universe pour tous les domaines suivis).
+    if (!poolHit) {
+      const canonical = providerResults.find(p => !p.error && p.results.length > 0);
+      if (canonical) {
+        await ingestExternalSerp(query, poolOpts, {
+          provider: canonical.provider.toLowerCase().replace(/\s+/g, ''),
+          organic: canonical.results.map(r => ({
+            position: r.position,
+            url: r.url,
+            domain: r.domain ?? '',
+            title: r.title ?? '',
+            snippet: '',
+          })),
+          paa: [],
+          relatedSearches: [],
+          knowledgeGraph: null,
+          raw: null,
+        }, 0.002).catch((e) => console.warn('[serp-benchmark] pool ingest failed:', (e as Error).message));
+      }
+    }
+
 
     // Store results only for authenticated users
     let insertedId: string | undefined;
@@ -419,7 +469,8 @@ Deno.serve(handleRequest(async (req) => {
     let q = supabase
       .from('serp_benchmark_results')
       .select('id, query_text, target_domain, location, providers_used, total_sites_found, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
+
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -436,7 +487,8 @@ Deno.serve(handleRequest(async (req) => {
       .from('serp_benchmark_results')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
+
       .single();
     if (error) return jsonError(error.message, 500);
     return jsonOk(data);

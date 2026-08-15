@@ -22,6 +22,8 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 import { callLovableAIJson } from '../_shared/lovableAI.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { getSerp } from '../_shared/serpPool.ts';
+
 
 // ───────────────────────────────────────────────────────────────
 // Schémas
@@ -87,7 +89,9 @@ interface CompetitorInput {
 }
 
 // ───────────────────────────────────────────────────────────────
-// SERP — DataForSEO (mode incognito-like, fallback Serper)
+// SERP — via le pool mutualisé (_shared/serpPool.ts)
+// Le pool gère la cascade DataForSEO → Serper → SerpAPI, le TTL (7j en
+// classe « intent »), le journal de coûts et le fan-out des positions.
 // ───────────────────────────────────────────────────────────────
 
 interface SerpResponse {
@@ -95,120 +99,52 @@ interface SerpResponse {
   serp_features: string[];
   paa_questions: string[];
   related_searches: string[];
-  provider: 'dataforseo' | 'serper';
+  provider: string;
   cost_usd: number;
+  from_pool: boolean;
 }
 
-async function fetchSerpDataForSEO(
+async function fetchSerpPooled(
   keyword: string,
   location: string,
   language: string,
+  userId: string,
 ): Promise<SerpResponse | null> {
-  const login = Deno.env.get('DATAFORSEO_LOGIN');
-  const password = Deno.env.get('DATAFORSEO_PASSWORD');
-  if (!login || !password) return null;
+  const res = await getSerp(keyword, {
+    caller: 'analyze-serp-intents',
+    userId,
+    usageClass: 'intent',
+    language,
+    country: language === 'fr' ? 'fr' : 'us',
+    device: 'desktop',
+    location,
+  });
+  if (!res) return null;
 
-  try {
-    const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Basic ' + btoa(`${login}:${password}`),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify([{
-        keyword,
-        location_name: location,
-        language_code: language,
-        device: 'desktop',
-        depth: 30,
-        // Mode "incognito-like" : pas de user_data, SERP non personnalisée
-      }]),
-    });
-    if (!resp.ok) {
-      console.warn('[analyze-serp-intents] DataForSEO HTTP', resp.status);
-      return null;
-    }
-    const data = await resp.json();
-    const items: SerpItem[] = data?.tasks?.[0]?.result?.[0]?.items ?? [];
-    const serp_features = new Set<string>();
-    const paa_questions: string[] = [];
-    const related_searches: string[] = [];
+  const items: SerpItem[] = res.organic.map((o) => ({
+    type: 'organic',
+    url: o.url,
+    title: o.title,
+    description: o.snippet,
+    rank_absolute: o.position,
+    domain: o.domain,
+  }));
 
-    for (const it of items) {
-      if (it.type !== 'organic') serp_features.add(it.type);
-      const anyIt = it as unknown as Record<string, unknown>;
-      if (it.type === 'people_also_ask' && Array.isArray(anyIt.items)) {
-        for (const q of anyIt.items as Array<{ title?: string }>) {
-          if (q.title) paa_questions.push(q.title);
-        }
-      }
-      if (it.type === 'related_searches' && Array.isArray(anyIt.items)) {
-        for (const r of anyIt.items as Array<string | { title?: string }>) {
-          const text = typeof r === 'string' ? r : r.title;
-          if (text) related_searches.push(text);
-        }
-      }
-    }
-
-    await trackPaidApiCall('analyze-serp-intents', 'dataforseo', 'serp/google/organic/advanced').catch(() => {});
-
-    return {
-      items,
-      serp_features: Array.from(serp_features),
-      paa_questions,
-      related_searches,
-      provider: 'dataforseo',
-      cost_usd: 0.002,
-    };
-  } catch (e) {
-    console.error('[analyze-serp-intents] DataForSEO error:', e);
-    return null;
+  if (res.source === 'provider') {
+    await trackPaidApiCall('analyze-serp-intents', res.provider, 'serp/organic').catch(() => {});
   }
+
+  return {
+    items,
+    serp_features: res.serpFeatures,
+    paa_questions: res.paa,
+    related_searches: res.relatedSearches,
+    provider: res.provider,
+    cost_usd: res.costUsd,
+    from_pool: res.source === 'pool',
+  };
 }
 
-async function fetchSerpSerperFallback(
-  keyword: string,
-  location: string,
-  language: string,
-): Promise<SerpResponse | null> {
-  const key = Deno.env.get('SERPER_API_KEY');
-  if (!key) return null;
-
-  try {
-    const resp = await fetch('https://google.serper.dev/search', {
-      method: 'POST',
-      headers: { 'X-API-KEY': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: keyword, gl: language === 'fr' ? 'fr' : 'us', hl: language, num: 30 }),
-    });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    const organic: Array<Record<string, unknown>> = data.organic ?? [];
-    const items: SerpItem[] = organic.map((o, idx) => ({
-      type: 'organic',
-      url: String(o.link ?? ''),
-      title: String(o.title ?? ''),
-      description: String(o.snippet ?? ''),
-      rank_absolute: Number(o.position ?? idx + 1),
-      domain: (() => { try { return new URL(String(o.link)).hostname; } catch { return ''; } })(),
-    }));
-    const paa_questions: string[] = (data.peopleAlsoAsk ?? []).map((p: { question: string }) => p.question).filter(Boolean);
-    const related_searches: string[] = (data.relatedSearches ?? []).map((r: { query: string }) => r.query).filter(Boolean);
-
-    await trackPaidApiCall('analyze-serp-intents', 'serper', 'search').catch(() => {});
-
-    return {
-      items,
-      serp_features: data.peopleAlsoAsk ? ['people_also_ask'] : [],
-      paa_questions,
-      related_searches,
-      provider: 'serper',
-      cost_usd: 0.001,
-    };
-  } catch (e) {
-    console.error('[analyze-serp-intents] Serper fallback error:', e);
-    return null;
-  }
-}
 
 // ───────────────────────────────────────────────────────────────
 // Position : GSC d'abord, sinon DataForSEO Labs proxy
@@ -467,11 +403,9 @@ export default handleRequest(async (req) => {
   }
 
   // 2) SERP fetch
-  let serp = await fetchSerpDataForSEO(keyword, location_name, language_code);
-  if (!serp) {
-    serp = await fetchSerpSerperFallback(keyword, location_name, language_code);
-  }
-  if (!serp) return jsonError('SERP providers unavailable (DataForSEO + Serper failed)', 502);
+  const serp = await fetchSerpPooled(keyword, location_name, language_code, auth.userId);
+  if (!serp) return jsonError('SERP indisponible (pool + providers en échec)', 502);
+
 
   // 3) Position
   const { position: ourPosition, source: positionSource } = await findOurPosition(

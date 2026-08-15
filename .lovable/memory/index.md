@@ -10,3 +10,4 @@
 - [Marina modes de scan](mem://features/marina/scan-modes-fr) — deep ≤120 URLs (120 p) / standard ≤1000 (150 p) / sample >1000 (60 p par gabarit), bascule automatique via _shared/marinaScanMode.ts, mode explicité dans l'intro du rapport et panneau /marina
 - [Marina données propriétaires](mem://features/marina/owner-first-party-data-fr) — Section 3b GSC+GA4 conditionnelle (module _shared/marinaOwnerData.ts), absente si aucune connexion Google vérifiée ne couvre le domaine
 - [Spiral score & trigger](mem://tech/autopilot/spiral-score-trigger-conflict-fr) — Trigger qui écrasait le score 10-signaux, neutralité 7/15 sans cluster, crons réconciliation Parménion (horaire) + retry cluster (6h)
+- [Pool SERP mutualisé](mem://tech/serp/pool-mutualise-fr) — Toute requête SERP via _shared/serpPool.ts (getSerp/ingestExternalSerp), TTL 24h/7j/30j, fan-out positions keyword_universe, journal serp_pool_hits
