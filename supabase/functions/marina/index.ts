@@ -586,6 +586,21 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
   const totalExternalLinks = crawlPages.reduce((sum, page) => sum + Number(page?.external_links || 0), 0);
   const brokenPages = crawlPages.filter((page) => Number(page?.http_status || 200) >= 400).length;
 
+  // Agrégats site (et non page d'accueil) : les tuiles du rapport annonçaient
+  // « Images 0 / Sans alt 0 » parce qu'on lisait la seule home, et sur une
+  // colonne inexistante (`images_missing_alt` au lieu de `images_without_alt`).
+  const totalImages = crawlPages.reduce((sum, page) => sum + Number(page?.images_total || 0), 0);
+  const totalImagesWithoutAlt = crawlPages.reduce(
+    (sum, page) => sum + Number(page?.images_without_alt ?? page?.images_missing_alt ?? 0),
+    0,
+  );
+  const responseTimes = crawlPages
+    .map((page) => Number(page?.response_time_ms))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const avgResponseTime = responseTimes.length
+    ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+    : (rawData?.responseTimeMs || null);
+
   const title = primaryPage?.title || htmlAnalysis?.titleContent || '';
   const metaDesc = primaryPage?.meta_description || htmlAnalysis?.metaDescContent || '';
   const h1 = primaryPage?.h1 || htmlAnalysis?.h1Contents?.[0] || '';
@@ -597,19 +612,27 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     // mono-page alors que le crawl multi-pages avait bien tourné.
     crawled_pages: Number(crawl?.crawled_pages || crawlPages.length || 1),
     total_pages: Number(crawl?.total_pages || crawl?.pages_discovered || crawl?.urls_discovered || 0) || null,
-    avgSeoScore: crawl?.avg_score ? Math.round(Number(crawl.avg_score)) : null,
-    avgResponseTime: rawData?.responseTimeMs || null,
+    // `seo_score` est stocké sur /200 : on l'affiche normalisé sur /100 comme
+    // partout ailleurs dans le rapport.
+    avgSeoScore: crawl?.avg_score ? Math.min(100, Math.round(Number(crawl.avg_score) / 2)) : null,
+    avgResponseTime,
     wordCount: totalWordCount || htmlAnalysis?.wordCount || 0,
-    imagesTotal: primaryPage?.images_total ?? htmlAnalysis?.imagesTotal ?? 0,
-    imagesWithoutAlt: primaryPage?.images_missing_alt ?? htmlAnalysis?.imagesMissingAlt ?? 0,
+    imagesTotal: totalImages || htmlAnalysis?.imagesTotal || 0,
+    imagesWithoutAlt: totalImagesWithoutAlt,
     h1,
     h2Count: primaryPage?.h2_count ?? htmlAnalysis?.h2Count ?? 0,
-    hasSchema: htmlAnalysis?.hasSchemaOrg || false,
-    hasOg: htmlAnalysis?.hasOg || false,
-    hasCanonical: htmlAnalysis?.hasCanonical || false,
+    hasSchema: primaryPage?.has_schema_org ?? htmlAnalysis?.hasSchemaOrg ?? false,
+    // Priorité au crawl réel : l'analyse expert ne voyait pas les balises
+    // injectées côté serveur et déclarait canonical/OG absents à tort.
+    hasOg: primaryPage?.has_og ?? htmlAnalysis?.hasOg ?? false,
+    hasCanonical: primaryPage?.has_canonical ?? htmlAnalysis?.hasCanonical ?? false,
+    canonicalCoverage: crawlPages.length
+      ? Math.round((crawlPages.filter((p) => p?.has_canonical).length / crawlPages.length) * 100)
+      : null,
     brokenLinks: brokenPages || rawData?.brokenLinks?.length || brokenLinksInsight?.broken?.length || 0,
     externalLinks: totalExternalLinks || linkProfile?.external || 0,
     internalLinks: totalInternalLinks || linkProfile?.internal || 0,
+
     indexable: htmlAnalysis?.isIndexable !== false,
     performanceScore: scores?.performance?.psiPerformance || null,
     lcp: scores?.performance?.lcp || null,
