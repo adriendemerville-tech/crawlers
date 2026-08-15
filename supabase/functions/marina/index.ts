@@ -2371,9 +2371,44 @@ function generateApiKey(): string {
   return key;
 }
 
+// ─── Checkpoint de phase : rend le pipeline reprenable ───
+// Un run d'edge function peut être tué (wall-time CPU) au milieu d'une phase.
+// On persiste donc systématiquement la dernière phase demandée + son payload :
+// un reaper peut alors relancer exactement ce point au lieu d'échouer le job.
+const PHASE_CHECKPOINT_TTL_MS = 3 * 60 * 60 * 1000;
+const MAX_PHASE_RESUMES = 6;
+
+function phaseCheckpointKey(jobId: string): string {
+  return `marina_checkpoint_${jobId}`;
+}
+
+async function savePhaseCheckpoint(
+  jobId: string,
+  payload: { url: string; lang: string; phase: string; intermediate: any },
+) {
+  try {
+    const sb = getServiceClient();
+    const { data: existing } = await sb
+      .from('audit_cache')
+      .select('result_data')
+      .eq('cache_key', phaseCheckpointKey(jobId))
+      .maybeSingle();
+    const resumes = Number((existing?.result_data as any)?.resumes || 0);
+    await sb.from('audit_cache').upsert({
+      cache_key: phaseCheckpointKey(jobId),
+      function_name: 'marina',
+      result_data: { ...payload, resumes, saved_at: new Date().toISOString() },
+      expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
+    }, { onConflict: 'cache_key' });
+  } catch (e) {
+    console.warn('[Marina] checkpoint write failed (non-fatal):', e);
+  }
+}
+
 // ─── Self-invoke helper for phase chaining ───
 async function selfInvokePhase(jobId: string, url: string, lang: string, phase: string, intermediateData: any) {
   console.log(`[Marina] 🔗 Self-invoking phase "${phase}" for job ${jobId}`);
+  await savePhaseCheckpoint(jobId, { url, lang, phase, intermediate: intermediateData });
   fetch(`${SUPABASE_URL}/functions/v1/marina`, {
     method: 'POST',
     headers: {
@@ -2385,6 +2420,55 @@ async function selfInvokePhase(jobId: string, url: string, lang: string, phase: 
     console.error(`[Marina] Phase "${phase}" self-invocation failed:`, err);
   });
 }
+
+// ─── Reprise d'un job interrompu depuis son checkpoint ───
+async function resumeJobFromCheckpoint(jobId: string): Promise<{ resumed: boolean; reason?: string; phase?: string }> {
+  const sb = getServiceClient();
+  const { data: row } = await sb
+    .from('audit_cache')
+    .select('result_data')
+    .eq('cache_key', phaseCheckpointKey(jobId))
+    .maybeSingle();
+
+  const cp = row?.result_data as any;
+  if (!cp?.phase || !cp?.url) return { resumed: false, reason: 'no_checkpoint' };
+
+  const resumes = Number(cp.resumes || 0);
+  if (resumes >= MAX_PHASE_RESUMES) return { resumed: false, reason: 'max_resumes_reached', phase: cp.phase };
+
+  await sb.from('audit_cache').upsert({
+    cache_key: phaseCheckpointKey(jobId),
+    function_name: 'marina',
+    result_data: { ...cp, resumes: resumes + 1, resumed_at: new Date().toISOString() },
+    expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
+  }, { onConflict: 'cache_key' });
+
+  await sb
+    .from('async_jobs')
+    .update({ status: 'processing', error_message: null, updated_at: new Date().toISOString() })
+    .eq('id', jobId)
+    .eq('function_name', 'marina');
+
+  console.log(`[Marina] ♻️ Reprise du job ${jobId} sur la phase "${cp.phase}" (reprise ${resumes + 1}/${MAX_PHASE_RESUMES})`);
+  fetch(`${SUPABASE_URL}/functions/v1/marina`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'run_job',
+      job_id: jobId,
+      url: cp.url,
+      lang: cp.lang ?? null,
+      _phase: cp.phase,
+      _intermediate: cp.intermediate ?? null,
+    }),
+  }).catch(err => console.error('[Marina] resume self-invocation failed:', err));
+
+  return { resumed: true, phase: cp.phase };
+}
+
 
 
 // ─── Mutualisation par domaine : cache des analyses "site-scoped" ───
